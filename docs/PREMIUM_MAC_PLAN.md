@@ -5349,3 +5349,45 @@ review requirement. This does not complete rank 6 or the wider Px scope. Remaini
 shared batch/history/keyboard, Mac/spoken/layout/account/window/hosted acceptance,
 independent child records, Watch/Wear OS and all other open plan items remain open.
 Every user-deferred release, provider and physical-device dependency stays deferred.
+
+
+### 2026-10-25 — Native project-adoption review and recovery (source)
+
+Implemented each app's independent typed adoption client, private recovery journal
+and native branch/location/contents/access/final-review flow. The UI defaults to
+private visibility, requires an explicit decision for each accepted collaborator,
+shows resulting effective access, affected descendants, own/inherited archive
+outcomes and exact assignment/invitation counts, and explains custody/Undo before
+confirmation. Unsupported file-custody and integration cases remain blocked.
+
+Requests persist only UUIDs, role choices, proofs and expected receipt counts/IDs
+before sending. No task text, project names, invitation emails or file bytes enter
+the private retry. Account/origin/process/removal/lease fences protect it, and the
+adoption envelope supports 1,000 decisions while other reviewed team commands keep
+their prior default bound. Lost applied replies retry the exact same request after
+relaunch/expiry; foreign/stale/closed callbacks and failed cleanup keep recovery.
+Unreadable recovery blocks fresh authoring. An account-level Saved project transfer
+entry remains reachable after team-access loss or ordinary team navigation changes.
+
+New authoring requires current owner-only personal custody, an empty outbox, no
+unresolved sync conflicts and closed affected task editors. Context/access/content
+changes invalidate the review. Accepted replies invoke normal workspace boundary
+refresh and draft/Recovery handling; they never overwrite tasks with old response
+contents. The UI provides an explicit success focus target and recovery/refresh
+controls. Native HTTP uses the exact operation/body RPC contract, current session
+fencing, no-store/cookie/redirect protections and a streamed 3 MB response cap.
+
+Both repos pass 361 focused Team Core checks (21 adoption cases), with no failures
+or skips, using independently generated actual SQL inspect/review/adopt fixtures.
+Both isolated Debug app builds pass with signing disabled: iOS Simulator and Mac.
+No app was installed/launched, no system settings or hosted configuration changed,
+and no installed UI/layout/keyboard/spoken/live-Keychain acceptance is claimed.
+Owned temporary builds are pruned; baseline Simulators and Core caches are kept.
+See p2-project-adoption-native-evidence.json for exact checks and cleanup.
+
+Next is installed native acceptance and the file-custody/personal integration
+pause/retarget adapters, followed by genuine hosted acceptance. This does not
+complete rank 6 or the wider Px scope. Shared batch/history/keyboard, remaining
+Mac/layout/account/window/accessibility/hosted checks, independent child records,
+Watch/Wear OS and other open plan items remain open. All user-deferred release,
+provider and physical-device dependencies stay deferred. Rollout remains disabled.

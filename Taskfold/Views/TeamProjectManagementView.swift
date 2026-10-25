@@ -10,6 +10,7 @@ struct TeamProjectManagementView: View {
     @State private var loadedScope: String?
     @State private var editing: TeamProjectEditRequest?
     @State private var recentTaskMoves = false
+    @State private var adopting = false
     @State private var moving: TeamProjectMoveRequest?
     @State private var preparing = false
     @State private var reviewError: String?
@@ -28,6 +29,9 @@ struct TeamProjectManagementView: View {
                 else {
                     List {
                         commandStatus
+                        if projectID == nil, store.projectTransferAuthoringAvailable, let team = browser.team, team.team.role != .guest, !team.team.archived, !browser.setupPaused {
+                            Section { Button("Bring personal projects…", systemImage: "folder.badge.plus") { adopting = true }.accessibilityIdentifier("startProjectTransfer") }
+                        }
                         if store.teamTaskMovesAvailable { Section { Button("Recent task moves", systemImage: "arrow.left.arrow.right") { recentTaskMoves = true }.accessibilityIdentifier("openRecentTeamTaskMoves") } }
                         if preparing { Section { ProgressView("Reviewing project branch…") } }
                         if let reviewError { Section { Label(reviewError, systemImage: "exclamationmark.circle").foregroundStyle(.secondary) } }
@@ -52,6 +56,7 @@ struct TeamProjectManagementView: View {
                 }
             } else { ContentUnavailableView("Projects unavailable", systemImage: "folder", description: Text("Return to the original synced workspace to view this team.")) }
         }
+        .sheet(isPresented: $adopting) { TeamProjectAdoptionView(team: browser?.team, destinations: browser?.projects ?? []) }
         .sheet(isPresented: $recentTaskMoves) { TeamTaskMoveView() }
         .navigationTitle(projectID == nil ? "Projects" : browser?.detail?.access.name ?? "Project")
         #if os(iOS)

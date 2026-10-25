@@ -1,10 +1,11 @@
 # Personal projects into a team
 
-Status: ownership-cutover primitives and the source-only inspect/review/adopt
-service are implemented and tested locally. The private client command/recovery
-and native screens are still required. Provider custody and integration pause
-adapters remain open; affected transfers are explicitly rejected atomically.
-Nothing in this milestone enables rollout or changes a hosted database.
+Status: the ownership boundary, reviewed service, private native command/recovery
+and native Mac/iPhone/iPad flow are implemented in source. Core checks and isolated
+Debug app builds pass. Installed-flow, layout, keyboard, VoiceOver, account/window
+and hosted acceptance remain open. Provider custody and integration pause adapters
+remain open; affected transfers are explicitly rejected atomically. No rollout or
+hosted configuration was enabled.
 
 ## Intended experience
 
@@ -197,9 +198,103 @@ hierarchy/assignment/guarded task-move routines, plus documented minimal depende
 snapshots. This proves the tested local SQL paths, not full hosted behavior or
 provider delivery. Evidence is in `p2-project-adoption-service-evidence.json`.
 
-Next: private native command persistence, exact retry/clear after relaunch,
-normal workspace refresh with unsent-draft recovery, premium review screens,
-file custody and explicit personal-integration pause/retarget adapters. Native
-Mac/iPhone/iPad, keyboard/spoken/layout/account/window and hosted acceptance are
-still required. The wider Px plan and every user-deferred external/release item
+Next: installed native flow/keyboard/spoken/layout/account/window acceptance,
+file custody and explicit personal-integration pause/retarget adapters, then
+hosted acceptance. The native command and screens below are implemented in source;
+build/Core evidence does not replace those runtime checks. The wider Px plan and every user-deferred external/release item
 remain open.
+
+
+## Native review and private recovery
+
+Both apps own `Core/TeamProjectAdoption.swift` and
+`Views/TeamProjectAdoptionView.swift`. Team project lists expose “Bring personal
+projects…” only under the existing native team rollout gate. The flow defaults
+to private visibility, lets the owner select project branches and a team folder/
+parent, lists every affected descendant and content total, requires explicit
+accepted-collaborator choices, and shows effective access and assignment/invitation
+counts before confirmation. Destination and custody/Undo consequences are visible
+on the final review. Files and personal integrations needing unfinished adapters
+show their review requirements and disable confirmation.
+
+New authoring rechecks a frozen local access/content stamp, owner-only personal
+custody, an empty outbox, no unresolved sync conflicts and closed task editors for
+the affected projects. Reviews invalidate across source/access changes and app
+inactivity. The server remains the final content/access authority; client stamps
+never replace its full proof. Late personal saves retain the service cutover guard.
+
+The durable command contains account/origin, UUIDs, role choices, proof/expiry,
+request ID and expected receipt IDs/counts. It stores no project names, task text,
+invitation addresses, file bytes or provider credentials. A validated Keychain
+journal uses account/process locks, cancellation leases and the account-removal
+fence. Adoption permits a 300 KB envelope for up to 1,000 decisions; other reviewed
+team commands keep their existing 20 KB default. Unreadable recovery blocks fresh
+authoring and is kept intact.
+
+Sending persists before network I/O. Retry reloads and sends the identical command,
+including after expiry; it never creates a replacement UUID. Replies must match
+the complete reviewed forest and all identity/placement/count fields. Account/
+workspace/session changes, close/cancel, foreign replies and failed private cleanup
+leave recovery available. Explicit clearing only removes the device retry; it does
+not cancel or Undo server work. Account-level “Saved project transfer” remains
+reachable independently of team membership and the ordinary team navigation flag.
+Closing that sheet rechecks the journal rather than hiding an unresolved retry.
+
+Backend inspect/review/adopt calls use the actual `operation`/`body` RPC arguments,
+current account/session fencing, no cached responses/cookies, refused redirects,
+a streamed 3 MB response cap and redacted errors. Accepted receipts certify custody
+only. The app invokes ordinary workspace/access refresh and its existing draft/
+Recovery path, never applies old task contents from a receipt. It reports refresh
+as incomplete while queued/conflicting work remains; absent/inaccessible projects
+are permitted after a fresh boundary instead of causing an endless refresh loop.
+Success receives an explicit VoiceOver focus target, and the existing access
+Recovery controls remain available when drafts are preserved.
+
+`export-project-adoption-contract.mjs` independently generates each repo's synthetic
+Swift fixture from the actual local inspect/review/adopt service and removes its
+owned database container. Core tests parse those SQL responses and exercise lost
+replies, relaunch, duplicate windows, foreign account/origin, cleanup failures,
+lease/close/account-removal fences, unreadable recovery, the 1,000-decision journal
+and actual mocked HTTP transport. Core checks and app compilation are recorded in
+`p2-project-adoption-native-evidence.json`. No installed UI/spoken/layout or live
+Keychain/provider/hosted behavior is claimed by that evidence.
+
+
+## Installed acceptance still required
+
+The following are open runtime gates, not completed by the Core/build evidence:
+
+1. Use a reserved, network-isolated host backed by the synthetic SQL contract.
+   Open the team project list and choose an archived personal root as well as an
+   active branch. Confirm all descendants/completed work appear; an inherited
+   archive clears at an active destination while explicit child archive remains.
+2. Require every accepted collaborator decision, including duplicate invitation
+   rows sharing one person/project decision. Verify guest/viewer/editor/retired
+   choices and effective admin/team-visible access; show exact assignment and
+   closed-invitation counts and the final team/folder/parent/visibility.
+3. Change source content/access or open an affected editor during review. Confirm
+   authoring stops without losing drafts; missing/corrupt private recovery must
+   block a fresh request, and unsupported files/integrations must stay blocked.
+4. Drop an already-applied reply, quit and relaunch, then retry the exact UUID.
+   Repeat after review expiry and destination-access loss. The account recovery
+   entry must remain reachable with ordinary team navigation disabled. Closing
+   it must not hide the unresolved retry. Reviewed clearing sends no Undo/cancel.
+5. Change account/session/workspace or close a window while storage/network I/O is
+   paused. Resume and verify no callback clears another context's journal or
+   changes its navigation. Competing windows must preserve the existing request.
+6. Refresh after confirmation while a late local edit/conflict exists. Verify
+   ordinary access masking, widget publication, encrypted Recovery and queued
+   draft preservation; no receipt task projection or false fresh-workspace claim.
+   An absent/inaccessible project after a fresh read must not cause endless retry.
+7. Check iPhone and iPad sizes, Mac resizing, large Dynamic Type, dark mode and
+   increased contrast. All destination/count/access/expiry/blocker text must be
+   readable. Exercise keyboard selection, Cancel/Back/confirmation and VoiceOver
+   success focus, plus the existing draft Recovery controls.
+8. Verify genuine private Keychain persistence/cleanup, including a large bounded
+   decision command. Core memory-I/O capacity checks do not prove this OS path.
+   Leave signing/distribution and physical-device/provider dependencies deferred.
+
+Prefer automated Simulator/native controls and authoritative saved-state checks.
+Only request a human observation for a system/spoken behavior that automation
+cannot inspect, after preparing a short concrete test. Broader hosted/provider
+acceptance and the wider Px plan remain open.

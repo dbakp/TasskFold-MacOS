@@ -1025,6 +1025,7 @@ final class Store {
     }
     @ObservationIgnored lazy var teamProjectCommandVault = TeamProjectCommandVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-project-commands"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
     @ObservationIgnored lazy var teamTaskMoveVault = TeamTaskMoveVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-task-moves"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
+    @ObservationIgnored lazy var projectAdoptionVault = TeamProjectAdoptionVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-project-adoption"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
     @ObservationIgnored lazy var teamOrganizationCommandVault = TeamOrganizationCommandVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".team-commands"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: cacheURL.deletingLastPathComponent())
     @ObservationIgnored lazy var emailAddressVault = EmailAddressVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".email-addresses"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("EmailAddressLocks", isDirectory: true))
     @ObservationIgnored lazy var webhookEnrollmentVault = WebhookEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".webhook-enrollment"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("WebhookEnrollmentLocks", isDirectory: true))
@@ -1140,6 +1141,7 @@ final class Store {
         try await teamOrganizationCommandVault.removeAccount(account, origin: command.origin)
         try await teamProjectCommandVault.removeAccount(account, origin: command.origin)
         try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
+        try await projectAdoptionVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
         removalPendingAccounts.remove(account)
         UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)
@@ -3213,3 +3215,42 @@ extension Store {
     }
 }
 #endif
+
+extension Store {
+    var projectTransferRecoveryAvailable: Bool { signedIn && !localMode && !signingOut && !accountRemovalBlocked }
+    var projectTransferAuthoringAvailable: Bool { projectTransferRecoveryAvailable && nativeTeamEditorEnabled && workspaceCacheReadable }
+    func projectTransferContext(account: String, origin: String, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        projectTransferRecoveryAvailable && account == userID && origin == (try? backend.accountRemovalOrigin) && workspace.matches(account: userID, generation: workspaceGeneration) && session == backend.reminderSessionIncarnation
+    }
+    var personalTransferProjects: [Record] {
+        guard projectTransferAuthoringAvailable, let boundary = nativeConversationTeamCache?.boundary else { return [] }
+        return allProjects.filter { $0.string("user_id") == userID && boundary.projects[$0.id]?.team == nil && boundary.projects[$0.id]?.role == "owner" }.sorted { $0.string("name").localizedStandardCompare($1.string("name")) == .orderedAscending }
+    }
+    /// A new transfer requires synced work and closed affected task editors.
+    /// Retries remain available independently, including after destination access loss.
+    func projectTransferAuthorStamp(_ scope: TeamProjectAdoptionScope, projects ids: [String]) -> String? {
+        guard projectTransferAuthoringAvailable, online, !syncing, snapshot.pending.isEmpty, syncConflict == nil, focusSyncConflict == nil,
+              scope.account == userID, scope.origin == (try? backend.accountRemovalOrigin), let cache = nativeConversationTeamCache,
+              cache.boundary.belongs(account: scope.account, origin: scope.origin), Set(scope.roots).isSubset(of: Set(ids)),
+              ids.allSatisfy({ id in record("projects", id: id)?.string("user_id") == userID && cache.knownTeams[id] == nil && cache.boundary.projects[id]?.role == "owner" && cache.boundary.projects[id]?.team == nil }) else { return nil }
+        for editor in editorSessions.values where !editor.closed && editor.account == userID {
+            let root = SubtaskTree.referencePath(editor.original.id)?.first ?? editor.original.id
+            let project = record("tasks", id: root)?.string("project_id") ?? editor.original.string("project_id")
+            if ids.contains(project) { return nil }
+        }
+        return "\(workspaceReadRevision)|\(taskRevision)|\(cache.boundary.raw["token"]?.text ?? "")"
+    }
+    /// Receipts certify custody only. Ordinary boundary refresh handles drafts,
+    /// recovery copies and visibility; no old response is projected into tasks.
+    func refreshAfterProjectTransfer(_ receipt: TeamProjectAdoptionReceipt) async -> Bool {
+        let c = receipt.command, workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration), session = backend.reminderSessionIncarnation
+        guard projectTransferContext(account: c.account, origin: c.origin, workspace: workspace, session: session), !syncing, online else { return false }
+        let started = Date(); await sync()
+        guard projectTransferContext(account: c.account, origin: c.origin, workspace: workspace, session: session), !syncing,
+              (lastSync ?? .distantPast) >= started, let cache = nativeConversationTeamCache, cache.boundary.belongs(account: c.account, origin: c.origin) else { return false }
+        // A refresh that preserved conflicting work is still useful, but it is
+        // not a claim that every selected project has reloaded successfully.
+        guard syncConflict == nil, focusSyncConflict == nil, snapshot.pending.isEmpty else { return false }
+        return c.projects.allSatisfy { cache.boundary.projects[$0] == nil || cache.boundary.projects[$0]?.team == c.scope.team }
+    }
+}

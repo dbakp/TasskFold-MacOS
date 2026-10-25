@@ -187,8 +187,9 @@ struct TeamOrganizationAdministration {
 /// Keychain data never enters portable backups, widgets or the task cache.
 protocol ReviewedTeamCommand: Codable, Equatable, Sendable {
     var account: String { get }; var origin: String { get }
-    static var storagePrefix: String { get }; static var invalid: AppFailure { get }
+    static var storagePrefix: String { get }; static var invalid: AppFailure { get }; static var maximumStoredBytes: Int { get }
 }
+extension ReviewedTeamCommand { static var maximumStoredBytes: Int { 20_000 } }
 extension TeamOrganizationCommand: ReviewedTeamCommand { static let storagePrefix = "team-command-v1." }
 typealias TeamOrganizationCommandVault = ReviewedTeamCommandVault<TeamOrganizationCommand>
 actor ReviewedTeamCommandVault<Command: ReviewedTeamCommand> {
@@ -211,7 +212,7 @@ actor ReviewedTeamCommandVault<Command: ReviewedTeamCommand> {
     private func read(account: String, origin: String) throws -> Command? {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard let data = try io.read(key: key(account, origin: origin)) else { return nil }
-        guard data.count <= 20_000, let value = try? JSONDecoder().decode(Envelope.self, from: data), value.version == 1,
+        guard data.count <= Command.maximumStoredBytes, let value = try? JSONDecoder().decode(Envelope.self, from: data), value.version == 1,
               value.command.account == account, value.command.origin == origin else { throw Command.invalid }
         return value.command
     }
@@ -225,7 +226,7 @@ actor ReviewedTeamCommandVault<Command: ReviewedTeamCommand> {
                     guard old == command else { throw AppFailure(message: "Finish or review your saved team request first.") }; return
                 }
                 let data = try JSONEncoder().encode(Envelope(command: command))
-                guard data.count <= 20_000 else { throw Command.invalid }
+                guard data.count <= Command.maximumStoredBytes else { throw Command.invalid }
                 try lease.check(); try io.write(data, key: key(command.account, origin: command.origin))
             }
         }
