@@ -77,7 +77,7 @@ struct RootView: View {
         }
         .sheet(item: Binding(get: { workspace.teamTaskMove }, set: { workspace.teamTaskMove = $0 })) { TeamTaskMoveView(request: $0) }
         .sheet(item: Binding(get: { workspace.teamTaskDeletion }, set: { workspace.teamTaskDeletion = $0 })) { TeamTaskDeletionReview(request: $0) }
-        .modifier(TeamTaskPlanningSheet(request: planningRequest, input: planningInput, assignment: assignmentInput, labels: labelsInput))
+        .modifier(TeamTaskPlanningSheet(request: planningRequest, input: planningInput, assignment: assignmentInput, labels: labelsInput, completion: Binding(get: { workspace.teamTaskCompletion }, set: { workspace.teamTaskCompletion = $0 })))
         .sheet(item: Binding(get: { workspace.deadlineSelection }, set: { workspace.deadlineSelection = $0 })) { request in
             BulkDeadlineEditor(request: request, records: request.account == store.userID ? request.records : []) { day in
                 try workspace.setDeadlines(request, day: day)

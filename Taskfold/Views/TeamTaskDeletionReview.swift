@@ -222,8 +222,80 @@ struct TeamTaskPlanningSheet: ViewModifier {
     @Binding var input: BulkTaskPlanningRequest?
     @Binding var assignment: BulkTaskAssignmentRequest?
     @Binding var labels: BulkTaskLabelsRequest?
-    init(request: Binding<TeamTaskPlanningRequest?>, input: Binding<BulkTaskPlanningRequest?> = .constant(nil), assignment: Binding<BulkTaskAssignmentRequest?> = .constant(nil), labels: Binding<BulkTaskLabelsRequest?> = .constant(nil)) { _request = request; _input = input; _assignment = assignment; _labels = labels }
+    @Binding var completion: TeamTaskCompletionRequest?
+    init(request: Binding<TeamTaskPlanningRequest?>, input: Binding<BulkTaskPlanningRequest?> = .constant(nil), assignment: Binding<BulkTaskAssignmentRequest?> = .constant(nil), labels: Binding<BulkTaskLabelsRequest?> = .constant(nil), completion: Binding<TeamTaskCompletionRequest?> = .constant(nil)) { _completion = completion; _request = request; _input = input; _assignment = assignment; _labels = labels }
     func body(content: Content) -> some View {
-        content.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }.sheet(item: $input) { BulkTaskPlanningEditor(request: $0) }.sheet(item: $assignment) { BulkTaskAssignmentEditor(request: $0) }.sheet(item: $labels) { BulkTaskLabelsEditor(request: $0) }
+        content.sheet(item: $completion) { TeamTaskCompletionReview(request: $0) }.sheet(item: $request) { TeamTaskPlanningReview(request: $0) }.sheet(item: $input) { BulkTaskPlanningEditor(request: $0) }.sheet(item: $assignment) { BulkTaskAssignmentEditor(request: $0) }.sheet(item: $labels) { BulkTaskLabelsEditor(request: $0) }
+    }
+}
+
+struct TeamTaskCompletionRequest: Identifiable {
+    let selection: TeamTaskCompletionSelection
+    let perform: () -> Bool
+    let completed: () -> Void
+    var id: UUID { selection.requestID }
+}
+
+struct TeamTaskCompletionReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: TeamTaskCompletionRequest
+    @State private var message: String?
+    @State private var finished = false
+    private var refusal: String? {
+        guard !finished else { return "This selection has already been saved." }
+        do { _ = try store.reviewedTeamTaskCompletionSelection(request.selection); return nil }
+        catch { return error.localizedDescription }
+    }
+    var body: some View {
+        let blocked = refusal
+        NavigationStack {
+            Form {
+                Section {
+                    Label("Complete together", systemImage: "checkmark.circle").font(.title2.weight(.semibold))
+                    Text("Review the shared tasks below. The entire selection saves together for everyone with access. Undo stays available on this device.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if blocked == nil {
+                    Section("Selected tasks") {
+                        ForEach(request.selection.drafts, id: \.source.id) { draft in
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(draft.source.title).font(.headline)
+                                Text(draft.source.completed ? "Already completed · unchanged" : "Will complete").font(.caption).foregroundStyle(.secondary)
+                                Text(store.record("projects", id: draft.scope.project)?.name ?? "Shared project").font(.caption).foregroundStyle(.secondary)
+                            }.fixedSize(horizontal: false, vertical: true).accessibilityElement(children: .combine)
+                        }
+                    }
+                    if !request.selection.successors.isEmpty {
+                        Section("Next repeat occurrences") {
+                            Text("The next occurrence is kept if it already exists. Other occurrences stay in place.").font(.footnote).foregroundStyle(.secondary)
+                            ForEach(Array(request.selection.successors.enumerated()), id: \.offset) { _, task in
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text(task.title)
+                                    Text(task.string("due_date")).font(.caption).foregroundStyle(.secondary)
+                                }.accessibilityElement(children: .combine)
+                            }
+                        }
+                    }
+                }
+                if let blocked { Section { Label("Completion paused", systemImage: "lock.shield"); Text(blocked).foregroundStyle(.secondary) }.accessibilityIdentifier("teamCompletionPaused") }
+                if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("teamCompletionError") } }
+                Section {
+                    Button {
+                        guard !finished, refusal == nil else { return }
+                        if request.perform() { finished = true; request.completed(); dismiss() }
+                        else { message = store.error ?? "The selection could not be saved. Try again."; store.error = nil }
+                    } label: { Label("Complete \(request.selection.completingCount) \(request.selection.completingCount == 1 ? "task" : "tasks")", systemImage: "checkmark.circle.fill") }
+                    .disabled(blocked != nil).accessibilityIdentifier("confirmTeamTaskCompletion")
+                }
+            }.formStyle(.grouped).accessibilityIdentifier("teamCompletionForm")
+            .navigationTitle("Complete shared tasks?")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelTeamTaskCompletion") } }
+        }
+        #if os(macOS)
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 430, idealHeight: 580)
+        #endif
     }
 }

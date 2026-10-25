@@ -72,6 +72,7 @@ struct Confirmation: Equatable {
 @MainActor @Observable
 final class Workspace {
     var teamTaskMove: TeamTaskMoveRequest?
+    var teamTaskCompletion: TeamTaskCompletionRequest?
     var teamTaskDeletion: TeamTaskDeletionRequest?
     var teamTaskPlanning: TeamTaskPlanningRequest?
     var bulkPlanning: BulkTaskPlanningRequest?
@@ -366,6 +367,20 @@ final class Workspace {
         if !task.completed { Feedback.complete(); confirm("Completed “\(task.title)”") }
     }
     func toggle(_ ids: Set<String>) {
+        if ids.count > 1, store.hasSharedTaskSelection(ids) {
+            do {
+                guard !ids.contains(where: { Self.subtaskPath($0) != nil }) else { throw TeamTaskBatch.invalid }
+                let captured = try store.captureTeamTaskCompletionSelection(ids.sorted().map { try store.selectionRecord($0) })
+                teamTaskCompletion = TeamTaskCompletionRequest(selection: captured, perform: { [weak self] in
+                    guard let self else { return false }; var saved = false
+                    self.run("Complete Shared Tasks") { saved = self.store.saveTeamTaskCompletionSelection(captured) }; return saved
+                }, completed: { [weak self] in
+                    self?.teamTaskCompletion = nil; self?.selection.subtract(ids); Feedback.complete()
+                    self?.confirm("Completed \(captured.completingCount) tasks")
+                })
+            } catch { store.error = error.localizedDescription }
+            return
+        }
         if hierarchyFilter {
             do {
                 let tasks = try ids.sorted().map { try store.selectionRecord($0) }, now = Date()

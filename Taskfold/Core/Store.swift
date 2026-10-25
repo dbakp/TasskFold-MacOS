@@ -432,6 +432,20 @@ final class Store {
             return nativeConversationTeamCache?.knownTasks.contains(root) == true || record("tasks", id: root).map { nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil } == true
         }
     }
+    func captureTeamTaskCompletionSelection(_ records: [Record]) throws -> TeamTaskCompletionSelection {
+        let selection = try TeamTaskCompletionSelection(drafts: records.map { try captureTeamTaskEditor($0) }, tasks: snapshot.tables["tasks"] ?? [])
+        _ = try reviewedTeamTaskCompletionSelection(selection); return selection
+    }
+    func reviewedTeamTaskCompletionSelection(_ selection: TeamTaskCompletionSelection) throws -> Mutation {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              let cache = nativeConversationTeamCache,
+              selection.drafts.allSatisfy({ $0.scope.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamTaskEditorDraft.unavailable }
+        return try selection.mutation(tasks: snapshot.tables["tasks"] ?? [], workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
+    }
+    @discardableResult func saveTeamTaskCompletionSelection(_ selection: TeamTaskCompletionSelection) -> Bool {
+        do { return commit([try reviewedTeamTaskCompletionSelection(selection)]) }
+        catch { self.error = error.localizedDescription; return false }
+    }
     func captureTeamTaskPlanningAdmission(_ records: [Record]) throws -> TeamTaskPlanningAdmission {
         guard !records.isEmpty, records.count <= 100, Set(records.map(\.id)).count == records.count else { throw TeamTaskBatch.invalid }
         let admission = try TeamTaskPlanningAdmission(drafts: records.map { try captureTeamTaskEditor($0) })

@@ -1,0 +1,6 @@
+{
+  "result": "BUILD SUCCEEDED",
+  "logSHA256": "64d0240dcdd3a6a29add6310fb6c043da97184da07e03ad6355b488137942214",
+  "architecture": "arm64",
+  "signing": "disabled; compile only"
+}

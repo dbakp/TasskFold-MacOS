@@ -457,3 +457,88 @@ extension TeamCompletionBatchTests {
         }
     }
 }
+
+extension TeamCompletionBatchTests {
+    private func completionOpening(_ phase: String = "") throws -> (TeamTaskCompletionSelection, [Record], WorkspaceBinding, UUID, TeamWorkspaceCache) {
+        let (_, header, batch, _) = try fixture(phase)
+        let projects = Set(batch.items.map { $0.teamCompletion!.scope.project }).sorted()
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(batch.account), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "a", count: 64)),
+            "teams": .array([.object(["id": .string(batch.team), "state": .string("active"), "revision": .number(1), "access_revision": .number(1)])]),
+            "projects": .array(projects.map { .object(["id": .string($0), "team_id": .string(batch.team), "role": .string("editor"), "archived": .bool(false), "can_send_tasks": .bool(true)]) })]
+        let cache = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: batch.account, origin: batch.origin), previous: nil, pending: [header])
+        let workspace = WorkspaceBinding(account: batch.account, generation: UUID()), session = UUID(), tasks = batch.items.map { $0.teamCompletion!.source }
+        let drafts = try tasks.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        return (try TeamTaskCompletionSelection(drafts: drafts, tasks: tasks, at: TaskPlanning.instant("2026-10-25T12:00:00Z")!, zone: "UTC"), tasks, workspace, session, cache)
+    }
+    func testCompletionReviewFreezesOneEnvelopeAndEveryNonceAcrossRepeatedValidation() throws {
+        let (opening, tasks, workspace, session, cache) = try completionOpening("recurring_")
+        let first = try opening.mutation(tasks: tasks, workspace: workspace, session: session, cache: cache, enabled: true)
+        XCTAssertEqual(first, try opening.mutation(tasks: tasks.reversed(), workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertEqual(first.method, "TEAM_BATCH"); XCTAssertEqual(first.teamTaskBatch?.operation, .complete)
+        XCTAssertEqual(opening.successors.count, 2); XCTAssertEqual(opening.completingCount, 2)
+        var projection = snapshot(first.teamTaskBatch!); XCTAssertTrue(first.teamTaskBatch!.apply(to: &projection, header: first))
+        XCTAssertEqual(projection.tables["tasks"]?.count, 4)
+    }
+    func testCompletionReviewRefusesChangedMissingAndDuplicateMembersWithoutRebuildingCommand() throws {
+        let (opening, tasks, workspace, session, cache) = try completionOpening()
+        let frozen = opening.command
+        for key in ["title", "task_generation", "completion_version", "due_date"] {
+            var changed = tasks; changed[1][key] = .string("changed")
+            XCTAssertThrowsError(try opening.mutation(tasks: changed, workspace: workspace, session: session, cache: cache, enabled: true))
+        }
+        XCTAssertThrowsError(try opening.mutation(tasks: Array(tasks.dropLast()), workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try opening.mutation(tasks: tasks + [tasks[0]], workspace: workspace, session: session, cache: cache, enabled: true))
+        XCTAssertEqual(opening.command, frozen)
+    }
+    func testCompletionReviewRefusesAccountWorkspaceSessionAndDisabledRollout() throws {
+        let (opening, tasks, workspace, session, cache) = try completionOpening()
+        XCTAssertThrowsError(try opening.mutation(tasks: tasks, workspace: WorkspaceBinding(account: workspace.account, generation: UUID()), session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try opening.mutation(tasks: tasks, workspace: WorkspaceBinding(account: UUID().uuidString.lowercased(), generation: workspace.generation), session: session, cache: cache, enabled: true))
+        XCTAssertThrowsError(try opening.mutation(tasks: tasks, workspace: workspace, session: UUID(), cache: cache, enabled: true))
+        XCTAssertThrowsError(try opening.mutation(tasks: tasks, workspace: workspace, session: session, cache: cache, enabled: false))
+    }
+    func testCompletionReviewRefusesNewOrEditedRepeatOccurrenceButAllowsUnrelatedTask() throws {
+        let (opening, tasks, workspace, session, cache) = try completionOpening("recurring_")
+        var new = opening.successors[0]
+        XCTAssertThrowsError(try opening.mutation(tasks: tasks + [new], workspace: workspace, session: session, cache: cache, enabled: true))
+        new["recurrence_parent_id"] = .null; new["id"] = .string(UUID().uuidString.lowercased())
+        XCTAssertEqual(try opening.mutation(tasks: tasks + [new], workspace: workspace, session: session, cache: cache, enabled: true), opening.command)
+    }
+    func testCompletionReviewIncludesCompletedSelectionWithoutReopeningIt() throws {
+        let (_, tasks, workspace, session, cache) = try completionOpening()
+        var mixed = tasks; mixed[1]["completed"] = .bool(true)
+        let drafts = try mixed.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        let opening = try TeamTaskCompletionSelection(drafts: drafts, tasks: mixed)
+        XCTAssertEqual(opening.drafts.count, 2); XCTAssertEqual(opening.completingCount, 1)
+        XCTAssertEqual(opening.command.teamTaskBatch?.items.map(\.recordID), [tasks[0].id])
+        var completed = mixed; completed[0]["completed"] = .bool(true)
+        let closed = try completed.map { try TeamTaskEditorDraft(source: $0, workspace: workspace, session: session, cache: cache, enabled: true) }
+        XCTAssertThrowsError(try TeamTaskCompletionSelection(drafts: closed, tasks: completed))
+    }
+    func testCompletionReviewCannotCaptureDuplicateOrForeignSourceRows() throws {
+        let (opening, tasks, _, _, _) = try completionOpening()
+        XCTAssertThrowsError(try TeamTaskCompletionSelection(drafts: opening.drafts + [opening.drafts[0]], tasks: tasks))
+        XCTAssertThrowsError(try TeamTaskCompletionSelection(drafts: opening.drafts, tasks: tasks + [tasks[0]]))
+        var changed = tasks; changed[0]["title"] = .string("not the captured row")
+        XCTAssertThrowsError(try TeamTaskCompletionSelection(drafts: opening.drafts, tasks: changed))
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testCompletionReviewRefusesChangedBoundaryTokenRoleAndArchivedProject() throws {
+        let (opening, tasks, workspace, session, cache) = try completionOpening()
+        for change in ["token", "role", "archived", "can_send_tasks"] {
+            var raw = cache.boundary.raw
+            if change == "token" { raw["token"] = .string(String(repeating: "b", count: 64)) }
+            else {
+                var projects = raw["projects"]!.list
+                var first = projects[0].object
+                first[change] = change == "role" ? .string("viewer") : .bool(change == "archived")
+                first["can_send_tasks"] = .bool(false)
+                projects[0] = .object(first); raw["projects"] = .array(projects)
+            }
+            let revoked = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: cache.boundary.account, origin: cache.boundary.origin), previous: cache, pending: [])
+            XCTAssertThrowsError(try opening.mutation(tasks: tasks, workspace: workspace, session: session, cache: revoked, enabled: true), change)
+        }
+    }
+}

@@ -499,3 +499,49 @@ private struct CompletionBatchReconciliation {
         return result
     }
 }
+
+/// Ephemeral opening authority, with a frozen durable command and repeat preview.
+/// Re-reading a review must never generate new nonces or acquire fresh baselines.
+struct TeamTaskCompletionSelection: Equatable, Sendable {
+    static var stale: AppFailure { AppFailure(message: "These tasks or their repeat occurrences changed. Close this review and select them again. Nothing was completed.") }
+    let drafts: [TeamTaskEditorDraft]
+    let command: Mutation
+    private let lifecycleRows: [Record]
+    private let series: Set<String>
+    var requestID: UUID { command.id }
+    var completingCount: Int { command.teamTaskBatch!.items.count }
+    var successors: [Record] {
+        command.teamTaskBatch!.items.compactMap { item in
+            guard let value = item.teamCompletion, let proposed = value.proposed else { return nil }
+            return lifecycleRows.first { $0.id == proposed.id || ($0.string("recurrence_parent_id") == value.seriesID && $0["due_date"] == proposed["due_date"]) } ?? proposed
+        }
+    }
+    init(drafts: [TeamTaskEditorDraft], tasks: [Record], at: Date = Date(), zone: String = TimeZone.current.identifier) throws {
+        let admission = try TeamTaskPlanningAdmission(drafts: drafts)
+        guard admission.drafts.contains(where: { !$0.source.completed }),
+              Set(tasks.map(\.id)).count == tasks.count,
+              admission.drafts.allSatisfy({ draft in tasks.first(where: { $0.id == draft.source.id }) == draft.source }) else { throw Self.stale }
+        let items = try admission.drafts.filter { !$0.source.completed }.map { draft -> Mutation in
+            guard draft.source["is_recurring"] != .bool(true) || TeamTaskRecurrence.supported(draft.source) else { throw TeamTaskRecurrence.invalid }
+            return try TeamCompletion.complete(draft.source, tasks: tasks, scope: draft.scope, at: at, zone: zone)
+        }
+        let first = admission.drafts[0].scope
+        let batch = TeamTaskBatch(account: first.account, origin: first.origin, team: first.team, operation: .complete, restores: nil, items: items)
+        command = TeamTaskBatch.header(batch)
+        _ = try batch.body(for: command)
+        self.drafts = admission.drafts
+        let capturedSeries = Set(items.map { $0.teamCompletion!.seriesID }).union(admission.drafts.map { $0.source.id })
+        series = capturedSeries
+        lifecycleRows = tasks.filter { capturedSeries.contains($0.id) || capturedSeries.contains($0.string("recurrence_parent_id")) }.sorted { $0.id < $1.id }
+    }
+    func mutation(tasks: [Record], workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) throws -> Mutation {
+        guard Set(tasks.map(\.id)).count == tasks.count else { throw Self.stale }
+        let current = Dictionary(uniqueKeysWithValues: tasks.map { ($0.id, $0) })
+        guard permits(current: current, workspace: workspace, session: session, cache: cache, enabled: enabled),
+              tasks.filter({ series.contains($0.id) || series.contains($0.string("recurrence_parent_id")) }).sorted(by: { $0.id < $1.id }) == lifecycleRows else { throw Self.stale }
+        return command
+    }
+    private func permits(current: [String: Record], workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) -> Bool {
+        drafts.allSatisfy { draft in current[draft.source.id] == draft.source && draft.permits(current: current[draft.source.id], workspace: workspace, session: session, cache: cache, enabled: enabled) }
+    }
+}

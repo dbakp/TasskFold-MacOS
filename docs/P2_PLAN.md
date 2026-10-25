@@ -3779,3 +3779,39 @@ point is enabled here. Mac installed/spoken/window and genuine hosted acceptance
 independent child records, remaining Watch/Wear OS and the wider Px goal remain
 open. All user-deferred release/provider/device work stays deferred. No hosted
 schema/configuration, rollout, real data or external account was changed.
+
+
+### 2026-10-25 — Captured native shared bulk completion review
+
+Complete selection now opens a native grouped review for shared roots. The
+opening captures exact source rows, workspace/session/access authority and one
+frozen completion envelope. It lists all selected roots (already-completed roots
+stay unchanged), the active count and next repeat occurrences. Cancel makes no
+saved changes. Revalidation never creates new requests or acquires new sources;
+changes to a selected row, its series/occurrences or permission pause the entire
+review and hide the captured contents. Shared mixed/nested unsupported selections
+refuse rather than reaching a personal writer. Mac review saves through native
+history; iOS uses its existing bound Undo feedback. All members persist together.
+The sheet uses existing forms, spacing, typography and feedback. Grouping its
+presentation with selection sheets keeps the Mac root view within SwiftUI's
+compiler limits.
+
+Both independent repos pass 594 selected Core cases, including 43 completion-batch
+cases and seven new capture/authority/lifecycle checks. The final isolated iOS
+app/test products build and are signed with preserved Simulator identities; the
+final arm64 Mac app build passes with signing disabled. On both phone and iPad,
+one actual UI test passes with no runtime warnings: Cancel leaves the entire
+cache unchanged, Save queues one TEAM_BATCH for both selected roots, untouched
+work is preserved, linked whole-group Undo restores both roots (with monotonic
+completion revisions), and normal relaunch preserves the exact final cache and
+queue. Installed executable, debug library and Info.plist hashes match the tested
+products. Review screenshots are readable without clipped text. These native
+fixtures are ordinary roots; recurring preview behavior is covered by Core.
+
+See p2-native-bulk-completion-evidence.json and native-bulk-completion/. The Mac
+runtime remains unverified in this stage: desktop control still reports locked.
+Native Redo/window/spoken acceptance, visible whole-cohort conflict recovery,
+large-selection responsiveness and genuine hosted acceptance remain open. This
+is not full rank-6 or Px completion. Teams rollout remains off; no hosted schema,
+configuration, real tasks/accounts, release signing or deferred provider/device
+work changed. Existing personal selection behavior stays on its original path.
