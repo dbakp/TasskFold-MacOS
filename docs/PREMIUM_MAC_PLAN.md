@@ -5256,3 +5256,55 @@ Rollout remains disabled. All user-deferred release, older-client, remote delive
 OAuth/provider and physical-location dependencies remain deferred. Owned apps,
 runners and temporary builds/results are removed after evidence capture; baseline
 Simulator states and Core caches stay intact. See `p2-team-task-moves-native-evidence.json`.
+
+
+## Project-adoption ownership boundary — 25 October 2026, rank 6 in progress
+
+Both repositories independently own the source-only transaction boundary needed
+for personal-project adoption. The transfer API/client/native screens are still
+unimplemented; this milestone does not complete adoption or rank 6. The full
+intended protocol, access decisions, forest/linked-work preservation and required
+commit ordering are recorded in `TEAM_PROJECT_ADOPTION.md`.
+
+Identity-only per-row epochs detect authored edit/revert and project delete/reuse
+without serializing unrelated task edits on one project counter. Private deferred
+realm tickets reject a personal task edit/insert, discussion, subproject or pending
+invitation acceptance that would otherwise finish after team custody changes.
+Shared/exclusive try-locks avoid waiting while holding rows needed by the other
+side. Unrelated projects keep saving. The private binding writer can approve only
+its own transaction's deliberate cutover, never another writer's ticket.
+
+Exact private project/parent/visibility/folder scopes permit a future reviewed
+forest admission. Deferred placement verification still checks the final binding
+and parent after temporary scope rows are erased. Personal invitation retirement
+skips automatic assignment clearing only in an exact private adoption scope; this
+keeps eligible assignment provenance intact. The future service must explicitly
+compute and apply every ineligible assignment change. Ordinary collaboration
+removal still clears departed assignees, and native owner/member team-project
+creation remains accepted. No new public adoption or scope-authority API exists.
+
+Each independent owned PostgreSQL fixture passes 52 new ownership-boundary checks,
+90 existing task-move checks, 95 project-hierarchy checks and 72 batch checks with
+this migration loaded: 309 checks per repo, no final failures. The focused fixture
+loads actual assignment-provenance code and inspected invitation/assignment-cleanup
+definitions, and verifies mention read epochs and personal Auth cleanup. Advisors
+show no new warning categories beyond known auth-initplan policy notices. Current
+app code is unchanged, so no new native build/runtime acceptance is claimed.
+
+The first diagnostic fixtures corrected a missing-row JSON-null helper and an
+unsupported direct comment write by the authenticated fixture role; the latter is
+now explicitly a privileged synthetic write, not a claimed native API. That early
+control failure exposed a test-helper cleanup gap. Cleanup now removes its owned
+container even when the control session has already failed, retains SQLSTATE and
+preserves the primary error. The one leaked diagnostic container was inspected and
+removed. A dedicated failed-control case verifies the repaired helper.
+
+Next is the reviewed inspect/review/adopt controller with exact immutable manifests,
+collaborator/effective-access decisions and durable retries, followed by native
+review/recovery on both platforms. Storage custody, paused personal integrations,
+shared batch/history/keyboard work, remaining Mac/spoken/layout/account/window and
+hosted acceptance, independent child records, remaining Watch/Wear OS and wider Px
+remain open. No hosted schema/configuration or rollout switch changed. Every
+user-deferred release, general older-client, remote-delivery, OAuth/provider and
+physical-location dependency stays deferred. See
+`p2-project-adoption-fences-evidence.json` for exact scope and cleanup.

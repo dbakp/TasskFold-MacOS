@@ -36,6 +36,10 @@ try {
       await loadTeamTaskMoveSchema(pg.raw, { base: false }); report.taskMoveMigration = teamTaskMoveMigration;
     }
   } else { await loadTeamBatchSchema(pg.raw); }
+  if (process.env.TASKFOLD_PROJECT_OWNERSHIP_REGRESSION === "1") {
+    const { loadProjectOwnershipSchema, projectOwnershipMigration } = await import("./project-ownership-schema.mjs");
+    await loadProjectOwnershipSchema(pg.raw, { base: false }); report.ownershipMigration = projectOwnershipMigration;
+  }
   report.migrationSHA256 = createHash("sha256").update(
     await readFile(
       new URL("../../supabase/migrations/" + migration, import.meta.url),

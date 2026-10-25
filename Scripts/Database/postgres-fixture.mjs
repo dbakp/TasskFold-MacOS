@@ -44,7 +44,11 @@ export async function createPostgresFixture(
   };
   const scalar = async (query) => JSON.parse(await raw(query));
   async function close() {
-    for (const holder of [...holders]) await holder.release("rollback");
+    // A failed control statement must never prevent owned-container cleanup
+    // or replace the test's primary error with a cleanup error.
+    for (const holder of [...holders]) {
+      try { await holder.release("rollback"); } catch { /* Removal below closes every owned backend. */ }
+    }
     if (created) {
       const state = JSON.parse(
         (await exec("docker", ["inspect", name], { timeout: 5000 })).stdout,
@@ -87,7 +91,8 @@ export async function createPostgresFixture(
       child = spawn("docker", ["exec", "-i", name, ...psql], {
         stdio: ["pipe", "pipe", "pipe"],
       });
-    let buffer = "", ready = false, pid;
+    let buffer = "", ready = false, pid, stderr = "";
+    child.stderr.on("data", part => { stderr = (stderr + part).slice(-65536); });
     const acquired = new Promise((resolve, reject) => {
       const timer = setTimeout(
         () => reject(new Error("Control lock not acquired")),
@@ -97,7 +102,8 @@ export async function createPostgresFixture(
       child.once("exit", () => {
         if (!ready) {
           clearTimeout(timer);
-          reject(new Error("Control session closed early"));
+          const failure = new Error("Control session closed early");
+          failure.code = /ERROR:\s+([A-Z0-9]{5}):/.exec(stderr)?.[1]; reject(failure);
         }
       });
       child.stdout.on("data", (part) => {
@@ -122,10 +128,10 @@ export async function createPostgresFixture(
       async release(mode = "commit", before = "") {
         if (!holders.has(holder)) return;
         holders.delete(holder);
-        child.stdin.end(
+        if (child.exitCode === null) child.stdin.end(
           before + ";" + (mode === "commit" ? "commit" : "rollback") + ";\n",
         );
-        await Promise.race([
+        if (child.exitCode === null) await Promise.race([
           once(child, "exit"),
           new Promise((r) => setTimeout(r, 5000)),
         ]);
@@ -134,7 +140,9 @@ export async function createPostgresFixture(
           throw new Error("Control session did not exit");
         }
         if (child.exitCode !== 0) {
-          throw new Error("Control transaction failed");
+          const failure = new Error("Control transaction failed");
+          failure.code = /ERROR:\s+([A-Z0-9]{5}):/.exec(stderr)?.[1];
+          throw failure;
         }
       },
     };
@@ -144,7 +152,8 @@ export async function createPostgresFixture(
         literal(marker)
       },'pid',pg_backend_pid());\n`,
     );
-    await acquired;
+    try { await acquired; }
+    catch (error) { try { await holder.release("rollback"); } catch { /* Preserve the query failure. */ } throw error; }
     return holder;
   }
   async function waitForLock(app, blocker) {

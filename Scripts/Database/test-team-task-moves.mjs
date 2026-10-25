@@ -12,6 +12,7 @@ let pg;
 try {
  pg=await createPostgresFixture({advisors:true});await loadTeamWorkspaceSchema(pg.raw);
  const sql=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');await pg.raw(sql);report.migrationSHA256=createHash('sha256').update(sql).digest('hex');
+ if(process.env.TASKFOLD_PROJECT_OWNERSHIP_REGRESSION==='1'){const {loadProjectOwnershipSchema,projectOwnershipMigration}=await import('./project-ownership-schema.mjs');await loadProjectOwnershipSchema(pg.raw,{base:false});report.ownershipMigration=projectOwnershipMigration;}
  for(const [name,u] of Object.entries(users))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(name+'@example.invalid')},now());insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
  for(const t of [team,foreignTeam])await pg.raw(`insert into taskfold_private.teams(id,owner_id,name) values(${lit(t)},${lit(users.owner.id)},'Move workshop');insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(t)},${lit(users.owner.id)},'admin');`);
  for(const [name,u] of Object.entries(users).filter(([x])=>x!=='outsider'&&x!=='owner'))await pg.raw(`insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(team)},${lit(u.id)},${lit(name==='owner'?'admin':'member')});`);

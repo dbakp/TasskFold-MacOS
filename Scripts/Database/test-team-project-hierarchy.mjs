@@ -22,6 +22,7 @@ try {
  }
  await pg.raw('alter table taskfold_private.team_project_config add column native_task_edits_enabled boolean not null default false');
  await pg.raw(await readFile(new URL('../../supabase/migrations/20261024094010_team_workspace_boundary.sql',import.meta.url),'utf8'));
+ if(process.env.TASKFOLD_PROJECT_OWNERSHIP_REGRESSION==='1'){const {loadProjectOwnershipSchema,projectOwnershipMigration}=await import('./project-ownership-schema.mjs');await loadProjectOwnershipSchema(pg.raw,{base:false});report.ownershipMigration=projectOwnershipMigration;}
  for(const [name,u] of Object.entries(users)) await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(name+'@example.invalid')},now());insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});insert into public.profiles(user_id,display_name) values(${lit(u.id)},${lit('Synthetic '+name)})`);
  await pg.raw(`insert into taskfold_private.teams(id,owner_id,name) values(${lit(team)},${lit(users.owner.id)},'Hierarchy workshop'),(${lit(otherTeam)},${lit(users.outside.id)},'Other team');`+Object.entries(users).map(([name,u])=>`insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(name==='outside'?otherTeam:team)},${lit(u.id)},${lit(['owner','outside'].includes(name)?'admin':name==='guest'?'guest':'member')});`).join(''));
  for(const [id,creator] of [[root,'owner'],[child,'member'],[leaf,'manager'],[destination,'member'],[foreign,'outside']]) {
