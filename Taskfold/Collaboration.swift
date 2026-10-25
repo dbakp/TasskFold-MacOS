@@ -162,7 +162,11 @@ struct ConflictReview: View {
         return (baseline[key] ?? .null) != conflict.remote[key]
     }
     var body: some View {
-        if let review=conflict.completionReview { TeamCompletionReviewContent(review:review) }
+        if let review = conflict.completionBatchReview {
+            if let latest = store.syncConflict?.completionBatchReview, latest.mutation == review.mutation { TeamCompletionBatchReviewContent(review: latest) }
+            else { TeamCompletionBatchReviewContent(review: review) }
+        }
+        else if let review=conflict.completionReview { TeamCompletionReviewContent(review:review) }
         else { ordinaryReview }
     }
     private var ordinaryReview: some View {
@@ -641,4 +645,74 @@ struct SavedTeamDraftCopyView: View {
         } catch {message=SyncStatus.failureMessage(error)}
     }
 
+}
+
+private struct TeamCompletionBatchReviewContent: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let review: TeamTaskBatch.Review
+    @State private var checking = false
+    @State private var message: String?
+    private var current: Bool { store.currentTeamCompletionBatchReview(review) }
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Label("Your work is saved", systemImage: "checkmark.icloud").font(.headline).foregroundStyle(Color.taskfold)
+                    Text(review.isCancelled ? "This selection was cancelled. Keep the synced tasks to continue." : review.isRecorded ? "This selection reached the server. Review its result before continuing sync." : "No synced result is available yet. Retrying keeps the changes and completion time you chose.").foregroundStyle(.secondary)
+                }
+                if current {
+                    Section("Saved selection") {
+                        ForEach(review.members, id: \.mutation.id) { member in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(member.mutation.teamCompletion!.source.title).font(.headline)
+                                Text(member.mutation.teamCompletion!.operation == .complete ? "Complete task" : "Undo completion").font(.caption).foregroundStyle(.secondary)
+                                if let task = member.task {
+                                    Label(task.completed ? "Synced: completed" : "Synced: open", systemImage: task.completed ? "checkmark.circle" : "circle")
+                                    if task.title != member.mutation.teamCompletion!.source.title { Text(task.title).foregroundStyle(.secondary) }
+                                } else { Text("This task is no longer available under its saved identity.").foregroundStyle(.secondary) }
+                                if let next = member.successor { Text("Next occurrence: \(next.title)").font(.caption).foregroundStyle(.secondary) }
+                            }.fixedSize(horizontal: false, vertical: true).accessibilityElement(children: .combine)
+                        }
+                    }
+                    Section {
+                        Text("The whole selection is reviewed together. Later edits stay saved. Changes that depend on this selection need their own review before you can keep the synced tasks.").font(.footnote).foregroundStyle(.secondary)
+                        if !review.isRecorded { Text("Keep synced tasks saves a recovery copy and sets aside this device’s completion changes. If they have already synced, you’ll see the result before continuing.").font(.footnote).foregroundStyle(.secondary) }
+                    }
+                } else { Section { Label("Review paused", systemImage: "lock.shield"); Text("Your workspace or project access changed. Reopen the current review to continue.").foregroundStyle(.secondary) } }
+                if let message { Section { Text(message).foregroundStyle(.red) }.accessibilityIdentifier("teamBatchRecoveryError") }
+                Section {
+                    if !review.isCancelled {
+                        Button(review.isRecorded ? "Continue sync" : "Retry saved selection") { perform { await store.continueTeamCompletionBatchReview(review) } }
+                            .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("continueTeamBatchRecovery")
+                    }
+                    if !review.isRecorded {
+                        Button("Keep synced tasks") { perform { await store.cancelTeamCompletionBatchReview(review) } }
+                            .disabled(!current || checking).accessibilityIdentifier("cancelTeamBatchRecovery")
+                    }
+                    Button("Check again") { perform(dismissOnSuccess: false) { await store.refreshTeamCompletionBatchReview(review) } }
+                        .disabled(!current || checking).accessibilityIdentifier("refreshTeamBatchRecovery")
+                    Button("Later") { dismiss() }.disabled(checking).accessibilityIdentifier("laterTeamBatchRecovery")
+                }
+                if checking { Section { ProgressView("Checking saved selection…") } }
+            }.formStyle(.grouped).accessibilityIdentifier("teamBatchRecoveryForm")
+            .navigationTitle("Review task selection")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .interactiveDismissDisabled(checking)
+        }
+        #if os(macOS)
+        .frame(minWidth: 500, idealWidth: 620, minHeight: 500, idealHeight: 680)
+        #endif
+        .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
+    }
+    private func perform(dismissOnSuccess: Bool = true, _ action: @escaping () async -> Bool) {
+        guard !checking, current else { return }; checking = true; message = nil
+        Task {
+            let saved = await action(); checking = false
+            if saved, dismissOnSuccess { dismiss() }
+            else if !saved { message = store.error ?? "The selection remains saved. Check the current result before continuing."; store.error = nil }
+        }
+    }
 }

@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-25",
+  "stage": "Native whole-selection completion sync recovery",
+  "platform": "mac",
+  "baseCommit": "bde9fda9af85a5448f187044787dee1e2ed73ae7",
+  "sourceSHA256": {
+    "Taskfold/Collaboration.swift": "8ee321f38f609c4a354ee6ab7d564e3b93ed4cc2db344e74bfe0a4c24e850b61",
+    "Taskfold/Core/Backend.swift": "171cf14659a412612b26e3c4a5f9cfa26a82cf7371ac0931f79f4a22ddbe3965",
+    "Taskfold/Core/Models.swift": "bb4cf26e770ba4f24c685f9b1ef5e337fc7776bf085b8e2e0bf87e06e13e553b",
+    "Taskfold/Core/Store.swift": "9a31666d1a69517040963dc083fd687e9d73bfa7bec96a8fe05258971531eac2",
+    "Taskfold/Core/TeamTaskBatch.swift": "86f51790dd499f828293942e8cc971496ccc2d403dd45b9a4b4003e3778b8c8b",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "799b95742a3ef41b4f7a8c9d01b67e5cce2fdb67e76575fde713f06adef9cee3",
+    "TaskfoldTests/Fixtures/team-completion-batch-recovery-v1.json": "13c2cf61b8e7e4fc03886b79479c8cddf704f6f79af56f8e6d137e211e1f56a8"
+  },
+  "core": {
+    "initialPassed": 605,
+    "finalCompletionGroupPassed": 55,
+    "uniqueCovered": 606,
+    "failures": 0,
+    "newReviewCases": 12,
+    "rawLogs": {
+      "core-regressions.log": {
+        "originalSHA256": "63b8b23bad302bb02402213a0c594880fdc25425efa02a065d46a4208ae433e4",
+        "trailingWhitespaceNormalized": true
+      },
+      "refined-bounds.log": {
+        "originalSHA256": "498c1637599a7ce11a2d25fdaf8cca2c875c2c9ac4c3211178252a9d0e875b1a",
+        "trailingWhitespaceNormalized": true
+      },
+      "completion-group-final.log": {
+        "originalSHA256": "7b8f0b532a1da46896d4ffc20c328a2a7d55ee7ca23e0ab89712b5d2a453ece1",
+        "trailingWhitespaceNormalized": true
+      }
+    }
+  },
+  "native": {
+    "iphone": "Not run: Mac repo owns independent code",
+    "ipad": "Not run: Mac repo owns independent code",
+    "mac": "Unverified: older isolated workflow checkpoint failed enabling automation before any cases ran",
+    "uiTestScope": "Two ordinary selected roots; isolated synthetic local peer; actual encrypted backup metadata retained on iOS",
+    "postNativeChange": "Final separate-series preservation safeguard covered by final 55-case Core suite; not a repeated native run"
+  },
+  "limits": [
+    "Teams rollout disabled; candidate SQL remains undeployed",
+    "Dependent-cohort cancellation and recorded acknowledgement after role/archive/write-pause changes remain guarded/unavailable",
+    "Missing-incarnation, recurring/Undo/Redo native review, Mac runtime, native storage/account-race/spoken and large-workload acceptance open",
+    "No hosted/schema/configuration or real account mutation; deferred release/provider/device work unchanged",
+    "Other rank-6/Px and wearable work remain open"
+  ],
+  "retainedEvidence": "docs/native-completion-group-review",
+  "cleanup": {
+    "removedOwnedScratchBytes": 1481448891,
+    "scope": "Only /tmp/taskfold-group-review*; reserved isolated app/runner uninstalled from both simulators",
+    "preserved": "Both repo .build caches, baseline booted devices, older ready Mac workflow acceptance artifacts"
+  }
+}

@@ -542,3 +542,176 @@ extension TeamCompletionBatchTests {
         }
     }
 }
+
+extension TeamCompletionBatchTests {
+    private func groupReviewFixture(_ phase: String = "unrecorded") throws -> ([String: JSON], Mutation, TeamTaskBatch.Review) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-completion-batch-recovery-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let f = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let body = f[phase == "cancelled" ? "unrecorded_body" : phase + "_body"]!.object, raw = f[phase == "cancelled" ? "cancelled_review" : phase + "_review"]!.object
+        let action: TeamCompletion.Operation = raw["operation"] == .string("undo") ? .undo : .complete
+        let items = try body["items"]!.list.map { value -> Mutation in
+            let b = value.object, source = Record(b["record"]!.object), nonce = UUID(uuidString: b["request_id"]!.text)!
+            let scope = TeamTaskEditScope(account: f["account"]!.text, origin: origin, team: body["team_id"]!.text, project: b["project_id"]!.text)
+            let command = TeamCompletion(scope: scope, operation: action, source: source, completedAt: b["completed_at"]!.text, inputZone: b["input_zone"]!.text,
+                seriesID: b["series_id"]!.text, seriesGeneration: b["series_generation"]!.text, seriesProject: b["series_project_id"]!.text,
+                nextGeneration: b["next_generation"]!.text, proposed: nil, related: b[action == .undo ? "undoes" : "redo_of"].flatMap { UUID(uuidString: $0.text) })
+            return TeamCompletion.header(command, id: nonce)
+        }
+        let batch = TeamTaskBatch(account: f["account"]!.text, origin: origin, team: body["team_id"]!.text, operation: action == .complete ? .complete : .undoComplete,
+            restores: body["related_request"].flatMap { UUID(uuidString: $0.text) }, items: items)
+        let header = TeamTaskBatch.header(batch, id: UUID(uuidString: body["request_id"]!.text)!)
+        XCTAssertEqual(try batch.body(for: header), body)
+        return (raw, header, try TeamTaskBatch.Review(raw, for: header))
+    }
+    private func groupReviewProjection(_ header: Mutation) -> Snapshot {
+        let batch = header.teamTaskBatch!
+        var before = snapshot(batch)
+        if batch.operation == .undoComplete {
+            before.tables["tasks"] = batch.items.map { item in
+                let c = item.teamCompletion!
+                return TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": .string(c.completedAt)], to: c.source)
+            }
+        }
+        XCTAssertTrue(batch.apply(to: &before, header: header)); before.pending = [header]; return before
+    }
+    func testGroupReviewParsesActualSQLUnrecordedCancelledCompleteUndoRedo() throws {
+        for phase in ["unrecorded", "cancelled", "recorded", "undo", "redo"] {
+            let (_, header, review) = try groupReviewFixture(phase)
+            XCTAssertEqual(review.members.count, header.teamTaskBatch!.items.count)
+            XCTAssertEqual(review.isCancelled, phase == "cancelled")
+            XCTAssertEqual(review.isRecorded, ["recorded", "undo", "redo"].contains(phase))
+            if let recorded = review.recorded { XCTAssertNoThrow(try header.teamTaskBatch!.confirm(recorded, for: header)) }
+        }
+    }
+    func testGroupReviewRejectsForeignPartialReorderedAndMixedMemberObservations() throws {
+        let (raw, header, _) = try groupReviewFixture()
+        for key in ["account", "team_id", "request_id", "operation", "related_request", "group_review_protocol", "state"] {
+            var wrong = raw; wrong[key] = .string("foreign"); XCTAssertThrowsError(try TeamTaskBatch.Review(wrong, for: header), key)
+        }
+        var wrong = raw; wrong["extra"] = .bool(true); XCTAssertThrowsError(try TeamTaskBatch.Review(wrong, for: header))
+        for mode in ["missing", "reverse", "mixed", "foreign", "capability", "duplicate"] {
+            var rows = raw["items"]!.list
+            if mode == "missing" { rows.removeLast() }
+            if mode == "reverse" { rows.reverse() }
+            if mode == "duplicate" { rows[1] = rows[0] }
+            if mode == "mixed" || mode == "foreign" || mode == "capability" {
+                var item = rows[1].object
+                item[mode == "mixed" ? "state" : mode == "foreign" ? "request_id" : "can_edit_current"] = .string("wrong")
+                rows[1] = .object(item)
+            }
+            wrong = raw; wrong["items"] = .array(rows); XCTAssertThrowsError(try TeamTaskBatch.Review(wrong, for: header), mode)
+        }
+    }
+    func testGroupReviewRejectsPartialReceiptAndMemberReceiptMismatch() throws {
+        let (raw, header, _) = try groupReviewFixture("recorded")
+        var wrong = raw; wrong["receipt"] = .null; XCTAssertThrowsError(try TeamTaskBatch.Review(wrong, for: header))
+        var receipt = raw["receipt"]!.object; receipt["items"] = .array(Array(receipt["items"]!.list.dropLast())); wrong = raw; wrong["receipt"] = .object(receipt)
+        XCTAssertThrowsError(try TeamTaskBatch.Review(wrong, for: header))
+        var members = raw["items"]!.list, item = members[1].object, row = item["task"]!.object
+        row["title"] = .string("unmatched observation"); item["task"] = .object(row); members[1] = .object(item); wrong = raw; wrong["items"] = .array(members)
+        XCTAssertThrowsError(try TeamTaskBatch.Review(wrong, for: header))
+    }
+    func testGroupReviewRejectsContradictoryRepeatedIdentityAndOversizedObservation() throws {
+        let (raw, header, _) = try groupReviewFixture()
+        var members = raw["items"]!.list, item = members[0].object, series = item["series"]!.object
+        series["title"] = .string("different same identity"); item["series"] = .object(series); members[0] = .object(item)
+        var wrong = raw; wrong["items"] = .array(members); XCTAssertThrowsError(try TeamTaskBatch.Review(wrong, for: header))
+        members = raw["items"]!.list; item = members[0].object; var task = item["task"]!.object
+        task["description"] = .string(String(repeating: "x", count: 4_300_001)); item["task"] = .object(task)
+        var sameSeries = item["series"]!.object; sameSeries["description"] = task["description"]; item["series"] = .object(sameSeries)
+        members[0] = .object(item); wrong = raw; wrong["items"] = .array(members)
+        XCTAssertThrowsError(try TeamTaskBatch.Review(wrong, for: header))
+    }
+    func testGroupReviewUnrecordedObservationNeverRemovesQueue() throws {
+        let (_, header, review) = try groupReviewFixture(), local = groupReviewProjection(header)
+        XCTAssertNil(review.acknowledging(local)); XCTAssertNil(review.cancelling(local)); XCTAssertTrue(review.canRequestCancellation(local))
+        XCTAssertEqual(local.pending, [header])
+    }
+    func testGroupReviewRecordedAcknowledgementKeepsUnrelatedWorkAndRejectsStaleHead() throws {
+        let (_, header, review) = try groupReviewFixture("recorded")
+        var local = groupReviewProjection(header)
+        let unrelated = Mutation(table: "view_preferences", recordID: "unrelated", method: "PATCH", fields: ["choice": .string("saved")])
+        local.pending.append(unrelated); local.tables["labels"] = [Record(["id": .string("untouched")])]
+        let next = try XCTUnwrap(review.acknowledging(local)); XCTAssertEqual(next.pending, [unrelated]); XCTAssertEqual(next.tables["labels"], local.tables["labels"])
+        local.pending.reverse(); XCTAssertNil(review.acknowledging(local)); XCTAssertNil(review.cancelling(local))
+    }
+    func testGroupReviewCancellationUsesWholeTerminalProofAndKeepsIndependentTailByteForByte() throws {
+        let (_, header, review) = try groupReviewFixture("cancelled")
+        var local = groupReviewProjection(header)
+        let independent = Mutation(table: "tasks", recordID: UUID().uuidString.lowercased(), method: "PATCH", fields: ["title": .string("independent saved draft")])
+        local.pending.append(independent); let original = local
+        let next = try XCTUnwrap(review.cancelling(local)); XCTAssertEqual(next.pending, [independent])
+        for member in review.members { XCTAssertEqual(next.tables["tasks"]?.first { $0.id == member.task?.id }, member.task) }
+        XCTAssertEqual(local, original); XCTAssertNil(review.acknowledging(local))
+    }
+    func testGroupReviewCancellationPreservesDependentGroupsNotesAndConversationDrafts() throws {
+        let (_, header, review) = try groupReviewFixture("cancelled"), id = header.teamTaskBatch!.items[0].recordID
+        for later in [Mutation(table: "tasks", recordID: id, method: "PATCH", fields: ["title": .string("authored later")]), Mutation(table: "view_preferences", recordID: "pinned", method: "PATCH", fields: ["note": .string(id)])] {
+            var local = groupReviewProjection(header); local.pending.append(later); let before = local
+            XCTAssertNil(review.cancelling(local)); XCTAssertFalse(review.canRequestCancellation(local)); XCTAssertEqual(local, before)
+        }
+        var local = groupReviewProjection(header); local.tables[ConversationOutbox.table] = [Record(["id": .string("draft"), "task_id": .string(id)])]
+        XCTAssertNil(review.cancelling(local))
+        local = groupReviewProjection(header); local.tables["tasks"]![0]["title"] = .string("unexplained local edit"); XCTAssertNil(review.cancelling(local))
+    }
+    func testGroupCancellationDoesNotRefreshSeparateSeriesParent() throws {
+        let (raw, header, _) = try groupReviewFixture("cancelled")
+        var batch = header.teamTaskBatch!, items = raw["items"]!.list
+        let old = batch.items[0].teamCompletion!, parentID = UUID().uuidString.lowercased()
+        var parent = old.source; parent["id"] = .string(parentID)
+        let command = TeamCompletion(scope: old.scope, operation: old.operation, source: old.source, completedAt: old.completedAt, inputZone: old.inputZone,
+            seriesID: parentID, seriesGeneration: parent.string("task_generation"), seriesProject: old.seriesProject, nextGeneration: old.nextGeneration, proposed: nil, related: old.related)
+        batch.items[0] = TeamCompletion.header(command, id: batch.items[0].id)
+        let changed = TeamTaskBatch.header(batch, id: header.id)
+        var member = items[0].object; member["series_id"] = .string(parentID); member["series"] = .object(parent.fields); items[0] = .object(member)
+        var response = raw; response["items"] = .array(items)
+        let review = try TeamTaskBatch.Review(response, for: changed)
+        var local = groupReviewProjection(changed)
+        parent["description"] = .string("local series notes must stay exactly saved")
+        local.tables["tasks", default: []].append(parent)
+        let next = try XCTUnwrap(review.cancelling(local))
+        XCTAssertEqual(next.tables["tasks"]?.first { $0.id == parentID }, parent)
+        XCTAssertTrue(next.pending.isEmpty)
+    }
+    @MainActor func testGroupReviewBackendUsesPrivateExactBoundedRequestAndTerminalCancellation() async throws {
+        let (raw, header, _) = try groupReviewFixture(), api = try backend(header.teamTaskBatch!.account)
+        var paths = [String](); CompletionBatchHTTP.handler = { request, peer in
+            paths.append(request.url!.path); XCTAssertEqual(request.timeoutInterval, 25); XCTAssertFalse(request.httpShouldHandleCookies)
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
+            let params = try! JSONDecoder().decode([String: JSON].self, from: request.httpBody!)
+            XCTAssertEqual(params["_body"], .object(try! header.teamTaskBatch!.body(for: header))); XCTAssertEqual(params["_action"], .string("complete"))
+            peer.finish(try! JSONEncoder().encode(raw))
+        }; defer { CompletionBatchHTTP.handler = nil }
+        _ = try await api.reviewTeamCompletionBatch(header, expectedAccount: header.teamTaskBatch!.account)
+        do { _ = try await api.reviewTeamCompletionBatch(header, expectedAccount: header.teamTaskBatch!.account, cancel: true); XCTFail("Unrecorded is not cancellation proof") } catch {}
+        XCTAssertEqual(paths, ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch"])
+    }
+    @MainActor func testGroupReviewBackendSanitizesErrorsAndRejectsLateAccountResponse() async throws {
+        let (raw, header, _) = try groupReviewFixture(), api = try backend(header.teamTaskBatch!.account)
+        CompletionBatchHTTP.handler = { _, peer in peer.finish(Data("{\"code\":\"PT409\",\"message\":\"private server contents\"}".utf8), status: 409) }; defer { CompletionBatchHTTP.handler = nil }
+        do { _ = try await api.reviewTeamCompletionBatch(header, expectedAccount: header.teamTaskBatch!.account); XCTFail() } catch { XCTAssertFalse(error.localizedDescription.contains("private server contents")) }
+        let gate = CompletionBatchGate(), started = expectation(description: "Group review held")
+        CompletionBatchHTTP.handler = { _, peer in gate.hold(peer); started.fulfill() }
+        let pending = Task { try await api.reviewTeamCompletionBatch(header, expectedAccount: header.teamTaskBatch!.account) }; await fulfillment(of: [started], timeout: 3)
+        var other = api.session!; other.user.id = UUID().uuidString.lowercased(); try await api.accept(other); gate.release(try JSONEncoder().encode(raw))
+        do { _ = try await pending.value; XCTFail("Late review reached another account") } catch { XCTAssertTrue(error is CancellationError) }
+    }
+}
+
+extension TeamCompletionBatchTests {
+    @MainActor func testGroupReviewBackendRejectsAnnouncedOversizeAndForeignOriginBeforeDispatch() async throws {
+        let (_, header, _) = try groupReviewFixture(), api = try backend(header.teamTaskBatch!.account)
+        var calls = 0
+        CompletionBatchHTTP.handler = { request, peer in
+            calls += 1
+            let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json", "Content-Length": "8500001"])!
+            peer.client?.urlProtocol(peer, didReceive: response, cacheStoragePolicy: .notAllowed)
+            peer.client?.urlProtocol(peer, didLoad: Data("{}".utf8)); peer.client?.urlProtocolDidFinishLoading(peer)
+        }; defer { CompletionBatchHTTP.handler = nil }
+        do { _ = try await api.reviewTeamCompletionBatch(header, expectedAccount: header.teamTaskBatch!.account); XCTFail("Oversized review accepted") } catch { XCTAssertTrue(error.localizedDescription.contains("too large"), error.localizedDescription) }
+        var foreign = header; let batch = header.teamTaskBatch!
+        foreign.teamTaskBatch = TeamTaskBatch(account: batch.account, origin: "https://another.example", team: batch.team, operation: batch.operation, restores: batch.restores, items: batch.items)
+        do { _ = try await api.reviewTeamCompletionBatch(foreign, expectedAccount: header.teamTaskBatch!.account); XCTFail("Foreign request dispatched") } catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(calls, 1)
+    }
+}

@@ -1,0 +1,5 @@
+{
+  "sha256": "4b4a3abfadf9e043cbe9010792942ac3fd79efcf945e4641f858170d4276ad5c",
+  "result": "BUILD SUCCEEDED",
+  "scope": "Current native review UI before final separate-series-only Core safeguard; Debug compile, no distribution acceptance"
+}

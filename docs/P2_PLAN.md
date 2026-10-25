@@ -3858,3 +3858,47 @@ recorded-acknowledgement/cancellation UI, native Redo and Mac runtime acceptance
 large-selection responsiveness and genuine hosted acceptance remain open. No
 schema was deployed, no rollout flag enabled, no real task/account changed and no
 user-deferred release/provider/device work resumed. The full Px goal stays open.
+
+
+### 2026-10-25 — Native whole-selection sync recovery
+
+Both independent clients now parse the versioned group review against the exact
+saved completion/Undo/Redo envelope. They reject partial, reordered, contradictory,
+foreign, oversized or mismatched observations and receipts. The private transport
+uses account/origin/session fencing, no cookies/cache, redirect refusal and bounded
+streaming. A native grouped review shows every member and offers Later, Check
+again, exact retry, recorded acknowledgement and Keep synced tasks. Refresh updates
+the existing presented review rather than leaving an obsolete copied sheet.
+
+Recorded acknowledgement reuses the connected-cohort reconciler off the main actor,
+then verifies the complete snapshot and session before persisting. Keep synced
+tasks first saves an encrypted recovery copy, obtains terminal whole-group
+cancellation proof, and atomically adopts only the completion-owned rows. Separate
+series parents remain untouched. Independent pending work is retained byte for byte.
+Dependent edits, conversation drafts or unexplained source edits refuse cancellation
+before any server request; their entire queue remains saved. A recorded winner is
+reviewed rather than undone. Persistence failure rolls back the in-memory projection.
+
+Verification: 605 Core cases passed per repo, then all 55 completion-group cases
+passed per repo after the final separate-series preservation regression (606 unique
+cases in this stage). The final class run also includes strengthened byte-limit
+assertions. Both app builds succeeded. Three actual native tests passed separately
+on iPhone and iPad with no runtime warnings: Later/refresh/exact retry preserves
+saved bytes; recorded acknowledgement removes one whole group; cancellation saves
+an encrypted backup and keeps synced roots through relaunch. Installed executable,
+debug library and Info hashes match the signed tested build on both devices.
+Screenshots were inspected for readable controls. Runtime fixtures use two ordinary
+synthetic roots and an isolated local transport peer; the parser additionally uses
+each repo's own previously generated PostgreSQL wire fixtures. These are not hosted
+acceptance tests. The last separate-series-only safeguard followed these native
+runs and is covered by the final Core regression, not a second native run.
+
+See p2-native-completion-group-review-evidence.json and native-completion-group-review/.
+A new Mac attempt after the user unlocked timed out enabling XCTest automation
+before any case ran, including on the preserved older workflow checkpoint. This is
+not Mac runtime acceptance. Native recovery with dependent authored cohorts, recorded
+acknowledgement after role/archive/write-pause changes, missing incarnations,
+recurring-group/Undo/Redo UI, native storage faults/account-race/spoken acceptance,
+large-workload responsiveness and genuine hosted acceptance remain open. Teams
+rollout stays off. No hosted schema/configuration, real tasks/accounts or deferred
+release/provider/device work changed. The full rank-6/Px goal remains active.

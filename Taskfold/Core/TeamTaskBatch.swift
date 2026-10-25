@@ -545,3 +545,97 @@ struct TeamTaskCompletionSelection: Equatable, Sendable {
         drafts.allSatisfy { draft in current[draft.source.id] == draft.source && draft.permits(current: current[draft.source.id], workspace: workspace, session: session, cache: cache, enabled: enabled) }
     }
 }
+
+extension TeamTaskBatch {
+    /// One versioned observation belongs to the entire immutable saved envelope.
+    struct Review: Equatable, Sendable {
+        let mutation: Mutation
+        let members: [TeamCompletion.Review]
+        let state: String
+        let recorded: [String: JSON]?
+        var isRecorded: Bool { state == "recorded" }
+        var isCancelled: Bool { state == "cancelled" }
+        static var invalid: AppFailure { AppFailure(message: "The selection’s sync status could not be verified. Your saved tasks and changes are kept. Check again to continue.") }
+        init(_ reply: [String: JSON], for mutation: Mutation) throws {
+            guard let batch = mutation.teamTaskBatch, let action = batch.completionOperation else { throw Self.invalid }
+            let body = try batch.body(for: mutation)
+            guard Set(reply.keys) == Set(["group_review_protocol", "account", "team_id", "request_id", "operation", "related_request", "state", "items", "receipt"]),
+                  reply["group_review_protocol"] == .number(1), reply["account"] == .string(batch.account),
+                  reply["team_id"] == .string(batch.team), reply["request_id"] == body["request_id"],
+                  reply["operation"] == .string(action.rawValue), reply["related_request"] == (body["related_request"] ?? .null),
+                  let state = reply["state"]?.text, ["unrecorded", "recorded", "cancelled"].contains(state),
+                  case .array(let values)? = reply["items"], values.count == batch.items.count,
+                  try JSONEncoder().encode(reply).count <= 8_500_000 else { throw Self.invalid }
+            let keys: Set<String> = ["review_protocol", "account", "team_id", "project_id", "task_id", "task_generation", "request_id", "operation", "series_id", "series_generation", "series_project_id", "planned_next_id", "state", "project_role", "task", "series", "successor", "receipt", "can_edit_current", "can_edit_series"]
+            let members = try zip(values, batch.items).map { value, item -> TeamCompletion.Review in
+                guard case .object(let raw) = value, Set(raw.keys) == keys, raw["state"] == .string(state),
+                      case .bool? = raw["can_edit_current"], case .bool? = raw["can_edit_series"] else { throw Self.invalid }
+                return try TeamCompletion.Review(raw, for: item)
+            }
+            if state == "recorded" {
+                guard case .object(let receipt)? = reply["receipt"], receipt["replayed"] == .bool(true) else { throw Self.invalid }
+                _ = try batch.completionReceipts(receipt, for: mutation)
+                guard receipt["items"] == .array(members.map { .object($0.recorded!) }) else { throw Self.invalid }
+                recorded = receipt
+            } else {
+                guard reply["receipt"] == .null else { throw Self.invalid }; recorded = nil
+            }
+            // A shared identity cannot have two different observations in one
+            // supposedly coherent group response, including a series parent.
+            var rows: [String: Record] = [:]
+            for row in members.flatMap({ [$0.task, $0.series, $0.successor].compactMap { $0 } }) {
+                if let previous = rows[row.id], !TeamCompletion.sameLocal(previous, row) { throw Self.invalid }
+                rows[row.id] = row
+            }
+            self.mutation = mutation; self.members = members; self.state = state
+        }
+        func acknowledging(_ snapshot: Snapshot) -> Snapshot? {
+            guard snapshot.pending.first == mutation, let recorded, let batch = mutation.teamTaskBatch else { return nil }
+            var next = snapshot
+            let saved = Record(["id": .string(mutation.recordID), "team_completion_batch_reply": .object(recorded)])
+            guard batch.acknowledgeCompletion(saved, header: mutation, snapshot: &next) else { return nil }
+            return next
+        }
+        func canRequestCancellation(_ snapshot: Snapshot) -> Bool { !isRecorded && cancellationProjection(snapshot) != nil }
+        func cancelling(_ snapshot: Snapshot) -> Snapshot? { isCancelled ? cancellationProjection(snapshot) : nil }
+        private func cancellationProjection(_ snapshot: Snapshot) -> Snapshot? {
+            guard !isRecorded, snapshot.pending.first == mutation, let batch = mutation.teamTaskBatch,
+                  Set((snapshot.tables["tasks"] ?? []).map(\.id)).count == (snapshot.tables["tasks"] ?? []).count else { return nil }
+            let commands = batch.items.compactMap(\.teamCompletion)
+            let ids = Set(commands.flatMap { [$0.source.id, $0.seriesID, $0.proposed?.id].compactMap { $0 } } + members.compactMap { $0.successor?.id })
+            func references(_ value: JSON) -> Bool {
+                switch value {
+                case .string(let text): return ids.contains { text.lowercased().contains($0.lowercased()) }
+                case .object(let fields): return fields.values.contains(where: references)
+                case .array(let values): return values.contains(where: references)
+                default: return false
+                }
+            }
+            // The recorded path supports connected cohorts. Retiring unrecorded
+            // intent needs a separate draft-preservation plan for dependent work;
+            // until then the whole queue stays saved and this action is withheld.
+            for later in snapshot.pending.dropFirst() {
+                guard !["projects", "sections"].contains(later.table),
+                      let encoded = try? JSONEncoder().encode(later), let value = try? JSONDecoder().decode(JSON.self, from: encoded), !references(value) else { return nil }
+            }
+            guard !(snapshot.tables[ConversationOutbox.table] ?? []).contains(where: { references(.object($0.fields)) }) else { return nil }
+            var rows = snapshot.tables["tasks"] ?? []
+            for command in commands {
+                guard let local = rows.first(where: { $0.id == command.source.id }) else { return nil }
+                var expected = TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": .string(command.completedAt)], to: command.source)
+                if command.operation == .undo { expected = TaskCompletionRevision.applying(["completed": .bool(false), "completed_at": .null], to: expected) }
+                guard TeamCompletion.sameLocal(local, expected) else { return nil }
+                if let proposed = command.proposed, let local = rows.first(where: { $0.id == proposed.id }), !TeamCompletion.sameLocal(local, proposed) { return nil }
+            }
+            let owned = Set(commands.flatMap { [$0.source.id, $0.proposed?.id].compactMap { $0 } })
+            rows.removeAll { owned.contains($0.id) }
+            // Separate series parents were never changed by this completion.
+            // Refresh only owned rows; an observation is not authority to
+            // replace an unrelated local parent or its unexplained edits.
+            let observed = members.flatMap { [$0.task, $0.series, $0.successor].compactMap { $0 } }.filter { owned.contains($0.id) }
+            for row in observed { rows.removeAll { $0.id == row.id }; rows.append(row) }
+            var next = snapshot; next.tables["tasks"] = rows; next.pending.removeFirst()
+            return next
+        }
+    }
+}

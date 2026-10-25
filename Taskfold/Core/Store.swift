@@ -1691,6 +1691,13 @@ final class Store {
             if generation == accountGeneration {
                 syncSignInWorkspace = error is AccountSessionAuthorizationRequired ? WorkspaceBinding(account:account,generation:generation) : nil
                 notice = SyncStatus.failureMessage(error)
+                if let mutation = sending, mutation.teamTaskBatch?.isCompletion == true,
+                   !(error is CancellationError), !(error is AccountSessionAuthorizationRequired),
+                   let review = try? await backend.reviewTeamCompletionBatch(mutation, expectedAccount: account),
+                   generation == accountGeneration, snapshot.pending.first == mutation {
+                    installTeamCompletionBatchReview(review)
+                    notice = "Your task selection is saved. Review its sync status to continue."; return
+                }
                 if let mutation=sending,mutation.teamCompletion != nil,
                    !(error is CancellationError),!(error is AccountSessionAuthorizationRequired),
                    let review=try? await backend.reviewTeamCompletion(mutation,expectedAccount:account),
@@ -1906,6 +1913,70 @@ final class Store {
         } catch {
             guard generation == accountGeneration else {return false}
             self.error=SyncStatus.failureMessage(error);return false
+        }
+    }
+
+    func currentTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) -> Bool {
+        guard workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              syncConflict?.completionBatchReview == review, snapshot.pending.first == review.mutation,
+              let batch = review.mutation.teamTaskBatch, batch.account == userID,
+              batch.origin == (try? backend.accountRemovalOrigin), let cache = nativeConversationTeamCache,
+              cache.boundary.belongs(account: batch.account, origin: batch.origin),
+              cache.boundary.raw["native_team_reads_enabled"] == .bool(true),
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(batch.team) && $0.object["state"] == .string("active") }) == true else { return false }
+        return batch.items.allSatisfy { item in
+            guard let command = item.teamCompletion else { return false }
+            return [command.scope.project, command.seriesProject].allSatisfy { cache.boundary.projects[$0]?.team == batch.team }
+        }
+    }
+    private func installTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) {
+        syncConflict = SyncConflict(mutation: review.mutation, remote: review.members.first?.task ?? review.mutation.teamTaskBatch!.items[0].teamCompletion!.source, completionBatchReview: review)
+    }
+    @discardableResult func refreshTeamCompletionBatchReview(_ expected: TeamTaskBatch.Review) async -> Bool {
+        let generation = accountGeneration, before = snapshot
+        guard currentTeamCompletionBatchReview(expected) else { return false }
+        do {
+            let review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: userID)
+            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+            installTeamCompletionBatchReview(review); return true
+        } catch {
+            guard generation == accountGeneration, currentTeamCompletionBatchReview(expected) else { return false }
+            self.error = SyncStatus.failureMessage(error); return false
+        }
+    }
+    @discardableResult func continueTeamCompletionBatchReview(_ review: TeamTaskBatch.Review) async -> Bool {
+        let generation = accountGeneration, before = snapshot
+        guard currentTeamCompletionBatchReview(review), !review.isCancelled else { return false }
+        if review.isRecorded {
+            let next = await Task.detached(priority: .userInitiated) { review.acknowledging(before) }.value
+            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(review) else { return false }
+            guard let next else { error = "Later task changes still need review. The entire saved selection and its drafts are kept."; return false }
+            snapshot = next
+            do { try persist() } catch { snapshot = before; self.error = error.localizedDescription; return false }
+            undoStack = []; redoStack = []
+        }
+        syncConflict = nil; notice = nil; Task { await sync() }; return true
+    }
+    @discardableResult func cancelTeamCompletionBatchReview(_ expected: TeamTaskBatch.Review) async -> Bool {
+        let generation = accountGeneration, before = snapshot, account = userID
+        guard currentTeamCompletionBatchReview(expected), expected.canRequestCancellation(before) else {
+            error = "Later edits depend on this selection. Keep this review for now; all your tasks and drafts remain saved."; return false
+        }
+        do {
+            _ = try await makeRecoveryBackup(kind: "Before selection sync review")
+            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+            let review = try await backend.reviewTeamCompletionBatch(expected.mutation, expectedAccount: account, cancel: true)
+            guard generation == accountGeneration, snapshot == before, currentTeamCompletionBatchReview(expected) else { return false }
+            installTeamCompletionBatchReview(review)
+            guard review.isCancelled else { notice = "This selection had already synced. Review its result to continue."; return false }
+            guard let next = review.cancelling(before) else { notice = "The selection was cancelled. Your additional changes remain saved for review."; return false }
+            snapshot = next
+            do { try persist() } catch { snapshot = before; throw error }
+            undoStack = []; redoStack = []; syncConflict = nil
+            notice = "Synced tasks kept. A recovery copy is saved."; Task { await sync() }; return true
+        } catch {
+            guard generation == accountGeneration else { return false }
+            self.error = SyncStatus.failureMessage(error); return false
         }
     }
 
