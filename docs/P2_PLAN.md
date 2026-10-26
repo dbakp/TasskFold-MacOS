@@ -27,8 +27,12 @@ history and broader productive projections remain open; see
 Day-planner rows and capacity now use the same productive descendant reading,
 with safe child scheduling/completion and an incomplete-work state. Scoped
 phone/tablet native acceptance passes; Mac native execution is pending unlock.
-Today/Upcoming, Inbox review and their matching badges/primary widget rows remain
-next; see `p2-task-headings-planner-evidence.json`.
+Today/Upcoming now query productive descendants, with fenced native actions,
+parent context and matching Mac Today badges. Scoped iPhone/iPad native acceptance
+passes; Mac runtime remains pending unlock. Inbox review and primary widget task
+rows/token/link authority remain next; see
+`p2-task-headings-planner-evidence.json` and
+`p2-task-headings-dated-evidence.json`.
 Mac UI automation is now authorized. Scoped Todoist, CSV clipboard/native-file
 transfer and project-work route/completion/Undo/Redo/cold checks pass; see
 `mac-heading-acceptance/report.json`.

@@ -1,0 +1,12 @@
+{
+  "host": "/tmp/taskfold-mac-recovery-host",
+  "derivedData": "/tmp/taskfold-mac-recovery-build",
+  "scheme": "Taskfold",
+  "configuration": "Debug",
+  "destination": "platform=macOS",
+  "tests": [
+    "TaskfoldUITests/TaskfoldMacUITests/testHeadingTodayChildDetailsCompletionUndoAndColdReturn",
+    "TaskfoldUITests/TaskfoldMacUITests/testHeadingPlannerChildScheduleUndoCompleteAndColdReturn"
+  ],
+  "status": "Both current-source cases build; use test-without-building and a fresh result bundle after manual unlock"
+}

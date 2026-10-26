@@ -1,0 +1,6 @@
+{
+  "appWidgetAndTestBuild": "passed",
+  "strictDeepAppSignature": "passed",
+  "currentSourceBound": true,
+  "scope": "Prepared Mac source compiles/signs; no Mac native execution claimed"
+}

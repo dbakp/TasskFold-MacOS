@@ -32,7 +32,7 @@ struct SidebarView: View {
             .accessibilityIdentifier("openFinder")
         List(selection: Binding(get: { Optional(workspace.section) }, set: { if let value = $0 { workspace.section = value } })) {
             Section {
-                item(.today, "Today", count: open.filter { !$0.string("due_date").isEmpty && $0.string("due_date") <= today }.count, dropDay: today)
+                item(.today, "Today", count: store.matching(TaskQuery(scope: .today)).filter { TaskKind.mayComplete($0) && !$0.completed }.count, dropDay: today)
                 item(.inbox, "Inbox", count: open.filter { $0.string("project_id").isEmpty }.count, dropProject: "")
                 item(.upcoming, "Upcoming", count: nil, dropDay: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!))
                 item(.calendar, "Calendar", count: nil)

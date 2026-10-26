@@ -254,6 +254,7 @@ final class Workspace {
         guard case .saved(let id) = scope, let view = store.record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]) else { return false }
         return rule.usesTaskHierarchy
     }
+    var hierarchyPresentation: Bool { scope.usesProductiveWork || hierarchyFilter }
     @discardableResult
     func runSelection(_ tasks: [Record], name: String, action: (Record) -> TaskSelectionPlan.Action) -> Bool {
         guard !tasks.isEmpty else { return false }
@@ -344,7 +345,7 @@ final class Workspace {
             confirm(task.completed ? "Reopened “\(task.title)”" : "Completed “\(task.title)”")
             return
         }
-        if hierarchyFilter {
+        if hierarchyPresentation {
             let now = Date()
             guard runSelection([task], name: task.completed ? "Reopen Task" : "Complete Task", action: { _ in .completion(!task.completed, now) }) else { return }
             if !task.completed { Feedback.complete() }
@@ -385,7 +386,7 @@ final class Workspace {
             } catch { store.error = error.localizedDescription }
             return
         }
-        if hierarchyFilter {
+        if hierarchyPresentation {
             do {
                 let tasks = try ids.sorted().map { try store.selectionRecord($0) }, now = Date()
                 let completed = tasks.contains { !$0.completed }
@@ -452,7 +453,7 @@ final class Workspace {
             } catch { store.error = error.localizedDescription }
             return
         }
-        if hierarchyFilter {
+        if hierarchyPresentation {
             guard runSelection(ids, name: "Delete Selected Branches", action: { _ in .delete }) else { return }
             selection.subtract(ids); if let id = finderTaskID, ids.contains(id) { finderTaskID = nil }
             confirm("Deleted selected branches"); return
@@ -504,7 +505,7 @@ final class Workspace {
     }
     func reschedule(_ ids: Set<String>, to day: String?, label: String) {
         if reviewSharedPlanning(ids, title: day == nil ? "Remove dates" : "Move to \(label)", fields: { TeamTaskBatch.dateFields(task: $0, day: day) }) { return }
-        if hierarchyFilter {
+        if hierarchyPresentation {
             guard runSelection(ids, name: "Reschedule", action: { task in .patch(day.map { TaskPlanner.dayFields(task: task, day: $0) } ?? ["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null]) }) else { return }
             Feedback.drop(); confirm(day == nil ? "Removed dates" : "Moved to \(label)"); return
         }
@@ -574,13 +575,13 @@ final class Workspace {
     func editDeadlines(_ ids: Set<String>) {
         if beginBulkPlanning(ids, field: .deadline) { return }
         do {
-            let records = hierarchyFilter ? try ids.sorted().map { try store.selectionRecord($0) } : ids.sorted().compactMap { taskRecord($0) }
+            let records = hierarchyPresentation ? try ids.sorted().map { try store.selectionRecord($0) } : ids.sorted().compactMap { taskRecord($0) }
             deadlineSelection = DeadlineSelection(account: store.userID, ids: ids, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), records: records)
         } catch { store.error = error.localizedDescription }
     }
     func setDeadlines(_ request: DeadlineSelection, day: String?) throws -> Bool {
         guard request.account == store.userID, request.workspace?.matches(account: store.userID, generation: store.workspaceGeneration) != false else { throw PlannerFailure(message: "This workspace changed. Select tasks again.") }
-        if hierarchyFilter || (!request.records.isEmpty && request.records.allSatisfy({ Self.subtaskPath($0.id) == nil || $0["task_generation"] != .null })) {
+        if hierarchyPresentation || (!request.records.isEmpty && request.records.allSatisfy({ Self.subtaskPath($0.id) == nil || $0["task_generation"] != .null })) {
             guard Set(request.records.map(\.id)) == request.ids else { throw PlannerFailure(message: "This selection changed. Select the tasks again.") }
             let fields = try TaskDeadlines.fields(day: day)
             guard runSelection(request.records, name: "Edit Deadlines", action: { _ in .patch(fields) }) else { return false }
@@ -599,7 +600,7 @@ final class Workspace {
         confirm(value == 4 ? "Priority cleared" : "Priority \(value) set")
     }
     func duplicate(_ ids: Set<String>) {
-        if hierarchyFilter {
+        if hierarchyPresentation {
             do {
                 let tasks = try ids.sorted().map { try store.selectionRecord($0) }; var saved = false
                 run("Duplicate Selected Branches") {
@@ -623,6 +624,15 @@ final class Workspace {
     @discardableResult
     func save(_ table: String, _ record: Record, name: String, baseline: Record? = nil) -> Bool {
         var saved = false
+        if table == "tasks", hierarchyPresentation, Self.subtaskPath(record.id) != nil {
+            run(name) {
+                do {
+                    let selected = try store.hierarchySelection(for: baseline ?? store.selectionRecord(record.id))
+                    saved = try store.commitHierarchy([TaskHierarchyIndex.Edit.editing(selected, draft: record)])
+                } catch { store.error = error.localizedDescription }
+            }
+            return saved
+        }
         if table == "tasks", let path = Self.subtaskPath(record.id) {
             guard let root = store.record("tasks", id: path[0]), let current = taskRecord(record.id) else { return false }
             let edited: Record
@@ -851,6 +861,7 @@ extension Workspace {
     func taskDepth(_ id: String) -> Int { (Self.subtaskPath(id)?.count ?? 1) - 1 }
     func taskRecord(_ id: String) -> Record? {
         guard let path = Self.subtaskPath(id) else { return store.record("tasks", id: id) }
+        if hierarchyPresentation, let projected = try? store.selectionRecord(id) { return projected }
         guard var item = store.record("tasks", id: path[0]) else { return nil }
         for key in path.dropFirst() {
             guard let index = SubtaskTree.uniqueChildIndex(item["subtasks"], key: key) else { return nil }
@@ -859,12 +870,20 @@ extension Workspace {
         item["id"] = .string(id)
         return item
     }
+    func independentWorkRow(_ task: Record) -> Bool {
+        scope.usesProductiveWork && store.productiveReading.contains(task.id)
+    }
+    func canExpandTask(_ task: Record) -> Bool {
+        !hierarchyFilter && section != .assigned && taskDepth(task.id) < SubtaskTree.readableDepth && !task["subtasks"].list.isEmpty && !(TaskKind(task) == .heading && independentWorkRow(task))
+    }
     func visibleTasks(_ roots: [Record]) -> [Record] {
         if section == .assigned || hierarchyFilter { return roots }
         return roots.flatMap { task -> [Record] in
-            guard taskDepth(task.id) < SubtaskTree.readableDepth, expandedTasks.contains(task.id) else { return [task] }
+            guard canExpandTask(task), expandedTasks.contains(task.id) else { return [task] }
             let children = task["subtasks"].list.enumerated().map { index, value -> Record in
-                var child = Record(value.object); child["id"] = .string(childID(parent: task.id, value: value, index: index)); return child
+                let id = childID(parent: task.id, value: value, index: index)
+                if hierarchyPresentation, let current = try? store.selectionRecord(id) { return current }
+                var child = Record(value.object); child["id"] = .string(id); return child
             }
             return [task] + visibleTasks(children)
         }
@@ -886,7 +905,7 @@ extension Workspace {
     }
     @discardableResult
     func updateTasks(_ ids: Set<String>, fields: [String: JSON], name: String) -> Bool {
-        if hierarchyFilter { return runSelection(ids, name: name, action: { _ in .patch(fields) }) }
+        if hierarchyPresentation { return runSelection(ids, name: name, action: { _ in .patch(fields) }) }
         var roots: [String: Record] = [:]
         for id in ids.sorted(by: { taskDepth($0) < taskDepth($1) }) {
             guard var task = taskRecord(id) else { continue }

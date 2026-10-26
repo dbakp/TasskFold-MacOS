@@ -219,3 +219,71 @@ extension HeadingProjectProgressTests {
         XCTAssertTrue(TaskPlanner.conflicts(task: context, start: TaskPlanning.start(child, calendar: calendar)!, minutes: 60, tasks: [context,child], events: [], calendar: calendar).isEmpty)
     }
 }
+
+extension HeadingProjectProgressTests {
+    func testTodayAndUpcomingMatchEachChildsOwnPlanAndPriorityWithDatedContext() {
+        var first = task("first"), later = task("later"), urgent = task("urgent"), complete = task("done", done: true)
+        first["due_date"] = .string("2026-10-05"); first["priority"] = .number(4)
+        later["due_date"] = .string("2026-10-07"); later["priority"] = .number(1)
+        urgent["due_date"] = .string("2026-10-06"); urgent["priority"] = .number(1)
+        complete["due_date"] = .string("2026-10-06")
+        var parent = root([first,later,urgent,complete,task("undated")]); parent["due_date"] = .string("2026-10-01"); parent["priority"] = .number(2)
+        let cache = TaskCache(); cache.update([parent])
+        let today = cache.matching(TaskQuery(scope: .today, today: "2026-10-06", timeZone: calendar.timeZone.identifier))
+        XCTAssertEqual(today.map(\.title), ["urgent","root","first"])
+        XCTAssertEqual(today.filter(TaskKind.mayComplete).count, 2)
+        XCTAssertTrue(today.filter(TaskKind.mayComplete).allSatisfy { SubtaskTree.referencePath($0.id) != nil })
+        let next = cache.matching(TaskQuery(scope: .upcoming, today: "2026-10-06", selectedDay: "2026-10-07", timeZone: calendar.timeZone.identifier))
+        XCTAssertEqual(next.map(\.title), ["later"])
+        var search = TaskQuery(scope: .today, text: "urgent", today: "2026-10-06"); search.priority = 1
+        XCTAssertEqual(cache.matching(search).map(\.title), ["urgent"])
+    }
+    func testDatedQueriesRetainOrdinaryChecklistAndExplicitHierarchyFilterSemantics() throws {
+        var ordinary = task("ordinary", children: [task("checklist")]); ordinary["due_date"] = .string("2026-10-06")
+        var child = task("child"); child["due_date"] = .string("2026-10-06")
+        let parent = root([child]), cache = TaskCache(); cache.update([ordinary,parent])
+        XCTAssertEqual(Set(cache.matching(TaskQuery(scope: .today, today: "2026-10-06")).map(\.title)), ["ordinary","child"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .project(project))).map(\.id), [parent.id])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .all)).count, 2)
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .inbox)).map(\.id), [ordinary.id])
+        var parser = try FilterParser("subtask", context: FilterContext(projects: [Record(["id": .string(project), "name": .string("Studio")])], sections: [], labels: [], userID: owner))
+        let rule = try parser.parse()
+        let explicit = cache.matching(TaskQuery(scope: .saved("explicit"), filter: rule, filterProjects: [FilterReference(id: project,name:"Studio")], userID: owner))
+        XCTAssertEqual(Set(explicit.map(\.title)), ["checklist","child"])
+    }
+    func testDatedQueriesInvalidateAfterCompletionTypeConversionAndPlanChanges() {
+        var child = task("child"); child["due_date"] = .string("2026-10-06")
+        let parent = root([child]), cache = TaskCache(), query = TaskQuery(scope: .today, today: "2026-10-06")
+        cache.update([parent]); XCTAssertEqual(cache.matching(query).map(\.title), ["child"])
+        var changed = parent; changed["subtasks"] = SubtaskTree.changing(parent["subtasks"], id:"child", fields:["completed":.bool(true)])
+        cache.update([changed]); XCTAssertTrue(cache.matching(query).isEmpty)
+        var including = query; including.includeCompleted = true
+        XCTAssertEqual(cache.matching(including).map(\.title), ["child"])
+        changed = parent; changed["is_heading"] = .bool(false); cache.update([changed]); XCTAssertTrue(cache.matching(query).isEmpty)
+        changed = parent; changed["subtasks"] = SubtaskTree.changing(parent["subtasks"], id:"child", fields:["due_date":.string("2026-10-07")]); cache.update([changed]); XCTAssertTrue(cache.matching(query).isEmpty)
+    }
+    func testDatedFixedChildUsesDeviceCivilDayAcrossTravelAndNeverHeadingPlan() {
+        var child = task("child"); child["due_date"] = .string("2026-10-06"); child["due_time"] = .string("00:30"); child["time_zone"] = .string("Europe/Copenhagen"); child["scheduled_at"] = .string("2026-10-05T22:30:00Z")
+        let cache = TaskCache(); cache.update([root([child])])
+        let rows = cache.matching(TaskQuery(scope:.today,today:"2026-10-05",timeZone:"America/New_York"))
+        XCTAssertEqual(rows.map(\.title), ["child"])
+        XCTAssertTrue(cache.matching(TaskQuery(scope:.today,today:"2026-10-05",timeZone:"Europe/Copenhagen")).isEmpty)
+    }
+    func testChildDatePlacementAndOrderShareOneRealRootTransactionAndUndo() throws {
+        var child = task("child"); child["due_date"] = .string("2026-10-06"); child["due_time"] = .string("09:00"); child["duration_minutes"] = .number(30)
+        let parent = root([child]), selected = ProductiveTaskReading(tasks:[parent]).work[0]
+        let workspace = WorkspaceBinding(account:owner,generation:UUID()), projects = [Record(["id":.string(project)])]
+        let changes = try DayPlacement.hierarchyChanges(task:selected,day:"2026-10-07",orderedIDs:["other"],before:"other",roots:[parent],projects:projects,workspace:workspace,calendar:calendar)
+        XCTAssertEqual(changes.map(\.table), ["tasks","view_orders"]); XCTAssertEqual(changes[0].recordID,parent.id)
+        XCTAssertEqual(changes[1].fields["ids"],.array([.string(selected.id),.string("other")]))
+        let after = changes[0].fields["subtasks"]!.list[0].object
+        XCTAssertEqual(after["id"],child["id"]); XCTAssertEqual(after["due_date"],.string("2026-10-07")); XCTAssertEqual(after["due_time"],child["due_time"]); XCTAssertNil(after["project_id"])
+        var snapshot=Snapshot(tables:["tasks":[parent]]);let history=EditHistory(changes:changes,snapshot:snapshot)
+        changes.forEach{snapshot.apply($0)};history.undo.forEach{snapshot.apply($0)}
+        XCTAssertEqual(snapshot.tables["tasks"]?.first?["subtasks"],parent["subtasks"])
+        var replaced=parent;replaced["task_generation"] = .string("replacement")
+        XCTAssertThrowsError(try DayPlacement.hierarchyChanges(task:selected,day:"2026-10-07",orderedIDs:[],before:nil,roots:[replaced],projects:projects,workspace:workspace))
+        var completed=parent;completed["subtasks"] = SubtaskTree.changing(parent["subtasks"],id:"child",fields:["completed":.bool(true)])
+        XCTAssertThrowsError(try DayPlacement.hierarchyChanges(task:selected,day:"2026-10-07",orderedIDs:[],before:nil,roots:[completed],projects:projects,workspace:workspace))
+    }
+}

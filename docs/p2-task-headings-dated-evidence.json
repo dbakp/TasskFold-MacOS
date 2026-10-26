@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-26",
+  "scope": "Today and Upcoming native productive-work queries/actions; Inbox and primary widget task publication remain next",
+  "implementation": [
+    "Today/Upcoming candidates use the cached productive reading and each child\u2019s own plan, priority, search text and completion",
+    "Dated heading context remains visible, including earlier dates, without work-count or completion credit",
+    "Mac Today badge uses the same matching query; list task totals exclude heading context",
+    "Mac projected rows use the strict selection/edit/Undo engine, with project-move controls retaining containment and native print/gesture contexts",
+    "Ordinary Mac task checklists remain expandable; heading contexts do not duplicate their independently listed children",
+    "iPhone date placement saves a real-root tree edit and view order in one transaction; lift-time source/workspace/membership fencing rejects stale releases",
+    "Row context and membership use cached dictionary/set lookups instead of repeated scans",
+    "Heading estimate badges are hidden without changing the saved estimate",
+    "Unreadable grouped work displays a parent-review notice"
+  ],
+  "core": {
+    "passed": 189,
+    "failed": 0,
+    "newCases": 5,
+    "log": "headings-dated-work/core-tests.log"
+  },
+  "nativeBuild": "passed app/widget/test build and signatures",
+  "sourceBinding": "headings-dated-work/source-binding.json",
+  "buildValidation": "headings-dated-work/build-validation.json",
+  "remaining": [
+    "Inbox review and default Inbox list still need productive descendants plus a reviewed containing-heading move policy",
+    "Primary Today/Inbox/Focus/Week/window widget rows and completion/link authority still need the productive projection; this stage does not claim widget/native count parity",
+    "Other list badges, project/label projections, broader calendar periods and separate child history remain open",
+    "Prepared Mac planner and Today cases require unlocked native execution",
+    "Actual child drag/priority-band gesture replay, broader native legacy/malformed cases, large-text/spoken acceptance and shared/cross-device adapters remain open",
+    "Normal heading authoring and every deferred release/provider/device gate remain unchanged"
+  ],
+  "native": {
+    "macOS": "pending unlocked run; latest availability probe reported locked. No repeat unlock request sent because one is already pending."
+  }
+}

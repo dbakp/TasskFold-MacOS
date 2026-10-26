@@ -4500,3 +4500,36 @@ extension TaskfoldMacUITests {
         capacity("30 min estimated · 0 without estimates"); XCTAssertEqual(try root(), completed)
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testHeadingTodayChildDetailsCompletionUndoAndColdReturn() throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner","com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
+        continueAfterFailure=false
+        let app=XCUIApplication();defer{app.terminate()}
+        app.launchArguments=["--uitesting","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","-localMode","YES"]
+        try launchHeadingWorkspace(app)
+        let cache=URL(fileURLWithPath:"/Users/"+NSUserName()+"/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        func root() throws -> NSDictionary {
+            let data=try XCTUnwrap(try JSONSerialization.jsonObject(with:Data(contentsOf:cache)) as? [String:Any])
+            return try XCTUnwrap(((data["tables"] as? [String:Any])?["tasks"] as? [NSDictionary])?.first{$0["id"] as? String == "f1810000-0000-4000-8000-000000000001"})
+        }
+        func waitChild(_ key:String,_ expected:AnyHashable) {
+            let ready=XCTNSPredicateExpectation(predicate:NSPredicate{_,_ in guard let row=try? root(), let children=row["subtasks"] as? [[String:Any]] else{return false}; return children.first?[key] as? AnyHashable == expected},object:nil)
+            XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:8),.completed)
+        }
+        let today=app.buttons["Today"].firstMatch;XCTAssertTrue(today.waitForExistence(timeout:15));today.click()
+        let child="subtask:" + (try JSONEncoder().encode(["f1810000-0000-4000-8000-000000000001","f5810000-0000-4000-8000-000000000001"])).base64EncodedString()
+        let title=app.staticTexts.matching(NSPredicate(format:"identifier == %@","title-" + child)).firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout:10));title.click()
+        let field=app.descendants(matching:.any).matching(identifier:"taskTitle").firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout:8));XCTAssertEqual(field.value as? String,"Draft the launch note")
+        retainWindow(app,name:"Mac Today heading child and exact inspector")
+        field.click();field.typeKey("a",modifierFlags:.command);field.typeText("Revised launch note");field.typeKey(.tab,modifierFlags:[]);waitChild("title","Revised launch note")
+        let complete=app.buttons.matching(NSPredicate(format:"identifier == %@","complete-" + child)).firstMatch
+        XCTAssertTrue(complete.waitForExistence(timeout:5));complete.click()
+        waitChild("completed",true);XCTAssertEqual(try root()["completed"] as? Bool,false)
+        app.typeKey("z",modifierFlags:.command);waitChild("completed",false);XCTAssertTrue(title.waitForExistence(timeout:8));let restored=try root()
+        app.terminate();app.launchArguments=["--uitesting","--section=today","-localMode","YES"];try launchHeadingWorkspace(app)
+        XCTAssertTrue(title.waitForExistence(timeout:10));XCTAssertEqual(try root(),restored);app.buttons["Upcoming"].firstMatch.click();XCTAssertTrue(title.waitForExistence(timeout:8))
+    }
+}

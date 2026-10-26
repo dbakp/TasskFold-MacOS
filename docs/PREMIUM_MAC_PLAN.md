@@ -7531,3 +7531,34 @@ See `p2-task-headings-planner-evidence.json` and `headings-planner-work/`.
 Next: Today/Upcoming and Inbox review, matching badges/primary widget rows,
 reviewed containing-heading moves, wider calendar projections and child history.
 These remain implementation work; this stage does not close headings or Px.
+
+## Heading work in Today and Upcoming — 26 October 2026
+
+Today and Upcoming now query ordinary work beneath headings using each child’s
+own date, priority, search text and completion. Heading dates remain context,
+including earlier dates; totals count work. The Mac Today badge uses the same
+query. Heading estimate badges are hidden while their stored values are kept.
+Unreadable groups show a parent-review notice. Parent captions and independent-row
+membership use cached lookups.
+
+Mac projected rows use the established hierarchy selection/edit/Undo path for
+completion, details, planning, duplication and deletion; moving a child keeps its
+parent’s containment rule. Printing and row gestures receive hierarchy context.
+Ordinary task checklists remain expandable, while a heading does not repeat the
+work already listed independently. iPhone date placement commits its real root
+and view order together; a captured lift intent refuses changed workspaces, rows
+or work that disappeared after a heading conversion.
+
+190 iOS and 189 Mac focused Core checks pass (six/five new cases). Current app,
+widget and UI-test builds/signatures pass. iPhone and iPad native flows pass exact
+child details, Cancel, title editing, completion, Undo, cold data equality and
+Upcoming membership. Final synthetic screenshots are inspected. The independent
+Mac planner/Today cases remain prepared for an unlocked run; one unlock request
+is already pending. Core checks do not establish real drag or spoken acceptance.
+See `p2-task-headings-dated-evidence.json` and `headings-dated-work/`.
+
+Next priorities are Inbox review/default Inbox membership with reviewed heading
+moves, then matching primary widget rows/token/link authority. Wider badges,
+calendar/project/label projections, child history and native/shared/cross-device
+acceptance remain open. No normal-authoring, hosted or release gate changes;
+this milestone does not close headings or Px.

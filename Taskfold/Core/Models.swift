@@ -1423,7 +1423,7 @@ final class TaskCache {
         if let filter = query.filter, filter.usesTaskHierarchy {
             guard let rows = try? hierarchyCandidates(for: filter, projects: query.filterProjects, userID: query.userID) else { return [] }
             candidates = rows
-        } else { candidates = tasks }
+        } else { candidates = incoming.scope.usesProductiveWork ? productiveReading().presentation : tasks }
         let matched = candidates.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
             else if !query.includeCompleted && task.completed && !(query.filter?.hasQuerySections == true && query.filter?.includesCompletion == true) { return false }
@@ -1445,7 +1445,7 @@ final class TaskCache {
             }
         }
         let sorted: [Record]
-        if query.sort == "priority", query.filter?.usesTaskHierarchy == true {
+        if query.sort == "priority", query.filter?.usesTaskHierarchy == true || query.scope.usesProductiveWork {
             sorted = matched.enumerated().sorted { $0.element.priority == $1.element.priority ? $0.offset < $1.offset : $0.element.priority < $1.element.priority }.map(\.element)
         }
         else if query.sort == "title" { sorted = matched.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending } }
@@ -1477,6 +1477,14 @@ enum DayPlacement {
             a.element.priority == b.element.priority ? a.offset < b.offset : a.element.priority < b.element.priority
         }.map(\.element)
     }
+    static func hierarchyChanges(task: Record, day: String, orderedIDs: [String], before: String?, roots: [Record], projects: [Record], workspace: WorkspaceBinding, calendar: Calendar = .current) throws -> [Mutation] {
+        guard SubtaskTree.referencePath(task.id) != nil, !task.completed, Dates.parse(day, calendar: calendar) != nil, before != task.id else { return [] }
+        let fields = TaskPlanner.dayFields(task: task, day: day, calendar: calendar)
+        let changes = try TaskSelectionPlan.changes([.init(task: task, action: .patch(fields), workspace: workspace)], accessibleRoots: roots, projects: projects, workspace: workspace, calendar: calendar)
+        var ids = orderedIDs.filter { $0 != task.id }
+        ids.insert(task.id, at: before.flatMap { ids.firstIndex(of: $0) } ?? ids.count)
+        return changes + [Mutation(table: table, recordID: day, method: "PATCH", fields: ["id": .string(day), "ids": .array(ids.map(JSON.string))])]
+    }
     /// Keeps a drop inside the dragged task's priority band. A slot among other priorities snaps to the
     /// end of the task's own band (which is also where a newly re-prioritised task lands).
     static func constrained(before: String?, priority: Int, in tasks: [Record]) -> String? {
@@ -1501,6 +1509,9 @@ enum DayPlacement {
 }
 
 extension TaskScope {
+    /// Global dated lists show independent work beneath headings. Project and
+    /// explicit hierarchy filters retain their own tree/membership semantics.
+    var usesProductiveWork: Bool { self == .today || self == .upcoming }
     var preferenceKey: String {
         switch self {
         case .today: return "today"

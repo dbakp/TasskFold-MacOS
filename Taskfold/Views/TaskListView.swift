@@ -56,7 +56,7 @@ struct TaskListView: View {
     private var overdueKey: String { "overdue:" + preferenceKey }
     private var overdueTasks: [Record] {
         if case .saved = scope { return [] }
-        return ordered(filtered.filter { TaskKind.mayComplete($0) && !$0.completed && !TaskPlanner.plannedDay($0).isEmpty && TaskPlanner.plannedDay($0) < Dates.day(Date()) }, day: overdueKey)
+        return ordered(filtered.filter { !$0.completed && !TaskPlanner.plannedDay($0).isEmpty && TaskPlanner.plannedDay($0) < Dates.day(Date()) }, day: overdueKey)
     }
     private var regularTasks: [Record] {
         let overdueIDs = Set(overdueTasks.map(\.id))
@@ -137,7 +137,7 @@ struct TaskListView: View {
         if dated { return dayGroups.map { (day: $0.0 == "Overdue" ? overdueKey : $0.0, ids: $0.1.map(\.id)) } }
         return [(day: overdueKey, ids: overdueTasks.map(\.id))] + groups.map { (day: $0.key, ids: $0.tasks.map(\.id)) }
     }
-    private var remaining: Int { filtered.filter { !$0.completed && !workspace.completing.contains($0.id) }.count }
+    private var remaining: Int { filtered.filter { TaskKind.mayComplete($0) && !$0.completed && !workspace.completing.contains($0.id) }.count }
 
     var body: some View {
         @Bindable var workspace = workspace
@@ -177,6 +177,11 @@ struct TaskListView: View {
                 guard workspace.section.scope == scope else { return }
                 workspace.selection = selection
             })) {
+                if dated && store.productiveReading.incomplete {
+                    Label("Some grouped tasks need review. Open their heading in All Tasks.", systemImage: "exclamationmark.circle")
+                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("datedGroupedWorkReview").selectionDisabled()
+                }
                 if !store.online || (store.notice != nil && store.syncConflict == nil && store.focusSyncConflict == nil) { statusRow }
                 if store.syncing && store.tasks.isEmpty && store.lastSync == nil && !store.localMode { SkeletonRows().padding(.vertical, 12).selectionDisabled().listRowSeparator(.hidden).transition(.skeletonReveal) }
                 if filtered.isEmpty && !dated { emptyState }
@@ -408,7 +413,7 @@ struct TaskListView: View {
     }
     private func performRowGesture(_ command: RowGestureCommand, intent: RowGestureIntent) {
         let root = store.activeTasks.first { $0.id == intent.root.id }
-        let current = workspace.hierarchyFilter ? try? store.selectionRecord(intent.task.id) : workspace.taskRecord(intent.task.id)
+        let current = workspace.hierarchyPresentation ? try? store.selectionRecord(intent.task.id) : workspace.taskRecord(intent.task.id)
         guard store.signedIn, workspace.section.key == preferenceKey, !workspace.drag.active, workspace.selection.count <= 1,
               intent.matches(current, root: root, account: store.userID, generation: store.workspaceGeneration) else { return }
         switch command {
@@ -431,7 +436,7 @@ struct TaskListView: View {
         else { sections = (overdueTasks.isEmpty ? [] : [("Overdue", overdueTasks)]) + groups.map { ($0.title, $0.tasks) } }
         let named = sections.map { name, tasks in (Dates.parse(name)?.formatted(.dateTime.weekday(.wide).day().month(.wide).year()) ?? name, tasks) }
         let detail = Date().formatted(.dateTime.day().month(.wide).year()) + (workspace.search.isEmpty ? "" : " · Search: " + workspace.search) + (priorityFilter == 0 ? "" : " · Priority \(priorityFilter)")
-        return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.projects, labels: store.labels, hierarchyRoots: workspace.hierarchyFilter ? store.activeTasks : nil, assigneeName: store.assigneeName)
+        return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.projects, labels: store.labels, hierarchyRoots: workspace.hierarchyPresentation ? store.activeTasks : nil, assigneeName: store.assigneeName)
     }
     private func preparePrint() {
         do {
@@ -469,7 +474,7 @@ struct TaskListView: View {
                 Button("Inbox", systemImage: "tray") { workspace.move(targets, toProject: "") }
                 ForEach(store.projects) { project in Button(project.name, systemImage: "folder") { workspace.move(targets, toProject: project.id) } }
             }
-            .disabled(workspace.hierarchyFilter && targets.contains { Workspace.subtaskPath($0) != nil })
+            .disabled(workspace.hierarchyPresentation && targets.contains { Workspace.subtaskPath($0) != nil })
             .help("Subtasks stay in their parent's project")
             Menu("Priority") { ForEach(1...4, id: \.self) { n in Button(n == 4 ? "None" : "Priority \(n)", systemImage: "flag") { workspace.setPriority(targets, n) } } }
             Button("Duplicate", systemImage: "doc.on.doc") { workspace.duplicate(targets) }

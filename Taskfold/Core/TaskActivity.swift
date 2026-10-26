@@ -386,6 +386,8 @@ struct ProductiveTaskReading {
     let incomplete: Bool
     let unavailable: Int
     let parents: [String: String]
+    private let presentationIDs: Set<String>
+    func contains(_ id: String) -> Bool { presentationIDs.contains(id) }
     init(tasks: [Record]) {
         let roots = tasks.filter { SubtaskTree.referencePath($0.id) == nil }
         let rootIDs = Set(roots.map { $0.id.lowercased() })
@@ -410,7 +412,7 @@ struct ProductiveTaskReading {
         // parent review. Do not invent routable identities for unreadable children.
         var contexts = Set<String>()
         rows += scope.contexts.filter { contexts.insert($0.id.lowercased()).inserted }
-        self.work = work; presentation = rows
+        self.work = work; presentation = rows; presentationIDs = Set(rows.map(\.id))
         incomplete = !scope.incompleteProjects.isEmpty || unavailable > 0
         self.unavailable = unavailable
         self.parents = parents

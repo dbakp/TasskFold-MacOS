@@ -263,7 +263,7 @@ struct TaskInspectorForm: View {
                     if TaskKind.mayComplete(draft) {
                     Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") {
                         guard editorAvailable,editingGeneration == currentGeneration, workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "This task or workspace changed. Reopen its current details."; return }
-                        if workspace.hierarchyFilter {
+                        if workspace.hierarchyPresentation {
                             do { workspace.complete(try store.selectionRecord(taskID)) } catch { store.error = error.localizedDescription }
                         } else if let current { workspace.complete(current) }
                     }

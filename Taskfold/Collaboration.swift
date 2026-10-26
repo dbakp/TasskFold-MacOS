@@ -20,8 +20,9 @@ extension Workspace {
         store.record("tasks", id: Self.subtaskPath(id)?.first ?? id)
     }
     func parentTitle(_ id: String) -> String? {
+        if let title = store.productiveReading.parents[id] { return title }
         guard Self.subtaskPath(id) != nil else { return nil }
-        guard hierarchyFilter, let path = Self.subtaskPath(id), var parent = rootTask(id) else { return rootTask(id)?.title }
+        guard hierarchyPresentation, let path = Self.subtaskPath(id), var parent = rootTask(id) else { return rootTask(id)?.title }
         var titles = [parent.title]
         for key in path.dropFirst().dropLast() {
             guard let child = parent["subtasks"].list.enumerated().first(where: { Self.childKey($0.element, index: $0.offset) == key }) else { return nil }
