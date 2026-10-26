@@ -1,0 +1,36 @@
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 1]
+[1 / 3] TaskfoldCore_TaskfoldCoreTests
+[1 / 5] TaskfoldCore
+[1 / 11] TaskfoldCoreTests-product
+[1 / 3] TaskfoldCoreTests-product
+Build complete! (2,80 secs)
+Test Suite 'Selected tests' started at 2026-10-26 03:32:49.034.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-26 03:32:49.118.
+Test Suite 'WearableReceiptTests' started at 2026-10-26 03:32:49.118.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testExplicitFullRestartAdvancesFenceAndPreservesWork]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testExplicitFullRestartAdvancesFenceAndPreservesWork]' passed (3.143 seconds).
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testLegacySnapshotAndExactNewSnapshotRoundtrip]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testLegacySnapshotAndExactNewSnapshotRoundtrip]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testOldUndoAndRestoreCannotLowerFenceOrResurrectReceipts]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testOldUndoAndRestoreCannotLowerFenceOrResurrectReceipts]' passed (3.737 seconds).
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testOrdinaryMergeCannotAdvanceFenceOrEraseCurrentProof]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testOrdinaryMergeCannotAdvanceFenceOrEraseCurrentProof]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testPrivateFenceIsNotInPortableBackup]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testPrivateFenceIsNotInPortableBackup]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testReceiptMustEnterOnlyWithExplicitAcceptance]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testReceiptMustEnterOnlyWithExplicitAcceptance]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testRestartRequiresFullHistoryExactGenerationAndNoNewMutation]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testRestartRequiresFullHistoryExactGenerationAndNoNewMutation]' passed (3.550 seconds).
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testUndoAndRestoreCannotEraseOrReplaceProof]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testUndoAndRestoreCannotEraseOrReplaceProof]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testUnknownInvalidAndOversizeReceiptsFailClosed]' started.
+Test Case '-[TaskfoldCoreTests.WearableReceiptTests testUnknownInvalidAndOversizeReceiptsFailClosed]' passed (0.877 seconds).
+Test Suite 'WearableReceiptTests' passed at 2026-10-26 03:33:00.495.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 11.328 (11.378) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-26 03:33:00.508.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 11.328 (11.391) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 03:33:00.508.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 11.328 (11.475) seconds

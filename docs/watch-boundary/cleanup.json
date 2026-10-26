@@ -1,0 +1,259 @@
+{
+  "sessions": {
+    "phone": {
+      "terminatedExit": 0,
+      "appUninstalled": true,
+      "restoredShutdown": true
+    },
+    "watch": {
+      "terminatedExit": 0,
+      "appUninstalled": true,
+      "restoredShutdown": true
+    },
+    "capacityPhone": {
+      "appUninstalled": true,
+      "originalBootStatePreserved": true
+    }
+  },
+  "preserved": [
+    "both repository .build caches",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "/tmp/taskfold-workflow-mac-native-host",
+    "/tmp/taskfold-workflow-mac-native-build"
+  ],
+  "originalPairStates": {
+    "phone": "Shutdown",
+    "watch": "Shutdown"
+  },
+  "otherSimulatorBootStates": "Existing iPhone18Pro and iPad left booted; only selected Air/42mm pair shut down. No device erased or unpaired.",
+  "pruned": [
+    {
+      "path": "/tmp/taskfold-watch-boundary-capacity-cold.json",
+      "logicalBytes": 280
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-capacity-initial.json",
+      "logicalBytes": 871
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-capacity-installed-products.json",
+      "logicalBytes": 287
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-capacity-launch.log",
+      "logicalBytes": 50
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-capacity-relaunch.log",
+      "logicalBytes": 50
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-core-v2.log",
+      "logicalBytes": 42789
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-core-v3.log",
+      "logicalBytes": 28198
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-core-v4.log",
+      "logicalBytes": 45242
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-core.log",
+      "logicalBytes": 26868
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-docs.py",
+      "logicalBytes": 9207
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-host",
+      "logicalBytes": 7027876
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-initial-evidence",
+      "logicalBytes": 89995
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-mac-core.log",
+      "logicalBytes": 3082
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-original-pairs.json",
+      "logicalBytes": 1197
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-paired-proof-v2.json",
+      "logicalBytes": 1083
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-paired-proof-v3.json",
+      "logicalBytes": 946
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-paired-proof-v4.json",
+      "logicalBytes": 2926
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-paired-proof.json",
+      "logicalBytes": 1083
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-paired-v2.log",
+      "logicalBytes": 973
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-paired-v3.log",
+      "logicalBytes": 1154
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-paired-v4.log",
+      "logicalBytes": 443
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-paired.log",
+      "logicalBytes": 973
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-pending.png",
+      "logicalBytes": 29267
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-phone-build",
+      "logicalBytes": 653264249
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-phone-build-v2.log",
+      "logicalBytes": 53032
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-phone-build-v3.log",
+      "logicalBytes": 44941
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-phone-build-v4.log",
+      "logicalBytes": 48078
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-phone-build.log",
+      "logicalBytes": 464957
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-phone.txt",
+      "logicalBytes": 5106
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-prepare.log",
+      "logicalBytes": 123
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-release-proof.json",
+      "logicalBytes": 408
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-retain.py",
+      "logicalBytes": 7693
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-screenshot.log",
+      "logicalBytes": 214
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-second-evidence",
+      "logicalBytes": 157755
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-sign-v2.log",
+      "logicalBytes": 92
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-sign-v3.log",
+      "logicalBytes": 92
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-sign-v4.log",
+      "logicalBytes": 92
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-sign.log",
+      "logicalBytes": 92
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-signatures-v2.json",
+      "logicalBytes": 773
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-signatures-v3.json",
+      "logicalBytes": 773
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-signatures-v4.json",
+      "logicalBytes": 773
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-signatures.json",
+      "logicalBytes": 773
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-source-proof.json",
+      "logicalBytes": 1765
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-tests.txt",
+      "logicalBytes": 3791
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-third-evidence",
+      "logicalBytes": 62936
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-build",
+      "logicalBytes": 90056594
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-build-v2.log",
+      "logicalBytes": 34814
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-build-v3.log",
+      "logicalBytes": 31771
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-build-v4.log",
+      "logicalBytes": 30767
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-build-v5.log",
+      "logicalBytes": 31786
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-build.log",
+      "logicalBytes": 51989
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-release-v2.log",
+      "logicalBytes": 30941
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-release-v3.log",
+      "logicalBytes": 30941
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-release-v4.log",
+      "logicalBytes": 31968
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch-release.log",
+      "logicalBytes": 52226
+    },
+    {
+      "path": "/tmp/taskfold-watch-boundary-watch.txt",
+      "logicalBytes": 11800
+    }
+  ],
+  "bytesMeaning": "Logical file sizes in owned scratch, not physical free-space guarantee.",
+  "logicalBytesPruned": 751828945,
+  "remainingTaskfoldProcesses": []
+}

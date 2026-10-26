@@ -7153,3 +7153,52 @@ retirement requests/replies, encrypted readback, explicit copy availability,
 linked navigation and sharing/cancellation are verified. Installed app/debug/test
 binaries match the signed products. The independent Mac app/test build and strict
 signatures pass; native Mac acceptance still requires UI automation approval.
+
+
+## 26 October 2026 — Watch workspace departure and reviewed recovery
+
+The iOS-owned companion now clears an active workspace through the existing
+revisioned empty packet. Its revision is durably saved before publication,
+including when receipt-generation rotation changes phone authority. Repeated
+retirement is idempotent; an exhausted revision refuses without changing the
+original authority. A stale cached reconnect notice can no longer cancel every
+new connection attempt on this normal departure path. No wire/archive fields,
+version or mutation-receipt contract changed.
+
+Watch retains its privacy marker when an empty update arrives. Every client
+guard derives from that saved marker plus an immediate memory fence for a failed
+privacy write. Only the current explicit Connect attempt can clear privacy.
+A valid current reply may follow its own equal/newer same-workspace publication;
+it confirms the connection without reverting the newer projection. Older,
+empty or different-workspace replies cannot reopen a concealed workspace.
+Superseded automatic-refresh replies cannot cancel a newer Connect attempt.
+
+All 104 focused iOS Watch/receipt checks pass, including 16 new cases. The Mac's
+unchanged receipt contract passes its nine independent compatibility checks.
+Seventeen assertions pass over the actual Air/42 mm Simulator pair across nine
+native Watch phases: held actual Connect reply/signout/privacy, cold relaunch,
+fresh explicit reconnect with the private draft's old destination intact,
+offline completion/relaunch, phone departure before delivery, explicit return,
+reviewed new Inbox capture, and exact old-completion replay. The original task
+stays open and unchanged, only the reviewed copy gets a mutation receipt, and
+replay preserves every actual phone-cache byte. The current phone Store/driver
+also passes 16 history-reset checks plus three cold checks with its OS-peer
+boundary injected; those 19 checks are separate from the real paired transport.
+
+The first two candidate paired runs kept privacy but failed reconnect; retained traces show
+a fresh reply whose attempt had already been invalidated. The third verified the
+numbered signout and retained private draft but caught disagreement between the
+saved marker and a separate memory flag. The final run passes with the guards
+using the saved state. Initial failures, full final native data, independent
+comparisons, source/signature bindings and exact limits are recorded in the
+iOS-owned p2-watch-boundary-evidence.json. Phone/Watch Debug and Watch Release
+builds pass; final installed debug code matches the real-signed products. Release
+excludes these fixture routes.
+
+These are synthetic local-workspace checks with controlled startup preparation
+and ordinary foreground WCSession delivery. They do not prove cloud-account
+Auth, physical phone/reinstall, background/system launch/protected storage,
+native typing/dictation/VoiceOver or wider layouts. Watch stays disabled and
+unembedded in shipping inputs. Wear OS, the rest of Px and every user-deferred
+release/provider/device gate remain open. The Mac gains no Watch target,
+transport or iOS build dependency.

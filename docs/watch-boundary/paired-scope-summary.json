@@ -1,0 +1,13 @@
+{
+  "allSeventeenPairedAssertionsVerified": true,
+  "nineNativeWatchPhasesPassed": true,
+  "heldActualReplyOlderThanReceivedEmptyRetirement": true,
+  "durablePrivacyAndPrivateDraftVerifiedAcrossRelaunch": true,
+  "freshReconnectKeepsDraftOriginalEpoch": true,
+  "originalTaskUnchangedAndOpen": true,
+  "onlyExplicitRecoveryCopySaved": true,
+  "oldCompletionReplayLeavesExactCurrentCacheBytesUnchanged": true,
+  "privateDraftWordsNotInPhoneCache": true,
+  "sixteenCapacityAndThreeColdChecksPassed": true,
+  "scope": "Synthetic local workspace; actual WCSession pair. No cloud Auth, peer/packet injection, native input/speech, background/system launch, hardware or distribution acceptance."
+}
