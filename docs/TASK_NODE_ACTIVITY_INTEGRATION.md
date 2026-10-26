@@ -89,8 +89,9 @@ the original parent feed. They must not claim child-history coverage yet.
 
 The parent type/generation prerequisite below is now implemented and verified;
 see [historical task type and generation](TASK_ROOT_ACTIVITY_CONTEXT.md). The
-separate child ledger's team identity, role and cleanup custody must be aligned
-before service rollout and mixed-feed UI. Activity screens still await that
+[child identity, role and cleanup custody](TASK_NODE_ACTIVITY_CUSTODY.md) is now
+implemented. Project-adoption inspection/review parity and mixed-feed integration
+remain before service/UI rollout. Activity screens still await that
 integration. The original sequence below records this milestone's starting plan.
 
 ## Original next-work sequence

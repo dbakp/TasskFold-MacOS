@@ -91,12 +91,12 @@ TASKFOLD_TEST_ROOT_CONTEXT=1 node Scripts/Database/test-team-content-custody.mjs
 
 ## Next, before mixed child history is enabled
 
-1. Align the separate child ledger with team custody and role gates. Its original
-   foundation still references Auth users and skips writes after creator removal;
-   it needs stable content-identity custody, matching native-team read restrictions,
-   personal-account cleanup and explicit team deletion. This is an undeployed
-   service prerequisite, not proof of completed child retention. Do not deploy the
-   child ledger into retained-team usage before this work and its tests.
+1. Child identity/role/cleanup custody is now implemented; see
+   [the custody milestone](TASK_NODE_ACTIVITY_CUSTODY.md). Before service rollout,
+   include that migration and extend project-adoption inspection, counts,
+   fingerprints, locks and client review to cover child history too. The original
+   foundation alone remains insufficient for retained-team usage.
+
 2. Combine both feeds using stable child occurrences and separate sequence spaces,
    preserve legacy root credits, and expose the child recording/coverage boundary.
    Known root context is now available for that fold; child events must not credit

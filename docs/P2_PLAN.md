@@ -5024,3 +5024,20 @@ before service rollout; that is now the first prerequisite for combining feeds
 and wiring activity/Insights/Project pulse. See
 [TASK_ROOT_ACTIVITY_CONTEXT.md](TASK_ROOT_ACTIVITY_CONTEXT.md). The full Px scope
 and all user-deferred release/provider/device gates remain unchanged.
+
+
+### Child custody and team read parity (26 October 2026)
+
+Prepared child-history custody now uses stable content identities, survives Auth
+author removal, keeps actual/unknown actors distinct, and follows parent-history
+role/session/scope gates. Personal/account and explicit team cleanup physically
+remove the appropriate child history, with file-guard rollback preserved. Existing
+events and sequence IDs remain intact; guaranteed coverage advances at upgrade.
+64 real-PostgreSQL and 228 focused client checks pass per repository. No hosted
+change, production Swift change or new native runtime pass is claimed.
+
+Next: adoption inspection/count/fingerprint/lock and client-review parity for the
+child ledger, followed by combined history and activity/Insights/widget UI. See
+[TASK_NODE_ACTIVITY_CUSTODY.md](TASK_NODE_ACTIVITY_CUSTODY.md) for the exact scope,
+evidence and remaining rollout gates. Px remains open; user-deferred gates stay
+deferred.

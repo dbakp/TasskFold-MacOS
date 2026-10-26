@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-26",
+  "previousGoalTurn": "progress: observed root context, verified retention and pushed commits",
+  "stage": "child identity custody, native role reads, account/team cleanup",
+  "databaseChecks": 64,
+  "coreChecks": 228,
+  "newCoreCases": 2,
+  "hostedChanges": false,
+  "wireFormatChanged": false,
+  "productionSwiftChanged": false,
+  "newNativeRuntimeAcceptance": false,
+  "adoptionInspectionPortComplete": false,
+  "mixedActivityUIComplete": false,
+  "sources": {
+    "supabase/migrations/20261026113556_task_node_activity_custody.sql": "ea35e156c70703d28007197760dfaeeeb44c87a35ace81b50b81f6afbef833df",
+    "Scripts/Database/test-task-node-custody.mjs": "1542cd24f24d5b39d6d39d3e971b09fa2d45294a29753f78d4054f4df04eaef1",
+    "TaskfoldTests/TaskNodeActivityTests.swift": "d372ea78e130ff0b5bfd6facdbd94751dcfd70dbf436bd31c85e33d64f6fdec4",
+    "TaskfoldTests/Fixtures/task-node-custody.json": "27e76dc577a5b1197735661796fc846f74a0eb0a82c65cd2b45b3e82804ba0a1"
+  },
+  "fixtures": "Owned inspected team-project dependencies and real migrations; no hosted/HTTP/native writer acceptance",
+  "coverage": "Existing events retained; guaranteed epoch advanced after source locks drain prior writers",
+  "advisors": "Seven existing init-plan warnings; no new ledger/writer finding",
+  "logNormalization": "Trailing whitespace and blank lines removed; result text retained"
+}

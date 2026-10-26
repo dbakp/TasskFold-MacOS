@@ -340,4 +340,25 @@ final class TaskNodeActivityTests: XCTestCase {
         var future = valid; future["format_version"] = .number(2); XCTAssertNil(parser.event(future))
     }
 
+    func testRetainedTeamSQLHistoryDecodesAndArchivesWithoutActorOrOwnerRewriting() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "task-node-custody", withExtension: "json", subdirectory: "Fixtures"))
+        let rows = try JSONDecoder().decode([Record].self, from: Data(contentsOf: url))
+        let events = try rows.map { try XCTUnwrap(TaskNodeActivity(row: $0), $0.id) }
+        XCTAssertTrue(events.contains { $0.actor == nil }); XCTAssertTrue(events.contains { $0.actor != nil && $0.actor != $0.owner })
+        let account = try XCTUnwrap(events.compactMap(\.actor).first)
+        let file = try WorkspaceBackup.read(WorkspaceBackup.make(Snapshot(tables: [TaskNodeActivity.table: rows]), account: account).data())
+        XCTAssertEqual(file.tables[TaskNodeActivity.table], rows)
+        XCTAssertTrue(try file.plan(current: Snapshot(), account: UUID().uuidString.lowercased()).changes.isEmpty)
+    }
+    func testRetainedAuthorHistoryRoutesForCurrentMemberOnlyThroughFreshProjectCatalog() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "task-node-custody", withExtension: "json", subdirectory: "Fixtures"))
+        let rows = try JSONDecoder().decode([Record].self, from: Data(contentsOf: url))
+        let event = try XCTUnwrap(rows.compactMap(TaskNodeActivity.init).first { $0.actor != nil && $0.actor != $0.owner && $0.kinds == [.completed] && $0.workAfter })
+        let member = try XCTUnwrap(event.actor), project = try XCTUnwrap(event.after["project_id"]?.text)
+        var root = Record.task(user: event.owner, project: project); root["id"] = .string(event.rootID); root["task_generation"] = .string(try XCTUnwrap(event.generation)); root["is_heading"] = .bool(true)
+        root["subtasks"] = .array([.object(["id": .string(event.nodeKey), "title": .string("Current retained child"), "completed": .bool(true)])])
+        let current = event.currentTask(tasks: [root], projects: [Record(["id": .string(project), "name": .string("Shared studio")])], account: member)
+        XCTAssertEqual(current?.title, "Current retained child"); XCTAssertNil(event.currentTask(tasks: [root], projects: [], account: member))
+    }
+
 }
