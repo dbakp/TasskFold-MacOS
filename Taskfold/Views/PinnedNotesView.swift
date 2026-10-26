@@ -93,7 +93,7 @@ private struct PinnedNoteDetail: View {
                             } else { Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText") }
                         }
                         Button {guard binding.matches(account:store.userID,generation:store.workspaceGeneration) else {return};editing=TaskEditorOpening(task:task,admission:store.editorAdmission(task,workspace:binding)) } label: { Label("Edit details", systemImage: "pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNote")
-                        Button("Print or save PDF", systemImage: "printer") { preparePrint() }.accessibilityIdentifier("printPinnedNote")
+                        Button("Print or export", systemImage: "printer") { preparePrint() }.accessibilityIdentifier("printPinnedNote")
                         Button(action: unpin) { Label("Unpin note", systemImage: "pin.slash").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("unpinNote")
                         Text("Unpinning keeps the task and its notes. Widgets show a shortened preview; this screen shows the full text.").font(.caption).foregroundStyle(.secondary)
                     }.padding(24).frame(maxWidth: .infinity, alignment: .leading)

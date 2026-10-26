@@ -436,7 +436,7 @@ struct TaskListView: View {
         else { sections = (overdueTasks.isEmpty ? [] : [("Overdue", overdueTasks)]) + groups.map { ($0.title, $0.tasks) } }
         let named = sections.map { name, tasks in (Dates.parse(name)?.formatted(.dateTime.weekday(.wide).day().month(.wide).year()) ?? name, tasks) }
         let detail = Date().formatted(.dateTime.day().month(.wide).year()) + (workspace.search.isEmpty ? "" : " · Search: " + workspace.search) + (priorityFilter == 0 ? "" : " · Priority \(priorityFilter)")
-        return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.projects, labels: store.labels, hierarchyRoots: workspace.hierarchyPresentation ? store.activeTasks : nil, expandOrdinaryChecklists: !workspace.hierarchyFilter, assigneeName: store.assigneeName)
+        return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.allProjects, labels: store.labels, hierarchyRoots: workspace.hierarchyPresentation ? store.tasks : nil, expandOrdinaryChecklists: !workspace.hierarchyFilter, assigneeName: store.assigneeName)
     }
     private func preparePrint() {
         do {

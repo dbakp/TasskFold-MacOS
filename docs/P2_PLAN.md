@@ -19,7 +19,7 @@ supported fields and exclusions are in `TASK_CSV_SOURCE_MAPPING.md`.
 
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
-sharing, older literal-copy conversion review, and shared type/capability/command
+sharing acceptance (implementation in TASK_ROW_CSV.md), older literal-copy conversion review, and shared type/capability/command
 adapters. The user-deferred older-client rollout dependency remains before hosted
 exposure. See `TASK_HEADINGS.md`, `TASK_CALENDAR_WORK.md`, `TASK_WORK_HISTORY.md`,
 `TASK_CSV_SOURCE_MAPPING.md` and their evidence folders. Historical checkpoints
@@ -5036,7 +5036,7 @@ Both owned clients and prepared SQL now count/fingerprint/lock child history in
 bounded transfer reviews, fence late/ABA writes and require a versioned count
 contract. Native review shows task/subtask history entries. Each repo passes 35
 new SQL-review checks, 55 connection-policy regression checks with the new schema,
-and 63 focused Core checks. Actual old approvals become stale; existing child
+and 64 focused Core checks. Actual old approvals become stale; existing child
 rows and applied receipt/retry shapes remain intact. No hosted flag changed.
 
 This closes bounded review coverage only. The current registry binds live task
@@ -5130,3 +5130,19 @@ cases. Build/native scope, source hashes and cleanup are in
 This implements generic workflow mapping; provider/file handoff, flat row sharing,
 shared capability adapters and wider rank-3/6/7 acceptance remain open. User-deferred
 gates and the full Px goal remain unchanged.
+
+
+### Reviewed flat task-row CSV — 26 October 2026
+
+Both apps now implement Print or export → Export CSV, with row review, explicit
+notes/checklist choices, native Save and guarded Share. Structured fields, status,
+file-local hierarchy and complete label names survive; account/live IDs and private
+non-task payloads are excluded. The explicit CSV mapper recognizes the versioned
+transport without reinterpreting generic text. Source/workspace/options checks
+precede handoff. Headings are counted as rows separately from productive work.
+Each repo passes 64 focused Core cases; current phone/tablet cancellation and cold
+preservation pass. Independent Mac build passes; native Mac, completed provider
+handoff and wider source/account/accessibility acceptance stay open.
+See [TASK_ROW_CSV.md](TASK_ROW_CSV.md) and task-row-csv/ for scope and evidence.
+The implementation advances flat row sharing; it does not close rank 3, the wider
+Px goal or user-deferred release/provider/device work.

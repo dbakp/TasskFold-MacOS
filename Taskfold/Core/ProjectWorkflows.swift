@@ -966,6 +966,7 @@ struct WorkflowCSVSource: Identifiable, Sendable {
     let id = UUID()
     let headers: [String]
     let records: [[String]]
+    let taskRowLabelsColumn: Int?
     init(data: Data) throws {
         let rows = try WorkflowTemplateCSV.rows(data, maximumColumns: 64)
         guard let header = rows.first, !header.isEmpty else { throw AppFailure(message: "Choose a CSV with column names on its first row.") }
@@ -981,7 +982,13 @@ struct WorkflowCSVSource: Identifiable, Sendable {
         guard !content.isEmpty, content.count <= 5000, content.allSatisfy({ $0.count == header.count }) else {
             throw AppFailure(message: "Review 1–5,000 task rows with the same number of columns as the header. No rows have been imported.")
         }
-        headers = names; records = content
+        if names.contains(TaskRowCSVFormat.columns[0]) {
+            guard names == TaskRowCSVFormat.columns, content.allSatisfy({ $0[0] == TaskRowCSVFormat.marker }) else {
+                throw AppFailure(message: "This task-row CSV needs its complete supported header and format marker. Nothing has been imported.")
+            }
+            headers = names; records = content.map { $0.map(WorkflowTemplateCSV.unescape) }
+            taskRowLabelsColumn = TaskRowCSVFormat.columns.firstIndex(of: "Labels")
+        } else { headers = names; records = content; taskRowLabelsColumn = nil }
     }
     func ignoredColumns(_ mapping: WorkflowCSVMapping) -> [String] {
         headers.indices.filter { !mapping.columns.values.contains($0) }.map { headers[$0] }
@@ -1044,8 +1051,13 @@ struct WorkflowCSVSource: Identifiable, Sendable {
                 throw fail("a time or time zone also needs a planned date so it can be retained in each run.")
             }
             var labels: [JSON] = [], seen = Set<String>()
-            for part in value(row, .labels).split(separator: ";") {
-                let label = part.trimmingCharacters(in: .whitespacesAndNewlines)
+            let labelParts: [String], canonicalLabels = taskRowLabelsColumn.map { mapping.columns[.labels] == $0 } ?? false
+            if canonicalLabels {
+                guard let parsed = try? JSONDecoder().decode([String].self, from: Data(value(row, .labels).utf8)) else { throw fail("the Taskfold labels cell is not a supported list of names.") }
+                labelParts = parsed
+            } else { labelParts = value(row, .labels).split(separator: ";").map(String.init) }
+            for part in labelParts {
+                let label = canonicalLabels ? part : part.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard label.count <= 160 else { throw fail("use label names up to 160 characters.") }
                 if !label.isEmpty, seen.insert(label).inserted { labels.append(.object(["name": .string(label), "color": .string("#e31e4b")])) }
             }
@@ -1089,7 +1101,7 @@ struct WorkflowCSVMapping: Sendable, Equatable {
             case .type: "Task or heading"
             case .priority: "Priority (1–4)"
             case .estimate: "Estimate in minutes"
-            case .labels: "Labels (separated by ;)"
+            case .labels: "Labels"
             case .plannedDate: "Planned date (YYYY-MM-DD)"
             case .deadlineDate: "Deadline (YYYY-MM-DD)"
             case .dueTime: "Time (HH:mm)"
@@ -1099,4 +1111,11 @@ struct WorkflowCSVMapping: Sendable, Equatable {
     }
     var columns: [Field: Int] = [:]
     var taskValue = "task", headingValue = "heading"
+}
+
+
+/// Reversible spreadsheet-safe text transport; not a task restore or completion-history format.
+enum TaskRowCSVFormat {
+    static let marker = "taskfold-task-rows-v1"
+    static let columns = ["Taskfold format", "Row reference", "Parent reference", "Group", "Parent path", "Type", "Title", "Notes", "Completed", "Project", "Priority", "Planned date", "Time", "Time zone", "Scheduled instant", "Deadline", "Estimate minutes", "Labels", "Assigned to"]
 }

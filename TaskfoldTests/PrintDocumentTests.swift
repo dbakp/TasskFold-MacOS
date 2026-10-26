@@ -140,3 +140,134 @@ extension PrintDocumentTests {
         XCTAssertThrowsError(try PrintDocument.capture(title: "", subtitle: "", groups: [("", selected)], projects: [], labels: [], hierarchyRoots: [root]))
     }
 }
+
+
+final class TaskRowCSVTests: XCTestCase {
+    func task(_ id: String, _ title: String, notes: String = "") -> Record {
+        Record(["id": .string(id), "title": .string(title), "description": .string(notes), "priority": .number(4), "completed": .bool(false), "labels": .array([]), "subtasks": .array([])])
+    }
+    func doc(_ tasks: [Record], projects: [Record] = [], labels: [Record] = []) throws -> PrintDocument {
+        try PrintDocument.capture(title: "Review", subtitle: "", groups: [("Work",tasks)], projects: projects, labels: labels, assigneeName: { _ in "Sam" })
+    }
+
+    func testDatedHeadingContextCountsAsARowAndNestedPathsRetainItsTitle() throws {
+        var child = task("child","First"), second = task("second","Second"), root = task("root","Context")
+        child["due_date"] = .string("2026-10-26"); second["due_date"] = .string("2026-10-26")
+        child["subtasks"] = .array([.object(task("detail","Checklist").fields)])
+        root["is_heading"] = .bool(true); root["due_date"] = .string("2026-10-26"); root["subtasks"] = .array([.object(child.fields),.object(second.fields)])
+        let cache = TaskCache(); cache.update([root])
+        let shown = cache.matching(TaskQuery(scope:.today,today:"2026-10-26"))
+        XCTAssertEqual(shown.count,3); XCTAssertEqual(shown.filter{TaskKind.mayComplete($0)}.count,2)
+        let captured = try PrintDocument.capture(title:"Today",subtitle:"",groups:[("Today",shown)],projects:[],labels:[],hierarchyRoots:[root],expandOrdinaryChecklists:true)
+        let full = try TaskRowCSV.make(captured); XCTAssertEqual(full.rows.count,4)
+        XCTAssertEqual(try TaskRowCSV.make(captured,options:.init(checklists:false)).rows.count,3)
+        XCTAssertEqual(full.rows.first{$0[6]=="Checklist"}?[4],"Context › First")
+    }
+    func testArchivedProjectIsReadableForExportWithoutRestoringOrMutatingIt() throws {
+        var root = task("root","Archived work"); root["project_id"] = .string("project")
+        let project = Record(["id":.string("project"),"name":.string("Saved project"),"is_archived":.bool(true)])
+        let captured = try PrintDocument.capture(title:"Saved project",subtitle:"Archived",groups:[("Tasks",[root])],projects:[project],labels:[],hierarchyRoots:[root])
+        let file = try TaskRowCSV.make(captured)
+        XCTAssertEqual(file.rows.count,1); XCTAssertEqual(file.rows[0][9],"Saved project")
+        XCTAssertEqual(project["is_archived"],.bool(true)); XCTAssertEqual(root["project_id"],.string("project"))
+    }
+    func testStructuredFieldsAndStatusExportWithoutLiveIdentifiersOrPrivatePayloads() throws {
+        var row = task("private-task", "Review", notes: "Keep **all** notes")
+        for (key,value) in ["user_id":"private-user","task_generation":"private-generation","project_id":"private-project","assigned_to":"private-person","due_date":"2026-10-26","due_time":"09:00","time_zone":"Europe/Copenhagen","scheduled_at":"2026-10-26T08:00:00Z","deadline_date":"2026-10-28"] { row[key] = .string(value) }
+        row["completed"] = .bool(true); row["duration_minutes"] = .number(45); row["labels"] = .array([.string("private-label")]); row["comments"] = .array([.string("PRIVATE-DISCUSSION")]); row["attachments"] = .array([.string("PRIVATE-ATTACHMENT")])
+        let before = row, output = try TaskRowCSV.make(doc([row], projects: [Record(["id":.string("private-project"),"name":.string("Studio")])], labels: [Record(["id":.string("private-label"),"name":.string("Design")])]))
+        let cells = output.rows[0], raw = String(decoding: output.data, as: UTF8.self)
+        XCTAssertEqual(cells[8], "true"); XCTAssertEqual(cells[9], "Studio"); XCTAssertEqual(cells[11], "2026-10-26"); XCTAssertEqual(cells[14], "2026-10-26T08:00:00Z"); XCTAssertEqual(cells[16], "45"); XCTAssertEqual(cells[18], "Sam")
+        for secret in ["private-task","private-user","private-generation","private-project","private-person","private-label","PRIVATE-DISCUSSION","PRIVATE-ATTACHMENT"] { XCTAssertFalse(raw.contains(secret), secret) }
+        XCTAssertEqual(row, before); XCTAssertEqual(try WorkflowTemplateCSV.rows(output.data).first, TaskRowCSVFormat.columns)
+    }
+    func testHierarchyReferencesAreScopedToPositionsEvenWhenLegacyChildKeysRepeat() throws {
+        var a = task("a", "First"), b = task("b", "Second")
+        let child = task("same", "Checklist"); a["subtasks"] = .array([.object(child.fields)]); b["subtasks"] = a["subtasks"]
+        let output = try TaskRowCSV.make(doc([a,b]))
+        XCTAssertEqual(output.rows.map { $0[1] }, ["row-1","row-2","row-3","row-4"])
+        XCTAssertEqual(output.rows.map { $0[2] }, ["","row-1","","row-3"])
+        XCTAssertEqual(output.rows.map { $0[4] }, ["","First","","Second"])
+    }
+    func testExplicitNotesAndChecklistExclusionsRemoveTheirActualContent() throws {
+        var row = task("root", "Parent", notes: "SECRET-PARENT-NOTES")
+        row["subtasks"] = .array([.object(task("child", "SECRET-CHILD-TITLE", notes: "SECRET-CHILD-NOTES").fields)])
+        let output = try TaskRowCSV.make(doc([row]), options: .init(notes:false,checklists:false))
+        XCTAssertEqual(output.rows.count,1); XCTAssertEqual(output.rows[0][7], "")
+        XCTAssertFalse(String(decoding:output.data,as:UTF8.self).contains("SECRET"))
+    }
+    func testSpreadsheetProtectionIsReversibleOnlyForTheRecognizedTransport() throws {
+        for value in ["=SUM(A1:A2)","  @formula","'literal","'=literal","First, \"quoted\"\r\nSecond 👩🏽‍💻"] {
+            let output = try TaskRowCSV.make(doc([task("root",value,notes:value)]))
+            XCTAssertEqual(try WorkflowTemplateCSV.rows(output.data)[1][6],WorkflowTemplateCSV.escape(value))
+            let source = try WorkflowCSVSource(data: output.data)
+            XCTAssertEqual(source.records[0][6],value); XCTAssertEqual(source.records[0][7],value)
+        }
+        let generic = try WorkflowCSVSource(data: Data("Title\n'=literal".utf8))
+        XCTAssertEqual(generic.records[0][0],"'=literal")
+    }
+    func testCanonicalLabelArraysPreserveSemicolonsBackslashesAndLiteralWhitespace() throws {
+        var row = task("root", "Labels")
+        row["labels"] = .array([.object(["name":.string("Design; Review")]),.object(["name":.string("Path\\Name")]),.object(["name":.string(" Spaced ")])])
+        let output = try TaskRowCSV.make(doc([row])), source = try WorkflowCSVSource(data:output.data)
+        var mapping = WorkflowCSVMapping(); mapping.columns = [.title:6,.labels:17]
+        let template = try source.template(name:"Workflow",mapping:mapping,anchor:Date(),headings:false)
+        XCTAssertEqual(template.template.tasks[0]["labels"].list.map{$0.object["name"]?.text},["Design; Review","Path\\Name"," Spaced "])
+    }
+    func testHeadingsAndChildrenRoundtripAsFreshReviewedWorkflowWithoutCompletionHistory() throws {
+        var root = task("private-root", "Context"), child = task("private-child", "Action")
+        root["is_heading"] = .bool(true); child["completed"] = .bool(true); root["subtasks"] = .array([.object(child.fields)])
+        let source = try WorkflowCSVSource(data: TaskRowCSV.make(doc([root])).data)
+        var mapping = WorkflowCSVMapping(); mapping.columns = [.identifier:1,.parent:2,.type:5,.title:6,.notes:7,.labels:17]
+        let file = try source.template(name:"Reusable",mapping:mapping,anchor:Date(),headings:true)
+        XCTAssertEqual(TaskKind(file.template.tasks[0]),.heading)
+        XCTAssertEqual(file.template.tasks[0]["subtasks"].list[0].object["title"],.string("Action"))
+        XCTAssertNil(file.template.tasks[0]["subtasks"].list[0].object["completed"])
+        XCTAssertThrowsError(try source.template(name:"Reusable",mapping:mapping,anchor:Date(),headings:false))
+    }
+    func testFilteredChildKeepsParentContextWithoutInventingNonmatchingRows() throws {
+        var root = task("root","Parent"); root["subtasks"] = .array([.object(task("leaf","Match").fields)])
+        let binding = WorkspaceBinding(account:"print-review",generation:UUID())
+        let index = try TaskHierarchyIndex(roots:[root],projects:[],workspace:binding)
+        let reference = SubtaskTree.reference(parent:root.id,key:"leaf"), child = try XCTUnwrap(index.item(reference)?.record)
+        let capture = try PrintDocument.capture(title:"Filtered",subtitle:"",groups:[("Matches",[child])],projects:[],labels:[],hierarchyRoots:[root])
+        let rows = try TaskRowCSV.make(capture).rows
+        XCTAssertEqual(rows.count,1); XCTAssertEqual(rows[0][2],""); XCTAssertEqual(rows[0][4],"Parent"); XCTAssertEqual(rows[0][6],"Match")
+    }
+    func testVisibleHeadingAndProjectedChildResolveLocalParentReference() throws {
+        var root = task("root","Context"); root["is_heading"] = .bool(true); root["subtasks"] = .array([.object(task("child","Action").fields)])
+        let work = ProductiveTaskReading(tasks:[root])
+        let capture = try PrintDocument.capture(title:"Project",subtitle:"",groups:[("Work",work.presentation)],projects:[],labels:[],hierarchyRoots:[root],expandOrdinaryChecklists:true)
+        let output = try TaskRowCSV.make(capture), heading = try XCTUnwrap(output.rows.first{$0[5]=="heading"}), child = try XCTUnwrap(output.rows.first{$0[6]=="Action"})
+        XCTAssertEqual(child[2],heading[1]); XCTAssertEqual(output.rows.count,2)
+    }
+    func testRepeatedQueryGroupsKeepSeparateRowsAndReferences() throws {
+        let row = task("same","Task")
+        let capture = try PrintDocument.capture(title:"Queries",subtitle:"",groups:[("First",[row]),("Second",[row])],projects:[],labels:[])
+        let output = try TaskRowCSV.make(capture)
+        XCTAssertEqual(output.rows.map{$0[3]},["First","Second"]); XCTAssertEqual(Set(output.rows.map{$0[1]}).count,2)
+    }
+    func testUnknownMetadataRefusesCSVWithoutBreakingReadablePDF() throws {
+        var row = task("root","Keep work"); row["priority"] = .string("future")
+        let capture = try doc([row]); XCTAssertThrowsError(try TaskRowCSV.make(capture)); XCTAssertGreaterThan(try TaskPrintRenderer.render(capture).data.count,0)
+        row = task("root","Label unavailable"); row["labels"] = .array([.string("private-missing-label")]); XCTAssertThrowsError(try TaskRowCSV.make(doc([row])))
+        row = task("root","Type unavailable"); row["is_heading"] = .string("future")
+        XCTAssertEqual(try TaskRowCSV.make(doc([row])).rows[0][5],"unavailable")
+    }
+    func testCanonicalMarkerDamageAndInvalidLabelCellsAreRefused() throws {
+        let output = try TaskRowCSV.make(doc([task("root","Task")]))
+        func data(_ rows:[[String]]) -> Data {Data(rows.map{$0.map(WorkflowTemplateCSV.quote).joined(separator:",")}.joined(separator:"\r\n").utf8)}
+        var rows = try WorkflowTemplateCSV.rows(output.data); rows[1][0]="future-format"; XCTAssertThrowsError(try WorkflowCSVSource(data:data(rows)))
+        rows = try WorkflowTemplateCSV.rows(output.data); rows[1][17]="not a list"
+        let source = try WorkflowCSVSource(data:data(rows)); var mapping = WorkflowCSVMapping(); mapping.columns=[.title:6,.labels:17]
+        XCTAssertThrowsError(try source.template(name:"Workflow",mapping:mapping,anchor:Date(),headings:false))
+    }
+    func testRowAndByteBoundsRefuseWholeFilesWithoutTruncation() throws {
+        let rows=(0..<5001).map{task("\($0)","Task")}
+        XCTAssertEqual(try TaskRowCSV.make(doc(Array(rows.prefix(5000)))).rows.count,5000)
+        XCTAssertThrowsError(try TaskRowCSV.make(doc(rows)))
+        let large = try doc([task("root","Task",notes:String(repeating:"x",count:2_100_000))])
+        XCTAssertThrowsError(try TaskRowCSV.make(large)); XCTAssertEqual(try TaskRowCSV.make(large,options:.init(notes:false)).rows.count,1)
+        XCTAssertThrowsError(try TaskRowCSV.make(doc([])))
+    }
+}

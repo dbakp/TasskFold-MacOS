@@ -1011,6 +1011,10 @@ private struct TemplateCSVMappingView: View {
                 Text(field == .title ? "Choose a column" : "Not copied").tag(-1)
                 ForEach(source.headers.indices, id: \.self) { index in Text(source.headers[index]).tag(index) }
             }.pickerStyle(.menu).accessibilityIdentifier("mappedCSVColumn-" + field.rawValue)
+            if field == .labels, mapping.columns[field] != nil {
+                Text(source.taskRowLabelsColumn == mapping.columns[field] ? "Keeps every label name from this Taskfold export." : "Separate label names with semicolons (;).")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             if let index = mapping.columns[field], source.headers.indices.contains(index) {
                 Text(source.records.prefix(2).map { $0[index].isEmpty ? "(empty)" : String($0[index].prefix(140)) }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(.secondary).lineLimit(3)
