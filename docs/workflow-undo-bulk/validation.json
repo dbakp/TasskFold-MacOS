@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-26",
+  "platform": "mac",
+  "core": {
+    "passed": 272,
+    "failed": 0
+  },
+  "sql": {
+    "passed": 62
+  },
+  "scale": {
+    "passed": 19
+  },
+  "native": {
+    "phonePassed": 5,
+    "tabletPassed": 5,
+    "macRuntime": "Pending UI Automation; not attempted with unchanged disabled Developer mode"
+  },
+  "deployment": "Source only; no hosted changes",
+  "screenshots": "Four inspected DEBUG acceptance-wrapper images; no production layout audit or oversized-alert screenshot claimed",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "b8da7d6d6075bc3807e0bc18be8dcf49bdd3be6fcdf95c71181fc325ce61a5a2",
+    "Taskfold/Core/Store.swift": "e77c919b83a1151ab1f4235cdd6d8463e97c94221106cf97ffb795ff5d707ad2",
+    "Taskfold/Core/Backend.swift": "804b799a1117cde91ec8e4a50e063d85154430d78df3b6cc8119710e6579ad0d",
+    "Taskfold/TeamTemplateNativeFixture.swift": "5574a083ececd5869cb030573792e642048ff7631d4831b4e827a189dfe56b26",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "e5682bbe2d55f1264cf80143638d5e8b09797a37951a23c8625bc787455ffd8e",
+    "Scripts/Database/test-workflow-undo.mjs": "32e6e9551158d9d2f1e7178d13713f254c5dab99dcc85489d2ff5c4441a55d74",
+    "Scripts/Database/test-workflow-undo-scale.mjs": "4a298df65ad5c107f0673aac036ae164e6eb4646479fab3d99f9f2a8f23961cf",
+    "supabase/migrations/20261026202554_workflow_undo_bulk.sql": "18034c5dcf289208d9a6ee311dd28a4f81be81bd6e8195d7940b5f6f4104f538",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "346003fbd28aedfaa560c2747ac98ef2b89ea1476b8f0389f5b864d1b46dc0c1"
+  },
+  "retainedMacCache": {
+    "host": "/tmp/taskfold-workflow-native-mac-host",
+    "build": "/tmp/taskfold-workflow-native-mac-build",
+    "note": "Mutable working cache refreshed to this stage; older stage bindings are historical"
+  },
+  "remaining": [
+    "Large creation UI/preparation/persistence/delivery",
+    "Production contention and hosted/paired acceptance",
+    "Mac runtime",
+    "Remaining ranked Px work and explicit user deferrals"
+  ],
+  "preparedSourceSHA256": {
+    "Taskfold/TeamTemplateNativeFixture.swift": "5574a083ececd5869cb030573792e642048ff7631d4831b4e827a189dfe56b26",
+    "Taskfold/Core/Backend.swift": "d1b38a5b8a2c83116e0579de653e772f1fbcaf92097b8b8c38501e1db3186bae",
+    "Taskfold/Core/Store.swift": "b2f8a148914ca28d412d33d4744b02b287c0e20ff398db8cdfb2be915895c869",
+    "Taskfold/Core/ProjectWorkflows.swift": "b8da7d6d6075bc3807e0bc18be8dcf49bdd3be6fcdf95c71181fc325ce61a5a2"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "f0d645a8639379f64566bc87d2c3edde1b52a3d474065e1a550e59a7ac31767a"
+  }
+}

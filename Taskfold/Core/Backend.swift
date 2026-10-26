@@ -949,7 +949,7 @@ final class Backend: NSObject {
         let expectedOwner = expectedAccount ?? session?.user.id
         guard expectedOwner == session?.user.id else { throw CancellationError() }
         if WorkflowUndo.matches(change) {
-            guard WorkflowUndo.items(change) != nil, change.fields["user_id"]?.text == expectedOwner else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
+            guard WorkflowUndo.items(change) != nil, WorkflowUndo.fitsBody(change), change.fields["user_id"]?.text == expectedOwner else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
             let data = try await request("/rest/v1/rpc/taskfold_undo_private_workflow", method: "POST", body: [
                 "_request": .string(change.id.uuidString.lowercased()), "_body": .object(change.fields)], expectedAccount: expectedOwner)
             let saved = try JSONDecoder().decode(Record.self, from: data)

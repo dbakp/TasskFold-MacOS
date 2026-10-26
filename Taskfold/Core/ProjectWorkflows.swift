@@ -1173,14 +1173,18 @@ enum WorkflowUndo {
         return boundary.raw["personal_workflow_undo_protocol"] == .number(1)
     }
     static func canSend(_ change: Mutation, boundary: TeamWorkspaceBoundary?) -> Bool {
-        !matches(change) || boundary?.raw["personal_workflow_undo_protocol"] == .number(1)
+        guard matches(change) else { return true }
+        guard boundary?.raw["personal_workflow_undo_protocol"] == .number(1) else { return false }
+        return (change.fields["items"]?.list.count ?? 0) <= 12000 || boundary?.raw["personal_workflow_undo_bulk_protocol"] == .number(1)
     }
+    static let maximumBytes = 16_800_000
+    static let tooLarge = "This workflow is too large to create in one step. Your template is kept and no work was created."
     static let message = "This workflow changed after it was created. Undo was cancelled and your current work was kept."
     static func matches(_ change: Mutation) -> Bool { change.table == table || change.method == "WORKFLOW_UNDO" }
     static func items(_ change: Mutation) -> [Mutation]? {
         guard change.table == table, change.method == "WORKFLOW_UNDO", let run = change.workflowRun,
               change.recordID == run.uuidString.lowercased(), case .array(let rows) = change.fields["items"],
-              !rows.isEmpty, rows.count <= 12000, let owner = change.fields["user_id"]?.text, !owner.isEmpty else { return nil }
+              !rows.isEmpty, let owner = change.fields["user_id"]?.text, !owner.isEmpty else { return nil }
         var seen = Set<String>(), result: [Mutation] = []
         for value in rows {
             let raw = value.object, name = raw["table"]?.text ?? "", id = raw["id"]?.text ?? ""
@@ -1191,15 +1195,53 @@ enum WorkflowUndo {
         }
         return result
     }
+    /// PostgreSQL jsonb::text adds a space after structural separators and
+    /// expands exponent notation. Count that representation before admitting a
+    /// durable command, without changing whitespace inside authored strings.
+    static func bodyBytes(_ change: Mutation) -> Int? {
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
+        guard let data = try? encoder.encode(JSON.object(change.fields)) else { return nil }
+        let bytes = Array(data)
+        var size = bytes.count, index = 0, quoted = false, escaped = false
+        while index < bytes.count {
+            let byte = bytes[index]
+            if quoted {
+                if escaped { escaped = false }
+                else if byte == 92 { escaped = true }
+                else if byte == 34 { quoted = false }
+            } else if byte == 34 { quoted = true }
+            else if byte == 44 || byte == 58 { size += 1 }
+            else if byte == 45 || (48...57).contains(byte) {
+                let start = index
+                while index < bytes.count && (bytes[index] == 45 || bytes[index] == 43 || bytes[index] == 46 || bytes[index] == 69 || bytes[index] == 101 || (48...57).contains(bytes[index])) { index += 1 }
+                let text = String(decoding: bytes[start..<index], as: UTF8.self)
+                if let e = text.firstIndex(where: { $0 == "e" || $0 == "E" }), let exponent = Int(text[text.index(after: e)...]) {
+                    let mantissa = String(text[..<e]), sign = mantissa.hasPrefix("-") ? 1 : 0
+                    let unsigned = sign == 1 ? String(mantissa.dropFirst()) : mantissa
+                    let parts = unsigned.split(separator: ".", omittingEmptySubsequences: false)
+                    let digits = parts.reduce(0) { $0 + $1.utf8.count }, position = parts[0].utf8.count + exponent
+                    let expanded = sign + (position >= digits ? position : position > 0 ? digits + 1 : 2 - position + digits)
+                    size += expanded - text.utf8.count
+                } else if text.hasPrefix("-"), text.dropFirst().allSatisfy({ $0 == "0" || $0 == "." }) {
+                    size -= 1 // jsonb normalizes a negative zero's sign.
+                }
+                continue
+            }
+            index += 1
+        }
+        return size
+    }
+    static func fitsBody(_ change: Mutation) -> Bool { bodyBytes(change).map { $0 <= maximumBytes } ?? false }
     static func deleting(_ changes: [Mutation], snapshot: Snapshot) -> Mutation? {
         guard let run = changes.first?.workflowRun, !changes.isEmpty,
               changes.allSatisfy({ $0.workflowRun == run && $0.method == "POST" && $0.insertOnly == true && $0.teamTaskScope == nil && $0.teamTaskBatch == nil && $0.teamCompletion == nil }),
               let owner = changes.first?.fields["user_id"]?.text else { return nil }
-        let created = changes.filter { change in !(snapshot.tables[change.table] ?? []).contains { $0.id == change.recordID } }
+        let existing = snapshot.tables.mapValues { Set($0.map(\.id)) }
+        let created = changes.filter { !(existing[$0.table] ?? []).contains($0.recordID) }
         guard !created.isEmpty else { return nil }
         let command = Mutation(table: table, recordID: run.uuidString.lowercased(), method: "WORKFLOW_UNDO", fields: [
             "user_id": .string(owner), "items": .array(created.reversed().map { .object(["table": .string($0.table), "id": .string($0.recordID), "base": .object($0.fields)]) })], workflowRun: run)
-        return items(command) == nil ? nil : command
+        return items(command) != nil && fitsBody(command) ? command : nil
     }
     static func restoring(_ change: Mutation) -> [Mutation]? {
         items(change)?.reversed().map { item in
@@ -1207,11 +1249,12 @@ enum WorkflowUndo {
         }
     }
     static func validate(_ change: Mutation, snapshot: Snapshot, account: String) throws {
-        guard let items = items(change), change.fields["user_id"]?.text == account else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
+        guard let items = items(change), fitsBody(change), change.fields["user_id"]?.text == account else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
         let ids = Dictionary(grouping: items, by: \.table).mapValues { Set($0.map(\.recordID)) }
         func external(_ table: String, _ row: Record) -> Bool { !(ids[table] ?? []).contains(row.id) }
+        let currentRows = snapshot.tables.mapValues { Dictionary($0.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }) }
         for item in items {
-            if let current = snapshot.tables[item.table]?.first(where: { $0.id == item.recordID }),
+            if let current = currentRows[item.table]?[item.recordID],
                !item.baseline!.allSatisfy({ current[$0.key] == $0.value }) { throw AppFailure(message: message) }
         }
         for row in snapshot.tables["projects"] ?? [] where external("projects", row) && (ids["projects"] ?? []).contains(row.string("parent_id")) { throw AppFailure(message: message) }
@@ -1225,15 +1268,22 @@ enum WorkflowUndo {
     }
     static func apply(_ change: Mutation, snapshot: inout Snapshot) {
         guard let items = items(change) else { return }
-        for item in items { snapshot.apply(item) }
+        let grouped = Dictionary(grouping: items, by: \.table).mapValues { Dictionary($0.map { ($0.recordID, $0) }, uniquingKeysWith: { first, _ in first }) }
+        for (table, changes) in grouped {
+            snapshot.tables[table] = (snapshot.tables[table] ?? []).filter { row in
+                guard let item = changes[row.id] else { return true }
+                return !TaskGeneration.permitsLocalAction(item, existing: row) || !TaskKind.permits(item, existing: row)
+            }
+        }
     }
     static func reply(_ saved: Record?, change: Mutation) -> (applied: Bool, rows: [Mutation])? {
         guard let items = items(change), let saved, saved.id == change.id.uuidString.lowercased(),
               case .bool(let applied) = saved["applied"], case .array(let values) = saved["rows"] else { return nil }
+        let expected = Set(items.map { $0.table + ":" + $0.recordID })
         var seen = Set<String>(), rows: [Mutation] = []
         for value in values {
             let raw = value.object, table = raw["table"]?.text ?? "", row = Record(raw["row"]?.object ?? [:])
-            guard items.contains(where: { $0.table == table && $0.recordID == row.id }),
+            guard expected.contains(table + ":" + row.id),
                   row.string("user_id") == change.fields["user_id"]?.text, seen.insert(table + ":" + row.id).inserted else { return nil }
             rows.append(Mutation(table: table, recordID: row.id, method: "POST", fields: row.fields))
         }
@@ -1245,9 +1295,9 @@ enum WorkflowUndo {
         snapshot.pending.removeAll { $0.id == change.id }
         if !reply.applied {
             // Refusal returns the server's surviving owned rows, not the stale creation payload.
-            for row in reply.rows {
-                snapshot.tables[row.table, default: []].removeAll { $0.id == row.recordID }
-                snapshot.tables[row.table, default: []].append(Record(row.fields))
+            for (table, rows) in Dictionary(grouping: reply.rows, by: \.table) {
+                let ids = Set(rows.map(\.recordID))
+                snapshot.tables[table] = (snapshot.tables[table] ?? []).filter { !ids.contains($0.id) } + rows.map { Record($0.fields) }
             }
             for queued in snapshot.pending { snapshot.apply(queued) }
         }

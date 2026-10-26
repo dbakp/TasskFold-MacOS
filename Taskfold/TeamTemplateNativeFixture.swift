@@ -373,6 +373,11 @@ import CryptoKit
             Form {
                 Text("Private workflow acceptance").font(.title2)
                 Button("Use native workflow") { presenting = true }.accessibilityIdentifier("openNativeWorkflow")
+                Button("Attempt oversized workflow") {
+                    var row = Record.task(user: store.userID); row["title"] = .string("Oversized workflow proof")
+                    row["description"] = .string(String(repeating: "x", count: WorkflowUndo.maximumBytes))
+                    _ = store.commit([Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields, insertOnly: true, workflowRun: UUID())])
+                }.accessibilityIdentifier("oversizedNativeWorkflow")
                 Button("Undo workflow") { store.undo() }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("undoNativeWorkflow")
                 Button("Redo workflow") { store.redo() }.disabled(store.redoStack.isEmpty).accessibilityIdentifier("redoNativeWorkflow")
                 Button("Add incoming task remotely") { update { state in

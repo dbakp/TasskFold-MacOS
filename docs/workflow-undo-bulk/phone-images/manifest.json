@@ -1,0 +1,32 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "DD1D8AC7-7F1A-47AF-8157-E81D3FBB7826.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private workflow restored after cold return_0_472478F7-7B00-4C7B-AD04-A4049532D021.png",
+        "timestamp" : 1793048960.002
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "801BBF61-2069-4344-87D1-0CB76AC205C7.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Refused workflow Undo preserves incoming work_0_7352952B-F28C-4047-9D9F-0E66D04EA2FD.png",
+        "timestamp" : 1793048981.64
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo"
+  }
+]

@@ -5122,10 +5122,28 @@ extension SharedHeadingNativeTests {
         XCTAssertEqual(try workflowPeer()["transitions"] as? Int, 0)
         let after = try workflowRows()
         for (table, rows) in first { for row in rows { XCTAssertEqual(after[table]?.first { $0["id"] as? String == row["id"] as? String } as NSDictionary?, row as NSDictionary) } }
-        XCTAssertTrue(app.staticTexts["Later incoming work"].waitForExistence(timeout: 5))
+        let incoming = app.staticTexts["Later incoming work"]
+        for _ in 0..<4 { if incoming.exists && incoming.isHittable { break }; app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
+        XCTAssertTrue(incoming.waitForExistence(timeout: 5)); XCTAssertTrue(incoming.isHittable)
         let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Refused workflow Undo preserves incoming work"; picture.lifetime = .keepAlways; add(picture)
         app.terminate(); try workflowStart(app, reset: false); workflowWait { try self.workflowSettled(tasks: 4, attempts: 1) }
     }
+
+    @MainActor func testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app)
+        let before = try workflowCache(), remote = try workflowRows()
+        app.buttons["oversizedNativeWorkflow"].click()
+        let warning = app.alerts.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "too large to create")).firstMatch
+        if warning.waitForExistence(timeout: 8) { XCTAssertTrue(warning.exists) }
+        else { XCTAssertTrue(app.staticTexts["nativeWorkflowStatus"].label.contains("too large to create"), app.debugDescription) }
+        if app.alerts.buttons["OK"].exists { app.alerts.buttons["OK"].click() }
+        XCTAssertEqual(try workflowCache() as NSDictionary, before as NSDictionary)
+        XCTAssertEqual(try workflowRows() as NSDictionary, remote as NSDictionary)
+        XCTAssertFalse(app.buttons["undoNativeWorkflow"].isEnabled)
+        app.terminate(); try workflowStart(app, reset: false)
+        XCTAssertEqual(try workflowCache() as NSDictionary, before as NSDictionary)
+    }
+
     @MainActor func testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app); try workflowCreate(app)
         let first = try workflowRows(); app.buttons["pauseNativeWorkflowSupport"].click()

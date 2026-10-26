@@ -1333,7 +1333,7 @@ final class Store {
             prepared=try TeamTaskBatch.preparing(changes,snapshot:snapshot)
             for change in prepared {
                 if WorkflowUndo.matches(change) {
-                    guard localMode || WorkflowUndo.available(boundary: nativeConversationTeamCache?.boundary, account: userID, origin: try? backend.accountRemovalOrigin) else { throw AppFailure(message: WorkflowUndo.unavailable) }
+                    guard localMode || (WorkflowUndo.available(boundary: nativeConversationTeamCache?.boundary, account: userID, origin: try? backend.accountRemovalOrigin) && WorkflowUndo.canSend(change, boundary: nativeConversationTeamCache?.boundary)) else { throw AppFailure(message: WorkflowUndo.unavailable) }
                     try WorkflowUndo.validate(change, snapshot: snapshot, account: userID)
                 }
                 if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
@@ -1455,9 +1455,17 @@ final class Store {
             if snapshot.sharedCaptureReceipts == nil { snapshot.sharedCaptureReceipts = [:] }
             snapshot.sharedCaptureReceipts?[draft.taskID] = draft.taskID
         }
-        do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
         let historyChanges = committedChanges.filter { $0.table != FocusSessionChange.table }
-        if remember, !historyChanges.isEmpty { undoStack.append(EditHistory(changes: historyChanges, snapshot: old)); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
+        let workflowCreation = historyChanges.first?.workflowRun != nil && historyChanges.allSatisfy { $0.method == "POST" && $0.workflowRun == historyChanges.first?.workflowRun }
+        let history = (remember || workflowCreation) && !historyChanges.isEmpty ? EditHistory(changes: historyChanges, snapshot: old) : nil
+        if workflowCreation {
+            let existing = old.tables.mapValues { Set($0.map(\.id)) }
+            if historyChanges.contains(where: { !(existing[$0.table] ?? []).contains($0.recordID) }), history?.undo.isEmpty != false {
+                snapshot = old; error = WorkflowUndo.tooLarge; return false
+            }
+        }
+        do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
+        if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }
         return true
     }

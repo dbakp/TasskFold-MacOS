@@ -1,0 +1,32 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "555C8F3A-B2AA-408E-8D28-2F3FA173B6CD.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private workflow restored after cold return_0_463EABC0-B398-49C2-B36A-D97EC4281AF5.png",
+        "timestamp" : 1793048960.697
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "exportedFileName" : "BE183A65-A87E-4967-B74F-B4ACB7A94255.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Refused workflow Undo preserves incoming work_0_ED4ED131-2D26-4E81-81FA-533F0B1D8988.png",
+        "timestamp" : 1793048981.801
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo"
+  }
+]

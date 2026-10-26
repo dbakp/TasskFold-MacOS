@@ -1,0 +1,5 @@
+{
+  "preparedTestSHA256": "b00d668bbda0078f430f5abef13276c86a03ee9946a7329c78fa83719a832a64",
+  "productionCodeUnchangedForRerun": true,
+  "onlyChange": "Materialize the debug panel incoming-work row by scrolling before asserting visibility."
+}

@@ -1,0 +1,25 @@
+{
+  "samples": [
+    {
+      "input": "{\"n\":1e+100}",
+      "bytes": 108
+    },
+    {
+      "input": "{\"n\":-1e-100}",
+      "bytes": 110
+    },
+    {
+      "input": "{\"n\":[1e+100,-1e-100]}",
+      "bytes": 215
+    },
+    {
+      "input": "{\"n\":\"https://x\\nñ🙂\"}",
+      "bytes": 26
+    },
+    {
+      "input": "{\"n\":\"comma, colon: quote\\\" slash\\\\\"}",
+      "bytes": 38
+    }
+  ],
+  "containerRemoved": true
+}

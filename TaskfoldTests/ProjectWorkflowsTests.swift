@@ -272,6 +272,77 @@ final class ProjectWorkflowsTests: XCTestCase {
         XCTAssertTrue(EditHistory(changes: bad, snapshot: Snapshot()).undo.isEmpty, "Tagged workflow history must not degrade to individual DELETEs")
     }
 
+
+
+
+    func testWorkflowUndoBudgetCountsPostgresSpacesAndExpandedNumbers() {
+        func bytes(_ value: JSON) -> Int? { WorkflowUndo.bodyBytes(Mutation(table: "test", recordID: "test", method: "POST", fields: ["n": value])) }
+        XCTAssertEqual(bytes(.number(1e100)), 108)
+        XCTAssertEqual(bytes(.number(-1e-100)), 110)
+        XCTAssertEqual(bytes(.array([.number(1e100), .number(-1e-100)])), 215)
+        XCTAssertEqual(bytes(.string("https://x\nñ🙂")), 26)
+        XCTAssertEqual(bytes(.string("comma, colon: quote\" slash\\")), 38)
+        XCTAssertEqual(bytes(.number(-0.0)), 8)
+        let exponentBody = Mutation(table: "test", recordID: "test", method: "POST", fields: ["n": .array(Array(repeating: .number(1e308), count: 60000))])
+        XCTAssertEqual(WorkflowUndo.bodyBytes(exponentBody), 18_660_007)
+        XCTAssertFalse(WorkflowUndo.fitsBody(exponentBody), "Compact JSON below 1 MB must not bypass the service's expanded-byte budget")
+        XCTAssertNil(bytes(.number(.infinity)))
+    }
+
+    func testWorkflowBulkReplayProtectsRecreatedTaskAndUnrelatedRows() throws {
+        let f = try workflowUndoFixture(), created = try XCTUnwrap(f.changes.first { $0.table == "tasks" })
+        var snapshot = f.snapshot
+        let index = try XCTUnwrap(snapshot.tables["tasks"]?.firstIndex { $0.id == created.recordID })
+        snapshot.tables["tasks"]![index]["task_generation"] = .string(UUID().uuidString.lowercased())
+        snapshot.tables["tasks"]![index]["title"] = .string("Restored on another device")
+        let recreated = snapshot.tables["tasks"]![index]
+        var unrelated = Record.task(user: owner); unrelated["title"] = .string("Unrelated work")
+        snapshot.tables["tasks", default: []].append(unrelated)
+        snapshot.apply(f.command)
+        XCTAssertEqual(snapshot.tables["tasks"]?.first { $0.id == recreated.id }, recreated)
+        XCTAssertEqual(snapshot.tables["tasks"]?.first { $0.id == unrelated.id }, unrelated)
+        snapshot.pending = [f.command, Mutation(table: "tasks", recordID: recreated.id, method: "PATCH", fields: ["title": .string("Stale generation edit")], baseline: ["task_generation": created.fields["task_generation"]!])]
+        let rows = f.changes.map { item in JSON.object(["table": .string(item.table), "row": .object(item.recordID == recreated.id ? recreated.fields : item.fields)]) }
+        let saved = Record(["id": .string(f.command.id.uuidString.lowercased()), "applied": .bool(false), "rows": .array(rows)])
+        XCTAssertTrue(snapshot.acknowledge(f.command, saved: saved))
+        XCTAssertEqual(snapshot.tables["tasks"]?.first { $0.id == recreated.id }, recreated)
+        XCTAssertEqual(snapshot.tables["tasks"]?.first { $0.id == unrelated.id }, unrelated)
+        XCTAssertEqual(snapshot.pending.count, 1, "A refused Undo cannot acknowledge a later edit")
+    }
+
+    func testFullSizedSectionedWorkflowKeepsOneUndoCommand() throws {
+        let count = 5000
+        let document: JSON = .object(["version": .number(1), "kind": .string("project"),
+            "projects": .array([.object(["id": .string("root"), "name": .string("Large project")])]),
+            "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
+            "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
+        let definition = try WorkflowTemplate(document: document)
+        let changes = try definition.instantiate(account: owner, name: "Large workflow")
+        XCTAssertEqual(changes.count, 20001)
+        let history = EditHistory(changes: changes, snapshot: Snapshot())
+        XCTAssertEqual(history.undo.count, 1, "A valid complete workflow must not silently lose Undo")
+        let command = try XCTUnwrap(history.undo.first)
+        XCTAssertEqual(WorkflowUndo.items(command)?.count, changes.count)
+        var raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(owner), "native_team_reads_enabled": .bool(false), "setup_paused": .bool(true), "projects": .array([]), "teams": .array([]), "token": .string(String(repeating: "a", count: 64)), "personal_workflow_undo_protocol": .number(1)]
+        let legacy = try TeamWorkspaceBoundary(raw, account: owner, origin: "https://synthetic.example")
+        XCTAssertFalse(WorkflowUndo.canSend(command, boundary: legacy), "An older count-limited service must pause this intact command")
+        raw["personal_workflow_undo_bulk_protocol"] = .number(1)
+        XCTAssertTrue(WorkflowUndo.canSend(command, boundary: try TeamWorkspaceBoundary(raw, account: owner, origin: legacy.origin)))
+        var snapshot = Snapshot(tables: Dictionary(grouping: changes, by: \.table).mapValues { $0.map { Record($0.fields) } })
+        let initial = snapshot
+        try WorkflowUndo.validate(command, snapshot: snapshot, account: owner)
+        snapshot.apply(command); XCTAssertTrue(snapshot.tables.values.allSatisfy(\.isEmpty)); snapshot.pending = [command]
+        snapshot = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        let task = try XCTUnwrap(changes.first { $0.table == "tasks" })
+        let later = Mutation(table: "tasks", recordID: task.recordID, method: "PATCH", fields: ["title": .string("My later work")])
+        snapshot.pending.append(later)
+        let refused = Record(["id": .string(command.id.uuidString.lowercased()), "applied": .bool(false), "rows": .array(changes.map { .object(["table": .string($0.table), "row": .object($0.fields)]) })])
+        XCTAssertTrue(snapshot.acknowledge(command, saved: refused)); XCTAssertEqual(snapshot.pending, [later])
+        XCTAssertEqual(snapshot.tables.values.reduce(0) { $0 + $1.count }, changes.count)
+        XCTAssertEqual(snapshot.tables["tasks"]?.first { $0.id == task.recordID }?.title, "My later work")
+        for table in ["projects", "sections", "labels", "view_orders"] { XCTAssertEqual(Set(snapshot.tables[table]!.map(\.id)), Set(initial.tables[table]!.map(\.id))) }
+    }
+
     func testProjectTemplatePreservesStructureAndOffsetsButNeverHistoryOrOwnership() throws {
         let source=fixture(),template=try WorkflowTemplate.capture(kind:.project,id:"root",snapshot:source)
         let run=UUID(),changes=try template.instantiate(account:"recipient",name:"October launch",start:Dates.parse("2026-11-01"),run:run)

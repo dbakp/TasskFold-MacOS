@@ -11,7 +11,10 @@ try {
  await pg.raw(`create table public.labels(id uuid primary key,user_id uuid not null references auth.users on delete cascade,name text,color text default '#e31e4b',order_index integer default 0);alter table public.labels enable row level security;create policy owner_labels on public.labels to authenticated using(user_id=(select auth.uid())) with check(user_id=(select auth.uid()));grant select,insert,update,delete on public.labels to authenticated;`);
  for(const id of [owner,other])await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(id)},${lit(id+'@example.invalid')},now());insert into auth.sessions(id,user_id) values(${lit(id)},${lit(id)});`);
  const migration=(await readdir(new URL('../../supabase/migrations/',import.meta.url))).find(x=>x.endsWith('_guarded_workflow_undo.sql'));
- const sql=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');await pg.raw(sql);report.migration=migration;report.migrationSHA256=createHash('sha256').update(sql).digest('hex');
+ const sql=await readFile(new URL('../../supabase/migrations/'+migration,import.meta.url),'utf8');await pg.raw(sql);
+ const bulk=(await readdir(new URL('../../supabase/migrations/',import.meta.url))).find(x=>x.endsWith('_workflow_undo_bulk.sql'));
+ if(bulk && process.env.TASKFOLD_TEST_WORKFLOW_UNDO_LEGACY!=='1'){const bulkSQL=await readFile(new URL('../../supabase/migrations/'+bulk,import.meta.url),'utf8');await pg.raw(bulkSQL);report.bulkMigration=bulk;report.bulkSHA256=createHash('sha256').update(bulkSQL).digest('hex');}
+ report.migration=migration;report.migrationSHA256=createHash('sha256').update(sql).digest('hex');
  const identity=(actor=owner,role='authenticated',session=actor)=>`set local role ${role};set local request.jwt.claim.sub=${lit(actor)};set local request.jwt.claims=${lit(JSON.stringify({sub:actor,session_id:session}))};`;
  const call=(request,body,{actor=owner,role='authenticated',session=actor,app='workflow-undo-check'}={})=>pg.scalar(`begin;set local application_name=${lit(app)};create temp table result(value jsonb,code text) on commit drop;grant all on result to authenticated,anon;${identity(actor,role,session)}do $r$begin begin insert into result values(public.taskfold_undo_private_workflow(${lit(request)},${json(body)}),null);exception when others then insert into result values(null,sqlstate);end;end$r$;select jsonb_build_object('value',value,'code',code) from result;commit`);
  const fixture=async()=>{
@@ -28,12 +31,28 @@ try {
  check('authenticated cannot read receipts',await pg.scalar("select to_jsonb(has_table_privilege('authenticated','taskfold_private.private_workflow_undos','select'))"),false);
  const boundary=await pg.scalar(`begin;${identity()}select public.taskfold_workspace_boundary();commit`);
  check('boundary advertises exact workflow compatibility',boundary.personal_workflow_undo_protocol,1);check('compatibility does not enable team editing',boundary.native_team_reads_enabled,false);
+ if(report.bulkMigration){check('bulk compatibility is additive',boundary.personal_workflow_undo_bulk_protocol,1);check('small-run compatibility retained',boundary.personal_workflow_undo_protocol,1);}
+ if(report.bulkMigration){
+  const budget=await fixture(),beforeBudget=await rows(budget.body);
+  const tooBig=await pg.scalar(`begin;create temp table result(code text) on commit drop;grant all on result to authenticated;${identity()}
+   do $b$begin begin perform public.taskfold_undo_private_workflow(${lit(randomUUID())},${json(budget.body)}||jsonb_build_object('budget_probe',(select jsonb_agg(1e308::numeric) from generate_series(1,60000))));insert into result values(null);exception when others then insert into result values(sqlstate);end;end$b$;select to_jsonb(code) from result;commit`);
+  check('expanded numbers cannot bypass byte quota',tooBig,'22023');check('byte refusal leaves complete workflow intact',await rows(budget.body),beforeBudget);
+  check('expanded-array budget agrees with client',await pg.scalar(`select to_jsonb(octet_length(jsonb_build_object('n',(select jsonb_agg(1e308::numeric) from generate_series(1,60000)))::text))`),18660007);
+ }
  const sparse=await fixture();for(const item of sparse.body.items)for(const [key,value] of Object.entries(item.base))if(value===null&&key!=='id'&&key!=='user_id')delete item.base[key];check('omitted insert defaults canonicalize safely',(await call(randomUUID(),sparse.body)).value?.applied);
  const clean=await fixture(),request=randomUUID(),done=await call(request,clean.body);check('authenticated atomic undo succeeds',done.code,null);check('unchanged workflow is removed',done.value?.applied);check('all five row types removed',(await rows(clean.body)).every(x=>x.row===null));
  // A reply retry must not delete recreated rows, even with identical IDs/content.
  await pg.raw(`insert into public.projects(id,user_id,name) values(${lit(clean.project)},${lit(owner)},'Restored copy');`);
  check('lost reply uses exact recorded result',await call(request,clean.body),done);check('reply retry leaves restored incarnation',await pg.scalar(`select to_jsonb(name) from public.projects where id=${lit(clean.project)}`),'Restored copy');
  const reused=structuredClone(clean.body);reused.items[0].base.ids=[];check('request identity cannot change body',(await call(request,reused)).code,'22023');
+ // Verify multi-row hierarchy deletion with the real parent FK as well as
+ // the older logical-column contract used by the remaining fixtures.
+ const nested=await fixture(),childProject=randomUUID(),childTask=randomUUID();
+ await pg.raw(`alter table public.projects add constraint fixture_workflow_parent foreign key(parent_id) references public.projects(id) on delete set null;insert into public.projects(id,user_id,parent_id,name) values(${lit(childProject)},${lit(owner)},${lit(nested.project)},'Child project');insert into public.tasks(id,user_id,project_id,title) values(${lit(childTask)},${lit(owner)},${lit(childProject)},'Child project task');`);
+ const childRow=await pg.scalar(`select to_jsonb(t)-'created_at'-'updated_at' from public.projects t where id=${lit(childProject)}`),childWork=await pg.scalar(`select to_jsonb(t)-'created_at'-'updated_at' from public.tasks t where id=${lit(childTask)}`);
+ nested.body.items.unshift({table:'tasks',id:childTask,base:childWork});nested.body.items.splice(nested.body.items.length-1,0,{table:'projects',id:childProject,base:childRow});
+ check('whole nested hierarchy undo succeeds',(await call(randomUUID(),nested.body)).value?.applied);check('both nested projects removed',await pg.scalar(`select to_jsonb(count(*)) from public.projects where id in(${lit(childProject)},${lit(nested.project)})`),0);check('both nested tasks removed',await pg.scalar(`select to_jsonb(count(*)) from public.tasks where id in(${lit(childTask)},${lit(nested.task)})`),0);
+ await pg.raw('alter table public.projects drop constraint fixture_workflow_parent');
  for(const table of ['projects','sections','labels','tasks','view_orders']){
   const f=await fixture(),item=f.body.items.find(x=>x.table===table);
   await pg.raw(`update public.${table} set ${table==='tasks'?"title='Later edit'":table==='view_orders'?"ids='[]'":"name='Later edit'"} where id::text=${lit(item.id)}`);
