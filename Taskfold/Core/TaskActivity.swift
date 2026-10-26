@@ -197,6 +197,46 @@ enum TaskAssignmentProvenance {
     }
 }
 
+/// Optional annotation on newly observed parent events. Missing metadata is
+/// legacy history, never an invitation to infer type from a current task row.
+struct TaskRootActivityContext: Equatable, Sendable {
+    enum Kind: String, Sendable { case task, heading, unknown }
+    let beforeType: Kind?
+    let afterType: Kind?
+    let beforeGeneration: String?
+    let afterGeneration: String?
+    var readable: Bool { beforeType != .unknown && afterType != .unknown }
+    var generationChanged: Bool { beforeGeneration != nil && afterGeneration != nil && beforeGeneration != afterGeneration }
+    init?(document: JSON, beforeExists: Bool, afterExists: Bool) {
+        guard case .object(let fields) = document, Set(fields.keys) == ["version", "before_type", "after_type", "before_generation", "after_generation"], fields["version"] == .number(1) else { return nil }
+        func type(_ key: String, exists: Bool) -> Kind? {
+            guard exists, case .string(let value)? = fields[key] else { return nil }
+            return Kind(rawValue: value)
+        }
+        func generation(_ key: String, exists: Bool) -> String? {
+            guard exists, case .string(let value)? = fields[key] else { return nil }
+            return UUID(uuidString: value)?.uuidString.lowercased()
+        }
+        beforeType = type("before_type", exists: beforeExists); afterType = type("after_type", exists: afterExists)
+        beforeGeneration = generation("before_generation", exists: beforeExists); afterGeneration = generation("after_generation", exists: afterExists)
+        guard beforeExists ? beforeType != nil && beforeGeneration != nil : fields["before_type"] == .null && fields["before_generation"] == .null,
+              afterExists ? afterType != nil && afterGeneration != nil : fields["after_type"] == .null && fields["after_generation"] == .null else { return nil }
+    }
+    static func document(before: Record?, after: Record?) -> JSON {
+        func type(_ row: Record?) -> JSON {
+            guard let row else { return .null }
+            if row["task_generation"] != .null, UUID(uuidString: row.string("task_generation")) == nil { return .string("unknown") }
+            switch TaskKind(row) { case .task: return .string("task"); case .heading: return .string("heading"); case .unsupported: return .string("unknown") }
+        }
+        func generation(_ row: Record?) -> JSON {
+            guard let row else { return .null }
+            if row["task_generation"] == .null { return .string(TaskNodeActivity.legacyGeneration) }
+            return .string(UUID(uuidString: row.string("task_generation"))?.uuidString.lowercased() ?? TaskNodeActivity.legacyGeneration)
+        }
+        return .object(["version": .number(1), "before_type": type(before), "after_type": type(after), "before_generation": generation(before), "after_generation": generation(after)])
+    }
+}
+
 struct TaskActivity: Equatable, Identifiable, Sendable {
     static let table = "task_activity"
     static let epochTable = "task_activity_epoch"
@@ -218,6 +258,9 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
     var kinds: [Kind]
     var before: [String: JSON]
     var after: [String: JSON]
+    var rootContext: TaskRootActivityContext?
+    var workBefore: Bool { !before.isEmpty && (rootContext.map { $0.readable && $0.beforeType == .task } ?? true) }
+    var workAfter: Bool { !after.isEmpty && (rootContext.map { $0.readable && $0.afterType == .task } ?? true) }
     init?(row: Record, parseInstant:(String)->Date? = TaskPlanning.instant, validDay:(String)->Bool = {Dates.parse($0) != nil}) {
         guard UUID(uuidString: row.id) != nil, let sequence = Self.integer(row["sequence"]), sequence > 0,
               Self.validID(row.string("user_id")), Self.validID(row.string("task_id")),
@@ -230,6 +273,11 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
               case .object(let before) = row["before_state"], case .object(let after) = row["after_state"],
               Self.validState(before,parseInstant:parseInstant,validDay:validDay), Self.validState(after,parseInstant:parseInstant,validDay:validDay),
               Self.changes(before: before, after: after).map(\.rawValue) == values.map(\.text) else { return nil }
+        if row["root_context"] == .null { rootContext = nil }
+        else {
+            guard let context = TaskRootActivityContext(document: row["root_context"], beforeExists: !before.isEmpty, afterExists: !after.isEmpty) else { return nil }
+            rootContext = context
+        }
         id = row.id.lowercased(); self.sequence = sequence; owner = row.string("user_id"); taskID = row.string("task_id").lowercased()
         actor = row["actor_id"] == .null ? nil : row.string("actor_id")
         recordedAt = recorded; effectiveAt = effective; completionVersion = version; kinds = values.compactMap { Kind(rawValue: $0.text) }
@@ -288,7 +336,7 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
         let last = existing.compactMap { integer($0["sequence"]) }.max() ?? 0
         guard last < 9_007_199_254_740_991 else { return }
         let effective = kinds.contains(.completed) ? TaskPlanning.instant(task.string("completed_at")) ?? now : now
-        let row = Record(["id": .string(change.id.uuidString.lowercased()), "sequence": .number(Double(last + 1)), "user_id": .string(account), "task_id": .string(task.id), "actor_id": .string(account), "recorded_at": .string(stamp(now)), "effective_at": .string(stamp(effective)), "completion_version": task.fields["completion_version"] ?? .number(0), "kinds": .array(kinds.map { .string($0.rawValue) }), "before_state": .object(b), "after_state": .object(a)])
+        let row = Record(["id": .string(change.id.uuidString.lowercased()), "sequence": .number(Double(last + 1)), "user_id": .string(account), "task_id": .string(task.id), "actor_id": .string(account), "recorded_at": .string(stamp(now)), "effective_at": .string(stamp(effective)), "completion_version": task.fields["completion_version"] ?? .number(0), "kinds": .array(kinds.map { .string($0.rawValue) }), "before_state": .object(b), "after_state": .object(a), "root_context": TaskRootActivityContext.document(before: before, after: after)])
         guard Self(row: row) != nil else { return }
         snapshot.tables[table, default: []].append(row)
         if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(stamp(now))])] }
@@ -688,16 +736,17 @@ struct ProjectPulseReading {
         events = activity.compactMap { row in
             guard let event = TaskActivity(row: row) else { malformed += 1; return nil }
             guard seen.insert(event.id).inserted, event.involves(project: project) else { return nil }
+            if let context = event.rootContext, !context.readable { malformed += 1 }
             return event
         }.sorted { $0.sequence == $1.sequence ? $0.id > $1.id : $0.sequence > $1.sequence }
         let recent = events.filter { $0.recordedAt >= start && $0.recordedAt < end && $0.recordedAt <= now }
         func before(_ event: TaskActivity) -> Bool { event.before["project_id"]?.text.lowercased() == project.lowercased() }
         func after(_ event: TaskActivity) -> Bool { event.after["project_id"]?.text.lowercased() == project.lowercased() }
-        completions = recent.filter { $0.kinds.contains(.completed) && after($0) }.count
-        reopens = recent.filter { $0.kinds.contains(.reopened) && before($0) }.count
-        additions = recent.filter { $0.kinds.contains(.created) && after($0) }.count
-        movedIn = recent.filter { !before($0) && after($0) && $0.kinds.contains(.moved) }.count
-        movedOut = recent.filter { before($0) && !after($0) && $0.kinds.contains(.moved) }.count
+        completions = recent.filter { $0.kinds.contains(.completed) && !($0.rootContext?.generationChanged ?? false) && $0.workAfter && after($0) }.count
+        reopens = recent.filter { $0.kinds.contains(.reopened) && !($0.rootContext?.generationChanged ?? false) && $0.workBefore && before($0) }.count
+        additions = recent.filter { $0.kinds.contains(.created) && $0.workAfter && after($0) }.count
+        movedIn = recent.filter { !before($0) && after($0) && $0.workAfter && $0.kinds.contains(.moved) }.count
+        movedOut = recent.filter { before($0) && !after($0) && $0.workBefore && $0.kinds.contains(.moved) }.count
     }
 }
 
@@ -818,8 +867,23 @@ struct InsightsReading {
             else { unique[event.id]=event }
         }
         var latest:[String:Int64]=[:],active:[String:Credit]=[:],deleted=Set<String>(),lifecycles:[String:String]=[:],archived:[Credit]=[]
+        var occurrences: [String: String] = [:]
         for event in unique.values.sorted(by:{$0.sequence==$1.sequence ? $0.id<$1.id : $0.sequence<$1.sequence}) {
             guard recordedFrom != nil else { break }
+            if let context = event.rootContext {
+                guard context.readable else { malformed += 1; continue }
+                let generation = context.afterGeneration ?? context.beforeGeneration
+                if let generation {
+                    if context.generationChanged || occurrences[event.taskID].map({ $0 != generation }) == true {
+                        // A new occurrence cannot inherit a prior counter or active
+                        // completion. Keep genuine earlier work as archived credit.
+                        if let credit = active.removeValue(forKey: event.taskID) { archived.append(credit) }
+                        latest.removeValue(forKey: event.taskID); deleted.remove(event.taskID)
+                        lifecycles[event.taskID] = "generation:" + generation
+                    }
+                    occurrences[event.taskID] = generation
+                }
+            }
             if deleted.contains(event.taskID),event.kinds.contains(.created) {
                 deleted.remove(event.taskID);latest.removeValue(forKey:event.taskID)
             }
@@ -831,12 +895,12 @@ struct InsightsReading {
             if deleted.contains(event.taskID) { if !event.kinds.contains(.deleted) { malformed+=1 };continue }
             latest[event.taskID]=event.completionVersion
             if event.kinds.contains(.reopened) { active.removeValue(forKey:event.taskID) }
-            if event.kinds.contains(.completed) {
+            if event.kinds.contains(.completed), event.workAfter, event.rootContext?.generationChanged != true {
                 let date=event.after["completed_at"].flatMap{instant($0.text)} ?? event.effectiveAt
                 let next=Credit(taskID:event.taskID,lifecycle:lifecycles[event.taskID] ?? "existing:"+event.taskID,version:event.completionVersion,date:date,projectID:event.after["project_id"]?.text.lowercased() ?? "",actor:event.actor?.lowercased())
                 if let previous=active[event.taskID],previous.version==next.version,previous != next { malformed+=1 }
                 else { active[event.taskID]=next }
-            } else if event.kinds.contains(.completion_time),var credit=active[event.taskID],event.after["completed"] == .bool(true) {
+            } else if event.kinds.contains(.completion_time),var credit=active[event.taskID],event.after["completed"] == .bool(true), event.workAfter, event.rootContext?.generationChanged != true {
                 if let date=event.after["completed_at"].flatMap({instant($0.text)}) { credit.date=date;credit.version=event.completionVersion;active[event.taskID]=credit }
                 else { active.removeValue(forKey:event.taskID);malformed+=1 }
             }
@@ -952,6 +1016,13 @@ struct ProjectActivityContext {
         } else { actorLabel = "Name unavailable" }
         if let current = tasks.first(where: { $0.id.lowercased() == event.taskID.lowercased() }),
            current.string("project_id").isEmpty ? current.string("user_id").lowercased() == account.lowercased() : accessible.contains(current.string("project_id").lowercased()) {
+            if let context = event.rootContext {
+                let generation = context.afterGeneration ?? context.beforeGeneration
+                guard context.readable, generation != TaskNodeActivity.legacyGeneration,
+                      current.string("user_id").lowercased() == event.owner.lowercased(),
+                      generation == UUID(uuidString: current.string("task_generation"))?.uuidString.lowercased(),
+                      tasks.filter({ $0.id.lowercased() == event.taskID.lowercased() }).count == 1 else { task = nil; return }
+            }
             task = current
         } else { task = nil }
     }

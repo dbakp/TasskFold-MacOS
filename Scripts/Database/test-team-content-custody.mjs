@@ -113,6 +113,12 @@ try {
   const sql = await source(migration);
   report.migrationSHA256 = createHash("sha256").update(sql).digest("hex");
   await pg.raw(sql);
+  if (process.env.TASKFOLD_TEST_ROOT_CONTEXT === "1") {
+    await pg.raw("alter table public.tasks add column is_heading boolean");
+    const contextSQL = await source("supabase/migrations/20261026104450_task_activity_root_context.sql");
+    report.rootContextMigrationSHA256 = createHash("sha256").update(contextSQL).digest("hex");
+    await pg.raw(contextSQL);
+  }
   check(
     "backfill all live identities",
     await pg.scalar(
@@ -658,6 +664,12 @@ try {
   const taskBeforeTransfer = await pg.scalar(
     `select to_jsonb(t) from public.tasks t where id=${lit(teamTask)}`,
   );
+  if (process.env.TASKFOLD_TEST_ROOT_CONTEXT === "1") {
+    check("retained team history has observed type and generation after Auth removal",
+      await pg.scalar(`select root_context from public.task_activity where task_id=${lit(teamTask)} order by sequence desc limit 1`),
+      {version:1,before_type:"task",after_type:"task",before_generation:taskBeforeTransfer.task_generation,after_generation:taskBeforeTransfer.task_generation});
+  }
+
   await pg.raw(
     `insert into taskfold_private.team_members(team_id,user_id,role) values(${
       lit(team)

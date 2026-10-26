@@ -7691,3 +7691,22 @@ trustworthy historical root type/work context and a combined child activity fold
 then their UI/widget integration and broader calendar/adapters acceptance. See
 [TASK_NODE_ACTIVITY_INTEGRATION.md](TASK_NODE_ACTIVITY_INTEGRATION.md) for the
 contract, verification limits and ordered remaining work. Px stays active.
+
+
+### Observed parent type and generation (26 October 2026)
+
+New parent events carry optional observed type/generation metadata. Heading
+events do not earn work credit, old untyped totals are preserved, and a known new
+occurrence resets its counter without erasing genuine earlier credit. Typed
+routes cannot open a recreated/foreign root at the same ID. The additive SQL
+writer preserves the later team-custody rule and continues recording retained
+parent work after Auth removal. No hosted schema or authoring flag changed.
+
+239 Core checks, 36 PostgreSQL upgrade checks and 94 broader custody checks pass
+per independent repository. App/test builds and exact native limits are recorded
+in `root-activity-context/`. This is not mixed child UI/runtime acceptance.
+The separate child ledger still needs team identity/role/cleanup custody alignment
+before service rollout; that is now the first prerequisite for combining feeds
+and wiring activity/Insights/Project pulse. See
+[TASK_ROOT_ACTIVITY_CONTEXT.md](TASK_ROOT_ACTIVITY_CONTEXT.md). The full Px scope
+and all user-deferred release/provider/device gates remain unchanged.

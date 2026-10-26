@@ -85,7 +85,15 @@ prepared, but no new Mac runtime acceptance is claimed.
 The metadata is now integrated; activity UI, Insights and Project pulse still use
 the original parent feed. They must not claim child-history coverage yet.
 
-## Next work
+## Current follow-up status
+
+The parent type/generation prerequisite below is now implemented and verified;
+see [historical task type and generation](TASK_ROOT_ACTIVITY_CONTEXT.md). The
+separate child ledger's team identity, role and cleanup custody must be aligned
+before service rollout and mixed-feed UI. Activity screens still await that
+integration. The original sequence below records this milestone's starting plan.
+
+## Original next-work sequence
 
 1. Capture trustworthy root type/work context for future root events before
    combining aggregates. Today's root type cannot classify a historical root

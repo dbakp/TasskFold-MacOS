@@ -109,6 +109,7 @@ extension WidgetProjection {
         for row in activity {
             guard let event = TaskActivity(row: row) else { malformed = true; continue }
             guard seen.insert(event.id).inserted, event.recordedAt <= now else { continue }
+            if let context = event.rootContext, !context.readable { malformed = true }
             let ids = Set([event.before["project_id"]?.text.lowercased() ?? "", event.after["project_id"]?.text.lowercased() ?? ""]).subtracting([""])
             for id in ids { events[id, default: []].append(row) }
         }

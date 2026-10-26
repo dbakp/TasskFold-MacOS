@@ -1,0 +1,30 @@
+{
+  "preparedSource": {
+    "Taskfold/Core/TaskActivity.swift": {
+      "source": "76c4942874889b445235ca20b60dbc5d6aad85d6a4f9015a8b8925552e340ae8",
+      "prepared": "76c4942874889b445235ca20b60dbc5d6aad85d6a4f9015a8b8925552e340ae8"
+    },
+    "Taskfold/Core/ProjectPulseWidget.swift": {
+      "source": "277e402cc11d86dc7f12233ee7800043bb71c4960137a96636c113217d31b965",
+      "prepared": "277e402cc11d86dc7f12233ee7800043bb71c4960137a96636c113217d31b965"
+    }
+  },
+  "products": {
+    "Taskfold.app": {
+      "bundleID": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+      "signatureVerified": true,
+      "executableSHA256": "1110a21bfbe1ee4a69b19c5b4ea68908923ddafba922a47080060fa37d107286",
+      "debugDylibSHA256": "7f8e98395bc6dc571050c2da0dd4f0451d4b9ffc3da0f4b41c415fab19e60c27"
+    },
+    "TaskfoldUITests-Runner.app": {
+      "bundleID": "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+      "signatureVerified": true,
+      "executableSHA256": "a65c4a12d6332f935598668f02cf663ab9aeb56556dff0d3aab25a4bb3aff2ba"
+    }
+  },
+  "appAndTestBuild": true,
+  "widgetAndShareBuild": false,
+  "newRuntimePass": false,
+  "distributionVerified": false,
+  "normalHeadingAuthoringEnabled": false
+}
