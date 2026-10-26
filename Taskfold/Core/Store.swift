@@ -1410,6 +1410,8 @@ final class Store {
                 error = "This task type or checklist needs review before completion. Your work is unchanged."
                 return false
             }
+            do { try TaskKind.validateCapturedTypeEdit(change, existing: record(change.table, id: change.recordID)) }
+            catch { snapshot = old; self.error = error.localizedDescription; return false }
             if let scope = change.teamTaskScope {
                 do {
                     guard !localMode, scope.account == userID, scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditScope.invalid }
@@ -1440,6 +1442,10 @@ final class Store {
     @discardableResult
     func save(_ table: String, _ record: Record, baseline: Record? = nil, applyReminderDefaults: Bool = true) -> Bool {
         let existing = self.record(table, id: record.id)
+        if table == "tasks", let existing, let baseline {
+            do { try TaskKind.validateTypeEdit(original: baseline, edited: record, current: existing) }
+            catch { self.error = error.localizedDescription; return false }
+        }
         if table == "projects" {
             let intended = baseline.map { old in record.fields.filter { old.fields[$0.key] != $0.value } } ?? record.fields
             let proposed = Record((existing?.fields ?? [:]).merging(intended) { _, new in new })
@@ -1531,10 +1537,16 @@ final class Store {
         changes.append(Mutation(table: table, recordID: id, method: "DELETE", fields: [:]))
         commit(changes)
     }
+    /// Source-only local acceptance switch. Normal app configuration omits it;
+    /// cloud/team authoring requires the capability and rollout work still open.
+    var taskHeadingsAuthoringEnabled: Bool {
+        localMode && (Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true)
+    }
     func toggle(_ task: Record) { toggleNativeTask(task) }
     /// Explicit native gesture admission. Shared rows never fall back to the
     /// personal writer if their captured access, source or workspace is unavailable.
     @discardableResult func toggleNativeTask(_ task: Record) -> Bool {
+        guard TaskKind.mayComplete(task) else { error = "Headings stay open. Open the heading to edit its details."; return false }
         do {
             if hasSharedTaskSelection([task.id]) {
                 let draft = try captureTeamTaskEditor(task)
@@ -3065,6 +3077,10 @@ extension Store {
             Record(["id": .string(id), "user_id": .string(userID), "name": .string(name), "color": .string("#8b5cf6"), "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(false), "order_index": .number(parent.isEmpty ? 0 : 1)])
         }
         var task = Record.task(user: userID, project: child, date: Date()); task["title"] = .string("Prepare workflow brief"); task["description"] = .string("Keep the original notes.")
+        if ProcessInfo.processInfo.arguments.contains("--task-heading-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
+            task["id"] = .string("f1810000-0000-4000-8000-000000000001")
+        }
         if ProcessInfo.processInfo.arguments.contains("--print-output-fixture") {
             task["description"] = .string((1...8).map { index in
                 "## Design section \(index)\nRésumé, København, 東京, العربية, 🙂. Review **contrast** and _spacing_, then read the [guide](https://example.com/guide).\n- Keep every instruction\n- Check the complete exported document\n```text\nLiteral **code** \(index)\n```"

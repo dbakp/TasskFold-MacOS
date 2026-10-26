@@ -334,6 +334,7 @@ final class Workspace {
 
     /// Persist completion before returning from the action, including an immediate app exit.
     func complete(_ task: Record) {
+        guard TaskKind.mayComplete(task) else { store.error = "Headings stay open. Open the heading to edit its details."; return }
         if Self.subtaskPath(task.id) == nil, store.hasSharedTaskSelection([task.id]) {
             var saved = false
             run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { saved = store.toggleNativeTask(task) } }
@@ -354,7 +355,7 @@ final class Workspace {
             var changed = task
             changed["completed"] = .bool(!task.completed)
             changed["completed_at"] = task.completed ? .null : .string(Dates.timestamp())
-            _ = save("tasks", changed, name: task.completed ? "Reopen Subtask" : "Complete Subtask")
+            guard save("tasks", changed, name: task.completed ? "Reopen Subtask" : "Complete Subtask") else { return }
             if !task.completed { Feedback.complete() }
             return
         }
@@ -367,6 +368,9 @@ final class Workspace {
         if !task.completed { Feedback.complete(); confirm("Completed “\(task.title)”") }
     }
     func toggle(_ ids: Set<String>) {
+        guard ids.allSatisfy({ id in taskRecord(id).map(TaskKind.mayComplete) == true }) else {
+            store.error = "Headings stay open. Select tasks to complete."; return
+        }
         if ids.count > 1, store.hasSharedTaskSelection(ids) {
             do {
                 guard !ids.contains(where: { Self.subtaskPath($0) != nil }) else { throw TeamTaskBatch.invalid }

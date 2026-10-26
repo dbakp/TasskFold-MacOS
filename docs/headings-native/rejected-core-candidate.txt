@@ -1,0 +1,9 @@
+Initial native type-draft Core case failed because a redundant explicit NULL completion timestamp looked like a completion edit. Draft type choice now changes only completion fields that actually require normalization. The original assertion remains in the passing suite.
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Taskfold/Core/SubtaskTree.swift:430: error: -[TaskfoldCoreTests.TaskKindTests testHierarchyDetailChoiceWritesOnlyTheExistingRootAndKeepsTheChildIdentity] : failed: caught error: "Failure(message: "Choose a valid subtask completion state and timestamp.")"
+Test Case '-[TaskfoldCoreTests.TaskKindTests testHierarchyDetailChoiceWritesOnlyTheExistingRootAndKeepsTheChildIdentity]' failed (0.614 seconds).
+Test Suite 'TaskKindTests' failed at 2026-10-26 05:03:45.508.
+Test Suite 'TaskfoldCoreTests.xctest' failed at 2026-10-26 05:03:45.557.
+	 Executed 154 tests, with 2 tests skipped and 1 failure (1 unexpected) in 3.009 (3.020) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 05:03:45.558.
+	 Executed 154 tests, with 2 tests skipped and 1 failure (1 unexpected) in 3.009 (3.020) seconds

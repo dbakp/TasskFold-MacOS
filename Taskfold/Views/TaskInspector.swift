@@ -38,7 +38,7 @@ struct MultiSelectionInspector: View {
                 Text("Changes apply to every selected task as one undoable step.").font(.callout).foregroundStyle(.secondary)
             }
             Section("Actions") {
-                Button("Complete", systemImage: "checkmark.circle") { workspace.toggle(workspace.selection) }
+                Button("Complete", systemImage: "checkmark.circle") { workspace.toggle(workspace.selection) }.disabled(!workspace.selection.allSatisfy { workspace.taskRecord($0).map(TaskKind.mayComplete) == true })
                 Menu("Reschedule") {
                     Button("Today") { workspace.reschedule(workspace.selection, to: Dates.day(Date()), label: "today") }
                     Button("Tomorrow") { workspace.reschedule(workspace.selection, to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }
@@ -210,6 +210,21 @@ struct TaskInspectorForm: View {
                     .onChange(of: titleFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
                     .accessibilityIdentifier("taskTitle")
                     .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: quickExclusions, onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
+                if store.taskHeadingsAuthoringEnabled && !isTeamTask {
+                    Picker("Task type", selection: Binding(get: { TaskKind(draft) == .heading }, set: { heading in
+                        guard editorAvailable else { return }
+                        do { draft = try TaskKind.setting(draft, heading: heading) }
+                        catch { store.error = error.localizedDescription }
+                    })) {
+                        Text("Task").tag(false)
+                        Text("Heading").tag(true)
+                    }.disabled(TaskKind(draft) == .unsupported).accessibilityIdentifier("taskKindPicker")
+                    if draft.completed { Text("Reopen this task to turn it into a heading.").font(.caption).foregroundStyle(.secondary) }
+                }
+                if !TaskKind.mayComplete(draft) {
+                    Label(TaskKind(draft) == .heading ? "Heading · stays open" : "Task type unavailable", systemImage: TaskKind(draft) == .heading ? "textformat" : "questionmark.square")
+                        .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("taskKindStatus")
+                }
                 Text(isCreating ? "Added only when you choose Add Task" : "Changes save automatically")
                     .font(.caption).foregroundStyle(.secondary)
                     .accessibilityIdentifier("inspectorAutosaveHint")
@@ -245,13 +260,15 @@ struct TaskInspectorForm: View {
                     Text("Pin only text you want visible on your desktop or Home Screen. Choose it in the Pinned note widget; hide its details for privacy.").font(.caption).foregroundStyle(.secondary)
                 }
                 HStack {
+                    if TaskKind.mayComplete(draft) {
                     Button(draft.completed ? "Reopen" : "Complete", systemImage: draft.completed ? "arrow.uturn.backward.circle" : "checkmark.circle") {
                         guard editorAvailable,editingGeneration == currentGeneration, workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { store.error = "This task or workspace changed. Reopen its current details."; return }
                         if workspace.hierarchyFilter {
                             do { workspace.complete(try store.selectionRecord(taskID)) } catch { store.error = error.localizedDescription }
                         } else if let current { workspace.complete(current) }
                     }
-                        .controlSize(.small).disabled(isTeamTask)
+                        .controlSize(.small).disabled(isTeamTask || !TaskKind.mayComplete(draft))
+                    }
                     Spacer()
                     if draft.completed, let at = ISO8601DateFormatter().date(from: draft.string("completed_at")) { Text("Completed \(at.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(.secondary) }
                 }
@@ -384,12 +401,17 @@ struct TaskInspectorForm: View {
                     let completed = value.object["completed"]?.flag == true
                     let accessibleTitle = title.isEmpty ? "untitled subtask" : title
                     HStack {
+                        if TaskKind.mayComplete(Record(value.object)) {
                         Button { var list = draft["subtasks"].list; var item = value.object; item["completed"] = .bool(!(item["completed"]?.flag ?? false)); list[index] = .object(item); draft["subtasks"] = .array(list) } label: {
                             Image(systemName: value.object["completed"]?.flag == true ? "checkmark.circle.fill" : "circle").foregroundStyle(value.object["completed"]?.flag == true ? Color.taskfold : .secondary)
                         }.buttonStyle(.borderless)
                             .accessibilityLabel((completed ? "Reopen " : "Complete ") + accessibleTitle)
                             .accessibilityValue(completed ? "Completed" : "Not completed")
                             .accessibilityIdentifier("subtaskCompletion-\(index)")
+                        } else {
+                            Image(systemName: TaskKind(Record(value.object)) == .heading ? "textformat" : "questionmark.square")
+                                .foregroundStyle(.secondary).accessibilityLabel(TaskKind(Record(value.object)) == .heading ? "Heading, stays open" : "Task type unavailable")
+                        }
                         TextField("Subtask", text: Binding(get: { SubtaskTree.inlineTitle(draft["subtasks"].list[index]) }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"), axis: .vertical)
                             .labelsHidden().textFieldStyle(.plain)
                         Button {

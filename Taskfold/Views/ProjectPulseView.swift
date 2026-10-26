@@ -88,7 +88,7 @@ struct ProjectPulseView: View {
                 Text(project.name).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseProjectName")
                 Text("\(reading.completed) of \(reading.total) completed").font(.title.weight(.semibold)).monospacedDigit().fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseProgress")
                 if reading.total > 0 { ProgressView(value: Double(reading.completed), total: Double(reading.total)).tint(Color.taskfold).accessibilityLabel("Project completion").accessibilityValue("\(reading.completed) of \(reading.total) tasks") }
-                Text("\(reading.total - reading.completed) open · Each task occurrence counts once. Checklist items are excluded. Adding or moving work changes this total.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text("\(reading.total - reading.completed) open · Each task occurrence counts once. Headings and checklist items are excluded. Adding or moving work changes this total.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(Color.taskfold.opacity(0.08), in: RoundedRectangle(cornerRadius: 24))
             if store.pendingCount > 0 { Label("Current counts include this device’s saved changes. Activity updates after sync.", systemImage: "icloud.and.arrow.up").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulsePending") }
             attention(project, now: now)
@@ -130,7 +130,7 @@ struct ProjectPulseView: View {
         let today = TaskPlanner.dayKey(now)
         let soon = TaskPlanner.dayKey(Calendar.current.date(byAdding: .day, value: 6, to: now)!)
         let tasks = store.tasks.filter { task in
-            guard !task.completed, task.string("project_id").lowercased() == project.id.lowercased() else { return false }
+            guard TaskKind.mayComplete(task), !task.completed, task.string("project_id").lowercased() == project.id.lowercased() else { return false }
             let deadline = task.string("deadline_date"), planned = TaskPlanner.plannedDay(task)
             return (!deadline.isEmpty && Dates.parse(deadline) != nil && deadline <= soon) || (!planned.isEmpty && Dates.parse(planned) != nil && planned < today)
         }.sorted { a, b in

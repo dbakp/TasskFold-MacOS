@@ -1,7 +1,8 @@
 # Task headings — contract and implementation gates
 
 Updated 26 October 2026. Rank 3 is in progress. This is an independently owned
-source contract in each app repository, not a shipped heading feature.
+source contract with gated local native authoring in each app repository, not a
+shipped heading feature.
 
 ## Intended experience
 
@@ -37,16 +38,56 @@ source-specific heading only after a complete, reviewed mapping is implemented.
   baseline merge and team-content guard. The global trigger also rejects the
   actual team completion service; an ordinary legacy team completion remains
   separately covered. RLS and default-off team configuration are unchanged.
-- Heading creation and type controls remain unexposed. No migration or setting
-  was applied to the hosted service; all SQL runs use disposable synthetic data.
+- Normal app configuration still omits the authoring switch. The native editor
+  now offers explicit Task/Heading choices only in an opted-in local test copy;
+  cloud and team authoring remain unavailable. No migration or setting was applied
+  to the hosted service; all SQL runs use disposable synthetic data.
+
+
+## Native editing and productive projections
+
+The local editor uses the existing Save/Cancel flow on iPhone/iPad and the Mac's
+existing autosave/Undo flow. Root and nested headings retain notes, dates, files,
+children and identity. Rows use a text symbol and stronger title weight instead
+of a completion ring; normal descendants keep their own completion controls.
+Selections, navigation and metadata editing remain available. Heading titles have
+an accessible heading trait where native text supports it, and their status is
+labelled “Heading, stays open”. Unsupported future types have a separate cue.
+Actual spoken, largest-text and broader Mac acceptance remain open.
+
+Type editing checks the opening workspace/source through existing editor
+admission, plus task type, completion state/timestamp, generation and revision.
+Unrelated current notes/dates can merge. A changed completion/type or unsupported
+revision refuses Save and preserves the draft. Final Store admission also covers
+compound type-and-note-pin saves. Embedded nodes retain their captured path and
+parent-owned write; they never become new root records. Legacy child nodes do not
+acquire a historical completion counter from this change.
+
+Heading completion controls are removed from rows and organizers; completion
+swipes and accessible completion actions are unavailable. Native completion
+entry points refuse headings and mixed selections without success feedback.
+Productive widgets publish actionable task rows only. Pinned note can still show
+a heading's selected notes. Inbox review, Focus choices, current project progress,
+project-attention widgets and capacity estimates exclude headings and unsupported
+future types. The app's date queries retain headings as context. Apple Watch's
+Today projection independently excludes headings and refuses stale ordinary
+completion commands after conversion; this is Core verification, not new paired
+Watch runtime acceptance. Historical activity and the remaining broad count/
+action/portability integrations are still acceptance gates below.
+
+Prepare a disposable copy with
+`python3 Scripts/prepare_task_heading_native_test.py --output /tmp/taskfold-heading-test`.
+This writes the local test switch only into the copy; it enables no hosted
+capability and changes no production settings. Use the existing signing and
+isolated-build scripts before runtime testing. See
+`p2-task-headings-native-evidence.json` for exact accepted build/test scope.
 
 ## Ordered work before exposure
 
-1. Native presentation and captured editing: type choice in task details,
-   heading typography, accessible heading/state labels, no misleading completion
-   control, explicit completed-task handling, workspace/access/source rechecks,
-   durable Undo/Redo and recovery. Provide equivalent native behavior on Mac,
-   iPhone and iPad, including nested headings and shared role restrictions.
+1. Finish native acceptance of the implemented local presentation/type editors:
+   completed/new task handling, durable Undo/Redo/recovery, source/access races,
+   Mac keyboard/window behavior, largest text and spoken feedback. Shared type
+   authoring and role-restricted command adapters remain unimplemented.
 2. Complete every interaction path: detail and checklist controls, keyboard and
    swipe actions, bulk actions, Focus/shortcut/notification actions, widgets and
    Watch projection. A refused action must neither report success nor discard
@@ -54,7 +95,9 @@ source-specific heading only after a complete, reviewed mapping is implemented.
 3. Define actionable totals consistently across Today, Inbox review, project
    progress, day capacity, productivity, filters, notifications and wearables.
    Retain dated headings as readable context without treating them as work that
-   can be completed. Verify ordinary descendants independently.
+   can be completed. Checklist progress still counts heading nodes (visible in
+   the recorded organizer screenshot); exclude those while retaining ordinary
+   descendants. Verify the remaining counters/history independently.
 4. Preserve the type through duplication, templates, backup/export/import,
    clipboard capture and reviewed Todoist mapping. Reject any incompatible
    template or export instead of silently dropping the type or its content.

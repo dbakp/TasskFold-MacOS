@@ -78,6 +78,7 @@ struct MacSwipeSample {
             cancel(); abandonedSequence = false; suppressMomentum = false
             candidate = anchor; surface = anchor.id; dispatch = prepared
             motion.canReschedule = !anchor.completed
+            motion.canComplete = anchor.canComplete
             motion.begin(width: anchor.bounds.width, initialOffset: previous)
         }
         if abandonedSequence {
@@ -127,17 +128,19 @@ struct MacSwipeAnchor: NSViewRepresentable {
     let controller: MacRowSwipeController
     let prepare: () -> ((RowGestureCommand) -> Void)?
     let completed: Bool
-    func makeNSView(context: Context) -> View { View(id: id, controller: controller, completed: completed, prepare: prepare) }
-    func updateNSView(_ view: View, context: Context) { view.prepare = prepare; view.completed = completed }
+    var canComplete = true
+    func makeNSView(context: Context) -> View { View(id: id, controller: controller, completed: completed, canComplete: canComplete, prepare: prepare) }
+    func updateNSView(_ view: View, context: Context) { view.prepare = prepare; view.completed = completed; view.canComplete = canComplete }
     static func dismantleNSView(_ view: View, coordinator: ()) { view.controller?.unregister(view) }
     final class View: NSView {
         let id: UUID
         weak var controller: MacRowSwipeController?
         var prepare: () -> ((RowGestureCommand) -> Void)?
         var completed: Bool
+        var canComplete: Bool
         var visibleBounds: NSRect { bounds.intersection(visibleRect) }
-        init(id: UUID, controller: MacRowSwipeController, completed: Bool = false, prepare: @escaping () -> ((RowGestureCommand) -> Void)?) {
-            self.id = id; self.controller = controller; self.completed = completed; self.prepare = prepare
+        init(id: UUID, controller: MacRowSwipeController, completed: Bool = false, canComplete: Bool = true, prepare: @escaping () -> ((RowGestureCommand) -> Void)?) {
+            self.id = id; self.controller = controller; self.completed = completed; self.canComplete = canComplete; self.prepare = prepare
             super.init(frame: .zero); setAccessibilityElement(false)
         }
         required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -214,6 +217,7 @@ struct MacSwipeEventHost: NSViewRepresentable {
 struct MacSwipeRow<Content: View>: View {
     let controller: MacRowSwipeController
     let completed: Bool
+    var canComplete = true
     let selected: Bool
     let prepare: () -> ((RowGestureCommand) -> Void)?
     @ViewBuilder var content: Content
@@ -245,7 +249,7 @@ struct MacSwipeRow<Content: View>: View {
                 .offset(x: logical)
         }
         .clipShape(.rect(cornerRadius: 6))
-        .background(MacSwipeAnchor(id: id, controller: controller, prepare: prepare, completed: completed))
+        .background(MacSwipeAnchor(id: id, controller: controller, prepare: prepare, completed: completed, canComplete: canComplete))
     }
     @ViewBuilder private func primary(_ action: RowGestureAction, width: CGFloat) -> some View {
         switch action {

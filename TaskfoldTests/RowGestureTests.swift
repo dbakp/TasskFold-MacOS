@@ -89,3 +89,13 @@ final class RowGestureTests: XCTestCase {
         XCTAssertFalse(intent.matches(completed, root: root, account: "a", generation: generation))
     }
 }
+
+
+extension RowGestureTests {
+    func testHeadingCannotRevealOrArmCompletionButOtherGesturesRemainAvailable() {
+        var motion = RowGestureMotion(); motion.fullSwipe = true; motion.canComplete = false
+        motion.begin(width: 600); XCTAssertFalse(motion.move(dx: 600, dy: 0)); XCTAssertFalse(motion.armed); XCTAssertNil(motion.finish())
+        motion.begin(width: 600); XCTAssertTrue(motion.move(dx: -600, dy: 0)); XCTAssertEqual(motion.finish(), .tomorrow)
+        motion.leading = .edit; motion.begin(width: 600); XCTAssertTrue(motion.move(dx: 100, dy: 0)); XCTAssertNil(motion.finish()); XCTAssertEqual(motion.stage, .open)
+    }
+}

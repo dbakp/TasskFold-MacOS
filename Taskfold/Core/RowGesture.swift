@@ -13,6 +13,15 @@ enum RowGestureAction: String, CaseIterable, Identifiable {
         }
     }
     var permitsFullSwipe: Bool { self == .complete || self == .tomorrow }
+    /// A missing completion action must never promote a remaining Delete button
+    /// to the system's full-swipe action.
+    func permitsFullSwipe(for task: Record) -> Bool {
+        switch self {
+        case .complete: return TaskKind.mayComplete(task)
+        case .tomorrow: return !task.completed
+        case .edit, .none: return false
+        }
+    }
 }
 
 enum RowGestureCommand: String {
@@ -37,6 +46,7 @@ struct RowGestureMotion {
     var trailing: RowGestureAction = .tomorrow
     var fullSwipe = false
     var canReschedule = true
+    var canComplete = true
     var rightToLeft = false
     private(set) var stage: Stage = .idle
     private(set) var offset: Double = 0
@@ -46,7 +56,7 @@ struct RowGestureMotion {
     private var initial: Double = 0
     static let leadingWidth: Double = 104
     static let trailingWidth: Double = 192
-    private func allowed(_ action: RowGestureAction) -> RowGestureAction { action == .tomorrow && !canReschedule ? .none : action }
+    private func allowed(_ action: RowGestureAction) -> RowGestureAction { (action == .tomorrow && !canReschedule || action == .complete && !canComplete) ? .none : action }
     var action: RowGestureAction { allowed(offset >= 0 ? leading : trailing) }
     var armed: Bool { stage == .tracking && fullSwipe && action.permitsFullSwipe && abs(x) >= 120 && abs(offset) >= max(120, min(240, width * 0.55)) }
 

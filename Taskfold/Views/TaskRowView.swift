@@ -30,7 +30,7 @@ struct TaskRowView: View {
     // Trim only the display preview; editors and persistence retain the original text.
     private var notePreview: String { NoteMarkup.summary(task.string("description"), includeLinkDestinations: true) }
     private var checked: Bool { task.completed || workspace.completing.contains(task.id) }
-    private var overdue: Bool { if let due = TaskPlanner.dayDate(task) { return due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
+    private var overdue: Bool { if let due = TaskPlanner.dayDate(task) { return TaskKind.mayComplete(task) && due < Calendar.current.startOfDay(for: Date()) && !task.completed }; return false }
     private var dueToday: Bool { TaskPlanner.plannedDay(task) == Dates.day(Date()) }
     private var showsDate: Bool {
         guard TaskPlanner.dayDate(task) != nil else { return false }
@@ -54,6 +54,7 @@ struct TaskRowView: View {
                 .accessibilityIdentifier("expand-" + task.id)
             } else { Color.clear.frame(width: 16, height: 1) }
 
+            if TaskKind.mayComplete(task) {
             Button { workspace.complete(task) } label: {
                 CheckMark(checked: checked, color: isSelected ? selectedForeground : Color.priority(task.priority), emphasized: isSelected || task.priority < 4)
                     .padding(3)
@@ -64,16 +65,23 @@ struct TaskRowView: View {
             .accessibilityLabel(checked ? "Reopen \(task.title)" : "Complete \(task.title)")
             .accessibilityIdentifier((checked ? "reopen-" : "complete-") + task.id)
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
+            } else {
+                Image(systemName: TaskKind(task) == .heading ? "textformat" : "questionmark.square")
+                    .foregroundStyle(isSelected ? selectedForeground : .secondary).frame(width: 24, height: 24)
+                    .accessibilityLabel(TaskKind(task) == .heading ? "Heading, stays open" : "Task type unavailable")
+            }
             VStack(alignment: .leading, spacing: 3) {
                 if Linkify.links(in: task.title).isEmpty {
                     Text(task.title.isEmpty ? "Untitled task" : task.title)
+                        .fontWeight(TaskKind(task) == .heading ? .semibold : .regular)
+                        .accessibilityAddTraits(TaskKind(task) == .heading ? .isHeader : [])
                         .foregroundStyle(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary)
                         .strikethrough(checked, color: .secondary)
                         .lineLimit(2)
                         .accessibilityLabel(accessibilitySummary)
                         .accessibilityIdentifier("title-\(task.id)")
                 } else {
-                    LinkText(text: task.title, font: .preferredFont(forTextStyle: .body),
+                    LinkText(text: task.title, font: TaskKind(task) == .heading ? .systemFont(ofSize: NSFont.preferredFont(forTextStyle: .body).pointSize, weight: .semibold) : .preferredFont(forTextStyle: .body),
                              color: NSColor(isSelected ? selectedForeground : checked ? Color.secondary : Color.primary),
                              linkColor: isSelected ? NSColor(selectedForeground) : NSColor(Color.taskfold),
                              strikethrough: checked, lineLimit: 2,
@@ -201,6 +209,8 @@ struct TaskRowView: View {
 
     private var accessibilitySummary: String {
         var parts = [task.title]
+        if TaskKind(task) == .heading { parts.append("heading, stays open") }
+        if TaskKind(task) == .unsupported { parts.append("task type unavailable") }
         if checked { parts.append("completed") }
         if workspace.hierarchyFilter, let parent = workspace.parentTitle(task.id) { parts.append("Subtask of " + parent) }
         if task.priority < 4 { parts.append("priority \(task.priority)") }

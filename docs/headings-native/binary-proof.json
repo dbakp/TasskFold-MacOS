@@ -1,0 +1,10 @@
+{
+  "strictAppAndRunnerSignature": true,
+  "sha256": {
+    "Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "586fcc224ef9c8d1c2d7e7ec22b96a8ba02ee7d2ef98256b767873a12fcb6999",
+    "Taskfold.app/Contents/MacOS/__preview.dylib": "d281271cc9311e3f983f2283ea1045d50ca37ef42530e1fe26089a0a9bcb3616",
+    "Taskfold.app/Contents/MacOS/Taskfold": "146f5977485b026ba38df2e3c7e25d94b8ff7239a8165fb58a67f4083c343caa",
+    "TaskfoldUITests-Runner.app/Contents/MacOS/TaskfoldUITests-Runner": "820f08fcddab275de0a1df6a7fc1062dd1bcbbd163ec33bc9e10f03a473fc5af",
+    "TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "2906e4190f0d8ce2bbaf766db632809ab58c7cff2be7a55dd556faae2e553c7a"
+  }
+}

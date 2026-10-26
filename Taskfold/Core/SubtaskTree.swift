@@ -53,7 +53,7 @@ enum SubtaskTree {
         guard !original.id.isEmpty, original.id == edited.id, current.id == original.id else {
             throw Failure(message: "This subtask changed. Reopen its current details before saving.")
         }
-        let editable: Set<String> = ["title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "subtasks", "comments", "attachments"]
+        let editable: Set<String> = ["is_heading", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "subtasks", "comments", "attachments"]
         var fields = edited.fields.filter { editable.contains($0.key) && original.fields[$0.key] != $0.value }
         if let title = fields["title"] {
             let value = title.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -77,6 +77,10 @@ enum SubtaskTree {
         }
         if let zone = fields["time_zone"], zone != .null, !zone.text.isEmpty {
             guard case .string = zone, TimeZone(identifier: zone.text) != nil else { throw Failure(message: "Choose a valid time zone for the subtask.") }
+        }
+        try TaskKind.validateTypeEdit(original: original, edited: edited, current: current)
+        guard TaskKind.permits(Mutation(table: "tasks", recordID: current.id, method: "PATCH", fields: fields), existing: current) else {
+            throw Failure(message: "Headings stay open. Your subtask draft is unchanged.")
         }
         fields = TaskPlanning.fields(fields, existing: current)
         var result = current
@@ -332,7 +336,7 @@ struct TaskHierarchyIndex {
     private(set) var excludedRootIDs = Set<String>()
     let workspace: WorkspaceBinding
     private var positions: [String: Int] = [:]
-    private static let editable: Set<String> = ["title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "subtasks", "comments", "attachments"]
+    private static let editable: Set<String> = ["is_heading", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "subtasks", "comments", "attachments"]
     private static func failure(_ message: String) -> SubtaskTree.Failure { SubtaskTree.Failure(message: message) }
     private static func validIdentity(_ id: String) -> Bool {
         ChecklistRecovery.validIdentity(id)

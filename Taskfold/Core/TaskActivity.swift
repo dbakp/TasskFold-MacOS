@@ -313,7 +313,7 @@ struct ProjectPulseReading {
         end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!
         start = calendar.date(byAdding: .day, value: -7, to: end)!
         var ids = Set<String>()
-        let scope = tasks.filter { $0.string("project_id").lowercased() == project.lowercased() && ids.insert($0.id.lowercased()).inserted }
+        let scope = tasks.filter { TaskKind.mayComplete($0) && $0.string("project_id").lowercased() == project.lowercased() && ids.insert($0.id.lowercased()).inserted }
         total = scope.count; completed = scope.filter(\.completed).count
         var seen = Set<String>(); malformed = 0
         events = activity.compactMap { row in

@@ -1,0 +1,461 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-heading-native-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" "-only-testing:TaskfoldUITests/TaskfoldUITests/testNativeHeadingChoiceCancelSaveAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldUITests/testNativeNestedHeadingKeepsDescendantsAndParentCancelThenSave" -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 180 -resultBundlePath /tmp/taskfold-heading-native-iphone-v5.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-heading-native-iphone-v5.xcresult
+
+2026-10-26 05:27:31.499336+0100 TaskfoldUITests-Runner[61227:21647791] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 05:27:35.683.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 05:27:35.683.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 05:27:35.683.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testNativeHeadingChoiceCancelSaveAndColdReturn]' started.
+    t =     0.01s Start Test at 2026-10-26 05:27:35.689
+    t =     0.03s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 05:27:35.913 xcodebuild[61221:21647555] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 05:27:35.913 xcodebuild[61221:21647555] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.27s         Setting up automation session
+objc[61227]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1066a8398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10a2e8310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     4.97s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.62s Checking existence of `"Today" Button`
+    t =     7.71s Tap "Today" Button
+    t =     7.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.73s     Find the "Today" Button
+    t =     7.75s     Check for interrupting elements affecting "Today" Button
+    t =     7.88s     Synthesize event
+    t =     8.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.24s Waiting 10.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    11.30s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    11.30s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    11.42s Tap "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    11.42s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.43s     Find the "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    11.46s     Check for interrupting elements affecting "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    11.50s     Synthesize event
+    t =    11.79s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.33s Waiting 5.0s for "taskTitle" TextField to exist
+    t =    13.38s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    13.38s         Checking existence of `"taskTitle" TextField`
+    t =    13.50s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    14.56s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    14.57s         Checking existence of `"taskKindPicker" Any`
+    t =    14.81s Tap "taskKindPicker" Any
+    t =    14.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.81s     Find the "taskKindPicker" Any
+    t =    15.03s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    15.11s     Synthesize event
+    t =    15.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.52s Waiting 5.0s for "Heading" Button to exist
+    t =    17.56s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    17.56s         Checking existence of `"Heading" Button`
+    t =    17.60s Tap "Heading" Button
+    t =    17.60s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.60s     Find the "Heading" Button
+    t =    17.64s     Check for interrupting elements affecting "Heading" Button
+    t =    17.71s     Synthesize event
+    t =    18.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.47s Checking existence of `"taskKindStatus" Any`
+    t =    19.56s Tap "Cancel" Button
+    t =    19.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.57s     Find the "Cancel" Button
+    t =    19.64s     Check for interrupting elements affecting "Cancel" Button
+    t =    19.70s     Synthesize event
+    t =    20.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.73s Waiting 2.0s for "Discard changes" Button to exist
+    t =    21.78s     Checking `Expect predicate `existsNoRetry == 1` for object "Discard changes" Button`
+    t =    21.79s         Checking existence of `"Discard changes" Button`
+    t =    21.90s Tap "Discard changes" Button
+    t =    21.90s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.90s     Find the "Discard changes" Button
+    t =    21.97s     Check for interrupting elements affecting "Discard changes" Button
+    t =    22.04s     Synthesize event
+    t =    22.34s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.53s Checking existence of `"Today" Button`
+    t =    22.59s Tap "Today" Button
+    t =    22.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.66s     Find the "Today" Button
+    t =    22.69s     Check for interrupting elements affecting "sun.max" Button
+    t =    22.75s     Synthesize event
+    t =    22.76s         Scroll element to visible
+    t =    22.76s         Find the "sun.max" Button
+    t =    22.79s         Computed hit point {-1, -1} after scrolling to visible
+    t =    23.08s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.19s Waiting 10.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    24.24s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    24.24s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    24.30s Tap "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    24.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.31s     Find the "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    24.35s     Check for interrupting elements affecting "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    24.38s     Synthesize event
+    t =    24.68s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.75s Waiting 5.0s for "taskTitle" TextField to exist
+    t =    25.80s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    25.80s         Checking existence of `"taskTitle" TextField`
+    t =    25.91s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    26.96s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    26.97s         Checking existence of `"taskKindPicker" Any`
+    t =    27.20s Tap "taskKindPicker" Any
+    t =    27.20s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.21s     Find the "taskKindPicker" Any
+    t =    27.41s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    27.49s     Synthesize event
+    t =    27.78s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.88s Waiting 5.0s for "Heading" Button to exist
+    t =    29.93s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    29.93s         Checking existence of `"Heading" Button`
+    t =    29.98s Tap "Heading" Button
+    t =    29.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.98s     Find the "Heading" Button
+    t =    30.01s     Check for interrupting elements affecting "Heading" Button
+    t =    30.08s     Synthesize event
+    t =    30.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.84s Checking existence of `"pinTaskNotes" Switch`
+    t =    31.92s Find the "pinTaskNotes" Switch
+    t =    32.00s Tap "pinTaskNotes" Switch[0.94, 0.50]
+    t =    32.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.00s     Find the "pinTaskNotes" Switch
+    t =    32.07s     Check for interrupting elements affecting "pinTaskNotes" Switch
+    t =    32.13s     Synthesize event
+    t =    32.13s         Find the "pinTaskNotes" Switch
+    t =    32.20s         Find the "pinTaskNotes" Switch
+    t =    32.27s         Find the "pinTaskNotes" Switch
+    t =    32.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    33.93s Find the "pinTaskNotes" Switch
+    t =    34.01s Tap "saveTask" Button
+    t =    34.01s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.02s     Find the "saveTask" Button
+    t =    34.08s     Check for interrupting elements affecting "saveTask" Button
+    t =    34.15s     Synthesize event
+    t =    34.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.96s Waiting 8.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    36.00s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    36.00s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    36.06s Checking existence of `"Complete Prepare workflow brief" Button`
+    t =    36.09s Checking existence of `"Inbox" Button`
+    t =    36.11s Tap "Inbox" Button
+    t =    36.11s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.11s     Find the "Inbox" Button
+    t =    36.13s     Check for interrupting elements affecting "tray" Button
+    t =    36.16s     Synthesize event
+    t =    36.45s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.17s Waiting 5.0s for Cell (First Match) to exist
+    t =    39.21s     Checking `Expect predicate `existsNoRetry == 1` for object Cell (First Match)`
+    t =    39.21s         Checking existence of `Cell (First Match)`
+    t =    39.27s Swipe left Cell (First Match)
+    t =    39.27s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.27s     Find the Cell (First Match)
+    t =    39.33s     Check for interrupting elements affecting Cell
+    t =    39.37s     Synthesize event
+    t =    39.80s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    40.41s Waiting 5.0s for "Delete" Button to exist
+    t =    41.46s     Checking `Expect predicate `existsNoRetry == 1` for object "Delete" Button`
+    t =    41.46s         Checking existence of `"Delete" Button`
+    t =    41.53s Checking existence of `"Today" Button`
+    t =    41.54s Tap "Today" Button
+    t =    41.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    41.55s     Find the "Today" Button
+    t =    41.56s     Check for interrupting elements affecting "sun.max" Button
+    t =    41.60s     Synthesize event
+    t =    41.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.63s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    43.80s Added attachment named 'Native heading row with preserved context'
+    t =    43.80s Terminate com.dbakp.taskfold.workflowteststeameditbridge:61255
+    t =    44.88s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    44.89s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 05:28:20.575 xcodebuild[61221:21647555] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 05:28:20.575 xcodebuild[61221:21647555] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    45.10s         Setting up automation session
+    t =    48.63s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    51.03s Checking existence of `"Today" Button`
+    t =    51.28s Tap "Today" Button
+    t =    51.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    51.30s     Find the "Today" Button
+    t =    51.32s     Check for interrupting elements affecting "Today" Button
+    t =    51.42s     Synthesize event
+    t =    51.75s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    53.68s Waiting 10.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    54.73s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    54.73s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    54.85s Tap "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    54.85s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    54.86s     Find the "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    54.89s     Check for interrupting elements affecting "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    54.92s     Synthesize event
+    t =    55.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    55.74s Waiting 5.0s for "taskTitle" TextField to exist
+    t =    56.78s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    56.78s         Checking existence of `"taskTitle" TextField`
+    t =    56.92s Checking existence of `"taskKindStatus" Any`
+    t =    57.00s Find the "pinTaskNotes" Switch
+    t =    57.06s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    58.11s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    58.11s         Checking existence of `"taskKindPicker" Any`
+    t =    58.35s Tap "taskKindPicker" Any
+    t =    58.35s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    58.36s     Find the "taskKindPicker" Any
+    t =    58.55s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    58.62s     Synthesize event
+    t =    58.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    60.03s Waiting 5.0s for "Task" Button to exist
+    t =    61.05s     Checking `Expect predicate `existsNoRetry == 1` for object "Task" Button`
+    t =    61.05s         Checking existence of `"Task" Button`
+    t =    61.09s Tap "Task" Button
+    t =    61.09s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    61.10s     Find the "Task" Button
+    t =    61.13s     Check for interrupting elements affecting "Task" Button
+    t =    61.19s     Synthesize event
+    t =    61.48s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    62.96s Tap "saveTask" Button
+    t =    62.96s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    62.97s     Find the "saveTask" Button
+    t =    63.04s     Check for interrupting elements affecting "saveTask" Button
+    t =    63.11s     Synthesize event
+    t =    63.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    63.92s Waiting 8.0s for "Complete Prepare workflow brief" Button to exist
+    t =    64.93s     Checking `Expect predicate `existsNoRetry == 1` for object "Complete Prepare workflow brief" Button`
+    t =    64.93s         Checking existence of `"Complete Prepare workflow brief" Button`
+    t =    65.00s Terminate com.dbakp.taskfold.workflowteststeameditbridge:61338
+    t =    66.07s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testNativeHeadingChoiceCancelSaveAndColdReturn]' passed (66.155 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testNativeNestedHeadingKeepsDescendantsAndParentCancelThenSave]' started.
+    t =     0.00s Start Test at 2026-10-26 05:28:41.845
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 05:28:41.865 xcodebuild[61221:21647555] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 05:28:41.865 xcodebuild[61221:21647555] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.23s         Setting up automation session
+    t =     3.71s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.04s Checking existence of `"Today" Button`
+    t =     6.21s Tap "Today" Button
+    t =     6.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.22s     Find the "Today" Button
+    t =     6.24s     Check for interrupting elements affecting "Today" Button
+    t =     6.32s     Synthesize event
+    t =     6.65s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.67s Waiting 10.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =     9.70s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =     9.71s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =     9.84s Tap "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =     9.84s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.84s     Find the "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =     9.88s     Check for interrupting elements affecting "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =     9.91s     Synthesize event
+    t =    10.20s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.72s Waiting 5.0s for "taskTitle" TextField to exist
+    t =    11.77s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    11.77s         Checking existence of `"taskTitle" TextField`
+    t =    11.90s Checking existence of `"organizeSubtasks" Button`
+    t =    11.97s Get number of matches for: Elements matching predicate '"taskEditorForm" IN identifiers'
+    t =    12.04s Swipe up "taskEditorForm" CollectionView
+    t =    12.04s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.04s     Find the "taskEditorForm" CollectionView
+    t =    12.10s     Check for interrupting elements affecting "taskEditorForm" CollectionView
+    t =    12.17s     Synthesize event
+    t =    12.61s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.76s Checking existence of `"organizeSubtasks" Button`
+    t =    14.85s Find the "organizeSubtasks" Button
+    t =    14.94s Tap "organizeSubtasks" Button
+    t =    14.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.94s     Find the "organizeSubtasks" Button
+    t =    15.02s     Check for interrupting elements affecting "organizeSubtasks" Button
+    t =    15.09s     Synthesize event
+    t =    15.38s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.85s Waiting 5.0s for "saveSubtaskOrganizer" Button to exist
+    t =    16.89s     Checking `Expect predicate `existsNoRetry == 1` for object "saveSubtaskOrganizer" Button`
+    t =    16.89s         Checking existence of `"saveSubtaskOrganizer" Button`
+    t =    17.04s Tap "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    17.04s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.05s     Find the "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    17.14s     Check for interrupting elements affecting "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    17.23s     Synthesize event
+    t =    17.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.32s Tap "Edit details" Button
+    t =    19.32s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.33s     Find the "Edit details" Button
+    t =    19.45s     Check for interrupting elements affecting "slider.horizontal.3" Button
+    t =    19.55s     Synthesize event
+    t =    19.84s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.28s Waiting 5.0s for "Subtask details" NavigationBar to exist
+    t =    22.32s     Checking `Expect predicate `existsNoRetry == 1` for object "Subtask details" NavigationBar`
+    t =    22.32s         Checking existence of `"Subtask details" NavigationBar`
+    t =    22.50s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    23.54s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    23.54s         Checking existence of `"taskKindPicker" Any`
+    t =    23.97s Tap "taskKindPicker" Any
+    t =    23.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.98s     Find the "taskKindPicker" Any
+    t =    24.40s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    24.54s     Synthesize event
+    t =    24.83s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.94s Waiting 5.0s for "Heading" Button to exist
+    t =    26.97s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    26.97s         Checking existence of `"Heading" Button`
+    t =    27.05s Tap "Heading" Button
+    t =    27.05s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.05s     Find the "Heading" Button
+    t =    27.10s     Check for interrupting elements affecting "Heading" Button
+    t =    27.22s     Synthesize event
+    t =    27.51s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.99s Tap "Save" Button
+    t =    28.99s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.00s     Find the "Save" Button
+    t =    29.14s     Check for interrupting elements affecting "saveTask" Button
+    t =    29.26s     Synthesize event
+    t =    29.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.28s Checking existence of `"organizedCompletion-f1710000-0000-4000-8000-000000000002" Button`
+    t =    30.40s Checking existence of `"organizedCompletion-f1710000-0000-4000-8000-000000000004" Button`
+    t =    30.50s Tap "Cancel" Button
+    t =    30.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.51s     Find the "Cancel" Button
+    t =    30.60s     Check for interrupting elements affecting "cancelSubtaskOrganizer" Button
+    t =    30.69s     Synthesize event
+    t =    30.99s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.71s Checking existence of `"organizeSubtasks" Button`
+    t =    31.80s Find the "organizeSubtasks" Button
+    t =    31.88s Tap "organizeSubtasks" Button
+    t =    31.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.89s     Find the "organizeSubtasks" Button
+    t =    31.96s     Check for interrupting elements affecting "organizeSubtasks" Button
+    t =    32.03s     Synthesize event
+    t =    32.32s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.71s Waiting 5.0s for "saveSubtaskOrganizer" Button to exist
+    t =    33.75s     Checking `Expect predicate `existsNoRetry == 1` for object "saveSubtaskOrganizer" Button`
+    t =    33.75s         Checking existence of `"saveSubtaskOrganizer" Button`
+    t =    33.88s Tap "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    33.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    33.88s     Find the "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    33.99s     Check for interrupting elements affecting "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    34.08s     Synthesize event
+    t =    34.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.49s Tap "Edit details" Button
+    t =    35.49s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.50s     Find the "Edit details" Button
+    t =    35.62s     Check for interrupting elements affecting "slider.horizontal.3" Button
+    t =    35.71s     Synthesize event
+    t =    36.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.44s Waiting 5.0s for "Subtask details" NavigationBar to exist
+    t =    38.49s     Checking `Expect predicate `existsNoRetry == 1` for object "Subtask details" NavigationBar`
+    t =    38.49s         Checking existence of `"Subtask details" NavigationBar`
+    t =    38.67s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    39.72s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    39.72s         Checking existence of `"taskKindPicker" Any`
+    t =    40.17s Tap "taskKindPicker" Any
+    t =    40.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    40.17s     Find the "taskKindPicker" Any
+    t =    40.59s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    40.72s     Synthesize event
+    t =    41.01s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.13s Waiting 5.0s for "Heading" Button to exist
+    t =    43.15s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    43.16s         Checking existence of `"Heading" Button`
+    t =    43.21s Tap "Heading" Button
+    t =    43.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.21s     Find the "Heading" Button
+    t =    43.26s     Check for interrupting elements affecting "Heading" Button
+    t =    43.38s     Synthesize event
+    t =    43.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.12s Tap "Save" Button
+    t =    45.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.13s     Find the "Save" Button
+    t =    45.27s     Check for interrupting elements affecting "saveTask" Button
+    t =    45.39s     Synthesize event
+    t =    45.69s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.40s Tap "saveSubtaskOrganizer" Button
+    t =    46.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.40s     Find the "saveSubtaskOrganizer" Button
+    t =    46.52s     Check for interrupting elements affecting "saveSubtaskOrganizer" Button
+    t =    46.61s     Synthesize event
+    t =    46.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.67s Tap "saveTask" Button
+    t =    47.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.68s     Find the "saveTask" Button
+    t =    47.77s     Check for interrupting elements affecting "saveTask" Button
+    t =    47.84s     Synthesize event
+    t =    48.14s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.65s Waiting 8.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    49.69s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    49.69s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    49.75s Terminate com.dbakp.taskfold.workflowteststeameditbridge:61376
+    t =    50.81s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    50.81s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 05:29:32.658 xcodebuild[61221:21647555] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 05:29:32.658 xcodebuild[61221:21647555] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    51.02s         Setting up automation session
+    t =    54.57s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    56.95s Checking existence of `"Today" Button`
+    t =    57.20s Tap "Today" Button
+    t =    57.20s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    57.22s     Find the "Today" Button
+    t =    57.23s     Check for interrupting elements affecting "Today" Button
+    t =    57.32s     Synthesize event
+    t =    57.65s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    59.67s Waiting 10.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    60.70s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    60.71s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    60.84s Tap "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    60.84s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    60.84s     Find the "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    60.88s     Check for interrupting elements affecting "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    60.91s     Synthesize event
+    t =    61.20s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    61.74s Waiting 5.0s for "taskTitle" TextField to exist
+    t =    62.77s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    62.77s         Checking existence of `"taskTitle" TextField`
+    t =    62.90s Checking existence of `"organizeSubtasks" Button`
+    t =    62.96s Get number of matches for: Elements matching predicate '"taskEditorForm" IN identifiers'
+    t =    63.03s Swipe up "taskEditorForm" CollectionView
+    t =    63.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    63.03s     Find the "taskEditorForm" CollectionView
+    t =    63.10s     Check for interrupting elements affecting "taskEditorForm" CollectionView
+    t =    63.17s     Synthesize event
+    t =    63.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    65.76s Checking existence of `"organizeSubtasks" Button`
+    t =    65.85s Find the "organizeSubtasks" Button
+    t =    65.94s Tap "organizeSubtasks" Button
+    t =    65.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    65.94s     Find the "organizeSubtasks" Button
+    t =    66.02s     Check for interrupting elements affecting "organizeSubtasks" Button
+    t =    66.08s     Synthesize event
+    t =    66.38s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    66.84s Waiting 5.0s for "saveSubtaskOrganizer" Button to exist
+    t =    67.89s     Checking `Expect predicate `existsNoRetry == 1` for object "saveSubtaskOrganizer" Button`
+    t =    67.89s         Checking existence of `"saveSubtaskOrganizer" Button`
+    t =    68.05s Checking existence of `"organizedCompletion-f1710000-0000-4000-8000-000000000002" Button`
+    t =    68.14s Checking existence of `"organizedCompletion-f1710000-0000-4000-8000-000000000004" Button`
+    t =    68.25s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    68.43s Added attachment named 'Nested heading retains actionable ordinary descendant'
+    t =    68.43s Tap "Cancel" Button
+    t =    68.43s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    68.44s     Find the "Cancel" Button
+    t =    68.54s     Check for interrupting elements affecting "cancelSubtaskOrganizer" Button
+    t =    68.63s     Synthesize event
+    t =    68.92s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    69.63s Tap "Cancel" Button
+    t =    69.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    69.64s     Find the "Cancel" Button
+    t =    69.73s     Check for interrupting elements affecting "Cancel" Button
+    t =    69.80s     Synthesize event
+    t =    70.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    70.54s Terminate com.dbakp.taskfold.workflowteststeameditbridge:61478
+    t =    71.61s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testNativeNestedHeadingKeepsDescendantsAndParentCancelThenSave]' passed (71.727 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-26 05:29:53.572.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 137.883 (137.889) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 05:29:53.573.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 137.883 (137.889) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 05:29:53.573.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 137.883 (137.890) seconds
+2026-10-26 05:29:53.891 xcodebuild[61221:21647555] [MT] IDETestOperationsObserverDebug: 144.387 elapsed -- Testing started completed.
+2026-10-26 05:29:53.891 xcodebuild[61221:21647555] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 05:29:53.891 xcodebuild[61221:21647555] [MT] IDETestOperationsObserverDebug: 144.387 sec, +144.387 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-heading-native-iphone-v5.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

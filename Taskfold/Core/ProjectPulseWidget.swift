@@ -102,7 +102,7 @@ extension WidgetProjection {
         guard readable, PulseProject.validID(account) else { return .null }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         var seen = Set<String>()
-        let uniqueTasks = tasks.filter { seen.insert($0.id.lowercased()).inserted }
+        let uniqueTasks = tasks.filter { TaskKind.mayComplete($0) && seen.insert($0.id.lowercased()).inserted }
         let groups = Dictionary(grouping: uniqueTasks, by: { $0.string("project_id").lowercased() })
         var events: [String: [Record]] = [:], malformed = false; seen = []
         for row in activity {

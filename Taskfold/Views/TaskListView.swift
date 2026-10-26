@@ -56,7 +56,7 @@ struct TaskListView: View {
     private var overdueKey: String { "overdue:" + preferenceKey }
     private var overdueTasks: [Record] {
         if case .saved = scope { return [] }
-        return ordered(filtered.filter { !$0.completed && !TaskPlanner.plannedDay($0).isEmpty && TaskPlanner.plannedDay($0) < Dates.day(Date()) }, day: overdueKey)
+        return ordered(filtered.filter { TaskKind.mayComplete($0) && !$0.completed && !TaskPlanner.plannedDay($0).isEmpty && TaskPlanner.plannedDay($0) < Dates.day(Date()) }, day: overdueKey)
     }
     private var regularTasks: [Record] {
         let overdueIDs = Set(overdueTasks.map(\.id))
@@ -201,7 +201,7 @@ struct TaskListView: View {
                                 }
                             } header: {
                                 if !projectID.isEmpty {
-                                    ProjectSectionHeader(key: group.key, title: group.title, count: group.tasks.count, collapsed: collapseBinding(group.key)) {
+                                    ProjectSectionHeader(key: group.key, title: group.title, count: group.tasks.filter(TaskKind.mayComplete).count, collapsed: collapseBinding(group.key)) {
                                         captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
                                         quickAddVisible = true
                                     }
@@ -282,7 +282,8 @@ struct TaskListView: View {
     private var subtitle: String {
         if store.filterError(scope) != nil { return "Filter unavailable" }
         if scope == .completed { return "\(filtered.count) completed" }
-        let count = remaining == 1 ? "1 task" : "\(remaining) tasks"
+        let headings = filtered.filter { TaskKind($0) == .heading }.count
+        let count = (remaining == 1 ? "1 task" : "\(remaining) tasks") + (headings == 0 ? "" : headings == 1 ? " · 1 heading" : " · \(headings) headings")
         if scope == .today { return Date().formatted(.dateTime.weekday(.wide).day().month(.wide)) + " · " + count }
         return count
     }
@@ -333,7 +334,8 @@ struct TaskListView: View {
         .selectionDisabled().listRowSeparator(.hidden).frame(minHeight: 260)
     }
     private func overdueSection(_ tasks: [Record]) -> some View {
-        Section {
+        let count = tasks.filter(TaskKind.mayComplete).count
+        return Section {
             if !overdueCollapsed {
                 ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: overdueKey, orderProvider: { order })).tag(task.id) }
                     .onMove { DayDropHandling(workspace: workspace, day: overdueKey, tasks: tasks).move(from: $0, to: $1) }
@@ -343,14 +345,16 @@ struct TaskListView: View {
             Button { withAnimation(layout) { overdueCollapsed.toggle() } } label: {
             HStack(spacing: 8) {
                 Image(systemName: overdueCollapsed ? "chevron.right" : "chevron.down").font(.caption.weight(.semibold))
-                Text("Overdue")
-                Text("\(tasks.count)").font(.caption.weight(.semibold)).monospacedDigit().padding(.horizontal, 6).padding(.vertical, 1)
-                    .background(Color.red.opacity(0.14), in: .capsule).foregroundStyle(.red).contentTransition(.numericText())
-                    .transition(reduceMotion ? .opacity : .badgePop)
+                Text(count == 0 ? "Earlier" : "Overdue")
+                if count > 0 {
+                    Text("\(count)").font(.caption.weight(.semibold)).monospacedDigit().padding(.horizontal, 6).padding(.vertical, 1)
+                        .background(Color.red.opacity(0.14), in: .capsule).foregroundStyle(.red).contentTransition(.numericText())
+                        .transition(reduceMotion ? .opacity : .badgePop)
+                }
             }
             }.buttonStyle(.plain)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Overdue, \(tasks.count) \(tasks.count == 1 ? "task" : "tasks")")
+            .accessibilityLabel(count == 0 ? "Earlier dates" : "Overdue, \(count) \(count == 1 ? "task" : "tasks")")
             .accessibilityValue(overdueCollapsed ? "Collapsed" : "Expanded")
             .accessibilityIdentifier("overdueToggle")
         }
@@ -361,7 +365,7 @@ struct TaskListView: View {
         let date = Dates.parse(day)
         let name = day == today ? "Today" : day == tomorrow ? "Tomorrow" : date?.formatted(.dateTime.weekday(.wide)) ?? day
         let detail = date?.formatted(.dateTime.month(.abbreviated).day()) ?? ""
-        let open = tasks.filter { !$0.completed && !workspace.completing.contains($0.id) }.count
+        let open = tasks.filter { TaskKind.mayComplete($0) && !$0.completed && !workspace.completing.contains($0.id) }.count
         return Section {
             ForEach(workspace.visibleTasks(tasks)) { task in row(task).modifier(DayDragRow(task: task, day: day, orderProvider: { order })).tag(task.id) }
                 .onMove { DayDropHandling(workspace: workspace, day: day, tasks: tasks).move(from: $0, to: $1) }
@@ -382,12 +386,12 @@ struct TaskListView: View {
     /// The selection tag must sit on the outermost row view, after any drag wrapper, or clicks cannot select.
     private func row(_ task: Record) -> some View {
         let intent = rowGestureIntent(task)
-        return MacSwipeRow(controller: rowSwipe, completed: task.completed, selected: workspace.selection.contains(task.id), prepare: {
+        return MacSwipeRow(controller: rowSwipe, completed: task.completed, canComplete: TaskKind.mayComplete(task), selected: workspace.selection.contains(task.id), prepare: {
             guard let intent else { return nil }
             return { command in performRowGesture(command, intent: intent) }
         }) { TaskRowView(task: task, compactDate: dated) }
         .background(ListScrollRowMarker(id: task.id, handle: nativeList)).id(task.id).listRowSeparator(.hidden)
-        .accessibilityAction(named: task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } }
+        .accessibilityActions { if TaskKind.mayComplete(task) { Button(task.completed ? "Reopen" : "Complete") { if let intent { performRowGesture(.complete, intent: intent) } } } }
         .accessibilityAction(named: "Move to tomorrow") { if let intent { performRowGesture(.tomorrow, intent: intent) } }
         .accessibilityAction(named: "Edit") { if let intent { performRowGesture(.edit, intent: intent) } }
         .accessibilityAction(named: "Delete") { if let intent { performRowGesture(.delete, intent: intent) } }
@@ -444,7 +448,7 @@ struct TaskListView: View {
             Button("New Task") { revealQuickAdd() }
         } else {
             if tasks.count == 1, let task = tasks.first { Button("Edit “\(task.title)”") { workspace.open(task.id) } }
-            Button(tasks.allSatisfy(\.completed) ? "Reopen" : "Complete") { workspace.toggle(targets) }
+            Button(tasks.allSatisfy(\.completed) ? "Reopen" : "Complete") { workspace.toggle(targets) }.disabled(!tasks.allSatisfy(TaskKind.mayComplete))
             Divider()
             Menu("Reschedule") {
                 Button("Today", systemImage: "sun.max") { workspace.reschedule(targets, to: Dates.day(Date()), label: "today") }

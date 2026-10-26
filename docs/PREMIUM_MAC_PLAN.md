@@ -7237,3 +7237,48 @@ acceptance remain open. See TASK_HEADINGS.md and
 p2-task-headings-contract-evidence.json. Headings, rank 3, rank 6, Watch and the
 full Px objective stay active. All user-deferred rollout/release/provider/device
 work remains deferred.
+
+
+### 2026-10-26 — Gated local heading editors and productive projections (rank 3 in progress)
+
+Both native clients now have explicit local Task/Heading choices in an opted-in
+isolated build, using their existing Save/Cancel or autosave/custody flow. Root
+and nested heading rows use a text symbol and stronger title weight, retain
+metadata/descendants and omit completion controls. Completion gestures and entry
+points refuse headings without success feedback. Source/workspace admission is
+retained; type saves additionally fence opening completion/type/generation and
+revision, including compound note-pin saves. Unsupported revisions/types refuse
+rather than authorizing an edit. Unrelated current notes/dates can still merge.
+
+Productive widget rows, Inbox review, Focus choices, capacity estimates, current
+project progress/attention and primary task counts exclude headings; app date
+queries retain readable context. Header-only earlier dates avoid a red overdue
+work count. iOS's system swipe surface explicitly disables full-swipe completion
+when unavailable, so its remaining Delete button cannot become an automatic
+fallback. The independently owned iOS Watch projection also excludes headings
+and refuses a captured ordinary completion after conversion.
+
+Current Core verification passes 172 cases on Mac (three existing optional
+fixture skips), 157 iOS Core cases (two existing optional fixture skips) and 97
+Watch cases, with zero failures. Each repo includes 29 task-kind cases. Both
+current arm64 Debug test builds and strict app/runner signatures pass. Two final
+installed scenarios pass on each signed isolated iPhone/iPad Simulator, covering
+root Cancel, Save+pin, actual fast Inbox swipe with unchanged saved task, cold
+return/conversion, nested choice, organizer Cancel, Save/relaunch and retained
+ordinary descendants. Four light/dark phone/tablet images were inspected.
+
+No new Mac native/spoken acceptance is claimed; its earlier interactive UI
+Automation authentication remains pending. Normal configuration still omits the
+local authoring switch. Checklist progress still counts heading nodes (visible
+in the organizer background), and broader counts/history, portability, new/
+completed task handling, Undo/recovery, largest/spoken/Mac acceptance and shared
+type command/capability adapters remain open. See TASK_HEADINGS.md,
+headings-native/ and p2-task-headings-native-evidence.json. The SQL contract is
+unchanged and was not rerun/deployed in this stage. No hosted configuration,
+rollout, remote reminder, distribution, provider or physical-device dependency
+changed. Headings, rank 3, rank 6, Watch and the full Px goal remain active.
+
+The owned phone/tablet app and runner installations are removed and no test app
+is running. This stage removed 814.8 MiB of logical scratch files; both Core
+build caches and the ready Mac host/build remain available. Existing Simulator
+boot states were preserved. See headings-native/cleanup.json.

@@ -4,11 +4,12 @@ Updated 26 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Non-completable headings now have a source-only persisted contract and completion
-safety foundation in both clients. Creation/type controls remain unexposed. Next
-is native presentation and captured type editing, followed by counts, full
-interaction and portability integration; see `TASK_HEADINGS.md` and
-`p2-task-headings-contract-evidence.json`. This does not close headings or rank 3.
+Non-completable headings now have their persisted contract, gated local native
+presentation/type editors and initial productive-count/projection integration.
+Normal app configuration still omits authoring. Next are portability/templates,
+remaining action/count/history acceptance and shared capability/command adapters;
+see `TASK_HEADINGS.md`, `p2-task-headings-contract-evidence.json` and
+`p2-task-headings-native-evidence.json`. This does not close headings or rank 3.
 The outstanding rank-6 and Watch acceptance below remains open.
 
 Native completion recovery and permanent encrypted selection drafts are implemented

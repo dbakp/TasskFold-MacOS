@@ -1,0 +1,12 @@
+{
+  "ownedScratchRemoved": 99,
+  "logicalMiBRemoved": 814.8,
+  "simulatorAppsAndRunnersRemoved": true,
+  "macTestAppLaunchedThisStage": false,
+  "preserved": [
+    "Both repository .build caches",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build"
+  ],
+  "simulatorBootStatesPreserved": true
+}

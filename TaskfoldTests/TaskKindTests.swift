@@ -140,3 +140,125 @@ extension TaskKindTests {
         XCTAssertEqual(updated["subtasks"]!.list[0].object["completed"], .bool(true))
     }
 }
+
+extension TaskKindTests {
+    func testDraftChoicePreservesAllDetailsAndWorksForEmbeddedChildren() throws {
+        var original = task(); original.fields.removeValue(forKey: "task_generation")
+        original["description"] = .string("Full notes"); original["opaque"] = .object(["keep": .bool(true)])
+        let edited = try TaskKind.setting(original, heading: true)
+        XCTAssertEqual(edited.id, original.id); XCTAssertEqual(edited["description"], original["description"]); XCTAssertEqual(edited["opaque"], original["opaque"])
+        XCTAssertEqual(edited["is_heading"], .bool(true)); XCTAssertEqual(edited["completed"], .bool(false)); XCTAssertEqual(edited["completed_at"], .null)
+        let restored = try TaskKind.setting(edited, heading: false); XCTAssertEqual(restored["is_heading"], .bool(false)); XCTAssertEqual(restored["opaque"], original["opaque"])
+    }
+    func testDraftChoiceRejectsCompletedAndUnsupportedKindsWithoutChangingSource() throws {
+        var original = task(); original["completed"] = .bool(true)
+        XCTAssertThrowsError(try TaskKind.setting(original, heading: true)); XCTAssertTrue(original.completed); XCTAssertEqual(original["is_heading"], .null)
+        original["is_heading"] = .number(1); XCTAssertThrowsError(try TaskKind.setting(original, heading: false))
+    }
+    func testTypeEditAdmitsUnrelatedConcurrentDetailsButFencesCompletionCyclesAndReplacement() throws {
+        let original = task(), edited = try TaskKind.setting(original, heading: true)
+        var current = original; current["description"] = .string("Other device notes"); current["due_date"] = .string("2026-10-30")
+        XCTAssertNoThrow(try TaskKind.validateTypeEdit(original: original, edited: edited, current: current))
+        current["completion_version"] = .number(2)
+        XCTAssertThrowsError(try TaskKind.validateTypeEdit(original: original, edited: edited, current: current))
+        current = original; current["is_heading"] = .bool(true)
+        XCTAssertThrowsError(try TaskKind.validateTypeEdit(original: original, edited: edited, current: current))
+        current = original; current["task_generation"] = .string(UUID().uuidString.lowercased())
+        XCTAssertThrowsError(try TaskKind.validateTypeEdit(original: original, edited: edited, current: current))
+    }
+    func testMalformedCompletionTimestampsCannotCompareAsTwoMissingDates() throws {
+        var original = task(); original["completed_at"] = .string("unsupported-old-value")
+        let edited = try TaskKind.setting(original, heading: true)
+        var current = original; current["completed_at"] = .string("unsupported-new-value")
+        XCTAssertThrowsError(try TaskKind.validateTypeEdit(original: original, edited: edited, current: current))
+    }
+    func testEmbeddedTypeEditMergesCurrentNotesAndKeepsOrdinaryDescendants() throws {
+        var original = task(); let leaf = task(); original["subtasks"] = .array([.object(leaf.fields)])
+        let edited = try TaskKind.setting(original, heading: true)
+        var current = original; current["description"] = .string("Concurrent notes")
+        let result = try SubtaskTree.detailChanges(original: original, edited: edited, current: current)
+        XCTAssertEqual(result["is_heading"], .bool(true)); XCTAssertEqual(result["description"], current["description"]); XCTAssertEqual(result["subtasks"], original["subtasks"])
+        var completed = current; completed["completed"] = .bool(true)
+        XCTAssertThrowsError(try SubtaskTree.detailChanges(original: original, edited: edited, current: completed))
+    }
+    func testHierarchyDetailChoiceWritesOnlyTheExistingRootAndKeepsTheChildIdentity() throws {
+        let workspace = WorkspaceBinding(account: "owner", generation: UUID())
+        var root = task(); let child = task(); root["subtasks"] = .array([.object(child.fields)])
+        let index = try TaskHierarchyIndex(roots: [root], projects: [], workspace: workspace)
+        let item = try XCTUnwrap(index.items.first { $0.isSubtask }), selected = try XCTUnwrap(index.selection(item.id))
+        let draft = try TaskKind.setting(selected.item.record, heading: true)
+        let changes = try TaskHierarchyIndex.changes([.editing(selected, draft: draft)], accessibleRoots: [root], projects: [], workspace: workspace)
+        XCTAssertEqual(changes.count, 1); XCTAssertEqual(changes[0].recordID, root.id)
+        let saved = changes[0].fields["subtasks"]!.list[0].object
+        XCTAssertEqual(saved["id"], .string(child.id)); XCTAssertEqual(saved["is_heading"], .bool(true)); XCTAssertTrue(TaskKind.permits(changes[0], existing: root))
+    }
+    func testProductiveProjectionExcludesHeadingsWhileAppQueriesRetainDatedContext() throws {
+        let now = Date(); var ordinary = task(), header = heading(), unsupported = task()
+        for row in [ordinary, header] { XCTAssertFalse(row.completed) }
+        ordinary["due_date"] = .string(Dates.day(now)); ordinary["duration_minutes"] = .number(20)
+        header["due_date"] = ordinary["due_date"]; header["duration_minutes"] = .number(300)
+        unsupported["is_heading"] = .string("future")
+        let rows = [ordinary, header, unsupported]
+        let payload = WidgetProjection.payload(tasks: rows, projects: [], account: "owner", now: now)
+        XCTAssertEqual(payload["tasks"]?.list.map { $0.object["id"] }, [.string(ordinary.id)])
+        XCTAssertTrue(InboxReviewRequest.eligible(ordinary)); XCTAssertFalse(InboxReviewRequest.eligible(header)); XCTAssertFalse(InboxReviewRequest.eligible(unsupported))
+        let capacity = TaskPlanner.capacity(rows, events: [], on: now, hours: WorkingHours())
+        XCTAssertEqual(capacity.estimatedMinutes, 20); XCTAssertEqual(capacity.unknownTasks, 0)
+        let catalog = FocusTaskCatalog(tasks: rows, projects: [], sections: [])
+        XCTAssertEqual(catalog.choices.map(\.id), [ordinary.id.lowercased()])
+        var converted = ordinary; converted["is_heading"] = .bool(true)
+        XCTAssertFalse(FocusTaskCatalog.selectable(try XCTUnwrap(catalog.choices.first), tasks: [converted]))
+        let cache = TaskCache(); cache.update(rows)
+        XCTAssertTrue(cache.matching(TaskQuery(scope: .today)).contains { $0.id == header.id })
+    }
+    func testProjectCurrentProgressDoesNotTreatHeadingsAsUnfinishedWork() {
+        let project = UUID().uuidString.lowercased(); var header = heading(), done = task(), ordinary = task()
+        for key in ["project_id"] { header[key] = .string(project); done[key] = .string(project); ordinary[key] = .string(project) }
+        done["completed"] = .bool(true)
+        let reading = ProjectPulseReading(project: project, tasks: [header, done, ordinary], activity: [])
+        XCTAssertEqual(reading.total, 2); XCTAssertEqual(reading.completed, 1)
+    }
+}
+
+
+extension TaskKindTests {
+    func testCompoundPinnedHeadingEditKeepsItsCapturedCompletionFence() throws {
+        let original = task(), edited = try TaskKind.setting(original, heading: true)
+        let command = try XCTUnwrap(PinnedNotes.edit(edited, existing: original, baseline: original))
+        XCTAssertNoThrow(try TaskKind.validateCapturedTypeEdit(command, existing: original))
+        var current = original; current["completion_version"] = .number(2)
+        XCTAssertThrowsError(try TaskKind.validateCapturedTypeEdit(command, existing: current))
+        var incomplete = command; incomplete.baseline?.removeValue(forKey: "completed_at")
+        XCTAssertThrowsError(try TaskKind.validateCapturedTypeEdit(incomplete, existing: original))
+        let metadata = patch(original, ["description": .string("Unrelated notes")])
+        XCTAssertNoThrow(try TaskKind.validateCapturedTypeEdit(metadata, existing: current))
+    }
+}
+
+
+extension TaskKindTests {
+    func testUnknownAndNonFiniteRevisionCannotAuthorizeTypeEditing() throws {
+        for version: JSON in [.string("0"), .number(-1), .number(0.5), .number(.infinity), .number(.nan), .number(9_007_199_254_740_991)] {
+            var original = task(); original["completion_version"] = version
+            let edited = try TaskKind.setting(original, heading: true)
+            XCTAssertThrowsError(try TaskKind.validateTypeEdit(original: original, edited: edited, current: original))
+        }
+    }
+}
+
+
+extension TaskKindTests {
+    func testUnavailableCompletionNeverPromotesDeletionToFullSwipe() {
+        var ordinary = task(); let heading = heading()
+        XCTAssertTrue(RowGestureAction.complete.permitsFullSwipe(for: ordinary))
+        XCTAssertFalse(RowGestureAction.complete.permitsFullSwipe(for: heading))
+        XCTAssertTrue(RowGestureAction.tomorrow.permitsFullSwipe(for: heading))
+        ordinary["completed"] = .bool(true)
+        XCTAssertTrue(RowGestureAction.complete.permitsFullSwipe(for: ordinary))
+        XCTAssertFalse(RowGestureAction.tomorrow.permitsFullSwipe(for: ordinary))
+        XCTAssertFalse(RowGestureAction.edit.permitsFullSwipe(for: heading))
+        XCTAssertFalse(RowGestureAction.none.permitsFullSwipe(for: heading))
+        var unknown = ordinary; unknown["is_heading"] = .string("future")
+        XCTAssertFalse(RowGestureAction.complete.permitsFullSwipe(for: unknown))
+    }
+}

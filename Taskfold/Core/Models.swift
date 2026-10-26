@@ -113,6 +113,55 @@ enum TaskKind: Equatable, Sendable {
         }
         return true
     }
+    /// Draft-only type choice. Identity and workspace stay with the enclosing
+    /// native editor; nested checklist nodes do not acquire a root identity.
+    static func setting(_ row: Record, heading: Bool) throws -> Record {
+        guard Self(row) != .unsupported else { throw AppFailure(message: "This task type needs a newer supported editor. Your work is unchanged.") }
+        guard Self(row) != (heading ? .heading : .task) else { return row }
+        guard !heading || !row.completed else { throw AppFailure(message: "Reopen the task before making it a heading.") }
+        var edited = row; edited["is_heading"] = .bool(heading)
+        if heading {
+            if edited["completed"] != .bool(false) { edited["completed"] = .bool(false) }
+            if edited["completed_at"] != .null { edited["completed_at"] = .null }
+        }
+        return edited
+    }
+    /// A type choice must not overtake a complete/reopen or a different type
+    /// choice while this editor was open. Unrelated metadata may still merge.
+    static func validateTypeEdit(original: Record, edited: Record, current: Record) throws {
+        guard original["is_heading"] != edited["is_heading"] else { return }
+        let oldStamp = TaskPlanning.instant(original.string("completed_at"))
+        let sameStamp = current["completed_at"] == original["completed_at"] || (oldStamp != nil && oldStamp == TaskPlanning.instant(current.string("completed_at")))
+        guard original.id == edited.id, current.id == original.id,
+              original["task_generation"] == .null || original["task_generation"] == current["task_generation"],
+              Self(original) != .unsupported, Self(current) == Self(original),
+              current.completed == original.completed, sameStamp,
+              let capturedRevision = revision(original), let liveRevision = revision(current), capturedRevision == liveRevision else {
+            throw AppFailure(message: "The task type or completion changed while you were editing. Your draft is still here; reopen the current task before changing its type.")
+        }
+        let changes = edited.fields.filter { original.fields[$0.key] != $0.value }
+        guard permits(Mutation(table: "tasks", recordID: current.id, method: "PATCH", fields: changes), existing: current) else {
+            throw AppFailure(message: "This heading needs an open state. Your draft is still here.")
+        }
+    }
+    private static func revision(_ row: Record) -> Double? {
+        if row["completion_version"] == .null { return 0 } // Legacy roots and embedded nodes.
+        guard case .number(let value) = row["completion_version"], value.isFinite,
+              value >= 0, value < 9_007_199_254_740_991, value.rounded(.down) == value else { return nil }
+        return value
+    }
+    /// Final Store admission also covers compound edits such as a type change
+    /// saved with a note pin; they must retain the same opening completion fence.
+    static func validateCapturedTypeEdit(_ change: Mutation, existing: Record?) throws {
+        guard change.table == "tasks", change.method == "PATCH", change.fields["is_heading"] != nil else { return }
+        guard let existing, let baseline = change.baseline,
+              ["is_heading", "completed", "completed_at", "completion_version", "task_generation"].allSatisfy({ baseline[$0] != nil }) else {
+            throw AppFailure(message: "Reopen this task before changing its type. Your draft is still here.")
+        }
+        let original = Record(existing.fields.merging(baseline) { _, captured in captured })
+        let edited = Record(original.fields.merging(change.fields) { _, intended in intended })
+        try validateTypeEdit(original: original, edited: edited, current: existing)
+    }
     static func change(_ row: Record, heading: Bool) throws -> Mutation? {
         guard Self(row) != .unsupported, UUID(uuidString: row.id) != nil,
               UUID(uuidString: row.string("task_generation")) != nil else {
@@ -1663,7 +1712,7 @@ enum WidgetProjection {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
         let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
         let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
-        let nested = WidgetCompletion.hierarchy(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account)?.items.filter { $0.isSubtask && !$0.record.completed } ?? []
+        let nested = WidgetCompletion.hierarchy(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account)?.items.filter { $0.isSubtask && TaskKind.mayComplete($0.record) && !$0.record.completed } ?? []
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         func projected(_ task: Record, parent: String? = nil, routeContext: String? = nil) -> JSON {
             let project = projects[task.string("project_id")]
@@ -1676,7 +1725,7 @@ enum WidgetProjection {
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        let rows = tasks.filter { !$0.completed }.map { projected($0) }
+        let rows = tasks.filter { TaskKind.mayComplete($0) && !$0.completed }.map { projected($0) }
         let nestedRows = nested.map { projected($0.record, parent: $0.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext($0)) }
         return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "nestedTasks": .array(nestedRows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
     }
@@ -1711,7 +1760,7 @@ enum WidgetProjection {
             let capacity = TaskPlanner.capacity(tasks, events: usable?.events ?? [], on: day, hours: hours, calendar: calendar)
             let key = TaskPlanner.dayKey(day, calendar: calendar)
             let plannedIDs = Set(TaskPlanner.blocks(tasks, on: day, calendar: calendar).map(\.id) + TaskPlanner.allDay(tasks, on: day, calendar: calendar).map(\.id))
-            let overdue = tasks.filter { !plannedIDs.contains($0.id) && !$0.completed && !$0.string("due_date").isEmpty && Dates.parse(TaskPlanner.plannedDay($0, calendar: calendar)) != nil && TaskPlanner.plannedDay($0, calendar: calendar) < key }.count
+            let overdue = tasks.filter { TaskKind.mayComplete($0) && !plannedIDs.contains($0.id) && !$0.completed && !$0.string("due_date").isEmpty && Dates.parse(TaskPlanner.plannedDay($0, calendar: calendar)) != nil && TaskPlanner.plannedDay($0, calendar: calendar) < key }.count
             days[key] = .object(["working": .number(Double(capacity.workingMinutes)), "busy": .number(Double(capacity.busyMinutes)), "estimated": .number(Double(capacity.estimatedMinutes)), "unknown": .number(Double(capacity.unknownTasks)), "overdue": .number(Double(overdue))])
         }
         return .object(["version": .number(1), "timeZone": .string(calendar.timeZone.identifier), "calendarState": .string(state),
@@ -1736,7 +1785,7 @@ enum WidgetProjection {
         func projection(_ groups: [TaskGrouping.Group]) -> (ids: [String], groups: [JSON]) {
             var seen=Set<String>(), ids:[String]=[], values:[JSON]=[]
             for group in groups {
-                let unique=group.tasks.filter { !$0.completed && seen.insert($0.id).inserted }.map(\.id)
+                let unique=group.tasks.filter { TaskKind.mayComplete($0) && !$0.completed && seen.insert($0.id).inserted }.map(\.id)
                 guard !unique.isEmpty else { continue }
                 ids += unique
                 values.append(.object(["id":.string(group.id),"name":.string(group.name),"ids":.array(unique.map(JSON.string))]))

@@ -16,7 +16,7 @@ struct SidebarView: View {
     @State private var projectsExpanded = true
     @State private var labelsExpanded = true
     private var today: String { Dates.day(Date()) }
-    private var open: [Record] { store.activeTasks.filter { !$0.completed } }
+    private var open: [Record] { store.activeTasks.filter { TaskKind.mayComplete($0) && !$0.completed } }
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
@@ -39,7 +39,7 @@ struct SidebarView: View {
             }
             Section("Browse") {
                 item(.all, "All Tasks", count: open.count)
-                item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { !$0.completed }.count)
+                item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { TaskKind.mayComplete($0) && !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
                 Button { openMentions() } label: { HStack { Label("Mentions", systemImage: "at"); Spacer(); if let count = store.mentionUnreadCount, count > 0 { Text("\(count)").foregroundStyle(.secondary) } } }.accessibilityIdentifier("openMentions")
                 Button("Insights",systemImage:"chart.xyaxis.line") { openInsights() }.accessibilityIdentifier("openInsights")

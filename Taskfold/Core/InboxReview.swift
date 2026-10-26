@@ -27,7 +27,7 @@ struct InboxReviewRequest: Identifiable, Sendable {
         let ranked = DayPlacement.arranged(inbox.enumerated().sorted { $0.element.priority == $1.element.priority ? $0.offset < $1.offset : $0.element.priority < $1.element.priority }.map(\.element), ids: order)
         ids = Array(ranked.prefix(batch.limit ?? ranked.count)).map(\.id)
     }
-    static func eligible(_ task: Record) -> Bool { !task.completed && task.string("project_id").isEmpty }
+    static func eligible(_ task: Record) -> Bool { TaskKind.mayComplete(task) && !task.completed && task.string("project_id").isEmpty }
     func remaining(tasks: [Record], decisions: [String: InboxReviewDecision]) -> [Record] {
         let rows = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return ids.compactMap { decisions[$0] == nil ? rows[$0] : nil }.filter(Self.eligible)

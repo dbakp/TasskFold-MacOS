@@ -157,6 +157,7 @@ private struct SubtaskOrganizer: View {
                     Section {
                         ForEach(items) { item in
                             HStack(alignment: .center, spacing: 8) {
+                                if TaskKind.mayComplete(item.record) {
                                 Button {
                                     draft = SubtaskTree.changing(draft, id: item.id, fields: ["completed": .bool(!item.record.completed)])
                                 } label: {
@@ -166,6 +167,11 @@ private struct SubtaskOrganizer: View {
                                 .accessibilityLabel((item.record.completed ? "Reopen " : "Complete ") + item.record.title)
                                 .accessibilityValue(item.record.completed ? "Completed" : "Not completed")
                                 .accessibilityIdentifier("organizedCompletion-" + item.id)
+                                } else {
+                                    Image(systemName: TaskKind(item.record) == .heading ? "textformat" : "questionmark.square")
+                                        .foregroundStyle(.secondary).frame(minWidth: 32, minHeight: 36)
+                                        .accessibilityLabel(TaskKind(item.record) == .heading ? "Heading, stays open" : "Task type unavailable")
+                                }
                                 TextField("Subtask", text: Binding(get: {
                                     SubtaskTree.outline(draft).first { $0.id == item.id }?.record.title ?? ""
                                 }, set: { title in draft = SubtaskTree.changing(draft, id: item.id, fields: ["title": .string(title)]) }), axis: .vertical)
@@ -174,6 +180,7 @@ private struct SubtaskOrganizer: View {
                                     .accessibilityLabel("Subtask name")
                                     .accessibilityHint("Level \(baseDepth + item.depth + 1). Use the actions menu to move or nest this subtask.")
                                     .accessibilityIdentifier("organizedTitle-" + item.id)
+                                .fontWeight(TaskKind(item.record) == .heading ? .semibold : .regular)
                                 Menu {
                                     #if os(iOS)
                                     Button("Edit details", systemImage: "slider.horizontal.3") { editingChild = ChildRequest(record: item.record, depth: baseDepth + item.depth + 1) }
