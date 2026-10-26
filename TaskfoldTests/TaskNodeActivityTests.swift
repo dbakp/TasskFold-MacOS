@@ -361,4 +361,29 @@ final class TaskNodeActivityTests: XCTestCase {
         XCTAssertEqual(current?.title, "Current retained child"); XCTAssertNil(event.currentTask(tasks: [root], projects: [], account: member))
     }
 
+    func testReviewedHistoricalCustodyRowsRemainValidWithoutLiveTasksOrAuthors() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "reviewed-history-custody", withExtension: "json", subdirectory: "Fixtures"))
+        let wire = try JSONDecoder().decode([String: [Record]].self, from: Data(contentsOf: url))
+        let roots = try XCTUnwrap(wire["root"]), children = try XCTUnwrap(wire["child"])
+        XCTAssertFalse(roots.isEmpty); XCTAssertFalse(children.isEmpty)
+        let rootEvents = try roots.map { try XCTUnwrap(TaskActivity(row: $0), $0.id) }
+        let childEvents = try children.map { try XCTUnwrap(TaskNodeActivity(row: $0), $0.id) }
+        XCTAssertTrue(rootEvents.allSatisfy { $0.actor == nil })
+        XCTAssertTrue(childEvents.allSatisfy { $0.actor == nil })
+        XCTAssertTrue(childEvents.contains { $0.kinds == [.completed] && $0.workAfter })
+        XCTAssertTrue(childEvents.contains { $0.kinds == [.deleted] })
+        // Reading the archive never supplies current task authority.
+        let member = UUID().uuidString.lowercased()
+        for event in childEvents { XCTAssertNil(event.currentTask(tasks: [], projects: [], account: member)) }
+        for event in rootEvents {
+            let project = event.after["project_id"]?.text ?? event.before["project_id"]?.text ?? ""
+            XCTAssertNil(ProjectActivityContext(event: event, project: project, tasks: [], projects: [], members: [], account: member).task)
+        }
+        let snapshot = Snapshot(tables: [TaskActivity.table: roots, TaskNodeActivity.table: children])
+        let archive = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: member).data())
+        XCTAssertEqual(archive.tables[TaskActivity.table], roots)
+        XCTAssertEqual(archive.tables[TaskNodeActivity.table], children)
+        XCTAssertTrue(try archive.plan(current: Snapshot(), account: UUID().uuidString.lowercased()).changes.isEmpty)
+    }
+
 }

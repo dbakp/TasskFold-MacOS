@@ -119,3 +119,11 @@ reminders, old-client rollout safeguards and external-provider setup stay deferr
 the client review contract are implemented locally. Historical-only event custody
 is still open; see [TASK_NODE_PROJECT_ADOPTION.md](TASK_NODE_PROJECT_ADOPTION.md)
 for exact scope and remaining service/UI work.
+
+
+26 October retention follow-up: reviewed per-event custody is now implemented
+and locally verified for new transfers, including deleted roots, joint ownership,
+author removal and final-team cleanup. It does not grant live-task authority or
+backfill already adopted orphan history. See
+[TASK_REVIEWED_HISTORY_CUSTODY.md](TASK_REVIEWED_HISTORY_CUSTODY.md) for exact
+semantics, coverage epochs, evidence and remaining UI/hosted acceptance.

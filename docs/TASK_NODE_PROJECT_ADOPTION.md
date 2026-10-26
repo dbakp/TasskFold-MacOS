@@ -96,3 +96,11 @@ swift test --filter 'TeamProjectAdoptionTests|TaskNodeActivityTests'
 The [current Supabase RLS guide](https://supabase.com/docs/guides/database/postgres/row-level-security)
 and changelog were reviewed. Only the already-authorized private routines read
 and lock ledger contents; stored history is not an access grant.
+
+
+26 October retention follow-up: reviewed per-event custody is now implemented
+and locally verified for new transfers, including deleted roots, joint ownership,
+author removal and final-team cleanup. It does not grant live-task authority or
+backfill already adopted orphan history. See
+[TASK_REVIEWED_HISTORY_CUSTODY.md](TASK_REVIEWED_HISTORY_CUSTODY.md) for exact
+semantics, coverage epochs, evidence and remaining UI/hosted acceptance.

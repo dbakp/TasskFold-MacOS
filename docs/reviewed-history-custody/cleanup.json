@@ -1,0 +1,64 @@
+{
+  "noNativeAppLaunched": true,
+  "ownedDatabaseContainersRemoved": true,
+  "readyMacHostAndBuildPreserved": [
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build"
+  ],
+  "persistentBuildCachesPreserved": true,
+  "removedOwnedScratch": [
+    {
+      "path": "/tmp/taskfold-history-custody-ios-connections.log",
+      "bytes": 38
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-mac-core.log",
+      "bytes": 69810
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-mac-connections.json",
+      "bytes": 11252
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-ios-connections.json",
+      "bytes": 11252
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-client-rows.json",
+      "bytes": 8123
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-mac.log",
+      "bytes": 81
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-ios.log",
+      "bytes": 81
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-ios.json",
+      "bytes": 13352
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-mac.json",
+      "bytes": 13352
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-ios-core.log",
+      "bytes": 70237
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-mac-connections.log",
+      "bytes": 38
+    },
+    {
+      "path": "/tmp/taskfold-history-custody-changelog.md",
+      "bytes": 102641
+    },
+    {
+      "path": "/tmp/taskfold-build-history-custody.py",
+      "bytes": 9203
+    }
+  ],
+  "prunedBytes": 309460
+}

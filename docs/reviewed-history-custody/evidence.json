@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-26",
+  "repository": "TasskFold-MacOS",
+  "sources": {
+    "supabase/migrations/20261026122805_reviewed_history_custody.sql": "f7294640c81bcde00897076d7e634565c0fe185ec2ff96485db6f568b5a71b15",
+    "Scripts/Database/test-reviewed-history-custody.mjs": "2d93b990e127a62aa4775ae881a6dee3526577cb8c113d598197beca1ffc9821",
+    "Scripts/Database/project-adoption-schema.mjs": "ee30b3ae2854cb814ed3ec8aa16cb89cca9db9ced9650618e0ccc939b176aa40",
+    "TaskfoldTests/TaskNodeActivityTests.swift": "4432dd440f0ff2fc6f8219956263f8e26797320b25a62978d00c572b54112d87",
+    "TaskfoldTests/Fixtures/reviewed-history-custody.json": "826788f17f169c0a5bd845d05811ec1bbcfd01e31c32253b6032bbc0b6410939"
+  },
+  "custodyDatabaseChecks": 88,
+  "connectionPolicyRegressionChecks": 55,
+  "coreChecks": 258,
+  "newClientCompatibilityCases": 1,
+  "productionSwiftChanged": false,
+  "wireEventFormatChanged": false,
+  "newNativeBuild": false,
+  "newNativeRuntimeAcceptance": false,
+  "hostedChanges": false,
+  "normalHeadingAuthoringEnabled": false,
+  "fullGoalComplete": false,
+  "oldAlreadyAdoptedOrphanBackfill": false,
+  "prospectiveReviewedCustodyVerified": true,
+  "scopeUpgradeGateVerified": true,
+  "jointAndPersonalRetentionVerified": true,
+  "allOwnedDatabaseContainersRemoved": true,
+  "remaining": [
+    "combined parent/child activity fold and UI/Insights/Project pulse/widgets",
+    "retrospective orphan repair through an explicit reviewed flow",
+    "full hosted-chain, HTTP and native acceptance",
+    "wider headings/calendar/provider acceptance and user-deferred release/provider gates"
+  ]
+}

@@ -611,3 +611,29 @@ activity/Insights/Project pulse and wider heading acceptance remain next. Mac
 native replay failed to activate after the unlock reply; no UI pass is counted.
 See [TASK_NODE_PROJECT_ADOPTION.md](TASK_NODE_PROJECT_ADOPTION.md) and
 `node-project-adoption/`. The full Px goal remains active.
+
+
+### Reviewed history survives author and task removal — 26 October 2026
+
+Forward project transfers now assign private, per-feed/event custody to the exact
+reviewed history, including deleted roots and old project intervals. This grants
+no current-task authority. Every referenced state still needs current project
+access; expired sessions, removed members/authors, disabled native reads and
+missing/deleted projects remain closed. Separate transfers may share an immutable
+event: exclusive history is removed with its team, joint history with its last
+owning team. Earlier observed rows survive; guaranteed epochs conservatively
+advance and no unreviewed historical repair/backfill is inferred.
+
+Each repo passes 88 PostgreSQL custody checks plus 55 connection-policy regression
+checks and 258 focused Core checks. A held real transfer proves team deletion
+returns PT409 instead of acting on a stale ownership snapshot. Existing file
+guards/rollback and applied receipt retry remain intact. Client wire/UI code is
+unchanged; no new native build/runtime acceptance is claimed. All owned containers
+are removed; hosted rollout and normal heading authoring remain unchanged.
+See [TASK_REVIEWED_HISTORY_CUSTODY.md](TASK_REVIEWED_HISTORY_CUSTODY.md) and
+`reviewed-history-custody/` for joint-retention semantics and exact limits.
+
+Next: combined parent/child activity, Insights and Project pulse, then UI/widget
+integration and the wider remaining heading/calendar/provider acceptance.
+Retrospective orphan repair and full hosted-chain/native acceptance stay open.
+The full Px goal remains active; user-deferred release/provider gates stay pending.
