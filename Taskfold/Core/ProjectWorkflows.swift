@@ -420,7 +420,7 @@ struct WorkflowTemplate: Sendable {
         // Every row belongs to this run's fresh identities (including its list
         // order). A retry after a lost reply must not upsert over later edits.
         return (changes + taskChanges + orders).map { change in
-            var change = change; change.insertOnly = true; return change
+            var change = change; change.insertOnly = true; change.workflowRun = run; return change
         }
     }
 }
@@ -1160,4 +1160,97 @@ struct WorkflowCSVMapping: Sendable, Equatable {
 enum TaskRowCSVFormat {
     static let marker = "taskfold-task-rows-v1"
     static let columns = ["Taskfold format", "Row reference", "Parent reference", "Group", "Parent path", "Type", "Title", "Notes", "Completed", "Project", "Priority", "Planned date", "Time", "Time zone", "Scheduled instant", "Deadline", "Estimate minutes", "Labels", "Assigned to"]
+}
+
+
+/// One durable, atomic Undo for the fresh personal records of a workflow run.
+/// The server checks the complete set before deleting any of it.
+enum WorkflowUndo {
+    static let table = "_private_workflow_undo"
+    static let unavailable = "Refresh this workspace after its service is updated to safely undo workflows. Your work is unchanged."
+    static func available(boundary: TeamWorkspaceBoundary?, account: String, origin: String?) -> Bool {
+        guard let boundary, let origin, boundary.belongs(account: account, origin: origin) else { return false }
+        return boundary.raw["personal_workflow_undo_protocol"] == .number(1)
+    }
+    static func canSend(_ change: Mutation, boundary: TeamWorkspaceBoundary?) -> Bool {
+        !matches(change) || boundary?.raw["personal_workflow_undo_protocol"] == .number(1)
+    }
+    static let message = "This workflow changed after it was created. Undo was cancelled and your current work was kept."
+    static func matches(_ change: Mutation) -> Bool { change.table == table || change.method == "WORKFLOW_UNDO" }
+    static func items(_ change: Mutation) -> [Mutation]? {
+        guard change.table == table, change.method == "WORKFLOW_UNDO", let run = change.workflowRun,
+              change.recordID == run.uuidString.lowercased(), case .array(let rows) = change.fields["items"],
+              !rows.isEmpty, rows.count <= 12000, let owner = change.fields["user_id"]?.text, !owner.isEmpty else { return nil }
+        var seen = Set<String>(), result: [Mutation] = []
+        for value in rows {
+            let raw = value.object, name = raw["table"]?.text ?? "", id = raw["id"]?.text ?? ""
+            guard ["projects", "sections", "labels", "tasks", "view_orders"].contains(name), !id.isEmpty,
+                  case .object(let base) = raw["base"], base["id"]?.text == id, base["user_id"]?.text == owner,
+                  seen.insert(name + ":" + id).inserted else { return nil }
+            result.append(Mutation(table: name, recordID: id, method: "DELETE", fields: [:], baseline: base, workflowRun: run))
+        }
+        return result
+    }
+    static func deleting(_ changes: [Mutation], snapshot: Snapshot) -> Mutation? {
+        guard let run = changes.first?.workflowRun, !changes.isEmpty,
+              changes.allSatisfy({ $0.workflowRun == run && $0.method == "POST" && $0.insertOnly == true && $0.teamTaskScope == nil && $0.teamTaskBatch == nil && $0.teamCompletion == nil }),
+              let owner = changes.first?.fields["user_id"]?.text else { return nil }
+        let created = changes.filter { change in !(snapshot.tables[change.table] ?? []).contains { $0.id == change.recordID } }
+        guard !created.isEmpty else { return nil }
+        let command = Mutation(table: table, recordID: run.uuidString.lowercased(), method: "WORKFLOW_UNDO", fields: [
+            "user_id": .string(owner), "items": .array(created.reversed().map { .object(["table": .string($0.table), "id": .string($0.recordID), "base": .object($0.fields)]) })], workflowRun: run)
+        return items(command) == nil ? nil : command
+    }
+    static func restoring(_ change: Mutation) -> [Mutation]? {
+        items(change)?.reversed().map { item in
+            Mutation(table: item.table, recordID: item.recordID, method: "POST", fields: item.baseline!, insertOnly: true, workflowRun: item.workflowRun)
+        }
+    }
+    static func validate(_ change: Mutation, snapshot: Snapshot, account: String) throws {
+        guard let items = items(change), change.fields["user_id"]?.text == account else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
+        let ids = Dictionary(grouping: items, by: \.table).mapValues { Set($0.map(\.recordID)) }
+        func external(_ table: String, _ row: Record) -> Bool { !(ids[table] ?? []).contains(row.id) }
+        for item in items {
+            if let current = snapshot.tables[item.table]?.first(where: { $0.id == item.recordID }),
+               !item.baseline!.allSatisfy({ current[$0.key] == $0.value }) { throw AppFailure(message: message) }
+        }
+        for row in snapshot.tables["projects"] ?? [] where external("projects", row) && (ids["projects"] ?? []).contains(row.string("parent_id")) { throw AppFailure(message: message) }
+        for row in snapshot.tables["sections"] ?? [] where external("sections", row) && (ids["projects"] ?? []).contains(row.string("project_id")) { throw AppFailure(message: message) }
+        func usesLabel(_ row: Record) -> Bool {
+            !Set(row["labels"].list.map(\.text)).isDisjoint(with: ids["labels"] ?? []) || row["subtasks"].list.contains { usesLabel(Record($0.object)) }
+        }
+        for row in snapshot.tables["tasks"] ?? [] where external("tasks", row) {
+            if (ids["projects"] ?? []).contains(row.string("project_id")) || (ids["sections"] ?? []).contains(row.string("section_id")) || usesLabel(row) { throw AppFailure(message: message) }
+        }
+    }
+    static func apply(_ change: Mutation, snapshot: inout Snapshot) {
+        guard let items = items(change) else { return }
+        for item in items { snapshot.apply(item) }
+    }
+    static func reply(_ saved: Record?, change: Mutation) -> (applied: Bool, rows: [Mutation])? {
+        guard let items = items(change), let saved, saved.id == change.id.uuidString.lowercased(),
+              case .bool(let applied) = saved["applied"], case .array(let values) = saved["rows"] else { return nil }
+        var seen = Set<String>(), rows: [Mutation] = []
+        for value in values {
+            let raw = value.object, table = raw["table"]?.text ?? "", row = Record(raw["row"]?.object ?? [:])
+            guard items.contains(where: { $0.table == table && $0.recordID == row.id }),
+                  row.string("user_id") == change.fields["user_id"]?.text, seen.insert(table + ":" + row.id).inserted else { return nil }
+            rows.append(Mutation(table: table, recordID: row.id, method: "POST", fields: row.fields))
+        }
+        guard !applied || rows.isEmpty else { return nil }
+        return (applied, rows)
+    }
+    static func acknowledge(_ saved: Record?, change: Mutation, snapshot: inout Snapshot) -> Bool {
+        guard let reply = reply(saved, change: change) else { return false }
+        snapshot.pending.removeAll { $0.id == change.id }
+        if !reply.applied {
+            // Refusal returns the server's surviving owned rows, not the stale creation payload.
+            for row in reply.rows {
+                snapshot.tables[row.table, default: []].removeAll { $0.id == row.recordID }
+                snapshot.tables[row.table, default: []].append(Record(row.fields))
+            }
+            for queued in snapshot.pending { snapshot.apply(queued) }
+        }
+        return true
+    }
 }

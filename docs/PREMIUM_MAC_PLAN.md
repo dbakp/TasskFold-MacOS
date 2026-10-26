@@ -8054,3 +8054,14 @@ needs service-side deletion guards for later edits/dependent work; this is still
 an open safety gap, not accepted by the retry tests. See P2_PLAN.md and
 workflow-creation-retry/validation.json. No new installed-native or hosted-service
 acceptance is claimed and normal flags/release deferrals remain unchanged.
+
+26 October atomic workflow Undo: newly created personal workflow sets use one
+verified command, protecting later edits and incoming dependent work before any
+server deletion. Safe receipt replay preserves recreated rows, and refused Undo
+restores fresh personal rows without exposing later team custody. Source service
+compatibility guards cloud admission/delivery. 269 Core cases, 54 isolated SQL
+checks and the full unsigned native app build pass independently in the Mac repo.
+The creation UI is unchanged; explicit notices cover refusal/missing support.
+Installed native create/Undo/Redo/refusal/relaunch, hosted/paired-client and largest
+workflow performance acceptance remain open. See workflow-undo/validation.json
+and the latest P2_PLAN.md stage. Existing release/provider/reminder deferrals stay.

@@ -27,9 +27,11 @@ uses the separate client opt-in; personal live heading creation now checks its
 own service compatibility signal. See DEFINITION_HEADING_AUTHORING.md and
 PERSONAL_TASK_HEADINGS.md for acceptance and remaining limits.
 
-Workflow creation retries now preserve later server edits; service-side protection
-for workflow Undo deletion remains an open data-safety priority. See the dated
-workflow retry stage and workflow-creation-retry/validation.json.
+Workflow creation retries preserve later server edits. Atomic personal workflow
+Undo now has source-level baseline/dependency and reply-retry protection, with
+service compatibility admission. Installed runtime, hosted/paired-client and
+large-workflow acceptance remain open. See the dated workflow stages and
+workflow-undo/validation.json.
 
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
@@ -5391,3 +5393,63 @@ heading Undo/Redo, nested/workflow/import/restore, source/account, spoken/widget
 and cross-device acceptance remain open. Rank 3/Px are active. Normal app flags,
 hosted services and the user's release/provider/reminder/older-client deferrals
 are unchanged.
+
+## 26 October — atomic personal workflow Undo
+
+New private workflow runs carry durable run provenance. Their history inverse is
+one command covering the records the run actually created, rather than separate
+unconditional organization deletes. The source-only service validates the whole
+owned personal set against typed creation baselines and actual schema defaults,
+checks both FK and logical organization/nested-label references, and refuses the
+whole Undo if any record changed, disappeared or gained outside dependent work.
+No row in the set is deleted on a refusal. New and unknown FK-dependent features
+fail closed; only derived assignment/reminder bookkeeping is exempt. Stable-order
+relation locks fence concurrent incoming references, including hidden rows and
+older columns without FK constraints. These locks can briefly contend with other
+writers; largest-workflow load/latency acceptance remains open.
+
+One account/request receipt makes a successful lost-reply retry harmless to later
+recreated records. A recorded refusal reads surviving personal rows afresh; it
+never serves stored content after team adoption/access changes. The private
+receipt retains the fingerprint/outcome, not row content. It has RLS, no client
+table privileges, and an account-cascade FK. The exposed function is invoker;
+its private definer validates the real actor/session and ownership and checks
+persistent team identities before returning rows or deleting. Team commands and
+permissions are unchanged.
+
+The client refuses malformed/inaccessible replies, restores current owned rows
+after a refusal, reapplies later queued edits, and explains the cancelled Undo.
+Redo retains create-only insertion and chooses fresh task incarnations. A new
+command gets a fresh request identity; a durable retry retains its identity.
+Observed local edits/dependencies prevent local deletion. Cached exact service
+compatibility is required to start cloud Undo; fresh preflight compatibility is
+required for delivery. Missing/removed support leaves work or a previously queued
+intention intact, without legacy DELETE fallback or a busy retry loop. Local
+workspaces use the same grouped history projection without a remote dependency.
+
+Each independent repo passes 269 selected Core tests (five new regression cases)
+and 54 actual-role isolated PostgreSQL checks, including a verified concurrent
+incoming writer. Both full native apps compile successfully with signing disabled.
+The SQL checks cover all five row types, omitted defaults, atomic edit/dependency
+refusal, a logical section link with no FK, hidden/nested-label/new-feature links,
+successful reply retry after recreation, fresh refusal replay, persistent team
+custody, actor/session/anonymous denial, malformed requests and advisors. The Core
+checks cover cold queue/history, task generation changes on Redo, exact account/
+origin compatibility, local refusal, authoritative restoration with later edits,
+reply ownership and atomic-RPC-only transport when the service is missing.
+
+See workflow-undo/validation.json, its retained logs and database report. Initial
+harness attempts corrected scalar JSON encoding, an omitted synthetic labels
+table, the fixture's text-array label type and its team-owner membership invariant.
+Two meaningful failed assertions drove explicit logical-link protection and the
+persistent-team identity fence; the final runs include both cases. Full builds
+are compile evidence, not installed runtime, signing or distribution acceptance.
+No app was installed/launched and no real data or hosted service changed.
+
+This closes the identified source-level organization-deletion gap for newly
+provenanced workflow runs. Legacy untagged queues are not guessed or upgraded;
+the deferred older-client rollout work remains separate. Installed native/cloud
+workflow create/Undo/Redo/refusal/relaunch acceptance, service-deployment and paired
+client acceptance, and large-workflow performance remain open. Wider rank-3/Px
+scope and all existing release/provider/reminder/older-client deferrals remain
+active. No normal heading flag or hosted rollout setting changed.

@@ -119,6 +119,10 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
         guard quarantined.count<=200000, knownTasks.count<=200000,knownTasks.allSatisfy(TeamProjectValue.id),knownTeams.count<=20000,knownTeams.allSatisfy({TeamProjectValue.id($0.key)&&TeamProjectValue.id($0.value)}),boundary.teamProjects.allSatisfy({knownTeams[$0.key]==$0.value}) else {throw TeamProjectValue.invalid}
     }
     func canSend(_ change:Mutation,in snapshot:Snapshot,cached:[String:[String:Record]]?=nil)->Bool {
+        if WorkflowUndo.matches(change) {
+            guard let items = WorkflowUndo.items(change), change.fields["user_id"]?.text == boundary.account else { return false }
+            return items.allSatisfy { canSend($0, in: snapshot, cached: cached) }
+        }
         func allowed(_ scope:TeamTaskEditScope)->Bool {
             guard scope.account==boundary.account,scope.origin==boundary.origin,let p=boundary.projects[scope.project] else {return false}
             return p.team==scope.team && p.canSend

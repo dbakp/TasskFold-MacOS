@@ -1332,6 +1332,10 @@ final class Store {
         do {
             prepared=try TeamTaskBatch.preparing(changes,snapshot:snapshot)
             for change in prepared {
+                if WorkflowUndo.matches(change) {
+                    guard localMode || WorkflowUndo.available(boundary: nativeConversationTeamCache?.boundary, account: userID, origin: try? backend.accountRemovalOrigin) else { throw AppFailure(message: WorkflowUndo.unavailable) }
+                    try WorkflowUndo.validate(change, snapshot: snapshot, account: userID)
+                }
                 if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
                     guard let command=change.teamCompletion else { throw TeamCompletion.invalid }
                     guard !localMode,command.scope.account == userID,command.scope.origin == (try backend.accountRemovalOrigin) else { throw TeamCompletion.invalid }
@@ -1714,9 +1718,10 @@ final class Store {
                 Task { await self.resumeSyncAfterSignIn(workspace: retry) }
             }
         }
+        var workflowUndoRefused = false
         do {
             let boundary:TeamWorkspaceBoundary?
-            let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil || PersonalTaskTypes.requiresService($0)}
+            let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil || PersonalTaskTypes.requiresService($0) || WorkflowUndo.matches($0)}
             do {boundary=try await backend.workspaceBoundary(account:account)}
             catch is TeamWorkspaceUnavailable {guard allowLegacy else {throw TeamWorkspaceUnavailable()};boundary=nil}
             guard generation==accountGeneration else {return}
@@ -1737,11 +1742,14 @@ final class Store {
                 }
                 // Compatibility pauses delivery, not access or the optimistic draft.
                 // Continue the read so restored support can resume this exact intention.
-                if !PersonalTaskTypes.canSend(mutation, boundary: boundary) { break }
+                if !PersonalTaskTypes.canSend(mutation, boundary: boundary) || !WorkflowUndo.canSend(mutation, boundary: boundary) { break }
                 sending = mutation
                 let saved = try await backend.send(mutation, expectedAccount: account)
                 guard generation == accountGeneration else { return }
                 guard snapshot.acknowledge(mutation, saved: saved) else { throw TeamCompletion.conflict }
+                if WorkflowUndo.matches(mutation), WorkflowUndo.reply(saved, change: mutation)?.applied == false {
+                    undoStack = []; redoStack = []; notice = WorkflowUndo.message; workflowUndoRefused = true
+                }
                 try persist()
                 if let command=mutation.teamCompletion,command.operation == .undo,let saved,
                    case .object(let raw)=saved["team_completion_reply"],let receipt=try? command.receipt(raw,for:mutation),
@@ -1855,10 +1863,12 @@ final class Store {
         syncSignInWorkspace = nil
         let accessBlocked=snapshot.pending.first.map{snapshot.teamWorkspace?.blocked(snapshot).contains($0.id)==true} ?? false
         let headingBlocked = snapshot.pending.first.map { !PersonalTaskTypes.canSend($0, boundary: snapshot.teamWorkspace?.boundary) } ?? false
+        let workflowUndoBlocked = snapshot.pending.first.map { !WorkflowUndo.canSend($0, boundary: snapshot.teamWorkspace?.boundary) } ?? false
+        if workflowUndoBlocked { notice = "Your workflow Undo is saved on this device. Its service needs an update before it can sync." }
         if headingBlocked, syncSignInWorkspace == nil { notice = "Your heading changes are saved on this device. This service needs heading support before they can sync." }
-        if !accessBlocked && !headingBlocked && !hadConflict {notice = widgetActionStatus}
+        if !accessBlocked && !headingBlocked && !workflowUndoBlocked && !workflowUndoRefused && !hadConflict {notice = widgetActionStatus}
         // A blocked head needs review, not an immediate busy retry loop.
-        if !snapshot.pending.isEmpty && !accessBlocked && !headingBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.sync()}}
+        if !snapshot.pending.isEmpty && !accessBlocked && !headingBlocked && !workflowUndoBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.sync()}}
     }
     /// Only fill missing remote rows after a successful fetch. Existing synchronized choices win.
     private func migrateOrganization() {

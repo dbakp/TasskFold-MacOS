@@ -948,6 +948,14 @@ final class Backend: NSObject {
         guard change.table != TaskNodeActivity.table, change.table != TaskNodeActivity.epochTable, change.table != TaskActivity.table, change.table != TaskActivity.epochTable, change.table != TaskAssignmentProvenance.table else { throw AppFailure(message: "Activity history is read-only.") }
         let expectedOwner = expectedAccount ?? session?.user.id
         guard expectedOwner == session?.user.id else { throw CancellationError() }
+        if WorkflowUndo.matches(change) {
+            guard WorkflowUndo.items(change) != nil, change.fields["user_id"]?.text == expectedOwner else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
+            let data = try await request("/rest/v1/rpc/taskfold_undo_private_workflow", method: "POST", body: [
+                "_request": .string(change.id.uuidString.lowercased()), "_body": .object(change.fields)], expectedAccount: expectedOwner)
+            let saved = try JSONDecoder().decode(Record.self, from: data)
+            guard WorkflowUndo.reply(saved, change: change) != nil else { throw AppFailure(message: "The server did not confirm this workflow Undo. It remains saved on this device.") }
+            return saved
+        }
         if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
             guard let command=change.teamCompletion else { throw TeamCompletion.invalid }
             guard !sessionTransition,command.scope.account == expectedOwner,command.scope.account == session?.user.id,command.scope.origin == (try accountRemovalOrigin) else { throw CancellationError() }

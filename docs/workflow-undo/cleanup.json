@@ -1,0 +1,11 @@
+{
+  "removedBuildBytes": 1284463892,
+  "removedBuildDirectories": [
+    "/tmp/taskfold-workflow-undo-ios-build",
+    "/tmp/taskfold-workflow-undo-mac-build"
+  ],
+  "fullBuildsTerminal": true,
+  "databaseContainersRemoved": true,
+  "appsInstalledOrLaunched": false,
+  "sourceBuildCachesPreserved": true
+}

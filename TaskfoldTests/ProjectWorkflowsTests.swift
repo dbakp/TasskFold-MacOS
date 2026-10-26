@@ -176,6 +176,102 @@ final class ProjectWorkflowsTests: XCTestCase {
         }
     }
 
+
+    func workflowUndoFixture() throws -> (changes: [Mutation], snapshot: Snapshot, command: Mutation) {
+        let template = try WorkflowTemplate.capture(kind: .project, id: "root", snapshot: fixture())
+        let changes = try template.instantiate(account: owner, name: "Undo workflow").map { TaskCompletionRevision.capturing($0, existing: nil) }
+        var snapshot = Snapshot(); for change in changes { snapshot.apply(change) }
+        let history = EditHistory(changes: changes, snapshot: Snapshot())
+        XCTAssertEqual(history.undo.count, 1)
+        return (changes, snapshot, try XCTUnwrap(history.undo.first))
+    }
+    func testWorkflowUndoIsOneColdDurableCommandAndRedoCreatesFreshTaskIncarnations() throws {
+        let f = try workflowUndoFixture()
+        try WorkflowUndo.validate(f.command, snapshot: f.snapshot, account: owner)
+        var snapshot = f.snapshot; snapshot.apply(f.command); snapshot.pending = [f.command]
+        let cold = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        XCTAssertEqual(cold, snapshot); XCTAssertTrue(f.changes.allSatisfy { cold.tables[$0.table]?.isEmpty == true })
+        let history = EditHistory(changes: [f.command], snapshot: f.snapshot)
+        XCTAssertEqual(history.undo.map(\.recordID), f.changes.map(\.recordID))
+        XCTAssertTrue(history.undo.allSatisfy { $0.method == "POST" && $0.insertOnly == true && $0.workflowRun == f.command.workflowRun })
+        let redo = history.undo.map { TaskGeneration.restoring($0, existing: nil) }
+        for task in redo where task.table == "tasks" {
+            XCTAssertNotEqual(task.fields["task_generation"], f.changes.first { $0.recordID == task.recordID }?.fields["task_generation"])
+        }
+        let secondUndo = EditHistory(changes: redo, snapshot: snapshot).undo
+        XCTAssertEqual(secondUndo.count, 1); XCTAssertNotEqual(secondUndo.first?.id, f.command.id)
+    }
+    func testWorkflowUndoRefusesObservedChangesAndIncomingDependenciesBeforeLocalDeletion() throws {
+        let f = try workflowUndoFixture(), project = try XCTUnwrap(f.changes.first { $0.table == "projects" })
+        for table in ["projects", "sections", "labels", "tasks", "view_orders"] {
+            var snapshot = f.snapshot
+            let index = try XCTUnwrap(snapshot.tables[table]?.indices.first)
+            snapshot.tables[table]![index][table == "tasks" ? "title" : table == "view_orders" ? "ids" : "name"] = table == "view_orders" ? .array([]) : .string("Later edit")
+            XCTAssertThrowsError(try WorkflowUndo.validate(f.command, snapshot: snapshot, account: owner))
+        }
+        var snapshot = f.snapshot, incoming = Record.task(user: owner, project: project.recordID)
+        incoming["title"] = .string("Later task"); snapshot.tables["tasks", default: []].append(incoming)
+        XCTAssertThrowsError(try WorkflowUndo.validate(f.command, snapshot: snapshot, account: owner))
+        XCTAssertThrowsError(try WorkflowUndo.validate(f.command, snapshot: f.snapshot, account: "another-account"))
+        var invalid = f.command; invalid.fields["items"] = .array([])
+        XCTAssertNil(WorkflowUndo.items(invalid))
+    }
+    func testRefusedWorkflowUndoRestoresCurrentRowsAndReplaysLaterQueuedEdits() throws {
+        let f = try workflowUndoFixture(), task = try XCTUnwrap(f.changes.first { $0.table == "tasks" })
+        var snapshot = f.snapshot; snapshot.apply(f.command)
+        let later = Mutation(table: "tasks", recordID: task.recordID, method: "PATCH", fields: ["title": .string("My later title")])
+        snapshot.pending = [f.command, later]
+        var rows = f.changes.map { value in JSON.object(["table": .string(value.table), "row": .object(value.fields)]) }
+        let projectIndex = try XCTUnwrap(f.changes.firstIndex { $0.table == "projects" })
+        var project = f.changes[projectIndex].fields; project["name"] = .string("Another device renamed this")
+        rows[projectIndex] = .object(["table": .string("projects"), "row": .object(project)])
+        let saved = Record(["id": .string(f.command.id.uuidString.lowercased()), "applied": .bool(false), "rows": .array(rows)])
+        XCTAssertTrue(snapshot.acknowledge(f.command, saved: saved)); XCTAssertEqual(snapshot.pending, [later])
+        XCTAssertEqual(snapshot.tables["projects"]?.first { $0.id == project["id"]?.text }?.name, "Another device renamed this")
+        XCTAssertEqual(snapshot.tables["tasks"]?.first { $0.id == task.recordID }?.title, "My later title")
+        var bad = saved; bad["id"] = .string(UUID().uuidString.lowercased())
+        XCTAssertNil(WorkflowUndo.reply(bad, change: f.command))
+        bad = saved; var foreign = project; foreign["user_id"] = .string("foreign")
+        bad["rows"] = .array([.object(["table": .string("projects"), "row": .object(foreign)])])
+        XCTAssertNil(WorkflowUndo.reply(bad, change: f.command))
+    }
+    @MainActor func testWorkflowUndoUsesOnlyAtomicRPCAndNeverFallsBackToRowDeletion() async throws {
+        let f = try workflowUndoFixture()
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [AuthTransportTests.Stub.self]
+        let session = try JSONDecoder().decode(Session.self, from: JSONEncoder().encode(JSON.object([
+            "access_token": .string("synthetic"), "refresh_token": .string("synthetic-refresh"),
+            "expires_in": .number(3600), "user": .object(["id": .string(owner)])])))
+        let backend = Backend(configuration: ["URL": "https://native-auth.test", "Key": "public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
+        defer { AuthTransportTests.Stub.handler = nil }
+        var requests = 0
+        AuthTransportTests.Stub.handler = { request in
+            requests += 1; XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_undo_private_workflow")
+            return (200, try JSONEncoder().encode(Record(["id": .string(f.command.id.uuidString.lowercased()), "applied": .bool(true), "rows": .array([])])))
+        }
+        let saved = try await backend.send(f.command, expectedAccount: owner)
+        XCTAssertEqual(WorkflowUndo.reply(saved, change: f.command)?.applied, true); XCTAssertEqual(requests, 1)
+        AuthTransportTests.Stub.handler = { _ in requests += 1; return (404, Data("{}".utf8)) }
+        do { _ = try await backend.send(f.command, expectedAccount: owner); XCTFail("Missing service must preserve the queue") } catch {}
+        XCTAssertEqual(requests, 2, "No generic DELETE fallback")
+    }
+
+
+    func testWorkflowUndoCompatibilityIsExactAccountBoundAndNeverUsesLegacyFallback() throws {
+        let change = try workflowUndoFixture().command, account = "f6310000-0000-4000-8000-000000000001"
+        for value: JSON? in [nil, .null, .number(0), .number(2), .string("1"), .bool(true), .number(1)] {
+            var raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(account), "native_team_reads_enabled": .bool(false), "setup_paused": .bool(true), "projects": .array([]), "teams": .array([]), "token": .string(String(repeating: "a", count: 64))]; raw["personal_workflow_undo_protocol"] = value
+            let boundary = try TeamWorkspaceBoundary(raw, account: account, origin: "https://personal.example")
+            XCTAssertEqual(WorkflowUndo.available(boundary: boundary, account: account, origin: boundary.origin), value == .number(1))
+            XCTAssertEqual(WorkflowUndo.canSend(change, boundary: boundary), value == .number(1))
+            XCTAssertFalse(WorkflowUndo.available(boundary: boundary, account: owner, origin: boundary.origin))
+            XCTAssertFalse(WorkflowUndo.available(boundary: boundary, account: account, origin: "https://another.example"))
+        }
+        XCTAssertFalse(WorkflowUndo.canSend(change, boundary: nil))
+        var bad = try workflowUndoFixture().changes; bad[0].table = "unexpected"
+        XCTAssertTrue(EditHistory(changes: bad, snapshot: Snapshot()).undo.isEmpty, "Tagged workflow history must not degrade to individual DELETEs")
+    }
+
     func testProjectTemplatePreservesStructureAndOffsetsButNeverHistoryOrOwnership() throws {
         let source=fixture(),template=try WorkflowTemplate.capture(kind:.project,id:"root",snapshot:source)
         let run=UUID(),changes=try template.instantiate(account:"recipient",name:"October launch",start:Dates.parse("2026-11-01"),run:run)

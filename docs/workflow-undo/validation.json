@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-26",
+  "repository": "TasskFold-MacOS",
+  "coreTests": 269,
+  "coreFailures": 0,
+  "newCoreCases": 5,
+  "databaseChecks": 54,
+  "databaseFailures": 0,
+  "fullAppBuild": "success; signing disabled; no installation or launch",
+  "commands": {
+    "core": "swift test --filter 'ProjectWorkflowsTests|TeamWorkflowRun|TeamWorkflowDestinationsTests|HeadingPortabilityTests|PersonalHeadingCapabilityTests|BackupTests|TeamWorkspace'",
+    "sql": "node Scripts/Database/test-workflow-undo.mjs REPORT.json",
+    "native": "xcodebuild build -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=macOS,arch=arm64 -derivedDataPath OWNED_TEMP CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "6468c46471719c0521c871bf937470dce7bf4f3556fc759ee90b057c68557bf2",
+    "Taskfold/Core/Models.swift": "79abdcfcedf00947bd658d89e5ac2084a0da79462871a4dcf4b047c7b3ce2058",
+    "Taskfold/Core/ProjectWorkflows.swift": "66563de6e10e13343158c9cebecb1fb2ad046ed0d22d99ad81318bd62577adfd",
+    "Taskfold/Core/Store.swift": "a90c129c85357976a2a2982c8ef02ad01b9856f4f88dd0ea1b4f6deb5ac57baa",
+    "Taskfold/Core/TeamWorkspace.swift": "309f289ed3cf8bb7fcd9e3f87cf7720116e25c9c41f9af2d2c1dece7eb630685",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "772a9f83597d4837dace93f57ad2cca92e3b57b7faaa594f0b60e1a2be327247",
+    "Scripts/Database/test-workflow-undo.mjs": "171f7812c2dc6bca06ff4845025fc494d09a3887f11d21ff950f4c21b0449560",
+    "supabase/migrations/20261026194848_guarded_workflow_undo.sql": "c4e6e97900293747a091fb6908040367c1c542dbebcedd7afb6cbb45fda7e8af"
+  },
+  "compiledBinarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "9dbb1177c1727895ee40527e7e46b6ca2bcc2b90408fd66ae9192dc69c8ab3be",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "b69d0f431474c06e7563efe053001f20585c6dd42581ab16e625e3958e99d143"
+  },
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "installedNativeAcceptance": false,
+  "remaining": [
+    "installed workflow create/Undo/Redo/refusal/relaunch acceptance",
+    "hosted deployment and paired client acceptance",
+    "largest-workflow load/latency acceptance",
+    "legacy untagged queues and deferred older-client rollout work"
+  ]
+}

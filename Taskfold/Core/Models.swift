@@ -260,6 +260,8 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var teamTaskScope: TeamTaskEditScope? = nil
     var teamTaskBatch: TeamTaskBatch? = nil
     var teamCompletion: TeamCompletion? = nil
+    /// Personal workflow provenance survives queued creation and history recreation.
+    var workflowRun: UUID? = nil
 }
 
 /// Undo/redo recreation is a new task incarnation; an exact queued retry retains its chosen ID.
@@ -573,6 +575,7 @@ struct Snapshot: Codable, Equatable, Sendable {
     /// Monotonic import receipts; excluded from shared rows and portable backups.
     var locationImports: [String: LocationHandoffImportReceipt]? = nil
     mutating func apply(_ change: Mutation) {
+        if WorkflowUndo.matches(change) { WorkflowUndo.apply(change, snapshot: &self); return }
         guard change.table != TaskAssignmentProvenance.table else { return }
         if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
             guard let command=change.teamCompletion else { return }
@@ -627,6 +630,7 @@ struct Snapshot: Codable, Equatable, Sendable {
     }
     /// Confirm the server revision before replaying work queued during the request.
     @discardableResult mutating func acknowledge(_ change: Mutation, saved: Record?) -> Bool {
+        if WorkflowUndo.matches(change) { return WorkflowUndo.acknowledge(saved, change: change, snapshot: &self) }
         if change.method == "TEAM_BATCH", change.teamTaskBatch == nil { return false }
         if let batch = change.teamTaskBatch, batch.isCompletion { return batch.acknowledgeCompletion(saved, header: change, snapshot: &self) }
         if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
@@ -1177,6 +1181,15 @@ struct EditHistory {
     init(changes: [Mutation], snapshot: Snapshot, id: UUID = UUID()) {
         self.id = id
         redo = []
+        if changes.count == 1, WorkflowUndo.matches(changes[0]), let restore = WorkflowUndo.restoring(changes[0]) {
+            redo = changes; undo = restore; return
+        }
+        if let command = WorkflowUndo.deleting(changes, snapshot: snapshot) {
+            redo = changes; undo = [command]; return
+        }
+        // A malformed or partially reused workflow must not fall back to blind
+        // individual deletion. Older untagged history keeps its existing behavior.
+        if changes.contains(where: { $0.workflowRun != nil }) { redo = changes; undo = []; return }
         var current = snapshot
         var inverse: [Mutation] = []
         for change in changes {
