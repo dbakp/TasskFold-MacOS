@@ -441,6 +441,26 @@ enum TemplateEditing {
         for (index, row) in document.object["tasks", default: .null].list.enumerated() { visit(Record(row.object), root: index, path: [],count:document.object["tasks",default:.null].list.count) }
         return result
     }
+    /// One draft edit, with explicit format promotion only when a heading is introduced.
+    /// A sheet captured before a move/replacement cannot edit a different item at that path.
+    static func editingTask(_ document: JSON, item: TaskItem, fields: [String: JSON], headingsEnabled: Bool) throws -> JSON {
+        _ = try WorkflowTemplate(document: document)
+        guard let current = tasks(document).first(where: { $0.id == item.id }), current.record == item.record else {
+            throw AppFailure(message: "This template task changed. Reopen its current details before saving.")
+        }
+        var fields = fields, root = document.object
+        if let type = fields["is_heading"] {
+            guard case .bool(let heading) = type else { throw AppFailure(message: "Choose a supported template task type.") }
+            if TaskKind(item.record) == (heading ? .heading : .task) { fields.removeValue(forKey: "is_heading") }
+            else {
+                guard headingsEnabled else { throw AppFailure(message: "Changing template task types isn’t available in this app version. Your definition is unchanged.") }
+                if root["version"] == .number(1) {
+                    root["version"] = .number(2); root["capabilities"] = .array([.string("task_headings")])
+                }
+            }
+        }
+        return try changing(.object(root), item: item, fields: fields)
+    }
     static func changing(_ document: JSON, item: TaskItem, fields: [String: JSON], remove: Bool = false) throws -> JSON {
         var root = document.object, rows = root["tasks", default: .null].list
         func change(_ rows: inout [JSON], path: [Int]) throws {
@@ -1040,7 +1060,7 @@ struct WorkflowCSVSource: Identifiable, Sendable {
                 let type = trimmed(row, .type)
                 guard type.isEmpty || type == taskType || type == headingType else { throw fail("the type must match your Task or Heading value; blank means Task.") }
                 if type == headingType {
-                    guard headings else { throw fail("heading import is not enabled in this workspace. Keep this CSV for a supported workspace.") }
+                    guard headings else { throw fail("this app version cannot create heading templates. Keep this CSV for a supported version.") }
                     task["is_heading"] = .bool(true); hasHeadings = true
                 }
             }

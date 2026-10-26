@@ -4761,3 +4761,114 @@ extension TeamWorkflowMacUITests {
         shot(app, "mac-heading-client-private-copy")
     }
 }
+
+extension TeamWorkflowMacUITests {
+    @MainActor private func definitionReveal(_ control: XCUIElement, _ app: XCUIApplication, towardTop: Bool = false) {
+        for _ in 0..<16 {
+            if control.exists, control.isHittable { return }
+            let surface = app.sheets.count > 0 ? app.sheets.element(boundBy: app.sheets.count - 1) : app.windows.firstMatch
+            surface.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: towardTop ? 280 : -280)
+        }
+        XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
+    }
+    @MainActor private func definitionChoose(_ id: String, _ title: String, _ app: XCUIApplication, towardTop: Bool = false) {
+        let picker = app.popUpButtons[id]; definitionReveal(picker, app, towardTop: towardTop); picker.click()
+        let option = app.menuItems[title].firstMatch; XCTAssertTrue(option.waitForExistence(timeout: 5)); option.click()
+    }
+    @MainActor private func definitionRows(_ name: String) throws -> [[String:Any]] {
+        let value = try cache(); return (value["tables"] as? [String:[[String:Any]]])?[name] ?? []
+    }
+    @MainActor private func definitionSaved(_ id: String) throws -> [String:Any] {
+        try XCTUnwrap(try definitionRows("project_templates").first { $0["id"] as? String == id })
+    }
+    @MainActor private func definitionPrepareCSV(_ app: XCUIApplication) {
+        app.buttons["openSharedTemplateFixture"].click()
+        let intake = app.buttons["importWorkflowText"]; definitionReveal(intake, app); intake.click()
+        let input = app.textViews["templateImportText"]; XCTAssertTrue(input.waitForExistence(timeout: 8)); input.click()
+        input.typeText("Name,Kind,Done\nDesign context,heading,true\n* Ordinary action,task,true")
+        let map = app.buttons["mapTemplateCSVText"]; definitionReveal(map, app); map.click()
+        definitionChoose("mappedCSVColumn-title", "Name", app); definitionChoose("mappedCSVColumn-type", "Kind", app)
+    }
+    @MainActor func testCloudCSVHeadingDefinitionCancelSaveAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app)
+        let original = try definitionRows("tasks"), before = try definitionRows("project_templates")
+        definitionPrepareCSV(app)
+        let review = app.buttons["reviewMappedCSV"]; definitionReveal(review, app); review.click()
+        let save = app.buttons["confirmImportTemplate"]; definitionReveal(save, app)
+        let cancel = app.buttons["cancelImportTemplateReview"]; definitionReveal(cancel, app); cancel.click()
+        XCTAssertEqual(try definitionRows("project_templates") as NSArray, before as NSArray)
+        // The intake sheet is dismissed. Reopen it from the current template library.
+        let intake = app.buttons["importWorkflowText"]; XCTAssertTrue(intake.waitForExistence(timeout: 8)); intake.click()
+        let input = app.textViews["templateImportText"]; XCTAssertTrue(input.waitForExistence(timeout: 8)); input.click(); input.typeText("Name,Kind,Done\nDesign context,heading,true\n* Ordinary action,task,true")
+        let map = app.buttons["mapTemplateCSVText"]; definitionReveal(map, app); map.click()
+        definitionChoose("mappedCSVColumn-title", "Name", app); definitionChoose("mappedCSVColumn-type", "Kind", app)
+        definitionReveal(review, app); review.click(); definitionReveal(save, app); shot(app, "cloud-heading-csv-review"); save.click()
+        XCTAssertTrue(intake.waitForExistence(timeout: 10))
+        let imported = try XCTUnwrap(try definitionRows("project_templates").first { $0["name"] as? String == "Imported workflow" })
+        let document = try XCTUnwrap(imported["document"] as? [String:Any]), tasks = try XCTUnwrap(document["tasks"] as? [[String:Any]])
+        XCTAssertEqual(document["version"] as? Int, 2); XCTAssertEqual(tasks[0]["is_heading"] as? Bool, true)
+        XCTAssertEqual(tasks[1]["title"] as? String, "* Ordinary action"); XCTAssertNil(tasks[1]["is_heading"])
+        XCTAssertTrue(tasks.allSatisfy { $0["completed"] == nil }); XCTAssertEqual(try definitionRows("tasks") as NSArray, original as NSArray)
+        let open = app.buttons["workflowTemplate-" + (imported["id"] as! String)]; definitionReveal(open, app); open.click()
+        let create = app.buttons["applyWorkflowTemplate"]; definitionReveal(create, app); XCTAssertFalse(create.isEnabled)
+        app.terminate(); try launch(app, reset: false)
+        XCTAssertEqual(try definitionSaved(imported["id"] as! String) as NSDictionary, imported as NSDictionary)
+        XCTAssertEqual(try definitionRows("tasks") as NSArray, original as NSArray)
+    }
+    @MainActor private func definitionEditTask(_ app: XCUIApplication, id: String = "0") {
+        app.buttons["openPrivateWorkflowRunFixture"].click()
+        let edit = app.buttons["editTemplateDefinition"]; XCTAssertTrue(edit.waitForExistence(timeout: 8)); edit.click()
+        let item = app.buttons["editTemplateTask-" + id]; definitionReveal(item, app); item.click()
+        XCTAssertTrue(app.buttons["saveTemplateTask"].waitForExistence(timeout: 8))
+    }
+    @MainActor func testCloudTemplateHeadingDraftCancelSaveAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app)
+        let original = try definitionRows("tasks"), before = try definitionRows("project_templates")
+        definitionEditTask(app); definitionChoose("templateTaskKind", "Heading", app)
+        app.buttons["saveTemplateTask"].click(); XCTAssertTrue(app.buttons["saveTemplateDefinition"].waitForExistence(timeout: 8))
+        XCTAssertEqual(try definitionRows("project_templates") as NSArray, before as NSArray)
+        app.buttons["cancelTemplateDefinition"].click(); let discard = app.windows.buttons.matching(identifier: "Discard changes").firstMatch; XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.click()
+        XCTAssertEqual(try definitionRows("project_templates") as NSArray, before as NSArray)
+        app.buttons["editTemplateDefinition"].click(); let task = app.buttons["editTemplateTask-0"]; definitionReveal(task, app); task.click()
+        definitionChoose("templateTaskKind", "Heading", app); app.buttons["saveTemplateTask"].click()
+        shot(app, "cloud-template-heading-draft"); app.buttons["saveTemplateDefinition"].click()
+        let id = try XCTUnwrap(before.first?["id"] as? String), saved = try definitionSaved(id)
+        let doc = try XCTUnwrap(saved["document"] as? [String:Any]), root = try XCTUnwrap((doc["tasks"] as? [[String:Any]])?.first)
+        XCTAssertEqual(doc["version"] as? Int, 2); XCTAssertEqual(root["is_heading"] as? Bool, true)
+        XCTAssertEqual(try definitionRows("tasks") as NSArray, original as NSArray)
+        app.terminate(); try launch(app, reset: false); XCTAssertEqual(try definitionSaved(id) as NSDictionary, saved as NSDictionary)
+    }
+    @MainActor func testNestedTemplateTypeEditPreservesWholeDefinition() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, headings: true)
+        let tasks = try definitionRows("tasks"), before = try XCTUnwrap(try definitionRows("project_templates").first), id = try XCTUnwrap(before["id"] as? String)
+        definitionEditTask(app, id: "0.0"); definitionChoose("templateTaskKind", "Task", app)
+        app.buttons["saveTemplateTask"].click(); app.buttons["saveTemplateDefinition"].click()
+        let saved = try definitionSaved(id), doc = try XCTUnwrap(saved["document"] as? [String:Any]), root = try XCTUnwrap((doc["tasks"] as? [[String:Any]])?.first), child = try XCTUnwrap((root["subtasks"] as? [[String:Any]])?.first)
+        XCTAssertEqual(doc["version"] as? Int, 2); XCTAssertEqual(root["is_heading"] as? Bool, true); XCTAssertEqual(child["is_heading"] as? Bool, false)
+        XCTAssertEqual((child["subtasks"] as? [[String:Any]])?.first?["title"] as? String, "Approve the design")
+        XCTAssertEqual(try definitionRows("tasks") as NSArray, tasks as NSArray)
+        app.terminate(); try launch(app, reset: false, headings: true); XCTAssertEqual(try definitionSaved(id) as NSDictionary, saved as NSDictionary)
+    }
+    @MainActor func testCSVHeadingClientGateStillAllowsOrdinaryMapping() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app)
+        let before = try definitionRows("project_templates"), tasks = try definitionRows("tasks")
+        definitionPrepareCSV(app); let review = app.buttons["reviewMappedCSV"]; definitionReveal(review, app); review.click()
+        let error = app.staticTexts["mappedCSVError"]; definitionReveal(error, app); XCTAssertTrue((error.value as? String ?? error.label).contains("cannot create heading templates"))
+        XCTAssertEqual(try definitionRows("project_templates") as NSArray, before as NSArray)
+        definitionChoose("mappedCSVColumn-type", "Not copied", app, towardTop: true); definitionReveal(review, app); review.click()
+        let save = app.buttons["confirmImportTemplate"]; definitionReveal(save, app); XCTAssertTrue(save.isEnabled)
+        shot(app, "client-off-ordinary-csv-review")
+        app.buttons["cancelImportTemplateReview"].click(); XCTAssertEqual(try definitionRows("tasks") as NSArray, tasks as NSArray)
+    }
+    @MainActor func testClientOffTemplateEditsKeepExistingHeadingType() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, headings: true)
+        let before = try XCTUnwrap(try definitionRows("project_templates").first), id = try XCTUnwrap(before["id"] as? String), tasks = try definitionRows("tasks")
+        definitionEditTask(app); let type = app.popUpButtons["templateTaskKind"]; XCTAssertTrue(type.exists); XCTAssertFalse(type.isEnabled)
+        let title = app.textFields["templateTaskTitle"]; title.click(); title.typeText(" revised")
+        app.buttons["saveTemplateTask"].click(); app.buttons["saveTemplateDefinition"].click()
+        let saved = try definitionSaved(id), doc = try XCTUnwrap(saved["document"] as? [String:Any]), root = try XCTUnwrap((doc["tasks"] as? [[String:Any]])?.first)
+        XCTAssertEqual(doc["version"] as? Int, 2); XCTAssertEqual(root["is_heading"] as? Bool, true); XCTAssertTrue((root["title"] as? String ?? "").contains("revised"))
+        XCTAssertEqual(try definitionRows("tasks") as NSArray, tasks as NSArray)
+        app.terminate(); try launch(app, reset: false, headings: true); XCTAssertEqual(try definitionSaved(id) as NSDictionary, saved as NSDictionary)
+    }
+}

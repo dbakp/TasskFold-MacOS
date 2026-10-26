@@ -566,3 +566,48 @@ extension ProjectWorkflowsTests {
         XCTAssertEqual(capture.template.tasks[0]["labels"].list[0].object["name"], .string(name))
     }
 }
+
+
+extension ProjectWorkflowsTests {
+    func editableDefinition() throws -> JSON {
+        try WorkflowTemplate(document: .object(["version": .number(1), "kind": .string("task"), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": .string("root"), "title": .string("* Literal context"), "description": .string("Keep full notes"), "priority": .number(2), "duration_minutes": .number(25), "planned_offset": .number(3), "labels": .array([.object(["name": .string("Design")])]), "subtasks": .array([.object(["id": .string("child"), "title": .string("Productive child"), "labels": .array([]), "subtasks": .array([])])])])])])).document
+    }
+    func testTemplateTypeEditPromotesKnownFormatAndPreservesWork() throws {
+        let original = try editableDefinition(), item = try XCTUnwrap(TemplateEditing.tasks(original).first)
+        let changed = try TemplateEditing.editingTask(original, item: item, fields: ["is_heading": .bool(true)], headingsEnabled: true)
+        XCTAssertEqual(changed.object["version"], .number(2)); XCTAssertEqual(changed.object["capabilities"], .array([.string("task_headings")]))
+        let edited = try XCTUnwrap(TemplateEditing.tasks(changed).first)
+        XCTAssertEqual(TaskKind(edited.record), .heading)
+        for key in item.record.fields.keys { XCTAssertEqual(item.record[key], edited.record[key], key) }
+        let runs = try WorkflowTemplate(document: changed).instantiate(account: owner, name: "Run")
+        XCTAssertTrue(runs.contains { $0.table == "tasks" && $0.fields["is_heading"] == .bool(true) })
+        XCTAssertEqual(original, try editableDefinition())
+    }
+    func testNestedTemplateHeadingEditAndReturnToTaskKeepV2() throws {
+        let original = try editableDefinition(), child = TemplateEditing.tasks(original)[1]
+        let changed = try TemplateEditing.editingTask(original, item: child, fields: ["is_heading": .bool(true), "description": .string("Child notes")], headingsEnabled: true)
+        let nodes = TemplateEditing.tasks(changed); XCTAssertEqual(TaskKind(nodes[0].record), .task); XCTAssertEqual(TaskKind(nodes[1].record), .heading)
+        let back = try TemplateEditing.editingTask(changed, item: nodes[1], fields: ["is_heading": .bool(false)], headingsEnabled: true)
+        XCTAssertEqual(back.object["version"], .number(2)); XCTAssertEqual(back.object["capabilities"], .array([.string("task_headings")]))
+        XCTAssertEqual(TemplateEditing.tasks(back)[1].record["is_heading"], .bool(false)); XCTAssertEqual(TemplateEditing.tasks(back)[1].record.string("description"), "Child notes")
+    }
+    func testTemplateTypeOptInDoesNotBlockReadPreservingEdits() throws {
+        let original = try editableDefinition(), item = TemplateEditing.tasks(original)[0]
+        XCTAssertThrowsError(try TemplateEditing.editingTask(original, item: item, fields: ["is_heading": .bool(true)], headingsEnabled: false))
+        let ordinary = try TemplateEditing.editingTask(original, item: item, fields: ["is_heading": .bool(false), "description": .string("Edited")], headingsEnabled: false)
+        XCTAssertEqual(ordinary.object["version"], .number(1)); XCTAssertNil(TemplateEditing.tasks(ordinary)[0].record.fields["is_heading"])
+        let headed = try TemplateEditing.editingTask(original, item: item, fields: ["is_heading": .bool(true)], headingsEnabled: true)
+        let heading = TemplateEditing.tasks(headed)[0]
+        XCTAssertThrowsError(try TemplateEditing.editingTask(headed, item: heading, fields: ["is_heading": .bool(false)], headingsEnabled: false))
+        let notes = try TemplateEditing.editingTask(headed, item: heading, fields: ["description": .string("Preserved heading")], headingsEnabled: false)
+        XCTAssertEqual(TaskKind(TemplateEditing.tasks(notes)[0].record), .heading)
+    }
+    func testTemplateTypeEditRefusesStaleItemMalformedTypeAndFutureDefinition() throws {
+        let original = try editableDefinition(), item = TemplateEditing.tasks(original)[0]
+        let newer = try TemplateEditing.changing(original, item: item, fields: ["title": .string("Newer title")])
+        XCTAssertThrowsError(try TemplateEditing.editingTask(newer, item: item, fields: ["is_heading": .bool(true)], headingsEnabled: true))
+        for value in [JSON.null, .string("true"), .number(1)] { XCTAssertThrowsError(try TemplateEditing.editingTask(original, item: item, fields: ["is_heading": value], headingsEnabled: true)) }
+        var future = original.object; future["version"] = .number(9)
+        XCTAssertThrowsError(try TemplateEditing.editingTask(.object(future), item: item, fields: ["is_heading": .bool(true)], headingsEnabled: true))
+    }
+}

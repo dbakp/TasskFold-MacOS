@@ -1557,6 +1557,8 @@ final class Store {
     }
     /// Source-only local acceptance switch. Normal app configuration omits it;
     /// shared authoring additionally requires negotiated capabilities and live team admission.
+    /// Authoring a portable definition does not create live tasks or grant shared access.
+    var workflowTemplateHeadingsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true }
     var taskHeadingsAuthoringEnabled: Bool {
         localMode && (Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true)
     }

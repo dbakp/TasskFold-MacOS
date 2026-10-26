@@ -20,6 +20,11 @@ supported fields and exclusions are in `TASK_CSV_SOURCE_MAPPING.md`.
 Shared heading templates now have native private/shared entry and recovery
 acceptance on Mac, iPhone and iPad; see PRIVATE_HEADING_WORKFLOWS.md.
 
+Reusable definition authoring now admits explicitly mapped CSV headings in a
+signed-in private workspace and offers root/nested Task / Heading editing. This
+uses the separate client opt-in; personal live heading creation keeps its existing
+guard. See DEFINITION_HEADING_AUTHORING.md for acceptance and remaining limits.
+
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
 sharing acceptance (implementation in TASK_ROW_CSV.md), older literal-copy conversion acceptance (review implemented in
@@ -5278,3 +5283,24 @@ active. Remaining adapters include the separate local-only heading admission in
 mapped-CSV definition authoring/private live creation, plus broader native delivery,
 source/access races, accessibility and cross-device acceptance. User-deferred
 provider, notification, upgrade and distribution work remains deferred.
+
+## 26 October — reusable heading definitions
+
+Closed the separate reusable-definition authoring gap: signed-in users can map
+explicit CSV heading rows and edit Task / Heading in root or nested template
+items when the client supports it. Child Save remains a draft operation; parent
+Cancel preserves the saved definition, while parent Save preserves the full
+versioned document. Existing tasks and runs remain unchanged. Actual disabled
+client builds refuse new heading interpretation/type changes while allowing
+ordinary mapping and preserving existing heading metadata during title edits.
+
+Each independently owned repo passes 107 focused Core cases and 23 actual-role
+isolated database checks. Installed Mac, iPhone and iPad acceptance covers all five
+new scenarios on each platform. See DEFINITION_HEADING_AUTHORING.md and its
+retained native evidence for exact scope and initial harness failures.
+
+Rank 3 remains active. Personal live heading creation still has its separate
+local-only guard, and wider file-provider delivery, concurrency, accessibility,
+installed-widget and cross-device acceptance remains open. No normal client
+flag or hosted configuration changed. The previously deferred provider setup,
+remote reminders, old-client rollout safeguards and distribution stay deferred.

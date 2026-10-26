@@ -536,7 +536,7 @@ private struct TemplateFileReview: View {
                         .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || name.count > 160)
                         .accessibilityIdentifier("confirmImportTemplate")
                     if let editText { Button(editLabel, action: editText).accessibilityIdentifier("editTemplateText") }
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }.accessibilityIdentifier("cancelImportTemplateReview")
                 }
                 if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("templateImportError") }
             }.formStyle(.grouped)
@@ -689,6 +689,7 @@ struct TemplateDefinitionEditor: View {
                                 Button { editing=item } label: {
                                     VStack(alignment:.leading,spacing:4) {
                                         Text(item.record.title).font(.headline)
+                                        if TaskKind(item.record) == .heading { Label("Heading · stays open", systemImage:"textformat").font(.caption).foregroundStyle(.secondary) }
                                         if !item.record.string("description").isEmpty { Text(item.record.string("description")).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
                                     }.frame(maxWidth:.infinity,minHeight:44,alignment:.leading).contentShape(.rect)
                                 }.buttonStyle(.plain).padding(.leading,CGFloat(min(item.depth,5))*12).accessibilityIdentifier("editTemplateTask-"+item.id)
@@ -731,12 +732,12 @@ struct TemplateDefinitionEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement:.cancellationAction) { Button("Cancel") { if changed { discard=true } else { cancel() } }.keyboardShortcut(.cancelAction) }
+                ToolbarItem(placement:.cancellationAction) { Button("Cancel") { if changed { discard=true } else { cancel() } }.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelTemplateDefinition") }
                 ToolbarItem(placement:.confirmationAction) { Button("Save",action:save).disabled(!supported || name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty).keyboardShortcut("s",modifiers:.command).accessibilityIdentifier("saveTemplateDefinition") }
             }
             .sheet(item:$editing) { item in
                 TemplateTaskDefinitionEditor(item:item,document:document) { fields in
-                    document = try TemplateEditing.changing(document,item:item,fields:fields)
+                    document = try TemplateEditing.editingTask(document,item:item,fields:fields,headingsEnabled:store.workflowTemplateHeadingsEnabled)
                 }
             }
             .sheet(item:$latest) { current in
@@ -824,11 +825,13 @@ struct TemplateDefinitionEditor: View {
 }
 
 private struct TemplateTaskDefinitionEditor: View {
+    @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let item: TemplateEditing.TaskItem
     let document: JSON
     let onSave: ([String:JSON]) throws -> Void
     @State private var title: String
+    @State private var heading: Bool
     @State private var notes: String
     @State private var priority: Int
     @State private var project: String
@@ -839,7 +842,7 @@ private struct TemplateTaskDefinitionEditor: View {
     @State private var message: String?
     init(item: TemplateEditing.TaskItem,document:JSON,onSave:@escaping ([String:JSON]) throws -> Void) {
         self.item=item;self.document=document;self.onSave=onSave
-        _title=State(initialValue:item.record.title);_notes=State(initialValue:item.record.string("description"));_priority=State(initialValue:item.record.priority)
+        _heading=State(initialValue:TaskKind(item.record) == .heading);_title=State(initialValue:item.record.title);_notes=State(initialValue:item.record.string("description"));_priority=State(initialValue:item.record.priority)
         _project=State(initialValue:item.record.string("project_id"));_section=State(initialValue:item.record.string("section_id"))
         func number(_ key:String)->String { if case .number(let value)=item.record[key] { return String(Int(value)) };return "" }
         _estimate=State(initialValue:number("duration_minutes"));_planned=State(initialValue:number("planned_offset"));_deadline=State(initialValue:number("deadline_offset"))
@@ -849,6 +852,10 @@ private struct TemplateTaskDefinitionEditor: View {
             Form {
                 Section("Task details") {
                     TextField("Task name",text:$title).accessibilityIdentifier("templateTaskTitle")
+                    Picker("Task type", selection: $heading) { Text("Task").tag(false); Text("Heading").tag(true) }
+                        .pickerStyle(.menu).disabled(!store.workflowTemplateHeadingsEnabled).accessibilityIdentifier("templateTaskKind")
+                    if heading { Label("Heading · stays open", systemImage: "textformat").font(.caption).foregroundStyle(.secondary) }
+                    Text("This changes the reusable definition only. Existing tasks and earlier runs stay unchanged.").font(.caption).foregroundStyle(.secondary)
                     TextField("Notes",text:$notes,axis:.vertical).lineLimit(3...8).accessibilityIdentifier("templateTaskNotes")
                     Picker("Priority",selection:$priority) { ForEach(1...4,id:\.self) { Text($0==4 ? "None" : "Priority \($0)").tag($0) } }
                     if item.path.isEmpty && document.object["kind"]?.text == "project" {
@@ -865,7 +872,7 @@ private struct TemplateTaskDefinitionEditor: View {
                 if let message { Text(message).foregroundStyle(.red) }
             }.formStyle(.grouped).accessibilityIdentifier("templateTaskDefinitionForm").navigationTitle("Template task")
             .toolbar {
-                ToolbarItem(placement:.cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction) }
+                ToolbarItem(placement:.cancellationAction) { Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction).accessibilityIdentifier("cancelTemplateTask") }
                 ToolbarItem(placement:.confirmationAction) { Button("Save") {
                     do {
                         var fields:[String:JSON]=["title":.string(title.trimmingCharacters(in:.whitespacesAndNewlines)),"description":.string(notes),"priority":.number(Double(priority))]
@@ -874,6 +881,10 @@ private struct TemplateTaskDefinitionEditor: View {
                             if text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty { fields[key] = .null }
                             else if let value=Int(text), (key=="duration_minutes" ? (1...10080).contains(value) : (-365000...365000).contains(value)) { fields[key] = .number(Double(value)) }
                             else { throw AppFailure(message:"Use whole minutes from 1 to 10080, and whole day offsets between −365000 and 365000.") }
+                        }
+                        if heading != (TaskKind(item.record) == .heading) {
+                            guard store.workflowTemplateHeadingsEnabled else { throw AppFailure(message:"Changing template task types isn’t available in this app version.") }
+                            fields["is_heading"] = .bool(heading)
                         }
                         try onSave(fields);dismiss()
                     } catch { message=error.localizedDescription }
@@ -987,7 +998,7 @@ private struct TemplateCSVMappingView: View {
                                 LabeledContent("Task") { TextField("Task value", text: $mapping.taskValue).multilineTextAlignment(.trailing).accessibilityIdentifier("mappedCSVTaskValue") }
                                 LabeledContent("Heading") { TextField("Heading value", text: $mapping.headingValue).multilineTextAlignment(.trailing).accessibilityIdentifier("mappedCSVHeadingValue") }
                                 Text("Values are case-sensitive. Blank type cells mean Task. Titles are kept literally, including a leading *.").font(.caption).foregroundStyle(.secondary)
-                                if !store.taskHeadingsAuthoringEnabled { Text("Heading import is not enabled in this workspace. Ordinary tasks can still be mapped.").font(.caption).foregroundStyle(.secondary) }
+                                if !store.workflowTemplateHeadingsEnabled { Text("This app version cannot create heading templates. Ordinary tasks can still be mapped.").font(.caption).foregroundStyle(.secondary) }
                             }.disabled(reading != nil)
                         }
                         if mapping.columns[.plannedDate] != nil || mapping.columns[.deadlineDate] != nil {
@@ -1032,7 +1043,7 @@ private struct TemplateCSVMappingView: View {
     }
     private func review() {
         guard store.workflowReady(binding) else { message = store.error; return }
-        let request = UUID(), selected = mapping, label = name, date = anchor, headings = store.taskHeadingsAuthoringEnabled
+        let request = UUID(), selected = mapping, label = name, date = anchor, headings = store.workflowTemplateHeadingsEnabled
         reading = request; message = nil
         Task {
             do {

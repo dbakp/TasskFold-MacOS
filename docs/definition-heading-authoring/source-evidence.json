@@ -1,0 +1,33 @@
+{
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "946d477e533e3e157ff77b2655ab63856ba024508927d3b7a504a3e8daf02b37",
+    "Taskfold/Core/ProjectWorkflows.swift": "1512848762a3af27000042fd43b681ece5ac7045b3f0ba7a08e155bb82ec2e41",
+    "Taskfold/Views/WorkflowViews.swift": "0311523a98827ef4897f1d6094fe1fe7f788f39ce18f7abc37234eaec2b3066a",
+    "Taskfold/Views/TaskInspector.swift": "98cb0e84b8cfb9b057e2dca3eee1de29f897905277b220cbdb970f9f6fad447e",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "341c598c5ed07872d70a6783185bf2148f702921958f65e3ede8cccbfc4ba68c",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "9695c41cfa7decb2d71cc9f0c86635236613d01fa8e81c7a8d2e093b61529852",
+    "Scripts/Database/test-template-heading-authoring.mjs": "4af20629a4b65184f90360dee4efcce4a7b5e1ee2151b3922f108b0572f4b2e3"
+  },
+  "infoOnSHA256": "55c1550013547bcd4e7c805fa4819b369036f8461ddbeeee34ba99979f44e4fe",
+  "nativeVariantSHA256": {
+    "Taskfold/Core/Store.swift": "68689cd2f3ab6e2d75463ae1d3a1e64efc19732e19a6da869b2287bd0c74ef4f",
+    "Taskfold/Core/ProjectWorkflows.swift": "1512848762a3af27000042fd43b681ece5ac7045b3f0ba7a08e155bb82ec2e41",
+    "Taskfold/Views/WorkflowViews.swift": "0311523a98827ef4897f1d6094fe1fe7f788f39ce18f7abc37234eaec2b3066a",
+    "Taskfold/Views/TaskInspector.swift": "98cb0e84b8cfb9b057e2dca3eee1de29f897905277b220cbdb970f9f6fad447e",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "9695c41cfa7decb2d71cc9f0c86635236613d01fa8e81c7a8d2e093b61529852"
+  },
+  "coreTests": 107,
+  "sqlChecks": 23,
+  "hostedChanges": false,
+  "rolloutChanged": false,
+  "realDataChanged": false,
+  "mobileInitialCollectorsInterruptedAfterCaseCompletion": true,
+  "infoOffSHA256": "a4b5b0ec80ae6b582769e8a0af20fa953842531d50602bf1dc27588e92dd3d0a",
+  "nativePassedScenarios": {
+    "mac": 5,
+    "iPhoneSimulator": 5,
+    "iPadSimulator": 5
+  },
+  "finalIPadOffRun": "tablet-off-visible-summary.json",
+  "testSourceNote": "Final test helper additionally ensures iPad rows are below the sheet title bar; production behavior unchanged between acceptance runs."
+}

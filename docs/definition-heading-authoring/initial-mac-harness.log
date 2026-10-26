@@ -1,0 +1,277 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-definition-headings-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testCloudCSVHeadingDefinitionCancelSaveAndColdReturn" "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testCloudTemplateHeadingDraftCancelSaveAndColdReturn" "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testNestedTemplateTypeEditPreservesWholeDefinition" -resultBundlePath /tmp/taskfold-definition-headings-mac.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-definition-headings-mac.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 19:00:31.678970+0100 TaskfoldUITests-Runner[21204:23228167] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 19:00:31.841.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 19:00:31.841.
+Test Suite 'TeamWorkflowMacUITests' started at 2026-10-26 19:00:31.842.
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 19:00:31.842
+    t =     0.84s Set Up
+    t =     0.86s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.86s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 19:00:33.067 xcodebuild[21190:23227761] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:00:33.067 xcodebuild[21190:23227761] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.97s         Wait for accessibility to load
+    t =     3.35s         Setting up automation session
+    t =     3.38s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.38s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.38s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.39s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.40s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     4.43s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     4.44s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     4.67s Click "openSharedTemplateFixture" Button
+    t =     4.67s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.68s     Find the "openSharedTemplateFixture" Button
+    t =     5.72s         Find the "openSharedTemplateFixture" Button (retry 1)
+    t =     6.83s         Find the "openSharedTemplateFixture" Button (retry 2)
+    t =     6.92s Requesting snapshot of accessibility hierarchy for app with pid 21211
+/tmp/taskfold-definition-headings-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4785: error: -[TaskfoldUITests.TeamWorkflowMacUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn] : Failed to click "openSharedTemplateFixture" Button: No matches found for Elements matching predicate '"openSharedTemplateFixture" IN identifiers' from input {(
+    Button, identifier: '_XCUI:CloseWindow',
+    Button, identifier: '_XCUI:FullScreenWindow',
+    Button, identifier: '_XCUI:MinimizeWindow',
+    Button, identifier: 'openTeamTemplateLibraryFixture', label: 'Open team template library',
+    Button, identifier: 'openPrivateWorkflowRunFixture', label: 'Open private workflow run',
+    Button, identifier: 'openWorkflowRecoveryFixture', label: 'Open workflow recovery',
+    Button, identifier: 'openSavedTeamTemplateFixture', label: 'Open saved template request'
+)}
+    t =     7.87s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn]' failed (8.491 seconds).
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 19:00:40.335
+    t =     1.29s Set Up
+    t =     1.30s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.30s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.30s         Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:21211
+2026-10-26 19:00:42.646 xcodebuild[21190:23227761] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:00:42.646 xcodebuild[21190:23227761] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.92s         Wait for accessibility to load
+    t =     3.11s         Setting up automation session
+    t =     3.14s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.15s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.16s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.18s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.18s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     4.22s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     4.22s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     4.37s Click "openPrivateWorkflowRunFixture" Button
+    t =     4.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.38s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     4.42s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     4.45s     Synthesize event
+    t =     5.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.24s Waiting 8.0s for "editTemplateDefinition" Button to exist
+    t =     6.28s     Checking `Expect predicate `existsNoRetry == 1` for object "editTemplateDefinition" Button`
+    t =     6.28s         Checking existence of `"editTemplateDefinition" Button`
+    t =     6.43s Click "editTemplateDefinition" Button
+    t =     6.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.44s     Find the "editTemplateDefinition" Button
+    t =     6.53s     Check for interrupting elements affecting "editTemplateDefinition" Button
+    t =     6.58s     Synthesize event
+    t =     7.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.39s Checking existence of `"editTemplateTask-0" Button`
+    t =     7.53s Find the "editTemplateTask-0" Button
+    t =     7.63s Click "editTemplateTask-0" Button
+    t =     7.63s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.64s     Find the "editTemplateTask-0" Button
+    t =     7.70s     Check for interrupting elements affecting "editTemplateTask-0" Button
+    t =     7.72s     Synthesize event
+    t =     8.38s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.81s Waiting 8.0s for "saveTemplateTask" Button to exist
+    t =     9.82s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateTask" Button`
+    t =     9.82s         Checking existence of `"saveTemplateTask" Button`
+<unknown>:0: warning: -[TaskfoldUITests.TeamWorkflowMacUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =    10.01s Checking existence of `"templateTaskKind" PopUpButton`
+    t =    10.10s Find the "templateTaskKind" PopUpButton
+    t =    10.20s Click "templateTaskKind" PopUpButton
+    t =    10.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.20s     Find the "templateTaskKind" PopUpButton
+    t =    10.28s     Check for interrupting elements affecting "templateTaskKind" PopUpButton
+    t =    10.30s     Synthesize event
+    t =    10.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.74s Waiting 5.0s for "Heading" MenuItem to exist
+    t =    11.78s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" MenuItem`
+    t =    11.78s         Checking existence of `"Heading" MenuItem`
+    t =    11.88s Click "Heading" MenuItem
+    t =    11.88s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.89s     Find the "Heading" MenuItem
+    t =    11.98s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    11.98s     Synthesize event
+    t =    11.99s         Checking existence of `"menuAction:" MenuItem`
+    t =    12.05s         Hover menu item 'Heading'
+    t =    12.05s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.05s             Find the "menuAction:" MenuItem
+    t =    12.12s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    12.12s             Synthesize event
+    t =    12.36s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.37s         Find the "menuAction:" MenuItem
+    t =    13.38s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.39s Click "saveTemplateTask" Button
+    t =    13.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.40s     Find the "saveTemplateTask" Button
+    t =    13.51s     Check for interrupting elements affecting "saveTemplateTask" Button
+    t =    13.54s     Synthesize event
+    t =    14.07s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.42s Waiting 8.0s for "saveTemplateDefinition" Button to exist
+    t =    15.46s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateDefinition" Button`
+    t =    15.46s         Checking existence of `"saveTemplateDefinition" Button`
+    t =    15.56s Click "cancelTemplateDefinition" Button
+    t =    15.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.56s     Find the "cancelTemplateDefinition" Button
+    t =    15.63s     Check for interrupting elements affecting "cancelTemplateDefinition" Button
+    t =    15.65s     Synthesize event
+    t =    16.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.54s Waiting 5.0s for "Discard changes" Button to exist
+    t =    17.58s     Checking `Expect predicate `existsNoRetry == 1` for object "Discard changes" Button`
+    t =    17.59s         Checking existence of `"Discard changes" Button`
+    t =    17.61s Click "Discard changes" Button
+    t =    17.61s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.61s     Find the "Discard changes" Button
+    t =    17.64s     Check for interrupting elements affecting "Discard changes" Button
+    t =    17.64s     Synthesize event
+    t =    17.64s         Failed: -[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for "Discard changes" Button.
+    t =    17.64s         Requesting snapshot of accessibility hierarchy for app with pid 21236
+    t =    18.93s     Retrying `Click "Discard changes" Button` (attempt #2)
+    t =    18.93s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.94s         Find the "Discard changes" Button
+    t =    18.96s         Check for interrupting elements affecting "Discard changes" Button
+    t =    18.97s         Synthesize event
+    t =    18.97s             Failed: -[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for "Discard changes" Button.
+    t =    18.97s             Requesting snapshot of accessibility hierarchy for app with pid 21236
+    t =    20.22s     Retrying `Click "Discard changes" Button` (attempt #3)
+    t =    20.22s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.23s         Find the "Discard changes" Button
+    t =    20.24s         Check for interrupting elements affecting "Discard changes" Button
+    t =    20.25s         Synthesize event
+    t =    20.25s             Failed: -[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for "Discard changes" Button.
+    t =    20.25s             Requesting snapshot of accessibility hierarchy for app with pid 21236
+/tmp/taskfold-definition-headings-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:4830: error: -[TaskfoldUITests.TeamWorkflowMacUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn] : -[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for "Discard changes" Button.
+    t =    20.39s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn]' failed (21.411 seconds).
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testNestedTemplateTypeEditPreservesWholeDefinition]' started.
+    t =     0.00s Start Test at 2026-10-26 19:01:01.748
+    t =     0.14s Set Up
+    t =     0.14s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.14s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.14s         Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:21236
+2026-10-26 19:01:02.981 xcodebuild[21190:23227761] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:01:02.981 xcodebuild[21190:23227761] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.05s         Wait for accessibility to load
+    t =     2.37s         Setting up automation session
+    t =     2.49s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.49s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.49s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.49s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.50s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     3.58s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     3.58s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     3.76s Click "openPrivateWorkflowRunFixture" Button
+    t =     3.76s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.76s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     3.80s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     3.86s     Synthesize event
+    t =     4.62s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.62s Waiting 8.0s for "editTemplateDefinition" Button to exist
+    t =     5.71s     Checking `Expect predicate `existsNoRetry == 1` for object "editTemplateDefinition" Button`
+    t =     5.71s         Checking existence of `"editTemplateDefinition" Button`
+    t =     5.85s Click "editTemplateDefinition" Button
+    t =     5.85s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.85s     Find the "editTemplateDefinition" Button
+    t =     5.92s     Check for interrupting elements affecting "editTemplateDefinition" Button
+    t =     5.94s     Synthesize event
+    t =     6.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.75s Checking existence of `"editTemplateTask-0.0" Button`
+    t =     6.94s Find the "editTemplateTask-0.0" Button
+    t =     7.05s Click "editTemplateTask-0.0" Button
+    t =     7.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.06s     Find the "editTemplateTask-0.0" Button
+    t =     7.18s     Check for interrupting elements affecting "editTemplateTask-0.0" Button
+    t =     7.21s     Synthesize event
+    t =     7.90s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.24s Waiting 8.0s for "saveTemplateTask" Button to exist
+    t =     9.26s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateTask" Button`
+    t =     9.28s         Checking existence of `"saveTemplateTask" Button`
+<unknown>:0: warning: -[TaskfoldUITests.TeamWorkflowMacUITests testNestedTemplateTypeEditPreservesWholeDefinition] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =     9.44s Checking existence of `"templateTaskKind" PopUpButton`
+    t =     9.60s Find the "templateTaskKind" PopUpButton
+    t =     9.75s Click "templateTaskKind" PopUpButton
+    t =     9.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.75s     Find the "templateTaskKind" PopUpButton
+    t =     9.89s     Check for interrupting elements affecting "templateTaskKind" PopUpButton
+    t =     9.93s     Synthesize event
+    t =    10.40s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.41s Waiting 5.0s for "Task" MenuItem to exist
+    t =    11.44s     Checking `Expect predicate `existsNoRetry == 1` for object "Task" MenuItem`
+    t =    11.45s         Checking existence of `"Task" MenuItem`
+    t =    11.56s Click "Task" MenuItem
+    t =    11.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.57s     Find the "Task" MenuItem
+    t =    11.68s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    11.69s     Synthesize event
+    t =    11.69s         Checking existence of `"menuAction:" MenuItem`
+    t =    11.77s         Hover menu item 'Task'
+    t =    11.77s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.78s             Find the "menuAction:" MenuItem
+    t =    11.85s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    11.85s             Synthesize event
+    t =    12.11s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.13s         Find the "menuAction:" MenuItem
+    t =    13.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.11s Click "saveTemplateTask" Button
+    t =    13.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.13s     Find the "saveTemplateTask" Button
+    t =    13.24s     Check for interrupting elements affecting "saveTemplateTask" Button
+    t =    13.26s     Synthesize event
+    t =    13.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.06s Click "saveTemplateDefinition" Button
+    t =    14.06s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.08s     Find the "saveTemplateDefinition" Button
+    t =    14.16s     Check for interrupting elements affecting "saveTemplateDefinition" Button
+    t =    14.18s     Synthesize event
+    t =    14.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.77s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:21295
+    t =    15.81s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    15.82s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 19:01:17.567 xcodebuild[21190:23227761] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:01:17.567 xcodebuild[21190:23227761] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    16.43s         Wait for accessibility to load
+    t =    16.69s         Setting up automation session
+    t =    16.75s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.76s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    16.77s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    16.78s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.79s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    17.82s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    17.82s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    17.98s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:21426
+    t =    19.07s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testNestedTemplateTypeEditPreservesWholeDefinition]' passed (19.813 seconds).
+Test Suite 'TeamWorkflowMacUITests' failed at 2026-10-26 19:01:21.562.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 49.716 (49.720) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 19:01:21.563.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 49.716 (49.722) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 19:01:21.564.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 49.716 (49.723) seconds
+2026-10-26 19:01:31.403 xcodebuild[21190:23227761] [MT] IDETestOperationsObserverDebug: 60.692 elapsed -- Testing started completed.
+2026-10-26 19:01:31.404 xcodebuild[21190:23227761] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 19:01:31.404 xcodebuild[21190:23227761] [MT] IDETestOperationsObserverDebug: 60.692 sec, +60.692 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-definition-headings-mac.xcresult
+
+Failing tests:
+	TeamWorkflowMacUITests.testCloudCSVHeadingDefinitionCancelSaveAndColdReturn()
+	TeamWorkflowMacUITests.testCloudTemplateHeadingDraftCancelSaveAndColdReturn()
+
+** TEST EXECUTE FAILED **
+
+Testing started

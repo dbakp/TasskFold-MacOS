@@ -1,0 +1,938 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-definition-headings-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378" -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testCloudCSVHeadingDefinitionCancelSaveAndColdReturn" "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testCloudTemplateHeadingDraftCancelSaveAndColdReturn" "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testNestedTemplateTypeEditPreservesWholeDefinition" -resultBundlePath /tmp/taskfold-definition-headings-tablet-retry.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-definition-headings-tablet-retry.xcresult
+
+2026-10-26 19:08:49.128576+0100 TaskfoldUITests-Runner[22885:23250892] [Default] Running tests...
+2026-10-26 19:08:49.329619+0100 TaskfoldUITests-Runner[22885:23250892] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 19:08:54.439.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 19:08:54.440.
+Test Suite 'TeamTemplateLibraryUITests' started at 2026-10-26 19:08:54.440.
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn]' started.
+    t =     0.02s Start Test at 2026-10-26 19:08:54.463
+    t =     0.06s Set Up
+    t =     0.08s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.09s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:08:54.633 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:08:54.633 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[22885]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10232c398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10364c310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     2.54s         Setting up automation session
+    t =     6.73s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.78s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     9.81s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     9.81s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     9.96s Tap "openSharedTemplateFixture" Button
+    t =     9.96s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.96s     Find the "openSharedTemplateFixture" Button
+    t =     9.99s     Check for interrupting elements affecting "openSharedTemplateFixture" Button
+    t =    10.06s         Wait for com.apple.springboard to idle
+    t =    10.13s     Synthesize event
+    t =    10.47s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.14s Checking existence of `"importWorkflowText" Button`
+    t =    11.29s Find the "importWorkflowText" Button
+    t =    11.37s Tap "importWorkflowText" Button
+    t =    11.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.62s     Find the "importWorkflowText" Button
+    t =    11.69s     Check for interrupting elements affecting "importWorkflowText" Button
+    t =    11.74s         Wait for com.apple.springboard to idle
+    t =    11.76s     Synthesize event
+    t =    12.06s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.68s Waiting 8.0s for "templateImportText" TextView to exist
+    t =    13.72s     Checking `Expect predicate `existsNoRetry == 1` for object "templateImportText" TextView`
+    t =    13.72s         Checking existence of `"templateImportText" TextView`
+    t =    13.81s Tap "templateImportText" TextView
+    t =    13.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.81s     Find the "templateImportText" TextView
+    t =    13.87s     Check for interrupting elements affecting "templateImportText" TextView
+    t =    13.93s         Wait for com.apple.springboard to idle
+    t =    13.96s     Synthesize event
+    t =    14.25s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.83s Type 'Name,Kind,Done
+Des...' into "templateImportText" TextView
+    t =    14.83s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.16s     Find the "templateImportText" TextView
+    t =    15.29s     Check for interrupting elements affecting "templateImportText" TextView
+    t =    15.36s         Wait for com.apple.springboard to idle
+    t =    15.38s     Synthesize event
+    t =    16.76s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.76s Checking existence of `"mapTemplateCSVText" Button`
+    t =    16.84s Find the "mapTemplateCSVText" Button
+    t =    16.92s Tap "mapTemplateCSVText" Button
+    t =    16.92s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.92s     Find the "mapTemplateCSVText" Button
+    t =    16.99s     Check for interrupting elements affecting "mapTemplateCSVText" Button
+    t =    17.05s         Wait for com.apple.springboard to idle
+    t =    17.08s     Synthesize event
+    t =    17.38s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.57s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    17.65s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    17.71s Find the NavigationBar (Element at index 1)
+    t =    17.80s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    17.80s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.91s     Find the "Import template text" NavigationBar
+    t =    18.00s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    18.07s         Wait for com.apple.springboard to idle
+    t =    18.10s     Synthesize event
+    t =    18.10s         Find the "Import template text" NavigationBar
+    t =    18.17s         Find the "Import template text" NavigationBar
+    t =    18.25s         Find the "Import template text" NavigationBar
+    t =    18.33s         Find the "Import template text" NavigationBar
+    t =    18.40s         Find the "Import template text" NavigationBar
+    t =    19.18s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.64s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    19.73s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    19.79s Find the NavigationBar (Element at index 1)
+    t =    19.88s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    19.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.89s     Find the "Import template text" NavigationBar
+    t =    19.95s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    20.02s         Wait for com.apple.springboard to idle
+    t =    20.04s     Synthesize event
+    t =    20.04s         Find the "Import template text" NavigationBar
+    t =    20.12s         Find the "Import template text" NavigationBar
+    t =    20.19s         Find the "Import template text" NavigationBar
+    t =    20.26s         Find the "Import template text" NavigationBar
+    t =    20.33s         Find the "Import template text" NavigationBar
+    t =    21.11s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.54s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    21.63s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    21.70s Find the NavigationBar (Element at index 1)
+    t =    21.78s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    21.78s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.78s     Find the "Import template text" NavigationBar
+    t =    21.84s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    21.91s         Wait for com.apple.springboard to idle
+    t =    21.94s     Synthesize event
+    t =    21.94s         Find the "Import template text" NavigationBar
+    t =    22.01s         Find the "Import template text" NavigationBar
+    t =    22.08s         Find the "Import template text" NavigationBar
+    t =    22.15s         Find the "Import template text" NavigationBar
+    t =    22.22s         Find the "Import template text" NavigationBar
+    t =    23.01s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.42s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    23.52s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    23.58s Find the NavigationBar (Element at index 1)
+    t =    23.66s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    23.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.66s     Find the "Import template text" NavigationBar
+    t =    23.73s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    23.80s         Wait for com.apple.springboard to idle
+    t =    23.82s     Synthesize event
+    t =    23.82s         Find the "Import template text" NavigationBar
+    t =    23.89s         Find the "Import template text" NavigationBar
+    t =    23.96s         Find the "Import template text" NavigationBar
+    t =    24.03s         Find the "Import template text" NavigationBar
+    t =    24.10s         Find the "Import template text" NavigationBar
+    t =    24.89s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.28s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    25.36s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    25.43s Find the NavigationBar (Element at index 1)
+    t =    25.51s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    25.51s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.51s     Find the "Import template text" NavigationBar
+    t =    25.57s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    25.64s         Wait for com.apple.springboard to idle
+    t =    25.67s     Synthesize event
+    t =    25.67s         Find the "Import template text" NavigationBar
+    t =    25.74s         Find the "Import template text" NavigationBar
+    t =    25.81s         Find the "Import template text" NavigationBar
+    t =    25.88s         Find the "Import template text" NavigationBar
+    t =    25.95s         Find the "Import template text" NavigationBar
+    t =    26.73s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.16s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    27.24s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    27.30s Find the NavigationBar (Element at index 1)
+    t =    27.37s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    27.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.37s     Find the "Import template text" NavigationBar
+    t =    27.43s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    27.50s         Wait for com.apple.springboard to idle
+    t =    27.52s     Synthesize event
+    t =    27.53s         Find the "Import template text" NavigationBar
+    t =    27.59s         Find the "Import template text" NavigationBar
+    t =    27.66s         Find the "Import template text" NavigationBar
+    t =    27.73s         Find the "Import template text" NavigationBar
+    t =    27.81s         Find the "Import template text" NavigationBar
+    t =    28.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.00s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    29.09s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    29.16s Find the NavigationBar (Element at index 1)
+    t =    29.24s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    29.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.25s     Find the "Import template text" NavigationBar
+    t =    29.32s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    29.39s         Wait for com.apple.springboard to idle
+    t =    29.41s     Synthesize event
+    t =    29.41s         Find the "Import template text" NavigationBar
+    t =    29.49s         Find the "Import template text" NavigationBar
+    t =    29.56s         Find the "Import template text" NavigationBar
+    t =    29.63s         Find the "Import template text" NavigationBar
+    t =    29.70s         Find the "Import template text" NavigationBar
+    t =    30.49s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.91s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    31.00s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    31.07s Find the NavigationBar (Element at index 1)
+    t =    31.15s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    31.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.15s     Find the "Import template text" NavigationBar
+    t =    31.22s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    31.29s         Wait for com.apple.springboard to idle
+    t =    31.31s     Synthesize event
+    t =    31.31s         Find the "Import template text" NavigationBar
+    t =    31.38s         Find the "Import template text" NavigationBar
+    t =    31.45s         Find the "Import template text" NavigationBar
+    t =    31.51s         Find the "Import template text" NavigationBar
+    t =    31.58s         Find the "Import template text" NavigationBar
+    t =    32.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.79s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    32.89s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    32.95s Find the NavigationBar (Element at index 1)
+    t =    33.03s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    33.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    33.03s     Find the "Import template text" NavigationBar
+    t =    33.10s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    33.17s         Wait for com.apple.springboard to idle
+    t =    33.19s     Synthesize event
+    t =    33.19s         Find the "Import template text" NavigationBar
+    t =    33.26s         Find the "Import template text" NavigationBar
+    t =    33.32s         Find the "Import template text" NavigationBar
+    t =    33.39s         Find the "Import template text" NavigationBar
+    t =    33.46s         Find the "Import template text" NavigationBar
+    t =    34.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.66s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    34.75s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    34.82s Find the NavigationBar (Element at index 1)
+    t =    34.89s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    34.89s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.89s     Find the "Import template text" NavigationBar
+    t =    34.96s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    35.02s         Wait for com.apple.springboard to idle
+    t =    35.05s     Synthesize event
+    t =    35.05s         Find the "Import template text" NavigationBar
+    t =    35.12s         Find the "Import template text" NavigationBar
+    t =    35.19s         Find the "Import template text" NavigationBar
+    t =    35.26s         Find the "Import template text" NavigationBar
+    t =    35.33s         Find the "Import template text" NavigationBar
+    t =    36.11s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.54s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    36.62s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    36.68s Find the NavigationBar (Element at index 1)
+    t =    36.76s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    36.76s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.76s     Find the "Import template text" NavigationBar
+    t =    36.83s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    36.90s         Wait for com.apple.springboard to idle
+    t =    36.92s     Synthesize event
+    t =    36.92s         Find the "Import template text" NavigationBar
+    t =    36.99s         Find the "Import template text" NavigationBar
+    t =    37.05s         Find the "Import template text" NavigationBar
+    t =    37.12s         Find the "Import template text" NavigationBar
+    t =    37.19s         Find the "Import template text" NavigationBar
+    t =    37.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.39s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    38.48s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    38.54s Find the NavigationBar (Element at index 1)
+    t =    38.62s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    38.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.62s     Find the "Import template text" NavigationBar
+    t =    38.68s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    38.75s         Wait for com.apple.springboard to idle
+    t =    38.78s     Synthesize event
+    t =    38.78s         Find the "Import template text" NavigationBar
+    t =    38.86s         Find the "Import template text" NavigationBar
+    t =    38.93s         Find the "Import template text" NavigationBar
+    t =    39.00s         Find the "Import template text" NavigationBar
+    t =    39.07s         Find the "Import template text" NavigationBar
+    t =    39.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    40.27s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    40.35s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    40.41s Find the NavigationBar (Element at index 1)
+    t =    40.50s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    40.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    40.50s     Find the "Import template text" NavigationBar
+    t =    40.56s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    40.63s         Wait for com.apple.springboard to idle
+    t =    40.66s     Synthesize event
+    t =    40.66s         Find the "Import template text" NavigationBar
+    t =    40.72s         Find the "Import template text" NavigationBar
+    t =    40.79s         Find the "Import template text" NavigationBar
+    t =    40.86s         Find the "Import template text" NavigationBar
+    t =    40.93s         Find the "Import template text" NavigationBar
+    t =    41.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.11s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    42.20s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    42.27s Find the NavigationBar (Element at index 1)
+    t =    42.35s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    42.35s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.35s     Find the "Import template text" NavigationBar
+    t =    42.42s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    42.48s         Wait for com.apple.springboard to idle
+    t =    42.51s     Synthesize event
+    t =    42.51s         Find the "Import template text" NavigationBar
+    t =    42.57s         Find the "Import template text" NavigationBar
+    t =    42.64s         Find the "Import template text" NavigationBar
+    t =    42.71s         Find the "Import template text" NavigationBar
+    t =    42.77s         Find the "Import template text" NavigationBar
+    t =    43.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.98s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    44.07s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    44.14s Find the NavigationBar (Element at index 1)
+    t =    44.22s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    44.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    44.22s     Find the "Import template text" NavigationBar
+    t =    44.30s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    44.37s         Wait for com.apple.springboard to idle
+    t =    44.40s     Synthesize event
+    t =    44.40s         Find the "Import template text" NavigationBar
+    t =    44.47s         Find the "Import template text" NavigationBar
+    t =    44.54s         Find the "Import template text" NavigationBar
+    t =    44.61s         Find the "Import template text" NavigationBar
+    t =    44.68s         Find the "Import template text" NavigationBar
+    t =    45.47s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.89s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    45.97s Get all elements bound by index for: Descendants matching type NavigationBar
+    t =    46.03s Find the NavigationBar (Element at index 1)
+    t =    46.12s Press "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 250.0) for 0.1 seconds, then drag to "Import template text" NavigationBar[0.50, 1.00] -> (0.0, 40.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    46.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.12s     Find the "Import template text" NavigationBar
+    t =    46.18s     Check for interrupting elements affecting "Import template text" NavigationBar
+    t =    46.26s         Wait for com.apple.springboard to idle
+    t =    46.28s     Synthesize event
+    t =    46.28s         Find the "Import template text" NavigationBar
+    t =    46.35s         Find the "Import template text" NavigationBar
+    t =    46.42s         Find the "Import template text" NavigationBar
+    t =    46.49s         Find the "Import template text" NavigationBar
+    t =    46.56s         Find the "Import template text" NavigationBar
+    t =    47.35s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.78s Checking existence of `"mappedCSVColumn-title" Button`
+    t =    47.87s Requesting snapshot of accessibility hierarchy for app with pid 22912
+    t =    48.40s Requesting snapshot of accessibility hierarchy for app with pid 22912
+/tmp/taskfold-definition-headings-ios-host/TaskfoldUITests/TeamTemplateLibraryUITests.swift:380: error: -[TaskfoldUITests.TeamTemplateLibraryUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn] : XCTAssertTrue failed - Attributes: Application, 0x1110857c0, pid: 22912, label: 'Taskfold Heading Test'
+Element subtree:
+ →Application, 0x1110857c0, pid: 22912, label: 'Taskfold Heading Test'
+    Window (Main), 0x111087ac0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x111087c00, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x111087d40, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x111087e80, {{-1032.0, -1376.0}, {3096.0, 4128.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+          Other, 0x110f4b5c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x110fefe80, {{0.0, 0.0}, {1032.0, 1376.0}}
+              Other, 0x110feee40, {{0.0, 0.0}, {1032.0, 1376.0}}
+                NavigationBar, 0x110fef5c0, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Templates'
+                  Button, 0x110fefc00, {{10.0, 32.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'Team editor test'
+                  Other, 0x110fefd40, {{70.0, 36.0}, {64.5, 36.0}}
+                    Other, 0x110fef200, {{70.0, 36.0}, {64.5, 36.0}}
+                      Button, 0x110fef340, {{70.0, 36.0}, {64.5, 36.0}}, label: 'Done'
+                  StaticText, 0x110feed00, {{20.0, 89.5}, {163.5, 41.0}}, label: 'Templates'
+                Other, 0x110feebc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  Other, 0x110fef480, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x11111c000, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      Other, 0x11111c140, {{0.0, 0.0}, {1032.0, 1376.0}}
+                        CollectionView, 0x11111c280, {{0.0, 0.0}, {1032.0, 1376.0}}
+                          Other, 0x11111c3c0, {{-20.0, -2614.0}, {1072.0, 2840.0}}
+                          Other, 0x11111c500, {{0.0, 0.0}, {1032.0, 1376.0}}
+                            Other, 0x11111c640, {{0.0, 0.0}, {1032.0, 126.0}}
+                          Other, 0x11111c780, {{0.0, 0.0}, {1032.0, 1376.0}}
+                          Cell, 0x11111c8c0, {{20.0, 138.0}, {992.0, 70.5}}
+                            Other, 0x11111ca00, {{20.0, 138.0}, {992.0, 70.5}}
+                              Other, 0x11111cb40, {{20.0, 138.0}, {992.0, 70.5}}
+                            Other, 0x11111cc80, {{20.0, 138.0}, {992.0, 70.5}}
+                              Other, 0x11111cdc0, {{20.0, 138.0}, {992.0, 70.5}}
+                                Other, 0x11111cf00, {{20.0, 138.0}, {992.0, 70.5}}
+                                  StaticText, 0x11111d040, {{20.0, 138.0}, {992.0, 70.5}}, label: 'Save a workflow once, then start fresh each time. New runs keep structure, notes, labels and relative dates; completion, discussion, files and assignments stay with the originals.'
+                          Other, 0x11111d180, {{-20.0, 226.0}, {1072.0, 125.0}}
+                          Cell, 0x11111d2c0, {{20.0, 226.0}, {992.0, 40.5}}
+                            Other, 0x11111d400, {{20.0, 226.0}, {992.0, 40.5}}
+                            Other, 0x11111d540, {{20.0, 226.0}, {992.0, 40.5}}
+                              Other, 0x11111d680, {{20.0, 226.0}, {992.0, 40.5}}
+                                Other, 0x11111d7c0, {{20.0, 226.0}, {992.0, 40.5}}
+                                  StaticText, 0x11111d900, {{20.0, 226.0}, {992.0, 40.5}}, label: 'Your templates'
+                          Cell, 0x11111da40, {{20.0, 266.5}, {992.0, 67.0}}
+                            Other, 0x11111db80, {{20.0, 266.5}, {992.0, 67.0}}
+                              Other, 0x11111dcc0, {{20.0, 266.5}, {992.0, 67.0}}
+                            Other, 0x11111de00, {{20.0, 266.5}, {992.0, 67.0}}
+                              Other, 0x11111df40, {{20.0, 266.5}, {992.0, 67.0}}
+                                Other, 0x11111e080, {{20.0, 266.5}, {992.0, 67.0}}
+                                  Button, 0x11111e1c0, {{20.0, 266.5}, {992.0, 67.0}}, identifier: 'workflowTemplate-ec240000-0000-4000-8000-000000000063', label: 'Release routine, 0 projects · 0 sections · 1 task'
+                                    Image, 0x11111e300, {{40.0, 290.0}, {21.0, 20.5}}, identifier: 'square.stack.3d.up', label: 'Hdr'
+                                    StaticText, 0x11111e440, {{69.0, 281.5}, {123.0, 20.5}}, label: 'Release routine'
+                                    StaticText, 0x11111e580, {{69.0, 304.0}, {169.0, 14.5}}, label: '0 projects · 0 sections · 1 task'
+                                    Image, 0x11111e6c0, {{982.5, 293.0}, {8.5, 14.5}}, identifier: 'chevron.right', label: 'Forward'
+                          Other, 0x11111e800, {{-20.0, 351.0}, {1072.0, 243.0}}
+                          Cell, 0x11111e940, {{20.0, 368.5}, {992.0, 52.0}}
+                            Other, 0x11111ea80, {{20.0, 368.5}, {992.0, 52.0}}
+                              Other, 0x11111ebc0, {{20.0, 368.5}, {992.0, 52.0}}
+                            Other, 0x11111ed00, {{20.0, 368.5}, {992.0, 52.0}}
+                              Other, 0x11111ee40, {{20.0, 368.5}, {992.0, 52.0}}
+                                Other, 0x11111ef80, {{20.0, 368.5}, {992.0, 52.0}}
+                                  Button, 0x11111f0c0, {{20.0, 368.5}, {992.0, 52.0}}, identifier: 'importWorkflowTemplate', label: 'Import template…'
+                                    Image, 0x11111f200, {{42.5, 382.5}, {19.0, 24.5}}, identifier: 'square.and.arrow.down', label: 'Download'
+                                    StaticText, 0x11111f340, {{42.5, 382.5}, {172.5, 24.5}}, label: 'Import template…'
+                          Cell, 0x11111f480, {{20.0, 420.5}, {992.0, 52.0}}
+                            Other, 0x11111f5c0, {{20.0, 420.5}, {992.0, 52.0}}
+                              Other, 0x11111f700, {{20.0, 420.5}, {992.0, 52.0}}
+                            Other, 0x11111f840, {{20.0, 420.5}, {992.0, 52.0}}
+                              Other, 0x11111f980, {{20.0, 420.5}, {992.0, 52.0}}
+                                Other, 0x11111fac0, {{20.0, 420.5}, {992.0, 52.0}}
+                                  Button, 0x11111fc00, {{20.0, 420.5}, {992.0, 52.0}}, identifier: 'importWorkflowText', label: 'Import from text…'
+                                    Image, 0x11111fd40, {{41.0, 433.0}, {22.0, 27.0}}, identifier: 'doc.on.clipboard', label: 'Paste'
+                                    StaticText, 0x11111fe80, {{41.0, 433.0}, {175.5, 27.0}}, label: 'Import from text…'
+                          Other, 0x111120000, {{80.0, 419.5}, {912.0, 1.0}}
+                          Cell, 0x111120140, {{20.0, 472.5}, {992.0, 52.0}}
+                            Other, 0x111120280, {{20.0, 472.5}, {992.0, 52.0}}
+                              Other, 0x1111203c0, {{20.0, 472.5}, {992.0, 52.0}}
+                            Other, 0x111120500, {{20.0, 472.5}, {992.0, 52.0}}
+                              Other, 0x111120640, {{20.0, 472.5}, {992.0, 52.0}}
+                                Other, 0x111120780, {{20.0, 472.5}, {992.0, 52.0}}
+                                  Button, 0x1111208c0, {{20.0, 472.5}, {992.0, 52.0}}, identifier: 'mapWorkflowCSVFile', label: 'Map a CSV file…'
+                                    StaticText, 0x111120a00, {{39.5, 488.2}, {165.0, 20.5}}, label: 'Map a CSV file…'
+                                    Image, 0x111120b40, {{39.5, 488.5}, {25.5, 20.0}}, identifier: 'tablecells', label: 'Table'
+                          Other, 0x111120c80, {{80.0, 471.5}, {912.0, 1.0}}
+                          Cell, 0x111120dc0, {{20.0, 524.5}, {992.0, 52.0}}
+                            Other, 0x111120f00, {{20.0, 524.5}, {992.0, 52.0}}
+                              Other, 0x111121040, {{20.0, 524.5}, {992.0, 52.0}}
+                            Other, 0x111121180, {{20.0, 524.5}, {992.0, 52.0}}
+                              Other, 0x1111212c0, {{20.0, 524.5}, {992.0, 52.0}}
+                                Other, 0x111121400, {{20.0, 524.5}, {992.0, 52.0}}
+                                  StaticText, 0x111121540, {{20.0, 524.5}, {992.0, 52.0}}, label: 'Review a workflow file before saving a private copy. Importing does not create any tasks.'
+                          Other, 0x111121680, {{80.0, 523.5}, {912.0, 1.0}}
+                          Other, 0x1111217c0, {{-20.0, 594.0}, {1072.0, 3020.5}}
+                          Cell, 0x111121900, {{20.0, 594.0}, {992.0, 40.5}}
+                            Other, 0x111121a40, {{20.0, 594.0}, {992.0, 40.5}}
+                            Other, 0x111121b80, {{20.0, 594.0}, {992.0, 40.5}}
+                              Other, 0x111121cc0, {{20.0, 594.0}, {992.0, 40.5}}
+                                Other, 0x111121e00, {{20.0, 594.0}, {992.0, 40.5}}
+                                  StaticText, 0x111121f40, {{20.0, 594.0}, {992.0, 40.5}}, label: 'Save a workflow'
+                          Cell, 0x111122080, {{20.0, 634.5}, {992.0, 52.0}}
+                            Other, 0x1111221c0, {{20.0, 634.5}, {992.0, 52.0}}
+                              Other, 0x111122300, {{20.0, 634.5}, {992.0, 52.0}}
+                            Other, 0x111122440, {{20.0, 634.5}, {992.0, 52.0}}
+                              Other, 0x111122580, {{20.0, 634.5}, {992.0, 52.0}}
+                                Other, 0x1111226c0, {{20.0, 634.5}, {992.0, 52.0}}
+                                  Button, 0x111122800, {{40.0, 643.5}, {952.0, 34.5}}, label: 'Type, Project and subprojects'
+                                    StaticText, 0x111122940, {{795.0, 650.5}, {181.0, 20.5}}, label: 'Project and subprojects'
+                                  StaticText, 0x111122a80, {{40.0, 650.2}, {37.5, 20.5}}, label: 'Type'
+                          Cell, 0x111122bc0, {{20.0, 686.5}, {992.0, 52.0}}
+                            Other, 0x111122d00, {{20.0, 686.5}, {992.0, 52.0}}
+                              Other, 0x111122e40, {{20.0, 686.5}, {992.0, 52.0}}
+                            Other, 0x111122f80, {{20.0, 686.5}, {992.0, 52.0}}
+                              Other, 0x1111230c0, {{20.0, 686.5}, {992.0, 52.0}}
+                                Other, 0x111123200, {{20.0, 686.5}, {992.0, 52.0}}
+                                  Button, 0x111123340, {{40.0, 695.5}, {952.0, 34.5}}, identifier: 'templateSource', label: 'Source, Design workshop'
+                                    StaticText, 0x111123480, {{844.5, 702.5}, {131.5, 20.5}}, label: 'Design workshop'
+                                  StaticText, 0x1111235c0, {{40.0, 702.2}, {54.0, 20.5}}, label: 'Source'
+                          Other, 0x111123700, {{40.0, 685.5}, {952.0, 1.0}}
+                          Cell, 0x111123840, {{20.0, 738.5}, {992.0, 52.0}}
+                            Other, 0x111123980, {{20.0, 738.5}, {992.0, 52.0}}
+                              Other, 0x111123ac0, {{20.0, 738.5}, {992.0, 52.0}}
+                            Other, 0x111123c00, {{20.0, 738.5}, {992.0, 52.0}}
+                              Other, 0x111123d40, {{20.0, 738.5}, {992.0, 52.0}}
+                                Other, 0x111123e80, {{20.0, 738.5}, {992.0, 52.0}}
+                                  TextField, 0x111130000, {{40.0, 753.5}, {952.0, 22.0}}, identifier: 'templateName', placeholderValue: 'Template name'
+                          Other, 0x111130140, {{40.0, 737.5}, {952.0, 1.0}}
+                          Cell, 0x111130280, {{20.0, 790.5}, {992.0, 52.0}}
+                            Other, 0x1111303c0, {{20.0, 790.5}, {992.0, 52.0}}
+                              Other, 0x111130500, {{20.0, 790.5}, {992.0, 52.0}}
+                            Other, 0x111130640, {{20.0, 790.5}, {992.0, 52.0}}
+                              Other, 0x111130780, {{20.0, 790.5}, {992.0, 52.0}}
+                                Other, 0x1111308c0, {{20.0, 790.5}, {992.0, 52.0}}
+                                  Button, 0x111130a00, {{20.0, 790.5}, {992.0, 52.0}}, identifier: 'saveWorkflowTemplate', label: 'Save template', Disabled
+                          Other, 0x111130b40, {{40.0, 789.5}, {952.0, 1.0}}
+                          Other, 0x111130c80, {{999.0, 86.0}, {30.0, 887.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                            Other, 0x111130dc0, {{1026.0, 199.5}, {3.0, 770.5}}
+                          Other, 0x111130f00, {{999.0, 86.0}, {30.0, 887.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                            Other, 0x111131040, {{1026.0, 199.5}, {3.0, 770.5}}
+                Toolbar, 0x111131180, {{0.0, 0.0}, {1032.0, 1376.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                  Other, 0x1111312c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x111131400, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x111131540, {{-1032.0, -1376.0}, {3096.0, 4128.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Other, 0x111131680, {{226.0, 156.5}, {580.0, 660.0}}
+          Image, 0x1111317c0, {{76.0, 6.5}, {880.0, 960.0}}
+          Other, 0x111131900, {{226.0, 156.5}, {580.0, 660.0}}
+            Other, 0x111131a40, {{226.0, 156.5}, {580.0, 660.0}}
+              Other, 0x111131b80, {{226.0, 156.5}, {580.0, 660.0}}
+                Other, 0x111131cc0, {{226.0, 156.5}, {580.0, 660.0}}
+                  NavigationBar, 0x111131e00, {{226.0, 166.5}, {580.0, 54.0}}, identifier: 'Import template text'
+                    Other, 0x111131f40, {{240.0, 170.5}, {64.5, 36.0}}
+                      Other, 0x111132080, {{240.0, 170.5}, {64.5, 36.0}}
+                        Button, 0x1111321c0, {{240.0, 170.5}, {64.5, 36.0}}, label: 'Done'
+                    StaticText, 0x111132300, {{434.5, 178.0}, {163.0, 21.0}}, label: 'Import template text'
+                  Other, 0x111132440, {{226.0, 156.5}, {580.0, 660.0}}
+                    Other, 0x111132580, {{226.0, 156.5}, {580.0, 660.0}}
+                      Other, 0x1111326c0, {{226.0, 156.5}, {580.0, 660.0}}
+                        Other, 0x111132800, {{226.0, 156.5}, {580.0, 660.0}}
+                          CollectionView, 0x111132940, {{226.0, 156.5}, {580.0, 660.0}}
+                            Other, 0x111132a80, {{210.0, -1099.5}, {612.0, 1746.5}}
+                            Other, 0x111132bc0, {{226.0, 156.5}, {580.0, 660.0}}
+                              Other, 0x111132d00, {{226.0, 156.5}, {580.0, 104.0}}
+                            Other, 0x111132e40, {{226.0, 156.5}, {580.0, 660.0}}
+                            Cell, 0x111132f80, {{242.0, 220.5}, {548.0, 94.5}}
+                              Other, 0x1111330c0, {{242.0, 220.5}, {548.0, 94.5}}
+                                Other, 0x111133200, {{242.0, 220.5}, {548.0, 94.5}}
+                              Other, 0x111133340, {{242.0, 220.5}, {548.0, 94.5}}
+                                Other, 0x111133480, {{242.0, 220.5}, {548.0, 94.5}}
+                                  Other, 0x1111335c0, {{242.0, 220.5}, {548.0, 94.5}}
+                                    StaticText, 0x111133700, {{242.0, 220.5}, {548.0, 94.5}}, label: 'Paste a Taskfold workflow or another CSV. Other CSV files need an explicit column mapping. Review the contents before saving a reusable copy; no tasks are created here.'
+                            Cell, 0x111133840, {{242.0, 315.0}, {548.0, 250.0}}
+                              Other, 0x111133980, {{242.0, 315.0}, {548.0, 250.0}}
+                                Other, 0x111133ac0, {{242.0, 315.0}, {548.0, 250.0}}
+                              Other, 0x111133c00, {{242.0, 315.0}, {548.0, 250.0}}
+                                Other, 0x111133d40, {{242.0, 315.0}, {548.0, 250.0}}
+                                  Other, 0x111133e80, {{242.0, 315.0}, {548.0, 250.0}}
+                                    TextView, 0x111138000, {{258.0, 330.0}, {516.0, 220.0}}, identifier: 'templateImportText', label: 'Workflow text', value: Name,Kind,Done
+Des..., Keyboard Focused
+                                      Other, 0x111138140, {{258.0, 330.0}, {0.0, 0.0}}, identifier: '_UITextSelectionRangeAdjustmentContainerView'
+                                        Other, 0x111138280, {{258.0, 330.0}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'
+                                          Other, 0x1111383c0, {{250.8, 316.5}, {16.5, 16.5}}
+                                          Other, 0x111138500, {{258.0, 330.0}, {2.0, 0.0}}
+                                        Other, 0x111138640, {{258.0, 330.0}, {0.0, 0.0}}, identifier: 'com.apple.text.grabber.leading'
+                                          Other, 0x111138780, {{250.8, 316.5}, {16.5, 16.5}}
+                                          Other, 0x1111388c0, {{258.0, 330.0}, {2.0, 0.0}}
+                                      Other, 0x111138a00, {{741.0, 330.0}, {30.0, 220.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                                        Other, 0x111138b40, {{768.0, 471.0}, {3.0, 76.0}}
+                            Other, 0x111138c80, {{258.0, 314.0}, {516.0, 1.0}}
+                            Cell, 0x111138dc0, {{242.0, 565.0}, {548.0, 64.5}}
+                              Other, 0x111138f00, {{242.0, 565.0}, {548.0, 64.5}}
+                                Other, 0x111139040, {{242.0, 565.0}, {548.0, 64.5}}
+                              Other, 0x111139180, {{242.0, 565.0}, {548.0, 64.5}}
+                                Other, 0x1111392c0, {{242.0, 565.0}, {548.0, 64.5}}
+                                  Other, 0x111139400, {{242.0, 565.0}, {548.0, 64.5}}
+                                    Button, 0x111139540, {{258.0, 580.0}, {87.0, 34.5}}, identifier: 'pasteTemplateText', label: 'Paste'
+                            Other, 0x111139680, {{258.0, 564.0}, {516.0, 1.0}}
+                            Other, 0x1111397c0, {{210.0, 647.0}, {612.0, 1461.5}}
+                            Cell, 0x111139900, {{242.0, 664.5}, {548.0, 52.0}}
+                              Other, 0x111139a40, {{242.0, 664.5}, {548.0, 52.0}}
+                                Other, 0x111139b80, {{242.0, 664.5}, {548.0, 52.0}}
+                              Other, 0x111139cc0, {{242.0, 664.5}, {548.0, 52.0}}
+                                Other, 0x111139e00, {{242.0, 664.5}, {548.0, 52.0}}
+                                  Other, 0x111139f40, {{242.0, 664.5}, {548.0, 52.0}}
+                                    Button, 0x11113a080, {{242.0, 664.5}, {548.0, 52.0}}, identifier: 'reviewTemplateText', label: 'Review template'
+                            Cell, 0x11113a1c0, {{242.0, 716.5}, {548.0, 52.0}}
+                              Other, 0x11113a300, {{242.0, 716.5}, {548.0, 52.0}}
+                                Other, 0x11113a440, {{242.0, 716.5}, {548.0, 52.0}}
+                              Other, 0x11113a580, {{242.0, 716.5}, {548.0, 52.0}}
+                                Other, 0x11113a6c0, {{242.0, 716.5}, {548.0, 52.0}}
+                                  Other, 0x11113a800, {{242.0, 716.5}, {548.0, 52.0}}
+                                    Button, 0x11113a940, {{242.0, 716.5}, {548.0, 52.0}}, identifier: 'mapTemplateCSVText', label: 'Map CSV columns'
+                            Other, 0x11113aa80, {{258.0, 715.5}, {516.0, 1.0}}
+                            Other, 0x11113abc0, {{773.0, 220.5}, {30.0, 564.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                              Other, 0x11113ad00, {{800.0, 251.5}, {3.0, 530.0}}
+                            Other, 0x11113ae40, {{773.0, 220.5}, {30.0, 564.0}}, label: 'Vertical scroll bar, 1 page', value: 0 %
+                              Other, 0x11113af80, {{800.0, 251.5}, {3.0, 530.0}}
+                  Toolbar, 0x11113b0c0, {{226.0, 156.5}, {580.0, 660.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                    Other, 0x11113b200, {{226.0, 156.5}, {580.0, 660.0}}
+    Window, 0x11113b340, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x11113b480, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x11113b5c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x11113b700, {{0.0, 973.0}, {1032.0, 403.0}}
+          Other, 0x11113b840, {{0.0, 973.0}, {1032.0, 403.0}}, identifier: 'inputView'
+    Window, 0x11113b980, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x11113bac0, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x11113bc00, {{0.0, 973.0}, {1032.0, 403.0}}
+          Other, 0x11113bd40, {{0.0, 973.0}, {1032.0, 55.0}}, identifier: 'inputAssistantView'
+            Other, 0x11113be80, {{0.0, 973.0}, {1032.0, 55.0}}
+              Other, 0x111144000, {{0.0, 973.0}, {283.0, 49.0}}, identifier: 'LeftButtonBar'
+                Other, 0x111144140, {{28.0, 973.0}, {255.0, 49.0}}
+                  Other, 0x111144280, {{28.0, 974.0}, {114.0, 49.0}}
+                    Other, 0x1111443c0, {{28.0, 974.0}, {22.0, 49.0}}
+                      Button, 0x111144500, {{28.0, 974.0}, {22.0, 49.0}}, identifier: 'assistantUndo', label: 'undo'
+                    Other, 0x111144640, {{74.0, 974.0}, {22.0, 49.0}}
+                      Button, 0x111144780, {{74.0, 974.0}, {22.0, 49.0}}, identifier: 'assistantRedo', label: 'Redo', Disabled
+                    Other, 0x1111448c0, {{120.0, 974.0}, {22.0, 49.0}}
+                      Button, 0x111144a00, {{120.0, 974.0}, {22.0, 49.0}}, identifier: 'assistantPaste:forEvent:', label: 'Paste', Disabled
+              Other, 0x111144b40, {{283.0, 979.0}, {466.0, 49.0}}, identifier: 'CenterPageView'
+                Other, 0x111144c80, {{283.0, 379.0}, {466.0, 1249.0}}
+                  ScrollView, 0x111144dc0, {{283.0, 979.0}, {466.0, 49.0}}
+                Other, 0x111144f00, {{283.0, 979.0}, {466.0, 49.0}}
+                  Other, 0x111145040, {{283.0, 979.0}, {466.0, 49.0}}
+                    Other, 0x111145180, {{283.0, 979.0}, {466.0, 49.0}}, label: 'Typing Predictions'
+                      Other, 0x1111452c0, {{283.0, 979.0}, {466.0, 49.0}}
+                        Other, 0x111145400, {{283.0, 979.0}, {466.0, 49.0}}
+                          Button, 0x111145540, {{283.0, 979.0}, {155.3, 49.0}}, label: '“true”'
+                          Button, 0x111145680, {{438.3, 979.0}, {155.3, 49.0}}, label: 'trust'
+                          Button, 0x1111457c0, {{593.7, 979.0}, {155.3, 49.0}}, label: 'truly'
+              Other, 0x111145900, {{749.0, 973.0}, {283.0, 49.0}}, identifier: 'RightButtonBar'
+                Other, 0x111145a40, {{749.0, 973.0}, {255.0, 49.0}}
+          Other, 0x111145b80, {{0.0, 973.0}, {1032.0, 404.0}}
+            Other, 0x111145cc0, {{0.0, 973.0}, {1032.0, 404.0}}
+              Other, 0x111145e00, {{0.0, 973.0}, {1032.0, 404.0}}
+          Other, 0x111145f40, {{0.0, 1028.0}, {1032.0, 345.0}}, identifier: 'inputView'
+            Keyboard, 0x111146080, {{0.0, 1028.0}, {1032.0, 345.0}}
+              Other, 0x1111461c0, {{0.0, 1028.0}, {1032.0, 345.0}}
+                Other, 0x111146300, {{0.0, 1028.0}, {1032.0, 345.0}}, identifier: 'UIKeyboardLayoutStar Preview'
+                  Key, 0x111146440, {{0.5, 1033.0}, {71.0, 52.5}}, label: '`'
+                  Key, 0x111146580, {{71.5, 1033.0}, {71.0, 52.5}}, label: '1'
+                  Key, 0x1111466c0, {{142.5, 1033.0}, {71.0, 52.5}}, label: '2'
+                  Key, 0x111146800, {{213.5, 1033.0}, {71.0, 52.5}}, label: '3'
+                  Key, 0x111146940, {{284.5, 1033.0}, {71.0, 52.5}}, label: '4'
+                  Key, 0x111146a80, {{355.5, 1033.0}, {71.0, 52.5}}, label: '5'
+                  Key, 0x111146bc0, {{426.5, 1033.0}, {71.0, 52.5}}, label: '6'
+                  Key, 0x111146d00, {{497.5, 1033.0}, {71.0, 52.5}}, label: '7'
+                  Key, 0x111146e40, {{568.5, 1033.0}, {71.0, 52.5}}, label: '8'
+                  Key, 0x111146f80, {{639.5, 1033.0}, {71.0, 52.5}}, label: '9'
+                  Key, 0x1111470c0, {{710.5, 1033.0}, {70.5, 52.5}}, label: '0'
+                  Key, 0x111147200, {{781.0, 1033.0}, {71.0, 52.5}}, label: '-'
+                  Key, 0x111147340, {{852.0, 1033.0}, {71.0, 52.5}}, label: '='
+                  Key, 0x111147480, {{923.0, 1033.0}, {109.5, 52.5}}, identifier: 'delete', label: 'delete'
+                  Button, 0x1111475c0, {{0.5, 1085.5}, {109.5, 68.0}}, identifier: 'tab', label: 'Tab'
+                  Key, 0x111147700, {{110.0, 1085.5}, {71.0, 68.0}}, label: 'q'
+                  Key, 0x111147840, {{181.0, 1085.5}, {71.0, 68.0}}, label: 'w'
+                  Key, 0x111147980, {{252.0, 1085.5}, {70.5, 68.0}}, label: 'e'
+                  Key, 0x111147ac0, {{322.5, 1085.5}, {71.0, 68.0}}, label: 'r'
+                  Key, 0x111147c00, {{393.5, 1085.5}, {71.0, 68.0}}, label: 't'
+                  Key, 0x111147d40, {{464.5, 1085.5}, {71.0, 68.0}}, label: 'y'
+                  Key, 0x111147e80, {{535.5, 1085.5}, {71.0, 68.0}}, label: 'u'
+                  Key, 0x111154000, {{606.5, 1085.5}, {71.0, 68.0}}, label: 'i'
+                  Key, 0x111154140, {{677.5, 1085.5}, {71.0, 68.0}}, label: 'o'
+                  Key, 0x111154280, {{748.5, 1085.5}, {71.0, 68.0}}, label: 'p'
+                  Key, 0x1111543c0, {{819.5, 1085.5}, {71.0, 68.0}}, label: '['
+                  Key, 0x111154500, {{890.5, 1085.5}, {71.0, 68.0}}, label: ']'
+                  Key, 0x111154640, {{961.5, 1085.5}, {71.0, 68.0}}, label: '\'
+                  Key, 0x111154780, {{0.5, 1153.5}, {125.5, 68.0}}, identifier: 'caps-lock', label: 'Caps Lock'
+                  Key, 0x1111548c0, {{126.0, 1153.5}, {71.0, 68.0}}, label: 'a'
+                  Key, 0x111154a00, {{197.0, 1153.5}, {71.0, 68.0}}, label: 's'
+                  Key, 0x111154b40, {{268.0, 1153.5}, {71.0, 68.0}}, label: 'd'
+                  Key, 0x111154c80, {{339.0, 1153.5}, {71.0, 68.0}}, label: 'f'
+                  Key, 0x111154dc0, {{410.0, 1153.5}, {71.0, 68.0}}, label: 'g'
+                  Key, 0x111154f00, {{481.0, 1153.5}, {71.0, 68.0}}, label: 'h'
+                  Key, 0x111155040, {{552.0, 1153.5}, {71.0, 68.0}}, label: 'j'
+                  Key, 0x111155180, {{623.0, 1153.5}, {71.0, 68.0}}, label: 'k'
+                  Key, 0x1111552c0, {{694.0, 1153.5}, {71.0, 68.0}}, label: 'l'
+                  Key, 0x111155400, {{765.0, 1153.5}, {71.0, 68.0}}, label: ';'
+                  Key, 0x111155540, {{836.0, 1153.5}, {71.0, 68.0}}, label: '''
+                  Button, 0x111155680, {{907.0, 1153.5}, {125.5, 68.0}}, identifier: 'Return', label: 'return'
+                  Button, 0x1111557c0, {{0.5, 1221.5}, {161.0, 68.5}}, identifier: 'shift', label: 'shift'
+                  Key, 0x111155900, {{161.5, 1221.5}, {71.0, 68.5}}, label: 'z'
+                  Key, 0x111155a40, {{232.5, 1221.5}, {71.0, 68.5}}, label: 'x'
+                  Key, 0x111155b80, {{303.5, 1221.5}, {71.0, 68.5}}, label: 'c'
+                  Key, 0x111155cc0, {{374.5, 1221.5}, {71.0, 68.5}}, label: 'v'
+                  Key, 0x111155e00, {{445.5, 1221.5}, {71.0, 68.5}}, label: 'b'
+                  Key, 0x111155f40, {{516.5, 1221.5}, {71.0, 68.5}}, label: 'n'
+                  Key, 0x111156080, {{587.5, 1221.5}, {71.0, 68.5}}, label: 'm'
+                  Key, 0x1111561c0, {{658.5, 1221.5}, {71.0, 68.5}}, label: ','
+                  Key, 0x111156300, {{729.5, 1221.5}, {71.0, 68.5}}, label: '.'
+                  Key, 0x111156440, {{800.5, 1221.5}, {71.0, 68.5}}, label: '/'
+                  Key, 0x111156580, {{871.5, 1221.5}, {161.0, 68.5}}, label: 'shift'
+                  Button, 0x1111566c0, {{0.5, 1290.0}, {100.5, 68.0}}, identifier: 'emoji', label: 'Next keyboard', value: Dansk
+                  Key, 0x111156800, {{101.0, 1290.0}, {100.5, 68.0}}, identifier: 'more', label: 'numbers'
+                  Button, 0x111156940, {{201.5, 1290.0}, {101.0, 68.0}}, identifier: 'dictation', label: 'Dictate'
+                  Key, 0x111156a80, {{302.5, 1290.0}, {426.5, 68.0}}, label: 'space'
+                  Key, 0x111156bc0, {{729.0, 1290.0}, {152.0, 68.0}}, identifier: 'more', label: 'numbers'
+                  Button, 0x111156d00, {{881.0, 1290.0}, {151.5, 68.0}}, label: 'Hide keyboard'
+Path to element:
+ →Application, 0x1110857c0, pid: 22912, label: 'Taskfold Heading Test'
+Query chain:
+ →Find: Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+  Output: {
+    Application, 0x111156e40, pid: 22912, label: 'Taskfold Heading Test'
+  }
+
+    t =    48.62s Tap "mappedCSVColumn-title" Button
+    t =    48.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.62s     Find the "mappedCSVColumn-title" Button
+    t =    49.70s         Find the "mappedCSVColumn-title" Button (retry 1)
+    t =    50.80s         Find the "mappedCSVColumn-title" Button (retry 2)
+    t =    50.89s Requesting snapshot of accessibility hierarchy for app with pid 22912
+/tmp/taskfold-definition-headings-ios-host/TaskfoldUITests/TeamTemplateLibraryUITests.swift:398: error: -[TaskfoldUITests.TeamTemplateLibraryUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn] : Failed to tap "mappedCSVColumn-title" Button: No matches found for Elements matching predicate '"mappedCSVColumn-title" IN identifiers' from input {(
+    Button, identifier: 'BackButton', label: 'Team editor test',
+    Button, identifier: 'tab', label: 'Tab',
+    Button, identifier: 'Return', label: 'return',
+    Button, identifier: 'shift', label: 'shift',
+    Button, identifier: 'emoji', label: 'Next keyboard', value: Dansk,
+    Button, identifier: 'dictation', label: 'Dictate',
+    Button, label: 'Hide keyboard',
+    Button, label: 'Done',
+    Button, identifier: 'assistantUndo', label: 'undo',
+    Button, identifier: 'assistantRedo', label: 'Redo', Disabled,
+    Button, identifier: 'assistantPaste:forEvent:', label: 'Paste', Disabled,
+    Button, label: 'Done',
+    Button, label: '“true”',
+    Button, label: 'trust',
+    Button, label: 'truly',
+    Button, identifier: 'workflowTemplate-ec240000-0000-4000-8000-000000000063', label: 'Release routine, 0 projects · 0 sections · 1 task',
+    Button, identifier: 'importWorkflowTemplate', label: 'Import template…',
+    Button, identifier: 'importWorkflowText', label: 'Import from text…',
+    Button, identifier: 'mapWorkflowCSVFile', label: 'Map a CSV file…',
+    Button, label: 'Type, Project and subprojects',
+    Button, identifier: 'templateSource', label: 'Source, Design workshop',
+    Button, identifier: 'saveWorkflowTemplate', label: 'Save template', Disabled,
+    Button, identifier: 'pasteTemplateText', label: 'Paste',
+    Button, identifier: 'reviewTemplateText', label: 'Review template',
+    Button, identifier: 'mapTemplateCSVText', label: 'Map CSV columns'
+)}
+Possibly caused by runtime issues:
+Automation type mismatch: computed Button from legacy attributes vs Key from modern attribute. Input attributes and values: {
+    "XC_kAXXCAttributeAutomationType" = 20;
+    "XC_kAXXCAttributeElementBaseType" = UIAccessibilityElement;
+    "XC_kAXXCAttributeElementType" = UIAccessibilityElementKBKey;
+    "XC_kAXXCAttributeTraits" = 8589934641;
+}
+Automation type mismatch: computed Button from legacy attributes vs Key from modern attribute. Input attributes and values: {
+    "XC_kAXXCAttributeAutomationType" = 20;
+    "XC_kAXXCAttributeElementBaseType" = UIAccessibilityElement;
+    "XC_kAXXCAttributeElementType" = UIAccessibilityElementKBKey;
+    "XC_kAXXCAttributeTraits" = 8589936689;
+}
+See test report attachments for more detail.
+    t =    51.03s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testCloudCSVHeadingDefinitionCancelSaveAndColdReturn]' failed (51.334 seconds).
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 19:09:45.797
+    t =     0.02s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s         Terminate com.dbakp.taskfold.workflowteststeameditbridge:22912
+2026-10-26 19:09:46.876 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:09:46.876 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.29s         Setting up automation session
+    t =     5.33s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.02s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     8.05s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     8.05s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     8.17s Tap "openPrivateWorkflowRunFixture" Button
+    t =     8.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.18s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     8.21s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     8.23s         Wait for com.apple.springboard to idle
+    t =     8.26s     Synthesize event
+    t =     8.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.77s Waiting 8.0s for "editTemplateDefinition" Button to exist
+    t =     9.79s     Checking `Expect predicate `existsNoRetry == 1` for object "editTemplateDefinition" Button`
+    t =     9.79s         Checking existence of `"editTemplateDefinition" Button`
+    t =     9.89s Tap "editTemplateDefinition" Button
+    t =     9.89s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.90s     Find the "editTemplateDefinition" Button
+    t =     9.94s     Check for interrupting elements affecting "editTemplateDefinition" Button
+    t =     9.98s         Wait for com.apple.springboard to idle
+    t =    10.00s     Synthesize event
+    t =    10.29s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.33s Checking existence of `"editTemplateTask-0" Button`
+    t =    10.39s Find the "editTemplateTask-0" Button
+    t =    10.43s Tap "editTemplateTask-0" Button
+    t =    10.43s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.44s     Find the "editTemplateTask-0" Button
+    t =    10.48s     Check for interrupting elements affecting "editTemplateTask-0" Button
+    t =    10.51s         Wait for com.apple.springboard to idle
+    t =    10.53s     Synthesize event
+    t =    10.83s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.93s Waiting 8.0s for "saveTemplateTask" Button to exist
+    t =    11.94s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateTask" Button`
+    t =    11.94s         Checking existence of `"saveTemplateTask" Button`
+    t =    12.05s Checking existence of `"templateTaskKind" Button`
+    t =    12.11s Find the "templateTaskKind" Button
+    t =    12.18s Tap "templateTaskKind" Button
+    t =    12.18s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.18s     Find the "templateTaskKind" Button
+    t =    12.25s     Check for interrupting elements affecting "templateTaskKind" Button
+    t =    12.31s         Wait for com.apple.springboard to idle
+    t =    12.33s     Synthesize event
+    t =    12.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.75s Waiting 5.0s for "Heading" Button to exist
+    t =    14.76s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    14.76s         Checking existence of `"Heading" Button`
+    t =    14.81s Tap "Heading" Button
+    t =    14.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.82s     Find the "Heading" Button
+    t =    14.86s     Check for interrupting elements affecting "Heading" Button
+    t =    14.92s         Wait for com.apple.springboard to idle
+    t =    14.94s     Synthesize event
+    t =    15.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.67s Tap "saveTemplateTask" Button
+    t =    16.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.68s     Find the "saveTemplateTask" Button
+    t =    16.76s     Check for interrupting elements affecting "saveTemplateTask" Button
+    t =    16.81s         Wait for com.apple.springboard to idle
+    t =    16.84s     Synthesize event
+    t =    17.13s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.58s Waiting 8.0s for "saveTemplateDefinition" Button to exist
+    t =    18.61s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateDefinition" Button`
+    t =    18.61s         Checking existence of `"saveTemplateDefinition" Button`
+    t =    18.66s Tap "cancelTemplateDefinition" Button
+    t =    18.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.66s     Find the "cancelTemplateDefinition" Button
+    t =    18.70s     Check for interrupting elements affecting "cancelTemplateDefinition" Button
+    t =    18.75s         Wait for com.apple.springboard to idle
+    t =    18.77s     Synthesize event
+    t =    19.06s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.55s Waiting 5.0s for "Discard changes" Button to exist
+    t =    20.58s     Checking `Expect predicate `existsNoRetry == 1` for object "Discard changes" Button`
+    t =    20.58s         Checking existence of `"Discard changes" Button`
+    t =    20.67s Tap "Discard changes" Button
+    t =    20.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.67s     Find the "Discard changes" Button
+    t =    20.76s     Check for interrupting elements affecting "Discard changes" Button
+    t =    20.80s         Wait for com.apple.springboard to idle
+    t =    20.82s     Synthesize event
+    t =    21.11s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.46s Tap "editTemplateDefinition" Button
+    t =    21.46s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.47s     Find the "editTemplateDefinition" Button
+    t =    21.57s     Check for interrupting elements affecting "editTemplateDefinition" Button
+    t =    21.60s         Wait for com.apple.springboard to idle
+    t =    21.62s     Synthesize event
+    t =    21.92s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.92s Checking existence of `"editTemplateTask-0" Button`
+    t =    21.97s Find the "editTemplateTask-0" Button
+    t =    22.02s Tap "editTemplateTask-0" Button
+    t =    22.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.02s     Find the "editTemplateTask-0" Button
+    t =    22.06s     Check for interrupting elements affecting "editTemplateTask-0" Button
+    t =    22.09s         Wait for com.apple.springboard to idle
+    t =    22.12s     Synthesize event
+    t =    22.41s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.44s Checking existence of `"templateTaskKind" Button`
+    t =    22.54s Find the "templateTaskKind" Button
+    t =    22.64s Tap "templateTaskKind" Button
+    t =    22.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.95s     Find the "templateTaskKind" Button
+    t =    23.05s     Check for interrupting elements affecting "templateTaskKind" Button
+    t =    23.11s         Wait for com.apple.springboard to idle
+    t =    23.13s     Synthesize event
+    t =    23.42s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.53s Waiting 5.0s for "Heading" Button to exist
+    t =    25.54s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    25.55s         Checking existence of `"Heading" Button`
+    t =    25.59s Tap "Heading" Button
+    t =    25.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.59s     Find the "Heading" Button
+    t =    25.64s     Check for interrupting elements affecting "Heading" Button
+    t =    25.71s         Wait for com.apple.springboard to idle
+    t =    25.73s     Synthesize event
+    t =    26.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.45s Tap "saveTemplateTask" Button
+    t =    27.45s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.45s     Find the "saveTemplateTask" Button
+    t =    27.52s     Check for interrupting elements affecting "saveTemplateTask" Button
+    t =    27.58s         Wait for com.apple.springboard to idle
+    t =    27.61s     Synthesize event
+    t =    27.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.33s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    28.52s Added attachment named 'cloud-template-heading-draft'
+    t =    28.52s Tap "saveTemplateDefinition" Button
+    t =    28.52s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.52s     Find the "saveTemplateDefinition" Button
+    t =    28.56s     Check for interrupting elements affecting "saveTemplateDefinition" Button
+    t =    28.60s         Wait for com.apple.springboard to idle
+    t =    28.62s     Synthesize event
+    t =    28.92s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.30s Terminate com.dbakp.taskfold.workflowteststeameditbridge:23008
+    t =    30.36s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    30.37s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:10:16.165 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:10:16.165 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    30.58s         Setting up automation session
+    t =    34.44s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.42s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    37.45s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    37.46s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    37.57s Terminate com.dbakp.taskfold.workflowteststeameditbridge:23082
+    t =    38.61s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testCloudTemplateHeadingDraftCancelSaveAndColdReturn]' passed (38.683 seconds).
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testNestedTemplateTypeEditPreservesWholeDefinition]' started.
+    t =     0.00s Start Test at 2026-10-26 19:10:24.483
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:10:24.503 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:10:24.503 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.23s         Setting up automation session
+    t =     4.06s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.04s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     7.05s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     7.05s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     7.16s Tap "openPrivateWorkflowRunFixture" Button
+    t =     7.16s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.16s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     7.20s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     7.23s         Wait for com.apple.springboard to idle
+    t =     7.25s     Synthesize event
+    t =     7.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.78s Waiting 8.0s for "editTemplateDefinition" Button to exist
+    t =     8.79s     Checking `Expect predicate `existsNoRetry == 1` for object "editTemplateDefinition" Button`
+    t =     8.79s         Checking existence of `"editTemplateDefinition" Button`
+    t =     8.88s Tap "editTemplateDefinition" Button
+    t =     8.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.88s     Find the "editTemplateDefinition" Button
+    t =     8.93s     Check for interrupting elements affecting "editTemplateDefinition" Button
+    t =     8.97s         Wait for com.apple.springboard to idle
+    t =     8.99s     Synthesize event
+    t =     9.29s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.29s Checking existence of `"editTemplateTask-0.0" Button`
+    t =     9.35s Find the "editTemplateTask-0.0" Button
+    t =     9.40s Tap "editTemplateTask-0.0" Button
+    t =     9.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.40s     Find the "editTemplateTask-0.0" Button
+    t =     9.44s     Check for interrupting elements affecting "editTemplateTask-0.0" Button
+    t =     9.48s         Wait for com.apple.springboard to idle
+    t =     9.50s     Synthesize event
+    t =     9.79s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.87s Waiting 8.0s for "saveTemplateTask" Button to exist
+    t =    10.88s     Checking `Expect predicate `existsNoRetry == 1` for object "saveTemplateTask" Button`
+    t =    10.88s         Checking existence of `"saveTemplateTask" Button`
+    t =    10.97s Checking existence of `"templateTaskKind" Button`
+    t =    11.04s Find the "templateTaskKind" Button
+    t =    11.12s Tap "templateTaskKind" Button
+    t =    11.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.12s     Find the "templateTaskKind" Button
+    t =    11.19s     Check for interrupting elements affecting "templateTaskKind" Button
+    t =    11.26s         Wait for com.apple.springboard to idle
+    t =    11.28s     Synthesize event
+    t =    11.57s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.68s Waiting 5.0s for "Task" Button to exist
+    t =    13.70s     Checking `Expect predicate `existsNoRetry == 1` for object "Task" Button`
+    t =    13.70s         Checking existence of `"Task" Button`
+    t =    13.75s Tap "Task" Button
+    t =    13.75s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.75s     Find the "Task" Button
+    t =    13.79s     Check for interrupting elements affecting "Task" Button
+    t =    13.86s         Wait for com.apple.springboard to idle
+    t =    13.88s     Synthesize event
+    t =    14.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.58s Tap "saveTemplateTask" Button
+    t =    15.58s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.59s     Find the "saveTemplateTask" Button
+    t =    15.67s     Check for interrupting elements affecting "saveTemplateTask" Button
+    t =    15.74s         Wait for com.apple.springboard to idle
+    t =    15.76s     Synthesize event
+    t =    16.06s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.50s Tap "saveTemplateDefinition" Button
+    t =    16.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.50s     Find the "saveTemplateDefinition" Button
+    t =    16.55s     Check for interrupting elements affecting "saveTemplateDefinition" Button
+    t =    16.59s         Wait for com.apple.springboard to idle
+    t =    16.61s     Synthesize event
+    t =    16.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.31s Terminate com.dbakp.taskfold.workflowteststeameditbridge:23106
+    t =    18.35s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    18.35s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 19:10:42.836 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:10:42.836 xcodebuild[22868:23250430] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    18.56s         Setting up automation session
+    t =    22.36s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.34s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    25.38s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    25.39s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    25.53s Terminate com.dbakp.taskfold.workflowteststeameditbridge:23148
+    t =    26.58s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testNestedTemplateTypeEditPreservesWholeDefinition]' passed (26.635 seconds).
+Test Suite 'TeamTemplateLibraryUITests' failed at 2026-10-26 19:10:51.117.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 116.652 (116.677) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 19:10:51.123.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 116.652 (116.683) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 19:10:51.123.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 116.652 (116.684) seconds
+2026-10-26 19:10:51.447 xcodebuild[22868:23250430] [MT] IDETestOperationsObserverDebug: 125.091 elapsed -- Testing started completed.
+2026-10-26 19:10:51.447 xcodebuild[22868:23250430] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 19:10:51.447 xcodebuild[22868:23250430] [MT] IDETestOperationsObserverDebug: 125.091 sec, +125.091 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-definition-headings-tablet-retry.xcresult
+
+Failing tests:
+	TeamTemplateLibraryUITests.testCloudCSVHeadingDefinitionCancelSaveAndColdReturn()
+	TeamTemplateLibraryUITests.testCloudCSVHeadingDefinitionCancelSaveAndColdReturn()
+
+** TEST EXECUTE FAILED **
+
+Testing started
