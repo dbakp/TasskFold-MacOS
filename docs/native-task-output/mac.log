@@ -1,0 +1,166 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-native-output-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testTaskCSVActualSaveOptionsCancelAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn" -resultBundlePath /tmp/taskfold-native-output-mac.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-native-output-mac.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 19:34:46.998428+0100 TaskfoldUITests-Runner[27498:23302990] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 19:34:47.085.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 19:34:47.086.
+Test Suite 'TaskfoldMacUITests' started at 2026-10-26 19:34:47.086.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTaskCSVActualSaveOptionsCancelAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 19:34:47.087
+    t =     0.22s Set Up
+    t =     0.23s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.23s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 19:34:47.398 xcodebuild[27492:23302785] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:34:47.398 xcodebuild[27492:23302785] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.06s         Wait for accessibility to load
+    t =     2.21s         Setting up automation session
+    t =     2.24s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.32s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.32s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.33s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.20s Waiting 15.0s for "Today" Button to exist
+    t =     4.24s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     4.24s         Checking existence of `"Today" Button`
+    t =     4.49s         Capturing element debug description
+    t =     5.22s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     5.22s         Checking existence of `"Today" Button`
+    t =     5.32s         Capturing element debug description
+    t =     6.25s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     6.25s         Checking existence of `"Today" Button`
+    t =     6.33s         Capturing element debug description
+    t =     7.27s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     7.27s         Checking existence of `"Today" Button`
+    t =     7.36s         Capturing element debug description
+    t =     8.29s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     8.30s         Checking existence of `"Today" Button`
+    t =     8.38s         Capturing element debug description
+    t =     9.21s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     9.21s         Checking existence of `"Today" Button`
+    t =     9.28s         Capturing element debug description
+    t =    10.22s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    10.22s         Checking existence of `"Today" Button`
+    t =    10.30s         Capturing element debug description
+    t =    11.24s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    11.24s         Checking existence of `"Today" Button`
+    t =    11.32s         Capturing element debug description
+    t =    12.26s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    12.26s         Checking existence of `"Today" Button`
+    t =    12.35s         Capturing element debug description
+    t =    13.28s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    13.28s         Checking existence of `"Today" Button`
+    t =    13.36s         Capturing element debug description
+    t =    14.30s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    14.30s         Checking existence of `"Today" Button`
+    t =    14.38s         Capturing element debug description
+    t =    15.21s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    15.21s         Checking existence of `"Today" Button`
+    t =    15.29s         Capturing element debug description
+    t =    16.23s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    16.23s         Checking existence of `"Today" Button`
+    t =    16.32s         Capturing element debug description
+    t =    17.25s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    17.25s         Checking existence of `"Today" Button`
+    t =    17.33s         Capturing element debug description
+    t =    18.21s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    18.21s         Checking existence of `"Today" Button`
+    t =    18.28s         Capturing element debug description
+    t =    18.29s     Checking existence of `"Today" Button`
+    t =    18.36s Collecting debug information to assist test failure triage
+    t =    18.36s     Requesting snapshot of accessibility hierarchy for app with pid 27501
+/tmp/taskfold-native-output-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:24: error: -[TaskfoldUITests.TaskfoldMacUITests testTaskCSVActualSaveOptionsCancelAndColdReturn] : XCTAssertTrue failed
+    t =    18.72s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTaskCSVActualSaveOptionsCancelAndColdReturn]' failed (19.292 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 19:35:06.381
+    t =     0.12s Set Up
+    t =     0.13s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.13s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.13s         Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:27501
+2026-10-26 19:35:07.592 xcodebuild[27492:23302785] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 19:35:07.592 xcodebuild[27492:23302785] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.71s         Wait for accessibility to load
+    t =     1.79s         Setting up automation session
+    t =     1.81s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.86s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.86s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.87s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.47s Waiting 15.0s for "Today" Button to exist
+    t =     3.51s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     3.51s         Checking existence of `"Today" Button`
+    t =     3.74s         Capturing element debug description
+    t =     4.47s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     4.47s         Checking existence of `"Today" Button`
+    t =     4.55s         Capturing element debug description
+    t =     5.48s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     5.48s         Checking existence of `"Today" Button`
+    t =     5.57s         Capturing element debug description
+    t =     6.50s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     6.51s         Checking existence of `"Today" Button`
+    t =     6.59s         Capturing element debug description
+    t =     7.53s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     7.53s         Checking existence of `"Today" Button`
+    t =     7.63s         Capturing element debug description
+    t =     8.56s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     8.56s         Checking existence of `"Today" Button`
+    t =     8.66s         Capturing element debug description
+    t =     9.49s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     9.49s         Checking existence of `"Today" Button`
+    t =     9.57s         Capturing element debug description
+    t =    10.50s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    10.50s         Checking existence of `"Today" Button`
+    t =    10.58s         Capturing element debug description
+    t =    11.50s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    11.50s         Checking existence of `"Today" Button`
+    t =    11.60s         Capturing element debug description
+    t =    12.53s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    12.53s         Checking existence of `"Today" Button`
+    t =    12.62s         Capturing element debug description
+    t =    13.54s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    13.54s         Checking existence of `"Today" Button`
+    t =    13.63s         Capturing element debug description
+    t =    14.57s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    14.57s         Checking existence of `"Today" Button`
+    t =    14.65s         Capturing element debug description
+    t =    15.48s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    15.48s         Checking existence of `"Today" Button`
+    t =    15.56s         Capturing element debug description
+    t =    16.49s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    16.49s         Checking existence of `"Today" Button`
+    t =    16.57s         Capturing element debug description
+    t =    17.48s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    17.48s         Checking existence of `"Today" Button`
+    t =    17.55s         Capturing element debug description
+    t =    17.55s     Checking existence of `"Today" Button`
+    t =    17.63s Collecting debug information to assist test failure triage
+    t =    17.63s     Requesting snapshot of accessibility hierarchy for app with pid 27562
+/tmp/taskfold-native-output-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:24: error: -[TaskfoldUITests.TaskfoldMacUITests testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn] : XCTAssertTrue failed
+    t =    17.80s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn]' failed (18.347 seconds).
+Test Suite 'TaskfoldMacUITests' failed at 2026-10-26 19:35:24.728.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 37.639 (37.642) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 19:35:24.729.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 37.639 (37.644) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 19:35:24.731.
+	 Executed 2 tests, with 2 failures (0 unexpected) in 37.639 (37.645) seconds
+2026-10-26 19:35:25.029 xcodebuild[27492:23302785] [MT] IDETestOperationsObserverDebug: 38.996 elapsed -- Testing started completed.
+2026-10-26 19:35:25.029 xcodebuild[27492:23302785] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 19:35:25.029 xcodebuild[27492:23302785] [MT] IDETestOperationsObserverDebug: 38.996 sec, +38.996 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-native-output-mac.xcresult
+
+Failing tests:
+	TaskfoldMacUITests.testTaskCSVActualSaveOptionsCancelAndColdReturn()
+	TaskfoldMacUITests.testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn()
+
+** TEST EXECUTE FAILED **
+
+Testing started

@@ -1,0 +1,42 @@
+[
+  {
+    "platform": "phone",
+    "rows": 4,
+    "columns": 19,
+    "sha256": "fb9963886b49953f20b1dd74832b1837312ebe66b1f404e3b1603c5371a90ffc",
+    "markerAndReferences": true,
+    "headingsRetained": true,
+    "notesExcluded": false,
+    "literalTitlesAndAccountPrivacy": true
+  },
+  {
+    "platform": "tablet",
+    "rows": 4,
+    "columns": 19,
+    "sha256": "fb9963886b49953f20b1dd74832b1837312ebe66b1f404e3b1603c5371a90ffc",
+    "markerAndReferences": true,
+    "headingsRetained": true,
+    "notesExcluded": false,
+    "literalTitlesAndAccountPrivacy": true
+  },
+  {
+    "platform": "mac",
+    "rows": 4,
+    "columns": 19,
+    "sha256": "fb9963886b49953f20b1dd74832b1837312ebe66b1f404e3b1603c5371a90ffc",
+    "markerAndReferences": true,
+    "headingsRetained": true,
+    "notesExcluded": false,
+    "literalTitlesAndAccountPrivacy": true
+  },
+  {
+    "platform": "mac-exclusions",
+    "rows": 3,
+    "columns": 19,
+    "sha256": "59f66d3b1af56ac18cd152167c1088c04076a3ae1d4647f726248c88710c6f1a",
+    "markerAndReferences": true,
+    "headingsRetained": true,
+    "notesExcluded": true,
+    "literalTitlesAndAccountPrivacy": true
+  }
+]

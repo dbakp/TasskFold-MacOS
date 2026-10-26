@@ -7994,3 +7994,28 @@ local-only guard, and wider file-provider delivery, concurrency, accessibility,
 installed-widget and cross-device acceptance remains open. No normal client
 flag or hosted configuration changed. The previously deferred provider setup,
 remote reminders, old-client rollout safeguards and distribution stay deferred.
+
+## 26 October — actual native task output
+
+Closed the scoped native Save/readback gap for task-row CSV on Mac, iPhone and
+iPad, plus Mac PDF Save and Print-panel cancellation. The three full task CSVs
+are byte-identical, retaining heading/checklist relationships and notes without
+account/record identities. Mac's explicit exclusions produce the expected three
+rows with no notes. The actual saved two-page A4 PDF retains all eight sections
+and the final instruction; both final rendered pages match the inspected output.
+All scenarios preserve exact saved tables, including cold return.
+
+Mac now advertises Print or Export in the list menu and the active scene's File
+menu; the latter declares Command-P and disables while its review is open. Both
+clients clear the preceding CSV success message when starting a new Save, so a
+cancelled later attempt cannot retain that message. Four final native scenarios
+pass (two Mac, one each phone/tablet). See NATIVE_TASK_OUTPUT.md and
+native-task-output/ for source/signing bindings, actual files and all results.
+
+A macOS local-network permission prompt interrupted keyboard attempts and covered
+part of the Mac app screenshots. It was not accepted by automation. File-menu
+and toolbar routes, readback/cancellation and cold preservation pass; the wider
+keyboard and unobstructed Mac visual checks remain open, alongside source/account
+races, external-provider delivery, spoken/largest-text and cross-device work.
+No print job, real data, hosted configuration, normal authoring flag or user-
+deferred release/provider/reminder/upgrade setting changed. Rank 3/Px stay active.

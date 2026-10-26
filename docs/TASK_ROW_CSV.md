@@ -73,3 +73,11 @@ not completed provider delivery, saved-file output or native source/account race
 Those, Mac runtime, spoken/largest-text and real-device/cross-device checks remain
 open. Normal heading authoring, hosted configuration, release and rollout gates
 remain unchanged. See task-row-csv/ for bindings, results and retained failures.
+
+### Native Save/readback follow-up — 26 October
+
+The scoped native Mac runtime and actual local saved-file checks described above
+now pass; iPhone/iPad actual Save/readback also pass. Mac options/cancellation,
+byte-identical full CSVs and exact saved-table/cold preservation are verified.
+See NATIVE_TASK_OUTPUT.md for exact results, remaining keyboard/visual limits and
+source/account/provider/spoken gates; this does not close the broader rank.

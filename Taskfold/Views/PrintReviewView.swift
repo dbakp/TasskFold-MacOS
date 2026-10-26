@@ -7,6 +7,16 @@ import UIKit
 import AppKit
 #endif
 
+#if os(macOS)
+private struct TaskPrintActionKey: FocusedValueKey { typealias Value = () -> Void }
+extension FocusedValues {
+    var taskfoldPrint: (() -> Void)? {
+        get { self[TaskPrintActionKey.self] }
+        set { self[TaskPrintActionKey.self] = newValue }
+    }
+}
+#endif
+
 struct PrintReviewRequest: Identifiable {
     let id = UUID()
     let document: PrintDocument
@@ -260,7 +270,7 @@ private struct TaskCSVReview: View {
                         Section {
                             Text("\(output.rows.count) rows · CSV").font(.headline).accessibilityIdentifier("csvRowCount")
                             Text("Formula-like text is protected for spreadsheets. Taskfold reads it back as the original text.").font(.caption).foregroundStyle(.secondary)
-                            Button("Save CSV…", systemImage: "square.and.arrow.down") { guard available, let current = prepared else { return }; exportData = current.data; exporting = true }.accessibilityIdentifier("saveTaskCSV")
+                            Button("Save CSV…", systemImage: "square.and.arrow.down") { guard available, let current = prepared else { return }; exportData = current.data; status = nil; exporting = true }.accessibilityIdentifier("saveTaskCSV")
                             ShareLink(item: transfer(output.data, selected: options), preview: SharePreview(request.document.title, image: Image(systemName: "tablecells"))) { Label("Share CSV…", systemImage: "square.and.arrow.up") }.accessibilityIdentifier("shareTaskCSV")
                             if let status { Text(status).foregroundStyle(.secondary).accessibilityIdentifier("csvExportStatus") }
                         }

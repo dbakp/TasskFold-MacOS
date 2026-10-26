@@ -1,6 +1,94 @@
 import XCTest
 import AppKit
+import PDFKit
 import Darwin
+
+extension TaskfoldMacUITests {
+    @MainActor private func outputTables() throws -> NSDictionary {
+        let cache = URL(fileURLWithPath: "/Users/" + NSUserName()).appendingPathComponent("Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        return try XCTUnwrap((JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? NSDictionary)?["tables"] as? NSDictionary)
+    }
+    @MainActor private func outputFront(_ app: XCUIApplication) -> XCUIElement {
+        app.sheets.count > 0 ? app.sheets.element(boundBy: app.sheets.count - 1) : app.windows.firstMatch
+    }
+    @MainActor private func outputReveal(_ control: XCUIElement, _ app: XCUIApplication) {
+        for _ in 0..<15 where !control.isHittable { outputFront(app).scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -280) }
+        XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
+    }
+    @MainActor private func outputStart(_ app: XCUIApplication, longNotes: Bool) throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
+        continueAfterFailure = false
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "-localMode", "YES", "-appearance", "light"]
+        app.launchArguments += longNotes ? ["--print-output-fixture"] : ["--heading-progress-fixture", "--heading-planner-fixture"]
+        try launchHeadingWorkspace(app)
+        let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 15), app.debugDescription); today.click()
+        if longNotes {
+            app.menuBars.menuBarItems["File"].click()
+            let command = app.menuItems["Print or Export…"]
+            XCTAssertTrue(command.waitForExistence(timeout: 5)); XCTAssertTrue(command.isEnabled); command.click()
+        } else {
+            let menu = app.menuButtons["Task options"].firstMatch
+            XCTAssertTrue(menu.waitForExistence(timeout: 10), app.debugDescription); menu.click()
+            let command = app.menuItems["openPrintReview"]
+            XCTAssertTrue(command.waitForExistence(timeout: 5), app.debugDescription); command.click()
+        }
+        XCTAssertTrue(app.staticTexts["printPageCount"].waitForExistence(timeout: 15), app.debugDescription)
+    }
+    @MainActor private func outputSave(_ button: String, suffix: String, _ app: XCUIApplication) throws -> URL {
+        let control = app.buttons[button]; outputReveal(control, app); control.click()
+        let panel = app.sheets["save-panel"], save = panel.buttons["OKButton"]
+        XCTAssertTrue(save.waitForExistence(timeout: 10), app.debugDescription)
+        let file = URL(fileURLWithPath: "/tmp/taskfold-output-proof-" + UUID().uuidString.lowercased() + "." + suffix)
+        let name = panel.textFields["saveAsNameTextField"]; name.click(); name.typeKey("a", modifierFlags: .command); name.typeText(file.lastPathComponent)
+        app.typeKey("g", modifierFlags: [.command, .shift])
+        let location = outputFront(app).textFields.firstMatch; XCTAssertTrue(location.waitForExistence(timeout: 5))
+        location.click(); location.typeKey("a", modifierFlags: .command); location.typeText("/tmp"); location.typeKey(.return, modifierFlags: [])
+        save.click()
+        let written = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: file.path) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [written], timeout: 15), .completed)
+        return file
+    }
+    @MainActor func testTaskCSVActualSaveOptionsCancelAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try outputStart(app, longNotes: false)
+        let before = try outputTables()
+        app.buttons["openTaskCSV"].click()
+        let count = app.staticTexts["csvRowCount"]; XCTAssertTrue(count.waitForExistence(timeout: 10))
+        XCTAssertEqual(count.value as? String ?? count.label, "4 rows · CSV")
+        let file = try outputSave("saveTaskCSV", suffix: "csv", app)
+        let bytes = try Data(contentsOf: file), text = String(decoding: bytes, as: UTF8.self)
+        XCTAssertTrue(text.contains("taskfold-task-rows-v1")); XCTAssertTrue(text.contains("Launch context")); XCTAssertTrue(text.contains("Keep the work’s own notes."))
+        XCTAssertFalse(text.contains("f1810000-0000-4000-8000-000000000001"))
+        let attachment = XCTAttachment(data: bytes, uniformTypeIdentifier: "public.comma-separated-values-text"); attachment.name = "Actual Mac task-row CSV"; attachment.lifetime = .keepAlways; add(attachment)
+        app.switches["csvIncludeNotes"].click(); app.switches["csvIncludeChecklists"].click()
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@ OR label == %@", "3 rows · CSV", "3 rows · CSV"), object: count)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 10), .completed)
+        let reduced = try outputSave("saveTaskCSV", suffix: "csv", app)
+        let trimmed = try Data(contentsOf: reduced); XCTAssertFalse(String(decoding: trimmed, as: UTF8.self).contains("Keep the work’s own notes."))
+        let second = XCTAttachment(data: trimmed, uniformTypeIdentifier: "public.comma-separated-values-text"); second.name = "Actual Mac CSV without notes or checklists"; second.lifetime = .keepAlways; add(second)
+        let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); image.name = "Mac task CSV review"; image.lifetime = .keepAlways; add(image)
+        app.buttons["saveTaskCSV"].click(); let cancel = app.sheets["save-panel"].buttons["CancelButton"]; XCTAssertTrue(cancel.waitForExistence(timeout: 10)); cancel.click()
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 10)); XCTAssertFalse(app.staticTexts["csvExportStatus"].exists); XCTAssertEqual(try outputTables(), before)
+        app.buttons["closeTaskCSV"].click(); app.buttons["closePrintReview"].click()
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertEqual(try outputTables(), before)
+        // The outer acceptance driver removes only verified synthetic outputs. The UI runner has read access, not delete authority, for files saved by the host.
+    }
+    @MainActor func testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try outputStart(app, longNotes: true)
+        let before = try outputTables(), file = try outputSave("saveTaskPDF", suffix: "pdf", app)
+        let bytes = try Data(contentsOf: file), pdf = try XCTUnwrap(PDFDocument(data: bytes)), text = try XCTUnwrap(pdf.string)
+        XCTAssertGreaterThan(pdf.pageCount, 1); XCTAssertTrue(text.contains("FINAL-NATIVE-PRINT-INSTRUCTION")); XCTAssertTrue(text.contains("Design section 1")); XCTAssertTrue(text.contains("Design section 8"))
+        for index in 0..<pdf.pageCount { let bounds = try XCTUnwrap(pdf.page(at: index)).bounds(for: .mediaBox); XCTAssertEqual(bounds.width, 595, accuracy: 1); XCTAssertEqual(bounds.height, 842, accuracy: 1) }
+        let attachment = XCTAttachment(data: bytes, uniformTypeIdentifier: "com.adobe.pdf"); attachment.name = "Actual Mac complete A4 task PDF"; attachment.lifetime = .keepAlways; add(attachment)
+        let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); image.name = "Mac PDF review"; image.lifetime = .keepAlways; add(image)
+        app.buttons["printTaskPDF"].click()
+        let cancel = app.windows.buttons["Cancel"].firstMatch; XCTAssertTrue(cancel.waitForExistence(timeout: 15), app.debugDescription); cancel.click()
+        XCTAssertTrue(app.buttons["saveTaskPDF"].isHittable); XCTAssertEqual(try outputTables(), before)
+        app.buttons["saveTaskPDF"].click(); let saveCancel = app.sheets["save-panel"].buttons["CancelButton"]; XCTAssertTrue(saveCancel.waitForExistence(timeout: 10)); saveCancel.click()
+        XCTAssertTrue(saveCancel.waitForNonExistence(timeout: 10)); app.buttons["closePrintReview"].click()
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app); XCTAssertEqual(try outputTables(), before)
+        // Verified synthetic output cleanup belongs to the outer acceptance driver.
+    }
+}
 
 final class TaskfoldMacUITests: XCTestCase {
     @MainActor func testTeamOrganizationOverviewAndRoleScopedDetail() {

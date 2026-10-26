@@ -238,6 +238,7 @@ struct TaskListView: View {
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
+        .focusedSceneValue(\.taskfoldPrint, printAction)
         .sheet(item: $printReview) { PrintReviewView(request: $0) }
         .alert("Could not prepare document", isPresented: Binding(get: { printFailure != nil }, set: { if !$0 { printFailure = nil } })) { Button("OK") { printFailure = nil } } message: { Text(printFailure ?? "") }
         .onChange(of: store.workspaceGeneration) { _, _ in printReview = nil; printFailure = nil; rowSwipe.cancel() }
@@ -438,6 +439,10 @@ struct TaskListView: View {
         let detail = Date().formatted(.dateTime.day().month(.wide).year()) + (workspace.search.isEmpty ? "" : " · Search: " + workspace.search) + (priorityFilter == 0 ? "" : " · Priority \(priorityFilter)")
         return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.allProjects, labels: store.labels, hierarchyRoots: workspace.hierarchyPresentation ? store.tasks : nil, expandOrdinaryChecklists: !workspace.hierarchyFilter, assigneeName: store.assigneeName)
     }
+    private var printAction: (() -> Void)? {
+        guard printReview == nil, store.filterError(scope) == nil else { return nil }
+        return { preparePrint() }
+    }
     private func preparePrint() {
         do {
             let document = try printableDocument(), binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)
@@ -488,7 +493,7 @@ struct TaskListView: View {
 
     private var viewOptions: some View {
             Menu {
-                Button("Print or Save PDF…", systemImage: "printer") { preparePrint() }.disabled(store.filterError(scope) != nil).keyboardShortcut("p", modifiers: .command).accessibilityIdentifier("openPrintReview")
+                Button("Print or Export…", systemImage: "printer") { preparePrint() }.disabled(store.filterError(scope) != nil).accessibilityIdentifier("openPrintReview")
                 if store.teamTaskMovesAvailable { Button("Recent Shared Task Moves", systemImage: "arrow.left.arrow.right") { workspace.teamTaskMove = TeamTaskMoveRequest() }.accessibilityIdentifier("openRecentTeamTaskMoves") }
                 Divider()
                 Button(store.isFavorite(scope) ? "Remove Favorite" : "Add Favorite", systemImage: "star") { store.toggleFavorite(scope) }.accessibilityIdentifier("toggleFavorite")

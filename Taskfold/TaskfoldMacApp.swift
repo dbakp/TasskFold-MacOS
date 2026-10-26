@@ -153,10 +153,14 @@ final class NotificationRoute {
 
 /// Menu bar commands mirror every keyboard shortcut in the window so they are discoverable and scriptable.
 struct TaskfoldCommands: Commands {
+    @FocusedValue(\.taskfoldPrint) private var printAction
     @Environment(\.openSettings) private var openSettings
     let workspace: Workspace
     let store: Store
     var body: some Commands {
+        CommandGroup(replacing: .printItem) {
+            Button("Print or Export…") { printAction?() }.keyboardShortcut("p", modifiers: .command).disabled(printAction == nil)
+        }
         CommandGroup(replacing: .newItem) {
             Button("New Task") { workspace.quickAddFocusRequest += 1 }.keyboardShortcut("n", modifiers: .command)
             Button("New Project…") { workspace.newProjectRequest += 1 }.keyboardShortcut("n", modifiers: [.command, .shift])
