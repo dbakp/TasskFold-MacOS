@@ -184,3 +184,56 @@ extension PlannerTests {
         XCTAssertTrue(TaskPlanner.tomorrowFields(task: task("invalid", ""), now: Date(timeIntervalSince1970: .nan), calendar: calendar()).isEmpty)
     }
 }
+
+final class CalendarWorkReadingTests: XCTestCase {
+    private func node(_ id: String, date: String = "2026-10-26", heading: Bool = false, completed: Bool = false, children: [Record] = []) -> Record {
+        Record(["id": .string(id), "title": .string(id), "due_date": .string(date), "is_heading": .bool(heading), "completed": .bool(completed), "subtasks": .array(children.map { .object($0.fields) })])
+    }
+    private func reading(_ roots: [Record], zone: String = "Europe/Copenhagen") -> CalendarWorkReading {
+        var calendar = Calendar(identifier: .gregorian); calendar.timeZone = TimeZone(identifier: zone)!
+        return CalendarWorkReading(work: ProductiveTaskReading(tasks: roots), calendar: calendar)
+    }
+    func testHeadingDatesDoNotReplaceIndependentChildDatesOrCountChecklists() {
+        let child = node("child", date: "2026-10-27", children: [node("checklist", date: "2026-10-28")])
+        let root = node("root", heading: true, children: [child, node("nested", heading: true, children: [node("second", date: "2026-11-01")])])
+        let value = reading([root])
+        XCTAssertEqual(value.open(on: "2026-10-26"), 0)
+        XCTAssertEqual(value.open(on: "2026-10-27"), 1)
+        XCTAssertEqual(value.open(on: "2026-10-28"), 0)
+        XCTAssertEqual(value.open(on: "2026-11-01"), 1)
+        XCTAssertFalse(value.incomplete)
+        XCTAssertEqual(value.rowsByDay["2026-10-27"]?.first?.id, SubtaskTree.reference(parent: "root", key: "child"))
+    }
+    func testCompletedRowsRemainReviewableButDoNotInflateDayHeatmaps() {
+        let value = reading([node("root", heading: true, children: [node("done", completed: true), node("open")])])
+        XCTAssertEqual(value.rowsByDay["2026-10-26"]?.count, 2)
+        XCTAssertEqual(value.open(on: "2026-10-26"), 1)
+        let open = value.rowsByDay["2026-10-26"]!.first { !$0.completed }!
+        XCTAssertEqual(value.open(on: "2026-10-26", excluding: [open.id]), 0)
+    }
+    func testIdenticalChildKeysInDifferentRootsKeepIndependentRoutes() {
+        let value = reading([node("a", heading: true, children: [node("same")]), node("b", heading: true, children: [node("same")])])
+        XCTAssertEqual(value.open(on: "2026-10-26"), 2)
+        XCTAssertEqual(Set(value.rowsByDay["2026-10-26"]!.map(\.id)).count, 2)
+    }
+    func testUnreadableIdentityNeverBecomesAnEditableCalendarRow() {
+        var child = node("child"); child["id"] = .null
+        let value = reading([node("root", heading: true, children: [child])])
+        XCTAssertEqual(value.open(on: "2026-10-26"), 1)
+        XCTAssertTrue(value.rowsByDay.isEmpty)
+        XCTAssertTrue(value.incomplete)
+    }
+    func testFixedChildSchedulesUseTheViewedTimeZoneAcrossMonthBoundaries() {
+        var child = node("child", date: "2026-11-01")
+        child["due_time"] = .string("00:30"); child["time_zone"] = .string("Europe/Copenhagen")
+        child["scheduled_at"] = .string("2026-10-31T23:30:00Z")
+        let root = node("root", heading: true, children: [child])
+        XCTAssertEqual(reading([root], zone: "America/New_York").open(on: "2026-10-31"), 1)
+        XCTAssertEqual(reading([root]).open(on: "2026-11-01"), 1)
+    }
+    func testSourceRootWinsOverAlreadyProjectedChildWithoutDuplicateWork() {
+        let root = node("root", heading: true, children: [node("child")])
+        let projected = ProductiveTaskReading(tasks: [root]).work
+        XCTAssertEqual(reading([root] + projected).open(on: "2026-10-26"), 1)
+    }
+}

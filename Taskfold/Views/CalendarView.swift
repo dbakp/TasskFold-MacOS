@@ -31,19 +31,16 @@ struct CalendarView: View {
     private var selected: Date { workspace.calendarDay }
     private var layout: Animation? { Motion.respecting(reduceMotion, Motion.layout) }
 
-    private var byDay: [String: [Record]] {
-        var map: [String: [Record]] = [:]
-        for task in store.tasks { let day = TaskPlanner.plannedDay(task); if !day.isEmpty { map[day, default: []].append(task) } }
-        return map
-    }
+    @State private var periodWork = CalendarWorkReading(work: ProductiveTaskReading(tasks: []))
+    private func rebuildIndex() { periodWork = CalendarWorkReading(work: store.productiveReading, calendar: calendar) }
     private func tasks(on day: Date) -> [Record] {
         let key = Dates.day(day)
-        return workspace.ordered(byDay[key] ?? [], day: key).sorted { a, b in
+        return workspace.ordered(periodWork.rowsByDay[key] ?? [], day: key).sorted { a, b in
             if a.completed != b.completed { return !a.completed }
             return false
         }
     }
-    private func open(on day: Date) -> Int { tasks(on: day).filter { !$0.completed && !workspace.completing.contains($0.id) }.count }
+    private func open(on day: Date) -> Int { periodWork.open(on: Dates.day(day), excluding: workspace.completing) }
 
     // MARK: Period math
 
@@ -89,6 +86,12 @@ struct CalendarView: View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
                 header
+                if periodWork.incomplete {
+                    Label("Some work needs review. Calendar totals include only readable tasks.", systemImage: "exclamationmark.circle")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 16).padding(.bottom, 8)
+                        .accessibilityIdentifier("calendarPartialWork")
+                }
                 Divider()
                 Group {
                     switch mode {
@@ -116,6 +119,10 @@ struct CalendarView: View {
         }
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .onChange(of: store.taskRevision, initial: true) { _, _ in rebuildIndex() }
+        .onChange(of: ProjectOrganization.archivedIDs(in: store.allProjects)) { _, _ in rebuildIndex() }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name.NSSystemTimeZoneDidChange)) { _ in rebuildIndex() }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in rebuildIndex() }
         .onChange(of: periodTitle) { _, value in if workspace.section == .calendar { workspace.navigationSubtitle = value } }
         .toolbar {
             if workspace.section == .calendar {
@@ -297,7 +304,7 @@ struct CalendarView: View {
         let selectedTask = workspace.selection.contains(task.id)
         let projectName = store.record("projects", id: task.string("project_id"))?.name ?? ""
         let plannedTime = task.string("due_time").isEmpty ? "" : TaskRowView.timeText(TaskPlanner.clockValue(task))
-        let accessibilityValue = [task.completed ? "Completed" : "Open", plannedTime, projectName]
+        let accessibilityValue = [task.completed ? "Completed" : "Open", store.productiveReading.parents[task.id] ?? "", plannedTime, projectName]
             .filter { !$0.isEmpty }.joined(separator: ", ")
         return calendarCardContent(task)
         .padding(.horizontal, 8).padding(.vertical, density == "compact" ? 5 : 8)
@@ -345,6 +352,9 @@ struct CalendarView: View {
                 .buttonStyle(GlyphStyle()).pointerStyle(.link)
                 .accessibilityLabel(task.completed ? "Reopen \(task.title)" : "Complete \(task.title)")
             VStack(alignment: .leading, spacing: 2) {
+                if let parent = store.productiveReading.parents[task.id] {
+                    Text(parent).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                }
                 Text(task.title).font(.callout).lineLimit(2).truncationMode(.tail).foregroundStyle(task.completed ? .secondary : .primary).strikethrough(task.completed)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 6) {

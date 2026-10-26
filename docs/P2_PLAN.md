@@ -5112,3 +5112,17 @@ See [TASK_WORK_HISTORY.md](TASK_WORK_HISTORY.md) and `work-history/` for exact
 source bindings/results, partial coverage rules and cleanup. Next: broader
 calendar periods, remaining heading/adapters acceptance and the other Px work.
 The full goal remains active; user-deferred release/provider gates stay pending.
+
+
+### Calendar periods and productive work — 26 October 2026
+
+Week, three-day, five-day, month and year calendars now project ordinary work
+inside headings, using each task's own date and viewed time zone. Heading and
+checklist dates do not inflate totals. Stable children use existing hierarchy
+editing/completion paths; unknown identities remain non-actionable with a partial
+notice. Project archive changes refresh the calendar immediately. Normal heading
+authoring remains off. See [TASK_CALENDAR_WORK.md](TASK_CALENDAR_WORK.md) and
+`calendar-work/` for verification, harness corrections and remaining limits.
+This completes the period-projection implementation; wider native Mac,
+accessibility, adapter and cross-device acceptance remains open. The full Px
+goal and user-deferred release/provider gates remain active/pending respectively.

@@ -56,6 +56,27 @@ struct PlannerCapacity: Equatable {
     var afterKnownWork: Int { workingMinutes - busyMinutes - estimatedMinutes }
 }
 
+/// Calendar periods count productive work, but expose actions only for stable identities.
+/// Heading dates and ordinary tasks' checklist dates never create duplicate work.
+struct CalendarWorkReading {
+    let workByDay: [String: [Record]]
+    let rowsByDay: [String: [Record]]
+    let incomplete: Bool
+    init(work: ProductiveTaskReading, calendar: Calendar = .current) {
+        var counts: [String: [Record]] = [:], rows: [String: [Record]] = [:]
+        for task in work.work {
+            let day = TaskPlanner.plannedDay(task, calendar: calendar)
+            guard !day.isEmpty else { continue }
+            counts[day, default: []].append(task)
+            if work.contains(task.id) { rows[day, default: []].append(task) }
+        }
+        workByDay = counts; rowsByDay = rows; incomplete = work.incomplete
+    }
+    func open(on day: String, excluding: Set<String> = []) -> Int {
+        (workByDay[day] ?? []).filter { !$0.completed && !excluding.contains($0.id) }.count
+    }
+}
+
 enum TaskPlanner {
     static func dayKey(_ date: Date, calendar: Calendar = .current) -> String {
         var iso = Calendar(identifier: .gregorian); iso.timeZone = calendar.timeZone
