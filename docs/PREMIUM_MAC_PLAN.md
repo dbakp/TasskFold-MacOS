@@ -8045,3 +8045,12 @@ Undo/Redo, source/account races, spoken/largest-text, installed widgets and cros
 device acceptance remain open. Normal app flags and hosted configuration were not
 changed. Older-client rollout, release/distribution, remote reminders and other
 user-deferred work stays deferred; rank 3/Px remain active.
+
+26 October workflow retry safety: all fresh run records now use the existing
+create-only transport, preserving later project/section/label/task/order edits
+after a lost reply. 182 selected Core cases pass, including three new queue and
+HTTP peer regressions. The premium creation UI is unchanged. Full workflow Undo
+needs service-side deletion guards for later edits/dependent work; this is still
+an open safety gap, not accepted by the retry tests. See P2_PLAN.md and
+workflow-creation-retry/validation.json. No new installed-native or hosted-service
+acceptance is claimed and normal flags/release deferrals remain unchanged.
