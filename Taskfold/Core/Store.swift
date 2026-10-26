@@ -3797,6 +3797,7 @@ extension Store {
                 try PersonalHeadingNativePeer.reset(row)
             }
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
+            if WorkflowUndoNativePeer.enabled { snapshot.tables[WorkflowTemplate.table] = [WorkflowUndoNativePeer.template] }
             if TeamTaskMoveNativePeer.enabled {
                 row["section_id"] = .null
                 row["assigned_to"] = .string(TeamEditorNativeFixture.recipientID)

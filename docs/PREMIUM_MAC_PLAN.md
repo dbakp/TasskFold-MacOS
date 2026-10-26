@@ -8065,3 +8065,14 @@ The creation UI is unchanged; explicit notices cover refusal/missing support.
 Installed native create/Undo/Redo/refusal/relaunch, hosted/paired-client and largest
 workflow performance acceptance remain open. See workflow-undo/validation.json
 and the latest P2_PLAN.md stage. Existing release/provider/reminder deferrals stay.
+
+26 October installed workflow history: all four native client scenarios pass on
+both iPhone and iPad (eight final passes), including structured heading workflow
+creation, Undo/Redo/cold return, exact lost-reply retry, incoming-work refusal and
+unsupported-service admission. Mac's same scenario source and signed isolated host
+build successfully, but XCTest's runner stopped before app launch while enabling
+UI Automation; Developer mode is disabled. This is an environment initialization
+failure, not accepted Mac runtime. The approval question is pending; one bounded
+Mac build/host cache is retained to avoid rebuilding. See workflow-undo-native/
+validation.json for evidence, signature/source bindings and exact retained paths.
+Normal app UX/flags, real data and deferred release/provider settings are unchanged.

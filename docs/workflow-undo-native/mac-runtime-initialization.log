@@ -1,0 +1,30 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn" -resultBundlePath /tmp/taskfold-workflow-native-mac-first.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-workflow-native-mac-first.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 21:08:42.791463+0100 TaskfoldUITests-Runner[49400:23547843] [Default] Running tests...
+2026-10-26 21:09:42.897959+0100 TaskfoldUITests-Runner[49400:23547843] [Default] Failed to initialize for UI testing: Error Domain=com.apple.dt.XCTest.XCTFuture Code=1000 "Timed out while enabling automation mode." UserInfo={NSLocalizedDescription=Timed out while enabling automation mode.}
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /tmp/taskfold-workflow-native-mac-first.xcresult
+
+2026-10-26 21:09:43.193 xcodebuild[49377:23547585] [MT] IDETestOperationsObserverDebug: 61.605 elapsed -- Testing started completed.
+2026-10-26 21:09:43.193 xcodebuild[49377:23547585] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 21:09:43.193 xcodebuild[49377:23547585] [MT] IDETestOperationsObserverDebug: 61.605 sec, +61.605 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-workflow-native-mac-first.xcresult
+
+Testing failed:
+	TaskfoldUITests-Runner (49400) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.))
+
+** TEST EXECUTE FAILED **
+
+Testing started

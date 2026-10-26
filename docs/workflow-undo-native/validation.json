@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-26",
+  "repository": "TasskFold-MacOS",
+  "finalInstalledSimulatorPasses": {
+    "iPhone": 4,
+    "iPad": 4
+  },
+  "macRuntime": {
+    "passes": 0,
+    "runnerInitializationFailures": 1,
+    "appLaunched": false,
+    "reason": "Timed out while enabling automation mode; Developer mode disabled",
+    "authorizationQuestion": "pending; no developer-mode change performed"
+  },
+  "macSignedBuild": "passed; strict verification passed",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "c2ffc1ab0c87444e0ab0f770cdec6b49bed77729b118c7ce1282934cd9b5929f",
+    "Taskfold/TeamTemplateNativeFixture.swift": "94726f3917e308f3b0d87938923ed4029d9c29c58c0505bb7e63966197dcc9e8",
+    "Taskfold/TaskfoldMacApp.swift": "cd64d22500e356157bde389174e5121f4caf8c050292e0c69adad3c8d10e54fe",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "0e8bf809750ec342bdf475e7387ade569eb8f868c3bdf2c19b942dd1dfeec69f"
+  },
+  "preparedSHA256": {
+    "Taskfold/Core/Store.swift": "64d2e59d5564f5ba9618403b14b27478dd20ea9cf945d74f4043ec1c6cf58fe9",
+    "Taskfold/TeamTemplateNativeFixture.swift": "94726f3917e308f3b0d87938923ed4029d9c29c58c0505bb7e63966197dcc9e8",
+    "Taskfold/TaskfoldMacApp.swift": "cd64d22500e356157bde389174e5121f4caf8c050292e0c69adad3c8d10e54fe",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "0e8bf809750ec342bdf475e7387ade569eb8f868c3bdf2c19b942dd1dfeec69f"
+  },
+  "compiledBinarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "ce0dff8bae6d184e00de06043e7ceb38fc9ab79c956915a02360eabbdde94720",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "94aeb0b18a6273277bdd28eb6ba486470744babe5d0bffcd7566d70c36aa72d4",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "982f6af7790bad19b1a1a994853739a7eb6436b958fc80a2d945f676d2b30e38"
+  },
+  "inspectedImages": [
+    "phone-restored.png",
+    "phone-refused.png",
+    "tablet-restored.png",
+    "tablet-refused.png"
+  ],
+  "realDataChanged": false,
+  "hostedChanges": false,
+  "rolloutChanged": false,
+  "retainedMacCache": {
+    "host": "/tmp/taskfold-workflow-native-mac-host",
+    "build": "/tmp/taskfold-workflow-native-mac-build",
+    "xctestrun": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "reason": "Pending approved UI Automation runtime check; avoid another full rebuild",
+    "testClass": "SharedHeadingNativeTests",
+    "testNames": [
+      "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn",
+      "testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly",
+      "testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo",
+      "testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace"
+    ]
+  },
+  "scopeLimits": [
+    "Synthetic HTTP peer installed client acceptance, not hosted service or paired-device acceptance",
+    "Debug wrapper images, not production layout audit",
+    "Mac runtime not yet accepted",
+    "Largest-workflow performance remains open"
+  ]
+}

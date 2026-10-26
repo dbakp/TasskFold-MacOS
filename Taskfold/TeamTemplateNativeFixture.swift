@@ -208,8 +208,10 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
         if ProcessInfo.processInfo.arguments.contains("--personal-heading-capability-off") { state.support = 0 }
         state.loseNext = ProcessInfo.processInfo.arguments.contains("--personal-heading-lose-reply")
         try write(state)
+        if WorkflowUndoNativePeer.enabled { try WorkflowUndoNativePeer.reset(row) }
     }
     static func boundary() throws -> TeamWorkspaceBoundary {
+        if WorkflowUndoNativePeer.enabled { return try WorkflowUndoNativePeer.boundary() }
         let support = (try? read().support) ?? 1
         return try TeamWorkspaceBoundary(["workspace_boundary_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account),
             "native_team_reads_enabled": .bool(false), "setup_paused": .bool(true), "task_types_protocol": .number(0), "task_type_lifecycle_protocol": .number(0),
@@ -228,6 +230,7 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
     }
     static func response(_ request: URLRequest) throws -> (Data, Bool) {
         guard enabled, request.url?.host == "synthetic.example", request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-auth" else { throw URLError(.userAuthenticationRequired) }
+        if let response = try WorkflowUndoNativePeer.response(request) { return response }
         let path = request.url!.path
         let value: JSON
         if path == "/rest/v1/rpc/taskfold_workspace_boundary" { value = .object(try boundary().raw) }
@@ -265,5 +268,130 @@ extension Store {
         do { var state = try PersonalHeadingNativePeer.read(); state.support = support; try PersonalHeadingNativePeer.write(state) }
         catch { self.error = error.localizedDescription }
     }
+}
+#endif
+
+#if DEBUG
+import SwiftUI
+import CryptoKit
+
+/// Installed client acceptance only. Exact reserved host/explicit flags are
+/// required; the enclosing URLProtocol never connects to a real service.
+@MainActor enum WorkflowUndoNativePeer {
+    static var enabled: Bool { PersonalHeadingNativePeer.enabled && ProcessInfo.processInfo.arguments.contains("--personal-workflow-undo-testing") }
+    static var file: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldWorkflowUndoNativeFixture-workflowteststeameditbridge.json") }
+    static let templateID = "ec240000-0000-4000-8000-000000000081"
+    static let incomingID = "ec240000-0000-4000-8000-000000000082"
+    struct State: Codable {
+        var rows: [String: [Record]]
+        var support = 1
+        var attempts: [[String: JSON]] = []
+        var receipts: [String: Record] = [:]
+        var transitions = 0
+        var loseUndo = false
+    }
+    static var template: Record {
+        let document: JSON = .object(["version": .number(2), "capabilities": .array([.string("task_headings")]), "kind": .string("project"),
+            "projects": .array([.object(["id": .string("root"), "name": .string("Native workflow proof"), "parent_id": .null]), .object(["id": .string("child"), "name": .string("Delivery"), "parent_id": .string("root")])]),
+            "sections": .array([.object(["id": .string("section"), "name": .string("Design"), "project_id": .string("root"), "order_index": .number(0)])]),
+            "tasks": .array([
+                .object(["id": .string("heading"), "is_heading": .bool(true), "title": .string("Design instructions"), "description": .string("Keep the layout readable.\nCheck contrast and spacing."), "priority": .number(4), "project_id": .string("root"), "section_id": .string("section"), "labels": .array([.object(["name": .string("Studio"), "color": .string("#7455b3")])]), "subtasks": .array([.object(["id": .string("work"), "title": .string("Approve the layout"), "priority": .number(2), "labels": .array([]), "subtasks": .array([])])])]),
+                .object(["id": .string("delivery"), "title": .string("Publish the design"), "priority": .number(3), "project_id": .string("child"), "labels": .array([]), "subtasks": .array([])])])])
+        return Record(["id": .string(templateID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Native workflow proof"), "document": document])
+    }
+    static func read() throws -> State { try JSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func write(_ state: State) throws { try JSONEncoder().encode(state).write(to: file, options: .atomic) }
+    static func reset(_ original: Record) throws {
+        var state = State(rows: ["tasks": [original], WorkflowTemplate.table: [template]])
+        state.loseUndo = ProcessInfo.processInfo.arguments.contains("--workflow-undo-lose-reply")
+        try write(state)
+    }
+    static func boundary() throws -> TeamWorkspaceBoundary {
+        let state = try read()
+        let projects = (state.rows["projects"] ?? []).sorted { $0.id < $1.id }.map { row in JSON.object(["id": .string(row.id), "team_id": .null, "role": .string("owner"), "archived": .bool(false), "can_send_tasks": .bool(true)]) }
+        var raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "native_team_reads_enabled": .bool(false), "setup_paused": .bool(true), "task_types_protocol": .number(0), "task_type_lifecycle_protocol": .number(0), "personal_task_types_protocol": .number(1), "personal_workflow_undo_protocol": .number(Double(state.support)), "projects": .array(projects), "teams": .array([])]
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        raw["token"] = .string(SHA256.hash(data: try encoder.encode(JSON.object(raw))).map { String(format: "%02x", $0) }.joined())
+        return try TeamWorkspaceBoundary(raw, account: TeamEditorNativeFixture.account, origin: "https://synthetic.example")
+    }
+    static func response(_ request: URLRequest) throws -> (Data, Bool)? {
+        guard enabled else { return nil }
+        let path = request.url!.path
+        if path == "/rest/v1/rpc/taskfold_undo_private_workflow" {
+            let body = try PersonalHeadingNativePeer.body(request); var state = try read()
+            guard state.support == 1, let id = body["_request"]?.text, let nonce = UUID(uuidString: id) else { throw URLError(.badServerResponse) }
+            state.attempts.append(body)
+            if let receipt = state.receipts[id] { try write(state); return (try JSONEncoder().encode(receipt), false) }
+            // The peer models outcome/transport. Actual SQL semantics are tested
+            // against PostgreSQL independently, not inferred from this helper.
+            let run = UUID(), fields = body["_body"]!.object
+            let command = Mutation(id: nonce, table: WorkflowUndo.table, recordID: run.uuidString.lowercased(), method: "WORKFLOW_UNDO", fields: fields, workflowRun: run)
+            let items = try require(WorkflowUndo.items(command)); var snapshot = Snapshot(tables: state.rows)
+            let applied: Bool
+            do { try WorkflowUndo.validate(command, snapshot: snapshot, account: TeamEditorNativeFixture.account); applied = true }
+            catch { applied = false }
+            var current: [JSON] = []
+            if applied {
+                WorkflowUndo.apply(command, snapshot: &snapshot); state.rows = snapshot.tables; state.transitions += 1
+            } else {
+                for item in items { if let row = state.rows[item.table]?.first(where: { $0.id == item.recordID }) { current.append(.object(["table": .string(item.table), "row": .object(row.fields)])) } }
+            }
+            let reply = Record(["id": .string(id), "applied": .bool(applied), "rows": .array(current)])
+            state.receipts[id] = reply
+            let lose = state.loseUndo; state.loseUndo = false; if lose { state.support = 0 }
+            try write(state); return (try JSONEncoder().encode(reply), lose)
+        }
+        guard path.hasPrefix("/rest/v1/") else { return nil }
+        let table = String(path.dropFirst("/rest/v1/".count))
+        guard ["projects", "sections", "labels", "tasks", "view_orders", WorkflowTemplate.table].contains(table) else { return nil }
+        var state = try read(), rows = state.rows[table] ?? []
+        if request.httpMethod == "POST" {
+            let fields = try PersonalHeadingNativePeer.body(request), id = fields["id"]?.text ?? ""
+            guard !id.isEmpty, fields["user_id"]?.text == TeamEditorNativeFixture.account else { throw URLError(.badServerResponse) }
+            if let index = rows.firstIndex(where: { $0.id == id }) {
+                if request.value(forHTTPHeaderField: "Prefer")?.contains("resolution=ignore-duplicates") == true { return (Data("[]".utf8), false) }
+                rows[index] = Record(fields)
+            } else { rows.append(Record(fields)) }
+            state.rows[table] = rows; try write(state)
+            return (try JSONEncoder().encode(rows.filter { $0.id == id }), false)
+        }
+        guard request.httpMethod == "GET" else { throw URLError(.unsupportedURL) }
+        for query in URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems ?? [] {
+            if query.name == "id", let value = query.value, value.hasPrefix("eq.") { rows = rows.filter { $0.id == String(value.dropFirst(3)) } }
+            if query.name == "user_id", let value = query.value, value.hasPrefix("eq.") { rows = rows.filter { $0.string("user_id") == String(value.dropFirst(3)) } }
+        }
+        return (try JSONEncoder().encode(rows), false)
+    }
+    static func require<T>(_ value: T?) throws -> T { guard let value else { throw URLError(.badServerResponse) }; return value }
+}
+
+@MainActor struct WorkflowUndoNativeFixtureView: View {
+    @Environment(Store.self) private var store
+    @State private var presenting = false
+    var body: some View {
+        NavigationStack {
+            Form {
+                Text("Private workflow acceptance").font(.title2)
+                Button("Use native workflow") { presenting = true }.accessibilityIdentifier("openNativeWorkflow")
+                Button("Undo workflow") { store.undo() }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("undoNativeWorkflow")
+                Button("Redo workflow") { store.redo() }.disabled(store.redoStack.isEmpty).accessibilityIdentifier("redoNativeWorkflow")
+                Button("Add incoming task remotely") { update { state in
+                    guard let project = state.rows["projects"]?.first else { return }
+                    var row = Record.task(user: TeamEditorNativeFixture.account, project: project.id); row["id"] = .string(WorkflowUndoNativePeer.incomingID); row["title"] = .string("Later incoming work")
+                    state.rows["tasks", default: []].append(row)
+                } }.accessibilityIdentifier("addIncomingWorkflowTask")
+                Button("Pause workflow support") { support(0) }.accessibilityIdentifier("pauseNativeWorkflowSupport")
+                Button("Restore workflow support") { support(1) }.accessibilityIdentifier("restoreNativeWorkflowSupport")
+                Text(store.notice ?? store.error ?? "Ready").accessibilityIdentifier("nativeWorkflowStatus")
+                Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("nativeWorkflowPending")
+                ForEach(store.projects) { project in Text(project.name) }
+                ForEach(store.tasks) { task in Text(task.title) }
+            }.navigationTitle("Workflow test")
+        }.sheet(isPresented: $presenting) { TemplateRunView(template: WorkflowUndoNativePeer.template) }
+    }
+    private func update(_ edit: (inout WorkflowUndoNativePeer.State) -> Void) {
+        do { var state = try WorkflowUndoNativePeer.read(); edit(&state); try WorkflowUndoNativePeer.write(state) } catch { store.error = error.localizedDescription }
+    }
+    private func support(_ value: Int) { update { $0.support = value }; Task { await store.sync() } }
 }
 #endif

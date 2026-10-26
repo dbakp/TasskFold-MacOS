@@ -29,7 +29,8 @@ PERSONAL_TASK_HEADINGS.md for acceptance and remaining limits.
 
 Workflow creation retries preserve later server edits. Atomic personal workflow
 Undo now has source-level baseline/dependency and reply-retry protection, with
-service compatibility admission. Installed runtime, hosted/paired-client and
+service compatibility admission. Four installed client cases pass on each phone
+and tablet Simulator; Mac runtime awaits UI Automation. Hosted/paired-client and
 large-workflow acceptance remain open. See the dated workflow stages and
 workflow-undo/validation.json.
 
@@ -5453,3 +5454,51 @@ workflow create/Undo/Redo/refusal/relaunch acceptance, service-deployment and pa
 client acceptance, and large-workflow performance remain open. Wider rank-3/Px
 scope and all existing release/provider/reminder/older-client deferrals remain
 active. No normal heading flag or hosted rollout setting changed.
+
+## 26 October — installed private workflow history on phone and tablet
+
+Four signed installed client scenarios now pass on each iPhone and iPad Simulator
+(eight final passes): actual TemplateRunView creation followed by two Undo/Redo
+cycles and cold return; a lost successful Undo reply followed by cold unsupported-
+service pause and exact request/body retry; incoming work causing the whole Undo
+to be refused, restored and retained across cold return; and unsupported-service
+Undo admission preserving the entire workspace until compatibility is restored.
+The source is a private project definition with two projects, one section, one new
+label, two root tasks (including a heading and productive child), two saved order
+groups and multiline instructions. Tests read the actual durable client cache and
+peer rows and check all six relevant tables, stable record identities, fresh task
+generations on Redo, retained content/relationships, exact retry identity, one
+recorded deletion, empty final queue and unchanged workflow rows on refusal.
+
+The new peer/panel is DEBUG-only, behind exact reserved-host guards and explicit
+personal/workflow flags. It calls the production template review, Store history,
+queue, Backend transport, acknowledgement and refresh paths. Its deterministic
+boundary fingerprint changes with project membership and compatibility, so a
+post-write access-boundary change restarts the client read. No real account or
+network is used. The peer models transport/outcomes; it does not prove SQL/RLS,
+cryptographic authentication or hosted PostgREST semantics. The independent 54 SQL
+checks from the preceding stage remain that service evidence, not a claim of new
+hosted or paired-device acceptance.
+
+The first four-per-device run also passed. After review, the peer was corrected
+from a compatibility-only token to a fingerprint of its complete synthetic access
+boundary, and both complete suites passed again. Initial test-harness compilation
+corrected a throwing conjunction and iOS main-actor helper isolation. Final native
+source/signature bindings, logs, summaries and four inspected PNGs are retained in
+workflow-undo-native/. The PNGs show the debug wrapper's empty queue, restored
+records and readable refusal notice; they are not a new production-layout audit.
+
+Mac's identical scenario source compiles in its signed isolated host and strict
+signature verification succeeds. Its one runtime attempt stopped before launching
+Taskfold: XCTest timed out enabling UI Automation. The system reports Developer
+mode disabled; the runner-initialization failure is retained explicitly and is not
+counted as an app-test pass. An approval/unlock question is pending. The current
+Mac host/build is retained as one bounded reusable cache for that check, with
+exact paths/hashes in validation.json; no Mac Taskfold test process is left running.
+
+Phone/tablet test hosts and runners are closed/uninstalled after evidence retention,
+and their completed temporary build/results are pruned. No normal app flags,
+user data, hosted service, distribution configuration or deferred release/provider/
+reminder/older-client setting changed. The four Mac runtime cases, genuine hosted/
+paired-client workflow acceptance, largest-workflow performance and wider rank-3/Px
+scope remain open. The full goal remains active.

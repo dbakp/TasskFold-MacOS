@@ -1,0 +1,521 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /tmp/taskfold-workflow-native-ios-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -derivedDataPath /tmp/taskfold-workflow-native-ios-build ARCHS=arm64 ONLY_ACTIVE_ARCH=YES
+
+Build settings from command line:
+    ARCHS = arm64
+    ONLY_ACTIVE_ARCH = YES
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (7 targets)
+    Target 'TaskfoldUITests' in project 'Taskfold'
+        ➜ Explicit dependency on target 'Taskfold' in project 'Taskfold'
+    Target 'Taskfold' in project 'Taskfold'
+        ➜ Explicit dependency on target 'TaskfoldShare' in project 'Taskfold'
+        ➜ Explicit dependency on target 'TaskfoldWidgets' in project 'Taskfold'
+        ➜ Explicit dependency on target 'AppAuthCore-product' in project 'AppAuth'
+    Target 'AppAuthCore-product' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuthCore' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuth_AppAuthCore' in project 'AppAuth'
+    Target 'AppAuthCore' in project 'AppAuth'
+        ➜ Explicit dependency on target 'AppAuth_AppAuthCore' in project 'AppAuth'
+    Target 'AppAuth_AppAuthCore' in project 'AppAuth' (no dependencies)
+    Target 'TaskfoldWidgets' in project 'Taskfold' (no dependencies)
+    Target 'TaskfoldShare' in project 'Taskfold' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -x objective-c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /tmp/taskfold-workflow-native-ios-host/Taskfold/TaskfoldIcon.icon /tmp/taskfold-workflow-native-ios-host/Taskfold/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: 665434ea2a300c30cc0861628164bc9a
+Build description path: /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/XCBuildData/665434ea2a300c30cc0861628164bc9a.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk /tmp/taskfold-workflow-native-ios-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache
+    cd /tmp/taskfold-workflow-native-ios-host/Taskfold.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -o /tmp/taskfold-workflow-native-ios-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache
+
+ProcessInfoPlistFile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldShare.appex/Info.plist /tmp/taskfold-workflow-native-ios-host/TaskfoldShare/Info.plist (in target 'TaskfoldShare' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-infoPlistUtility /tmp/taskfold-workflow-native-ios-host/TaskfoldShare/Info.plist -producttype com.apple.product-type.app-extension -expandbuildsettings -format binary -platform iphonesimulator -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldShare.appex/Info.plist
+
+ProcessInfoPlistFile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldWidgets.appex/Info.plist /tmp/taskfold-workflow-native-ios-host/TaskfoldWidgets/Info.plist (in target 'TaskfoldWidgets' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-infoPlistUtility /tmp/taskfold-workflow-native-ios-host/TaskfoldWidgets/Info.plist -producttype com.apple.product-type.app-extension -expandbuildsettings -format binary -platform iphonesimulator -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldWidgets.appex/Info.plist
+
+ProcessInfoPlistFile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/AppAuth_AppAuthCore.bundle/Info.plist /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/AppAuth.build/Debug-iphonesimulator/AppAuth_AppAuthCore-b.build/empty-AppAuth_AppAuthCore.plist (in target 'AppAuth_AppAuthCore' from project 'AppAuth')
+    cd /tmp/taskfold-workflow-native-ios-build/SourcePackages/checkouts/AppAuth-iOS
+    builtin-infoPlistUtility /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/AppAuth.build/Debug-iphonesimulator/AppAuth_AppAuthCore-b.build/empty-AppAuth_AppAuthCore.plist -producttype com.apple.product-type.bundle -expandbuildsettings -format binary -platform iphonesimulator -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/AppAuth_AppAuthCore.bundle/Info.plist
+
+SwiftDriver Taskfold normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Taskfold -Onone @/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftFileList -DDEBUG -Xcc -fmodule-map-file\=/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/AppAuthCore.modulemap -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-ios-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -F /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-ios-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-ios-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS-iphonesimulator/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-Swift.h -working-directory /tmp/taskfold-workflow-native-ios-host -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ TeamTemplateNativeFixture.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/TeamTemplateNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/TeamTemplateNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamTemplateNativeFixture.swift
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Taskfold (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    
+
+/tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TaskEditor.swift:7:38: warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]
+   5 | 
+   6 | /// Carry task and unsaved label names in the same sheet item so presentation cannot capture stale state.
+   7 | @MainActor struct TaskEditorRequest: Identifiable {
+     |                                      |- warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]
+     |                                      |- note: isolate this conformance to the main actor with '@MainActor'
+     |                                      `- note: turn data races into runtime errors with '@preconcurrency'
+   8 |     init(creation: TaskEditorOpening) {
+   9 |         task = creation.task; pendingLabelNames = []; hierarchySelection = nil
+     :
+  15 |     let admission: TaskEditorAdmission
+  16 |     let handoffSession: TaskEditorSession?
+  17 |     var id: String {task.id}
+     |         |- note: main actor-isolated property 'id' cannot satisfy nonisolated requirement
+     |         `- note: mark property 'id' 'nonisolated'
+  18 |     init(store:Store,task:Record,pendingLabelNames:[String]=[],hierarchySelection:TaskHierarchyIndex.Selection?=nil,isNew:Bool=false) {
+  19 |         self.task=task;self.pendingLabelNames=pendingLabelNames;self.hierarchySelection=hierarchySelection
+
+[#ConformanceIsolation]: <https://docs.swift.org/compiler/documentation/diagnostics/conformance-isolation>
+SwiftDriverJobDiscovery normal arm64 Compiling TeamTemplateNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 Compiling\ FocusSessionView.swift,\ PinnedNotesView.swift,\ InboxReviewView.swift,\ WidgetActionTestPanel.swift,\ WidgetActions.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/FocusSessionView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PinnedNotesView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/InboxReviewView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Core/WidgetActionTestPanel.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Core/WidgetActions.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/FocusSessionView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile FocusSessionView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PinnedNotesView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile PinnedNotesView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/InboxReviewView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile InboxReviewView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Core/WidgetActionTestPanel.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WidgetActionTestPanel.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Core/WidgetActions.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WidgetActions.swift
+
+SwiftCompile normal arm64 Compiling\ BulkPlanningEditor.swift,\ ProjectAdoptionNativeFixture.swift,\ TeamProjectAdoptionView.swift,\ TeamTaskMoveView.swift,\ TeamTaskDeletionReview.swift,\ TeamTaskRecurrenceEditor.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/BulkPlanningEditor.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/ProjectAdoptionNativeFixture.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamProjectAdoptionView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskMoveView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskDeletionReview.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskRecurrenceEditor.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/BulkPlanningEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile BulkPlanningEditor.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/ProjectAdoptionNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile ProjectAdoptionNativeFixture.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamProjectAdoptionView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamProjectAdoptionView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskMoveView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamTaskMoveView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskDeletionReview.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamTaskDeletionReview.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskRecurrenceEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamTaskRecurrenceEditor.swift
+
+SwiftCompile normal arm64 Compiling\ CalendarView.swift,\ QuickAdd.swift,\ Intents.swift,\ PlanDayView.swift,\ CollaborationViews.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/CalendarView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/QuickAdd.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Core/Intents.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PlanDayView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/CollaborationViews.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/CalendarView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile CalendarView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/QuickAdd.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile QuickAdd.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Core/Intents.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile Intents.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PlanDayView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile PlanDayView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/CollaborationViews.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile CollaborationViews.swift
+
+SwiftCompile normal arm64 Compiling\ AutomationAccessView.swift,\ LocationPlaces.swift,\ VoiceDraftView.swift,\ NoteFormattingView.swift,\ PrintReviewView.swift,\ SharedDraftsView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/AutomationAccessView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/LocationPlaces.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/VoiceDraftView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/NoteFormattingView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PrintReviewView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/SharedDraftsView.swift (in target 'Taskfold' from project 'Taskfold')
+/tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PrintReviewView.swift:196:70: warning: 'showsPageRange' was deprecated in iOS 10.0: Pages can be removed from the print preview, so page range is always shown. [#DeprecatedDeclaration]
+194 |             let print = UIPrintInteractionController.shared
+195 |             let info = UIPrintInfo(dictionary: nil); info.jobName = jobTitle; info.outputType = .general
+196 |             print.printInfo = info; print.printingItem = data; print.showsPageRange = true
+    |                                                                      `- warning: 'showsPageRange' was deprecated in iOS 10.0: Pages can be removed from the print preview, so page range is always shown. [#DeprecatedDeclaration]
+197 |             let completion: UIPrintInteractionController.CompletionHandler = { [weak self] _, _, error in self?.finish(error?.localizedDescription) }
+198 |             if UIDevice.current.userInterfaceIdiom == .pad { print.present(from: CGRect(x: view.bounds.midX, y: 1, width: 1, height: 1), in: view, animated: true, completionHandler: completion) }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/AutomationAccessView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile AutomationAccessView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/LocationPlaces.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile LocationPlaces.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/VoiceDraftView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile VoiceDraftView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/NoteFormattingView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile NoteFormattingView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PrintReviewView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile PrintReviewView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/SharedDraftsView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile SharedDraftsView.swift
+
+SwiftCompile normal arm64 Compiling\ SavedViews.swift,\ AccountRemovalNativeFixture.swift,\ Store.swift,\ TaskfoldApp.swift,\ BrowseView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/SavedViews.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/AccountRemovalNativeFixture.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Core/Store.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/TaskfoldApp.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/BrowseView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/SavedViews.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile SavedViews.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/AccountRemovalNativeFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile AccountRemovalNativeFixture.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Core/Store.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile Store.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/TaskfoldApp.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TaskfoldApp.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/BrowseView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile BrowseView.swift
+
+/tmp/taskfold-workflow-native-ios-host/Taskfold/TaskfoldApp.swift:1591:22: warning: result of call to 'withAnimation' is unused [#NoUsage]
+1589 |         if dated { Button("Tomorrow", systemImage: "sunrise") { if moveTask(task.id, Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), nil) { Haptics.drop(); showToast("Moved to tomorrow", pending: nil) } } }
+1590 |         Button(SubtaskTree.referencePath(task.id) == nil ? "Duplicate" : "Duplicate subtask", systemImage: "doc.on.doc") {
+1591 |             do { try withAnimation(layout) { try store.duplicateSelection([task]) }; Haptics.tap(); showToast("Duplicated", pending: nil) }
+     |                      `- warning: result of call to 'withAnimation' is unused [#NoUsage]
+1592 |             catch { store.error = error.localizedDescription }
+1593 |         }
+
+/tmp/taskfold-workflow-native-ios-host/Taskfold/TaskfoldApp.swift:1857:18: warning: result of call to 'withAnimation' is unused [#NoUsage]
+1855 |     func duplicateSelection() {
+1856 |         let tasks = selectedTasks; guard !tasks.isEmpty else { return }
+1857 |         do { try withAnimation(layout) { try store.duplicateSelection(tasks) }; Haptics.tap(); finishBulk("Duplicated selected branches") }
+     |                  `- warning: result of call to 'withAnimation' is unused [#NoUsage]
+1858 |         catch { store.error = error.localizedDescription }
+1859 |     }
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+SwiftCompile normal arm64 Compiling\ SharedCaptureStore.swift,\ WorkflowViews.swift,\ SubtaskOrganizer.swift,\ ConversationStore.swift,\ SharedConversationView.swift,\ ProjectPulseView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/SharedCaptureStore.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/WorkflowViews.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/SubtaskOrganizer.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/ConversationStore.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/SharedConversationView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/ProjectPulseView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/SharedCaptureStore.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile SharedCaptureStore.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/WorkflowViews.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WorkflowViews.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/SubtaskOrganizer.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile SubtaskOrganizer.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/ConversationStore.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile ConversationStore.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/SharedConversationView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile SharedConversationView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/ProjectPulseView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile ProjectPulseView.swift
+
+SwiftCompile normal arm64 Compiling\ WatchPhoneFixture.swift,\ WatchPhoneStore.swift,\ EmailCaptureKeychainFixture.swift,\ EmailCaptureView.swift,\ WebhookAccessView.swift,\ ConnectionSignInView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchPhoneFixture.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchPhoneStore.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/EmailCaptureKeychainFixture.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/EmailCaptureView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/WebhookAccessView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/ConnectionSignInView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchPhoneFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WatchPhoneFixture.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchPhoneStore.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WatchPhoneStore.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/EmailCaptureKeychainFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile EmailCaptureKeychainFixture.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/EmailCaptureView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile EmailCaptureView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/WebhookAccessView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WebhookAccessView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/ConnectionSignInView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile ConnectionSignInView.swift
+
+SwiftCompile normal arm64 Compiling\ ReminderEditor.swift,\ ConflictReview.swift,\ BackupTools.swift,\ PlannerSettings.swift,\ HourlyPlanner.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/ReminderEditor.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/ConflictReview.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/BackupTools.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PlannerSettings.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/HourlyPlanner.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/ReminderEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile ReminderEditor.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/ConflictReview.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile ConflictReview.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/BackupTools.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile BackupTools.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/PlannerSettings.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile PlannerSettings.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/HourlyPlanner.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile HourlyPlanner.swift
+
+SwiftCompile normal arm64 Compiling\ TeamTaskRemindersEditor.swift,\ TeamTaskLabelsEditor.swift,\ TeamTaskAssigneePicker.swift,\ WatchConnectionFixture.swift,\ WatchPhoneBridge.swift,\ WatchPhoneDriver.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskRemindersEditor.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskLabelsEditor.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskAssigneePicker.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchConnectionFixture.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchPhoneBridge.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchPhoneDriver.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskRemindersEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamTaskRemindersEditor.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskLabelsEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamTaskLabelsEditor.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTaskAssigneePicker.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamTaskAssigneePicker.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchConnectionFixture.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WatchConnectionFixture.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchPhoneBridge.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WatchPhoneBridge.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/WatchPhoneDriver.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile WatchPhoneDriver.swift
+
+SwiftCompile normal arm64 Compiling\ TaskEditor.swift,\ TeamProjectManagementView.swift,\ TeamTemplateLibraryView.swift,\ TeamWorkflowRunView.swift,\ TeamOrganizationView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TaskEditor.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamProjectManagementView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTemplateLibraryView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamWorkflowRunView.swift /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamOrganizationView.swift (in target 'Taskfold' from project 'Taskfold')
+/tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TaskEditor.swift:7:38: warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]
+   5 | 
+   6 | /// Carry task and unsaved label names in the same sheet item so presentation cannot capture stale state.
+   7 | @MainActor struct TaskEditorRequest: Identifiable {
+     |                                      |- warning: conformance of 'TaskEditorRequest' to protocol 'Identifiable' crosses into main actor-isolated code and can cause data races; this is an error in the Swift 6 language mode [#ConformanceIsolation]
+     |                                      |- note: isolate this conformance to the main actor with '@MainActor'
+     |                                      `- note: turn data races into runtime errors with '@preconcurrency'
+   8 |     init(creation: TaskEditorOpening) {
+   9 |         task = creation.task; pendingLabelNames = []; hierarchySelection = nil
+     :
+  15 |     let admission: TaskEditorAdmission
+  16 |     let handoffSession: TaskEditorSession?
+  17 |     var id: String {task.id}
+     |         |- note: main actor-isolated property 'id' cannot satisfy nonisolated requirement
+     |         `- note: mark property 'id' 'nonisolated'
+  18 |     init(store:Store,task:Record,pendingLabelNames:[String]=[],hierarchySelection:TaskHierarchyIndex.Selection?=nil,isNew:Bool=false) {
+  19 |         self.task=task;self.pendingLabelNames=pendingLabelNames;self.hierarchySelection=hierarchySelection
+
+[#ConformanceIsolation]: <https://docs.swift.org/compiler/documentation/diagnostics/conformance-isolation>
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TaskEditor.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TaskEditor.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamProjectManagementView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamProjectManagementView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamTemplateLibraryView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamTemplateLibraryView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamWorkflowRunView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamWorkflowRunView.swift
+
+SwiftCompile normal arm64 /tmp/taskfold-workflow-native-ios-host/Taskfold/Views/TeamOrganizationView.swift (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-SwiftPerFileCompile TeamOrganizationView.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling TeamTaskRemindersEditor.swift, TeamTaskLabelsEditor.swift, TeamTaskAssigneePicker.swift, WatchConnectionFixture.swift, WatchPhoneBridge.swift, WatchPhoneDriver.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling FocusSessionView.swift, PinnedNotesView.swift, InboxReviewView.swift, WidgetActionTestPanel.swift, WidgetActions.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling BulkPlanningEditor.swift, ProjectAdoptionNativeFixture.swift, TeamProjectAdoptionView.swift, TeamTaskMoveView.swift, TeamTaskDeletionReview.swift, TeamTaskRecurrenceEditor.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling WatchPhoneFixture.swift, WatchPhoneStore.swift, EmailCaptureKeychainFixture.swift, EmailCaptureView.swift, WebhookAccessView.swift, ConnectionSignInView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AutomationAccessView.swift, LocationPlaces.swift, VoiceDraftView.swift, NoteFormattingView.swift, PrintReviewView.swift, SharedDraftsView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling CalendarView.swift, QuickAdd.swift, Intents.swift, PlanDayView.swift, CollaborationViews.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SharedCaptureStore.swift, WorkflowViews.swift, SubtaskOrganizer.swift, ConversationStore.swift, SharedConversationView.swift, ProjectPulseView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ReminderEditor.swift, ConflictReview.swift, BackupTools.swift, PlannerSettings.swift, HourlyPlanner.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TaskEditor.swift, TeamProjectManagementView.swift, TeamTemplateLibraryView.swift, TeamWorkflowRunView.swift, TeamOrganizationView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SavedViews.swift, AccountRemovalNativeFixture.swift, Store.swift, TaskfoldApp.swift, BrowseView.swift (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriver\ Compilation Taskfold normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Taskfold -Onone @/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftFileList -DDEBUG -Xcc -fmodule-map-file\=/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/AppAuthCore.modulemap -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-ios-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -F /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-ios-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-ios-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS-iphonesimulator/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-Swift.h -working-directory /tmp/taskfold-workflow-native-ios-host -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for Taskfold (in target 'Taskfold' from project 'Taskfold')
+
+SwiftDriver\ Compilation\ Requirements Taskfold normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Taskfold -Onone @/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftFileList -DDEBUG -Xcc -fmodule-map-file\=/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator/AppAuthCore.modulemap -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -index-store-path /tmp/taskfold-workflow-native-ios-build/Index.noindex/DataStore -swift-version 5 -I /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -F /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/PackageFrameworks -F /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/taskfold-workflow-native-ios-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex -sdk-module-cache-path /tmp/taskfold-workflow-native-ios-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/taskfold-workflow-native-ios-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-generated-files.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-own-target-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold-d9bb5bf2a2df43b51bd562026dd319cf-VFS-iphonesimulator/all-product-headers.yaml -Xcc -iquote -Xcc /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-project-headers.hmap -Xcc -I/tmp/taskfold-workflow-native-ios-build/SourcePackages/checkouts/AppAuth-iOS/Sources/AppAuthCore -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources-normal/arm64 -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources/arm64 -Xcc -I/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold-Swift.h -working-directory /tmp/taskfold-workflow-native-ios-host -experimental-emit-module-separately -disable-cmo
+
+Copy /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.swiftmodule/arm64-apple-ios-simulator.abi.json /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.abi.json (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.abi.json /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+Copy /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.swiftmodule/arm64-apple-ios-simulator.swiftmodule /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.swiftmodule/arm64-apple-ios-simulator.swiftmodule
+
+Copy /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.swiftsourceinfo (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -strip-unsigned-binaries -strip-deterministic -strip-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/strip -resolve-src-symlinks -rename /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.swiftsourceinfo /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+Ld /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib normal (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios18.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -Os -Xlinker -no_warn_duplicate_libraries -L/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -F/tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/PackageFrameworks -F/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -filelist /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.LinkFileList -install_name @rpath/Taskfold.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path -Xlinker -rpath -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold_lto.o -rdynamic -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.swiftmodule -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -Xlinker -no_adhoc_codesign -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-ExecutorLinkFileList-normal-arm64.txt (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    construct-stub-executor-link-file-list /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'Taskfold' from project 'Taskfold')
+
+Ld /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold normal (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios18.0-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -Os -Xlinker -no_warn_duplicate_libraries -L/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -F/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/PackageFrameworks -F/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @loader_path -Xlinker -rpath -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -objc_abi_version -Xlinker 2 -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold-ExecutorLinkFileList-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold.app-Simulated.xcent -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __ents_der -Xlinker /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold.app-Simulated.xcent.der /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib -Xlinker -no_adhoc_codesign -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold
+
+ExtractAppIntentsMetadata (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name Taskfold --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk --xcode-version 27A266a --platform-family iOS --deployment-target 18.0 --bundle-identifier com.dbakp.taskfold.workflowteststeameditbridge --output /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app --target-triple arm64-apple-ios18.0-simulator --binary-file /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold --dependency-file /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold_dependency_info.dat --stringsdata-file /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftFileList --metadata-file-list /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold.DependencyMetadataFileList --static-metadata-file-list /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Objects-normal/arm64/Taskfold.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-10-26 21:15:52.857 appintentsmetadataprocessor[50584:23561750] Starting appintentsmetadataprocessor export
+2026-10-26 21:15:52.981 appintentsmetadataprocessor[50584:23561750] Writing Metadata.appintents
+2026-10-26 21:15:52.981 appintentsmetadataprocessor[50584:23561750] Metadata root: /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Metadata.appintents
+
+ProcessInfoPlistFile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Info.plist /tmp/taskfold-workflow-native-ios-host/Taskfold/Info.plist (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-infoPlistUtility /tmp/taskfold-workflow-native-ios-host/Taskfold/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/assetcatalog_generated_info.plist -scanforprivacyfile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/AppAuth_AppAuthCore.bundle -scanforprivacyfile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/PlugIns/TaskfoldShare.appex -scanforprivacyfile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/PlugIns/TaskfoldWidgets.appex -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Info.plist
+
+CopySwiftLibs /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib --scan-folder /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Frameworks --scan-folder /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/PlugIns --scan-folder /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/SystemExtensions --scan-folder /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+GenerateDSYMFile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app.dSYM /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    export PATH\=/Applications/Xcode.app/Contents/SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/PlugIns/SWBUniversalPlatformPlugin.bundle/Contents/Frameworks/SWBUniversalPlatform.framework/Resources:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/local/bin:/Applications/Xcode.app/Contents/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/usr/local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/davidbakposada/.codex/tmp/arg0-macos/codex-arg0HEd1SQ:/Users/davidbakposada/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/davidbakposada/.deno/bin:/Users/davidbakposada/Library/pnpm:/Users/davidbakposada/.local/bin:/Users/davidbakposada/.nvm/versions/node/v20.19.0/bin:/Users/davidbakposada/.bun/bin:/Users/davidbakposada/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil -q /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app.dSYM
+
+GenerateDSYMFile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app.dSYM /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    export PATH\=/Applications/Xcode.app/Contents/SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/PlugIns/SWBUniversalPlatformPlugin.bundle/Contents/Frameworks/SWBUniversalPlatform.framework/Resources:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/local/bin:/Applications/Xcode.app/Contents/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/usr/local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/davidbakposada/.codex/tmp/arg0-macos/codex-arg0HEd1SQ:/Users/davidbakposada/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/davidbakposada/.deno/bin:/Users/davidbakposada/Library/pnpm:/Users/davidbakposada/.local/bin:/Users/davidbakposada/.nvm/versions/node/v20.19.0/bin:/Users/davidbakposada/.bun/bin:/Users/davidbakposada/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources:/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app.dSYM
+
+CodeSign /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib
+
+CodeSign /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/__preview.dylib (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/__preview.dylib
+/tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/__preview.dylib: replacing existing signature
+
+CodeSign /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --entitlements /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/Taskfold.build/Taskfold.app.xcent --timestamp\=none --generate-entitlement-der /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app
+
+Validate /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app (in target 'Taskfold' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-validationUtility /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app -shallow-bundle -infoplist-subpath Info.plist
+
+ProcessInfoPlistFile /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/Info.plist /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldUITests.build/empty-TaskfoldUITests.plist (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-infoPlistUtility /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldUITests.build/empty-TaskfoldUITests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldUITests.build/ProductTypeInfoPlistAdditions.plist -o /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/Info.plist
+
+CopySwiftLibs /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest (in target 'TaskfoldUITests' from project 'Taskfold')
+    cd /tmp/taskfold-workflow-native-ios-host
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests --scan-folder /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/Frameworks --scan-folder /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/PlugIns --scan-folder /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/SystemExtensions --scan-folder /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/taskfold-workflow-native-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/Taskfold.build/Debug-iphonesimulator/TaskfoldUITests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-ios-build/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/taskfold-workflow-native-ios-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+** TEST BUILD SUCCEEDED **
+

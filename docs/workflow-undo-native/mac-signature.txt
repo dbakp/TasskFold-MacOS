@@ -1,0 +1,28 @@
+Executable=/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold
+Identifier=com.dbakp.taskfold.mac.workflowteststeameditbridge
+Format=app bundle with Mach-O thin (arm64)
+CodeDirectory v=20500 size=478 flags=0x10000(runtime) hashes=3+7 location=embedded
+VersionPlatform=1
+VersionMin=983040
+VersionSDK=1769472
+Hash type=sha256 size=32
+CandidateCDHash sha256=f7d4d27765511b3d2d117bd85255d05511633831
+CandidateCDHashFull sha256=f7d4d27765511b3d2d117bd85255d05511633831c3922905c24757fc4de620b7
+Hash choices=sha256
+CMSDigest=f7d4d27765511b3d2d117bd85255d05511633831c3922905c24757fc4de620b7
+CMSDigestType=2
+Executable Segment base=0
+Executable Segment limit=16384
+Executable Segment flags=0x1
+Page size=16384
+CDHash=f7d4d27765511b3d2d117bd85255d05511633831
+Signature size=4801
+Authority=Apple Development: davidbakposada@gmail.com (ZTJYVDSQ3S)
+Authority=Apple Worldwide Developer Relations Certification Authority
+Authority=Apple Root CA
+Signed Time=26 Oct 2026 at 21.16.07
+Info.plist entries=36
+TeamIdentifier=3UZ4C73FM2
+Runtime Version=27.0.0
+Sealed Resources version=2 rules=13 files=14
+Internal requirements count=1 size=224

@@ -5031,3 +5031,112 @@ extension SharedHeadingNativeTests {
         XCTAssertEqual(try root()["description"] as? String, before["description"] as? String); XCTAssertEqual(try personalState()["transitions"] as? Int, 0)
     }
 }
+
+
+extension SharedHeadingNativeTests {
+    private func workflowPeerFile() throws -> URL { return personalStateFile().deletingLastPathComponent().appendingPathComponent("TaskfoldWorkflowUndoNativeFixture-workflowteststeameditbridge.json") }
+    private func workflowPeer() throws -> [String: Any] { try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: workflowPeerFile())) as? [String: Any]) }
+    private func workflowCache() throws -> [String: Any] { return try saved() }
+    private func workflowRows() throws -> [String: [[String: Any]]] { try XCTUnwrap(workflowPeer()["rows"] as? [String: [[String: Any]]]) }
+    @MainActor private func workflowWait(_ condition: @escaping () throws -> Bool) {
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (try? condition()) == true }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 25), .completed)
+    }
+    @MainActor private func workflowStart(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false) throws {
+        guard [bundle + ".runner", bundle + ".runner.xctrunner"].contains(Bundle(for: Self.self).bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated Mac host required") }
+        continueAfterFailure = false
+        app.launchArguments = ["--team-editor-testing", "--team-heading-testing", "--personal-heading-testing", "--personal-workflow-undo-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-undo-lose-reply"] : [])
+        try open(app)
+        XCTAssertTrue(app.buttons["openNativeWorkflow"].waitForExistence(timeout: 15), app.debugDescription)
+        workflowWait { try self.workflowCachedSupport() == 1 || !reset }
+    }
+    private func workflowCachedSupport() throws -> Int? {
+        let cache = try workflowCache()
+        return (((cache["teamWorkspace"] as? [String: Any])?["boundary"] as? [String: Any])?["raw"] as? [String: Any])?["personal_workflow_undo_protocol"] as? Int
+    }
+    @MainActor private func workflowCreate(_ app: XCUIApplication) throws {
+        app.buttons["openNativeWorkflow"].click()
+        let create = app.buttons["applyWorkflowTemplate"]
+
+        XCTAssertTrue(create.waitForExistence(timeout: 8), app.debugDescription); create.click()
+        workflowWait { try self.workflowSettled(tasks: 3, attempts: 0) }
+        let rows = try workflowRows()
+        XCTAssertEqual(rows["projects"]?.count, 2); XCTAssertEqual(rows["sections"]?.count, 1); XCTAssertEqual(rows["labels"]?.count, 1); XCTAssertEqual(rows["view_orders"]?.count, 2)
+        let heading = try XCTUnwrap(rows["tasks"]?.first { $0["title"] as? String == "Design instructions" })
+        XCTAssertEqual(heading["is_heading"] as? Bool, true)
+        XCTAssertEqual(heading["description"] as? String, "Keep the layout readable.\nCheck contrast and spacing.")
+        XCTAssertEqual((heading["subtasks"] as? [[String: Any]])?.first?["title"] as? String, "Approve the layout")
+    }
+    private func workflowSettled(tasks: Int, attempts: Int) throws -> Bool {
+        let cache = try workflowCache(), peer = try workflowPeer(), remote = try workflowRows()
+        guard (cache["pending"] as? [Any])?.isEmpty == true, (peer["attempts"] as? [Any])?.count == attempts,
+              remote["tasks"]?.count == tasks, let local = cache["tables"] as? [String: [[String: Any]]] else { return false }
+        for table in ["projects", "sections", "labels", "tasks", "view_orders", "project_templates"] {
+            let expected = Dictionary((remote[table] ?? []).map { ($0["id"] as! String, $0 as NSDictionary) }, uniquingKeysWith: { a, _ in a })
+            let actual = Dictionary((local[table] ?? []).map { ($0["id"] as! String, $0 as NSDictionary) }, uniquingKeysWith: { a, _ in a })
+            if expected as NSDictionary != actual as NSDictionary { return false }
+        }
+        return true
+    }
+    @MainActor func testPrivateWorkflowNativeCreateUndoRedoAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app); try workflowCreate(app)
+        let first = try workflowRows()
+        app.buttons["undoNativeWorkflow"].click(); workflowWait { try self.workflowSettled(tasks: 1, attempts: 1) }
+        XCTAssertEqual(try workflowPeer()["transitions"] as? Int, 1)
+        app.buttons["redoNativeWorkflow"].click(); workflowWait { try self.workflowSettled(tasks: 3, attempts: 1) }
+        let restored = try workflowRows()
+        for table in ["projects", "sections", "labels", "tasks", "view_orders"] {
+            XCTAssertEqual(Set((first[table] ?? []).compactMap { $0["id"] as? String }), Set((restored[table] ?? []).compactMap { $0["id"] as? String }))
+        }
+        for old in first["tasks"] ?? [] where old["title"] as? String != "Personal heading proof" {
+            let current = try XCTUnwrap(restored["tasks"]?.first { $0["id"] as? String == old["id"] as? String })
+            XCTAssertNotEqual(current["task_generation"] as? String, old["task_generation"] as? String)
+            for key in ["title", "description", "subtasks", "labels", "is_heading", "project_id", "section_id"] { XCTAssertEqual(current[key] as? NSObject, old[key] as? NSObject, key) }
+        }
+        app.buttons["undoNativeWorkflow"].click(); workflowWait { try self.workflowSettled(tasks: 1, attempts: 2) }
+        app.buttons["redoNativeWorkflow"].click(); workflowWait { try self.workflowSettled(tasks: 3, attempts: 2) }
+        let final = try workflowRows(); app.terminate(); try workflowStart(app, reset: false)
+        workflowWait { try self.workflowSettled(tasks: 3, attempts: 2) }; XCTAssertEqual(try workflowRows() as NSDictionary, final as NSDictionary)
+        let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Private workflow restored after cold return"; picture.lifetime = .keepAlways; add(picture)
+    }
+    @MainActor func testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app, lost: true); try workflowCreate(app)
+        app.buttons["undoNativeWorkflow"].click()
+        workflowWait { let cache = try self.workflowCache(), peer = try self.workflowPeer(); return (cache["pending"] as? [Any])?.count == 1 && (peer["attempts"] as? [Any])?.count == 1 }
+        let first = try XCTUnwrap((try workflowPeer()["attempts"] as? [[String: Any]])?.first)
+        let pending = try XCTUnwrap((try workflowCache()["pending"] as? [[String: Any]])?.first)
+        XCTAssertEqual(pending["method"] as? String, "WORKFLOW_UNDO")
+        app.terminate(); try workflowStart(app, reset: false)
+        workflowWait { try self.workflowCachedSupport() == 0 && (self.workflowCache()["pending"] as? [Any])?.count == 1 }
+        XCTAssertEqual((try workflowPeer()["attempts"] as? [Any])?.count, 1)
+        app.buttons["restoreNativeWorkflowSupport"].click()
+        workflowWait { try self.workflowSettled(tasks: 1, attempts: 2) }
+        XCTAssertEqual((try workflowPeer()["attempts"] as? [[String: Any]])?.last as NSDictionary?, first as NSDictionary)
+        XCTAssertEqual(try workflowPeer()["transitions"] as? Int, 1)
+        XCTAssertEqual((try workflowPeer()["receipts"] as? [String: Any])?.count, 1)
+    }
+    @MainActor func testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app); try workflowCreate(app)
+        let first = try workflowRows(); app.buttons["addIncomingWorkflowTask"].click(); app.buttons["undoNativeWorkflow"].click()
+        workflowWait { try self.workflowSettled(tasks: 4, attempts: 1) }
+        XCTAssertEqual(try workflowPeer()["transitions"] as? Int, 0)
+        let after = try workflowRows()
+        for (table, rows) in first { for row in rows { XCTAssertEqual(after[table]?.first { $0["id"] as? String == row["id"] as? String } as NSDictionary?, row as NSDictionary) } }
+        XCTAssertTrue(app.staticTexts["Later incoming work"].waitForExistence(timeout: 5))
+        let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Refused workflow Undo preserves incoming work"; picture.lifetime = .keepAlways; add(picture)
+        app.terminate(); try workflowStart(app, reset: false); workflowWait { try self.workflowSettled(tasks: 4, attempts: 1) }
+    }
+    @MainActor func testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app); try workflowCreate(app)
+        let first = try workflowRows(); app.buttons["pauseNativeWorkflowSupport"].click()
+        workflowWait { try self.workflowCachedSupport() == 0 }
+        app.buttons["undoNativeWorkflow"].click()
+        let warning = app.alerts.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "safely undo workflows")).firstMatch
+        if warning.waitForExistence(timeout: 2) { XCTAssertTrue(warning.exists) }
+        else { XCTAssertTrue(app.staticTexts["nativeWorkflowStatus"].label.contains("safely undo workflows"), app.debugDescription) }
+        if app.alerts.buttons["OK"].exists { app.alerts.buttons["OK"].click() }
+        XCTAssertTrue(try workflowSettled(tasks: 3, attempts: 0)); XCTAssertEqual(try workflowRows() as NSDictionary, first as NSDictionary)
+        app.buttons["restoreNativeWorkflowSupport"].click(); workflowWait { try self.workflowCachedSupport() == 1 }
+        app.buttons["undoNativeWorkflow"].click(); workflowWait { try self.workflowSettled(tasks: 1, attempts: 1) }
+    }
+}
