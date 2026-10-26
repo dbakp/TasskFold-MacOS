@@ -109,3 +109,33 @@ struct TodoistImportFlow {
         return noun + (suffix == "Skipped" ? " already imported" : " imported")
     }
 }
+
+
+/// Explicit repair for old imported copies; literal Taskfold text never implies a type.
+struct TodoistHeadingConversion: Identifiable, Sendable {
+    let id = UUID()
+    let captured: Record
+    let sourceTitle: String
+    init?(_ row: Record) {
+        guard TaskKind(row) == .task,
+              row["completed"] == .null || row["completed"] == .bool(false),
+              row["completed_at"] == .null,
+              row["source_metadata"].object["provider"] == .string("todoist"),
+              case .string(let title)? = row["source_metadata"].object["original"]?.object["content"],
+              title.hasPrefix("* "), !title.dropFirst(2).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              case .string(let current) = row["title"], !current.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        captured = row; sourceTitle = title
+    }
+    var canRemoveMarker: Bool { captured.title.hasPrefix("* ") && !captured.title.dropFirst(2).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    var removeMarkerByDefault: Bool { canRemoveMarker && captured.title == sourceTitle }
+    func title(removingMarker: Bool) -> String { removingMarker && canRemoveMarker ? String(captured.title.dropFirst(2)) : captured.title }
+    func applying(to current: Record, removingMarker: Bool, authoringEnabled: Bool) throws -> Record {
+        guard authoringEnabled, current == captured, Self(current) != nil else {
+            throw AppFailure(message: "This task or heading availability changed. Close this review and reopen it from the current task. Your work is unchanged.")
+        }
+        guard !removingMarker || canRemoveMarker else { throw AppFailure(message: "Keep the current title; it has no removable imported marker.") }
+        var edited = try TaskKind.setting(current, heading: true)
+        edited["title"] = .string(title(removingMarker: removingMarker))
+        return edited
+    }
+}

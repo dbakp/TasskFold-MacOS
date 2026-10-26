@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-26",
+  "sources": {
+    "Taskfold/Core/TodoistImport.swift": "4ee5a92499cca88fa1e38f680d3968755b27dff98cd16db290c19971790eaa45",
+    "Taskfold/Views/TodoistHeadingConversionReview.swift": "a181f8de309bcf94f4cb662030482c26570c8673885eb93b3497783108a2d8c6",
+    "TaskfoldTests/TaskKindTests.swift": "99ba42f117951ffb70e85069abe073064ff1a936b2c0f52f84fddeb1ec1fe83e",
+    "Taskfold.xcodeproj/project.pbxproj": "4f02e37fc7618e2e00f4558a034e7503dede2c2caeb5b000d4b485d272186244",
+    "Taskfold/Views/TaskInspector.swift": "8773004ffb1ee3d7d56b9322cc8ddb965ca156f5176f6fad510657520c656e8f"
+  },
+  "normalHeadingAuthoringChanged": false,
+  "hostedChanges": false
+}

@@ -19,7 +19,8 @@ supported fields and exclusions are in `TASK_CSV_SOURCE_MAPPING.md`.
 
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
-sharing acceptance (implementation in TASK_ROW_CSV.md), older literal-copy conversion review, and shared type/capability/command
+sharing acceptance (implementation in TASK_ROW_CSV.md), older literal-copy conversion acceptance (review implemented in
+TODOIST_HEADING_CONVERSION.md), and shared type/capability/command
 adapters. The user-deferred older-client rollout dependency remains before hosted
 exposure. See `TASK_HEADINGS.md`, `TASK_CALENDAR_WORK.md`, `TASK_WORK_HISTORY.md`,
 `TASK_CSV_SOURCE_MAPPING.md` and their evidence folders. Historical checkpoints
@@ -5146,3 +5147,23 @@ handoff and wider source/account/accessibility acceptance stay open.
 See [TASK_ROW_CSV.md](TASK_ROW_CSV.md) and task-row-csv/ for scope and evidence.
 The implementation advances flat row sharing; it does not close rank 3, the wider
 Px goal or user-deferred release/provider/device work.
+
+
+### Reviewed older Todoist heading copies — 26 October 2026
+
+Both apps now offer an explicit review for ordinary open rows carrying known
+Todoist heading source metadata. The review separates imported and current titles,
+lets the user keep or remove one leading marker, and preserves edited wording by
+default. Apply rechecks the whole captured editor draft and heading availability;
+the native editor retains its Save/recovery/Undo paths. Reviewed title words stay
+literal rather than becoming new quick-entry date/project/priority edits.
+
+Each owned repo passes 52 selected Core checks (7 new conversion scenarios).
+Current iPhone and iPad scenarios pass review Cancel, marker choices, Apply then
+parent Cancel, separate Save, exact untouched-field preservation and cold return.
+Both review images were inspected. Independent Mac Debug build and strict/deep
+Simulator signing checks pass. Mac native, broader live source/access races,
+spoken/largest-text and shared/cloud/cross-device acceptance remain open.
+Normal heading authoring and all user-deferred rollout/provider gates are unchanged.
+See [TODOIST_HEADING_CONVERSION.md](TODOIST_HEADING_CONVERSION.md) and
+heading-conversion/. Rank 3 and the full Px goal remain active.

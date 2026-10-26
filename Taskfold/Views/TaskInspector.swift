@@ -100,6 +100,7 @@ struct TaskInspectorForm: View {
     @State private var comment = ""
     @State private var conversation: ConversationRequest?
     @State private var noteFormatting: NoteFormatRequest?
+    @State private var headingConversion: TodoistHeadingConversion?
     @State private var pastedImageName: String?
     @State private var importing = false
     @State private var preview: URL?
@@ -195,6 +196,13 @@ struct TaskInspectorForm: View {
         .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0) }
         .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
         .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
+        .sheet(item: $headingConversion) { request in
+            TodoistHeadingConversionReview(request: request, available: { editorAvailable && store.taskHeadingsAuthoringEnabled && draft == request.captured }, apply: { remove in
+                guard editorAvailable else { throw AppFailure(message: "The workspace changed. Reopen the task.") }
+                let edited = try request.applying(to: draft, removingMarker: remove, authoringEnabled: store.taskHeadingsAuthoringEnabled)
+                saveTask?.cancel(); titleParsingBaseline = edited.title; draft = edited
+            })
+        }
         .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
         .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
         .onChange(of:recoveryExtras) {_,_ in checkpoint()}
@@ -220,6 +228,9 @@ struct TaskInspectorForm: View {
                         Text("Heading").tag(true)
                     }.disabled(TaskKind(draft) == .unsupported).accessibilityIdentifier("taskKindPicker")
                     if draft.completed { Text("Reopen this task to turn it into a heading.").font(.caption).foregroundStyle(.secondary) }
+                    if let request = TodoistHeadingConversion(draft) {
+                        Button("Review imported heading", systemImage: "textformat") { titleFocused = false; headingConversion = request }.accessibilityIdentifier("reviewImportedHeading")
+                    }
                 }
                 if !TaskKind.mayComplete(draft) {
                     Label(TaskKind(draft) == .heading ? "Heading · stays open" : "Task type unavailable", systemImage: TaskKind(draft) == .heading ? "textformat" : "questionmark.square")

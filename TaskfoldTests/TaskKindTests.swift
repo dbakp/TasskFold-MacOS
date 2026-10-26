@@ -262,3 +262,65 @@ extension TaskKindTests {
         XCTAssertFalse(RowGestureAction.complete.permitsFullSwipe(for: unknown))
     }
 }
+
+
+final class TodoistHeadingConversionTests: XCTestCase {
+    func imported(_ title: String = "* Plan tomorrow #work p1") -> Record {
+        var row = Record.task(user: "synthetic-user")
+        row["title"] = .string(title)
+        row["source_metadata"] = .object(["provider": .string("todoist"), "account": .string("synthetic-account"), "original": .object(["content": .string("* Plan tomorrow #work p1"), "id": .string("synthetic-source")])])
+        return row
+    }
+    func testOnlyKnownImportEvidenceOffersReview() {
+        var row = imported(); XCTAssertNotNil(TodoistHeadingConversion(row))
+        row["source_metadata"] = .null; XCTAssertNil(TodoistHeadingConversion(row))
+        row = imported(); row["source_metadata"] = .object(["provider": .string("other"), "original": .object(["content": .string(row.title)])]); XCTAssertNil(TodoistHeadingConversion(row))
+        for value in [JSON.string("ordinary"), .string("* "), .string("* \n"), .number(4), .null] {
+            row = imported(); row["source_metadata"] = .object(["provider": .string("todoist"), "original": .object(["content": value])]); XCTAssertNil(TodoistHeadingConversion(row))
+        }
+    }
+    func testReviewDoesNotMutateAndApplyChangesOnlyTypeAndReviewedTitle() throws {
+        var row = imported(); row["description"] = .string("Full notes"); row["opaque"] = .object(["future": .bool(true)])
+        row["subtasks"] = .array([.object(["id": .string("child"), "title": .string("Work"), "completed": .bool(false)])])
+        row["attachments"] = .array([.object(["name": .string("brief.pdf")])]); row["comments"] = .array([.string("Keep")])
+        row["is_recurring"] = .bool(true); row["recurrence_pattern"] = .object(["type": .string("daily")]); row["due_date"] = .string("2026-10-27")
+        let before = row, review = try XCTUnwrap(TodoistHeadingConversion(row))
+        XCTAssertTrue(review.removeMarkerByDefault); XCTAssertEqual(row, before)
+        let edited = try review.applying(to: row, removingMarker: true, authoringEnabled: true)
+        XCTAssertEqual(edited.title, "Plan tomorrow #work p1"); XCTAssertEqual(TaskKind(edited), .heading)
+        for (key, value) in row.fields where !["title", "is_heading"].contains(key) { XCTAssertEqual(edited[key], value, key) }
+        XCTAssertEqual(row, before); XCTAssertTrue(TaskCompletion.complete(edited, tasks: [edited]).isEmpty)
+        XCTAssertTrue(TaskKind.permits(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: ["title": edited["title"], "is_heading": .bool(true)]), existing: row))
+    }
+    func testLiteralMarkerCanBeKeptAndOnlyOneMarkerIsRemoved() throws {
+        let row = imported("* * Keep the second marker"), review = try XCTUnwrap(TodoistHeadingConversion(row))
+        XCTAssertFalse(review.removeMarkerByDefault)
+        XCTAssertEqual(try review.applying(to: row, removingMarker: false, authoringEnabled: true).title, row.title)
+        XCTAssertEqual(try review.applying(to: row, removingMarker: true, authoringEnabled: true).title, "* Keep the second marker")
+    }
+    func testEditedTitleIsNeverReplacedBySourceTitle() throws {
+        let row = imported("My current wording"), review = try XCTUnwrap(TodoistHeadingConversion(row))
+        XCTAssertFalse(review.canRemoveMarker); XCTAssertFalse(review.removeMarkerByDefault)
+        XCTAssertEqual(try review.applying(to: row, removingMarker: false, authoringEnabled: true).title, row.title)
+        XCTAssertThrowsError(try review.applying(to: row, removingMarker: true, authoringEnabled: true))
+    }
+    func testCompletedUnsupportedAndInvalidStateNeedExplicitRecoveryFirst() {
+        for pair in [("completed", JSON.bool(true)), ("completed", .string("false")), ("completed_at", .string("2026-10-25T12:00:00Z")), ("is_heading", .bool(true)), ("is_heading", .string("future")), ("title", .string(""))] {
+            var row = imported(); row[pair.0] = pair.1; XCTAssertNil(TodoistHeadingConversion(row), pair.0)
+        }
+    }
+    func testWholeDraftAndCapabilityAreRechecked() throws {
+        let row = imported(), review = try XCTUnwrap(TodoistHeadingConversion(row))
+        XCTAssertThrowsError(try review.applying(to: row, removingMarker: true, authoringEnabled: false))
+        for pair in [("title", JSON.string("Changed")), ("completed", .bool(true)), ("completion_version", .number(8)), ("task_generation", .string("replaced")), ("description", .string("New work")), ("source_metadata", .null)] {
+            var changed = row; changed[pair.0] = pair.1
+            XCTAssertThrowsError(try review.applying(to: changed, removingMarker: true, authoringEnabled: true), pair.0)
+        }
+    }
+    func testReviewedLiteralTitleDoesNotCreateQuickEntryEdits() throws {
+        let row = imported(), review = try XCTUnwrap(TodoistHeadingConversion(row))
+        let edited = try review.applying(to: row, removingMarker: true, authoringEnabled: true)
+        let parsed = QuickEntry(edited.title, disabled: Set(QuickEntry.groups), task: edited)
+        XCTAssertEqual(parsed.title, edited.title); XCTAssertTrue(parsed.updates.isEmpty)
+    }
+}
