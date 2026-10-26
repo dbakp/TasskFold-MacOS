@@ -326,3 +326,65 @@ extension SharedCommentsTests {
         XCTAssertEqual(snapshot.tables[SharedMention.table], [opaque])
     }
 }
+
+extension SharedCommentsTests {
+    private func recoverySnapshot() throws -> Snapshot {
+        var snapshot = conversationSnapshot()
+        let origin = "https://synthetic.example", team = id(90)
+        let raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(owner), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "a", count: 64)), "teams": .array([.object(["id": .string(team), "state": .string("active"), "revision": .number(1), "access_revision": .number(1)])]), "projects": .array([.object(["id": .string(id(40)), "team_id": .string(team), "role": .string("editor"), "archived": .bool(false), "can_send_tasks": .bool(true)])])]
+        snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: owner, origin: origin), previous: nil, pending: [], tasks: snapshot.tables["tasks"]!)
+        return snapshot
+    }
+    func testMentionContextCaptureIsImmutableScopedAndExcludesUnknownPrivateColumns() throws {
+        var snapshot = try recoverySnapshot()
+        snapshot.tables[SharedComment.table]![0]["future_private"] = .string("Never freeze an unknown column")
+        snapshot.tables[SharedMention.table]![0]["future_private"] = .string("Never freeze a recipient extension")
+        let intent = try SharedMentionChange(mention: XCTUnwrap(SharedMention(mention())), account: owner, read: false, operationID: id(60))
+        try ConversationOutbox.enqueue(intent.record, into: &snapshot, origin: "https://synthetic.example")
+        let saved = snapshot.tables[ConversationOutbox.table]!.first!, context = try XCTUnwrap(MentionRecoveryContext.saved(in: saved))
+        XCTAssertEqual(saved["intent"], .object(intent.record.fields)); XCTAssertNil(context.comment.fields["future_private"]); XCTAssertNil(context.mention.fields["future_private"])
+        snapshot.tables[SharedComment.table]![0]["body"] = .string("A later comment revision")
+        try ConversationOutbox.enqueue(intent.record, into: &snapshot, origin: "https://synthetic.example")
+        XCTAssertEqual(snapshot.tables[ConversationOutbox.table], [saved], "Retry cannot replace the context captured with this nonce")
+        var malformed = saved, raw = saved[MentionRecoveryContext.field].object
+        raw["future"] = .bool(true); malformed[MentionRecoveryContext.field] = .object(raw)
+        XCTAssertFalse(ConversationOutbox.valid(malformed))
+        malformed = saved; malformed["id"] = .string(id(61)); XCTAssertFalse(ConversationOutbox.valid(malformed))
+        let restored = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+        XCTAssertEqual(restored.tables[ConversationOutbox.table], [saved])
+        XCTAssertEqual(ConversationOutbox.mention(saved)?.payload, intent.payload)
+    }
+    func testMentionContextUnavailableOrAmbiguousCaptureKeepsOriginalLegacyIntent() throws {
+        for mode in ["no-boundary", "foreign-origin", "missing-comment", "duplicate-comment", "missing-mention", "duplicate-task", "wrong-generation"] {
+            var snapshot = try recoverySnapshot()
+            if mode == "no-boundary" { snapshot.teamWorkspace = nil }
+            if mode == "missing-comment" { snapshot.tables[SharedComment.table] = [] }
+            if mode == "duplicate-comment" { snapshot.tables[SharedComment.table]!.append(snapshot.tables[SharedComment.table]![0]) }
+            if mode == "missing-mention" { snapshot.tables[SharedMention.table] = [] }
+            if mode == "duplicate-task" { snapshot.tables["tasks"]!.append(snapshot.tables["tasks"]![0]) }
+            if mode == "wrong-generation" { snapshot.tables["tasks"]![0]["task_generation"] = .string(id(99)) }
+            let intent = try SharedMentionChange(mention: XCTUnwrap(SharedMention(mention())), account: owner, read: true, operationID: id(60))
+            try ConversationOutbox.enqueue(intent.record, into: &snapshot, origin: mode == "foreign-origin" ? "https://foreign.example" : "https://synthetic.example")
+            let row = try XCTUnwrap(snapshot.tables[ConversationOutbox.table]?.first)
+            XCTAssertNil(row.fields[MentionRecoveryContext.field], mode); XCTAssertTrue(ConversationOutbox.valid(row)); XCTAssertEqual(row["intent"], .object(intent.record.fields))
+        }
+    }
+    @MainActor func testCapturedMentionHTTPBodyContainsOnlyOriginalReadArguments() async throws {
+        var snapshot = try recoverySnapshot()
+        let intent = try SharedMentionChange(mention: XCTUnwrap(SharedMention(mention())), account: owner, read: true, operationID: id(60))
+        try ConversationOutbox.enqueue(intent.record, into: &snapshot, origin: "https://synthetic.example")
+        let row = try XCTUnwrap(snapshot.tables[ConversationOutbox.table]?.first)
+        XCTAssertNotNil(row.fields[MentionRecoveryContext.field])
+        let actual = try XCTUnwrap(ConversationOutbox.mention(row)), backend = try api(owner)
+        var next = mention(); next["revision"] = .number(2); next["read_at"] = .string("2026-10-21T02:01:00Z")
+        let reply = try response(next, revision: 2)
+        ConversationHTTP.state.set { request, transport in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_mark_mention")
+            let body = try? self.body(request).fields
+            XCTAssertEqual(body, intent.payload); XCTAssertEqual(Set(body?.keys.map { $0 } ?? []), ["_operation_id", "_mention_id", "_expected_revision", "_read"])
+            XCTAssertNil(body?[MentionRecoveryContext.field]); transport.finish(200, reply)
+        }; defer { ConversationHTTP.state.set(nil) }
+        let result = try await backend.markSharedMention(actual)
+        XCTAssertEqual(result.current?.isRead, true)
+    }
+}

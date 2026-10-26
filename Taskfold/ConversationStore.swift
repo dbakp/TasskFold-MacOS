@@ -59,7 +59,7 @@ extension Store {
         guard workspace.matches(account: userID, generation: workspaceGeneration), conversationsAvailable, conversationMentions.contains(where:{$0.id==mention.id}) else { return false }
         do {
             let change = try SharedMentionChange(mention: mention, account: userID, read: read)
-            guard commitConversation({ try ConversationOutbox.enqueue(change.record, into: &$0) }) else { return false }
+            guard commitConversation({ try ConversationOutbox.enqueue(change.record, into: &$0, origin: try? backend.accountRemovalOrigin) }) else { return false }
             Task { await syncConversations() }; return true
         } catch { conversationError = error.localizedDescription; return false }
     }

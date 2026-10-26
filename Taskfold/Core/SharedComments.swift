@@ -207,6 +207,88 @@ extension Backend {
     }
 }
 
+/// Device-local evidence for a queued mention choice. This is not a permission
+/// grant or an RPC payload; it can explain an absent cached discussion only.
+struct MentionRecoveryContext: Codable, Equatable, Sendable {
+    let version: Int
+    let origin: String
+    let intent: Record
+    let comment: Record
+    let mention: Record
+    static let field = "mention_recovery"
+    private static let commentKeys: Set<String> = ["id", "task_id", "task_generation", "project_id", "author_id", "body", "mention_ids", "revision", "created_at", "updated_at", "deleted_at"]
+    private static let mentionKeys: Set<String> = ["id", "comment_id", "recipient_id", "revision", "created_at", "read_at"]
+    func validate(_ row: Record) throws {
+        let change = try SharedMentionChange(record: intent)
+        try TeamOrganizationValue.scope(account: change.account, origin: origin)
+        guard version == 1, row.id == change.operationID, row.string("account") == change.account,
+              row["intent"] == .object(intent.fields), Set(comment.fields.keys) == Self.commentKeys,
+              Set(mention.fields.keys) == Self.mentionKeys,
+              let thread = SharedComment(comment), let marker = SharedMention(mention),
+              thread.id == change.commentID, marker.id == change.mentionID,
+              marker.commentID == thread.id, marker.recipientID == change.account,
+              marker.revision == change.expectedRevision,
+              try JSONEncoder().encode(self).count <= 64_000 else { throw SharedWire.invalidChange }
+    }
+    static func saved(in row: Record) throws -> Self? {
+        guard let value = row.fields[field] else { return nil }
+        guard Set(value.object.keys) == ["version", "origin", "intent", "comment", "mention"] else { throw SharedWire.invalidChange }
+        let data = try JSONEncoder().encode(value)
+        guard data.count <= 64_000 else { throw SharedWire.invalidChange }
+        let result = try JSONDecoder().decode(Self.self, from: data)
+        try result.validate(row); return result
+    }
+    static func capturing(_ row: Record, snapshot: Snapshot, origin: String) -> Self? {
+        guard let change = ConversationOutbox.mention(row),
+              let cache = snapshot.teamWorkspace, cache.boundary.belongs(account: change.account, origin: origin) else { return nil }
+        let comments = (snapshot.tables[SharedComment.table] ?? []).filter { $0.id.lowercased() == change.commentID }
+        let mentions = (snapshot.tables[SharedMention.table] ?? []).filter { $0.id.lowercased() == change.mentionID }
+        guard comments.count == 1, mentions.count == 1, let thread = SharedComment(comments[0]),
+              cache.knownTasks.contains(thread.taskID), cache.boundary.projects[thread.projectID] != nil,
+              (snapshot.tables["tasks"] ?? []).filter({ $0.id == thread.taskID }).count == 1,
+              (snapshot.tables["tasks"] ?? []).filter({ $0.id == thread.taskID && $0.string("task_generation") == thread.taskGeneration && $0.string("project_id") == thread.projectID }).count == 1 else { return nil }
+        let result = Self(version: 1, origin: origin, intent: Record(row["intent"].object),
+            comment: Record(comments[0].fields.filter { commentKeys.contains($0.key) }),
+            mention: Record(mentions[0].fields.filter { mentionKeys.contains($0.key) }))
+        guard (try? result.validate(row)) != nil else { return nil }; return result
+    }
+    /// Only this analysis copy gains missing frozen rows. The live cache never
+    /// receives a historical comment/mention or a synthetic access boundary.
+    static func resolving(_ original: Snapshot, account: String, origin: String, affected: Set<String>, tasks: [Record]) throws -> Snapshot {
+        var result = original
+        for row in original.tables[ConversationOutbox.table] ?? [] {
+            guard let context = try saved(in: row), let thread = SharedComment(context.comment) else { continue }
+            guard affected.contains(thread.taskID) else { continue }
+            guard context.origin == origin, row.string("account") == account,
+                  tasks.contains(where: { $0.id == thread.taskID && $0.string("task_generation") == thread.taskGeneration && $0.string("project_id") == thread.projectID }) else { throw TeamTaskBatch.conflict }
+            for (table, frozen) in [(SharedComment.table, context.comment), (SharedMention.table, context.mention)] {
+                let current = (original.tables[table] ?? []).filter { $0.id.lowercased() == frozen.id.lowercased() }
+                guard current.count <= 1 else { throw TeamTaskBatch.conflict }
+                if let live = current.first {
+                    if table == SharedComment.table {
+                        guard let value = SharedComment(live), value.taskID == thread.taskID, value.taskGeneration == thread.taskGeneration, value.projectID == thread.projectID else { throw TeamTaskBatch.conflict }
+                    } else {
+                        guard let value = SharedMention(live), let captured = SharedMention(frozen),
+                              value.commentID == captured.commentID, value.recipientID == captured.recipientID,
+                              value.revision >= captured.revision else { throw TeamTaskBatch.conflict }
+                    }
+                } else {
+                    // Distinct queued markers may share a comment. They must
+                    // agree on its task incarnation, even if the text evolved.
+                    if let previous = result.tables[table]?.first(where: { $0.id == frozen.id }) {
+                        guard table == SharedComment.table, let value = SharedComment(previous), value.taskID == thread.taskID,
+                              value.taskGeneration == thread.taskGeneration, value.projectID == thread.projectID else { throw TeamTaskBatch.conflict }
+                    } else { result.tables[table, default: []].append(frozen) }
+                }
+            }
+        }
+        // Metadata contains task references; the existing typed edge analysis
+        // must inspect the intent itself after the frozen rows are validated.
+        result.tables[ConversationOutbox.table] = original.tables[ConversationOutbox.table]?.map { row in var value = row; value.fields.removeValue(forKey: field); return value }
+        return result
+    }
+}
+
 /// Separate from task mutations: a blocked conversation never discards or rewrites its authored intent.
 enum ConversationOutbox {
     static let table = "_conversation_outbox"
@@ -220,12 +302,16 @@ enum ConversationOutbox {
     static func valid(_ row: Record) -> Bool {
         guard row["version"] == .number(1), UUID(uuidString: row.id) != nil, states.contains(row.string("state")),
               TaskPlanning.instant(row.string("created_at")) != nil else { return false }
+        if row.fields[MentionRecoveryContext.field] != nil, (try? MentionRecoveryContext.saved(in: row)) == nil { return false }
         if let value = comment(row) { return row.id == value.operationID && row.string("account") == value.account }
         if let value = mention(row) { return row.id == value.operationID && row.string("account") == value.account }
         return false
     }
-    static func enqueue(_ intent: Record, into snapshot: inout Snapshot, now: Date = Date()) throws {
-        let row = Record(["id": intent["operation_id"], "version": .number(1), "account": intent["account"], "intent": .object(intent.fields), "state": .string("pending"), "created_at": .string(TaskActivity.stamp(now))])
+    static func enqueue(_ intent: Record, into snapshot: inout Snapshot, now: Date = Date(), origin: String? = nil) throws {
+        var row = Record(["id": intent["operation_id"], "version": .number(1), "account": intent["account"], "intent": .object(intent.fields), "state": .string("pending"), "created_at": .string(TaskActivity.stamp(now))])
+        if let origin, let captured = MentionRecoveryContext.capturing(row, snapshot: snapshot, origin: origin) {
+            row[MentionRecoveryContext.field] = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(captured))
+        }
         guard valid(row) else { throw AppFailure(message: "This conversation change needs a valid account and identity.") }
         let existing = snapshot.tables[table] ?? []
         if let previous = existing.first(where: { $0.id == row.id }) {
@@ -404,9 +490,14 @@ enum ConversationRecoveryExport {
     static func context(_ rows: [Record], snapshot: Snapshot) -> [JSON] {
         let changes = rows.compactMap(ConversationOutbox.mention)
         let mentionIDs = Set(changes.map(\.mentionID)), commentIDs = Set(changes.map(\.commentID))
+        let frozen = rows.compactMap { try? MentionRecoveryContext.saved(in: $0) }
         return [(SharedComment.table, commentIDs), (SharedMention.table, mentionIDs)].flatMap { table, ids in
-            (snapshot.tables[table] ?? []).filter { ids.contains($0.id.lowercased()) }.map {
-                .object(["table": .string(table), "row": .object($0.fields)])
+            ids.sorted().compactMap { id -> JSON? in
+                if let live = snapshot.tables[table]?.first(where: { $0.id.lowercased() == id }) {
+                    return .object(["table": .string(table), "row": .object(live.fields)])
+                }
+                let row = frozen.map { table == SharedComment.table ? $0.comment : $0.mention }.first { $0.id.lowercased() == id }
+                return row.map { .object(["table": .string(table), "row": .object($0.fields), "source": .string("captured")]) }
             }
         }
     }
@@ -415,7 +506,8 @@ enum ConversationRecoveryExport {
             if let comment = ConversationOutbox.comment(row) { return comment.deleting ? "Comment marked for deletion: " + comment.body : "Comment draft: " + comment.body }
             guard let mention = ConversationOutbox.mention(row) else { return nil }
             let comment = (snapshot.tables[SharedComment.table] ?? []).compactMap(SharedComment.init).first { $0.id == mention.commentID }
-            let detail = comment.map { $0.isDeleted ? "Deleted comment" : $0.body } ?? mention.commentID
+            let saved = (try? MentionRecoveryContext.saved(in: row)).flatMap { SharedComment($0.comment) }
+            let detail = comment.map { $0.isDeleted ? "Deleted comment" : $0.body } ?? saved.map { "Saved comment: " + ($0.isDeleted ? "Deleted comment" : $0.body) } ?? mention.commentID
             return (mention.read ? "Mention marked read: " : "Mention marked unread: ") + detail + "\nSaved for review only; this read state will not be sent automatically."
         }
     }

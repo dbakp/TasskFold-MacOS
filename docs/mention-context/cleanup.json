@@ -1,0 +1,40 @@
+{
+  "removedOwnedScratchLogicalBytes": 753810230,
+  "removedPaths": {
+    "/tmp/taskfold-mention-context-phone.xcresult": 3147726,
+    "/tmp/taskfold-mention-context-ios-core-v3.log": 96769,
+    "/tmp/taskfold-mention-context-ios-core-v2.log": 105609,
+    "/tmp/taskfold-mention-context-mac-core.log": 18674,
+    "/tmp/taskfold-mention-context-ipad-native.log": 46453,
+    "/tmp/taskfold-mention-context-ios-build": 734750196,
+    "/tmp/taskfold-mention-context-host.log": 43,
+    "/tmp/taskfold-mention-context-mac-build.log": 81950,
+    "/tmp/taskfold-mention-context-signatures.json": 705,
+    "/tmp/taskfold-mention-context-phone-native.log": 40370,
+    "/tmp/taskfold-mention-context-export-ipad": 2251919,
+    "/tmp/taskfold-mention-context.swift": 6030,
+    "/tmp/taskfold-mention-context-ipad.xcresult": 3483030,
+    "/tmp/taskfold-mention-context-export-phone": 2030613,
+    "/tmp/taskfold-mention-context-host": 6972382,
+    "/tmp/taskfold-mention-context-ios-core.log": 18721,
+    "/tmp/taskfold-mention-context-http-tests.txt": 5694,
+    "/tmp/taskfold-mention-context-ios-build.log": 537625,
+    "/tmp/taskfold-mention-context-signing.log": 88,
+    "/tmp/taskfold-mention-context-collect.py": 2927,
+    "/tmp/taskfold-mention-context-mac-core-v2.log": 105172,
+    "/tmp/taskfold-mention-context-tests.txt": 10299,
+    "/tmp/taskfold-mention-context-run.py": 833,
+    "/tmp/taskfold-mention-context-mac-core-v3.log": 96402
+  },
+  "preserved": [
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/.build",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/.build",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "/tmp/taskfold-workflow-mac-native-host",
+    "/tmp/taskfold-workflow-mac-native-build"
+  ],
+  "remainingTaskfoldProcesses": 0,
+  "simulators": "Only reserved workflowteststeameditbridge apps/runners removed; both prior boot states preserved.",
+  "note": "Logical bytes, not an APFS physical-space measurement. Current signed Mac host/test build remains ready for approval."
+}

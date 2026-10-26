@@ -1,0 +1,22 @@
+{
+  "initial": "Two individual-completion call sites needed the new explicit backend-origin argument; compilation caught both.",
+  "compileErrors": [
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Core/TeamCompletion.swift:149:119: error: missing argument for parameter 'origin' in call",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Core/TeamCompletion.swift:281:127: error: missing argument for parameter 'origin' in call"
+  ],
+  "v2": {
+    "total": 284,
+    "failed": 3,
+    "cause": "New HTTP/capture fixture team omitted required revision and access_revision; corrected fixture only. All six new recovery cases already passed.",
+    "failures": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Core/TeamProjectAccess.swift:25: error: -[TaskfoldCoreTests.SharedCommentsTests testCapturedMentionHTTPBodyContainsOnlyOriginalReadArguments] : failed: caught error: \"AppFailure(message: \"Project access couldn\u2019t be verified. Reload your projects.\")\"",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Core/TeamProjectAccess.swift:25: error: -[TaskfoldCoreTests.SharedCommentsTests testMentionContextCaptureIsImmutableScopedAndExcludesUnknownPrivateColumns] : failed: caught error: \"AppFailure(message: \"Project access couldn\u2019t be verified. Reload your projects.\")\"",
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Core/TeamProjectAccess.swift:25: error: -[TaskfoldCoreTests.SharedCommentsTests testMentionContextUnavailableOrAmbiguousCaptureKeepsOriginalLegacyIntent] : failed: caught error: \"AppFailure(message: \"Project access couldn\u2019t be verified. Reload your projects.\")\""
+    ]
+  },
+  "final": {
+    "total": 284,
+    "failed": 0,
+    "skipped": 0
+  }
+}

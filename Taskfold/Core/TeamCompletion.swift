@@ -146,7 +146,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
         if let proposed, receipt.successor?.id != proposed.id || receipt.successor?["task_generation"] != proposed["task_generation"] { displaced.insert(proposed.id) }
         if !displaced.isEmpty {
             guard !snapshot.pending.contains(where: { $0.id != header.id && TaskOrderRecovery.references($0, tasks: displaced) }) else { return false }
-            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: scope.account, affected: displaced,
+            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: scope.account, origin: scope.origin, affected: displaced,
                 tasks: (snapshot.tables["tasks"] ?? []) + [source] + [proposed].compactMap { $0 }), conversations.isEmpty else { return false }
         }
         let later=result.pending.filter{$0.id != header.id}
@@ -278,7 +278,7 @@ extension TeamCompletion {
                 guard let encoded=try? JSONEncoder().encode(later),let value=try? JSONDecoder().decode(JSON.self,from:encoded),!references(value) else {return nil}
                 if later.table == "projects",later.recordID.lowercased() == command.scope.project.lowercased() {return nil}
             }
-            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: command.scope.account, affected: ids,
+            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: command.scope.account, origin: command.scope.origin, affected: ids,
                 tasks: (snapshot.tables["tasks"] ?? []) + [command.source] + [command.proposed].compactMap { $0 }), conversations.isEmpty else { return nil }
             var rows=snapshot.tables["tasks"] ?? []
             if let local=rows.first(where:{$0.id == command.source.id}) {

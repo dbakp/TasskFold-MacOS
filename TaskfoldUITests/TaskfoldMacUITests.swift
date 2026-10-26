@@ -3407,13 +3407,14 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         wait(for: [opened], timeout: 10)
         app.activate()
     }
-    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false, mentions: Bool = false, preferences: Bool = false, cancelling: Bool = false, cancellationRace: Bool = false) throws {
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false, mentions: Bool = false, preferences: Bool = false, cancelling: Bool = false, cancellationRace: Bool = false, capturedMentions: Bool = false) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
         if !recorded { app.launchArguments.removeAll { $0 == "--team-batch-recovery-recorded" } }
         if let storage { app.launchArguments.append("--team-recovery-storage=" + storage) }
         if recordedDraft { app.launchArguments.append("--team-recorded-draft-testing") }
         if mentions { app.launchArguments.append("--team-recorded-mention-testing") }
+        if capturedMentions { app.launchArguments.append("--team-captured-mention-testing") }
         if preferences { app.launchArguments.append("--team-recorded-order-testing") }
         if cancelling { app.launchArguments.append("--team-cancelled-draft-testing") }
         if cancellationRace { app.launchArguments.append("--team-cancelled-draft-recorded-race") }
@@ -3738,10 +3739,10 @@ extension TeamCompletionRecoveryMacUITests {
 
 
 extension TeamCompletionRecoveryMacUITests {
-    @MainActor private func recordedDraftRecovery(_ scenario: String, mentions: Bool = false, preferences: Bool = false) throws {
+    @MainActor private func recordedDraftRecovery(_ scenario: String, mentions: Bool = false, preferences: Bool = false, capturedMentions: Bool = false) throws {
         let app = XCUIApplication(); defer { app.terminate() }
         let single = scenario == "single", fault = scenario == "vault" ? "draft" : "cache"
-        try launch(app, mode: "viewer", single: single, recorded: true, storage: fault, recordedDraft: true, mentions: mentions, preferences: preferences)
+        try launch(app, mode: "viewer", single: single, recorded: true, storage: fault, recordedDraft: true, mentions: mentions, preferences: preferences, capturedMentions: capturedMentions)
         app.buttons["openMacCompletionRecovery"].click()
         let fm = FileManager.default, support = try support()
         let cacheFile = support.appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json")
@@ -3839,6 +3840,14 @@ extension TeamCompletionRecoveryMacUITests {
             let beforeRows = before["tables"] as! [String: Any], afterRows = after["tables"] as! [String: Any]
             let originalMarkers = try XCTUnwrap(beforeRows["_conversation_outbox"] as? [[String: Any]])
             XCTAssertEqual(originalMarkers.count, 1)
+            if capturedMentions {
+                XCTAssertNotNil(originalMarkers[0]["mention_recovery"])
+                XCTAssertTrue((beforeRows["task_comments"] as? [[String: Any]])?.isEmpty == true)
+                XCTAssertTrue((beforeRows["task_mentions"] as? [[String: Any]])?.isEmpty == true)
+                XCTAssertTrue((afterRows["task_comments"] as? [[String: Any]])?.isEmpty == true)
+                XCTAssertTrue((afterRows["task_mentions"] as? [[String: Any]])?.isEmpty == true)
+                XCTAssertTrue(((json["conversation_context"] as? [[String: Any]]) ?? []).allSatisfy { $0["source"] as? String == "captured" })
+            }
             XCTAssertEqual((originalMarkers[0]["intent"] as? [String: Any])?["kind"] as? String, "mention-read")
             XCTAssertEqual((afterRows["_conversation_outbox"] as? [[String: Any]])?.count, 0)
             XCTAssertEqual(json["conversations"] as? NSArray, originalMarkers as NSArray)
@@ -4123,4 +4132,8 @@ extension TeamCompletionRecoveryMacUITests {
 
 extension TeamCompletionRecoveryMacUITests {
     @MainActor func testSingleCancellationAlreadyRecordedRaceKeepsPreflightDraftAndQueue() throws { try cancelledDraftRecovery("race") }
+}
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor func testRecordedDraftRecoversCapturedDiscussionAfterCacheDisappears() throws { try recordedDraftRecovery("group", mentions: true, preferences: true, capturedMentions: true) }
 }

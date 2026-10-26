@@ -13,7 +13,7 @@ draft work. See the dated stages at the end of this plan for verification and
 remaining limits; older paragraphs record preceding checkpoints.
 
 The next priorities within rank 6 are:
-1. Finish provisional connected-draft paths and missing conversation context
+1. Finish provisional connected-draft paths and unsupported legacy conversation context
    without guessing legacy or unsupported preference history. Individual
    cancellation drafts now pass Core and iPhone/iPad native acceptance; current
    Mac native acceptance awaits interactive automation approval. Captured
@@ -4652,3 +4652,52 @@ Mac interactive automation remains pending user approval. Provisional connected
 edit expansion, missing conversation context, I/O-phase account/session UI races,
 broader native/spoken/recurring checks, large workloads and hosted rollout remain
 open. Collaboration stays default off; all user deferrals remain unchanged.
+
+
+## 26 October: captured discussion context for queued mention choices
+
+Marking a mention read or unread now captures an optional version-1 device-local
+context when the current workspace has one matching task, comment and mention.
+It binds the complete original intent and nonce, account/backend, exact task
+incarnation/project, recipient and expected mention revision. Only supported
+comment/mention columns are frozen; unrelated discussion, task records, unknown
+private columns and permission caches are excluded. Missing/ambiguous capture
+keeps the original read-state intent without inventing historical context. A retry
+with the same operation ID never replaces its original capture.
+
+Recorded missing-task and individual/selection cancellation recovery can use this
+capture if its matching cached discussion has disappeared. Historical rows are
+added only to a temporary analysis copy; they are never reinserted into the live
+workspace. Existing live rows take precedence and must retain matching identities;
+malformed, duplicated, reassigned or older mention identities refuse recovery.
+Current workspace read access is still required. A plain completion receipt cannot
+silently orphan the connected read-state choice. Readable draft previews explain
+“Saved comment” when relying on captured text. Explicit export includes only the
+selected discussion, marking fallback rows as captured. Legacy entries are not
+assigned guessed context, and unsupported metadata keeps work protected.
+
+Both independent repos pass 284 focused Core checks, with nine new cases for
+captured read/unread preservation, exact cancellation proof, current access refusal,
+malformed/foreign/stale/recreated context, encrypted reopen/export isolation,
+nonce immutability, missing/ambiguous capture and actual intercepted HTTP payloads.
+The existing server request body is unchanged: captured context never enters it.
+Native acceptance and exact source/artifact hashes are recorded in
+[p2-mention-context-evidence.json](p2-mention-context-evidence.json).
+
+This handles supported newly captured mention choices, not arbitrary missing
+legacy conversation evidence or the wider provisional-copy cohort. Mac native
+acceptance still awaits interactive automation approval. I/O-phase account/session
+races, broader native recurring/spoken/large-workload checks and genuine hosted
+collaboration remain open. Collaboration stays default off and all user-deferred
+release/provider/device gates remain unchanged.
+
+Two native cases pass on each iPhone and iPad Simulator: the new recorded-group
+recovery with both live discussion caches empty, and the existing individual
+recorded-draft regression. Actual before/after/relaunch/archive/export JSON is
+retained and independently compared. The frozen selected discussion survives;
+it is never restored into the live cache. Native sharing opens and cancels without
+changing saved state. Installed binaries match the strictly verified signed
+products. Debug setup uses the production enqueue/capture helper; normal public
+Mark read/unread button interaction, native cancellation/unread and hosted behavior
+are not claimed by these two cases. The independent Mac app/test build and strict
+signature verification pass; its matching UI test awaits automation approval.

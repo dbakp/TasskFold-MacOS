@@ -1763,3 +1763,103 @@ extension TeamCompletionBatchTests {
         XCTAssertTrue(draft.text.contains("Keep the reopened task’s authored notes")); XCTAssertEqual(draft.original.teamCompletion?.operation, .undo)
     }
 }
+
+extension TeamCompletionBatchTests {
+    private func capturedMention(_ snapshot: inout Snapshot, task: Record, account: String, origin: String, read: Bool = true) throws -> (Record, SharedMentionChange) {
+        let pair = try attachRecoveryMention(&snapshot, task: task, account: account, read: read)
+        snapshot.tables[ConversationOutbox.table] = []
+        try ConversationOutbox.enqueue(pair.1.record, into: &snapshot, origin: origin)
+        XCTAssertNotNil(snapshot.tables[ConversationOutbox.table]!.first!.fields[MentionRecoveryContext.field])
+        return pair
+    }
+    func testCapturedMentionContextRecoversAbsentCommentAndMarkerWithoutRestoringLiveCache() throws {
+        for single in [true, false] { for read in [true, false] {
+            let (base, cache, edit, review) = try recoveryFixture(single: single); var local = base.snapshot
+            let (comment, change) = try capturedMention(&local, task: XCTUnwrap(local.tables["tasks"]?.first { $0.id == edit.recordID }), account: base.account, origin: base.origin, read: read)
+            local.tables[SharedComment.table] = []; local.tables[SharedMention.table] = []
+            let before = local, draft = single ? try TeamCompletionRecoveryDraft(single: review.members[0], snapshot: local) : try TeamCompletionRecoveryDraft(group: review, snapshot: local)
+            let next = try XCTUnwrap(draft.preserving(readable: cache))
+            XCTAssertEqual(local, before); XCTAssertEqual(draft.snapshot, before)
+            XCTAssertTrue(next.tables[SharedComment.table]!.isEmpty); XCTAssertTrue(next.tables[SharedMention.table]!.isEmpty)
+            XCTAssertTrue(next.tables[ConversationOutbox.table]!.isEmpty)
+            XCTAssertEqual(ConversationOutbox.mention(draft.parkedConversations[0]), change)
+            XCTAssertTrue(draft.text.contains("Saved comment: " + comment.string("body")))
+            let json = try JSONDecoder().decode([String: JSON].self, from: draft.data())
+            XCTAssertEqual(json["conversation_context"]!.list.count, 2)
+            XCTAssertTrue(json["conversation_context"]!.list.allSatisfy { $0.object["source"] == .string("captured") })
+            XCTAssertEqual(json["conversations"]!.list, before.tables[ConversationOutbox.table]!.map { .object($0.fields) })
+        } }
+    }
+    func testCapturedMentionContextCannotBypassCurrentReadScopeOrPlainAcknowledgement() throws {
+        let (base, cache, edit, review) = try recoveryFixture(single: true); var local = base.snapshot
+        _ = try capturedMention(&local, task: XCTUnwrap(local.tables["tasks"]?.first { $0.id == edit.recordID }), account: base.account, origin: base.origin)
+        local.tables[SharedComment.table] = []; local.tables[SharedMention.table] = []
+        let draft = try TeamCompletionRecoveryDraft(single: review.members[0], snapshot: local)
+        XCTAssertNotNil(draft.preserving(readable: cache)); XCTAssertNil(review.members[0].acknowledging(local))
+        var raw = cache.boundary.raw; raw["projects"] = .array([]); raw["teams"] = .array([])
+        let lost = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: base.account, origin: base.origin), previous: nil, pending: [], tasks: [])
+        XCTAssertNil(draft.preserving(readable: lost))
+    }
+    func testCapturedMentionContextCancellationPreservesOriginalIntentAndActualTerminalProof() throws {
+        let (base, cancelled, cache, edit) = try singleCancellationFixture(conversations: false, orders: false); var local = base.snapshot
+        let (_, change) = try capturedMention(&local, task: XCTUnwrap(local.tables["tasks"]?.first { $0.id == edit.recordID }), account: base.account, origin: base.origin)
+        local.tables[SharedComment.table] = []; local.tables[SharedMention.table] = []
+        let unrecorded = try TeamCompletion.Review(base.review, for: base.original)
+        let draft = try TeamCompletionRecoveryDraft(single: unrecorded, snapshot: local)
+        XCTAssertNotNil(draft.previewCancellation(readable: cache)); XCTAssertNil(draft.preserving(readable: cache))
+        let verified = try draft.withCancellation(cancelled), next = try XCTUnwrap(verified.preserving(readable: cache))
+        XCTAssertTrue(next.tables[ConversationOutbox.table]!.isEmpty)
+        XCTAssertEqual(verified.parkedConversations[0]["intent"], .object(change.record.fields))
+        XCTAssertEqual(verified.cancellations, [cancelled.response])
+    }
+    func testCapturedMentionContextRefusesChangedLiveIdentityDuplicateOrMalformedRows() throws {
+        for mode in ["comment-generation", "comment-project", "mention-comment", "mention-recipient", "mention-revision", "duplicate-comment", "duplicate-mention", "malformed-comment", "malformed-mention"] {
+            let (base, _, edit, review) = try recoveryFixture(); var local = base.snapshot
+            _ = try capturedMention(&local, task: XCTUnwrap(local.tables["tasks"]?.first { $0.id == edit.recordID }), account: base.account, origin: base.origin)
+            if mode == "comment-generation" { local.tables[SharedComment.table]![0]["task_generation"] = .string(UUID().uuidString.lowercased()) }
+            if mode == "comment-project" { local.tables[SharedComment.table]![0]["project_id"] = .string(UUID().uuidString.lowercased()) }
+            if mode == "mention-comment" { local.tables[SharedMention.table]![0]["comment_id"] = .string(UUID().uuidString.lowercased()) }
+            if mode == "mention-recipient" { local.tables[SharedMention.table]![0]["recipient_id"] = .string(UUID().uuidString.lowercased()) }
+            if mode == "mention-revision" { local.tables[SharedMention.table]![0]["revision"] = .number(2) }
+            if mode == "duplicate-comment" { local.tables[SharedComment.table]!.append(local.tables[SharedComment.table]![0]) }
+            if mode == "duplicate-mention" { local.tables[SharedMention.table]!.append(local.tables[SharedMention.table]![0]) }
+            if mode == "malformed-comment" { local.tables[SharedComment.table]![0]["revision"] = .number(0) }
+            if mode == "malformed-mention" { local.tables[SharedMention.table]![0]["revision"] = .number(0) }
+            let before = local; XCTAssertThrowsError(try TeamCompletionRecoveryDraft(group: review, snapshot: local), mode); XCTAssertEqual(local, before)
+        }
+    }
+    func testCapturedMentionContextRejectsChangedBindingOriginAndUnknownFormatAtomically() throws {
+        for mode in ["origin", "version", "intent", "recipient", "revision", "extra-field", "task-generation"] {
+            let (base, _, edit, review) = try recoveryFixture(); var local = base.snapshot
+            _ = try capturedMention(&local, task: XCTUnwrap(local.tables["tasks"]?.first { $0.id == edit.recordID }), account: base.account, origin: base.origin)
+            var row = local.tables[ConversationOutbox.table]![0], raw = row[MentionRecoveryContext.field].object
+            if mode == "origin" { raw["origin"] = .string("https://foreign.example") }
+            if mode == "version" { raw["version"] = .number(2) }
+            if mode == "intent" { var intent = raw["intent"]!.object; intent["read"] = .bool(false); raw["intent"] = .object(intent) }
+            if mode == "recipient" { var mention = raw["mention"]!.object; mention["recipient_id"] = .string(UUID().uuidString.lowercased()); raw["mention"] = .object(mention) }
+            if mode == "revision" { var mention = raw["mention"]!.object; mention["revision"] = .number(4); raw["mention"] = .object(mention) }
+            if mode == "extra-field" { var comment = raw["comment"]!.object; comment["future_private"] = .string("Must not enter captured context"); raw["comment"] = .object(comment) }
+            if mode == "task-generation" { var comment = raw["comment"]!.object; comment["task_generation"] = .string(UUID().uuidString.lowercased()); raw["comment"] = .object(comment) }
+            row[MentionRecoveryContext.field] = .object(raw); local.tables[ConversationOutbox.table]![0] = row
+            local.tables[SharedComment.table] = []; local.tables[SharedMention.table] = []
+            let before = local; XCTAssertThrowsError(try TeamCompletionRecoveryDraft(group: review, snapshot: local), mode); XCTAssertEqual(local, before)
+        }
+    }
+    func testCapturedMentionContextEncryptedRoundtripAndUnrelatedDiscussionExportIsolation() throws {
+        let (base, cache, edit, review) = try recoveryFixture(); var local = base.snapshot
+        let (comment, _) = try capturedMention(&local, task: XCTUnwrap(local.tables["tasks"]?.first { $0.id == edit.recordID }), account: base.account, origin: base.origin)
+        var outside = local.tables["tasks"]!.first!; outside["id"] = .string(UUID().uuidString.lowercased()); outside["task_generation"] = .string(UUID().uuidString.lowercased()); local.tables["tasks"]!.append(outside)
+        let (privateComment, _) = try attachRecoveryMention(&local, task: outside, account: base.account)
+        let independent = local.tables[ConversationOutbox.table]!.last!
+        local.tables[SharedComment.table]!.removeAll { $0.id == comment.id }; local.tables[SharedMention.table]!.removeAll { $0.string("comment_id") == comment.id }
+        let draft = try TeamCompletionRecoveryDraft(group: review, snapshot: local)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString); defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionRecoveryDraftVault(directory: directory, account: base.account, origin: base.origin, key: { key })
+        let saved = try vault.save(draft), reopened = try vault.load(saved.id)
+        XCTAssertEqual(reopened, draft); XCTAssertEqual(reopened.snapshot, local)
+        XCTAssertEqual(try XCTUnwrap(reopened.preserving(readable: cache)).tables[ConversationOutbox.table], [independent])
+        let export = String(decoding: try reopened.data(), as: UTF8.self)
+        XCTAssertTrue(export.contains(comment.id)); XCTAssertFalse(export.contains(privateComment.id)); XCTAssertFalse(export.contains(independent.id))
+        XCTAssertFalse(String(decoding: try Data(contentsOf: vault.file(saved.id)), as: UTF8.self).contains(comment.string("body")))
+    }
+}

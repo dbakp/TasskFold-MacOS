@@ -4060,7 +4060,12 @@ extension Store {
                 let marker = Record(["id": .string(mentionID), "comment_id": .string(commentID), "recipient_id": .string(userID), "revision": .number(3), "created_at": .string(stamp), "read_at": .null])
                 guard let mention = SharedMention(marker) else { throw TeamCompletion.invalid }
                 snapshot.tables[SharedComment.table] = [comment]; snapshot.tables[SharedMention.table] = [marker]
-                try ConversationOutbox.enqueue(SharedMentionChange(mention: mention, account: userID, read: true).record, into: &snapshot)
+                let captured = ProcessInfo.processInfo.arguments.contains("--team-captured-mention-testing")
+                try ConversationOutbox.enqueue(SharedMentionChange(mention: mention, account: userID, read: true).record, into: &snapshot, origin: captured ? (try? backend.accountRemovalOrigin) : nil)
+                if captured {
+                    guard snapshot.tables[ConversationOutbox.table]?.first?.fields[MentionRecoveryContext.field] != nil else { throw TeamCompletion.invalid }
+                    snapshot.tables[SharedComment.table] = []; snapshot.tables[SharedMention.table] = []
+                }
                 try persist()
             }
             if ProcessInfo.processInfo.arguments.contains("--team-recorded-order-testing"),

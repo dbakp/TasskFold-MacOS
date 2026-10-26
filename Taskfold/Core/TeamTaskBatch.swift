@@ -352,7 +352,8 @@ private struct CompletionBatchReadAccess {
 /// marker. Resolve only validated, account-owned intent; never infer permission
 /// from free text or retarget a marker to a newer task incarnation.
 enum CompletionRecoveryConversations {
-    static func parked(in snapshot: Snapshot, account: String, affected: Set<String>, tasks: [Record]) throws -> Set<String> {
+    static func parked(in snapshot: Snapshot, account: String, origin: String, affected: Set<String>, tasks: [Record]) throws -> Set<String> {
+        let snapshot = try MentionRecoveryContext.resolving(snapshot, account: account, origin: origin, affected: affected, tasks: tasks)
         func references(_ value: JSON, _ ids: Set<String>) -> Bool {
             switch value {
             case .string(let text): return ids.contains { text.lowercased().contains($0.lowercased()) }
@@ -611,7 +612,7 @@ private struct CompletionBatchReconciliation {
             }
             let taskRows = (expected.tables["tasks"] ?? []) + Array(current.values) + archivedRows
             let orders = try TaskOrderRecovery.parking(changes, snapshot: original, affected: affected, taskRows: taskRows, account: batch.account, origin: batch.origin)
-            let parkedComments = try CompletionRecoveryConversations.parked(in: original, account: batch.account, affected: affected,
+            let parkedComments = try CompletionRecoveryConversations.parked(in: original, account: batch.account, origin: batch.origin, affected: affected,
                 tasks: taskRows)
             for i in changes.indices where !selected.contains(i) && !orders.indices.contains(i) {
                 let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
@@ -649,7 +650,7 @@ private struct CompletionBatchReconciliation {
                 default: return false
                 }
             }
-            guard try CompletionRecoveryConversations.parked(in: original, account: batch.account, affected: displaced,
+            guard try CompletionRecoveryConversations.parked(in: original, account: batch.account, origin: batch.origin, affected: displaced,
                 tasks: (expected.tables["tasks"] ?? []) + Array(current.values)).isEmpty else { throw TeamTaskBatch.conflict }
             for i in changes.indices where !selected.contains(i) {
                 let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
@@ -806,7 +807,7 @@ extension TeamTaskBatch {
                 guard !["projects", "sections"].contains(later.table),
                       let encoded = try? JSONEncoder().encode(later), let value = try? JSONDecoder().decode(JSON.self, from: encoded), !references(value) else { return nil }
             }
-            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: batch.account, affected: ids,
+            guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: batch.account, origin: batch.origin, affected: ids,
                 tasks: (snapshot.tables["tasks"] ?? []) + commands.flatMap { [$0.source] + [$0.proposed].compactMap { $0 } }), conversations.isEmpty else { return nil }
             var rows = snapshot.tables["tasks"] ?? []
             for command in commands {
