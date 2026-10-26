@@ -162,9 +162,11 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
         result["tasks"]=tables["tasks"]?.filter{row in let p=row.string("project_id");return p.isEmpty ? row.string("user_id")==boundary.account && !knownTasks.contains(row.id):allowed.contains(p) && (!knownTasks.contains(row.id) || boundary.projects[p]?.team != nil)}
         for table in ["sections","project_collaborators"] {result[table]=tables[table]?.filter{allowed.contains($0.string("project_id"))}}
         let tasks=Set((result["tasks"] ?? []).map(\.id))
-        result[TaskActivity.table]=tables[TaskActivity.table]?.filter {row in
+        for table in [TaskActivity.table, TaskNodeActivity.table] {
+        result[table]=tables[table]?.filter {row in
             let scopes=[row["before_state"].object["project_id"]?.text,row["after_state"].object["project_id"]?.text].compactMap{$0}.filter{!$0.isEmpty}
             return scopes.allSatisfy{allowed.contains($0)} && (!scopes.isEmpty || tasks.contains(row.string("task_id")) || (row.string("user_id")==boundary.account && !knownTasks.contains(row.string("task_id"))))
+        }
         }
         result[TaskAssignmentProvenance.table]=tables[TaskAssignmentProvenance.table]?.filter{tasks.contains($0.string("task_id"))}
         for table in [SharedComment.table,SharedMention.table] {result[table]=tables[table]?.filter{row in
@@ -173,7 +175,7 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
         }}
         for key in result.keys where key.hasPrefix("project_members:") && !allowed.contains(String(key.dropFirst("project_members:".count))) {result.removeValue(forKey:key)}
         var people:Set<String>=[boundary.account]
-        for table in ["projects","tasks","project_collaborators",TaskActivity.table] {for row in result[table] ?? [] {for key in ["user_id","assigned_to","actor_id"] where !row.string(key).isEmpty {people.insert(row.string(key))}}}
+        for table in ["projects","tasks","project_collaborators",TaskActivity.table,TaskNodeActivity.table] {for row in result[table] ?? [] {for key in ["user_id","assigned_to","actor_id"] where !row.string(key).isEmpty {people.insert(row.string(key))}}}
         result["profiles"]=tables["profiles"]?.filter{people.contains($0.string("user_id").isEmpty ? $0.id:$0.string("user_id"))}
         result[ConversationOutbox.viewsTable]=tables[ConversationOutbox.viewsTable]?.filter{$0["access_token"] == boundary.raw["token"]}
         var visible=Snapshot(tables:result)
@@ -217,6 +219,7 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
     func merging(_ remote:[String:[Record]],into snapshot:Snapshot)->Snapshot {
         var result=snapshot
         result.tables.merge(filtering(remote)){_,new in new}
+        TaskNodeActivity.discardUnavailable(in: &result.tables, remote: remote)
         let blocked=blocked(snapshot)
         let localProjects=Set(snapshot.pending.filter{$0.table=="projects" && $0.method=="POST" && !blocked.contains($0.id) && knownTeams[$0.recordID]==nil}.map(\.recordID))
         for change in snapshot.pending where !blocked.contains(change.id) {result.apply(change)}
@@ -299,6 +302,7 @@ struct TeamWorkspaceRead: Sendable {let tables:[String:[Record]];let boundary:Te
             var remote:[String:[Record]]=[:]
             for table in Self.workspaceTables {remote[table]=try await rows(table,expectedAccount:account,maximumRows:100000)}
             remote[TaskAssignmentProvenance.table]=await assignmentProvenanceRows()
+            if let history = await nodeActivityHistory(expectedAccount: account) { remote.merge(history.tables) { _, new in new } }
             guard session?.user.id==account else {throw CancellationError()}
             guard let expected=before else {return TeamWorkspaceRead(tables:remote,boundary:nil)}
             let after=try await workspaceBoundary(account:account)

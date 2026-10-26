@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-26",
+  "stage": "local recording, optional sync, access masks and backup archives",
+  "previousTurn": "progress: independent recording contracts, database verification and pushed commits",
+  "core": {
+    "passed": 252,
+    "failed": 0,
+    "newCases": 12,
+    "suites": [
+      "BackupTests",
+      "TaskActivityTests",
+      "TaskNodeActivityTests",
+      "TeamTaskBatchTests",
+      "TeamTaskLifecycleTests",
+      "TeamWorkspaceTests"
+    ]
+  },
+  "append5000baselineSeconds": 2.915178894996643,
+  "nativeBuild": {
+    "appAndTests": true,
+    "widgetAndShare": false,
+    "sourceBinding": "source-binding.json",
+    "signatureVerified": true
+  },
+  "native": {
+    "macOS": "signed app/test build; screen locked; no new runtime acceptance",
+    "simulators": "Verified in independently owned iOS repository; no Mac runtime inference"
+  },
+  "database": "Unchanged migration; previous independent real-PostgreSQL/advisor results remain in child-activity-history",
+  "hostedChanges": false,
+  "normalHeadingAuthoringEnabled": false,
+  "activityUIAndAggregatesIntegrated": false,
+  "serviceAdoptionProtocolChanged": false,
+  "sources": {
+    "Taskfold/Core/TaskActivity.swift": "14bb7dd4d0a54afc9e7359b57a106cda74c797f8c80b88ee2c4be70aa9b3bb01",
+    "Taskfold/Core/Backend.swift": "78515f0a0dae2e1816e7bdec84838c1433dda068d8a55e27bfff761538158939",
+    "Taskfold/Core/Backups.swift": "f1d2927bce75bc6d1490c715dd5122154c139432cd9ccbb49ddafb62d42104cd",
+    "Taskfold/Core/Models.swift": "fc758e5f32178535e88e20876843c6b6a451b8fdd982125c247e91d78a1623de",
+    "Taskfold/Core/Store.swift": "31feee6d7b9227afd7f8a750ac985455475c10b796ee45d2371b4fe16e2701fd",
+    "Taskfold/Core/TeamWorkspace.swift": "22dbc1ee0e9f91ab1b3d780d782b65a50af41fc2438dfe2020a77f3571986c5d",
+    "Taskfold/Core/TeamProjectAccess.swift": "3a92db38c9fbe9f590c55dc8f3bd30157269e9283c613bccf94c18abdb3e9aac",
+    "TaskfoldTests/TaskNodeActivityTests.swift": "e515f4674bd38951b5755d328407ded1dc6b55404d3bc7a85ac8575b44b3e1d7",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "1d36b9851df01b4ea6c7badfdbc11734835bc539177fcb61ae1fbde75907767d"
+  },
+  "testHarnessCorrection": "Initial actual-Redo replay reached the menu but UIKit omitted SwiftUI menu identifiers. Corrected the test to use visible Undo & redo / Redo labels. Phone producer was terminated after the test had failed and cleanup stalled; no pass claimed for that run. Final corrected producer handles exited 0 on both simulators.",
+  "append5000RepeatedStampSeconds": 0.1394660472869873,
+  "append5000DistinctRootAndTimestampSeconds": 0.36964499950408936,
+  "benchmarkNote": "Baseline/repeated-stamp samples compare identical fixtures. Final benchmark additionally uses 5,000 distinct roots and timestamps; it measures only the append validation, not fixture construction. No release latency guarantee.",
+  "logNormalization": "Trailing whitespace and trailing blank lines removed; diagnostic and result text retained."
+}

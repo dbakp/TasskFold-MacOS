@@ -1,8 +1,12 @@
 # Child activity history foundation — 26 October 2026
 
-This milestone provides an inactive recording/reader contract and an additive SQL
-migration. It does **not** activate child history in the apps. Normal heading
-authoring stays disabled. No hosted schema, feature flag or real data changed.
+The recording foundation has now been connected to committed local edits,
+optional workspace reads, access masks and backup archives in both apps. Activity
+screens and aggregate widgets still use parent history; their child integration
+is next. See [the integration milestone](TASK_NODE_ACTIVITY_INTEGRATION.md) for
+current behavior and verification. Normal heading authoring stays disabled; no
+hosted schema, feature flag or real data changed. The notes below retain the
+original foundation milestone's evidence and remaining-work sequence.
 
 ## Contract
 
@@ -74,7 +78,7 @@ node Scripts/Database/test-task-node-activity.mjs --report /tmp/taskfold-child-h
 The database command creates only an owned disposable container. Advisor access
 uses an ephemeral loopback port. It does not read a hosted project URL or token.
 
-## Next integration, in order
+## Original integration sequence (current status linked above)
 
 1. Add optional, account-bound feed/epoch reads with complete paging and explicit
    unavailable/coverage states. Apply current team visibility masks, account-switch

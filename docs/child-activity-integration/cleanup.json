@@ -1,0 +1,19 @@
+{
+  "ownedSimulatorApps": {
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4:com.dbakp.taskfold.workflowteststeameditbridge": {
+      "uninstallExitCode": 0
+    },
+    "F2ACCCB5-E5B3-426F-B962-955A113D4EF4:com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": {
+      "uninstallExitCode": 0
+    },
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378:com.dbakp.taskfold.workflowteststeameditbridge": {
+      "uninstallExitCode": 0
+    },
+    "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378:com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": {
+      "uninstallExitCode": 0
+    }
+  },
+  "preservedMacReadyHostAndBuild": true,
+  "ownedScratchApproxMiB": 1087.8,
+  "ownedScratchPathsRemoved": 51
+}

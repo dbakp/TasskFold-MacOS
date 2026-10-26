@@ -328,16 +328,17 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     var isGap: Bool { kinds == [.coverage_gap] }
     var path: [String] { afterPath.isEmpty ? beforePath : afterPath }
     var subject: String { [rootID, generation ?? "unknown", nodeKey].joined(separator: ":") }
-    init?(row: Record) {
+    init?(row: Record) { self.init(row: row, parseInstant: TaskPlanning.instant, validDay: { Dates.parse($0) != nil }) }
+    init?(row: Record, parseInstant: (String) -> Date?, validDay: (String) -> Bool) {
         guard row["format_version"] == .number(1), UUID(uuidString: row.id) != nil,
               let sequence = TaskActivity.integer(row["sequence"]), sequence > 0,
               TaskActivity.validID(row.string("user_id")), TaskActivity.validID(row.string("task_id")),
               row["actor_id"] == .null || TaskActivity.validID(row.string("actor_id")),
-              let recorded = TaskPlanning.instant(row.string("recorded_at")), let effective = TaskPlanning.instant(row.string("effective_at")),
+              let recorded = parseInstant(row.string("recorded_at")), let effective = parseInstant(row.string("effective_at")),
               let revision = TaskActivity.integer(row["completion_version"]),
               case .bool(let workBefore) = row["work_before"], case .bool(let workAfter) = row["work_after"],
               case .object(let before) = row["before_state"], case .object(let after) = row["after_state"],
-              TaskActivity.validState(before), TaskActivity.validState(after),
+              TaskActivity.validState(before, parseInstant: parseInstant, validDay: validDay), TaskActivity.validState(after, parseInstant: parseInstant, validDay: validDay),
               let beforePath = Self.path(row["before_path"]), let afterPath = Self.path(row["after_path"]),
               case .array(let rawKinds) = row["kinds"], !rawKinds.isEmpty,
               rawKinds.allSatisfy({ if case .string(let key) = $0 { return Kind(rawValue: key) != nil }; return false }),
@@ -475,13 +476,48 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     }
     static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
         let existing = snapshot.tables[table] ?? []
-        guard existing.allSatisfy({ Self(row: $0) != nil }), Set(existing.compactMap { TaskActivity.integer($0["sequence"]) }).count == existing.count else { return }
+        let parser = Parser()
+        guard existing.allSatisfy({ parser.event($0) != nil }), Set(existing.compactMap { TaskActivity.integer($0["sequence"]) }).count == existing.count else { return }
         let ids = Set(existing.map { $0.id.lowercased() })
         let start = existing.compactMap { TaskActivity.integer($0["sequence"]) }.max() ?? 0
         let rows = localRows(change, before: before, after: after, account: account, recordedAt: now, afterSequence: start).filter { !ids.contains($0.id.lowercased()) }
         guard !rows.isEmpty else { return }
         snapshot.tables[table, default: []] += rows
         if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])] }
+    }
+    /// One parser belongs to one immutable read/validation pass. Formatters and
+    /// memoized dates are never shared between accounts, threads or refreshes.
+    final class Parser {
+        private let fractional: ISO8601DateFormatter = { let f = ISO8601DateFormatter(); f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]; return f }()
+        private let whole = ISO8601DateFormatter()
+        private var instants: [String: Date] = [:]
+        private var invalidInstants = Set<String>()
+        private var days: [String: Bool] = [:]
+        private func instant(_ text: String) -> Date? {
+            if let value = instants[text] { return value }
+            if invalidInstants.contains(text) { return nil }
+            if let value = fractional.date(from: text) ?? whole.date(from: text) { instants[text] = value; return value }
+            invalidInstants.insert(text); return nil
+        }
+        private func validDay(_ text: String) -> Bool {
+            if let value = days[text] { return value }
+            let value = Dates.parse(text) != nil; days[text] = value; return value
+        }
+        func event(_ row: Record) -> TaskNodeActivity? { TaskNodeActivity(row: row, parseInstant: instant, validDay: validDay) }
+    }
+    struct Feed: Equatable, Sendable {
+        let rows: [Record]
+        let epoch: [Record]
+        var tables: [String: [Record]] { [TaskNodeActivity.table: rows, TaskNodeActivity.epochTable: epoch] }
+    }
+    static func validEpoch(_ rows: [Record]) -> Bool {
+        rows.count == 1 && rows[0].id == "current" && Set(rows[0].fields.keys) == ["id", "recorded_from"] && TaskPlanning.instant(rows[0].string("recorded_from")) != nil
+    }
+    /// A fresh task read cannot certify an unavailable optional ledger. Remove
+    /// both halves together, including cached history after access recovery.
+    static func discardUnavailable(in tables: inout [String: [Record]], remote: [String: [Record]]) {
+        guard remote["tasks"] != nil, remote[table] == nil || !validEpoch(remote[epochTable] ?? []) else { return }
+        tables.removeValue(forKey: table); tables.removeValue(forKey: epochTable)
     }
     static func query(after sequence: Int64) -> String { "/rest/v1/task_node_activity?select=*&order=sequence.asc&sequence=gt.\(sequence)&limit=500" }
 }

@@ -659,6 +659,7 @@ struct Snapshot: Codable, Equatable, Sendable {
         // actor, including an unobserved remote A→B→A assignment cycle.
         if remote["tasks"] != nil && remote[TaskAssignmentProvenance.table] == nil { tables.removeValue(forKey:TaskAssignmentProvenance.table) }
         tables.merge(remote) { _, new in new }
+        TaskNodeActivity.discardUnavailable(in: &tables, remote: remote)
         for change in pending { apply(change) }
         ConversationCache.prune(&self)
     }

@@ -234,7 +234,9 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
 extension TeamTaskEditScope {
     static func historyAction(_ original: Mutation) -> Mutation {
         var change = original
-        if change.teamTaskScope != nil { change.id = UUID() }
+        // History is a new user action, including ordinary task Redo. A
+        // network retry reuses the prepared mutation and never comes here.
+        if change.table == "tasks" || change.teamTaskScope != nil { change.id = UUID() }
         return change
     }
     func lifecycleAction(for change: Mutation) throws -> String {

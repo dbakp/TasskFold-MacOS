@@ -137,4 +137,207 @@ final class TaskNodeActivityTests: XCTestCase {
         XCTAssertNil(event.currentTask(tasks: [value], projects: [Record(["id": .string(project)])], account: owner))
     }
 
+    func testBackupPreservesChildArchiveWithoutReplayingOrRemappingHistory() throws {
+        let task = root([node("child")]), done = complete(task, "child")
+        let archive = rows(task, done)
+        let epoch = Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])
+        let snapshot = Snapshot(tables: ["tasks": [done], "projects": [Record(["id": .string(project), "name": .string("Studio"), "user_id": .string(owner)])], TaskNodeActivity.table: archive, TaskNodeActivity.epochTable: [epoch]])
+        let backup = try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: owner).data())
+        XCTAssertEqual(backup.tables[TaskNodeActivity.table], archive)
+        XCTAssertEqual(backup.tables[TaskNodeActivity.epochTable], [epoch])
+        let plan = try backup.plan(current: Snapshot(), account: "55555555-5555-4555-8555-555555555555")
+        XCTAssertFalse(plan.changes.contains { [TaskNodeActivity.table, TaskNodeActivity.epochTable].contains($0.table) })
+        XCTAssertTrue(plan.warnings.contains { $0.contains("archive") && $0.contains("not replayed") })
+        XCTAssertNotEqual(plan.changes.first { $0.table == "tasks" }?.fields["task_generation"], .string(generation))
+    }
+    func testBackupRejectsFutureDuplicateOrInvalidChildHistoryWithoutChangingSource() throws {
+        let task = root([node("child")]), valid = try XCTUnwrap(rows(task, complete(task, "child")).first)
+        for edit: [String: JSON] in [["format_version": .number(2)], ["after_path": .array([.string("other")])], ["sequence": .number(0)]] {
+            var damaged = valid; for (key, value) in edit { damaged[key] = value }
+            let snapshot = Snapshot(tables: [TaskNodeActivity.table: [damaged]])
+            let original = snapshot
+            XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(snapshot, account: owner).data()))
+            XCTAssertEqual(snapshot, original)
+        }
+        var sameSequence = valid; sameSequence["id"] = .string(UUID().uuidString)
+        for values in [[valid, valid], [valid, sameSequence]] {
+            XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(Snapshot(tables: [TaskNodeActivity.table: values]), account: owner).data()))
+        }
+        for values in [[], [Record(["id": .string("other"), "recorded_from": .string(TaskActivity.stamp(now))])], [Record(["id": .string("current"), "recorded_from": .string("invalid")])]] where !values.isEmpty {
+            XCTAssertThrowsError(try WorkspaceBackup.read(WorkspaceBackup.make(Snapshot(tables: [TaskNodeActivity.epochTable: values]), account: owner).data()))
+        }
+    }
+    func testFreshTasksDiscardUnavailableArchiveButKeepQueueAndOtherHistory() {
+        let task = root([node("child")]), archive = rows(task, complete(task, "child"))
+        let epoch = Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])
+        let queued = change(task, complete(task, "child"))
+        let original = Snapshot(tables: ["tasks": [task], TaskNodeActivity.table: archive, TaskNodeActivity.epochTable: [epoch], TaskActivity.table: []], pending: [queued])
+        for remote: [String: [Record]] in [["tasks": [task]], ["tasks": [task], TaskNodeActivity.table: archive], ["tasks": [task], TaskNodeActivity.epochTable: [epoch]]] {
+            var next = original; next.mergeRemote(remote)
+            XCTAssertNil(next.tables[TaskNodeActivity.table]); XCTAssertNil(next.tables[TaskNodeActivity.epochTable]); XCTAssertEqual(next.pending, [queued]); XCTAssertEqual(next.tables[TaskActivity.table], [])
+        }
+        var offline = original; offline.mergeRemote(["labels": []]); XCTAssertEqual(offline.tables[TaskNodeActivity.table], archive)
+        var refreshed = original; refreshed.mergeRemote(["tasks": [task], TaskNodeActivity.table: [], TaskNodeActivity.epochTable: [epoch]])
+        XCTAssertEqual(refreshed.tables[TaskNodeActivity.table], []); XCTAssertEqual(refreshed.tables[TaskNodeActivity.epochTable], [epoch])
+    }
+    @MainActor func historyBackend() throws -> (Backend, Session) {
+        let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [AuthTransportTests.Stub.self]
+        let session = try JSONDecoder().decode(Session.self, from: Data(("{\"access_token\":\"test\",\"refresh_token\":\"refresh\",\"expires_in\":3600,\"user\":{\"id\":\"" + owner + "\"}}").utf8))
+        return (Backend(configuration: ["URL": "https://native-auth.test", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in }), session)
+    }
+    @MainActor func testOptionalNetworkHistoryRequiresCompleteStableEpochAndPreservesEmpty() async throws {
+        let (backend, _) = try historyBackend()
+        let epoch = try JSONEncoder().encode([Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])])
+        defer { AuthTransportTests.Stub.handler = nil }
+        var calls = 0
+        AuthTransportTests.Stub.handler = { request in
+            calls += 1
+            return (200, request.url!.path.hasSuffix("epoch") ? epoch : Data("[]".utf8))
+        }
+        let empty = await backend.nodeActivityHistory()
+        XCTAssertEqual(empty?.rows, []); XCTAssertEqual(calls, 3)
+        for status in [403, 404, 500] {
+            for failedPath in [TaskNodeActivity.epochTable, TaskNodeActivity.table] {
+                AuthTransportTests.Stub.handler = { request in
+                    if request.url!.lastPathComponent == failedPath { return (status, Data("{\"message\":\"Unavailable\"}".utf8)) }
+                    return (200, epoch)
+                }
+                let unavailable = await backend.nodeActivityHistory(); XCTAssertNil(unavailable)
+            }
+        }
+        AuthTransportTests.Stub.handler = { _ in (200, Data("[]".utf8)) }
+        let missingEpoch = await backend.nodeActivityHistory(); XCTAssertNil(missingEpoch)
+        var epochs = 0
+        AuthTransportTests.Stub.handler = { request in
+            if request.url!.path.hasSuffix("epoch") {
+                epochs += 1
+                return (200, epochs == 1 ? epoch : Data("[{\"id\":\"current\",\"recorded_from\":\"2026-10-27T10:00:00Z\"}]".utf8))
+            }
+            return (200, Data("[]".utf8))
+        }
+        let reset = await backend.nodeActivityHistory(); XCTAssertNil(reset)
+    }
+    @MainActor func testNetworkHistoryPagesBySequenceAndRejectsPartialFutureDuplicateOrUnorderedFeed() async throws {
+        let (backend, _) = try historyBackend(), task = root([node("child")])
+        let template = try XCTUnwrap(rows(task, complete(task, "child")).first)
+        let epoch = try JSONEncoder().encode([Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])])
+        var first = (1...500).map { sequence in var row = template; row["sequence"] = .number(Double(sequence)); row["id"] = .string(UUID().uuidString); return row }
+        var last = template; last["sequence"] = .number(503); last["id"] = .string(UUID().uuidString)
+        defer { AuthTransportTests.Stub.handler = nil }
+        var pages = 0
+        AuthTransportTests.Stub.handler = { request in
+            if request.url!.path.hasSuffix("epoch") { return (200, epoch) }
+            pages += 1
+            XCTAssertTrue(request.url!.query!.contains(pages == 1 ? "sequence=gt.0" : "sequence=gt.500"))
+            XCTAssertFalse(request.url!.query!.contains("offset="))
+            return (200, try JSONEncoder().encode(pages == 1 ? first : [last]))
+        }
+        let full = await backend.nodeActivityHistory(); XCTAssertEqual(full?.rows.count, 501); XCTAssertEqual(pages, 2)
+        for problem in ["later failure", "duplicate ID", "unordered", "future", "oversized"] {
+            pages = 0
+            AuthTransportTests.Stub.handler = { request in
+                if request.url!.path.hasSuffix("epoch") { return (200, epoch) }
+                pages += 1
+                if pages == 1 {
+                    if problem == "oversized" { return (200, try JSONEncoder().encode(first + [last])) }
+                    return (200, try JSONEncoder().encode(first))
+                }
+                if problem == "later failure" { return (500, Data("{}".utf8)) }
+                var bad = last
+                if problem == "duplicate ID" { bad["id"] = first[0]["id"] }
+                if problem == "unordered" { bad["sequence"] = .number(500) }
+                if problem == "future" { bad["format_version"] = .number(2) }
+                return (200, try JSONEncoder().encode([bad]))
+            }
+            let incomplete = await backend.nodeActivityHistory(); XCTAssertNil(incomplete, problem)
+        }
+        first[0]["sequence"] = .number(0)
+        AuthTransportTests.Stub.handler = { request in (200, request.url!.path.hasSuffix("epoch") ? epoch : try JSONEncoder().encode(first)) }
+        let invalid = await backend.nodeActivityHistory(); XCTAssertNil(invalid)
+    }
+    @MainActor func testNetworkHistoryDiscardsSameAccountSessionCycle() async throws {
+        let (backend, session) = try historyBackend()
+        let epoch = try JSONEncoder().encode([Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])])
+        let started = expectation(description: "Child history read started"), gate = DispatchSemaphore(value: 0)
+        defer { AuthTransportTests.Stub.handler = nil; gate.signal() }
+        AuthTransportTests.Stub.handler = { request in
+            if request.url!.path.hasSuffix("epoch") { return (200, epoch) }
+            started.fulfill(); _ = gate.wait(timeout: .now() + 10)
+            return (200, Data("[]".utf8))
+        }
+        let read = Task { await backend.nodeActivityHistory(expectedAccount: owner) }
+        await fulfillment(of: [started], timeout: 5)
+        var other = session; other.user.id = "55555555-5555-4555-8555-555555555555"
+        try await backend.accept(other); try await backend.accept(session); gate.signal()
+        let stale = await read.value; XCTAssertNil(stale)
+    }
+    @MainActor func testChildHistoryAndEpochRejectAllClientWritesBeforeNetwork() async throws {
+        let (backend, _) = try historyBackend()
+        AuthTransportTests.Stub.handler = { _ in XCTFail("Read-only history sent a request"); return (200, Data("[]".utf8)) }
+        defer { AuthTransportTests.Stub.handler = nil }
+        for table in [TaskNodeActivity.table, TaskNodeActivity.epochTable] {
+            for method in ["POST", "PATCH", "DELETE"] {
+                do { _ = try await backend.send(Mutation(table: table, recordID: UUID().uuidString, method: method, fields: [:])); XCTFail("History write accepted") }
+                catch { XCTAssertTrue(error.localizedDescription.contains("read-only")) }
+            }
+        }
+    }
+
+    func testActualEditHistoryRedoIsNewActionWhileTransportRetryStaysIdempotent() throws {
+        let before = root([node("child")]), after = complete(before, "child"), original = change(before, after)
+        let history = EditHistory(changes: [original], snapshot: Snapshot(tables: ["tasks": [before]]))
+        var snapshot = Snapshot(tables: ["tasks": [before]])
+        func commit(_ mutation: Mutation) {
+            let prior = snapshot.tables["tasks"]?.first; snapshot.apply(mutation)
+            TaskNodeActivity.recordLocal(mutation, before: prior, after: snapshot.tables["tasks"]?.first, snapshot: &snapshot, account: owner, now: now)
+        }
+        commit(original)
+        let undo = TeamCompletion.historyAction(try XCTUnwrap(history.undo.first), snapshot: snapshot)
+        commit(undo)
+        let open = try XCTUnwrap(snapshot.tables["tasks"]?.first)
+        let redo = TeamCompletion.historyAction(try XCTUnwrap(history.redo.first), snapshot: snapshot)
+        XCTAssertNotEqual(redo.id, original.id); XCTAssertNotEqual(redo.id, undo.id)
+        commit(redo)
+        let rows = snapshot.tables[TaskNodeActivity.table] ?? []
+        XCTAssertEqual(rows.compactMap(TaskNodeActivity.init).map(\.kinds), [[.completed], [.reopened], [.completed]])
+        TaskNodeActivity.recordLocal(redo, before: open, after: snapshot.tables["tasks"]?.first, snapshot: &snapshot, account: owner, now: now.addingTimeInterval(2))
+        XCTAssertEqual(snapshot.tables[TaskNodeActivity.table], rows)
+    }
+
+    func testLocalAppendValidatesFiveThousandExistingEventsWithoutLosingCoverage() throws {
+        let before = root([node("child")]), after = complete(before, "child"), template = try XCTUnwrap(rows(before, after).first)
+        let events = (1...5000).map { index -> Record in
+            var row = template
+            row["sequence"] = .number(Double(index)); row["id"] = .string(WorkspaceBackup.stableID("child-history-performance", String(index)))
+            row["task_id"] = .string(WorkspaceBackup.stableID("child-history-existing-root", String(index)))
+            let stamp = TaskActivity.stamp(now.addingTimeInterval(-Double(index)))
+            row["recorded_at"] = .string(stamp); row["effective_at"] = .string(stamp)
+            var state = row["after_state"].object; state["completed_at"] = .string(stamp); row["after_state"] = .object(state)
+            return row
+        }
+        var snapshot = Snapshot(tables: [TaskNodeActivity.table: events])
+        let start = Date()
+        TaskNodeActivity.recordLocal(change(after, before), before: after, after: before, snapshot: &snapshot, account: owner, now: now)
+        print("CHILD_HISTORY_APPEND_5000_SECONDS=\(Date().timeIntervalSince(start))")
+        XCTAssertEqual(snapshot.tables[TaskNodeActivity.table]?.count, 5001)
+        XCTAssertEqual(snapshot.tables[TaskNodeActivity.table]?.last?["sequence"], .number(5001))
+    }
+
+    func testCachedParserRetainsExactValidationAndTimestampSemantics() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "task-node-activity", withExtension: "json", subdirectory: "Fixtures"))
+        let records = try JSONDecoder().decode([Record].self, from: Data(contentsOf: url))
+        let parser = TaskNodeActivity.Parser()
+        for row in records { XCTAssertEqual(parser.event(row), TaskNodeActivity(row: row)) }
+        let valid = try XCTUnwrap(rows(nil, root([node("child")])).first)
+        for stamp in ["2026-10-20T09:00:00Z", "2026-10-20T11:00:00.123456+02:00", "not-an-instant", ""] {
+            var row = valid; row["recorded_at"] = .string(stamp); row["effective_at"] = .string(stamp)
+            XCTAssertEqual(parser.event(row), TaskNodeActivity(row: row))
+        }
+        for day in ["2026-10-26", "2026-02-30", "invalid"] {
+            var row = valid; var state = row["after_state"].object; state["due_date"] = .string(day); row["after_state"] = .object(state)
+            XCTAssertEqual(parser.event(row), TaskNodeActivity(row: row))
+        }
+        var future = valid; future["format_version"] = .number(2); XCTAssertNil(parser.event(future))
+    }
+
 }

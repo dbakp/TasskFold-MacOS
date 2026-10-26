@@ -908,4 +908,48 @@ extension TeamWorkspaceTests {
         XCTAssertThrowsError(try draft.completionMutation(current: row, tasks: [row], workspace: workspace, session: session, cache: cache, enabled: true))
         XCTAssertEqual(draft.source, row)
     }
+    func testChildHistoryUsesSameScopeMaskAndPrunesActorsAfterRevocation() throws {
+        let b = try boundary(); var local = try snapshot(); var task = local.tables["tasks"]![0]
+        task["task_generation"] = .string(UUID().uuidString.lowercased())
+        task["subtasks"] = .array([.object(["id": .string("child"), "title": .string("Synthetic child"), "completed": .bool(false)])])
+        local.tables["tasks"]![0] = task
+        let change = Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields)
+        var events = TaskNodeActivity.localRows(change, before: nil, after: task, account: b.account, recordedAt: Date())
+        XCTAssertEqual(events.count, 1)
+        let actor = UUID().uuidString.lowercased(); events[0]["actor_id"] = .string(actor)
+        local.tables[TaskNodeActivity.table] = events
+        local.tables[TaskNodeActivity.epochTable] = [Record(["id": .string("current"), "recorded_from": .string(Dates.timestamp())])]
+        local.tables["profiles", default: []].append(Record(["user_id": .string(actor), "display_name": .string("Synthetic actor")]))
+        let previous = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: local.tables["tasks"]!)
+        XCTAssertEqual(previous.filtering(local.tables)[TaskNodeActivity.table], events)
+        XCTAssertNotNil(previous.filtering(local.tables)["profiles"]?.first { $0.string("user_id") == actor })
+        let revoked = try TeamWorkspaceCache(boundary: boundary("left"), previous: previous, pending: [])
+        let hidden = revoked.presentation(local)
+        XCTAssertEqual(hidden[TaskNodeActivity.table], []); XCTAssertNil(hidden["profiles"]?.first { $0.string("user_id") == actor })
+        let merged = previous.merging(["tasks": local.tables["tasks"]!], into: local)
+        XCTAssertNil(merged.tables[TaskNodeActivity.table]); XCTAssertNil(merged.tables[TaskNodeActivity.epochTable])
+        // An event spanning an unavailable prior project must not disclose it,
+        // even if its current root is in a readable project.
+        var moved = events[0]; var before = moved["after_state"].object
+        before["project_id"] = .string(UUID().uuidString.lowercased()); moved["before_state"] = .object(before)
+        local.tables[TaskNodeActivity.table] = [moved]
+        XCTAssertEqual(previous.filtering(local.tables)[TaskNodeActivity.table], [])
+    }
+    @MainActor func testWorkspaceStillRefreshesTasksWhenOptionalChildHistoryFails() async throws {
+        let f = try fixture(), b = try boundary(), api = try backend(b.account), local = try snapshot()
+        WorkspaceHTTP.handler = { request, peer in
+            switch request.url!.lastPathComponent {
+            case "taskfold_workspace_boundary": peer.finish(f["active"]!)
+            case "task_node_activity_epoch": peer.finish(.object(["message": .string("Not installed")]), status: 404)
+            case "tasks": peer.finish(.array(local.tables["tasks"]!.map { .object($0.fields) }))
+            case "projects": peer.finish(.array(local.tables["projects"]!.map { .object($0.fields) }))
+            default: peer.finish(.array([]))
+            }
+        }
+        defer { WorkspaceHTTP.handler = nil }
+        let read = try await api.workspaceRead(account: b.account, initial: nil, allowLegacy: false)
+        XCTAssertEqual(read.tables["tasks"]?.count, local.tables["tasks"]?.count)
+        XCTAssertNil(read.tables[TaskNodeActivity.table]); XCTAssertNil(read.tables[TaskNodeActivity.epochTable]); XCTAssertEqual(read.boundary, b)
+    }
+
 }

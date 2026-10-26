@@ -4572,8 +4572,15 @@ extension TaskfoldMacUITests {
         choose("Priority work");XCTAssertTrue(title.waitForExistence(timeout:8));retainWindow(app,name:"Mac default saved filter child priority")
         let complete=app.buttons.matching(NSPredicate(format:"identifier == %@","complete-"+child)).firstMatch;XCTAssertTrue(complete.waitForExistence(timeout:5));complete.click()
         func state(_ expected:Bool){let ready=XCTNSPredicateExpectation(predicate:NSPredicate{_,_ in guard let row=try? root(),let children=row["subtasks"] as? [[String:Any]] else{return false};return children.first?["completed"] as? Bool == expected},object:nil);XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:8),.completed)}
-        state(true);app.typeKey("z",modifierFlags:.command);state(false);XCTAssertTrue(title.waitForExistence(timeout:8));complete.click();state(true);let saved=try root();XCTAssertEqual(saved["completed"] as? Bool,false)
+        state(true);app.typeKey("z",modifierFlags:.command);state(false);XCTAssertTrue(title.waitForExistence(timeout:8));app.typeKey("z",modifierFlags:[.command,.shift]);state(true);let saved=try root();XCTAssertEqual(saved["completed"] as? Bool,false)
         app.terminate();app.launchArguments=["--uitesting","-localMode","YES"];try launchHeadingWorkspace(app)
         choose("Design work");XCTAssertFalse(title.waitForExistence(timeout:3));choose("Completed");XCTAssertTrue(title.waitForExistence(timeout:8));XCTAssertEqual(try root(),saved)
+        let cacheValue = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? [String: Any])
+        let history = try XCTUnwrap((cacheValue["tables"] as? [String: Any])?["task_node_activity"] as? [[String: Any]])
+        let childEvents = history.filter { $0["node_key"] as? String == "f5810000-0000-4000-8000-000000000001" }
+        XCTAssertEqual(childEvents.suffix(3).compactMap { ($0["kinds"] as? [String])?.first }, ["completed", "reopened", "completed"])
+        XCTAssertTrue(childEvents.allSatisfy { $0["work_before"] as? Bool == true && $0["work_after"] as? Bool == true })
+        XCTAssertEqual(Set(childEvents.compactMap { $0["id"] as? String }).count, childEvents.count)
+
     }
 }

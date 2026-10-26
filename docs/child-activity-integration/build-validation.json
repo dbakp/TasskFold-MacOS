@@ -1,0 +1,18 @@
+{
+  "products": {
+    "Taskfold.app": {
+      "bundleID": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+      "signatureVerified": true,
+      "binarySHA256": "7446f340d54818bcf9ef1c3a6b10ca1d12fc9025d317f39b05de9a76903020f6",
+      "debugDylibSHA256": "df34df25bfe37cb55ceef5ed0083e12d1cafc28825acc97c1680cc58735aeb60"
+    },
+    "TaskfoldUITests-Runner.app": {
+      "bundleID": "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner",
+      "signatureVerified": true,
+      "binarySHA256": "a65c4a12d6332f935598668f02cf663ab9aeb56556dff0d3aab25a4bb3aff2ba"
+    }
+  },
+  "buildForTesting": "passed",
+  "releaseDistributionVerified": false,
+  "normalAuthoringSwitch": false
+}

@@ -1360,7 +1360,7 @@ final class Store {
         }
         #endif
         guard preparedChanges.filter(ProductivityGoalEdit.matches).allSatisfy({ProductivityGoalEdit.valid($0,account:userID)}) else { error="These goals need a supported choice and current workspace.";return false }
-        guard preparedChanges.allSatisfy({ $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable && $0.table != TaskAssignmentProvenance.table && $0.table != SharedComment.table && $0.table != SharedMention.table && !$0.table.hasPrefix("_conversation_") }) else { error = "Activity history is read-only."; return false }
+        guard preparedChanges.allSatisfy({ $0.table != TaskNodeActivity.table && $0.table != TaskNodeActivity.epochTable && $0.table != TaskActivity.table && $0.table != TaskActivity.epochTable && $0.table != TaskAssignmentProvenance.table && $0.table != SharedComment.table && $0.table != SharedMention.table && !$0.table.hasPrefix("_conversation_") }) else { error = "Activity history is read-only."; return false }
         guard preparedChanges.filter({ $0.table == FocusSessionChange.table }).allSatisfy({ FocusSessionChange.valid($0, account: userID) }) else {
             error = "This Focus command needs a valid workspace and revision."; return false
         }
@@ -1435,6 +1435,7 @@ final class Store {
             snapshot.apply(change)
             if localMode {
                 TaskActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID)
+                TaskNodeActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID)
                 TaskAssignmentProvenance.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID)
             }
             if !localMode { snapshot.pending.append(change) }
@@ -1652,6 +1653,7 @@ final class Store {
                 if table == mutation.table, remote[table]!.contains(where: { $0.id.lowercased() == mutation.recordID.lowercased() }) { return false }
             }
             remote[TaskAssignmentProvenance.table] = await backend.assignmentProvenanceRows()
+            if let history = await backend.nodeActivityHistory(expectedAccount: account) { remote.merge(history.tables) { _, new in new } }
             guard generation == accountGeneration, snapshot == reviewed else { return false }
             guard let recovered = reviewed.recoveringUnavailableProject(for: mutation, remote: remote), recovered.pending.count < reviewed.pending.count else { return false }
             _ = try await makeRecoveryBackup(kind: "Access removed")

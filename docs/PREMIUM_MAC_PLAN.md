@@ -7670,3 +7670,24 @@ normal heading authoring remain unchanged. Mac native replay was retried after
 unlock, but the Mac locked before interaction; no new runtime pass is claimed.
 See [the child history contract and ordered next work](TASK_NODE_ACTIVITY.md) and
 `child-activity-history/evidence.json`. Px remains open.
+
+
+### Child history in local edits, sync and backups (26 October 2026)
+
+Both apps now record committed local child transitions, read the optional cloud
+feed with sequence/session/epoch checks, apply team visibility masks, discard
+unavailable cached history on a fresh task read, and preserve history as a
+validated backup archive without replaying it. Ordinary task Undo/Redo now uses
+fresh action identities; retries keep their prepared identity. Per-pass parsers
+reduce a 5,000-event append validation from 2.915 seconds to about 0.14 seconds
+without weakening decoding; a 5,000-distinct-root/timestamp sample takes about
+0.36–0.37 seconds. 252 focused checks pass per repo, including 12 new
+cases. App/test builds pass; exact native and signing scope is recorded in
+`child-activity-integration/evidence.json`. Mac runtime remains unverified while
+locked. No service migration or rollout flag changed.
+
+Activity screens, Insights and Project pulse still use parent history. Next is
+trustworthy historical root type/work context and a combined child activity fold,
+then their UI/widget integration and broader calendar/adapters acceptance. See
+[TASK_NODE_ACTIVITY_INTEGRATION.md](TASK_NODE_ACTIVITY_INTEGRATION.md) for the
+contract, verification limits and ordered remaining work. Px stays active.

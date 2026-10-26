@@ -98,11 +98,11 @@ struct WorkspaceBackup: Codable, Sendable {
         }
         guard tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw BackupFailure(message: "This backup exceeds the 50,000-record limit.") }
         for (table, rows) in tables {
-            let activity = table == TaskActivity.table || table == TaskActivity.epochTable
+            let activity = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable].contains(table)
             let conversation = [SharedComment.table, SharedMention.table, ConversationOutbox.table, ConversationOutbox.viewsTable].contains(table)
             let metadata = conversation || activity || table == "profiles" || table == "project_collaborators" || table.hasPrefix("project_members:") || table == "_local_day_order"
             guard Self.workTables.contains(table) || metadata else { throw BackupFailure(message: "This backup includes the unsupported table “\(table)”. Update Taskfold before restoring it.") }
-            var ids = Set<String>()
+            var ids = Set<String>(); var nodeSequences = Set<Int64>()
             for row in rows {
                 try Self.checkJSON(.object(row.fields), depth: 0)
                 if conversation {
@@ -116,6 +116,8 @@ struct WorkspaceBackup: Codable, Sendable {
                     guard ids.insert(UUID(uuidString: row.id)?.uuidString.lowercased() ?? row.id).inserted else { throw BackupFailure(message: "The activity archive contains a duplicate ID.") }
                     if table == TaskActivity.table {
                         guard TaskActivity(row: row) != nil else { throw BackupFailure(message: "The activity archive contains an invalid event.") }
+                    } else if table == TaskNodeActivity.table {
+                        guard let event = TaskNodeActivity(row: row), nodeSequences.insert(event.sequence).inserted else { throw BackupFailure(message: "The child activity archive contains an invalid or duplicate event.") }
                     } else {
                         guard rows.count == 1, row.id == "current", Set(row.fields.keys) == ["id", "recorded_from"], TaskPlanning.instant(row.string("recorded_from")) != nil else { throw BackupFailure(message: "The activity recording start is invalid.") }
                     }
@@ -474,7 +476,7 @@ extension WorkspaceBackup {
         if tables[SharedComment.table]?.isEmpty == false || tables[ConversationOutbox.table]?.isEmpty == false {
             result.warnings.append("Shared conversations and unsent comment text are restored as historical task comments. Authorship is not reverified, and mentions, read state and the sending queue are never replayed.")
         }
-        if tables[TaskActivity.table]?.isEmpty == false { result.warnings.append("Recorded activity is retained in this file as an archive. It is not replayed as new history; restored task copies start their own activity.") }
+        if tables[TaskActivity.table]?.isEmpty == false || tables[TaskNodeActivity.table]?.isEmpty == false { result.warnings.append("Recorded activity is retained in this file as an archive. It is not replayed as new history; restored task copies start their own activity.") }
         if tables.keys.contains(where: { $0 == "project_collaborators" || $0.hasPrefix("project_members:") }) { result.warnings.append("Collaborators and invitations are not recreated. Restored project copies belong to you.") }
         result.warnings.append("Existing work outside this backup is kept. Sign-in, profile identity and device calendar permissions are not changed.")
         return result

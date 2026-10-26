@@ -838,14 +838,18 @@ final class Backend: NSObject {
     func rows(_ table: String, expectedAccount:String?=nil, maximumRows:Int?=nil) async throws -> [Record] {
         let expected=expectedAccount ?? session?.user.id,epoch=sessionGeneration
         guard expected==session?.user.id else {throw CancellationError()}
-        if table == TaskActivity.table {
+        if table == TaskActivity.table || table == TaskNodeActivity.table {
             let owner = expected, generation = sessionGeneration
-            var result: [Record] = []; var cursor: Int64 = 0
+            var result: [Record] = []; var cursor: Int64 = 0; var seen = Set<String>(); let nodeParser = TaskNodeActivity.Parser()
             while true {
                 guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
-                let data = try await request(TaskActivityPage.query(after: cursor), expectedAccount: owner)
+                let data = try await request(table == TaskNodeActivity.table ? TaskNodeActivity.query(after: cursor) : TaskActivityPage.query(after: cursor), expectedAccount: owner)
                 guard generation == sessionGeneration, session?.user.id == owner else { throw CancellationError() }
                 let page = try JSONDecoder().decode([Record].self, from: data)
+                if table == TaskNodeActivity.table {
+                    guard page.count <= 500, result.count + page.count <= (maximumRows ?? 100_000),
+                          page.allSatisfy({ nodeParser.event($0) != nil && seen.insert($0.id.lowercased()).inserted }) else { throw TeamProjectValue.invalid }
+                }
                 cursor = try TaskActivityPage.cursor(page, after: cursor); result += page
                 if let maximumRows,result.count>maximumRows {throw TeamProjectValue.invalid}
                 if page.count < 500 { return result }
@@ -871,6 +875,20 @@ final class Backend: NSObject {
         guard account != nil else { return nil }
         guard let result = try? await rows(TaskAssignmentProvenance.table), generation == sessionGeneration, session?.user.id == account else { return nil }
         return result
+    }
+    /// Missing/denied/partial/future history is unavailable, never an empty
+    /// certified feed. A start/end epoch and session fence cover the full read.
+    func nodeActivityHistory(expectedAccount: String? = nil) async -> TaskNodeActivity.Feed? {
+        let generation = sessionGeneration, account = expectedAccount ?? session?.user.id
+        guard let account, session?.user.id == account else { return nil }
+        do {
+            let before = try await rows(TaskNodeActivity.epochTable, expectedAccount: account, maximumRows: 1)
+            guard TaskNodeActivity.validEpoch(before) else { return nil }
+            let events = try await rows(TaskNodeActivity.table, expectedAccount: account, maximumRows: 100_000)
+            let after = try await rows(TaskNodeActivity.epochTable, expectedAccount: account, maximumRows: 1)
+            guard before == after, generation == sessionGeneration, session?.user.id == account else { return nil }
+            return TaskNodeActivity.Feed(rows: events, epoch: after)
+        } catch { return nil }
     }
     func copyTeamDraft(_ draft:TeamCompletionDraft,command:TeamCompletionDraft.CopyCommand,commit:Bool,cancel:Bool=false,expectedAccount:String) async throws -> TeamCompletionDraft.CopyReview {
         try draft.validate()
@@ -927,7 +945,7 @@ final class Backend: NSObject {
     }
 
     @discardableResult func send(_ change: Mutation, expectedAccount: String? = nil) async throws -> Record? {
-        guard change.table != TaskActivity.table, change.table != TaskActivity.epochTable, change.table != TaskAssignmentProvenance.table else { throw AppFailure(message: "Activity history is read-only.") }
+        guard change.table != TaskNodeActivity.table, change.table != TaskNodeActivity.epochTable, change.table != TaskActivity.table, change.table != TaskActivity.epochTable, change.table != TaskAssignmentProvenance.table else { throw AppFailure(message: "Activity history is read-only.") }
         let expectedOwner = expectedAccount ?? session?.user.id
         guard expectedOwner == session?.user.id else { throw CancellationError() }
         if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
