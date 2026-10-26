@@ -1189,3 +1189,43 @@ provisional connected-copy cohorts, unsupported legacy conversation context,
 I/O-phase account/session UI races, native spoken/recurring/maximum-workload and
 genuine hosted team acceptance. Collaboration stays default off. All user-deferred
 release/provider/device gates remain unchanged.
+
+
+## 26 October 2026 — Connected provisional task-copy drafts
+
+Recorded individual recurring actions can now preserve connected list-order/pin
+histories and supported discussion markers without losing their explicit task-copy
+workflow. The complete encrypted recovery archive is saved and read back first;
+the separate task draft then links to that verified archive. The existing
+actor-bound retirement operation retires only the unused planned generation. Its
+actual response is retained and verified before the recovered workspace is saved.
+Any actual shared replacement remains intact. Saving never creates a task copy.
+
+Saved task details provide a direct link to the connected edits and explain the
+scope of copying. Optional local metadata keeps the existing draft formats,
+encryption context and RPC bodies compatible. A retry reuses the saved task-copy
+request rather than changing its frozen choices. Both metadata histories have
+explicit bounds without automatic eviction. Account-removal fences protect these
+writes. Unsupported or unreadable histories remain queued.
+
+Verification and remaining limits are recorded in
+[p2-connected-provisional-evidence.json](p2-connected-provisional-evidence.json).
+The focused Core suite passes 302 checks in each repository, including 13 new
+connected-draft, encrypted-I/O, removal-fence and actual transport cases. Native
+acceptance is tracked separately; this does not close the broader hosted,
+maximum-workload, I/O-phase race or spoken-accessibility gates. Collaboration
+remains default off, and the user-deferred release/provider/device gates stay
+deferred.
+
+Three new native cases pass on each iPhone and iPad Simulator: ordinary linked
+preservation, copy-vault failure with zero premature retirement calls, and a
+cache-write failure followed by cold reopen and retry. A recorded single-task
+regression also passes on each device. The initial six new native cases stopped
+at a task-copy control below the visible scrolling form; correcting the test's
+scrolling made all six pass without changing production recovery code. Full
+snapshots compare equal after sorting only the cache's knownTasks/quarantined
+sets; queued commands and task/table order are compared unchanged. Actual
+retirement requests/replies, encrypted readback, explicit copy availability,
+linked navigation and sharing/cancellation are verified. Installed app/debug/test
+binaries match the signed products. The independent Mac app/test build and strict
+signatures pass; native Mac acceptance still requires UI automation approval.

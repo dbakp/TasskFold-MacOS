@@ -1344,3 +1344,182 @@ private final class ProvisionalVaultKeySource: @unchecked Sendable {
         return key
     }
 }
+
+extension TeamCompletionTests {
+    private func connectedProvisionalFixture(deleted: Bool = false, missingContext: Bool = true) throws -> (TeamConnectedProvisionalDraft, TeamCompletionDraft.Retirement, TeamWorkspaceCache) {
+        let (header, _, raw) = try retirementFixture(), proof = try TeamCompletionDraft.Retirement(raw, for: header)
+        var local = try editedDraftSnapshot(header)
+        let scope = header.teamCompletion!.scope, proposed = header.teamCompletion!.proposed!
+        let boundary: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(scope.account), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false), "token": .string(String(repeating: "a", count: 64)), "teams": .array([.object(["id": .string(scope.team), "state": .string("active"), "revision": .number(1), "access_revision": .number(1)])]), "projects": .array([.object(["id": .string(scope.project), "team_id": .string(scope.team), "role": .string("viewer"), "archived": .bool(false), "can_send_tasks": .bool(false)])])]
+        let access = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(boundary, account: scope.account, origin: scope.origin), previous: nil, pending: local.pending, tasks: local.tables["tasks"]!)
+        local.teamWorkspace = access
+        let commentID = UUID().uuidString.lowercased(), mentionID = UUID().uuidString.lowercased(), stamp = "2026-10-26T12:00:00Z"
+        let comment = Record(["id": .string(commentID), "task_id": .string(proposed.id), "task_generation": proposed["task_generation"], "project_id": .string(scope.project), "author_id": .string(scope.account), "body": .string("Connected retirement discussion"), "mention_ids": .array([.string(scope.account)]), "revision": .number(2), "created_at": .string(stamp), "updated_at": .string(stamp), "deleted_at": .null])
+        let mention = Record(["id": .string(mentionID), "comment_id": .string(commentID), "recipient_id": .string(scope.account), "revision": .number(3), "created_at": .string(stamp), "read_at": .null])
+        local.tables[SharedComment.table] = [comment]; local.tables[SharedMention.table] = [mention]
+        try ConversationOutbox.enqueue(SharedMentionChange(mention: XCTUnwrap(SharedMention(mention)), account: scope.account, read: false).record, into: &local, origin: scope.origin)
+        XCTAssertNotNil(local.tables[ConversationOutbox.table]!.last!.fields[MentionRecoveryContext.field])
+        if missingContext { local.tables[SharedComment.table] = []; local.tables[SharedMention.table] = [] }
+        let pin = try TaskOrderRecovery.capturing(Mutation(table: "view_orders", recordID: PinnedNotes.key(proposed.id), method: "POST", fields: ["id": .string(PinnedNotes.key(proposed.id)), "user_id": .string(scope.account), "ids": .array([.string(proposed.id)])]), snapshot: local, account: scope.account, origin: scope.origin)
+        local.apply(pin); local.pending.append(pin)
+        if deleted {
+            let row = try XCTUnwrap(local.tables["tasks"]?.first { $0.id == proposed.id })
+            let deletion = try scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "DELETE", fields: [:], baseline: row.fields, teamTaskScope: scope), existing: row)
+            local.apply(deletion); local.pending.append(deletion)
+        }
+        XCTAssertNil(TeamCompletionDraft.Candidate(review: proof.review, snapshot: local))
+        return (try XCTUnwrap(TeamConnectedProvisionalDraft(review: proof.review, snapshot: local)), proof, access)
+    }
+    func testConnectedProvisionalPreservesPinDiscussionAndReadChoiceUnderViewerScope() throws {
+        let (candidate, proof, access) = try connectedProvisionalFixture(), before = candidate.recovery.snapshot
+        let label = Mutation(table: "labels", recordID: UUID().uuidString.lowercased(), method: "POST", fields: ["name": .string("Independent label")])
+        var local = before; local.apply(label); local.pending.append(label)
+        let connected = try XCTUnwrap(TeamConnectedProvisionalDraft(review: proof.review, snapshot: local)), next = try XCTUnwrap(connected.parking(proof: proof, readable: access))
+        XCTAssertEqual(next.pending, [label]); XCTAssertEqual(next.tables["labels"], local.tables["labels"])
+        XCTAssertEqual(connected.recovery.parkedChanges, Array(local.pending.dropLast()))
+        XCTAssertEqual(connected.recovery.parkedConversations, local.tables[ConversationOutbox.table]); XCTAssertTrue(next.tables[ConversationOutbox.table]!.isEmpty)
+        XCTAssertFalse((next.tables["view_orders"] ?? []).contains { $0.id == PinnedNotes.key(connected.copy.record.id) })
+        XCTAssertFalse(next.tables["tasks"]!.contains { $0.id == connected.copy.record.id && $0["task_generation"] == connected.copy.record["task_generation"] })
+        XCTAssertEqual(connected.copy.record.title, "My unsent design notes"); XCTAssertTrue(connected.recovery.text.contains("Connected retirement discussion"))
+        XCTAssertFalse(next.teamWorkspace!.canSend(candidate.copy.original, in: next)); XCTAssertEqual(candidate.recovery.snapshot, before)
+    }
+    func testConnectedProvisionalDeletionKeepsLastAuthoredRecordAndWholeHistory() throws {
+        let (candidate, proof, access) = try connectedProvisionalFixture(deleted: true)
+        XCTAssertTrue(candidate.copy.markedForDeletion); XCTAssertEqual(candidate.copy.record.string("description"), "Keep every edited instruction")
+        XCTAssertTrue(candidate.recovery.parkedChanges.contains { $0.method == "DELETE" })
+        let next = try XCTUnwrap(candidate.parking(proof: proof, readable: access)); XCTAssertTrue(next.pending.isEmpty)
+        XCTAssertFalse(next.tables["tasks"]!.contains { $0.id == candidate.copy.record.id && $0["task_generation"] == candidate.copy.record["task_generation"] })
+        XCTAssertEqual(next.tables["tasks"]?.first { $0.id == candidate.copy.record.id }, proof.currentProposed)
+    }
+    func testConnectedProvisionalRetainsActualReplacementWithoutOldDiscussionCache() throws {
+        let (candidate, proof, access) = try connectedProvisionalFixture(missingContext: false)
+        var reply = proof.response, row = try XCTUnwrap(proof.currentProposed)
+        row["title"] = .string("Actual replacement")
+        reply["current_proposed"] = .object(row.fields)
+        let current = try TeamCompletionDraft.Retirement(reply, for: candidate.copy.original), next = try XCTUnwrap(candidate.parking(proof: current, readable: access))
+        XCTAssertEqual(next.tables["tasks"]?.first { $0.id == row.id }, row)
+        XCTAssertTrue(next.tables[SharedComment.table]!.isEmpty); XCTAssertTrue(next.tables[SharedMention.table]!.isEmpty)
+    }
+    func testConnectedProvisionalPairAndActualRetirementSurviveEncryptedReadback() throws {
+        let (candidate, proof, _) = try connectedProvisionalFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), archiveVault = TeamCompletionRecoveryDraftVault(directory: directory.appendingPathComponent("archives"), account: candidate.recovery.account, origin: candidate.recovery.origin, key: { key }), copyVault = draftVault(candidate.copy, directory: directory.appendingPathComponent("copies"), key: key)
+        let archive = try archiveVault.save(candidate.recovery), copy = try copyVault.saveConnected(candidate.copy, recovery: archive)
+        let verified = try archiveVault.recordProvisionalRetirement(archive, proof: proof)
+        XCTAssertEqual(try archiveVault.load(archive.id), verified); XCTAssertEqual(try copyVault.load(copy.id), copy)
+        XCTAssertEqual(copy.connectedRecoveryIDs, [archive.id]); XCTAssertEqual(verified.provisionalRetirements, [proof.response]); XCTAssertEqual(verified.snapshot, candidate.recovery.snapshot)
+        let export = try JSONDecoder().decode([String: JSON].self, from: verified.data())
+        XCTAssertNil(export["provisionalRetirements"]); XCTAssertNil(export["review"]); XCTAssertNil(export["snapshot"])
+        XCTAssertEqual(export["conversations"]!.list, candidate.recovery.parkedConversations.map { .object($0.fields) })
+        XCTAssertTrue(verified.text.contains("Provisional task retired"))
+        XCTAssertFalse(String(decoding: try Data(contentsOf: copyVault.file(copy.id)), as: UTF8.self).contains(copy.record.title))
+    }
+    func testConnectedProvisionalReusesFrozenLegacyCopyAcrossNewArchiveLinks() throws {
+        let (candidate, _, _) = try connectedProvisionalFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let copyVault = draftVault(candidate.copy, directory: directory, key: SymmetricKey(size: .bits256))
+        let old = try copyVault.save(candidate.copy), command = TeamCompletionDraft.CopyCommand(assignments: true, reminders: false)
+        let frozen = try copyVault.prepareCopy(old, command: command), body = try command.body(for: frozen)
+        let linked = try copyVault.saveConnected(candidate.copy, recovery: candidate.recovery)
+        XCTAssertEqual(linked.id, frozen.id); XCTAssertEqual(linked.copyAttempt, command); XCTAssertEqual(try command.body(for: linked), body)
+        var raw = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(candidate.recovery)); raw["id"] = .string(UUID().uuidString.lowercased())
+        let another = try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(raw))
+        let twice = try copyVault.saveConnected(candidate.copy, recovery: another)
+        XCTAssertEqual(twice.id, frozen.id); XCTAssertEqual(twice.copyAttempt, command); XCTAssertEqual(twice.connectedRecoveryIDs, [candidate.recovery.id, another.id]); XCTAssertEqual(try command.body(for: twice), body)
+        XCTAssertEqual(try copyVault.entries().count, 1)
+    }
+    func testConnectedProvisionalLinkReadbackFailureReopensSameCopyAndLink() throws {
+        let (candidate, _, _) = try connectedProvisionalFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let source = ProvisionalVaultKeySource(), vault = TeamCompletionDraftVault(directory: directory, account: candidate.copy.scope.account, origin: candidate.copy.scope.origin, key: { try source.read() })
+        let old = try vault.save(candidate.copy), command = TeamCompletionDraft.CopyCommand(), frozen = try vault.prepareCopy(old, command: command)
+        source.fail(on: 4); XCTAssertThrowsError(try vault.saveConnected(candidate.copy, recovery: candidate.recovery))
+        source.fail(on: nil); let reopened = try vault.load(frozen.id), bytes = try Data(contentsOf: vault.file(frozen.id))
+        XCTAssertEqual(reopened.copyAttempt, command); XCTAssertEqual(reopened.connectedRecoveryIDs, [candidate.recovery.id])
+        XCTAssertEqual(try vault.saveConnected(candidate.copy, recovery: candidate.recovery), reopened)
+        XCTAssertEqual(try Data(contentsOf: vault.file(frozen.id)), bytes)
+    }
+    func testConnectedProvisionalLinkBoundNeverEvictsOrResetsCopyRequest() throws {
+        let (candidate, _, _) = try connectedProvisionalFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vault = draftVault(candidate.copy, directory: directory, key: SymmetricKey(size: .bits256)), command = TeamCompletionDraft.CopyCommand()
+        let frozen = try vault.prepareCopy(vault.save(candidate.copy), command: command)
+        var raw = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(candidate.recovery))
+        for _ in 0..<20 { raw["id"] = .string(UUID().uuidString.lowercased()); let archive = try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(raw)); _ = try vault.saveConnected(candidate.copy, recovery: archive) }
+        let bytes = try Data(contentsOf: vault.file(frozen.id)); raw["id"] = .string(UUID().uuidString.lowercased())
+        let overflow = try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(raw)); XCTAssertThrowsError(try vault.saveConnected(candidate.copy, recovery: overflow))
+        XCTAssertEqual(try Data(contentsOf: vault.file(frozen.id)), bytes); XCTAssertEqual(try vault.load(frozen.id).connectedRecoveryIDs?.count, 20); XCTAssertEqual(try vault.load(frozen.id).copyAttempt, command)
+    }
+    func testConnectedProvisionalActualProofHistoryBoundAndWrongPhaseRefusal() throws {
+        let (candidate, proof, _) = try connectedProvisionalFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionRecoveryDraftVault(directory: directory, account: candidate.recovery.account, origin: candidate.recovery.origin, key: { key })
+        let saved = try vault.save(candidate.recovery)
+        for i in 0..<20 { var raw = proof.response; raw["test_observation"] = .number(Double(i)); _ = try vault.recordProvisionalRetirement(saved, proof: TeamCompletionDraft.Retirement(raw, for: candidate.copy.original)) }
+        let bytes = try Data(contentsOf: vault.file(saved.id)); var raw = proof.response; raw["test_observation"] = .number(20)
+        XCTAssertThrowsError(try vault.recordProvisionalRetirement(saved, proof: TeamCompletionDraft.Retirement(raw, for: candidate.copy.original)))
+        XCTAssertEqual(try Data(contentsOf: vault.file(saved.id)), bytes); XCTAssertEqual(try vault.load(saved.id).provisionalRetirements?.count, 20)
+        let cancellationVault = TeamCompletionRecoveryDraftVault(directory: directory, account: candidate.recovery.account, origin: candidate.recovery.origin, key: { key }, cancelled: true)
+        XCTAssertThrowsError(try cancellationVault.recordProvisionalRetirement(saved, proof: proof))
+    }
+    func testConnectedProvisionalRefusesChangedCopyDefinitionAndLostCurrentReadScope() throws {
+        let (candidate, proof, access) = try connectedProvisionalFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vault = draftVault(candidate.copy, directory: directory, key: SymmetricKey(size: .bits256)); _ = try vault.save(candidate.copy)
+        let bytes = try Data(contentsOf: vault.file(candidate.copy.id)); var changed = candidate.copy.record; changed["title"] = .string("Unexpected different copy")
+        let other = TeamCompletionDraft(version: 1, id: UUID(), createdAt: Date(), original: candidate.copy.original, record: changed, markedForDeletion: false, edits: [], conversations: [])
+        XCTAssertThrowsError(try vault.saveConnected(other, recovery: candidate.recovery)); XCTAssertEqual(try Data(contentsOf: vault.file(candidate.copy.id)), bytes)
+        var boundary = access.boundary.raw; boundary["projects"] = .array([]); boundary["teams"] = .array([])
+        let lost = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(boundary, account: access.boundary.account, origin: access.boundary.origin), previous: nil, pending: [], tasks: [])
+        XCTAssertNil(candidate.parking(proof: proof, readable: lost))
+    }
+    func testConnectedProvisionalLongOwnHistoryStaysInFullArchiveWithoutTruncation() throws {
+        let (base, proof, access) = try connectedProvisionalFixture(); var local = base.recovery.snapshot
+        for i in 0..<105 {
+            let row = try XCTUnwrap(local.tables["tasks"]?.first { $0.id == base.copy.record.id }), fields: [String: JSON] = ["description": .string("Long connected history \(i)")]
+            let edit = try base.copy.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: base.copy.scope), existing: row)
+            local.apply(edit); local.pending.append(edit)
+        }
+        let candidate = try XCTUnwrap(TeamConnectedProvisionalDraft(review: proof.review, snapshot: local))
+        XCTAssertTrue(candidate.copy.edits.isEmpty); XCTAssertEqual(candidate.recovery.parkedChanges.count, local.pending.count)
+        let text = candidate.recovery.text
+        for i in 0..<105 { XCTAssertTrue(text.contains("Long connected history \(i)")) }
+        XCTAssertTrue(try XCTUnwrap(candidate.parking(proof: proof, readable: access)).pending.isEmpty)
+    }
+    func testConnectedProvisionalOptionalLinksKeepLegacyWireBodyAndDecoderCompatibility() throws {
+        let (draft, command, fixture) = try draftCopyFixture(); var linked = draft; linked.connectedRecoveryIDs = [UUID()]
+        XCTAssertEqual(try command.body(for: linked), fixture["body"]!.object)
+        let data = try JSONEncoder().encode(linked); XCTAssertEqual(try JSONDecoder().decode(TeamCompletionDraft.self, from: data), linked)
+        var raw = try JSONDecoder().decode([String: JSON].self, from: data); raw.removeValue(forKey: "connectedRecoveryIDs")
+        XCTAssertNil(try JSONDecoder().decode(TeamCompletionDraft.self, from: JSONEncoder().encode(raw)).connectedRecoveryIDs)
+        linked.connectedRecoveryIDs = [UUID(uuidString: "00000000-0000-0000-0000-000000000000")!]; XCTAssertThrowsError(try linked.validate())
+    }
+    @MainActor func testConnectedProvisionalRetirementTransportRetainsActualReplyAndOriginalBody() async throws {
+        let (candidate, proof, _) = try connectedProvisionalFixture(), api = try backend(candidate.copy.scope.account)
+        var requests: [URLRequest] = []
+        CompletionHTTP.handler = { request, peer in requests.append(request); peer.finish(try! JSONEncoder().encode(proof.response)) }; defer { CompletionHTTP.handler = nil }
+        let actual = try await api.retireTeamProvisional(candidate.copy.original, expectedAccount: candidate.copy.scope.account)
+        XCTAssertEqual(actual.response, proof.response); XCTAssertEqual(requests.count, 1)
+        XCTAssertEqual(requests[0].url?.path, "/rest/v1/rpc/taskfold_retire_team_provisional")
+        let body = try JSONDecoder().decode([String: JSON].self, from: XCTUnwrap(requests[0].httpBody))
+        XCTAssertEqual(body, ["_body": .object(try candidate.copy.original.teamCompletion!.body(for: candidate.copy.original))])
+        XCTAssertNil(body["connectedRecoveryIDs"]); XCTAssertNil(body["provisionalRetirements"])
+    }
+}
+
+extension TeamCompletionTests {
+    func testConnectedProvisionalAccountRemovalFencesBothArchiveUpdates() throws {
+        let (candidate, proof, _) = try connectedProvisionalFixture(), root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let gate = AccountRemovalDisk(directory: root, account: candidate.copy.scope.account), key = SymmetricKey(size: .bits256)
+        var copies = draftVault(candidate.copy, directory: root.appendingPathComponent("copies"), key: key)
+        copies.removalGate = gate
+        let archive = TeamCompletionRecoveryDraftVault(directory: root.appendingPathComponent("archives"), account: candidate.recovery.account, origin: candidate.recovery.origin, key: { key }, removalGate: gate)
+        let saved = try archive.save(candidate.recovery), copy = try copies.saveConnected(candidate.copy, recovery: saved)
+        let copyBytes = try Data(contentsOf: copies.file(copy.id)), archiveBytes = try Data(contentsOf: archive.file(saved.id))
+        try gate.removeCache()
+        XCTAssertThrowsError(try copies.saveConnected(candidate.copy, recovery: saved))
+        XCTAssertThrowsError(try archive.recordProvisionalRetirement(saved, proof: proof))
+        XCTAssertEqual(try Data(contentsOf: copies.file(copy.id)), copyBytes); XCTAssertEqual(try Data(contentsOf: archive.file(saved.id)), archiveBytes)
+    }
+}

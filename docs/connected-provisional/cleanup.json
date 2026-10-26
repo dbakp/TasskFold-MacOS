@@ -1,0 +1,253 @@
+{
+  "sessions": {
+    "phone": {
+      "com.dbakp.taskfold.workflowteststeameditbridge": {
+        "uninstalled": true,
+        "terminateExit": 3
+      },
+      "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": {
+        "uninstalled": true,
+        "terminateExit": 3
+      }
+    },
+    "ipad": {
+      "com.dbakp.taskfold.workflowteststeameditbridge": {
+        "uninstalled": true,
+        "terminateExit": 3
+      },
+      "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner": {
+        "uninstalled": true,
+        "terminateExit": 3
+      }
+    },
+    "simulatorBootStates": "Both previously booted Simulators left booted."
+  },
+  "preserved": [
+    "both repository .build caches",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "/tmp/taskfold-workflow-mac-native-host",
+    "/tmp/taskfold-workflow-mac-native-build"
+  ],
+  "pruned": [
+    {
+      "name": "/tmp/taskfold-connected-provisional-collect.py",
+      "logicalBytes": 4863
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-compile.log",
+      "logicalBytes": 51220
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-core-v2.log",
+      "logicalBytes": 20263
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-core.log",
+      "logicalBytes": 20935
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-core.py",
+      "logicalBytes": 9690
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-doc-stage.txt",
+      "logicalBytes": 1613
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-document.py",
+      "logicalBytes": 6341
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-export-initial-all.log",
+      "logicalBytes": 7801
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-export-initial-ipad.log",
+      "logicalBytes": 687
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-export-initial-phone.log",
+      "logicalBytes": 7484
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-export-initial.log",
+      "logicalBytes": 326
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-fence-test.txt",
+      "logicalBytes": 1446
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-host",
+      "logicalBytes": 7006452
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-installed-products.json",
+      "logicalBytes": 2032
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ios-build",
+      "logicalBytes": 741272925
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ios-build-v2.log",
+      "logicalBytes": 53011
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ios-build.log",
+      "logicalBytes": 555225
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ios-full-core.log",
+      "logicalBytes": 103064
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad-export-v2.log",
+      "logicalBytes": 1842
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad-initial-all",
+      "logicalBytes": 122978564
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad-initial-attachments",
+      "logicalBytes": 4
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad-summary.json",
+      "logicalBytes": 1015
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad-v2-attachments",
+      "logicalBytes": 3260743
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad-v2.log",
+      "logicalBytes": 71297
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad-v2.xcresult",
+      "logicalBytes": 4901986
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad.log",
+      "logicalBytes": 66825
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-ipad.xcresult",
+      "logicalBytes": 176713216
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-mac-build-v2.log",
+      "logicalBytes": 35645
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-mac-build-v3.log",
+      "logicalBytes": 30520
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-mac-build.log",
+      "logicalBytes": 90178
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-mac-full-core.log",
+      "logicalBytes": 110007
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-mac-sign.log",
+      "logicalBytes": 1163
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-native-peer.py",
+      "logicalBytes": 5368
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-native-template.txt",
+      "logicalBytes": 10481
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-native.py",
+      "logicalBytes": 5585
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-phone-export-v2.log",
+      "logicalBytes": 1843
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-phone-initial-all",
+      "logicalBytes": 99653540
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-phone-summary.json",
+      "logicalBytes": 998
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-phone-v2-attachments",
+      "logicalBytes": 3459914
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-phone-v2.log",
+      "logicalBytes": 62810
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-phone-v2.xcresult",
+      "logicalBytes": 4967932
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-phone.log",
+      "logicalBytes": 58151
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-phone.xcresult",
+      "logicalBytes": 152380729
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-prepare-v2.json",
+      "logicalBytes": 177
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-prepare-v2.log",
+      "logicalBytes": 117
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-session-cleanup.json",
+      "logicalBytes": 607
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-setup.py",
+      "logicalBytes": 2703
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-sign-v2.log",
+      "logicalBytes": 88
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-sign.log",
+      "logicalBytes": 88
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-signatures-v2.json",
+      "logicalBytes": 705
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-signatures.json",
+      "logicalBytes": 705
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-source-proof.json",
+      "logicalBytes": 2130
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-store.py",
+      "logicalBytes": 9528
+    },
+    {
+      "name": "/tmp/taskfold-connected-provisional-tests.txt",
+      "logicalBytes": 18528
+    }
+  ],
+  "bytesMeaning": "Sum of logical file sizes in owned scratch; not a physical free-space guarantee.",
+  "logicalBytesPruned": 1318031110,
+  "remainingTaskfoldProcesses": []
+}

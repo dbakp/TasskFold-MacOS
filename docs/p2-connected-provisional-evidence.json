@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-26",
+  "scope": "Connected recorded individual recurring task drafts retain the explicit copy workflow plus full connected order/pin/discussion recovery. Both repos own their code.",
+  "core": {
+    "passed": 302,
+    "failed": 0,
+    "skipped": 0,
+    "newCases": 13,
+    "filter": "TeamCompletion|SharedComments|PinnedNotes"
+  },
+  "contract": {
+    "formats": "Optional navigation-only connectedRecoveryIDs and actual provisionalRetirements history; existing v1 envelopes/AAD and all RPC bodies unchanged.",
+    "sequence": "Verified backup, full encrypted archive/readback, task draft/link/readback, actual actor-bound retirement, actual response retention/readback, read-bound projection and durable workspace persistence.",
+    "copy": "No automatic copy; existing explicit copy operation unchanged. Frozen legacy copy request/choices survive added links.",
+    "bounds": "20 navigation links and 20 distinct retirement observations, no eviction; existing DTO/vault budgets/removal fences retained.",
+    "permissions": "Captured account/session/incarnation/read cache/revision and exact pending snapshot rechecked after awaits. Current read scope still required; existing editor checks still apply to copying.",
+    "unavailable": "Unsupported/lost read histories remain queued; failed writes retain original queue and any already verified archive."
+  },
+  "native": {
+    "acceptedCases": 0,
+    "status": "Pending interactive Enable UI Automation approval",
+    "build": "Current independent signed app/test targets compile; strict deep signature and namespace-only source checks pass.",
+    "sharedCoreAcceptance": "iOS-owned new native cases pass six times plus two recorded-single regressions; no Mac runtime acceptance inferred."
+  },
+  "remaining": [
+    "Native Mac approval and runtime acceptance",
+    "Broader recurring/related provisional cohorts and unsupported legacy discussion context",
+    "I/O-phase account/session UI races, maximum-workload live UI/archive I/O, broader spoken accessibility and genuine hosted team acceptance",
+    "Default-off collaboration rollout and all user-deferred release/distribution, remote reminders, old-client safety, provider configuration and physical location delivery remain deferred"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "004303c1503e11944697e8521bd4611d35d9b0e1867451e3f972162864b20e20",
+    "Taskfold/Core/TeamCompletionDraft.swift": "1b55dd9704c5f07326283264c975f1efef80d278ff03118ebdc9663c5d5b84b3",
+    "Taskfold/Collaboration.swift": "8a44b134ec22c2e3bd7e4753680ab6a288a861242b3774da2293c2986819f079",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "57c3641926f0f3e81f3aa9965b57efd0fb6df056add73749f2c9280820808446",
+    "TaskfoldTests/TeamCompletionTests.swift": "4f89a8d55c7e082c45ec9ae33d7546da8a7a2b52f014467e7f6c8d3ba1970e8d"
+  },
+  "artifactSHA256": {
+    "app-build.log": "2b3311a2005fb1f54382f49fa4158ecee5c47df0926ebae4d640532ee807b91e",
+    "cleanup.json": "ded3f6f9f5cdda4c03acf2adc287a87eca5167643586f636298263c3adefc0b9",
+    "core.log": "d1b9d5515f71fb06b273634a510e91b7a5022b5265507383d23904ed66ba1e4b",
+    "isolation-receipt.json": "e2c7f7ffc45a33bae745aa6c296c0e37fe1f84f224eb4c10cdd37fef4b6d9dfe",
+    "prepared-source-proof.json": "e083ef4e18ca93b90228c49bfe42c71262697b659d2a939ab38225804499b786",
+    "signatures.log": "4372dcb459d10005b8cdd737b396172f22e8be39a7b29e01d94e04d6c452433f"
+  },
+  "cleanup": "connected-provisional/cleanup.json"
+}

@@ -1920,6 +1920,62 @@ final class Store {
         }
     }
 
+    @discardableResult func parkConnectedTeamCompletionDraft(_ expected: TeamCompletionReviewPresentation) async -> Bool {
+        guard expected == teamCompletionReviewPresentation, let initial = syncConflict?.completionReview,
+              currentTeamCompletionReview(initial), initial.isRecorded,
+              let access = nativeConversationTeamCache, let copyVault = teamDraftVault,
+              let archiveVault = teamRecordedRecoveryVault else { return false }
+        let generation = accountGeneration, session = backend.reminderSessionIncarnation, account = userID
+        let before = snapshot, revision = workspaceReadRevision
+        var observed = initial
+        func unchanged() -> Bool {
+            generation == accountGeneration && session == backend.reminderSessionIncarnation && before == snapshot &&
+            revision == workspaceReadRevision && nativeConversationTeamCache == access && currentTeamCompletionReview(observed) &&
+            syncConflict?.completionBatchReview == expected.group && teamCompletionReviewMayFinish(expected)
+        }
+        do {
+            let candidate = try await Task.detached(priority: .userInitiated) {
+                guard let value = TeamConnectedProvisionalDraft(review: initial, snapshot: before),
+                      value.recovery.preserving(readable: access) != nil else { throw TeamCompletionDraft.invalid }
+                return value
+            }.value
+            guard unchanged() else { return false }
+            _ = try await makeRecoveryBackup(kind: "Before saving connected recurring draft")
+            guard unchanged() else { return false }
+            let saved = try await Task.detached(priority: .utility) { () -> (TeamCompletionRecoveryDraft, TeamCompletionDraft) in
+                let archive = try archiveVault.save(candidate.recovery)
+                let copy = try copyVault.saveConnected(candidate.copy, recovery: archive)
+                guard archive.sameWork(as: candidate.recovery), copy.original == candidate.copy.original,
+                      copy.record == candidate.copy.record, copy.connectedRecoveryIDs?.contains(archive.id) == true else { throw TeamCompletionDraft.invalid }
+                return (archive, copy)
+            }.value
+            guard unchanged() else { return false }
+            // Existing actor-bound retirement only; this never creates a task copy.
+            let proof = try await backend.retireTeamProvisional(initial.mutation, expectedAccount: account)
+            guard unchanged() else { return false }
+            syncConflict = SyncConflict(mutation: proof.review.mutation, remote: proof.review.task ?? initial.mutation.teamCompletion!.source, completionReview: proof.review)
+            observed = proof.review
+            let next = try await Task.detached(priority: .utility) { () -> Snapshot in
+                let archive = try archiveVault.recordProvisionalRetirement(saved.0, proof: proof)
+                let copy = try copyVault.load(saved.1.id)
+                guard archive.provisionalRetirements?.last == proof.response,
+                      copy.original == candidate.copy.original, copy.record == candidate.copy.record,
+                      copy.connectedRecoveryIDs?.contains(archive.id) == true,
+                      let projection = candidate.parking(proof: proof, readable: access) else { throw TeamCompletionDraft.invalid }
+                return projection
+            }.value
+            guard unchanged() else { return false }
+            snapshot = next
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: expected); return false }
+            undoStack = []; redoStack = []; syncConflict = nil
+            notice = "Recurring draft kept. Review its task copy and connected saved edits in Saved team drafts."
+            Task { await sync() }; return true
+        } catch {
+            guard unchanged() else { return false }
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: expected); return false
+        }
+    }
+
     @discardableResult func cancelTeamCompletionReview(_ expected:TeamCompletion.Review) async -> Bool {
         await resolveTeamCompletionReview(expected,rebase:false)
     }
@@ -3928,7 +3984,12 @@ extension Store {
             let header = try recurringCommand(b, operation: operation)
             let command = header.teamCompletion!
             guard let (task, originalNext) = current[command.source.id] else { throw TeamCompletion.invalid }
-            let next: Record? = originalNext?.id == command.proposed?.id ? originalNext : nil
+            var next: Record? = originalNext?.id == command.proposed?.id ? originalNext : nil
+            if ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), var replacement = next {
+                replacement["task_generation"] = .string(WorkspaceBackup.stableID("native-connected-replacement", replacement.id))
+                replacement["title"] = .string("Existing shared occurrence")
+                next = replacement
+            }
             let nextValue: JSON = next.map { JSON.object($0.fields) } ?? .null
             let related: JSON = command.related.map { JSON.string($0.uuidString.lowercased()) } ?? .null
             var identity: [String: JSON] = [:]
@@ -3936,7 +3997,7 @@ extension Store {
             var receipt = identity
             receipt["protocol"] = .number(1); receipt["account"] = .string(TeamEditorNativeFixture.account)
             receipt["operation"] = .string(operation.rawValue); receipt["related_request"] = related; receipt["replayed"] = .bool(true)
-            receipt["source_revision"] = task["completion_version"]; receipt["created_successor"] = .bool(next != nil); receipt["removed_successor"] = .bool(false)
+            receipt["source_revision"] = task["completion_version"]; receipt["created_successor"] = .bool(next != nil && (!ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing") || next?["task_generation"] == command.proposed?["task_generation"])); receipt["removed_successor"] = .bool(false)
             receipt["successor_id"] = next.map { JSON.string($0.id) } ?? .null
             receipt["successor_generation"] = next?["task_generation"] ?? .null
             receipt["task"] = .object(task.fields); receipt["successor"] = nextValue
@@ -3957,13 +4018,24 @@ extension Store {
         trace(request)
         if blockedSync, request.httpMethod == "POST", request.url?.path == "/rest/v1/rpc/taskfold_workspace_boundary" { return try? JSONEncoder().encode(readBoundary().raw) }
         guard request.httpMethod == "POST",
-              ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion"].contains(request.url?.path ?? "") else { return nil }
+              ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional"].contains(request.url?.path ?? "") else { return nil }
         var data = request.httpBody
         if data == nil, let stream = request.httpBodyStream {
             stream.open(); defer { stream.close() }; var value = Data(), bytes = [UInt8](repeating: 0, count: 4096)
             while stream.hasBytesAvailable && value.count < 2_000_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; value.append(contentsOf: bytes.prefix(count)) }; data = value
         }
         guard let data, let params = try? JSONDecoder().decode([String: JSON].self, from: data) else { return nil }
+        if recurring, request.url?.path == "/rest/v1/rpc/taskfold_retire_team_provisional" {
+            guard ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), Set(params.keys) == ["_body"], let body = params["_body"]?.object,
+                  let data = try? recurringResponse(["_action": .string("complete"), "_body": .object(body)], single: true),
+                  let read = try? JSONDecoder().decode([String: JSON].self, from: data), read["state"] == .string("recorded") else { return nil }
+            let response: [String: JSON] = ["draft_retirement_protocol": .number(1), "generation_unavailable": .bool(true), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "project_id": body["project_id"]!, "request_id": body["request_id"]!, "task_id": body["planned_next_id"]!, "task_generation": body["next_generation"]!, "review": .object(read), "current_proposed": read["successor"] ?? .null]
+            let file = recurringProof.deletingLastPathComponent().appendingPathComponent("taskfold-connected-provisional-rpc-proof.json")
+            var calls = (try? JSONDecoder().decode([JSON].self, from: Data(contentsOf: file))) ?? []
+            calls.append(.object(["path": .string(request.url!.path), "body": .object(params), "response": .object(response)]))
+            try? JSONEncoder().encode(Array(calls.suffix(16))).write(to: file, options: .atomic)
+            return try? JSONEncoder().encode(response)
+        }
         if recurring { return try? recurringResponse(params, single: ["/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion"].contains(request.url?.path ?? "")) }
         guard params["_action"] == .string("complete"),
               let body = params["_body"]?.object, body["team_id"] == .string(TeamEditorNativeFixture.teamID),
@@ -4035,6 +4107,15 @@ extension Store {
                 }
                 header = first; snapshot.pending[0] = first; undoStack = []; redoStack = []; try persist()
             }
+            if ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), TeamBatchRecoveryNativePeer.recurring,
+               ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-dependent"), snapshot.pending.count == 1,
+               let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first,
+               let command = item.teamCompletion, let proposed = command.proposed,
+               let row = snapshot.tables["tasks"]?.first(where: { $0.id == proposed.id && $0["task_generation"] == proposed["task_generation"] }) {
+                let fields: [String: JSON] = ["title": .string("Connected recurring draft"), "description": .string("Keep the connected recurring instructions")]
+                let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
+                snapshot.apply(edit); snapshot.pending.append(edit); try persist()
+            }
             if TeamBatchRecoveryNativePeer.recurring, ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-dependent"), snapshot.pending.count == 3 {
                 let last = snapshot.pending.last!
                 guard let item = last.teamCompletion != nil ? last : last.teamTaskBatch?.items.first,
@@ -4051,10 +4132,13 @@ extension Store {
                 let edit = try command.scope.capturing(Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: row), teamTaskScope: command.scope), existing: row)
                 snapshot.apply(edit); snapshot.pending.append(edit); try persist()
             }
+            if ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), let previous = snapshot.teamWorkspace {
+                snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: previous.boundary, previous: previous, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+            }
             if ProcessInfo.processInfo.arguments.contains("--team-recorded-mention-testing"),
                (snapshot.tables[ConversationOutbox.table] ?? []).isEmpty,
                let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first,
-               let task = snapshot.tables["tasks"]?.first(where: { $0.id == item.recordID }) {
+               let task = snapshot.tables["tasks"]?.first(where: { $0.id == ((ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing") ? item.teamCompletion?.proposed?.id : nil) ?? item.recordID) }) {
                 let stamp = "2026-10-25T12:00:00Z", commentID = "ec240000-0000-4000-8000-000000000091", mentionID = "ec240000-0000-4000-8000-000000000092"
                 let comment = Record(["id": .string(commentID), "task_id": .string(task.id), "task_generation": task["task_generation"], "project_id": task["project_id"], "author_id": .string(userID), "body": .string("Native connected mention recovery proof"), "mention_ids": .array([.string(userID)]), "revision": .number(2), "created_at": .string(stamp), "updated_at": .string(stamp), "deleted_at": .null])
                 let marker = Record(["id": .string(mentionID), "comment_id": .string(commentID), "recipient_id": .string(userID), "revision": .number(3), "created_at": .string(stamp), "read_at": .null])
@@ -4071,7 +4155,7 @@ extension Store {
             if ProcessInfo.processInfo.arguments.contains("--team-recorded-order-testing"),
                !snapshot.pending.contains(where: { $0.table == "view_orders" }),
                let item = header.teamCompletion != nil ? header : header.teamTaskBatch?.items.first,
-               let task = snapshot.tables["tasks"]?.first(where: { $0.id == item.recordID }),
+               let task = snapshot.tables["tasks"]?.first(where: { $0.id == ((ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing") ? item.teamCompletion?.proposed?.id : nil) ?? item.recordID) }),
                let other = snapshot.tables["tasks"]?.first(where: { $0.id != task.id }) {
                 let stale = "ec240000-0000-4000-8000-000000000099"
                 let order = Record(["id": .string("scope:today"), "user_id": .string(userID), "ids": .array([.string(other.id), .string(stale), .string(task.id)]), "updated_at": .string("2026-10-25T12:00:00Z")])
@@ -4141,7 +4225,7 @@ extension Store {
 @MainActor enum TeamRecoveryStorageNativeFixture {
     static var fault: String? {
         guard TeamEditorNativeFixture.enabled else { return nil }
-        return ["cache", "draft", "backup"].first { ProcessInfo.processInfo.arguments.contains("--team-recovery-storage=" + $0) }
+        return ["cache", "draft", "backup", "connected-copy"].first { ProcessInfo.processInfo.arguments.contains("--team-recovery-storage=" + $0) }
     }
     private static var support: URL { URL.applicationSupportDirectory }
     private static var cache: URL { support.appendingPathComponent("Taskfold/" + TeamEditorNativeFixture.account + ".json") }
@@ -4152,6 +4236,7 @@ extension Store {
     private static func target(_ fault: String) -> URL {
         if fault == "cache" { return cache }
         if fault == "backup" { return vault.appendingPathComponent("index.json") }
+        if fault == "connected-copy" { return vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee.taskfolddraft") }
         let name = ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-testing") ? "Cancelled recovery" : ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing") ? "Recorded recovery" : "Selections"
         return vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/" + name)
     }
@@ -4182,7 +4267,7 @@ extension Store {
         let fm = FileManager.default
         guard fm.fileExists(atPath: journal.path) else { return }
         let proof = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: journal))
-        guard ["cache", "draft", "backup"].contains(proof["fault"]?.text ?? ""), let hadVault = proof["hadVault"]?.flag else { throw TeamCompletion.invalid }
+        guard ["cache", "draft", "backup", "connected-copy"].contains(proof["fault"]?.text ?? ""), let hadVault = proof["hadVault"]?.flag else { throw TeamCompletion.invalid }
         if fm.fileExists(atPath: held.path) {
             if fm.fileExists(atPath: cache.path) { try fm.removeItem(at: cache) }
             try fm.moveItem(at: held, to: cache)

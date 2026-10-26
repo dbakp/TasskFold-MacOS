@@ -3407,7 +3407,7 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         wait(for: [opened], timeout: 10)
         app.activate()
     }
-    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false, mentions: Bool = false, preferences: Bool = false, cancelling: Bool = false, cancellationRace: Bool = false, capturedMentions: Bool = false) throws {
+    @MainActor private func launch(_ app: XCUIApplication, mode: String, single: Bool, refresh: Bool = false, recorded: Bool = true, storage: String? = nil, race: String? = nil, dependent: Bool = true, recordedDraft: Bool = false, mentions: Bool = false, preferences: Bool = false, cancelling: Bool = false, cancellationRace: Bool = false, capturedMentions: Bool = false, connectedProvisional: Bool = false) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
         app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-batch-testing", "--team-batch-recovery-testing", "--team-batch-recovery-recorded", "--team-batch-recovery-" + mode, "-appearance", "light"]
         if !recorded { app.launchArguments.removeAll { $0 == "--team-batch-recovery-recorded" } }
@@ -3415,6 +3415,7 @@ final class TeamCompletionRecoveryMacUITests: XCTestCase {
         if recordedDraft { app.launchArguments.append("--team-recorded-draft-testing") }
         if mentions { app.launchArguments.append("--team-recorded-mention-testing") }
         if capturedMentions { app.launchArguments.append("--team-captured-mention-testing") }
+        if connectedProvisional { app.launchArguments += ["--team-connected-provisional-testing", "--team-batch-recovery-recurring"] }
         if preferences { app.launchArguments.append("--team-recorded-order-testing") }
         if cancelling { app.launchArguments.append("--team-cancelled-draft-testing") }
         if cancellationRace { app.launchArguments.append("--team-cancelled-draft-recorded-race") }
@@ -4136,4 +4137,121 @@ extension TeamCompletionRecoveryMacUITests {
 
 extension TeamCompletionRecoveryMacUITests {
     @MainActor func testRecordedDraftRecoversCapturedDiscussionAfterCacheDisappears() throws { try recordedDraftRecovery("group", mentions: true, preferences: true, capturedMentions: true) }
+}
+
+extension TeamCompletionRecoveryMacUITests {
+    @MainActor private func connectedProvisionalRecovery(_ scenario: String) throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        try launch(app, mode: "viewer", single: true, recorded: true, storage: scenario == "vault" ? "connected-copy" : "cache", recordedDraft: true, mentions: true, preferences: true, capturedMentions: true, connectedProvisional: true)
+        app.buttons["openMacCompletionRecovery"].click()
+        let fm = FileManager.default, support = try support()
+        let cacheFile = support.appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json")
+        let vault = cacheFile.deletingLastPathComponent().appendingPathComponent("Backups/d2be2d54-84e6-8f3d-8850-546d0835535a")
+        let copies = vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82")
+        let archives = copies.appendingPathComponent("Recorded recovery")
+        let callFile = support.appendingPathComponent("taskfold-connected-provisional-rpc-proof.json")
+        if fm.fileExists(atPath: callFile.path) { try fm.removeItem(at: callFile) }
+        addTeardownBlock {
+            await MainActor.run {
+                app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; app.launchArguments.append("--team-recovery-storage-cleanup")
+                app.launch(); app.terminate()
+            }
+        }
+        func saved() throws -> [String: Any] { try JSONSerialization.jsonObject(with: Data(contentsOf: cacheFile)) as! [String: Any] }
+        func calls() throws -> [[String: Any]] { fm.fileExists(atPath: callFile.path) ? try JSONSerialization.jsonObject(with: Data(contentsOf: callFile)) as! [[String: Any]] : [] }
+        let before = try saved(), bytes = try Data(contentsOf: cacheFile), queue = before["pending"] as! [[String: Any]]
+        XCTAssertEqual(queue.count, 6)
+        let command = try XCTUnwrap(queue[0]["teamCompletion"] as? [String: Any]), proposed = try XCTUnwrap(command["proposed"] as? [String: Any])
+        let target = proposed["id"] as! String, generation = proposed["task_generation"] as! String
+        let keep = app.buttons["parkConnectedTeamCompletionDraft"]
+        XCTAssertTrue(keep.waitForExistence(timeout: 25), app.debugDescription); XCTAssertTrue(keep.isEnabled)
+        app.buttons["blockNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage blocked"].waitForExistence(timeout: 8))
+        if scenario == "success" { app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8)) }
+        keep.click()
+        if scenario != "success" {
+            let ok = app.windows.buttons["OK"].firstMatch
+            XCTAssertTrue(ok.waitForExistence(timeout: 25), app.debugDescription)
+            let old = try Data(contentsOf: scenario == "cache" ? cacheFile.appendingPathExtension("storage-proof-held") : cacheFile)
+            XCTAssertEqual(old, bytes)
+            XCTAssertEqual(try calls().count, scenario == "cache" ? 1 : 0)
+            let files = try fm.contentsOfDirectory(at: archives, includingPropertiesForKeys: nil).filter { $0.pathExtension == "taskfoldrecovery" }
+            XCTAssertEqual(files.count, 1, "The complete connected archive precedes the copy-vault write and retirement request")
+            shot(app, "Connected provisional failure " + scenario)
+            ok.click()
+            app.buttons["repairNativeRecoveryStorage"].click(); XCTAssertTrue(app.staticTexts["Storage available"].waitForExistence(timeout: 8))
+            if scenario == "cache" {
+                app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }
+                try open(app); app.buttons["openMacCompletionRecovery"].click()
+                XCTAssertEqual(canonicalRecordedDraft(try saved()), canonicalRecordedDraft(before))
+            }
+            XCTAssertTrue(keep.waitForExistence(timeout: 25), app.debugDescription); XCTAssertTrue(keep.isEnabled); keep.click()
+        }
+        XCTAssertTrue(app.buttons["openMacCompletionRecovery"].waitForExistence(timeout: 30), app.debugDescription)
+        let after = try saved(); XCTAssertTrue((after["pending"] as! [Any]).isEmpty)
+        let observed = try calls(); XCTAssertEqual(observed.count, scenario == "cache" ? 2 : 1)
+        for call in observed {
+            XCTAssertEqual(call["path"] as? String, "/rest/v1/rpc/taskfold_retire_team_provisional")
+            let request = try XCTUnwrap(call["body"] as? [String: Any]); XCTAssertEqual(Set(request.keys), ["_body"])
+            let body = try XCTUnwrap(request["_body"] as? [String: Any]); XCTAssertEqual(body["request_id"] as? String, (queue[0]["id"] as! String).lowercased())
+            XCTAssertEqual(body["planned_next_id"] as? String, target); XCTAssertEqual(body["next_generation"] as? String, generation)
+        }
+        let response = try XCTUnwrap(observed.last?["response"] as? [String: Any]), replacement = try XCTUnwrap(response["current_proposed"] as? [String: Any])
+        let oldTables = before["tables"] as! [String: Any], newTables = after["tables"] as! [String: Any]
+        let oldTasks = oldTables["tasks"] as! [[String: Any]], newTasks = newTables["tasks"] as! [[String: Any]]
+        XCTAssertEqual(newTasks.first { $0["id"] as? String == target } as NSDictionary?, replacement as NSDictionary)
+        XCTAssertNotEqual(replacement["task_generation"] as? String, generation)
+        XCTAssertEqual(newTasks.filter { $0["id"] as? String != target } as NSArray, oldTasks.filter { $0["id"] as? String != target } as NSArray)
+        XCTAssertTrue((newTables["_conversation_outbox"] as! [Any]).isEmpty)
+        XCTAssertTrue((newTables["task_comments"] as? [Any])?.isEmpty == true); XCTAssertTrue((newTables["task_mentions"] as? [Any])?.isEmpty == true)
+        let preferenceCommands = queue.filter { $0["table"] as? String == "view_orders" }; XCTAssertEqual(preferenceCommands.count, 4)
+        let beforeOrder = (preferenceCommands[0]["orderRecovery"] as! [String: Any])["before"] as! [String: Any]
+        let orders = newTables["view_orders"] as! [[String: Any]]
+        XCTAssertEqual(orders.first { $0["id"] as? String == "scope:today" } as NSDictionary?, beforeOrder as NSDictionary)
+        XCTAssertFalse(orders.contains { ($0["id"] as? String)?.hasPrefix("widget-note:") == true })
+        let oldIndependent = (oldTables["view_orders"] as! [[String: Any]]).first { $0["id"] as? String == "scope:inbox" }
+        XCTAssertEqual(orders.first { $0["id"] as? String == "scope:inbox" } as NSDictionary?, oldIndependent as NSDictionary?)
+        let copyFiles = try fm.contentsOfDirectory(at: copies, includingPropertiesForKeys: nil).filter { $0.pathExtension == "taskfolddraft" }
+        let archiveFiles = try fm.contentsOfDirectory(at: archives, includingPropertiesForKeys: nil).filter { $0.pathExtension == "taskfoldrecovery" }
+        XCTAssertEqual(copyFiles.count, 1); XCTAssertEqual(archiveFiles.count, 1)
+        XCTAssertFalse(String(decoding: try Data(contentsOf: copyFiles[0]), as: UTF8.self).contains("Connected recurring draft"))
+        XCTAssertFalse(String(decoding: try Data(contentsOf: archiveFiles[0]), as: UTF8.self).contains("Native connected mention recovery proof"))
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; try open(app)
+        let drafts = app.buttons["openMacSavedDrafts"]
+        XCTAssertTrue(drafts.waitForExistence(timeout: 15)); drafts.click()
+        let item = app.buttons["savedProvisionalTaskDraft"].firstMatch
+        XCTAssertTrue(item.waitForExistence(timeout: 15), app.debugDescription); item.click()
+        let copy = try JSONSerialization.jsonObject(with: Data(contentsOf: support.appendingPathComponent("taskfold-connected-provisional-copy-proof.json"))) as! [String: Any]
+        XCTAssertEqual((copy["id"] as! String).lowercased(), copyFiles[0].deletingPathExtension().lastPathComponent)
+        XCTAssertEqual((copy["connectedRecoveryIDs"] as? [String])?.map { $0.lowercased() }, [archiveFiles[0].deletingPathExtension().lastPathComponent])
+        XCTAssertEqual(copy["original"] as? NSDictionary, queue[0] as NSDictionary); XCTAssertNil(copy["copyAttempt"])
+        let record = try XCTUnwrap(copy["record"] as? [String: Any]); XCTAssertEqual(record["id"] as? String, target); XCTAssertEqual(record["task_generation"] as? String, generation)
+        XCTAssertEqual(record["title"] as? String, "Connected recurring draft"); XCTAssertEqual(record["description"] as? String, "Keep the connected recurring instructions")
+        XCTAssertTrue(app.buttons["reviewSavedTeamDraftCopy"].exists, "The explicit task-copy workflow stays available")
+        let related = app.buttons["reviewConnectedProvisionalEdits"]
+
+        XCTAssertTrue(related.waitForExistence(timeout: 15), app.debugDescription); related.click()
+        let preview = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Provisional task retired", "Provisional task retired")).firstMatch
+        XCTAssertTrue(preview.waitForExistence(timeout: 15), app.debugDescription)
+        let archive = try JSONSerialization.jsonObject(with: Data(contentsOf: support.appendingPathComponent("taskfold-recorded-draft-proof.json"))) as! [String: Any]
+        let data = try Data(contentsOf: support.appendingPathComponent("taskfold-recorded-export-proof.json")), exported = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        XCTAssertEqual(canonicalRecordedDraft(archive["snapshot"] as! [String: Any]), canonicalRecordedDraft(before))
+        XCTAssertEqual((archive["id"] as! String).lowercased(), archiveFiles[0].deletingPathExtension().lastPathComponent)
+        let proofs = archive["provisionalRetirements"] as! [[String: Any]]; XCTAssertEqual(proofs.count, 1); XCTAssertEqual(proofs[0] as NSDictionary, response as NSDictionary)
+        XCTAssertEqual(exported["changes"] as? NSArray, queue as NSArray)
+        XCTAssertEqual(exported["conversations"] as? NSArray, oldTables["_conversation_outbox"] as? NSArray)
+        XCTAssertEqual((exported["conversation_context"] as? [Any])?.count, 2)
+        XCTAssertNil(exported["provisionalRetirements"]); XCTAssertNil(exported["snapshot"]); XCTAssertNil(exported["review"])
+        shot(app, "Connected provisional saved edits " + scenario)
+        let export = app.buttons["exportRecordedEdits"]
+        for _ in 0..<8 where !export.isHittable { app.descendants(matching: .any)["savedRecordedEditsForm"].firstMatch.swipeUp() }
+        XCTAssertTrue(export.isEnabled)
+
+        XCTAssertEqual(canonicalRecordedDraft(try saved()), canonicalRecordedDraft(after))
+        let values: [String: Any] = ["before": before, "after": after, "relaunch": try saved(), "copy": copy, "archive": archive, "export": exported, "actualRetirementRequests": observed]
+        let attachment = XCTAttachment(data: try JSONSerialization.data(withJSONObject: values, options: [.sortedKeys]), uniformTypeIdentifier: "public.json")
+        attachment.name = "Connected provisional " + scenario + " complete proof"; attachment.lifetime = .keepAlways; add(attachment)
+    }
+    @MainActor func testConnectedProvisionalDraftKeepsCopyAndLinkedEditsAfterRelaunch() throws { try connectedProvisionalRecovery("success") }
+    @MainActor func testConnectedProvisionalCopyVaultFailureKeepsQueueBeforeRetirement() throws { try connectedProvisionalRecovery("vault") }
+    @MainActor func testConnectedProvisionalCacheFailureReopensSameLinkedDrafts() throws { try connectedProvisionalRecovery("cache") }
 }

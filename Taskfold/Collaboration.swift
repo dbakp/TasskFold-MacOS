@@ -291,6 +291,7 @@ private struct TeamCompletionReviewContent: View {
     @State private var checking=false
     @State private var canPreserveRecordedDraft = false
     @State private var canPreserveCancelledDraft = false
+    @State private var canPreserveConnectedProvisional = false
     @State private var recordedDraftContext: TeamCompletionReviewPresentation?
     @State private var message:String?
     private var current:Bool {store.currentTeamCompletionReview(review)}
@@ -356,7 +357,13 @@ private struct TeamCompletionReviewContent: View {
                 VStack(spacing:10) {
                     Divider()
                     // Keep the existing provisional-task copy workflow available.
-                    if canPreserveRecordedDraft && park == nil {
+                    if canPreserveConnectedProvisional && park == nil {
+                        Button("Keep edits as draft") {
+                            guard let context = recordedDraftContext else { return }
+                            performReview(fallback: "Your recurring draft and connected edits remain queued.") { await store.parkConnectedTeamCompletionDraft(context) }
+                        }.buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("parkConnectedTeamCompletionDraft")
+                        Text("Keep this next task available for an explicit copy, with its connected list choices and discussion saved separately. Nothing is copied automatically.").font(.caption).foregroundStyle(.secondary)
+                    } else if canPreserveRecordedDraft && park == nil {
                         Button("Keep edits as draft") {
                             guard let context = recordedDraftContext else { return }
                             performReview(fallback: "Your saved edits remain queued.") { await store.preserveRecordedCompletionDraft(context) }
@@ -402,17 +409,21 @@ private struct TeamCompletionReviewContent: View {
         .onChange(of:store.workspaceGeneration){_,_ in dismiss()}
     }
     private func updateRecordedDraftAvailability() async {
-        canPreserveRecordedDraft = false; canPreserveCancelledDraft = false; recordedDraftContext = nil
+        canPreserveRecordedDraft = false; canPreserveCancelledDraft = false; canPreserveConnectedProvisional = false; recordedDraftContext = nil
         let context = store.teamCompletionReviewPresentation
         guard current, let cache = context.access else { return }
-        let value = await Task.detached(priority: .userInitiated) {
-            guard let draft = try? TeamCompletionRecoveryDraft(single: review, snapshot: context.snapshot) else { return false }
-            return review.isRecorded ? draft.preserving(readable: cache) != nil : draft.previewCancellation(readable: cache) != nil
+        let availability = await Task.detached(priority: .userInitiated) { () -> (Bool, Bool) in
+            guard let draft = try? TeamCompletionRecoveryDraft(single: review, snapshot: context.snapshot) else { return (false, false) }
+            let value = review.isRecorded ? draft.preserving(readable: cache) != nil : draft.previewCancellation(readable: cache) != nil
+            let connected = value && review.isRecorded && TeamCompletionDraft.Candidate(review: review, snapshot: context.snapshot) == nil && TeamConnectedProvisionalDraft(review: review, snapshot: context.snapshot) != nil
+            return (value, connected)
         }.value
+        let value = availability.0
         guard !Task.isCancelled, context == store.teamCompletionReviewPresentation, current else { return }
         recordedDraftContext = value ? context : nil
         canPreserveRecordedDraft = value && review.isRecorded
         canPreserveCancelledDraft = value && !review.isRecorded
+        canPreserveConnectedProvisional = availability.1
     }
     private func performReview(dismissOnSuccess: Bool = true, fallback: String, _ action: @escaping () async -> Bool) {
         guard !checking, current else { return }
@@ -483,17 +494,33 @@ struct SavedTeamDraftsView: View {
                                     LabeledContent("Reminder choices retained",value:String(draft.record["reminder_specs"].list.count))
                                 }
                                 Section {Text("The full task details and earlier edits remain in this encrypted draft. Copying text never changes a shared task.").foregroundStyle(.secondary)}
+                                if let ids = draft.connectedRecoveryIDs, !ids.isEmpty {
+                                    Section("Connected saved edits") {
+                                        Text("A task copy includes this task only. Its connected list choices and discussion remain saved separately and are never replayed automatically.").foregroundStyle(.secondary)
+                                        if let related = ids.reversed().compactMap({ id in recoveries.first { $0.id == id } }).first {
+                                            NavigationLink { SavedRecordedEditsView(draft: related) } label: { Label("Review connected saved edits", systemImage: "lock.doc") }.accessibilityIdentifier("reviewConnectedProvisionalEdits")
+                                        } else { Text("The linked saved edits are unavailable here. Your task draft is kept.").foregroundStyle(.secondary) }
+                                    }
+                                }
                                 NavigationLink {SavedTeamDraftCopyView(draft:draft)} label:{Label("Review task copy",systemImage:"doc.badge.plus")}.accessibilityIdentifier("reviewSavedTeamDraftCopy")
                                 Button(copiedKey == draft.id.uuidString ? "Copied":"Copy saved text",systemImage:"doc.on.doc"){copy(draft.text,key:draft.id.uuidString)}.accessibilityIdentifier("copyTeamDraftText")
                                 ShareLink("Share saved text",item:draft.text).accessibilityIdentifier("shareTeamDraftText")
                             }.formStyle(.grouped).navigationTitle(draft.record.title)
+                            #if DEBUG
+                            .task {
+                                if ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), (Bundle.main.bundleIdentifier ?? "").contains("workflowteststeameditbridge") {
+                                    try? JSONEncoder().encode(draft).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-connected-provisional-copy-proof.json"), options: .atomic)
+                                }
+                            }
+                            #endif
                         } label: {
                             VStack(alignment:.leading,spacing:5) {
                                 Text(draft.record.title).font(.headline).lineLimit(2)
                                 Text(draft.createdAt.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)
-                                Text("\(draft.edits.count) saved changes · \(draft.conversations.count) comment drafts").font(.caption).foregroundStyle(.secondary)
+                                if draft.connectedRecoveryIDs?.isEmpty == false { Text("Task copy and connected saved edits").font(.caption).foregroundStyle(.secondary) }
+                                else { Text("\(draft.edits.count) saved changes · \(draft.conversations.count) comment drafts").font(.caption).foregroundStyle(.secondary) }
                             }
-                        }.swipeActions {Button("Delete",role:.destructive){deleting=draft}}
+                        }.accessibilityIdentifier("savedProvisionalTaskDraft").swipeActions {Button("Delete",role:.destructive){deleting=draft}}
                         .contextMenu {Button("Delete saved draft",role:.destructive){deleting=draft}}
                     }
                     ForEach(selections) { selection in

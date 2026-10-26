@@ -12,6 +12,8 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
     let edits: [Mutation]
     let conversations: [Record]
     var copyAttempt: CopyCommand? = nil
+    /// Optional local navigation links; never copy authority or RPC fields.
+    var connectedRecoveryIDs: [UUID]? = nil
     var scope: TeamTaskEditScope { original.teamCompletion!.scope }
     static var invalid: AppFailure {AppFailure(message:"This saved draft needs review. Your queued work is unchanged.")}
     func validate() throws {
@@ -31,6 +33,10 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
         for row in conversations {
             guard ConversationOutbox.valid(row),let change=ConversationOutbox.comment(row),change.account == command.scope.account,
                   change.projectID == command.scope.project,change.taskID == proposed.id,change.taskGeneration == proposed.string("task_generation") else {throw Self.invalid}
+        }
+        if let ids = connectedRecoveryIDs {
+            guard !ids.isEmpty, ids.count <= 20, Set(ids).count == ids.count,
+                  ids.allSatisfy({ $0.uuidString != "00000000-0000-0000-0000-000000000000" }) else { throw Self.invalid }
         }
         try copyAttempt?.validate(for:self)
         guard try JSONEncoder().encode(self).count<=16_000_000 else {throw Self.invalid}
@@ -170,6 +176,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
     }
 
     struct Retirement: Equatable, Sendable {
+        let response: [String: JSON]
         let review: TeamCompletion.Review
         let currentProposed: Record?
         init(_ reply:[String:JSON],for mutation:Mutation) throws {
@@ -190,7 +197,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
                       case .string?=fields["title"],case .bool?=fields["completed"],case .number(let v)?=fields["completion_version"],v.isFinite,v>=0,v<=9_007_199_254_740_991,v.rounded(.down)==v else {throw TeamCompletionDraft.invalid}
                 current=Record(fields)
             }
-            self.review=review;self.currentProposed=current
+            self.response=reply;self.review=review;self.currentProposed=current
         }
     }
     struct Candidate: Equatable, Sendable {
@@ -257,6 +264,43 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
             result.tables[SharedMention.table]?.removeAll{oldComments.contains($0.string("comment_id"))}
             return result
         }
+    }
+}
+
+/// Preserve a full connected cohort while retaining the original provisional
+/// task's existing explicit copy workflow. No task is copied by saving this pair.
+struct TeamConnectedProvisionalDraft: Sendable {
+    let recovery: TeamCompletionRecoveryDraft
+    let copy: TeamCompletionDraft
+    init?(review: TeamCompletion.Review, snapshot: Snapshot, now: Date = Date()) {
+        guard review.isRecorded, snapshot.pending.first == review.mutation,
+              let command = review.mutation.teamCompletion, command.operation == .complete,
+              let proposed = command.proposed, review.successor?["task_generation"] != proposed["task_generation"],
+              let recovery = try? TeamCompletionRecoveryDraft(single: review, snapshot: snapshot, now: now),
+              let record = recovery.records.first(where: { $0.id == proposed.id && $0["task_generation"] == proposed["task_generation"] }) else { return nil }
+        let leaves = recovery.parkedChanges.flatMap { $0.teamTaskBatch?.items ?? [$0] }
+        let own = leaves.filter { $0.table == "tasks" && $0.recordID == proposed.id && $0.teamCompletion == nil && $0.teamTaskBatch == nil && $0.baseline?["task_generation"] == proposed["task_generation"] }
+        let comments = recovery.parkedConversations.filter { ConversationOutbox.comment($0)?.taskID == proposed.id && ConversationOutbox.comment($0)?.taskGeneration == proposed.string("task_generation") }
+        let copy = TeamCompletionDraft(version: 1, id: UUID(), createdAt: now, original: review.mutation, record: record,
+            markedForDeletion: !(snapshot.tables["tasks"] ?? []).contains { $0.id == proposed.id && $0["task_generation"] == proposed["task_generation"] },
+            edits: own.count <= 100 ? own : [], conversations: comments)
+        guard (try? copy.validate()) != nil else { return nil }
+        self.recovery = recovery; self.copy = copy
+    }
+    func parking(proof: TeamCompletionDraft.Retirement, readable cache: TeamWorkspaceCache) -> Snapshot? {
+        guard proof.review.mutation == recovery.original,
+              let fresh = Self(review: proof.review, snapshot: recovery.snapshot),
+              fresh.copy.record == copy.record, fresh.copy.markedForDeletion == copy.markedForDeletion,
+              var next = fresh.recovery.preserving(readable: cache),
+              let proposed = recovery.original.teamCompletion?.proposed else { return nil }
+        if let row = proof.currentProposed {
+            if let current = next.tables["tasks"]?.first(where: { $0.id == row.id }), current["task_generation"] != row["task_generation"] { return nil }
+            next.tables["tasks"]?.removeAll { $0.id == row.id }; next.tables["tasks", default: []].append(row)
+        }
+        let removed = Set((next.tables[SharedComment.table] ?? []).filter { $0.string("task_id") == proposed.id && $0["task_generation"] == proposed["task_generation"] }.map(\.id))
+        next.tables[SharedComment.table]?.removeAll { removed.contains($0.id) }
+        next.tables[SharedMention.table]?.removeAll { removed.contains($0.string("comment_id")) }
+        return next
     }
 }
 
@@ -354,6 +398,24 @@ struct TeamCompletionDraftVault: Sendable {
         guard proof.cancelled,proof.matches(current),current.sameWork(as:draft),current.copyAttempt == proof.command else {throw TeamCompletionDraft.invalid}
         current.copyAttempt=nil;try current.validate()
         _ = try writeVerified(current)
+    }
+    @discardableResult func saveConnected(_ draft: TeamCompletionDraft, recovery: TeamCompletionRecoveryDraft) throws -> TeamCompletionDraft {
+        if let removalGate { var free = self; free.removalGate = nil; return try removalGate.writable { try free.saveConnected(draft, recovery: recovery) } }
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        try draft.validate(); try recovery.validate()
+        guard recovery.version == 1, recovery.original == draft.original,
+              draft.scope.account == account, draft.scope.origin == origin,
+              let proposed = draft.original.teamCompletion?.proposed,
+              recovery.records.first(where: { $0.id == proposed.id && $0["task_generation"] == proposed["task_generation"] }) == draft.record,
+              draft.markedForDeletion == !(recovery.snapshot.tables["tasks"] ?? []).contains(where: { $0.id == proposed.id && $0["task_generation"] == proposed["task_generation"] }) else { throw TeamCompletionDraft.invalid }
+        // The server body uses the original command/record/choices only. A later
+        // connected choice cannot reset a frozen request for that same task copy.
+        var current = try entries().first { $0.original == draft.original && $0.record == draft.record && $0.markedForDeletion == draft.markedForDeletion } ?? save(draft)
+        var ids = current.connectedRecoveryIDs ?? []
+        if ids.contains(recovery.id) { return current }
+        guard ids.count < 20 else { throw AppFailure(message: "This task draft has reached its connected-edit limit. Your queued work is kept.") }
+        ids.append(recovery.id); current.connectedRecoveryIDs = ids
+        return try writeVerified(current)
     }
     func remove(_ id:UUID) throws {
         if let removalGate {var free=self;free.removalGate=nil;return try removalGate.writable{try free.remove(id)}}
@@ -520,6 +582,7 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
     let snapshot: Snapshot
     /// Version 2 only: actual cancellation observations, retained without eviction.
     var cancellations: [[String: JSON]]? = nil
+    var provisionalRetirements: [[String: JSON]]? = nil
     var isCancellationDraft: Bool { version == 2 }
     var cancellationConfirmed: Bool { isCancellationDraft && (cancellations?.isEmpty == false || review["state"] == .string("cancelled")) }
     var account: String { original.teamCompletion?.scope.account ?? original.teamTaskBatch?.account ?? "" }
@@ -573,7 +636,17 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
                   !(try TeamCompletion.Review(review, for: original)).isRecorded, (cancellations?.count ?? 0) <= 20 else { throw Self.invalid }
             for response in cancellations ?? [] { guard try TeamCompletion.Review(response, for: original).isCancelled else { throw Self.invalid } }
         }
+        if let history = provisionalRetirements {
+            guard version == 1, original.teamTaskBatch == nil, !history.isEmpty, history.count <= 20 else { throw Self.invalid }
+            for response in history { _ = try TeamCompletionDraft.Retirement(response, for: original) }
+        }
         return kept
+    }
+    func withProvisionalRetirement(_ proof: TeamCompletionDraft.Retirement) throws -> Self {
+        guard version == 1, original.teamTaskBatch == nil, proof.review.mutation == original else { throw Self.invalid }
+        var next = self, history = provisionalRetirements ?? []
+        if !history.contains(proof.response) { history.append(proof.response) }
+        next.provisionalRetirements = history; try next.validate(); return next
     }
     func previewCancellation(readable cache: TeamWorkspaceCache) -> Snapshot? {
         guard isCancellationDraft, (try? validate()) != nil, let (value, local) = try? observation() else { return nil }
@@ -646,6 +719,7 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
         let present = Set((snapshot.tables["tasks"] ?? []).map(\.id))
         var lines = ["Saved edits", createdAt.formatted(date: .abbreviated, time: .shortened)]
         if isCancellationDraft { lines.append(cancellationConfirmed ? "Saved action cancelled. Your edits are kept for review." : "Cancellation is not confirmed in this draft. Reopen the task’s sync review to continue.") }
+        if provisionalRetirements?.isEmpty == false { lines.append("Provisional task retired. Its connected edits are kept for review.") }
         func checklist(_ values: [JSON], depth: Int) {
             guard depth < 24 else { return }
             for value in values { let item = Record(value.object); lines.append(String(repeating: "  ", count: depth) + (item.completed ? "☑ " : "☐ ") + item.title); checklist(item["subtasks"].list, depth: depth + 1) }
@@ -730,6 +804,21 @@ struct TeamCompletionRecoveryDraftVault: Sendable {
         let saved = try load(draft.id)
         guard saved.sameWork(as: draft) else { throw TeamCompletionRecoveryDraft.invalid }
         let next = try saved.withCancellation(proof)
+        if saved == next { return saved }
+        let old = try entries(), sealed = try AES.GCM.seal(JSONEncoder().encode(next), using: key(), authenticating: context)
+        guard let bytes = sealed.combined,
+              try old.filter({ $0.id != saved.id }).reduce(0, { try $0 + Data(contentsOf: file($1.id)).count }) + bytes.count <= 64_000_000 else { throw TeamCompletionRecoveryDraft.invalid }
+        try bytes.write(to: file(saved.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        let verified = try load(saved.id)
+        guard verified == next else { throw TeamCompletionRecoveryDraft.invalid }; return verified
+    }
+    func recordProvisionalRetirement(_ draft: TeamCompletionRecoveryDraft, proof: TeamCompletionDraft.Retirement) throws -> TeamCompletionRecoveryDraft {
+        if let removalGate { var free = self; free.removalGate = nil; return try removalGate.writable { try free.recordProvisionalRetirement(draft, proof: proof) } }
+        Self.lock.lock(); defer { Self.lock.unlock() }
+        guard !cancelled else { throw TeamCompletionRecoveryDraft.invalid }
+        let saved = try load(draft.id)
+        guard saved.sameWork(as: draft) else { throw TeamCompletionRecoveryDraft.invalid }
+        let next = try saved.withProvisionalRetirement(proof)
         if saved == next { return saved }
         let old = try entries(), sealed = try AES.GCM.seal(JSONEncoder().encode(next), using: key(), authenticating: context)
         guard let bytes = sealed.combined,
