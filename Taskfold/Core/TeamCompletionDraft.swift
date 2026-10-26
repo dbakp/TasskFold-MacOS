@@ -557,10 +557,13 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
         guard snapshot.pending.first == original, let (value, local) = try? observation() else { return nil }
         return isCancellationDraft ? value.parkingPreview(local) : value.recordedDraftPreview(local)
     }
-    func validate() throws {
+    func validate() throws { _ = try validatedPreview() }
+    /// One projection per validation; derived display work never replays the
+    /// recovery transaction or becomes persisted authority.
+    private func validatedPreview() throws -> Snapshot {
         guard [1, 2].contains(version), createdAt.timeIntervalSince1970.isFinite, snapshot.pending.first == original,
               Set(snapshot.pending.map(\.id)).count == snapshot.pending.count, snapshot.pending.count <= 1000, snapshot.tables.values.reduce(0, { $0 + $1.count }) <= 50000,
-              preview() != nil, parkedChanges.count > 1 || !parkedConversations.isEmpty,
+              let kept = preview(), changes(keeping: kept).count > 1 || !conversations(keeping: kept).isEmpty,
               try JSONEncoder().encode(self).count <= 16_000_000 else { throw Self.invalid }
         if version == 1 {
             guard cancellations == nil else { throw Self.invalid }
@@ -570,6 +573,7 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
                   !(try TeamCompletion.Review(review, for: original)).isRecorded, (cancellations?.count ?? 0) <= 20 else { throw Self.invalid }
             for response in cancellations ?? [] { guard try TeamCompletion.Review(response, for: original).isCancelled else { throw Self.invalid } }
         }
+        return kept
     }
     func previewCancellation(readable cache: TeamWorkspaceCache) -> Snapshot? {
         guard isCancellationDraft, (try? validate()) != nil, let (value, local) = try? observation() else { return nil }
@@ -586,61 +590,85 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
         return isCancellationDraft ? value.parkingCancellation(local, readable: cache) : value.preservingRecordedDraft(local, readable: cache)
     }
     func sameWork(as other: Self) -> Bool { version == other.version && original == other.original && snapshot == other.snapshot && (isCancellationDraft || review == other.review) }
-    var parkedChanges: [Mutation] {
-        guard let kept = preview() else { return [] }
+    private func changes(keeping kept: Snapshot) -> [Mutation] {
         let ids = Set(kept.pending.map(\.id)); return snapshot.pending.filter { !ids.contains($0.id) }
     }
-    var parkedConversations: [Record] {
-        guard let kept = preview() else { return [] }
+    private func conversations(keeping kept: Snapshot) -> [Record] {
         let ids = Set((kept.tables[ConversationOutbox.table] ?? []).map(\.id))
         return (snapshot.tables[ConversationOutbox.table] ?? []).filter { !ids.contains($0.id) }
     }
-    private var leaves: [Mutation] { parkedChanges.flatMap { $0.teamTaskBatch?.items ?? [$0] }.filter { $0.table == "tasks" } }
-    var records: [Record] {
-        var order = [String](), fallback = [String: Record]()
+    var parkedChanges: [Mutation] { preview().map { changes(keeping: $0) } ?? [] }
+    var parkedConversations: [Record] { preview().map { conversations(keeping: $0) } ?? [] }
+    private struct Content {
+        let changes: [Mutation]
+        let conversations: [Record]
+        let leaves: [Mutation]
+        let records: [Record]
+    }
+    private func records(for leaves: [Mutation]) -> [Record] {
+        var order = [String](), seen = Set<String>(), fallback = [String: Record]()
+        func include(_ id: String) { if seen.insert(id).inserted { order.append(id) } }
         for item in leaves {
-            if !order.contains(item.recordID) { order.append(item.recordID) }
+            include(item.recordID)
             if let command = item.teamCompletion {
                 fallback[item.recordID] = command.source
-                if let next = command.proposed {
-                    if !order.contains(next.id) { order.append(next.id) }; fallback[next.id] = next
-                }
+                if let next = command.proposed { include(next.id); fallback[next.id] = next }
             } else if let baseline = item.baseline {
                 var row = Record(baseline)
                 if item.method == "PATCH" { for (key, value) in item.fields { row[key] = value } }
                 fallback[item.recordID] = row
             } else if item.method == "POST" { fallback[item.recordID] = Record(item.fields) }
         }
-        return order.compactMap { id in snapshot.tables["tasks"]?.first(where: { $0.id == id }) ?? fallback[id] }
+        // Keep the first matching cache row, exactly as the former first(where:)
+        // lookup did. Validation, rather than a dictionary overwrite, decides
+        // whether an ambiguous authored identity can be recovered.
+        var current = [String: Record]()
+        for row in snapshot.tables["tasks"] ?? [] where seen.contains(row.id) && current[row.id] == nil { current[row.id] = row }
+        return order.compactMap { current[$0] ?? fallback[$0] }
     }
+    private func content(keeping kept: Snapshot?) -> Content {
+        let changes = kept.map { changes(keeping: $0) } ?? []
+        let conversations = kept.map { conversations(keeping: $0) } ?? []
+        let leaves = changes.flatMap { $0.teamTaskBatch?.items ?? [$0] }.filter { $0.table == "tasks" }
+        return Content(changes: changes, conversations: conversations, leaves: leaves, records: records(for: leaves))
+    }
+    var records: [Record] { content(keeping: preview()).records }
     // Listing a draft must not replay its full saved queue on the UI thread.
     var title: String { original.teamCompletion?.source.title ?? original.teamTaskBatch?.items.first?.teamCompletion?.source.title ?? "Saved edits" }
-    var text: String {
+    /// Native detail screens prepare text and export together away from the
+    /// interface thread, sharing one validated projection and task index.
+    func preparedContents() throws -> (String, Data) {
+        let content = content(keeping: try validatedPreview())
+        return (renderedText(content), try exportData(content))
+    }
+    var text: String { renderedText(content(keeping: preview())) }
+    private func renderedText(_ content: Content) -> String {
+        let present = Set((snapshot.tables["tasks"] ?? []).map(\.id))
         var lines = ["Saved edits", createdAt.formatted(date: .abbreviated, time: .shortened)]
         if isCancellationDraft { lines.append(cancellationConfirmed ? "Saved action cancelled. Your edits are kept for review." : "Cancellation is not confirmed in this draft. Reopen the task’s sync review to continue.") }
         func checklist(_ values: [JSON], depth: Int) {
             guard depth < 24 else { return }
             for value in values { let item = Record(value.object); lines.append(String(repeating: "  ", count: depth) + (item.completed ? "☑ " : "☐ ") + item.title); checklist(item["subtasks"].list, depth: depth + 1) }
         }
-        for row in records {
+        for row in content.records {
             lines.append(row.title); lines.append(row.completed ? "Completed" : "Open")
-            if !(snapshot.tables["tasks"] ?? []).contains(where: { $0.id == row.id }) { lines.append("Removed in the saved edits") }
+            if !present.contains(row.id) { lines.append("Removed in the saved edits") }
             for key in ["description", "due_date", "due_time", "deadline_date"] where !row.string(key).isEmpty { lines.append(row.string(key)) }
             checklist(row["subtasks"].list, depth: 0)
         }
-        for item in leaves { for key in ["title", "description"] where !item.fields[key, default: .null].text.isEmpty { lines.append("Earlier saved text: " + item.fields[key]!.text) } }
-        lines.append(contentsOf: TaskOrderRecovery.reviewText(parkedChanges, snapshot: snapshot, records: records))
-        lines.append(contentsOf: ConversationRecoveryExport.text(parkedConversations, snapshot: snapshot))
+        for item in content.leaves { for key in ["title", "description"] where !item.fields[key, default: .null].text.isEmpty { lines.append("Earlier saved text: " + item.fields[key]!.text) } }
+        lines.append(contentsOf: TaskOrderRecovery.reviewText(content.changes, snapshot: snapshot, records: content.records))
+        lines.append(contentsOf: ConversationRecoveryExport.text(content.conversations, snapshot: snapshot))
         return lines.joined(separator: "\n\n")
     }
     /// No full snapshot, permission cache, unrelated outbox or analysis envelope
     /// crosses the explicit export boundary.
-    func data() throws -> Data {
-        try validate()
+    func data() throws -> Data { try exportData(content(keeping: try validatedPreview())) }
+    private func exportData(_ content: Content) throws -> Data {
         func json<T: Encodable>(_ value: T) throws -> JSON { try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)) }
-        var body: [String: JSON] = ["format": .string("com.taskfold.saved-edits"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)), "original": try json(original), "changes": try json(parkedChanges), "tasks": .array(records.map { .object($0.fields) }), "conversations": .array(parkedConversations.map { .object($0.fields) })]
+        var body: [String: JSON] = ["format": .string("com.taskfold.saved-edits"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)), "original": try json(original), "changes": try json(content.changes), "tasks": .array(content.records.map { .object($0.fields) }), "conversations": .array(content.conversations.map { .object($0.fields) })]
         if isCancellationDraft { body["version"] = .number(2); body["state"] = .string(cancellationConfirmed ? "cancelled" : "unconfirmed") }
-        let context = ConversationRecoveryExport.context(parkedConversations, snapshot: snapshot)
+        let context = ConversationRecoveryExport.context(content.conversations, snapshot: snapshot)
         if !context.isEmpty { body["conversation_context"] = .array(context) }
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; return try encoder.encode(body)
     }

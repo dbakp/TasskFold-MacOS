@@ -7068,3 +7068,48 @@ products. Debug setup uses the production enqueue/capture helper; normal public
 Mark read/unread button interaction, native cancellation/unread and hosted behavior
 are not claimed by these two cases. The independent Mac app/test build and strict
 signature verification pass; its matching UI test awaits automation approval.
+
+
+## 26 October: large saved-draft preparation
+
+Saved task-recovery drafts now derive their display/export content once instead
+of repeatedly rebuilding the same recovery plan. Task lookups use a temporary
+index while retaining the former first-match behavior. Native Mac and iOS detail
+screens request text and JSON together in their existing background task, sharing
+one validated plan. Account/workspace result guards remain in place; no prepared
+display result is reused as authority for applying recovery.
+
+Profiling a full-size draft also identified repeated ID scans during typed replay.
+For draft analysis only, affected tasks are brought to the front of a temporary
+simulation copy. Every record and every existing validation stays present. The
+initial/returned workspace is separately prepared from the original cache order;
+analysis ordering is never persisted or exported. Ordinary acknowledgement keeps
+its existing path. No task body, draft version, encryption context or server/RPC
+contract changes.
+
+A synthetic debug case with 101 related task records, 102 queued commands and
+10,000 unrelated cached tasks originally spent about 14 seconds on text and 16 on
+export. Final measurements prepare both outputs together in under a second. The
+full 50,000-record archive fixture prepares in about 2.3 seconds; adding the full
+1,000-command queue takes about 3.3–4.4 seconds across the retained runs. These are observations from this Mac,
+not release/hardware performance guarantees. Original preview-text hashes and
+recovered-cache order are verified; every queued command and authored historical
+note is preserved, while unrelated cache content stays outside the export.
+
+Each repository passes all 289 selected Core checks, including five new cases.
+The current Core/native results, profiling evidence, before/after observations,
+prepared-source/signature hashes and exact acceptance limits are retained in
+[p2-draft-performance-evidence.json](p2-draft-performance-evidence.json). Two native
+cases pass on each iPhone and iPad Simulator through the actual combined-preparation
+screen: captured-discussion/group/order/pin recovery and the recorded single-task
+regression, including encrypted reopening and native sharing cancellation. Full
+snapshots and exports are independently compared. Normal-size synthetic native
+checks do not establish a maximum-size live UI, archive-I/O or hosted benchmark.
+The independently signed Mac app/test build passes; Mac UI automation remains
+pending interactive approval.
+
+This advances the large-selection preparation gate; it does not close wider
+provisional connected-copy cohorts, unsupported legacy conversation context,
+I/O-phase account/session UI races, native spoken/recurring/maximum-workload and
+genuine hosted team acceptance. Collaboration stays default off. All user-deferred
+release/provider/device gates remain unchanged.

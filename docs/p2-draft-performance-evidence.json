@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-26",
+  "scope": "Large saved task-recovery draft preparation in both independent apps; existing recovery validators, cache contents/order and export contract retained.",
+  "core": {
+    "passed": 289,
+    "failed": 0,
+    "skipped": 0,
+    "newCases": 5,
+    "filter": "TeamCompletion|SharedComments|PinnedNotes",
+    "coverage": "10,000 unrelated cached tasks/101 authored records/102 queue commands; full 50,000-row capacity; combined 50,000-row/1,000-command capacity including every historical note; full queue and surviving order preservation, exact separate/combined outputs, captured discussion/cancellation phases, and invalid envelope refusal."
+  },
+  "performance": {
+    "baselineOrigin": "iOS-owned Core source before optimization on this Mac",
+    "baselineSeparateTextPlusExportSeconds": 29.985334000200965,
+    "mediumCombinedSeconds": 0.7736672083847225,
+    "rowCapacityCombinedSeconds": 2.311753625050187,
+    "rowAndQueueCapacityCombinedSeconds": 3.316774083301425,
+    "previewTextBaselineSHA256": "33c1c5cd096e4a1fcd6a27ad2786303a7687846a3f1e016a204e630196975970",
+    "mediumPreviewTextMatchesBaseline": true,
+    "survivingCacheOrder": "Explicit full ordered-ID equality per case; iOS medium hash also matches the separately captured old-path result. Maximum queue and row-only cases retain identical task order.",
+    "limits": "Observed synthetic debug samples, not controlled release/hardware performance guarantees. Concurrent suites/compilers affect timing; elapsed time is not a test assertion."
+  },
+  "contract": {
+    "model": "Immutable derived content shared by text/export. No persisted cache or new Codable fields. Task indexing keeps first-match semantics.",
+    "replay": "Every row and existing validator retained. Only the private draft-analysis copy places the affected cohort first. Returned initial workspace is independently constructed in original cache order; ordinary acknowledgement is unchanged.",
+    "authority": "Prepared content never authorizes recovery. Existing current read/session/workspace guards remain; preservation still requires the existing backup/encrypted archive/proof/persist sequence.",
+    "exports": "Original task/command/conversation histories retained; unrelated cache, permission snapshot and synthetic analysis state excluded."
+  },
+  "native": {
+    "status": "Pending interactive macOS automation approval",
+    "acceptedCases": 0,
+    "build": "Current signed app/test targets pass; strict signature and namespace-only prepared-source checks pass."
+  },
+  "remaining": [
+    "Mac UI approval and native acceptance",
+    "Maximum-size interactive and archive-I/O acceptance; broader spoken/recurring/hosted checks",
+    "Provisional connected-copy cohorts and unsupported legacy discussion context",
+    "I/O-phase account/session UI races and genuine hosted team acceptance before default-off rollout; user deferrals unchanged"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Collaboration.swift": "b9a2706d43cf3dd36b126ea1a1ed4171399f23db0b88ddf6420f00174393e8c7",
+    "Taskfold/Core/TeamCompletionDraft.swift": "39c6e389ab3a59bd72b9d5c7580b2275c55b69164bec4c7093ebf2786f4c79d5",
+    "Taskfold/Core/TeamTaskBatch.swift": "6ca4a7b0ba4f6a3b3b2fe77f08c0a16baf94ce202b7dc7496ab00b9b49f8569d",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "e101fbd63e8641db8a7357d8d833921be31cc70dc5f954b70c0c442b5d301085"
+  },
+  "artifactSHA256": {
+    "metrics.json": "21387daece05ca793f71343fcb8d0a2c219fe71235907037695ea9be2e7d358f",
+    "app-build.log": "44943a6bf7c6b626048099edcbc317944a95ae41d57b2ca8743dc48cfc637bac",
+    "core.log": "9411114182ae015a9e48b487c61bad7af0385c5358ea07c40a106f57f1817be2",
+    "intermediate-core.log": "cb09167f76167d3c7465e275c1980264737fb8a43dd07a3dbdce4c4b2c6045ac",
+    "signatures.json": "735bc01bc30aa49ee2721f86d5385a615cb91593b9d437a226d5b8b4802b57ef",
+    "cleanup.json": "920d00d59eaa48a0040097921f8ad3b7cc8103848d2cca386e957919dfc5272b",
+    "order-reference.log": "43ae0ebb7987012eb02594de70c1f1f2fc5b5ca92916606ee680e553fffc746b",
+    "isolation-receipt.json": "7f0e83d60d3f0d415c430b24daf74e2e832953f817433eca076a3dd1efe3036e",
+    "before.log": "405139693fd00b13529af30bbb9159beb2ac09101a662db77c0ea9968885dadf",
+    "profile.json": "fe853362eb2f196a938e72218df3d6c16bbe15e208480ca8c71dfa600df79ad9"
+  },
+  "cleanup": "draft-performance/cleanup.json"
+}

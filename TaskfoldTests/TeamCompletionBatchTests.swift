@@ -1863,3 +1863,103 @@ extension TeamCompletionBatchTests {
         XCTAssertFalse(String(decoding: try Data(contentsOf: vault.file(saved.id)), as: UTF8.self).contains(comment.string("body")))
     }
 }
+
+extension TeamCompletionBatchTests {
+    func testLargeSavedDraftPreviewAndExportPreserveWholeCohortAndExcludeUnrelatedCache() throws { try largeSavedDraft(noiseCount: 10_000) }
+    func testSavedDraftAtRowCapacityPreparesOnlyItsAuthoredCohort() throws { try largeSavedDraft(noiseCount: nil) }
+    func testSavedDraftAtQueueAndRowCapacityPreservesEveryAuthoredCommand() throws { try largeSavedDraft(noiseCount: nil, queueCapacity: true) }
+    private func largeSavedDraft(noiseCount requestedNoiseCount: Int?, queueCapacity: Bool = false) throws {
+        let (base, _, _, observed) = try recoveryFixture(); var local = base.snapshot
+        let batch = base.original.teamTaskBatch!, scope = batch.items[0].teamCompletion!.scope
+        var additional: [Record] = []
+        for i in 0..<99 {
+            var task = batch.items[0].teamCompletion!.source
+            task["id"] = .string(WorkspaceBackup.stableID("large-draft-task", String(i)))
+            task["task_generation"] = .string(WorkspaceBackup.stableID("large-draft-generation", String(i)))
+            task["title"] = .string("Large draft task \(i)"); task["description"] = .string("Original notes \(i)")
+            local.tables["tasks"]!.append(task)
+            let change = try patch(task, ["description": .string("Preserved authored notes \(i)")], scope: scope); append(change, to: &local)
+            additional.append(local.tables["tasks"]!.first { $0.id == task.id }!)
+        }
+        let chosen = [local.tables["tasks"]!.first { $0.id == batch.items[0].recordID }!] + additional
+        let items = chosen.map { Mutation(table: "tasks", recordID: $0.id, method: "PATCH", fields: ["priority": .number(1)], baseline: $0.fields, teamTaskScope: scope) }.sorted { $0.recordID < $1.recordID }
+        let mixed = TeamTaskBatch.header(TeamTaskBatch(account: batch.account, origin: batch.origin, team: batch.team, operation: .edit, restores: nil, items: items)); append(mixed, to: &local)
+        let extended = 1000 - local.pending.count
+        if queueCapacity {
+            for i in 0..<extended {
+                let current = try XCTUnwrap(local.tables["tasks"]?.first { $0.id == batch.items[0].recordID })
+                let edit = try patch(current, ["description": .string("Capacity history \(i)")], scope: scope); append(edit, to: &local)
+            }
+            XCTAssertEqual(local.pending.count, 1000)
+        }
+        let noiseCount = requestedNoiseCount ?? (50_000 - local.tables.values.reduce(0) { $0 + $1.count })
+        let noise = (0..<noiseCount).map { i in Record(["id": .string(WorkspaceBackup.stableID("large-draft-private", String(i))), "title": .string("Unrelated private cache \(i)"), "task_generation": .string(WorkspaceBackup.stableID("large-draft-private-generation", String(i))), "project_id": .string(scope.project)]) }
+        local.tables["tasks"] = noise + local.tables["tasks"]!
+        let draft = try TeamCompletionRecoveryDraft(group: observed, snapshot: local, now: Date(timeIntervalSince1970: 0))
+        let before = local
+        if requestedNoiseCount == nil { XCTAssertEqual(local.tables.values.reduce(0) { $0 + $1.count }, 50_000) }
+        var separate: (String, Data)?, textTime = 0.0, exportTime = 0.0
+        if noiseCount == 10_000 {
+            let start = ProcessInfo.processInfo.systemUptime, text = draft.text; textTime = ProcessInfo.processInfo.systemUptime - start
+            let exportStart = ProcessInfo.processInfo.systemUptime, data = try draft.data(); exportTime = ProcessInfo.processInfo.systemUptime - exportStart
+            separate = (text, data)
+        }
+        let preparedStart = ProcessInfo.processInfo.systemUptime, prepared = try draft.preparedContents(), preparedTime = ProcessInfo.processInfo.systemUptime - preparedStart
+        let (text, data) = prepared
+        if let separate { XCTAssertEqual(text, separate.0); XCTAssertEqual(data, separate.1) }
+        let json = try JSONDecoder().decode([String: JSON].self, from: data)
+        XCTAssertEqual(draft.snapshot, before); XCTAssertEqual(local, before)
+        XCTAssertEqual(json["changes"]!.list.count, local.pending.count)
+        let changes = try JSONDecoder().decode([Mutation].self, from: JSONEncoder().encode(json["changes"]!))
+        XCTAssertEqual(changes, local.pending)
+        let rows = json["tasks"]!.list.map { Record($0.object) }
+        XCTAssertEqual(Set(rows.map(\.id)), Set(chosen.map(\.id)).union(batch.items.dropFirst().map(\.recordID)))
+        for i in 0..<99 { XCTAssertTrue(text.contains("Preserved authored notes \(i)")) }
+        if queueCapacity { for i in 0..<extended { XCTAssertTrue(text.contains("Capacity history \(i)")) } }
+        XCTAssertFalse(text.contains("Unrelated private cache")); XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("Unrelated private cache"))
+        XCTAssertNil(json["snapshot"]); XCTAssertNil(json["teamWorkspace"])
+        let access = try readRecoveryCache(base.original, local: local), preserved = try XCTUnwrap(draft.preserving(readable: access))
+        XCTAssertTrue(preserved.pending.isEmpty)
+        let remaining = try XCTUnwrap(preserved.tables["tasks"])
+        XCTAssertEqual(remaining.map(\.id), local.tables["tasks"]!.filter { $0.id != batch.items[0].recordID }.map(\.id), "Recovery preserves the complete existing cache order outside the removed source")
+        let orderDigest = SHA256.hash(data: Data(remaining.map(\.id).joined(separator: "\n").utf8)).map { String(format: "%02x", $0) }.joined()
+        print("LARGE_DRAFT_METRICS " + String(data: try JSONSerialization.data(withJSONObject: ["cacheRows": local.tables["tasks"]!.count, "queuedCommands": local.pending.count, "cohortRecords": rows.count, "textSeconds": textTime, "exportSeconds": exportTime, "preparedSeconds": preparedTime, "remainingOrderSHA256": orderDigest, "separateMeasured": noiseCount == 10_000, "snapshotRows": local.tables.values.reduce(0) { $0 + $1.count }, "textSHA256": SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()], options: [.sortedKeys]), encoding: .utf8)!)
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testPreparedDraftContentsKeepCapturedDiscussionAndCancellationStatus() throws {
+        for single in [true, false] {
+            let (base, _, edit, review) = try recoveryFixture(single: single); var local = base.snapshot
+            let (comment, _) = try capturedMention(&local, task: XCTUnwrap(local.tables["tasks"]?.first { $0.id == edit.recordID }), account: base.account, origin: base.origin)
+            local.tables[SharedComment.table] = []; local.tables[SharedMention.table] = []
+            let draft = single ? try TeamCompletionRecoveryDraft(single: review.members[0], snapshot: local) : try TeamCompletionRecoveryDraft(group: review, snapshot: local)
+            let prepared = try draft.preparedContents(), json = try JSONDecoder().decode([String: JSON].self, from: prepared.1)
+            XCTAssertEqual(prepared.0, draft.text); XCTAssertEqual(prepared.1, try draft.data())
+            XCTAssertTrue(prepared.0.contains("Saved comment: " + comment.string("body")))
+            XCTAssertEqual(json["conversation_context"]!.list.count, 2)
+            XCTAssertTrue(json["conversation_context"]!.list.allSatisfy { $0.object["source"] == .string("captured") })
+            XCTAssertEqual(try JSONDecoder().decode([Mutation].self, from: JSONEncoder().encode(json["changes"]!)), local.pending)
+            XCTAssertEqual(draft.snapshot, local)
+        }
+        let (pending, proof, _, _) = try singleCancellationFixture()
+        for draft in [pending, try pending.withCancellation(proof)] {
+            let prepared = try draft.preparedContents(), json = try JSONDecoder().decode([String: JSON].self, from: prepared.1)
+            XCTAssertEqual(prepared.0, draft.text); XCTAssertEqual(prepared.1, try draft.data())
+            XCTAssertEqual(json["state"], .string(draft.cancellationConfirmed ? "cancelled" : "unconfirmed"))
+            XCTAssertFalse(json["conversations"]!.list.isEmpty)
+            XCTAssertEqual(try JSONDecoder().decode([Mutation].self, from: JSONEncoder().encode(json["changes"]!)), draft.snapshot.pending)
+        }
+    }
+    func testPreparedDraftContentsRefuseUnsupportedEnvelopeWithoutChangingSavedWork() throws {
+        let (draft, _, _, _) = try recoveryFixture(single: true)
+        var encoded = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(draft))
+        encoded["version"] = .number(3)
+        let invalid = try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(encoded)), before = invalid
+        XCTAssertThrowsError(try invalid.preparedContents()); XCTAssertEqual(invalid, before)
+        encoded["version"] = .number(1)
+        var receipt = encoded["review"]!.object; receipt["state"] = .string("unrecorded"); encoded["review"] = .object(receipt)
+        let unrecorded = try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(encoded)), old = unrecorded
+        XCTAssertThrowsError(try unrecorded.preparedContents()); XCTAssertEqual(unrecorded, old)
+    }
+}

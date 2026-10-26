@@ -578,8 +578,28 @@ private struct CompletionBatchReconciliation {
             if let command = item.teamCompletion, command.operation == .complete, let row = command.proposed { born[row.id, default: []].insert(row.string("task_generation")) }
         }
         var expected = seed
+        let draftAnalysis = cancellation != nil || parkRecorded
+        if draftAnalysis {
+            // Replay still sees every record and every existing validation.
+            // Put the affected cohort first only in this temporary simulation,
+            // avoiding repeated full-cache ID scans for each authored command.
+            var cohort: [Record] = [], other: [Record] = []
+            cohort.reserveCapacity(affected.count)
+            for row in seed.tables["tasks"] ?? [] {
+                if affected.contains(row.id) { cohort.append(row) } else { other.append(row) }
+            }
+            expected.tables["tasks"] = cohort + other
+        }
         guard batch.apply(to: &expected, header: header) else { throw TeamTaskBatch.conflict }
-        let initial = expected
+        let initial: Snapshot
+        if draftAnalysis {
+            // The actual returned workspace uses the original cache order and
+            // the same source application as before. Analysis ordering is never
+            // persisted, exported or used as an authorization shortcut.
+            var ordered = seed
+            guard batch.apply(to: &ordered, header: header) else { throw TeamTaskBatch.conflict }
+            initial = ordered
+        } else { initial = expected }
         for i in indices { try replay(changes[i], into: &expected) }
         var authoritative: [String: Record] = [:]
         for receipt in receipts { for row in [receipt.task, receipt.successor].compactMap({ $0 }) { authoritative[row.id] = row } }

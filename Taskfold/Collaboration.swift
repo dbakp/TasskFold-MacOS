@@ -961,7 +961,7 @@ private struct SavedRecordedEditsView: View {
             let generation = store.workspaceGeneration
             guard current else { return }
             do {
-                let result = try await Task.detached(priority: .utility) { (draft.text, try draft.data()) }.value
+                let result = try await Task.detached(priority: .utility) { try draft.preparedContents() }.value
                 guard generation == store.workspaceGeneration, current else { return }
                 text = result.0; exportData = result.1
                 #if DEBUG
