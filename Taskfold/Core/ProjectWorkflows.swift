@@ -23,6 +23,8 @@ struct WorkflowTemplateFile: Sendable {
 
     init(data: Data) throws {
         guard data.count <= Self.maximumBytes else { throw AppFailure(message: "Choose a template file no larger than 2.1 MB.") }
+        let prefix = String(decoding: data.prefix(80), as: UTF8.self).replacingOccurrences(of: "\u{feff}", with: "")
+        if prefix.hasPrefix("format,document_version,") || prefix.hasPrefix("\"format\",\"document_version\",") { self = try WorkflowTemplateCSV.decode(data); return }
         let value: JSON
         do { value = try JSONDecoder().decode(JSON.self, from: data) }
         catch { throw AppFailure(message: "This isn’t a readable Taskfold template file.") }
@@ -795,4 +797,164 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         guard self.source == source, self.team == team, self.destination == destination,
               self.workspace == workspace, self.session == session else { throw Self.invalid }
     }
+}
+
+/// A readable, explicitly versioned workflow table. It contains definitions,
+/// never live account IDs, completion history or executable mutation queues.
+enum WorkflowTemplateCSV {
+    static let columns = ["format", "document_version", "workflow", "name", "capabilities", "entity", "id", "parent_id", "project_id", "section_id", "title", "notes", "type", "priority", "estimate_minutes", "color", "order_index", "labels", "planned_offset", "deadline_offset", "repeat_start_offset", "repeat_end_offset", "due_time", "time_zone", "is_recurring", "recurrence_pattern"]
+    static let maximumRows = 20_000
+    static func failure(_ message: String) -> AppFailure { AppFailure(message: message) }
+    /// Protect spreadsheet text while retaining literal apostrophes on roundtrip.
+    static func needsEscape(_ value: String) -> Bool {
+        value.hasPrefix("'") || value.first.map { "=+-@\t\r\n".contains($0) } == true || value.drop(while: { $0.isWhitespace }).first.map { "=+-@".contains($0) } == true
+    }
+    static func escape(_ value: String) -> String { needsEscape(value) ? "'" + value : value }
+    static func unescape(_ value: String) -> String { value.hasPrefix("'") && needsEscape(String(value.dropFirst())) ? String(value.dropFirst()) : value }
+    static func quote(_ value: String) -> String { "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\"" }
+    static func string(_ value: JSON) throws -> String {
+        if value == .null { return "" }
+        if case .string(let text) = value { return escape(text) }
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        return String(decoding: try encoder.encode(value), as: UTF8.self)
+    }
+    static func encode(_ file: WorkflowTemplateFile) throws -> Data {
+        let portable = try WorkflowTemplateFile(data: file.encoded()).template
+        let version = portable.document.object["version"]!.integer
+        let metadata = ["format": "taskfold-workflow-v1", "document_version": String(version), "workflow": portable.kind.rawValue, "name": escape(file.name), "capabilities": version == 2 ? "task_headings" : ""]
+        var rows = [columns]
+        func append(_ entity: String, _ row: Record, parent: String = "") throws {
+            var cells = metadata; cells["entity"] = entity
+            if entity != "workflow" {
+                for key in ["id", "project_id", "section_id", "color", "order_index", "labels", "planned_offset", "deadline_offset", "repeat_start_offset", "repeat_end_offset", "due_time", "time_zone", "is_recurring", "recurrence_pattern", "priority"] { cells[key] = try string(row[key]) }
+                cells["parent_id"] = escape(entity == "project" ? row.string("parent_id") : parent)
+                cells["title"] = escape(entity == "task" ? row.title : row.name)
+                cells["notes"] = escape(row.string("description"))
+                cells["estimate_minutes"] = try string(row["duration_minutes"])
+                if entity == "task" { cells["type"] = TaskKind(row) == .heading ? "heading" : "task" }
+            }
+            rows.append(columns.map { cells[$0] ?? "" })
+            guard rows.count <= maximumRows + 2 else { throw failure("This workflow is too large for CSV. Use its JSON file instead.") }
+        }
+        try append("workflow", Record())
+        for project in portable.projects { try append("project", project) }
+        for section in portable.sections { try append("section", section) }
+        func task(_ row: Record, parent: String = "") throws {
+            try append("task", row, parent: parent)
+            for child in row["subtasks"].list { try task(Record(child.object), parent: row.id) }
+        }
+        for row in portable.tasks { try task(row) }
+        let data = Data((rows.map { $0.map(quote).joined(separator: ",") }.joined(separator: "\r\n") + "\r\n").utf8)
+        guard data.count <= WorkflowTemplateFile.maximumBytes else { throw failure("This CSV exceeds 2.1 MB. Use the workflow’s JSON file instead.") }
+        return data
+    }
+    /// Strict bounded UTF-8 CSV parsing, including quoted newlines and doubled quotes.
+    static func rows(_ data: Data) throws -> [[String]] {
+        guard data.count <= WorkflowTemplateFile.maximumBytes else { throw failure("Choose template text no larger than 2.1 MB.") }
+        var bytes = Array(data); if bytes.starts(with: [239,187,191]) { bytes.removeFirst(3) }
+        var result: [[String]] = [], row: [String] = [], cell: [UInt8] = [], quoted = false, closed = false, started = false, index = 0
+        func field() throws {
+            guard let text = String(bytes: cell, encoding: .utf8) else { throw failure("This CSV is not valid UTF-8 text.") }
+            row.append(text); cell.removeAll(keepingCapacity: true); closed = false; started = false
+            guard row.count <= columns.count else { throw failure("The CSV has extra columns. Its source is unchanged.") }
+        }
+        func record() throws {
+            try field(); result.append(row); row.removeAll(keepingCapacity: true)
+            guard result.count <= maximumRows + 2 else { throw failure("Review up to 20,000 workflow rows at a time.") }
+        }
+        while index < bytes.count {
+            let byte = bytes[index]; index += 1
+            if quoted {
+                if byte == 34 {
+                    if index < bytes.count && bytes[index] == 34 { cell.append(34); index += 1 }
+                    else { quoted = false; closed = true }
+                } else { cell.append(byte) }
+            } else if byte == 44 { try field() }
+            else if byte == 10 || byte == 13 {
+                if byte == 13 && index < bytes.count && bytes[index] == 10 { index += 1 }
+                try record()
+            } else if byte == 34 && !started && !closed { quoted = true; started = true }
+            else {
+                guard !closed && byte != 34 else { throw failure("The CSV has an invalid quoted field. Check its quotes before importing.") }
+                started = true; cell.append(byte)
+            }
+        }
+        guard !quoted else { throw failure("The CSV ends inside a quoted field. Nothing has been imported.") }
+        if started || closed || !cell.isEmpty || !row.isEmpty { try record() }
+        return result
+    }
+    static func decode(_ data: Data) throws -> WorkflowTemplateFile {
+        let rows = try rows(data)
+        guard rows.count >= 2, rows[0] == columns, rows.allSatisfy({ $0.count == columns.count }) else { throw failure("Choose a Taskfold workflow CSV with its complete header. Other task CSV formats need a reviewed mapping.") }
+        let tables = rows.dropFirst().map { Dictionary(uniqueKeysWithValues: zip(columns, $0)) }
+        let metadata = tables[0]
+        guard metadata["format"] == "taskfold-workflow-v1", ["1", "2"].contains(metadata["document_version"] ?? ""), metadata["entity"] == "workflow",
+              let kind = WorkflowTemplate.Kind(rawValue: metadata["workflow"] ?? ""),
+              metadata["capabilities"] == (metadata["document_version"] == "2" ? "task_headings" : "") else { throw failure("This workflow CSV requires a supported format and heading capability.") }
+        let metaKeys = ["format", "document_version", "workflow", "name", "capabilities"]
+        guard tables.allSatisfy({ row in metaKeys.allSatisfy { row[$0] == metadata[$0] } }) else { throw failure("The CSV combines different workflow definitions. Import each file separately.") }
+        func text(_ row: [String:String], _ key: String) -> String { unescape(row[key] ?? "") }
+        func integer(_ row: [String:String], _ key: String) throws -> JSON? {
+            guard let raw = row[key], !raw.isEmpty else { return nil }
+            guard let number = Int(raw), String(number) == raw, abs(Double(number)) <= 9_007_199_254_740_991 else { throw failure("The CSV’s \(key) must be a whole number.") }
+            return .number(Double(number))
+        }
+        func structured(_ row: [String:String], _ key: String) throws -> JSON? {
+            guard let raw = row[key], !raw.isEmpty else { return nil }
+            guard let value = try? JSONDecoder().decode(JSON.self, from: Data(raw.utf8)) else { throw failure("The CSV’s \(key) is not a valid structured value.") }
+            return value
+        }
+        let common = Set(metaKeys + ["entity"])
+        guard columns.filter({ !common.contains($0) }).allSatisfy({ metadata[$0]?.isEmpty == true }) else { throw failure("The workflow metadata row contains unexpected task fields.") }
+        let allowed: [String:Set<String>] = [
+            "project": Set(["id", "parent_id", "title", "notes", "color", "order_index"]),
+            "section": Set(["id", "project_id", "title", "order_index"]),
+            "task": Set(["id", "parent_id", "project_id", "section_id", "title", "notes", "type", "priority", "estimate_minutes", "labels", "planned_offset", "deadline_offset", "repeat_start_offset", "repeat_end_offset", "due_time", "time_zone", "is_recurring", "recurrence_pattern"])
+        ]
+        var projects: [Record] = [], sections: [Record] = [], tasks: [String:Record] = [:], parents: [String:String] = [:], order: [String] = []
+        for row in tables.dropFirst() {
+            guard let entity = row["entity"], ["project", "section", "task"].contains(entity), !text(row,"id").isEmpty else { throw failure("The CSV has an unsupported row or missing reference.") }
+            guard columns.allSatisfy({ common.contains($0) || allowed[entity]!.contains($0) || row[$0]?.isEmpty == true }) else { throw failure("A CSV row contains fields that do not belong to its entity. Nothing has been discarded or imported.") }
+            var item = Record(["id": .string(text(row,"id"))])
+            item[entity == "task" ? "title" : "name"] = .string(text(row,"title"))
+            if entity != "section" { item["description"] = .string(text(row,"notes")) }
+            for key in ["project_id", "section_id", "color"] where row[key]?.isEmpty == false { item[key] = .string(text(row,key)) }
+            if let number = try integer(row,"order_index") { item["order_index"] = number }
+            if entity == "project" { if !text(row,"parent_id").isEmpty { item["parent_id"] = .string(text(row,"parent_id")) }; projects.append(item) }
+            else if entity == "section" { sections.append(item) }
+            else {
+                guard tasks[item.id] == nil, ["task", "heading"].contains(row["type"] ?? ""), row["type"] != "heading" || metadata["document_version"] == "2" else { throw failure("The CSV has a duplicate task or unsupported task type.") }
+                if metadata["document_version"] == "2" { item["is_heading"] = .bool(row["type"] == "heading") }
+                for key in ["priority", "planned_offset", "deadline_offset", "repeat_start_offset", "repeat_end_offset"] { if let number = try integer(row,key) { item[key] = number } }
+                if let number = try integer(row,"estimate_minutes") { item["duration_minutes"] = number }
+                for key in ["due_time", "time_zone"] where row[key]?.isEmpty == false { item[key] = .string(text(row,key)) }
+                item["labels"] = try structured(row,"labels") ?? .array([])
+                if let value = try structured(row,"recurrence_pattern") { item["recurrence_pattern"] = value }
+                if row["is_recurring"]?.isEmpty == false {
+                    guard ["true", "false"].contains(row["is_recurring"] ?? "") else { throw failure("The CSV’s repeat setting must be true or false.") }
+                    item["is_recurring"] = .bool(row["is_recurring"] == "true")
+                }
+                tasks[item.id] = item; parents[item.id] = text(row,"parent_id"); order.append(item.id)
+            }
+        }
+        var children: [String:[String]] = [:], roots: [String] = []
+        for id in order {
+            if let parent = parents[id], !parent.isEmpty { guard tasks[parent] != nil else { throw failure("A CSV subtask refers to a missing parent.") }; children[parent,default:[]].append(id) }
+            else { roots.append(id) }
+        }
+        var seen = Set<String>()
+        func build(_ id: String, depth: Int) throws -> JSON {
+            guard depth <= 10, seen.insert(id).inserted, var row = tasks[id] else { throw failure("The CSV task hierarchy is cyclic or too deep.") }
+            row["subtasks"] = .array(try (children[id] ?? []).map { try build($0, depth: depth + 1) }); return .object(row.fields)
+        }
+        let nested = try roots.map { try build($0, depth: 0) }
+        guard seen.count == tasks.count else { throw failure("The CSV contains a disconnected task cycle.") }
+        var document: [String:JSON] = ["version": .number(metadata["document_version"] == "2" ? 2 : 1), "kind": .string(kind.rawValue), "projects": .array(projects.map { .object($0.fields) }), "sections": .array(sections.map { .object($0.fields) }), "tasks": .array(nested)]
+        if metadata["document_version"] == "2" { document["capabilities"] = .array([.string("task_headings")]) }
+        return try WorkflowTemplateFile(name: text(metadata,"name"), document: .object(document))
+    }
+}
+
+extension WorkflowTemplateFile {
+    func encodedCSV() throws -> Data { try WorkflowTemplateCSV.encode(self) }
 }

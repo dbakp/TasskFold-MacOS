@@ -1,0 +1,36 @@
+{
+  "simulatorUninstall": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "ownedBundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "uninstalled": true,
+      "detail": ""
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "ownedBundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+      "uninstalled": true,
+      "detail": ""
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "ownedBundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "uninstalled": true,
+      "detail": ""
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "ownedBundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+      "uninstalled": true,
+      "detail": ""
+    }
+  ],
+  "ownedLogicalBytesRemoved": 1500226090,
+  "preserved": [
+    "Both repo .build caches",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "Original Simulator boot states"
+  ],
+  "allOwnedCSVBuildAndTestCommandsTerminal": true
+}

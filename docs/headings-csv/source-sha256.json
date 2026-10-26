@@ -1,0 +1,7 @@
+{
+  "Taskfold/Core/ProjectWorkflows.swift": "dbc37f4b2a52bb4f2a17a06fece05b02ec757191e88af219a32843b9fe7fa1d9",
+  "Taskfold/Views/WorkflowViews.swift": "d6ed4f29d1737f820a388a8e6fe6c53a49ad488f9b4a43a7033e770b56838d22",
+  "Taskfold/Views/BackupTools.swift": "f3e128ceb9b10642b9b6c51e5b57644a274f68106712d37ad21c1087ffde913c",
+  "TaskfoldTests/WorkflowCSVTests.swift": "985a9a255c0a6cf507705c97318824163e4d5497baec04cb715fdf9908c321f9",
+  "TaskfoldUITests/TaskfoldMacUITests.swift": "4b37d7ccda610c8f5e6e51ea632cfa40b3e46511398e4f32eeb1571be7d0e31a"
+}

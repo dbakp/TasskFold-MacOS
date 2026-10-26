@@ -9,6 +9,7 @@ import AppKit
 
 struct WorkspaceDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.json] }
+    static var writableContentTypes: [UTType] { [.json, .commaSeparatedText] }
     var data: Data
     init(data: Data) { self.data = data }
     init(configuration: ReadConfiguration) throws { data = configuration.file.regularFileContents ?? Data() }

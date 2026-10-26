@@ -1,0 +1,32 @@
+{
+  "files": [
+    {
+      "path": "Taskfold/Core/ProjectWorkflows.swift",
+      "sourceSHA256": "dbc37f4b2a52bb4f2a17a06fece05b02ec757191e88af219a32843b9fe7fa1d9",
+      "hostSHA256": "dbc37f4b2a52bb4f2a17a06fece05b02ec757191e88af219a32843b9fe7fa1d9",
+      "onlyReservedNamespaceTransform": true
+    },
+    {
+      "path": "Taskfold/Views/WorkflowViews.swift",
+      "sourceSHA256": "d6ed4f29d1737f820a388a8e6fe6c53a49ad488f9b4a43a7033e770b56838d22",
+      "hostSHA256": "d6ed4f29d1737f820a388a8e6fe6c53a49ad488f9b4a43a7033e770b56838d22",
+      "onlyReservedNamespaceTransform": true
+    },
+    {
+      "path": "Taskfold/Views/BackupTools.swift",
+      "sourceSHA256": "f3e128ceb9b10642b9b6c51e5b57644a274f68106712d37ad21c1087ffde913c",
+      "hostSHA256": "f3e128ceb9b10642b9b6c51e5b57644a274f68106712d37ad21c1087ffde913c",
+      "onlyReservedNamespaceTransform": true
+    },
+    {
+      "path": "TaskfoldUITests/TaskfoldMacUITests.swift",
+      "sourceSHA256": "4b37d7ccda610c8f5e6e51ea632cfa40b3e46511398e4f32eeb1571be7d0e31a",
+      "hostSHA256": "1740a2d456f7177b8a7fd92e0fd1e02ac87295a2ed1a7e93bfba0ee5c91ce571",
+      "onlyReservedNamespaceTransform": true
+    }
+  ],
+  "normalHeadingAuthoringEnabled": false,
+  "isolatedHeadingAuthoringEnabled": true,
+  "normalBundleID": "$(PRODUCT_BUNDLE_IDENTIFIER)",
+  "isolatedBundleID": "$(PRODUCT_BUNDLE_IDENTIFIER)"
+}

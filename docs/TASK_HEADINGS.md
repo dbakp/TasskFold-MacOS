@@ -204,9 +204,10 @@ real local PostgreSQL persistence are tested separately from native response/UI
 fixtures; these do not establish genuine-provider, hosted, broad Mac/spoken or
 cross-device heading acceptance.
 
-See `p2-task-headings-todoist-evidence.json` and `headings-todoist/`. Clipboard/CSV
-formats, older imported-copy conversion review, remaining action/history policies
-and shared adapters still need work before normal heading exposure.
+See `p2-task-headings-todoist-evidence.json` and `headings-todoist/`. Taskfold
+workflow CSV/clipboard is covered below; generic source mappings, older imported-copy
+conversion review, remaining action/history policies and shared adapters still
+need work before normal heading exposure.
 
 ## Ordered work before exposure
 
@@ -224,8 +225,8 @@ and shared adapters still need work before normal heading exposure.
    can be completed. Checklist progress now excludes heading nodes and retains
    ordinary descendants; verify the remaining root/descendant totals and history
    independently before exposure.
-4. Finish clipboard/CSV formats and provider/native acceptance of the implemented
-   reviewed Todoist mapping. Scoped
+4. Finish generic clipboard/CSV source mappings and provider/native acceptance of
+   the reviewed Todoist mapping. Taskfold workflow CSV/clipboard, scoped
    duplication, versioned template files/runs and workspace backup/restore now
    preserve known types; wider provider/file-handoff/cross-device and native
    recovery acceptance remain open.
@@ -251,3 +252,47 @@ hashes, rejected harness attempts and remaining limits.
 This stage does not close headings, rank 3, rank 6, wearable acceptance or the
 full Px backlog. Release/distribution, remote reminders, old-client rollout,
 provider registration and physical location delivery remain deferred.
+
+## Workflow CSV and explicit clipboard transfer — 26 October 2026
+
+The template library now accepts Taskfold workflow JSON or CSV through its file
+picker, or text through an explicit Paste/edit → Review → Add to templates flow.
+Export previews offer JSON/CSV and Copy template text. Import saves only a private
+reusable definition; task creation remains the separate reviewed Use template
+operation. Cancel leaves saved definitions and tasks unchanged. Pasted text stays
+in memory across a workspace change, but requires an explicit new workspace bind
+and review before saving. No background clipboard inspection is performed.
+
+The CSV is Taskfold's own versioned workflow interchange format, not a generic
+Todoist/third-party CSV mapping. Its exact 26-column header begins
+`format,document_version,workflow,name,capabilities,entity,id,parent_id`.
+`format=taskfold-workflow-v1`; document version 2 requires `task_headings` and
+explicit `type=task|heading`. Version 1 remains ordinary tasks. A title beginning
+`* ` remains literal; it never creates a heading. A workflow metadata row precedes
+project/section/task rows, with repeated metadata checked on every row. References
+are file-local, and tasks have explicit parent references; sibling order follows
+row order. Labels and recurrence use JSON cells. Text fields use a reversible
+leading-apostrophe escape for formula-like prefixes and literal apostrophes.
+UTF-8, optional BOM, quoted commas/newlines and doubled quotes are supported.
+Export uses CRLF. Parsing is bounded to 2.1 MB and 20,000 entity rows, and refuses
+unknown fields/types/capabilities, invalid values, duplicate/missing references,
+cycles and excessive depth as a whole definition. Existing template validation
+and portability limits apply, including intentional exclusion of assignments,
+attachments, discussion and completion history. Ordinary v1 exports remain v1.
+
+Mac retains its native save panel and pasteboard; iOS retains protected temporary
+share files and an explicit system Paste button. Each repo owns its implementation.
+Normal heading authoring remains gated. Generic source mapping, flat task-row
+sharing, cross-device/provider handoff, older literal-copy conversion review,
+remaining action/history/shared adapters and the broader headings acceptance
+matrix remain open. No hosted service or shipping capability is changed here.
+
+Verification: each repo passes 75 scoped Core cases, including all 12 new CSV
+cases and 16 heading-portability cases; four optional cloud integration cases
+skip without disposable accounts. Both isolated Debug builds and strict code
+signatures pass. The actual clipboard review/edit/Cancel/Save/cold-return scenario
+passes on iPhone and iPad Simulator with unchanged task tables; two screenshots
+are inspected. Mac native launch is blocked by the locked screen, so Mac
+clipboard/save-panel acceptance remains open. The initial phone offscreen-control
+assertion and locked Mac launch failure are retained, not counted as passes.
+See `p2-task-headings-csv-evidence.json` and `headings-csv/`.

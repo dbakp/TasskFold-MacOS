@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import AppKit
 
 /// Workspace-bound workflow tools. Every preview stays local until the user saves.
 
@@ -171,6 +172,7 @@ struct TemplateLibraryView: View {
     @State private var editingTemplate: Record?
     @State private var importing = false
     @State private var imported: ImportedWorkflowTemplate?
+    @State private var importingText = false
     @State private var exportRequest: ExportedWorkflowTemplate?
     @State private var captured: WorkflowTemplateCapture?
     @State private var readingFile: UUID?
@@ -200,6 +202,7 @@ struct TemplateLibraryView: View {
                 Section {
                     Button { importing = true } label: { Label("Import template…", systemImage: "square.and.arrow.down") }
                         .accessibilityIdentifier("importWorkflowTemplate")
+                    Button("Import from text…", systemImage: "doc.on.clipboard") { importingText = true }.accessibilityIdentifier("importWorkflowText")
                     Text("Review a workflow file before saving a private copy. Importing does not create any tasks.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Save a workflow") {
@@ -229,7 +232,7 @@ struct TemplateLibraryView: View {
         .onChange(of: store.workspaceGeneration) { _, _ in
             readingFile = nil; importing = false; imported = nil; exportRequest = nil
         }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .commaSeparatedText]) { result in
             guard store.workflowReady(binding) else { message = store.error; return }
             do {
                 let url = try result.get(), request = UUID()
@@ -255,6 +258,7 @@ struct TemplateLibraryView: View {
         .sheet(item: $captured) { value in TemplateCaptureReview(capture: value, initialName: name, completed: { name = ""; source = ""; message = nil }) }
         .sheet(item: $exportRequest) { request in TemplateFileExportReview(request: request, binding: binding) }
         .sheet(item: $imported) { request in TemplateFileReview(request: request, binding: binding) }
+        .sheet(isPresented: $importingText) { TemplateTextImportView(binding: binding) }
         .sheet(item: $selected) { TemplateRunView(template: $0) }
         .sheet(item: $editingTemplate) { TemplateDefinitionEditor(template: $0) }
         .confirmationDialog("Delete this template?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
@@ -376,6 +380,9 @@ private struct TemplateFileExportReview: View {
     let binding: WorkspaceBinding?
     @State private var exporting = false
     @State private var message: String?
+    @State private var csv = false
+    @State private var copied = false
+    @State private var exportData: Data?
     var body: some View {
         WorkflowShell(title: "Export template") {
             if binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true {
@@ -387,7 +394,9 @@ private struct TemplateFileExportReview: View {
                 }
                 Section("Workflow preview") { TemplateDefinitionPreview(document: request.file.template.document, scope: "export") }
                 Section {
-                    Button("Save file…", action: beginExport).accessibilityIdentifier("saveTemplateFile")
+                    Toggle("CSV format", isOn: $csv).accessibilityIdentifier("templateCSVFormat").onChange(of: csv) { _, _ in copied = false }
+                    Button(copied ? "Copied" : "Copy template text", systemImage: "doc.on.clipboard", action: copyText).accessibilityIdentifier("copyTemplateText")
+                    Button(csv ? "Save CSV…" : "Save file…", action: beginExport).accessibilityIdentifier("saveTemplateFile")
                     Button("Cancel", role: .cancel) { dismiss() }
                 }
                 if let message { Text(message).foregroundStyle(.red) }
@@ -396,7 +405,7 @@ private struct TemplateFileExportReview: View {
                 ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Reopen templates in your current workspace."))
             }
         }
-        .fileExporter(isPresented: $exporting, document: WorkspaceDocument(data: request.data), contentType: .json, defaultFilename: "Taskfold-template") { result in
+        .fileExporter(isPresented: $exporting, document: WorkspaceDocument(data: exportData ?? request.data), contentType: csv ? .commaSeparatedText : .json, defaultFilename: "Taskfold-template") { result in
             switch result {
             case .success: dismiss()
             case .failure(let error): if (error as NSError).code != NSUserCancelledError { message = error.localizedDescription }
@@ -405,10 +414,74 @@ private struct TemplateFileExportReview: View {
     }
     private func beginExport() {
         guard store.workflowReady(binding) else { message = store.error; return }
-        exporting = true
+        do { exportData = csv ? try request.file.encodedCSV() : request.data; exporting = true }
+        catch { message = error.localizedDescription }
+    }
+    private func copyText() {
+        guard store.workflowReady(binding) else { message = store.error; return }
+        do {
+            let data = csv ? try request.file.encodedCSV() : request.data
+            NSPasteboard.general.clearContents()
+            guard NSPasteboard.general.setString(String(decoding: data, as: UTF8.self), forType: .string) else { throw AppFailure(message: "The workflow could not be copied. Try again.") }
+            copied = true; message = nil
+        } catch { message = error.localizedDescription }
     }
 }
 
+
+/// Text is supplied by an explicit paste or edit, never a background clipboard read.
+private struct TemplateTextImportView: View {
+    @Environment(Store.self) private var store
+    @State private var binding: WorkspaceBinding?
+    @State private var text = ""
+    @State private var parsed: ImportedWorkflowTemplate?
+    @State private var reading: UUID?
+    @State private var message: String?
+    init(binding: WorkspaceBinding?) { _binding = State(initialValue: binding) }
+    var body: some View {
+        Group {
+            if binding?.matches(account: store.userID, generation: store.workspaceGeneration) != true {
+                WorkflowShell(title: "Pasted workflow kept") {
+                    VStack(spacing: 16) {
+                        Text("Workspace changed").font(.title2.bold())
+                        Text("Your pasted text is kept. Review it again before using it in the current workspace.").foregroundStyle(.secondary)
+                        Button("Review in current workspace") { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); parsed = nil; reading = nil; message = nil }
+                            .accessibilityIdentifier("rebindTemplateText")
+                    }.padding()
+                }
+            } else if let parsed {
+                TemplateFileReview(request: parsed, binding: binding, editText: { self.parsed = nil })
+            } else {
+                WorkflowShell(title: "Import template text") {
+                    Form {
+                        Section {
+                            Text("Paste Taskfold workflow JSON or CSV. Review its full contents before saving a reusable copy. No tasks are created here.").foregroundStyle(.secondary)
+                            TextEditor(text: $text).frame(height: 220).accessibilityLabel("Workflow text").accessibilityIdentifier("templateImportText").disabled(reading != nil)
+                            PasteButton(payloadType: String.self) { values in if reading == nil, let first = values.first { text = first; message = nil } }
+                                .accessibilityIdentifier("pasteTemplateText").disabled(reading != nil)
+                        }
+                        Section {
+                            Button("Review template", action: review).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || reading != nil).accessibilityIdentifier("reviewTemplateText")
+                            if reading != nil { ProgressView("Reading workflow…") }
+                            if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("templateTextError") }
+                        }
+                    }.formStyle(.grouped)
+                }
+            }
+        }.onDisappear { reading = nil }
+    }
+    private func review() {
+        guard store.workflowReady(binding) else { message = store.error; return }
+        let id = UUID(), candidate = text, opening = binding; reading = id; message = nil
+        Task {
+            do {
+                let file = try await Task.detached(priority: .userInitiated) { try WorkflowTemplateFile(data: Data(candidate.utf8)) }.value
+                guard reading == id, candidate == text, opening == binding, binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { return }
+                reading = nil; parsed = ImportedWorkflowTemplate(file: file)
+            } catch { if reading == id { reading = nil; message = error.localizedDescription } }
+        }
+    }
+}
 
 private struct ImportedWorkflowTemplate: Identifiable {
     let id = UUID()
@@ -423,6 +496,7 @@ private struct TemplateFileReview: View {
     #endif
     let request: ImportedWorkflowTemplate
     let binding: WorkspaceBinding?
+    var editText: (() -> Void)? = nil
     @State private var name = ""
     @State private var message: String?
     var body: some View {
@@ -440,6 +514,7 @@ private struct TemplateFileReview: View {
                     Button("Add to templates", action: save)
                         .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || name.count > 160)
                         .accessibilityIdentifier("confirmImportTemplate")
+                    if let editText { Button("Edit pasted text", action: editText).accessibilityIdentifier("editTemplateText") }
                     Button("Cancel", role: .cancel) { dismiss() }
                 }
                 if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("templateImportError") }

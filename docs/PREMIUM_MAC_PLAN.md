@@ -7422,3 +7422,28 @@ p2-task-headings-todoist-evidence.json and headings-todoist/.
 Owned phone/tablet apps/runners and the isolated Mac session are closed.
 This step removed 845.7 MiB of owned logical scratch, preserving both Core caches,
 the ready Mac host/build and existing Simulator boot states.
+
+
+## Reviewed workflow CSV and clipboard — 26 October 2026
+
+Mac now owns its versioned workflow CSV parser/encoder, JSON/CSV native export,
+explicit Copy and Paste/edit → Review → Add to templates flow. It preserves
+heading types, hierarchy, notes, labels, relative plans and repeat rules; literal
+`* ` titles stay ordinary. Import saves only a reusable private definition.
+Pasted text survives workspace changes and requires a new bind/review. File-local
+references, strict whole-definition refusal, bounded reads and spreadsheet text
+escaping reuse existing template portability and workspace guards. The iOS repo
+owns its independent system Paste/share-file implementation; Mac has no new iOS
+build dependency. Normal heading exposure remains off.
+
+75 Core cases pass, including 12 CSV and 16 portability cases; four optional
+cloud tests skip without disposable accounts. Current isolated Debug build and
+strict signature checks pass. The attempted Mac native case failed at activation
+because the Mac is locked; it did not exercise clipboard controls. User unlock
+has been requested, and the ready host/build are preserved for that acceptance.
+The independent phone/tablet clipboard scenarios pass with task tables unchanged,
+but do not establish Mac native behavior. CSV file-provider/save/share panels,
+workspace-switch UI and spoken acceptance also remain open. Evidence and exact
+limits are in p2-task-headings-csv-evidence.json, headings-csv/ and TASK_HEADINGS.md.
+This is a scoped interoperability step; broader headings/Px and all deferred
+release/provider/device gates remain active.

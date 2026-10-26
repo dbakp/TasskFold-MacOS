@@ -4282,3 +4282,58 @@ extension TaskfoldMacUITests {
         let confirmed = XCTAttachment(screenshot: window.screenshot()); confirmed.name = "Mac typed Todoist receipt after safe retry"; confirmed.lifetime = .keepAlways; add(confirmed)
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testWorkflowCSVClipboardReviewCancelSaveAndColdReturn() throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
+        continueAfterFailure = false
+        let board = NSPasteboard.general
+        let previous = board.pasteboardItems?.map { item in item.types.compactMap { type in item.data(forType: type).map { (type, $0) } } } ?? []
+        var copiedChange: Int?
+        defer { if let copiedChange, board.changeCount == copiedChange { board.clearContents(); let items = previous.map { values in let item = NSPasteboardItem(); for (type, data) in values { item.setData(data, forType: type) }; return item }; if !items.isEmpty { board.writeObjects(items) } } }
+        let app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--subtask-organizer-fixture", "--heading-portability-template-fixture", "-localMode", "YES"]
+        app.launch()
+        let cacheURL = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        func tables() throws -> [String: Any] { try XCTUnwrap((JSONSerialization.jsonObject(with: Data(contentsOf: cacheURL)) as? [String: Any])?["tables"] as? [String: Any]) }
+        let before = try tables()
+        app.buttons["openTemplates"].click()
+
+        let template = app.buttons["workflowTemplate-f2810000-0000-4000-8000-000000000003"]
+        XCTAssertTrue(template.waitForExistence(timeout: 8), app.debugDescription)
+
+        template.rightClick(); app.menuItems["Export template…"].click()
+        let toggle = app.checkBoxes["templateCSVFormat"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5)); toggle.click()
+        app.buttons["copyTemplateText"].click(); copiedChange = board.changeCount
+        XCTAssertTrue(board.string(forType: .string)?.hasPrefix("\"format\"") == true)
+        app.buttons["Cancel"].firstMatch.click()
+        app.buttons["importWorkflowText"].click()
+        let text = app.textViews["templateImportText"]
+        XCTAssertTrue(text.waitForExistence(timeout: 5)); text.click(); text.typeKey("v", modifierFlags: .command)
+        app.buttons["reviewTemplateText"].click()
+        func reveal(_ control: XCUIElement) {
+            for _ in 0..<15 where !control.isHittable { app.windows.firstMatch.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
+            XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
+        }
+        let save = app.buttons["confirmImportTemplate"]
+        reveal(save)
+        app.buttons["editTemplateText"].click()
+        XCTAssertTrue(text.waitForExistence(timeout: 5)); XCTAssertTrue((text.value as? String)?.contains("task_headings") == true)
+        app.buttons["reviewTemplateText"].click(); reveal(save)
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Mac CSV pasted workflow review before Save"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["Cancel"].firstMatch.click()
+        XCTAssertEqual(try tables()["project_templates"] as? NSArray, before["project_templates"] as? NSArray)
+        app.buttons["importWorkflowText"].click(); XCTAssertTrue(text.waitForExistence(timeout: 5)); text.click(); text.typeKey("v", modifierFlags: .command)
+        app.buttons["reviewTemplateText"].click(); reveal(save); save.click()
+        XCTAssertTrue(app.buttons["importWorkflowText"].waitForExistence(timeout: 8))
+        let after = try tables(), definitions = try XCTUnwrap(after["project_templates"] as? [[String: Any]])
+        XCTAssertEqual(definitions.count, 2); XCTAssertEqual(after["tasks"] as? NSArray, before["tasks"] as? NSArray)
+        let source = try XCTUnwrap((before["project_templates"] as? [[String: Any]])?.first)
+        let imported = try XCTUnwrap(definitions.first { $0["id"] as? String != source["id"] as? String })
+        XCTAssertEqual((imported["document"] as? [String: Any])?["version"] as? Int, 2)
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; app.launch(); app.buttons["openTemplates"].click()
+        XCTAssertTrue(app.buttons["workflowTemplate-" + (imported["id"] as! String)].waitForExistence(timeout: 8))
+        XCTAssertEqual(try tables()["tasks"] as? NSArray, before["tasks"] as? NSArray)
+    }
+}

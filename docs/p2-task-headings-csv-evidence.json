@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-26",
+  "scope": "Taskfold workflow CSV plus explicit native template clipboard transfer",
+  "core": {
+    "executed": 79,
+    "passed": 75,
+    "optionalCloudSkipped": 4,
+    "failures": 0,
+    "newCSVTests": 12,
+    "headingPortabilityTests": 16
+  },
+  "build": {
+    "configuration": "Debug isolated host",
+    "result": "passed",
+    "strictDeepCodeSignature": "passed"
+  },
+  "native": {
+    "iPad": "not applicable",
+    "iPhone": "not applicable",
+    "macOS": "blocked at application activation by locked Mac"
+  },
+  "behavior": [
+    "Reviewed task, section and project definitions",
+    "Explicit task/heading type, nested hierarchy, notes, plans, labels and repeat settings",
+    "Whole-definition refusal for malformed or unsupported CSV",
+    "Save private definition only; separate explicit task creation",
+    "Cancel preserves task and definition tables",
+    "No passive clipboard read; explicit Copy/Paste",
+    "Retain pasted text and require new review after workspace change"
+  ],
+  "limitations": [
+    "Taskfold workflow interchange only; no generic third-party CSV mapping",
+    "Native CSV file-provider pick/save/share acceptance not established by the clipboard scenario",
+    "Workspace-switch UI acceptance remains open",
+    "No new spoken feedback acceptance claimed",
+    "Normal heading authoring remains gated; no hosted deployment",
+    "All deferred release, remote reminder, old-client, OAuth/provider and physical-location gates unchanged"
+  ],
+  "initialFailures": [
+    "Initial CSV fixtures lacked required task arrays; corrected fixtures before final Core run",
+    "A no-final-newline test removed Swift Characters instead of CRLF bytes; corrected byte-level fixture",
+    "First iPhone UI attempted to find lazy offscreen Save before scrolling; corrected the test and bounded text editor",
+    "Mac UI launch failed while locked; no workflow interaction occurred"
+  ],
+  "cleanup": {
+    "clipboard": "Prior native clipboard kept in memory; restore only if synthetic content remains. Guard exited without changing it.",
+    "sessions": "Owned Mac app and completed Simulator app sessions closed; original Simulator boot states retained.",
+    "failedDiagnostics": "After both final native Simulator tests passed, stopped only the obsolete failed-run simctl diagnose collector and polled its xcodebuild to terminal failure. Failure log retained; bulky diagnostics are not acceptance evidence."
+  }
+}
