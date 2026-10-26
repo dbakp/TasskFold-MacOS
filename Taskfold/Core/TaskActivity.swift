@@ -296,6 +296,196 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
     func involves(project: String) -> Bool { before["project_id"]?.text.lowercased() == project.lowercased() || after["project_id"]?.text.lowercased() == project.lowercased() }
 }
 
+
+/// Read-only child transitions. The separate feed preserves the original parent
+/// ledger for older clients; no title, note, attachment or invented identity is retained.
+struct TaskNodeActivity: Equatable, Identifiable, Sendable {
+    static let table = "task_node_activity"
+    static let epochTable = "task_node_activity_epoch"
+    static let legacyGeneration = "00000000-0000-0000-0000-000000000000"
+    enum Kind: String, CaseIterable, Sendable {
+        case created, completed, reopened, completion_time, moved, rescheduled, deleted, scope_changed, type_changed, coverage_gap
+    }
+    let id: String
+    let sequence: Int64
+    let owner: String
+    let rootID: String
+    let generation: String?
+    let nodeKey: String
+    let beforePath: [String]
+    let afterPath: [String]
+    let actor: String?
+    let recordedAt: Date
+    let effectiveAt: Date
+    let completionVersion: Int64
+    let before: [String: JSON]
+    let after: [String: JSON]
+    let typeBefore: String?
+    let typeAfter: String?
+    let workBefore: Bool
+    let workAfter: Bool
+    let kinds: [Kind]
+    var isGap: Bool { kinds == [.coverage_gap] }
+    var path: [String] { afterPath.isEmpty ? beforePath : afterPath }
+    var subject: String { [rootID, generation ?? "unknown", nodeKey].joined(separator: ":") }
+    init?(row: Record) {
+        guard row["format_version"] == .number(1), UUID(uuidString: row.id) != nil,
+              let sequence = TaskActivity.integer(row["sequence"]), sequence > 0,
+              TaskActivity.validID(row.string("user_id")), TaskActivity.validID(row.string("task_id")),
+              row["actor_id"] == .null || TaskActivity.validID(row.string("actor_id")),
+              let recorded = TaskPlanning.instant(row.string("recorded_at")), let effective = TaskPlanning.instant(row.string("effective_at")),
+              let revision = TaskActivity.integer(row["completion_version"]),
+              case .bool(let workBefore) = row["work_before"], case .bool(let workAfter) = row["work_after"],
+              case .object(let before) = row["before_state"], case .object(let after) = row["after_state"],
+              TaskActivity.validState(before), TaskActivity.validState(after),
+              let beforePath = Self.path(row["before_path"]), let afterPath = Self.path(row["after_path"]),
+              case .array(let rawKinds) = row["kinds"], !rawKinds.isEmpty,
+              rawKinds.allSatisfy({ if case .string(let key) = $0 { return Kind(rawValue: key) != nil }; return false }),
+              Set(rawKinds.map(\.text)).count == rawKinds.count else { return nil }
+        let kinds = rawKinds.compactMap { Kind(rawValue: $0.text) }
+        func type(_ key: String) -> String? { row[key] == .null ? nil : row.string(key) }
+        let typeBefore = type("type_before"), typeAfter = type("type_after")
+        guard [typeBefore, typeAfter].allSatisfy({ $0 == nil || ["task", "heading"].contains($0!) }) else { return nil }
+        let generation = row["task_generation"] == .null ? nil : UUID(uuidString: row.string("task_generation"))?.uuidString.lowercased()
+        guard row["task_generation"] == .null || generation != nil else { return nil }
+        if kinds == [.coverage_gap] {
+            guard row["node_key"] == .string(""), beforePath.isEmpty, afterPath.isEmpty,
+                  !workBefore, !workAfter, typeBefore == nil, typeAfter == nil, revision == 0 else { return nil }
+        } else {
+            guard let generation, !generation.isEmpty,
+                  ChecklistRecovery.validIdentity(row.string("node_key")),
+                  before.isEmpty == beforePath.isEmpty, after.isEmpty == afterPath.isEmpty,
+                  !(before.isEmpty && after.isEmpty),
+                  beforePath.isEmpty || beforePath.last == row.string("node_key"),
+                  afterPath.isEmpty || afterPath.last == row.string("node_key"),
+                  before.isEmpty == (typeBefore == nil), after.isEmpty == (typeAfter == nil),
+                  !workBefore || typeBefore == "task", !workAfter || typeAfter == "task",
+                  typeBefore != "heading" || before["completed"] == .bool(false) && before["completed_at"] == .null,
+                  typeAfter != "heading" || after["completed"] == .bool(false) && after["completed_at"] == .null,
+                  kinds == Self.changes(before: before, after: after, beforePath: beforePath, afterPath: afterPath, workBefore: workBefore, workAfter: workAfter, typeBefore: typeBefore, typeAfter: typeAfter) else { return nil }
+        }
+        id = row.id.lowercased(); self.sequence = sequence; owner = row.string("user_id")
+        rootID = row.string("task_id").lowercased(); self.generation = generation; nodeKey = row.string("node_key")
+        self.beforePath = beforePath; self.afterPath = afterPath; actor = row["actor_id"] == .null ? nil : row.string("actor_id")
+        recordedAt = recorded; effectiveAt = effective; completionVersion = revision
+        self.before = before; self.after = after; self.typeBefore = typeBefore; self.typeAfter = typeAfter; self.workBefore = workBefore; self.workAfter = workAfter; self.kinds = kinds
+    }
+    static func path(_ value: JSON) -> [String]? {
+        guard case .array(let list) = value, list.count <= SubtaskTree.readableDepth,
+              list.allSatisfy({ if case .string(let key) = $0 { return ChecklistRecovery.validIdentity(key) }; return false }),
+              let data = try? JSONEncoder().encode(value), data.count <= 65_536 else { return nil }
+        return list.map(\.text)
+    }
+    static func changes(before: [String: JSON], after: [String: JSON], beforePath: [String], afterPath: [String], workBefore: Bool, workAfter: Bool, typeBefore: String?, typeAfter: String?) -> [Kind] {
+        var result = TaskActivity.changes(before: before, after: after).compactMap { Kind(rawValue: $0.rawValue) }
+        guard !before.isEmpty, !after.isEmpty else { return result }
+        if beforePath != afterPath, !result.contains(.moved) {
+            result.insert(.moved, at: result.firstIndex(of: .rescheduled) ?? result.count)
+        }
+        if typeBefore != typeAfter { result.append(.type_changed) }
+        else if workBefore != workAfter { result.append(.scope_changed) }
+        return result
+    }
+    func involves(project: String) -> Bool {
+        before["project_id"]?.text.lowercased() == project.lowercased() || after["project_id"]?.text.lowercased() == project.lowercased()
+    }
+    /// A historical path is never editing authority. Follow a stable key only
+    /// within the same current root incarnation and a freshly validated tree.
+    func currentTask(tasks: [Record], projects: [Record], account: String) -> Record? {
+        guard !isGap, !account.isEmpty, let generation, generation != Self.legacyGeneration,
+              let root = tasks.first(where: { $0.id.lowercased() == rootID }),
+              tasks.filter({ $0.id.lowercased() == rootID }).count == 1,
+              Self.generation(root) == generation, root.string("user_id").lowercased() == owner.lowercased(),
+              !root.string("project_id").isEmpty || root.string("user_id").lowercased() == account.lowercased(),
+              let index = try? TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: account, generation: UUID())),
+              let item = index.items.first(where: { $0.isSubtask && $0.path.last == nodeKey }) else { return nil }
+        return item.record
+    }
+    private struct Node {
+        let generation: String
+        let path: [String]
+        let state: [String: JSON]
+        let type: String
+        let work: Bool
+        let revision: Int64
+        var key: String { generation + ":" + path.last! }
+    }
+    private static func generation(_ root: Record) -> String? {
+        if root["task_generation"] == .null { return legacyGeneration }
+        return UUID(uuidString: root.string("task_generation"))?.uuidString.lowercased()
+    }
+    private static func nodes(_ root: Record?) -> [String: Node]? {
+        guard let root else { return [:] }
+        guard let generation = generation(root), TaskKind(root) != .unsupported,
+              let bytes = try? JSONEncoder().encode(root["subtasks"]), bytes.count <= ChecklistRecovery.maximumBytes else { return nil }
+        let p = root.string("project_id"), projects = p.isEmpty ? [] : [Record(["id": .string(p), "name": .string("Containment")])]
+        guard let index = try? TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: "node-history", generation: UUID())) else { return nil }
+        let work = ProductiveTaskReading(tasks: [root]); guard !work.incomplete else { return nil }
+        var result: [String: Node] = [:]
+        for item in index.items where item.isSubtask {
+            guard TaskKind(item.source) != .unsupported,
+                  !item.source.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  item.source["completed"] == .null || { if case .bool = item.source["completed"] { return true }; return false }() else { return nil }
+            if TaskKind(item.source) == .heading && (item.source.completed || item.source["completed_at"] != .null) { return nil }
+            let state = TaskActivity.state(item.record)
+            guard TaskActivity.validState(state), path(.array(item.path.map(JSON.string))) != nil,
+                  let revision = item.source["completion_version"] == .null ? 0 : TaskActivity.integer(item.source["completion_version"]) else { return nil }
+            let node = Node(generation: generation, path: item.path, state: state, type: TaskKind(item.source) == .heading ? "heading" : "task", work: TaskKind.mayComplete(item.source) && work.contains(item.id), revision: revision)
+            result[node.key] = node
+        }
+        return result
+    }
+    /// Stable retry identities derive from the actual mutation and node occurrence.
+    /// This is a ledger record, never a client-supplied table mutation.
+    static func localRows(_ change: Mutation, before: Record?, after: Record?, account: String, recordedAt: Date, afterSequence: Int64 = 0) -> [Record] {
+        guard change.table == "tasks", ["POST", "PATCH", "DELETE"].contains(change.method),
+              TaskActivity.validID(account), let root = after ?? before, TaskActivity.validID(root.id),
+              change.recordID == root.id, before == nil || before?.id == root.id,
+              [before, after].compactMap({ $0 }).allSatisfy({ $0.string("user_id").isEmpty || $0.string("user_id") == account }),
+              afterSequence >= 0, afterSequence < 9_007_199_254_740_991,
+              (change.method == "POST" && before == nil && after != nil) || (change.method == "PATCH" && before != nil && after != nil) || (change.method == "DELETE" && before != nil && after == nil) else { return [] }
+        if let before, let after, before["subtasks"] == after["subtasks"], before["is_heading"] == after["is_heading"],
+           before["project_id"] == after["project_id"], before["section_id"] == after["section_id"], before["task_generation"] == after["task_generation"] { return [] }
+        let prior = nodes(before), current = nodes(after)
+        var result: [Record] = [], sequence = afterSequence, overflow = false
+        func append(_ key: String, generation: String?, nodeKey: String, b: [String: JSON], a: [String: JSON], oldPath: [String], newPath: [String], oldWork: Bool, newWork: Bool, oldType: String?, newType: String?, revision: Int64, kinds: [Kind]) {
+            guard !kinds.isEmpty else { return }
+            guard sequence < 9_007_199_254_740_991 else { overflow = true; return }; sequence += 1
+            let identity = try! JSONEncoder().encode([change.id.uuidString.lowercased(), root.id, key])
+            let hash = SHA256.hash(data: identity).map { String(format: "%02x", $0) }.joined()
+            let raw = String(hash.prefix(32)), points = [8,12,16,20]
+            let id = raw.enumerated().map { (points.contains($0.offset) ? "-" : "") + String($0.element) }.joined()
+            let effective = kinds.contains(.completed) ? a["completed_at"].flatMap { TaskPlanning.instant($0.text) } ?? recordedAt : recordedAt
+            let row = Record(["id": .string(id), "format_version": .number(1), "sequence": .number(Double(sequence)), "user_id": .string(account), "task_id": .string(root.id), "task_generation": generation.map(JSON.string) ?? .null,
+                "node_key": .string(nodeKey), "before_path": .array(oldPath.map(JSON.string)), "after_path": .array(newPath.map(JSON.string)), "actor_id": .string(account),
+                "recorded_at": .string(TaskActivity.stamp(recordedAt)), "effective_at": .string(TaskActivity.stamp(effective)), "completion_version": .number(Double(revision)),
+                "before_state": .object(b), "after_state": .object(a), "type_before": oldType.map(JSON.string) ?? .null, "type_after": newType.map(JSON.string) ?? .null, "work_before": .bool(oldWork), "work_after": .bool(newWork), "kinds": .array(kinds.map { .string($0.rawValue) })])
+            if Self(row: row) != nil { result.append(row) }
+        }
+        guard let prior, let current else {
+            append("coverage-gap", generation: generation(root), nodeKey: "", b: TaskActivity.state(before), a: TaskActivity.state(after), oldPath: [], newPath: [], oldWork: false, newWork: false, oldType: nil, newType: nil, revision: 0, kinds: [.coverage_gap]); return result
+        }
+        for key in Set(prior.keys).union(current.keys).sorted() {
+            let old = prior[key], new = current[key], node = new ?? old!
+            let b = old?.state ?? [:], a = new?.state ?? [:], oldPath = old?.path ?? [], newPath = new?.path ?? []
+            append(key, generation: node.generation, nodeKey: node.path.last!, b: b, a: a, oldPath: oldPath, newPath: newPath, oldWork: old?.work ?? false, newWork: new?.work ?? false, oldType: old?.type, newType: new?.type, revision: node.revision,
+                   kinds: changes(before: b, after: a, beforePath: oldPath, afterPath: newPath, workBefore: old?.work ?? false, workAfter: new?.work ?? false, typeBefore: old?.type, typeAfter: new?.type))
+        }
+        return overflow ? [] : result
+    }
+    static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
+        let existing = snapshot.tables[table] ?? []
+        guard existing.allSatisfy({ Self(row: $0) != nil }), Set(existing.compactMap { TaskActivity.integer($0["sequence"]) }).count == existing.count else { return }
+        let ids = Set(existing.map { $0.id.lowercased() })
+        let start = existing.compactMap { TaskActivity.integer($0["sequence"]) }.max() ?? 0
+        let rows = localRows(change, before: before, after: after, account: account, recordedAt: now, afterSequence: start).filter { !ids.contains($0.id.lowercased()) }
+        guard !rows.isEmpty else { return }
+        snapshot.tables[table, default: []] += rows
+        if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])] }
+    }
+    static func query(after sequence: Int64) -> String { "/rest/v1/task_node_activity?select=*&order=sequence.asc&sequence=gt.\(sequence)&limit=500" }
+}
+
 /// Current work follows ordinary task occurrences. A heading is transparent:
 /// its nearest ordinary descendants take its place, while an ordinary task's
 /// checklist remains part of that task. This is a read model, never live rows.

@@ -4970,3 +4970,17 @@ native creation/conversion/race/legacy/largest-text/spoken acceptance, installed
 widgets, shared/service and cross-device adapters and generic provider mapping.
 Normal heading authoring remains disabled. This does not close headings or Px;
 all user-deferred release/provider/device gates remain unchanged.
+
+
+### Child history recording foundation (26 October 2026)
+
+Separate child-ledger schema, strict reader and standalone local recorder now
+exist in both owned repos. 53 Core checks per app (22 new) and 49 real-PostgreSQL
+checks per independent fixture pass, including actual SQL-to-Swift rows, retry,
+privacy/account boundaries and 10,000-child samples. Official advisors report no
+new-object findings. This stage is inactive: Store/sync/team masking/backups and
+activity/Insights/Project pulse integration remain next. Hosted deployment and
+normal heading authoring remain unchanged. Mac native replay was retried after
+unlock, but the Mac locked before interaction; no new runtime pass is claimed.
+See [the child history contract and ordered next work](TASK_NODE_ACTIVITY.md) and
+`child-activity-history/evidence.json`. Px remains open.
