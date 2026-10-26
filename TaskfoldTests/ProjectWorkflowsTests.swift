@@ -72,6 +72,110 @@ final class ProjectWorkflowsTests: XCTestCase {
         var second=Record.task(user:owner,project:"child");second["title"] = .string("Follow up");second["due_date"] = .string("2026-10-22")
         return Snapshot(tables:["projects":[p,child],"sections":[section],"tasks":[task,second],"labels":[label]])
     }
+
+    func testEveryTemplateKindRetainsCreateOnlyIntentAcrossColdQueueAndHistory() throws {
+        for kind in [WorkflowTemplate.Kind.project, .section, .task] {
+            let source = fixture(), id = kind == .project ? "root" : kind == .section ? "section" : "source"
+            let template = try WorkflowTemplate.capture(kind: kind, id: id, snapshot: source)
+            let changes = try template.instantiate(account: owner, name: "Fresh workflow", targetProject: "destination")
+            XCTAssertFalse(changes.isEmpty)
+            XCTAssertTrue(changes.allSatisfy { $0.method == "POST" && $0.insertOnly == true })
+            var snapshot = Snapshot()
+            for change in changes { snapshot.apply(change); snapshot.pending.append(change) }
+            let cold = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+            XCTAssertEqual(cold, snapshot)
+            let history = EditHistory(changes: changes, snapshot: Snapshot())
+            XCTAssertEqual(history.redo, changes, "Redo must retain create-only intent")
+            for change in cold.pending {
+                var newer = Record(change.fields)
+                let field = change.table == "tasks" ? "title" : change.table == "view_orders" ? "ids" : "name"
+                newer[field] = field == "ids" ? .array([]) : .string("Later edit")
+                var current = Snapshot(tables: [change.table: [newer]])
+                current.apply(change)
+                XCTAssertEqual(current.tables[change.table], [newer], "Replaying \(change.table) cannot replace current work")
+            }
+        }
+    }
+
+    @MainActor func testWorkflowLostRepliesPreserveLaterEditsThroughBackendAndColdQueue() async throws {
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [AuthTransportTests.Stub.self]
+        let session = try JSONDecoder().decode(Session.self, from: JSONEncoder().encode(JSON.object([
+            "access_token": .string("synthetic"), "refresh_token": .string("synthetic-refresh"),
+            "expires_in": .number(3600), "user": .object(["id": .string(owner)])])))
+        let backend = Backend(configuration: ["URL": "https://native-auth.test", "Key": "public"],
+            http: URLSession(configuration: config), session: session, persistSession: { _ in })
+        defer { AuthTransportTests.Stub.handler = nil }
+        let template = try WorkflowTemplate.capture(kind: .project, id: "root", snapshot: fixture())
+        let changes = try template.instantiate(account: owner, name: "Retry workflow")
+        XCTAssertEqual(Set(changes.map(\.table)), ["projects", "sections", "labels", "tasks", "view_orders"])
+        var snapshot = Snapshot()
+        for change in changes { snapshot.apply(change); snapshot.pending.append(change) }
+        for original in changes {
+            var remote: Record?, posts = 0, reads = 0
+            var later = Record(original.fields)
+            let field = original.table == "tasks" ? "title" : original.table == "view_orders" ? "ids" : "name"
+            later[field] = field == "ids" ? .array([.string("later-order")]) : .string("Changed after creation")
+            AuthTransportTests.Stub.handler = { request in
+                XCTAssertEqual(request.url?.path, "/rest/v1/" + original.table)
+                if request.httpMethod == "POST" {
+                    posts += 1
+                    let prefer = request.value(forHTTPHeaderField: "Prefer") ?? ""
+                    XCTAssertEqual(prefer, "handling=strict,resolution=ignore-duplicates,missing=default,return=representation")
+                    let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems
+                    XCTAssertEqual(query?.first { $0.name == "on_conflict" }?.value, original.table == "view_orders" ? "user_id,id" : "id")
+                    if posts == 1 {
+                        // The server saves, another client edits, then the response is lost.
+                        remote = later; throw URLError(.networkConnectionLost)
+                    }
+                    // Emulate PostgREST conflict handling; merge would destroy the later edit.
+                    if prefer.contains("resolution=merge-duplicates") { remote = Record(original.fields) }
+                    return (200, Data("[]".utf8))
+                }
+                reads += 1
+                XCTAssertEqual(request.httpMethod, "GET")
+                let query = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems
+                XCTAssertEqual(query?.first { $0.name == "id" }?.value, "eq." + original.recordID)
+                XCTAssertEqual(query?.first { $0.name == "user_id" }?.value, "eq." + self.owner)
+                return (200, try JSONEncoder().encode([try XCTUnwrap(remote)]))
+            }
+            let queued = try XCTUnwrap(snapshot.pending.first)
+            XCTAssertEqual(queued, original)
+            do { _ = try await backend.send(queued, expectedAccount: owner); XCTFail("Lost reply must remain unconfirmed") }
+            catch { XCTAssertEqual((error as? URLError)?.code, .networkConnectionLost) }
+            snapshot = try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot))
+            XCTAssertEqual(snapshot.pending.first, original)
+            let saved = try await backend.send(try XCTUnwrap(snapshot.pending.first), expectedAccount: owner)
+            XCTAssertEqual(saved, later)
+            XCTAssertTrue(snapshot.acknowledge(original, saved: saved))
+            XCTAssertEqual(snapshot.tables[original.table]?.first { $0.id == original.recordID }, later)
+            XCTAssertEqual(posts, 2); XCTAssertEqual(reads, 1)
+        }
+        XCTAssertTrue(snapshot.pending.isEmpty)
+    }
+
+
+    @MainActor func testWorkflowRetryCannotAcknowledgeMissingOrForeignRows() async throws {
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [AuthTransportTests.Stub.self]
+        let session = try JSONDecoder().decode(Session.self, from: JSONEncoder().encode(JSON.object([
+            "access_token": .string("synthetic"), "refresh_token": .string("synthetic-refresh"),
+            "expires_in": .number(3600), "user": .object(["id": .string(owner)])])))
+        let backend = Backend(configuration: ["URL": "https://native-auth.test", "Key": "public"],
+            http: URLSession(configuration: config), session: session, persistSession: { _ in })
+        defer { AuthTransportTests.Stub.handler = nil }
+        let template = try WorkflowTemplate.capture(kind: .project, id: "root", snapshot: fixture())
+        for change in try template.instantiate(account: owner, name: "Private workflow") {
+            for foreign in [false, true] {
+                AuthTransportTests.Stub.handler = { request in
+                    if request.httpMethod == "POST" || !foreign { return (200, Data("[]".utf8)) }
+                    var row = Record(change.fields); row["user_id"] = .string("other-owner")
+                    return (200, try JSONEncoder().encode([row]))
+                }
+                do { _ = try await backend.send(change, expectedAccount: owner); XCTFail("Unconfirmed \(change.table) must stay queued") }
+                catch { XCTAssertTrue(error.localizedDescription.contains("could not confirm")) }
+            }
+        }
+    }
+
     func testProjectTemplatePreservesStructureAndOffsetsButNeverHistoryOrOwnership() throws {
         let source=fixture(),template=try WorkflowTemplate.capture(kind:.project,id:"root",snapshot:source)
         let run=UUID(),changes=try template.instantiate(account:"recipient",name:"October launch",start:Dates.parse("2026-11-01"),run:run)

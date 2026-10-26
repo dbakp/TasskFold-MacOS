@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-26",
+  "platform_repository": "TasskFold-MacOS",
+  "command": "swift test --filter 'ProjectWorkflowsTests|TeamWorkflowRun|TeamWorkflowDestinationsTests|HeadingPortabilityTests|PersonalHeadingCapabilityTests|BackupTests'",
+  "tests": 182,
+  "failures": 0,
+  "new_regression_cases": 3,
+  "source_sha256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "99934763b6e06364b7e9e6597feba51d7e80c2717fc436435cc67aabf83d7f98",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "de1997f5d0590df7109b65eb57bff07da908e2791c7c6b45d217a3f24426f03e"
+  },
+  "scope": "Core and isolated URLProtocol HTTP peer; no new native, hosted or SQL acceptance",
+  "initial_attempt": "Test compile rejected extra label argument to EditHistory; corrected to its existing initializer before final passes.",
+  "open_safety_gap": "Service-side guarded workflow Undo deletion must protect later edits and newly dependent work."
+}

@@ -417,7 +417,11 @@ struct WorkflowTemplate: Sendable {
                 orders.append(Mutation(table: "view_orders", recordID: key, method: "POST", fields: ["id": .string(key), "user_id": .string(account), "ids": .array(groups[key]!.map { .string($0.recordID) })]))
             }
         }
-        return changes + taskChanges + orders
+        // Every row belongs to this run's fresh identities (including its list
+        // order). A retry after a lost reply must not upsert over later edits.
+        return (changes + taskChanges + orders).map { change in
+            var change = change; change.insertOnly = true; return change
+        }
     }
 }
 

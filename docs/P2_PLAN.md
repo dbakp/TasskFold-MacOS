@@ -27,6 +27,10 @@ uses the separate client opt-in; personal live heading creation now checks its
 own service compatibility signal. See DEFINITION_HEADING_AUTHORING.md and
 PERSONAL_TASK_HEADINGS.md for acceptance and remaining limits.
 
+Workflow creation retries now preserve later server edits; service-side protection
+for workflow Undo deletion remains an open data-safety priority. See the dated
+workflow retry stage and workflow-creation-retry/validation.json.
+
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
 sharing acceptance (implementation in TASK_ROW_CSV.md), older literal-copy conversion acceptance (review implemented in
@@ -5357,3 +5361,33 @@ Undo/Redo, source/account races, spoken/largest-text, installed widgets and cros
 device acceptance remain open. Normal app flags and hosted configuration were not
 changed. Older-client rollout, release/distribution, remote reminders and other
 user-deferred work stays deferred; rank 3/Px remain active.
+
+## 26 October — preserve later edits when workflow creation retries
+
+New private workflow runs now mark every generated project, section, label, task
+and manual-order row create-only. The same run keeps its existing stable record
+identities. A duplicate delivery uses the established owned-row readback and
+acknowledges the current server row instead of merging the old creation payload
+into it. Ordinary ordering edits and the separate atomic team workflow service
+are unchanged. This also preserves the creation intent through the durable queue
+and history Redo; it does not add a new history deletion guard.
+
+Each independent repo passes 182 selected Core tests. Three new regression cases
+cover every template kind, cold queue/history intent, and Backend requests for
+all five generated table types: lose each creation reply after a synthetic later
+edit, decode the saved queue, retry with ignore-duplicates and owner-filtered
+readback, preserve the later row and clear only the confirmed intention. Missing
+and foreign-owned rows cannot be acknowledged. Existing heading portability,
+personal compatibility, backup and shared workflow suites also pass. Logs and
+source hashes are retained in workflow-creation-retry/validation.json and its
+adjacent log. This is an isolated HTTP peer/Core check, not new installed-native,
+hosted PostgREST, SQL or cross-device acceptance.
+
+**Next data-safety gap:** workflow Undo still uses ordinary project/section/label/
+order deletion. It must gain service-side protection against later edits and new
+dependent work before claiming that full workflow Undo is safe under concurrency.
+Create-only Redo does not resolve that deletion risk. Wider native personal
+heading Undo/Redo, nested/workflow/import/restore, source/account, spoken/widget
+and cross-device acceptance remain open. Rank 3/Px are active. Normal app flags,
+hosted services and the user's release/provider/reminder/older-client deferrals
+are unchanged.
