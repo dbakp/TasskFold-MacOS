@@ -1,0 +1,8 @@
+{
+  "host": "/tmp/taskfold-native-types-mac-host",
+  "derived": "/tmp/taskfold-native-types-mac-native-build",
+  "xctestrun": "/tmp/taskfold-native-types-mac-native-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+  "test": "TaskfoldUITests/SharedHeadingNativeTests/testSharedHeadingAutosaveUndoRedoAndColdQueue",
+  "buildSHA256": "9ec8f7c617ee3d4127869e3a3a7d418f0cde5c8c02d1cacda590489505b87d54",
+  "runtimeAccepted": false
+}

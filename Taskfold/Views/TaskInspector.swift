@@ -197,9 +197,9 @@ struct TaskInspectorForm: View {
         .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
         .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
         .sheet(item: $headingConversion) { request in
-            TodoistHeadingConversionReview(request: request, available: { editorAvailable && store.taskHeadingsAuthoringEnabled && draft == request.captured }, apply: { remove in
+            TodoistHeadingConversionReview(request: request, available: { editorAvailable && store.canAuthorTaskHeadings(teamDraft: teamDraft) && draft == request.captured }, apply: { remove in
                 guard editorAvailable else { throw AppFailure(message: "The workspace changed. Reopen the task.") }
-                let edited = try request.applying(to: draft, removingMarker: remove, authoringEnabled: store.taskHeadingsAuthoringEnabled)
+                let edited = try request.applying(to: draft, removingMarker: remove, authoringEnabled: store.canAuthorTaskHeadings(teamDraft: teamDraft))
                 saveTask?.cancel(); titleParsingBaseline = edited.title; draft = edited
             })
         }
@@ -218,7 +218,7 @@ struct TaskInspectorForm: View {
                     .onChange(of: titleFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
                     .accessibilityIdentifier("taskTitle")
                     .referenceCompletions(text: text("title"), selection: $titleSelection, choices: $referenceChoices, declined: $declined, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)), focused: titleFocused, task: draft, excluded: quickExclusions, onChoose: { applyReferenceChoices(); titleFocused = true }, submit: { applySuggestions(); saveNow() }, submitsFromKeyboard: true)
-                if store.taskHeadingsAuthoringEnabled && !isTeamTask {
+                if store.canAuthorTaskHeadings(teamDraft: teamDraft) {
                     Picker("Task type", selection: Binding(get: { TaskKind(draft) == .heading }, set: { heading in
                         guard editorAvailable else { return }
                         do { draft = try TaskKind.setting(draft, heading: heading) }
@@ -1174,6 +1174,15 @@ struct TeamEditorNativeFixtureView: View {
             }
         } else {
         TaskInspectorForm(taskID: TeamEditorNativeFixture.taskID)
+             .safeAreaInset(edge: .top) {
+                if ProcessInfo.processInfo.arguments.contains("--team-heading-testing") {
+                    HStack {
+                        Button("Pause heading support") { store.pauseTeamHeadingCapabilityFixture() }.accessibilityIdentifier("pauseTeamHeadingCapability")
+                        Button("Undo task edit") { store.undo() }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("undoTeamHeading")
+                        Button("Redo task edit") { store.redo() }.disabled(store.redoStack.isEmpty).accessibilityIdentifier("redoTeamHeading")
+                    }.padding(8)
+                }
+            }
             .safeAreaInset(edge: .bottom) { Button("Revoke test editing") { store.revokeTeamEditorNativeFixture() }.accessibilityIdentifier("revokeTeamEditorFixture") }
         }
     }

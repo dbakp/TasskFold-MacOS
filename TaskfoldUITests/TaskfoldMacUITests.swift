@@ -4636,3 +4636,38 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(((try tables())["project_templates"] as? [[String: Any]])?.first { $0["id"] as? String == imported["id"] as? String } as NSDictionary?, imported as NSDictionary)
     }
 }
+
+final class SharedHeadingNativeTests: XCTestCase {
+    private let bundle = "com.dbakp.taskfold.mac.workflowteststeameditbridge"
+    private func saved() throws -> [String: Any] {
+        let url = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/" + bundle + "/Data/Library/Application Support/Taskfold/ec240000-0000-4000-8000-000000000001.json")
+        return try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+    }
+    private func root() throws -> [String: Any] { try XCTUnwrap((try saved()["tables"] as? [String: [[String: Any]]])?["tasks"]?.first) }
+    @MainActor private func open(_ app: XCUIApplication) throws {
+        app.launch(); let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundle)
+        XCTAssertEqual(running.count, 1); let url = try XCTUnwrap(running.first?.bundleURL)
+        let opened = expectation(description: "Open isolated shared heading workspace")
+        let config = NSWorkspace.OpenConfiguration(); config.activates = true; config.createsNewApplicationInstance = false
+        NSWorkspace.shared.openApplication(at: url, configuration: config) { _, error in XCTAssertNil(error); opened.fulfill() }
+        wait(for: [opened], timeout: 10); app.activate()
+    }
+    @MainActor func testSharedHeadingAutosaveUndoRedoAndColdQueue() throws {
+        guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Reserved isolated Mac host required") }
+        continueAfterFailure = false; let app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--team-editor-testing", "--team-editor-reset", "--team-heading-testing", "-appearance", "light"]
+        try open(app); let picker = app.descendants(matching: .any).matching(identifier: "taskKindPicker").firstMatch
+        XCTAssertTrue(picker.waitForExistence(timeout: 12), app.debugDescription); let before = try root(); picker.click()
+        XCTAssertTrue(app.menuItems["Heading"].waitForExistence(timeout: 5), app.debugDescription); app.menuItems["Heading"].click()
+        func waitType(_ heading: Bool) {
+            let changed = expectation(for: NSPredicate { _, _ in (try? self.root())?["is_heading"] as? Bool == heading }, evaluatedWith: nil)
+            wait(for: [changed], timeout: 12)
+        }
+        waitType(true); let after = try root()
+        for key in ["title", "description", "user_id", "project_id", "task_generation", "subtasks", "opaque_future"] { XCTAssertEqual(after[key] as? NSObject, before[key] as? NSObject, key) }
+        app.buttons["undoTeamHeading"].click(); waitType(false); app.buttons["redoTeamHeading"].click(); waitType(true)
+        let final = try saved(), picture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); picture.name = "Mac shared heading autosave and typed Undo"; picture.lifetime = .keepAlways; add(picture)
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; try open(app)
+        XCTAssertTrue(picker.waitForExistence(timeout: 12)); XCTAssertEqual(try saved() as NSDictionary, final as NSDictionary)
+    }
+}

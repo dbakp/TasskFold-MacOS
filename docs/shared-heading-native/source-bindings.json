@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-26",
+  "sources": {
+    "Scripts/prepare_task_heading_native_test.py": "f8c8fb4e698af27c856349d8dfe21dc260cd8b4bc3b9953ba3fe126e70787ee1",
+    "Taskfold/Core/Store.swift": "4150061f1ffc3d31f0dc2b456e02f9143c15725fe00ae82dcf4aa804d609a127",
+    "Taskfold/Core/TeamChecklist.swift": "329fbd940e23affee7050b51b0f41be83d039e53d67f6e211fe5da31e28c459c",
+    "Taskfold/Views/SubtaskOrganizer.swift": "2ec66bfd6658ce986f0a0a57cc4b1f952cd4ddf56fce6a83887de68b5d914ca3",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "2aee2dacabd980ae3f5d9fb04e28e9c1dc1843949edbbaa40c9bfc9d7ea387f9",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd",
+    "Taskfold/Views/TaskInspector.swift": "4860decc8af6edd0b40c87796f9f86a3cf973652e3371f51decea28709b6027f",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "12a718e19d8192d31c85b24de5fa55da24018c86507755ed86fc9201a404bd76"
+  },
+  "normalHeadingFlagChanged": false,
+  "hostedChanges": false,
+  "preparedSourceHashes": {
+    "Scripts/prepare_task_heading_native_test.py": "f8c8fb4e698af27c856349d8dfe21dc260cd8b4bc3b9953ba3fe126e70787ee1",
+    "Taskfold/Core/Store.swift": "12b4b60628562774040aaec32a27f2f3821e2bbe5dd781f2b1d709f843852f54",
+    "Taskfold/Core/TeamChecklist.swift": "329fbd940e23affee7050b51b0f41be83d039e53d67f6e211fe5da31e28c459c",
+    "Taskfold/Views/SubtaskOrganizer.swift": "2ec66bfd6658ce986f0a0a57cc4b1f952cd4ddf56fce6a83887de68b5d914ca3",
+    "Taskfold/Info.plist": "55c1550013547bcd4e7c805fa4819b369036f8461ddbeeee34ba99979f44e4fe",
+    "Taskfold/Views/TaskInspector.swift": "4860decc8af6edd0b40c87796f9f86a3cf973652e3371f51decea28709b6027f",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "12a718e19d8192d31c85b24de5fa55da24018c86507755ed86fc9201a404bd76"
+  },
+  "preparedCopyNote": "Normal identifiers, keychain namespaces, test flags and fixture Info differ by the owned isolation scripts. Store fresh-baseline fix and final UI sources were present before the accepted builds/tests."
+}

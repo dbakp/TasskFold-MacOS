@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-26",
+  "appBuild": "passed",
+  "configuration": "Debug arm64",
+  "signing": "Independent unsigned app passed; isolated development app/runner build passed and app signature verified",
+  "logSHA256": "72e3191ef6a4bddbbf3e79d3a9952ea4488206a3592dbb7ce39fb5ceba771d69",
+  "macRuntime": "test runner authorization timeout; no case executed"
+}

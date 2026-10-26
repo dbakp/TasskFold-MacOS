@@ -2,7 +2,8 @@
 
 26 October 2026. Both owned repos now implement typed lifecycle commands through
 the existing team lifecycle and atomic selection RPCs. This follows TEAM_TASK_TYPES.md.
-No hosted configuration, rollout, normal heading gate or native picker changed.
+No hosted configuration, rollout or normal heading gate changed. The later native
+picker follow-up and its exact acceptance are in TEAM_TASK_TYPE_NATIVE.md.
 
 ## Transport and authoring
 
@@ -24,7 +25,8 @@ no completion timestamp. Known headings may be deleted or restored through their
 certified Undo while new authoring is paused. The global edit/read/team/session,
 role and archive gates still apply, including recorded retries. The separate
 transport capability lets clients preserve known work without granting new type
-authoring. Normal Store authoring remains gated until native integration.
+authoring. Native Store integration now retains client opt-in and negotiated admission;
+see TEAM_TASK_TYPE_NATIVE.md for the scoped native follow-up.
 
 ## Preservation and recovery
 

@@ -1403,7 +1403,7 @@ final class Store {
         var committedChanges: [Mutation] = []
         for var change in changes {
             if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
-                change.baseline = Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, existing[$0]) })
+                change.baseline = TaskCompletionRevision.editBaseline(for: change.fields, from: existing)
             }
             if change.table == "tasks", change.method == "DELETE", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
                 change.baseline = existing.fields
@@ -1417,7 +1417,7 @@ final class Store {
                 error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
                 return false
             }
-            guard taskHeadingsAuthoringEnabled || !TaskKind.requiresAuthoring(change, existing: record(change.table, id: change.recordID)) else {
+            guard taskHeadingsAuthoringEnabled || teamHeadingAuthoringAvailable(change.teamTaskScope) || !TaskKind.requiresAuthoring(change, existing: record(change.table, id: change.recordID)) else {
                 snapshot = old; error = "Heading creation is not available in this workspace yet. Your source and saved draft are unchanged."; return false
             }
             guard TaskKind.permits(change, existing: record(change.table, id: change.recordID)) else {
@@ -1554,9 +1554,19 @@ final class Store {
         commit(changes)
     }
     /// Source-only local acceptance switch. Normal app configuration omits it;
-    /// cloud/team authoring requires the capability and rollout work still open.
+    /// shared authoring additionally requires negotiated capabilities and live team admission.
     var taskHeadingsAuthoringEnabled: Bool {
         localMode && (Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true)
+    }
+    private func teamHeadingAuthoringAvailable(_ scope: TeamTaskEditScope?) -> Bool {
+        guard let scope, workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              scope.account == userID, scope.origin == (try? backend.accountRemovalOrigin), let cache = nativeConversationTeamCache else { return false }
+        return TeamTaskTypes.authoringAvailable(scope: scope, cache: cache, enabled: nativeTeamEditorEnabled && (Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true))
+    }
+    func canAuthorTaskHeadings(teamDraft: TeamTaskEditorDraft?) -> Bool {
+        guard let teamDraft else { return taskHeadingsAuthoringEnabled }
+        guard teamHeadingAuthoringAvailable(teamDraft.scope), let cache = nativeConversationTeamCache else { return false }
+        return teamDraft.permits(current: record("tasks", id: teamDraft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
     }
     func toggle(_ task: Record) { toggleNativeTask(task) }
     /// Explicit native gesture admission. Shared rows never fall back to the
@@ -3590,7 +3600,9 @@ extension Store {
         }
         return try TeamWorkspaceBoundary([
             "workspace_boundary_protocol": .number(1), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(false),
-            "account": .string(account), "token": .string(String(repeating: viewer ? "b" : "a", count: 64)),
+            "task_types_protocol": .number(ProcessInfo.processInfo.arguments.contains("--team-heading-testing") && !viewer && !ProcessInfo.processInfo.arguments.contains("--team-heading-capability-off") && !UserDefaults.standard.bool(forKey: "teamHeadingCapabilityPaused") ? 1 : 0),
+            "task_type_lifecycle_protocol": .number(ProcessInfo.processInfo.arguments.contains("--team-heading-testing") ? 1 : 0),
+            "account": .string(account), "token": .string(String(repeating: viewer ? "b" : (ProcessInfo.processInfo.arguments.contains("--team-heading-testing") && UserDefaults.standard.bool(forKey: "teamHeadingCapabilityPaused") ? "c" : "a"), count: 64)),
             "teams": .array([.object(["id": .string(teamID), "state": .string("active"), "revision": .number(1), "access_revision": .number(viewer ? 2 : 1)])]),
             "projects": .array(rows)
         ], account: account, origin: "https://synthetic.example")
@@ -3644,6 +3656,7 @@ extension Store {
         if ProjectAdoptionNativeFixture.enabled { prepareProjectAdoptionNativeFixture(); return }
         dailyBackupsEnabled = false
         if ProcessInfo.processInfo.arguments.contains("--team-editor-reset") {
+            UserDefaults.standard.removeObject(forKey: "teamHeadingCapabilityPaused")
             teamAccessMask = nil
             try? FileManager.default.removeItem(at: AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).teamAccessFence)
         }
@@ -3793,6 +3806,14 @@ extension Store {
     func failTeamDeletionFixtureSave() {
         guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing") else { return }
         savedFilterFixtureFailNextPersist = true
+    }
+    func pauseTeamHeadingCapabilityFixture() {
+        guard TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-heading-testing") else { return }
+        UserDefaults.standard.set(true, forKey: "teamHeadingCapabilityPaused")
+        do {
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: snapshot.teamWorkspace, pending: snapshot.pending, tasks: snapshot.tables["tasks"] ?? [])
+            try persist()
+        } catch { self.error = error.localizedDescription }
     }
     func revokeTeamEditorNativeFixture() {
         guard TeamEditorNativeFixture.enabled else { return }

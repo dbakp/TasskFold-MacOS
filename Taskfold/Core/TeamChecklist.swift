@@ -120,3 +120,18 @@ enum TeamTaskTypes {
     }
     static var unavailable: AppFailure { AppFailure(message: "Heading editing is not available for this team workspace yet. Your draft is kept on this device.") }
 }
+
+
+extension TeamTaskTypes {
+    /// Current capability and custody, separate from the editor's frozen source/session admission.
+    static func authoringAvailable(scope: TeamTaskEditScope, cache: TeamWorkspaceCache, enabled: Bool) -> Bool {
+        guard enabled, scope.taskTypesProtocol == 1, scope.taskTypeLifecycleProtocol == 1,
+              cache.boundary.belongs(account: scope.account, origin: scope.origin),
+              cache.boundary.raw["task_types_protocol"] == .number(1), cache.boundary.raw["task_type_lifecycle_protocol"] == .number(1),
+              cache.knownTeams[scope.project] == scope.team,
+              let project = cache.boundary.projects[scope.project], project.team == scope.team,
+              project.canSend, !project.archived, ["manager", "editor"].contains(project.role),
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(scope.team) && $0.object["state"] == .string("active") }) == true else { return false }
+        return true
+    }
+}

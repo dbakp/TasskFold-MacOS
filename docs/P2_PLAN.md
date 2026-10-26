@@ -20,8 +20,8 @@ supported fields and exclusions are in `TASK_CSV_SOURCE_MAPPING.md`.
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
 sharing acceptance (implementation in TASK_ROW_CSV.md), older literal-copy conversion acceptance (review implemented in
-TODOIST_HEADING_CONVERSION.md), and shared type/capability/command
-adapters. The user-deferred older-client rollout dependency remains before hosted
+TODOIST_HEADING_CONVERSION.md), and remaining shared template/import adapters and native runtime
+acceptance (TEAM_TASK_TYPE_NATIVE.md). The user-deferred older-client rollout dependency remains before hosted
 exposure. See `TASK_HEADINGS.md`, `TASK_CALENDAR_WORK.md`, `TASK_WORK_HISTORY.md`,
 `TASK_CSV_SOURCE_MAPPING.md` and their evidence folders. Historical checkpoints
 below retain their original scope; their former “next” items are not current status.
@@ -5198,3 +5198,21 @@ and an unsigned current-source Debug app build. No hosted or native authoring ga
 changed. Native controls/recovery/races, template/import and wider cross-device/
 accessibility acceptance remain open. See TEAM_TASK_TYPE_LIFECYCLE.md and
 team-type-lifecycle/. Rank 3 and the broader Px goal remain active.
+
+
+### Shared heading native controls — 26 October 2026
+
+Both clients now gate root type choices and organizer type actions on captured
+and live shared capabilities plus client opt-in and current edit access. Native
+acceptance exposed and fixed a fresh Undo baseline missing completion context.
+Five installed iPhone and five iPad scenarios now pass conversion Cancel/Save,
+Undo/Redo, nested root-scoped writes, missing capability, preserved paused drafts,
+creation failure/retry and cold persistence. All four images were inspected.
+Each repo passes 141 selected Core checks; current app builds/signatures pass.
+
+The Mac runtime attempt failed before test execution while Xcode tried to enable
+UI automation. Its current signed harness is retained; no system setting changed.
+The synthetic iOS peer pauses sync, so genuine delivery/receipt recovery, broader
+native races/lifecycle/accessibility and shared template/import adapters remain
+open. Normal flags and hosted rollout are unchanged. See TEAM_TASK_TYPE_NATIVE.md
+and shared-heading-native/. The wider rank-3/Px goal stays active.

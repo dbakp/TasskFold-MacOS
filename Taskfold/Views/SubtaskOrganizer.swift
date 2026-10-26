@@ -189,6 +189,15 @@ private struct SubtaskOrganizer: View {
                                         Button("Save and open details", systemImage: "sidebar.trailing") { commit(opening: item.id) }
                                     }
                                     #endif
+                                    if store.canAuthorTaskHeadings(teamDraft: admission.teamDraft), TaskKind(item.record) != .unsupported {
+                                        Button(TaskKind(item.record) == .heading ? "Make task" : "Make heading", systemImage: "textformat") {
+                                            guard available, store.canAuthorTaskHeadings(teamDraft: admission.teamDraft), let current = items.first(where: { $0.id == item.id })?.record, current == item.record else { return }
+                                            do {
+                                                let edited = try TaskKind.setting(current, heading: TaskKind(current) != .heading)
+                                                draft = SubtaskTree.changing(draft, id: item.id, fields: edited.fields.filter { current.fields[$0.key] != $0.value })
+                                            } catch { message = error.localizedDescription }
+                                        }.disabled(item.record.completed).accessibilityIdentifier("organizedType-" + item.id)
+                                    }
                                     Button("Add child subtask", systemImage: "plus") { addingTo = item.id; childTitle = ""; addingChild = true }
                                         .disabled(baseDepth + item.depth + 1 >= SubtaskTree.maximumDepth)
                                     Button("Move up", systemImage: "arrow.up") { move(item, .up) }.disabled(!canMove(item, .up))

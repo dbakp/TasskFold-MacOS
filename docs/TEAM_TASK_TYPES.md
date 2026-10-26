@@ -2,8 +2,9 @@
 
 26 October 2026. First source stage of the shared heading adapters. Both repos
 own a compatible client command and SQL migration; no hosted changes or rollout
-switches were enabled. Native type pickers and the Store authoring gate are still
-unchanged. This is command/service verification, not a shipped shared editor.
+switches were enabled. The native follow-up now connects pickers and Store checks under the existing
+default-off client flag; see TEAM_TASK_TYPE_NATIVE.md. The command/service evidence
+here remains separate from native delivery or a shipped shared editor.
 
 ## Protocol
 

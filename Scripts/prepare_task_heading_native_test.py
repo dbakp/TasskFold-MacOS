@@ -4,7 +4,8 @@
 Build/sign the copied app, then launch with --uitesting --workflow-fixture
 --task-heading-fixture -localMode YES. Add --subtask-organizer-fixture for
 nested type controls. Omit seed flags on relaunch to inspect durable state.
-Cloud/team heading authoring remains unavailable.
+Add --team-editor-testing --team-heading-testing for synthetic shared authoring.
+Hosted rollout and normal heading settings remain unchanged.
 """
 import argparse
 import hashlib
@@ -28,6 +29,7 @@ info.write_bytes(plistlib.dumps(value))
 (root / "task-heading-test-receipt.json").write_text(json.dumps({
     "reservedNamespace": "workflowteststeameditbridge",
     "localHeadingAuthoringInCopyOnly": True,
+    "syntheticTeamHeadingOptIn": "--team-heading-testing",
     "cloudHeadingAuthoring": False,
     "sourceStoreSHA256": hashlib.sha256((Path(__file__).resolve().parents[1] / "Taskfold/Core/Store.swift").read_bytes()).hexdigest(),
     "preparedInfoSHA256": hashlib.sha256(info.read_bytes()).hexdigest(),

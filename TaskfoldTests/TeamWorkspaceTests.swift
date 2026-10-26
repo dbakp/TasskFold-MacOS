@@ -953,3 +953,33 @@ extension TeamWorkspaceTests {
     }
 
 }
+
+
+extension TeamWorkspaceTests {
+    func testSharedHeadingAuthoringRequiresAppOptInAndBothLiveCapturedCapabilities() throws {
+        let f = try fixture(); var raw = try boundary().raw
+        raw["task_types_protocol"] = .number(1); raw["task_type_lifecycle_protocol"] = .number(1)
+        let boundary = try TeamWorkspaceBoundary(raw, account: f["account"]!.text, origin: origin)
+        var row = Record.task(user: boundary.account, project: f["project"]!.text); row["title"] = .string("Shared heading proof"); row["task_generation"] = .string(UUID().uuidString.lowercased())
+        let cache = try TeamWorkspaceCache(boundary: boundary, previous: nil, pending: [], tasks: [row])
+        let draft = try TeamTaskEditorDraft(source: row, workspace: WorkspaceBinding(account: boundary.account, generation: UUID()), session: UUID(), cache: cache, enabled: true)
+        XCTAssertTrue(TeamTaskTypes.authoringAvailable(scope: draft.scope, cache: cache, enabled: true))
+        XCTAssertFalse(TeamTaskTypes.authoringAvailable(scope: draft.scope, cache: cache, enabled: false))
+        var legacy = draft.scope; legacy.taskTypesProtocol = nil
+        XCTAssertFalse(TeamTaskTypes.authoringAvailable(scope: legacy, cache: cache, enabled: true))
+        legacy = draft.scope; legacy.taskTypeLifecycleProtocol = nil
+        XCTAssertFalse(TeamTaskTypes.authoringAvailable(scope: legacy, cache: cache, enabled: true))
+        for key in ["task_types_protocol", "task_type_lifecycle_protocol"] {
+            for value in [JSON.number(0), .number(2), .null] {
+                var changed = raw; changed[key] = value
+                let live = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(changed, account: boundary.account, origin: origin), previous: cache, pending: [], tasks: [row])
+                XCTAssertFalse(TeamTaskTypes.authoringAvailable(scope: draft.scope, cache: live, enabled: true), key)
+            }
+        }
+        let otherOrigin = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(raw, account: boundary.account, origin: "https://other.example"), previous: nil, pending: [], tasks: [row])
+        XCTAssertFalse(TeamTaskTypes.authoringAvailable(scope: draft.scope, cache: otherOrigin, enabled: true))
+        var viewer = try self.boundary("viewer").raw; viewer["task_types_protocol"] = .number(1); viewer["task_type_lifecycle_protocol"] = .number(1)
+        let revoked = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(viewer, account: boundary.account, origin: origin), previous: cache, pending: [], tasks: [row])
+        XCTAssertFalse(TeamTaskTypes.authoringAvailable(scope: draft.scope, cache: revoked, enabled: true))
+    }
+}
