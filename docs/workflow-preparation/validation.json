@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-26",
+  "repository": "TasskFold-MacOS",
+  "corePassed": 275,
+  "coreFailed": 0,
+  "nativeStatus": "Passed: initial 7 per device; final 2 targeted per device after progress placement fix",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "e482991b7442982ec57e3045460b6f61f7e628b5f42b6858b6feb68c2f507391",
+    "Taskfold/Views/WorkflowViews.swift": "80dfa5e684b48db48da60eca3c52b9bafe62c69c006154fd951deadd6a5ffd8d",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "f0654fc6a5909d5355d6dbf3ffcc623c6bf80526b9e08547414d337450777fb9",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "89e32e3039a2f74c3334fc7bdde350ed36c609344ee67ce247c2e1c44d786465"
+  },
+  "signedBuild": "passed",
+  "macRuntime": "Not attempted; Developer mode disabled; existing approval question pending",
+  "realDataChanged": false,
+  "hostedChanges": false,
+  "preparedSourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "e482991b7442982ec57e3045460b6f61f7e628b5f42b6858b6feb68c2f507391",
+    "Taskfold/Views/WorkflowViews.swift": "80dfa5e684b48db48da60eca3c52b9bafe62c69c006154fd951deadd6a5ffd8d",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "89e32e3039a2f74c3334fc7bdde350ed36c609344ee67ce247c2e1c44d786465"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "b32408a6572795af1971f9cff7f1b0e1aff47a1f5736fb9026a8e46fb9138b1d",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "bde3cd8b1cca0a80eb66fab839d7301aaa83cac44a1ad428ff900406855fad20",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "1797f2d4997322ca44551e299b1e6708856c2495afdca29ac6bf78e6ac9cff38"
+  },
+  "sourceChangesAfterInitialNativeRun": [
+    "Only progress/Cancel placement moved to a pinned bottom safe-area bar"
+  ],
+  "retainedMacCache": {
+    "host": "/tmp/taskfold-workflow-native-mac-host",
+    "build": "/tmp/taskfold-workflow-native-mac-build",
+    "note": "Mutable working cache now bound to this stage; earlier stage bindings remain historical"
+  },
+  "nativePasses": {
+    "initialPhone": 7,
+    "initialTablet": 7,
+    "finalLayoutPhone": 2,
+    "finalLayoutTablet": 2,
+    "failures": 0,
+    "skips": 0
+  },
+  "inspectedImages": [
+    "phone-initial-images/9F150419-83C6-419F-A886-719CC7D8F544.png",
+    "tablet-initial-images/4586D818-25E8-4F6D-AF4B-3EAD136FFB88.png",
+    "phone-final-images/DD05F113-3CCB-4AFB-861C-2ADC39ED02F7.png",
+    "tablet-final-images/89594261-340F-418F-822B-892F79F630FA.png"
+  ],
+  "scopeLimits": [
+    "Production sheet inside reserved DEBUG host with synthetic peer",
+    "Installed cases use small structured workflow; 5000-task cancellation is Core acceptance",
+    "No Mac runtime acceptance",
+    "No hosted or rollout change",
+    "Store/disk/delivery responsiveness remains open"
+  ],
+  "initialCorrections": [
+    "Two new Core fixtures initially violated existing template-kind cardinality; corrected to a valid full project and a one-task template",
+    "Signing helper first rejected the parent Products directory; rerun with its required Debug Simulator subdirectory",
+    "Initial green UI tests missed below-viewport iPad progress; screenshot inspection led to pinned bar and targeted reruns"
+  ]
+}

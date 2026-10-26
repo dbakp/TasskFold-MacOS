@@ -1,5 +1,19 @@
 import Foundation
 
+/// Immutable inputs retained only while a workflow is being prepared. A result
+/// must be reviewed against the current workspace before entering the save path.
+struct WorkflowPreparationContext: Sendable {
+    let workspace: WorkspaceBinding
+    let session: UUID
+    let document: JSON
+    let labels: [Record]
+    let target: String
+    func matches(workspace: WorkspaceBinding, session: UUID, document: JSON?, labels: [Record], projects: [Record]) -> Bool {
+        self.workspace == workspace && self.session == session && self.document == document && self.labels == labels &&
+        (target.isEmpty || projects.contains { $0.id == target })
+    }
+}
+
 /// A workflow file contains a definition, never an account snapshot or live records.
 struct WorkflowTemplateFile: Sendable {
     static let maximumBytes = 2_100_000
@@ -360,29 +374,33 @@ struct WorkflowTemplate: Sendable {
         if headings { definition["capabilities"] = .array([.string("task_headings")]) }
         return try Self(document: .object(definition))
     }
-    func instantiate(account: String, name: String, targetProject: String = "", start: Date? = nil, labels: [Record] = [], run: UUID = UUID()) throws -> [Mutation] {
+    func instantiate(account: String, name: String, targetProject: String = "", start: Date? = nil, labels: [Record] = [], run: UUID = UUID(), checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws -> [Mutation] {
+        try checkCancellation()
         guard !account.isEmpty, kind != .project || !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, kind != .section || !targetProject.isEmpty else { throw AppFailure(message: "Choose a project name or destination before using this template.") }
         func fresh(_ kind: String, _ id: String) -> String { WorkspaceBackup.stableID("template-run:" + run.uuidString + ":" + kind, id) }
         var changes: [Mutation] = [], labelIDs = Dictionary(labels.map { ($0.name.lowercased(), $0.id) }, uniquingKeysWith: { first, _ in first })
         var projectIDs: [String: String] = [:], sectionIDs: [String: String] = [:]
-        for project in projects { projectIDs[project.id] = kind == .project ? fresh("project", project.id) : targetProject }
+        for project in projects { try checkCancellation(); projectIDs[project.id] = kind == .project ? fresh("project", project.id) : targetProject }
         if kind == .project {
-            let pending = projects.map { row -> Record in
+            let pending = try projects.map { row -> Record in
+                try checkCancellation()
                 var row = row; row["id"] = .string(projectIDs[row.id]!); row["user_id"] = .string(account)
                 row["parent_id"] = projectIDs[row.string("parent_id")].map(JSON.string) ?? .null
                 if row.string("parent_id").isEmpty { row["name"] = .string(name.trimmingCharacters(in: .whitespacesAndNewlines)) }
                 row["is_archived"] = .bool(false); return row
             }
-            for item in ProjectOrganization.outline(pending) { changes.append(Mutation(table: "projects", recordID: item.id, method: "POST", fields: item.project.fields)) }
+            for item in ProjectOrganization.outline(pending) { try checkCancellation(); changes.append(Mutation(table: "projects", recordID: item.id, method: "POST", fields: item.project.fields)) }
         }
         for section in OrganizationOrder.sorted(sections) {
+            try checkCancellation()
             let id = fresh("section", section.id); sectionIDs[section.id] = id
             var row = section; row["id"] = .string(id); row["user_id"] = .string(account); row["project_id"] = .string(projectIDs[section.string("project_id")] ?? targetProject)
             changes.append(Mutation(table: "sections", recordID: id, method: "POST", fields: row.fields))
         }
         let calendar = Calendar(identifier: .gregorian)
         func day(_ row: Record, _ field: String) -> String? { guard let start, row.fields[field] != nil, let date = calendar.date(byAdding: .day, value: row[field].integer, to: start) else { return nil }; return Dates.day(date) }
-        func task(_ source: Record, path: String) -> Record {
+        func task(_ source: Record, path: String) throws -> Record {
+            try checkCancellation()
             var row = Record.task(user: account, project: projectIDs[source.string("project_id")] ?? targetProject)
             row["id"] = .string(fresh("task", path)); row["task_generation"] = .string(fresh("generation", path))
             for field in ["is_heading","title","description","priority","duration_minutes"] where source.fields[field] != nil { row[field] = source[field] }
@@ -395,18 +413,19 @@ struct WorkflowTemplate: Sendable {
                 pattern["endDate"] = day(source, "repeat_end_offset").map(JSON.string)
                 row["is_recurring"] = .bool(true); row["recurrence_pattern"] = .object(pattern); row["recurrence_end_date"] = pattern["endDate"] ?? .null
             }
-            row["labels"] = .array(source["labels"].list.map { value in
+            row["labels"] = .array(try source["labels"].list.map { value in
+                try checkCancellation()
                 let name = value.object["name", default: .null].text, key = name.lowercased()
                 if let id = labelIDs[key] { return .string(id) }
                 let id = fresh("label", key); labelIDs[key] = id
                 changes.append(Mutation(table: "labels", recordID: id, method: "POST", fields: ["id": .string(id), "user_id": .string(account), "name": .string(name), "color": .string(value.object["color"]?.text.isEmpty == false ? value.object["color"]!.text : "#e31e4b")]))
                 return .string(id)
             })
-            row["subtasks"] = .array(source["subtasks"].list.enumerated().map { index, child in .object(task(Record(child.object), path: path + ":" + String(index)).fields) })
+            row["subtasks"] = .array(try source["subtasks"].list.enumerated().map { index, child in .object(try task(Record(child.object), path: path + ":" + String(index)).fields) })
             return row
         }
         var taskChanges: [Mutation] = []
-        for source in tasks { let row = task(source, path: fresh("source", source.id)); taskChanges.append(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields)) }
+        for source in tasks { let row = try task(source, path: fresh("source", source.id)); taskChanges.append(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields)) }
         var orders: [Mutation] = []
         if kind != .task {
             let groups = Dictionary(grouping: taskChanges) { change in
@@ -414,12 +433,14 @@ struct WorkflowTemplate: Sendable {
                 return "group:" + row.string("project_id") + ":" + (row.string("section_id").isEmpty ? "none" : row.string("section_id"))
             }
             for key in groups.keys.sorted() {
+                try checkCancellation()
                 orders.append(Mutation(table: "view_orders", recordID: key, method: "POST", fields: ["id": .string(key), "user_id": .string(account), "ids": .array(groups[key]!.map { .string($0.recordID) })]))
             }
         }
         // Every row belongs to this run's fresh identities (including its list
         // order). A retry after a lost reply must not upsert over later edits.
-        return (changes + taskChanges + orders).map { change in
+        return try (changes + taskChanges + orders).map { change in
+            try checkCancellation()
             var change = change; change.insertOnly = true; change.workflowRun = run; return change
         }
     }

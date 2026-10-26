@@ -5042,10 +5042,10 @@ extension SharedHeadingNativeTests {
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (try? condition()) == true }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 25), .completed)
     }
-    @MainActor private func workflowStart(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false) throws {
+    @MainActor private func workflowStart(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false, hold: Bool = false) throws {
         guard [bundle + ".runner", bundle + ".runner.xctrunner"].contains(Bundle(for: Self.self).bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated Mac host required") }
         continueAfterFailure = false
-        app.launchArguments = ["--team-editor-testing", "--team-heading-testing", "--personal-heading-testing", "--personal-workflow-undo-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-undo-lose-reply"] : [])
+        app.launchArguments = ["--team-editor-testing", "--team-heading-testing", "--personal-heading-testing", "--personal-workflow-undo-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-undo-lose-reply"] : []) + (hold ? ["--workflow-preparation-hold"] : [])
         try open(app)
         XCTAssertTrue(app.buttons["openNativeWorkflow"].waitForExistence(timeout: 15), app.debugDescription)
         workflowWait { try self.workflowCachedSupport() == 1 || !reset }
@@ -5127,6 +5127,47 @@ extension SharedHeadingNativeTests {
         XCTAssertTrue(incoming.waitForExistence(timeout: 5)); XCTAssertTrue(incoming.isHittable)
         let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Refused workflow Undo preserves incoming work"; picture.lifetime = .keepAlways; add(picture)
         app.terminate(); try workflowStart(app, reset: false); workflowWait { try self.workflowSettled(tasks: 4, attempts: 1) }
+    }
+
+    @MainActor private func workflowBeginHeldPreparation(_ app: XCUIApplication) {
+        app.buttons["openNativeWorkflow"].click()
+        let create = app.buttons["applyWorkflowTemplate"]
+        XCTAssertTrue(create.waitForExistence(timeout: 8)); create.click()
+        XCTAssertTrue(app.buttons["cancelWorkflowPreparation"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertFalse(create.isEnabled, "One preparation must not start duplicate runs")
+        XCTAssertTrue(app.staticTexts["workflowPreparationStatus"].exists)
+    }
+    @MainActor private func workflowAssertNoLateSave(cache: [String: Any], remote: [String: [[String: Any]]]) throws {
+        let changed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let current = try? self.workflowCache(), let peer = try? self.workflowRows() else { return true }
+            return current as NSDictionary != cache as NSDictionary || peer as NSDictionary != remote as NSDictionary
+        }, object: nil)
+        changed.isInverted = true
+        XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 12), .completed, "Cancelled preparation must not save after its worker returns")
+        XCTAssertEqual(try workflowCache() as NSDictionary, cache as NSDictionary)
+        XCTAssertEqual(try workflowRows() as NSDictionary, remote as NSDictionary)
+    }
+    @MainActor func testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app, hold: true)
+        let before = try workflowCache(), remote = try workflowRows()
+        workflowBeginHeldPreparation(app)
+        let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Cancellable workflow preparation"; picture.lifetime = .keepAlways; add(picture)
+        app.buttons["cancelWorkflowPreparation"].click()
+        XCTAssertTrue(app.buttons["applyWorkflowTemplate"].isEnabled)
+        try workflowAssertNoLateSave(cache: before, remote: remote)
+        app.buttons["Done"].firstMatch.click()
+        try workflowCreate(app)
+    }
+    @MainActor func testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app, hold: true)
+        let before = try workflowCache(), remote = try workflowRows()
+        workflowBeginHeldPreparation(app)
+        app.buttons["Done"].firstMatch.click()
+        XCTAssertTrue(app.buttons["openNativeWorkflow"].waitForExistence(timeout: 5))
+        try workflowAssertNoLateSave(cache: before, remote: remote)
+        app.terminate(); try workflowStart(app, reset: false)
+        XCTAssertEqual(try workflowCache() as NSDictionary, before as NSDictionary)
+        XCTAssertEqual(try workflowRows() as NSDictionary, remote as NSDictionary)
     }
 
     @MainActor func testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave() throws {

@@ -32,8 +32,10 @@ Undo now has source-level baseline/dependency and reply-retry protection, with
 service compatibility admission. Five installed client cases pass on each phone
 and tablet Simulator; Mac runtime awaits UI Automation. Full-size Undo now passes
 isolated scale acceptance; large creation UI/delivery and hosted/paired-client
-acceptance remain open. See workflow-undo-bulk/validation.json. See the dated workflow stages and
-workflow-undo/validation.json.
+acceptance remain open. Background instantiation is now cancellable, with native
+phone/tablet acceptance and a pinned progress bar; see workflow-preparation/.
+The remaining full-size save/delivery work is not accepted by these preparation
+checks. See workflow-undo-bulk/validation.json and the dated workflow stages.
 
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
@@ -5538,3 +5540,33 @@ checks. The numeric budget expectation was corrected against actual PostgreSQL
 rendering. Scale setup exhausted fixture locks/storage when accumulating cases;
 seeding in bounded transactions and separate isolated contexts retained the full
 workload. Final reports use identical backgrounds for the timing comparison.
+
+
+## 26 October: cancellable workflow preparation
+
+Use template now instantiates workflows on a background worker, with a pinned
+progress/Cancel bar and disabled duplicate creation. Cancellation is checked
+through organization, root/child task, label, order and command preparation.
+Cancel or sheet dismissal cannot later save a worker result. Before saving or
+retrying a failed save, the current workspace incarnation, session incarnation,
+source document, label catalog and active destination must still match.
+
+Each repo passes 275 selected Core checks, including cancellation of a valid
+5,000-task project, nested interruption, a genuinely cancelled detached task and
+changed request inputs. Both full signed native test builds pass. Seven native
+scenarios pass on each iPhone/iPad Simulator (14 total). Screenshot review then
+found an inline progress row below the iPad viewport. Moving it to a bottom
+safe-area bar fixes that visibility issue; the two affected scenarios pass again
+on each device (four final targeted passes), with inspected final screenshots.
+The delayed-worker tests verify exact saved-cache/peer preservation beyond the
+worker deadline, retry and cold return. No manual user check was required.
+
+These are synthetic native acceptance checks, not hosted/paired acceptance or
+an installed 5,000-task responsiveness benchmark. Definition decoding/preview,
+Store normalization/projection and repeated task-cache work, local activity,
+persistence and remote delivery remain the next large-creation performance work.
+Mac runtime is still pending existing UI Automation approval with Developer mode
+disabled; the current signed host/build cache is retained, without a repeated
+unchanged-state runtime attempt. Wider ranked Px work stays active. Existing
+release/provider/reminder/older-client deferrals and normal rollout flags stay.
+See workflow-preparation/validation.json and visual-review.md for exact evidence.

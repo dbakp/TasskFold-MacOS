@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/sign_simulator_test_products.py", line 126, in <module>
+    main()
+  File "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/sign_simulator_test_products.py", line 66, in main
+    assert root.name == 'Debug-iphonesimulator', 'Only Debug Simulator products are accepted'
+AssertionError: Only Debug Simulator products are accepted

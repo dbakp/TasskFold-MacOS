@@ -575,8 +575,11 @@ struct TemplateRunView: View {
     @State private var binding: WorkspaceBinding?
     @State private var message: String?
     @State private var pending: [Mutation]?
+    @State private var pendingContext: WorkflowPreparationContext?
     @State private var run = UUID()
     @State private var editingDefinition = false
+    @State private var preparation: Task<Void, Never>?
+    @State private var preparationID: UUID?
     @State private var sharedWorkflow: TeamWorkflowRunRequest?
     var body: some View {
         Group {
@@ -590,14 +593,14 @@ struct TemplateRunView: View {
                     Section {
                         Button("Use in shared workspace…", systemImage: "person.3") { sharedWorkflow = .init(source: .personal(template)) }
                             .accessibilityIdentifier("runPrivateTemplateShared")
-                            .disabled(definition.requiresHeadingSupport && !store.teamWorkflowHeadingClientEnabled)
+                            .disabled(preparation != nil || (definition.requiresHeadingSupport && !store.teamWorkflowHeadingClientEnabled))
                         if definition.requiresHeadingSupport && !store.teamWorkflowHeadingClientEnabled {
                             Text(TeamWorkflowRunPlan.headingClientUnavailableMessage).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("privateWorkflowHeadingUnavailable")
                         }
                     }
                 }
 
-                Button("Edit template",systemImage:"pencil") { editingDefinition=true }.accessibilityIdentifier("editTemplateDefinition").disabled(pending != nil)
+                Button("Edit template",systemImage:"pencil") { editingDefinition=true }.accessibilityIdentifier("editTemplateDefinition").disabled(pending != nil || preparation != nil)
                 if let definition = try? WorkflowTemplate(document: template["document"]) {
                     Section("New workflow") {
                         if definition.kind == .project { TextField("New project name", text: $name).accessibilityIdentifier("templateProjectName") }
@@ -607,7 +610,7 @@ struct TemplateRunView: View {
                         Toggle("Schedule from a start date", isOn: $dated)
                         if dated { DatePicker("Start date", selection: $date, displayedComponents: .date) }
                         Text(dated ? "Dated tasks keep their spacing from the first planned day, or first deadline. Tasks without dates stay unscheduled." : "New tasks start without planned dates or deadlines.").font(.caption).foregroundStyle(.secondary)
-                    }.disabled(pending != nil)
+                    }.disabled(pending != nil || preparation != nil)
                     Section("Preview") {
                         if definition.requiresHeadingSupport { TemplateDefinitionPreview(document: definition.document, scope: "run") }
                         else {
@@ -618,31 +621,83 @@ struct TemplateRunView: View {
                             Text("Creating a private workflow with headings isn’t available in this workspace yet. You can keep or export this template.").font(.caption).foregroundStyle(.secondary)
                         }
                         Button { apply(definition) } label: { Text("Create workflow").frame(maxWidth:.infinity,minHeight:44) }
-                            .buttonStyle(.borderedProminent).accessibilityIdentifier("applyWorkflowTemplate").disabled(definition.requiresHeadingSupport && !store.taskHeadingsAuthoringEnabled)
+                            .buttonStyle(.borderedProminent).accessibilityIdentifier("applyWorkflowTemplate").disabled(preparation != nil || (definition.requiresHeadingSupport && !store.taskHeadingsAuthoringEnabled))
                     }
                 } else { ContentUnavailableView("Template needs an update", systemImage: "arrow.down.app", description: Text("Update Taskfold to use this template. Its definition is still saved.")) }
                 if let message { Text(message).foregroundStyle(.red) }
             }.formStyle(.grouped)
+                .safeAreaInset(edge: .bottom) {
+                    if preparation != nil {
+                        HStack {
+                            ProgressView().controlSize(.small)
+                            Text("Preparing workflow…").foregroundStyle(.secondary).accessibilityIdentifier("workflowPreparationStatus")
+                            Spacer()
+                            Button("Cancel", action: cancelPreparation).accessibilityIdentifier("cancelWorkflowPreparation")
+                        }.accessibilityElement(children: .contain)
+                            .padding(.horizontal).padding(.vertical, 12).background(.bar)
+                    }
+                }
         }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); name = template.name; project = "__choose__" } }
             }
-        }.sheet(item: $sharedWorkflow) { request in WorkflowShell(title: "Use shared workflow") { TeamWorkflowRunView(source: request.source) } }
+        }.onDisappear(perform: cancelPreparation).sheet(item: $sharedWorkflow) { request in WorkflowShell(title: "Use shared workflow") { TeamWorkflowRunView(source: request.source) } }
+    }
+    private func validate(_ definition: WorkflowTemplate, target: String) throws {
+        guard store.workflowReady(binding), store.record(WorkflowTemplate.table, id: template.id)?["document"] == template["document"] else { throw AppFailure(message: "The workspace or template changed. Reopen it before creating a workflow.") }
+        guard !definition.requiresHeadingSupport || store.taskHeadingsAuthoringEnabled else { throw AppFailure(message: "Heading workflows are not available in this workspace yet. The template is still saved.") }
+        guard target.isEmpty || store.projects.contains(where: { $0.id == target }) else { throw AppFailure(message: "This destination is no longer active.") }
+    }
+    private func current(_ context: WorkflowPreparationContext) -> Bool {
+        context.matches(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, document: store.record(WorkflowTemplate.table, id: template.id)?["document"], labels: store.labels, projects: store.projects)
+    }
+    private func cancelPreparation() {
+        preparationID = nil; preparation?.cancel(); preparation = nil
     }
     private func apply(_ definition: WorkflowTemplate) {
-        guard store.workflowReady(binding), store.record(WorkflowTemplate.table, id: template.id)?["document"] == template["document"] else { message = "The workspace or template changed. Reopen it before creating a workflow."; return }
+        guard preparation == nil else { return }
+        let target = project == "__choose__" ? "" : project
         do {
-            guard !definition.requiresHeadingSupport || store.taskHeadingsAuthoringEnabled else { throw AppFailure(message: "Heading workflows are not available in this workspace yet. The template is still saved.") }
-            let target = project == "__choose__" ? "" : project
+            try validate(definition, target: target)
             guard definition.kind == .project || (definition.kind == .task && project != "__choose__") || !target.isEmpty else { throw AppFailure(message: "Choose a destination first.") }
-            guard target.isEmpty || store.projects.contains(where: { $0.id == target }) else { throw AppFailure(message: "This destination is no longer active.") }
-            if pending == nil { pending = try definition.instantiate(account: store.userID, name: name, targetProject: target, start: dated ? date : nil, labels: store.labels, run: run) }
-            var saved = false
-            #if os(macOS)
-            workspace.run("Create Workflow") { saved = store.commit(pending!) }
-            #else
-            saved = store.commit(pending!)
-            #endif
-            if saved { store.error = nil; dismiss() } else { message = store.error }
+            if pending != nil { savePrepared(); return }
+            let account = store.userID, title = name, start = dated ? date : nil, labels = store.labels, run = run
+            let context = WorkflowPreparationContext(workspace: WorkspaceBinding(account: account, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, document: template["document"], labels: labels, target: target)
+            let ticket = UUID(); preparationID = ticket; message = nil
+            let worker = Task.detached(priority: .userInitiated) {
+                #if DEBUG
+                if ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? ""), ProcessInfo.processInfo.arguments.contains("--workflow-preparation-hold") {
+                    try await Task.sleep(for: .seconds(10))
+                }
+                #endif
+                return try definition.instantiate(account: account, name: title, targetProject: target, start: start, labels: labels, run: run)
+            }
+            preparation = Task { @MainActor in
+                defer { if preparationID == ticket { preparation = nil; preparationID = nil } }
+                do {
+                    let result = try await withTaskCancellationHandler(operation: { try await worker.value }, onCancel: { worker.cancel() })
+                    guard !Task.isCancelled, preparationID == ticket else { return }
+                    // Preparation may outlive its source, destination or account.
+                    try validate(definition, target: target)
+                    guard current(context) else { throw AppFailure(message: "The workspace or template changed while preparing. Try creating the workflow again.") }
+                    pending = result; pendingContext = context
+                    savePrepared()
+                } catch is CancellationError { }
+                catch { if preparationID == ticket { message = error.localizedDescription } }
+            }
         } catch { message = error.localizedDescription }
+    }
+    private func savePrepared() {
+        guard let pending else { return }
+        guard let pendingContext, current(pendingContext) else {
+            self.pending = nil; self.pendingContext = nil
+            message = "The workspace or template changed while preparing. Try creating the workflow again."; return
+        }
+        var saved = false
+        #if os(macOS)
+        workspace.run("Create Workflow") { saved = store.commit(pending) }
+        #else
+        saved = store.commit(pending)
+        #endif
+        if saved { store.error = nil; dismiss() } else { message = store.error }
     }
 }
 

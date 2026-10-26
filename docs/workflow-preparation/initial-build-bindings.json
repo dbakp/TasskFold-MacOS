@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-26",
+  "repository": "TasskFold-MacOS",
+  "corePassed": 275,
+  "coreFailed": 0,
+  "nativeStatus": "Running; not accepted until results are retained",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "e482991b7442982ec57e3045460b6f61f7e628b5f42b6858b6feb68c2f507391",
+    "Taskfold/Views/WorkflowViews.swift": "94fb9954611f9bde691cbab3a3a48ba7c0ef9b7868ea3b5b6dcf3dd7a87a9f1d",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "f0654fc6a5909d5355d6dbf3ffcc623c6bf80526b9e08547414d337450777fb9",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "89e32e3039a2f74c3334fc7bdde350ed36c609344ee67ce247c2e1c44d786465"
+  },
+  "signedBuild": "passed",
+  "macRuntime": "Not attempted; Developer mode disabled; existing approval question pending",
+  "realDataChanged": false,
+  "hostedChanges": false,
+  "preparedSourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "e482991b7442982ec57e3045460b6f61f7e628b5f42b6858b6feb68c2f507391",
+    "Taskfold/Views/WorkflowViews.swift": "94fb9954611f9bde691cbab3a3a48ba7c0ef9b7868ea3b5b6dcf3dd7a87a9f1d",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "89e32e3039a2f74c3334fc7bdde350ed36c609344ee67ce247c2e1c44d786465"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "e0f40172a00b6cd582baac1fe654ea84eba07e0abc4be54a62cbe6a864ef6082"
+  }
+}

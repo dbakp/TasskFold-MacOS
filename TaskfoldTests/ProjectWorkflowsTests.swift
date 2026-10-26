@@ -310,6 +310,54 @@ final class ProjectWorkflowsTests: XCTestCase {
         XCTAssertEqual(snapshot.pending.count, 1, "A refused Undo cannot acknowledge a later edit")
     }
 
+    func testWorkflowPreparationRejectsChangedWorkspaceSessionSourceLabelsAndDestination() {
+        let workspace = WorkspaceBinding(account: owner, generation: UUID()), session = UUID()
+        let document: JSON = .object(["version": .number(1)])
+        let labels = [Record(["id": .string("label"), "name": .string("Design")])]
+        let projects = [project("destination")]
+        let context = WorkflowPreparationContext(workspace: workspace, session: session, document: document, labels: labels, target: "destination")
+        XCTAssertTrue(context.matches(workspace: workspace, session: session, document: document, labels: labels, projects: projects))
+        XCTAssertFalse(context.matches(workspace: .init(account: owner, generation: UUID()), session: session, document: document, labels: labels, projects: projects))
+        XCTAssertFalse(context.matches(workspace: .init(account: "another", generation: workspace.generation), session: session, document: document, labels: labels, projects: projects))
+        XCTAssertFalse(context.matches(workspace: workspace, session: UUID(), document: document, labels: labels, projects: projects))
+        XCTAssertFalse(context.matches(workspace: workspace, session: session, document: nil, labels: labels, projects: projects))
+        XCTAssertFalse(context.matches(workspace: workspace, session: session, document: .null, labels: labels, projects: projects))
+        XCTAssertFalse(context.matches(workspace: workspace, session: session, document: document, labels: [], projects: projects))
+        XCTAssertFalse(context.matches(workspace: workspace, session: session, document: document, labels: labels, projects: []))
+        let inbox = WorkflowPreparationContext(workspace: workspace, session: session, document: document, labels: labels, target: "")
+        XCTAssertTrue(inbox.matches(workspace: workspace, session: session, document: document, labels: labels, projects: []))
+    }
+    func testWorkflowPreparationCancellationDiscardsFullSizedAndNestedWork() throws {
+        let tasks: [JSON] = (0..<5000).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "labels": .array([.object(["name": .string("Design")])]), "subtasks": .array([])]) }
+        let document: JSON = .object(["version": .number(1), "kind": .string("project"), "projects": .array([.object(["id": .string("root"), "name": .string("Large workflow")])]), "sections": .array([]), "tasks": .array(tasks)])
+        let definition = try WorkflowTemplate(document: document)
+        var checks = 0
+        XCTAssertThrowsError(try definition.instantiate(account: owner, name: "Large workflow", checkCancellation: {
+            checks += 1
+            if checks == 501 { throw CancellationError() }
+        })) { XCTAssertTrue($0 is CancellationError) }
+        XCTAssertEqual(checks, 501)
+        XCTAssertEqual(definition.document, document, "Cancelled preparation must keep the reusable definition")
+        let run = UUID(), changes = try definition.instantiate(account: owner, name: "Large workflow", run: run)
+        XCTAssertEqual(changes.filter { $0.table == "tasks" }.count, 5000)
+        XCTAssertTrue(changes.allSatisfy { $0.workflowRun == run && $0.insertOnly == true })
+        let again = try definition.instantiate(account: owner, name: "Large workflow", run: run)
+        XCTAssertEqual(changes.map(\.recordID), again.map(\.recordID))
+        let nested = try WorkflowTemplate(document: .object(["version": .number(1), "kind": .string("task"), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": .string("root"), "title": .string("Root"), "labels": .array([]), "subtasks": .array([.object(["id": .string("child"), "title": .string("Child"), "labels": .array([]), "subtasks": .array([])])])])])]))
+        checks = 0
+        XCTAssertThrowsError(try nested.instantiate(account: owner, name: "Large workflow", checkCancellation: { checks += 1; if checks == 3 { throw CancellationError() } })) { XCTAssertTrue($0 is CancellationError) }
+        XCTAssertEqual(checks, 3, "Nested children must also check cancellation")
+    }
+    func testCancelledTaskCannotPrepareWorkflow() async throws {
+        let definition = try WorkflowTemplate(document: .object(["version": .number(1), "kind": .string("task"), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": .string("root"), "title": .string("Task"), "labels": .array([]), "subtasks": .array([])])])]))
+        let account = owner
+        let worker = Task.detached {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try definition.instantiate(account: account, name: "")
+        }
+        do { _ = try await worker.value; XCTFail("An already cancelled worker must not prepare changes") }
+        catch { XCTAssertTrue(error is CancellationError) }
+    }
     func testFullSizedSectionedWorkflowKeepsOneUndoCommand() throws {
         let count = 5000
         let document: JSON = .object(["version": .number(1), "kind": .string("project"),

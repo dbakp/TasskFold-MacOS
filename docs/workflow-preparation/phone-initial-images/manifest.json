@@ -1,0 +1,47 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "503613DD-5C7F-4591-9752-98D17CA9773E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private workflow restored after cold return_0_577EB533-E6F9-4BAB-A2AA-657495716F15.png",
+        "timestamp" : 1793050164.318
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "B394FE40-E4AB-4246-809C-59FBFB31C852.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Refused workflow Undo preserves incoming work_0_0DFE9159-E89B-46D9-9BA5-FDDEEF325BC6.png",
+        "timestamp" : 1793050185.672
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "9F150419-83C6-419F-A886-719CC7D8F544.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Cancellable workflow preparation_0_8ED0FB9C-35E4-4028-A3F3-A15F00C35941.png",
+        "timestamp" : 1793050270.273
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry"
+  }
+]

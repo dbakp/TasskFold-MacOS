@@ -1,0 +1,10 @@
+{
+  "temporaryLogicalBytesRemoved": 774775502,
+  "reservedSimulatorHostsAndRunnersUninstalled": true,
+  "ownedMacTestProcessesRunning": false,
+  "retained": [
+    "one signed isolated Mac host/build pending UI Automation",
+    "source build caches",
+    "reusable pinned database fixture image"
+  ]
+}

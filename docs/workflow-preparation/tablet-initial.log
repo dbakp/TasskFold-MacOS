@@ -1,0 +1,561 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-preparation-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378" -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-workflow-preparation-tablet.xcresult "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn"
+
+Writing result bundle at path:
+	/tmp/taskfold-workflow-preparation-tablet.xcresult
+
+2026-10-26 22:28:41.108490+0100 TaskfoldUITests-Runner[66101:23727005] [Default] Running tests...
+2026-10-26 22:28:41.258682+0100 TaskfoldUITests-Runner[66101:23727005] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 22:28:45.957.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 22:28:45.959.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 22:28:45.959.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 22:28:45.963
+    t =     0.19s Set Up
+    t =     0.20s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.20s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:28:46.427 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:28:46.427 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[66101]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x103e7c398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108078310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     3.39s         Setting up automation session
+    t =     8.13s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.60s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =    11.68s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    11.68s         Checking existence of `"openNativeWorkflow" Button`
+    t =    12.98s Tap "openNativeWorkflow" Button
+    t =    12.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.99s     Find the "openNativeWorkflow" Button
+    t =    13.02s     Check for interrupting elements affecting "openNativeWorkflow" Button
+    t =    13.08s         Wait for com.apple.springboard to idle
+    t =    13.17s     Synthesize event
+    t =    13.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.05s Find the "applyWorkflowTemplate" Button
+    t =    15.20s     Find the "applyWorkflowTemplate" Button (retry 1)
+    t =    16.27s     Find the "applyWorkflowTemplate" Button (retry 2)
+    t =    16.34s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    16.34s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.34s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    16.38s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    16.43s         Wait for com.apple.springboard to idle
+    t =    16.45s     Synthesize event
+    t =    16.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.98s Find the "applyWorkflowTemplate" Button
+    t =    18.07s Waiting 8.0s for "applyWorkflowTemplate" Button to exist
+    t =    19.15s     Checking `Expect predicate `existsNoRetry == 1` for object "applyWorkflowTemplate" Button`
+    t =    19.15s         Checking existence of `"applyWorkflowTemplate" Button`
+    t =    19.21s Tap "applyWorkflowTemplate" Button
+    t =    19.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.23s     Find the "applyWorkflowTemplate" Button
+    t =    19.30s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    19.37s         Wait for com.apple.springboard to idle
+    t =    19.39s     Synthesize event
+    t =    19.69s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.30s Tap "undoNativeWorkflow" Button
+    t =    21.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.30s     Find the "undoNativeWorkflow" Button
+    t =    21.35s     Check for interrupting elements affecting "undoNativeWorkflow" Button
+    t =    21.40s         Wait for com.apple.springboard to idle
+    t =    21.42s     Synthesize event
+    t =    21.72s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.07s Tap "redoNativeWorkflow" Button
+    t =    23.07s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.07s     Find the "redoNativeWorkflow" Button
+    t =    23.10s     Check for interrupting elements affecting "redoNativeWorkflow" Button
+    t =    23.13s         Wait for com.apple.springboard to idle
+    t =    23.16s     Synthesize event
+    t =    23.45s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.81s Tap "undoNativeWorkflow" Button
+    t =    24.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.82s     Find the "undoNativeWorkflow" Button
+    t =    24.87s     Check for interrupting elements affecting "undoNativeWorkflow" Button
+    t =    24.91s         Wait for com.apple.springboard to idle
+    t =    24.93s     Synthesize event
+    t =    25.23s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.57s Tap "redoNativeWorkflow" Button
+    t =    26.57s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.57s     Find the "redoNativeWorkflow" Button
+    t =    26.60s     Check for interrupting elements affecting "redoNativeWorkflow" Button
+    t =    26.63s         Wait for com.apple.springboard to idle
+    t =    26.65s     Synthesize event
+    t =    26.95s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.32s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66141
+    t =    29.37s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    29.37s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:29:15.350 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:29:15.350 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    29.61s         Setting up automation session
+    t =    33.47s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.54s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =    36.62s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    36.62s         Checking existence of `"openNativeWorkflow" Button`
+    t =    38.89s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    39.11s Added attachment named 'Private workflow restored after cold return'
+    t =    39.11s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66216
+    t =    40.20s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' passed (40.274 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' started.
+    t =     0.00s Start Test at 2026-10-26 22:29:26.237
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:29:26.258 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:29:26.258 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     4.03s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     5.95s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =     6.99s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =     6.99s         Checking existence of `"openNativeWorkflow" Button`
+    t =     8.16s Tap "openNativeWorkflow" Button
+    t =     8.16s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.17s     Find the "openNativeWorkflow" Button
+    t =     8.20s     Check for interrupting elements affecting "openNativeWorkflow" Button
+    t =     8.24s         Wait for com.apple.springboard to idle
+    t =     8.26s     Synthesize event
+    t =     8.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.86s Find the "applyWorkflowTemplate" Button
+    t =     9.96s     Find the "applyWorkflowTemplate" Button (retry 1)
+    t =    11.03s     Find the "applyWorkflowTemplate" Button (retry 2)
+    t =    11.10s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.10s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.14s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    11.20s         Wait for com.apple.springboard to idle
+    t =    11.22s     Synthesize event
+    t =    11.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.62s Find the "applyWorkflowTemplate" Button
+    t =    12.71s Waiting 8.0s for "applyWorkflowTemplate" Button to exist
+    t =    13.76s     Checking `Expect predicate `existsNoRetry == 1` for object "applyWorkflowTemplate" Button`
+    t =    13.76s         Checking existence of `"applyWorkflowTemplate" Button`
+    t =    13.84s Tap "applyWorkflowTemplate" Button
+    t =    13.84s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.87s     Find the "applyWorkflowTemplate" Button
+    t =    13.93s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    13.98s         Wait for com.apple.springboard to idle
+    t =    14.00s     Synthesize event
+    t =    14.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.83s Tap "addIncomingWorkflowTask" Button
+    t =    15.83s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.84s     Find the "addIncomingWorkflowTask" Button
+    t =    15.87s     Check for interrupting elements affecting "addIncomingWorkflowTask" Button
+    t =    15.91s         Wait for com.apple.springboard to idle
+    t =    15.93s     Synthesize event
+    t =    16.23s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.47s Tap "undoNativeWorkflow" Button
+    t =    16.47s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.47s     Find the "undoNativeWorkflow" Button
+    t =    16.52s     Check for interrupting elements affecting "undoNativeWorkflow" Button
+    t =    16.56s         Wait for com.apple.springboard to idle
+    t =    16.58s     Synthesize event
+    t =    16.87s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.23s Checking existence of `"Later incoming work" StaticText`
+    t =    18.26s Find the "Later incoming work" StaticText
+    t =    18.32s Waiting 5.0s for "Later incoming work" StaticText to exist
+    t =    19.40s     Checking `Expect predicate `existsNoRetry == 1` for object "Later incoming work" StaticText`
+    t =    19.40s         Checking existence of `"Later incoming work" StaticText`
+    t =    19.44s Find the "Later incoming work" StaticText
+    t =    19.49s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    19.67s Added attachment named 'Refused workflow Undo preserves incoming work'
+    t =    19.67s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66250
+    t =    20.76s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    20.76s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:29:47.001 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:29:47.001 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    20.97s         Setting up automation session
+    t =    24.80s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.84s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =    27.91s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    27.92s         Checking existence of `"openNativeWorkflow" Button`
+    t =    30.20s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66303
+    t =    31.21s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' passed (31.281 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly]' started.
+    t =     0.00s Start Test at 2026-10-26 22:29:57.519
+    t =     0.03s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:29:57.549 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:29:57.549 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     4.13s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.14s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =     7.19s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =     7.20s         Checking existence of `"openNativeWorkflow" Button`
+    t =     8.34s Tap "openNativeWorkflow" Button
+    t =     8.34s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.35s     Find the "openNativeWorkflow" Button
+    t =     8.39s     Check for interrupting elements affecting "openNativeWorkflow" Button
+    t =     8.43s         Wait for com.apple.springboard to idle
+    t =     8.45s     Synthesize event
+    t =     8.79s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.03s Find the "applyWorkflowTemplate" Button
+    t =    10.13s     Find the "applyWorkflowTemplate" Button (retry 1)
+    t =    11.21s     Find the "applyWorkflowTemplate" Button (retry 2)
+    t =    11.28s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.28s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.32s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    11.37s         Wait for com.apple.springboard to idle
+    t =    11.39s     Synthesize event
+    t =    11.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.84s Find the "applyWorkflowTemplate" Button
+    t =    12.93s Waiting 8.0s for "applyWorkflowTemplate" Button to exist
+    t =    13.96s     Checking `Expect predicate `existsNoRetry == 1` for object "applyWorkflowTemplate" Button`
+    t =    13.96s         Checking existence of `"applyWorkflowTemplate" Button`
+    t =    14.03s Tap "applyWorkflowTemplate" Button
+    t =    14.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.09s     Find the "applyWorkflowTemplate" Button
+    t =    14.16s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    14.21s         Wait for com.apple.springboard to idle
+    t =    14.23s     Synthesize event
+    t =    14.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.03s Tap "undoNativeWorkflow" Button
+    t =    16.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.04s     Find the "undoNativeWorkflow" Button
+    t =    16.09s     Check for interrupting elements affecting "undoNativeWorkflow" Button
+    t =    16.13s         Wait for com.apple.springboard to idle
+    t =    16.15s     Synthesize event
+    t =    16.45s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.79s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66325
+    t =    18.87s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    18.87s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:30:16.392 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:30:16.392 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    19.09s         Setting up automation session
+    t =    22.89s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.84s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =    25.92s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    25.92s         Checking existence of `"openNativeWorkflow" Button`
+    t =    28.20s Tap "restoreNativeWorkflowSupport" Button
+    t =    28.20s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.20s     Find the "restoreNativeWorkflowSupport" Button
+    t =    28.25s     Check for interrupting elements affecting "restoreNativeWorkflowSupport" Button
+    t =    28.28s         Wait for com.apple.springboard to idle
+    t =    28.30s     Synthesize event
+    t =    28.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.97s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66379
+    t =    31.06s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly]' passed (31.139 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' started.
+    t =     0.00s Start Test at 2026-10-26 22:30:28.659
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:30:28.683 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:30:28.683 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     3.99s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     5.90s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =     6.96s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =     6.96s         Checking existence of `"openNativeWorkflow" Button`
+    t =     8.13s Tap "oversizedNativeWorkflow" Button
+    t =     8.13s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.13s     Find the "oversizedNativeWorkflow" Button
+    t =     8.17s     Check for interrupting elements affecting "oversizedNativeWorkflow" Button
+    t =     8.21s         Wait for com.apple.springboard to idle
+    t =     8.23s     Synthesize event
+    t =     8.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.91s Waiting 8.0s for StaticText (First Match) to exist
+    t =     9.96s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =     9.96s         Checking existence of `StaticText (First Match)`
+    t =    10.04s         Capturing element debug description
+    t =    10.97s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    10.97s         Checking existence of `StaticText (First Match)`
+    t =    11.05s         Capturing element debug description
+    t =    11.99s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    11.99s         Checking existence of `StaticText (First Match)`
+    t =    12.04s         Capturing element debug description
+    t =    13.00s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    13.00s         Checking existence of `StaticText (First Match)`
+    t =    13.07s         Capturing element debug description
+    t =    13.99s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    13.99s         Checking existence of `StaticText (First Match)`
+    t =    14.06s         Capturing element debug description
+    t =    15.00s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    15.00s         Checking existence of `StaticText (First Match)`
+    t =    15.06s         Capturing element debug description
+    t =    16.00s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    16.01s         Checking existence of `StaticText (First Match)`
+    t =    16.09s         Capturing element debug description
+    t =    16.91s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    16.92s         Checking existence of `StaticText (First Match)`
+    t =    17.01s         Capturing element debug description
+    t =    17.01s     Checking existence of `StaticText (First Match)`
+    t =    17.08s Collecting debug information to assist test failure triage
+    t =    17.08s     Requesting snapshot of accessibility hierarchy for app with pid 66415
+    t =    17.13s Find the "nativeWorkflowStatus" StaticText
+    t =    17.15s Checking existence of `"OK" Button`
+    t =    17.18s Find the "undoNativeWorkflow" Button
+    t =    17.21s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66415
+    t =    18.30s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    18.30s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:30:46.965 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:30:46.965 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    18.52s         Setting up automation session
+    t =    22.28s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.20s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =    25.28s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    25.28s         Checking existence of `"openNativeWorkflow" Button`
+    t =    26.50s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66450
+    t =    27.59s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' passed (27.647 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' started.
+    t =     0.00s Start Test at 2026-10-26 22:30:56.307
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:30:56.327 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:30:56.327 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     4.04s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     5.99s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =     7.06s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =     7.06s         Checking existence of `"openNativeWorkflow" Button`
+    t =     8.28s Tap "openNativeWorkflow" Button
+    t =     8.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.28s     Find the "openNativeWorkflow" Button
+    t =     8.32s     Check for interrupting elements affecting "openNativeWorkflow" Button
+    t =     8.35s         Wait for com.apple.springboard to idle
+    t =     8.37s     Synthesize event
+    t =     8.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.92s Find the "applyWorkflowTemplate" Button
+    t =    10.02s     Find the "applyWorkflowTemplate" Button (retry 1)
+    t =    11.10s     Find the "applyWorkflowTemplate" Button (retry 2)
+    t =    11.16s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.16s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.17s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.20s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    11.25s         Wait for com.apple.springboard to idle
+    t =    11.27s     Synthesize event
+    t =    11.69s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.71s Find the "applyWorkflowTemplate" Button
+    t =    12.80s Waiting 8.0s for "applyWorkflowTemplate" Button to exist
+    t =    13.86s     Checking `Expect predicate `existsNoRetry == 1` for object "applyWorkflowTemplate" Button`
+    t =    13.86s         Checking existence of `"applyWorkflowTemplate" Button`
+    t =    13.94s Tap "applyWorkflowTemplate" Button
+    t =    13.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.97s     Find the "applyWorkflowTemplate" Button
+    t =    14.02s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    14.08s         Wait for com.apple.springboard to idle
+    t =    14.10s     Synthesize event
+    t =    14.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.40s Waiting 5.0s for "cancelWorkflowPreparation" Button to exist
+    t =    15.45s     Checking `Expect predicate `existsNoRetry == 1` for object "cancelWorkflowPreparation" Button`
+    t =    15.45s         Checking existence of `"cancelWorkflowPreparation" Button`
+    t =    15.54s Find the "applyWorkflowTemplate" Button
+    t =    15.59s Checking existence of `"workflowPreparationStatus" StaticText`
+    t =    15.65s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    15.86s Added attachment named 'Cancellable workflow preparation'
+    t =    15.86s Tap "cancelWorkflowPreparation" Button
+    t =    15.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.87s     Find the "cancelWorkflowPreparation" Button
+    t =    15.92s     Check for interrupting elements affecting "cancelWorkflowPreparation" Button
+    t =    15.98s         Wait for com.apple.springboard to idle
+    t =    16.00s     Synthesize event
+    t =    16.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.55s Find the "applyWorkflowTemplate" Button
+    t =    28.66s Tap "Done" Button
+    t =    28.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.66s     Find the "Done" Button
+    t =    28.74s     Check for interrupting elements affecting "Done" Button
+    t =    28.80s         Wait for com.apple.springboard to idle
+    t =    28.81s     Synthesize event
+    t =    29.11s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.52s Tap "openNativeWorkflow" Button
+    t =    29.52s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.52s     Find the "openNativeWorkflow" Button
+    t =    29.55s     Check for interrupting elements affecting "openNativeWorkflow" Button
+    t =    29.58s         Wait for com.apple.springboard to idle
+    t =    29.60s     Synthesize event
+    t =    29.90s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.31s Find the "applyWorkflowTemplate" Button
+    t =    31.40s     Find the "applyWorkflowTemplate" Button (retry 1)
+    t =    32.46s     Find the "applyWorkflowTemplate" Button (retry 2)
+    t =    32.54s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    32.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.54s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    32.58s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    32.63s         Wait for com.apple.springboard to idle
+    t =    32.65s     Synthesize event
+    t =    33.07s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.05s Find the "applyWorkflowTemplate" Button
+    t =    34.14s Waiting 8.0s for "applyWorkflowTemplate" Button to exist
+    t =    35.20s     Checking `Expect predicate `existsNoRetry == 1` for object "applyWorkflowTemplate" Button`
+    t =    35.20s         Checking existence of `"applyWorkflowTemplate" Button`
+    t =    35.28s Tap "applyWorkflowTemplate" Button
+    t =    35.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.30s     Find the "applyWorkflowTemplate" Button
+    t =    35.35s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    35.41s         Wait for com.apple.springboard to idle
+    t =    35.43s     Synthesize event
+    t =    35.73s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.81s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66470
+    t =    47.91s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' passed (47.987 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 22:31:44.296
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:31:44.319 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:31:44.319 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     3.97s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     5.94s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =     7.01s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =     7.02s         Checking existence of `"openNativeWorkflow" Button`
+    t =     8.23s Tap "openNativeWorkflow" Button
+    t =     8.23s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.23s     Find the "openNativeWorkflow" Button
+    t =     8.27s     Check for interrupting elements affecting "openNativeWorkflow" Button
+    t =     8.31s         Wait for com.apple.springboard to idle
+    t =     8.33s     Synthesize event
+    t =     8.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.92s Find the "applyWorkflowTemplate" Button
+    t =    10.03s     Find the "applyWorkflowTemplate" Button (retry 1)
+    t =    11.12s     Find the "applyWorkflowTemplate" Button (retry 2)
+    t =    11.19s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.19s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.23s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    11.28s         Wait for com.apple.springboard to idle
+    t =    11.30s     Synthesize event
+    t =    11.72s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.74s Find the "applyWorkflowTemplate" Button
+    t =    12.82s Waiting 8.0s for "applyWorkflowTemplate" Button to exist
+    t =    13.89s     Checking `Expect predicate `existsNoRetry == 1` for object "applyWorkflowTemplate" Button`
+    t =    13.89s         Checking existence of `"applyWorkflowTemplate" Button`
+    t =    13.96s Tap "applyWorkflowTemplate" Button
+    t =    13.96s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.99s     Find the "applyWorkflowTemplate" Button
+    t =    14.05s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    14.10s         Wait for com.apple.springboard to idle
+    t =    14.12s     Synthesize event
+    t =    14.42s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.42s Waiting 5.0s for "cancelWorkflowPreparation" Button to exist
+    t =    15.46s     Checking `Expect predicate `existsNoRetry == 1` for object "cancelWorkflowPreparation" Button`
+    t =    15.46s         Checking existence of `"cancelWorkflowPreparation" Button`
+    t =    15.52s Find the "applyWorkflowTemplate" Button
+    t =    15.58s Checking existence of `"workflowPreparationStatus" StaticText`
+    t =    15.64s Tap "Done" Button
+    t =    15.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.64s     Find the "Done" Button
+    t =    15.71s     Check for interrupting elements affecting "Done" Button
+    t =    15.77s         Wait for com.apple.springboard to idle
+    t =    15.79s     Synthesize event
+    t =    16.08s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.54s Waiting 5.0s for "openNativeWorkflow" Button to exist
+    t =    17.61s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    17.61s         Checking existence of `"openNativeWorkflow" Button`
+    t =    29.66s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66582
+    t =    30.74s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    30.74s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:32:15.036 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:32:15.036 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    30.95s         Setting up automation session
+    t =    34.88s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.87s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =    37.94s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    37.94s         Checking existence of `"openNativeWorkflow" Button`
+    t =    39.11s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66633
+    t =    40.20s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' passed (40.273 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' started.
+    t =     0.00s Start Test at 2026-10-26 22:32:24.568
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:32:24.595 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:32:24.595 xcodebuild[66094:23726629] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     3.93s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     5.98s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =     7.04s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =     7.04s         Checking existence of `"openNativeWorkflow" Button`
+    t =     8.21s Tap "openNativeWorkflow" Button
+    t =     8.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.21s     Find the "openNativeWorkflow" Button
+    t =     8.25s     Check for interrupting elements affecting "openNativeWorkflow" Button
+    t =     8.29s         Wait for com.apple.springboard to idle
+    t =     8.31s     Synthesize event
+    t =     8.65s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.87s Find the "applyWorkflowTemplate" Button
+    t =     9.97s     Find the "applyWorkflowTemplate" Button (retry 1)
+    t =    11.06s     Find the "applyWorkflowTemplate" Button (retry 2)
+    t =    11.13s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.13s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.14s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    11.18s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    11.23s         Wait for com.apple.springboard to idle
+    t =    11.25s     Synthesize event
+    t =    11.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.69s Find the "applyWorkflowTemplate" Button
+    t =    12.78s Waiting 8.0s for "applyWorkflowTemplate" Button to exist
+    t =    13.86s     Checking `Expect predicate `existsNoRetry == 1` for object "applyWorkflowTemplate" Button`
+    t =    13.86s         Checking existence of `"applyWorkflowTemplate" Button`
+    t =    13.93s Tap "applyWorkflowTemplate" Button
+    t =    13.93s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.94s     Find the "applyWorkflowTemplate" Button
+    t =    13.99s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    14.05s         Wait for com.apple.springboard to idle
+    t =    14.07s     Synthesize event
+    t =    14.36s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.94s Tap "pauseNativeWorkflowSupport" Button
+    t =    15.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.95s     Find the "pauseNativeWorkflowSupport" Button
+    t =    15.99s     Check for interrupting elements affecting "pauseNativeWorkflowSupport" Button
+    t =    16.02s         Wait for com.apple.springboard to idle
+    t =    16.04s     Synthesize event
+    t =    16.34s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.66s Tap "undoNativeWorkflow" Button
+    t =    17.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.66s     Find the "undoNativeWorkflow" Button
+    t =    17.71s     Check for interrupting elements affecting "undoNativeWorkflow" Button
+    t =    17.74s         Wait for com.apple.springboard to idle
+    t =    17.77s     Synthesize event
+    t =    18.06s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.31s Waiting 2.0s for StaticText (First Match) to exist
+    t =    19.39s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    19.39s         Checking existence of `StaticText (First Match)`
+    t =    19.52s         Capturing element debug description
+    t =    20.32s     Checking `Expect predicate `existsNoRetry == 1` for object StaticText (First Match)`
+    t =    20.32s         Checking existence of `StaticText (First Match)`
+    t =    20.40s         Capturing element debug description
+    t =    20.40s     Checking existence of `StaticText (First Match)`
+    t =    20.47s Collecting debug information to assist test failure triage
+    t =    20.47s     Requesting snapshot of accessibility hierarchy for app with pid 66657
+    t =    20.53s Find the "nativeWorkflowStatus" StaticText
+    t =    20.57s Checking existence of `"OK" Button`
+    t =    20.61s Tap "restoreNativeWorkflowSupport" Button
+    t =    20.61s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.61s     Find the "restoreNativeWorkflowSupport" Button
+    t =    20.64s     Check for interrupting elements affecting "restoreNativeWorkflowSupport" Button
+    t =    20.68s         Wait for com.apple.springboard to idle
+    t =    20.70s     Synthesize event
+    t =    21.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.33s Tap "undoNativeWorkflow" Button
+    t =    22.33s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.33s     Find the "undoNativeWorkflow" Button
+    t =    22.36s     Check for interrupting elements affecting "undoNativeWorkflow" Button
+    t =    22.48s         Wait for com.apple.springboard to idle
+    t =    22.51s     Synthesize event
+    t =    22.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.16s Terminate com.dbakp.taskfold.workflowteststeameditbridge:66657
+    t =    25.18s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' passed (25.539 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-26 22:32:50.108.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 244.141 (244.149) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 22:32:50.109.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 244.141 (244.150) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 22:32:50.110.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 244.141 (244.153) seconds
+2026-10-26 22:32:50.449 xcodebuild[66094:23726629] [MT] IDETestOperationsObserverDebug: 252.863 elapsed -- Testing started completed.
+2026-10-26 22:32:50.449 xcodebuild[66094:23726629] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 22:32:50.449 xcodebuild[66094:23726629] [MT] IDETestOperationsObserverDebug: 252.863 sec, +252.863 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-workflow-preparation-tablet.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
