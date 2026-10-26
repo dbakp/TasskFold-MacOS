@@ -61,17 +61,29 @@ sync; Save verifies native admission, durable local intent and queue isolation,
 not actual server delivery or hosted acceptance. Prior isolated SQL contracts are
 separate evidence, not a substitute for end-to-end native transport testing.
 
-The current Mac app and UI runner also build with the verified existing Apple
-Development team and pass strict/deep app signing checks. Its actual runtime
-attempt exits 65 before any test case: Xcode’s test manager timed out enabling UI
-automation mode. This is not an app acceptance pass. No debugger authorization or
-system setting was changed. The signed current-source harness is retained in
-/tmp/taskfold-native-types-mac-host and /tmp/taskfold-native-types-mac-native-build.
-The expired authorization question requires no action on a stale prompt.
+The Mac app and UI runner build with the verified existing Apple Development
+team and pass strict/deep app signing checks. Initial runtime attempts timed out
+before test execution while enabling UI automation. After the user approved that
+authorization, the specific root-editor runtime case passed as recorded below.
+No debugger authorization was changed by this work. Both historical prepared Mac
+harness directories were removed after retaining their results and image.
 
-Remaining: Mac runtime/keyboard/window acceptance, full native delivery and receipt
+Remaining: wider Mac keyboard/window acceptance, full native delivery and receipt
 recovery, source/account races, completed-item reopen combinations, native lifecycle
 and bulk recovery, spoken/largest-text, installed widgets and cross-device checks,
 and shared template/import adapters. Normal rollout and user-deferred upgrade,
 provider, notification and distribution work remain unchanged. Rank 3 and Px stay
 active. Exact results and initial failures are in shared-heading-native/.
+
+
+### Mac runtime follow-up — 26 October 2026
+
+After the user approved Xcode UI automation, the preserved signed source variant
+passed `SharedHeadingNativeTests/testSharedHeadingAutosaveUndoRedoAndColdQueue`
+(1 case, zero failures). It exercised native root conversion/autosave, Undo/Redo,
+exact unrelated-field preservation, scoped queue contents and cold persistence.
+`shared-heading-native/mac-summary.json`, `mac-runtime.log` and the inspected
+`mac-editor.png` record this acceptance. Earlier initialization failures above
+remain historical; they do not describe the final result. This closes that
+specific root-editor runtime check, not the wider Mac heading acceptance list.
+The fixture still pauses sync; this test does not prove real server delivery.

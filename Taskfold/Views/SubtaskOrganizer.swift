@@ -192,6 +192,10 @@ private struct SubtaskOrganizer: View {
                                     if store.canAuthorTaskHeadings(teamDraft: admission.teamDraft), TaskKind(item.record) != .unsupported {
                                         Button(TaskKind(item.record) == .heading ? "Make task" : "Make heading", systemImage: "textformat") {
                                             guard available, store.canAuthorTaskHeadings(teamDraft: admission.teamDraft), let current = items.first(where: { $0.id == item.id })?.record, current == item.record else { return }
+                                            guard !TeamTaskTypes.needsSavedReopen(current, originalTree: admission.teamDraft?.source["subtasks"]) else {
+                                                message = "Save the reopened subtask and its parent task first. Then reopen Organize subtasks to change its type."
+                                                return
+                                            }
                                             do {
                                                 let edited = try TaskKind.setting(current, heading: TaskKind(current) != .heading)
                                                 draft = SubtaskTree.changing(draft, id: item.id, fields: edited.fields.filter { current.fields[$0.key] != $0.value })

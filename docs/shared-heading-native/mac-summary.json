@@ -11,8 +11,8 @@
         "platform" : "macOS"
       },
       "expectedFailures" : 0,
-      "failedTests" : 1,
-      "passedTests" : 0,
+      "failedTests" : 0,
+      "passedTests" : 1,
       "skippedTests" : 0,
       "testPlanConfiguration" : {
         "configurationId" : "1",
@@ -22,26 +22,20 @@
   ],
   "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
   "expectedFailures" : 0,
-  "failedTests" : 1,
-  "finishTime" : 1793033013.569,
-  "passedTests" : 0,
-  "result" : "Failed",
+  "failedTests" : 0,
+  "finishTime" : 1793034238.262,
+  "passedTests" : 1,
+  "result" : "Passed",
   "runtimeWarnings" : [
 
   ],
   "skippedTests" : 0,
-  "startTime" : 1793032941.479,
+  "startTime" : 1793034210.713,
   "statistics" : [
 
   ],
   "testFailures" : [
-    {
-      "failureText" : "The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.)",
-      "targetName" : "TaskfoldUITests",
-      "testIdentifier" : 1,
-      "testIdentifierString" : "TaskfoldUITests-Runner (4959) encountered an error",
-      "testName" : "TaskfoldUITests-Runner (4959) encountered an error"
-    }
+
   ],
   "title" : "Test - Taskfold",
   "topInsights" : [

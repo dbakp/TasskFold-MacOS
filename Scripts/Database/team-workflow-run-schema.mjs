@@ -2,7 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {loadProjectAdoptionSchema} from './project-adoption-schema.mjs';
 import {teamTemplateLibraryMigration} from './team-template-library-schema.mjs';
 export const workflowRunMigration='20261025092534_team_workflow_runs.sql';
-export async function loadWorkflowRunSchema(execute){
+export async function loadWorkflowRunSchema(execute,{taskTypes=process.env.TASKFOLD_TEST_WORKFLOW_TYPES==='1'}={}){
  await loadProjectAdoptionSchema(execute);
  // Inspected base fields omitted by the minimal task fixtures; no user rows.
  await execute(`alter table public.projects add column description text;
@@ -14,4 +14,5 @@ export async function loadWorkflowRunSchema(execute){
  const foundation=await readFile(new URL('../../supabase/migrations/20261020174132_project_workflow_foundation.sql',import.meta.url),'utf8');
  await execute(foundation.slice(foundation.indexOf('create table public.project_templates')));
  for(const file of [teamTemplateLibraryMigration,workflowRunMigration])await execute(await readFile(new URL('../../supabase/migrations/'+file,import.meta.url),'utf8'));
+ if(taskTypes)for(const file of ['20261024222451_team_task_repeat_edits.sql','20261026032336_task_headings_contract.sql','20261026155711_team_task_heading_commands.sql','20261026161001_team_task_heading_lifecycle.sql','20261026165807_shared_workflow_task_headings.sql'])await execute(await readFile(new URL('../../supabase/migrations/'+file,import.meta.url),'utf8'));
 }

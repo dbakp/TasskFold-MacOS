@@ -191,7 +191,7 @@ struct TeamWorkflowRunView: View {
                 if let parent { Text("Inside " + (parent.name ?? "selected parent")) }
                 if let folder, let title = catalog?.organization?.folders.first(where: { $0.id == folder })?.name { Text("Folder: " + title) }
             }
-            Text(contentsSummary(value.plan)).font(.subheadline).foregroundStyle(.secondary)
+            Text(value.plan.contentsSummary).font(.subheadline).foregroundStyle(.secondary)
             Text("New tasks are unassigned and incomplete. Discussions, files and completion history are excluded. Existing tasks and list order are preserved.").font(.caption).foregroundStyle(.secondary)
         }
         TeamWorkflowContents(plan: value.plan)
@@ -201,14 +201,6 @@ struct TeamWorkflowRunView: View {
             Button("Back to destination") { prepared = nil; accepted = false }.disabled(disabled).accessibilityIdentifier("backSharedWorkflow")
             Text("Create sends this complete workflow together. A lost reply keeps the original request for safe retry.").font(.caption).foregroundStyle(.secondary)
         }
-    }
-    private func contentsSummary(_ plan: TeamWorkflowRunPlan) -> String {
-        var checklist = 0
-        for row in plan.tasks { checklist += (try? TeamChecklist.indexed(row["subtasks"]).count) ?? 0 }
-        let groups: [(Int, String)] = [(plan.projects.count, "project"), (plan.sections.count, "section"), (plan.tasks.count, "task"), (checklist, "checklist item")]
-        var parts: [String] = []
-        for (count, noun) in groups where count > 0 { parts.append(String(count) + " " + noun + (count == 1 ? "" : "s")) }
-        return parts.joined(separator: " · ")
     }
     private func sourceName(_ value: TeamWorkflowRunPlan.Source) -> String { switch value { case .personal(let row): row.name; case .shared(let detail): detail.metadata.name } }
     private func normalized(_ value: TeamWorkflowRunPlan.Source) -> TeamWorkflowRunPlan.Source {
@@ -258,13 +250,21 @@ struct TeamWorkflowRunView: View {
         }
         guard let access = eligible.first(where: { $0.id == project }) else { throw TeamWorkflowRunCommand.invalid }; return .project(access)
     }
+    @MainActor private func headingSupport(for source: TeamWorkflowRunPlan.Source) async throws -> Bool {
+        guard try WorkflowTemplate(document: source.document).requiresHeadingSupport else { return false }
+        guard Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true else { throw TeamWorkflowRunCommand.invalid }
+        let boundary = try await store.backend.workspaceBoundary(account: store.userID)
+        guard boundary.raw["task_types_protocol"] == .number(1), boundary.raw["task_type_lifecycle_protocol"] == .number(1) else { throw TeamWorkflowRunCommand.invalid }
+        return true
+    }
     @MainActor private func prepare() async {
         guard visible, !disabled, let seed = currentSource, let opening, let session, let origin else { return }
         working = true; sourceReadable = false; message = nil; defer { working = false }
         do {
             let latest = try await readSource(seed); await catalog?.load(team: team)
             guard visible, latest == seed, let organization = catalog?.organization else { changedSource = latest; throw TeamWorkflowRunCommand.invalid }
-            let plan = try TeamWorkflowRunPlan(source: latest, account: opening.account, origin: origin, team: organization.team, destination: destination(), name: name, start: dated ? date : nil, workspace: opening, session: session)
+            let headings = try await headingSupport(for: latest)
+            let plan = try TeamWorkflowRunPlan(source: latest, account: opening.account, origin: origin, team: organization.team, destination: destination(), name: name, start: dated ? date : nil, workspace: opening, session: session, supportsHeadings: headings)
             let orders = try await store.backend.workflowBaseOrders(plan)
             guard visible, store.teamWorkflowCreationAvailable else { throw CancellationError() }
             let command = try TeamWorkflowRunCommand(plan: plan, baseOrders: orders)
@@ -277,6 +277,7 @@ struct TeamWorkflowRunView: View {
         do {
             let latest = try await readSource(value.plan.source); await catalog?.load(team: value.plan.team.id)
             guard visible, let organization = catalog?.organization, let opening, let session else { throw CancellationError() }
+            if value.plan.supportsHeadings { guard try await headingSupport(for: latest) else { throw TeamWorkflowRunCommand.invalid } }
             try value.plan.verify(source: latest, team: organization.team, destination: destination(), workspace: opening, session: session)
             let orders = try await store.backend.workflowBaseOrders(value.plan)
             guard try value.plan.requestBody(baseOrders: orders) == value.command.body, visible else { throw TeamWorkflowRunCommand.invalid }
@@ -320,7 +321,8 @@ private struct TeamWorkflowContents: View {
         } } }
         Section("New tasks and checklist") {
             ForEach(rows) { item in VStack(alignment: .leading, spacing: 6) {
-                Text(item.row.title).font(item.depth == 0 ? .headline : .body).accessibilityIdentifier("sharedWorkflowTask-" + item.row.id)
+                Text(item.row.title).font(item.depth == 0 || TaskKind(item.row) == .heading ? .headline : .body).accessibilityIdentifier("sharedWorkflowTask-" + item.row.id)
+                if TaskKind(item.row) == .heading { Label("Heading · stays open", systemImage: "textformat").font(.caption).foregroundStyle(.secondary) }
                 if item.depth == 0 { Text(item.project + (item.section.map { " · " + $0 } ?? "")).font(.caption).foregroundStyle(.secondary) }
                 if !item.row.string("description").isEmpty { Text(item.row.string("description")).textSelection(.enabled) }
                 Text(details(item.row)).font(.caption).foregroundStyle(.secondary)

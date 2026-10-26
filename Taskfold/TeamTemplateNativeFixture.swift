@@ -25,7 +25,14 @@ import Foundation
         var loseNextWorkflow = false
     }
     static func document(title: String = "Review the launch") -> JSON {
-        .object(["version": .number(1), "kind": .string("task"), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": .string("review"), "title": .string(title), "description": .string("Compare the full layout, confirm readable labels, and record the release decision."), "priority": .number(2), "duration_minutes": .number(25), "planned_offset": .number(1), "labels": .array([.object(["name": .string("Design"), "color": .string("#7455b3")])]), "subtasks": .array([])])])])
+        var document: JSON = .object(["version": .number(1), "kind": .string("task"), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": .string("review"), "title": .string(title), "description": .string("Compare the full layout, confirm readable labels, and record the release decision."), "priority": .number(2), "duration_minutes": .number(25), "planned_offset": .number(1), "labels": .array([.object(["name": .string("Design"), "color": .string("#7455b3")])]), "subtasks": .array([])])])])
+        if ProcessInfo.processInfo.arguments.contains("--workflow-heading-testing") {
+            var root = document.object; root["version"] = .number(2); root["capabilities"] = .array([.string("task_headings")])
+            var task = root["tasks"]!.list[0].object; task["is_heading"] = .bool(true)
+            task["subtasks"] = .array([.object(["id": .string("phase"), "title": .string("Research phase"), "is_heading": .bool(true), "labels": .array([]), "subtasks": .array([.object(["id": .string("work"), "title": .string("Approve the design"), "labels": .array([]), "subtasks": .array([])])])])])
+            root["tasks"] = .array([.object(task)]); document = .object(root)
+        }
+        return document
     }
     static var personal: Record { Record(["id": .string(personalID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Release routine"), "document": document(title: "Check release notes")]) }
     static func item(_ id: String, name: String, document: JSON) -> [String: JSON] {
@@ -96,7 +103,8 @@ import Foundation
                 guard row["base_ids"] == .array((state.workflowOrders[key] ?? []).map(JSON.string)) else { return (["code": .string("PT409")], 409, false) }
                 state.workflowOrders[key] = (state.workflowOrders[key] ?? []) + row["task_ids"]!.list.map(\.text)
             }
-            let raw: [String: JSON] = ["run_protocol": .number(1), "account": .string(command.account), "team_id": .string(command.team), "request_id": .string(command.id), "projects": .array(body["projects"]!.list.map { $0.object["id"]! }), "sections": .array(body["sections"]!.list.map { $0.object["id"]! }), "tasks": .array(body["tasks"]!.list.map { .object(["id": $0.object["id"]!, "generation": $0.object["task_generation"]!, "project_id": $0.object["project_id"]!]) }), "replayed": .bool(false)]
+            var raw: [String: JSON] = ["run_protocol": .number(1), "account": .string(command.account), "team_id": .string(command.team), "request_id": .string(command.id), "projects": .array(body["projects"]!.list.map { $0.object["id"]! }), "sections": .array(body["sections"]!.list.map { $0.object["id"]! }), "tasks": .array(body["tasks"]!.list.map { .object(["id": $0.object["id"]!, "generation": $0.object["task_generation"]!, "project_id": $0.object["project_id"]!]) }), "replayed": .bool(false)]
+            if body["workflow_types_protocol"] != nil { raw["workflow_types_protocol"] = .number(1) }
             state.workflowRequests[command.id] = params; state.workflowReceipts[command.id] = raw
             let lose = state.loseNextWorkflow; state.loseNextWorkflow = false; try save(state); return (raw, 200, lose)
         }
@@ -123,6 +131,7 @@ import Foundation
             if action == .delete { state.items.remove(at: index!) }
             else { var item = self.item(command.template, name: body["name"]!.text, document: body["document"]!); item["revision"] = .number(revision); if let index { state.items[index] = item } else { state.items.append(item) } }
             raw = ["library_protocol": .number(1), "account": .string(command.account), "team_id": .string(command.team), "request_id": .string(command.id), "template_id": .string(command.template), "operation": .string(operation), "revision": .number(revision), "deleted": .bool(action == .delete), "replayed": .bool(false)]
+            if body["workflow_types_protocol"] != nil { raw["workflow_types_protocol"] = .number(1) }
             state.receipts[command.id] = raw; state.requests[command.id] = params; state.revision += 1
             let lose = state.loseNext; state.loseNext = false; try save(state); return (raw, 200, lose)
         default: throw URLError(.notConnectedToInternet)

@@ -5216,3 +5216,33 @@ The synthetic iOS peer pauses sync, so genuine delivery/receipt recovery, broade
 native races/lifecycle/accessibility and shared template/import adapters remain
 open. Normal flags and hosted rollout are unchanged. See TEAM_TASK_TYPE_NATIVE.md
 and shared-heading-native/. The wider rank-3/Px goal stays active.
+
+
+### Shared heading workflows and Mac runtime follow-up — 26 October 2026
+
+Both independently owned clients and service sources now preserve headings
+through reviewed shared-template publication/replacement, private copying and
+shared workflow runs. Root/nested headings retain their type and child order;
+review counts distinguish them from productive tasks/checklist items. Exact typed
+acknowledgments preserve one encrypted request across lost replies and relaunch.
+A reopened shared subtask now gets a clear save-first explanation before a type
+conversion that would require a separately saved reopen.
+
+Each repo passes 96 selected Core checks, 60 heading-specific PostgreSQL/advisor
+checks and all 89 existing workflow SQL checks with the new migration installed.
+Signed iPhone/iPad acceptance passes publication/copy/cold preservation and the
+final heading run/lost-reply/relaunch/exact retry flow. The signed Mac runtime
+also passes heading workflow review and that recovery flow. Five output images
+were inspected. Earlier failures were test-harness selectors/value types/home
+resolution and are retained with the final passing results.
+
+The preceding Mac root heading editor/autosave/Undo/Redo/cold-queue test also now
+passes after the user approved Xcode UI automation. Its earlier initialization
+failure is resolved for that specific case. Source fingerprints, signatures,
+results and limits are in SHARED_WORKFLOW_HEADINGS.md, shared-workflow-headings/
+and shared-heading-native/mac-summary.json. UI acceptance uses the synthetic
+HTTP peer; actual SQL acceptance is separate. Full native server delivery,
+broader source/access races, accessibility/largest-text, installed widgets and
+cross-device work remain open. Normal rollout and all user-deferred provider,
+notification, safe-upgrade and distribution work remain unchanged. Rank 3 and
+broader Px stay active.

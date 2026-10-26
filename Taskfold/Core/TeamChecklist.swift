@@ -135,3 +135,14 @@ extension TeamTaskTypes {
         return true
     }
 }
+
+/// Shared type conversion needs a separately saved reopen, so it cannot reuse
+/// a completed item's old checkbox revision as authority for a new type.
+extension TeamTaskTypes {
+    static func needsSavedReopen(_ item: Record, originalTree: JSON?) -> Bool {
+        guard let originalTree else { return false }
+        guard let nodes = try? TeamChecklist.indexed(originalTree) else { return true }
+        guard let old = nodes[item.id] else { return false }
+        return (old["completed"] ?? .bool(false)) != .bool(false) || (old["completed_at"] ?? .null) != .null
+    }
+}

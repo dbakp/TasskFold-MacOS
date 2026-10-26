@@ -204,6 +204,7 @@ private struct TeamTemplatePublicationReview: View {
     @State private var message: String?
     @State private var audienceConfirmed = false
     @State private var submitted = false
+    private var headingSupport: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true }
     private var definition: JSON? { source?["document"] ?? request.baseline?.document }
     private var sourceCurrent: Bool { source == nil || (store.record(WorkflowTemplate.table, id: source!.id) == source && source?.string("user_id") == store.userID) }
     private var authoringCurrent: Bool { phase == .active && current() && sourceCurrent }
@@ -212,7 +213,8 @@ private struct TeamTemplatePublicationReview: View {
         guard allowed, !submitted else { return false }
         if request.action == .delete { return request.baseline != nil }
         guard (try? TeamTemplateLibraryValue.name(.string(name.trimmingCharacters(in: .whitespacesAndNewlines)))) != nil, let definition else { return false }
-        return (try? WorkflowTemplate(document: definition)) != nil && audienceConfirmed
+        guard let template = try? WorkflowTemplate(document: definition) else { return false }
+        return (!template.requiresHeadingSupport || headingSupport) && audienceConfirmed
     }
     var body: some View {
         NavigationStack {
@@ -239,7 +241,12 @@ private struct TeamTemplatePublicationReview: View {
                             Text("Project names, task notes, labels and schedule rules will be visible to this audience. No tasks are created. Assignments, discussion and files are not included.").font(.callout).foregroundStyle(.secondary)
                             if request.action == .replace { Text("This replaces the saved definition for future use. Existing work stays unchanged.").font(.callout) }
                         }
-                        if let definition { Section("Full contents") { TemplateDefinitionPreview(document: definition, scope: "publish") } }
+                        if let definition {
+                            Section("Full contents") { TemplateDefinitionPreview(document: definition, scope: "publish") }
+                            if (try? WorkflowTemplate(document: definition))?.requiresHeadingSupport == true && !headingSupport {
+                                Section { Text("Publishing templates with headings isn’t available in this app version. Your definition is kept unchanged.").foregroundStyle(.secondary) }
+                            }
+                        }
                         Section { Toggle("I reviewed the audience and contents", isOn: $audienceConfirmed).accessibilityIdentifier("confirmTeamTemplateAudience") }
                     }
                     #if DEBUG
@@ -269,7 +276,7 @@ private struct TeamTemplatePublicationReview: View {
     private func send() {
         guard valid else { return }
         do {
-            let command = try TeamTemplateCommand(account: request.organization.account, origin: request.organization.origin, action: request.action, team: request.organization.team.id, template: request.baseline?.metadata.id ?? UUID().uuidString.lowercased(), revision: request.baseline?.metadata.revision, name: request.action == .delete ? nil : name, document: request.action == .delete ? nil : definition)
+            let command = try TeamTemplateCommand(account: request.organization.account, origin: request.organization.origin, action: request.action, team: request.organization.team.id, template: request.baseline?.metadata.id ?? UUID().uuidString.lowercased(), revision: request.baseline?.metadata.revision, name: request.action == .delete ? nil : name, document: request.action == .delete ? nil : definition, supportsHeadings: headingSupport)
             submitted = true
             Task {
                 await model.send(command, canAuthor: {

@@ -1,30 +1,103 @@
 Command line invocation:
-    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-native-types-mac-native-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testSharedHeadingAutosaveUndoRedoAndColdQueue" -resultBundlePath /tmp/taskfold-native-types-mac.xcresult
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-native-types-mac-native-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testSharedHeadingAutosaveUndoRedoAndColdQueue" -resultBundlePath /tmp/taskfold-native-types-mac-authorized-20261026.xcresult
 
 Writing result bundle at path:
-	/tmp/taskfold-native-types-mac.xcresult
+	/tmp/taskfold-native-types-mac-authorized-20261026.xcresult
 
 --- xcodebuild: WARNING: Using the first of multiple matching destinations:
 { platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
 { platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
 { platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
 { platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
-2026-10-26 17:42:23.064677+0100 TaskfoldUITests-Runner[4959:23061363] [Default] Running tests...
-2026-10-26 17:43:23.177702+0100 TaskfoldUITests-Runner[4959:23061363] [Default] Failed to initialize for UI testing: Error Domain=com.apple.dt.XCTest.XCTFuture Code=1000 "Timed out while enabling automation mode." UserInfo={NSLocalizedDescription=Timed out while enabling automation mode.}
-
-
-*** If you believe this error represents a bug, please attach the result bundle at /tmp/taskfold-native-types-mac.xcresult
-
-2026-10-26 17:43:33.558 xcodebuild[4947:23061052] [MT] IDETestOperationsObserverDebug: 71.651 elapsed -- Testing started completed.
-2026-10-26 17:43:33.558 xcodebuild[4947:23061052] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
-2026-10-26 17:43:33.558 xcodebuild[4947:23061052] [MT] IDETestOperationsObserverDebug: 71.651 sec, +71.651 sec -- end
+2026-10-26 18:03:34.656212+0100 TaskfoldUITests-Runner[10082:23107462] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 18:03:35.046.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 18:03:35.049.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-26 18:03:35.049.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testSharedHeadingAutosaveUndoRedoAndColdQueue]' started.
+    t =     0.00s Start Test at 2026-10-26 18:03:35.050
+    t =     2.88s Set Up
+    t =     3.01s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.01s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:03:38.557 xcodebuild[10009:23106642] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:03:38.557 xcodebuild[10009:23106642] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.94s         Wait for accessibility to load
+    t =     6.16s         Setting up automation session
+    t =     6.21s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.32s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     6.32s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     6.33s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.33s Waiting 12.0s for "taskKindPicker" Any to exist
+    t =     8.37s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =     8.37s         Checking existence of `"taskKindPicker" Any`
+    t =     8.69s Click "taskKindPicker" Any
+    t =     8.69s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.72s     Find the "taskKindPicker" Any
+    t =     8.79s     Check for interrupting elements affecting "taskKindPicker" PopUpButton
+    t =     8.89s     Synthesize event
+    t =     9.45s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.46s Waiting 5.0s for "Heading" MenuItem to exist
+    t =    10.50s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" MenuItem`
+    t =    10.50s         Checking existence of `"Heading" MenuItem`
+    t =    10.76s Click "Heading" MenuItem
+    t =    10.76s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.76s     Find the "Heading" MenuItem
+    t =    10.86s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    10.86s     Synthesize event
+    t =    10.87s         Checking existence of `"menuAction:" MenuItem`
+    t =    10.92s         Hover menu item 'Heading'
+    t =    10.93s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.93s             Find the "menuAction:" MenuItem
+    t =    11.00s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    11.00s             Synthesize event
+    t =    11.22s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.23s         Find the "menuAction:" MenuItem
+    t =    12.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.33s Click "undoTeamHeading" Button
+    t =    13.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.34s     Find the "undoTeamHeading" Button
+    t =    13.49s     Check for interrupting elements affecting "undoTeamHeading" Button
+    t =    13.57s     Synthesize event
+    t =    14.18s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.22s Click "redoTeamHeading" Button
+    t =    15.22s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.23s     Find the "redoTeamHeading" Button
+    t =    15.39s     Check for interrupting elements affecting "redoTeamHeading" Button
+    t =    15.43s     Synthesize event
+    t =    16.01s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.06s Checking existence of `Window (First Match)`
+    t =    17.07s Find the Window (First Match)
+2026-10-26 18:03:52.132583+0100 TaskfoldUITests-Runner[10082:23107462] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    17.58s Added attachment named 'Mac shared heading autosave and typed Undo'
+    t =    17.58s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:10135
+    t =    18.65s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    18.65s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:03:53.704 xcodebuild[10009:23106642] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:03:53.704 xcodebuild[10009:23106642] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    19.37s         Wait for accessibility to load
+    t =    20.10s         Setting up automation session
+    t =    20.13s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.19s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    20.19s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    20.20s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.22s Waiting 12.0s for "taskKindPicker" PopUpButton to exist
+    t =    21.26s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" PopUpButton`
+    t =    21.26s         Checking existence of `"taskKindPicker" PopUpButton`
+    t =    21.48s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:10301
+    t =    22.49s Tear Down
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testSharedHeadingAutosaveUndoRedoAndColdQueue]' passed (22.896 seconds).
+Test Suite 'SharedHeadingNativeTests' passed at 2026-10-26 18:03:57.948.
+	 Executed 1 test, with 0 failures (0 unexpected) in 22.896 (22.899) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 18:03:57.949.
+	 Executed 1 test, with 0 failures (0 unexpected) in 22.896 (22.901) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 18:03:57.950.
+	 Executed 1 test, with 0 failures (0 unexpected) in 22.896 (22.904) seconds
+2026-10-26 18:03:58.253 xcodebuild[10009:23106642] [MT] IDETestOperationsObserverDebug: 26.723 elapsed -- Testing started completed.
+2026-10-26 18:03:58.253 xcodebuild[10009:23106642] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 18:03:58.253 xcodebuild[10009:23106642] [MT] IDETestOperationsObserverDebug: 26.723 sec, +26.723 sec -- end
 
 Test session results, code coverage, and logs:
-	/tmp/taskfold-native-types-mac.xcresult
+	/tmp/taskfold-native-types-mac-authorized-20261026.xcresult
 
-Testing failed:
-	TaskfoldUITests-Runner (4959) encountered an error (The test runner failed to initialize for UI testing. (Underlying Error: Timed out while enabling automation mode.))
-
-** TEST EXECUTE FAILED **
+** TEST EXECUTE SUCCEEDED **
 
 Testing started

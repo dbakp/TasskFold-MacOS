@@ -649,6 +649,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
     let origin: String
     let team: TeamOrganization
     let source: Source
+    let supportsHeadings: Bool
     let destination: Destination
     let workspace: WorkspaceBinding
     let session: UUID
@@ -657,6 +658,19 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
     let sections: [Record]
     let tasks: [Record]
     let orders: [Order]
+    var contentsSummary: String {
+        var roots = 0, checklist = 0, headings = 0
+        for row in tasks {
+            if TaskKind(row) == .heading { headings += 1 } else { roots += 1 }
+            for child in (try? TeamChecklist.indexed(row["subtasks"]))?.values ?? [:].values {
+                if TaskKind(Record(child)) == .heading { headings += 1 } else { checklist += 1 }
+            }
+        }
+        let groups: [(Int, String)] = [(projects.count, "project"), (sections.count, "section"), (roots, "task"), (checklist, "checklist item"), (headings, "heading")]
+        var parts: [String] = []
+        for (count, noun) in groups where count > 0 { parts.append(String(count) + " " + noun + (count == 1 ? "" : "s")) }
+        return parts.joined(separator: " · ")
+    }
     var description: String { "Private shared workflow run preview" }
     var debugDescription: String { description }
     static var invalid: AppFailure { AppFailure(message: "The template or destination changed. Review the workflow again before creating it.") }
@@ -664,7 +678,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
     init(source: Source, account: String, origin: String, team: TeamOrganization,
          destination: Destination, name: String, start: Date? = nil,
          workspace: WorkspaceBinding, session: UUID, run: UUID = UUID(),
-         createdAt: Date = Date()) throws {
+         createdAt: Date = Date(), supportsHeadings: Bool = false) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard workspace.account == account, !team.archived, TeamProjectValue.id(run.uuidString.lowercased()),
               (-62135596800...253402214400).contains(createdAt.timeIntervalSince1970), start == nil || (-62135596800...253402214400).contains(start!.timeIntervalSince1970) else { throw Self.invalid }
@@ -675,6 +689,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
             guard detail.scope.account == account, detail.scope.origin == origin else { throw Self.invalid }
         }
         let definition = try WorkflowTemplate(document: source.document)
+        guard !definition.requiresHeadingSupport || supportsHeadings else { throw Self.invalid }
         let target: String
         switch destination {
         case .newProject(_, let folder, let parent):
@@ -711,7 +726,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
             guard children.count == original.count else { throw Self.invalid }
             row["subtasks"] = .array(try zip(children, original).map { .object(try task(Record($0.0.object), source: Record($0.1.object), child: true).fields) })
             if child {
-                let fields: Set<String> = ["id", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "deadline_date", "duration_minutes", "time_zone", "labels", "subtasks"]
+                let fields: Set<String> = ["is_heading", "id", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "deadline_date", "duration_minutes", "time_zone", "labels", "subtasks"]
                 row = Record(row.fields.filter { fields.contains($0.key) })
             }
             return row
@@ -729,7 +744,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
             case "tasks":
                 guard sourceIndex < definition.tasks.count else { throw Self.invalid }
                 row = try task(row, source: definition.tasks[sourceIndex])
-                let scope = TeamTaskEditScope(account: account, origin: origin, team: team.id, project: row.string("project_id"))
+                let scope = TeamTaskEditScope(account: account, origin: origin, team: team.id, project: row.string("project_id"), taskTypesProtocol: supportsHeadings ? 1 : nil, taskTypeLifecycleProtocol: supportsHeadings ? 1 : nil)
                 let requestID = WorkspaceBackup.stableID("template-checklist:" + run.uuidString, row.id)
                 guard let nonce = UUID(uuidString: requestID) else { throw Self.invalid }
                 let mutation = try TeamChecklist.preparing(Mutation(id: nonce, table: "tasks", recordID: row.id, method: "POST", fields: row.fields, insertOnly: true, teamTaskScope: scope))
@@ -754,7 +769,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         guard Set(identities).count == identities.count, identities.allSatisfy(TeamProjectValue.id),
               identities.allSatisfy({ $0 != target }),
               try JSONEncoder().encode(projectRows.map(\.fields) + sectionRows.map(\.fields) + taskRows.map(\.fields)).count <= 2_000_000 else { throw Self.invalid }
-        self.account = account; self.origin = origin; self.team = team; self.source = source
+        self.account = account; self.origin = origin; self.team = team; self.source = source; self.supportsHeadings = definition.requiresHeadingSupport
         self.destination = destination; self.workspace = workspace; self.session = session; self.run = run
         projects = projectRows; sections = sectionRows; tasks = taskRows; orders = orderRows
     }
@@ -782,11 +797,12 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         case .project(let access):
             target["mode"] = .string("project"); target["project_id"] = .string(access.id); target["revision"] = .number(access.revision)
         }
-        let body: [String: JSON] = ["team_id": .string(team.id), "team_revision": .number(team.revision), "request_id": .string(run.uuidString.lowercased()),
+        var body: [String: JSON] = ["team_id": .string(team.id), "team_revision": .number(team.revision), "request_id": .string(run.uuidString.lowercased()),
             "source": sourceBody, "destination": .object(target), "projects": .array(projects.map { .object($0.fields) }),
             "sections": .array(sections.map { .object($0.fields) }), "tasks": .array(tasks.map { .object($0.fields) }),
             "orders": .array(zip(orders, keys).map { order, key in .object(["project_id": .string(order.project), "section_id": order.section.map(JSON.string) ?? .null,
                 "base_ids": .array(baseOrders[key]!.map(JSON.string)), "task_ids": .array(order.tasks.map(JSON.string))]) })]
+        if supportsHeadings { body["workflow_types_protocol"] = .number(1) }
         guard try JSONEncoder().encode(body).count <= 4_200_000 else { throw Self.invalid }
         return body
     }

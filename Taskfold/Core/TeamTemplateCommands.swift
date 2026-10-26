@@ -19,11 +19,17 @@ struct TeamTemplateCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
     var template: String { body["template_id"]!.text }
     var description: String { "Private team template request" }
     var debugDescription: String { description }
-    init(account: String, origin: String, action: Action, team: String, template: String, revision: Double? = nil, name: String? = nil, document: JSON? = nil, requestID: UUID = UUID()) throws {
+    init(account: String, origin: String, action: Action, team: String, template: String, revision: Double? = nil, name: String? = nil, document: JSON? = nil, supportsHeadings: Bool = false, requestID: UUID = UUID()) throws {
         var body: [String: JSON] = ["team_id": .string(team), "template_id": .string(template), "request_id": .string(requestID.uuidString.lowercased())]
         if let revision { body["revision"] = .number(revision) }
         if let name { body["name"] = .string(name.trimmingCharacters(in: .whitespacesAndNewlines)) }
-        if let document { body["document"] = document }
+        if let document {
+            body["document"] = document
+            if try WorkflowTemplate(document: document).requiresHeadingSupport {
+                guard supportsHeadings else { throw Self.invalid }
+                body["workflow_types_protocol"] = .number(1)
+            }
+        }
         try self.init(account: account, origin: origin, action: action, body: body)
     }
     init(account: String, origin: String, action: Action, body: [String: JSON]) throws {
@@ -39,7 +45,10 @@ struct TeamTemplateCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
             let name = try TeamTemplateLibraryValue.name(body["name"])
             guard name == name.trimmingCharacters(in: .whitespacesAndNewlines), let document = body["document"] else { throw Self.invalid }
             let definition = try WorkflowTemplate(document: document)
-            guard !definition.requiresHeadingSupport else { throw Self.invalid }
+            if definition.requiresHeadingSupport {
+                fields.insert("workflow_types_protocol")
+                guard body["workflow_types_protocol"] == .number(1) else { throw Self.invalid }
+            }
         }
         guard Set(body.keys) == fields, try JSONEncoder().encode(body).count <= 2_050_000 else { throw Self.invalid }
         self.account = account; self.origin = origin; self.action = action; self.body = body
@@ -56,7 +65,9 @@ struct TeamTemplateCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
         case .replace: revision = try TeamTemplateLibraryValue.revision(body["revision"]) + 1
         case .delete: revision = try TeamTemplateLibraryValue.revision(body["revision"])
         }
-        guard Set(raw.keys) == ["library_protocol", "account", "team_id", "request_id", "operation", "template_id", "revision", "deleted", "replayed"],
+        var keys: Set<String> = ["library_protocol", "account", "team_id", "request_id", "operation", "template_id", "revision", "deleted", "replayed"]
+        if body["workflow_types_protocol"] != nil { keys.insert("workflow_types_protocol"); guard raw["workflow_types_protocol"] == .number(1) else { throw Self.invalid } }
+        guard Set(raw.keys) == keys,
               raw["library_protocol"] == .number(1), raw["account"] == .string(account), raw["team_id"] == .string(team),
               raw["request_id"] == .string(id), raw["operation"] == .string(action.rawValue), raw["template_id"] == .string(template),
               raw["revision"] == .number(revision), raw["deleted"] == .bool(action == .delete), case .bool? = raw["replayed"] else { throw Self.invalid }

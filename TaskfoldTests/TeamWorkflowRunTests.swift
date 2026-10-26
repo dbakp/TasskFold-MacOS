@@ -186,3 +186,73 @@ final class TeamWorkflowRunTests: XCTestCase {
         XCTAssertEqual(row["document"], .object(doc))
     }
 }
+
+// Heading-aware shared reuse must preserve the reviewed format through recovery.
+extension TeamWorkflowRunTests {
+    func headingWorkflowSource() -> TeamWorkflowRunPlan.Source {
+        let child: JSON = .object(["id": .string("phase"), "title": .string("Research"), "is_heading": .bool(true), "labels": .array([]), "subtasks": .array([.object(["id": .string("work"), "title": .string("* Literal task"), "labels": .array([]), "subtasks": .array([])])])])
+        let document: JSON = .object(["version": .number(2), "capabilities": .array([.string("task_headings")]), "kind": .string("task"), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": .string("root"), "title": .string("Design phase"), "is_heading": .bool(true), "labels": .array([]), "subtasks": .array([child])])])])
+        return .personal(Record(["id": .string(templateID), "user_id": .string(account), "name": .string("Design"), "document": document]))
+    }
+    func headingRun() throws -> TeamWorkflowRunPlan {
+        try .init(source: headingWorkflowSource(), account: account, origin: origin, team: team(), destination: .project(access()), name: "Design", workspace: workspace, session: session, createdAt: stamp, supportsHeadings: true)
+    }
+    func testSharedHeadingRunRequiresOptInAndPreservesNestedTypes() throws {
+        XCTAssertThrowsError(try plan(source: headingWorkflowSource(), destination: .project(access())))
+        let p = try headingRun(), row = try XCTUnwrap(p.tasks.first)
+        XCTAssertEqual(p.contentsSummary, "1 checklist item · 2 headings")
+        XCTAssertEqual(TaskKind(row), .heading)
+        let nested = Record(try XCTUnwrap(row["subtasks"].list.first).object)
+        XCTAssertEqual(TaskKind(nested), .heading)
+        let work = Record(try XCTUnwrap(nested["subtasks"].list.first).object)
+        XCTAssertEqual(TaskKind(work), .task); XCTAssertEqual(work.title, "* Literal task")
+        XCTAssertFalse(row.completed); XCTAssertFalse(nested.completed); XCTAssertFalse(work.completed)
+        XCTAssertEqual(TeamChecklist.token(nested[TeamChecklist.key])?.version, 0)
+        let bases = Dictionary(uniqueKeysWithValues: p.orders.map { ("group:" + $0.project + ":" + ($0.section ?? "none"), [String]()) })
+        let c = try TeamWorkflowRunCommand(plan: p, baseOrders: bases)
+        XCTAssertEqual(c.body["workflow_types_protocol"], .number(1))
+        XCTAssertEqual(try JSONDecoder().decode(TeamWorkflowRunCommand.self, from: JSONEncoder().encode(c)), c)
+        for marker in [JSON.null, .number(2), .bool(true)] {
+            var body = c.body; body["workflow_types_protocol"] = marker
+            XCTAssertThrowsError(try TeamWorkflowRunCommand(account: account, origin: origin, body: body))
+        }
+        var body = c.body; body.removeValue(forKey: "workflow_types_protocol")
+        XCTAssertThrowsError(try TeamWorkflowRunCommand(account: account, origin: origin, body: body))
+        for level in [0, 1] {
+            var root = row.fields
+            if level == 0 { root.removeValue(forKey: "is_heading") }
+            else { var nodes = root["subtasks"]!.list; var node = nodes[0].object; node["is_heading"] = .bool(false); nodes[0] = .object(node); root["subtasks"] = .array(nodes) }
+            body = c.body; body["tasks"] = .array([.object(root)])
+            XCTAssertThrowsError(try TeamWorkflowRunCommand(account: account, origin: origin, body: body))
+        }
+        var receipt: [String:JSON] = ["run_protocol": .number(1), "workflow_types_protocol": .number(1), "account": .string(account), "team_id": .string(teamID), "request_id": .string(c.id), "projects": .array([]), "sections": .array([]), "tasks": .array([.object(["id": row["id"], "generation": row["task_generation"], "project_id": row["project_id"]])]), "replayed": .bool(false)]
+        XCTAssertNoThrow(try c.confirmed(receipt)); receipt.removeValue(forKey: "workflow_types_protocol")
+        XCTAssertThrowsError(try c.confirmed(receipt))
+    }
+    func testSharedHeadingPublicationRequiresTypedAckAndRetainsDocument() throws {
+        let doc = headingWorkflowSource().document
+        XCTAssertThrowsError(try TeamTemplateCommand(account: account, origin: origin, action: .publish, team: teamID, template: templateID, name: "Design", document: doc))
+        for action in [TeamTemplateCommand.Action.publish, .replace] {
+            let c = try TeamTemplateCommand(account: account, origin: origin, action: action, team: teamID, template: templateID, revision: action == .replace ? 1 : nil, name: "Design", document: doc, supportsHeadings: true)
+            XCTAssertEqual(c.body["document"], doc); XCTAssertEqual(c.body["workflow_types_protocol"], .number(1))
+            XCTAssertEqual(try JSONDecoder().decode(TeamTemplateCommand.self, from: JSONEncoder().encode(c)), c)
+            var raw: [String:JSON] = ["library_protocol": .number(1), "workflow_types_protocol": .number(1), "account": .string(account), "team_id": .string(teamID), "request_id": .string(c.id), "operation": .string(action.rawValue), "template_id": .string(templateID), "revision": .number(action == .publish ? 1 : 2), "deleted": .bool(false), "replayed": .bool(true)]
+            XCTAssertNoThrow(try c.confirmed(raw)); raw["workflow_types_protocol"] = .number(2)
+            XCTAssertThrowsError(try c.confirmed(raw)); raw.removeValue(forKey: "workflow_types_protocol")
+            XCTAssertThrowsError(try c.confirmed(raw))
+            var body = c.body; body.removeValue(forKey: "workflow_types_protocol")
+            XCTAssertThrowsError(try TeamTemplateCommand(account: account, origin: origin, action: action, body: body))
+        }
+    }
+    func testSharedOrganizerReopenMustBeSavedBeforeTypeChange() throws {
+        let row = Record(["id": .string("item"), "completed": .bool(false)])
+        XCTAssertFalse(TeamTaskTypes.needsSavedReopen(row, originalTree: nil))
+        XCTAssertFalse(TeamTaskTypes.needsSavedReopen(row, originalTree: .array([])))
+        XCTAssertFalse(TeamTaskTypes.needsSavedReopen(row, originalTree: .array([.object(row.fields)])))
+        var completed = row; completed["completed"] = .bool(true)
+        XCTAssertTrue(TeamTaskTypes.needsSavedReopen(row, originalTree: .array([.object(completed.fields)])))
+        completed["completed"] = .bool(false); completed["completed_at"] = .string("2026-10-26T10:00:00Z")
+        XCTAssertTrue(TeamTaskTypes.needsSavedReopen(row, originalTree: .array([.object(completed.fields)])))
+        XCTAssertTrue(TeamTaskTypes.needsSavedReopen(row, originalTree: .string("unknown")))
+    }
+}

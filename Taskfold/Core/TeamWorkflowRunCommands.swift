@@ -18,14 +18,16 @@ struct TeamWorkflowRunCommand: ReviewedTeamCommand, ReviewedTeamFileCommand, Cus
     }
     init(account: String, origin: String, body: [String: JSON]) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
-        guard Set(body.keys) == ["team_id", "request_id", "team_revision", "source", "destination", "projects", "sections", "tasks", "orders"],
+        var keys: Set<String> = ["team_id", "request_id", "team_revision", "source", "destination", "projects", "sections", "tasks", "orders"]
+        if body["workflow_types_protocol"] != nil { keys.insert("workflow_types_protocol") }
+        guard Set(body.keys) == keys,
               try JSONEncoder().encode(body).count <= 4_200_000 else { throw Self.invalid }
         _ = try TeamOrganizationValue.id(body["team_id"]); _ = try TeamOrganizationValue.id(body["request_id"])
         _ = try TeamProjectValue.revision(body["team_revision"])
         guard case .object(let source)? = body["source"], Set(source.keys) == ["kind", "id", "team_id", "revision", "document"], let document = source["document"] else { throw Self.invalid }
         _ = try TeamOrganizationValue.id(source["id"])
         let definition = try WorkflowTemplate(document: document)
-            guard !definition.requiresHeadingSupport else { throw Self.invalid }
+        guard definition.requiresHeadingSupport ? body["workflow_types_protocol"] == .number(1) : body["workflow_types_protocol"] == nil else { throw Self.invalid }
         switch source["kind"] {
         case .string("personal"): guard source["team_id"] == .null, source["revision"] == .null else { throw Self.invalid }
         case .string("shared"): _ = try TeamOrganizationValue.id(source["team_id"]); _ = try TeamProjectValue.revision(source["revision"])
@@ -78,18 +80,23 @@ struct TeamWorkflowRunCommand: ReviewedTeamCommand, ReviewedTeamFileCommand, Cus
                   TeamTaskLabelsDraft(row["labels"] ?? .null).supported,
                   ["assigned_to", "completed_at"].allSatisfy({ row[$0] == nil || row[$0] == .null }),
                   ["attachments", "comments"].allSatisfy({ row[$0] == nil || row[$0] == .array([]) }) else { throw Self.invalid }
-            let scope = TeamTaskEditScope(account: account, origin: origin, team: body["team_id"]!.text, project: row["project_id"]!.text)
+            let scope = TeamTaskEditScope(account: account, origin: origin, team: body["team_id"]!.text, project: row["project_id"]!.text, taskTypesProtocol: definition.requiresHeadingSupport ? 1 : nil, taskTypeLifecycleProtocol: definition.requiresHeadingSupport ? 1 : nil)
             _ = try scope.lifecycleBody(for: Mutation(table: "tasks", recordID: id, method: "POST", fields: row, insertOnly: true, teamTaskScope: scope))
             let tree = row["subtasks"] ?? .array([])
             try TeamChecklist.validate(tree)
             for child in try TeamChecklist.indexed(tree).values {
-                guard Set(child.keys).isSubset(of: ["id", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "deadline_date", "duration_minutes", "time_zone", "labels", "subtasks", TeamChecklist.key]),
+                guard Set(child.keys).isSubset(of: ["is_heading", "id", "title", "description", "completed", "completed_at", "priority", "due_date", "due_time", "deadline_date", "duration_minutes", "time_zone", "labels", "subtasks", TeamChecklist.key]),
                       child["completed"] == .bool(false), child["completed_at"] == nil || child["completed_at"] == .null,
                       case .string(let title)? = child["title"], !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                       let token = TeamChecklist.token(child[TeamChecklist.key]), token.version == 0,
                       TeamTaskLabelsDraft(child["labels"] ?? .null).supported else { throw Self.invalid }
             }
         }
+        func sameTypes(_ source: Record, _ row: Record) -> Bool {
+            guard source.fields["is_heading"] == row.fields["is_heading"], source["subtasks"].list.count == row["subtasks"].list.count else { return false }
+            return zip(source["subtasks"].list, row["subtasks"].list).allSatisfy { sameTypes(Record($0.0.object), Record($0.1.object)) }
+        }
+        guard !definition.requiresHeadingSupport || zip(definition.tasks, tasks).allSatisfy({ sameTypes($0.0, Record($0.1)) }) else { throw Self.invalid }
         guard projectIDs.isDisjoint(with: sectionIDs), projectIDs.isDisjoint(with: taskIDs), sectionIDs.isDisjoint(with: taskIDs) else { throw Self.invalid }
         let orders = try TeamOrganizationValue.rows(body["orders"], limit: 5000)
         var grouped = Set<String>(), ordered = Set<String>()
@@ -115,7 +122,9 @@ struct TeamWorkflowRunCommand: ReviewedTeamCommand, ReviewedTeamFileCommand, Cus
     }
     func confirmed(_ raw: [String: JSON]) throws -> TeamWorkflowRunReceipt {
         let expected = body["tasks"]!.list.map { row in JSON.object(["id": row.object["id"]!, "generation": row.object["task_generation"]!, "project_id": row.object["project_id"]!]) }
-        guard Set(raw.keys) == ["run_protocol", "account", "team_id", "request_id", "projects", "sections", "tasks", "replayed"],
+        var keys: Set<String> = ["run_protocol", "account", "team_id", "request_id", "projects", "sections", "tasks", "replayed"]
+        if body["workflow_types_protocol"] != nil { keys.insert("workflow_types_protocol"); guard raw["workflow_types_protocol"] == .number(1) else { throw Self.invalid } }
+        guard Set(raw.keys) == keys,
               raw["run_protocol"] == .number(1), raw["account"] == .string(account), raw["team_id"] == .string(team), raw["request_id"] == .string(id),
               raw["projects"] == .array(body["projects"]!.list.map { $0.object["id"]! }), raw["sections"] == .array(body["sections"]!.list.map { $0.object["id"]! }),
               raw["tasks"] == .array(expected), case .bool? = raw["replayed"] else { throw Self.invalid }
