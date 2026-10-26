@@ -4584,3 +4584,55 @@ extension TaskfoldMacUITests {
 
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testSourceCSVFileMappingReviewCancelSaveAndColdReturn() throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
+        continueAfterFailure = false
+        let app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--subtask-organizer-fixture", "--heading-portability-template-fixture", "-localMode", "YES"]
+        try launchHeadingWorkspace(app)
+        let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        func tables() throws -> NSDictionary { try XCTUnwrap((JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? NSDictionary)?["tables"] as? NSDictionary) }
+        func front() -> XCUIElement { app.sheets.count > 0 ? app.sheets.element(boundBy: app.sheets.count - 1) : app.windows.firstMatch }
+        func reveal(_ control: XCUIElement) {
+            for _ in 0..<15 where !control.isHittable { front().scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
+            XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
+        }
+        XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15)); let before = try tables()
+        app.buttons["openTemplates"].click()
+        let file = URL(fileURLWithPath: "/tmp/taskfold-source-mapping-" + UUID().uuidString.lowercased() + ".csv")
+        try Data("Name,Details,Kind,Done\nDesign context,Keep the context,heading,true\n* Ordinary action,Keep the action,task,true".utf8).write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        func prepare() {
+            let importFile = app.buttons["mapWorkflowCSVFile"]; reveal(importFile); importFile.click()
+            app.typeKey("g", modifierFlags: [.command, .shift])
+            let field = front().textFields.firstMatch; XCTAssertTrue(field.waitForExistence(timeout: 5)); field.click(); field.typeKey("a", modifierFlags: .command); field.typeText(file.path); field.typeKey(.return, modifierFlags: [])
+            let open = app.sheets["open-panel"].buttons["OKButton"]; if open.waitForExistence(timeout: 3) { open.click() }
+            for (key, value) in [("title","Name"),("notes","Details"),("type","Kind")] {
+                let picker = app.descendants(matching: .any).matching(identifier: "mappedCSVColumn-" + key).firstMatch
+                XCTAssertTrue(picker.waitForExistence(timeout: 8)); reveal(picker); picker.click()
+                let option = app.menuItems[value]; XCTAssertTrue(option.waitForExistence(timeout: 5), app.debugDescription); option.click()
+            }
+            let review = app.buttons["reviewMappedCSV"]; reveal(review)
+            XCTAssertTrue(renderedText(app.staticTexts["mappedCSVIgnoredColumns"]).contains("Done"))
+            review.click(); reveal(app.buttons["confirmImportTemplate"])
+        }
+        prepare(); retainWindow(app, name: "Mac mapped source CSV full review before saving")
+        let cancel = front().buttons["Cancel"].firstMatch; reveal(cancel); cancel.click(); XCTAssertEqual(try tables(), before)
+        prepare(); app.buttons["confirmImportTemplate"].click()
+        let after = try tables(), definitions = try XCTUnwrap(after["project_templates"] as? [[String: Any]])
+        XCTAssertEqual(after["tasks"] as? NSArray, before["tasks"] as? NSArray)
+        XCTAssertEqual(definitions.count, (before["project_templates"] as? [Any])!.count + 1)
+        let imported = try XCTUnwrap(definitions.first { $0["name"] as? String == "Imported workflow" })
+        let document = try XCTUnwrap(imported["document"] as? [String: Any]), tasks = try XCTUnwrap(document["tasks"] as? [[String: Any]])
+        XCTAssertEqual(document["version"] as? Int, 2); XCTAssertEqual(tasks[0]["is_heading"] as? Bool, true)
+        XCTAssertEqual(tasks[1]["title"] as? String, "* Ordinary action"); XCTAssertNil(tasks[0]["completed"])
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app)
+        XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15)); app.buttons["openTemplates"].click()
+        XCTAssertTrue(app.buttons["workflowTemplate-" + (imported["id"] as! String)].waitForExistence(timeout: 8))
+        XCTAssertEqual((try tables())["tasks"] as? NSArray, before["tasks"] as? NSArray)
+        XCTAssertEqual(((try tables())["project_templates"] as? [[String: Any]])?.first { $0["id"] as? String == imported["id"] as? String } as NSDictionary?, imported as NSDictionary)
+    }
+}

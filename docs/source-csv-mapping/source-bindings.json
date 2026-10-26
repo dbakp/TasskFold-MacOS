@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-26",
+  "sources": {
+    "Taskfold/Core/ProjectWorkflows.swift": "588fa0938eb312b173510a06172dbe61edf948c430c11af00bc64179da6fd340",
+    "Taskfold/Views/WorkflowViews.swift": "80c3aa28446c80635fc1767be26fece84008abfa2fe59dbd02fa86707dd66191",
+    "TaskfoldTests/WorkflowCSVTests.swift": "cbd39aef7ff53d7f1211eaf1c3e229832b84339b841a37638a0b1466b8aa5fd2",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "2523f1945d266b269f680828e8914016e0bd92271823191b0205a3e950d689b6"
+  },
+  "preparedCoreAndViewsMatch": {
+    "Taskfold/Core/ProjectWorkflows.swift": true,
+    "Taskfold/Views/WorkflowViews.swift": true
+  },
+  "preparedTestSHA256": "2523f1945d266b269f680828e8914016e0bd92271823191b0205a3e950d689b6",
+  "normalHeadingConfigurationChanged": false,
+  "hostedChanges": false
+}

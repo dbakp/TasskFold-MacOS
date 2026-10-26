@@ -173,6 +173,8 @@ struct TemplateLibraryView: View {
     @State private var importing = false
     @State private var imported: ImportedWorkflowTemplate?
     @State private var importingText = false
+    @State private var mappingFile = false
+    @State private var csvSource: WorkflowCSVSource?
     @State private var exportRequest: ExportedWorkflowTemplate?
     @State private var captured: WorkflowTemplateCapture?
     @State private var readingFile: UUID?
@@ -200,9 +202,10 @@ struct TemplateLibraryView: View {
                     }
                 }
                 Section {
-                    Button { importing = true } label: { Label("Import template…", systemImage: "square.and.arrow.down") }
+                    Button { mappingFile = false; importing = true } label: { Label("Import template…", systemImage: "square.and.arrow.down") }
                         .accessibilityIdentifier("importWorkflowTemplate")
                     Button("Import from text…", systemImage: "doc.on.clipboard") { importingText = true }.accessibilityIdentifier("importWorkflowText")
+                    Button("Map a CSV file…", systemImage: "tablecells") { mappingFile = true; importing = true }.accessibilityIdentifier("mapWorkflowCSVFile")
                     Text("Review a workflow file before saving a private copy. Importing does not create any tasks.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Save a workflow") {
@@ -230,22 +233,23 @@ struct TemplateLibraryView: View {
         }
         .onDisappear { readingFile = nil }
         .onChange(of: store.workspaceGeneration) { _, _ in
-            readingFile = nil; importing = false; imported = nil; exportRequest = nil
+            readingFile = nil; importing = false; imported = nil; csvSource = nil; exportRequest = nil
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .commaSeparatedText]) { result in
             guard store.workflowReady(binding) else { message = store.error; return }
             do {
-                let url = try result.get(), request = UUID()
+                let url = try result.get(), request = UUID(), mapped = mappingFile
                 readingFile = request; message = nil
                 Task {
                     do {
-                        let file = try await Task.detached(priority: .userInitiated) {
-                            try WorkflowTemplateFile.read(url)
+                        let result = try await Task.detached(priority: .userInitiated) { () -> (WorkflowTemplateFile?, WorkflowCSVSource?) in
+                            if mapped { return (nil, try WorkflowCSVSource(data: WorkflowTemplateFile.readData(url))) }
+                            return (try WorkflowTemplateFile.read(url), nil)
                         }.value
                         guard readingFile == request else { return }
                         readingFile = nil
                         guard store.workflowReady(binding) else { message = store.error; return }
-                        imported = ImportedWorkflowTemplate(file: file)
+                        if let file = result.0 { imported = ImportedWorkflowTemplate(file: file) }; csvSource = result.1
                     } catch {
                         guard readingFile == request else { return }
                         readingFile = nil; message = error.localizedDescription
@@ -259,6 +263,7 @@ struct TemplateLibraryView: View {
         .sheet(item: $exportRequest) { request in TemplateFileExportReview(request: request, binding: binding) }
         .sheet(item: $imported) { request in TemplateFileReview(request: request, binding: binding) }
         .sheet(isPresented: $importingText) { TemplateTextImportView(binding: binding) }
+        .sheet(item: $csvSource) { source in TemplateCSVMappingView(source: source, binding: binding) }
         .sheet(item: $selected) { TemplateRunView(template: $0) }
         .sheet(item: $editingTemplate) { TemplateDefinitionEditor(template: $0) }
         .confirmationDialog("Delete this template?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
@@ -434,6 +439,7 @@ private struct TemplateTextImportView: View {
     @Environment(Store.self) private var store
     @State private var binding: WorkspaceBinding?
     @State private var text = ""
+    @State private var csvSource: WorkflowCSVSource?
     @State private var parsed: ImportedWorkflowTemplate?
     @State private var reading: UUID?
     @State private var message: String?
@@ -445,23 +451,26 @@ private struct TemplateTextImportView: View {
                     VStack(spacing: 16) {
                         Text("Workspace changed").font(.title2.bold())
                         Text("Your pasted text is kept. Review it again before using it in the current workspace.").foregroundStyle(.secondary)
-                        Button("Review in current workspace") { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); parsed = nil; reading = nil; message = nil }
+                        Button("Review in current workspace") { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); parsed = nil; csvSource = nil; reading = nil; message = nil }
                             .accessibilityIdentifier("rebindTemplateText")
                     }.padding()
                 }
+            } else if let csvSource {
+                TemplateCSVMappingView(source: csvSource, binding: binding, editText: { self.csvSource = nil })
             } else if let parsed {
                 TemplateFileReview(request: parsed, binding: binding, editText: { self.parsed = nil })
             } else {
                 WorkflowShell(title: "Import template text") {
                     Form {
                         Section {
-                            Text("Paste Taskfold workflow JSON or CSV. Review its full contents before saving a reusable copy. No tasks are created here.").foregroundStyle(.secondary)
+                            Text("Paste a Taskfold workflow or another CSV. Other CSV files need an explicit column mapping. Review the contents before saving a reusable copy; no tasks are created here.").foregroundStyle(.secondary)
                             TextEditor(text: $text).frame(height: 220).accessibilityLabel("Workflow text").accessibilityIdentifier("templateImportText").disabled(reading != nil)
                             PasteButton(payloadType: String.self) { values in if reading == nil, let first = values.first { text = first; message = nil } }
                                 .accessibilityIdentifier("pasteTemplateText").disabled(reading != nil)
                         }
                         Section {
                             Button("Review template", action: review).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || reading != nil).accessibilityIdentifier("reviewTemplateText")
+                            Button("Map CSV columns", action: mapCSV).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || reading != nil).accessibilityIdentifier("mapTemplateCSVText")
                             if reading != nil { ProgressView("Reading workflow…") }
                             if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("templateTextError") }
                         }
@@ -469,6 +478,17 @@ private struct TemplateTextImportView: View {
                 }
             }
         }.onDisappear { reading = nil }
+    }
+    private func mapCSV() {
+        guard store.workflowReady(binding) else { message = store.error; return }
+        let id = UUID(), candidate = text, opening = binding; reading = id; message = nil
+        Task {
+            do {
+                let source = try await Task.detached(priority: .userInitiated) { try WorkflowCSVSource(data: Data(candidate.utf8)) }.value
+                guard reading == id, candidate == text, opening == binding, binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { return }
+                reading = nil; csvSource = source
+            } catch { if reading == id { reading = nil; message = error.localizedDescription } }
+        }
     }
     private func review() {
         guard store.workflowReady(binding) else { message = store.error; return }
@@ -497,6 +517,7 @@ private struct TemplateFileReview: View {
     let request: ImportedWorkflowTemplate
     let binding: WorkspaceBinding?
     var editText: (() -> Void)? = nil
+    var editLabel = "Edit pasted text"
     @State private var name = ""
     @State private var message: String?
     var body: some View {
@@ -514,7 +535,7 @@ private struct TemplateFileReview: View {
                     Button("Add to templates", action: save)
                         .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || name.count > 160)
                         .accessibilityIdentifier("confirmImportTemplate")
-                    if let editText { Button("Edit pasted text", action: editText).accessibilityIdentifier("editTemplateText") }
+                    if let editText { Button(editLabel, action: editText).accessibilityIdentifier("editTemplateText") }
                     Button("Cancel", role: .cancel) { dismiss() }
                 }
                 if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("templateImportError") }
@@ -917,5 +938,98 @@ struct TemplateDefinitionPreview: View {
             }.padding(.leading,CGFloat(min(item.depth,5))*10)
         }
         } else { Text("This definition needs a newer Taskfold version. Its saved content is preserved.").foregroundStyle(.secondary) }
+    }
+}
+
+
+/// Mapping is explicit and workspace-bound; opening a source never creates work.
+private struct TemplateCSVMappingView: View {
+    @Environment(Store.self) private var store
+    let source: WorkflowCSVSource
+    let binding: WorkspaceBinding?
+    var editText: (() -> Void)? = nil
+    @State private var mapping = WorkflowCSVMapping()
+    @State private var name = "Imported workflow"
+    @State private var anchor = Date()
+    @State private var parsed: ImportedWorkflowTemplate?
+    @State private var reading: UUID?
+    @State private var message: String?
+    var body: some View {
+        Group {
+            if binding?.matches(account: store.userID, generation: store.workspaceGeneration) != true {
+                WorkflowShell(title: "CSV review") {
+                    ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Return to your source text or reopen this CSV in the current workspace. Nothing has been imported."))
+                }
+            } else if let parsed {
+                TemplateFileReview(request: parsed, binding: binding, editText: { self.parsed = nil }, editLabel: "Edit column mapping")
+            } else {
+                WorkflowShell(title: "Map CSV columns") {
+                    Form {
+                        Section {
+                            Text("\(source.records.count) rows · \(source.headers.count) columns").font(.headline)
+                            Text("The first row names the columns. Choose the fields to keep; row order becomes task order in a new reusable project workflow. No tasks are created here.").foregroundStyle(.secondary)
+                            TextField("Template name", text: $name).accessibilityIdentifier("mappedCSVName").disabled(reading != nil)
+                        }
+                        Section("Choose columns") {
+                            ForEach(WorkflowCSVMapping.Field.allCases) { field in column(field) }
+                        }.disabled(reading != nil)
+                        if mapping.columns[.type] != nil {
+                            Section("Source type values") {
+                                LabeledContent("Task") { TextField("Task value", text: $mapping.taskValue).multilineTextAlignment(.trailing).accessibilityIdentifier("mappedCSVTaskValue") }
+                                LabeledContent("Heading") { TextField("Heading value", text: $mapping.headingValue).multilineTextAlignment(.trailing).accessibilityIdentifier("mappedCSVHeadingValue") }
+                                Text("Values are case-sensitive. Blank type cells mean Task. Titles are kept literally, including a leading *.").font(.caption).foregroundStyle(.secondary)
+                                if !store.taskHeadingsAuthoringEnabled { Text("Heading import is not enabled in this workspace. Ordinary tasks can still be mapped.").font(.caption).foregroundStyle(.secondary) }
+                            }.disabled(reading != nil)
+                        }
+                        if mapping.columns[.plannedDate] != nil || mapping.columns[.deadlineDate] != nil {
+                            Section("Reusable dates") {
+                                DatePicker("Reference date", selection: $anchor, displayedComponents: .date).accessibilityIdentifier("mappedCSVReferenceDate")
+                                Text("Dates become offsets from this reference date. Each new run chooses its own start date.").font(.caption).foregroundStyle(.secondary)
+                            }.disabled(reading != nil)
+                        }
+                        Section("What will be kept") {
+                            let ignored = source.ignoredColumns(mapping)
+                            Text(ignored.isEmpty ? "Every source column is mapped." : "Columns not copied: " + ignored.joined(separator: ", "))
+                                .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("mappedCSVIgnoredColumns")
+                            Text("Completion status, assignments, attachments and discussions are not copied. All runs start fresh; the original CSV stays unchanged.").font(.caption).foregroundStyle(.secondary)
+                            Button("Review mapped workflow", action: review).disabled(mapping.columns[.title] == nil || reading != nil).accessibilityIdentifier("reviewMappedCSV")
+                            if let editText { Button("Edit source text", action: editText).disabled(reading != nil) }
+                            if reading != nil { ProgressView("Preparing preview…") }
+                            if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("mappedCSVError") }
+                        }
+                    }.formStyle(.grouped)
+                }
+            }
+        }.onDisappear { reading = nil }
+    }
+    private func column(_ field: WorkflowCSVMapping.Field) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Picker(field.title, selection: Binding(get: { mapping.columns[field] ?? -1 }, set: { value in
+                if value < 0 { mapping.columns.removeValue(forKey: field) } else { mapping.columns[field] = value }
+                message = nil
+            })) {
+                Text(field == .title ? "Choose a column" : "Not copied").tag(-1)
+                ForEach(source.headers.indices, id: \.self) { index in Text(source.headers[index]).tag(index) }
+            }.pickerStyle(.menu).accessibilityIdentifier("mappedCSVColumn-" + field.rawValue)
+            if let index = mapping.columns[field], source.headers.indices.contains(index) {
+                Text(source.records.prefix(2).map { $0[index].isEmpty ? "(empty)" : String($0[index].prefix(140)) }.joined(separator: " · "))
+                    .font(.caption).foregroundStyle(.secondary).lineLimit(3)
+            }
+        }
+    }
+    private func review() {
+        guard store.workflowReady(binding) else { message = store.error; return }
+        let request = UUID(), selected = mapping, label = name, date = anchor, headings = store.taskHeadingsAuthoringEnabled
+        reading = request; message = nil
+        Task {
+            do {
+                let file = try await Task.detached(priority: .userInitiated) { try source.template(name: label, mapping: selected, anchor: date, headings: headings) }.value
+                guard reading == request else { return }
+                reading = nil
+                guard mapping == selected, name == label, anchor == date,
+                      binding?.matches(account: store.userID, generation: store.workspaceGeneration) == true else { return }
+                parsed = ImportedWorkflowTemplate(file: file)
+            } catch { if reading == request { reading = nil; message = error.localizedDescription } }
+        }
     }
 }

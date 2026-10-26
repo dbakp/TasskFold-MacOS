@@ -4,39 +4,26 @@ Updated 26 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Non-completable headings now have their persisted contract, gated local native
-presentation/type editors and initial productive-count/projection integration.
-Normal app configuration still omits authoring. Versioned template/workspace
-files, fresh runs/copies and checklist progress now retain heading semantics.
-Time/Focus/location eligibility now excludes headings, and list/board/filter
-badges and typed template-library summaries distinguish context from work.
-Reviewed Todoist heading mapping now has owned service/RPC/client support behind
-default-off gates. Taskfold workflow CSV and explicit clipboard review now retain
-these types. Next are generic source mappings, remaining provider/native
-action/count/history acceptance and shared capability/command adapters;
-see `TASK_HEADINGS.md`, `p2-task-headings-contract-evidence.json` and
-`p2-task-headings-native-evidence.json` and
-`p2-task-headings-portability-evidence.json` and
-`p2-task-headings-actions-evidence.json` and
-`p2-task-headings-todoist-evidence.json` and
-`p2-task-headings-csv-evidence.json`. This does not close headings or rank 3.
-Project progress and attention now count ordinary work beneath headings, with
-matching widget totals and an explicit incomplete-total state. Separate child
-history and broader productive projections remain open; see
-`p2-task-headings-project-work-evidence.json`.
-Day-planner rows and capacity now use the same productive descendant reading,
-with safe child scheduling/completion and an incomplete-work state. Scoped
-phone/tablet native acceptance passes; Mac native execution is pending unlock.
-Today/Upcoming now query productive descendants, with fenced native actions,
-parent context and matching Mac Today badges. Scoped iPhone/iPad native acceptance
-passes; Mac runtime remains pending unlock. Inbox review and primary widget task
-rows/token/link authority remain next; see
-`p2-task-headings-planner-evidence.json` and
-`p2-task-headings-dated-evidence.json`.
-Mac UI automation is now authorized. Scoped Todoist, CSV clipboard/native-file
-transfer and project-work route/completion/Undo/Redo/cold checks pass; see
-`mac-heading-acceptance/report.json`.
-The outstanding wider Mac, rank-6 and Watch acceptance below remains open.
+Rank 3 remains active. Headings have a compatible persisted contract and gated
+local native editors; normal authoring stays off. Productive child work now feeds
+Today/Upcoming, Inbox, project/label/filter lists, primary widgets, day planning,
+week/month/year calendars, current project progress, combined activity and Insights.
+Separate immutable child history, custody and reviewed project-adoption history
+are implemented in source; hosted deployment/exposure has not been enabled.
+
+Template/workspace files, reviewed Todoist mapping, Taskfold workflow CSV and
+explicit text transfer preserve known types. Generic CSV column mapping now has
+owned file/text intake, explicit task/heading and parent-reference choices, a
+separate contents review, and a private reusable project-definition save. Its exact
+supported fields and exclusions are in `TASK_CSV_SOURCE_MAPPING.md`.
+
+Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
+widget acceptance, provider/file-handoff and cross-device checks, flat task-row
+sharing, older literal-copy conversion review, and shared type/capability/command
+adapters. The user-deferred older-client rollout dependency remains before hosted
+exposure. See `TASK_HEADINGS.md`, `TASK_CALENDAR_WORK.md`, `TASK_WORK_HISTORY.md`,
+`TASK_CSV_SOURCE_MAPPING.md` and their evidence folders. Historical checkpoints
+below retain their original scope; their former “next” items are not current status.
 
 Native completion recovery and permanent encrypted selection drafts are implemented
 in both clients. Missing-source/occurrence authored task/comment work now also has
@@ -5126,3 +5113,20 @@ authoring remains off. See [TASK_CALENDAR_WORK.md](TASK_CALENDAR_WORK.md) and
 This completes the period-projection implementation; wider native Mac,
 accessibility, adapter and cross-device acceptance remains open. The full Px
 goal and user-deferred release/provider gates remain active/pending respectively.
+
+
+### Reviewed generic CSV workflow mapping — 26 October 2026
+
+Both clients now accept explicitly mapped comma-separated workflows through
+Templates file intake or explicit pasted text. Users choose title/notes, parent
+references, exact task/heading values, dates relative to a reviewed reference
+date, priority, estimate, labels, time and time zone. Unmapped columns are listed;
+source account/completion/assignment/history data is not guessed or imported.
+A separate full definition review precedes Add to templates; runs remain separate.
+Known Taskfold files keep their strict path and normal heading authoring stays off.
+Each owned repository passes 87 focused Core checks, including 12 new mapping
+cases. Build/native scope, source hashes and cleanup are in
+[TASK_CSV_SOURCE_MAPPING.md](TASK_CSV_SOURCE_MAPPING.md) and `source-csv-mapping/`.
+This implements generic workflow mapping; provider/file handoff, flat row sharing,
+shared capability adapters and wider rank-3/6/7 acceptance remain open. User-deferred
+gates and the full Px goal remain unchanged.

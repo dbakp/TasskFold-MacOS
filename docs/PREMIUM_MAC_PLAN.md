@@ -7812,3 +7812,20 @@ authoring remains off. See [TASK_CALENDAR_WORK.md](TASK_CALENDAR_WORK.md) and
 This completes the period-projection implementation; wider native Mac,
 accessibility, adapter and cross-device acceptance remains open. The full Px
 goal and user-deferred release/provider gates remain active/pending respectively.
+
+
+### Reviewed generic CSV workflow mapping — 26 October 2026
+
+Both clients now accept explicitly mapped comma-separated workflows through
+Templates file intake or explicit pasted text. Users choose title/notes, parent
+references, exact task/heading values, dates relative to a reviewed reference
+date, priority, estimate, labels, time and time zone. Unmapped columns are listed;
+source account/completion/assignment/history data is not guessed or imported.
+A separate full definition review precedes Add to templates; runs remain separate.
+Known Taskfold files keep their strict path and normal heading authoring stays off.
+Each owned repository passes 87 focused Core checks, including 12 new mapping
+cases. Build/native scope, source hashes and cleanup are in
+[TASK_CSV_SOURCE_MAPPING.md](TASK_CSV_SOURCE_MAPPING.md) and `source-csv-mapping/`.
+This implements generic workflow mapping; provider/file handoff, flat row sharing,
+shared capability adapters and wider rank-3/6/7 acceptance remain open. User-deferred
+gates and the full Px goal remain unchanged.

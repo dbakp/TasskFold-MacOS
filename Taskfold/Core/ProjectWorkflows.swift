@@ -36,7 +36,8 @@ struct WorkflowTemplateFile: Sendable {
     }
 
     /// Coordinate provider-backed reads; never load an unbounded file into memory.
-    static func read(_ url: URL) throws -> Self {
+    static func read(_ url: URL) throws -> Self { try Self(data: readData(url)) }
+    static func readData(_ url: URL) throws -> Data {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > maximumBytes {
@@ -44,7 +45,7 @@ struct WorkflowTemplateFile: Sendable {
         }
         let coordinator = NSFileCoordinator()
         var coordinationError: NSError?
-        var result: Result<Self, Error>?
+        var result: Result<Data, Error>?
         coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
             result = Result {
                 let handle = try FileHandle(forReadingFrom: readableURL)
@@ -55,7 +56,7 @@ struct WorkflowTemplateFile: Sendable {
                     guard let chunk = try handle.read(upToCount: count), !chunk.isEmpty else { break }
                     data.append(chunk)
                 }
-                return try Self(data: data)
+                return data
             }
         }
         if let coordinationError { throw coordinationError }
@@ -849,14 +850,14 @@ enum WorkflowTemplateCSV {
         return data
     }
     /// Strict bounded UTF-8 CSV parsing, including quoted newlines and doubled quotes.
-    static func rows(_ data: Data) throws -> [[String]] {
+    static func rows(_ data: Data, maximumColumns: Int = columns.count) throws -> [[String]] {
         guard data.count <= WorkflowTemplateFile.maximumBytes else { throw failure("Choose template text no larger than 2.1 MB.") }
         var bytes = Array(data); if bytes.starts(with: [239,187,191]) { bytes.removeFirst(3) }
         var result: [[String]] = [], row: [String] = [], cell: [UInt8] = [], quoted = false, closed = false, started = false, index = 0
         func field() throws {
             guard let text = String(bytes: cell, encoding: .utf8) else { throw failure("This CSV is not valid UTF-8 text.") }
             row.append(text); cell.removeAll(keepingCapacity: true); closed = false; started = false
-            guard row.count <= columns.count else { throw failure("The CSV has extra columns. Its source is unchanged.") }
+            guard row.count <= maximumColumns else { throw failure("The CSV has extra columns. Its source is unchanged.") }
         }
         func record() throws {
             try field(); result.append(row); row.removeAll(keepingCapacity: true)
@@ -957,4 +958,145 @@ enum WorkflowTemplateCSV {
 
 extension WorkflowTemplateFile {
     func encodedCSV() throws -> Data { try WorkflowTemplateCSV.encode(self) }
+}
+
+
+/// An explicitly mapped source CSV becomes a reusable project definition, never live tasks.
+struct WorkflowCSVSource: Identifiable, Sendable {
+    let id = UUID()
+    let headers: [String]
+    let records: [[String]]
+    init(data: Data) throws {
+        let rows = try WorkflowTemplateCSV.rows(data, maximumColumns: 64)
+        guard let header = rows.first, !header.isEmpty else { throw AppFailure(message: "Choose a CSV with column names on its first row.") }
+        let names = header.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard names.allSatisfy({ !$0.isEmpty && $0.count <= 160 }), Set(names).count == names.count else {
+            throw AppFailure(message: "Give every CSV column a unique, nonempty name of up to 160 characters.")
+        }
+        // Versioned Taskfold files retain their strict schema; mapping cannot bypass it.
+        guard !names.starts(with: ["format", "document_version"]) else {
+            throw AppFailure(message: "Use Import template for versioned Taskfold files. Column mapping is for other CSV workflows.")
+        }
+        let content = rows.dropFirst().filter { !$0.allSatisfy(\.isEmpty) }
+        guard !content.isEmpty, content.count <= 5000, content.allSatisfy({ $0.count == header.count }) else {
+            throw AppFailure(message: "Review 1–5,000 task rows with the same number of columns as the header. No rows have been imported.")
+        }
+        headers = names; records = content
+    }
+    func ignoredColumns(_ mapping: WorkflowCSVMapping) -> [String] {
+        headers.indices.filter { !mapping.columns.values.contains($0) }.map { headers[$0] }
+    }
+    func template(name: String, mapping: WorkflowCSVMapping, anchor: Date, headings: Bool, calendar: Calendar = .current) throws -> WorkflowTemplateFile {
+        let chosen = Array(mapping.columns.values)
+        guard mapping.columns[.title] != nil, chosen.allSatisfy(headers.indices.contains), Set(chosen).count == chosen.count,
+              mapping.columns[.parent] == nil || mapping.columns[.identifier] != nil else {
+            throw AppFailure(message: "Choose a distinct column for each mapped field. Parent reference also needs a row reference column.")
+        }
+        let taskType = mapping.taskValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let headingType = mapping.headingValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if mapping.columns[.type] != nil {
+            guard !taskType.isEmpty, !headingType.isEmpty, taskType != headingType, taskType.count <= 160, headingType.count <= 160 else {
+                throw AppFailure(message: "Use different nonempty values for Task and Heading, up to 160 characters each.")
+            }
+        }
+        var gregorian = Calendar(identifier: .gregorian); gregorian.timeZone = calendar.timeZone
+        let referenceDay = gregorian.startOfDay(for: anchor)
+        var tasks: [String: Record] = [:], parents: [String: String] = [:], order: [String] = [], hasHeadings = false
+        func value(_ row: [String], _ field: WorkflowCSVMapping.Field) -> String { mapping.columns[field].map { row[$0] } ?? "" }
+        func trimmed(_ row: [String], _ field: WorkflowCSVMapping.Field) -> String { value(row, field).trimmingCharacters(in: .whitespacesAndNewlines) }
+        for (index, row) in records.enumerated() {
+            func fail(_ message: String) -> AppFailure { AppFailure(message: "CSV row \(index + 2): " + message) }
+            let title = value(row, .title)
+            guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw fail("give this task a title.") }
+            let key = mapping.columns[.identifier] == nil ? "row-\(index)" : trimmed(row, .identifier)
+            guard !key.isEmpty, tasks[key] == nil else { throw fail("row references must be nonempty and unique.") }
+            var task = Record(["id": .string("csv-task-\(index + 1)"), "title": .string(title), "description": .string(value(row, .notes)), "project_id": .string("csv-project"), "labels": .array([]), "subtasks": .array([])])
+            if mapping.columns[.type] != nil {
+                let type = trimmed(row, .type)
+                guard type.isEmpty || type == taskType || type == headingType else { throw fail("the type must match your Task or Heading value; blank means Task.") }
+                if type == headingType {
+                    guard headings else { throw fail("heading import is not enabled in this workspace. Keep this CSV for a supported workspace.") }
+                    task["is_heading"] = .bool(true); hasHeadings = true
+                }
+            }
+            for (field, target, bounds) in [(WorkflowCSVMapping.Field.priority, "priority", 1...4), (.estimate, "duration_minutes", 1...10080)] {
+                let text = trimmed(row, field)
+                if !text.isEmpty {
+                    guard text.allSatisfy({ $0.isASCII && $0.isNumber }), let number = Int(text), bounds.contains(number) else { throw fail("\(field.title) must be a whole number from \(bounds.lowerBound) to \(bounds.upperBound).") }
+                    task[target] = .number(Double(number))
+                }
+            }
+            for (field, target) in [(WorkflowCSVMapping.Field.plannedDate, "planned_offset"), (.deadlineDate, "deadline_offset")] {
+                let text = trimmed(row, field)
+                if !text.isEmpty {
+                    guard text.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil,
+                          let day = Dates.parse(text, calendar: gregorian), TaskPlanner.dayKey(day, calendar: gregorian) == text,
+                          let offset = gregorian.dateComponents([.day], from: referenceDay, to: day).day, abs(offset) <= 365000 else {
+                        throw fail("\(field.title) needs a valid YYYY-MM-DD date within 1,000 years of the reference date.")
+                    }
+                    task[target] = .number(Double(offset))
+                }
+            }
+            for (field, target) in [(WorkflowCSVMapping.Field.dueTime, "due_time"), (.timeZone, "time_zone")] {
+                let text = trimmed(row, field); if !text.isEmpty { task[target] = .string(text) }
+            }
+            guard (task.string("due_time").isEmpty && task.string("time_zone").isEmpty) || task.fields["planned_offset"] != nil else {
+                throw fail("a time or time zone also needs a planned date so it can be retained in each run.")
+            }
+            var labels: [JSON] = [], seen = Set<String>()
+            for part in value(row, .labels).split(separator: ";") {
+                let label = part.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard label.count <= 160 else { throw fail("use label names up to 160 characters.") }
+                if !label.isEmpty, seen.insert(label).inserted { labels.append(.object(["name": .string(label), "color": .string("#e31e4b")])) }
+            }
+            guard labels.count <= 100 else { throw fail("use at most 100 labels per task.") }
+            task["labels"] = .array(labels)
+            tasks[key] = task; parents[key] = trimmed(row, .parent); order.append(key)
+        }
+        var children: [String: [String]] = [:], roots: [String] = []
+        for key in order {
+            let parent = parents[key] ?? ""
+            if parent.isEmpty { roots.append(key) }
+            else {
+                guard tasks[parent] != nil else { throw AppFailure(message: "A CSV parent reference does not match any row. Nothing has been imported.") }
+                children[parent, default: []].append(key)
+            }
+        }
+        var visited = Set<String>()
+        func build(_ key: String, depth: Int) throws -> JSON {
+            guard depth <= 10, visited.insert(key).inserted, var task = tasks[key] else { throw AppFailure(message: "The CSV hierarchy contains a cycle or is deeper than 10 levels.") }
+            task["subtasks"] = .array(try (children[key] ?? []).map { try build($0, depth: depth + 1) })
+            return .object(task.fields)
+        }
+        let nested = try roots.map { try build($0, depth: 0) }
+        guard visited.count == tasks.count else { throw AppFailure(message: "The CSV hierarchy contains a disconnected cycle. Nothing has been imported.") }
+        var document: [String: JSON] = ["version": .number(hasHeadings ? 2 : 1), "kind": .string("project"), "projects": .array([.object(["id": .string("csv-project"), "name": .string(name)])]), "sections": .array([]), "tasks": .array(nested)]
+        if hasHeadings { document["capabilities"] = .array([.string("task_headings")]) }
+        return try WorkflowTemplateFile(name: name, document: .object(document))
+    }
+}
+
+struct WorkflowCSVMapping: Sendable, Equatable {
+    enum Field: String, CaseIterable, Identifiable, Sendable {
+        case title, notes, identifier, parent, type, priority, estimate, labels, plannedDate, deadlineDate, dueTime, timeZone
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .title: "Task title"
+            case .notes: "Notes"
+            case .identifier: "Row reference"
+            case .parent: "Parent reference"
+            case .type: "Task or heading"
+            case .priority: "Priority (1–4)"
+            case .estimate: "Estimate in minutes"
+            case .labels: "Labels (separated by ;)"
+            case .plannedDate: "Planned date (YYYY-MM-DD)"
+            case .deadlineDate: "Deadline (YYYY-MM-DD)"
+            case .dueTime: "Time (HH:mm)"
+            case .timeZone: "Time zone name"
+            }
+        }
+    }
+    var columns: [Field: Int] = [:]
+    var taskValue = "task", headingValue = "heading"
 }
