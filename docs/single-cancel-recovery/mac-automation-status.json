@@ -1,0 +1,7 @@
+{
+  "at": "2026-10-26",
+  "condition": "macOS automation-mode writer requires interactive authentication",
+  "appTestsExecutedInV2AndV3": 0,
+  "userRequestedApproval": true,
+  "noPermissionChangeMadeByAgent": true
+}

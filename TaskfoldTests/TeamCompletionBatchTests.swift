@@ -1615,3 +1615,151 @@ extension TeamCompletionBatchTests {
         XCTAssertThrowsError(try TaskOrderRecovery.parking([order], snapshot: local, affected: [stale], taskRows: [Record(["id": .string(stale), "task_generation": .string(UUID().uuidString.lowercased()), "project_id": .null])], account: base.account, origin: base.origin))
     }
 }
+
+extension TeamCompletionBatchTests {
+    private func singleCancellationFixture(recurring: Bool = false, conversations: Bool = true, orders: Bool = true) throws -> (TeamCompletionRecoveryDraft, TeamCompletion.Review, TeamWorkspaceCache, Mutation) {
+        let (_, header, batch, _) = try fixture(recurring ? "recurring_" : "")
+        let single = batch.items[0], command = single.teamCompletion!
+        var local = snapshot(batch); append(single, to: &local)
+        let target = recurring ? command.proposed! : local.tables["tasks"]!.first { $0.id == single.recordID }!
+        let edit = try patch(target, ["title": .string("Keep cancelled task work"), "description": .string("Every authored cancellation line\nSecond line 🌱")], scope: command.scope); append(edit, to: &local)
+        if conversations {
+            let comment = try SharedCommentChange(account: batch.account, taskID: target.id, taskGeneration: target.string("task_generation"), projectID: target.string("project_id"), body: "Unsent cancellation discussion")
+            try ConversationOutbox.enqueue(comment.record, into: &local)
+            _ = try attachRecoveryMention(&local, task: target, account: batch.account)
+        }
+        if orders { _ = try captureOrder(&local, key: PinnedNotes.key(target.id), ids: [target.id], account: batch.account, origin: batch.origin) }
+        let initial = try parkingReview(header, cancelled: false).members[0], proof = try parkingReview(header).members[0]
+        let cache = try readRecoveryCache(header, local: local); local.teamWorkspace = cache
+        return (try TeamCompletionRecoveryDraft(single: initial, snapshot: local), proof, cache, edit)
+    }
+    func testSingleCancellationPreflightPreservesActualEnvelopeWithoutAuthorizingRetirement() throws {
+        let (draft, _, cache, _) = try singleCancellationFixture()
+        XCTAssertEqual(draft.version, 2); XCTAssertTrue(draft.isCancellationDraft); XCTAssertFalse(draft.cancellationConfirmed)
+        XCTAssertNotNil(draft.previewCancellation(readable: cache)); XCTAssertNil(draft.preserving(readable: cache))
+        XCTAssertEqual(draft.original, draft.snapshot.pending[0]); XCTAssertNotNil(draft.original.teamCompletion); XCTAssertNil(draft.original.teamTaskBatch)
+        XCTAssertEqual(draft.review["state"], .string("unrecorded")); XCTAssertNil(draft.cancellations)
+        let json = try JSONDecoder().decode([String: JSON].self, from: draft.data())
+        XCTAssertEqual(json["version"], .number(2)); XCTAssertEqual(json["state"], .string("unconfirmed")); XCTAssertNil(json["review"]); XCTAssertNil(json["cancellations"])
+    }
+    func testSingleCancellationProofRetainsEveryConnectedEditPinAndConversationUnderReadRestrictions() throws {
+        let (draft, proof, _, edit) = try singleCancellationFixture()
+        let confirmed = try draft.withCancellation(proof)
+        for mode in ["viewer", "archive", "pause"] {
+            let (_, group, _, _) = try fixture()
+            let cache = try readRecoveryCache(group, local: draft.snapshot, role: mode == "viewer" ? "viewer" : "editor", archived: mode == "archive", paused: mode == "pause")
+            let next = try XCTUnwrap(confirmed.preserving(readable: cache))
+            XCTAssertTrue(next.pending.isEmpty); XCTAssertTrue(next.tables[ConversationOutbox.table]!.isEmpty); XCTAssertEqual(next.tables["view_orders"], [])
+            XCTAssertEqual(next.tables["tasks"]?.first { $0.id == edit.recordID }, draft.original.teamCompletion!.source)
+            XCTAssertFalse(next.teamWorkspace!.canSend(draft.original, in: next)); XCTAssertEqual(next.teamWorkspace!.boundary, cache.boundary)
+        }
+        XCTAssertEqual(confirmed.snapshot, draft.snapshot); XCTAssertEqual(confirmed.parkedChanges, draft.snapshot.pending); XCTAssertEqual(confirmed.parkedConversations, draft.snapshot.tables[ConversationOutbox.table])
+        XCTAssertEqual(confirmed.review, draft.review); XCTAssertEqual(confirmed.cancellations, [proof.response]); XCTAssertTrue(confirmed.cancellationConfirmed)
+        XCTAssertTrue(confirmed.text.contains("Saved action cancelled")); XCTAssertTrue(confirmed.text.contains("Pinned note choice:")); XCTAssertTrue(confirmed.text.contains("Mention marked read:"))
+    }
+    func testSingleCancelledRecurringOccurrenceRetainsDeletedAuthoredWorkAndActualProof() throws {
+        let (base, proof, cache, edit) = try singleCancellationFixture(recurring: true); var local = base.snapshot
+        let row = try XCTUnwrap(local.tables["tasks"]?.first { $0.id == edit.recordID })
+        append(Mutation(table: "tasks", recordID: row.id, method: "DELETE", fields: [:], baseline: row.fields, teamTaskScope: edit.teamTaskScope), to: &local)
+        let draft = try TeamCompletionRecoveryDraft(single: TeamCompletion.Review(base.review, for: base.original), snapshot: local).withCancellation(proof)
+        let next = try XCTUnwrap(draft.preserving(readable: cache))
+        XCTAssertFalse(next.tables["tasks"]!.contains { $0.id == row.id }); XCTAssertEqual(draft.records.first { $0.id == row.id }?.string("description"), row.string("description"))
+        XCTAssertEqual(draft.parkedConversations.count, 2); XCTAssertTrue(draft.text.contains("Every authored cancellation line")); XCTAssertEqual(draft.original, base.original)
+        let json = try JSONDecoder().decode([String: JSON].self, from: draft.data()); XCTAssertEqual(json["state"], .string("cancelled")); XCTAssertEqual(json["conversations"]?.list.count, 2)
+    }
+    func testSingleCancellationPreservesMixedCohortsAndIndependentWorkWithoutInventedHeaders() throws {
+        let (base, proof, cache, edit) = try singleCancellationFixture(conversations: false, orders: false); var local = base.snapshot
+        var outside = local.tables["tasks"]![0]; outside["id"] = .string(UUID().uuidString.lowercased()); outside["task_generation"] = .string(UUID().uuidString.lowercased())
+        local.tables["tasks"]!.append(outside)
+        let earlier = try patch(outside, ["description": .string("Outside baseline must survive")], scope: edit.teamTaskScope!); append(earlier, to: &local)
+        let rows = [local.tables["tasks"]!.first { $0.id == edit.recordID }!, local.tables["tasks"]!.first { $0.id == outside.id }!]
+        let items = rows.map { Mutation(table: "tasks", recordID: $0.id, method: "PATCH", fields: ["priority": .number(1)], baseline: $0.fields, teamTaskScope: edit.teamTaskScope) }.sorted { $0.recordID < $1.recordID }
+        let scope = edit.teamTaskScope!, mixed = TeamTaskBatch.header(TeamTaskBatch(account: scope.account, origin: scope.origin, team: scope.team, operation: .edit, restores: nil, items: items)); append(mixed, to: &local)
+        let independent = Mutation(table: "view_preferences", recordID: "private", method: "PATCH", fields: ["layout": .string("board")]); local.pending.append(independent)
+        let draft = try TeamCompletionRecoveryDraft(single: TeamCompletion.Review(base.review, for: base.original), snapshot: local).withCancellation(proof), next = try XCTUnwrap(draft.preserving(readable: cache))
+        XCTAssertEqual(draft.parkedChanges, [base.original, edit, earlier, mixed]); XCTAssertEqual(next.pending, [independent]); XCTAssertEqual(next.tables["tasks"]?.first { $0.id == outside.id }, outside)
+        let exported = try JSONDecoder().decode([String: JSON].self, from: draft.data()); XCTAssertEqual(exported["original"]?.object["id"], .string(base.original.id.uuidString)); XCTAssertNil(exported["original"]?.object["teamTaskBatch"])
+    }
+    func testSingleCancellationCannotUseUnrecordedRecordedForeignOrForgedProof() throws {
+        let (draft, proof, cache, _) = try singleCancellationFixture()
+        XCTAssertThrowsError(try draft.withCancellation(TeamCompletion.Review(draft.review, for: draft.original)))
+        let (_, _, _, recorded) = try recoveryFixture(single: true); XCTAssertThrowsError(try draft.withCancellation(recorded.members[0]))
+        var other = draft.original; other.id = UUID()
+        var raw = proof.response; raw["request_id"] = .string(other.id.uuidString.lowercased())
+        let unrelated = try TeamCompletion.Review(raw, for: other); XCTAssertThrowsError(try draft.withCancellation(unrelated))
+        let (_, group, _, _) = try fixture()
+        for boundary in [try readRecoveryCache(group, local: draft.snapshot, reads: false), try readRecoveryCache(group, local: draft.snapshot, active: false), try readRecoveryCache(group, local: draft.snapshot, missing: [draft.original.teamCompletion!.scope.project]), try readRecoveryCache(group, local: draft.snapshot, account: UUID().uuidString.lowercased())] {
+            XCTAssertNil(draft.previewCancellation(readable: boundary)); XCTAssertNil(try draft.withCancellation(proof).preserving(readable: boundary))
+        }
+        XCTAssertNotNil(draft.previewCancellation(readable: cache))
+        var encoded = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(draft)); encoded["version"] = .number(1)
+        let forged = try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: JSONEncoder().encode(encoded)); XCTAssertThrowsError(try forged.validate())
+    }
+    func testSingleCancellationVaultKeepsOriginalReadAndAllTerminalObservationsOnRetry() throws {
+        let (draft, proof, cache, _) = try singleCancellationFixture()
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString); defer { try? FileManager.default.removeItem(at: folder) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionRecoveryDraftVault(directory: folder, account: draft.account, origin: draft.origin, key: { key }, cancelled: true)
+        let saved = try vault.save(draft); XCTAssertFalse(saved.cancellationConfirmed)
+        let confirmed = try vault.recordCancellation(saved, proof: proof), bytes = try Data(contentsOf: vault.file(saved.id))
+        XCTAssertTrue(confirmed.cancellationConfirmed); XCTAssertEqual(confirmed.review, draft.review); XCTAssertEqual(confirmed.cancellations, [proof.response]); XCTAssertEqual(confirmed.snapshot, draft.snapshot)
+        let retry = try TeamCompletionRecoveryDraft(single: proof, snapshot: draft.snapshot), found = try vault.save(retry)
+        XCTAssertEqual(found.id, saved.id); XCTAssertEqual(found.review, draft.review); XCTAssertEqual(try vault.recordCancellation(found, proof: proof), confirmed)
+        XCTAssertEqual(try Data(contentsOf: vault.file(saved.id)), bytes); XCTAssertNotNil(confirmed.preserving(readable: cache))
+        var raw = proof.response, task = raw["task"]!.object; task["description"] = .string("Newer current server notes"); raw["task"] = .object(task); raw["series"] = .object(task)
+        let newer = try TeamCompletion.Review(raw, for: draft.original), updated = try vault.recordCancellation(found, proof: newer)
+        XCTAssertEqual(updated.id, saved.id); XCTAssertEqual(updated.review, draft.review); XCTAssertEqual(updated.cancellations, [proof.response, newer.response]); XCTAssertEqual(updated.snapshot, draft.snapshot)
+        XCTAssertEqual(try vault.entries().count, 1); XCTAssertFalse(String(decoding: try Data(contentsOf: vault.file(saved.id)), as: UTF8.self).contains("cancellation line"))
+    }
+    func testSingleCancellationArchivesStaySeparateFromRecordedFormatAndAssociatedData() throws {
+        let (draft, proof, _, _) = try singleCancellationFixture(), (recorded, _, _, _) = try recoveryFixture(single: true)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString); defer { try? FileManager.default.removeItem(at: folder) }
+        let key = SymmetricKey(size: .bits256), old = TeamCompletionRecoveryDraftVault(directory: folder.appendingPathComponent("Recorded"), account: draft.account, origin: draft.origin, key: { key }), new = TeamCompletionRecoveryDraftVault(directory: folder.appendingPathComponent("Cancelled"), account: draft.account, origin: draft.origin, key: { key }, cancelled: true)
+        XCTAssertThrowsError(try old.save(draft)); XCTAssertThrowsError(try new.save(recorded)); _ = try old.save(recorded); let saved = try new.save(draft)
+        _ = try new.recordCancellation(saved, proof: proof); try FileManager.default.copyItem(at: new.file(saved.id), to: old.file(saved.id)); XCTAssertThrowsError(try old.load(saved.id))
+        XCTAssertEqual(try new.load(saved.id).version, 2); XCTAssertEqual(try old.load(recorded.id).version, 1)
+    }
+    func testSingleCancellationHistoryBoundNeverEvictsProofOrRewritesAnInvalidArchive() throws {
+        let (draft, proof, _, _) = try singleCancellationFixture()
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString); defer { try? FileManager.default.removeItem(at: folder) }
+        let key = SymmetricKey(size: .bits256), vault = TeamCompletionRecoveryDraftVault(directory: folder, account: draft.account, origin: draft.origin, key: { key }, cancelled: true)
+        var current = try vault.save(draft)
+        for index in 0..<20 {
+            var raw = proof.response, task = raw["task"]!.object; task["description"] = .string("Observation \(index)"); raw["task"] = .object(task); raw["series"] = .object(task)
+            current = try vault.recordCancellation(current, proof: TeamCompletion.Review(raw, for: draft.original))
+        }
+        let bytes = try Data(contentsOf: vault.file(current.id)); XCTAssertEqual(current.cancellations?.count, 20)
+        var raw = proof.response, task = raw["task"]!.object; task["description"] = .string("Observation 21"); raw["task"] = .object(task); raw["series"] = .object(task)
+        XCTAssertThrowsError(try vault.recordCancellation(current, proof: TeamCompletion.Review(raw, for: draft.original)))
+        XCTAssertEqual(try Data(contentsOf: vault.file(current.id)), bytes); XCTAssertEqual(try vault.load(current.id), current)
+    }
+    func testSingleCancellationExportContainsOnlyActualConnectedAuthoredWork() throws {
+        let (draft, proof, _, _) = try singleCancellationFixture(); var local = draft.snapshot
+        local.tables["profiles"] = [Record(["id": .string("private-profile"), "private_notes": .string("Must stay off the export")])]
+        let updated = try TeamCompletionRecoveryDraft(single: TeamCompletion.Review(draft.review, for: draft.original), snapshot: local).withCancellation(proof)
+        let data = try updated.data(), text = String(decoding: data, as: UTF8.self), json = try JSONDecoder().decode([String: JSON].self, from: data)
+        XCTAssertEqual(json["state"], .string("cancelled")); XCTAssertEqual(json["version"], .number(2)); XCTAssertEqual(json["conversations"]?.list.count, 2)
+        XCTAssertNil(json["cancellations"]); XCTAssertNil(json["review"]); XCTAssertNil(json["snapshot"]); XCTAssertNil(json["teamWorkspace"]); XCTAssertFalse(text.contains("Must stay off the export"))
+        XCTAssertEqual(try JSONDecoder().decode([Mutation].self, from: JSONEncoder().encode(json["changes"]!)), updated.parkedChanges)
+        XCTAssertNil(json["original"]?.object["teamTaskBatch"])
+    }
+}
+
+extension TeamCompletionBatchTests {
+    func testSingleReopenCancellationKeepsAuthoredWorkAndTheActualCompletedServerTask() throws {
+        let (_, group, _) = try groupReviewFixture("undo"), batch = group.teamTaskBatch!, single = batch.items[0], command = single.teamCompletion!
+        var local = snapshot(batch)
+        local.tables["tasks"] = batch.items.map { item in TaskCompletionRevision.applying(["completed": .bool(true), "completed_at": .string(item.teamCompletion!.completedAt)], to: item.teamCompletion!.source) }
+        let remote = try XCTUnwrap(local.tables["tasks"]?.first { $0.id == single.recordID })
+        append(single, to: &local)
+        let row = try XCTUnwrap(local.tables["tasks"]?.first { $0.id == single.recordID })
+        let edit = try patch(row, ["description": .string("Keep the reopened task’s authored notes")], scope: command.scope); append(edit, to: &local)
+        var raw = try parkingReview(group, cancelled: false).members[0].response
+        raw["task"] = .object(remote.fields); raw["series"] = .object(remote.fields)
+        let initial = try TeamCompletion.Review(raw, for: single); raw["state"] = .string("cancelled"); let proof = try TeamCompletion.Review(raw, for: single)
+        let cache = try readRecoveryCache(group, local: local), draft = try TeamCompletionRecoveryDraft(single: initial, snapshot: local).withCancellation(proof)
+        let next = try XCTUnwrap(draft.preserving(readable: cache))
+        XCTAssertEqual(draft.original, single); XCTAssertEqual(draft.parkedChanges, [single, edit]); XCTAssertTrue(next.pending.isEmpty)
+        XCTAssertEqual(next.tables["tasks"]?.first { $0.id == single.recordID }, remote); XCTAssertTrue(remote.completed); XCTAssertFalse(next.teamWorkspace!.canSend(single, in: next))
+        XCTAssertTrue(draft.text.contains("Keep the reopened task’s authored notes")); XCTAssertEqual(draft.original.teamCompletion?.operation, .undo)
+    }
+}

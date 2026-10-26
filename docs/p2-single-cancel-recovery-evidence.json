@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-26",
+  "scope": "Individual cancellation keeps connected task, conversation, order and pin history in a verified encrypted draft before removing local work. Synthetic intercepted service only; collaboration remains default off.",
+  "core": {
+    "passed": 267,
+    "failed": 0,
+    "newCases": 10,
+    "coverage": "Preflight cannot retire; actual terminal response required. Recurring deletion, Undo/reopen, mixed independent work, current read scope, foreign/malformed proof refusal, vault retry and bounded history, format/AAD separation and scoped export."
+  },
+  "native": {
+    "status": "pending macOS interactive automation approval",
+    "acceptedCases": 0,
+    "intendedCases": 5,
+    "runnerInitializationFailures": 2
+  },
+  "appBuild": "passed with development signing",
+  "contract": {
+    "recordedDraftVersion": 1,
+    "singleCancellationVersion": 2,
+    "storage": "Separate Cancelled recovery namespace and authenticated context; original actual single command/read/snapshot retained; actual terminal observations appended without eviction before local queue changes.",
+    "export": "Authored work and status only; no whole snapshot, permission cache or raw read/cancellation proof; no synthetic header.",
+    "alreadyRecorded": "Preflight draft retained; entire live queue/cache unchanged.",
+    "guards": "Expected current presentation plus account generation, session incarnation, full snapshot and read revision/cache checked at async boundaries. No new editing permission."
+  },
+  "remaining": [
+    "Mac native approval and acceptance",
+    "Provisional-copy cancellation and absent conversation context",
+    "I/O-phase account/session races, broader native recurring/spoken and large workloads",
+    "Genuine hosted team acceptance; user-deferred release/provider/device gates unchanged"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Collaboration.swift": "e3659aa22fc46d5fb63d59dd563f8351fa49d126ada9b90ce6a424eb97907ff3",
+    "Taskfold/Core/Store.swift": "ad945364ed4682d692ae5c68fc1f8f8b39ec7002ca49dc3b28ad0f7c0076a47e",
+    "Taskfold/Core/TeamCompletionDraft.swift": "3676b217da26910d158fd3b231d35229947e7d0116ae60d41d634df7ec1c2b6b",
+    "Taskfold/Core/TeamTaskBatch.swift": "da4befc4391bce56b63391d16822c4561a83d0fd99518f9d2b678d2d45b5c7f3",
+    "TaskfoldTests/TeamCompletionBatchTests.swift": "b2eac8cf3b2f5c47070dba86f3564f6d01f3dbe2a1e971a5c57972a2b6fb4de4",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "6b87edbcbfa620b4fc73b8c6d8941a4d1ddb7f88e9cbc9dd56521e3cb36bc244"
+  },
+  "artifactSHA256": {
+    "app-build.log": "6dbcf4a06bd8512bf8a09b4fc408baa4f27d606466594d7fdef0adebe2d61af7",
+    "core.log": "693848db8c7977b245d72adc70bc80449ea99baa5848b9dfb780b81b9ad1fa13",
+    "signatures.json": "f0198e3a00f9592cf46da7ff16f213ca35589d962c18b78a6589563a552ec471",
+    "cleanup.json": "c8fb7bfc9a6afeaed3594be639a469101201af761b36e50cda4a3d2a211ed9c9",
+    "mac-runner-v2-summary.json": "3746e13b4dd3d5a10a8abe2fd593952204c4d3275efb5937af0a935145ca9778",
+    "mac-runner-v3-summary.json": "7168916196b137357955324bc30e775a23296fe5224516251ba6a914bcc3da29",
+    "initial-attempts.json": "04c5e01dc897d19f2c48ced09998ce1f07e2274208d17422b05fcadb1690f2d2",
+    "source-receipt.json": "f9a2fc7bdd82ad2d0029732315c0f1c08039ca1583065dd502a8bd44d7c179ad",
+    "isolation-receipt.json": "ed107f6329a15dfeab3890fb2e884161cd1ed39d7c33f7a7b37d4d877105c9fe",
+    "mac-automation-status.json": "86b832d31c9da00dfdcef0071ebc5ddb6d5234e6a2ec5c8f32a6088d2514324f"
+  },
+  "cleanup": "single-cancel-recovery/cleanup.json"
+}

@@ -311,6 +311,13 @@ final class Store {
         guard let base = teamDraftVault else { return nil }
         return TeamCompletionRecoveryDraftVault(directory: base.directory.appendingPathComponent("Recorded recovery", isDirectory: true), account: base.account, origin: base.origin, key: base.key, removalGate: base.removalGate)
     }
+    var teamCancelledRecoveryVault: TeamCompletionRecoveryDraftVault? {
+        guard let base = teamDraftVault else { return nil }
+        return TeamCompletionRecoveryDraftVault(directory: base.directory.appendingPathComponent("Cancelled recovery", isDirectory: true), account: base.account, origin: base.origin, key: base.key, removalGate: base.removalGate, cancelled: true)
+    }
+    func teamRecoveryVault(for draft: TeamCompletionRecoveryDraft) -> TeamCompletionRecoveryDraftVault? {
+        draft.isCancellationDraft ? teamCancelledRecoveryVault : teamRecordedRecoveryVault
+    }
     var teamSelectionDraftVault: TeamCompletionBatchDraftVault? {
         guard let base = teamDraftVault else { return nil }
         return TeamCompletionBatchDraftVault(directory: base.directory.appendingPathComponent("Selections", isDirectory: true), account: base.account, origin: base.origin, key: base.key, removalGate: base.removalGate)
@@ -2054,6 +2061,59 @@ final class Store {
             do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
             undoStack = []; redoStack = []; syncConflict = nil
             notice = "Edits kept in Saved team drafts. Sync can continue."
+            Task { await sync() }; return true
+        } catch {
+            guard unchanged() else { return false }
+            recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false
+        }
+    }
+
+    /// A saved preflight is not a cancellation certificate. Retain the actual
+    /// terminal reply in the encrypted archive and verify it before local retirement.
+    @discardableResult func preserveCancelledCompletionDraft(_ expected: TeamCompletionReviewPresentation) async -> Bool {
+        let presentation = teamCompletionReviewPresentation
+        guard expected == presentation, let initial = syncConflict?.completionReview,
+              currentTeamCompletionReview(initial), !initial.isRecorded,
+              let access = nativeConversationTeamCache, let vault = teamCancelledRecoveryVault else { return false }
+        let generation = accountGeneration, session = backend.reminderSessionIncarnation, account = userID
+        let before = snapshot, revision = workspaceReadRevision
+        var observed = initial
+        func unchanged() -> Bool {
+            generation == accountGeneration && session == backend.reminderSessionIncarnation && before == snapshot &&
+            revision == workspaceReadRevision && nativeConversationTeamCache == access && currentTeamCompletionReview(observed) &&
+            syncConflict?.completionBatchReview == presentation.group && teamCompletionReviewMayFinish(presentation)
+        }
+        do {
+            let draft = try await Task.detached(priority: .userInitiated) {
+                let draft = try TeamCompletionRecoveryDraft(single: initial, snapshot: before)
+                guard draft.previewCancellation(readable: access) != nil else { throw TeamCompletionRecoveryDraft.invalid }
+                return draft
+            }.value
+            guard unchanged() else { return false }
+            _ = try await makeRecoveryBackup(kind: "Before cancelling saved action")
+            guard unchanged() else { return false }
+            let saved = try await Task.detached(priority: .utility) { try vault.save(draft) }.value
+            guard unchanged(), saved.sameWork(as: draft) else { return false }
+            let proof: TeamCompletion.Review
+            if initial.isCancelled { proof = initial }
+            else { proof = try await backend.cancelTeamCompletion(initial.mutation, expectedAccount: account) }
+            guard unchanged() else { return false }
+            syncConflict = SyncConflict(mutation: proof.mutation, remote: proof.task ?? proof.mutation.teamCompletion!.source, completionReview: proof)
+            observed = proof
+            guard proof.isCancelled else {
+                let message = "This action already synced. Your draft is kept; review the recorded result to continue."
+                notice = message; recordTeamCompletionReviewFailure(message, origin: presentation); return false
+            }
+            let prepared = try await Task.detached(priority: .utility) { () -> (TeamCompletionRecoveryDraft, Snapshot) in
+                let verified = try vault.recordCancellation(saved, proof: proof)
+                guard verified.cancellations?.last == proof.response, let next = verified.preserving(readable: access) else { throw TeamCompletionRecoveryDraft.invalid }
+                return (verified, next)
+            }.value
+            guard unchanged(), prepared.0.sameWork(as: draft) else { return false }
+            snapshot = prepared.1
+            do { try persist() } catch { snapshot = before; recordTeamCompletionReviewFailure(TeamCompletionRecoveryFailure.message(error), origin: presentation); return false }
+            undoStack = []; redoStack = []; syncConflict = nil
+            notice = "Saved action cancelled. Your edits are kept in Saved team drafts."
             Task { await sync() }; return true
         } catch {
             guard unchanged() else { return false }
@@ -3915,7 +3975,20 @@ extension Store {
         var retired = (try? JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file))) ?? [:]
         if let old = retired[nonce], old != .object(body) { return nil }
         let alreadyCancelled = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-cancelled")
-        let recorded = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded") && !alreadyCancelled
+        let support = file.deletingLastPathComponent(), recordedFile = support.appendingPathComponent("taskfold-single-cancel-recorded-peer.json")
+        var recordedActions = (try? JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recordedFile))) ?? [:]
+        if let old = recordedActions[nonce], old != .object(body) { return nil }
+        let raceRecorded = ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-recorded-race") && request.url!.path.contains("cancel_")
+        let recorded = (ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded") && !alreadyCancelled) || recordedActions[nonce] != nil || raceRecorded
+        if raceRecorded {
+            recordedActions[nonce] = .object(body); try? JSONEncoder().encode(recordedActions).write(to: recordedFile, options: .atomic)
+        }
+        if ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-testing"), request.url!.path.contains("cancel_") {
+            let trace = support.appendingPathComponent("taskfold-single-cancel-attempts.json")
+            var attempts = (try? JSONDecoder().decode([JSON].self, from: Data(contentsOf: trace))) ?? []
+            attempts.append(.object(["path": .string(request.url!.path), "request_id": .string(nonce), "body": .object(body)]))
+            try? JSONEncoder().encode(Array(attempts.suffix(128))).write(to: trace, options: .atomic)
+        }
         if request.url!.path.contains("cancel_"), !recorded {
             retired[nonce] = .object(body)
             do { try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true); try JSONEncoder().encode(retired).write(to: file, options: .atomic) } catch { return nil }
@@ -4074,7 +4147,7 @@ extension Store {
     private static func target(_ fault: String) -> URL {
         if fault == "cache" { return cache }
         if fault == "backup" { return vault.appendingPathComponent("index.json") }
-        let name = ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing") ? "Recorded recovery" : "Selections"
+        let name = ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-testing") ? "Cancelled recovery" : ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing") ? "Recorded recovery" : "Selections"
         return vault.appendingPathComponent("Team drafts/1d019528-c5bc-8e72-8e2a-1305600e9a82/" + name)
     }
     static func block() throws {
@@ -4297,7 +4370,9 @@ extension Store {
         let context = teamCompletionReviewPresentation, before = snapshot, oldError = error
         let file = cacheURL, bytes = try? Data(contentsOf: file)
         error = "Current workspace message"
-        let accepted = await preserveRecordedCompletionDraft(context)
+        let accepted: Bool
+        if ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-testing") { accepted = await preserveCancelledCompletionDraft(context) }
+        else { accepted = await preserveRecordedCompletionDraft(context) }
         let protected = !accepted && before == snapshot && bytes != nil && (try? Data(contentsOf: file)) == bytes && error == "Current workspace message"
         if error == "Current workspace message" { error = oldError }
         recordedDraftAdmissionStatus = protected ? "Saved draft context protected" : "Saved draft context failed"

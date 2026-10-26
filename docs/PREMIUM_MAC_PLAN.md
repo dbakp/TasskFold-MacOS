@@ -6931,3 +6931,56 @@ recurring/spoken acceptance, large-workload responsiveness and genuine hosted
 acceptance remain open. Collaboration stays default off. No hosted schema/service/
 configuration, rollout, real account/task or user-deferred release/provider/device
 gate changed.
+
+## 26 October: individual cancellation drafts
+
+Both clients can now keep connected edits as a draft when cancelling an individual
+queued completion or reopen action. Admission checks the exact current review,
+account/session, workspace read revision, full local snapshot and readable task
+incarnations. A verified safety backup and permanent encrypted preflight draft
+precede the cancellation request. The actual terminal cancellation response is
+then appended atomically and read back before the live queue or cache changes.
+An unconfirmed draft cannot authorize local retirement. If the action already
+synced, the preflight draft remains available and the whole live queue stays intact
+for recorded-result review. A failed cache write can retry after cold reopen using
+the same draft and confirmed response, without sending cancellation again.
+
+Saved drafts clearly distinguish pending cancellation from confirmed cancellation.
+The separate version-2 encrypted namespace preserves the actual individual command,
+original read response, complete original snapshot and bounded terminal history.
+Existing recorded version-1 files and their authenticated context are unchanged.
+Readable exports include authored task/conversation/order choices and cancellation
+status; private snapshots, permission caches and raw review/proof responses are not
+exported. No synthetic collection header is saved or transmitted. The internal
+one-member adapter is used only for local analysis. Unknown or unsupported work
+continues to protect the whole queue; this adds no editing permission.
+
+Each repository passes 267 focused Core checks (ten new cases). These include
+recurring successor/deletion and Undo/reopen cancellation, mixed independent work,
+viewer/archive/pause boundaries, malformed/foreign/unrecorded/recorded proof
+refusal, exact encrypted round trips, bounded proof history and export isolation.
+Native verification and retained evidence are recorded in
+[p2-single-cancel-recovery-evidence.json](p2-single-cancel-recovery-evidence.json).
+
+The remaining work includes provisional-copy cancellation and absent conversation
+context, I/O-phase account/session races, broader native recurring/spoken checks,
+large-workload responsiveness and genuine hosted collaboration acceptance.
+Collaboration stays default off. Hosted schema, service/configuration, rollout,
+real accounts/tasks and the agreed release/provider/device deferrals are unchanged.
+
+Five native cases pass on each iPhone and iPad Simulator: successful connected
+cancellation/export, cache-write failure with cold retry, vault failure before any
+cancellation request, an already-recorded race, and the existing recorded-draft
+regression. Full before/after/relaunch snapshots, actual command/proof/export and
+one exact individual cancellation request per scenario are retained and independently
+checked. Native sharing opens and cancels without replaying saved edits. Both
+installed binaries matched the strictly verified real-team signed products.
+
+The Mac build and 267 Core checks pass. Its current native suite is pending macOS’s
+interactive “Enable UI Automation” approval. Two attempts failed at runner
+initialization before any app test ran. The interrupted initial observation exposed
+an alert selector that matched Touch Bar instead of the window; this is corrected.
+The initial already-recorded expectation also incorrectly required the preserved
+disk permission snapshot to change; it now checks the whole snapshot stays exact.
+These failed/interrupted attempts are retained as compact evidence, not counted as
+current Mac acceptance. No additional manual listening or widget checks are needed.

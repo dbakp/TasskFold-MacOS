@@ -322,14 +322,15 @@ extension TeamTaskBatch {
 private struct CompletionBatchReadAccess {
     let review: TeamTaskBatch.Review
     let cache: TeamWorkspaceCache
-    init?(review: TeamTaskBatch.Review, cache: TeamWorkspaceCache, snapshot: Snapshot) {
-        guard review.isRecorded || review.isCancelled, let batch = review.mutation.teamTaskBatch,
+    let unrecordedPreview: Bool
+    init?(review: TeamTaskBatch.Review, cache: TeamWorkspaceCache, snapshot: Snapshot, unrecordedPreview: Bool = false) {
+        guard review.isRecorded || review.isCancelled || unrecordedPreview, let batch = review.mutation.teamTaskBatch,
               batch.canReviewCompletion(review.mutation, readable: cache) else { return nil }
         if let old = snapshot.teamWorkspace {
             guard old.boundary.belongs(account: batch.account, origin: batch.origin),
                   old.knownTasks.isSubset(of: cache.knownTasks), old.knownTeams.allSatisfy({ cache.knownTeams[$0.key] == $0.value }) else { return nil }
         }
-        self.review = review; self.cache = cache
+        self.review = review; self.cache = cache; self.unrecordedPreview = unrecordedPreview
         guard permits(review.mutation) else { return nil }
     }
     func permits(_ mutation: Mutation) -> Bool {
@@ -515,7 +516,7 @@ private struct CompletionBatchReconciliation {
             guard readAccess.review.mutation == header, readAccess.permits(header),
                   indices.allSatisfy({ readAccess.permits(changes[$0]) }) else { throw TeamTaskBatch.conflict }
             if let cancellation {
-                guard cancellation.isCancelled, readAccess.review == cancellation else { throw TeamTaskBatch.conflict }
+                guard cancellation.isCancelled || readAccess.unrecordedPreview, readAccess.review == cancellation else { throw TeamTaskBatch.conflict }
             } else { guard readAccess.review.isRecorded, readAccess.review.recorded == raw else { throw TeamTaskBatch.conflict } }
         } else if cancellation == nil, !parkRecorded, let access = original.teamWorkspace {
             guard indices.allSatisfy({ access.canSend(changes[$0], in: original) }) else { throw TeamTaskBatch.conflict }
@@ -604,10 +605,10 @@ private struct CompletionBatchReconciliation {
                 }
             }
             // Frozen typed rows also prove identity after a queued deletion.
-            let archivedRows = parkRecorded ? all.flatMap { item -> [Record] in
+            let archivedRows = all.flatMap { item -> [Record] in
                 if let command = item.teamCompletion { return [command.source] + [command.proposed].compactMap { $0 } }
                 return [item.baseline.map(Record.init), item.method == "POST" ? Record(item.fields) : nil].compactMap { $0 }
-            } : []
+            }
             let taskRows = (expected.tables["tasks"] ?? []) + Array(current.values) + archivedRows
             let orders = try TaskOrderRecovery.parking(changes, snapshot: original, affected: affected, taskRows: taskRows, account: batch.account, origin: batch.origin)
             let parkedComments = try CompletionRecoveryConversations.parked(in: original, account: batch.account, affected: affected,
@@ -897,6 +898,18 @@ extension TeamTaskBatch.Review {
               let access = CompletionBatchReadAccess(review: self, cache: cache, snapshot: snapshot),
               let receipts = try? batch.completionReceipts(recorded, for: mutation),
               let next = try? CompletionBatchReconciliation(batch: batch, header: mutation, original: snapshot, raw: recorded, receipts: receipts, readAccess: access, parkRecorded: true).confirmed() else { return nil }
+        return cache.retainingRecoveryAccess(in: next, from: snapshot)
+    }
+}
+
+
+extension TeamTaskBatch.Review {
+    /// Pure admission only. An unrecorded observation never retires a command;
+    /// Store must save a draft and a verified cancellation before persistence.
+    func cancellationDraftPreview(_ snapshot: Snapshot, readable cache: TeamWorkspaceCache) -> Snapshot? {
+        guard !isRecorded, let batch = mutation.teamTaskBatch,
+              let access = CompletionBatchReadAccess(review: self, cache: cache, snapshot: snapshot, unrecordedPreview: true),
+              let next = try? CompletionBatchReconciliation(batch: batch, header: mutation, original: snapshot, raw: [:], receipts: [], cancellation: self, readAccess: access).confirmed() else { return nil }
         return cache.retainingRecoveryAccess(in: next, from: snapshot)
     }
 }

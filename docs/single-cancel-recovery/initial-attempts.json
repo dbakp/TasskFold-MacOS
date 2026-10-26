@@ -1,0 +1,33 @@
+{
+  "mac": {
+    "finishedCases": [
+      [
+        "-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testRecordedMissingSingleKeepsAuthoredEditsAndExportAfterRelaunch]",
+        "passed"
+      ],
+      [
+        "-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testSingleCancellationAlreadyRecordedRaceKeepsPreflightDraftAndQueue]",
+        "failed"
+      ],
+      [
+        "-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testSingleCancellationDraftCacheFailureReopensAndReusesTerminalProof]",
+        "failed"
+      ],
+      [
+        "-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testSingleCancellationDraftVaultFailureCannotRequestCancellation]",
+        "failed"
+      ],
+      [
+        "-[TaskfoldUITests.TeamCompletionRecoveryMacUITests testSingleCancellationKeepsConnectedDraftAndExportAfterRelaunch]",
+        "passed"
+      ]
+    ],
+    "failureLines": [
+      "/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:3979: error: -[TaskfoldUITests.TeamCompletionRecoveryMacUITests testSingleCancellationAlreadyRecordedRaceKeepsPreflightDraftAndQueue] : -[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for \"OK\" Button.",
+      "/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:3967: error: -[TaskfoldUITests.TeamCompletionRecoveryMacUITests testSingleCancellationDraftCacheFailureReopensAndReusesTerminalProof] : -[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for \"OK\" Button.",
+      "/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:3967: error: -[TaskfoldUITests.TeamCompletionRecoveryMacUITests testSingleCancellationDraftVaultFailureCannotRequestCancellation] : -[XCUIElementMacOSEventTarget clickWithError:]_block_invoke cannot be called with Touch Bar elements, not valid for \"OK\" Button."
+    ],
+    "interrupted": true,
+    "note": "Initial observation was interrupted; no final xcresult summary available. Mac completed five logged cases; iOS stopped during cache retry. These logs are not final acceptance."
+  }
+}

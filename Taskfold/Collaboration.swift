@@ -290,6 +290,7 @@ private struct TeamCompletionReviewContent: View {
     let review: TeamCompletion.Review
     @State private var checking=false
     @State private var canPreserveRecordedDraft = false
+    @State private var canPreserveCancelledDraft = false
     @State private var recordedDraftContext: TeamCompletionReviewPresentation?
     @State private var message:String?
     private var current:Bool {store.currentTeamCompletionReview(review)}
@@ -362,6 +363,12 @@ private struct TeamCompletionReviewContent: View {
                         }
                             .buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("preserveRecordedCompletionDraft")
                         Text("Keep connected task edits, list choices and conversation drafts on this device, then continue with the synced result.").font(.caption).foregroundStyle(.secondary)
+                    } else if canPreserveCancelledDraft {
+                        Button("Keep edits as draft") {
+                            guard let context = recordedDraftContext else { return }
+                            performReview(fallback: "Your connected work remains queued.") { await store.preserveCancelledCompletionDraft(context) }
+                        }.buttonStyle(.borderedProminent).disabled(!current || checking).accessibilityIdentifier("preserveCancelledCompletionDraft")
+                        Text("Cancel only this saved action and keep its connected edits, list choices and conversation drafts on this device. Sync continues only after cancellation is confirmed.").font(.caption).foregroundStyle(.secondary)
                     } else if park != nil {
                         Button("Keep edits as draft") {
                             performReview(fallback: "Your draft remains saved for review.") { await store.parkTeamCompletionDraft(review) }
@@ -395,15 +402,17 @@ private struct TeamCompletionReviewContent: View {
         .onChange(of:store.workspaceGeneration){_,_ in dismiss()}
     }
     private func updateRecordedDraftAvailability() async {
-        canPreserveRecordedDraft = false; recordedDraftContext = nil
+        canPreserveRecordedDraft = false; canPreserveCancelledDraft = false; recordedDraftContext = nil
         let context = store.teamCompletionReviewPresentation
-        guard current, review.isRecorded, let cache = context.access else { return }
+        guard current, let cache = context.access else { return }
         let value = await Task.detached(priority: .userInitiated) {
-            (try? TeamCompletionRecoveryDraft(single: review, snapshot: context.snapshot))?.preserving(readable: cache) != nil
+            guard let draft = try? TeamCompletionRecoveryDraft(single: review, snapshot: context.snapshot) else { return false }
+            return review.isRecorded ? draft.preserving(readable: cache) != nil : draft.previewCancellation(readable: cache) != nil
         }.value
         guard !Task.isCancelled, context == store.teamCompletionReviewPresentation, current else { return }
         recordedDraftContext = value ? context : nil
-        canPreserveRecordedDraft = value
+        canPreserveRecordedDraft = value && review.isRecorded
+        canPreserveCancelledDraft = value && !review.isRecorded
     }
     private func performReview(dismissOnSuccess: Bool = true, fallback: String, _ action: @escaping () async -> Bool) {
         guard !checking, current else { return }
@@ -503,6 +512,7 @@ struct SavedTeamDraftsView: View {
                             VStack(alignment: .leading, spacing: 5) {
                                 Label("Saved edits", systemImage: "lock.doc").font(.headline)
                                 Text(recovery.title).lineLimit(2)
+                                if recovery.isCancellationDraft { Text(recovery.cancellationConfirmed ? "Cancelled action" : "Cancellation unconfirmed").font(.caption).foregroundStyle(.secondary) }
                                 Text(recovery.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
                             }
                         }.accessibilityIdentifier("savedRecordedCompletionDraft")
@@ -558,7 +568,10 @@ struct SavedTeamDraftsView: View {
             guard let recoveryVault = store.teamRecordedRecoveryVault else { return }
             let recorded = try await Task.detached(priority: .utility) { try recoveryVault.entries() }.value
             guard generation == store.workspaceGeneration, scope == scopeKey else { return }
-            drafts=values;selections=groups;recoveries=recorded;loadedScope=scope
+            guard let cancelledVault = store.teamCancelledRecoveryVault else { return }
+            let cancelled = try await Task.detached(priority: .utility) { try cancelledVault.entries() }.value
+            guard generation == store.workspaceGeneration, scope == scopeKey else { return }
+            drafts=values;selections=groups;recoveries=(recorded + cancelled).sorted { $0.createdAt > $1.createdAt };loadedScope=scope
         } catch {
             guard generation == store.workspaceGeneration,scope == scopeKey else {return}
             message="Saved drafts could not be opened on this device. Your saved files are kept."
@@ -566,7 +579,7 @@ struct SavedTeamDraftsView: View {
     }
     private func removeRecovery(_ draft: TeamCompletionRecoveryDraft) async {
         let scope = scopeKey, generation = store.workspaceGeneration
-        guard let vault = store.teamRecordedRecoveryVault, draft.account == vault.account, draft.origin == vault.origin else { return }
+        guard let vault = store.teamRecoveryVault(for: draft), draft.account == vault.account, draft.origin == vault.origin else { return }
         do {
             try await Task.detached(priority: .utility) { try vault.remove(draft.id) }.value
             guard generation == store.workspaceGeneration, scope == scopeKey else { return }; deletingRecovery = nil; await reload()
@@ -916,13 +929,13 @@ private struct SavedRecordedEditsView: View {
     @State private var message: String?
     @State private var copied = false
     @State private var reset: UUID?
-    private var current: Bool { store.teamRecordedRecoveryVault.map { $0.account == draft.account && $0.origin == draft.origin } == true }
+    private var current: Bool { store.teamRecoveryVault(for: draft).map { $0.account == draft.account && $0.origin == draft.origin } == true }
     var body: some View {
         Form {
             if current {
                 Section {
                     Label("Your edits are kept", systemImage: "lock.doc").font(.headline)
-                    Text("The shared task or occurrence changed. These edits, list choices and conversation drafts stay encrypted on this device until you delete them. They won’t change shared tasks automatically.").foregroundStyle(.secondary)
+                    Text(draft.isCancellationDraft ? (draft.cancellationConfirmed ? "The saved action was cancelled. Your edits, list choices and conversation drafts stay encrypted on this device until you delete them. They won’t be sent automatically." : "Your edits are saved, but cancellation is not confirmed in this draft. Reopen the task’s sync review to continue. These saved edits won’t be sent automatically.") : "The shared task or occurrence changed. These edits, list choices and conversation drafts stay encrypted on this device until you delete them. They won’t change shared tasks automatically.").foregroundStyle(.secondary)
                 }
                 Section("Saved edits preview") {
                     if text.isEmpty && message == nil { ProgressView("Opening saved edits…") }
