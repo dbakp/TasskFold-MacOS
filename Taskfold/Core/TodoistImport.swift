@@ -8,7 +8,14 @@ struct TodoistImportFlow {
         let workspace: UUID
         let previewOnly: Bool
         let sourceAccount: String
-        var body: [String: JSON] { ["userToken": .string(token), "preview": .bool(previewOnly), "stream": .bool(false), "sourceAccount": sourceAccount.isEmpty ? .null : .string(sourceAccount)] }
+        let supportsHeadings: Bool
+        let headingApproval: JSON?
+        var body: [String: JSON] {
+            var value: [String: JSON] = ["userToken": .string(token), "preview": .bool(previewOnly), "stream": .bool(false), "sourceAccount": sourceAccount.isEmpty ? .null : .string(sourceAccount)]
+            if supportsHeadings { value["capabilities"] = .array([.string("task_headings")]) }
+            if let headingApproval { value["headingApproval"] = headingApproval }
+            return value
+        }
     }
     static let countKeys = ["projects", "sections", "labels", "tasks", "subtasks", "comments"]
     static let resultKeys = ["projectsImported", "sectionsImported", "labelsImported", "tasksImported", "subtasksImported", "commentsImported", "projectsSkipped", "sectionsSkipped", "labelsSkipped", "tasksSkipped"]
@@ -19,18 +26,25 @@ struct TodoistImportFlow {
     private(set) var message: String?
     private var previewWorkspace: UUID?
     var busy: Bool { active != nil }
+    var headingCount: Int { (preview?["headings"].object["roots"]?.integer ?? 0) + (preview?["headings"].object["subtasks"]?.integer ?? 0) }
+    var headingImportAvailable: Bool { headingCount == 0 || preview?["headings"].object["available"] == .bool(true) }
+    var canImport: Bool { !busy && preview != nil && headingImportAvailable }
+
     var canPreview: Bool { !busy && (16...512).contains(token.trimmingCharacters(in: .whitespacesAndNewlines).count) }
     var warnings: [String] { (preview ?? result)?["warnings"].list.map(\.text) ?? [] }
     mutating func updateToken(_ value: String) {
         guard !busy, value != token else { return }
         token = value; preview = nil; result = nil; previewWorkspace = nil; message = nil
     }
-    mutating func begin(previewOnly: Bool, workspace: UUID) throws -> Request {
+    mutating func begin(previewOnly: Bool, workspace: UUID, supportsHeadings: Bool = false) throws -> Request {
         guard canPreview else { throw AppFailure(message: "Enter your Todoist API token before previewing.") }
         if !previewOnly {
             guard previewWorkspace == workspace, preview != nil else { throw AppFailure(message: "Preview this import again before importing.") }
+            guard headingImportAvailable, headingCount == 0 || supportsHeadings else { throw AppFailure(message: "This import contains headings. Keep this preview and use a supported workspace after heading import is enabled.") }
+
         }
-        let request = Request(token: token.trimmingCharacters(in: .whitespacesAndNewlines), workspace: workspace, previewOnly: previewOnly, sourceAccount: previewOnly ? "" : preview!.string("sourceAccount"))
+        let request = Request(token: token.trimmingCharacters(in: .whitespacesAndNewlines), workspace: workspace, previewOnly: previewOnly, sourceAccount: previewOnly ? "" : preview!.string("sourceAccount"), supportsHeadings: supportsHeadings,
+                              headingApproval: !previewOnly && preview?.fields["headings"] != nil ? .object(["roots": preview!["headings"].object["roots"] ?? .number(0), "subtasks": preview!["headings"].object["subtasks"] ?? .number(0)]) : nil)
         active = request; message = nil
         if previewOnly { preview = nil; result = nil; previewWorkspace = nil }
         return request
@@ -52,6 +66,25 @@ struct TodoistImportFlow {
             return n.isFinite && n >= 0 && n <= 1_000_000_000 && n.rounded(.towardZero) == n
         }), request.previewOnly ? row["preview"].flag : (row["success"].flag && account == request.sourceAccount) else {
             throw AppFailure(message: "Taskfold did not confirm the import. Preview and retry safely using the same account.")
+        }
+        if request.previewOnly && request.supportsHeadings && row.fields["headings"] == nil {
+            throw AppFailure(message: "The import service does not support heading review yet. Your source is unchanged; try again after the service is updated.")
+        }
+        if request.previewOnly, let headingInfo = row.fields["headings"] {
+            let info = headingInfo.object
+            guard info["version"] == .number(1), case .bool = info["available"],
+                  ["roots", "subtasks"].allSatisfy({ key in
+                      guard case .number(let n) = info[key] else { return false }
+                      let bound = counts[key == "roots" ? "tasks" : "subtasks"]?.integer ?? 0
+                      return n.isFinite && n >= 0 && n <= Double(bound) && n.rounded(.towardZero) == n
+                  }), info["available"] != .bool(true) || request.supportsHeadings else {
+                throw AppFailure(message: "Taskfold could not verify this heading preview. Preview again with a supported app.")
+            }
+        }
+        if !request.previewOnly, let approval = request.headingApproval, (approval.object["roots"]?.integer ?? 0) + (approval.object["subtasks"]?.integer ?? 0) > 0 {
+            guard row["formatVersion"] == .number(2), row["capabilities"] == .array([.string("task_headings")]) else {
+                throw AppFailure(message: "Taskfold could not confirm the heading format. Your approved preview is kept for a safe retry.")
+            }
         }
         active = nil
         if request.previewOnly { preview = row; previewWorkspace = workspace; return false }

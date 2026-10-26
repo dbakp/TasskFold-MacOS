@@ -1,0 +1,7 @@
+{
+  "todoistHeadingFormat": "https://www.todoist.com/help/articles/create-an-uncompletable-task-in-todoist-QxQosZuF",
+  "todoistAPI": "https://developer.todoist.com/api/v1/",
+  "supabaseTesting": "https://supabase.com/docs/guides/functions/unit-test",
+  "supabaseChangelogReviewed": "https://supabase.com/changelog.md",
+  "relatedTLSNoticeReviewed": "https://supabase.com/changelog/cbc-tls-ciphers-deprecated"
+}

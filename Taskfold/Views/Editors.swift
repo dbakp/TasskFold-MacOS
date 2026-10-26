@@ -264,6 +264,11 @@ struct TodoistImportView: View {
                             .accessibilityValue("\(preview["counts"].object[key]?.integer ?? 0)")
                             .accessibilityIdentifier("todoistCount-" + key)
                     }
+                    if flow.headingCount > 0 {
+                        LabeledContent("Headings included above", value: String(flow.headingCount)).accessibilityIdentifier("todoistHeadingCount")
+                        Text(flow.headingImportAvailable ? "These will stay open as headings, with their notes and child tasks." : "Heading import is not available in this workspace yet. Your source is unchanged; keep using Todoist until support is enabled.")
+                            .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistHeadingAvailability")
+                    }
                 }.accessibilityElement(children: .contain)
             }
             if !flow.warnings.isEmpty {
@@ -278,7 +283,7 @@ struct TodoistImportView: View {
             if flow.preview != nil {
                 Section {
                     if let message = flow.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("todoistImportError") }
-                    Button(flow.busy ? "Importing…" : flow.message == nil ? "Import into Taskfold" : "Retry import") { run(previewOnly: false) }.disabled(flow.busy).accessibilityIdentifier("todoistImport")
+                    Button(flow.busy ? "Importing…" : flow.message == nil ? "Import into Taskfold" : "Retry import") { run(previewOnly: false) }.disabled(!flow.canImport).accessibilityIdentifier("todoistImport")
                 } footer: { Text("Source IDs prevent duplicates when you retry this account. Existing imported tasks keep your Taskfold edits.") }
             }
             if let result = flow.result {
@@ -299,7 +304,7 @@ struct TodoistImportView: View {
         .onDisappear { if flow.active?.previewOnly != false { flow.reset() } }
     }
     private func run(previewOnly: Bool) {
-        guard let request = try? flow.begin(previewOnly: previewOnly, workspace: store.workspaceGeneration) else { return }
+        guard let request = try? flow.begin(previewOnly: previewOnly, workspace: store.workspaceGeneration, supportsHeadings: store.taskHeadingsAuthoringEnabled) else { return }
         Task {
             do {
                 let data: Data
@@ -324,10 +329,17 @@ struct TodoistImportView: View {
         if request.previewOnly {
             fields["preview"] = .bool(true)
             fields["counts"] = .object(["projects": .number(2), "sections": .number(3), "labels": .number(2), "tasks": .number(4), "subtasks": .number(2), "comments": .number(3)])
+            if request.supportsHeadings { fields["headings"] = .object(["version": .number(1), "roots": .number(0), "subtasks": .number(0), "available": .bool(false)]) }
+            if request.token == "fixture-heading-blocked-token" || request.token == "fixture-heading-ready-token" {
+                fields["headings"] = .object(["version": .number(1), "roots": .number(1), "subtasks": .number(1), "available": .bool(request.supportsHeadings && request.token == "fixture-heading-ready-token")])
+            }
+
         } else {
             fixtureAttempts += 1
             if fixtureAttempts == 1 { throw AppFailure(message: "The connection was lost while saving. Preview and retry: source IDs prevent duplicate imports.") }
             fields["success"] = .bool(true)
+            if request.token == "fixture-heading-ready-token" { fields["formatVersion"] = .number(2); fields["capabilities"] = .array([.string("task_headings")]) }
+
             for key in TodoistImportFlow.resultKeys { fields[key] = .number(key.hasSuffix("Skipped") ? (key == "tasksSkipped" ? 4 : 2) : 0) }
         }
         return try JSONEncoder().encode(Record(fields))

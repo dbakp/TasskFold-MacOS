@@ -44,3 +44,25 @@ Computer use returned stale filtered-row accessibility IDs/content and one inval
 ### 11 October — genuine replay response deliberately lost
 
 The native iPhone importer now passes recovery after a real successful provider replay response is deliberately dropped at the HTTP boundary. It shows the interrupted-save explanation and Retry without false success, retries the same approved source, receives all expected zero-created/skipped counts, clears its transient token, reopens empty after relaunch and returns to the original account through native authentication. All 15 destination tables and four checked source tables are identical before/after; existing Mac edits remain in the exact imported phone cache. Both own importer suites pass eight cases; see `import-lost-response-evidence.json`. The isolated DEBUG boundary requires an exact bundle/account, explicit flag and UUID marker, loses only the first actual successful save response, and is absent from Release output. This proves accepted-response replay recovery; first-import commit/response-loss and native Mac discard/retry remain unverified. Earlier response-state fixtures remain distinct.
+
+
+### 26 October — owned heading mapping, gated source only
+
+Each native repo now owns its own import-todoist service source/tests and typed
+import migration. The starting point is deployed version 41, read without
+modification. Todoist's documented leading asterisk/space becomes an explicit
+root/nested heading, keeping original content in source metadata. Notes, dates,
+comments, HTTPS links and descendants are retained. Typed bundle/receipt and
+client/server availability checks prevent flattening a heading into completable
+work. Preview counts and availability are explicit; a changed heading count
+requires a new preview. Replay preserves existing Taskfold types/edits and cannot
+resurrect deleted destinations. Older imported literal-prefix copies are not
+automatically converted.
+
+No code or migration was deployed. Normal heading creation/import and the server
+switch remain off. Native fixture responses do not contact Todoist or save tasks;
+the separate real local database harness consumes the actual mapper's output.
+See TASK_HEADINGS.md and p2-task-headings-todoist-evidence.json for exact scope,
+source hashes, rejected harness attempts and remaining provider/native gates.
+The earlier genuine provider evidence above remains historical, not evidence
+that the new heading path has been run against a real account.

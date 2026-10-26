@@ -4255,3 +4255,30 @@ extension TeamCompletionRecoveryMacUITests {
     @MainActor func testConnectedProvisionalCopyVaultFailureKeepsQueueBeforeRetirement() throws { try connectedProvisionalRecovery("vault") }
     @MainActor func testConnectedProvisionalCacheFailureReopensSameLinkedDrafts() throws { try connectedProvisionalRecovery("cache") }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testTodoistHeadingReviewAvailabilityAndTypedRetry() throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated Mac heading host required") }
+        continueAfterFailure = false
+        let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--workflow-fixture", "--todoist-import-testing", "-localMode", "YES"]; app.launch(); defer { app.terminate() }
+        app.menuBars.menuBarItems["Account"].click(); app.menuItems["Import from Todoist…"].click()
+        let field = app.secureTextFields["todoistToken"]; XCTAssertTrue(field.waitForExistence(timeout: 8))
+        let window = app.windows.containing(.secureTextField, identifier: "todoistToken").firstMatch
+        func reveal(_ control: XCUIElement, top: Bool = false) {
+            for _ in 0..<12 where !control.isHittable { window.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: top ? 400 : -400) }
+            XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
+        }
+        field.click(); field.typeText("fixture-heading-blocked-token"); app.buttons["todoistPreview"].click()
+        let count = app.descendants(matching: .any)["todoistHeadingCount"].firstMatch
+        XCTAssertTrue(count.waitForExistence(timeout: 6)); XCTAssertEqual(count.value as? String, "2")
+        let save = app.buttons["todoistImport"]; reveal(save); XCTAssertFalse(save.isEnabled)
+        let blocked = XCTAttachment(screenshot: window.screenshot()); blocked.name = "Mac Todoist headings unavailable with source retained"; blocked.lifetime = .keepAlways; add(blocked)
+        let clear = app.buttons["todoistClearToken"]; reveal(clear, top: true); clear.click(); reveal(field, top: true); field.click(); field.typeText("fixture-heading-ready-token"); app.buttons["todoistPreview"].click()
+        XCTAssertTrue(count.waitForExistence(timeout: 6)); reveal(save); XCTAssertTrue(save.isEnabled); save.click()
+        let failure = app.staticTexts["todoistImportError"]; XCTAssertTrue(failure.waitForExistence(timeout: 6)); reveal(save); XCTAssertTrue(save.isEnabled); save.click()
+        let receipt = app.descendants(matching: .any)["todoistReceipt-tasksSkipped"].firstMatch
+        XCTAssertTrue(receipt.waitForExistence(timeout: 6)); XCTAssertFalse(save.exists)
+        let confirmed = XCTAttachment(screenshot: window.screenshot()); confirmed.name = "Mac typed Todoist receipt after safe retry"; confirmed.lifetime = .keepAlways; add(confirmed)
+    }
+}

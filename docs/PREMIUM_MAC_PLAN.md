@@ -7369,3 +7369,56 @@ TASK_HEADINGS.md, p2-task-headings-actions-evidence.json and headings-actions/.
 Owned phone/tablet apps/runners are removed; no native Mac app was launched.
 This step pruned 716.4 MiB of owned logical scratch, preserving both Core caches,
 the ready Mac host/build and existing Simulator boot states.
+
+
+### 2026-10-26 — Reviewed Todoist headings and owned release inputs (rank 3 in progress)
+
+Both native repositories now independently own import-todoist source, handler,
+tests and the typed import migration, based on the read-only observed deployed
+version 41. The documented Todoist asterisk/space prefix maps to explicit root
+and nested headings, retaining original content, notes, dates, comments, HTTPS
+links and descendants. Completed source heading state is normalized open with
+a preview warning and original state preserved. Empty headings and hierarchies
+outside the reader limit refuse. Taskfold literals/clipboard text are unchanged.
+
+Version-2 bundles and receipts declare task_headings. The existing invoker RPC
+retains source-account locking, owner checks, RLS, stable source mappings and
+atomicity while persisting the root flag. Replay preserves destination edits/
+types and cannot resurrect deliberately deleted tasks. Older imported literal
+copies are not silently converted; their limitation is explained before saving.
+
+Service and client switches default off. Both are required for typed saving; the
+preview separates included heading counts and availability. Changed heading
+counts require a fresh preview. A heading-aware client refuses an old service
+without type-review metadata, and typed receipt acknowledgement is required
+before clearing the token. Unavailable and lost-response states retain source
+approval for a safe retry. No edge function, schema, hosted configuration or
+normal authoring setting was deployed/enabled.
+
+Each repo passes 67 scoped Core cases (six new import cases), 14 Deno cases
+(four new) and 38 actual local PostgreSQL checks consuming the real mapper's
+output. Invoker/RLS/account isolation, atomic refusal, replay/edit retention,
+deleted-destination protection and collection/depth bounds are checked. Local
+advisors ran with seven inherited fixture notices and zero import_sources
+findings. This is not a hosted advisor or genuine Todoist heading-import claim.
+
+After the user's approval, Mac UI automation now works. The current isolated Mac
+walk passes unavailable heading preview, disabled Import, supported preview,
+lost-response retry and typed receipt. The same current guarded-source scenario
+passes on iPhone and iPad Simulator with unchanged synthetic task tables. Three
+scenarios pass, zero failures/skips, and six screenshots are inspected. Current
+Debug builds and strict signatures pass. A failed Browse scrollbar test and
+rejected SQL harness preparation attempts are retained in the verification notes.
+No additional user interaction was needed after permission became available.
+
+This closes the automation-permission blocker, not wider Mac heading acceptance.
+Clipboard/CSV formats, explicit review for older literal-prefix copies, genuine
+provider/hosted acceptance, broader action/history/keyboard/spoken/cross-device
+work and shared capability/command adapters remain open. All user-deferred
+release, remote delivery, old-client, provider and physical-device gates remain
+unchanged. The full Px objective and headings remain active. See TASK_HEADINGS.md,
+p2-task-headings-todoist-evidence.json and headings-todoist/.
+
+Owned phone/tablet apps/runners and the isolated Mac session are closed.
+This step removed 845.7 MiB of owned logical scratch, preserving both Core caches,
+the ready Mac host/build and existing Simulator boot states.

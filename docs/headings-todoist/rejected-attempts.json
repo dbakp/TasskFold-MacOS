@@ -1,0 +1,33 @@
+[
+  {
+    "attempt": "ios-sql.log",
+    "accepted": false,
+    "signals": [
+      "Error: Owned PostgreSQL query failed",
+      "  code: '42601'"
+    ]
+  },
+  {
+    "attempt": "ios-sql-final.log",
+    "accepted": false,
+    "signals": [
+      "  code: 'ERR_ASSERTION',",
+      "  actual: undefined,",
+      "  expected: true,"
+    ]
+  },
+  {
+    "attempt": "ios-sql-accepted.log",
+    "accepted": false,
+    "signals": [
+      "SyntaxError: Unexpected end of JSON input"
+    ]
+  },
+  {
+    "attempt": "iphone.log",
+    "accepted": false,
+    "signals": [
+      "/tmp/taskfold-heading-interop-host/TaskfoldUITests/TaskfoldUITests.swift:1580: error: -[TaskfoldUITests.TaskfoldUITests testTodoistHeadingReviewAvailabilityAndTypedRetry] : XCTAssertTrue failed - Attributes: Application, 0x106d888c0, pid: 77054, label: 'Taskfold Heading Test'"
+    ]
+  }
+]

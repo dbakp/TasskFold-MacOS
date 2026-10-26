@@ -164,6 +164,50 @@ limits. Historical activity semantics, broader productive/descendant policies,
 provider/source mapping, shared capability work and native Mac/spoken acceptance
 are still open; these changes do not expose heading authoring in normal builds.
 
+## Reviewed Todoist source mapping
+
+Both app repos now own the import-todoist service source, handler and tests,
+starting from the observed deployed version 41. This removes the release input
+dependency on the web-reference checkout. No hosted source/configuration changed.
+
+Only the documented Todoist leading `* ` prefix maps to an explicit heading;
+Taskfold capture, literal titles and unrelated clipboard text do not gain this
+interpretation. The first marker is removed from the displayed imported title;
+source metadata retains the complete original content. Root/nested flags, notes,
+dates, HTTPS file links, comments and ordinary descendants are preserved. A
+source heading carrying a completed state becomes an open heading with a preview
+warning and original state kept. Empty heading titles refuse the entire import.
+A heading hierarchy outside the current reader's 32 nested levels also refuses.
+
+Typed bundles require version 2 plus exactly `["task_headings"]`. The invoker RPC
+persists the root flag and retains the global nested-heading invariant. Its
+source-account lock, owner checks, RLS, source-ID mapping and atomic transaction
+remain intact. Malformed/unsupported capabilities, invalid types and completed
+heading states refuse without partial work. Legacy ordinary bundles remain
+compatible. Source metadata is not interpreted as nested task containment.
+
+The service switch `TASKFOLD_TODOIST_HEADINGS_ENABLED` defaults off. Both this
+switch and an explicit client capability are required to save a heading bundle.
+Preview exposes separate included heading counts and availability; unavailable
+native previews retain their source token/workspace approval and disable Import.
+The client uses its existing local test heading opt-in, so normal/cloud heading
+imports remain unavailable. Saving rechecks the approved heading counts against
+the fresh source snapshot; a changed count requires a new preview. Typed receipts
+must confirm the capability before the client clears its token/approval. A lost
+or unconfirmed receipt keeps the same source for safe retry.
+
+Retries deliberately preserve existing imported Taskfold types/edits, including
+older literal-prefix copies. They do not auto-convert those copies or resurrect
+deleted destinations. The preview explains this limitation. No Todoist mutation
+is performed: the provider client retains GET-only behavior. Service mapping and
+real local PostgreSQL persistence are tested separately from native response/UI
+fixtures; these do not establish genuine-provider, hosted, broad Mac/spoken or
+cross-device heading acceptance.
+
+See `p2-task-headings-todoist-evidence.json` and `headings-todoist/`. Clipboard/CSV
+formats, older imported-copy conversion review, remaining action/history policies
+and shared adapters still need work before normal heading exposure.
+
 ## Ordered work before exposure
 
 1. Finish native acceptance of the implemented local presentation/type editors:
@@ -180,7 +224,8 @@ are still open; these changes do not expose heading authoring in normal builds.
    can be completed. Checklist progress now excludes heading nodes and retains
    ordinary descendants; verify the remaining root/descendant totals and history
    independently before exposure.
-4. Finish clipboard/CSV and reviewed source-specific Todoist mapping. Scoped
+4. Finish clipboard/CSV formats and provider/native acceptance of the implemented
+   reviewed Todoist mapping. Scoped
    duplication, versioned template files/runs and workspace backup/restore now
    preserve known types; wider provider/file-handoff/cross-device and native
    recovery acceptance remain open.
@@ -189,8 +234,9 @@ are still open; these changes do not expose heading authoring in normal builds.
    hosted deployment/exposure. Missing server capability must leave current work
    safe; this contract is not a complete legacy-writer enforcement audit.
 6. Run native local/shared source-change, accessibility, large-text, relaunch,
-   rollback and cross-device acceptance. Real Mac automation currently awaits
-   interactive permission; builds and Core checks do not substitute for it.
+   rollback and cross-device acceptance. Mac UI automation now works and the
+   focused Todoist heading review passes; broader Mac heading scenarios still
+   require execution. Builds and Core checks do not substitute for that work.
 
 ## Verification
 

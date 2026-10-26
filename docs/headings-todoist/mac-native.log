@@ -1,0 +1,236 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-mac-recovery-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -resultBundlePath /tmp/taskfold-heading-interop-mac-native.xcresult -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 180 "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testTodoistHeadingReviewAvailabilityAndTypedRetry"
+
+Writing result bundle at path:
+	/tmp/taskfold-heading-interop-mac-native.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 06:48:26.075498+0100 TaskfoldUITests-Runner[78608:21810381] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 06:48:26.193.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 06:48:26.194.
+Test Suite 'TaskfoldMacUITests' started at 2026-10-26 06:48:26.194.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTodoistHeadingReviewAvailabilityAndTypedRetry]' started.
+    t =     0.00s Start Test at 2026-10-26 06:48:26.195
+    t =     0.46s Set Up
+    t =     0.49s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.49s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 06:48:26.764 xcodebuild[78599:21810149] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 06:48:26.764 xcodebuild[78599:21810149] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.15s         Wait for accessibility to load
+    t =     2.30s         Setting up automation session
+    t =     2.33s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.33s Click "Account" MenuBarItem
+    t =     2.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.34s     Find the "Account" MenuBarItem
+    t =     2.70s     Check for interrupting elements affecting "Account" MenuBarItem
+    t =     2.70s     Synthesize event
+    t =     3.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.24s Click "Import from Todoist…" MenuItem
+    t =     3.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.25s     Find the "Import from Todoist…" MenuItem
+    t =     3.29s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     3.29s     Synthesize event
+    t =     3.31s         Checking existence of `"menuAction:" MenuItem`
+    t =     3.33s         Hover menu item 'Import from Todoist…'
+    t =     3.33s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.34s             Find the "menuAction:" MenuItem
+    t =     3.38s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     3.38s             Synthesize event
+    t =     3.60s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.61s         Find the "menuAction:" MenuItem
+    t =     4.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.94s Waiting 8.0s for "todoistToken" SecureTextField to exist
+    t =     5.99s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistToken" SecureTextField`
+    t =     5.99s         Checking existence of `"todoistToken" SecureTextField`
+    t =     6.14s Click "todoistToken" SecureTextField
+    t =     6.14s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.15s     Find the "todoistToken" SecureTextField
+    t =     6.20s     Check for interrupting elements affecting "todoistToken" SecureTextField
+    t =     6.22s     Synthesize event
+    t =     6.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.73s Type 'fixture-heading-bl...' into "todoistToken" SecureTextField
+    t =     6.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.73s     Find the "todoistToken" SecureTextField
+    t =     6.82s     Check for interrupting elements affecting "todoistToken" SecureTextField
+    t =     6.84s     Synthesize event
+2026-10-26 06:48:33.050524+0100 TaskfoldUITests-Runner[78608:21810381] [DisplayManager] Found 1 displays containing rect (861.0, 521.5, 448.0, 18.0): [1]
+    t =     7.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.40s Click "todoistPreview" Button
+    t =     7.40s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.41s     Find the "todoistPreview" Button
+    t =     7.47s     Check for interrupting elements affecting "todoistPreview" Button
+    t =     7.49s     Synthesize event
+    t =     8.01s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.03s Waiting 6.0s for "todoistHeadingCount" Any to exist
+    t =     9.06s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistHeadingCount" Any`
+    t =     9.06s         Checking existence of `"todoistHeadingCount" Any`
+    t =     9.19s Find the "todoistHeadingCount" Any
+    t =     9.29s Find the "todoistImport" Button
+    t =     9.45s Scroll ScrollView (First Match) by dx: 0.00, dy: -400.00
+    t =     9.45s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.45s     Find the ScrollView (First Match)
+    t =     9.47s     Check for interrupting elements affecting "todoistImportForm" ScrollView
+    t =     9.48s     Synthesize event
+    t =     9.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.82s Find the "todoistImport" Button
+    t =     9.92s Find the "todoistImport" Button
+    t =    10.00s Find the "todoistImport" Button
+    t =    10.08s Find the "todoistImport" Button
+    t =    10.15s Find the "todoistImport" Button
+    t =    10.23s Find the "todoistImport" Button
+    t =    10.31s Find the "todoistImport" Button
+    t =    10.38s Find the "todoistImport" Button
+    t =    10.44s Find the "todoistImport" Button
+    t =    10.52s Find the "todoistImport" Button
+    t =    10.59s Find the "todoistImport" Button
+    t =    10.67s Checking existence of `"todoistImport" Button`
+    t =    10.73s Find the "todoistImport" Button
+    t =    10.80s Find the "todoistImport" Button
+    t =    10.86s Checking existence of `Window (First Match)`
+    t =    10.87s Find the Window (First Match)
+2026-10-26 06:48:37.092836+0100 TaskfoldUITests-Runner[78608:21810381] [DisplayManager] Found 1 displays containing rect (718.0, 360.0, 620.0, 648.0): [1]
+    t =    10.93s Added attachment named 'Mac Todoist headings unavailable with source retained'
+    t =    10.93s Find the "todoistClearToken" Button
+    t =    11.03s Scroll ScrollView (First Match) by dx: 0.00, dy: 400.00
+    t =    11.03s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.04s     Find the ScrollView (First Match)
+    t =    11.05s     Check for interrupting elements affecting "todoistImportForm" ScrollView
+    t =    11.06s     Synthesize event
+    t =    11.38s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.39s Find the "todoistClearToken" Button
+    t =    11.48s Find the "todoistClearToken" Button
+    t =    11.55s Find the "todoistClearToken" Button
+    t =    11.62s Find the "todoistClearToken" Button
+    t =    11.69s Find the "todoistClearToken" Button
+    t =    11.77s Find the "todoistClearToken" Button
+    t =    11.95s Find the "todoistClearToken" Button
+    t =    12.03s Find the "todoistClearToken" Button
+    t =    12.10s Find the "todoistClearToken" Button
+    t =    12.17s Find the "todoistClearToken" Button
+    t =    12.24s Find the "todoistClearToken" Button
+    t =    12.31s Checking existence of `"todoistClearToken" Button`
+    t =    12.38s Find the "todoistClearToken" Button
+    t =    12.56s Click "todoistClearToken" Button
+    t =    12.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.57s     Find the "todoistClearToken" Button
+    t =    12.63s     Check for interrupting elements affecting "todoistClearToken" Button
+    t =    12.65s     Synthesize event
+    t =    13.16s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.17s Find the "todoistToken" SecureTextField
+    t =    13.23s Find the "todoistToken" SecureTextField
+    t =    13.29s Find the "todoistToken" SecureTextField
+    t =    13.35s Find the "todoistToken" SecureTextField
+    t =    13.40s Find the "todoistToken" SecureTextField
+    t =    13.45s Find the "todoistToken" SecureTextField
+    t =    13.51s Find the "todoistToken" SecureTextField
+    t =    13.57s Find the "todoistToken" SecureTextField
+    t =    13.65s Find the "todoistToken" SecureTextField
+    t =    13.71s Find the "todoistToken" SecureTextField
+    t =    13.78s Find the "todoistToken" SecureTextField
+    t =    13.84s Find the "todoistToken" SecureTextField
+    t =    13.89s Checking existence of `"todoistToken" SecureTextField`
+    t =    13.94s Find the "todoistToken" SecureTextField
+    t =    14.00s Click "todoistToken" SecureTextField
+    t =    14.00s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.00s     Find the "todoistToken" SecureTextField
+    t =    14.05s     Check for interrupting elements affecting "todoistToken" SecureTextField
+    t =    14.06s     Synthesize event
+    t =    14.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.57s Type 'fixture-heading-re...' into "todoistToken" SecureTextField
+    t =    14.57s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.57s     Find the "todoistToken" SecureTextField
+    t =    14.66s     Check for interrupting elements affecting "todoistToken" SecureTextField
+    t =    14.68s     Synthesize event
+2026-10-26 06:48:40.880397+0100 TaskfoldUITests-Runner[78608:21810381] [DisplayManager] Found 1 displays containing rect (861.0, 521.5, 448.0, 18.0): [1]
+    t =    15.19s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.20s Click "todoistPreview" Button
+    t =    15.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.22s     Find the "todoistPreview" Button
+    t =    15.28s     Check for interrupting elements affecting "todoistPreview" Button
+    t =    15.30s     Synthesize event
+    t =    15.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.83s Waiting 6.0s for "todoistHeadingCount" Any to exist
+    t =    16.86s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistHeadingCount" Any`
+    t =    16.86s         Checking existence of `"todoistHeadingCount" Any`
+    t =    16.98s Find the "todoistImport" Button
+    t =    17.10s Scroll ScrollView (First Match) by dx: 0.00, dy: -400.00
+    t =    17.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.10s     Find the ScrollView (First Match)
+    t =    17.13s     Check for interrupting elements affecting "todoistImportForm" ScrollView
+    t =    17.14s     Synthesize event
+    t =    17.46s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.48s Find the "todoistImport" Button
+    t =    17.58s Find the "todoistImport" Button
+    t =    17.67s Find the "todoistImport" Button
+    t =    17.75s Find the "todoistImport" Button
+    t =    17.82s Find the "todoistImport" Button
+    t =    17.89s Find the "todoistImport" Button
+    t =    17.97s Find the "todoistImport" Button
+    t =    18.03s Find the "todoistImport" Button
+    t =    18.10s Find the "todoistImport" Button
+    t =    18.18s Find the "todoistImport" Button
+    t =    18.25s Find the "todoistImport" Button
+    t =    18.33s Checking existence of `"todoistImport" Button`
+    t =    18.39s Find the "todoistImport" Button
+    t =    18.47s Find the "todoistImport" Button
+    t =    18.54s Click "todoistImport" Button
+    t =    18.54s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.55s     Find the "todoistImport" Button
+    t =    18.61s     Check for interrupting elements affecting "todoistImport" Button
+    t =    18.63s     Synthesize event
+    t =    19.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.10s Waiting 6.0s for "todoistImportError" StaticText to exist
+    t =    20.13s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistImportError" StaticText`
+    t =    20.14s         Checking existence of `"todoistImportError" StaticText`
+    t =    20.22s Find the "todoistImport" Button
+    t =    20.29s Find the "todoistImport" Button
+    t =    20.36s Find the "todoistImport" Button
+    t =    20.43s Find the "todoistImport" Button
+    t =    20.50s Find the "todoistImport" Button
+    t =    20.57s Find the "todoistImport" Button
+    t =    20.64s Find the "todoistImport" Button
+    t =    20.72s Find the "todoistImport" Button
+    t =    20.79s Find the "todoistImport" Button
+    t =    20.86s Find the "todoistImport" Button
+    t =    20.93s Find the "todoistImport" Button
+    t =    21.00s Find the "todoistImport" Button
+    t =    21.07s Checking existence of `"todoistImport" Button`
+    t =    21.12s Find the "todoistImport" Button
+    t =    21.19s Find the "todoistImport" Button
+    t =    21.26s Click "todoistImport" Button
+    t =    21.26s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.27s     Find the "todoistImport" Button
+    t =    21.33s     Check for interrupting elements affecting "todoistImport" Button
+    t =    21.34s     Synthesize event
+    t =    21.85s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.86s Waiting 6.0s for "todoistReceipt-tasksSkipped" Any to exist
+    t =    22.89s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistReceipt-tasksSkipped" Any`
+    t =    22.89s         Checking existence of `"todoistReceipt-tasksSkipped" Any`
+    t =    23.02s Checking existence of `"todoistImport" Button`
+    t =    23.07s Checking existence of `"com_apple_SwiftUI_Settings_window" Window`
+    t =    23.09s Find the "com_apple_SwiftUI_Settings_window" Window
+2026-10-26 06:48:49.305498+0100 TaskfoldUITests-Runner[78608:21810381] [DisplayManager] Found 1 displays containing rect (718.0, 360.0, 620.0, 648.0): [1]
+    t =    23.13s Added attachment named 'Mac typed Todoist receipt after safe retry'
+    t =    23.13s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:78612
+    t =    24.16s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTodoistHeadingReviewAvailabilityAndTypedRetry]' passed (24.609 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-10-26 06:48:50.805.
+	 Executed 1 test, with 0 failures (0 unexpected) in 24.609 (24.611) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 06:48:50.806.
+	 Executed 1 test, with 0 failures (0 unexpected) in 24.609 (24.612) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 06:48:50.806.
+	 Executed 1 test, with 0 failures (0 unexpected) in 24.609 (24.613) seconds
+2026-10-26 06:48:51.092 xcodebuild[78599:21810149] [MT] IDETestOperationsObserverDebug: 25.756 elapsed -- Testing started completed.
+2026-10-26 06:48:51.092 xcodebuild[78599:21810149] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 06:48:51.092 xcodebuild[78599:21810149] [MT] IDETestOperationsObserverDebug: 25.756 sec, +25.756 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-heading-interop-mac-native.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

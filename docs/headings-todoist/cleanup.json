@@ -1,0 +1,339 @@
+{
+  "ownedScratchRemoved": [
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-final.log",
+      "logicalBytes": 22999
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-client-tests.py",
+      "logicalBytes": 4870
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-attachments",
+      "logicalBytes": 991762
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-signing.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-current-build.log",
+      "logicalBytes": 71976
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ipad.xcresult",
+      "logicalBytes": 3125957
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql-final.log",
+      "logicalBytes": 599
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-current-signing.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-final-core.log",
+      "logicalBytes": 35048
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ipad-current-attachments.log",
+      "logicalBytes": 552
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-current-summary.json",
+      "logicalBytes": 998
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ipad-current-attachments",
+      "logicalBytes": 461469
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-service.log",
+      "logicalBytes": 1533
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-service-final.log",
+      "logicalBytes": 1533
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-format.log",
+      "logicalBytes": 623
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-core-first.log",
+      "logicalBytes": 19050
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql-final-accepted.json",
+      "logicalBytes": 10491
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ipad-current.xcresult",
+      "logicalBytes": 3436060
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql-current.log",
+      "logicalBytes": 31
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql-verified.json",
+      "logicalBytes": 10295
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-native-summary.json",
+      "logicalBytes": 972
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-native.xcresult",
+      "logicalBytes": 771140
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql.log",
+      "logicalBytes": 656
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-build.log",
+      "logicalBytes": 38026
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql-accepted.log",
+      "logicalBytes": 487
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-harness-format.log",
+      "logicalBytes": 134
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-final-build.log",
+      "logicalBytes": 48319
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-service-accepted.log",
+      "logicalBytes": 1533
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-core.log",
+      "logicalBytes": 34842
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-build",
+      "logicalBytes": 746642427
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-sql.py",
+      "logicalBytes": 9339
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ipad-current-summary.json",
+      "logicalBytes": 1015
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-service-accepted.log",
+      "logicalBytes": 1533
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql-final.log",
+      "logicalBytes": 605
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-edge-check.log",
+      "logicalBytes": 49
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-current.xcresult",
+      "logicalBytes": 3687949
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql-accepted.log",
+      "logicalBytes": 493
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-attachments",
+      "logicalBytes": 288186
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-guard-build.log",
+      "logicalBytes": 58170
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-edge-accepted.log",
+      "logicalBytes": 49
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-current-attachments",
+      "logicalBytes": 992467
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ipad.log",
+      "logicalBytes": 25755
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-edge-check.log",
+      "logicalBytes": 49
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql-final-accepted.log",
+      "logicalBytes": 31
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-current-attachments.log",
+      "logicalBytes": 554
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-service-final.log",
+      "logicalBytes": 1533
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-native.log",
+      "logicalBytes": 16336
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-summary.json",
+      "logicalBytes": 999
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-host",
+      "logicalBytes": 7076149
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql-final-accepted.log",
+      "logicalBytes": 31
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-changelog.md",
+      "logicalBytes": 102641
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-core-first.log",
+      "logicalBytes": 2680
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql-final-accepted.json",
+      "logicalBytes": 10491
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-current-build.log",
+      "logicalBytes": 34047
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-attachments.log",
+      "logicalBytes": 546
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-tests.py",
+      "logicalBytes": 5118
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-service.log",
+      "logicalBytes": 1533
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone.log",
+      "logicalBytes": 69315
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql-verified.log",
+      "logicalBytes": 31
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql-current.json",
+      "logicalBytes": 10295
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-final.xcresult",
+      "logicalBytes": 3689925
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-prepare.log",
+      "logicalBytes": 43
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ipad-current.log",
+      "logicalBytes": 25779
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-edge-accepted.log",
+      "logicalBytes": 49
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-build.log",
+      "logicalBytes": 539441
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql.log",
+      "logicalBytes": 665
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-final-core.log",
+      "logicalBytes": 35462
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-guard-signing-prepare.json",
+      "logicalBytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-signing-prepare.json",
+      "logicalBytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone.xcresult",
+      "logicalBytes": 114274173
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-iphone-current.log",
+      "logicalBytes": 23005
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-attachments.log",
+      "logicalBytes": 525
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-format.log",
+      "logicalBytes": 608
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql-current.log",
+      "logicalBytes": 31
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-final-signing.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-core.log",
+      "logicalBytes": 35096
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-final-build.log",
+      "logicalBytes": 34947
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql-verified.json",
+      "logicalBytes": 10295
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-harness-format.log",
+      "logicalBytes": 131
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-service-baseline.log",
+      "logicalBytes": 1125
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-mac-sql-current.json",
+      "logicalBytes": 10295
+    },
+    {
+      "path": "/tmp/taskfold-heading-interop-ios-sql-verified.log",
+      "logicalBytes": 31
+    }
+  ],
+  "logicalBytesRemoved": 886816466,
+  "ownedPhoneAndTabletInstallsRemoved": true,
+  "macNativeTestEndedAndAppClosed": true,
+  "noTaskfoldHostProcessRemaining": true,
+  "coreCachesPreserved": true,
+  "readyMacHostAndBuildPreserved": true,
+  "simulatorBootStatesPreserved": true
+}

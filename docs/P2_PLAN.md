@@ -10,13 +10,16 @@ Normal app configuration still omits authoring. Versioned template/workspace
 files, fresh runs/copies and checklist progress now retain heading semantics.
 Time/Focus/location eligibility now excludes headings, and list/board/filter
 badges and typed template-library summaries distinguish context from work.
-Next are source-specific interoperability, remaining action/count/history
-acceptance and shared capability/command adapters;
+Reviewed Todoist heading mapping now has owned service/RPC/client support behind
+default-off gates. Next are clipboard/CSV interoperability, remaining provider/
+native action/count/history acceptance and shared capability/command adapters;
 see `TASK_HEADINGS.md`, `p2-task-headings-contract-evidence.json` and
 `p2-task-headings-native-evidence.json` and
 `p2-task-headings-portability-evidence.json` and
-`p2-task-headings-actions-evidence.json`. This does not close headings or rank 3.
-The outstanding rank-6 and Watch acceptance below remains open.
+`p2-task-headings-actions-evidence.json` and
+`p2-task-headings-todoist-evidence.json`. This does not close headings or rank 3.
+Mac UI automation is now authorized and the focused Todoist heading review passes.
+The outstanding wider Mac, rank-6 and Watch acceptance below remains open.
 
 Native completion recovery and permanent encrypted selection drafts are implemented
 in both clients. Missing-source/occurrence authored task/comment work now also has

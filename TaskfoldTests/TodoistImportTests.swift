@@ -99,3 +99,73 @@ final class TodoistImportTests: XCTestCase {
     }
 
 }
+
+
+extension TodoistImportTests {
+    private func headingPreview(available: Bool) -> Record {
+        var row = preview(); row["headings"] = .object(["version": .number(1), "roots": .number(1), "subtasks": .number(1), "available": .bool(available)]); return row
+    }
+    func testUnavailableHeadingPreviewKeepsSourceButCannotStartImport() throws {
+        let workspace = UUID(); var flow = TodoistImportFlow(); flow.updateToken(token)
+        let request = try flow.begin(previewOnly: true, workspace: workspace)
+        _ = try flow.accept(headingPreview(available: false), request: request, workspace: workspace)
+        XCTAssertEqual(flow.headingCount, 2); XCTAssertFalse(flow.canImport)
+        XCTAssertThrowsError(try flow.begin(previewOnly: false, workspace: workspace, supportsHeadings: true))
+        XCTAssertNotNil(flow.preview); XCTAssertEqual(flow.token, token); XCTAssertFalse(flow.busy)
+    }
+    func testAvailableHeadingPreviewRequiresDeclaredClientSupportAndCapturedApproval() throws {
+        let workspace = UUID(); var flow = TodoistImportFlow(); flow.updateToken(token)
+        let request = try flow.begin(previewOnly: true, workspace: workspace, supportsHeadings: true)
+        XCTAssertEqual(request.body["capabilities"], .array([.string("task_headings")]))
+        _ = try flow.accept(headingPreview(available: true), request: request, workspace: workspace)
+        XCTAssertTrue(flow.canImport)
+        XCTAssertThrowsError(try flow.begin(previewOnly: false, workspace: workspace))
+        let save = try flow.begin(previewOnly: false, workspace: workspace, supportsHeadings: true)
+        XCTAssertEqual(save.body["headingApproval"], .object(["roots": .number(1), "subtasks": .number(1)]))
+        XCTAssertEqual(save.body["sourceAccount"], .string("source-a"))
+    }
+    func testTypedReceiptNeedsConfirmedFormatAndCapabilityBeforeClearingToken() throws {
+        let workspace = UUID(); var flow = TodoistImportFlow(); flow.updateToken(token)
+        let request = try flow.begin(previewOnly: true, workspace: workspace, supportsHeadings: true)
+        _ = try flow.accept(headingPreview(available: true), request: request, workspace: workspace)
+        let save = try flow.begin(previewOnly: false, workspace: workspace, supportsHeadings: true)
+        XCTAssertThrowsError(try flow.accept(receipt(), request: save, workspace: workspace))
+        flow.fail(AppFailure(message: "Unconfirmed format"), request: save, workspace: workspace)
+        XCTAssertNotNil(flow.preview); XCTAssertEqual(flow.token, token)
+        let retry = try flow.begin(previewOnly: false, workspace: workspace, supportsHeadings: true)
+        XCTAssertEqual(save.body, retry.body)
+        var result = receipt(); result["formatVersion"] = .number(2); result["capabilities"] = .array([.string("task_headings")])
+        XCTAssertTrue(try flow.accept(result, request: retry, workspace: workspace)); XCTAssertNil(flow.preview); XCTAssertEqual(flow.token, "")
+    }
+    func testMalformedOrUnrequestedHeadingResponseNeverAuthorizesImport() throws {
+        let workspace = UUID()
+        var invalid = [headingPreview(available: true), headingPreview(available: false), headingPreview(available: false), headingPreview(available: false)]
+        invalid[1]["headings"] = .object(["version": .number(2), "roots": .number(1), "subtasks": .number(0), "available": .bool(false)])
+        invalid[2]["headings"] = .object(["version": .number(1), "roots": .number(99), "subtasks": .number(0), "available": .bool(false)])
+        invalid[3]["headings"] = .object(["version": .number(1), "roots": .number(0.5), "subtasks": .number(0), "available": .bool(false)])
+        for row in invalid {
+            var flow = TodoistImportFlow(); flow.updateToken(token); let request = try flow.begin(previewOnly: true, workspace: workspace)
+            XCTAssertThrowsError(try flow.accept(row, request: request, workspace: workspace)); XCTAssertFalse(flow.canImport); XCTAssertNil(flow.preview)
+        }
+    }
+    func testLegacyPreviewDoesNotInventHeadingApprovalOrChangeLiteralTaskText() throws {
+        let workspace = UUID(); var flow = try approved(workspace)
+        XCTAssertEqual(flow.headingCount, 0); XCTAssertTrue(flow.canImport)
+        let save = try flow.begin(previewOnly: false, workspace: workspace)
+        XCTAssertNil(save.body["headingApproval"]); XCTAssertNil(save.body["capabilities"])
+        var literal = Record.task(user: "synthetic"); literal["title"] = .string("* Literal Taskfold text")
+        XCTAssertEqual(TaskKind(literal), .task); XCTAssertEqual(literal.title, "* Literal Taskfold text")
+    }
+}
+
+
+extension TodoistImportTests {
+    func testHeadingAwareClientCannotApproveLegacyServiceWithoutTypeReview() throws {
+        let workspace = UUID(); var flow = TodoistImportFlow(); flow.updateToken("isolated-fixture-token")
+        let request = try flow.begin(previewOnly: true, workspace: workspace, supportsHeadings: true)
+        XCTAssertThrowsError(try flow.accept(preview(), request: request, workspace: workspace))
+        XCTAssertNil(flow.preview); XCTAssertFalse(flow.canImport)
+        flow.fail(AppFailure(message: "Service needs heading review"), request: request, workspace: workspace)
+        XCTAssertEqual(flow.token, "isolated-fixture-token"); XCTAssertFalse(flow.busy)
+    }
+}

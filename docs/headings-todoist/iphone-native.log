@@ -1,0 +1,344 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-heading-interop-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -resultBundlePath /tmp/taskfold-heading-interop-iphone-current.xcresult -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 180 "-only-testing:TaskfoldUITests/TaskfoldUITests/testTodoistHeadingReviewAvailabilityAndTypedRetry"
+
+Writing result bundle at path:
+	/tmp/taskfold-heading-interop-iphone-current.xcresult
+
+2026-10-26 06:49:25.129517+0100 TaskfoldUITests-Runner[78782:21812546] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 06:49:30.455.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 06:49:30.456.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 06:49:30.456.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testTodoistHeadingReviewAvailabilityAndTypedRetry]' started.
+    t =     0.01s Start Test at 2026-10-26 06:49:30.468
+    t =     0.04s Set Up
+    t =     0.05s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.05s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 06:49:30.580 xcodebuild[78774:21812252] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 06:49:30.580 xcodebuild[78774:21812252] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[78782]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1067e4398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x109ea8310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     1.35s         Setting up automation session
+    t =     5.23s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.12s Checking existence of `"Browse" Button`
+    t =     8.32s Tap "Browse" Button
+    t =     8.32s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.33s     Find the "Browse" Button
+    t =     8.36s     Check for interrupting elements affecting "Browse" Button
+    t =     8.44s     Synthesize event
+    t =     8.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.81s Find the "openTodoistImport" Button
+    t =    11.93s     Find the "openTodoistImport" Button (retry 1)
+    t =    12.99s     Find the "openTodoistImport" Button (retry 2)
+    t =    13.04s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    13.04s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.05s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    13.08s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    13.12s     Synthesize event
+    t =    13.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.69s Find the "openTodoistImport" Button
+    t =    15.79s Find the "openTodoistImport" Button
+    t =    15.86s Find the "openTodoistImport" Button
+    t =    15.92s Find the "openTodoistImport" Button
+    t =    15.99s Find the "openTodoistImport" Button
+    t =    16.06s Find the "openTodoistImport" Button
+    t =    16.12s Find the "openTodoistImport" Button
+    t =    16.18s Find the "openTodoistImport" Button
+    t =    16.25s Find the "openTodoistImport" Button
+    t =    16.31s Find the "openTodoistImport" Button
+    t =    16.37s Find the "openTodoistImport" Button
+    t =    16.44s Find the "openTodoistImport" Button
+    t =    16.51s Find the "openTodoistImport" Button
+    t =    16.57s Find the "openTodoistImport" Button
+    t =    16.64s Find the "openTodoistImport" Button
+    t =    16.70s Find the "openTodoistImport" Button
+    t =    16.77s Find the "openTodoistImport" Button
+    t =    16.83s Checking existence of `"openTodoistImport" Button`
+    t =    16.89s Find the "openTodoistImport" Button
+    t =    16.95s Tap "openTodoistImport" Button
+    t =    16.95s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.96s     Find the "openTodoistImport" Button
+    t =    17.01s     Check for interrupting elements affecting "openTodoistImport" Button
+    t =    17.06s     Synthesize event
+    t =    17.36s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.77s Waiting 5.0s for "todoistToken" SecureTextField to exist
+    t =    18.81s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistToken" SecureTextField`
+    t =    18.81s         Checking existence of `"todoistToken" SecureTextField`
+    t =    18.84s Tap "todoistToken" SecureTextField
+    t =    18.84s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.85s     Find the "todoistToken" SecureTextField
+    t =    18.87s     Check for interrupting elements affecting "todoistToken" SecureTextField
+    t =    18.90s     Synthesize event
+    t =    19.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.70s Type 'fixture-heading-bl...' into "todoistToken" SecureTextField
+    t =    19.70s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.06s     Find the "todoistToken" SecureTextField
+    t =    20.12s     Check for interrupting elements affecting "todoistToken" SecureTextField
+    t =    20.16s     Synthesize event
+    t =    20.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.86s Tap "todoistPreview" Button
+    t =    20.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.86s     Find the "todoistPreview" Button
+    t =    20.90s     Check for interrupting elements affecting "todoistPreview" Button
+    t =    20.94s     Synthesize event
+    t =    21.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.58s Waiting 6.0s for "todoistHeadingCount" Any to exist
+    t =    22.62s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistHeadingCount" Any`
+    t =    22.62s         Checking existence of `"todoistHeadingCount" Any`
+    t =    22.79s Find the "todoistHeadingCount" Any
+    t =    22.95s Find the "todoistHeadingCount" StaticText
+    t =    23.12s Find the "todoistHeadingCount" StaticText
+    t =    23.28s Find the "todoistHeadingCount" StaticText
+    t =    23.47s Find the "todoistHeadingCount" StaticText
+    t =    23.65s Find the "todoistHeadingCount" StaticText
+    t =    23.82s Find the "todoistHeadingCount" StaticText
+    t =    23.98s Find the "todoistHeadingCount" StaticText
+    t =    24.15s Find the "todoistHeadingCount" StaticText
+    t =    24.32s Find the "todoistHeadingCount" StaticText
+    t =    24.49s Find the "todoistHeadingCount" StaticText
+    t =    24.66s Find the "todoistHeadingCount" StaticText
+    t =    24.83s Find the "todoistHeadingCount" StaticText
+    t =    25.00s Find the "todoistHeadingCount" StaticText
+    t =    25.17s Find the "todoistHeadingCount" StaticText
+    t =    25.34s Find the "todoistHeadingCount" StaticText
+    t =    25.51s Find the "todoistHeadingCount" StaticText
+    t =    25.68s Find the "todoistHeadingCount" StaticText
+    t =    25.85s Checking existence of `"todoistHeadingCount" StaticText`
+    t =    26.00s Find the "todoistHeadingCount" StaticText
+    t =    26.17s Find the "todoistHeadingAvailability" StaticText
+    t =    26.21s Find the "todoistImport" Button
+    t =    27.26s     Find the "todoistImport" Button (retry 1)
+    t =    28.32s     Find the "todoistImport" Button (retry 2)
+    t =    28.37s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    28.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.38s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    28.41s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    28.45s     Synthesize event
+    t =    28.87s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.48s Find the "todoistImport" Button
+    t =    29.56s Find the "todoistImport" Button
+    t =    29.63s Find the "todoistImport" Button
+    t =    29.69s Find the "todoistImport" Button
+    t =    29.75s Find the "todoistImport" Button
+    t =    29.80s Find the "todoistImport" Button
+    t =    29.85s Find the "todoistImport" Button
+    t =    29.91s Find the "todoistImport" Button
+    t =    29.96s Find the "todoistImport" Button
+    t =    30.02s Find the "todoistImport" Button
+    t =    30.07s Find the "todoistImport" Button
+    t =    30.13s Find the "todoistImport" Button
+    t =    30.18s Find the "todoistImport" Button
+    t =    30.24s Find the "todoistImport" Button
+    t =    30.29s Find the "todoistImport" Button
+    t =    30.35s Find the "todoistImport" Button
+    t =    30.40s Find the "todoistImport" Button
+    t =    30.46s Checking existence of `"todoistImport" Button`
+    t =    30.50s Find the "todoistImport" Button
+    t =    30.56s Find the "todoistImport" Button
+    t =    30.60s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    30.75s Added attachment named 'Todoist heading preview keeps unsupported source and disables import'
+    t =    30.75s Find the "todoistClearToken" Button
+    t =    31.80s     Find the "todoistClearToken" Button (retry 1)
+    t =    32.85s     Find the "todoistClearToken" Button (retry 2)
+    t =    32.90s Swipe down Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    32.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.91s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    32.94s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    32.98s     Synthesize event
+    t =    33.41s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.01s Find the "todoistClearToken" Button
+    t =    34.07s Find the "todoistClearToken" Button
+    t =    34.13s Find the "todoistClearToken" Button
+    t =    34.18s Find the "todoistClearToken" Button
+    t =    34.23s Find the "todoistClearToken" Button
+    t =    34.28s Find the "todoistClearToken" Button
+    t =    34.34s Find the "todoistClearToken" Button
+    t =    34.39s Find the "todoistClearToken" Button
+    t =    34.44s Find the "todoistClearToken" Button
+    t =    34.49s Find the "todoistClearToken" Button
+    t =    34.54s Find the "todoistClearToken" Button
+    t =    34.60s Find the "todoistClearToken" Button
+    t =    34.65s Find the "todoistClearToken" Button
+    t =    34.70s Find the "todoistClearToken" Button
+    t =    34.75s Find the "todoistClearToken" Button
+    t =    34.80s Find the "todoistClearToken" Button
+    t =    34.86s Find the "todoistClearToken" Button
+    t =    34.91s Checking existence of `"todoistClearToken" Button`
+    t =    34.95s Find the "todoistClearToken" Button
+    t =    35.00s Tap "todoistClearToken" Button
+    t =    35.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.00s     Find the "todoistClearToken" Button
+    t =    35.04s     Check for interrupting elements affecting "todoistClearToken" Button
+    t =    35.08s     Synthesize event
+    t =    35.38s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.63s Find the "todoistToken" SecureTextField
+    t =    35.67s Find the "todoistToken" SecureTextField
+    t =    35.70s Find the "todoistToken" SecureTextField
+    t =    35.73s Find the "todoistToken" SecureTextField
+    t =    35.76s Find the "todoistToken" SecureTextField
+    t =    35.79s Find the "todoistToken" SecureTextField
+    t =    35.82s Find the "todoistToken" SecureTextField
+    t =    35.85s Find the "todoistToken" SecureTextField
+    t =    35.88s Find the "todoistToken" SecureTextField
+    t =    35.92s Find the "todoistToken" SecureTextField
+    t =    35.95s Find the "todoistToken" SecureTextField
+    t =    35.98s Find the "todoistToken" SecureTextField
+    t =    36.01s Find the "todoistToken" SecureTextField
+    t =    36.04s Find the "todoistToken" SecureTextField
+    t =    36.07s Find the "todoistToken" SecureTextField
+    t =    36.10s Find the "todoistToken" SecureTextField
+    t =    36.13s Find the "todoistToken" SecureTextField
+    t =    36.16s Find the "todoistToken" SecureTextField
+    t =    36.19s Checking existence of `"todoistToken" SecureTextField`
+    t =    36.21s Find the "todoistToken" SecureTextField
+    t =    36.24s Tap "todoistToken" SecureTextField
+    t =    36.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.24s     Find the "todoistToken" SecureTextField
+    t =    36.27s     Check for interrupting elements affecting "todoistToken" SecureTextField
+    t =    36.29s     Synthesize event
+    t =    36.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.59s Type 'fixture-heading-re...' into "todoistToken" SecureTextField
+    t =    36.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.59s     Find the "todoistToken" SecureTextField
+    t =    36.63s     Check for interrupting elements affecting "todoistToken" SecureTextField
+    t =    36.67s     Synthesize event
+    t =    37.33s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.33s Tap "todoistPreview" Button
+    t =    37.33s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.34s     Find the "todoistPreview" Button
+    t =    37.38s     Check for interrupting elements affecting "todoistPreview" Button
+    t =    37.42s     Synthesize event
+    t =    37.72s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.03s Waiting 6.0s for "todoistHeadingCount" StaticText to exist
+    t =    39.05s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistHeadingCount" StaticText`
+    t =    39.05s         Checking existence of `"todoistHeadingCount" StaticText`
+    t =    39.22s Find the "todoistHeadingCount" StaticText
+    t =    39.39s Find the "todoistHeadingCount" StaticText
+    t =    39.57s Find the "todoistHeadingCount" StaticText
+    t =    39.75s Find the "todoistHeadingCount" StaticText
+    t =    39.91s Find the "todoistHeadingCount" StaticText
+    t =    40.08s Find the "todoistHeadingCount" StaticText
+    t =    40.25s Find the "todoistHeadingCount" StaticText
+    t =    40.42s Find the "todoistHeadingCount" StaticText
+    t =    40.58s Find the "todoistHeadingCount" StaticText
+    t =    40.75s Find the "todoistHeadingCount" StaticText
+    t =    40.93s Find the "todoistHeadingCount" StaticText
+    t =    41.10s Find the "todoistHeadingCount" StaticText
+    t =    41.26s Find the "todoistHeadingCount" StaticText
+    t =    41.43s Find the "todoistHeadingCount" StaticText
+    t =    41.61s Find the "todoistHeadingCount" StaticText
+    t =    41.78s Find the "todoistHeadingCount" StaticText
+    t =    41.95s Find the "todoistHeadingCount" StaticText
+    t =    42.12s Find the "todoistHeadingCount" StaticText
+    t =    42.28s Checking existence of `"todoistHeadingCount" StaticText`
+    t =    42.44s Find the "todoistHeadingCount" StaticText
+    t =    42.61s Find the "todoistHeadingAvailability" StaticText
+    t =    42.65s Find the "todoistImport" Button
+    t =    43.70s     Find the "todoistImport" Button (retry 1)
+    t =    44.75s     Find the "todoistImport" Button (retry 2)
+    t =    44.79s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    44.79s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    44.80s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    44.83s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    44.87s     Synthesize event
+    t =    45.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.90s Find the "todoistImport" Button
+    t =    45.96s Find the "todoistImport" Button
+    t =    46.01s Find the "todoistImport" Button
+    t =    46.07s Find the "todoistImport" Button
+    t =    46.12s Find the "todoistImport" Button
+    t =    46.18s Find the "todoistImport" Button
+    t =    46.24s Find the "todoistImport" Button
+    t =    46.30s Find the "todoistImport" Button
+    t =    46.35s Find the "todoistImport" Button
+    t =    46.40s Find the "todoistImport" Button
+    t =    46.46s Find the "todoistImport" Button
+    t =    46.51s Find the "todoistImport" Button
+    t =    46.57s Find the "todoistImport" Button
+    t =    46.62s Find the "todoistImport" Button
+    t =    46.68s Find the "todoistImport" Button
+    t =    46.73s Find the "todoistImport" Button
+    t =    46.79s Find the "todoistImport" Button
+    t =    46.84s Checking existence of `"todoistImport" Button`
+    t =    46.88s Find the "todoistImport" Button
+    t =    46.94s Find the "todoistImport" Button
+    t =    46.98s Tap "todoistImport" Button
+    t =    46.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.17s     Find the "todoistImport" Button
+    t =    47.23s     Check for interrupting elements affecting "todoistImport" Button
+    t =    47.28s     Synthesize event
+    t =    47.58s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.83s Waiting 6.0s for "todoistImportError" StaticText to exist
+    t =    48.87s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistImportError" StaticText`
+    t =    48.87s         Checking existence of `"todoistImportError" StaticText`
+    t =    48.94s Find the "todoistImportError" StaticText
+    t =    48.98s Find the "todoistImport" Button
+    t =    49.04s Find the "todoistImport" Button
+    t =    49.09s Find the "todoistImport" Button
+    t =    49.15s Find the "todoistImport" Button
+    t =    49.21s Find the "todoistImport" Button
+    t =    49.26s Find the "todoistImport" Button
+    t =    49.32s Find the "todoistImport" Button
+    t =    49.37s Find the "todoistImport" Button
+    t =    49.43s Find the "todoistImport" Button
+    t =    49.49s Find the "todoistImport" Button
+    t =    49.55s Find the "todoistImport" Button
+    t =    49.61s Find the "todoistImport" Button
+    t =    49.66s Find the "todoistImport" Button
+    t =    49.72s Find the "todoistImport" Button
+    t =    49.77s Find the "todoistImport" Button
+    t =    49.83s Find the "todoistImport" Button
+    t =    49.89s Find the "todoistImport" Button
+    t =    49.94s Find the "todoistImport" Button
+    t =    50.00s Checking existence of `"todoistImport" Button`
+    t =    50.05s Find the "todoistImport" Button
+    t =    50.10s Find the "todoistImport" Button
+    t =    50.15s Tap "todoistImport" Button
+    t =    50.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    50.15s     Find the "todoistImport" Button
+    t =    50.20s     Check for interrupting elements affecting "todoistImport" Button
+    t =    50.24s     Synthesize event
+    t =    50.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    50.79s Waiting 6.0s for "todoistReceipt-tasksSkipped" Any to exist
+    t =    51.82s     Checking `Expect predicate `existsNoRetry == 1` for object "todoistReceipt-tasksSkipped" Any`
+    t =    51.82s         Checking existence of `"todoistReceipt-tasksSkipped" Any`
+    t =    52.03s Find the "todoistReceipt-tasksSkipped" Any
+    t =    52.21s Find the "todoistReceipt-tasksSkipped" Other
+    t =    52.39s Find the "todoistReceipt-tasksSkipped" Other
+    t =    52.58s Find the "todoistReceipt-tasksSkipped" Other
+    t =    52.76s Find the "todoistReceipt-tasksSkipped" Other
+    t =    52.94s Find the "todoistReceipt-tasksSkipped" Other
+    t =    53.13s Find the "todoistReceipt-tasksSkipped" Other
+    t =    53.32s Find the "todoistReceipt-tasksSkipped" Other
+    t =    53.51s Find the "todoistReceipt-tasksSkipped" Other
+    t =    53.70s Find the "todoistReceipt-tasksSkipped" Other
+    t =    53.89s Find the "todoistReceipt-tasksSkipped" Other
+    t =    54.08s Find the "todoistReceipt-tasksSkipped" Other
+    t =    54.27s Find the "todoistReceipt-tasksSkipped" Other
+    t =    54.47s Find the "todoistReceipt-tasksSkipped" Other
+    t =    54.66s Find the "todoistReceipt-tasksSkipped" Other
+    t =    54.85s Find the "todoistReceipt-tasksSkipped" Other
+    t =    55.04s Find the "todoistReceipt-tasksSkipped" Other
+    t =    55.23s Find the "todoistReceipt-tasksSkipped" Other
+    t =    55.42s Checking existence of `"todoistReceipt-tasksSkipped" Other`
+    t =    55.59s Find the "todoistReceipt-tasksSkipped" Other
+    t =    55.78s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    55.93s Added attachment named 'Typed Todoist receipt confirmed after safe retry'
+    t =    55.94s Terminate com.dbakp.taskfold.workflowteststeameditbridge:78804
+    t =    57.00s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testTodoistHeadingReviewAvailabilityAndTypedRetry]' passed (57.048 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-26 06:50:27.516.
+	 Executed 1 test, with 0 failures (0 unexpected) in 57.048 (57.060) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 06:50:27.517.
+	 Executed 1 test, with 0 failures (0 unexpected) in 57.048 (57.060) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 06:50:27.517.
+	 Executed 1 test, with 0 failures (0 unexpected) in 57.048 (57.061) seconds
+2026-10-26 06:50:27.823 xcodebuild[78774:21812252] [MT] IDETestOperationsObserverDebug: 66.392 elapsed -- Testing started completed.
+2026-10-26 06:50:27.824 xcodebuild[78774:21812252] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 06:50:27.824 xcodebuild[78774:21812252] [MT] IDETestOperationsObserverDebug: 66.392 sec, +66.392 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-heading-interop-iphone-current.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
