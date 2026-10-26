@@ -1,0 +1,91 @@
+Analysis of sampling Taskfold (pid 70919) every 1 millisecond
+Process:         Taskfold [70919]
+Path:            /Users/USER/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/D828E899-0629-4CD8-BEFD-D5CCEE2D92CC/Taskfold.app/Taskfold
+Load Address:    0x100880000
+Identifier:      com.dbakp.taskfold.workflowteststeameditbridge
+Version:         1.4.0 (19)
+Code Type:       ARM64
+Platform:        iOS Simulator
+Parent Process:  launchd_sim [1622]
+Target Type:     live task
+
+Date/Time:       2026-10-26 22:52:12.945 +0100
+Launch Time:     2026-10-26 22:50:41.672 +0100
+OS Version:      macOS 26.6.2 (25G83)
+Report Version:  7
+Analysis Tool:   /usr/bin/sample
+
+Physical footprint:         172.7M
+Physical footprint (peak):  183.6M
+Idle exit:                  untracked
+----
+
+Call graph:
+    2 Thread_23778941   DispatchQueue_1: com.apple.main-thread  (serial)
+      2 start  (in dyld) + 6992  [0x100c084e4]
+        2 start_sim  (in dyld_sim) + 20  [0x100950350]
+          2 __debug_main_executable_dylib_entry_point  (in Taskfold.debug.dylib) + 12  [0x10856d5a8]  TaskfoldApp.swift:0
+            2 static TaskfoldApp.$main()  (in Taskfold.debug.dylib) + 40  [0x10845f2a4]  /<compiler-generated>:0
+              2 static App.main()  (in SwiftUI) + 148  [0x1c9b09750]
+                2 runApp<A>(_:)  (in SwiftUI) + 204  [0x1c9d8b784]
+                  2 closure #1 in KitRendererCommon(_:)  (in SwiftUI) + 164  [0x1c9d8b908]
+                    2 UIApplicationMain  (in UIKitCore) + 124  [0x1c5535e30]
+                      2 GSEventRunModal  (in GraphicsServices) + 116  [0x2219199ac]
+                        2 _CFRunLoopRunSpecificWithOptions  (in CoreFoundation) + 496  [0x1c01de040]
+                          2 __CFRunLoopRun  (in CoreFoundation) + 2116  [0x1c01e35d8]
+                            2 __CFRunLoopDoSource1  (in CoreFoundation) + 476  [0x1c01e44c8]
+                              2 __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__  (in CoreFoundation) + 56  [0x1c01e4e78]
+                                2 __CFMachPortPerform  (in CoreFoundation) + 164  [0x1c01a5270]
+                                  2 UC::DriverCore::continueProcessing()  (in UpdateCycle) + 80  [0x25a82e364]
+                                    2 schedulerStepScheduledMainSectionContinue  (in UIKitCore) + 44  [0x1c47ef290]
+                                      2 _UIUpdateSequenceRunNext  (in UIKitCore) + 120  [0x1c3d97848]
+                                        2 updateCycleEntry  (in UIKitCore) + 4596  [0x1c4794370]
+                                          2 __dispatchPreprocessedEventFromEventQueue  (in UIKitCore) + 1208  [0x1c4799158]
+                                            2 -[UIApplicationAccessibility sendEvent:]  (in UIKit) + 116  [0x1c8cc7000]
+                                              2 -[UIApplication sendEvent:]  (in UIKitCore) + 436  [0x1c48fe770]
+                                                2 -[UIWindow sendEvent:]  (in UIKitCore) + 4140  [0x1c4920e58]
+                                                  2 -[UIGestureEnvironment _updateForEvent:window:]  (in UIKitCore) + 468  [0x1c4367fac]
+                                                    2 ???  (in Gestures)  load address 0x1c8ed8000 + 0x90d0  [0x1c8ee10d0]
+                                                      2 ???  (in Gestures)  load address 0x1c8ed8000 + 0x326c44  [0x1c91fec44]
+                                                        2 __39-[UIGestureEnvironment nodeCoordinator]_block_invoke_2  (in UIKitCore) + 60  [0x1c551c7ac]
+                                                          2 -[UIGestureDelayedEventComponentDispatcher sendDelayedTouches]  (in UIKitCore) + 2196  [0x1c3caa2c4]
+                                                            2 forwardTouchMethod  (in UIKitCore) + 352  [0x1c49101c4]
+                                                              2 forwardTouchMethod  (in UIKitCore) + 352  [0x1c49101c4]
+                                                                2 forwardTouchMethod  (in UIKitCore) + 352  [0x1c49101c4]
+                                                                  2 forwardTouchMethod  (in UIKitCore) + 352  [0x1c49101c4]
+                                                                    2 -[UICollectionView touchesEnded:withEvent:]  (in UIKitCore) + 444  [0x1c3f52174]
+                                                                      2 -[UICollectionView _userSelectItemAtIndexPath:animatedSelection:]  (in UIKitCore) + 252  [0x1c3f51ed4]
+                                                                        2 -[UICollectionView _selectItemAtIndexPath:animated:scrollPosition:notifyDelegate:deselectPrevious:performPrimaryAction:performCustomSelectionAction:isUserInitiated:]  (in UIKitCore) + 1104  [0x1c3f21de4]
+                                                                          2 <deduplicated_symbol>  (in SwiftUI) + 120  [0x1c999ff74]
+                                                                            2 UICollectionViewListCoordinatorBase.collectionView(_:performPrimaryActionForItemAt:)  (in SwiftUI) + 4144  [0x1c9d5f6c4]
+                                                                              2 UpdateGroup.enqueueAction(reason:_:)  (in SwiftUICore) + 196  [0x1c71ac0ec]
+                                                                                2 UpdateGroup.end()  (in SwiftUICore) + 128  [0x1c71ac28c]
+                                                                                  2 UpdateGroup.dispatchActions()  (in SwiftUICore) + 320  [0x1c71ad194]
+                                                                                    2 dispatch #1 () in UpdateGroup.dispatchActions()  (in SwiftUICore) + 312  [0x1c71ad9ac]
+                                                                                      2 UpdateGroup.Action.callAsFunction()  (in SwiftUICore) + 172  [0x1c71adc74]
+                                                                                        2 <deduplicated_symbol>  (in SwiftUI) + 20  [0x1c98b78c8]
+                                                                                          2 <deduplicated_symbol>  (in SwiftUI) + 20  [0x1c98b78c8]
+                                                                                            2 partial apply for specialized closure #2 in PlatformItemList.containerSelectionBehavior.getter  (in SwiftUI) + 16  [0x1c9b1b830]
+                                                                                              2 <deduplicated_symbol>  (in SwiftUI) + 40  [0x1c9b0d2e8]
+                                                                                                2 <deduplicated_symbol>  (in SwiftUI) + 20  [0x1c98b78c8]
+                                                                                                  2 <deduplicated_symbol>  (in SwiftUI) + 52  [0x1c9639f60]
+                                                                                                    2 ButtonAction.callAsFunction()  (in SwiftUI) + 308  [0x1ca3fce2c]
+                                                                                                      2 specialized static MainActor.assumeIsolated<A>(_:file:line:)  (in SwiftUI) + 132  [0x1ca437da0]
+                                                                                                        2 <deduplicated_symbol>  (in SwiftUI) + 24  [0x1c9ccf5e8]
+                                                                                                          2 implicit closure #2 in implicit closure #1 in closure #1 in closure #1 in WorkflowUndoNativeFixtureView.body.getter  (in Taskfold.debug.dylib) + 36  [0x108c1ac50]  TeamTemplateNativeFixture.swift:0
+                                                                                                            2 WorkflowUndoNativeFixtureView.measureCommit()  (in Taskfold.debug.dylib) + 4280  [0x108c1bd18]  TeamTemplateNativeFixture.swift:415
+                                                                                                              2 Store.commit(_:remember:widgetReceipt:widgetFeedback:sharedCaptureReceipt:locationResponse:locationImport:wearableReceipt:)  (in Taskfold.debug.dylib) + 22248  [0x10815bc70]  Store.swift:1606
+                                                                                                                2 Snapshot.apply(_:)  (in Taskfold.debug.dylib) + 6420  [0x108018d00]  Models.swift:610
+                                                                                                                  2 Collection.firstIndex(where:)  (in libswiftCore.dylib) + 448  [0x1c170618c]
+                                                                                                                    2 ???  (in Taskfold.debug.dylib)  load address 0x10696c000 + 0x25865c  [0x106bc465c]
+                                                                                                                      1 ???  (in Taskfold.debug.dylib)  load address 0x10696c000 + 0x24c618  [0x106bb8618]
+                                                                                                                      + 1 Record.id.getter  (in Taskfold.debug.dylib) + 64  [0x107ff9f80]  Models.swift:35
+                                                                                                                      +   1 Record.string(_:)  (in Taskfold.debug.dylib) + 80  [0x107ff9ff8]  Models.swift:43
+                                                                                                                      +     1 Record.subscript.getter  (in Taskfold.debug.dylib) + 64  [0x107ffa2fc]  Models.swift:40
+                                                                                                                      +       1 swift_bridgeObjectRetain  (in libswiftCore.dylib) + 0  [0x1c162f388]
+                                                                                                                      1 ???  (in Taskfold.debug.dylib)  load address 0x10696c000 + 0x24c66c  [0x106bb866c]
+
+Total number in stack (recursive counted multiple, when >=5):
+
+Sort by top of stack, same collapsed (when >= 5):
+

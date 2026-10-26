@@ -1,0 +1,54 @@
+[
+  {
+    "device": "phone",
+    "undoCommands": 1,
+    "pending": 4001,
+    "saved": true,
+    "commands": 4001,
+    "proof": "c7c9223b-9683-4c33-85e9-4b84d0466583",
+    "count": 1000,
+    "taskRevisionDelta": 1,
+    "tasks": 1001,
+    "seconds": 3.447280542,
+    "error": null
+  },
+  {
+    "device": "phone",
+    "commands": 20001,
+    "proof": "290b8cb0-850c-49e5-8601-aaa48d35c5fb",
+    "count": 5000,
+    "tasks": 5001,
+    "error": null,
+    "saved": true,
+    "undoCommands": 1,
+    "taskRevisionDelta": 1,
+    "pending": 20001,
+    "seconds": 62.563369042
+  },
+  {
+    "device": "tablet",
+    "undoCommands": 1,
+    "tasks": 1001,
+    "error": null,
+    "commands": 4001,
+    "proof": "4c4c416a-d789-4c95-b7f2-5c176d4a5ed9",
+    "taskRevisionDelta": 1,
+    "pending": 4001,
+    "saved": true,
+    "count": 1000,
+    "seconds": 3.479131125
+  },
+  {
+    "device": "tablet",
+    "saved": true,
+    "proof": "5d60b5e4-c5e0-4cc4-bb5a-645fbd3fa90b",
+    "count": 5000,
+    "undoCommands": 1,
+    "pending": 20001,
+    "seconds": 62.726638375,
+    "error": null,
+    "taskRevisionDelta": 1,
+    "commands": 20001,
+    "tasks": 5001
+  }
+]

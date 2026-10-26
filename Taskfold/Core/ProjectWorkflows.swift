@@ -1184,10 +1184,53 @@ enum TaskRowCSVFormat {
 }
 
 
+/// A one-use append plan for wholly fresh personal workflow identities. Keeping
+/// the working snapshot local avoids a linear lookup and array copy per insert.
+/// Collisions, retries and mixed commands keep the ordinary projection path.
+struct FreshWorkflowCreation {
+    private let run: UUID
+    private let account: String
+    private var remaining: Set<String>
+    init?(_ changes: [Mutation], snapshot: Snapshot, account: String) {
+        guard let run = WorkflowUndo.creationRun(changes), !account.isEmpty else { return nil }
+        let existing = snapshot.tables.mapValues { Set($0.map(\.id)) }
+        var keys = Set<String>()
+        for change in changes {
+            guard change.fields["id"]?.text == change.recordID, !change.recordID.isEmpty,
+                  change.fields["user_id"]?.text == account,
+                  !(existing[change.table] ?? []).contains(change.recordID),
+                  keys.insert(change.table + ":" + change.recordID).inserted else { return nil }
+        }
+        self.run = run; self.account = account; remaining = keys
+    }
+    mutating func append(_ change: Mutation, to snapshot: inout Snapshot) -> Record? {
+        guard WorkflowUndo.creationRun([change]) == run, change.fields["id"]?.text == change.recordID,
+              change.fields["user_id"]?.text == account,
+              TaskGeneration.permitsLocalAction(change, existing: nil), TaskKind.permits(change, existing: nil),
+              remaining.remove(change.table + ":" + change.recordID) != nil else { return nil }
+        var fields = change.fields
+        if change.table == "tasks" { fields["completion_version"] = .number(0) }
+        let row = Record(fields)
+        snapshot.tables[change.table, default: []].append(row)
+        if change.table == "tasks" { TaskAssignmentProvenance.invalidate(before: nil, after: row, snapshot: &snapshot) }
+        return row
+    }
+}
+
 /// One durable, atomic Undo for the fresh personal records of a workflow run.
 /// The server checks the complete set before deleting any of it.
 enum WorkflowUndo {
     static let table = "_private_workflow_undo"
+    /// Only ordinary insert-only personal workflow runs can defer presentation.
+    /// Validation and sequential snapshot mutation still happen for every row.
+    static func creationRun(_ changes: [Mutation]) -> UUID? {
+        guard let run = changes.first?.workflowRun, !changes.isEmpty,
+              changes.allSatisfy({ $0.workflowRun == run && $0.method == "POST" && $0.insertOnly == true &&
+                  ["projects", "sections", "labels", "tasks", "view_orders"].contains($0.table) &&
+                  $0.teamTaskScope == nil && $0.teamTaskBatch == nil && $0.teamCompletion == nil && $0.organizationOrder == nil }) else { return nil }
+        return run
+    }
+
     static let unavailable = "Refresh this workspace after its service is updated to safely undo workflows. Your work is unchanged."
     static func available(boundary: TeamWorkspaceBoundary?, account: String, origin: String?) -> Bool {
         guard let boundary, let origin, boundary.belongs(account: account, origin: origin) else { return false }

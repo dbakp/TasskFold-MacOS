@@ -26,11 +26,16 @@ final class Store {
     private(set) var workspaceReadRevision = UUID()
     var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
     var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
+    @ObservationIgnored private var workflowPresentationDeferred = false
     var snapshot = Snapshot() {
         didSet {
-            if oldValue.teamWorkspace?.boundary != snapshot.teamWorkspace?.boundary || oldValue.tables["projects"] != snapshot.tables["projects"] || oldValue.tables["project_collaborators"] != snapshot.tables["project_collaborators"] { workspaceReadRevision = UUID() }
-            if taskCache.update(presentedTables["tasks"] ?? []) { taskRevision += 1 }
+            guard !workflowPresentationDeferred else { return }
+            refreshSnapshotPresentation(from: oldValue)
         }
+    }
+    private func refreshSnapshotPresentation(from old: Snapshot) {
+        if old.teamWorkspace?.boundary != snapshot.teamWorkspace?.boundary || old.tables["projects"] != snapshot.tables["projects"] || old.tables["project_collaborators"] != snapshot.tables["project_collaborators"] { workspaceReadRevision = UUID() }
+        if taskCache.update(presentedTables["tasks"] ?? []) { taskRevision += 1 }
     }
     private var teamAccessMask:TeamWorkspaceCache? {
         didSet {
@@ -928,6 +933,12 @@ final class Store {
         }
         catch { if !workspaceCacheDecoded { workspaceRepairFingerprint = try? backupVault.unreadableFingerprint(cacheURL) }; self.error = "Could not read saved tasks: \(error.localizedDescription)"; if let disk = try? widgetActionDisk() { try? disk.clearProjection() } }
     }
+    #if DEBUG
+    func failNextWorkflowNativeSave() {
+        guard WorkflowUndoNativePeer.enabled else { return }
+        savedFilterFixtureFailNextPersist = true
+    }
+    #endif
     func persist(acceptingTimeSnooze timeSnooze: TimeSnoozeIntent? = nil) throws {
         #if DEBUG
         if savedFilterFixtureFailNextPersist {
@@ -1026,7 +1037,8 @@ final class Store {
             "com.dbakp.taskfold.mac.p0uitests", "com.dbakp.taskfold.mac.p0localuitests",
             "com.dbakp.taskfold.mac.p0importa11ytests", "com.dbakp.taskfold.mac.p0focuscontrasttests",
             "com.dbakp.taskfold.mac.p0grammaruitests", "com.dbakp.taskfold.mac.p0signeduitests",
-            "com.dbakp.taskfold.mac.p0notificationtests"
+            "com.dbakp.taskfold.mac.p0notificationtests",
+            "com.dbakp.taskfold.mac.workflowteststeameditbridge"
         ]
         if ProcessInfo.processInfo.arguments.contains("--widget-action-testing") || isolatedNativeBundles.contains(Bundle.main.bundleIdentifier ?? "") {
             return WidgetActionDisk(directory: cacheURL.deletingLastPathComponent().appending(path: "WidgetActionTests", directoryHint: .isDirectory))
@@ -1384,13 +1396,21 @@ final class Store {
             return change
         }
         let old = snapshot
-        let changes = orderingCommands.flatMap { TaskAssignment.mutations($0, existing: record($0.table, id: $0.recordID)) }.map { change in
+        // Normalization precedes all mutation; reuse its immutable lookup/catalog.
+        let normalizationTables = Set(orderingCommands.map(\.table))
+        let normalizationRows = presentedTables.filter { normalizationTables.contains($0.key) }.mapValues { rows in
+            Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        }
+        func normalizationRecord(_ table: String, id: String) -> Record? { normalizationRows[table]?[id] }
+        let normalizationLabels = orderingCommands.contains { $0.table == "tasks" && $0.method != "DELETE" } ? labels : []
+        let normalizationCache = nativeConversationTeamCache
+        let changes = orderingCommands.flatMap { TaskAssignment.mutations($0, existing: normalizationRecord($0.table, id: $0.recordID)) }.map { change in
             var change = change
             if change.table == "tasks", change.method != "DELETE" {
-                change.fields = TaskPlanning.fields(change.fields, existing: record("tasks", id: change.recordID))
+                change.fields = TaskPlanning.fields(change.fields, existing: normalizationRecord("tasks", id: change.recordID))
                 if change.method == "PATCH", change.fields["reminder_specs"] == nil,
                    !Set(change.fields.keys).isDisjoint(with: ["due_date", "due_time", "scheduled_at", "time_zone"]),
-                   let existing = record("tasks", id: change.recordID) {
+                   let existing = normalizationRecord("tasks", id: change.recordID) {
                     let proposed = Record(existing.fields.merging(change.fields) { _, new in new })
                     let resolved = applyingReminderDefault(proposed, previous: existing)
                     if resolved["reminder_specs"] != proposed["reminder_specs"] {
@@ -1398,7 +1418,7 @@ final class Store {
                         if change.baseline != nil { change.baseline?["reminder_specs"] = existing["reminder_specs"] }
                     }
                 }
-                change = TeamTaskLabelsDraft.normalizing(change, existing: record("tasks", id: change.recordID), catalog: labels, cache: nativeConversationTeamCache)
+                change = TeamTaskLabelsDraft.normalizing(change, existing: normalizationRecord("tasks", id: change.recordID), catalog: normalizationLabels, cache: normalizationCache)
             }
             if change.table == DayPlacement.table, change.method != "DELETE" {
                 change.method = "POST" // Stable composite upsert also handles pre-sync legacy rows.
@@ -1406,50 +1426,78 @@ final class Store {
             }
             return change
         }
+        // This synchronous creation path reads rows directly, not cached task
+        // queries. Publish once after validation/history admission, before disk
+        // save and widget publication; every early return restores the old view.
+        var deferringPresentation = WorkflowUndo.creationRun(changes) != nil && !workflowPresentationDeferred
+        if deferringPresentation { workflowPresentationDeferred = true }
+        defer {
+            if deferringPresentation {
+                workflowPresentationDeferred = false
+                refreshSnapshotPresentation(from: old)
+            }
+        }
+        var freshCreation = FreshWorkflowCreation(changes, snapshot: old, account: userID)
+        let projectsFreshCreation = freshCreation != nil
+        var working = old
         var committedChanges: [Mutation] = []
         for var change in changes {
-            if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
+            let current = projectsFreshCreation ? nil : record(change.table, id: change.recordID)
+            if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = current {
                 change.baseline = TaskCompletionRevision.editBaseline(for: change.fields, from: existing)
             }
-            if change.table == "tasks", change.method == "DELETE", change.baseline == nil, let existing = record("tasks", id: change.recordID) {
+            if change.table == "tasks", change.method == "DELETE", change.baseline == nil, let existing = current {
                 change.baseline = existing.fields
             }
-            if change.table == WorkflowTemplate.table, ["PATCH","DELETE"].contains(change.method), let existing=record(change.table,id:change.recordID) {
+            if change.table == WorkflowTemplate.table, ["PATCH","DELETE"].contains(change.method), let existing=current {
                 change.baseline = existing.fields.merging(change.baseline ?? [:]) { _, original in original }
             }
-            change = TaskCompletionRevision.capturing(change, existing: record(change.table, id: change.recordID))
-            guard TaskGeneration.permitsLocalAction(change, existing: record(change.table, id: change.recordID)) else {
+            change = TaskCompletionRevision.capturing(change, existing: current)
+            guard TaskGeneration.permitsLocalAction(change, existing: current) else {
                 snapshot = old
                 error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
                 return false
             }
-            guard (change.teamTaskScope == nil && taskHeadingsAuthoringEnabled) || teamHeadingAuthoringAvailable(change.teamTaskScope) || !TaskKind.requiresAuthoring(change, existing: record(change.table, id: change.recordID)) else {
+            guard (change.teamTaskScope == nil && taskHeadingsAuthoringEnabled) || teamHeadingAuthoringAvailable(change.teamTaskScope) || !TaskKind.requiresAuthoring(change, existing: current) else {
                 snapshot = old; error = "Heading creation is not available in this workspace yet. Your source and saved draft are unchanged."; return false
             }
-            guard TaskKind.permits(change, existing: record(change.table, id: change.recordID)) else {
+            guard TaskKind.permits(change, existing: current) else {
                 snapshot = old
                 error = "This task type or checklist needs review before completion. Your work is unchanged."
                 return false
             }
-            do { try TaskKind.validateCapturedTypeEdit(change, existing: record(change.table, id: change.recordID)) }
+            do { try TaskKind.validateCapturedTypeEdit(change, existing: current) }
             catch { snapshot = old; self.error = error.localizedDescription; return false }
             if let scope = change.teamTaskScope {
                 do {
                     guard !localMode, scope.account == userID, scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditScope.invalid }
-                    change = try scope.capturing(change, existing: record("tasks", id: change.recordID))
+                    change = try scope.capturing(change, existing: current)
                 } catch { snapshot = old; self.error = error.localizedDescription; return false }
             }
             if change.table == "view_orders" { change = capturingTaskOrderRecovery(change) }
             committedChanges.append(change)
-            let before = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
+            if projectsFreshCreation {
+                guard let after = freshCreation?.append(change, to: &working) else {
+                    snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
+                }
+                if localMode {
+                    TaskActivity.recordLocal(change, before: nil, after: after, snapshot: &working, account: userID)
+                    TaskNodeActivity.recordLocal(change, before: nil, after: after, snapshot: &working, account: userID)
+                    TaskAssignmentProvenance.recordLocal(change, before: nil, after: after, snapshot: &working, account: userID)
+                } else { working.pending.append(change) }
+                continue
+            }
+            let before = change.table == "tasks" ? current : nil
             snapshot.apply(change)
             if localMode {
-                TaskActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID)
-                TaskNodeActivity.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID)
-                TaskAssignmentProvenance.recordLocal(change, before: before, after: record("tasks", id: change.recordID), snapshot: &snapshot, account: userID)
+                let after = change.table == "tasks" ? record("tasks", id: change.recordID) : nil
+                TaskActivity.recordLocal(change, before: before, after: after, snapshot: &snapshot, account: userID)
+                TaskNodeActivity.recordLocal(change, before: before, after: after, snapshot: &snapshot, account: userID)
+                TaskAssignmentProvenance.recordLocal(change, before: before, after: after, snapshot: &snapshot, account: userID)
             }
             if !localMode { snapshot.pending.append(change) }
         }
+        if projectsFreshCreation { snapshot = working }
         if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt); snapshot.widgetCompletion.feedback = widgetFeedback }
         if let draft = sharedCaptureReceipt {
             if snapshot.sharedCaptureReceipts == nil { snapshot.sharedCaptureReceipts = [:] }
@@ -1463,6 +1511,10 @@ final class Store {
             if historyChanges.contains(where: { !(existing[$0.table] ?? []).contains($0.recordID) }), history?.undo.isEmpty != false {
                 snapshot = old; error = WorkflowUndo.tooLarge; return false
             }
+        }
+        if deferringPresentation {
+            workflowPresentationDeferred = false; deferringPresentation = false
+            refreshSnapshotPresentation(from: old)
         }
         do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
         if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
@@ -1516,7 +1568,7 @@ final class Store {
     /// Older/unsupported choices keep their original queue and remain protected.
     func capturingTaskOrderRecovery(_ change: Mutation) -> Mutation {
         var result = change; result.orderRecovery = nil
-        guard result.table == "view_orders", !localMode,
+        guard result.table == "view_orders", result.insertOnly != true, !localMode,
               let origin = try? backend.accountRemovalOrigin,
               let captured = try? TaskOrderRecovery.capturing(result, snapshot: snapshot, account: userID, origin: origin) else { return result }
         return captured
@@ -1704,6 +1756,7 @@ final class Store {
     }
     func sync() async {
         #if DEBUG
+        if PersonalHeadingNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") { return }
         if (TeamEditorNativeFixture.enabled && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
         #endif
         guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}

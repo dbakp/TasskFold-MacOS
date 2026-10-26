@@ -1,0 +1,17 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "97153F3F-5194-4D00-B34A-6CE996DA2D3C.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Cancellable workflow preparation_0_F9A6505D-9428-4D71-AA71-F3411002C40D.png",
+        "timestamp": 1793053208.174
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry"
+  }
+]

@@ -28,14 +28,14 @@ own service compatibility signal. See DEFINITION_HEADING_AUTHORING.md and
 PERSONAL_TASK_HEADINGS.md for acceptance and remaining limits.
 
 Workflow creation retries preserve later server edits. Atomic personal workflow
-Undo now has source-level baseline/dependency and reply-retry protection, with
-service compatibility admission. Five installed client cases pass on each phone
-and tablet Simulator; Mac runtime awaits UI Automation. Full-size Undo now passes
-isolated scale acceptance; large creation UI/delivery and hosted/paired-client
-acceptance remain open. Background instantiation is now cancellable, with native
-phone/tablet acceptance and a pinned progress bar; see workflow-preparation/.
-The remaining full-size save/delivery work is not accepted by these preparation
-checks. See workflow-undo-bulk/validation.json and the dated workflow stages.
+Undo and full-size append/queue/widget publication have source and isolated
+acceptance. Ten workflow cases now have installed passing coverage on each
+phone, tablet and Mac; the former workflow UI Automation gate is resolved.
+See workflow-creation-scale/ for exact matrix/targeted evidence and scope.
+The full 20,001-command save is faster but still takes 11–14s on the main thread;
+background save/widget I/O, local-history scaling, production-screen rendering
+and hosted/paired bulk delivery remain open. Prior source migrations remain
+undeployed, and normal authoring/rollout gates remain unchanged.
 
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
@@ -5570,3 +5570,45 @@ disabled; the current signed host/build cache is retained, without a repeated
 unchanged-state runtime attempt. Wider ranked Px work stays active. Existing
 release/provider/reminder/older-client deferrals and normal rollout flags stay.
 See workflow-preparation/validation.json and visual-review.md for exact evidence.
+
+
+## 26 October: workflow save and widget projection scale
+
+Personal workflow creation now normalizes against one immutable lookup/catalog,
+validates every row, and appends wholly fresh owned identities to a local working
+Snapshot before publishing once. Collision/retry/shared paths preserve ordinary
+replay. A failed save restores the old presentation; a real UI retry verifies the
+creation sheet closes and the actual task list updates. Task-cache project/label
+indexes and widget section/order/preference indexes remove repeated membership
+scans while preserving aliases, ordering, invalid states and every record.
+
+Each repo passes 642 selected Core checks. Mac has two additional existing
+external-fixture tests skipped (offline account-switch and organization-order
+handoff inputs were not supplied). The full structured widget check publishes,
+decodes and writes all 5,001 lists, 5,000 groups and 5,000 tasks in about 1.8s.
+Both signed native builds pass. Ten distinct workflow cases have positive installed
+acceptance on each phone, tablet and Mac (30 platform/case pairs), combining the
+main matrix and narrowly targeted test-selector corrections. This is not a claim
+that the first matrix was entirely green: its native alert/inline-message queries
+were corrected to inspect actual Cocoa sheets/value text and visible inline
+errors. The retained coverage map identifies the passing job for every case.
+Mac UI Automation is now enabled following the user's approval; the former
+workflow runtime initialization gate is resolved.
+
+Measured native Store saving includes projection, durable queue/cache encoding
+and widget publication, excluding template instantiation and remote delivery.
+The 1,000-task phone baseline is 7.42s and 1,000 task revisions; the final phone/
+tablet cases are 2.05/2.01s and one revision (Mac 1.28s). The 5,000-task structured
+case still retains all 20,001 commands, one Undo and one revision: 13.30s phone,
+13.54s tablet and 11.38s Mac. Before the final widget indexes, that save measured
+62.56/62.73s on phone/tablet. These are isolated Debug measurements, not release
+latency guarantees. The remaining 11–14s is too long on the UI thread: background
+save/widget I/O, local activity-history scaling, full production-screen rendering
+and genuine paired/hosted bulk delivery remain open. No source migration or
+hosted change was made; wider ranked Px work and all user deferrals remain.
+
+See workflow-creation-scale/validation.json, accepted-metrics.json and README.md.
+Only synthetic data was used. Scale fixtures restore their initial state; test
+apps are closed after acceptance. One current host/build per platform may remain
+as a bounded working cache for the next active-goal checks, instead of repeatedly
+rebuilding it. Older cache bindings in earlier stages remain historical.

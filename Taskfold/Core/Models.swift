@@ -1379,6 +1379,37 @@ struct TaskQuery: Hashable {
 /// Shared by tabs. Results survive navigation and invalidate only when task data changes.
 final class TaskCache {
     private var source: [Record] = []
+    private var projectPresentation: [String: [Record]]?
+    private var projectOutline: [String: [Record]]?
+    private var labelPositions: [String: [Int]]?
+    private func scopedCandidates(_ query: TaskQuery, reading: ProductiveTaskReading) -> [Record] {
+        switch query.scope {
+        case .project(let id):
+            if query.sort == "manual" {
+                if projectOutline == nil { projectOutline = Dictionary(grouping: reading.outline, by: { $0.string("project_id") }) }
+                return projectOutline?[id] ?? []
+            }
+            if projectPresentation == nil { projectPresentation = Dictionary(grouping: reading.presentation, by: { $0.string("project_id") }) }
+            return projectPresentation?[id] ?? []
+        case .label(let id):
+            let rows = reading.presentation
+            if labelPositions == nil {
+                var indexed: [String: [Int]] = [:]
+                for (position, row) in rows.enumerated() {
+                    var seen = Set<String>()
+                    for value in row["labels"].list {
+                        guard case .string(let label) = value, seen.insert(label).inserted else { continue }
+                        indexed[label, default: []].append(position)
+                    }
+                }
+                labelPositions = indexed
+            }
+            let positions = Set((labelPositions?[id] ?? []) + (labelPositions?[query.labelName] ?? [])).sorted()
+            return positions.map { rows[$0] }
+        default: return reading.presentation
+        }
+    }
+
     private var results: [TaskQuery: [Record]] = [:]
     private var productiveResult: ProductiveTaskReading?
     private var inboxProductiveResult: ProductiveTaskReading?
@@ -1426,6 +1457,7 @@ final class TaskCache {
     }
     @discardableResult func update(_ rows: [Record]) -> Bool {
         guard source != rows else { return false }
+        projectPresentation = nil; projectOutline = nil; labelPositions = nil
         source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; inboxProductiveResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
         results.removeAll(keepingCapacity: true)
@@ -1450,7 +1482,8 @@ final class TaskCache {
             } else { candidates = rows }
         } else {
             let reading = productiveReading()
-            if incoming.sort == "manual", case .project = incoming.scope { candidates = reading.outline }
+            if query.filter == nil { candidates = scopedCandidates(query, reading: reading) }
+            else if incoming.sort == "manual", case .project = incoming.scope { candidates = reading.outline }
             else { candidates = reading.presentation }
         }
         let matched = candidates.filter { task in
@@ -1891,11 +1924,14 @@ enum WidgetProjection {
         let incompleteProjects = workScope.incompleteProjects.union(workScope.items.filter { $0.navigationTask == nil }.map { $0.root.string("project_id").lowercased() })
         let settings = viewPreferences.filter { $0.string("user_id") == account }
         let orders = viewOrders.filter { $0.string("user_id") == account }
-        func sort(_ scope: TaskScope) -> String { settings.first { $0.id == scope.preferenceKey }?.fields["sort_by"]?.text ?? "manual" }
+        let settingsByID = Dictionary(settings.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let ordersByID = Dictionary(orders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let sectionsByProject = Dictionary(grouping: sections, by: { $0.string("project_id") })
+        func sort(_ scope: TaskScope) -> String { settingsByID[scope.preferenceKey]?.fields["sort_by"]?.text ?? "manual" }
         func supportedSort(_ value:String) -> Bool { ["manual","priority","title","date","deadline","duration"].contains(value) }
         func arranged(_ rows: [Record], key: String, sort: String) -> [Record] {
             guard ["manual", "priority"].contains(sort) else { return rows }
-            let ids = orders.first { $0.id == key }?["ids"].list.map(\.text) ?? []
+            let ids = ordersByID[key]?["ids"].list.map(\.text) ?? []
             return key.hasPrefix("group:") ? DayPlacement.arrangedOutline(rows, ids: ids) : DayPlacement.arranged(rows, ids: ids)
         }
         func projection(_ groups: [TaskGrouping.Group]) -> (ids: [String], groups: [JSON]) {
@@ -1922,10 +1958,11 @@ enum WidgetProjection {
             let scope=TaskScope.project(project.id), ordering=sort(scope)
             guard supportedSort(ordering), !incompleteProjects.contains(project.id.lowercased()) else { return row(project,kind:"project",days:[:],error:true) }
             let rows=cache.matching(TaskQuery(scope:scope,sort:ordering))
-            let selected=OrganizationOrder.sorted(sections.filter { $0.string("project_id")==project.id })
+            let selected=OrganizationOrder.sorted(sectionsByProject[project.id] ?? [])
             let valid=Set(selected.map(\.id))
+            let rowsBySection = Dictionary(grouping: rows, by: { $0.string("section_id") })
             var groups=[TaskGrouping.Group(id:"none",name:selected.isEmpty ? "" : "Tasks",tasks:arranged(rows.filter { !valid.contains($0.string("section_id")) },key:"group:"+project.id+":none",sort:ordering))]
-            groups += selected.map { section in TaskGrouping.Group(id:section.id,name:section.name,tasks:arranged(rows.filter{$0.string("section_id")==section.id},key:"group:"+project.id+":"+section.id,sort:ordering)) }
+            groups += selected.map { section in TaskGrouping.Group(id:section.id,name:section.name,tasks:arranged(rowsBySection[section.id] ?? [],key:"group:"+project.id+":"+section.id,sort:ordering)) }
             let value=projection(groups)
             return row(project,kind:"project",days:["*":value.ids],groups:["*":value.groups])
         }

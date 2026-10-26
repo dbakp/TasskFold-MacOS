@@ -368,16 +368,22 @@ import CryptoKit
 @MainActor struct WorkflowUndoNativeFixtureView: View {
     @Environment(Store.self) private var store
     @State private var presenting = false
+    @State private var scaleOriginal: Snapshot?
     var body: some View {
         NavigationStack {
             Form {
                 Text("Private workflow acceptance").font(.title2)
+                if ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") {
+                    Button("Measure workflow commit", action: measureCommit).accessibilityIdentifier("measureWorkflowCommit")
+                    Button("Restore scale fixture", action: restoreScale).disabled(scaleOriginal == nil).accessibilityIdentifier("restoreScaleFixture")
+                }
                 Button("Use native workflow") { presenting = true }.accessibilityIdentifier("openNativeWorkflow")
                 Button("Attempt oversized workflow") {
                     var row = Record.task(user: store.userID); row["title"] = .string("Oversized workflow proof")
                     row["description"] = .string(String(repeating: "x", count: WorkflowUndo.maximumBytes))
                     _ = store.commit([Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields, insertOnly: true, workflowRun: UUID())])
                 }.accessibilityIdentifier("oversizedNativeWorkflow")
+                Button("Fail next workflow save") { store.failNextWorkflowNativeSave() }.accessibilityIdentifier("failNativeWorkflowSave")
                 Button("Undo workflow") { store.undo() }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("undoNativeWorkflow")
                 Button("Redo workflow") { store.redo() }.disabled(store.redoStack.isEmpty).accessibilityIdentifier("redoNativeWorkflow")
                 Button("Add incoming task remotely") { update { state in
@@ -387,12 +393,47 @@ import CryptoKit
                 } }.accessibilityIdentifier("addIncomingWorkflowTask")
                 Button("Pause workflow support") { support(0) }.accessibilityIdentifier("pauseNativeWorkflowSupport")
                 Button("Restore workflow support") { support(1) }.accessibilityIdentifier("restoreNativeWorkflowSupport")
-                Text(store.notice ?? store.error ?? "Ready").accessibilityIdentifier("nativeWorkflowStatus")
+                Text(store.error ?? store.notice ?? "Ready").accessibilityIdentifier("nativeWorkflowStatus")
                 Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("nativeWorkflowPending")
                 ForEach(store.projects) { project in Text(project.name) }
-                ForEach(store.tasks) { task in Text(task.title) }
+                if ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") {
+                    Text("Saved tasks: \(store.tasks.count)")
+                } else { ForEach(store.tasks) { task in Text(task.title) } }
             }.navigationTitle("Workflow test")
         }.sheet(isPresented: $presenting) { TemplateRunView(template: WorkflowUndoNativePeer.template) }
+            .alert("Workflow needs attention", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
+                Button("OK") { store.error = nil }
+            } message: { Text(store.error ?? "") }
+    }
+    private func restoreScale() {
+        guard WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale"), let scaleOriginal else { return }
+        store.snapshot = scaleOriginal
+        do { try store.persist(); self.scaleOriginal = nil; store.error = nil }
+        catch { store.error = error.localizedDescription }
+    }
+    private func measureCommit() {
+        guard WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale"),
+              let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-count=") }),
+              let count = Int(argument.split(separator: "=").last ?? ""), [1000, 5000].contains(count),
+              let proofArgument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
+              let proof = UUID(uuidString: String(proofArgument.dropFirst("--workflow-commit-proof=".count))) else { return }
+        do {
+            let document: JSON = .object(["version": .number(1), "kind": .string("project"),
+                "projects": .array([.object(["id": .string("root"), "name": .string("Scale workflow")])]),
+                "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
+                "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
+            let changes = try WorkflowTemplate(document: document).instantiate(account: store.userID, name: "Scale workflow")
+            scaleOriginal = store.snapshot
+            let revision = store.taskRevision, clock = ContinuousClock(), started = clock.now
+            let saved = store.commit(changes), elapsed = started.duration(to: clock.now)
+            let data: JSON = .object(["proof": .string(proof.uuidString.lowercased()), "count": .number(Double(count)), "commands": .number(Double(changes.count)), "saved": .bool(saved),
+                "seconds": .number(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18),
+                "taskRevisionDelta": .number(Double(store.taskRevision - revision)),
+                "tasks": .number(Double(store.tasks.count)), "pending": .number(Double(store.snapshot.pending.count)),
+                "undoCommands": .number(Double(store.undoStack.last?.undo.count ?? 0)), "error": store.error.map(JSON.string) ?? .null])
+            try FileManager.default.createDirectory(at: TeamTemplateNativeFixture.root, withIntermediateDirectories: true)
+            try JSONEncoder().encode(data).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
+        } catch { store.error = error.localizedDescription }
     }
     private func update(_ edit: (inout WorkflowUndoNativePeer.State) -> Void) {
         do { var state = try WorkflowUndoNativePeer.read(); edit(&state); try WorkflowUndoNativePeer.write(state) } catch { store.error = error.localizedDescription }

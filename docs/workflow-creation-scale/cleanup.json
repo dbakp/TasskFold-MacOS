@@ -1,0 +1,12 @@
+{
+  "removedUnusedTemporaryLogicalBytes": 671063143,
+  "simulatorTestHostsAndRunnersUninstalled": true,
+  "ownedMacProcessesTerminated": [],
+  "workingCachesRetained": [
+    "/tmp/taskfold-workflow-commit-ios-host",
+    "/tmp/taskfold-workflow-commit-ios-build",
+    "/tmp/taskfold-workflow-native-mac-host",
+    "/tmp/taskfold-workflow-native-mac-build"
+  ],
+  "reason": "One current build per platform will be reused for the next active-goal save/I/O checks; source build caches preserved"
+}

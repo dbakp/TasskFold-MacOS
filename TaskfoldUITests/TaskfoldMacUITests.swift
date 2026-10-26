@@ -5034,6 +5034,15 @@ extension SharedHeadingNativeTests {
 
 
 extension SharedHeadingNativeTests {
+    @MainActor private func workflowDismissAlert(_ app: XCUIApplication, containing message: String) {
+        let alert = app.sheets.matching(NSPredicate(format: "label == %@", "alert")).firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 10), app.debugDescription)
+        let warning = alert.staticTexts.matching(NSPredicate(format: "value CONTAINS %@ OR label CONTAINS %@", message, message)).firstMatch
+        XCTAssertTrue(warning.exists, "The actual Cocoa warning must contain the expected message")
+        alert.buttons["OK"].click()
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: alert)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
+    }
     private func workflowPeerFile() throws -> URL { return personalStateFile().deletingLastPathComponent().appendingPathComponent("TaskfoldWorkflowUndoNativeFixture-workflowteststeameditbridge.json") }
     private func workflowPeer() throws -> [String: Any] { try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: workflowPeerFile())) as? [String: Any]) }
     private func workflowCache() throws -> [String: Any] { return try saved() }
@@ -5042,10 +5051,10 @@ extension SharedHeadingNativeTests {
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (try? condition()) == true }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 25), .completed)
     }
-    @MainActor private func workflowStart(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false, hold: Bool = false) throws {
+    @MainActor private func workflowStart(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false, hold: Bool = false, scale: Int? = nil, scaleProof: String? = nil) throws {
         guard [bundle + ".runner", bundle + ".runner.xctrunner"].contains(Bundle(for: Self.self).bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated Mac host required") }
         continueAfterFailure = false
-        app.launchArguments = ["--team-editor-testing", "--team-heading-testing", "--personal-heading-testing", "--personal-workflow-undo-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-undo-lose-reply"] : []) + (hold ? ["--workflow-preparation-hold"] : [])
+        app.launchArguments = ["--team-editor-testing", "--team-heading-testing", "--personal-heading-testing", "--personal-workflow-undo-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-undo-lose-reply"] : []) + (hold ? ["--workflow-preparation-hold"] : []) + (scale.map { ["--workflow-commit-scale", "--workflow-commit-count=\($0)"] } ?? []) + (scaleProof.map { ["--workflow-commit-proof=\($0)"] } ?? [])
         try open(app)
         XCTAssertTrue(app.buttons["openNativeWorkflow"].waitForExistence(timeout: 15), app.debugDescription)
         workflowWait { try self.workflowCachedSupport() == 1 || !reset }
@@ -5097,7 +5106,7 @@ extension SharedHeadingNativeTests {
         app.buttons["redoNativeWorkflow"].click(); workflowWait { try self.workflowSettled(tasks: 3, attempts: 2) }
         let final = try workflowRows(); app.terminate(); try workflowStart(app, reset: false)
         workflowWait { try self.workflowSettled(tasks: 3, attempts: 2) }; XCTAssertEqual(try workflowRows() as NSDictionary, final as NSDictionary)
-        let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Private workflow restored after cold return"; picture.lifetime = .keepAlways; add(picture)
+        let picture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); picture.name = "Private workflow restored after cold return"; picture.lifetime = .keepAlways; add(picture)
     }
     @MainActor func testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app, lost: true); try workflowCreate(app)
@@ -5125,7 +5134,7 @@ extension SharedHeadingNativeTests {
         let incoming = app.staticTexts["Later incoming work"]
         for _ in 0..<4 { if incoming.exists && incoming.isHittable { break }; app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
         XCTAssertTrue(incoming.waitForExistence(timeout: 5)); XCTAssertTrue(incoming.isHittable)
-        let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Refused workflow Undo preserves incoming work"; picture.lifetime = .keepAlways; add(picture)
+        let picture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); picture.name = "Refused workflow Undo preserves incoming work"; picture.lifetime = .keepAlways; add(picture)
         app.terminate(); try workflowStart(app, reset: false); workflowWait { try self.workflowSettled(tasks: 4, attempts: 1) }
     }
 
@@ -5151,7 +5160,7 @@ extension SharedHeadingNativeTests {
         let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app, hold: true)
         let before = try workflowCache(), remote = try workflowRows()
         workflowBeginHeldPreparation(app)
-        let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Cancellable workflow preparation"; picture.lifetime = .keepAlways; add(picture)
+        let picture = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); picture.name = "Cancellable workflow preparation"; picture.lifetime = .keepAlways; add(picture)
         app.buttons["cancelWorkflowPreparation"].click()
         XCTAssertTrue(app.buttons["applyWorkflowTemplate"].isEnabled)
         try workflowAssertNoLateSave(cache: before, remote: remote)
@@ -5170,14 +5179,66 @@ extension SharedHeadingNativeTests {
         XCTAssertEqual(try workflowRows() as NSDictionary, remote as NSDictionary)
     }
 
+    @MainActor private func workflowMeasureCommit(count: Int) throws {
+        let app = XCUIApplication()
+        defer {
+            if app.state != .notRunning && app.buttons["restoreScaleFixture"].exists && app.buttons["restoreScaleFixture"].isEnabled { app.buttons["restoreScaleFixture"].click() }
+            app.terminate()
+        }
+        let proof = UUID().uuidString.lowercased()
+        try workflowStart(app, scale: count, scaleProof: proof)
+        let file = personalStateFile().deletingLastPathComponent().appendingPathComponent("TaskfoldTeamLibraryNativeFixture-workflowteststeameditbridge/commit-scale-\(proof).json")
+        let initial = try XCTUnwrap((try workflowCache())["tables"] as? [String: [[String: Any]]])
+        app.buttons["measureWorkflowCommit"].click()
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: file.path) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 180), .completed)
+        let data = try Data(contentsOf: file), value = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let receipt = XCTAttachment(data: data, uniformTypeIdentifier: "public.json"); receipt.name = "Workflow commit scale \(count)"; receipt.lifetime = .keepAlways; add(receipt)
+        XCTAssertEqual(value["proof"] as? String, proof)
+        XCTAssertEqual(value["saved"] as? Bool, true, String(decoding: data, as: UTF8.self))
+        XCTAssertEqual(value["commands"] as? Int, count * 4 + 1)
+        XCTAssertEqual(value["tasks"] as? Int, count + (initial["tasks"]?.count ?? 0))
+        XCTAssertEqual(value["pending"] as? Int, count * 4 + 1)
+        XCTAssertEqual(value["undoCommands"] as? Int, 1)
+        let cache = try workflowCache(), tables = try XCTUnwrap(cache["tables"] as? [String: [[String: Any]]])
+        for table in ["tasks", "sections", "labels", "view_orders"] { XCTAssertEqual(tables[table]?.count, count + (initial[table]?.count ?? 0), table) }
+        XCTAssertEqual(value["taskRevisionDelta"] as? Int, 1, "Creating one workflow should publish its task list once")
+    }
+    @MainActor func testPrivateWorkflowNativeCommitScale1000PublishesOnce() throws { try workflowMeasureCommit(count: 1000) }
+    @MainActor func testPrivateWorkflowNativeCommitScale5000PublishesOnce() throws { try workflowMeasureCommit(count: 5000) }
+
+    @MainActor func testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app)
+        let before = try workflowCache(), remote = try workflowRows()
+        app.buttons["failNativeWorkflowSave"].click(); app.buttons["openNativeWorkflow"].click()
+        let create = app.buttons["applyWorkflowTemplate"]
+        XCTAssertTrue(create.waitForExistence(timeout: 8)); create.click()
+        let alert = app.sheets.matching(NSPredicate(format: "label == %@", "alert")).firstMatch
+        if alert.exists { workflowDismissAlert(app, containing: "could not be saved") }
+        else {
+            let warnings = app.staticTexts.matching(NSPredicate(format: "value CONTAINS %@ OR label CONTAINS %@", "could not be saved", "could not be saved"))
+            for _ in 0..<5 {
+                if warnings.allElementsBoundByIndex.contains(where: { $0.isHittable }) { break }
+                app.sheets.firstMatch.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -300)
+            }
+            XCTAssertTrue(warnings.allElementsBoundByIndex.contains(where: { $0.isHittable }), "The failed save must show a readable message in the workflow sheet")
+        }
+        XCTAssertEqual(try workflowCache() as NSDictionary, before as NSDictionary)
+        XCTAssertEqual(try workflowRows() as NSDictionary, remote as NSDictionary)
+        create.click()
+        workflowWait { try self.workflowSettled(tasks: 3, attempts: 0) }
+        XCTAssertTrue(app.buttons["openNativeWorkflow"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["applyWorkflowTemplate"].exists, "The successful retry must close the creation sheet")
+        let visible = app.staticTexts["Design instructions"]
+        for _ in 0..<5 { if visible.exists && visible.isHittable { break }; app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -300) }
+        XCTAssertTrue(visible.exists && visible.isHittable, "The successful retry must refresh the actual task list")
+    }
+
     @MainActor func testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app)
         let before = try workflowCache(), remote = try workflowRows()
         app.buttons["oversizedNativeWorkflow"].click()
-        let warning = app.alerts.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "too large to create")).firstMatch
-        if warning.waitForExistence(timeout: 8) { XCTAssertTrue(warning.exists) }
-        else { XCTAssertTrue(app.staticTexts["nativeWorkflowStatus"].label.contains("too large to create"), app.debugDescription) }
-        if app.alerts.buttons["OK"].exists { app.alerts.buttons["OK"].click() }
+        workflowDismissAlert(app, containing: "too large to create")
         XCTAssertEqual(try workflowCache() as NSDictionary, before as NSDictionary)
         XCTAssertEqual(try workflowRows() as NSDictionary, remote as NSDictionary)
         XCTAssertFalse(app.buttons["undoNativeWorkflow"].isEnabled)
@@ -5190,10 +5251,7 @@ extension SharedHeadingNativeTests {
         let first = try workflowRows(); app.buttons["pauseNativeWorkflowSupport"].click()
         workflowWait { try self.workflowCachedSupport() == 0 }
         app.buttons["undoNativeWorkflow"].click()
-        let warning = app.alerts.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "safely undo workflows")).firstMatch
-        if warning.waitForExistence(timeout: 2) { XCTAssertTrue(warning.exists) }
-        else { XCTAssertTrue(app.staticTexts["nativeWorkflowStatus"].label.contains("safely undo workflows"), app.debugDescription) }
-        if app.alerts.buttons["OK"].exists { app.alerts.buttons["OK"].click() }
+        workflowDismissAlert(app, containing: "safely undo workflows")
         XCTAssertTrue(try workflowSettled(tasks: 3, attempts: 0)); XCTAssertEqual(try workflowRows() as NSDictionary, first as NSDictionary)
         app.buttons["restoreNativeWorkflowSupport"].click(); workflowWait { try self.workflowCachedSupport() == 1 }
         app.buttons["undoNativeWorkflow"].click(); workflowWait { try self.workflowSettled(tasks: 1, attempts: 1) }

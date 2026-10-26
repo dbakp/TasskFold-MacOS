@@ -1,0 +1,22 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-workflow-commit-mac-alerts.xcresult "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries"
+Test Suite 'Selected tests' started at 2026-10-26 23:22:49.237.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 23:22:49.237.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-26 23:22:49.237.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' passed (13.853 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5039: error: -[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries] : XCTAssertTrue failed - Attributes: Application, 0x8b9186440, pid: 76370, title: 'Taskfold Workflow Test', Disabled
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' failed (18.310 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' passed (19.490 seconds).
+Test Suite 'SharedHeadingNativeTests' failed at 2026-10-26 23:23:40.894.
+	 Executed 3 tests, with 1 failure (0 unexpected) in 51.653 (51.657) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 23:23:40.894.
+	 Executed 3 tests, with 1 failure (0 unexpected) in 51.653 (51.657) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 23:23:40.899.
+	 Executed 3 tests, with 1 failure (0 unexpected) in 51.653 (51.662) seconds
+Failing tests:
+	SharedHeadingNativeTests.testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries()
+** TEST EXECUTE FAILED **
+Testing started

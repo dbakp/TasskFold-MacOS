@@ -3,6 +3,51 @@ import XCTest
 @testable import WidgetModel
 
 final class WidgetListTests: XCTestCase {
+    func testIndexedProjectAndLabelCandidatesKeepAliasesOrderingAndSourceUpdates() {
+        var a = task("a", projectID: "A", labels: ["label-id", "label-id"])
+        var b = task("b", projectID: "A", labels: ["Alias"])
+        var c = task("c", projectID: "B", labels: ["Alias", "label-id"])
+        var d = task("d", projectID: "B", labels: ["alias"])
+        a["priority"] = .number(4); b["priority"] = .number(1); c["priority"] = .number(2); d["priority"] = .number(3)
+        a["title"] = .string("AA"); b["title"] = .string("ZZ"); c["title"] = .string("MM")
+        let cache = TaskCache(); cache.update([a, b, c, d])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .project("A"), sort: "manual")).map(\.id), ["b", "a"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .project("B"), sort: "priority")).map(\.id), ["c", "d"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .label("label-id"), sort: "manual", labelName: "Alias")).map(\.id), ["b", "c", "a"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .label("label-id"), sort: "title", labelName: "Alias")).map(\.id), ["a", "c", "b"])
+        b["project_id"] = .string("B"); b["labels"] = .array([])
+        d["labels"] = .array([.string(""), .object(["name": .string("Alias")])])
+        cache.update([a, b, c, d])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .project("A"), sort: "manual")).map(\.id), ["a"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .project("B"), sort: "priority")).map(\.id), ["b", "c", "d"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .label("label-id"), sort: "manual", labelName: "Alias")).map(\.id), ["c", "a"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .label("label-id"), sort: "manual")).map(\.id), ["c", "d", "a"], "Legacy empty-string membership remains exact; objects do not become label names")
+    }
+    func testFullStructuredWorkflowPublishesAllWidgetListsGroupsAndMembership() throws {
+        let count = 5000, account = "11111111-1111-4111-8111-111111111111"
+        let document: JSON = .object(["version": .number(1), "kind": .string("project"),
+            "projects": .array([.object(["id": .string("root"), "name": .string("Full workflow")])]),
+            "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
+            "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
+        let changes = try WorkflowTemplate(document: document).instantiate(account: account, name: "Full workflow")
+        let tables = Dictionary(grouping: changes, by: \.table).mapValues { $0.map { Record($0.fields) } }
+        let tasks = try XCTUnwrap(tables["tasks"])
+        let payload = WidgetProjection.payload(tasks: tasks, projects: tables["projects"]!, account: account, now: now, labels: tables["labels"]!, sections: tables["sections"]!, calendar: cph, viewOrders: tables["view_orders"]!)
+        let data = try JSONEncoder().encode(JSON.object(payload)), snapshot = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+        XCTAssertEqual(snapshot.tasks.count, count); XCTAssertEqual(snapshot.lists.count, count + 1)
+        let projectList = try XCTUnwrap(snapshot.lists.first { $0.kind == "project" })
+        XCTAssertEqual(projectList.days["*"], tasks.map(\.id))
+        XCTAssertEqual(projectList.groups?["*"]?.count, count)
+        XCTAssertEqual(projectList.groups?["*"]?.map(\.id), OrganizationOrder.sorted(tables["sections"]!).map(\.id))
+        let expected = Dictionary(uniqueKeysWithValues: tasks.map { ($0["labels"].list[0].text, $0.id) })
+        for label in snapshot.lists where label.kind == "label" { XCTAssertEqual(label.days["*"], expected[label.recordID].map { [$0] }) }
+        XCTAssertEqual(snapshot.listStatus(projectList.id, at: now, calendar: cph), .ready)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let disk = WidgetActionDisk(directory: root); try disk.publish(data)
+        XCTAssertEqual(try disk.read().data, data)
+    }
+
     func testCreationProjectionUsesCivilDaysAndExpiresWithoutPublishingCreationMetadata() throws {
         var first = task("created-first"); first["created_at"] = .string("2026-10-23T22:00:00Z")
         var fold = task("created-fold"); fold["created_at"] = .string("2026-10-25T01:30:00Z")

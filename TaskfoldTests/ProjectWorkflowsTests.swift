@@ -358,6 +358,59 @@ final class ProjectWorkflowsTests: XCTestCase {
         do { _ = try await worker.value; XCTFail("An already cancelled worker must not prepare changes") }
         catch { XCTAssertTrue(error is CancellationError) }
     }
+    func testFreshWorkflowAppendMatchesSequentialProjectionAndProtectsCollisions() throws {
+        let run = UUID(), projectID = UUID().uuidString.lowercased()
+        var task = Record.task(user: owner, project: projectID); task["completion_version"] = .number(92)
+        let changes = [Mutation(table: "projects", recordID: projectID, method: "POST", fields: ["id": .string(projectID), "user_id": .string(owner), "name": .string("Project")], insertOnly: true, workflowRun: run),
+                       Mutation(table: "tasks", recordID: task.id, method: "POST", fields: task.fields, insertOnly: true, workflowRun: run)]
+        var original = Snapshot(tables: ["tasks": [Record.task(user: owner)]], pending: [Mutation(table: "labels", recordID: "pending", method: "PATCH", fields: [:])])
+        original.tables["labels"] = [Record(["id": .string("existing"), "user_id": .string(owner), "name": .string("Keep")])]
+        var projected = original, sequential = original, batch = try XCTUnwrap(FreshWorkflowCreation(changes, snapshot: original, account: owner))
+        for change in changes { sequential.apply(change); XCTAssertNotNil(batch.append(change, to: &projected)) }
+        XCTAssertEqual(projected, sequential)
+        XCTAssertNil(batch.append(changes[0], to: &projected), "A certificate cannot append the same identity twice")
+        XCTAssertEqual(projected, sequential)
+        XCTAssertNil(FreshWorkflowCreation(changes, snapshot: projected, account: owner), "Observed rows must use collision-aware ordinary replay")
+        XCTAssertNil(FreshWorkflowCreation(changes + [changes[0]], snapshot: original, account: owner))
+        var changed = changes; changed[0].fields["id"] = .string("other"); XCTAssertNil(FreshWorkflowCreation(changed, snapshot: original, account: owner))
+        changed = changes; changed[0].fields["user_id"] = .string("other"); XCTAssertNil(FreshWorkflowCreation(changed, snapshot: original, account: owner))
+        changed = changes; changed[0].method = "PATCH"; XCTAssertNil(FreshWorkflowCreation(changed, snapshot: original, account: owner))
+    }
+    func testFreshFullWorkflowAppendPreservesEveryRecordAndOneUndo() throws {
+        let count = 5000
+        let document: JSON = .object(["version": .number(1), "kind": .string("project"),
+            "projects": .array([.object(["id": .string("root"), "name": .string("Full workflow")])]),
+            "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root")]) }),
+            "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
+        let changes = try WorkflowTemplate(document: document).instantiate(account: owner, name: "Full workflow")
+        var snapshot = Snapshot()
+        var batch = FreshWorkflowCreation(changes, snapshot: snapshot, account: owner)
+        XCTAssertNotNil(batch)
+        for change in changes { XCTAssertNotNil(batch?.append(change, to: &snapshot)); snapshot.pending.append(change) }
+        XCTAssertEqual(snapshot.tables["tasks"]?.count, count); XCTAssertEqual(snapshot.tables["sections"]?.count, count)
+        XCTAssertEqual(snapshot.tables["labels"]?.count, count); XCTAssertEqual(snapshot.tables["view_orders"]?.count, count)
+        XCTAssertEqual(snapshot.pending.count, 20001)
+        for (table, expected) in Dictionary(grouping: changes, by: \.table) {
+            XCTAssertEqual(snapshot.tables[table]?.map(\.id), expected.map(\.recordID))
+        }
+        let history = EditHistory(changes: changes, snapshot: Snapshot())
+        XCTAssertEqual(history.undo.count, 1); XCTAssertEqual(WorkflowUndo.items(history.undo[0])?.count, 20001)
+        XCTAssertEqual(try JSONDecoder().decode(Snapshot.self, from: JSONEncoder().encode(snapshot)), snapshot)
+    }
+    func testWorkflowPresentationBatchingOnlyAdmitsOnePrivateInsertRun() throws {
+        let run = UUID()
+        let commands = ["projects", "sections", "labels", "tasks", "view_orders"].map { Mutation(table: $0, recordID: UUID().uuidString.lowercased(), method: "POST", fields: [:], insertOnly: true, workflowRun: run) }
+        XCTAssertEqual(WorkflowUndo.creationRun(commands), run)
+        XCTAssertNil(WorkflowUndo.creationRun([]))
+        for method in ["PATCH", "DELETE", "ORDER", "TEAM_BATCH", "WORKFLOW_UNDO"] {
+            var changed = commands; changed[0].method = method; XCTAssertNil(WorkflowUndo.creationRun(changed))
+        }
+        var changed = commands; changed[0].workflowRun = UUID(); XCTAssertNil(WorkflowUndo.creationRun(changed))
+        changed = commands; changed[0].workflowRun = nil; XCTAssertNil(WorkflowUndo.creationRun(changed))
+        changed = commands; changed[0].insertOnly = false; XCTAssertNil(WorkflowUndo.creationRun(changed))
+        changed = commands; changed[0].table = "saved_views"; XCTAssertNil(WorkflowUndo.creationRun(changed))
+        changed = commands; changed[0].table = TaskActivity.table; XCTAssertNil(WorkflowUndo.creationRun(changed))
+    }
     func testFullSizedSectionedWorkflowKeepsOneUndoCommand() throws {
         let count = 5000
         let document: JSON = .object(["version": .number(1), "kind": .string("project"),

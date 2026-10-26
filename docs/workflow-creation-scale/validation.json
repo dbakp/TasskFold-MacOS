@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-26",
+  "repository": "TasskFold-MacOS",
+  "core": {
+    "passed": 642,
+    "failed": 0,
+    "skipped": 2
+  },
+  "native": {
+    "distinctPlatformCasePairsPassed": 30,
+    "coverage": {
+      "phone": {
+        "testPrivateWorkflowNativeCommitScale1000PublishesOnce": "phone-widget-final",
+        "testPrivateWorkflowNativeCommitScale5000PublishesOnce": "phone-widget-final",
+        "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn": "phone-widget-final",
+        "testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo": "phone-widget-final",
+        "testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly": "phone-widget-final",
+        "testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave": "phone-widget-final",
+        "testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry": "phone-widget-final",
+        "testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn": "phone-widget-final",
+        "testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace": "phone-widget-final",
+        "testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries": "phone-retry-final"
+      },
+      "tablet": {
+        "testPrivateWorkflowNativeCommitScale1000PublishesOnce": "tablet-widget-final",
+        "testPrivateWorkflowNativeCommitScale5000PublishesOnce": "tablet-widget-final",
+        "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn": "tablet-widget-final",
+        "testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo": "tablet-widget-final",
+        "testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly": "tablet-widget-final",
+        "testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave": "tablet-widget-final",
+        "testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry": "tablet-widget-final",
+        "testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn": "tablet-widget-final",
+        "testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace": "tablet-widget-final",
+        "testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries": "tablet-retry-final"
+      },
+      "mac": {
+        "testPrivateWorkflowNativeCommitScale1000PublishesOnce": "mac-widget-final",
+        "testPrivateWorkflowNativeCommitScale5000PublishesOnce": "mac-widget-final",
+        "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn": "mac-widget-final",
+        "testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo": "mac-widget-final",
+        "testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly": "mac-widget-final",
+        "testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry": "mac-widget-final",
+        "testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn": "mac-widget-final",
+        "testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave": "mac-alerts",
+        "testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace": "mac-alerts",
+        "testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries": "mac-retry-final"
+      }
+    },
+    "note": "Passing method coverage combines the main matrix with specific UI-selector corrections; initial failures retained"
+  },
+  "signedBuild": "passed",
+  "macWorkflowRuntime": "Enabled after user approval; all ten methods now have passing evidence",
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "08850cfd4f339e3b59dfb37a54d3f2ecb1d965976c3bed4b0ade5d1c26129f02",
+    "Taskfold/Core/ProjectWorkflows.swift": "6540085bea561038b5aa528e0b6f3e8e8382a7c40e100a2d60a963aec059bc80",
+    "Taskfold/Core/Store.swift": "95ae00297d48569c2397f1f359300546abe056037cfb593349138165214e7ed7",
+    "Taskfold/TeamTemplateNativeFixture.swift": "5dcbe67c974b569d3e90d980de6bd884411c2a14fe7307bc8b9e92c30a0e66f0",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "0b41f015f514f4711f51ee094f06d5016ff4cb7d18aa180b82babd96321211af",
+    "TaskfoldTests/WidgetListTests.swift": "752f23b89b1c251cc8102245cc1db9b7034987eab6a582e6a2a956ef2ae79b59",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "0c194bf42eef0706689c6a499fc81acb4ae179d9ce6a25be7b185c853f2a84f6",
+    "Taskfold/TaskfoldMacApp.swift": "38cbbd0c3762e99badefee5e4cd0bcd1479390c6d908d2693c5be6929d661ffe"
+  },
+  "preparedSourceSHA256": {
+    "Taskfold/Core/Models.swift": "08850cfd4f339e3b59dfb37a54d3f2ecb1d965976c3bed4b0ade5d1c26129f02",
+    "Taskfold/Core/ProjectWorkflows.swift": "6540085bea561038b5aa528e0b6f3e8e8382a7c40e100a2d60a963aec059bc80",
+    "Taskfold/Core/Store.swift": "f933e5e8b0f19bf4df908e75a2e122db9b3b411cf8a906040c35069bedfff495",
+    "Taskfold/TeamTemplateNativeFixture.swift": "5dcbe67c974b569d3e90d980de6bd884411c2a14fe7307bc8b9e92c30a0e66f0",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "0c194bf42eef0706689c6a499fc81acb4ae179d9ce6a25be7b185c853f2a84f6",
+    "Taskfold/TaskfoldMacApp.swift": "38cbbd0c3762e99badefee5e4cd0bcd1479390c6d908d2693c5be6929d661ffe"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "366f407f61f13f03d22bb1c903ac44bad649a00072bfa2328aa4a8c63f5375a4",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "41557486386d5486c0e95bfbd7096e4b1d17ed8300cc2b371f66f0df5b4ef376",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "b8b87c230477e2f4f32a01815d67f6c06cba06929a398f8c6224cc63c4a45d48"
+  },
+  "inspectedImages": [
+    "phone-images/97153F3F-5194-4D00-B34A-6CE996DA2D3C.png",
+    "tablet-images/A2ED6B5B-244D-405E-A590-77F6E3AAAA1D.png",
+    "mac-images/9034C529-7237-422F-BDC6-34734EAC51A4.png"
+  ],
+  "visualScope": "Default-size light preparation sheet in reserved host; Mac captures are window-only. No production-wide layout/VoiceOver claim.",
+  "realDataChanged": false,
+  "hostedChanges": false,
+  "rolloutChanged": false,
+  "remaining": [
+    "11\u201314 second full save still blocks UI; background save/widget I/O",
+    "Local activity-history scaling",
+    "Full production-screen rendering",
+    "Paired/hosted bulk delivery",
+    "Wider ranked Px and existing explicit user deferrals"
+  ],
+  "workingCaches": {
+    "iosHost": "/tmp/taskfold-workflow-commit-ios-host",
+    "iosBuild": "/tmp/taskfold-workflow-commit-ios-build",
+    "macHost": "/tmp/taskfold-workflow-native-mac-host",
+    "macBuild": "/tmp/taskfold-workflow-native-mac-build",
+    "note": "One current mutable host/build per platform retained for upcoming work; older stage cache hashes are historical"
+  }
+}

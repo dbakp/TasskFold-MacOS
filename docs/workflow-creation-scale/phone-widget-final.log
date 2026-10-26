@@ -1,0 +1,36 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-commit-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-workflow-commit-phone-widget-final.xcresult "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCommitScale1000PublishesOnce" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCommitScale5000PublishesOnce" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries"
+Test Suite 'Selected tests' started at 2026-10-26 23:16:45.332.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 23:16:45.335.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 23:16:45.335.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (20.180 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale5000PublishesOnce]' passed (38.892 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' passed (35.879 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' passed (32.678 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly]' passed (31.041 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' passed (28.383 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' passed (47.279 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' passed (38.927 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' started.
+/tmp/taskfold-workflow-commit-ios-host/TaskfoldUITests/TaskfoldUITests.swift:16094: error: -[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries] : XCTAssertTrue failed - Attributes: Application, 0x111e5fd40, pid: 76110, label: 'Taskfold Heading Test'
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' failed (25.795 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' passed (25.872 seconds).
+Test Suite 'TaskfoldUITests' failed at 2026-10-26 23:22:10.275.
+	 Executed 10 tests, with 1 failure (0 unexpected) in 324.926 (324.939) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 23:22:10.290.
+	 Executed 10 tests, with 1 failure (0 unexpected) in 324.926 (324.955) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 23:22:10.291.
+	 Executed 10 tests, with 1 failure (0 unexpected) in 324.926 (324.959) seconds
+Failing tests:
+	TaskfoldUITests.testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries()
+** TEST EXECUTE FAILED **
+Testing started

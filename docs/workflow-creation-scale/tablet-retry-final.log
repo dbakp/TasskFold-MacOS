@@ -1,0 +1,15 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-commit-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378" -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-workflow-commit-tablet-retry-final.xcresult "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries"
+Test Suite 'Selected tests' started at 2026-10-26 23:27:16.911.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 23:27:16.912.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 23:27:16.912.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' passed (28.014 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-26 23:27:44.955.
+	 Executed 1 test, with 0 failures (0 unexpected) in 28.014 (28.044) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 23:27:44.956.
+	 Executed 1 test, with 0 failures (0 unexpected) in 28.014 (28.044) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 23:27:44.956.
+	 Executed 1 test, with 0 failures (0 unexpected) in 28.014 (28.045) seconds
+** TEST EXECUTE SUCCEEDED **
+Testing started

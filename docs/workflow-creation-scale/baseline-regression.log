@@ -1,0 +1,53 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-commit-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-workflow-commit-ios-before-verified.xcresult "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCommitScale1000PublishesOnce"
+
+Writing result bundle at path:
+	/tmp/taskfold-workflow-commit-ios-before-verified.xcresult
+
+2026-10-26 22:45:47.782599+0100 TaskfoldUITests-Runner[69995:23767969] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 22:45:51.046.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 22:45:51.047.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 22:45:51.047.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+    t =     0.00s Start Test at 2026-10-26 22:45:51.049
+    t =     0.03s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 22:45:51.136 xcodebuild[69990:23767720] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 22:45:51.136 xcodebuild[69990:23767720] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.12s         Setting up automation session
+objc[69995]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x102128398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1064c8310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =    10.26s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.95s Waiting 15.0s for "openNativeWorkflow" Button to exist
+    t =    12.98s     Checking `Expect predicate `existsNoRetry == 1` for object "openNativeWorkflow" Button`
+    t =    12.98s         Checking existence of `"openNativeWorkflow" Button`
+    t =    14.18s Tap "measureWorkflowCommit" Button
+    t =    14.18s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.18s     Find the "measureWorkflowCommit" Button
+    t =    14.22s     Check for interrupting elements affecting "measureWorkflowCommit" Button
+    t =    14.25s     Synthesize event
+    t =    14.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.61s Added attachment named 'Workflow commit scale 1000'
+/tmp/taskfold-workflow-commit-ios-host/TaskfoldUITests/TaskfoldUITests.swift:16076: error: -[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce] : XCTAssertEqual failed: ("Optional(1000)") is not equal to ("Optional(1)") - Creating one workflow should publish its task list once
+    t =    26.80s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' failed (27.050 seconds).
+Test Suite 'TaskfoldUITests' failed at 2026-10-26 22:46:18.099.
+	 Executed 1 test, with 1 failure (0 unexpected) in 27.050 (27.052) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 22:46:18.099.
+	 Executed 1 test, with 1 failure (0 unexpected) in 27.050 (27.053) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 22:46:18.100.
+	 Executed 1 test, with 1 failure (0 unexpected) in 27.050 (27.054) seconds
+2026-10-26 22:46:18.434 xcodebuild[69990:23767720] [MT] IDETestOperationsObserverDebug: 32.792 elapsed -- Testing started completed.
+2026-10-26 22:46:18.434 xcodebuild[69990:23767720] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 22:46:18.434 xcodebuild[69990:23767720] [MT] IDETestOperationsObserverDebug: 32.792 sec, +32.792 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-workflow-commit-ios-before-verified.xcresult
+
+Failing tests:
+	TaskfoldUITests.testPrivateWorkflowNativeCommitScale1000PublishesOnce()
+
+** TEST EXECUTE FAILED **
+
+Testing started

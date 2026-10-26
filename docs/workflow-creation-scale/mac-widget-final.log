@@ -1,0 +1,40 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-workflow-commit-mac-widget-final.xcresult "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale1000PublishesOnce" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale5000PublishesOnce" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn" "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries"
+Test Suite 'Selected tests' started at 2026-10-26 23:16:38.168.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 23:16:38.169.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-26 23:16:38.169.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (32.748 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale5000PublishesOnce]' passed (33.153 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' passed (22.229 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' passed (18.598 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly]' passed (18.114 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5224: error: -[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave] : XCTAssertTrue failed - Attributes: Application, 0xb9e0ef480, pid: 75750, title: 'Taskfold Workflow Test', Disabled
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' failed (13.893 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' passed (39.478 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' passed (27.623 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5208: error: -[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries] : XCTAssertTrue failed - Attributes: Application, 0xb9e0d9f40, pid: 75941, title: 'Taskfold Workflow Test', Disabled
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' failed (18.373 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5240: error: -[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace] : XCTAssertTrue failed - Attributes: Application, 0xb9de85f40, pid: 75988, title: 'Taskfold Workflow Test', Disabled
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' failed (14.891 seconds).
+Test Suite 'SharedHeadingNativeTests' failed at 2026-10-26 23:20:37.275.
+	 Executed 10 tests, with 3 failures (0 unexpected) in 239.099 (239.106) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 23:20:37.277.
+	 Executed 10 tests, with 3 failures (0 unexpected) in 239.099 (239.108) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 23:20:37.280.
+	 Executed 10 tests, with 3 failures (0 unexpected) in 239.099 (239.113) seconds
+Failing tests:
+	SharedHeadingNativeTests.testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave()
+	SharedHeadingNativeTests.testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries()
+	SharedHeadingNativeTests.testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace()
+** TEST EXECUTE FAILED **
+Testing started
