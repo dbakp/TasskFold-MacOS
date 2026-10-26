@@ -380,6 +380,8 @@ final class Store {
     /// This explicit path never infers team scope for an ordinary personal save.
     /// Organization rollout and the service's task capability both stay required.
     private var nativeTeamEditorEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamsEnabled") as? Bool == true }
+    /// Local client support is distinct from live shared-workspace admission.
+    var teamWorkflowHeadingClientEnabled: Bool { nativeTeamEditorEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true }
     var teamWorkflowCreationAvailable: Bool { nativeTeamEditorEnabled && workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked && online && !syncing && snapshot.pending.isEmpty }
     var teamTaskMovesAvailable: Bool { nativeTeamEditorEnabled && workspaceCacheReadable && signedIn && !localMode && !signingOut && !accountRemovalBlocked }
     func teamTaskMoveContextCurrent(account: String, origin: String, workspace: WorkspaceBinding, session: UUID) -> Bool {

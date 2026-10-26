@@ -172,9 +172,12 @@ struct TeamWorkflowRunView: View {
                     Toggle("Schedule from a start date", isOn: $dated)
                     if dated { DatePicker("Start date", selection: $date, displayedComponents: .date).accessibilityIdentifier("sharedWorkflowStart") }
                     Text(dated ? "Planned days and deadlines keep their spacing from this date. Undated tasks stay undated." : "New tasks start without planned days or deadlines.").font(.caption).foregroundStyle(.secondary)
-                    Button("Review workflow") { Task { await prepare() } }.buttonStyle(.borderedProminent).disabled(disabled || nameIssue != nil || (definition.kind != .project && project.isEmpty)).accessibilityIdentifier("reviewSharedWorkflow")
+                    Button("Review workflow") { Task { await prepare() } }.buttonStyle(.borderedProminent).disabled(disabled || nameIssue != nil || (definition.kind != .project && project.isEmpty) || (definition.requiresHeadingSupport && !store.teamWorkflowHeadingClientEnabled)).accessibilityIdentifier("reviewSharedWorkflow")
                 }
             }.disabled(disabled)
+            if definition.requiresHeadingSupport && !store.teamWorkflowHeadingClientEnabled {
+                Section { Text(TeamWorkflowRunPlan.headingClientUnavailableMessage).foregroundStyle(.secondary).accessibilityIdentifier("sharedWorkflowHeadingUnavailable") }
+            }
             Section("Template contents") { TemplateDefinitionPreview(document: definition.document, scope: "shared-run-source") }
         } else {
             ContentUnavailableView("Update Taskfold to use this template", systemImage: "square.stack.3d.up", description: Text("The latest definition uses a format this app cannot safely create. Its contents are preserved."))
@@ -252,9 +255,9 @@ struct TeamWorkflowRunView: View {
     }
     @MainActor private func headingSupport(for source: TeamWorkflowRunPlan.Source) async throws -> Bool {
         guard try WorkflowTemplate(document: source.document).requiresHeadingSupport else { return false }
-        guard Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true else { throw TeamWorkflowRunCommand.invalid }
+        guard store.teamWorkflowHeadingClientEnabled else { throw AppFailure(message: TeamWorkflowRunPlan.headingClientUnavailableMessage) }
         let boundary = try await store.backend.workspaceBoundary(account: store.userID)
-        guard boundary.raw["task_types_protocol"] == .number(1), boundary.raw["task_type_lifecycle_protocol"] == .number(1) else { throw TeamWorkflowRunCommand.invalid }
+        guard boundary.raw["task_types_protocol"] == .number(1), boundary.raw["task_type_lifecycle_protocol"] == .number(1) else { throw AppFailure(message: TeamWorkflowRunPlan.headingWorkspaceUnavailableMessage) }
         return true
     }
     @MainActor private func prepare() async {
@@ -269,7 +272,14 @@ struct TeamWorkflowRunView: View {
             guard visible, store.teamWorkflowCreationAvailable else { throw CancellationError() }
             let command = try TeamWorkflowRunCommand(plan: plan, baseOrders: orders)
             prepared = TeamWorkflowPrepared(plan: plan, command: command); accepted = false; sourceReadable = true
-        } catch { if visible { message = "This workflow couldn’t be prepared. Review the source and destination, then try again."; statusFocused = true } }
+        } catch {
+            if visible {
+                let reason = (error as? AppFailure)?.message
+                if let reason, [TeamWorkflowRunPlan.headingClientUnavailableMessage, TeamWorkflowRunPlan.headingWorkspaceUnavailableMessage].contains(reason) { message = reason }
+                else { message = "This workflow couldn’t be prepared. Review the source and destination, then try again." }
+                statusFocused = true
+            }
+        }
     }
     @MainActor private func create(_ value: TeamWorkflowPrepared) async {
         guard visible, accepted, !disabled, prepared?.id == value.id, let model = commands else { return }

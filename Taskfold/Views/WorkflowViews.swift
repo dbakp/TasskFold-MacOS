@@ -586,7 +586,16 @@ struct TemplateRunView: View {
         WorkflowShell(title: "Use template") {
             Form {
                 Text(template.name).font(.title2.bold())
-                if store.teamWorkflowCreationAvailable, (try? WorkflowTemplate(document: template["document"]))?.requiresHeadingSupport == false { Section { Button("Use in shared workspace…", systemImage: "person.3") { sharedWorkflow = .init(source: .personal(template)) }.accessibilityIdentifier("runPrivateTemplateShared") } }
+                if store.teamWorkflowCreationAvailable, let definition = try? WorkflowTemplate(document: template["document"]) {
+                    Section {
+                        Button("Use in shared workspace…", systemImage: "person.3") { sharedWorkflow = .init(source: .personal(template)) }
+                            .accessibilityIdentifier("runPrivateTemplateShared")
+                            .disabled(definition.requiresHeadingSupport && !store.teamWorkflowHeadingClientEnabled)
+                        if definition.requiresHeadingSupport && !store.teamWorkflowHeadingClientEnabled {
+                            Text(TeamWorkflowRunPlan.headingClientUnavailableMessage).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("privateWorkflowHeadingUnavailable")
+                        }
+                    }
+                }
 
                 Button("Edit template",systemImage:"pencil") { editingDefinition=true }.accessibilityIdentifier("editTemplateDefinition").disabled(pending != nil)
                 if let definition = try? WorkflowTemplate(document: template["document"]) {
@@ -606,7 +615,7 @@ struct TemplateRunView: View {
                             if definition.tasks.count > 25 { Text("And \(definition.tasks.count - 25) more tasks").foregroundStyle(.secondary) }
                         }
                         if definition.requiresHeadingSupport && !store.taskHeadingsAuthoringEnabled {
-                            Text("Heading workflows are not available in this workspace yet. You can keep or export this template.").font(.caption).foregroundStyle(.secondary)
+                            Text("Creating a private workflow with headings isn’t available in this workspace yet. You can keep or export this template.").font(.caption).foregroundStyle(.secondary)
                         }
                         Button { apply(definition) } label: { Text("Create workflow").frame(maxWidth:.infinity,minHeight:44) }
                             .buttonStyle(.borderedProminent).accessibilityIdentifier("applyWorkflowTemplate").disabled(definition.requiresHeadingSupport && !store.taskHeadingsAuthoringEnabled)

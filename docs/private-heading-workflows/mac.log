@@ -1,0 +1,579 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-private-headings-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testPrivateHeadingWorkflowLostReplyColdRetryPreservesTypes" "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testPrivateHeadingReviewBackPreservesSourceAfterRelaunch" "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testPrivateHeadingMissingWorkspaceSupportExplainsAndCreatesNothing" "-only-testing:TaskfoldUITests/TeamWorkflowMacUITests/testPrivateTemplateCreatesInSharedProject" -resultBundlePath /tmp/taskfold-private-headings-mac.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-private-headings-mac.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 18:26:23.033256+0100 TaskfoldUITests-Runner[16944:23179889] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 18:26:23.126.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 18:26:23.126.
+Test Suite 'TeamWorkflowMacUITests' started at 2026-10-26 18:26:23.126.
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testPrivateHeadingMissingWorkspaceSupportExplainsAndCreatesNothing]' started.
+    t =     0.00s Start Test at 2026-10-26 18:26:23.127
+    t =     3.65s Set Up
+    t =     3.68s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.68s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:26:27.088 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:26:27.089 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.71s         Wait for accessibility to load
+    t =     6.00s         Setting up automation session
+    t =     6.03s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.04s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     6.04s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     6.04s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.05s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     7.09s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     7.09s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     7.33s Click "openPrivateWorkflowRunFixture" Button
+    t =     7.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.35s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     7.39s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     7.40s     Synthesize event
+    t =     8.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.23s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =     9.27s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =     9.27s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =     9.38s Click "runPrivateTemplateShared" Button
+    t =     9.38s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.38s     Find the "runPrivateTemplateShared" Button
+    t =     9.44s     Check for interrupting elements affecting "runPrivateTemplateShared" Button
+    t =     9.45s     Synthesize event
+    t =    10.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.38s Waiting 12.0s for "sharedWorkflowTeam" PopUpButton to exist
+    t =    11.44s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" PopUpButton`
+    t =    11.44s         Checking existence of `"sharedWorkflowTeam" PopUpButton`
+    t =    11.55s Click "sharedWorkflowTeam" PopUpButton
+    t =    11.55s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.56s     Find the "sharedWorkflowTeam" PopUpButton
+    t =    11.63s     Check for interrupting elements affecting "sharedWorkflowTeam" PopUpButton
+    t =    11.68s     Synthesize event
+    t =    12.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.21s Waiting 5.0s for "Widget Studio" MenuItem to exist
+    t =    13.25s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" MenuItem`
+    t =    13.26s         Checking existence of `"Widget Studio" MenuItem`
+    t =    13.37s Click "Widget Studio" MenuItem
+    t =    13.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.37s     Find the "Widget Studio" MenuItem
+    t =    13.47s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    13.47s     Synthesize event
+    t =    13.49s         Checking existence of `"menuAction:" MenuItem`
+    t =    13.56s         Hover menu item 'Widget Studio'
+    t =    13.56s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.57s             Find the "menuAction:" MenuItem
+    t =    13.63s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    13.63s             Synthesize event
+    t =    13.86s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.87s         Find the "menuAction:" MenuItem
+    t =    14.86s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.87s Waiting 12.0s for "sharedWorkflowProject" PopUpButton to exist
+    t =    15.93s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" PopUpButton`
+    t =    15.94s         Checking existence of `"sharedWorkflowProject" PopUpButton`
+    t =    16.06s Click "sharedWorkflowProject" PopUpButton
+    t =    16.06s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.06s     Find the "sharedWorkflowProject" PopUpButton
+    t =    16.15s     Check for interrupting elements affecting "sharedWorkflowProject" PopUpButton
+    t =    16.17s     Synthesize event
+    t =    16.67s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.68s Waiting 5.0s for "Design board" MenuItem to exist
+    t =    17.72s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" MenuItem`
+    t =    17.72s         Checking existence of `"Design board" MenuItem`
+    t =    17.84s Click "Design board" MenuItem
+    t =    17.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.85s     Find the "Design board" MenuItem
+    t =    17.95s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    17.96s     Synthesize event
+    t =    17.96s         Checking existence of `"menuAction:" MenuItem`
+    t =    18.02s         Hover menu item 'Design board'
+    t =    18.03s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.03s             Find the "menuAction:" MenuItem
+    t =    18.10s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    18.10s             Synthesize event
+    t =    18.34s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.36s         Find the "menuAction:" MenuItem
+    t =    19.31s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.32s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    19.40s Find the "reviewSharedWorkflow" Button
+    t =    19.50s Click "reviewSharedWorkflow" Button
+    t =    19.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.50s     Find the "reviewSharedWorkflow" Button
+    t =    19.58s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    19.60s     Synthesize event
+    t =    20.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.13s Waiting 12.0s for "sharedWorkflowMessage" StaticText to exist
+    t =    21.17s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowMessage" StaticText`
+    t =    21.17s         Checking existence of `"sharedWorkflowMessage" StaticText`
+    t =    21.25s Find the "sharedWorkflowMessage" StaticText
+    t =    21.32s Checking existence of `"createSharedWorkflow" Button`
+    t =    21.40s Checking existence of `Window (First Match)`
+    t =    21.40s Find the Window (First Match)
+2026-10-26 18:26:44.536083+0100 TaskfoldUITests-Runner[16944:23179889] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    21.48s Added attachment named 'mac-private-heading-workspace-unavailable'
+    t =    21.48s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:16965
+    t =    22.52s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testPrivateHeadingMissingWorkspaceSupportExplainsAndCreatesNothing]' passed (24.499 seconds).
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testPrivateHeadingReviewBackPreservesSourceAfterRelaunch]' started.
+    t =     0.00s Start Test at 2026-10-26 18:26:47.626
+    t =     0.29s Set Up
+    t =     0.29s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.29s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:26:47.921 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:26:47.921 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.10s         Wait for accessibility to load
+    t =     1.48s         Setting up automation session
+    t =     1.51s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.52s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.52s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.52s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.52s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     2.59s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     2.59s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     2.74s Click "openPrivateWorkflowRunFixture" Button
+    t =     2.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.78s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     2.82s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     2.85s     Synthesize event
+    t =     3.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.57s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =     4.66s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =     4.67s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =     4.78s Click "runPrivateTemplateShared" Button
+    t =     4.78s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.79s     Find the "runPrivateTemplateShared" Button
+    t =     4.87s     Check for interrupting elements affecting "runPrivateTemplateShared" Button
+    t =     4.90s     Synthesize event
+    t =     5.49s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.81s Waiting 12.0s for "sharedWorkflowTeam" PopUpButton to exist
+    t =     6.89s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" PopUpButton`
+    t =     6.90s         Checking existence of `"sharedWorkflowTeam" PopUpButton`
+    t =     7.05s Click "sharedWorkflowTeam" PopUpButton
+    t =     7.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.06s     Find the "sharedWorkflowTeam" PopUpButton
+    t =     7.15s     Check for interrupting elements affecting "sharedWorkflowTeam" PopUpButton
+    t =     7.18s     Synthesize event
+    t =     7.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.73s Waiting 5.0s for "Widget Studio" MenuItem to exist
+    t =     8.83s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" MenuItem`
+    t =     8.84s         Checking existence of `"Widget Studio" MenuItem`
+    t =     9.02s Click "Widget Studio" MenuItem
+    t =     9.02s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.02s     Find the "Widget Studio" MenuItem
+    t =     9.16s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     9.16s     Synthesize event
+    t =     9.16s         Checking existence of `"menuAction:" MenuItem`
+    t =     9.24s         Hover menu item 'Widget Studio'
+    t =     9.24s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.24s             Find the "menuAction:" MenuItem
+    t =     9.32s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     9.32s             Synthesize event
+    t =     9.54s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.55s         Find the "menuAction:" MenuItem
+    t =    10.53s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.53s Waiting 12.0s for "sharedWorkflowProject" PopUpButton to exist
+    t =    11.59s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" PopUpButton`
+    t =    11.59s         Checking existence of `"sharedWorkflowProject" PopUpButton`
+    t =    11.72s Click "sharedWorkflowProject" PopUpButton
+    t =    11.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.73s     Find the "sharedWorkflowProject" PopUpButton
+    t =    11.82s     Check for interrupting elements affecting "sharedWorkflowProject" PopUpButton
+    t =    11.86s     Synthesize event
+    t =    12.46s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.46s Waiting 5.0s for "Design board" MenuItem to exist
+    t =    13.53s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" MenuItem`
+    t =    13.55s         Checking existence of `"Design board" MenuItem`
+    t =    13.75s Click "Design board" MenuItem
+    t =    13.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.76s     Find the "Design board" MenuItem
+    t =    13.89s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    13.89s     Synthesize event
+    t =    13.90s         Checking existence of `"menuAction:" MenuItem`
+    t =    13.97s         Hover menu item 'Design board'
+    t =    13.97s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.97s             Find the "menuAction:" MenuItem
+    t =    14.04s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    14.06s             Synthesize event
+    t =    14.28s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.32s         Find the "menuAction:" MenuItem
+    t =    15.30s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.31s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    15.40s Find the "reviewSharedWorkflow" Button
+    t =    15.54s Click "reviewSharedWorkflow" Button
+    t =    15.54s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.54s     Find the "reviewSharedWorkflow" Button
+    t =    15.63s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    15.65s     Synthesize event
+    t =    16.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.14s Checking existence of `"createSharedWorkflow" Button`
+    t =    16.21s Checking existence of `"sharedWorkflowForm" ScrollView`
+    t =    16.23s Scroll "sharedWorkflowForm" ScrollView by dx: 0.00, dy: -250.00
+    t =    16.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.28s     Find the "sharedWorkflowForm" ScrollView
+    t =    16.31s     Check for interrupting elements affecting "sharedWorkflowForm" ScrollView
+    t =    16.34s     Synthesize event
+    t =    16.64s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.64s Checking existence of `"createSharedWorkflow" Button`
+    t =    16.73s Find the "createSharedWorkflow" Button
+    t =    16.95s Checking existence of `"createSharedWorkflow" Button`
+    t =    17.03s Find the "createSharedWorkflow" Button
+    t =    17.12s Checking existence of `"backSharedWorkflow" Button`
+    t =    17.22s Find the "backSharedWorkflow" Button
+    t =    17.33s Click "backSharedWorkflow" Button
+    t =    17.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.34s     Find the "backSharedWorkflow" Button
+    t =    17.47s     Check for interrupting elements affecting "backSharedWorkflow" Button
+    t =    17.48s     Synthesize event
+    t =    18.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.10s Waiting 8.0s for "reviewSharedWorkflow" Button to exist
+    t =    19.13s     Checking `Expect predicate `existsNoRetry == 1` for object "reviewSharedWorkflow" Button`
+    t =    19.14s         Checking existence of `"reviewSharedWorkflow" Button`
+    t =    19.23s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:17016
+    t =    20.31s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    20.31s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:27:07.937 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:27:07.937 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    20.97s         Wait for accessibility to load
+    t =    21.26s         Setting up automation session
+    t =    21.28s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.31s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    21.31s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    21.32s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.33s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    22.36s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    22.36s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    22.55s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:17072
+    t =    23.56s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testPrivateHeadingReviewBackPreservesSourceAfterRelaunch]' passed (24.283 seconds).
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testPrivateHeadingWorkflowLostReplyColdRetryPreservesTypes]' started.
+    t =     0.00s Start Test at 2026-10-26 18:27:11.910
+    t =     0.17s Set Up
+    t =     0.18s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.18s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:27:12.087 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:27:12.087 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.75s         Wait for accessibility to load
+    t =     0.95s         Setting up automation session
+    t =     0.97s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.98s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.98s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.99s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.99s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     2.03s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     2.03s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     2.16s Click "openPrivateWorkflowRunFixture" Button
+    t =     2.16s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.18s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     2.22s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     2.24s     Synthesize event
+    t =     2.91s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.91s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =     3.95s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =     3.96s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =     4.06s Click "runPrivateTemplateShared" Button
+    t =     4.06s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.07s     Find the "runPrivateTemplateShared" Button
+    t =     4.14s     Check for interrupting elements affecting "runPrivateTemplateShared" Button
+    t =     4.15s     Synthesize event
+    t =     4.70s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.99s Waiting 12.0s for "sharedWorkflowTeam" PopUpButton to exist
+    t =     6.04s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" PopUpButton`
+    t =     6.04s         Checking existence of `"sharedWorkflowTeam" PopUpButton`
+    t =     6.15s Click "sharedWorkflowTeam" PopUpButton
+    t =     6.15s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.16s     Find the "sharedWorkflowTeam" PopUpButton
+    t =     6.25s     Check for interrupting elements affecting "sharedWorkflowTeam" PopUpButton
+    t =     6.28s     Synthesize event
+    t =     6.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.81s Waiting 5.0s for "Widget Studio" MenuItem to exist
+    t =     7.84s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" MenuItem`
+    t =     7.84s         Checking existence of `"Widget Studio" MenuItem`
+    t =     7.96s Click "Widget Studio" MenuItem
+    t =     7.97s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.98s     Find the "Widget Studio" MenuItem
+    t =     8.08s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     8.09s     Synthesize event
+    t =     8.10s         Checking existence of `"menuAction:" MenuItem`
+    t =     8.18s         Hover menu item 'Widget Studio'
+    t =     8.18s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.18s             Find the "menuAction:" MenuItem
+    t =     8.25s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     8.25s             Synthesize event
+    t =     8.48s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.50s         Find the "menuAction:" MenuItem
+    t =     9.47s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.48s Waiting 12.0s for "sharedWorkflowProject" PopUpButton to exist
+    t =    10.52s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" PopUpButton`
+    t =    10.52s         Checking existence of `"sharedWorkflowProject" PopUpButton`
+    t =    10.60s Click "sharedWorkflowProject" PopUpButton
+    t =    10.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.61s     Find the "sharedWorkflowProject" PopUpButton
+    t =    10.68s     Check for interrupting elements affecting "sharedWorkflowProject" PopUpButton
+    t =    10.71s     Synthesize event
+    t =    11.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.22s Waiting 5.0s for "Design board" MenuItem to exist
+    t =    12.25s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" MenuItem`
+    t =    12.25s         Checking existence of `"Design board" MenuItem`
+    t =    12.36s Click "Design board" MenuItem
+    t =    12.36s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.37s     Find the "Design board" MenuItem
+    t =    12.48s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    12.48s     Synthesize event
+    t =    12.49s         Checking existence of `"menuAction:" MenuItem`
+    t =    12.55s         Hover menu item 'Design board'
+    t =    12.55s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.56s             Find the "menuAction:" MenuItem
+    t =    12.63s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    12.63s             Synthesize event
+    t =    12.86s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.88s         Find the "menuAction:" MenuItem
+    t =    13.86s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.86s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    13.95s Find the "reviewSharedWorkflow" Button
+    t =    14.05s Click "reviewSharedWorkflow" Button
+    t =    14.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.06s     Find the "reviewSharedWorkflow" Button
+    t =    14.13s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    14.15s     Synthesize event
+    t =    14.65s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.66s Checking existence of `"createSharedWorkflow" Button`
+    t =    14.72s Checking existence of `"sharedWorkflowForm" ScrollView`
+    t =    14.74s Scroll "sharedWorkflowForm" ScrollView by dx: 0.00, dy: -250.00
+    t =    14.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.75s     Find the "sharedWorkflowForm" ScrollView
+    t =    14.80s     Check for interrupting elements affecting "sharedWorkflowForm" ScrollView
+    t =    14.82s     Synthesize event
+    t =    15.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.14s Checking existence of `"createSharedWorkflow" Button`
+    t =    15.23s Find the "createSharedWorkflow" Button
+    t =    15.32s Checking existence of `"createSharedWorkflow" Button`
+    t =    15.40s Find the "createSharedWorkflow" Button
+    t =    15.48s Checking existence of `Window (First Match)`
+    t =    15.48s Find the Window (First Match)
+2026-10-26 18:27:27.403634+0100 TaskfoldUITests-Runner[16944:23179889] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    15.56s Added attachment named 'mac-private-heading-workflow-review'
+    t =    15.56s Checking existence of `"acknowledgeSharedWorkflow" Switch`
+    t =    15.63s Find the "acknowledgeSharedWorkflow" Switch
+    t =    15.70s Click "acknowledgeSharedWorkflow" Switch
+    t =    15.70s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.70s     Find the "acknowledgeSharedWorkflow" Switch
+    t =    15.78s     Check for interrupting elements affecting "acknowledgeSharedWorkflow" Switch
+    t =    15.80s     Synthesize event
+    t =    16.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.35s Checking existence of `"createSharedWorkflow" Button`
+    t =    16.43s Find the "createSharedWorkflow" Button
+    t =    16.55s Find the "createSharedWorkflow" Button
+    t =    16.64s Click "createSharedWorkflow" Button
+    t =    16.64s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.66s     Find the "createSharedWorkflow" Button
+    t =    16.74s     Check for interrupting elements affecting "createSharedWorkflow" Button
+    t =    16.79s     Synthesize event
+    t =    17.30s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.32s Waiting 12.0s for "sharedWorkflowRecoveryMessage" StaticText to exist
+    t =    18.34s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowRecoveryMessage" StaticText`
+    t =    18.34s         Checking existence of `"sharedWorkflowRecoveryMessage" StaticText`
+    t =    18.43s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:17089
+    t =    19.46s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    19.46s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:27:31.375 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:27:31.375 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    20.11s         Wait for accessibility to load
+    t =    20.33s         Setting up automation session
+    t =    20.35s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.37s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    20.37s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    20.38s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.39s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    21.42s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    21.42s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    21.59s Click "openWorkflowRecoveryFixture" Button
+    t =    21.59s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.61s     Find the "openWorkflowRecoveryFixture" Button
+    t =    21.64s     Check for interrupting elements affecting "openWorkflowRecoveryFixture" Button
+    t =    21.67s     Synthesize event
+    t =    22.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.25s Waiting 10.0s for "savedTeamWorkflowRequest" Button to exist
+    t =    23.27s     Checking `Expect predicate `existsNoRetry == 1` for object "savedTeamWorkflowRequest" Button`
+    t =    23.27s         Checking existence of `"savedTeamWorkflowRequest" Button`
+    t =    23.34s Click "savedTeamWorkflowRequest" Button
+    t =    23.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.34s     Find the "savedTeamWorkflowRequest" Button
+    t =    23.39s     Check for interrupting elements affecting "savedTeamWorkflowRequest" Button
+    t =    23.41s     Synthesize event
+    t =    23.98s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.29s Waiting 8.0s for "retrySharedWorkflow" Button to exist
+    t =    25.31s     Checking `Expect predicate `existsNoRetry == 1` for object "retrySharedWorkflow" Button`
+    t =    25.31s         Checking existence of `"retrySharedWorkflow" Button`
+    t =    25.41s Click "retrySharedWorkflow" Button
+    t =    25.41s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.42s     Find the "retrySharedWorkflow" Button
+    t =    25.48s     Check for interrupting elements affecting "retrySharedWorkflow" Button
+    t =    25.50s     Synthesize event
+    t =    26.07s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    26.35s Waiting 5.0s for "confirmSharedWorkflowRetry" Button to exist
+    t =    27.45s     Checking `Expect predicate `existsNoRetry == 1` for object "confirmSharedWorkflowRetry" Button`
+    t =    27.45s         Checking existence of `"confirmSharedWorkflowRetry" Button`
+    t =    27.48s Click "confirmSharedWorkflowRetry" Button
+    t =    27.48s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.49s     Find the "confirmSharedWorkflowRetry" Button
+    t =    27.51s     Check for interrupting elements affecting "confirmSharedWorkflowRetry" Button
+    t =    27.53s     Synthesize event
+    t =    28.31s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.33s Waiting 12.0s for "sharedWorkflowSuccess" StaticText to exist
+    t =    29.36s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowSuccess" StaticText`
+    t =    29.36s         Checking existence of `"sharedWorkflowSuccess" StaticText`
+    t =    29.44s Checking existence of `Window (First Match)`
+    t =    29.45s Find the Window (First Match)
+2026-10-26 18:27:41.368102+0100 TaskfoldUITests-Runner[16944:23179889] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    29.52s Added attachment named 'mac-private-heading-workflow-original-confirmed'
+    t =    29.52s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:17128
+    t =    30.60s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testPrivateHeadingWorkflowLostReplyColdRetryPreservesTypes]' passed (30.942 seconds).
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testPrivateTemplateCreatesInSharedProject]' started.
+    t =     0.00s Start Test at 2026-10-26 18:27:42.853
+    t =     0.11s Set Up
+    t =     0.12s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.12s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 18:27:42.978 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:27:42.978 xcodebuild[16927:23179488] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.67s         Wait for accessibility to load
+    t =     0.89s         Setting up automation session
+    t =     0.91s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.92s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.92s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.93s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.95s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     1.97s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     1.97s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     2.11s Click "openPrivateWorkflowRunFixture" Button
+    t =     2.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.12s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     2.16s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     2.19s     Synthesize event
+    t =     2.96s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.97s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =     3.99s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =     3.99s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =     4.10s Click "runPrivateTemplateShared" Button
+    t =     4.10s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.11s     Find the "runPrivateTemplateShared" Button
+    t =     4.16s     Check for interrupting elements affecting "runPrivateTemplateShared" Button
+    t =     4.17s     Synthesize event
+    t =     4.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.03s Waiting 12.0s for "sharedWorkflowTeam" PopUpButton to exist
+    t =     6.05s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" PopUpButton`
+    t =     6.05s         Checking existence of `"sharedWorkflowTeam" PopUpButton`
+    t =     6.18s Click "sharedWorkflowTeam" PopUpButton
+    t =     6.18s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.19s     Find the "sharedWorkflowTeam" PopUpButton
+    t =     6.26s     Check for interrupting elements affecting "sharedWorkflowTeam" PopUpButton
+    t =     6.30s     Synthesize event
+    t =     6.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.82s Waiting 5.0s for "Widget Studio" MenuItem to exist
+    t =     7.84s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" MenuItem`
+    t =     7.84s         Checking existence of `"Widget Studio" MenuItem`
+    t =     7.94s Click "Widget Studio" MenuItem
+    t =     7.94s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.95s     Find the "Widget Studio" MenuItem
+    t =     8.03s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     8.04s     Synthesize event
+    t =     8.05s         Checking existence of `"menuAction:" MenuItem`
+    t =     8.11s         Hover menu item 'Widget Studio'
+    t =     8.11s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.12s             Find the "menuAction:" MenuItem
+    t =     8.18s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     8.18s             Synthesize event
+    t =     8.41s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.43s         Find the "menuAction:" MenuItem
+    t =     9.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.37s Waiting 12.0s for "sharedWorkflowProject" PopUpButton to exist
+    t =    10.39s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" PopUpButton`
+    t =    10.40s         Checking existence of `"sharedWorkflowProject" PopUpButton`
+    t =    10.49s Click "sharedWorkflowProject" PopUpButton
+    t =    10.49s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.50s     Find the "sharedWorkflowProject" PopUpButton
+    t =    10.56s     Check for interrupting elements affecting "sharedWorkflowProject" PopUpButton
+    t =    10.61s     Synthesize event
+    t =    11.13s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.17s Waiting 5.0s for "Design board" MenuItem to exist
+    t =    12.19s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" MenuItem`
+    t =    12.19s         Checking existence of `"Design board" MenuItem`
+    t =    12.30s Click "Design board" MenuItem
+    t =    12.30s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.31s     Find the "Design board" MenuItem
+    t =    12.42s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    12.42s     Synthesize event
+    t =    12.42s         Checking existence of `"menuAction:" MenuItem`
+    t =    12.48s         Hover menu item 'Design board'
+    t =    12.48s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.49s             Find the "menuAction:" MenuItem
+    t =    12.56s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    12.56s             Synthesize event
+    t =    12.80s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.81s         Find the "menuAction:" MenuItem
+    t =    13.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.81s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    13.89s Find the "reviewSharedWorkflow" Button
+    t =    13.98s Click "reviewSharedWorkflow" Button
+    t =    13.98s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.98s     Find the "reviewSharedWorkflow" Button
+    t =    14.06s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    14.07s     Synthesize event
+    t =    14.59s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.60s Checking existence of `"createSharedWorkflow" Button`
+    t =    14.67s Checking existence of `"sharedWorkflowForm" ScrollView`
+    t =    14.73s Scroll "sharedWorkflowForm" ScrollView by dx: 0.00, dy: -250.00
+    t =    14.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.74s     Find the "sharedWorkflowForm" ScrollView
+    t =    14.76s     Check for interrupting elements affecting "sharedWorkflowForm" ScrollView
+    t =    14.79s     Synthesize event
+    t =    15.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.11s Checking existence of `"createSharedWorkflow" Button`
+    t =    15.20s Find the "createSharedWorkflow" Button
+    t =    15.44s Checking existence of `"createSharedWorkflow" Button`
+    t =    15.52s Find the "createSharedWorkflow" Button
+    t =    15.61s Checking existence of `"acknowledgeSharedWorkflow" Switch`
+    t =    15.68s Find the "acknowledgeSharedWorkflow" Switch
+    t =    15.76s Click "acknowledgeSharedWorkflow" Switch
+    t =    15.76s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.76s     Find the "acknowledgeSharedWorkflow" Switch
+    t =    15.83s     Check for interrupting elements affecting "acknowledgeSharedWorkflow" Switch
+    t =    15.86s     Synthesize event
+    t =    16.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.42s Checking existence of `"createSharedWorkflow" Button`
+    t =    16.50s Find the "createSharedWorkflow" Button
+    t =    16.60s Find the "createSharedWorkflow" Button
+    t =    16.67s Click "createSharedWorkflow" Button
+    t =    16.67s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.68s     Find the "createSharedWorkflow" Button
+    t =    16.77s     Check for interrupting elements affecting "createSharedWorkflow" Button
+    t =    16.81s     Synthesize event
+    t =    17.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.35s Waiting 12.0s for "sharedWorkflowSuccess" StaticText to exist
+    t =    18.38s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowSuccess" StaticText`
+    t =    18.38s         Checking existence of `"sharedWorkflowSuccess" StaticText`
+    t =    18.46s Checking existence of `Window (First Match)`
+    t =    18.47s Find the Window (First Match)
+2026-10-26 18:28:01.327325+0100 TaskfoldUITests-Runner[16944:23179889] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    18.54s Added attachment named 'mac-private-template-shared-workflow'
+    t =    18.54s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:17148
+    t =    19.62s Tear Down
+Test Case '-[TaskfoldUITests.TeamWorkflowMacUITests testPrivateTemplateCreatesInSharedProject]' passed (20.275 seconds).
+Test Suite 'TeamWorkflowMacUITests' passed at 2026-10-26 18:28:03.128.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 99.999 (100.001) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 18:28:03.129.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 99.999 (100.002) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 18:28:03.129.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 99.999 (100.004) seconds
+2026-10-26 18:28:03.420 xcodebuild[16927:23179488] [MT] IDETestOperationsObserverDebug: 101.321 elapsed -- Testing started completed.
+2026-10-26 18:28:03.420 xcodebuild[16927:23179488] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 18:28:03.420 xcodebuild[16927:23179488] [MT] IDETestOperationsObserverDebug: 101.321 sec, +101.321 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-private-headings-mac.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

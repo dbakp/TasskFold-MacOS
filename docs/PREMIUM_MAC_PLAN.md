@@ -7944,3 +7944,32 @@ broader source/access races, accessibility/largest-text, installed widgets and
 cross-device work remain open. Normal rollout and all user-deferred provider,
 notification, safe-upgrade and distribution work remain unchanged. Rank 3 and
 broader Px stay active.
+
+
+### Private heading-template reuse — 26 October 2026
+
+The private template screen still hid shared-workspace reuse for every heading
+definition, despite the completed typed workflow protocol. Both apps now expose
+the reviewed shared route for known v2 definitions when the client supports it.
+Private and team-library entry points explain unavailable client support while
+leaving copy/export available; a fresh workspace capability refusal explains the
+specific problem before sending any creation request. Other preparation errors
+retain the bounded general message. Private creation and shared creation are
+explicitly distinguished in the preview.
+
+Each repo passes 82 focused client checks. Five signed installed scenarios pass
+on each Mac/iPhone/iPad: missing workspace support sends nothing, Back/cold return
+preserves the source, private heading-run lost-reply/cold exact retry, ordinary
+private-template reuse, and actual Info-disabled creation with a verified complete
+typed private copy. The disabled-build checks use real copied app configuration,
+not a fake runtime override. Seven native output images were inspected. Initial
+Mac text-selector and phone lazy-list scrolling failures were test-harness issues;
+final runs pass. Source definitions and existing tasks stay intact.
+
+See PRIVATE_HEADING_WORKFLOWS.md and private-heading-workflows/. These native
+checks use the synthetic HTTP peer; the preceding real SQL evidence is unchanged.
+No hosted or normal client rollout setting changed. Rank 3 and broader Px remain
+active. Remaining adapters include the separate local-only heading admission in
+mapped-CSV definition authoring/private live creation, plus broader native delivery,
+source/access races, accessibility and cross-device acceptance. User-deferred
+provider, notification, upgrade and distribution work remains deferred.

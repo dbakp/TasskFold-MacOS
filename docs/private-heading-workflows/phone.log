@@ -1,0 +1,573 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-private-headings-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testPrivateHeadingWorkflowLostReplyColdRetryPreservesTypes" "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testPrivateHeadingReviewBackPreservesSourceAfterRelaunch" "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testPrivateHeadingMissingWorkspaceSupportExplainsAndCreatesNothing" "-only-testing:TaskfoldUITests/TeamTemplateLibraryUITests/testPrivateTemplateRunsIntoSharedProject" -resultBundlePath /tmp/taskfold-private-headings-phone.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-private-headings-phone.xcresult
+
+2026-10-26 18:26:23.664784+0100 TaskfoldUITests-Runner[16931:23179616] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 18:26:30.184.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 18:26:30.186.
+Test Suite 'TeamTemplateLibraryUITests' started at 2026-10-26 18:26:30.186.
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testPrivateHeadingMissingWorkspaceSupportExplainsAndCreatesNothing]' started.
+    t =     0.01s Start Test at 2026-10-26 18:26:30.196
+    t =     0.05s Set Up
+    t =     0.07s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.07s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 18:26:30.342 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:26:30.343 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[16931]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x105a04398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x106a14310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     2.95s         Setting up automation session
+    t =     8.44s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.27s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    12.31s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    12.31s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    12.47s Tap "openPrivateWorkflowRunFixture" Button
+    t =    12.47s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.47s     Find the "openPrivateWorkflowRunFixture" Button
+    t =    12.51s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =    12.56s     Synthesize event
+    t =    12.95s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.41s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =    14.45s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =    14.45s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =    14.55s Tap "runPrivateTemplateShared" Button
+    t =    14.55s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.55s     Find the "runPrivateTemplateShared" Button
+    t =    14.60s     Check for interrupting elements affecting "runPrivateTemplateShared" Button
+    t =    14.67s     Synthesize event
+    t =    14.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.08s Waiting 15.0s for "sharedWorkflowTeam" Button to exist
+    t =    16.12s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" Button`
+    t =    16.13s         Checking existence of `"sharedWorkflowTeam" Button`
+    t =    16.22s Tap "sharedWorkflowTeam" Button
+    t =    16.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.22s     Find the "sharedWorkflowTeam" Button
+    t =    16.28s     Check for interrupting elements affecting "sharedWorkflowTeam" Button
+    t =    16.34s     Synthesize event
+    t =    16.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.87s Waiting 5.0s for "Widget Studio" Button to exist
+    t =    18.95s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" Button`
+    t =    18.96s         Checking existence of `"Widget Studio" Button`
+    t =    19.03s Tap "Widget Studio" Button
+    t =    19.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.03s     Find the "Widget Studio" Button
+    t =    19.08s     Check for interrupting elements affecting "Widget Studio" Button
+    t =    19.15s     Synthesize event
+    t =    19.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.52s Waiting 15.0s for "sharedWorkflowProject" Button to exist
+    t =    21.56s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" Button`
+    t =    21.56s         Checking existence of `"sharedWorkflowProject" Button`
+    t =    21.66s Tap "sharedWorkflowProject" Button
+    t =    21.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.66s     Find the "sharedWorkflowProject" Button
+    t =    21.73s     Check for interrupting elements affecting "sharedWorkflowProject" Button
+    t =    21.80s     Synthesize event
+    t =    22.09s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.19s Waiting 5.0s for "Design board" Button to exist
+    t =    24.24s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" Button`
+    t =    24.25s         Checking existence of `"Design board" Button`
+    t =    24.29s Tap "Design board" Button
+    t =    24.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.30s     Find the "Design board" Button
+    t =    24.34s     Check for interrupting elements affecting "Design board" Button
+    t =    24.42s     Synthesize event
+    t =    24.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.14s Find the "sharedWorkflowForm" CollectionView
+    t =    26.20s Find the "sharedWorkflowForm" CollectionView
+    t =    26.25s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    26.31s Find the "reviewSharedWorkflow" Button
+    t =    26.39s Find the "reviewSharedWorkflow" Button
+    t =    26.46s Find the "reviewSharedWorkflow" Button
+    t =    26.53s Tap "reviewSharedWorkflow" Button
+    t =    26.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.53s     Find the "reviewSharedWorkflow" Button
+    t =    26.60s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    26.66s     Synthesize event
+    t =    26.96s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.96s Waiting 12.0s for "sharedWorkflowMessage" StaticText to exist
+    t =    28.04s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowMessage" StaticText`
+    t =    28.06s         Checking existence of `"sharedWorkflowMessage" StaticText`
+    t =    28.12s Find the "sharedWorkflowMessage" StaticText
+    t =    28.17s Checking existence of `"createSharedWorkflow" Button`
+    t =    28.25s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    28.44s Added attachment named 'private-heading-workspace-unavailable'
+    t =    28.44s Terminate com.dbakp.taskfold.workflowteststeameditbridge:16976
+    t =    29.53s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testPrivateHeadingMissingWorkspaceSupportExplainsAndCreatesNothing]' passed (29.802 seconds).
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testPrivateHeadingReviewBackPreservesSourceAfterRelaunch]' started.
+    t =     0.00s Start Test at 2026-10-26 18:26:59.997
+    t =     0.02s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 18:27:00.024 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:27:00.024 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     4.54s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.50s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     7.53s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     7.53s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     7.66s Tap "openPrivateWorkflowRunFixture" Button
+    t =     7.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.66s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     7.69s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     7.72s     Synthesize event
+    t =     8.06s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.29s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =     9.33s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =     9.33s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =     9.43s Tap "runPrivateTemplateShared" Button
+    t =     9.43s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.44s     Find the "runPrivateTemplateShared" Button
+    t =     9.49s     Check for interrupting elements affecting "runPrivateTemplateShared" Button
+    t =     9.53s     Synthesize event
+    t =     9.83s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.32s Waiting 15.0s for "sharedWorkflowTeam" Button to exist
+    t =    11.35s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" Button`
+    t =    11.35s         Checking existence of `"sharedWorkflowTeam" Button`
+    t =    11.44s Tap "sharedWorkflowTeam" Button
+    t =    11.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.44s     Find the "sharedWorkflowTeam" Button
+    t =    11.51s     Check for interrupting elements affecting "sharedWorkflowTeam" Button
+    t =    11.56s     Synthesize event
+    t =    11.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.98s Waiting 5.0s for "Widget Studio" Button to exist
+    t =    14.01s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" Button`
+    t =    14.01s         Checking existence of `"Widget Studio" Button`
+    t =    14.08s Tap "Widget Studio" Button
+    t =    14.08s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.08s     Find the "Widget Studio" Button
+    t =    14.12s     Check for interrupting elements affecting "Widget Studio" Button
+    t =    14.19s     Synthesize event
+    t =    14.48s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.54s Waiting 15.0s for "sharedWorkflowProject" Button to exist
+    t =    16.58s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" Button`
+    t =    16.58s         Checking existence of `"sharedWorkflowProject" Button`
+    t =    16.66s Tap "sharedWorkflowProject" Button
+    t =    16.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.66s     Find the "sharedWorkflowProject" Button
+    t =    16.73s     Check for interrupting elements affecting "sharedWorkflowProject" Button
+    t =    16.80s     Synthesize event
+    t =    17.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.20s Waiting 5.0s for "Design board" Button to exist
+    t =    19.24s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" Button`
+    t =    19.24s         Checking existence of `"Design board" Button`
+    t =    19.28s Tap "Design board" Button
+    t =    19.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.29s     Find the "Design board" Button
+    t =    19.33s     Check for interrupting elements affecting "Design board" Button
+    t =    19.39s     Synthesize event
+    t =    19.69s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.12s Find the "sharedWorkflowForm" CollectionView
+    t =    21.17s Find the "sharedWorkflowForm" CollectionView
+    t =    21.23s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    21.31s Find the "reviewSharedWorkflow" Button
+    t =    21.39s Find the "reviewSharedWorkflow" Button
+    t =    21.46s Find the "reviewSharedWorkflow" Button
+    t =    21.54s Tap "reviewSharedWorkflow" Button
+    t =    21.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.54s     Find the "reviewSharedWorkflow" Button
+    t =    21.61s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    21.68s     Synthesize event
+    t =    21.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.97s Find the "sharedWorkflowForm" CollectionView
+    t =    22.03s Find the "sharedWorkflowForm" CollectionView
+    t =    22.08s Checking existence of `"createSharedWorkflow" Button`
+    t =    22.15s Checking existence of `"createSharedWorkflow" Button`
+    t =    22.21s Find the "sharedWorkflowForm" CollectionView
+    t =    22.26s Find the "sharedWorkflowForm" CollectionView
+    t =    22.32s Press "sharedWorkflowForm" CollectionView[0.00, 0.00] -> (221.1, 440.0) for 0.1 seconds, then drag to "sharedWorkflowForm" CollectionView[0.00, 0.00] -> (221.1, 440.0) -> (0.0, -252.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    22.32s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.32s     Find the "sharedWorkflowForm" CollectionView
+    t =    22.37s     Check for interrupting elements affecting "sharedWorkflowForm" CollectionView
+    t =    22.43s     Synthesize event
+    t =    22.43s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.49s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.54s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.59s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.64s         Find the "sharedWorkflowForm" CollectionView
+    t =    23.49s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.50s Find the "sharedWorkflowForm" CollectionView
+    t =    23.55s Find the "sharedWorkflowForm" CollectionView
+    t =    23.61s Checking existence of `"createSharedWorkflow" Button`
+    t =    23.68s Find the "createSharedWorkflow" Button
+    t =    23.77s Find the "createSharedWorkflow" Button
+    t =    23.84s Find the "createSharedWorkflow" Button
+    t =    23.92s Waiting 15.0s for "createSharedWorkflow" Button to exist
+    t =    24.96s     Checking `Expect predicate `existsNoRetry == 1` for object "createSharedWorkflow" Button`
+    t =    24.96s         Checking existence of `"createSharedWorkflow" Button`
+    t =    25.04s Find the "createSharedWorkflow" Button
+    t =    25.11s Find the "sharedWorkflowForm" CollectionView
+    t =    25.15s Find the "sharedWorkflowForm" CollectionView
+    t =    25.20s Checking existence of `"backSharedWorkflow" Button`
+    t =    25.27s Find the "backSharedWorkflow" Button
+    t =    25.35s Find the "backSharedWorkflow" Button
+    t =    25.43s Find the "backSharedWorkflow" Button
+    t =    25.50s Tap "backSharedWorkflow" Button
+    t =    25.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.51s     Find the "backSharedWorkflow" Button
+    t =    25.59s     Check for interrupting elements affecting "backSharedWorkflow" Button
+    t =    25.66s     Synthesize event
+    t =    25.96s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.23s Waiting 8.0s for "reviewSharedWorkflow" Button to exist
+    t =    27.25s     Checking `Expect predicate `existsNoRetry == 1` for object "reviewSharedWorkflow" Button`
+    t =    27.25s         Checking existence of `"reviewSharedWorkflow" Button`
+    t =    27.33s Terminate com.dbakp.taskfold.workflowteststeameditbridge:17042
+    t =    28.39s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    28.40s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 18:27:28.397 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:27:28.397 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    28.61s         Setting up automation session
+    t =    32.90s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.74s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    35.76s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    35.76s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    35.91s Terminate com.dbakp.taskfold.workflowteststeameditbridge:17123
+    t =    37.00s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testPrivateHeadingReviewBackPreservesSourceAfterRelaunch]' passed (37.085 seconds).
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testPrivateHeadingWorkflowLostReplyColdRetryPreservesTypes]' started.
+    t =     0.00s Start Test at 2026-10-26 18:27:37.083
+    t =     0.02s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 18:27:37.110 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:27:37.110 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     4.36s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.48s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     7.50s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     7.50s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     7.60s Tap "openPrivateWorkflowRunFixture" Button
+    t =     7.60s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.61s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     7.64s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     7.67s     Synthesize event
+    t =     8.00s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.25s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =     9.29s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =     9.29s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =     9.38s Tap "runPrivateTemplateShared" Button
+    t =     9.38s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.38s     Find the "runPrivateTemplateShared" Button
+    t =     9.43s     Check for interrupting elements affecting "runPrivateTemplateShared" Button
+    t =     9.47s     Synthesize event
+    t =     9.76s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.23s Waiting 15.0s for "sharedWorkflowTeam" Button to exist
+    t =    11.25s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" Button`
+    t =    11.25s         Checking existence of `"sharedWorkflowTeam" Button`
+    t =    11.32s Tap "sharedWorkflowTeam" Button
+    t =    11.32s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.33s     Find the "sharedWorkflowTeam" Button
+    t =    11.39s     Check for interrupting elements affecting "sharedWorkflowTeam" Button
+    t =    11.45s     Synthesize event
+    t =    11.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.88s Waiting 5.0s for "Widget Studio" Button to exist
+    t =    13.92s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" Button`
+    t =    13.92s         Checking existence of `"Widget Studio" Button`
+    t =    13.98s Tap "Widget Studio" Button
+    t =    13.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.98s     Find the "Widget Studio" Button
+    t =    14.03s     Check for interrupting elements affecting "Widget Studio" Button
+    t =    14.12s     Synthesize event
+    t =    14.42s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.85s Waiting 15.0s for "sharedWorkflowProject" Button to exist
+    t =    16.88s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" Button`
+    t =    16.88s         Checking existence of `"sharedWorkflowProject" Button`
+    t =    16.96s Tap "sharedWorkflowProject" Button
+    t =    16.96s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.96s     Find the "sharedWorkflowProject" Button
+    t =    17.03s     Check for interrupting elements affecting "sharedWorkflowProject" Button
+    t =    17.10s     Synthesize event
+    t =    17.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.50s Waiting 5.0s for "Design board" Button to exist
+    t =    19.52s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" Button`
+    t =    19.52s         Checking existence of `"Design board" Button`
+    t =    19.56s Tap "Design board" Button
+    t =    19.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.56s     Find the "Design board" Button
+    t =    19.60s     Check for interrupting elements affecting "Design board" Button
+    t =    19.66s     Synthesize event
+    t =    19.96s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.38s Find the "sharedWorkflowForm" CollectionView
+    t =    21.44s Find the "sharedWorkflowForm" CollectionView
+    t =    21.49s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    21.56s Find the "reviewSharedWorkflow" Button
+    t =    21.64s Find the "reviewSharedWorkflow" Button
+    t =    21.72s Find the "reviewSharedWorkflow" Button
+    t =    21.80s Tap "reviewSharedWorkflow" Button
+    t =    21.80s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.80s     Find the "reviewSharedWorkflow" Button
+    t =    21.87s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    21.94s     Synthesize event
+    t =    22.23s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.24s Find the "sharedWorkflowForm" CollectionView
+    t =    22.29s Find the "sharedWorkflowForm" CollectionView
+    t =    22.34s Checking existence of `"createSharedWorkflow" Button`
+    t =    22.41s Checking existence of `"createSharedWorkflow" Button`
+    t =    22.47s Find the "sharedWorkflowForm" CollectionView
+    t =    22.52s Find the "sharedWorkflowForm" CollectionView
+    t =    22.57s Press "sharedWorkflowForm" CollectionView[0.00, 0.00] -> (221.1, 440.0) for 0.1 seconds, then drag to "sharedWorkflowForm" CollectionView[0.00, 0.00] -> (221.1, 440.0) -> (0.0, -252.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    22.57s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.58s     Find the "sharedWorkflowForm" CollectionView
+    t =    22.63s     Check for interrupting elements affecting "sharedWorkflowForm" CollectionView
+    t =    22.70s     Synthesize event
+    t =    22.70s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.76s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.81s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.86s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.91s         Find the "sharedWorkflowForm" CollectionView
+    t =    23.76s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.77s Find the "sharedWorkflowForm" CollectionView
+    t =    23.83s Find the "sharedWorkflowForm" CollectionView
+    t =    23.88s Checking existence of `"createSharedWorkflow" Button`
+    t =    23.96s Find the "createSharedWorkflow" Button
+    t =    24.04s Find the "createSharedWorkflow" Button
+    t =    24.11s Find the "createSharedWorkflow" Button
+    t =    24.19s Waiting 15.0s for "createSharedWorkflow" Button to exist
+    t =    25.22s     Checking `Expect predicate `existsNoRetry == 1` for object "createSharedWorkflow" Button`
+    t =    25.22s         Checking existence of `"createSharedWorkflow" Button`
+    t =    25.29s Find the "createSharedWorkflow" Button
+    t =    25.36s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    25.52s Added attachment named 'private-heading-workflow-review'
+    t =    25.52s Find the "sharedWorkflowForm" CollectionView
+    t =    25.57s Find the "sharedWorkflowForm" CollectionView
+    t =    25.61s Checking existence of `"acknowledgeSharedWorkflow" Switch`
+    t =    25.67s Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.75s Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.82s Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.89s Tap "acknowledgeSharedWorkflow" Switch[0.94, 0.50]
+    t =    25.89s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.90s     Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.96s     Check for interrupting elements affecting "acknowledgeSharedWorkflow" Switch
+    t =    26.03s     Synthesize event
+    t =    26.04s         Find the "acknowledgeSharedWorkflow" Switch
+    t =    26.11s         Find the "acknowledgeSharedWorkflow" Switch
+    t =    26.18s         Find the "acknowledgeSharedWorkflow" Switch
+    t =    26.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.84s Find the "sharedWorkflowForm" CollectionView
+    t =    27.89s Find the "sharedWorkflowForm" CollectionView
+    t =    27.94s Checking existence of `"createSharedWorkflow" Button`
+    t =    28.00s Find the "createSharedWorkflow" Button
+    t =    28.08s Find the "createSharedWorkflow" Button
+    t =    28.15s Find the "createSharedWorkflow" Button
+    t =    28.22s Find the "createSharedWorkflow" Button
+    t =    28.30s Tap "createSharedWorkflow" Button
+    t =    28.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.31s     Find the "createSharedWorkflow" Button
+    t =    28.38s     Check for interrupting elements affecting "createSharedWorkflow" Button
+    t =    28.44s     Synthesize event
+    t =    28.73s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.74s Waiting 15.0s for "sharedWorkflowRecoveryMessage" StaticText to exist
+    t =    29.77s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowRecoveryMessage" StaticText`
+    t =    29.77s         Checking existence of `"sharedWorkflowRecoveryMessage" StaticText`
+    t =    29.87s Terminate com.dbakp.taskfold.workflowteststeameditbridge:17143
+    t =    30.92s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    30.92s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 18:28:08.003 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:28:08.003 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    31.13s         Setting up automation session
+    t =    34.98s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.74s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =    37.76s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =    37.76s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =    37.87s Tap "openWorkflowRecoveryFixture" Button
+    t =    37.87s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.88s     Find the "openWorkflowRecoveryFixture" Button
+    t =    37.91s     Check for interrupting elements affecting "openWorkflowRecoveryFixture" Button
+    t =    37.94s     Synthesize event
+    t =    38.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.77s Waiting 10.0s for "savedTeamWorkflowRequest" Button to exist
+    t =    39.80s     Checking `Expect predicate `existsNoRetry == 1` for object "savedTeamWorkflowRequest" Button`
+    t =    39.80s         Checking existence of `"savedTeamWorkflowRequest" Button`
+    t =    39.83s Tap "savedTeamWorkflowRequest" Button
+    t =    39.83s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.83s     Find the "savedTeamWorkflowRequest" Button
+    t =    39.85s     Check for interrupting elements affecting "savedTeamWorkflowRequest" Button
+    t =    39.87s     Synthesize event
+    t =    40.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    40.62s Waiting 8.0s for "retrySharedWorkflow" Button to exist
+    t =    41.65s     Checking `Expect predicate `existsNoRetry == 1` for object "retrySharedWorkflow" Button`
+    t =    41.65s         Checking existence of `"retrySharedWorkflow" Button`
+    t =    41.71s Tap "retrySharedWorkflow" Button
+    t =    41.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    41.72s     Find the "retrySharedWorkflow" Button
+    t =    41.75s     Check for interrupting elements affecting "retrySharedWorkflow" Button
+    t =    41.79s     Synthesize event
+    t =    42.08s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.37s Waiting 5.0s for "confirmSharedWorkflowRetry" Button to exist
+    t =    43.40s     Checking `Expect predicate `existsNoRetry == 1` for object "confirmSharedWorkflowRetry" Button`
+    t =    43.40s         Checking existence of `"confirmSharedWorkflowRetry" Button`
+    t =    43.50s Tap "confirmSharedWorkflowRetry" Button
+    t =    43.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.51s     Find the "confirmSharedWorkflowRetry" Button
+    t =    43.59s     Check for interrupting elements affecting "confirmSharedWorkflowRetry" Button
+    t =    43.63s     Synthesize event
+    t =    43.92s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    44.10s Waiting 15.0s for "sharedWorkflowSuccess" StaticText to exist
+    t =    45.11s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowSuccess" StaticText`
+    t =    45.11s         Checking existence of `"sharedWorkflowSuccess" StaticText`
+    t =    45.15s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    45.27s Added attachment named 'private-heading-workflow-original-confirmed'
+    t =    45.27s Terminate com.dbakp.taskfold.workflowteststeameditbridge:17206
+    t =    46.33s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testPrivateHeadingWorkflowLostReplyColdRetryPreservesTypes]' passed (46.543 seconds).
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testPrivateTemplateRunsIntoSharedProject]' started.
+    t =     0.00s Start Test at 2026-10-26 18:28:23.628
+    t =     0.02s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 18:28:23.655 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 18:28:23.655 xcodebuild[16923:23178746] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.34s         Setting up automation session
+    t =     4.04s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.02s Waiting 15.0s for "openTeamTemplateLibraryFixture" Button to exist
+    t =     7.02s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamTemplateLibraryFixture" Button`
+    t =     7.02s         Checking existence of `"openTeamTemplateLibraryFixture" Button`
+    t =     7.11s Tap "openPrivateWorkflowRunFixture" Button
+    t =     7.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.12s     Find the "openPrivateWorkflowRunFixture" Button
+    t =     7.15s     Check for interrupting elements affecting "openPrivateWorkflowRunFixture" Button
+    t =     7.17s     Synthesize event
+    t =     7.51s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.70s Waiting 10.0s for "runPrivateTemplateShared" Button to exist
+    t =     8.72s     Checking `Expect predicate `existsNoRetry == 1` for object "runPrivateTemplateShared" Button`
+    t =     8.73s         Checking existence of `"runPrivateTemplateShared" Button`
+    t =     8.80s Tap "runPrivateTemplateShared" Button
+    t =     8.80s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.80s     Find the "runPrivateTemplateShared" Button
+    t =     8.84s     Check for interrupting elements affecting "runPrivateTemplateShared" Button
+    t =     8.88s     Synthesize event
+    t =     9.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     9.62s Waiting 15.0s for "sharedWorkflowTeam" Button to exist
+    t =    10.64s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowTeam" Button`
+    t =    10.64s         Checking existence of `"sharedWorkflowTeam" Button`
+    t =    10.71s Tap "sharedWorkflowTeam" Button
+    t =    10.71s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.71s     Find the "sharedWorkflowTeam" Button
+    t =    10.77s     Check for interrupting elements affecting "sharedWorkflowTeam" Button
+    t =    10.82s     Synthesize event
+    t =    11.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.24s Waiting 5.0s for "Widget Studio" Button to exist
+    t =    13.26s     Checking `Expect predicate `existsNoRetry == 1` for object "Widget Studio" Button`
+    t =    13.26s         Checking existence of `"Widget Studio" Button`
+    t =    13.30s Tap "Widget Studio" Button
+    t =    13.30s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.31s     Find the "Widget Studio" Button
+    t =    13.34s     Check for interrupting elements affecting "Widget Studio" Button
+    t =    13.39s     Synthesize event
+    t =    13.69s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.11s Waiting 15.0s for "sharedWorkflowProject" Button to exist
+    t =    16.14s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowProject" Button`
+    t =    16.14s         Checking existence of `"sharedWorkflowProject" Button`
+    t =    16.22s Tap "sharedWorkflowProject" Button
+    t =    16.22s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.22s     Find the "sharedWorkflowProject" Button
+    t =    16.29s     Check for interrupting elements affecting "sharedWorkflowProject" Button
+    t =    16.35s     Synthesize event
+    t =    16.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.76s Waiting 5.0s for "Design board" Button to exist
+    t =    18.78s     Checking `Expect predicate `existsNoRetry == 1` for object "Design board" Button`
+    t =    18.79s         Checking existence of `"Design board" Button`
+    t =    18.84s Tap "Design board" Button
+    t =    18.84s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.85s     Find the "Design board" Button
+    t =    18.88s     Check for interrupting elements affecting "Design board" Button
+    t =    18.94s     Synthesize event
+    t =    19.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.65s Find the "sharedWorkflowForm" CollectionView
+    t =    20.71s Find the "sharedWorkflowForm" CollectionView
+    t =    20.76s Checking existence of `"reviewSharedWorkflow" Button`
+    t =    20.82s Find the "reviewSharedWorkflow" Button
+    t =    20.89s Find the "reviewSharedWorkflow" Button
+    t =    20.96s Find the "reviewSharedWorkflow" Button
+    t =    21.03s Tap "reviewSharedWorkflow" Button
+    t =    21.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.03s     Find the "reviewSharedWorkflow" Button
+    t =    21.09s     Check for interrupting elements affecting "reviewSharedWorkflow" Button
+    t =    21.16s     Synthesize event
+    t =    21.46s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.47s Find the "sharedWorkflowForm" CollectionView
+    t =    21.51s Find the "sharedWorkflowForm" CollectionView
+    t =    21.55s Checking existence of `"createSharedWorkflow" Button`
+    t =    21.62s Find the "createSharedWorkflow" Button
+    t =    21.68s Find the "createSharedWorkflow" Button
+    t =    21.75s Find the "createSharedWorkflow" Button
+    t =    21.81s Checking existence of `"createSharedWorkflow" Button`
+    t =    21.86s Find the "createSharedWorkflow" Button
+    t =    21.93s Find the "createSharedWorkflow" Button
+    t =    21.99s Find the "createSharedWorkflow" Button
+    t =    22.05s Find the "sharedWorkflowForm" CollectionView
+    t =    22.09s Find the "sharedWorkflowForm" CollectionView
+    t =    22.13s Press "sharedWorkflowForm" CollectionView[0.00, 0.00] -> (221.1, 440.0) for 0.1 seconds, then drag to "sharedWorkflowForm" CollectionView[0.00, 0.00] -> (221.1, 440.0) -> (0.0, -28.3) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    22.13s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.14s     Find the "sharedWorkflowForm" CollectionView
+    t =    22.17s     Check for interrupting elements affecting "sharedWorkflowForm" CollectionView
+    t =    22.23s     Synthesize event
+    t =    22.23s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.28s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.32s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.36s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.40s         Find the "sharedWorkflowForm" CollectionView
+    t =    22.80s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.54s Find the "sharedWorkflowForm" CollectionView
+    t =    23.58s Find the "sharedWorkflowForm" CollectionView
+    t =    23.63s Checking existence of `"createSharedWorkflow" Button`
+    t =    23.69s Find the "createSharedWorkflow" Button
+    t =    23.76s Find the "createSharedWorkflow" Button
+    t =    23.83s Find the "createSharedWorkflow" Button
+    t =    23.90s Waiting 15.0s for "createSharedWorkflow" Button to exist
+    t =    24.95s     Checking `Expect predicate `existsNoRetry == 1` for object "createSharedWorkflow" Button`
+    t =    24.95s         Checking existence of `"createSharedWorkflow" Button`
+    t =    25.03s Find the "createSharedWorkflow" Button
+    t =    25.09s Find the "sharedWorkflowForm" CollectionView
+    t =    25.13s Find the "sharedWorkflowForm" CollectionView
+    t =    25.18s Checking existence of `"acknowledgeSharedWorkflow" Switch`
+    t =    25.23s Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.30s Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.36s Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.43s Tap "acknowledgeSharedWorkflow" Switch[0.94, 0.50]
+    t =    25.43s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.43s     Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.50s     Check for interrupting elements affecting "acknowledgeSharedWorkflow" Switch
+    t =    25.56s     Synthesize event
+    t =    25.56s         Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.62s         Find the "acknowledgeSharedWorkflow" Switch
+    t =    25.69s         Find the "acknowledgeSharedWorkflow" Switch
+    t =    26.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.34s Find the "sharedWorkflowForm" CollectionView
+    t =    27.41s Find the "sharedWorkflowForm" CollectionView
+    t =    27.45s Checking existence of `"createSharedWorkflow" Button`
+    t =    27.51s Find the "createSharedWorkflow" Button
+    t =    27.58s Find the "createSharedWorkflow" Button
+    t =    27.64s Find the "createSharedWorkflow" Button
+    t =    27.71s Find the "createSharedWorkflow" Button
+    t =    27.77s Tap "createSharedWorkflow" Button
+    t =    27.77s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.78s     Find the "createSharedWorkflow" Button
+    t =    27.84s     Check for interrupting elements affecting "createSharedWorkflow" Button
+    t =    27.90s     Synthesize event
+    t =    28.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.43s Waiting 15.0s for "sharedWorkflowSuccess" StaticText to exist
+    t =    29.45s     Checking `Expect predicate `existsNoRetry == 1` for object "sharedWorkflowSuccess" StaticText`
+    t =    29.45s         Checking existence of `"sharedWorkflowSuccess" StaticText`
+    t =    29.51s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    29.64s Added attachment named 'private-template-shared-workflow'
+    t =    29.64s Terminate com.dbakp.taskfold.workflowteststeameditbridge:17231
+    t =    30.71s Tear Down
+Test Case '-[TaskfoldUITests.TeamTemplateLibraryUITests testPrivateTemplateRunsIntoSharedProject]' passed (30.778 seconds).
+Test Suite 'TeamTemplateLibraryUITests' passed at 2026-10-26 18:28:54.405.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 144.209 (144.219) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 18:28:54.411.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 144.209 (144.224) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 18:28:54.411.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 144.209 (144.227) seconds
+2026-10-26 18:28:54.738 xcodebuild[16923:23178746] [MT] IDETestOperationsObserverDebug: 155.146 elapsed -- Testing started completed.
+2026-10-26 18:28:54.738 xcodebuild[16923:23178746] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 18:28:54.738 xcodebuild[16923:23178746] [MT] IDETestOperationsObserverDebug: 155.146 sec, +155.146 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-private-headings-phone.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

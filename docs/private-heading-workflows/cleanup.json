@@ -1,0 +1,26 @@
+{
+  "removedDirectories": [
+    "/tmp/taskfold-private-headings-tablet-off.xcresult",
+    "/tmp/taskfold-private-headings-mac.xcresult",
+    "/tmp/taskfold-private-headings-phone-off-final.xcresult",
+    "/tmp/taskfold-private-headings-ios-build",
+    "/tmp/taskfold-private-headings-phone-off.xcresult",
+    "/tmp/taskfold-private-headings-mac-build",
+    "/tmp/taskfold-private-headings-mac-host",
+    "/tmp/taskfold-private-headings-tablet.xcresult",
+    "/tmp/taskfold-private-headings-tablet-off-final.xcresult",
+    "/tmp/taskfold-private-headings-phone-off-final-attachments",
+    "/tmp/taskfold-private-headings-phone.xcresult",
+    "/tmp/taskfold-private-headings-ios-host",
+    "/tmp/taskfold-private-headings-mac-off-final-attachments",
+    "/tmp/taskfold-private-headings-phone-attachments",
+    "/tmp/taskfold-private-headings-mac-attachments",
+    "/tmp/taskfold-private-headings-tablet-off-final-attachments",
+    "/tmp/taskfold-private-headings-tablet-attachments",
+    "/tmp/taskfold-private-headings-mac-off-final.xcresult",
+    "/tmp/taskfold-private-headings-mac-off.xcresult"
+  ],
+  "removedBytes": 1677179807,
+  "simulatorTestAppsRemoved": true,
+  "remainingTaskfoldProcesses": []
+}

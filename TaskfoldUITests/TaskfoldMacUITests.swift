@@ -3281,11 +3281,13 @@ final class TeamWorkflowMacUITests: XCTestCase {
         return URL(fileURLWithPath: String(cString: user.pointee.pw_dir), isDirectory: true)
             .appendingPathComponent("Library/Containers/" + bundle + "/Data/Library/Application Support")
     }
+    @MainActor private func cache() throws -> [String:Any] { try JSONSerialization.jsonObject(with: Data(contentsOf: support().appendingPathComponent("Taskfold/ec240000-0000-4000-8000-000000000001.json"))) as! [String:Any] }
+    private func rows(_ cache: [String:Any], _ table: String) -> NSArray { ((cache["tables"] as? [String:[[String:Any]]])?[table] ?? []) as NSArray }
     @MainActor private func stateFile() throws -> URL { try support().appendingPathComponent("TaskfoldTeamLibraryNativeFixture-workflowteststeameditbridge/state.json") }
     @MainActor private func state() throws -> [String: Any] { try JSONSerialization.jsonObject(with: Data(contentsOf: stateFile())) as! [String: Any] }
-    @MainActor private func launch(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false, headings: Bool = false) throws {
+    @MainActor private func launch(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false, headings: Bool = false, capabilityOff: Bool = false) throws {
         guard Bundle(for: Self.self).bundleIdentifier == bundle + ".runner" else { throw XCTSkip("Requires the reserved isolated Mac host") }
-        app.launchArguments = ["--team-editor-testing", "--team-library-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-run-lose-reply"] : []) + (headings ? ["--team-heading-testing", "--workflow-heading-testing"] : [])
+        app.launchArguments = ["--team-editor-testing", "--team-library-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-run-lose-reply"] : []) + (headings ? ["--team-heading-testing", "--workflow-heading-testing"] : []) + (capabilityOff ? ["--team-heading-capability-off"] : [])
         app.launch(); app.activate()
         XCTAssertTrue(app.buttons["openTeamTemplateLibraryFixture"].waitForExistence(timeout: 15), app.debugDescription)
     }
@@ -3304,7 +3306,7 @@ final class TeamWorkflowMacUITests: XCTestCase {
         let picker = app.popUpButtons[id]; XCTAssertTrue(picker.waitForExistence(timeout: 12), app.debugDescription); picker.click()
         let item = app.menuItems[title].firstMatch; XCTAssertTrue(item.waitForExistence(timeout: 5), app.debugDescription); item.click()
     }
-    @MainActor private func review(_ app: XCUIApplication, personal: Bool = false) {
+    @MainActor private func review(_ app: XCUIApplication, personal: Bool = false, available: Bool = true) {
         if personal {
             app.buttons["openPrivateWorkflowRunFixture"].click()
             let run = app.buttons["runPrivateTemplateShared"]; XCTAssertTrue(run.waitForExistence(timeout: 10)); run.click()
@@ -3316,6 +3318,7 @@ final class TeamWorkflowMacUITests: XCTestCase {
         choose("sharedWorkflowTeam", title: "Widget Studio", app: app)
         choose("sharedWorkflowProject", title: "Design board", app: app)
         let preview = app.buttons["reviewSharedWorkflow"]; reveal(preview, app: app); preview.click()
+        if !available { return }
         let create = app.buttons["createSharedWorkflow"]; reveal(create, app: app); XCTAssertTrue(create.exists); XCTAssertFalse(create.isEnabled)
     }
     @MainActor private func create(_ app: XCUIApplication) {
@@ -4693,5 +4696,68 @@ extension TeamWorkflowMacUITests {
         let after = try state(); XCTAssertEqual(after["workflowRequests"] as? NSDictionary, requests as NSDictionary); XCTAssertEqual(after["workflowCalls"] as? Int, 2)
         XCTAssertEqual((after["workflowReceipts"] as? [String:[String:Any]])?.values.first?["workflow_types_protocol"] as? Int, 1)
         shot(app, "mac-heading-workflow-original-confirmed")
+    }
+}
+
+extension TeamWorkflowMacUITests {
+    @MainActor func testPrivateHeadingWorkflowLostReplyColdRetryPreservesTypes() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, lost: true, headings: true)
+        let before = try cache(); review(app, personal: true); shot(app, "mac-private-heading-workflow-review"); create(app)
+        XCTAssertTrue(app.staticTexts["sharedWorkflowRecoveryMessage"].waitForExistence(timeout: 12), app.debugDescription)
+        let requests = try XCTUnwrap(try state()["workflowRequests"] as? [String:[String:Any]])
+        XCTAssertEqual(requests.count, 1)
+        let body = try XCTUnwrap(requests.values.first?["_body"] as? [String:Any]); XCTAssertEqual(body["workflow_types_protocol"] as? Int, 1)
+        XCTAssertEqual((body["source"] as? [String:Any])?["kind"] as? String, "personal")
+        let root = try XCTUnwrap((body["tasks"] as? [[String:Any]])?.first); XCTAssertEqual(root["is_heading"] as? Bool, true)
+        let child = try XCTUnwrap((root["subtasks"] as? [[String:Any]])?.first); XCTAssertEqual(child["is_heading"] as? Bool, true)
+        let work = try XCTUnwrap((child["subtasks"] as? [[String:Any]])?.first); XCTAssertNil(work["is_heading"]); XCTAssertEqual(work["title"] as? String, "Approve the design")
+        app.terminate(); try launch(app, reset: false, headings: true)
+        app.buttons["openWorkflowRecoveryFixture"].click()
+        let saved = app.buttons["savedTeamWorkflowRequest"]; XCTAssertTrue(saved.waitForExistence(timeout: 10)); saved.click()
+        let retry = app.buttons["retrySharedWorkflow"]; XCTAssertTrue(retry.waitForExistence(timeout: 8)); retry.click()
+        let confirm = app.buttons.matching(identifier: "confirmSharedWorkflowRetry").firstMatch; XCTAssertTrue(confirm.waitForExistence(timeout: 5)); confirm.click()
+        XCTAssertTrue(app.staticTexts["sharedWorkflowSuccess"].waitForExistence(timeout: 12), app.debugDescription)
+        let after = try state(); XCTAssertEqual(after["workflowRequests"] as? NSDictionary, requests as NSDictionary); XCTAssertEqual(after["workflowCalls"] as? Int, 2)
+        XCTAssertEqual((after["workflowReceipts"] as? [String:[String:Any]])?.values.first?["workflow_types_protocol"] as? Int, 1)
+        XCTAssertEqual(rows(try cache(), "project_templates"), rows(before, "project_templates")); XCTAssertEqual(rows(try cache(), "tasks"), rows(before, "tasks"))
+        shot(app, "mac-private-heading-workflow-original-confirmed")
+    }
+    @MainActor func testPrivateHeadingReviewBackPreservesSourceAfterRelaunch() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, headings: true)
+        let before = try cache(); review(app, personal: true)
+        let back = app.buttons["backSharedWorkflow"]; reveal(back, app: app); back.click()
+        XCTAssertTrue(app.buttons["reviewSharedWorkflow"].waitForExistence(timeout: 8)); XCTAssertEqual(try state()["workflowCalls"] as? Int, 0)
+        app.terminate(); try launch(app, reset: false, headings: true)
+        XCTAssertEqual(rows(try cache(), "project_templates"), rows(before, "project_templates")); XCTAssertEqual(rows(try cache(), "tasks"), rows(before, "tasks"))
+        XCTAssertEqual(try state()["workflowCalls"] as? Int, 0)
+    }
+    @MainActor func testPrivateHeadingMissingWorkspaceSupportExplainsAndCreatesNothing() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, headings: true, capabilityOff: true)
+        let before = try cache(); review(app, personal: true, available: false)
+        let message = app.staticTexts["sharedWorkflowMessage"]; XCTAssertTrue(message.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue((message.value as? String ?? message.label).contains("Headings aren’t available in this shared workspace"))
+        XCTAssertFalse(app.buttons["createSharedWorkflow"].exists); XCTAssertEqual(try state()["workflowCalls"] as? Int, 0)
+        XCTAssertEqual(rows(try cache(), "project_templates"), rows(before, "project_templates"))
+        shot(app, "mac-private-heading-workspace-unavailable")
+    }
+    @MainActor func testHeadingClientGateKeepsDefinitionsAndTransferAvailable() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try launch(app, headings: true)
+        let before = try cache(); app.buttons["openPrivateWorkflowRunFixture"].click()
+        let run = app.buttons["runPrivateTemplateShared"]; XCTAssertTrue(run.waitForExistence(timeout: 10)); XCTAssertFalse(run.isEnabled)
+        XCTAssertTrue(app.staticTexts["privateWorkflowHeadingUnavailable"].exists)
+        app.terminate(); try launch(app, reset: false, headings: true)
+        app.buttons["openTeamTemplateLibraryFixture"].click(); let item = app.buttons["teamTemplate-" + definition]; XCTAssertTrue(item.waitForExistence(timeout: 10)); item.click()
+        let copy = app.buttons["copyTeamTemplate"]; XCTAssertTrue(copy.waitForExistence(timeout: 8)); XCTAssertTrue(copy.isEnabled)
+        XCTAssertFalse(app.buttons["runTeamTemplate"].isEnabled); XCTAssertTrue(app.staticTexts["teamWorkflowHeadingUnavailable"].exists); XCTAssertTrue(app.buttons["exportTeamTemplate"].isEnabled)
+        shot(app, "mac-heading-client-support-unavailable")
+        let document = try XCTUnwrap((try state()["items"] as? [[String:Any]])?.first { $0["id"] as? String == self.definition }?["document"] as? NSDictionary)
+        copy.click(); let save = app.buttons["saveTeamTemplateCopy"]; XCTAssertTrue(save.waitForExistence(timeout: 8)); save.click()
+        XCTAssertTrue(app.buttons["copyTeamTemplate"].waitForExistence(timeout: 10))
+        let templates = rows(try cache(), "project_templates") as! [[String:Any]], original = rows(before, "project_templates") as! [[String:Any]]
+        let copies = templates.filter { $0["id"] as? String != original.first?["id"] as? String }
+        XCTAssertEqual(copies.count, 1); XCTAssertEqual(copies[0]["document"] as? NSDictionary, document)
+        XCTAssertEqual(templates.first { $0["id"] as? String == original.first?["id"] as? String } as NSDictionary?, original.first as NSDictionary?)
+        XCTAssertEqual(rows(try cache(), "tasks"), rows(before, "tasks")); XCTAssertEqual(try state()["workflowCalls"] as? Int, 0)
+        shot(app, "mac-heading-client-private-copy")
     }
 }

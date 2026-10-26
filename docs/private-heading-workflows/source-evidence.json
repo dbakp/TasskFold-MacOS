@@ -1,0 +1,28 @@
+{
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "d74737d7ce3af490f8136a7158ffc7a6c345275fcd5969bf74d654a6103ba6e7",
+    "Taskfold/Core/ProjectWorkflows.swift": "406a768bf2804cb964224bda391d1b1ed2a3eb488b585f93ad2604b9b0215cee",
+    "Taskfold/Views/WorkflowViews.swift": "fd1ef6fd7092a0094b24cc9aaff5b107d2f462d218a1a0f47fdd9c32b8ae87ee",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "10c083c280a4b060e894c9cdf221227bd00836f78f6dd1d20cefa1b1b1670846",
+    "Taskfold/Views/TeamWorkflowRunView.swift": "3fea6a4ca06c404b58210a9bd9d6ea56724dc739649feb03c6b0a4ff99cd3818",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "53fd1d70ddf214e82c52a1dca2752f9de4b07e5ab9001e46034ed97a9ccc4ad9"
+  },
+  "nativeVariantSHA256": {
+    "Taskfold/Core/Store.swift": "6987bd57a95911446c01062b0b4087b8205df24fa56dc9f5e101f660e56d102a",
+    "Taskfold/Core/ProjectWorkflows.swift": "406a768bf2804cb964224bda391d1b1ed2a3eb488b585f93ad2604b9b0215cee",
+    "Taskfold/Views/WorkflowViews.swift": "fd1ef6fd7092a0094b24cc9aaff5b107d2f462d218a1a0f47fdd9c32b8ae87ee",
+    "Taskfold/Views/TeamTemplateLibraryView.swift": "10c083c280a4b060e894c9cdf221227bd00836f78f6dd1d20cefa1b1b1670846",
+    "Taskfold/Views/TeamWorkflowRunView.swift": "3fea6a4ca06c404b58210a9bd9d6ea56724dc739649feb03c6b0a4ff99cd3818",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "d3c69b3f2c9a43ac0f95aaba0cc6c0d85b8fd19b18ee0543fccd5507ad68685b"
+  },
+  "infoOnSHA256": "55c1550013547bcd4e7c805fa4819b369036f8461ddbeeee34ba99979f44e4fe",
+  "rolloutChanged": false,
+  "hostedChanges": false,
+  "realDataChanged": false,
+  "infoOffSHA256": "a4b5b0ec80ae6b582769e8a0af20fa953842531d50602bf1dc27588e92dd3d0a",
+  "offVariantUITestSHA256": "53fd1d70ddf214e82c52a1dca2752f9de4b07e5ab9001e46034ed97a9ccc4ad9",
+  "coreTestsPassed": 82,
+  "signedOnAndOffBuildsVerified": true,
+  "nativeScenariosPassedPerPlatform": 5,
+  "inspectedImages": 7
+}

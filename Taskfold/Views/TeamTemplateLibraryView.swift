@@ -69,7 +69,13 @@ struct TeamTemplateLibraryView: View {
                                 }
                                 if detail.supported != nil {
                                     Section {
-                                        if store.teamWorkflowCreationAvailable { Button("Use in shared workspace…", systemImage: "person.3") { workflow = TeamWorkflowRunRequest(source: .shared(detail)) }.accessibilityIdentifier("runTeamTemplate") }
+                                        if store.teamWorkflowCreationAvailable {
+                                            Button("Use in shared workspace…", systemImage: "person.3") { workflow = TeamWorkflowRunRequest(source: .shared(detail)) }
+                                                .accessibilityIdentifier("runTeamTemplate").disabled(detail.supported?.requiresHeadingSupport == true && !store.teamWorkflowHeadingClientEnabled)
+                                            if detail.supported?.requiresHeadingSupport == true && !store.teamWorkflowHeadingClientEnabled {
+                                                Text(TeamWorkflowRunPlan.headingClientUnavailableMessage).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("teamWorkflowHeadingUnavailable")
+                                            }
+                                        }
                                         Button("Save private copy…", systemImage: "square.on.square") { transfer(detail, exporting: false) }.accessibilityIdentifier("copyTeamTemplate")
                                         Button("Export template…", systemImage: "square.and.arrow.up") { transfer(detail, exporting: true) }.accessibilityIdentifier("exportTeamTemplate")
                                     }

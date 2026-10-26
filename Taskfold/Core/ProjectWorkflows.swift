@@ -673,6 +673,8 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
     }
     var description: String { "Private shared workflow run preview" }
     var debugDescription: String { description }
+    static let headingClientUnavailableMessage = "Creating shared workflows with headings isn’t available in this app version. Your template is unchanged."
+    static let headingWorkspaceUnavailableMessage = "Headings aren’t available in this shared workspace yet. Your template is unchanged."
     static var invalid: AppFailure { AppFailure(message: "The template or destination changed. Review the workflow again before creating it.") }
 
     init(source: Source, account: String, origin: String, team: TeamOrganization,
