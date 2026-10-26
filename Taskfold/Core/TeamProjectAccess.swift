@@ -151,6 +151,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     var parentGeneration: String? = nil
     var checklistRestoreRequest: UUID? = nil
     var taskTypesProtocol: Int? = nil
+    var taskTypeLifecycleProtocol: Int? = nil
 
     static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "subtasks", "is_recurring", "recurrence_pattern", "recurrence_end_date", "is_heading"]
     static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
@@ -255,15 +256,21 @@ extension TeamTaskEditScope {
     }
     func lifecycleBody(for change: Mutation) throws -> [String: JSON] {
         let action = try lifecycleAction(for: change)
-        if action == "create", TaskKind.requiresAuthoring(change, existing: nil) { throw TeamTaskTypes.unavailable }
         guard [account,team,project,change.recordID].allSatisfy(TeamProjectValue.id) else { throw Self.invalid }
         let record = action == "delete" ? change.baseline : change.fields
         guard let record, record["id"] == .string(change.recordID), record["project_id"] == .string(project),
               case .string(let creator)? = record["user_id"], TeamProjectValue.id(creator),
               case .string? = record["title"], case .string(let generation)? = record["task_generation"],
               TeamProjectValue.id(generation), action != "create" || creator == account else { throw Self.invalid }
+        let typed = TaskKind.containsTypeMetadata([Record(record)])
+        if typed {
+            guard taskTypeLifecycleProtocol == 1,
+                  TaskKind.permits(Mutation(table: "tasks", recordID: change.recordID, method: "POST", fields: record), existing: nil) else { throw TeamTaskTypes.unavailable }
+        }
+        if action == "create", TaskKind.requiresAuthoring(change, existing: nil), taskTypesProtocol != 1 { throw TeamTaskTypes.unavailable }
         var body: [String: JSON] = ["team_id":.string(team),"project_id":.string(project),"task_id":.string(change.recordID),
             "request_id":.string(change.id.uuidString.lowercased()),"task_generation":.string(generation),"record":.object(record)]
+        if typed { body["task_type_lifecycle_protocol"] = .number(1) }
         if action == "restore", let restoreRequest { body["restore_from"] = .string(restoreRequest.uuidString.lowercased()) }
         if action == "create", let parent = record["recurrence_parent_id"], parent != .null {
             guard case .string(let parentID) = parent, TeamProjectValue.id(parentID), let parentGeneration,
@@ -275,6 +282,7 @@ extension TeamTaskEditScope {
     }
     func lifecycleSaved(_ reply: [String: JSON], for change: Mutation) throws -> Record? {
         let action = try lifecycleAction(for: change), body = try lifecycleBody(for: change)
+        if body["task_type_lifecycle_protocol"] != nil, reply["task_type_lifecycle_protocol"] != .number(1) { throw Self.invalid }
         guard reply["protocol"] == .number(1), reply["operation"] == .string(action), reply["account"] == .string(account),
               reply["team_id"] == .string(team), reply["project_id"] == .string(project), reply["task_id"] == .string(change.recordID),
               reply["request_id"] == body["request_id"], reply["task_generation"] == body["task_generation"],
@@ -288,6 +296,10 @@ extension TeamTaskEditScope {
               case .string(let creator)? = row["user_id"], TeamProjectValue.id(creator), row["user_id"] == body["record"]?.object["user_id"], case .string? = row["title"],
               case .bool? = row["completed"], case .number(let revision)? = row["completion_version"], revision.isFinite,
               revision >= 0, revision <= 9_007_199_254_740_991, revision.rounded(.down) == revision else { throw Self.invalid }
+        if body["task_type_lifecycle_protocol"] != nil {
+            guard row["is_heading"] != nil,
+                  TaskKind.permits(Mutation(table: "tasks", recordID: change.recordID, method: "POST", fields: row), existing: nil) else { throw Self.invalid }
+        }
         return Record(row)
     }
 }

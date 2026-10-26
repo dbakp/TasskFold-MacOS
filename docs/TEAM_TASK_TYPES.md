@@ -18,8 +18,8 @@ A captured TeamTaskEditScope retains the optional version in durable Codable
 commands. Root type changes and new/changed recognized nested types require the
 version and send an explicit protocol marker through the existing edit RPC.
 Ordinary edits retain their previous body. Unknown versions and unsupported state
-refuse rather than falling back to the personal writer. Heading creation remains
-refused by the existing lifecycle adapter until its own protocol is implemented.
+refuse rather than falling back to the personal writer. Typed creation/deletion/restoration now use the separate lifecycle
+protocol described in TEAM_TASK_TYPE_LIFECYCLE.md; native authoring is still gated.
 
 Root type edits require an explicit boolean and a complete captured type,
 completion state, timestamp and revision. Reopen is separate: conversion cannot
@@ -57,11 +57,10 @@ have no new warnings; both owned containers were removed. Each independent arm64
 Debug app build passes without signing. No native runtime acceptance is claimed.
 
 Next: connect the existing native Store/editor controls to the negotiated type
-capability; add native Save/Undo/recovery/source-change checks; complete typed
-creation, deletion/restore, shared templates/import and their capability/receipt
-adapters. Existing lifecycle payload whitelists do not yet accept the new root
-type column, including its null representation, and refuse those payloads. They
-must be updated before exposure; conversion support is not lifecycle acceptance.
+capability; add native Save/Undo/recovery/source-change checks; verify native typed creation/deletion/restore and finish shared templates/import
+and their capability/receipt adapters. The lifecycle follow-up now supports the
+root type column, including its null representation; its scoped verification is
+in TEAM_TASK_TYPE_LIFECYCLE.md.
 Wider hosted, cross-device, spoken/largest-text and installed-widget acceptance
 remain open. Normal authoring, collaboration rollout and user-deferred older-client,
 provider, notification and distribution work remain unchanged. Rank 3 and Px stay

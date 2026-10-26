@@ -1,0 +1,363 @@
+{
+  "account": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+  "team": "8c47f577-63b4-4240-888e-f86e738e3d8a",
+  "project": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+  "create": {
+    "body": {
+      "team_id": "8c47f577-63b4-4240-888e-f86e738e3d8a",
+      "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+      "task_id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+      "request_id": "e80400a8-9be6-4eda-8f77-ddd0ece37e3c",
+      "task_generation": "2b8d051f-2f2d-4b80-a888-a2a2454babb5",
+      "record": {
+        "id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+        "user_id": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+        "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+        "task_generation": "2b8d051f-2f2d-4b80-a888-a2a2454babb5",
+        "title": "Plan the workshop",
+        "description": "Keep the complete design notes.",
+        "completed": false,
+        "completed_at": null,
+        "completion_version": 0,
+        "priority": 2,
+        "due_date": "2026-10-26",
+        "is_recurring": true,
+        "recurrence_pattern": {
+          "type": "daily"
+        },
+        "created_at": "2026-10-26T12:00:00Z",
+        "labels": [],
+        "subtasks": [
+          {
+            "id": "design-heading",
+            "title": "Design review",
+            "is_heading": true,
+            "completed": false,
+            "completed_at": null,
+            "subtasks": [
+              {
+                "id": "productive-detail",
+                "title": "Approve contrast",
+                "completed": false,
+                "completed_at": null,
+                "subtasks": []
+              }
+            ]
+          }
+        ],
+        "attachments": [],
+        "comments": [],
+        "reminders": [],
+        "reminder_specs": [],
+        "source_metadata": {},
+        "is_heading": true
+      },
+      "task_type_lifecycle_protocol": 1
+    },
+    "reply": {
+      "task": {
+        "id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+        "title": "Plan the workshop",
+        "labels": [],
+        "user_id": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+        "comments": [],
+        "due_date": "2026-10-26",
+        "due_time": null,
+        "priority": 2,
+        "subtasks": [
+          {
+            "id": "design-heading",
+            "title": "Design review",
+            "subtasks": [
+              {
+                "id": "productive-detail",
+                "title": "Approve contrast",
+                "subtasks": [],
+                "completed": false,
+                "completed_at": null,
+                "taskfold_completion_v1": {
+                  "epoch": "ffb7f319-d0c6-4747-96b1-7a921f94e4a3",
+                  "version": 0
+                }
+              }
+            ],
+            "completed": false,
+            "is_heading": true,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "a758407d-5b3a-4573-8d5d-b55030e1d741",
+              "version": 0
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-26T12:00:00+00:00",
+        "is_heading": true,
+        "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+        "section_id": null,
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Keep the complete design notes.",
+        "completed_at": null,
+        "is_recurring": true,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "2b8d051f-2f2d-4b80-a888-a2a2454babb5",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": {
+          "type": "daily"
+        },
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "account": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+      "task_id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+      "team_id": "8c47f577-63b4-4240-888e-f86e738e3d8a",
+      "protocol": 1,
+      "replayed": false,
+      "operation": "create",
+      "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+      "request_id": "e80400a8-9be6-4eda-8f77-ddd0ece37e3c",
+      "unavailable": false,
+      "task_generation": "2b8d051f-2f2d-4b80-a888-a2a2454babb5",
+      "task_type_lifecycle_protocol": 1
+    }
+  },
+  "delete": {
+    "body": {
+      "team_id": "8c47f577-63b4-4240-888e-f86e738e3d8a",
+      "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+      "task_id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+      "request_id": "dd444b53-6017-47cc-aad9-99b70f957991",
+      "task_generation": "2b8d051f-2f2d-4b80-a888-a2a2454babb5",
+      "record": {
+        "id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+        "title": "Plan the workshop",
+        "labels": [],
+        "user_id": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+        "comments": [],
+        "due_date": "2026-10-26",
+        "due_time": null,
+        "priority": 2,
+        "subtasks": [
+          {
+            "id": "design-heading",
+            "title": "Design review",
+            "subtasks": [
+              {
+                "id": "productive-detail",
+                "title": "Approve contrast",
+                "subtasks": [],
+                "completed": false,
+                "completed_at": null,
+                "taskfold_completion_v1": {
+                  "epoch": "ffb7f319-d0c6-4747-96b1-7a921f94e4a3",
+                  "version": 0
+                }
+              }
+            ],
+            "completed": false,
+            "is_heading": true,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "a758407d-5b3a-4573-8d5d-b55030e1d741",
+              "version": 0
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-26T12:00:00+00:00",
+        "is_heading": true,
+        "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+        "section_id": null,
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Keep the complete design notes.",
+        "completed_at": null,
+        "is_recurring": true,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "2b8d051f-2f2d-4b80-a888-a2a2454babb5",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": {
+          "type": "daily"
+        },
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "task_type_lifecycle_protocol": 1
+    },
+    "reply": {
+      "task": null,
+      "account": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+      "task_id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+      "team_id": "8c47f577-63b4-4240-888e-f86e738e3d8a",
+      "protocol": 1,
+      "replayed": false,
+      "operation": "delete",
+      "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+      "request_id": "dd444b53-6017-47cc-aad9-99b70f957991",
+      "unavailable": true,
+      "task_generation": "2b8d051f-2f2d-4b80-a888-a2a2454babb5",
+      "task_type_lifecycle_protocol": 1
+    }
+  },
+  "restore": {
+    "body": {
+      "team_id": "8c47f577-63b4-4240-888e-f86e738e3d8a",
+      "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+      "task_id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+      "request_id": "246a5c2d-e751-434c-83a1-22a677b96ce2",
+      "task_generation": "b77c6302-65e3-4876-aa3c-20f2a3496293",
+      "record": {
+        "id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+        "title": "Plan the workshop",
+        "labels": [],
+        "user_id": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+        "comments": [],
+        "due_date": "2026-10-26",
+        "due_time": null,
+        "priority": 2,
+        "subtasks": [
+          {
+            "id": "design-heading",
+            "title": "Design review",
+            "subtasks": [
+              {
+                "id": "productive-detail",
+                "title": "Approve contrast",
+                "subtasks": [],
+                "completed": false,
+                "completed_at": null,
+                "taskfold_completion_v1": {
+                  "epoch": "ffb7f319-d0c6-4747-96b1-7a921f94e4a3",
+                  "version": 0
+                }
+              }
+            ],
+            "completed": false,
+            "is_heading": true,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "a758407d-5b3a-4573-8d5d-b55030e1d741",
+              "version": 0
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-26T12:00:00+00:00",
+        "is_heading": true,
+        "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+        "section_id": null,
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Keep the complete design notes.",
+        "completed_at": null,
+        "is_recurring": true,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "b77c6302-65e3-4876-aa3c-20f2a3496293",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": {
+          "type": "daily"
+        },
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "task_type_lifecycle_protocol": 1,
+      "restore_from": "dd444b53-6017-47cc-aad9-99b70f957991"
+    },
+    "reply": {
+      "task": {
+        "id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+        "title": "Plan the workshop",
+        "labels": [],
+        "user_id": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+        "comments": [],
+        "due_date": "2026-10-26",
+        "due_time": null,
+        "priority": 2,
+        "subtasks": [
+          {
+            "id": "design-heading",
+            "title": "Design review",
+            "subtasks": [
+              {
+                "id": "productive-detail",
+                "title": "Approve contrast",
+                "subtasks": [],
+                "completed": false,
+                "completed_at": null,
+                "taskfold_completion_v1": {
+                  "epoch": "ffb7f319-d0c6-4747-96b1-7a921f94e4a3",
+                  "version": 0
+                }
+              }
+            ],
+            "completed": false,
+            "is_heading": true,
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "a758407d-5b3a-4573-8d5d-b55030e1d741",
+              "version": 0
+            }
+          }
+        ],
+        "completed": false,
+        "reminders": [],
+        "time_zone": null,
+        "created_at": "2026-10-26T12:00:00+00:00",
+        "is_heading": true,
+        "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+        "section_id": null,
+        "assigned_to": null,
+        "attachments": [],
+        "description": "Keep the complete design notes.",
+        "completed_at": null,
+        "is_recurring": true,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "reminder_specs": [],
+        "source_metadata": {},
+        "task_generation": "b77c6302-65e3-4876-aa3c-20f2a3496293",
+        "duration_minutes": null,
+        "completion_version": 0,
+        "recurrence_pattern": {
+          "type": "daily"
+        },
+        "recurrence_end_date": null,
+        "notification_sent_at": null,
+        "recurrence_parent_id": null
+      },
+      "account": "89284fc7-135f-44be-a2cb-0397abe83cc2",
+      "task_id": "65cf1811-cf7c-448d-8b72-75735f1bce07",
+      "team_id": "8c47f577-63b4-4240-888e-f86e738e3d8a",
+      "protocol": 1,
+      "replayed": false,
+      "operation": "restore",
+      "project_id": "be15f88d-0a8a-4667-ba73-c36878278aa9",
+      "request_id": "246a5c2d-e751-434c-83a1-22a677b96ce2",
+      "unavailable": false,
+      "task_generation": "b77c6302-65e3-4876-aa3c-20f2a3496293",
+      "task_type_lifecycle_protocol": 1
+    }
+  }
+}

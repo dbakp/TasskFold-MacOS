@@ -126,3 +126,96 @@ final class TeamTaskLifecycleTests: XCTestCase {
         }
     }
 }
+
+
+final class TeamTaskTypeLifecycleTests: XCTestCase {
+    let account = UUID().uuidString.lowercased(), project = UUID().uuidString.lowercased(), team = UUID().uuidString.lowercased()
+    func scope(authoring: Bool = true, transport: Bool = true, restore: UUID? = nil) -> TeamTaskEditScope {
+        TeamTaskEditScope(account: account, origin: "https://synthetic.example", team: team, project: project, restoreRequest: restore, taskTypesProtocol: authoring ? 1 : nil, taskTypeLifecycleProtocol: transport ? 1 : nil)
+    }
+    func row() -> Record {
+        var task = Record.task(user: account, project: project); task["title"] = .string("Design workshop")
+        task["task_generation"] = .string(UUID().uuidString.lowercased()); task["completion_version"] = .number(0); return task
+    }
+    func change(_ row: Record, deleting: Bool = false, scope: TeamTaskEditScope) -> Mutation {
+        Mutation(table: "tasks", recordID: row.id, method: deleting ? "DELETE" : "POST", fields: deleting ? [:] : row.fields, baseline: deleting ? row.fields : nil, insertOnly: deleting ? nil : true, teamTaskScope: scope)
+    }
+    func testHeadingCreationNeedsBothCapabilitiesAndRetainsLiteralData() throws {
+        var task = try TaskKind.setting(row(), heading: true); task["description"] = .string("Full notes"); task["opaque"] = .object(["kept": .bool(true)])
+        let active = scope(), command = change(task, scope: active), body = try active.lifecycleBody(for: command)
+        XCTAssertEqual(body["task_type_lifecycle_protocol"], .number(1)); XCTAssertEqual(body["record"], .object(task.fields))
+        XCTAssertThrowsError(try scope(authoring: false).lifecycleBody(for: command))
+        XCTAssertThrowsError(try scope(transport: false).lifecycleBody(for: command))
+    }
+    func testKnownHeadingDeletionAndRestoreDoNotNeedNewAuthoring() throws {
+        let task = try TaskKind.setting(row(), heading: true), paused = scope(authoring: false)
+        let deletion = change(task, deleting: true, scope: paused)
+        XCTAssertEqual(try paused.lifecycleBody(for: deletion)["record"], .object(task.fields))
+        let recovering = scope(authoring: false, restore: deletion.id); var restored = task; restored["task_generation"] = .string(UUID().uuidString.lowercased())
+        let body = try recovering.lifecycleBody(for: change(restored, scope: recovering))
+        XCTAssertEqual(body["restore_from"], .string(deletion.id.uuidString.lowercased())); XCTAssertEqual(body["record"]?.object["is_heading"], .bool(true))
+        XCTAssertThrowsError(try scope(authoring: false, transport: false).lifecycleBody(for: deletion))
+    }
+    func testNestedHeadingCreationNeedsAuthoringAndPreservesOrdinaryDescendants() throws {
+        var task = row(); task["subtasks"] = .array([.object(["id": .string("heading"), "title": .string("Plan"), "is_heading": .bool(true), "completed": .bool(false), "subtasks": .array([.object(["id": .string("work"), "title": .string("Prepare"), "completed": .bool(false)])])])])
+        let active = scope(), command = try active.capturing(change(task, scope: active), existing: nil)
+        XCTAssertEqual(try active.lifecycleBody(for: command)["record"]?.object["subtasks"], command.fields["subtasks"])
+        XCTAssertThrowsError(try scope(authoring: false).lifecycleBody(for: command))
+        XCTAssertEqual(command.fields["subtasks"]?.list[0].object["taskfold_completion_v1"]?.object["version"], .number(0))
+    }
+    func testOrdinaryNullTypeUsesTransportWithoutAuthoringAndLegacyBodyStaysCompatible() throws {
+        let plain = row(), legacy = scope(authoring: false, transport: false)
+        XCTAssertNil(try legacy.lifecycleBody(for: change(plain, scope: legacy))["task_type_lifecycle_protocol"])
+        var typed = plain; typed["is_heading"] = .null
+        let supported = scope(authoring: false)
+        XCTAssertEqual(try supported.lifecycleBody(for: change(typed, scope: supported))["task_type_lifecycle_protocol"], .number(1))
+        XCTAssertThrowsError(try legacy.lifecycleBody(for: change(typed, scope: legacy)))
+    }
+    func testCompletedUnknownAndInvalidNestedTypesCannotBeCreated() throws {
+        let active = scope(); var task = row(); task["is_heading"] = .bool(true); task["completed"] = .bool(true)
+        XCTAssertThrowsError(try active.lifecycleBody(for: change(task, scope: active)))
+        task["completed"] = .bool(false); task["is_heading"] = .string("future")
+        XCTAssertThrowsError(try active.lifecycleBody(for: change(task, scope: active)))
+        task["is_heading"] = .bool(false); task["subtasks"] = .array([.object(["id": .string("child"), "is_heading": .bool(true), "completed": .bool(true)])])
+        XCTAssertThrowsError(try active.lifecycleBody(for: change(task, scope: active)))
+    }
+    func testTypedReceiptAndDurableCommandRetainProtocol() throws {
+        var task = try TaskKind.setting(row(), heading: true); let active = scope(), command = change(task, scope: active)
+        var reply: [String: JSON] = ["protocol": .number(1), "task_type_lifecycle_protocol": .number(1), "operation": .string("create"), "account": .string(account), "team_id": .string(team), "project_id": .string(project), "task_id": .string(task.id), "request_id": .string(command.id.uuidString.lowercased()), "task_generation": task["task_generation"], "unavailable": .bool(false), "replayed": .bool(false), "task": .object(task.fields)]
+        XCTAssertEqual(try active.lifecycleSaved(reply, for: command), task)
+        reply.removeValue(forKey: "task_type_lifecycle_protocol"); XCTAssertThrowsError(try active.lifecycleSaved(reply, for: command))
+        reply["task_type_lifecycle_protocol"] = .number(1); task.fields.removeValue(forKey: "is_heading"); reply["task"] = .object(task.fields)
+        XCTAssertThrowsError(try active.lifecycleSaved(reply, for: command))
+        let decoded = try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(command))
+        XCTAssertEqual(decoded.teamTaskScope?.taskTypeLifecycleProtocol, 1); XCTAssertEqual(try active.lifecycleBody(for: decoded), try active.lifecycleBody(for: command))
+    }
+}
+
+
+extension TeamTaskTypeLifecycleTests {
+    func testActualSQLTypedCreateDeleteRestoreReceipts() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-type-lifecycle-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let fixture = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        for action in ["create", "delete", "restore"] {
+            let part = try XCTUnwrap(fixture[action]?.object), body = try XCTUnwrap(part["body"]?.object)
+            let scope = TeamTaskEditScope(account: fixture["account"]!.text, origin: "https://synthetic.example", team: body["team_id"]!.text, project: body["project_id"]!.text, restoreRequest: body["restore_from"].flatMap { UUID(uuidString: $0.text) }, taskTypesProtocol: 1, taskTypeLifecycleProtocol: 1)
+            let command = Mutation(id: try XCTUnwrap(UUID(uuidString: body["request_id"]!.text)), table: "tasks", recordID: body["task_id"]!.text, method: action == "delete" ? "DELETE" : "POST", fields: action == "delete" ? [:] : body["record"]!.object, baseline: action == "delete" ? body["record"]!.object : nil, insertOnly: action == "delete" ? nil : true, teamTaskScope: scope)
+            XCTAssertEqual(try scope.lifecycleBody(for: command), body)
+            let result = try scope.lifecycleSaved(part["reply"]!.object, for: command)
+            if action == "delete" { XCTAssertNil(result) }
+            else { XCTAssertEqual(result?["is_heading"], .bool(true)); XCTAssertEqual(result?["subtasks"].list[0].object["is_heading"], .bool(true)) }
+        }
+    }
+    func testTypedSelectionUndoRetainsCapabilityAndRequiresTypedAcknowledgement() throws {
+        let first = try TaskKind.setting(row(), heading: true); var second = row(); second["is_heading"] = .null
+        let active = scope(authoring: false), rows = [first, second]
+        let prepared = try TeamTaskBatch.preparing(rows.map { change($0, deleting: true, scope: active) }, snapshot: Snapshot(tables: ["tasks": rows]))
+        let header = try XCTUnwrap(prepared.first), batch = try XCTUnwrap(header.teamTaskBatch), body = try batch.body(for: header)
+        XCTAssertTrue(body["items"]!.list.allSatisfy { $0.object["task_type_lifecycle_protocol"] == .number(1) })
+        var reply: [String: JSON] = ["protocol": .number(1), "account": .string(account), "team_id": .string(team), "request_id": body["request_id"]!, "operation": .string("delete"), "restores": .null, "replayed": .bool(false), "items": .array(body["items"]!.list.map { .object($0.object.filter { ["task_id", "project_id", "task_generation", "request_id"].contains($0.key) }) })]
+        XCTAssertThrowsError(try batch.confirm(reply, for: header))
+        reply["task_type_lifecycle_protocol"] = .number(1); XCTAssertNoThrow(try batch.confirm(reply, for: header))
+        let undo = try batch.inverse(of: header, snapshot: Snapshot(tables: ["tasks": rows])), restored = try XCTUnwrap(undo.teamTaskBatch)
+        XCTAssertTrue(try restored.body(for: undo)["items"]!.list.allSatisfy { $0.object["task_type_lifecycle_protocol"] == .number(1) })
+    }
+}

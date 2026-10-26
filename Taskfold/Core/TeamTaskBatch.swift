@@ -64,6 +64,7 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
     func confirm(_ reply:[String:JSON],for header:Mutation) throws {
         let request=try body(for:header)
         if isCompletion { _ = try completionReceipts(reply, for: header); return }
+        if request["items"]!.list.contains(where: { $0.object["task_type_lifecycle_protocol"] != nil }), reply["task_type_lifecycle_protocol"] != .number(1) { throw Self.invalid }
         let expected=request["items"]!.list.map { value -> JSON in
             let row=value.object
             return .object(Dictionary(uniqueKeysWithValues:["task_id","project_id","task_generation","request_id"].map{($0,row[$0]!)}))

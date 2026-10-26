@@ -356,7 +356,7 @@ struct TeamTaskEditorDraft: Equatable, Sendable {
               case .string? = source.fields["title"], case .bool? = source.fields["completed"],
               let token = boundary.raw["token"]?.text else { throw Self.unavailable }
         self.kind = kind; self.source = source; self.workspace = workspace; self.session = session
-        scope = TeamTaskEditScope(account: boundary.account, origin: boundary.origin, team: team, project: project, taskTypesProtocol: boundary.raw["task_types_protocol"] == .number(1) ? 1 : nil)
+        scope = TeamTaskEditScope(account: boundary.account, origin: boundary.origin, team: team, project: project, taskTypesProtocol: boundary.raw["task_types_protocol"] == .number(1) ? 1 : nil, taskTypeLifecycleProtocol: boundary.raw["task_type_lifecycle_protocol"] == .number(1) ? 1 : nil)
         accessToken = token; role = TeamProjectRole(rawValue: permission.role)!
     }
     func permits(current: Record?, workspace: WorkspaceBinding, session: UUID, cache: TeamWorkspaceCache, enabled: Bool) -> Bool {

@@ -216,7 +216,8 @@ need work before normal heading exposure.
    completed/new task handling, durable Undo/Redo/recovery, source/access races,
    Mac keyboard/window behavior, largest text and spoken feedback. Shared native type
    authoring remains open; negotiated role-restricted edit commands are implemented
-   in TEAM_TASK_TYPES.md. Creation/lifecycle adapters remain open.
+   in TEAM_TASK_TYPES.md. Typed creation/lifecycle commands are now implemented in
+   TEAM_TASK_TYPE_LIFECYCLE.md; native recovery acceptance remains open.
 2. Complete every interaction path: detail and checklist controls, keyboard and
    swipe actions, bulk actions, Focus/shortcut/notification actions, widgets and
    Watch projection. A refused action must neither report success nor discard
@@ -748,3 +749,19 @@ Native Store/editor integration, creation/lifecycle, shared templates/import,
 recovery/runtime and wider accessibility/cross-device acceptance are next; the
 existing lifecycle whitelist still refuses typed root payloads. This does not
 close shared heading editing or rank 3. See TEAM_TASK_TYPES.md and team-task-types/.
+
+
+### Shared typed lifecycle — 26 October 2026
+
+Both apps and service sources now preserve root/nested heading types through new
+creation, deletion, certified restoration and atomic selection Undo. Lifecycle
+transport support is advertised separately from default-off new heading authoring.
+Typed acknowledgements and durable identities protect retries; known work can be
+restored while new authoring is paused. The null type-column whitelist issue is
+fixed. Normalized discussions retain content with fresh callback identities.
+
+Each repo passes 179 selected Core cases, 100 isolated PostgreSQL/advisor checks
+and an unsigned current-source Debug app build. No hosted or native authoring gate
+changed. Native controls/recovery/races, template/import and wider cross-device/
+accessibility acceptance remain open. See TEAM_TASK_TYPE_LIFECYCLE.md and
+team-type-lifecycle/. Rank 3 and the broader Px goal remain active.

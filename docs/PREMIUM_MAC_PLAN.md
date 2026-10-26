@@ -7880,3 +7880,19 @@ Native Store/editor integration, creation/lifecycle, shared templates/import,
 recovery/runtime and wider accessibility/cross-device acceptance are next; the
 existing lifecycle whitelist still refuses typed root payloads. This does not
 close shared heading editing or rank 3. See TEAM_TASK_TYPES.md and team-task-types/.
+
+
+### Shared typed lifecycle — 26 October 2026
+
+Both apps and service sources now preserve root/nested heading types through new
+creation, deletion, certified restoration and atomic selection Undo. Lifecycle
+transport support is advertised separately from default-off new heading authoring.
+Typed acknowledgements and durable identities protect retries; known work can be
+restored while new authoring is paused. The null type-column whitelist issue is
+fixed. Normalized discussions retain content with fresh callback identities.
+
+Each repo passes 179 selected Core cases, 100 isolated PostgreSQL/advisor checks
+and an unsigned current-source Debug app build. No hosted or native authoring gate
+changed. Native controls/recovery/races, template/import and wider cross-device/
+accessibility acceptance remain open. See TEAM_TASK_TYPE_LIFECYCLE.md and
+team-type-lifecycle/. Rank 3 and the broader Px goal remain active.
