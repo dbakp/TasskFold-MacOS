@@ -7771,3 +7771,30 @@ Next: combined parent/child activity, Insights and Project pulse, then UI/widget
 integration and the wider remaining heading/calendar/provider acceptance.
 Retrospective orphan repair and full hosted-chain/native acceptance stay open.
 The full Px goal remains active; user-deferred release/provider gates stay pending.
+
+
+### Parent and child activity, Insights and Project pulse — 26 October 2026
+
+The app now combines immutable parent/child activity with feed-specific identities
+and receipt-time display order. Productive children earn corrected Insights
+credit; headings, ordinary checklist details and completed imports/promotions do
+not. Undo/Redo and completion-time edits keep their existing semantics, while
+productive-scope conversion preserves genuine earlier work without a fake reopen.
+Unknown/gap data remains partial and cannot lend current-task authority.
+
+Project activity opens exact current children using fresh generation/owner/key
+checks. Store and widgets publish the same event counts, keep current progress
+separate, and show partial history without discarding verified parent counts.
+Child-only local history is supported; differing recording epochs remain explicit.
+
+Each owned repo passes 257 focused Core checks (20 new). Independent Mac Debug
+app and iOS Simulator app/widget/share/UI-runner builds pass. iPhone/iPad native
+flows verify child completion, 2/3 progress, one recorded event, cold saved-state
+equality, exact history route and one Insights completion. Source widget renders
+are inspected in partial light/dark states. Mac runtime, spoken/largest-text,
+installed widgets and hosted/cross-device acceptance are not claimed. Normal
+heading authoring and hosted/release configuration stay unchanged.
+See [TASK_WORK_HISTORY.md](TASK_WORK_HISTORY.md) and `work-history/` for exact
+source bindings/results, partial coverage rules and cleanup. Next: broader
+calendar periods, remaining heading/adapters acceptance and the other Px work.
+The full goal remains active; user-deferred release/provider gates stay pending.

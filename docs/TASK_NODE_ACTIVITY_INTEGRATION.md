@@ -127,3 +127,9 @@ author removal and final-team cleanup. It does not grant live-task authority or
 backfill already adopted orphan history. See
 [TASK_REVIEWED_HISTORY_CUSTODY.md](TASK_REVIEWED_HISTORY_CUSTODY.md) for exact
 semantics, coverage epochs, evidence and remaining UI/hosted acceptance.
+
+
+26 October client follow-up: combined parent/child activity, Insights and Project
+pulse/widget publication are now implemented and verified in the local clients.
+See [TASK_WORK_HISTORY.md](TASK_WORK_HISTORY.md) for counting, coverage, native
+phone/tablet evidence and remaining Mac/hosted/widget/accessibility acceptance.

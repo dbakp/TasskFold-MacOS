@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import argparse
 
-modes = ["pulse", "pulse-dark", "pulse-private", "pulse-choose", "pulse-unavailable", "pulse-refresh", "pulse-no-history", "pulse-incomplete", "pulse-empty", "pulse-dense", "pulse-largest", "pulse-work-incomplete"]
+modes = ["pulse", "pulse-dark", "pulse-private", "pulse-choose", "pulse-unavailable", "pulse-refresh", "pulse-no-history", "pulse-incomplete", "pulse-empty", "pulse-dense", "pulse-largest", "pulse-work-incomplete", "pulse-partial", "pulse-partial-dark"]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--mode", action="append", choices=modes)
 parser.add_argument("--output-dir", type=Path)
@@ -17,6 +17,7 @@ source += r'''
  @MainActor static func main() throws {
   let mode = CommandLine.arguments[2]
   var entry = PulseEntry.preview
+  if mode == "pulse-partial" || mode == "pulse-partial-dark" { entry.snapshot.projectPulse?.projects[0].historyPartial = true }
   if mode == "pulse-private" { entry.hideNames = true }
   if mode == "pulse-choose" { entry.projectID = nil }
   if mode == "pulse-unavailable" { entry.projectID = PulseProject.key(account: "preview", project: "removed") }
@@ -45,8 +46,8 @@ source += r'''
     PulseWidgetView(family: .systemLarge, entry: entry).padding(16).frame(width: 338, height: 354).background(WidgetSurface(tint: mint)).clipShape(RoundedRectangle(cornerRadius: 24))
     PulseWidgetView(family: .systemSmall, entry: rose).padding(16).frame(width: 170, height: 170).background(WidgetSurface(tint: brand)).clipShape(RoundedRectangle(cornerRadius: 24))
    }
-  }.padding(32).background(mode == "pulse-dark" ? Color(white: 0.09) : Color.white)
-   .environment(\.colorScheme, mode == "pulse-dark" ? .dark : .light)
+  }.padding(32).background((mode == "pulse-dark" || mode == "pulse-partial-dark") ? Color(white: 0.09) : Color.white)
+   .environment(\.colorScheme, (mode == "pulse-dark" || mode == "pulse-partial-dark") ? .dark : .light)
    .environment(\.dynamicTypeSize, mode == "pulse-largest" ? .accessibility3 : .large)
   let renderer = ImageRenderer(content: content); renderer.scale = 2
   guard let image = renderer.cgImage else { fatalError("Pulse render failed") }

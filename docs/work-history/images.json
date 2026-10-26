@@ -1,0 +1,49 @@
+[
+  {
+    "path": "phone-insights.png",
+    "source": "9725C99E-C125-40C8-ABEE-92BA7A407FD1.png",
+    "description": "Insights includes the recorded child completion after cold return_0_1F70EC2D-48BD-45EC-B44C-CB4F5D91E9D3.png",
+    "device": "phone",
+    "inspected": true
+  },
+  {
+    "path": "phone-pulse.png",
+    "source": "FC816F71-0ED1-4C01-BB3A-A9A09F15A43E.png",
+    "description": "Project and published widget counts after ordinary child completion_0_1AAA8616-D238-4874-B426-6C4B4EB411F0.png",
+    "device": "phone",
+    "inspected": true
+  },
+  {
+    "path": "phone-attention-route.png",
+    "source": "C33DEDCA-8D17-4F02-AC4B-0C8031A81E3F.png",
+    "description": "Project attention opens exact ordinary child under heading_0_A99E9C05-05E6-4104-83B3-EB51719ABE2B.png",
+    "device": "phone",
+    "inspected": false
+  },
+  {
+    "path": "tablet-insights.png",
+    "source": "3931D316-5094-4D0F-82D3-68250594F0AC.png",
+    "description": "Insights includes the recorded child completion after cold return_0_689A5310-7A99-4D90-8AFE-0AF20D8DCB7F.png",
+    "device": "tablet",
+    "inspected": true
+  },
+  {
+    "path": "tablet-pulse.png",
+    "source": "1C0D394C-A387-4DCD-A314-34D110A3592E.png",
+    "description": "Project and published widget counts after ordinary child completion_0_94A041BB-E470-4C26-B920-DFD7122CF22D.png",
+    "device": "tablet",
+    "inspected": true
+  },
+  {
+    "path": "tablet-attention-route.png",
+    "source": "C58110BE-C931-42C4-AA56-F8A7C42DD385.png",
+    "description": "Project attention opens exact ordinary child under heading_0_AF8FD392-2675-4900-AC3A-6D95F9DB2C40.png",
+    "device": "tablet",
+    "inspected": false
+  },
+  {
+    "path": "pulse-partial.png",
+    "description": "Actual owned SwiftUI widget source render; not an installed widget",
+    "inspected": true
+  }
+]

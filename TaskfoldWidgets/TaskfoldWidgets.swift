@@ -1859,7 +1859,7 @@ struct PulseWidgetView: View {
     }
     private func recent(_ day: PulseDay) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text("Recorded · last 7 days").font(.system(size: 9, weight: .semibold)).foregroundStyle(tint)
+            Text(project?.historyPartial == true ? "Partial history · last 7 days" : "Recorded · last 7 days").font(.system(size: 9, weight: .semibold)).foregroundStyle(tint)
             if entry.snapshot.projectPulse?.history == "ready" {
                 Text("\(day.completions) completion \(day.completions == 1 ? "event" : "events")").font(.system(size: 11, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8).accessibilityIdentifier("pulseWidgetEvents")
                 Text("\(day.reopens) reopen \(day.reopens == 1 ? "event" : "events")").font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)

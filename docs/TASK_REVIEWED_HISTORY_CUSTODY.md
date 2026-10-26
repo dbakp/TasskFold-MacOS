@@ -130,3 +130,9 @@ cross-device/provider acceptance remain open. Retrospective repair of any alread
 adopted orphan history requires a separate reviewed flow; this forward migration
 does not silently assign it. Full hosted-chain/HTTP/native acceptance remains open.
 All user-deferred provider/release gates remain deferred. The Px goal stays active.
+
+
+26 October client follow-up: combined parent/child activity, Insights and Project
+pulse/widget publication are now implemented and verified in the local clients.
+See [TASK_WORK_HISTORY.md](TASK_WORK_HISTORY.md) for counting, coverage, native
+phone/tablet evidence and remaining Mac/hosted/widget/accessibility acceptance.

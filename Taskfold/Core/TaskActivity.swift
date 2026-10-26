@@ -551,6 +551,8 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
             if let value = days[text] { return value }
             let value = Dates.parse(text) != nil; days[text] = value; return value
         }
+        func date(_ text: String) -> Date? { instant(text) }
+        func parent(_ row: Record) -> TaskActivity? { TaskActivity(row: row, parseInstant: instant, validDay: validDay) }
         func event(_ row: Record) -> TaskNodeActivity? { TaskNodeActivity(row: row, parseInstant: instant, validDay: validDay) }
     }
     struct Feed: Equatable, Sendable {
@@ -722,10 +724,12 @@ struct ProjectPulseReading {
     var movedIn = 0
     var movedOut = 0
     var events: [TaskActivity] = []
+    var timeline: [WorkActivity] = []
+    var historyIncomplete = false
     var malformed = 0
     var start: Date
     var end: Date
-    init(project: String, tasks: [Record], activity: [Record], now: Date = Date(), calendar input: Calendar = .current, work suppliedWork: ProjectWorkScope? = nil) {
+    init(project: String, tasks: [Record], activity: [Record], now: Date = Date(), calendar input: Calendar = .current, work suppliedWork: ProjectWorkScope? = nil, children: ChildWorkHistory? = nil, childReading suppliedChildren: ChildWorkReading? = nil) {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!
         start = calendar.date(byAdding: .day, value: -7, to: end)!
@@ -733,20 +737,34 @@ struct ProjectPulseReading {
         countsIncomplete = work.incomplete(project: project)
         total = scope.count; completed = scope.filter { $0.task.completed }.count
         var seen = Set<String>(); malformed = 0
+        let parser = TaskNodeActivity.Parser()
         events = activity.compactMap { row in
-            guard let event = TaskActivity(row: row) else { malformed += 1; return nil }
+            guard let event = parser.parent(row) else { malformed += 1; return nil }
             guard seen.insert(event.id).inserted, event.involves(project: project) else { return nil }
             if let context = event.rootContext, !context.readable { malformed += 1 }
             return event
         }.sorted { $0.sequence == $1.sequence ? $0.id > $1.id : $0.sequence > $1.sequence }
+        let child = suppliedChildren ?? children.map { ChildWorkReading($0, now: now) }
+        let childEvents = child?.events(project: project) ?? []
+        historyIncomplete = child.map { $0.incomplete(project: project) || ($0.recordedFrom.map { $0 > start } ?? true) } ?? false
+        timeline = (events.filter { $0.recordedAt <= now }.map(WorkActivity.root) + childEvents.map(WorkActivity.child)).sorted(by: WorkActivity.newestFirst)
         let recent = events.filter { $0.recordedAt >= start && $0.recordedAt < end && $0.recordedAt <= now }
         func before(_ event: TaskActivity) -> Bool { event.before["project_id"]?.text.lowercased() == project.lowercased() }
         func after(_ event: TaskActivity) -> Bool { event.after["project_id"]?.text.lowercased() == project.lowercased() }
-        completions = recent.filter { $0.kinds.contains(.completed) && !($0.rootContext?.generationChanged ?? false) && $0.workAfter && after($0) }.count
-        reopens = recent.filter { $0.kinds.contains(.reopened) && !($0.rootContext?.generationChanged ?? false) && $0.workBefore && before($0) }.count
+        completions = recent.filter { $0.kinds.contains(.completed) && !($0.rootContext?.generationChanged ?? false) && $0.workBefore && $0.workAfter && after($0) }.count
+        reopens = recent.filter { $0.kinds.contains(.reopened) && !($0.rootContext?.generationChanged ?? false) && $0.workBefore && $0.workAfter && before($0) }.count
         additions = recent.filter { $0.kinds.contains(.created) && $0.workAfter && after($0) }.count
         movedIn = recent.filter { !before($0) && after($0) && $0.workAfter && $0.kinds.contains(.moved) }.count
         movedOut = recent.filter { before($0) && !after($0) && $0.workBefore && $0.kinds.contains(.moved) }.count
+        for e in childEvents where e.recordedAt >= start && e.recordedAt < end {
+            let before = e.before["project_id"]?.text.lowercased() == project.lowercased(), after = e.after["project_id"]?.text.lowercased() == project.lowercased()
+            if e.kinds.contains(.completed), e.workBefore && e.workAfter, after { completions += 1 }
+            if e.kinds.contains(.reopened), e.workBefore && e.workAfter, before { reopens += 1 }
+            if e.kinds.contains(.created), e.workAfter, after { additions += 1 }
+            if e.kinds.contains(.moved), e.workAfter, !before && after { movedIn += 1 }
+            if e.kinds.contains(.moved), e.workBefore, before && !after { movedOut += 1 }
+        }
+
     }
 }
 
@@ -826,13 +844,15 @@ struct InsightsReading {
     var week=0
     var malformed=0
     var recordedFrom:Date?
+    var historyIncomplete = false
+    var childRecordedFrom: Date?
     var windowStart:Date
     var windowEnd:Date
     var weekStart:Date
     var scope:Scope
     var hasHistory:Bool { recordedFrom != nil }
     var reliable:Bool { hasHistory && malformed==0 }
-    init(account:String,activity:[Record],epoch:[Record],goals:ProductivityGoals,scope:Scope = .mine,projectID:String? = nil,accessibleProjects:Set<String> = [],windowDays:Int=7,now:Date=Date()) {
+    init(account:String,activity:[Record],epoch:[Record],goals:ProductivityGoals,scope:Scope = .mine,projectID:String? = nil,accessibleProjects:Set<String> = [],windowDays:Int=7,now:Date=Date(),children:ChildWorkHistory?=nil) {
         self.scope=scope
         let validGoals=try? goals.validated()
         let goals=validGoals ?? (try! ProductivityGoals())
@@ -856,6 +876,7 @@ struct InsightsReading {
         let epochRows=epoch.filter{$0.id=="current"}
         if epochRows.count==1,let date=instant(epochRows[0].string("recorded_from")),date<=now { recordedFrom=date }
         else if !epochRows.isEmpty { malformed+=1 }
+        let rootRecordedFrom = recordedFrom
         let account=account.lowercased(),accessible=Set(accessibleProjects.map{$0.lowercased()})
         var unique:[String:TaskActivity]=[:],blocked=Set<String>()
         for row in activity {
@@ -869,7 +890,7 @@ struct InsightsReading {
         var latest:[String:Int64]=[:],active:[String:Credit]=[:],deleted=Set<String>(),lifecycles:[String:String]=[:],archived:[Credit]=[]
         var occurrences: [String: String] = [:]
         for event in unique.values.sorted(by:{$0.sequence==$1.sequence ? $0.id<$1.id : $0.sequence<$1.sequence}) {
-            guard recordedFrom != nil else { break }
+            guard rootRecordedFrom != nil else { break }
             if let context = event.rootContext {
                 guard context.readable else { malformed += 1; continue }
                 let generation = context.afterGeneration ?? context.beforeGeneration
@@ -894,8 +915,12 @@ struct InsightsReading {
             if let version=latest[event.taskID],event.completionVersion<version { continue }
             if deleted.contains(event.taskID) { if !event.kinds.contains(.deleted) { malformed+=1 };continue }
             latest[event.taskID]=event.completionVersion
-            if event.kinds.contains(.reopened) { active.removeValue(forKey:event.taskID) }
-            if event.kinds.contains(.completed), event.workAfter, event.rootContext?.generationChanged != true {
+            if let context = event.rootContext, !event.before.isEmpty, !event.after.isEmpty, context.beforeType != context.afterType {
+                if let credit = active.removeValue(forKey: event.taskID) { archived.append(credit) }
+                latest.removeValue(forKey: event.taskID); lifecycles[event.taskID] = "scope:" + event.id
+            }
+            if event.kinds.contains(.reopened), event.workBefore && event.workAfter { active.removeValue(forKey:event.taskID) }
+            if event.kinds.contains(.completed), event.workBefore && event.workAfter, event.rootContext?.generationChanged != true {
                 let date=event.after["completed_at"].flatMap{instant($0.text)} ?? event.effectiveAt
                 let next=Credit(taskID:event.taskID,lifecycle:lifecycles[event.taskID] ?? "existing:"+event.taskID,version:event.completionVersion,date:date,projectID:event.after["project_id"]?.text.lowercased() ?? "",actor:event.actor?.lowercased())
                 if let previous=active[event.taskID],previous.version==next.version,previous != next { malformed+=1 }
@@ -909,7 +934,19 @@ struct InsightsReading {
                 deleted.insert(event.taskID)
             }
         }
-        credits=(archived+Array(active.values)).filter { credit in
+        var childCredits: [Credit] = []
+        if let children {
+            let visible = children.rows.map { rows in rows.filter { row in
+                let scopes = [row["before_state"].object["project_id"]?.text.lowercased() ?? "", row["after_state"].object["project_id"]?.text.lowercased() ?? ""].filter { !$0.isEmpty }
+                return scopes.isEmpty ? row.string("user_id").lowercased() == account : scopes.allSatisfy { accessible.contains($0) }
+            } }
+            let child = ChildWorkReading(ChildWorkHistory(rows: visible, epoch: children.epoch), now: now)
+            childCredits = child.credits()
+            historyIncomplete = child.incomplete || rootRecordedFrom == nil
+            childRecordedFrom = child.recordedFrom
+            if let childStart = child.recordedFrom { recordedFrom = rootRecordedFrom.map { min($0, childStart) } ?? childStart }
+        }
+        credits=(archived+Array(active.values)+childCredits).filter { credit in
             credit.date<=now && (scope == .workspace || credit.actor==account) && (projectID.map{$0.lowercased()==credit.projectID} ?? true)
         }.sorted{$0.date==$1.date ? $0.taskID<$1.taskID : $0.date<$1.date}
         today=credits.filter{$0.date>=todayStart && $0.date<windowEnd}.count
@@ -918,8 +955,14 @@ struct InsightsReading {
         var day=windowStart
         while day<windowEnd {
             let end=calendar.date(byAdding:.day,value:1,to:day)!,key=TaskPlanner.dayKey(day,calendar:calendar)
-            var coverage:Coverage=recordedFrom.map{$0>=end ? .untracked : $0>day ? .partial : .recorded} ?? .untracked
+            func coverageSince(_ from: Date?) -> Coverage { from.map { $0 >= end ? .untracked : $0 > day ? .partial : .recorded } ?? .untracked }
+            var coverage = coverageSince(rootRecordedFrom)
+            if children != nil {
+                let other = coverageSince(childRecordedFrom)
+                coverage = coverage == .recorded && other == .recorded ? .recorded : coverage == .untracked && other == .untracked ? .untracked : .partial
+            }
             if coverage == .untracked,counts[key,default:0]>0 { coverage = .partial }
+            if historyIncomplete, coverage == .recorded { coverage = .partial }
             days.append(Day(id:key,date:day,count:counts[key] ?? 0,coverage:coverage,restDay:!goals.activeWeekdays.contains(calendar.component(.weekday,from:day))))
             day=end
         }
@@ -1025,5 +1068,147 @@ struct ProjectActivityContext {
             }
             task = current
         } else { task = nil }
+    }
+}
+
+/// Optional child history is distinct from a loaded empty ledger.
+struct ChildWorkHistory {
+    let rows: [Record]?
+    let epoch: [Record]?
+    var recordedFrom: Date? {
+        guard let epoch, TaskNodeActivity.validEpoch(epoch) else { return nil }
+        return TaskPlanning.instant(epoch[0].string("recorded_from"))
+    }
+}
+
+/// Display identity includes its feed. Sequences are comparable only within a feed.
+enum WorkActivity: Identifiable, Equatable {
+    case root(TaskActivity), child(TaskNodeActivity)
+    var id: String { switch self { case .root(let e): return "root:" + e.id; case .child(let e): return "child:" + e.id } }
+    var accessibilityKey: String { switch self { case .root(let e): return e.id; case .child(let e): return "child-" + e.id } }
+    var recordedAt: Date { switch self { case .root(let e): return e.recordedAt; case .child(let e): return e.recordedAt } }
+    var effectiveAt: Date { switch self { case .root(let e): return e.effectiveAt; case .child(let e): return e.effectiveAt } }
+    var sequence: Int64 { switch self { case .root(let e): return e.sequence; case .child(let e): return e.sequence } }
+    var actor: String? { switch self { case .root(let e): return e.actor; case .child(let e): return e.actor } }
+    var before: [String: JSON] { switch self { case .root(let e): return e.before; case .child(let e): return e.before } }
+    var after: [String: JSON] { switch self { case .root(let e): return e.after; case .child(let e): return e.after } }
+    var kinds: [String] {
+        switch self {
+        case .root(let e):
+            if let context = e.rootContext, context.readable, context.beforeType != nil, context.afterType != nil, context.beforeType != context.afterType {
+                return e.kinds.filter { $0 != .completed && $0 != .reopened }.map(\.rawValue) + ["type_changed"]
+            }
+            return e.kinds.map(\.rawValue)
+        case .child(let e):
+            let changed = !e.before.isEmpty && !e.after.isEmpty && (e.workBefore != e.workAfter || e.typeBefore != e.typeAfter)
+            return e.kinds.filter { !changed || $0 != .completed && $0 != .reopened }.map(\.rawValue)
+        }
+    }
+    var title: String { kinds.map { key in
+        if let kind = TaskActivity.Kind(rawValue: key) { return kind.title }
+        switch key { case "scope_changed": return "Work scope changed"; case "type_changed": return "Type changed"; default: return "Some history unavailable" }
+    }.joined(separator: " · ") }
+    var isChild: Bool { if case .child = self { return true }; return false }
+    func involves(project: String) -> Bool { before["project_id"]?.text.lowercased() == project.lowercased() || after["project_id"]?.text.lowercased() == project.lowercased() }
+    func context(project: String, tasks: [Record], projects: [Record], members: [Record], account: String) -> (task: Record?, actor: String) {
+        switch self {
+        case .root(let event):
+            let c = ProjectActivityContext(event: event, project: project, tasks: tasks, projects: projects, members: members, account: account)
+            return (c.task, c.actorLabel)
+        case .child(let event):
+            guard !account.isEmpty, involves(project: project), projects.contains(where: { $0.id.lowercased() == project.lowercased() }) else { return (nil, "Name unavailable") }
+            let name: String
+            if actor?.lowercased() == account.lowercased() { name = "You" }
+            else if let actor { let current = members.first { $0.id.lowercased() == actor.lowercased() }?.string("display_name").trimmingCharacters(in: .whitespacesAndNewlines) ?? ""; name = current.isEmpty ? "Collaborator" : current }
+            else { name = "Name unavailable" }
+            return (event.currentTask(tasks: tasks, projects: projects, account: account), name)
+        }
+    }
+    static func newestFirst(_ a: Self, _ b: Self) -> Bool {
+        if a.recordedAt != b.recordedAt { return a.recordedAt > b.recordedAt }
+        if a.isChild == b.isChild, a.sequence != b.sequence { return a.sequence > b.sequence }
+        return a.id < b.id
+    }
+}
+
+/// Immutable child read. Ambiguous rows never lend authority or completion credit.
+struct ChildWorkReading {
+    let events: [TaskNodeActivity]
+    let recordedFrom: Date?
+    let incomplete: Bool
+    let malformed: Int
+    let blockedSubjects: Set<String>
+    private let grouped: [String: [TaskNodeActivity]]
+    private let incompleteProjects: Set<String>
+    private let globallyIncomplete: Bool
+    func events(project: String) -> [TaskNodeActivity] { grouped[project.lowercased()] ?? [] }
+    func incomplete(project: String) -> Bool { globallyIncomplete || incompleteProjects.contains(project.lowercased()) }
+    init(_ history: ChildWorkHistory, now: Date) {
+        recordedFrom = history.rows == nil ? nil : history.recordedFrom.flatMap { $0 <= now ? $0 : nil }
+        guard let rows = history.rows, recordedFrom != nil else { events = []; incomplete = true; malformed = 0; blockedSubjects = []; grouped = [:]; incompleteProjects = []; globallyIncomplete = true; return }
+        let parser = TaskNodeActivity.Parser()
+        var unique: [String: TaskNodeActivity] = [:], sequences: [Int64: TaskNodeActivity] = [:]
+        var badIDs = Set<String>(), blocked = Set<String>(), blockedRoots = Set<String>(), unknownRoot = false, malformed = 0
+        var partial = Set<String>(), global = false
+        func mark(_ before: [String: JSON], _ after: [String: JSON]) {
+            let ids = [before["project_id"]?.text.lowercased() ?? "", after["project_id"]?.text.lowercased() ?? ""].filter { !$0.isEmpty }
+            if ids.isEmpty { global = true }; partial.formUnion(ids)
+        }
+        for row in rows {
+            guard let event = parser.event(row) else {
+                malformed += 1; mark(row["before_state"].object, row["after_state"].object)
+                if let gen = UUID(uuidString: row.string("task_generation")), UUID(uuidString: row.string("task_id")) != nil, !row.string("node_key").isEmpty { blocked.insert(row.string("task_id").lowercased() + ":" + gen.uuidString.lowercased() + ":" + row.string("node_key")) }
+                else if UUID(uuidString: row.string("task_id")) != nil { blockedRoots.insert(row.string("task_id").lowercased()) }
+                else { unknownRoot = true }
+                continue
+            }
+            guard event.recordedAt <= now else { continue }
+            if let previous = unique[event.id], previous != event { blocked.insert(previous.subject); blocked.insert(event.subject); badIDs.insert(event.id); malformed += 1; mark(previous.before, previous.after); mark(event.before, event.after) }
+            if let previous = sequences[event.sequence], previous.id != event.id { blocked.insert(previous.subject); blocked.insert(event.subject); malformed += 1; mark(previous.before, previous.after); mark(event.before, event.after) }
+            unique[event.id] = event; sequences[event.sequence] = event
+        }
+        events = unique.values.filter { event in
+            if unknownRoot || blockedRoots.contains(event.rootID) { mark(event.before, event.after); return false }
+            return !badIDs.contains(event.id) && !blocked.contains(event.subject)
+        }.sorted { $0.sequence == $1.sequence ? $0.id < $1.id : $0.sequence < $1.sequence }
+        self.malformed = malformed; blockedSubjects = blocked
+        var groups: [String: [TaskNodeActivity]] = [:]
+        for event in events {
+            let ids = Set([event.before["project_id"]?.text.lowercased() ?? "", event.after["project_id"]?.text.lowercased() ?? ""]).subtracting([""])
+            for id in ids { groups[id, default: []].append(event) }
+            if event.isGap { mark(event.before, event.after) }
+        }
+        grouped = groups; incompleteProjects = partial; globallyIncomplete = global
+        incomplete = malformed > 0 || events.contains(where: \.isGap)
+    }
+    func credits() -> [InsightsReading.Credit] {
+        var active: [String: InsightsReading.Credit] = [:], archived: [InsightsReading.Credit] = []
+        var latest: [String: Int64] = [:], deleted = Set<String>(), lifecycle: [String: String] = [:], roots: [String: String] = [:]
+        let dates = TaskNodeActivity.Parser()
+        for e in events {
+            if e.isGap {
+                for subject in roots.keys.filter({ roots[$0] == e.rootID }) { active.removeValue(forKey: subject); latest.removeValue(forKey: subject); deleted.remove(subject); lifecycle[subject] = "after-gap:" + e.id }
+                continue
+            }
+            let subject = e.subject; roots[subject] = e.rootID
+            if e.kinds.contains(.created) { deleted.remove(subject); latest.removeValue(forKey: subject); lifecycle[subject] = e.id }
+            // Becoming a heading/checklist detail closes productive scope without
+            // undoing genuine earlier work. Promotion cannot manufacture a credit.
+            if !e.before.isEmpty, !e.after.isEmpty, e.workBefore != e.workAfter || e.typeBefore != e.typeAfter {
+                if let credit = active.removeValue(forKey: subject) { archived.append(credit) }
+                latest.removeValue(forKey: subject); lifecycle[subject] = "scope:" + e.id
+            }
+            if deleted.contains(subject) || latest[subject].map({ e.completionVersion < $0 }) == true { continue }
+            latest[subject] = e.completionVersion
+            if e.kinds.contains(.reopened), e.workBefore && e.workAfter { active.removeValue(forKey: subject) }
+            if e.kinds.contains(.completed), e.workBefore && e.workAfter, e.typeBefore == "task", e.typeAfter == "task" {
+                active[subject] = InsightsReading.Credit(taskID: "child:" + subject, lifecycle: lifecycle[subject] ?? "existing:" + subject, version: e.completionVersion, date: e.after["completed_at"].flatMap { dates.date($0.text) } ?? e.effectiveAt, projectID: e.after["project_id"]?.text.lowercased() ?? "", actor: e.actor?.lowercased())
+            } else if e.kinds.contains(.completion_time), e.workBefore && e.workAfter, var credit = active[subject], e.after["completed"] == .bool(true) {
+                if let date = e.after["completed_at"].flatMap({ dates.date($0.text) }) { credit.date = date; credit.version = e.completionVersion; active[subject] = credit }
+                else { active.removeValue(forKey: subject) }
+            }
+            if e.kinds.contains(.deleted) { if let credit = active.removeValue(forKey: subject) { archived.append(credit) }; deleted.insert(subject) }
+        }
+        return archived + Array(active.values)
     }
 }

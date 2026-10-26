@@ -82,7 +82,10 @@ struct ProjectPulseView: View {
     }
     private func content(_ project: Record, now: Date) -> some View {
         let work = ProjectWorkScope(tasks: store.tasks)
-        let reading = ProjectPulseReading(project: project.id, tasks: store.tasks, activity: store.rows(TaskActivity.table), now: now, work: work)
+        let childHistory = store.childActivityHistory
+        let rootStart = recordedFrom.flatMap { $0 <= now ? $0 : nil }
+        let childStart = childHistory.rows == nil ? nil : childHistory.recordedFrom.flatMap { $0 <= now ? $0 : nil }
+        let reading = ProjectPulseReading(project: project.id, tasks: store.tasks, activity: store.rows(TaskActivity.table), now: now, work: work, children: childHistory)
         return VStack(alignment: .leading, spacing: 24) {
             VStack(alignment: .leading, spacing: 14) {
                 Label("Current project tasks", systemImage: "chart.bar.fill").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
@@ -97,13 +100,15 @@ struct ProjectPulseView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Recorded in the last 7 days").font(.headline)
                 Text("\(reading.start.formatted(date: .abbreviated, time: .omitted)) – \(now.formatted(date: .abbreviated, time: .omitted)) · \(TimeZone.current.identifier)").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                if let recordedFrom {
+                if let recordedFrom = [rootStart, childStart].compactMap({ $0 }).min() {
                     if reading.malformed == 0 {
                         Text("\(reading.completions) completion \(reading.completions == 1 ? "event" : "events") · \(reading.reopens) reopen \(reading.reopens == 1 ? "event" : "events")").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseActivityCounts")
                         Text("\(reading.additions) added · \(reading.movedIn) moved in · \(reading.movedOut) moved out").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     } else { Label("Some activity could not be read. Refresh before relying on these counts.", systemImage: "exclamationmark.arrow.triangle.2.circlepath").fixedSize(horizontal: false, vertical: true) }
-                    Text("History starts \(recordedFrom.formatted(date: .abbreviated, time: .shortened)). Earlier work has no recorded timeline. Offline changes appear when received; a completion’s chosen time is retained.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryCoverage")
-                    Text("\(store.localMode ? "Saved on this device." : "Activity is limited to currently accessible work.") These are recorded parent-task events, separate from the current task total. Checklist changes have no separate timeline yet.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    if reading.historyIncomplete || (rootStart.map { $0 > reading.start } ?? true) { Label("Some history is unavailable. These are the recorded changes we can verify.", systemImage: "clock.badge.exclamationmark").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryPartial") }
+                    Text("Recorded history starts \(recordedFrom.formatted(date: .abbreviated, time: .shortened)). Earlier work has no recorded timeline. Offline changes appear when received; a completion’s chosen time is retained.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryCoverage")
+                    if let start = childStart { Text("Subtask history starts " + start.formatted(date: .abbreviated, time: .shortened) + ". Earlier subtask work may be unrecorded.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseChildCoverage") }
+                    Text("\(store.localMode ? "Saved on this device." : "Activity is limited to currently accessible work.") Tasks within headings have their own history. Ordinary checklist details appear in activity but do not earn separate completion credit.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     Divider().padding(.vertical, 8)
                     Text("Project activity").font(.headline)
                     Text("Most recently received changes.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -114,7 +119,7 @@ struct ProjectPulseView: View {
                         }.disabled(loadingPeople).accessibilityIdentifier("pulseRefreshPeople")
                         if let peopleError { Text(peopleError).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                     }
-                    let events = reading.events.filter { !onlyMine || ProjectActivityContext.isMine($0, account: store.userID) }
+                    let events = reading.timeline.filter { !onlyMine || $0.actor?.lowercased() == store.userID.lowercased() }
                     if events.isEmpty { Text(onlyMine ? "No recorded changes by you in this project yet." : "No recorded activity for this project yet.").foregroundStyle(.secondary).accessibilityIdentifier("pulseActivityEmpty") }
                     else {
                         LazyVStack(alignment: .leading, spacing: 20) {
@@ -123,9 +128,7 @@ struct ProjectPulseView: View {
                         if limit < events.count { Button { limit += 30 } label: { Text("Show more activity").frame(maxWidth: .infinity, minHeight: 44) }.accessibilityIdentifier("pulseMoreActivity") }
                     }
                 } else {
-                    Text(work.items(project: project.id).contains(where: \.nested)
-                         ? "Checklist completions update current progress. Recorded history covers parent tasks; separate checklist history is not available yet."
-                         : store.localMode ? "Activity will be recorded when you change a task on this device." : "Sync your workspace to load recorded history.")
+                    Text(store.localMode ? "Activity will be recorded when you change a task on this device." : "Sync your workspace to load recorded history.")
                         .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryUnavailable")
                 }
             }
@@ -157,30 +160,30 @@ struct ProjectPulseView: View {
             if tasks.count > 5 { Text("\(tasks.count - 5) more in this project").font(.footnote).foregroundStyle(.secondary) }
         }
     }
-    private func activityRow(_ event: TaskActivity) -> some View {
+    private func activityRow(_ event: WorkActivity) -> some View {
         let context = activityContext(event)
         return VStack(alignment: .leading, spacing: 6) {
-            Text(event.kinds.map(\.title).joined(separator: " · ")).font(.subheadline.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseEvent-" + event.id)
-            Label(context.actorLabel, systemImage: "person.crop.circle").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseActor-" + event.id)
+            Text((event.isChild ? "Subtask · " : "") + event.title).font(.subheadline.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseEvent-" + event.accessibilityKey)
+            Label(context.actor, systemImage: "person.crop.circle").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseActor-" + event.accessibilityKey)
             if let task = context.task {
                 Button {
                     guard active, let current = activityContext(event).task else { return }
                     dismiss(); openTask(current)
                 } label: {
                     Label(task.title, systemImage: "arrow.up.forward").fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
-                }.buttonStyle(.plain).foregroundStyle(Color.taskfold).accessibilityHint("Open the current task").accessibilityIdentifier("pulseActivityTask-" + event.id)
-            } else { Text("Removed or unavailable task").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                }.buttonStyle(.plain).foregroundStyle(Color.taskfold).accessibilityHint("Open the current task").accessibilityIdentifier("pulseActivityTask-" + event.accessibilityKey)
+            } else { Text(event.kinds.contains("coverage_gap") ? "Some subtask changes are unavailable." : "Removed or unavailable task").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
             Text("Recorded \(event.recordedAt.formatted(date: .abbreviated, time: .shortened))").font(.footnote).foregroundStyle(.secondary)
-            if event.kinds.contains(.completed), abs(event.effectiveAt.timeIntervalSince(event.recordedAt)) >= 60 {
+            if event.kinds.contains("completed"), abs(event.effectiveAt.timeIntervalSince(event.recordedAt)) >= 60 {
                 Text("Completion time \(event.effectiveAt.formatted(date: .abbreviated, time: .shortened))").font(.footnote).foregroundStyle(.secondary)
             }
-            if event.kinds.contains(.moved) {
+            if event.kinds.contains("moved") {
                 Text("\(place(event.before)) → \(place(event.after))").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
-    private func activityContext(_ event: TaskActivity) -> ProjectActivityContext {
-        ProjectActivityContext(event: event, project: projectID, tasks: store.tasks, projects: store.allProjects, members: store.projectMembers(projectID), account: store.userID)
+    private func activityContext(_ event: WorkActivity) -> (task: Record?, actor: String) {
+        event.context( project: projectID, tasks: store.tasks, projects: store.allProjects, members: store.projectMembers(projectID), account: store.userID)
     }
     private func refreshPeople() async {
         guard active, !store.localMode, let project else { return }
@@ -245,7 +248,7 @@ struct InsightsView:View {
         #endif
     }
     private func reading(_ goals:ProductivityGoals,scope:InsightsReading.Scope,now:Date) -> InsightsReading {
-        InsightsReading(account:store.userID,activity:store.rows(TaskActivity.table),epoch:store.rows(TaskActivity.epochTable),goals:goals,scope:scope,accessibleProjects:Set(store.allProjects.map(\.id)),windowDays:windowDays,now:now)
+        InsightsReading(account:store.userID,activity:store.rows(TaskActivity.table),epoch:store.rows(TaskActivity.epochTable),goals:goals,scope:scope,accessibleProjects:Set(store.allProjects.map(\.id)),windowDays:windowDays,now:now,children:store.childActivityHistory)
     }
     private func content(_ goals:ProductivityGoals,now:Date) -> some View {
         let personal=reading(goals,scope:.mine,now:now),shown=scope == .mine ? personal : reading(goals,scope:scope,now:now)
@@ -286,10 +289,12 @@ struct InsightsView:View {
                     } else if !textSize.isAccessibilitySize { Text("Select a day to see its count. Rest days are muted.").font(.caption).foregroundStyle(.secondary) }
                 }.padding(20).background(Color.secondary.opacity(0.05),in:RoundedRectangle(cornerRadius:24))
             }
+            if shown.historyIncomplete { Label("Partial history. Available parent and subtask completions are shown; missing history is not treated as zero.",systemImage:"clock.badge.exclamationmark").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("insightsHistoryPartial") }
+            if let childStart=shown.childRecordedFrom { Text("Subtask history since " + date(childStart,calendar:goals.calendar)).font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("insightsChildCoverage") }
             if let start=shown.recordedFrom {
                 Label("Tracking since \(date(start,calendar:goals.calendar)). Earlier days can be incomplete; recorded backdated completions are included.",systemImage:"clock.arrow.circlepath").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true).accessibilityIdentifier("insightsHistoryCoverage")
             }
-            Text("A completion counts once per task occurrence. Reopening removes its credit from the original day; changing its completion time moves that credit. Checklist items are excluded. Weekly goals include completions on rest days. Workspace charts include other people’s accessible activity; personal goals use your completions.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+            Text("A completion counts once per task occurrence. Reopening removes its credit from the original day; changing its completion time moves that credit. Tasks within headings count independently; ordinary checklist details are excluded. Changing a completed task into a heading or checklist detail preserves its earlier work. Weekly goals include completions on rest days. Workspace charts include other people’s accessible activity; personal goals use your completions.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
             Text("Totals cover currently accessible recorded work. Changes in access can change these totals.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
             if store.localMode { Label("History and goals are saved on this device.",systemImage:"internaldrive").font(.footnote).foregroundStyle(.secondary) }
         }

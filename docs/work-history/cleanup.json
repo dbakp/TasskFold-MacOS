@@ -1,0 +1,234 @@
+{
+  "ownedSimulatorApps": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "terminationExit": 3,
+      "uninstallExit": 0,
+      "absentAfterUninstall": true
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+      "terminationExit": 3,
+      "uninstallExit": 0,
+      "absentAfterUninstall": true
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "terminationExit": 3,
+      "uninstallExit": 0,
+      "absentAfterUninstall": true
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+      "terminationExit": 3,
+      "uninstallExit": 0,
+      "absentAfterUninstall": true
+    }
+  ],
+  "ownedNativeMacAppLaunched": false,
+  "removedScratch": [
+    {
+      "path": "/tmp/taskfold-work-history-phone-summary.json",
+      "logicalBytes": 999
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-renders",
+      "logicalBytes": 497466
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet-accepted-images",
+      "logicalBytes": 1278274
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-build-accepted.log",
+      "logicalBytes": 47107
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet.log",
+      "logicalBytes": 41816
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-core-final.log",
+      "logicalBytes": 85896
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-core-accepted.log",
+      "logicalBytes": 86290
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone-accepted.log",
+      "logicalBytes": 28246
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-build-coverage.log",
+      "logicalBytes": 47129
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-build.log",
+      "logicalBytes": 446330
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-build",
+      "logicalBytes": 632309219
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone-accepted-export.log",
+      "logicalBytes": 742
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet-export.log",
+      "logicalBytes": 734
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone-accepted-images",
+      "logicalBytes": 667002
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-build-final.log",
+      "logicalBytes": 39134
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-host",
+      "logicalBytes": 7202756
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-build",
+      "logicalBytes": 751570256
+    },
+    {
+      "path": "/tmp/taskfold-work-history-signature.log",
+      "logicalBytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-core.log",
+      "logicalBytes": 36711
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet-summary.json",
+      "logicalBytes": 1015
+    },
+    {
+      "path": "/tmp/taskfold-work-history-port.patch",
+      "logicalBytes": 50369
+    },
+    {
+      "path": "/tmp/taskfold-work-history-render.log",
+      "logicalBytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-work-history-core-first.log",
+      "logicalBytes": 35842
+    },
+    {
+      "path": "/tmp/taskfold-work-history-owned-app-cleanup.json",
+      "logicalBytes": 879
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet-accepted.log",
+      "logicalBytes": 42121
+    },
+    {
+      "path": "/tmp/taskfold-work-history-widget-first.log",
+      "logicalBytes": 32082
+    },
+    {
+      "path": "/tmp/taskfold-work-history-core-second.log",
+      "logicalBytes": 39448
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone-accepted.xcresult",
+      "logicalBytes": 1646343
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-core-accepted.log",
+      "logicalBytes": 85817
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone-export.log",
+      "logicalBytes": 733
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-build-accepted.log",
+      "logicalBytes": 33264
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet-accepted-summary.json",
+      "logicalBytes": 1015
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet-accepted.xcresult",
+      "logicalBytes": 2863366
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-build.log",
+      "logicalBytes": 488081
+    },
+    {
+      "path": "/tmp/taskfold-work-history-prepare.log",
+      "logicalBytes": 44
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet-images",
+      "logicalBytes": 1277606
+    },
+    {
+      "path": "/tmp/taskfold-work-history-new-tests.log",
+      "logicalBytes": 20474
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-core-final.log",
+      "logicalBytes": 85514
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone-accepted-summary.json",
+      "logicalBytes": 999
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone-images",
+      "logicalBytes": 662022
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet.xcresult",
+      "logicalBytes": 2864269
+    },
+    {
+      "path": "/tmp/taskfold-work-history-renders",
+      "logicalBytes": 1159010
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone.log",
+      "logicalBytes": 28219
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-render.log",
+      "logicalBytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-work-history-mac-core.log",
+      "logicalBytes": 92719
+    },
+    {
+      "path": "/tmp/taskfold-work-history-tablet-accepted-export.log",
+      "logicalBytes": 743
+    },
+    {
+      "path": "/tmp/taskfold-work-history-ios-build-final.log",
+      "logicalBytes": 156400
+    },
+    {
+      "path": "/tmp/taskfold-work-history-phone.xcresult",
+      "logicalBytes": 1638743
+    }
+  ],
+  "logicalBytesRemoved": 1407693244,
+  "preserved": [
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "persistent .build caches in both repos"
+  ],
+  "noRealAppOrUserDataRemoved": true
+}

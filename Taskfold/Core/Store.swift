@@ -808,6 +808,10 @@ final class Store {
     private(set) var googleAvatarURL: URL?
     private var avatarMetadataLoaded = false
     var avatarURL: URL? { localMode ? nil : ProfileAvatar.resolved(uploaded: profile.string("avatar_url"), google: googleAvatarURL) }
+    var childActivityHistory: ChildWorkHistory {
+        let tables = presentedTables
+        return ChildWorkHistory(rows: tables[TaskNodeActivity.table], epoch: tables[TaskNodeActivity.epochTable])
+    }
     var pendingCount: Int { snapshot.pending.count + ConversationOutbox.rows(snapshot, account: userID).filter { $0.string("state") != "draft" }.count }
     var cacheURL: URL {
         #if DEBUG
@@ -972,7 +976,7 @@ final class Store {
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
-        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: (activeTeamMask ?? snapshot.teamWorkspace)?.widgetTokens(presentationSnapshot) ?? WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"), collaborators: filterCollaborators, assignments: assignmentCatalog)
+        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: (activeTeamMask ?? snapshot.teamWorkspace)?.widgetTokens(presentationSnapshot) ?? WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), pulseChildren: childActivityHistory, datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"), collaborators: filterCollaborators, assignments: assignmentCatalog)
         if let feedback = snapshot.widgetCompletion.feedback, feedback.account == account,
            Date() < feedback.expiresAt, widgetFeedbackIsCurrent(feedback) {
             payload["completionFeedback"] = try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
