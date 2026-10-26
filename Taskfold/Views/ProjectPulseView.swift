@@ -81,17 +81,19 @@ struct ProjectPulseView: View {
         #endif
     }
     private func content(_ project: Record, now: Date) -> some View {
-        let reading = ProjectPulseReading(project: project.id, tasks: store.tasks, activity: store.rows(TaskActivity.table), now: now)
+        let work = ProjectWorkScope(tasks: store.tasks)
+        let reading = ProjectPulseReading(project: project.id, tasks: store.tasks, activity: store.rows(TaskActivity.table), now: now, work: work)
         return VStack(alignment: .leading, spacing: 24) {
             VStack(alignment: .leading, spacing: 14) {
                 Label("Current project tasks", systemImage: "chart.bar.fill").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
                 Text(project.name).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseProjectName")
-                Text("\(reading.completed) of \(reading.total) completed").font(.title.weight(.semibold)).monospacedDigit().fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseProgress")
-                if reading.total > 0 { ProgressView(value: Double(reading.completed), total: Double(reading.total)).tint(Color.taskfold).accessibilityLabel("Project completion").accessibilityValue("\(reading.completed) of \(reading.total) tasks") }
-                Text("\(reading.total - reading.completed) open · Each task occurrence counts once. Headings and checklist items are excluded. Adding or moving work changes this total.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(reading.countsIncomplete ? "\(reading.completed) of \(reading.total) known tasks completed" : "\(reading.completed) of \(reading.total) completed").font(.title.weight(.semibold)).monospacedDigit().fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseProgress")
+                if reading.total > 0 && !reading.countsIncomplete { ProgressView(value: Double(reading.completed), total: Double(reading.total)).tint(Color.taskfold).accessibilityLabel("Project completion").accessibilityValue("\(reading.completed) of \(reading.total) tasks") }
+                Text("\(reading.total - reading.completed) open · Each task occurrence counts once. Tasks inside headings count; checklist items inside ordinary tasks stay part of their parent. Adding or moving work changes this total.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(Color.taskfold.opacity(0.08), in: RoundedRectangle(cornerRadius: 24))
+            if reading.countsIncomplete { Label("Some work could not be counted. Review the project’s headings and checklists.", systemImage: "exclamationmark.triangle").font(.footnote).foregroundStyle(.secondary).accessibilityIdentifier("pulseCountsIncomplete") }
             if store.pendingCount > 0 { Label("Current counts include this device’s saved changes. Activity updates after sync.", systemImage: "icloud.and.arrow.up").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulsePending") }
-            attention(project, now: now)
+            attention(project, now: now, work: work)
             VStack(alignment: .leading, spacing: 12) {
                 Text("Recorded in the last 7 days").font(.headline)
                 Text("\(reading.start.formatted(date: .abbreviated, time: .omitted)) – \(now.formatted(date: .abbreviated, time: .omitted)) · \(TimeZone.current.identifier)").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -101,7 +103,7 @@ struct ProjectPulseView: View {
                         Text("\(reading.additions) added · \(reading.movedIn) moved in · \(reading.movedOut) moved out").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     } else { Label("Some activity could not be read. Refresh before relying on these counts.", systemImage: "exclamationmark.arrow.triangle.2.circlepath").fixedSize(horizontal: false, vertical: true) }
                     Text("History starts \(recordedFrom.formatted(date: .abbreviated, time: .shortened)). Earlier work has no recorded timeline. Offline changes appear when received; a completion’s chosen time is retained.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryCoverage")
-                    Text("\(store.localMode ? "Saved on this device." : "Activity is limited to currently accessible work.") These are events, separate from the current task total.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text("\(store.localMode ? "Saved on this device." : "Activity is limited to currently accessible work.") These are recorded parent-task events, separate from the current task total. Checklist changes have no separate timeline yet.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     Divider().padding(.vertical, 8)
                     Text("Project activity").font(.headline)
                     Text("Most recently received changes.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -121,35 +123,36 @@ struct ProjectPulseView: View {
                         if limit < events.count { Button { limit += 30 } label: { Text("Show more activity").frame(maxWidth: .infinity, minHeight: 44) }.accessibilityIdentifier("pulseMoreActivity") }
                     }
                 } else {
-                    Text(store.localMode ? "Activity will be recorded when you change a task on this device." : "Sync your workspace to load recorded history.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryUnavailable")
+                    Text(work.items(project: project.id).contains(where: \.nested)
+                         ? "Checklist completions update current progress. Recorded history covers parent tasks; separate checklist history is not available yet."
+                         : store.localMode ? "Activity will be recorded when you change a task on this device." : "Sync your workspace to load recorded history.")
+                        .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryUnavailable")
                 }
             }
         }
     }
-    private func attention(_ project: Record, now: Date) -> some View {
-        let today = TaskPlanner.dayKey(now)
-        let soon = TaskPlanner.dayKey(Calendar.current.date(byAdding: .day, value: 6, to: now)!)
-        let tasks = store.tasks.filter { task in
-            guard TaskKind.mayComplete(task), !task.completed, task.string("project_id").lowercased() == project.id.lowercased() else { return false }
-            let deadline = task.string("deadline_date"), planned = TaskPlanner.plannedDay(task)
-            return (!deadline.isEmpty && Dates.parse(deadline) != nil && deadline <= soon) || (!planned.isEmpty && Dates.parse(planned) != nil && planned < today)
-        }.sorted { a, b in
-            let first = a.string("deadline_date"), second = b.string("deadline_date")
-            if first != second { return (first.isEmpty ? "9999" : first) < (second.isEmpty ? "9999" : second) }
-            if a.priority != b.priority { return a.priority < b.priority }
-            return a.id < b.id
-        }
+    private func attention(_ project: Record, now: Date, work: ProjectWorkScope) -> some View {
+        let tasks = work.attention(project: project.id, now: now)
         return VStack(alignment: .leading, spacing: 12) {
             Text("Needs attention").font(.headline)
             Text("Open tasks planned before today or with a deadline in the next 7 days.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             if tasks.isEmpty { Text("No overdue plans or near deadlines.").foregroundStyle(.secondary) }
-            ForEach(Array(tasks.prefix(5))) { task in
-                Button { guard active, store.record("tasks", id: task.id) != nil else { return }; dismiss(); openTask(task) } label: {
+            ForEach(Array(tasks.prefix(5))) { item in
+                let task = item.task
+                Button {
+                    guard active, let root = store.record("tasks", id: item.root.id), root == item.root else { return }
+                    let destination: Record
+                    if let projected = item.navigationTask, item.nested,
+                       let selection = try? store.hierarchySelection(for: projected) { destination = selection.item.record }
+                    else { destination = root }
+                    dismiss(); openTask(destination)
+                } label: {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(task.title).font(.body.weight(.medium)).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                        if item.nested { Text("In " + item.root.title).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                         Text(task.string("deadline_date").isEmpty ? "Planned \(TaskPlanner.plannedDay(task))" : "Deadline \(task.string("deadline_date"))").font(.footnote).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).padding(12).background(.quaternary, in: RoundedRectangle(cornerRadius: 16))
-                }.buttonStyle(.plain).accessibilityIdentifier("pulseAttention-" + task.id)
+                }.buttonStyle(.plain).accessibilityIdentifier("pulseAttention-" + item.id)
             }
             if tasks.count > 5 { Text("\(tasks.count - 5) more in this project").font(.footnote).foregroundStyle(.secondary) }
         }

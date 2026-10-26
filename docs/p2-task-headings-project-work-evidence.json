@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-26",
+  "scope": "Project pulse current work under explicit headings, attention routes and widget totals",
+  "core": {
+    "executed": 80,
+    "passed": 80,
+    "skipped": 0,
+    "failures": 0,
+    "newProjectWorkCases": 12,
+    "tenThousandTaskHeadingSeconds": 0.5421
+  },
+  "native": {
+    "macOS": "Not run: CUA confirmed the Mac remains locked; ready current-source case/build preserved",
+    "iPhone": "not applicable",
+    "iPad": "not applicable"
+  },
+  "widgetLayouts": {
+    "sourceRenderer": "owned SwiftUI source, not an installed WidgetKit host",
+    "states": [
+      "normal",
+      "incomplete current work"
+    ],
+    "families": [
+      "small",
+      "medium",
+      "large"
+    ],
+    "inspected": true
+  },
+  "policy": [
+    "Count roots that are ordinary tasks once",
+    "Traverse heading-only containers to their nearest ordinary tasks",
+    "Do not count headings or an ordinary task\u2019s own checklist again",
+    "Only root containment inherited; child dates and completion remain independent",
+    "Unknown branches and bounds flag incomplete totals, never a full completion bar",
+    "Modern references open existing subtask editor; legacy/unavailable references open containing root",
+    "Separate recorded parent events from current child completion progress"
+  ],
+  "limits": [
+    "Separate child activity history remains open",
+    "Today/Inbox/capacity/Focus/Watch descendant work projections remain open",
+    "Mac native and installed widget refresh/interaction remain open",
+    "Largest text, spoken and shared/service/cross-device acceptance remain open",
+    "Normal heading authoring remains off",
+    "All user-deferred release, remote delivery, older-client, OAuth/provider and physical-device gates unchanged"
+  ],
+  "initialFailures": [
+    "First native phone case reached the correct Subtask details screen but the test looked for Task details; corrected test navigation title",
+    "First renderer CLI patch did not apply; its baseline-only generated images were restored before adding explicit mode/output options",
+    "A source-binding check initially omitted the existing isolated iOS App Group transformation; corrected the binding map without changing code"
+  ],
+  "rerunReason": "Final native rerun verifies the newly added honest history coverage explanation after completing a child; it does not broaden the scoped behavior claim.",
+  "cleanup": {
+    "ownedLogicalBytesPruned": 1566220757,
+    "simulatorUninstall": [
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true
+      },
+      {
+        "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+        "uninstalled": true
+      },
+      {
+        "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+        "uninstalled": true
+      }
+    ],
+    "preserved": [
+      "Both .build caches",
+      "Ready Mac host/build",
+      "Original Simulator boot states"
+    ],
+    "allOwnedBuildAndTestCommandsTerminal": true,
+    "sourceData": "Only isolated synthetic fixtures used"
+  }
+}

@@ -1842,12 +1842,12 @@ struct PulseWidgetView: View {
     }
     private func progress(_ project: PulseProject) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("\(project.completed) / \(project.total)").font(.system(size: small ? 32 : 30, weight: .semibold, design: .rounded).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.5).accessibilityLabel("\(project.completed) of \(project.total) current project tasks completed").accessibilityIdentifier("pulseWidgetProgress")
-            Text("completed · current tasks").font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.85)
+            Text(project.countsIncomplete == true ? "Review tasks" : "\(project.completed) / \(project.total)").font(.system(size: small ? 32 : 30, weight: .semibold, design: .rounded).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.5).accessibilityLabel(project.countsIncomplete == true ? "Project totals incomplete. Open the project to review its work." : "\(project.completed) of \(project.total) current project tasks completed").accessibilityIdentifier("pulseWidgetProgress")
+            Text(project.countsIncomplete == true ? "Some work unavailable" : "completed · current tasks").font(.system(size: 9)).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.85)
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
                     Capsule().fill(tint.opacity(0.15))
-                    Capsule().fill(tint).frame(width: project.total == 0 ? 0 : proxy.size.width * Double(project.completed) / Double(project.total))
+                    Capsule().fill(tint).frame(width: project.total == 0 || project.countsIncomplete == true ? 0 : proxy.size.width * Double(project.completed) / Double(project.total))
                 }
             }.frame(height: 5).accessibilityHidden(true)
         }

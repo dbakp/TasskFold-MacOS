@@ -1,0 +1,50 @@
+{
+  "nativeFiles": [
+    {
+      "path": "Taskfold/Core/TaskActivity.swift",
+      "sourceSHA256": "df69244b8c1c631fedbc8a5472aef2b0b361150b534f52ab91e20ec1aa6604a1",
+      "hostSHA256": "df69244b8c1c631fedbc8a5472aef2b0b361150b534f52ab91e20ec1aa6604a1",
+      "matchesReservedNamespaceOnlyTransform": true
+    },
+    {
+      "path": "Taskfold/Core/ProjectPulseWidget.swift",
+      "sourceSHA256": "5bcd67bcd0854520ad7de90a9d19fa2af1ae37701ed9ddfe73d7d3f7182ac6da",
+      "hostSHA256": "5bcd67bcd0854520ad7de90a9d19fa2af1ae37701ed9ddfe73d7d3f7182ac6da",
+      "matchesReservedNamespaceOnlyTransform": true
+    },
+    {
+      "path": "Taskfold/Core/Store.swift",
+      "sourceSHA256": "52f56dd4129a02734457ddbdf1d08cf4b76d6aa1dee8f980dad3eb16b4afdd38",
+      "hostSHA256": "f34cceaa8609a992af8721491a49f88c74e1f4c176a69e8ed53a6b2d35b7b4df",
+      "matchesReservedNamespaceOnlyTransform": true
+    },
+    {
+      "path": "Taskfold/Views/ProjectPulseView.swift",
+      "sourceSHA256": "5121c50b1121601201fb5545f2d836a95c53120927da476d77c00bd780db9d27",
+      "hostSHA256": "5121c50b1121601201fb5545f2d836a95c53120927da476d77c00bd780db9d27",
+      "matchesReservedNamespaceOnlyTransform": true
+    },
+    {
+      "path": "TaskfoldWidgets/TaskfoldWidgets.swift",
+      "sourceSHA256": "9ee6378ef56c10e9e2c6ef0ce07ebf111ba7a2d17dc64eebb91a5b9c88d18bac",
+      "hostSHA256": "9ee6378ef56c10e9e2c6ef0ce07ebf111ba7a2d17dc64eebb91a5b9c88d18bac",
+      "matchesReservedNamespaceOnlyTransform": true
+    },
+    {
+      "path": "Taskfold/Views/RootView.swift",
+      "sourceSHA256": "72eaceee16f9fcb8d03474b80c36eaabb159705f2c034c469378ae156d0f44b7",
+      "hostSHA256": "72eaceee16f9fcb8d03474b80c36eaabb159705f2c034c469378ae156d0f44b7",
+      "matchesReservedNamespaceOnlyTransform": true
+    },
+    {
+      "path": "TaskfoldUITests/TaskfoldMacUITests.swift",
+      "sourceSHA256": "47756c6ca0cb5eea17b11a29b768f0cc460fe815657f8428d6c9b157d8f02d7a",
+      "hostSHA256": "4b1a56a0a4da94029e5e231a878ca41d40bea521e909239941fa67663d0dc8cd",
+      "matchesReservedNamespaceOnlyTransform": true
+    }
+  ],
+  "otherSource": {
+    "TaskfoldTests/HeadingProjectProgressTests.swift": "998650d928f746facc7f1da60ce876c40d9eb00352843c76220f3a9cdb09d5ad",
+    "Scripts/render_pulse_widget_previews.py": "c6c401096a7f0d551e0bbc4a1b6b64abcdfbcc5f012d7b463a91fddf97b12e8b"
+  }
+}

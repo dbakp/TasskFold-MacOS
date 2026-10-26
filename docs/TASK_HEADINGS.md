@@ -126,9 +126,10 @@ schema was enabled by this stage.
 See `p2-task-headings-portability-evidence.json` for the exact Core, coordinated
 file-I/O, native and build scope. Broader action/count/history consistency,
 source-specific Todoist/CSV/clipboard mapping and shared type support remain open.
-In particular, project totals still use the existing root-occurrence/checklist
-policy; descendant work under headings needs a deliberate broader review before
-exposure. Largest-text, spoken, Mac runtime and cross-device acceptance are also
+Project totals now expose nearest ordinary descendants beneath headings while
+retaining ordinary-parent checklist semantics; see the project-work stage below.
+The remaining productive projections and child history still need acceptance
+before exposure. Largest-text, spoken, Mac runtime and cross-device acceptance are also
 not established by these scoped checks.
 
 ## Reminder eligibility and displayed counts
@@ -296,3 +297,48 @@ are inspected. Mac native launch is blocked by the locked screen, so Mac
 clipboard/save-panel acceptance remains open. The initial phone offscreen-control
 assertion and locked Mac launch failure are retained, not counted as passes.
 See `p2-task-headings-csv-evidence.json` and `headings-csv/`.
+
+## Project work beneath headings — 26 October 2026
+
+Project pulse now uses an explicit current-work policy in both apps and their
+published widget summaries. Headings contribute no work occurrence themselves;
+their nearest ordinary descendants count in their place, recursively through
+heading-only containers. Traversal stops at an ordinary task: its own checklist
+remains part of that task, preserving the existing ordinary-parent policy. A
+completed ordinary parent still counts once even with open checklist details.
+Empty headings add no unfinished work. This changes current project progress,
+not the saved hierarchy or completion behavior.
+
+Only project/section/account containment comes from the root. A child keeps its
+own dates, priority, estimate, assignment and completion; a dated heading cannot
+make an undated child overdue. Needs attention uses the same work scope and date
+policy as the widget. Modern child references open the existing subtask editor,
+with fresh hierarchy/workspace admission; legacy text or unavailable references
+open their containing root for review instead. No derived work item is saved as
+a new task row. Widget summaries retain only bounded names and opaque scoped
+identities, not complete notes or mutable child commands.
+
+Unrecognized branches, malformed containers, conflicting root duplicates and
+read limits mark totals incomplete. The native overview labels known counts and
+omits its progress bar; the widget says Review tasks instead of claiming a
+complete ratio. The new optional countsIncomplete summary field is absent on
+ordinary complete snapshots, preserving legacy decoding. Heading authoring and
+all shipping/service rollout switches remain unchanged.
+
+Recorded parent-task events remain separate from these current totals. Child
+completion changes current progress but has no separate activity event yet;
+Project pulse now explains that limitation even before any history exists.
+Separate child history, broader Today/Inbox/capacity/Focus/Watch descendant work
+projections, shared/service acceptance and the remaining exposure matrix stay
+open. This is project progress and attention consistency, not completion of the
+full heading/count/history objective.
+
+Verification: 80 scoped Core cases pass per repo, including 12 new project-work
+cases, with zero skips/failures. Both current Debug app/test builds, strict app
+signatures and owned WidgetKit target builds pass. The final iPhone/iPad scenario
+passes exact child navigation, unchanged Cancel, child completion, matching
+published widget totals (1/3 → 2/3), explicit history coverage and cold return;
+four native screenshots are inspected. Owned source-rendered normal/incomplete
+widget layouts are inspected on both repos. Native Mac execution and installed
+widget interaction remain open because the Mac is locked. See
+`p2-task-headings-project-work-evidence.json` and `headings-project-work/`.

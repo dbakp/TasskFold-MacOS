@@ -296,7 +296,86 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
     func involves(project: String) -> Bool { before["project_id"]?.text.lowercased() == project.lowercased() || after["project_id"]?.text.lowercased() == project.lowercased() }
 }
 
+/// Current work follows ordinary task occurrences. A heading is transparent:
+/// its nearest ordinary descendants take its place, while an ordinary task's
+/// checklist remains part of that task. This is a read model, never live rows.
+struct ProjectWorkScope {
+    struct Item: Identifiable {
+        let id: String
+        let task: Record
+        let root: Record
+        let navigationTask: Record?
+        var nested: Bool { id != root.id }
+    }
+    private(set) var items: [Item] = []
+    private(set) var incompleteProjects = Set<String>()
+    private var groups: [String: [Item]] = [:]
+    func items(project: String) -> [Item] { groups[project.lowercased()] ?? [] }
+    func incomplete(project: String) -> Bool { incompleteProjects.contains(project.lowercased()) }
+    init(tasks: [Record]) {
+        var roots: [String: Record] = [:], visited = 0
+        for root in tasks {
+            let project = root.string("project_id").lowercased(), key = root.id.lowercased()
+            guard !key.isEmpty, !root.id.hasPrefix("subtask:") else { incompleteProjects.insert(project); continue }
+            if let previous = roots[key] {
+                if previous != root { incompleteProjects.insert(project); incompleteProjects.insert(previous.string("project_id").lowercased()) }
+                continue
+            }
+            roots[key] = root
+            func visit(_ source: Record, positions: [Int], keys: [String], reference: String?, depth: Int) {
+                visited += 1
+                guard depth <= SubtaskTree.readableDepth, visited <= TaskHierarchyIndex.maximumItems else { incompleteProjects.insert(project); return }
+                switch TaskKind(source) {
+                case .unsupported: incompleteProjects.insert(project)
+                case .task:
+                    let id: String
+                    if positions.isEmpty { id = root.id }
+                    else {
+                        let identity = try! JSONEncoder().encode([root.id.lowercased()] + positions.map(String.init))
+                        id = "work:" + SHA256.hash(data: identity).map { String(format: "%02x", $0) }.joined()
+                    }
+                    var task = source; task["id"] = .string(id)
+                    for field in ["project_id", "section_id", "user_id", "task_generation"] { task[field] = root[field] }
+                    let navigation = reference.map { TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: [], id: $0).record }
+                    let item = Item(id: id, task: task, root: root, navigationTask: navigation)
+                    items.append(item); groups[project, default: []].append(item)
+                case .heading:
+                    if source.completed { incompleteProjects.insert(project) }
+                    let children = source["subtasks"]
+                    guard SubtaskTree.hasListContainer(children) else { incompleteProjects.insert(project); return }
+                    let indices = SubtaskTree.uniqueChildIndices(children)
+                    for (index, child) in children.list.enumerated() {
+                        let row: Record
+                        if case .string(let title) = child, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { row = Record(["title": .string(title)]) }
+                        else if case .object(let fields) = child, case .string(let title)? = fields["title"], !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { row = Record(fields) }
+                        else { incompleteProjects.insert(project); continue }
+                        let childKey = row.id
+                        let unique = !childKey.isEmpty && indices[childKey] != nil
+                        let next = unique ? reference.map { SubtaskTree.reference(parent: $0, key: childKey) } : nil
+                        visit(row, positions: positions + [index], keys: keys + [childKey], reference: next, depth: depth + 1)
+                    }
+                }
+            }
+            visit(root, positions: [], keys: [], reference: root.id, depth: 0)
+        }
+    }
+    func attention(project: String, now: Date, calendar: Calendar = .current) -> [Item] {
+        let today = TaskPlanner.dayKey(now, calendar: calendar)
+        let soon = TaskPlanner.dayKey(calendar.date(byAdding: .day, value: 6, to: now)!, calendar: calendar)
+        return items(project: project).filter {
+            guard !$0.task.completed else { return false }
+            let deadline = $0.task.string("deadline_date"), planned = TaskPlanner.plannedDay($0.task, calendar: calendar)
+            return (!deadline.isEmpty && Dates.parse(deadline) != nil && deadline <= soon) || (!planned.isEmpty && Dates.parse(planned) != nil && planned < today)
+        }.sorted {
+            let a = $0.task.string("deadline_date"), b = $1.task.string("deadline_date")
+            if a != b { return (a.isEmpty ? "9999" : a) < (b.isEmpty ? "9999" : b) }
+            return $0.task.priority == $1.task.priority ? $0.id < $1.id : $0.task.priority < $1.task.priority
+        }
+    }
+}
+
 struct ProjectPulseReading {
+    var countsIncomplete = false
     var total = 0
     var completed = 0
     var completions = 0
@@ -308,13 +387,13 @@ struct ProjectPulseReading {
     var malformed = 0
     var start: Date
     var end: Date
-    init(project: String, tasks: [Record], activity: [Record], now: Date = Date(), calendar input: Calendar = .current) {
+    init(project: String, tasks: [Record], activity: [Record], now: Date = Date(), calendar input: Calendar = .current, work suppliedWork: ProjectWorkScope? = nil) {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!
         start = calendar.date(byAdding: .day, value: -7, to: end)!
-        var ids = Set<String>()
-        let scope = tasks.filter { TaskKind.mayComplete($0) && $0.string("project_id").lowercased() == project.lowercased() && ids.insert($0.id.lowercased()).inserted }
-        total = scope.count; completed = scope.filter(\.completed).count
+        let work = suppliedWork ?? ProjectWorkScope(tasks: tasks), scope = work.items(project: project)
+        countsIncomplete = work.incomplete(project: project)
+        total = scope.count; completed = scope.filter { $0.task.completed }.count
         var seen = Set<String>(); malformed = 0
         events = activity.compactMap { row in
             guard let event = TaskActivity(row: row) else { malformed += 1; return nil }

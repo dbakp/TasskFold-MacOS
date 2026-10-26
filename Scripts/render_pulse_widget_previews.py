@@ -3,6 +3,13 @@
 from pathlib import Path
 import subprocess
 import tempfile
+import argparse
+
+modes = ["pulse", "pulse-dark", "pulse-private", "pulse-choose", "pulse-unavailable", "pulse-refresh", "pulse-no-history", "pulse-incomplete", "pulse-empty", "pulse-dense", "pulse-largest", "pulse-work-incomplete"]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--mode", action="append", choices=modes)
+parser.add_argument("--output-dir", type=Path)
+args = parser.parse_args()
 root = Path(__file__).resolve().parent.parent
 source = (root/'TaskfoldWidgets/TaskfoldWidgets.swift').read_text().replace('@main\nstruct TaskfoldWidgetBundle', 'struct TaskfoldWidgetBundle').replace('@Environment(\\.widgetFamily) private var family', 'var family: WidgetFamily = .systemMedium')
 source += r'''
@@ -16,6 +23,7 @@ source += r'''
   if mode == "pulse-refresh" { entry.snapshot.updated -= 86_400 }
   if mode == "pulse-no-history" { entry.snapshot.projectPulse?.recordedFrom = nil; entry.snapshot.projectPulse?.history = "unavailable" }
   if mode == "pulse-incomplete" { entry.snapshot.projectPulse?.history = "incomplete" }
+  if mode == "pulse-work-incomplete" { entry.snapshot.projectPulse?.projects[0].countsIncomplete = true }
   if mode == "pulse-empty" {
    entry.snapshot.projectPulse?.projects[0].total = 0; entry.snapshot.projectPulse?.projects[0].completed = 0
    for key in entry.snapshot.projectPulse!.projects[0].days.keys { entry.snapshot.projectPulse!.projects[0].days[key] = PulseDay(completions: 0, reopens: 0, additions: 0, movedIn: 0, movedOut: 0, attentionCount: 0, attention: []) }
@@ -46,9 +54,9 @@ source += r'''
  }
 }
 '''
-output = root/'docs/widget-previews'; output.mkdir(exist_ok=True, parents=True)
+output = args.output_dir or root/'docs/widget-previews'; output.mkdir(exist_ok=True, parents=True)
 with tempfile.TemporaryDirectory(prefix='taskfold-pulse-previews-') as temporary:
  path=Path(temporary); (path/'Preview.swift').write_text(source)
  subprocess.run(['xcrun','swiftc','-parse-as-library','-D','TASKFOLD_WIDGET_EXTENSION',str(root/'Taskfold/Core/WidgetActions.swift'),str(root/'Taskfold/Core/FocusWidget.swift'),str(root/'Taskfold/Core/ProjectPulseWidget.swift'),str(path/'Preview.swift'),'-o',str(path/'preview')],check=True)
- for mode in ['pulse','pulse-dark','pulse-private','pulse-choose','pulse-unavailable','pulse-refresh','pulse-no-history','pulse-incomplete','pulse-empty','pulse-dense','pulse-largest']:
+ for mode in args.mode or modes:
   subprocess.run([str(path/'preview'),str(output/f'{mode}.png'),mode],check=True)

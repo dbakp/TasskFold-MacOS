@@ -1,0 +1,19 @@
+{
+  "builds": [
+    {
+      "scope": "isolated app and native test runner",
+      "configuration": "Debug arm64",
+      "result": "passed",
+      "logSHA256": "954f9a5025c95f9241babbf327f740b443da3756389e306cff2242d0ba2e4560",
+      "distributionAcceptance": false
+    },
+    {
+      "scope": "owned WidgetKit target compile only",
+      "configuration": "Debug arm64",
+      "result": "passed",
+      "logSHA256": "ea8a633cd383e2ea94385e7967314f392ce503d3e0b6aa044384e95051664bd3",
+      "distributionAcceptance": false
+    }
+  ],
+  "appStrictDeepSignature": "passed"
+}

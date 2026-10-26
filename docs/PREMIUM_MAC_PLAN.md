@@ -7447,3 +7447,32 @@ workspace-switch UI and spoken acceptance also remain open. Evidence and exact
 limits are in p2-task-headings-csv-evidence.json, headings-csv/ and TASK_HEADINGS.md.
 This is a scoped interoperability step; broader headings/Px and all deferred
 release/provider/device gates remain active.
+
+
+## Heading project work and attention — 26 October 2026
+
+Mac and its widget now count the nearest ordinary work beneath heading-only
+containers in Project pulse. Ordinary parents retain their existing checklist
+policy. Child dates/priority/completion remain their own; a heading's date cannot
+make its children overdue. Attention uses the same scope as progress and opens
+existing hierarchical tasks, falling back to the containing root for legacy or
+unavailable references. No derived row becomes a saved root task. Unknown or
+unreadable branches show incomplete totals; widget progress says Review tasks
+instead of displaying a complete ratio. Recorded parent events remain separate
+from child current progress, and the native empty-history explanation makes
+that limit clear.
+
+Each repo passes 80 scoped Core cases with zero skips/failures, including 12 new
+project-work cases. A 10,000-task heading is read in about 0.54 seconds in these
+concurrent Debug checks. Current app/test-runner and owned widget-target builds
+pass. The app's strict signature passes. Actual owned SwiftUI source renders
+normal/incomplete small/medium/large widget layouts cleanly; this is not an
+installed WidgetKit test. The new native Mac case is ready and compiled, but the
+Mac remains locked, so Mac execution and the earlier CSV screen check stay open.
+Normal heading exposure is unchanged. See TASK_HEADINGS.md,
+p2-task-headings-project-work-evidence.json and headings-project-work/ for exact
+scope, source bindings and the independently owned phone/tablet checks.
+
+Separate child history, the other productive projections, shared/service and
+cross-device acceptance, spoken/largest-text work and the full advanced backlog
+remain open. All user-deferred release/provider/device gates remain deferred.

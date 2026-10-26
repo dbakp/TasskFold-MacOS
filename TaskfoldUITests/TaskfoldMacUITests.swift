@@ -4337,3 +4337,28 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(try tables()["tasks"] as? NSArray, before["tasks"] as? NSArray)
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testHeadingProjectWorkCountsExactChildAndColdReturn() throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
+        continueAfterFailure = false
+        let app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--heading-progress-fixture", "-localMode", "YES"]
+        app.launch()
+        func pulse() {
+            app.buttons["openProjectPulse"].click()
+            let picker = app.descendants(matching: .any).matching(identifier: "pulseProjectPicker").firstMatch
+            XCTAssertTrue(picker.waitForExistence(timeout: 5)); picker.click(); picker.menuItems["Launch lab"].click()
+            XCTAssertTrue(app.staticTexts["pulseProgress"].waitForExistence(timeout: 5)); XCTAssertEqual(renderedText(app.staticTexts["pulseProgress"]), "1 of 3 completed")
+        }
+        pulse()
+        let attention = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "pulseAttention-")).firstMatch
+        for _ in 0..<10 where !attention.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -350) }
+        XCTAssertTrue(attention.isHittable); attention.click()
+        let title = app.descendants(matching: .any)["taskTitle"].firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 8)); XCTAssertEqual(title.value as? String, "Draft the launch note")
+        retainWindow(app, name: "Mac project attention opens exact ordinary child under heading")
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; app.launch(); pulse()
+    }
+}

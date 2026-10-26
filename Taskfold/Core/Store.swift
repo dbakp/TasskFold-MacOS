@@ -3132,6 +3132,19 @@ extension Store {
                 snapshot.tables[WorkflowTemplate.table] = [Record(["id": .string("f2810000-0000-4000-8000-000000000003"), "user_id": .string(userID), "name": .string(decoded.name), "document": decoded.template.document])]
             } catch { self.error = error.localizedDescription }
         }
+        if ProcessInfo.processInfo.arguments.contains("--heading-progress-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
+            func item(_ suffix: String, _ title: String, heading: Bool = false, done: Bool = false, children: [JSON] = []) -> JSON {
+                .object(["id": .string("f5810000-0000-4000-8000-" + suffix), "title": .string(title), "description": .string("Keep the work’s own notes."), "is_heading": .bool(heading), "completed": .bool(done), "subtasks": .array(children)])
+            }
+            var heading = try! TaskKind.setting(task, heading: true)
+            heading["project_id"] = .string(parent); heading["title"] = .string("Launch context")
+            heading["due_date"] = .string(Dates.day(Date()))
+            var attention = item("000000000001", "Draft the launch note", children: [item("000000000005", "Checklist detail")]).object
+            attention["deadline_date"] = .string("2026-01-01")
+            heading["subtasks"] = .array([.object(attention), item("000000000002", "Choose the palette", done: true), item("000000000003", "Second phase", heading: true, children: [item("000000000004", "Check the layout")])])
+            snapshot.tables["tasks"] = [heading]
+        }
         do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }
     }
 }

@@ -54,8 +54,9 @@ struct RootView: View {
         } }
         .environment(\.openProjectPulse, { project in pulseRequest = ProjectPulseRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), projectID: project) })
         .sheet(item: $pulseRequest) { request in ProjectPulseView(request: request) { task in
-            guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration), store.record("tasks", id: task.id) != nil else { return }
-            pulseRequest = nil; workspace.openExternalTask(task.id)
+            guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration),
+                  let current = try? store.selectionRecord(task.id), current == task else { return }
+            pulseRequest = nil; workspace.openExternalTask(current.id)
         } }
         .sheet(item: $focusRequest) { FocusSessionView(request: $0) }
         .safeAreaInset(edge: .top) {

@@ -20,6 +20,10 @@ see `TASK_HEADINGS.md`, `p2-task-headings-contract-evidence.json` and
 `p2-task-headings-actions-evidence.json` and
 `p2-task-headings-todoist-evidence.json` and
 `p2-task-headings-csv-evidence.json`. This does not close headings or rank 3.
+Project progress and attention now count ordinary work beneath headings, with
+matching widget totals and an explicit incomplete-total state. Separate child
+history and broader productive projections remain open; see
+`p2-task-headings-project-work-evidence.json`.
 Mac UI automation is now authorized and the focused Todoist heading review passes.
 The outstanding wider Mac, rank-6 and Watch acceptance below remains open.
 

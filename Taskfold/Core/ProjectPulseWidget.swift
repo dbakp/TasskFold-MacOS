@@ -18,9 +18,10 @@ public struct PulseDay: Codable, Equatable, Sendable {
 public struct PulseProject: Codable, Equatable, Identifiable, Sendable {
     public var id: String, recordID: String, name: String
     public var total: Int, completed: Int
+    public var countsIncomplete: Bool?
     public var days: [String: PulseDay]
-    public init(account: String, recordID: String, name: String, total: Int, completed: Int, days: [String: PulseDay]) {
-        self.id = Self.key(account: account, project: recordID); self.recordID = recordID; self.name = name; self.total = total; self.completed = completed; self.days = days
+    public init(account: String, recordID: String, name: String, total: Int, completed: Int, days: [String: PulseDay], countsIncomplete: Bool = false) {
+        self.id = Self.key(account: account, project: recordID); self.recordID = recordID; self.name = name; self.total = total; self.completed = completed; self.days = days; self.countsIncomplete = countsIncomplete ? true : nil
     }
     public static func key(account: String, project: String) -> String { (try? JSONEncoder().encode([account, project]).base64EncodedString()) ?? "" }
     public static func link(for id: String) -> ProjectPulseLink? {
@@ -102,8 +103,8 @@ extension WidgetProjection {
         guard readable, PulseProject.validID(account) else { return .null }
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         var seen = Set<String>()
-        let uniqueTasks = tasks.filter { TaskKind.mayComplete($0) && seen.insert($0.id.lowercased()).inserted }
-        let groups = Dictionary(grouping: uniqueTasks, by: { $0.string("project_id").lowercased() })
+        let work = ProjectWorkScope(tasks: tasks)
+        let groups = Dictionary(grouping: tasks, by: { $0.string("project_id").lowercased() })
         var events: [String: [Record]] = [:], malformed = false; seen = []
         for row in activity {
             guard let event = TaskActivity(row: row) else { malformed = true; continue }
@@ -119,20 +120,12 @@ extension WidgetProjection {
             var days: [String: PulseDay] = [:]
             for offset in 0..<8 {
                 let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now))!
-                let key = ProjectPulseSnapshot.day(date, calendar: calendar), soon = ProjectPulseSnapshot.day(calendar.date(byAdding: .day, value: 6, to: date)!, calendar: calendar)
-                let reading = ProjectPulseReading(project: id, tasks: rows, activity: events[id] ?? [], now: offset == 0 ? now : date, calendar: calendar)
-                let attention = rows.filter {
-                    guard !$0.completed else { return false }
-                    let deadline = $0.string("deadline_date"), planned = TaskPlanner.plannedDay($0, calendar: calendar)
-                    return (!deadline.isEmpty && Dates.parse(deadline) != nil && deadline <= soon) || (!planned.isEmpty && Dates.parse(planned) != nil && planned < key)
-                }.sorted {
-                    let a = $0.string("deadline_date"), b = $1.string("deadline_date")
-                    if a != b { return (a.isEmpty ? "9999" : a) < (b.isEmpty ? "9999" : b) }
-                    return $0.priority == $1.priority ? $0.id < $1.id : $0.priority < $1.priority
-                }
-                days[key] = PulseDay(completions: reading.completions, reopens: reading.reopens, additions: reading.additions, movedIn: reading.movedIn, movedOut: reading.movedOut, attentionCount: attention.count, attention: attention.prefix(3).map { PulseAttention(id: $0.id, title: PinnedNotes.excerpt($0.title, characters: 120, bytes: 800).0) })
+                let key = ProjectPulseSnapshot.day(date, calendar: calendar)
+                let reading = ProjectPulseReading(project: id, tasks: rows, activity: events[id] ?? [], now: offset == 0 ? now : date, calendar: calendar, work: work)
+                let attention = work.attention(project: id, now: date, calendar: calendar)
+                days[key] = PulseDay(completions: reading.completions, reopens: reading.reopens, additions: reading.additions, movedIn: reading.movedIn, movedOut: reading.movedOut, attentionCount: attention.count, attention: attention.prefix(3).map { PulseAttention(id: $0.id, title: PinnedNotes.excerpt($0.task.title, characters: 120, bytes: 800).0) })
             }
-            return PulseProject(account: account, recordID: id, name: PinnedNotes.excerpt(project.name, characters: 160, bytes: 1000).0, total: rows.count, completed: rows.filter(\.completed).count, days: days)
+            return PulseProject(account: account, recordID: id, name: PinnedNotes.excerpt(project.name, characters: 160, bytes: 1000).0, total: work.items(project: id).count, completed: work.items(project: id).filter { $0.task.completed }.count, days: days, countsIncomplete: work.incomplete(project: id))
         }
         let snapshot = ProjectPulseSnapshot(account: account, timeZone: calendar.timeZone.identifier, history: malformed ? "incomplete" : recorded == nil ? "unavailable" : "ready", recordedFrom: recorded, projects: cards, omitted: max(0, all.count - cards.count))
         guard snapshot.valid(for: account) else { return .null }
