@@ -1,0 +1,129 @@
+{
+  "ownedScratchRemoved": [
+    {
+      "path": "/tmp/taskfold-heading-actions-ipad.log",
+      "logicalBytes": 21694
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-iphone-attachments.log",
+      "logicalBytes": 712
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-iphone.xcresult",
+      "logicalBytes": 1379679
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-prepare.log",
+      "logicalBytes": 43
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-mac-first.log",
+      "logicalBytes": 18717
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-host",
+      "logicalBytes": 7068932
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-mac-private-lock.log",
+      "logicalBytes": 1046
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-mac-final-recovery.log",
+      "logicalBytes": 22611
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-private-lock.log",
+      "logicalBytes": 1465
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-core.log",
+      "logicalBytes": 74805
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-mac-final-core.log",
+      "logicalBytes": 74085
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-build.log",
+      "logicalBytes": 539437
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ipad-attachments.log",
+      "logicalBytes": 710
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-iphone-attachments",
+      "logicalBytes": 779189
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-recovery-core.log",
+      "logicalBytes": 24130
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-mac-core.log",
+      "logicalBytes": 74415
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-iphone-summary.json",
+      "logicalBytes": 998
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ipad-summary.json",
+      "logicalBytes": 1015
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-first.log",
+      "logicalBytes": 19180
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ipad.xcresult",
+      "logicalBytes": 1624689
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ipad-attachments",
+      "logicalBytes": 945586
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-sample.txt",
+      "logicalBytes": 282919
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-final-core.log",
+      "logicalBytes": 74441
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-final-recovery.log",
+      "logicalBytes": 22988
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-sample-command.log",
+      "logicalBytes": 219
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-signing.json",
+      "logicalBytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-mac-recovery-core.log",
+      "logicalBytes": 25026
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-mac-build.log",
+      "logicalBytes": 48329
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-iphone.log",
+      "logicalBytes": 16810
+    },
+    {
+      "path": "/tmp/taskfold-heading-actions-ios-build",
+      "logicalBytes": 738055078
+    }
+  ],
+  "logicalBytesRemoved": 751199653,
+  "ownedPhoneAndTabletAppsAndRunnersRemoved": true,
+  "coreCachesPreserved": true,
+  "readyMacHostAndBuildPreserved": true,
+  "simulatorBootStatesPreserved": true
+}

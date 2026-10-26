@@ -678,8 +678,8 @@ final class Store {
             error = "This Focus session changed. Review its current state before continuing."; return false
         }
         if let session, session.status == .running || session.id != focusSession?.id {
-            guard tasks.contains(where: { $0.id.lowercased() == session.taskID && !$0.completed }) else {
-                error = "This task is no longer open in your workspace."; return false
+            guard tasks.contains(where: { $0.id.lowercased() == session.taskID && TaskKind.mayComplete($0) && !$0.completed }) else {
+                error = "Choose an open task to start or resume Focus."; return false
             }
         }
         do { return commit([try FocusSessionChange.make(session, current: focusRecord, account: userID)], remember: false) }

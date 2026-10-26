@@ -272,6 +272,7 @@ struct TemplateLibraryView: View {
     }
     private func summary(_ row: Record) -> String {
         guard let template = try? WorkflowTemplate(document: row["document"]) else { return "Update Taskfold to use this template" }
+        if template.requiresHeadingSupport { return TemplateEditing.summary(template.document) }
         return [workflowCount(template.projects.count, "project"), workflowCount(template.sections.count, "section"), workflowCount(template.tasks.count, "task")].joined(separator: " · ")
     }
     private func capture() {

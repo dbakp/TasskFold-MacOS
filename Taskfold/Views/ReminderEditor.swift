@@ -14,6 +14,12 @@ struct TaskReminderEditor: View {
     }
     var body: some View {
         Form {
+            if !TaskKind.mayComplete(task) {
+                Section {
+                    Text(TaskKind(task) == .heading ? "Task reminders are paused for headings. Your settings are kept if you change this back to a task." : "Task reminders are paused for this unsupported task type. Your settings are kept.")
+                        .font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("remindersPausedForTaskType")
+                }
+            }
             Section {
                 Toggle("At planned time", isOn: Binding(get: { ReminderSpec.plannedEnabled(task) }, set: { if !ReminderSpec.setPlanned($0, task: &task) { message = "Another reminder is already enabled at planned time. Turn it off or delete it first." } }))
                     .disabled(!plannedEditable).accessibilityIdentifier("reminderPlanned")

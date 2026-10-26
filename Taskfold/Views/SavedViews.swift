@@ -373,7 +373,7 @@ struct SavedFilterBoard: View {
                 HStack(alignment: .top, spacing: 16) {
                     ForEach(groups) { group in
                         VStack(alignment: .leading, spacing: 12) {
-                            HStack(alignment: .firstTextBaseline) { Text(group.name).font(.headline).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true); Spacer(); Text("\(group.tasks.count)").foregroundStyle(.secondary).monospacedDigit() }
+                            HStack(alignment: .firstTextBaseline) { Text(group.name).font(.headline).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true); Spacer(); Text(TaskKind.listCountLabel(group.tasks)).foregroundStyle(.secondary).monospacedDigit() }
                             let orderKey = "scope:" + scope.preferenceKey + ":group:" + group.id
                             let ordered = store.viewValue(scope, field: "sort_by", fallback: .string("manual")).text == "manual" ? DayPlacement.arranged(group.tasks, ids: store.record(DayPlacement.table, id: orderKey)?["ids"].list.map(\.text) ?? []) : group.tasks
                             ScrollView(.vertical) {

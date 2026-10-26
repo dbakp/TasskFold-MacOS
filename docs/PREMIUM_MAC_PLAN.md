@@ -7322,3 +7322,50 @@ installations are removed, with no native Mac test app launched. This stage
 removed 858.7 MiB of logical scratch; both Core caches and the ready isolated
 Mac host/build remain. Simulator boot states are preserved. See
 headings-portability/cleanup.json.
+
+
+### 2026-10-26 — Heading reminder eligibility and context counts (rank 3 in progress)
+
+Time reminder generation and stale receipt reconstruction now require an ordinary
+open task. This includes planned-time fallback, scheduled alerts and snoozes.
+Focus start/resume and finish alerts refuse heading/unsupported types while
+retaining the saved session. Location candidate/review/proposal and imported
+receipt/recovery admission now require ordinary tasks; a type conversion retires
+the old ticket, keeping saved task settings and private pins. Cancellation-only
+ticket reconstruction stays available so old OS work can still be cancelled.
+The native reminder screen explains paused heading delivery.
+
+List/board/filter badges distinguish displayed headings and unknown types from
+tasks, preserving compact ordinary-only counts. Typed template-library summaries
+now match the complete task/subtask/heading review totals. Root project progress
+retains its documented occurrence policy; these badges do not double-count
+checklist descendants. Mac board overdue grouping also excludes heading context.
+
+Both independently owned clients pass 209 scoped Core cases and all 21 private
+location recovery cases: three overlap, for 227 distinct passes per repository,
+zero failures/skips. Nine new cases cover eligibility, stale snooze, Focus,
+private review/import recovery and displayed counts. Current Debug arm64 app
+builds and strict signatures pass. One signed native iPhone and iPad scenario
+each verifies template-library summary, review/Cancel/Create, cold-return group
+count, paused reminder explanation and unchanged saved work after editor Cancel.
+Six images and both synthetic snapshots are checked. This is Simulator/Core
+acceptance, not actual post-conversion system notification delivery, physical
+location delivery or native/spoken Mac acceptance. Earlier interactive Mac UI
+Automation authentication remains pending.
+
+The streamed oversize test is confirmed live in a process sample and completes
+in roughly a minute; the separately rerun private-authority lock test and full
+recovery class pass. No full-suite acceptance or transport performance fix is
+claimed. A rejected date-sensitive trigger test is corrected to use a future DST
+fold while retaining historical component checks. The additional import test's
+initial compile error is retained in the verification notes. No schema, hosted
+configuration, production authoring flag or user-deferred dependency changed.
+
+Heading history, remaining productive/descendant policies, Todoist/CSV/clipboard
+mapping, shared command/capability adapters, largest-text, spoken, Mac runtime and
+cross-device acceptance remain open. The full Px goal remains active. See
+TASK_HEADINGS.md, p2-task-headings-actions-evidence.json and headings-actions/.
+
+Owned phone/tablet apps/runners are removed; no native Mac app was launched.
+This step pruned 716.4 MiB of owned logical scratch, preserving both Core caches,
+the ready Mac host/build and existing Simulator boot states.

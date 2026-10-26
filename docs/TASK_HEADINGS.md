@@ -131,6 +131,39 @@ policy; descendant work under headings needs a deliberate broader review before
 exposure. Largest-text, spoken, Mac runtime and cross-device acceptance are also
 not established by these scoped checks.
 
+## Reminder eligibility and displayed counts
+
+A heading is reference context, not reminder work. Time-reminder generation and
+reconstruction now require an ordinary task, including the legacy planned-date
+fallback. Converting to a heading suppresses future task alerts and makes old
+snooze callbacks obsolete after the current state is loaded. Reminder settings,
+notes and dates remain saved. The native reminder screen explains that delivery
+is paused and settings are kept; converting back to a task is explicit.
+
+Focus start/resume admission and finish-alert generation require an ordinary
+open task. Saved sessions are retained for review, pause/stop and history. A
+captured ordinary choice no longer authorizes Focus after conversion.
+
+Location candidates, editor reviews, outbound private drafts, imported receipt
+admission and recovery candidates require an ordinary task. Type conversion
+retires the old delivery ticket without deleting saved task settings or private
+pins. Cancellation-only ticket reconstruction intentionally remains available:
+a retired or unsupported task must still be able to cancel an old OS request.
+No physical location delivery or remote reminder rollout is enabled here.
+
+List, board and saved-filter group badges count the displayed records. Ordinary
+only groups keep their compact numeric badge; mixed/context groups label task,
+heading and unsupported-item counts separately. This does not expand checklist
+descendants into a second count. Typed template-library summaries now use the
+full task/subtask and heading totals used in their review. Project pulse retains
+its documented root-occurrence policy (checklist items excluded); a hierarchy
+view counts the independently displayed nodes in that view.
+
+See `p2-task-headings-actions-evidence.json` for current verification and exact
+limits. Historical activity semantics, broader productive/descendant policies,
+provider/source mapping, shared capability work and native Mac/spoken acceptance
+are still open; these changes do not expose heading authoring in normal builds.
+
 ## Ordered work before exposure
 
 1. Finish native acceptance of the implemented local presentation/type editors:

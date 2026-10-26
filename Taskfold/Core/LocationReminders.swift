@@ -136,7 +136,7 @@ struct LocationReminderCandidate: Equatable, Sendable {
     let title: String
     let priority: Int
     init?(account: String, device: String, task: Record, settings: LocationReminderSettings, place: LocationPrivatePlace) {
-        guard LocationReminderIdentity.account(account), settings.enabled, !task.completed,
+        guard LocationReminderIdentity.account(account), settings.enabled, TaskKind.mayComplete(task), !task.completed,
               task.id == settings.taskID, task.string("task_generation") == settings.taskGeneration,
               device == settings.device, place.account == account, place.id == settings.placeID, place.revision == settings.placeRevision else { return nil }
         let completion: Int
@@ -527,7 +527,7 @@ struct LocationReminderReview: Sendable {
     init?(workspace: WorkspaceBinding, task: Record, archive: LocationPrivateArchive, place: LocationPrivatePlace,
           transition: LocationReminderSettings.Transition, repeats: Bool? = nil, replacing: LocationReminderSettings? = nil, identity: (id: String, arm: String)? = nil) {
         guard archive.valid, place.account == workspace.account, archive.places(for: workspace.account).contains(where: { $0 == place }),
-              !task.completed, LocationReminderIdentity.uuid(task["task_generation"]),
+              TaskKind.mayComplete(task), !task.completed, LocationReminderIdentity.uuid(task["task_generation"]),
               replacing == nil || ReminderSpec.rows(task).contains(.object(replacing!.raw)),
               let created = LocationReminderSettings.make(device: archive.device, taskID: task.id, taskGeneration: task.string("task_generation"), place: place, transition: transition, repeats: repeats ?? replacing?.repeats ?? false, id: identity?.id ?? replacing?.id ?? UUID().uuidString.lowercased(), arm: identity?.arm ?? UUID().uuidString.lowercased()) else { return nil }
         var fields = replacing?.raw ?? [:]
@@ -541,7 +541,7 @@ struct LocationReminderReview: Sendable {
     }
     func valid(task: Record, archive: LocationPrivateArchive, workspace: WorkspaceBinding) -> Bool {
         self.workspace == workspace && archive.valid && archive.device == settings.device &&
-        task.id == settings.taskID && task.string("task_generation") == settings.taskGeneration && !task.completed && task["completion_version"] == completion &&
+        task.id == settings.taskID && task.string("task_generation") == settings.taskGeneration && TaskKind.mayComplete(task) && !task.completed && task["completion_version"] == completion &&
         archive.places(for: workspace.account).contains { $0.id == place.id && $0.revision == place.revision && $0.geometry == place.geometry }
     }
     func applying(to task: Record, archive: LocationPrivateArchive, workspace: WorkspaceBinding) -> Record? {
@@ -579,7 +579,7 @@ extension LocationReminderTicket {
         return ticket.valid ? ticket : nil
     }
     static func retired(account: String, before: Record, after: Record?) -> [Self] {
-        let kept = (after?.completed == false ? after : nil).map { task in ReminderSpec.rows(task).compactMap { LocationReminderSettings(raw: $0.object) }.filter(\.enabled).compactMap { bound(account: account, task: task, settings: $0) } } ?? []
+        let kept = (after.map { TaskKind.mayComplete($0) && !$0.completed } == true ? after : nil).map { task in ReminderSpec.rows(task).compactMap { LocationReminderSettings(raw: $0.object) }.filter(\.enabled).compactMap { bound(account: account, task: task, settings: $0) } } ?? []
         return ReminderSpec.rows(before).compactMap { LocationReminderSettings(raw: $0.object) }.compactMap { bound(account: account, task: before, settings: $0) }.filter { !kept.contains($0) }
     }
 }
@@ -818,7 +818,7 @@ struct LocationHandoffProposal: Equatable, Sendable {
     static func make(account: String, task: Record, place: LocationPrivatePlace, transition: LocationReminderSettings.Transition, repeats: Bool,
                      now: Date = Date(), id: String = UUID().uuidString.lowercased()) -> Self? {
         let milliseconds = floor(now.timeIntervalSince1970 * 1000)
-        guard place.account == account, !task.completed, milliseconds.isFinite, (0...Double(maximumTime)).contains(milliseconds) else { return nil }
+        guard place.account == account, TaskKind.mayComplete(task), !task.completed, milliseconds.isFinite, (0...Double(maximumTime)).contains(milliseconds) else { return nil }
         let completion = task["completion_version"] == .null ? JSON.number(0) : task["completion_version"]
         return Self(account: account, raw: ["version": .number(1),"id": .string(id),"task_id": .string(task.id),"task_generation": task["task_generation"],
             "completion_version": completion,"authored_at_ms": .number(milliseconds),"place_name": .string(place.name),
@@ -826,7 +826,7 @@ struct LocationHandoffProposal: Equatable, Sendable {
             "transition": .string(transition.rawValue),"repeats": .bool(repeats)])
     }
     func matches(task: Record, account: String) -> Bool {
-        self.account == account && task.id == taskID && task.string("task_generation") == generation && !task.completed &&
+        self.account == account && task.id == taskID && task.string("task_generation") == generation && TaskKind.mayComplete(task) && !task.completed &&
         (task["completion_version"] == .null ? 0 : Recurrence.number(task["completion_version"], in: 0...9_007_199_254_740_991)) == completion
     }
 }
@@ -985,7 +985,7 @@ struct LocationHandoffImportReceipt: Codable, Equatable, Sendable {
         guard review.valid, settings.id == review.specID, settings.arm == review.arm, settings.device == review.device,
               settings.placeID == review.placeID, settings.placeRevision == review.placeRevision,
               settings.taskID == review.taskID, settings.taskGeneration == review.generation,
-              !task.completed, ReminderSpec.rows(task).contains(.object(settings.raw)),
+              TaskKind.mayComplete(task), !task.completed, ReminderSpec.rows(task).contains(.object(settings.raw)),
               let ticket = LocationReminderTicket.bound(account: review.account, task: task, settings: settings),
               ticket.completionVersion == review.completion else { return nil }
         reviewID = review.id; expiresMilliseconds = review.expiresMilliseconds; self.ticket = ticket; self.recoveryEpoch = recoveryEpoch
@@ -999,7 +999,7 @@ struct LocationHandoffImportReceipt: Codable, Equatable, Sendable {
               archive.journal.entries[ticket.identifier] == nil, archive.journal.revoked?.contains(ticket.identifier) != true,
               cancellations[ticket.identifier] == nil else { return nil }
         let matches = tasks.filter { $0.id == ticket.taskID }
-        guard matches.count == 1, let task = matches.first, !task.completed,
+        guard matches.count == 1, let task = matches.first, TaskKind.mayComplete(task), !task.completed,
               let settings = ReminderSpec.rows(task).compactMap({ LocationReminderSettings(raw: $0.object) }).first(where: { $0.id == ticket.specID }),
               let place = archive.places(for: account).first(where: { $0.id == ticket.placeID && $0.revision == ticket.placeRevision }),
               let candidate = LocationReminderCandidate(account: account, device: archive.device, task: task, settings: settings, place: place),
@@ -1034,7 +1034,7 @@ enum LocationHandoffImportLedger {
         if let receipt {
             guard receipt.valid, records[receipt.key] == nil, proposed.locationImports?[receipt.key] == receipt,
                   let saved = proposed.tables["tasks"]?.filter({ $0.id == receipt.ticket.taskID }), saved.count == 1,
-                  !saved[0].completed,
+                  TaskKind.mayComplete(saved[0]), !saved[0].completed,
                   let settings = ReminderSpec.rows(saved[0]).compactMap({ LocationReminderSettings(raw: $0.object) }).first(where: { $0.id == receipt.ticket.specID }),
                   LocationReminderTicket.bound(account: receipt.ticket.account, task: saved[0], settings: settings) == receipt.ticket,
                   !(previous.tables["tasks"] ?? []).contains(where: { task in

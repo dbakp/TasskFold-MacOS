@@ -341,3 +341,27 @@ final class LocationHandoffRecoveryTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf:file.url),bytes)
     }
 }
+
+
+extension LocationHandoffRecoveryTests {
+    func testHeadingAndUnknownTypeCannotCertifyOrRecoverAnImportedPlaceReminder() async throws {
+        let root = try root(); defer { try? FileManager.default.removeItem(at: root) }
+        let store = LocationPrivateStore(applicationSupport: root), pending = try record(), proposal = try XCTUnwrap(pending.proposal)
+        let ticket = try await store.reserveHandoffReview(pending, expectedDevice: nil)
+        _ = try await store.setAllowance(account: account, enabled: true, expectedDevice: ticket.device)
+        let archive = try await store.saveReviewedHandoffPlace(ticket, proposal: proposal)
+        let (before, after, receipt, _) = try prepared(pending, ticket: ticket, archive: archive)
+        let settings = try XCTUnwrap(ReminderSpec.rows(after).compactMap { LocationReminderSettings(raw: $0.object) }.first)
+        XCTAssertNotNil(receipt.recoveryCandidate(account: account, tasks: [after], archive: archive, cancellations: [:]))
+        for type in [JSON.bool(true), .string("future")] {
+            var changed = after; changed["is_heading"] = type
+            XCTAssertNil(LocationHandoffImportReceipt(review: ticket, task: changed, settings: settings, recoveryEpoch: receipt.recoveryEpoch))
+            XCTAssertNil(receipt.recoveryCandidate(account: account, tasks: [changed], archive: archive, cancellations: [:]))
+            let previous = Snapshot(tables: ["tasks": [before]])
+            var proposed = Snapshot(tables: ["tasks": [changed]]); proposed.locationImports = [receipt.key: receipt]
+            XCTAssertThrowsError(try LocationHandoffImportLedger.staging(previous: previous, proposed: proposed, accepting: receipt))
+            XCTAssertEqual(changed["reminder_specs"], after["reminder_specs"])
+        }
+        let unchanged = try await load(store); XCTAssertEqual(unchanged, archive)
+    }
+}

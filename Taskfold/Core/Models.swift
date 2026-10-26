@@ -71,6 +71,20 @@ enum TaskKind: Equatable, Sendable {
         }
     }
     static func mayComplete(_ row: Record) -> Bool { Self(row) == .task }
+    /// Counts the displayed records, without counting checklist descendants twice.
+    /// Headings remain visible context; unknown future types are labelled separately.
+    static func listCountLabel(_ rows: [Record]) -> String {
+        let tasks = rows.filter(mayComplete).count
+        let headings = rows.filter { Self($0) == .heading }.count
+        let unsupported = rows.count - tasks - headings
+        guard headings > 0 || unsupported > 0 else { return String(tasks) }
+        func label(_ count: Int, _ noun: String) -> String { "\(count) " + noun + (count == 1 ? "" : "s") }
+        var parts = [label(tasks, "task")]
+        if headings > 0 { parts.append(label(headings, "heading")) }
+        if unsupported > 0 { parts.append(label(unsupported, "unsupported item")) }
+        return parts.joined(separator: " · ")
+    }
+
     static func containsTypeMetadata(_ rows: [Record]) -> Bool {
         rows.contains { row in
             row.fields["is_heading"] != nil || (checklistNodes(row["subtasks"]).map { $0.contains { $0.fields["is_heading"] != nil } } ?? true)

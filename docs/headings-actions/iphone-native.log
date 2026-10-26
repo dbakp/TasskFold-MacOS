@@ -1,0 +1,214 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-heading-actions-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -resultBundlePath /tmp/taskfold-heading-actions-iphone.xcresult -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 180 "-only-testing:TaskfoldUITests/TaskfoldUITests/testHeadingTemplateDecodedFileReviewCancelCreateAndColdReturn"
+
+Writing result bundle at path:
+	/tmp/taskfold-heading-actions-iphone.xcresult
+
+2026-10-26 06:22:47.992136+0100 TaskfoldUITests-Runner[71418:21743889] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 06:22:52.662.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 06:22:52.662.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 06:22:52.663.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testHeadingTemplateDecodedFileReviewCancelCreateAndColdReturn]' started.
+    t =     0.01s Start Test at 2026-10-26 06:22:52.674
+    t =     0.08s Set Up
+    t =     0.08s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.08s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 06:22:52.959 xcodebuild[71411:21743670] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 06:22:52.959 xcodebuild[71411:21743670] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.15s         Setting up automation session
+objc[71418]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x105f7c398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x109b30310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     5.04s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.49s Checking existence of `"Browse" Button`
+    t =     8.62s Tap "Browse" Button
+    t =     8.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.64s     Find the "Browse" Button
+    t =     8.67s     Check for interrupting elements affecting "Browse" Button
+    t =     8.81s     Synthesize event
+    t =     9.16s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.17s Get all elements bound by index for: Descendants matching type CollectionView
+    t =    11.24s Find the CollectionView (Element at index 0)
+    t =    11.29s Find the "Browse" NavigationBar
+    t =    11.37s Find the CollectionView at {{0.0, 0.0}, {402.0, 874.0}}
+    t =    11.42s Checking existence of `TabBar (First Match)`
+    t =    11.43s Find the TabBar (First Match)
+    t =    11.44s Checking existence of `"openTemplates" Button`
+    t =    11.49s Find the "openTemplates" Button
+    t =    11.56s Checking existence of `"openTemplates" Button`
+    t =    11.61s Find the "openTemplates" Button
+    t =    11.66s Press CollectionView at {{0.0, 0.0}, {402.0, 874.0}}[0.97, 0.70] for 0.1 seconds, then drag to CollectionView at {{0.0, 0.0}, {402.0, 874.0}}[0.97, 0.50] with velocity of 250.00 pixels per second, and then hold for 0.2 seconds 
+    t =    11.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.67s     Find the CollectionView at {{0.0, 0.0}, {402.0, 874.0}}
+    t =    11.71s     Check for interrupting elements affecting CollectionView
+    t =    11.75s     Synthesize event
+    t =    11.75s         Find the CollectionView at {{0.0, 0.0}, {402.0, 874.0}}
+    t =    11.79s         Find the CollectionView at {{0.0, 0.0}, {402.0, 874.0}}
+    t =    11.84s         Find the CollectionView at {{0.0, 0.0}, {402.0, 874.0}}
+    t =    11.88s         Find the CollectionView at {{0.0, 0.0}, {402.0, 874.0}}
+    t =    11.93s         Find the CollectionView at {{0.0, 0.0}, {402.0, 874.0}}
+    t =    13.16s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.21s Checking existence of `"openTemplates" Button`
+    t =    13.28s Find the "openTemplates" Button
+    t =    13.34s Find the "openTemplates" Button
+    t =    13.39s Find the "openTemplates" Button
+    t =    13.44s Checking existence of `"openTemplates" Button`
+    t =    13.49s Find the "openTemplates" Button
+    t =    13.55s Find the "openTemplates" Button
+    t =    13.60s Find the "openTemplates" Button
+    t =    13.65s Tap "openTemplates" Button
+    t =    13.65s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.66s     Find the "openTemplates" Button
+    t =    13.71s     Check for interrupting elements affecting "openTemplates" Button
+    t =    13.75s     Synthesize event
+    t =    14.05s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.34s Waiting 8.0s for "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button to exist
+    t =    15.40s     Checking `Expect predicate `existsNoRetry == 1` for object "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button`
+    t =    15.40s         Checking existence of `"workflowTemplate-f2810000-0000-4000-8000-000000000003" Button`
+    t =    15.50s Find the "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    15.57s Tap "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    15.57s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.57s     Find the "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    15.61s     Check for interrupting elements affecting "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    15.65s     Synthesize event
+    t =    15.95s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.11s Waiting 5.0s for "templateDestination" Button to exist
+    t =    17.15s     Checking `Expect predicate `existsNoRetry == 1` for object "templateDestination" Button`
+    t =    17.15s         Checking existence of `"templateDestination" Button`
+    t =    17.23s Tap "Done" Button
+    t =    17.23s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.23s     Find the "Done" Button
+    t =    17.30s     Check for interrupting elements affecting "Done" Button
+    t =    17.36s     Synthesize event
+    t =    17.65s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.09s Tap "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    18.09s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.10s     Find the "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    18.14s     Check for interrupting elements affecting "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    18.18s     Synthesize event
+    t =    18.48s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.92s Tap "templateDestination" Button
+    t =    18.92s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.92s     Find the "templateDestination" Button
+    t =    19.00s     Check for interrupting elements affecting "templateDestination" Button
+    t =    19.07s     Synthesize event
+    t =    19.36s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.59s Waiting 5.0s for "templateInboxDestination" Button to exist
+    t =    21.63s     Checking `Expect predicate `existsNoRetry == 1` for object "templateInboxDestination" Button`
+    t =    21.63s         Checking existence of `"templateInboxDestination" Button`
+    t =    21.74s Tap "templateInboxDestination" Button
+    t =    21.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.74s     Find the "templateInboxDestination" Button
+    t =    21.81s     Check for interrupting elements affecting "templateInboxDestination" Button
+    t =    21.88s     Synthesize event
+    t =    22.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.59s Checking existence of `"applyWorkflowTemplate" Button`
+    t =    23.67s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    23.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    23.68s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    23.72s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    23.78s     Synthesize event
+    t =    24.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.00s Checking existence of `"applyWorkflowTemplate" Button`
+    t =    25.09s Find the "applyWorkflowTemplate" Button
+    t =    25.17s Find the "applyWorkflowTemplate" Button
+    t =    25.24s Find the "applyWorkflowTemplate" Button
+    t =    25.30s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    25.47s Added attachment named 'Typed heading workflow contents before Create'
+    t =    25.48s Tap "applyWorkflowTemplate" Button
+    t =    25.48s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.48s     Find the "applyWorkflowTemplate" Button
+    t =    25.55s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    25.61s     Synthesize event
+    t =    25.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.37s Waiting 8.0s for "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button to exist
+    t =    27.43s     Checking `Expect predicate `existsNoRetry == 1` for object "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button`
+    t =    27.43s         Checking existence of `"workflowTemplate-f2810000-0000-4000-8000-000000000003" Button`
+    t =    27.49s Terminate com.dbakp.taskfold.workflowteststeameditbridge:71435
+    t =    28.58s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    28.58s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 06:23:21.247 xcodebuild[71411:21743670] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 06:23:21.247 xcodebuild[71411:21743670] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    28.80s         Setting up automation session
+    t =    32.30s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.14s Checking existence of `"Inbox" Button`
+    t =    35.34s Tap "Inbox" Button
+    t =    35.34s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.36s     Find the "Inbox" Button
+    t =    35.38s     Check for interrupting elements affecting "Inbox" Button
+    t =    35.54s     Synthesize event
+    t =    35.87s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.52s Waiting 8.0s for "taskDetails-9c5374bf-12b7-81ec-8da1-b208bd8ca642" Button to exist
+    t =    38.56s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-9c5374bf-12b7-81ec-8da1-b208bd8ca642" Button`
+    t =    38.57s         Checking existence of `"taskDetails-9c5374bf-12b7-81ec-8da1-b208bd8ca642" Button`
+    t =    38.66s Checking existence of `"Complete Prepare workflow brief" Button`
+    t =    38.69s Checking existence of `"0 tasks · 1 heading" StaticText`
+    t =    38.73s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    38.86s Added attachment named 'Heading workflow copied into Inbox after cold return'
+    t =    38.86s Tap "taskDetails-9c5374bf-12b7-81ec-8da1-b208bd8ca642" Button
+    t =    38.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.87s     Find the "taskDetails-9c5374bf-12b7-81ec-8da1-b208bd8ca642" Button
+    t =    38.90s     Check for interrupting elements affecting "taskDetails-9c5374bf-12b7-81ec-8da1-b208bd8ca642" Button
+    t =    38.94s     Synthesize event
+    t =    39.23s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.88s Find the "taskReminders" Button
+    t =    41.02s     Find the "taskReminders" Button (retry 1)
+    t =    42.12s     Find the "taskReminders" Button (retry 2)
+    t =    42.21s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    42.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.22s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    42.27s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    42.33s     Synthesize event
+    t =    42.75s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    44.92s Find the "taskReminders" Button
+    t =    45.04s Find the "taskReminders" Button
+    t =    45.12s Find the "taskReminders" Button
+    t =    45.21s Find the "taskReminders" Button
+    t =    45.29s Find the "taskReminders" Button
+    t =    45.38s Find the "taskReminders" Button
+    t =    45.47s Find the "taskReminders" Button
+    t =    45.55s Find the "taskReminders" Button
+    t =    45.64s Find the "taskReminders" Button
+    t =    45.72s Find the "taskReminders" Button
+    t =    45.81s Tap "taskReminders" Button
+    t =    45.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.81s     Find the "taskReminders" Button
+    t =    45.88s     Check for interrupting elements affecting "taskReminders" Button
+    t =    45.96s     Synthesize event
+    t =    46.25s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.72s Waiting 5.0s for "remindersPausedForTaskType" StaticText to exist
+    t =    47.76s     Checking `Expect predicate `existsNoRetry == 1` for object "remindersPausedForTaskType" StaticText`
+    t =    47.76s         Checking existence of `"remindersPausedForTaskType" StaticText`
+    t =    47.84s Find the "remindersPausedForTaskType" StaticText
+    t =    47.90s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    48.05s Added attachment named 'Heading reminder settings kept with paused delivery explanation'
+    t =    48.05s Tap Button (Element at index 0)
+    t =    48.05s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.05s     Find the Button (Element at index 0)
+    t =    48.11s     Check for interrupting elements affecting "BackButton" Button
+    t =    48.17s     Synthesize event
+    t =    48.46s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.81s Tap "Cancel" Button
+    t =    48.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.82s     Find the "Cancel" Button
+    t =    48.90s     Check for interrupting elements affecting "Cancel" Button
+    t =    48.97s     Synthesize event
+    t =    49.27s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    49.72s Terminate com.dbakp.taskfold.workflowteststeameditbridge:71588
+    t =    50.81s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testHeadingTemplateDecodedFileReviewCancelCreateAndColdReturn]' passed (50.972 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-26 06:23:43.646.
+	 Executed 1 test, with 0 failures (0 unexpected) in 50.972 (50.983) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 06:23:43.649.
+	 Executed 1 test, with 0 failures (0 unexpected) in 50.972 (50.986) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 06:23:43.649.
+	 Executed 1 test, with 0 failures (0 unexpected) in 50.972 (50.988) seconds
+2026-10-26 06:23:43.971 xcodebuild[71411:21743670] [MT] IDETestOperationsObserverDebug: 59.651 elapsed -- Testing started completed.
+2026-10-26 06:23:43.971 xcodebuild[71411:21743670] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 06:23:43.971 xcodebuild[71411:21743670] [MT] IDETestOperationsObserverDebug: 59.651 sec, +59.651 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-heading-actions-iphone.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

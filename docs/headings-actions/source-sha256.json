@@ -1,0 +1,14 @@
+{
+  "Taskfold/Core/LocationReminders.swift": "8e5835ed0eb81dbdfe2e6bc53542bae51e37a264e78a51e174fa783cdbd3fe4a",
+  "Taskfold/Core/Models.swift": "a784532143e88f04bd73f1a2688f94cb12514190cf047ab603f5bf2c88b86508",
+  "Taskfold/Core/Reminders.swift": "d27402065a2a2722d7e8a243511484d7c76ac81655f48a48391b071d104016f1",
+  "Taskfold/Core/Store.swift": "0665ef5255c2b6085b8747cf370326f76679fe46cb97bee8f6672bcecb2eef9a",
+  "Taskfold/Views/ProjectBoard.swift": "1665c560d4eb606aa4e355cac35a7668e44fe5a74285d3010ba77c6a1591e134",
+  "Taskfold/Views/ReminderEditor.swift": "d54c5a613141db52869a9a97759491cd25697de7ee3d1350f564a04b624412a2",
+  "Taskfold/Views/SavedViews.swift": "533f1b7e42307a2de344318af75005c1667f82502ab7820699e201766af40100",
+  "Taskfold/Views/TaskListView.swift": "b21ddd5a6d3fe8cfaaa5b44459b13585ca83d45b946d3a1c1a85db0303ae7b99",
+  "Taskfold/Views/WorkflowViews.swift": "3839bd0923df4c886e862ecc9f753d08242f39739fce65d850acf3937af30215",
+  "TaskfoldTests/LocationHandoffRecoveryTests.swift": "d0c576ade5c8035082f99f947502c386f1d6f4872b62e836497ce29a165e585a",
+  "TaskfoldTests/ReminderTests.swift": "a7831a63ae69f4cfb2cfb645314881e822c195dcd223b828837beb3da89781f2",
+  "TaskfoldTests/HeadingDeliveryTests.swift": "ebc873797ed63651017923a4ddfb147d376832af5ce31ef76c0990f385775a08"
+}

@@ -568,7 +568,7 @@ struct DueReminder: Equatable, Sendable {
     }
     static func digest(_ value: String) -> String { SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined() }
     private static func specifications(_ task: Record, channels: Set<String>) -> [ReminderSpec] {
-        guard !task.completed else { return [] }
+        guard TaskKind.mayComplete(task), !task.completed else { return [] }
         if let generation = task.fields["task_generation"], generation != .null {
             guard case .string(let value) = generation, UUID(uuidString: value) != nil else { return [] }
         }
@@ -1019,7 +1019,7 @@ enum FocusFinish {
     static func event(row: Record?, tasks: [Record], account: String, available: Bool = true, conflict: Bool = false) -> DueReminder? {
         guard available, !conflict, !account.isEmpty, let row,
               let session = FocusSessionChange.session(in: row, account: account), session.status == .running,
-              let end = session.endDate, let task = tasks.first(where: { $0.id.lowercased() == session.taskID && !$0.completed }) else { return nil }
+              let end = session.endDate, let task = tasks.first(where: { $0.id.lowercased() == session.taskID && TaskKind.mayComplete($0) && !$0.completed }) else { return nil }
         var fields: [String: JSON] = ["state": session.document, "baseline": .object(FocusSessionChange.baseline(row)), "completion": task["completion_version"]]
         if !task.string("task_generation").isEmpty { fields["task_generation"] = task["task_generation"] }
         let document: JSON = .object(fields)

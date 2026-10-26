@@ -201,7 +201,7 @@ struct TaskListView: View {
                                 }
                             } header: {
                                 if !projectID.isEmpty {
-                                    ProjectSectionHeader(key: group.key, title: group.title, count: group.tasks.filter(TaskKind.mayComplete).count, collapsed: collapseBinding(group.key)) {
+                                    ProjectSectionHeader(key: group.key, title: group.title, count: TaskKind.listCountLabel(group.tasks), collapsed: collapseBinding(group.key)) {
                                         captureSection = group.key.split(separator: ":").last.map(String.init).flatMap { $0 == "none" ? nil : $0 } ?? ""
                                         quickAddVisible = true
                                     }

@@ -61,13 +61,13 @@ private struct BoardColumn: View {
         self.column = column; self.order = order; self.add = add
         _overdueCollapsed = AppStorage(wrappedValue: false, "mac.board.\(column.id).overdueCollapsed")
     }
-    private var overdue: [Record] { column.tasks.filter { !$0.completed && $0.due.map { $0 < Calendar.current.startOfDay(for: Date()) } == true } }
+    private var overdue: [Record] { column.tasks.filter { TaskKind.mayComplete($0) && !$0.completed && $0.due.map { $0 < Calendar.current.startOfDay(for: Date()) } == true } }
     private var regular: [Record] { let ids = Set(overdue.map(\.id)); return column.tasks.filter { !ids.contains($0.id) } }
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 Button { toggleCollapsed() } label: {
-                    HStack { Image(systemName: collapsed ? "chevron.right" : "chevron.down"); Text(column.title); Text("\(column.tasks.count)").foregroundStyle(.secondary) }
+                    HStack { Image(systemName: collapsed ? "chevron.right" : "chevron.down"); Text(column.title); Text(TaskKind.listCountLabel(column.tasks)).foregroundStyle(.secondary) }
                 }.buttonStyle(.plain).accessibilityIdentifier("board-collapse-" + column.sectionID)
                 Spacer()
                 Button(action: add) { Image(systemName: "plus") }.buttonStyle(.borderless).help("Add task to \(column.title)").accessibilityIdentifier("board-add-" + column.sectionID)
@@ -134,7 +134,7 @@ private struct BoardColumn: View {
 struct ProjectSectionHeader: View {
     let key: String
     let title: String
-    let count: Int
+    let count: String
     @Binding var collapsed: Bool
     let add: () -> Void
     var body: some View {

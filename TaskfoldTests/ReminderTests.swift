@@ -109,8 +109,16 @@ final class ReminderTests: XCTestCase {
         XCTAssertEqual(trigger.dateComponents.timeZone?.secondsFromGMT(for: instant), 0)
         XCTAssertEqual(trigger.dateComponents.calendar?.date(from: trigger.dateComponents), instant)
         XCTAssertFalse(trigger.repeats)
-        // The native trigger calculates the same instant, independent of the Mac's local zone.
-        XCTAssertEqual(trigger.nextTriggerDate(), instant > Date() ? instant : nil)
+        // Keep the historical second-fold component check above deterministic.
+        // nextTriggerDate consults the real clock; use next year's final October
+        // Sunday so this check never asks the OS to interpret a past trigger.
+        var utc = Calendar(identifier: .gregorian); utc.timeZone = .gmt
+        let year = utc.component(.year, from: Date()) + 1
+        let lastOctoberDay = try XCTUnwrap(utc.date(from: DateComponents(year: year, month: 10, day: 31, hour: 1, minute: 30)))
+        let futureFold = try XCTUnwrap(utc.date(byAdding: .day, value: -(utc.component(.weekday, from: lastOctoberDay) - 1), to: lastOctoberDay))
+        let futureTrigger = SystemReminderCenter.trigger(at: futureFold)
+        XCTAssertEqual(futureTrigger.dateComponents.calendar?.date(from: futureTrigger.dateComponents), futureFold)
+        XCTAssertEqual(futureTrigger.nextTriggerDate(), futureFold)
         var reserved = ReminderSpec.relative(0, id: ReminderSpec.plannedID).raw
         reserved["offset_minutes"] = .number(5)
         XCTAssertNil(ReminderSpec(row: .object(reserved)))

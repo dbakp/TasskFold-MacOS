@@ -8,11 +8,14 @@ Non-completable headings now have their persisted contract, gated local native
 presentation/type editors and initial productive-count/projection integration.
 Normal app configuration still omits authoring. Versioned template/workspace
 files, fresh runs/copies and checklist progress now retain heading semantics.
+Time/Focus/location eligibility now excludes headings, and list/board/filter
+badges and typed template-library summaries distinguish context from work.
 Next are source-specific interoperability, remaining action/count/history
 acceptance and shared capability/command adapters;
 see `TASK_HEADINGS.md`, `p2-task-headings-contract-evidence.json` and
 `p2-task-headings-native-evidence.json` and
-`p2-task-headings-portability-evidence.json`. This does not close headings or rank 3.
+`p2-task-headings-portability-evidence.json` and
+`p2-task-headings-actions-evidence.json`. This does not close headings or rank 3.
 The outstanding rank-6 and Watch acceptance below remains open.
 
 Native completion recovery and permanent encrypted selection drafts are implemented

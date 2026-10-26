@@ -1,0 +1,8 @@
+{
+  "platform": "ios",
+  "configuration": "Debug",
+  "architecture": "arm64",
+  "strictSignatureVerified": true,
+  "binarySHA256": "4888a5fa57b140c7b7a75c8d834a8bfdaac3ec1a863c9a6809cc6dee50b54b23",
+  "macRuntimeAccepted": false
+}

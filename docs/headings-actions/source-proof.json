@@ -1,0 +1,47 @@
+{
+  "Taskfold/Core/LocationReminders.swift": {
+    "sourceSHA256": "8e5835ed0eb81dbdfe2e6bc53542bae51e37a264e78a51e174fa783cdbd3fe4a",
+    "preparedSHA256": "8e5835ed0eb81dbdfe2e6bc53542bae51e37a264e78a51e174fa783cdbd3fe4a",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Core/Models.swift": {
+    "sourceSHA256": "a784532143e88f04bd73f1a2688f94cb12514190cf047ab603f5bf2c88b86508",
+    "preparedSHA256": "a784532143e88f04bd73f1a2688f94cb12514190cf047ab603f5bf2c88b86508",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Core/Reminders.swift": {
+    "sourceSHA256": "d27402065a2a2722d7e8a243511484d7c76ac81655f48a48391b071d104016f1",
+    "preparedSHA256": "d27402065a2a2722d7e8a243511484d7c76ac81655f48a48391b071d104016f1",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Core/Store.swift": {
+    "sourceSHA256": "0665ef5255c2b6085b8747cf370326f76679fe46cb97bee8f6672bcecb2eef9a",
+    "preparedSHA256": "ea5ed1f2ae409da27f50e602337f65e7f8b551b409bb358474cdc21d2552d8f6",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Views/ProjectBoard.swift": {
+    "sourceSHA256": "1665c560d4eb606aa4e355cac35a7668e44fe5a74285d3010ba77c6a1591e134",
+    "preparedSHA256": "1665c560d4eb606aa4e355cac35a7668e44fe5a74285d3010ba77c6a1591e134",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Views/ReminderEditor.swift": {
+    "sourceSHA256": "d54c5a613141db52869a9a97759491cd25697de7ee3d1350f564a04b624412a2",
+    "preparedSHA256": "d54c5a613141db52869a9a97759491cd25697de7ee3d1350f564a04b624412a2",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Views/SavedViews.swift": {
+    "sourceSHA256": "533f1b7e42307a2de344318af75005c1667f82502ab7820699e201766af40100",
+    "preparedSHA256": "533f1b7e42307a2de344318af75005c1667f82502ab7820699e201766af40100",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Views/TaskListView.swift": {
+    "sourceSHA256": "b21ddd5a6d3fe8cfaaa5b44459b13585ca83d45b946d3a1c1a85db0303ae7b99",
+    "preparedSHA256": "b21ddd5a6d3fe8cfaaa5b44459b13585ca83d45b946d3a1c1a85db0303ae7b99",
+    "matchesIsolatedSource": true
+  },
+  "Taskfold/Views/WorkflowViews.swift": {
+    "sourceSHA256": "3839bd0923df4c886e862ecc9f753d08242f39739fce65d850acf3937af30215",
+    "preparedSHA256": "3839bd0923df4c886e862ecc9f753d08242f39739fce65d850acf3937af30215",
+    "matchesIsolatedSource": true
+  }
+}
