@@ -7476,3 +7476,29 @@ scope, source bindings and the independently owned phone/tablet checks.
 Separate child history, the other productive projections, shared/service and
 cross-device acceptance, spoken/largest-text work and the full advanced backlog
 remain open. All user-deferred release/provider/device gates remain deferred.
+
+## Mac native clipboard, CSV files and project work — 26 October 2026
+
+After the user unlocked the Mac, three distinct native scenarios pass against the
+committed isolated app code: CSV clipboard review/edit/Cancel/Save/cold return;
+actual native CSV file export/open/review/Cancel; and exact child navigation,
+completion, Command-Z Undo, Shift-Command-Z Redo and cold project return. The
+heading stays open and other saved heading/notes content remains intact. Project
+totals move from 1/3 to 2/3. Clipboard Save adds only a private version-2 template;
+Cancel retains work. File-panel Cancel preserves the entire saved tables set.
+The real exported CSV is retained as a synthetic fixture. Four native screenshots
+are inspected and scoped to the isolated app; surrounding desktop/file-picker
+content is excluded from committed evidence.
+
+Test corrections use the existing single-instance Finder/Dock-open pattern,
+actual host-container path, native Switch/front-sheet scrolling and scoped
+Export/Open panel controls. Earlier failures are documented rather than counted
+as passes. The final test bundle builds and the app's strict signature passes.
+Only test harness and evidence change in this closeout; shipping authoring flags,
+services and release inputs are unchanged. See `mac-heading-acceptance/report.json`.
+
+These scoped Mac checks supersede the earlier locked-screen blockers. Wider
+heading creation/conversion, spoken/large-text, source-race, installed widget,
+cloud-provider and cross-device acceptance remain open. Today/Inbox/capacity and
+other descendant projections, separate child history and shared adapters still
+need implementation/verification. The full Px objective remains active.

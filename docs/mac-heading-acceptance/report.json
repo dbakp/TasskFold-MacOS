@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-26",
+  "testedAppSourceCommit": "ab6f4c62abaf603a1daf018ab990330023990bc0",
+  "productionCodeChangedInThisCloseout": false,
+  "nativeCases": [
+    {
+      "case": "testWorkflowCSVClipboardReviewCancelSaveAndColdReturn",
+      "result": "passed",
+      "run": "v4",
+      "resultFile": "clipboard-result.json"
+    },
+    {
+      "case": "testHeadingProjectWorkCountsExactChildAndColdReturn",
+      "result": "passed",
+      "run": "v6",
+      "resultFile": "project-work-result.json"
+    },
+    {
+      "case": "testWorkflowCSVNativeFileSaveImportReviewAndCancel",
+      "result": "passed",
+      "run": "v8",
+      "resultFile": "native-csv-file-result.json"
+    }
+  ],
+  "distinctCasesPassed": 3,
+  "screenshotsInspected": 4,
+  "onlyIsolatedSyntheticData": true,
+  "appStrictDeepSignature": "passed",
+  "finalNativeTestBuild": "passed",
+  "testSourceSHA256": "5419b15e19bb6f83b03541bd0102f952274533117eae2801a5065947408c492f",
+  "preparedTestSourceSHA256": "b7eadae9fe5effbf349298239659dfc11e5aa0cd493564468a3078ad81173300",
+  "appExecutableSHA256": "00801c58bbe79a2a9c3cff2b74f0a9263905ba59057f0a41fd7f927266bd5194",
+  "sourceCaptureAdjustment": "After passing behavior checks, changed the two CSV screenshot calls from desktop capture to app-window capture. Final test bundle builds; behavior assertions are unchanged. Committed CSV images are cropped to the observed isolated review-sheet bounds. No surrounding desktop/chat or file-picker contents are committed.",
+  "initialHarnessFailures": [
+    "Wrong test-runner-home prefix for the app cache; use the actual isolated host container",
+    "XCTest process start omitted the Finder/Dock open event after force quit; now reuse the existing single-instance Launch Services test helper pattern",
+    "CSV control is a native Switch and requires scrolling the front sheet",
+    "Native save confirmation is Export (OKButton), not Save",
+    "Unscoped Open matched a hidden Touch Bar button; now target open-panel/OKButton",
+    "An optional unwrap in the expanded native assertion was corrected before execution"
+  ],
+  "assertedBehavior": [
+    "Clipboard CSV is explicitly selected/copied/pasted, re-reviewed, edited, cancelled, saved and retained after cold return",
+    "Clipboard Cancel retains task and template tables; Save adds only a version-2 private definition",
+    "Native CSV is actually saved through the export panel and reopened through the import panel, with file-local IDs and explicit heading capability",
+    "Native file review shows two headings; Cancel leaves the entire saved tables dictionary unchanged",
+    "Project attention opens the exact existing ordinary child under the heading",
+    "Complete/Undo/Redo persist the expected child state while the heading remains open and its other heading/notes remain intact",
+    "Project progress changes from 1 of 3 to 2 of 3 and exact saved root content survives cold return",
+    "Test opening asserts one running instance and sends the normal user-open event without starting another process"
+  ],
+  "remaining": [
+    "Today/Inbox/capacity and other productive descendant projections",
+    "Separate child activity history",
+    "Broader native heading creation/conversion/source races, large text and spoken acceptance",
+    "Installed desktop widget refresh/actions for this source",
+    "Cloud file-provider and iOS CSV share-sheet transfer acceptance",
+    "Shared/service/cross-device capability work and all deferred release/provider/device gates"
+  ]
+}

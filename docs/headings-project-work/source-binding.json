@@ -38,8 +38,8 @@
     },
     {
       "path": "TaskfoldUITests/TaskfoldMacUITests.swift",
-      "sourceSHA256": "47756c6ca0cb5eea17b11a29b768f0cc460fe815657f8428d6c9b157d8f02d7a",
-      "hostSHA256": "4b1a56a0a4da94029e5e231a878ca41d40bea521e909239941fa67663d0dc8cd",
+      "sourceSHA256": "5419b15e19bb6f83b03541bd0102f952274533117eae2801a5065947408c492f",
+      "hostSHA256": "b7eadae9fe5effbf349298239659dfc11e5aa0cd493564468a3078ad81173300",
       "matchesReservedNamespaceOnlyTransform": true
     }
   ],

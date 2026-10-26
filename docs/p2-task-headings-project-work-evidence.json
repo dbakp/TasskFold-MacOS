@@ -10,7 +10,7 @@
     "tenThousandTaskHeadingSeconds": 0.5421
   },
   "native": {
-    "macOS": "Not run: CUA confirmed the Mac remains locked; ready current-source case/build preserved",
+    "macOS": "passed scoped native acceptance; see mac-heading-acceptance/report.json",
     "iPhone": "not applicable",
     "iPad": "not applicable"
   },
@@ -39,7 +39,7 @@
   "limits": [
     "Separate child activity history remains open",
     "Today/Inbox/capacity/Focus/Watch descendant work projections remain open",
-    "Mac native and installed widget refresh/interaction remain open",
+    "Scoped Mac project route/completion/Undo/Redo/cold return now passes; installed widget refresh/interaction remains open",
     "Largest text, spoken and shared/service/cross-device acceptance remain open",
     "Normal heading authoring remains off",
     "All user-deferred release, remote delivery, older-client, OAuth/provider and physical-device gates unchanged"
@@ -81,5 +81,6 @@
     ],
     "allOwnedBuildAndTestCommandsTerminal": true,
     "sourceData": "Only isolated synthetic fixtures used"
-  }
+  },
+  "macNativeCloseout": "mac-heading-acceptance/report.json"
 }

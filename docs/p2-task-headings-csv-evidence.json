@@ -17,7 +17,7 @@
   "native": {
     "iPad": "not applicable",
     "iPhone": "not applicable",
-    "macOS": "blocked at application activation by locked Mac"
+    "macOS": "passed scoped native acceptance; see mac-heading-acceptance/report.json"
   },
   "behavior": [
     "Reviewed task, section and project definitions",
@@ -30,7 +30,7 @@
   ],
   "limitations": [
     "Taskfold workflow interchange only; no generic third-party CSV mapping",
-    "Native CSV file-provider pick/save/share acceptance not established by the clipboard scenario",
+    "Local Mac native CSV save/open/review/Cancel now passes; cloud-provider/iOS share transfer remains open",
     "Workspace-switch UI acceptance remains open",
     "No new spoken feedback acceptance claimed",
     "Normal heading authoring remains gated; no hosted deployment",
@@ -46,5 +46,6 @@
     "clipboard": "Prior native clipboard kept in memory; restore only if synthetic content remains. Guard exited without changing it.",
     "sessions": "Owned Mac app and completed Simulator app sessions closed; original Simulator boot states retained.",
     "failedDiagnostics": "After both final native Simulator tests passed, stopped only the obsolete failed-run simctl diagnose collector and polled its xcodebuild to terminal failure. Failure log retained; bulky diagnostics are not acceptance evidence."
-  }
+  },
+  "macNativeCloseout": "mac-heading-acceptance/report.json"
 }

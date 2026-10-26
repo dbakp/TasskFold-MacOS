@@ -24,7 +24,9 @@ Project progress and attention now count ordinary work beneath headings, with
 matching widget totals and an explicit incomplete-total state. Separate child
 history and broader productive projections remain open; see
 `p2-task-headings-project-work-evidence.json`.
-Mac UI automation is now authorized and the focused Todoist heading review passes.
+Mac UI automation is now authorized. Scoped Todoist, CSV clipboard/native-file
+transfer and project-work route/completion/Undo/Redo/cold checks pass; see
+`mac-heading-acceptance/report.json`.
 The outstanding wider Mac, rank-6 and Watch acceptance below remains open.
 
 Native completion recovery and permanent encrypted selection drafts are implemented
@@ -43,8 +45,8 @@ remain open; see the dated Watch stage below.
 The next priorities within rank 6 are:
 1. Finish broader recurring provisional cohorts and unsupported legacy conversation context
    without guessing legacy or unsupported preference history. Individual
-   cancellation drafts now pass Core and iPhone/iPad native acceptance; current
-   Mac native acceptance awaits interactive automation approval. Captured
+   cancellation drafts now pass Core and iPhone/iPad native acceptance; broader
+   Mac native acceptance still needs execution. Captured
    task list-order/pin histories and connected version-1 mention read/unread
    markers now have explicit encrypted preservation with native relaunch/export
    acceptance. Arbitrary view_preferences fields remain protected. Broader

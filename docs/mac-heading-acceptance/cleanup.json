@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-26",
+  "ownedScratchEntriesRemoved": 41,
+  "bytesRemoved": 1155677223,
+  "MiBRemoved": 1102.1,
+  "noOwnedAppOrTestProcessRunning": true,
+  "preserved": [
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "both repository .build caches"
+  ],
+  "retainedEvidence": "Selected passing case results, synthetic CSV, scoped screenshots and safe per-case logs only"
+}
