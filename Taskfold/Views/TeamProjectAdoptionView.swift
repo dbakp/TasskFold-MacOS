@@ -150,6 +150,10 @@ struct TeamProjectAdoptionView: View {
         Section("What comes with you") {
             LabeledContent("Projects", value: String(i.projects.count))
             LabeledContent("Tasks, including completed", value: String(i.contents["counts"]?.object["tasks"]?.integer ?? 0))
+            LabeledContent("Task history entries", value: String(i.contents["counts"]?.object["task_activity"]?.integer ?? 0))
+            if i.supportsChildHistory {
+                LabeledContent("Subtask history entries", value: String(i.contents["counts"]?.object["task_node_activity"]?.integer ?? 0))
+            }
             LabeledContent("Discussion comments", value: String(i.contents["counts"]?.object["task_comments"]?.integer ?? 0))
             LabeledContent("Attachments, including subtasks", value: String(i.contents["attachments"]?.integer ?? 0))
             DisclosureGroup("All affected projects") {

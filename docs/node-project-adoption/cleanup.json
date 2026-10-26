@@ -1,0 +1,19 @@
+{
+  "prunedFailedNativeResultBytes": 964484859,
+  "preserved": [
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build"
+  ],
+  "noNativeProcessRemaining": true,
+  "ownedBuildsPruned": [
+    {
+      "path": "/tmp/taskfold-node-adoption-ios-build",
+      "bytes": 1434725188
+    },
+    {
+      "path": "/tmp/taskfold-node-adoption-mac-build",
+      "bytes": 628314122
+    }
+  ],
+  "totalPrunedBytes": 3027524169
+}

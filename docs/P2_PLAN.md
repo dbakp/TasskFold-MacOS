@@ -5041,3 +5041,21 @@ child ledger, followed by combined history and activity/Insights/widget UI. See
 [TASK_NODE_ACTIVITY_CUSTODY.md](TASK_NODE_ACTIVITY_CUSTODY.md) for the exact scope,
 evidence and remaining rollout gates. Px remains open; user-deferred gates stay
 deferred.
+
+
+### Child history in project-transfer review — 26 October 2026
+
+Both owned clients and prepared SQL now count/fingerprint/lock child history in
+bounded transfer reviews, fence late/ABA writes and require a versioned count
+contract. Native review shows task/subtask history entries. Each repo passes 35
+new SQL-review checks, 55 connection-policy regression checks with the new schema,
+and 63 focused Core checks. Actual old approvals become stale; existing child
+rows and applied receipt/retry shapes remain intact. No hosted flag changed.
+
+This closes bounded review coverage only. The current registry binds live task
+roots, so historical-only/deleted roots and earlier project intervals still need
+event-level custody, removal/read rules and acceptance before rollout. Mixed
+activity/Insights/Project pulse and wider heading acceptance remain next. Mac
+native replay failed to activate after the unlock reply; no UI pass is counted.
+See [TASK_NODE_PROJECT_ADOPTION.md](TASK_NODE_PROJECT_ADOPTION.md) and
+`node-project-adoption/`. The full Px goal remains active.

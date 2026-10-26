@@ -113,3 +113,9 @@ integration. The original sequence below records this milestone's starting plan.
 
 The full Px goal stays active. User-deferred release/distribution, remote
 reminders, old-client rollout safeguards and external-provider setup stay deferred.
+
+
+26 October follow-up: bounded adoption inspection/counts/fingerprints/locks and
+the client review contract are implemented locally. Historical-only event custody
+is still open; see [TASK_NODE_PROJECT_ADOPTION.md](TASK_NODE_PROJECT_ADOPTION.md)
+for exact scope and remaining service/UI work.

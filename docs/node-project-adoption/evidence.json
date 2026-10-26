@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-26",
+  "repository": "TasskFold-MacOS",
+  "sources": {
+    "Taskfold/Core/TeamProjectAdoption.swift": "c50d5fdb4564e87a2e2949c409df6ca3b837929b4a5ee9c86c014a025f047b16",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "8908dafbde0c4354df8ea665de6e82627826d05c06d427d30258b78709a79f9d",
+    "TaskfoldTests/TeamProjectAdoptionTests.swift": "4f8ea63e567f0e4f57c66a39c4491ba494934eec7efffa4ac89ed6588ec3e936",
+    "TaskfoldTests/Fixtures/team-project-adoption-child-history-v1.json": "e99f497b9c96ced57841631fa0a46837483def8f3a047d4cd029fcf0944d213e",
+    "Scripts/Database/test-task-node-adoption.mjs": "608586d4202b2a681ccc141a9e735fd7c639cac3397d7ea20a7771843a7be3e7",
+    "Scripts/Database/project-adoption-schema.mjs": "96f037ace3fef71ed3f0bf642ef8e0c87b60a62deb16d48cbac740a6d374a88f",
+    "Scripts/Database/export-project-adoption-contract.mjs": "7cf4b828bf9847d16d9a6be97f6695cb7e3e6abacb2f2bb4182d2e432b03cbb8",
+    "supabase/migrations/20261026121332_task_node_project_adoption_review.sql": "d2e437af083dafb9024c9276549ba612efae5e3358cb7affc52e1a9844722d7b"
+  },
+  "databaseChecks": 35,
+  "connectionPolicyRegressionChecks": 55,
+  "coreChecks": 63,
+  "appBuild": {
+    "passed": true,
+    "target": "macOS arm64",
+    "configuration": "Debug",
+    "codeSigningAllowed": false,
+    "runtimeAcceptance": false,
+    "warnings": []
+  },
+  "newNativeMacPass": false,
+  "nativeAttempt": "Failed to activate isolated app; interrupted; terminal exit 73; see mac-native-attempt-summary.json",
+  "hostedChanges": false,
+  "normalHeadingAuthoringEnabled": false,
+  "historicalEventCustodyComplete": false,
+  "mixedActivityUIComplete": false,
+  "goalComplete": false,
+  "allOwnedDatabaseContainersRemoved": true,
+  "deferredReleaseProviderGatesUnchanged": true
+}

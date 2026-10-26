@@ -3,9 +3,9 @@ import {randomUUID} from 'node:crypto';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadProjectAdoptionSchema} from './project-adoption-schema.mjs';
 const id=n=>'fdad0000-0000-4000-8000-'+String(n).padStart(12,'0'),account=id(1),member=id(2),outside=id(3),team=id(4),root=id(5),child=id(6),session=id(7);
-const json=x=>lit(JSON.stringify(x))+'::jsonb',connections=process.argv.includes('--connections');let pg;
+const json=x=>lit(JSON.stringify(x))+'::jsonb',connections=process.argv.includes('--connections'),nodes=process.argv.includes('--child-history');let pg;
 try {
- pg=await createPostgresFixture();await loadProjectAdoptionSchema(pg.raw);
+ pg=await createPostgresFixture();await loadProjectAdoptionSchema(pg.raw,{nodes});
  for(const a of [account,member,outside])await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(a)},${lit(a+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(a)});`);
  await pg.raw(`insert into auth.sessions(id,user_id) values(${lit(session)},${lit(account)});insert into taskfold_private.teams(id,owner_id,name) values(${lit(team)},${lit(member)},'Design Studio');insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(team)},${lit(account)},'member'),(${lit(team)},${lit(member)},'admin');update taskfold_private.team_config set enabled=true;update taskfold_private.team_project_config set native_reads_enabled=true,native_task_edits_enabled=true,native_project_adoption_enabled=true;insert into public.projects(id,user_id,name) values(${lit(root)},${lit(account)},'Studio plan');insert into public.projects(id,user_id,name,parent_id,is_archived) values(${lit(child)},${lit(account)},'Research archive',${lit(root)},true);`);
  const identity=`set local request.jwt.claim.sub=${lit(account)};set local request.jwt.claims=${lit(JSON.stringify({sub:account,session_id:session}))};`;
@@ -17,6 +17,7 @@ try {
  (${lit(id(13))},${lit(account)},'Unfinished connection','https://receiver.example.invalid/events','project',${lit(root)},array['task.updated'],30,repeat('e',64),'{}','pending',now()+interval '1 day',null),
  (${lit(id(14))},${lit(account)},'Personal global connection','https://receiver.example.invalid/events','all',null,array['task.updated'],30,repeat('f',64),'{}','active',now()+interval '1 day',now());
  begin;${identity}update public.tasks set priority=3 where id=${lit(id(10))};commit;`);
+ if(nodes) await pg.raw(`begin;${identity}insert into public.tasks(id,user_id,project_id,title,is_heading,subtasks) values(${lit(id(15))},${lit(account)},${lit(root)},'Synthetic work group',true,${json([{id:id(16),title:'Synthetic independent child',completed:false,subtasks:[]}])});update public.tasks set subtasks=${json([{id:id(16),title:'Synthetic independent child',completed:true,completed_at:new Date().toISOString(),subtasks:[]}])} where id=${lit(id(15))};commit;`);
  const body={team_id:team,roots:[root],visibility:'private',folder_id:null,parent_id:null};
  const call=(op,b)=>pg.scalar(`begin;${identity}set local role authenticated;select public.taskfold_team_project_adoption(${lit(op)},${json(b)});commit;`);
  const native=(name,params)=>pg.scalar(`begin;${identity}set local role authenticated;select public.${name}(${params});commit;`);

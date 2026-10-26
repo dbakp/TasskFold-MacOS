@@ -60,6 +60,53 @@ final class TeamProjectAdoptionTests: XCTestCase {
         XCTAssertEqual(c.body, raw["command"]!.object); XCTAssertFalse(try c.confirmed(raw["receipt"]!.object).replayed)
         XCTAssertEqual(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(c)), c)
     }
+    func testChildHistoryReviewHasAnExplicitBoundedVersion() throws {
+        let (raw, old, _, _) = try fixture()
+        XCTAssertFalse(old.supportsChildHistory)
+        var value = raw["inspect"]!.object
+        var contents = value["contents"]!.object
+        var counts = contents["counts"]!.object
+        counts["task_node_activity"] = .number(12)
+        contents["counts"] = .object(counts); value["contents"] = .object(contents)
+        // Never accept an unversioned extra category or silently infer support.
+        XCTAssertThrowsError(try TeamProjectAdoptionInspection(value, scope: old.scope))
+        value["child_history_protocol"] = .number(1)
+        let reading = try TeamProjectAdoptionInspection(value, scope: old.scope)
+        XCTAssertTrue(reading.supportsChildHistory)
+        XCTAssertEqual(reading.contents["counts"]?.object["task_node_activity"], .number(12))
+        for version in [JSON.number(2), .string("1"), .null, .bool(true)] {
+            var invalid = value; invalid["child_history_protocol"] = version
+            XCTAssertThrowsError(try TeamProjectAdoptionInspection(invalid, scope: old.scope))
+        }
+        for count in [JSON.number(-1), .number(1.5), .number(100000), .number(100001), .string("12"), .null] {
+            var invalidCounts = counts; invalidCounts["task_node_activity"] = count
+            var invalidContents = contents; invalidContents["counts"] = .object(invalidCounts)
+            var invalid = value; invalid["contents"] = .object(invalidContents)
+            XCTAssertThrowsError(try TeamProjectAdoptionInspection(invalid, scope: old.scope))
+        }
+        var missing = raw["inspect"]!.object; missing["child_history_protocol"] = .number(1)
+        XCTAssertThrowsError(try TeamProjectAdoptionInspection(missing, scope: old.scope))
+    }
+    func testActualSQLChildHistoryInspectionReviewAndReceipt() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-adoption-child-history-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let b = raw["body"]!.object
+        let scope = try TeamProjectAdoptionScope(account: raw["account"]!.text, origin: raw["origin"]!.text, team: b["team_id"]!.text, roots: b["roots"]!.list.map(\.text), visibility: .private)
+        let i = try TeamProjectAdoptionInspection(raw["inspect"]!.object, scope: scope)
+        XCTAssertTrue(i.supportsChildHistory)
+        XCTAssertGreaterThan(i.contents["counts"]!.object["task_node_activity"]!.integer, 0)
+        let decisions = try raw["decisions"]!.list.map { try TeamProjectAdoptionDecision($0.object) }
+        let review = try TeamProjectAdoptionReview(raw["review"]!.object, inspection: i, decisions: decisions, connectionPolicy: .pause)
+        let command = try TeamProjectAdoptionCommand(review: review, requestID: UUID(uuidString: raw["command"]!.object["request_id"]!.text)!, now: review.expires.addingTimeInterval(-60))
+        XCTAssertEqual(command.body, raw["command"]!.object)
+        XCTAssertTrue(try command.confirmed(raw["receipt"]!.object).command.connectionEffects != nil)
+        var stale = raw["review"]!.object
+        var contents = stale["contents"]!.object
+        var counts = contents["counts"]!.object
+        counts["task_node_activity"] = .number(Double(counts["task_node_activity"]!.integer + 1))
+        contents["counts"] = .object(counts); stale["contents"] = .object(contents)
+        XCTAssertThrowsError(try TeamProjectAdoptionReview(stale, inspection: i, decisions: decisions, connectionPolicy: .pause))
+    }
     func testEveryAcceptedCollaboratorNeedsAnExplicitDecision() throws {
         let (_, i, r, _) = try fixture()
         XCTAssertThrowsError(try i.reviewBody([])); XCTAssertThrowsError(try i.reviewBody(r.decisions + [r.decisions[0]]))

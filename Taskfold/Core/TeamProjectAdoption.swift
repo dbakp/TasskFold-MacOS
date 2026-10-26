@@ -71,6 +71,7 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
     let projects: [Project], collaborators: [Collaborator], contents: [String: JSON]
     let commitSupported: Bool, destinationArchived: Bool, teamMembers: Int
     let supportsConnectionPause: Bool, connectionPauseSupported: Bool
+    let supportsChildHistory: Bool
     var hasConnections: Bool { ["email_routes", "webhooks", "queued_webhook_events"].contains { (contents[$0]?.integer ?? 0) > 0 } }
     var inflightUpdates: Int { contents["inflight_webhook_events"]?.integer ?? 0 }
     func expectedConnectionEffects() throws -> TeamProjectConnectionEffects {
@@ -111,7 +112,9 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
             return try Collaborator(id: TeamOrganizationValue.id(row["id"]), project: project, user: user, email: email, status: status, eligible: eligible)
         }
         guard Set(collaborators.map(\.id)).count == collaborators.count else { throw TeamProjectAdoptionValue.invalid }
-        let kinds: Set<String> = ["projects", "tasks", "sections", "project_collaborators", "task_comments", "task_mentions", "task_assignment_provenance", "task_activity"]
+        guard raw["child_history_protocol"] == nil || raw["child_history_protocol"] == .number(1) else { throw TeamProjectAdoptionValue.invalid }
+        supportsChildHistory = raw["child_history_protocol"] == .number(1)
+        let kinds: Set<String> = Set(supportsChildHistory ? ["task_node_activity"] : []).union(["projects", "tasks", "sections", "project_collaborators", "task_comments", "task_mentions", "task_assignment_provenance", "task_activity"])
         guard Set(counts.keys) == kinds, try kinds.reduce(0, { try $0 + TeamProjectAdoptionValue.count(counts[$1], limit: 100000) }) <= 100000,
               try TeamProjectAdoptionValue.count(counts["projects"], limit: 1000) == projects.count, try TeamProjectAdoptionValue.count(counts["tasks"], limit: 10000) >= 0,
               try TeamProjectAdoptionValue.count(counts["project_collaborators"], limit: 1000) == collaborators.count else { throw TeamProjectAdoptionValue.invalid }

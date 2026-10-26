@@ -112,3 +112,9 @@ authority; neither stored history nor a client claim grants access.
 
 The full Px goal stays active. Remote reminders, older-client rollout safeguards,
 release/distribution and external-provider configuration remain user-deferred.
+
+
+26 October follow-up: bounded adoption inspection/counts/fingerprints/locks and
+the client review contract are implemented locally. Historical-only event custody
+is still open; see [TASK_NODE_PROJECT_ADOPTION.md](TASK_NODE_PROJECT_ADOPTION.md)
+for exact scope and remaining service/UI work.
