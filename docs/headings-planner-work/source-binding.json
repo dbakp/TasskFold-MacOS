@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-26",
+  "baseCommit": "2588f0eb2f1c18dba329395ac8b4fe594aed788e",
+  "files": {
+    "Taskfold/Core/TaskActivity.swift": "77ea75d9e38785e7a253d318c964f62e0fd9dd0f95773c99f7a144855b484b91",
+    "Taskfold/Core/Models.swift": "b888259223a21f79d65912fa93f2f88e66a3da22dd9726684af47ee2084ba3e4",
+    "Taskfold/Core/Planner.swift": "2af2e3a80d3046702119795734a7d29a6301866c761222a1c9e8d09ee073200f",
+    "Taskfold/Core/Store.swift": "cfeb4df1de476af492b66e5bb850df219464352008b2d6300c940a521fe5be5b",
+    "Taskfold/Views/CalendarView.swift": "1f0987c2a63f03d4e42c77fe4983e41859cc1a352956a5807bee22985af0decf",
+    "Taskfold/Views/HourlyPlanner.swift": "68b74a650f83560c3974b525342660d1ff8419d9dbf61cfe155be3d05db59649",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "2a489fea5732d727bb752378cca79e9ba0312fbe8bf0e732400ea66a4edc33a7",
+    "TaskfoldTests/HeadingProjectProgressTests.swift": "5920518adf9ce18e48ec64a6ee8412a6ed1c41a47cf33d88c44433753e588d66",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "a1b25eee168bfe70de26fd32aa384bee5073d98ccef090ed1010b877013ba7a8",
+    "Scripts/render_widget_previews.py": "9d8c447d9edddbc9d978935f8d880136d01206330e1d1bda1f9d26f0251ce3a3"
+  }
+}

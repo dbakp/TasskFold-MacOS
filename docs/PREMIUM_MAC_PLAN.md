@@ -7502,3 +7502,32 @@ heading creation/conversion, spoken/large-text, source-race, installed widget,
 cloud-provider and cross-device acceptance remain open. Today/Inbox/capacity and
 other descendant projections, separate child history and shared adapters still
 need implementation/verification. The full Px objective remains active.
+
+## Heading work in the day planner and capacity — 26 October 2026
+
+The planner now shows nearest ordinary tasks beneath headings with their own
+plans and estimates, real child routes and a heading breadcrumb. Dated headings
+remain context, with no completion control or productive estimate/overlap credit.
+Ordinary task checklists stay part of their parent work. Scheduling and completion
+of projected children use the strict hierarchy selection contract and save only
+the real root tree; native Undo keeps the existing durable queue/history path.
+
+A cached productive reading excludes archived projects and is invalidated with
+task/visibility changes. Planner and capacity-widget publication share child
+estimates, unestimated work and carryover/overdue treatment. Unreadable branches
+or missing child identities keep readable totals but withhold spare-capacity
+claims; the widget says Review / Readable estimates only. Its optional
+workIncomplete field is omitted when clear. Three actual SwiftUI source-view
+renders (normal and review light/dark) are inspected; these are not installed
+widget-host acceptance. No schema, normal-authoring or release gate changes.
+
+82 focused Core checks pass independently in each repository, including ten new
+productive-planner cases. The signed iPhone and iPad native flows pass scheduling,
+Cancel, Undo, completion and cold saved-state equality. The independent Mac app,
+widget and corrected test harness build; its native planner case remains pending
+an unlocked run. Initial selector/navigation failures are documented as failures.
+See `p2-task-headings-planner-evidence.json` and `headings-planner-work/`.
+
+Next: Today/Upcoming and Inbox review, matching badges/primary widget rows,
+reviewed containing-heading moves, wider calendar projections and child history.
+These remain implementation work; this stage does not close headings or Px.

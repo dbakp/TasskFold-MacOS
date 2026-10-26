@@ -1,0 +1,36 @@
+{
+  "closedOwnedMacProcesses": [],
+  "simulatorCleanup": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "isolatedBundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "uninstalled": true
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "isolatedBundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+      "uninstalled": true
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "isolatedBundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+      "uninstalled": true
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "isolatedBundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner",
+      "uninstalled": true
+    }
+  ],
+  "scope": "Only reserved synthetic acceptance apps/runners; no ordinary Taskfold app or saved user workspace modified",
+  "date": "2026-10-26",
+  "scratchEntriesRemoved": 43,
+  "bytesRemoved": 1815582431,
+  "MiBRemoved": 1731.5,
+  "preserved": [
+    "both .build Core caches",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build"
+  ],
+  "reasonForPreservedMacHost": "Current-source Mac planner UI test still needs unlocked execution"
+}

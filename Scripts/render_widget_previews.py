@@ -114,7 +114,10 @@ extension PreviewLink where Content == Text {
             if mode == "capacity-off" { value.calendarState = "off"; value.calendarUpdated = nil }
             if mode == "capacity-incomplete" { value.calendarState = "incomplete" }
             if mode == "capacity-refresh" { value.calendarUpdated = capacityEntry.date.addingTimeInterval(-3601).timeIntervalSinceReferenceDate }
+            if mode.hasPrefix("capacity-grouped") { value.calendarState = "off"; value.calendarUpdated = nil }
             for key in value.days.keys {
+                if mode.hasPrefix("capacity-grouped") { value.days[key]?.estimated = 75; value.days[key]?.busy = 0; value.days[key]?.unknown = 0; value.days[key]?.overdue = 0 }
+                if mode.hasPrefix("capacity-grouped-review") { value.days[key]?.workIncomplete = true }
                 if mode == "capacity-overload" { value.days[key]?.estimated = 540; value.days[key]?.busy = 120; value.days[key]?.unknown = 0 }
                 if mode == "capacity-unknown" { value.days[key]?.unknown = 4 }
                 if mode == "capacity-off" { value.days[key]?.busy = 0 }
@@ -194,7 +197,7 @@ extension PreviewLink where Content == Text {
             }
         }.environment(\.dynamicTypeSize, mode == "notes-largest" ? .accessibility3 : .large)
 
-        let actual = Group { if notes { noteContent.padding(32).background(mode == "notes-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "notes-dark" ? .dark : .light) } else if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode == "capacity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "capacity-dark" ? .dark : .light) } else if lists { listContent.padding(32).background((mode == "lists-dark" || mode == "lists-hierarchy-dark") ? Color(white: 0.09) : Color.white).environment(\.colorScheme, (mode == "lists-dark" || mode == "lists-hierarchy-dark") ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
+        let actual = Group { if notes { noteContent.padding(32).background(mode == "notes-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "notes-dark" ? .dark : .light) } else if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode.hasSuffix("dark") ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode.hasSuffix("dark") ? .dark : .light) } else if lists { listContent.padding(32).background((mode == "lists-dark" || mode == "lists-hierarchy-dark") ? Color(white: 0.09) : Color.white).environment(\.colorScheme, (mode == "lists-dark" || mode == "lists-hierarchy-dark") ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
         let renderer = ImageRenderer(content: actual)
         renderer.scale = 2
         if let image = renderer.cgImage {
@@ -214,5 +217,7 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
         modes = [(mode, mode) for mode in ["lists-completed", "lists-completed-private", "lists-completed-empty"]]
     if "--hierarchy" in sys.argv:
         modes = [(mode, mode) for mode in ["lists-hierarchy", "lists-hierarchy-dark", "lists-hierarchy-private"]]
+    if "--heading-capacity" in sys.argv:
+        modes = [(mode, mode) for mode in ["capacity-grouped", "capacity-grouped-review", "capacity-grouped-review-dark"]]
     for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)

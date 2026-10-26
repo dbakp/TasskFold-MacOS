@@ -4461,3 +4461,42 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(try tables(), before)
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testHeadingPlannerChildScheduleUndoCompleteAndColdReturn() throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
+        continueAfterFailure = false
+        let app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "--heading-progress-fixture", "--heading-planner-fixture", "--section=calendar", "--calendar-mode=day", "-localMode", "YES"]
+        try launchHeadingWorkspace(app)
+        let calendar = app.buttons["Calendar"].firstMatch
+        XCTAssertTrue(calendar.waitForExistence(timeout: 15)); calendar.click()
+        let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        func root() throws -> NSDictionary {
+            let data = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? [String: Any])
+            return try XCTUnwrap(((data["tables"] as? [String: Any])?["tasks"] as? [NSDictionary])?.first { $0["id"] as? String == "f1810000-0000-4000-8000-000000000001" })
+        }
+        func capacity(_ expected: String) {
+            let text = app.staticTexts["plannerCapacity"]; XCTAssertTrue(text.waitForExistence(timeout: 15), app.debugDescription)
+            XCTAssertEqual(renderedText(text), expected)
+        }
+        capacity("75 min estimated · 0 without estimates"); let original = try root()
+        let child = "subtask:" + (try JSONEncoder().encode(["f1810000-0000-4000-8000-000000000001", "f5810000-0000-4000-8000-000000000001"])).base64EncodedString()
+        let schedule = app.buttons.matching(NSPredicate(format: "identifier == %@", "plannerAllDay-" + child)).firstMatch
+        app.buttons["plannerShowAllDay"].click(); XCTAssertTrue(schedule.waitForExistence(timeout: 5)); schedule.click()
+        let estimate = app.textFields["plannerEstimate"]; XCTAssertTrue(estimate.waitForExistence(timeout: 5)); XCTAssertEqual(estimate.value as? String, "45")
+        app.buttons["Cancel"].firstMatch.click(); XCTAssertEqual(try root(), original)
+        schedule.click(); XCTAssertTrue(estimate.waitForExistence(timeout: 5)); estimate.click(); estimate.typeKey("a", modifierFlags: .command); estimate.typeText("60")
+        app.buttons["plannerSave"].click(); capacity("90 min estimated · 0 without estimates")
+        let changed = try root(), children = try XCTUnwrap(changed["subtasks"] as? [[String: Any]])
+        XCTAssertEqual(children[0]["duration_minutes"] as? Int, 60); XCTAssertNil(children[0]["project_id"])
+        XCTAssertEqual(changed["is_heading"] as? Bool, true); XCTAssertEqual(changed["duration_minutes"] as? Int, 999)
+        app.buttons["plannerUndo"].click(); capacity("75 min estimated · 0 without estimates")
+        app.buttons["plannerShowAllDay"].click(); retainWindow(app, name: "Mac grouped work capacity and heading context")
+        let complete = app.buttons.matching(NSPredicate(format: "identifier == %@", "plannerComplete-" + child)).firstMatch; XCTAssertTrue(complete.waitForExistence(timeout: 5)); complete.click()
+        capacity("30 min estimated · 0 without estimates")
+        let completed = try root(); XCTAssertEqual((completed["subtasks"] as? [[String: Any]])?[0]["completed"] as? Bool, true); XCTAssertEqual(completed["completed"] as? Bool, false)
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=calendar", "--calendar-mode=day", "-localMode", "YES"]; try launchHeadingWorkspace(app)
+        capacity("30 min estimated · 0 without estimates"); XCTAssertEqual(try root(), completed)
+    }
+}

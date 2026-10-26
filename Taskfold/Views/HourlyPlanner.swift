@@ -17,7 +17,8 @@ struct HourlyPlannerView: View {
         #endif
     }
     let day: Date
-    let tasks: [Record]
+    let work: ProductiveTaskReading
+    private var tasks: [Record] { work.presentation }
     var calendarHeader: AnyView? = nil
     @State private var busy = CalendarBusyStore.shared
     @State private var settings = false
@@ -47,7 +48,7 @@ struct HourlyPlannerView: View {
     private var bounds: DateInterval { calendar.dateInterval(of: .day, for: day)! }
     private var blocks: [PlannerBlock] { TaskPlanner.blocks(tasks, on: day) }
     private var allDay: [Record] { TaskPlanner.allDay(tasks, on: day) }
-    private var capacity: PlannerCapacity { TaskPlanner.capacity(tasks, events: events, on: day, hours: hours) }
+    private var capacity: PlannerCapacity { TaskPlanner.capacity(tasks, events: events, on: day, hours: hours, reading: work) }
     private func clock(_ date: Date) -> String { date.formatted(.dateTime.hour().minute()) }
     private func showCalendar(_ event:PlannerEvent) {
         selectedEvent=PlannerCalendarRequest(eventID:event.id,workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))
@@ -145,6 +146,10 @@ struct HourlyPlannerView: View {
                 }
             }
             Text(workingSummary).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerWorkingCapacity")
+            if work.incomplete {
+                Label("Some grouped tasks need review. Capacity includes readable estimates only.", systemImage: "exclamationmark.circle")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerGroupedWorkReview")
+            }
             Text(busy.status).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             if !usesAgenda,(PlannerTimelineItem.layout(blocks:blocks,events:events,on:day,calendar:calendar).map(\.laneCount).max() ?? 1)>1 {
                 Label("Overlapping plans sit side by side. Scroll sideways if needed.",systemImage:"arrow.left.and.right")
@@ -159,6 +164,7 @@ struct HourlyPlannerView: View {
             .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("plannerCapacity")
     }
     private var workingSummary: String {
+        if capacity.incomplete { return "Review grouped tasks before relying on remaining capacity." }
         guard hours != nil else { return "Capacity unavailable. Update Taskfold to read these working hours." }
         if busy.ready {
             let remaining=capacity.afterKnownWork>=0 ? "\(capacity.afterKnownWork) min after known work":"\(capacity.afterKnownWork.magnitude) min over capacity"
@@ -203,16 +209,25 @@ struct HourlyPlannerView: View {
         }.padding(.top, 12)
     }
     private func taskTitle(_ task: Record) -> some View {
-        Button { open(task) } label: { Text(task.title).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.buttonStyle(.plain)
+        Button { open(task) } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(task.title).fixedSize(horizontal: false, vertical: true)
+                if let parent = work.parents[task.id] { Text(parent).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+            }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        }.buttonStyle(.plain)
     }
     private func completeButton(_ task: Record) -> some View {
-        Button { complete(task) } label: { Image(systemName: "circle").font(.system(size: 24)).foregroundStyle(Color.taskfold).frame(width: 44, height: 44).contentShape(Rectangle()) }.buttonStyle(.plain).accessibilityLabel("Complete " + task.title)
+        Group {
+            if TaskKind.mayComplete(task) {
+                Button { complete(task) } label: { Image(systemName: "circle").font(.system(size: 24)).foregroundStyle(Color.taskfold).frame(width: 44, height: 44).contentShape(Rectangle()) }.buttonStyle(.plain).accessibilityLabel("Complete " + task.title).accessibilityIdentifier("plannerComplete-" + task.id)
+            } else { Image(systemName: "text.alignleft").foregroundStyle(.secondary).frame(width: 44, height: 44).accessibilityLabel("Heading") }
+        }
     }
     private func taskScheduleButton(_ task: Record) -> some View {
         Button { choose(task) } label: { Image(systemName: "clock").font(.system(size: 20)).frame(width: 44, height: 44) }.accessibilityLabel("Schedule " + task.title).accessibilityIdentifier("plannerAllDay-" + task.id).id("all-day-action-" + task.id)
     }
     private func estimate(_ task: Record) -> some View {
-        Text(task.durationMinutes.map { "\($0)m" } ?? "No estimate").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        Text(TaskKind(task) == .heading ? "Heading" : task.durationMinutes.map { "\($0)m" } ?? "No estimate").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
     }
     /// Fixed-height blocks cannot contain full accessibility-size text. Keep the same plans and
     /// mutations in a readable agenda, with the graphical timeline available as a view choice.
@@ -225,6 +240,7 @@ struct HourlyPlannerView: View {
                     Button { open(block.task) } label: {
                         Text(block.task.title).font(.headline).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     }.buttonStyle(.plain).accessibilityIdentifier("plannerOpen-" + block.id)
+                    if let parent = work.parents[block.id] { Text(parent).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                     Text((block.start < block.clippedStart ? "Continues from an earlier day · " : "") + clock(block.start) + (block.end.map { " – " + $0.formatted(.dateTime.month(.abbreviated).day().hour().minute()) } ?? "") + " · " + (block.task.durationMinutes.map { "\($0) min" } ?? "No estimate"))
                         .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     if let deadline = block.task.deadline { Text("Deadline: " + deadline.formatted(date: .abbreviated, time: .omitted)).font(.callout).fixedSize(horizontal: false, vertical: true) }
@@ -382,7 +398,7 @@ private struct PlannerSchedulingSheet: View {
                         Button { chosen = task } label: {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(task.title).foregroundStyle(.primary)
-                                Text(task.durationMinutes.map { "\($0) min" } ?? "No estimate").font(.caption).foregroundStyle(.secondary)
+                                Text(TaskKind(task) == .heading ? "Heading · context only" : task.durationMinutes.map { "\($0) min" } ?? "No estimate").font(.caption).foregroundStyle(.secondary)
                             }
                         }.accessibilityIdentifier("plannerChoose-" + task.id)
                     }
@@ -409,7 +425,9 @@ private struct PlannerBlockCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .top, spacing: 6) {
-                Button(action: complete) { Image(systemName: "circle").font(.caption) }.buttonStyle(.plain).accessibilityLabel("Complete " + block.task.title)
+                if TaskKind.mayComplete(block.task) {
+                    Button(action: complete) { Image(systemName: "circle").font(.caption) }.buttonStyle(.plain).accessibilityLabel("Complete " + block.task.title)
+                } else { Image(systemName: "text.alignleft").font(.caption).foregroundStyle(.secondary).accessibilityLabel("Heading") }
                 Text(block.task.title).font(.subheadline.weight(.medium)).lineLimit(block.renderLength < 40 ? 1 : 2)
                     .frame(maxWidth: .infinity, alignment: .leading).layoutPriority(1)
             }
@@ -487,6 +505,7 @@ private struct PlannerScheduleForm: View {
                 Text(fixed ? "Keeps the same moment when you travel. Displayed in \(TimeZone.current.identifier)." : "Keeps this clock time when you travel.").font(.caption).foregroundStyle(.secondary)
             }
             Section("Estimate") {
+                if TaskKind(task) == .heading { Text("Headings keep their date as context. Their estimates do not count toward capacity.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                 Toggle("Set an estimate", isOn: $estimated).accessibilityIdentifier("plannerHasEstimate")
                 if estimated { TextField("Minutes", text: $estimate).focused($estimateFocused).accessibilityLabel("Minutes").accessibilityIdentifier("plannerEstimate")
                     #if os(iOS)

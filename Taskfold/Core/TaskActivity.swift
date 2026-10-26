@@ -305,9 +305,11 @@ struct ProjectWorkScope {
         let task: Record
         let root: Record
         let navigationTask: Record?
+        let parentTitles: [String]
         var nested: Bool { id != root.id }
     }
     private(set) var items: [Item] = []
+    private(set) var contexts: [Record] = []
     private(set) var incompleteProjects = Set<String>()
     private var groups: [String: [Item]] = [:]
     func items(project: String) -> [Item] { groups[project.lowercased()] ?? [] }
@@ -322,7 +324,7 @@ struct ProjectWorkScope {
                 continue
             }
             roots[key] = root
-            func visit(_ source: Record, positions: [Int], keys: [String], reference: String?, depth: Int) {
+            func visit(_ source: Record, positions: [Int], keys: [String], reference: String?, titles: [String], depth: Int) {
                 visited += 1
                 guard depth <= SubtaskTree.readableDepth, visited <= TaskHierarchyIndex.maximumItems else { incompleteProjects.insert(project); return }
                 switch TaskKind(source) {
@@ -336,10 +338,11 @@ struct ProjectWorkScope {
                     }
                     var task = source; task["id"] = .string(id)
                     for field in ["project_id", "section_id", "user_id", "task_generation"] { task[field] = root[field] }
-                    let navigation = reference.map { TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: [], id: $0).record }
-                    let item = Item(id: id, task: task, root: root, navigationTask: navigation)
+                    let navigation = reference.map { TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: $0).record }
+                    let item = Item(id: id, task: task, root: root, navigationTask: navigation, parentTitles: titles)
                     items.append(item); groups[project, default: []].append(item)
                 case .heading:
+                    if let reference { contexts.append(TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: reference).record) }
                     if source.completed { incompleteProjects.insert(project) }
                     let children = source["subtasks"]
                     guard SubtaskTree.hasListContainer(children) else { incompleteProjects.insert(project); return }
@@ -352,11 +355,11 @@ struct ProjectWorkScope {
                         let childKey = row.id
                         let unique = !childKey.isEmpty && indices[childKey] != nil
                         let next = unique ? reference.map { SubtaskTree.reference(parent: $0, key: childKey) } : nil
-                        visit(row, positions: positions + [index], keys: keys + [childKey], reference: next, depth: depth + 1)
+                        visit(row, positions: positions + [index], keys: keys + [childKey], reference: next, titles: titles + [source.title], depth: depth + 1)
                     }
                 }
             }
-            visit(root, positions: [], keys: [], reference: root.id, depth: 0)
+            visit(root, positions: [], keys: [], reference: root.id, titles: [], depth: 0)
         }
     }
     func attention(project: String, now: Date, calendar: Calendar = .current) -> [Item] {
@@ -371,6 +374,46 @@ struct ProjectWorkScope {
             if a != b { return (a.isEmpty ? "9999" : a) < (b.isEmpty ? "9999" : b) }
             return $0.task.priority == $1.task.priority ? $0.id < $1.id : $0.task.priority < $1.task.priority
         }
+    }
+}
+
+/// Read-only workload: headings provide context; their nearest ordinary descendants
+/// are independent work. An ordinary task's checklist is already part of its work.
+/// Only `presentation` rows may enter native actions, where Store revalidates them.
+struct ProductiveTaskReading {
+    let work: [Record]
+    let presentation: [Record]
+    let incomplete: Bool
+    let unavailable: Int
+    let parents: [String: String]
+    init(tasks: [Record]) {
+        let roots = tasks.filter { SubtaskTree.referencePath($0.id) == nil }
+        let rootIDs = Set(roots.map { $0.id.lowercased() })
+        let scope = ProjectWorkScope(tasks: roots)
+        var work: [Record] = [], rows: [Record] = [], seen = Set<String>(), unavailable = 0
+        var parents: [String: String] = [:]
+        for item in scope.items {
+            let row = item.navigationTask ?? item.task
+            work.append(row)
+            if !item.parentTitles.isEmpty { parents[row.id] = item.parentTitles.joined(separator: " › ") }
+            if item.navigationTask != nil { rows.append(row) }
+            else { unavailable += 1 }
+            seen.insert(row.id)
+        }
+        // Already projected native rows are valid read inputs too. A source root
+        // wins over its projections, so repeated projection never double-counts.
+        for task in tasks {
+            guard let path = SubtaskTree.referencePath(task.id), !rootIDs.contains(path[0].lowercased()), seen.insert(task.id).inserted else { continue }
+            if TaskKind.mayComplete(task) { work.append(task); rows.append(task) }
+        }
+        // Retain addressable heading context, including legacy branches that need
+        // parent review. Do not invent routable identities for unreadable children.
+        var contexts = Set<String>()
+        rows += scope.contexts.filter { contexts.insert($0.id.lowercased()).inserted }
+        self.work = work; presentation = rows
+        incomplete = !scope.incompleteProjects.isEmpty || unavailable > 0
+        self.unavailable = unavailable
+        self.parents = parents
     }
 }
 

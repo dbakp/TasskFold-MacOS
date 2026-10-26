@@ -100,3 +100,122 @@ final class HeadingProjectProgressTests: XCTestCase {
         XCTAssertFalse(work.incomplete(project: project)); print("HEADING_PROJECT_10000_SECONDS=\(Date().timeIntervalSince(start))")
     }
 }
+
+extension HeadingProjectProgressTests {
+    func testProductivePlannerUsesChildPlansWithoutHeadingOrChecklistDoubleCounts() throws {
+        var first = task("first", children: [task("checklist")]), second = task("second"), done = task("done", done: true)
+        for row in [0, 1, 2] {
+            var value = [first, second, done][row]; value["due_date"] = .string("2026-10-06"); value["duration_minutes"] = .number(Double([30, 45, 90][row]))
+            if row == 0 { first = value }; if row == 1 { second = value }; if row == 2 { done = value }
+        }
+        first["due_time"] = .string("09:00")
+        var parent = root([first, task("nested", heading: true, children: [second,done])])
+        parent["due_date"] = .string("2026-10-06"); parent["duration_minutes"] = .number(999)
+        let read = ProductiveTaskReading(tasks: [parent])
+        XCTAssertEqual(read.work.map(\.title), ["first","second","done"]); XCTAssertEqual(read.parents[read.work[1].id], "root › nested")
+        XCTAssertTrue(read.presentation.contains { $0.id == parent.id }); XCTAssertFalse(read.incomplete)
+        let capacity = TaskPlanner.capacity([parent], events: [], on: now, hours: WorkingHours(), calendar: calendar)
+        XCTAssertEqual(capacity.estimatedMinutes, 75); XCTAssertEqual(capacity.unknownTasks, 0); XCTAssertFalse(capacity.incomplete)
+        XCTAssertEqual(TaskPlanner.blocks(read.presentation, on: now, calendar: calendar).map { $0.task.title }, ["first"])
+    }
+    func testProductivePlanningDoesNotInheritDatesOrEstimatesAndKeepsOrdinaryParentWork() {
+        var parent = root([task("undated")]); parent["due_date"] = .string("2026-10-06"); parent["duration_minutes"] = .number(80)
+        var ordinary = task("ordinary", children: [task("checklist")]); ordinary["due_date"] = .string("2026-10-06"); ordinary["duration_minutes"] = .number(20)
+        let value = TaskPlanner.capacity([parent, ordinary], events: [], on: now, hours: WorkingHours(), calendar: calendar)
+        XCTAssertEqual(value.estimatedMinutes, 20); XCTAssertEqual(value.unknownTasks, 0)
+        XCTAssertNil(ProductiveTaskReading(tasks: [parent]).work.first?.due)
+    }
+    func testAlreadyProjectedInputsDoNotDoubleCountAndKeepNativeReferences() throws {
+        let parent = root([task("child")]), reading = ProductiveTaskReading(tasks: [parent])
+        let nested = try XCTUnwrap(reading.work.first)
+        XCTAssertEqual(SubtaskTree.referencePath(nested.id), [parent.id,"child"])
+        XCTAssertEqual(ProductiveTaskReading(tasks: reading.presentation).work, reading.work)
+        XCTAssertEqual(ProductiveTaskReading(tasks: [nested]).work, [nested])
+        XCTAssertEqual(ProductiveTaskReading(tasks: [parent,nested,nested,parent]).work, [nested])
+    }
+    func testLegacyAndFutureGroupedWorkNeverClaimSpareCapacity() throws {
+        var parent = root([]); parent["subtasks"] = .array([.object(["title": .string("No identity"), "due_date": .string("2026-10-06"), "duration_minutes": .number(25)]), .string("Legacy")])
+        let reading = ProductiveTaskReading(tasks: [parent]); XCTAssertEqual(reading.unavailable, 2); XCTAssertTrue(reading.incomplete)
+        XCTAssertEqual(reading.presentation.map(\.id), [parent.id]); XCTAssertEqual(reading.work.count, 2)
+        let capacity = TaskPlanner.capacity([parent], events: [], on: now, hours: WorkingHours(), calendar: calendar)
+        XCTAssertEqual(capacity.estimatedMinutes, 25); XCTAssertTrue(capacity.incomplete)
+        var future = task("future"); future["is_heading"] = .string("future")
+        XCTAssertTrue(ProductiveTaskReading(tasks: [root([future])]).incomplete)
+        let bytes = try JSONEncoder().encode(WidgetProjection.payload(tasks: [parent], projects: [], account: owner, now: now, calendar: calendar))
+        let widget = try JSONDecoder().decode(WidgetSnapshot.self, from: bytes).capacityReading(at: now, calendar: calendar)
+        XCTAssertEqual(widget.state, "work"); XCTAssertFalse(widget.canCalculateRoom); XCTAssertEqual(widget.day?.estimated, 25)
+    }
+    func testCapacityWidgetSharesChildWorkOverdueAndUnknownEstimates() throws {
+        var today = task("today"), unknown = task("unknown"), past = task("past"), done = task("done", done: true)
+        today["due_date"] = .string("2026-10-06"); today["duration_minutes"] = .number(40)
+        unknown["due_date"] = .string("2026-10-06"); unknown["due_time"] = .string("10:00")
+        past["due_date"] = .string("2026-10-05"); done["due_date"] = .string("2026-10-05")
+        let parent = root([today,unknown,past,done])
+        let payload = WidgetProjection.payload(tasks: [parent], projects: [], account: owner, now: now, calendar: calendar)
+        let bytes = try JSONEncoder().encode(payload)
+        let widget = try JSONDecoder().decode(WidgetSnapshot.self, from: bytes).capacityReading(at: now, calendar: calendar)
+        let native = TaskPlanner.capacity([parent], events: [], on: now, hours: WorkingHours(), calendar: calendar)
+        XCTAssertEqual(widget.day?.estimated, native.estimatedMinutes); XCTAssertEqual(widget.day?.unknown, 1); XCTAssertEqual(widget.day?.overdue, 1)
+        XCTAssertNil(widget.day?.workIncomplete); XCTAssertTrue(widget.canCalculateRoom)
+        XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains("workIncomplete"))
+    }
+    func testProductiveCacheInvalidatesOnCompletionAndProjectVisibility() throws {
+        let a = root([task("a")]), b = root([task("b")], id: "second"), cache = TaskCache(); cache.update([a,b])
+        XCTAssertEqual(cache.productiveReading().work.count, 2)
+        XCTAssertTrue(cache.productiveReading(excluding: [project]).work.isEmpty)
+        XCTAssertEqual(cache.productiveReading().work.count, 2)
+        var changed = a; changed["subtasks"] = SubtaskTree.changing(a["subtasks"], id: "a", fields: ["completed": .bool(true)])
+        cache.update([changed]); XCTAssertEqual(cache.productiveReading().work.filter(\.completed).count, 1)
+    }
+    func testProductivePlannerActionsPatchOnlyRealRootAndPreserveChildIdentity() throws {
+        var child = task("child"); child["due_date"] = .string("2026-10-06"); child["duration_minutes"] = .number(20)
+        let parent = root([child]), reading = ProductiveTaskReading(tasks: [parent]), selected = try XCTUnwrap(reading.work.first)
+        let workspace = WorkspaceBinding(account: owner, generation: UUID()), projects = [Record(["id": .string(project)])]
+        let fields: [String: JSON] = ["duration_minutes": .number(35), "due_time": .string("11:00")]
+        let edits = try TaskSelectionPlan.changes([.init(task: selected, action: .patch(fields), workspace: workspace)], accessibleRoots: [parent], projects: projects, workspace: workspace)
+        XCTAssertEqual(edits.map(\.recordID), [parent.id]); XCTAssertEqual(Set(edits[0].fields.keys), ["subtasks"])
+        let after = edits[0].fields["subtasks"]!.list[0].object
+        XCTAssertEqual(after["id"], child["id"]); XCTAssertNil(after["project_id"]); XCTAssertEqual(after["duration_minutes"], .number(35))
+        XCTAssertEqual(after["due_date"], child["due_date"])
+        let history = EditHistory(changes: edits, snapshot: Snapshot(tables: ["tasks": [parent]]))
+        var snapshot = Snapshot(tables: ["tasks": [parent]])
+        edits.forEach { snapshot.apply($0) }; history.undo.forEach { snapshot.apply($0) }
+        XCTAssertEqual(snapshot.tables["tasks"]?.first?["subtasks"], parent["subtasks"])
+        var replaced = parent; replaced["task_generation"] = .string("replacement")
+        XCTAssertThrowsError(try TaskSelectionPlan.changes([.init(task: selected, action: .patch(fields), workspace: workspace)], accessibleRoots: [replaced], projects: projects, workspace: workspace))
+        var converted = parent; converted["is_heading"] = .bool(false)
+        XCTAssertEqual(ProductiveTaskReading(tasks: [converted]).work.map(\.id), [parent.id])
+    }
+}
+
+extension HeadingProjectProgressTests {
+    func testDatedNestedHeadingStaysContextWithoutAddingEstimatedWork() {
+        var nested = task("phase", heading: true, children: [task("child")]); nested["due_date"] = .string("2026-10-06"); nested["duration_minutes"] = .number(100)
+        let parent = root([nested]), reading = ProductiveTaskReading(tasks: [parent])
+        XCTAssertEqual(reading.work.map(\.title), ["child"])
+        XCTAssertEqual(reading.presentation.filter { TaskKind($0) == .heading }.map(\.title), ["root","phase"])
+        XCTAssertEqual(TaskPlanner.allDay(reading.presentation, on: now, calendar: calendar).map(\.title), ["phase"])
+        XCTAssertEqual(TaskPlanner.capacity([parent], events: [], on: now, hours: WorkingHours(), calendar: calendar).estimatedMinutes, 0)
+    }
+    func testGroupedFixedTimeWorkClipsAcrossMidnightAndSharesWidgetDayTotals() throws {
+        var child = task("travel"); child["due_date"] = .string("2026-10-05"); child["due_time"] = .string("23:30"); child["duration_minutes"] = .number(90)
+        let parent = root([child]), reading = ProductiveTaskReading(tasks: [parent])
+        let native = TaskPlanner.capacity([parent], events: [], on: now, hours: WorkingHours(), calendar: calendar)
+        XCTAssertEqual(native.estimatedMinutes, 60)
+        XCTAssertEqual(TaskPlanner.blocks(reading.presentation, on: now, calendar: calendar).first?.length, 60)
+        let payload = WidgetProjection.payload(tasks: [parent], projects: [], account: owner, now: now, calendar: calendar)
+        let widget = try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(payload)).capacityReading(at: now, calendar: calendar)
+        XCTAssertEqual(widget.day?.estimated, 60); XCTAssertEqual(widget.day?.overdue, 0)
+    }
+}
+
+
+extension HeadingProjectProgressTests {
+    func testHeadingContextDoesNotCreateWorkConflicts() {
+        var context = root([]), child = task("child")
+        for key in ["due_date", "due_time"] { context[key] = .string(key == "due_date" ? "2026-10-06" : "10:00"); child[key] = context[key] }
+        context["duration_minutes"] = .number(60)
+        XCTAssertTrue(TaskPlanner.conflicts(task: child, start: TaskPlanning.start(child, calendar: calendar)!, minutes: 30, tasks: [context,child], events: [], calendar: calendar).isEmpty)
+        XCTAssertTrue(TaskPlanner.conflicts(task: context, start: TaskPlanning.start(child, calendar: calendar)!, minutes: 60, tasks: [context,child], events: [], calendar: calendar).isEmpty)
+    }
+}

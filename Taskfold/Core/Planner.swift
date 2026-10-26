@@ -52,6 +52,7 @@ struct PlannerBlock: Identifiable {
 
 struct PlannerCapacity: Equatable {
     var workingMinutes: Int, busyMinutes: Int, estimatedMinutes: Int, unknownTasks: Int
+    var incomplete = false
     var afterKnownWork: Int { workingMinutes - busyMinutes - estimatedMinutes }
 }
 
@@ -113,15 +114,17 @@ enum TaskPlanner {
         if let start, let end { minutes += end.timeIntervalSince(start) }
         return Int((minutes / 60).rounded())
     }
-    static func capacity(_ tasks: [Record], events: [PlannerEvent], on day: Date, hours: WorkingHours?, calendar: Calendar = .current) -> PlannerCapacity {
-        let actionable = tasks.filter(TaskKind.mayComplete)
+    static func capacity(_ tasks: [Record], events: [PlannerEvent], on day: Date, hours: WorkingHours?, calendar: Calendar = .current, reading suppliedReading: ProductiveTaskReading? = nil) -> PlannerCapacity {
+        let reading = suppliedReading ?? ProductiveTaskReading(tasks: tasks)
+        let actionable = reading.work
         let blocks = blocks(actionable, on: day, calendar: calendar), loose = allDay(actionable, on: day, calendar: calendar)
         let window = hours?.interval(on: day, calendar: calendar)
         return PlannerCapacity(workingMinutes: Int((window?.duration ?? 0) / 60), busyMinutes: window.map { unionMinutes(events.map(\.interval), clippedTo: $0) } ?? 0,
             estimatedMinutes: Int(blocks.filter { $0.end != nil }.reduce(0) { $0 + $1.length }.rounded()) + loose.compactMap(\.durationMinutes).reduce(0, +),
-            unknownTasks: blocks.filter { $0.end == nil }.count + loose.filter { $0.durationMinutes == nil }.count)
+            unknownTasks: blocks.filter { $0.end == nil }.count + loose.filter { $0.durationMinutes == nil }.count, incomplete: reading.incomplete)
     }
     static func conflicts(task: Record, start: Date, minutes: Int?, tasks: [Record], events: [PlannerEvent], calendar: Calendar = .current) -> [String] {
+        guard TaskKind.mayComplete(task) else { return [] }
         let end = minutes.map { start.addingTimeInterval(Double($0 * 60)) }
         func overlaps(_ otherStart: Date, _ otherEnd: Date?) -> Bool {
             switch (end, otherEnd) {
@@ -131,7 +134,7 @@ enum TaskPlanner {
             case (.none, .none): return start == otherStart
             }
         }
-        var names = tasks.filter { !$0.completed && $0.id != task.id }.compactMap { other -> String? in
+        var names = tasks.filter { TaskKind.mayComplete($0) && !$0.completed && $0.id != task.id }.compactMap { other -> String? in
             guard let otherStart = TaskPlanning.start(other, calendar: calendar), overlaps(otherStart, other.durationMinutes.map { otherStart.addingTimeInterval(Double($0 * 60)) }) else { return nil }
             return other.title
         }

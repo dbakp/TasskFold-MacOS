@@ -108,6 +108,7 @@ enum DeadlineWindow: String, CaseIterable, Codable { case week = "7", fortnight 
 enum CapacityDay: String, CaseIterable, Codable { case today, tomorrow; var offset: Int { self == .today ? 0 : 1 } }
 struct WidgetCapacityDay: Codable, Equatable {
     var working: Int, busy: Int, estimated: Int, unknown: Int, overdue: Int
+    var workIncomplete: Bool? = nil
     var afterKnownWork: Int { working - busy - estimated }
     var valid: Bool { (0...1500).contains(working) && (0...working).contains(busy) && (0...100_000_000).contains(estimated) && (0...1_000_000).contains(unknown) && (0...1_000_000).contains(overdue) }
 }
@@ -133,6 +134,7 @@ struct WidgetCapacityReading {
         case "choose": return "Choose calendars in Taskfold"
         case "unavailable": return "Calendar access unavailable"
         case "settings": return "Update Taskfold to read working hours"
+        case "work": return "Review grouped tasks in Taskfold"
         default: return "Open Taskfold to refresh"
         }
     }
@@ -437,6 +439,7 @@ struct WidgetSnapshot: Codable {
         if state == "ready" || state == "incomplete" {
             if let updated = capacity.calendarUpdated, updated.isFinite, date.timeIntervalSinceReferenceDate >= updated - 300, date.timeIntervalSinceReferenceDate < updated + 3600 {} else { state = "refresh" }
         }
+        if value.workIncomplete == true { state = "work" }
         return WidgetCapacityReading(day: value, state: state, dayKey: key, hours: capacity.hours)
     }
     func capacityTimelineDates(from now: Date, calendar: Calendar = .current) -> [Date] {
@@ -1309,13 +1312,13 @@ struct CapacityWidgetView: View {
         return WidgetCapacityReading.minutes(day.afterKnownWork) + (day.afterKnownWork < 0 ? " over" : "")
     }
     private func qualifier(_ day: WidgetCapacityDay) -> String {
-        if !reading.canCalculateRoom { return "Calendar needs attention" }
+        if !reading.canCalculateRoom { return reading.state == "work" ? "Grouped tasks need review" : "Calendar needs attention" }
         if day.working == 0 { return WidgetCapacityReading.minutes(day.estimated) + " task estimates" }
         if day.afterKnownWork < 0 { return "over the day’s budget" }
         return reading.state == "off" ? "whole day after estimates" : "whole day after known work"
     }
     private func caution(_ day: WidgetCapacityDay) -> String {
-        let estimate = day.unknown == 0 ? "All planned tasks estimated" : "\(day.unknown) unestimated"
+        let estimate = day.workIncomplete == true ? "Readable estimates only" : day.unknown == 0 ? "All planned tasks estimated" : "\(day.unknown) unestimated"
         return estimate + (day.overdue == 0 ? "" : " · \(day.overdue) overdue outside plan")
     }
     private func metric(_ title: String, value: String, color: Color) -> some View {

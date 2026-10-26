@@ -24,6 +24,11 @@ Project progress and attention now count ordinary work beneath headings, with
 matching widget totals and an explicit incomplete-total state. Separate child
 history and broader productive projections remain open; see
 `p2-task-headings-project-work-evidence.json`.
+Day-planner rows and capacity now use the same productive descendant reading,
+with safe child scheduling/completion and an incomplete-work state. Scoped
+phone/tablet native acceptance passes; Mac native execution is pending unlock.
+Today/Upcoming, Inbox review and their matching badges/primary widget rows remain
+next; see `p2-task-headings-planner-evidence.json`.
 Mac UI automation is now authorized. Scoped Todoist, CSV clipboard/native-file
 transfer and project-work route/completion/Undo/Redo/cold checks pass; see
 `mac-heading-acceptance/report.json`.

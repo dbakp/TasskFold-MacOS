@@ -197,7 +197,11 @@ struct CalendarView: View {
     }
 
     private var hourlyPlanner: some View {
-        HourlyPlannerView(day: selected, tasks: store.tasks, open: { workspace.open($0.id) }, complete: { task in workspace.run("Complete Task") { store.toggle(task) } }, save: { task, fields in
+        HourlyPlannerView(day: selected, work: store.productiveReading, open: { workspace.open($0.id) }, complete: { task in
+            if SubtaskTree.referencePath(task.id) == nil { workspace.run("Complete Task") { store.toggle(task) } }
+            else { _ = workspace.runSelection([task], name: "Complete Task") { _ in .completion(!task.completed, Date()) } }
+        }, save: { task, fields in
+            if SubtaskTree.referencePath(task.id) != nil { return workspace.runSelection([task], name: "Schedule Task") { _ in .patch(fields) } }
             var saved = false
             workspace.run("Schedule Task") { saved = store.commit([Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields, baseline: Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, task[$0]) }))]) }
             return saved

@@ -1,0 +1,48 @@
+{
+  "nativeSource": {
+    "Taskfold/Core/TaskActivity.swift": {
+      "sourceSHA256": "77ea75d9e38785e7a253d318c964f62e0fd9dd0f95773c99f7a144855b484b91",
+      "hostSHA256": "77ea75d9e38785e7a253d318c964f62e0fd9dd0f95773c99f7a144855b484b91",
+      "allowedNamespaceTransformMatches": true
+    },
+    "Taskfold/Core/Models.swift": {
+      "sourceSHA256": "b888259223a21f79d65912fa93f2f88e66a3da22dd9726684af47ee2084ba3e4",
+      "hostSHA256": "b888259223a21f79d65912fa93f2f88e66a3da22dd9726684af47ee2084ba3e4",
+      "allowedNamespaceTransformMatches": true
+    },
+    "Taskfold/Core/Planner.swift": {
+      "sourceSHA256": "2af2e3a80d3046702119795734a7d29a6301866c761222a1c9e8d09ee073200f",
+      "hostSHA256": "2af2e3a80d3046702119795734a7d29a6301866c761222a1c9e8d09ee073200f",
+      "allowedNamespaceTransformMatches": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "cfeb4df1de476af492b66e5bb850df219464352008b2d6300c940a521fe5be5b",
+      "hostSHA256": "98f19b0bcd40d817e2f91bb41141e020fe0bb290a1e7798a0e13d061cadab9b4",
+      "allowedNamespaceTransformMatches": true
+    },
+    "Taskfold/Views/CalendarView.swift": {
+      "sourceSHA256": "1f0987c2a63f03d4e42c77fe4983e41859cc1a352956a5807bee22985af0decf",
+      "hostSHA256": "1f0987c2a63f03d4e42c77fe4983e41859cc1a352956a5807bee22985af0decf",
+      "allowedNamespaceTransformMatches": true
+    },
+    "Taskfold/Views/HourlyPlanner.swift": {
+      "sourceSHA256": "68b74a650f83560c3974b525342660d1ff8419d9dbf61cfe155be3d05db59649",
+      "hostSHA256": "68b74a650f83560c3974b525342660d1ff8419d9dbf61cfe155be3d05db59649",
+      "allowedNamespaceTransformMatches": true
+    },
+    "TaskfoldWidgets/TaskfoldWidgets.swift": {
+      "sourceSHA256": "2a489fea5732d727bb752378cca79e9ba0312fbe8bf0e732400ea66a4edc33a7",
+      "hostSHA256": "2a489fea5732d727bb752378cca79e9ba0312fbe8bf0e732400ea66a4edc33a7",
+      "allowedNamespaceTransformMatches": true
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "sourceSHA256": "a1b25eee168bfe70de26fd32aa384bee5073d98ccef090ed1010b877013ba7a8",
+      "hostSHA256": "1523b107399b1dd6b8766784ece064fbd6847338e893a49984933bc1cf5c5fad",
+      "allowedNamespaceTransformMatches": true
+    }
+  },
+  "appExecutableUUID": "UUID: 8D41E176-2AD4-320C-9A18-18A35D22B42D (arm64) /tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+  "finalAppAndWidgetBuild": "passed",
+  "strictDeepSignature": "passed",
+  "scope": "Current Mac app, widget and UI test bundle build and strict signatures pass. Prepared source matches owned Mac files under explicit namespace transforms. No successful Mac runtime execution is claimed for this stage; the corrected case still needs an unlocked run."
+}

@@ -1366,6 +1366,14 @@ struct TaskQuery: Hashable {
 final class TaskCache {
     private var source: [Record] = []
     private var results: [TaskQuery: [Record]] = [:]
+    private var productiveResult: ProductiveTaskReading?
+    private var productiveExcluded = Set<String>()
+    func productiveReading(excluding projects: Set<String> = []) -> ProductiveTaskReading {
+        if let productiveResult, productiveExcluded == projects { return productiveResult }
+        let value = ProductiveTaskReading(tasks: tasks.filter { !projects.contains($0.string("project_id")) })
+        productiveResult = value; productiveExcluded = projects
+        return value
+    }
     private(set) var tasks: [Record] = []
     private(set) var computationCount = 0
     private struct HierarchyKey: Hashable { var projects: [FilterReference]; var userID: String }
@@ -1398,7 +1406,7 @@ final class TaskCache {
     }
     @discardableResult func update(_ rows: [Record]) -> Bool {
         guard source != rows else { return false }
-        source = rows; hierarchyKey = nil; hierarchyResult = nil
+        source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
         results.removeAll(keepingCapacity: true)
         return true
@@ -1789,14 +1797,18 @@ enum WidgetProjection {
             value.account == account && value.timeZone == calendar.timeZone.identifier && now >= value.updated.addingTimeInterval(-300) && now < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let state = usable?.state ?? fallback
+        let reading = ProductiveTaskReading(tasks: tasks)
+        let tasks = reading.work
         var days: [String: JSON] = [:]
         for offset in 0..<8 {
             guard let day = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)) else { continue }
-            let capacity = TaskPlanner.capacity(tasks, events: usable?.events ?? [], on: day, hours: hours, calendar: calendar)
+            let capacity = TaskPlanner.capacity(tasks, events: usable?.events ?? [], on: day, hours: hours, calendar: calendar, reading: reading)
             let key = TaskPlanner.dayKey(day, calendar: calendar)
             let plannedIDs = Set(TaskPlanner.blocks(tasks, on: day, calendar: calendar).map(\.id) + TaskPlanner.allDay(tasks, on: day, calendar: calendar).map(\.id))
             let overdue = tasks.filter { TaskKind.mayComplete($0) && !plannedIDs.contains($0.id) && !$0.completed && !$0.string("due_date").isEmpty && Dates.parse(TaskPlanner.plannedDay($0, calendar: calendar)) != nil && TaskPlanner.plannedDay($0, calendar: calendar) < key }.count
-            days[key] = .object(["working": .number(Double(capacity.workingMinutes)), "busy": .number(Double(capacity.busyMinutes)), "estimated": .number(Double(capacity.estimatedMinutes)), "unknown": .number(Double(capacity.unknownTasks)), "overdue": .number(Double(overdue))])
+            var fields: [String: JSON] = ["working": .number(Double(capacity.workingMinutes)), "busy": .number(Double(capacity.busyMinutes)), "estimated": .number(Double(capacity.estimatedMinutes)), "unknown": .number(Double(capacity.unknownTasks)), "overdue": .number(Double(overdue))]
+            if reading.incomplete { fields["workIncomplete"] = .bool(true) }
+            days[key] = .object(fields)
         }
         return .object(["version": .number(1), "timeZone": .string(calendar.timeZone.identifier), "calendarState": .string(state),
             "calendarUpdated": usable.map { .number($0.updated.timeIntervalSinceReferenceDate) } ?? .null,
