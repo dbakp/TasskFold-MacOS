@@ -1217,3 +1217,130 @@ extension TeamCompletionPresentationTests {
         XCTAssertFalse(failure.mayConsume(origin: origin, current: origin, error: "Different message"))
     }
 }
+
+extension TeamCompletionTests {
+    func testProvisionalDraftSaveRequiresEncryptedReadbackAndRetriesSameArchive() throws {
+        let (draft, _, _) = try draftCopyFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let source = ProvisionalVaultKeySource(), vault = TeamCompletionDraftVault(directory: directory, account: draft.scope.account, origin: draft.scope.origin, key: { try source.read() })
+        source.fail(on: 2)
+        XCTAssertThrowsError(try vault.save(draft), "A successful write with an unreadable result must not authorize retirement")
+        source.fail(on: nil)
+        let saved = try vault.load(draft.id), bytes = try Data(contentsOf: vault.file(draft.id))
+        XCTAssertEqual(saved, draft)
+        XCTAssertEqual(try vault.save(draft), saved)
+        XCTAssertEqual(try Data(contentsOf: vault.file(draft.id)), bytes, "Retry reuses the already verified authored archive")
+        XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains(draft.record.title))
+    }
+    func testProvisionalCopyPreparationReadbackFailureKeepsExactFrozenRequestForRetry() throws {
+        let (draft, command, _) = try draftCopyFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let source = ProvisionalVaultKeySource(), vault = TeamCompletionDraftVault(directory: directory, account: draft.scope.account, origin: draft.scope.origin, key: { try source.read() })
+        try vault.save(draft); source.fail(on: 4)
+        XCTAssertThrowsError(try vault.prepareCopy(draft, command: command))
+        source.fail(on: nil)
+        let reopened = try vault.load(draft.id), bytes = try Data(contentsOf: vault.file(draft.id))
+        XCTAssertEqual(reopened.copyAttempt, command); XCTAssertTrue(reopened.sameWork(as: draft))
+        XCTAssertEqual(try vault.prepareCopy(draft, command: command), reopened)
+        XCTAssertEqual(try Data(contentsOf: vault.file(draft.id)), bytes)
+        XCTAssertThrowsError(try vault.prepareCopy(draft, command: TeamCompletionDraft.CopyCommand(assignments: !command.assignments)))
+        XCTAssertEqual(try vault.load(draft.id), reopened)
+    }
+    func testProvisionalCopyCancellationReadbackFailurePreservesAuthoredWorkOnReopen() throws {
+        let (draft, command, reply) = try cancelledDraftCopyFixture(), proof = try TeamCompletionDraft.CopyReview(reply, draft: draft, command: command)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let source = ProvisionalVaultKeySource(), vault = TeamCompletionDraftVault(directory: directory, account: draft.scope.account, origin: draft.scope.origin, key: { try source.read() })
+        try vault.save(draft); let prepared = try vault.prepareCopy(draft, command: command)
+        source.fail(on: 4)
+        XCTAssertThrowsError(try vault.clearCopyAttempt(prepared, proof: proof))
+        source.fail(on: nil)
+        let reopened = try vault.load(draft.id)
+        XCTAssertNil(reopened.copyAttempt); XCTAssertTrue(reopened.sameWork(as: draft))
+        // A late old cancellation cannot release a newer request after relaunch.
+        let next = TeamCompletionDraft.CopyCommand()
+        let frozen = try vault.prepareCopy(reopened, command: next)
+        XCTAssertThrowsError(try vault.clearCopyAttempt(prepared, proof: proof))
+        XCTAssertEqual(try vault.load(draft.id), frozen)
+    }
+    func testProvisionalVaultRefusesOversizeFilesBeforeReadingOrFetchingKey() throws {
+        let (draft, _, _) = try draftCopyFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let source = ProvisionalVaultKeySource(), vault = TeamCompletionDraftVault(directory: directory, account: draft.scope.account, origin: draft.scope.origin, key: { try source.read() })
+        XCTAssertTrue(FileManager.default.createFile(atPath: vault.file(draft.id).path, contents: nil))
+        let handle = try FileHandle(forWritingTo: vault.file(draft.id)); try handle.truncate(atOffset: 16_001_025); try handle.close()
+        XCTAssertThrowsError(try vault.load(draft.id)); XCTAssertThrowsError(try vault.entries()); XCTAssertThrowsError(try vault.save(draft))
+        XCTAssertEqual(source.calls, 0)
+        XCTAssertEqual(try vault.file(draft.id).resourceValues(forKeys: [.fileSizeKey]).fileSize, 16_001_025)
+    }
+    func testProvisionalVaultChecksAggregateAndCountBoundsBeforeDecrypting() throws {
+        let (draft, _, _) = try draftCopyFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let source = ProvisionalVaultKeySource(), vault = TeamCompletionDraftVault(directory: directory, account: draft.scope.account, origin: draft.scope.origin, key: { try source.read() })
+        for _ in 0..<5 {
+            let url = vault.file(UUID()); XCTAssertTrue(FileManager.default.createFile(atPath: url.path, contents: nil))
+            let handle = try FileHandle(forWritingTo: url); try handle.truncate(atOffset: 13_000_000); try handle.close()
+        }
+        XCTAssertThrowsError(try vault.entries()); XCTAssertEqual(source.calls, 0)
+        for file in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) { try FileManager.default.removeItem(at: file) }
+        for _ in 0..<21 { XCTAssertTrue(FileManager.default.createFile(atPath: vault.file(UUID()).path, contents: nil)) }
+        XCTAssertThrowsError(try vault.entries()); XCTAssertEqual(source.calls, 0)
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil).count, 21)
+    }
+    func testProvisionalVaultRejectsLinkedDirectoryAndLinkedFileWithoutChangingTarget() throws {
+        let (draft, command, _) = try draftCopyFixture(), root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let key = SymmetricKey(size: .bits256), target = draftVault(draft, directory: root.appendingPathComponent("target"), key: key)
+        try target.save(draft); let bytes = try Data(contentsOf: target.file(draft.id))
+        let linked = draftVault(draft, directory: root.appendingPathComponent("linked"), key: key)
+        try FileManager.default.createSymbolicLink(at: linked.directory, withDestinationURL: target.directory)
+        XCTAssertThrowsError(try linked.entries()); XCTAssertThrowsError(try linked.load(draft.id)); XCTAssertThrowsError(try linked.save(draft)); XCTAssertThrowsError(try linked.prepareCopy(draft, command: command)); XCTAssertThrowsError(try linked.remove(draft.id))
+        let other = draftVault(draft, directory: root.appendingPathComponent("other"), key: key)
+        try FileManager.default.createDirectory(at: other.directory, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: other.file(draft.id), withDestinationURL: target.file(draft.id))
+        XCTAssertThrowsError(try other.load(draft.id)); XCTAssertThrowsError(try other.entries()); XCTAssertThrowsError(try other.prepareCopy(draft, command: command)); XCTAssertThrowsError(try other.remove(draft.id))
+        XCTAssertEqual(try Data(contentsOf: target.file(draft.id)), bytes)
+    }
+    func testProvisionalVaultBlockedDestinationRepairKeepsAuthoredArchiveAndCopyChoices() throws {
+        let (draft, command, _) = try draftCopyFixture(), root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let vault = draftVault(draft, directory: root.appendingPathComponent("vault"), key: SymmetricKey(size: .bits256))
+        try Data("Reserved test barrier".utf8).write(to: vault.directory)
+        XCTAssertThrowsError(try vault.save(draft)); XCTAssertEqual(try String(contentsOf: vault.directory), "Reserved test barrier")
+        try FileManager.default.removeItem(at: vault.directory); try vault.save(draft)
+        let held = vault.file(draft.id).appendingPathExtension("held")
+        try FileManager.default.moveItem(at: vault.file(draft.id), to: held)
+        try FileManager.default.createDirectory(at: vault.file(draft.id), withIntermediateDirectories: false)
+        XCTAssertThrowsError(try vault.prepareCopy(draft, command: command)); XCTAssertThrowsError(try vault.load(draft.id))
+        try FileManager.default.removeItem(at: vault.file(draft.id)); try FileManager.default.moveItem(at: held, to: vault.file(draft.id))
+        XCTAssertEqual(try vault.load(draft.id), draft)
+        XCTAssertEqual(try vault.prepareCopy(draft, command: command).copyAttempt, command)
+    }
+    func testAccountRemovalFenceProtectsProvisionalDraftDeletionAsWellAsWrites() throws {
+        let (draft, _, _) = try draftCopyFixture(), directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let gate = AccountRemovalDisk(directory: directory, account: draft.scope.account)
+        var vault = draftVault(draft, directory: directory.appendingPathComponent("drafts"), key: SymmetricKey(size: .bits256)); vault.removalGate = gate
+        try vault.save(draft); let bytes = try Data(contentsOf: vault.file(draft.id))
+        try gate.removeCache(); XCTAssertThrowsError(try vault.remove(draft.id))
+        XCTAssertEqual(try Data(contentsOf: vault.file(draft.id)), bytes)
+        XCTAssertEqual(try vault.load(draft.id), draft, "Existing encrypted material remains reviewable; the fence prevents mutation")
+    }
+
+}
+
+private final class ProvisionalVaultKeySource: @unchecked Sendable {
+    private let lock = NSLock()
+    private let key = SymmetricKey(size: .bits256)
+    private var failure: Int?, count = 0
+    var calls: Int { lock.lock(); defer { lock.unlock() }; return count }
+    func fail(on call: Int?) { lock.lock(); defer { lock.unlock() }; count = 0; failure = call }
+    func read() throws -> SymmetricKey {
+        lock.lock(); defer { lock.unlock() }; count += 1
+        if count == failure { throw AppFailure(message: "Synthetic key temporarily unavailable") }
+        return key
+    }
+}

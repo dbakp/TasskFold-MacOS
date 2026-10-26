@@ -1,0 +1,22 @@
+{
+  "initial": "New tests were initially inserted into the presentation-test extension; compilation refused missing private fixture access. Moved into the correct TeamCompletionTests extension. No product tests accepted from this attempt.",
+  "compileDiagnostics": [
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionTests.swift:1220:33: error: cannot find 'draftCopyFixture' in scope",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionTests.swift:1233:39: error: cannot find 'draftCopyFixture' in scope",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionTests.swift:1247:43: error: cannot find 'cancelledDraftCopyFixture' in scope",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionTests.swift:1264:33: error: cannot find 'draftCopyFixture' in scope"
+  ],
+  "v2": {
+    "tests": 228,
+    "failed": 1,
+    "cause": "Repaired destination was still rejected because Foundation cached the prior non-directory metadata. Production checks now clear cached resource values.",
+    "failureLines": [
+      "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Core/TeamCompletionDraft.swift:275: error: -[TaskfoldCoreTests.TeamCompletionTests testProvisionalVaultBlockedDestinationRepairKeepsAuthoredArchiveAndCopyChoices] : failed: caught error: \"AppFailure(message: \"This saved draft needs review. Your queued work is unchanged.\")\""
+    ]
+  },
+  "final": {
+    "tests": 238,
+    "failed": 0,
+    "skipped": 0
+  }
+}

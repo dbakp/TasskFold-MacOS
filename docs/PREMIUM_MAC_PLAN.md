@@ -6984,3 +6984,38 @@ The initial already-recorded expectation also incorrectly required the preserved
 disk permission snapshot to change; it now checks the whole snapshot stays exact.
 These failed/interrupted attempts are retained as compact evidence, not counted as
 current Mac acceptance. No additional manual listening or widget checks are needed.
+
+
+## 26 October: verified provisional-draft storage
+
+The original provisional-occurrence draft vault now reads back and compares the
+actual decrypted archive after saving a draft, freezing a copy request or clearing
+a confirmed-cancelled copy request. A successful filesystem write alone no longer
+lets these calls return success. When verification fails after the atomic write,
+the authored archive and actual saved request remain on disk for review/retry;
+the code does not fabricate a rollback or mint a replacement identity. Existing
+Store callers await these operations before retirement, sending a copy or accepting
+cancellation. No task, wire format, draft version, authenticated encryption context
+or UI flow changes.
+
+The vault now rejects linked/nonregular files and linked vault directories. Listing checks file sizes, the twenty-file bound and the 64 MB aggregate
+bound before loading ciphertext or fetching a key. Direct loads check their own
+file type and size first; writes also check the complete archive budget. Files are not evicted when a bound or an
+unreadable archive prevents access. The account-removal fence now protects explicit
+draft deletion as well as save/copy writes; already encrypted material remains
+readable for recovery under the existing policy.
+
+Each repository passes 238 selected completion-recovery Core tests. Eight new
+real-filesystem cases cover read-back key loss during all three
+writes, reopening and exact-request retry, stale cancellation after a newer request,
+sparse oversized files, aggregate/count refusal before key access, linked paths,
+blocked destination repair and deletion fencing. Current results and limits are in
+[p2-provisional-vault-evidence.json](p2-provisional-vault-evidence.json). This is
+storage acceptance, not new native/hosted retirement or copy-delivery acceptance.
+Both app builds pass (signed isolated Mac build; iOS Simulator compile-only).
+The first storage run exposed cached folder metadata after repair; fetching fresh
+metadata fixes the actual retry. Compact failed-iteration evidence is retained.
+Mac interactive automation remains pending user approval. Provisional connected
+edit expansion, missing conversation context, I/O-phase account/session UI races,
+broader native/spoken/recurring checks, large workloads and hosted rollout remain
+open. Collaboration stays default off; all user deferrals remain unchanged.

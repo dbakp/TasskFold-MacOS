@@ -270,11 +270,44 @@ struct TeamCompletionDraftVault: Sendable {
     var removalGate: AccountRemovalDisk? = nil
     private static let lock=NSRecursiveLock()
     private var context:Data {Data(("com.taskfold.review-draft.v1|"+account+"|"+origin).utf8)}
+    private func checkDirectory() throws {
+        var fresh = directory; fresh.removeAllCachedResourceValues()
+        let meta = try fresh.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+        guard meta.isSymbolicLink != true, meta.isDirectory == true else { throw TeamCompletionDraft.invalid }
+    }
+    private func ciphertextSize(_ url: URL) throws -> Int {
+        var fresh = url; fresh.removeAllCachedResourceValues()
+        let meta = try fresh.resourceValues(forKeys: [.isSymbolicLinkKey, .isRegularFileKey, .fileSizeKey])
+        guard meta.isSymbolicLink != true, meta.isRegularFile == true,
+              let size = meta.fileSize, size >= 0, size <= 16_001_024 else { throw TeamCompletionDraft.invalid }
+        return size
+    }
+    /// Verify the actual encrypted bytes, rather than treating a successful
+    /// atomic write as proof that the key and saved envelope can be read back.
+    private func writeVerified(_ draft: TeamCompletionDraft) throws -> TeamCompletionDraft {
+        try draft.validate(); try checkDirectory()
+        guard draft.scope.account == account, draft.scope.origin == origin else { throw TeamCompletionDraft.invalid }
+        let sealed = try AES.GCM.seal(JSONEncoder().encode(draft), using: key(), authenticating: context)
+        guard let bytes = sealed.combined, bytes.count <= 16_001_024 else { throw TeamCompletionDraft.invalid }
+        let old = try entries()
+        let total = try old.filter { $0.id != draft.id }.reduce(0) { try $0 + ciphertextSize(file($1.id)) }
+        guard total <= 64_000_000 - bytes.count else { throw AppFailure(message: "Saved drafts reached their storage limit. Your draft is kept.") }
+        try bytes.write(to: file(draft.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        let verified = try load(draft.id)
+        guard verified == draft else { throw TeamCompletionDraft.invalid }
+        return verified
+    }
     func entries() throws -> [TeamCompletionDraft] {
         Self.lock.lock();defer{Self.lock.unlock()}
         guard FileManager.default.fileExists(atPath:directory.path) else {return []}
-        let urls=try FileManager.default.contentsOfDirectory(at:directory,includingPropertiesForKeys:[.isSymbolicLinkKey]).filter{$0.pathExtension == "taskfolddraft"}
+        try checkDirectory()
+        let urls=try FileManager.default.contentsOfDirectory(at:directory,includingPropertiesForKeys:[.fileSizeKey]).filter{$0.pathExtension == "taskfolddraft"}
         guard urls.count<=20 else {throw TeamCompletionDraft.invalid}
+        _ = try urls.reduce(0) { total, url in
+            let size = try ciphertextSize(url)
+            guard total <= 64_000_000 - size else { throw TeamCompletionDraft.invalid }
+            return total + size
+        }
         return try urls.map {url in
             guard let id=UUID(uuidString:url.deletingPathExtension().lastPathComponent),try url.resourceValues(forKeys:[.isSymbolicLinkKey]).isSymbolicLink != true else {throw TeamCompletionDraft.invalid}
             return try load(id)
@@ -282,7 +315,9 @@ struct TeamCompletionDraftVault: Sendable {
     }
     func load(_ id:UUID) throws -> TeamCompletionDraft {
         Self.lock.lock();defer{Self.lock.unlock()}
-        let data=try Data(contentsOf:file(id));guard data.count<=16_001_024 else {throw TeamCompletionDraft.invalid}
+        try checkDirectory()
+        let size = try ciphertextSize(file(id))
+        let data=try Data(contentsOf:file(id));guard data.count == size, data.count<=16_001_024 else {throw TeamCompletionDraft.invalid}
         let plain=try AES.GCM.open(AES.GCM.SealedBox(combined:data),using:key(),authenticating:context)
         let value=try JSONDecoder().decode(TeamCompletionDraft.self,from:plain);try value.validate()
         guard value.id == id,value.scope.account == account,value.scope.origin == origin else {throw TeamCompletionDraft.invalid}
@@ -294,14 +329,9 @@ struct TeamCompletionDraftVault: Sendable {
         try draft.validate();guard draft.scope.account == account,draft.scope.origin == origin else {throw TeamCompletionDraft.invalid}
         let old=try entries();if let existing=old.first(where:{$0.sameWork(as:draft)}) {return existing}
         guard old.count<20,!FileManager.default.fileExists(atPath:file(draft.id).path) else {throw AppFailure(message:"Your saved drafts are full. Review or remove an older draft before parking more work.")}
-        let data=try JSONEncoder().encode(draft)
-        let size=try old.reduce(0){try $0+Data(contentsOf:file($1.id)).count}
-        let sealed=try AES.GCM.seal(data,using:key(),authenticating:context)
-        guard let bytes=sealed.combined else {throw TeamCompletionDraft.invalid}
-        guard size+bytes.count<=64_000_000 else {throw AppFailure(message:"Saved drafts reached their storage limit. Review or remove an older draft first.")}
         try FileManager.default.createDirectory(at:directory,withIntermediateDirectories:true)
-        try bytes.write(to:file(draft.id),options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
-        return draft
+        try checkDirectory()
+        return try writeVerified(draft)
     }
     /// Confirm before writing to the server. Retrying cannot silently mint a
     /// second task or change options when the first response was lost.
@@ -315,13 +345,7 @@ struct TeamCompletionDraftVault: Sendable {
             return current
         }
         current.copyAttempt=command;try current.validate();_=try command.body(for:current)
-        let data=try JSONEncoder().encode(current),sealed=try AES.GCM.seal(data,using:key(),authenticating:context)
-        guard let bytes=sealed.combined else {throw TeamCompletionDraft.invalid}
-        let oldSize=try Data(contentsOf:file(current.id)).count
-        let total=try entries().reduce(0){try $0+Data(contentsOf:file($1.id)).count}
-        guard total-oldSize+bytes.count<=64_000_000 else {throw AppFailure(message:"Saved drafts reached their storage limit. The copy has not been sent.")}
-        try bytes.write(to:file(current.id),options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
-        return current
+        return try writeVerified(current)
     }
     func clearCopyAttempt(_ draft:TeamCompletionDraft,proof:TeamCompletionDraft.CopyReview) throws {
         if let removalGate {var free=self;free.removalGate=nil;return try removalGate.writable{try free.clearCopyAttempt(draft,proof:proof)}}
@@ -329,11 +353,10 @@ struct TeamCompletionDraftVault: Sendable {
         var current=try load(draft.id)
         guard proof.cancelled,proof.matches(current),current.sameWork(as:draft),current.copyAttempt == proof.command else {throw TeamCompletionDraft.invalid}
         current.copyAttempt=nil;try current.validate()
-        let sealed=try AES.GCM.seal(JSONEncoder().encode(current),using:key(),authenticating:context)
-        guard let bytes=sealed.combined else {throw TeamCompletionDraft.invalid}
-        try bytes.write(to:file(current.id),options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
+        _ = try writeVerified(current)
     }
     func remove(_ id:UUID) throws {
+        if let removalGate {var free=self;free.removalGate=nil;return try removalGate.writable{try free.remove(id)}}
         Self.lock.lock();defer{Self.lock.unlock()};_=try load(id);try FileManager.default.removeItem(at:file(id))
     }
     func file(_ id:UUID) -> URL {directory.appendingPathComponent(id.uuidString.lowercased()+".taskfolddraft")}

@@ -1,0 +1,28 @@
+{
+  "removedOwnedScratchLogicalBytes": 643093916,
+  "removedPaths": {
+    "/tmp/taskfold-provisional-vault-ios-core.log": 34054,
+    "/tmp/taskfold-provisional-vault-ios-build": 642117366,
+    "/tmp/taskfold-provisional-vault-ios-build.log": 474324,
+    "/tmp/taskfold-provisional-vault-mac-build-v2.log": 33846,
+    "/tmp/taskfold-provisional-vault-ios-core-v3.log": 68215,
+    "/tmp/taskfold-provisional-vault-ios-core-v2.log": 80950,
+    "/tmp/taskfold-provisional-vault-mac-build.log": 38059,
+    "/tmp/taskfold-provisional-vault-ios-build-v2.log": 48282,
+    "/tmp/taskfold-provisional-vault-mac-core-v2.log": 81650,
+    "/tmp/taskfold-provisional-vault-mac-core-v3.log": 67749,
+    "/tmp/taskfold-provisional-vault-mac-core.log": 34909,
+    "/tmp/taskfold-provisional-vault-tests.txt": 10271,
+    "/tmp/taskfold-provisional-vault-edit.py": 4241
+  },
+  "preserved": [
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/.build",
+    "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/.build",
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "/tmp/taskfold-workflow-mac-native-host",
+    "/tmp/taskfold-workflow-mac-native-build"
+  ],
+  "remainingTaskfoldProcesses": 0,
+  "note": "No Simulator installed or boot-state changes this stage. Logical byte sum is not a physical APFS free-space measurement. Current signed Mac host remains ready for interactive automation approval."
+}
