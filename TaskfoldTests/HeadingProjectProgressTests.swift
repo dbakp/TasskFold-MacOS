@@ -151,7 +151,7 @@ extension HeadingProjectProgressTests {
         unknown["due_date"] = .string("2026-10-06"); unknown["due_time"] = .string("10:00")
         past["due_date"] = .string("2026-10-05"); done["due_date"] = .string("2026-10-05")
         let parent = root([today,unknown,past,done])
-        let payload = WidgetProjection.payload(tasks: [parent], projects: [], account: owner, now: now, calendar: calendar)
+        let payload = WidgetProjection.payload(tasks: [parent], projects: [Record(["id": .string(project), "name": .string("Studio")])], account: owner, now: now, calendar: calendar)
         let bytes = try JSONEncoder().encode(payload)
         let widget = try JSONDecoder().decode(WidgetSnapshot.self, from: bytes).capacityReading(at: now, calendar: calendar)
         let native = TaskPlanner.capacity([parent], events: [], on: now, hours: WorkingHours(), calendar: calendar)
@@ -285,5 +285,100 @@ extension HeadingProjectProgressTests {
         XCTAssertThrowsError(try DayPlacement.hierarchyChanges(task:selected,day:"2026-10-07",orderedIDs:[],before:nil,roots:[replaced],projects:projects,workspace:workspace))
         var completed=parent;completed["subtasks"] = SubtaskTree.changing(parent["subtasks"],id:"child",fields:["completed":.bool(true)])
         XCTAssertThrowsError(try DayPlacement.hierarchyChanges(task:selected,day:"2026-10-07",orderedIDs:[],before:nil,roots:[completed],projects:projects,workspace:workspace))
+    }
+}
+
+extension HeadingProjectProgressTests {
+    private func inboxHeading(_ children: [Record]) -> Record { var row=root(children);row["project_id"] = .null;return row }
+    private var inboxDestination: Record { Record(["id":.string(project),"name":.string("Studio"),"user_id":.string(owner)]) }
+    private func widgetSnapshot(_ snapshot: Snapshot) throws -> WidgetSnapshot {
+        let payload=WidgetProjection.payload(tasks:snapshot.tables["tasks"] ?? [],projects:snapshot.tables["projects"] ?? [],account:owner,now:now,savedViews:snapshot.tables["saved_views"] ?? [],calendar:calendar,completionTokens:WidgetCompletion.tokens(snapshot))
+        return try JSONDecoder().decode(WidgetSnapshot.self,from:JSONEncoder().encode(payload))
+    }
+    func testInboxNativeReviewAndPrimaryWidgetsAgreeOnIndependentWork() throws {
+        var first=task("first",children:[task("checklist")]),second=task("second"),done=task("done",done:true)
+        first["due_date"] = .string("2026-10-06");first["duration_minutes"] = .number(25);first["priority"] = .number(1)
+        second["priority"] = .number(2);done["due_date"] = .string("2026-10-06")
+        let root=inboxHeading([first,task("phase",heading:true,children:[second,done])]),workspace=WorkspaceBinding(account:owner,generation:UUID())
+        var snapshot=Snapshot(tables:["tasks":[root],"projects":[inboxDestination]]);WidgetCompletion.prepare(&snapshot)
+        let cache=TaskCache();cache.update([root]);let request=InboxReviewRequest(workspace:workspace,tasks:[root],batch:.all)
+        let widget=try widgetSnapshot(snapshot),native=cache.matching(TaskQuery(scope:.inbox)).filter{TaskKind.mayComplete($0) && !$0.completed}
+        XCTAssertEqual(widget.inboxReading().count,2);XCTAssertEqual(Set(widget.tasks.map(\.id)),Set(native.map(\.id)));XCTAssertEqual(Set(request.ids),Set(native.map(\.id)))
+        XCTAssertEqual(widget.today(at:now,calendar:calendar).map(\.title),["first"])
+        XCTAssertEqual(widget.focus(at:now,calendar:calendar)?.title,"first");XCTAssertEqual(widget.week(at:now,calendar:calendar)[0].count,1)
+        XCTAssertEqual(widget.smallWindow(minutes:25,scope:.inbox,at:now,calendar:calendar).map(\.title),["first"])
+        XCTAssertNil(widget.workIncomplete);XCTAssertFalse(WidgetCompletion.tokens(snapshot).keys.contains(SubtaskTree.reference(parent:native[0].id,key:"checklist")))
+        XCTAssertTrue(widget.tasks.allSatisfy{$0.routeContext != nil && $0.completionToken != nil});XCTAssertEqual(widget.nestedTasks?.count,0,"Primary children need no duplicate filter catalog")
+    }
+    func testInboxChildDecisionsRejectChangedCompletionParentConversionAndWorkspace() throws {
+        let root=inboxHeading([task("child")]),workspace=WorkspaceBinding(account:owner,generation:UUID()),request=InboxReviewRequest(workspace:workspace,tasks:[root])
+        let row=try XCTUnwrap(request.remaining(tasks:[root],decisions:[:]).first)
+        XCTAssertEqual(request.actionable(row,tasks:[root],account:owner,generation:workspace.generation),row)
+        var changed=root;changed["subtasks"] = SubtaskTree.changing(root["subtasks"],id:"child",fields:["description":.string("Updated")])
+        XCTAssertNil(request.actionable(row,tasks:[changed],account:owner,generation:workspace.generation))
+        changed=root;changed["is_heading"] = .bool(false);XCTAssertTrue(request.remaining(tasks:[changed],decisions:[:]).isEmpty)
+        XCTAssertNil(request.actionable(row,tasks:[root],account:owner,generation:UUID()))
+        XCTAssertThrowsError(try InboxReviewRequest.move(row,to:project))
+    }
+    func testHeadingMoveReviewRequiresExplicitWholeGroupAndPreservesChildDataAndUndo() throws {
+        var child=task("child");child["due_date"] = .string("2026-10-06");child["description"] = .string("Keep full notes");child["duration_minutes"] = .number(30)
+        let root=inboxHeading([child,task("phase",heading:true,children:[task("sibling",done:true)])]),workspace=WorkspaceBinding(account:owner,generation:UUID())
+        let selected=ProductiveTaskReading(tasks:[root]).work[0],before=Snapshot(tables:["tasks":[root],"projects":[inboxDestination]])
+        let review=try InboxHeadingMoveReview(task:selected,tasks:[root],projects:[inboxDestination],destination:project,workspace:workspace)
+        XCTAssertEqual(review.taskTitles,["child","sibling"]);XCTAssertEqual(review.taskCount,2);XCTAssertEqual(review.root,root)
+        let changes=try review.changes(tasks:[root],projects:[inboxDestination],workspace:workspace)
+        XCTAssertTrue(changes.allSatisfy{$0.table == "tasks" && $0.recordID == root.id})
+        var saved=before;let history=EditHistory(changes:changes,snapshot:before);changes.forEach{saved.apply($0)}
+        XCTAssertEqual(saved.tables["tasks"]?.first?.string("project_id"),project);XCTAssertEqual(saved.tables["tasks"]?.first?["subtasks"],root["subtasks"])
+        XCTAssertEqual(saved.tables["tasks"]?.first?["is_heading"],.bool(true));XCTAssertEqual(saved.tables["tasks"]?.count,1)
+        XCTAssertTrue(InboxReviewRequest(workspace:workspace,tasks:saved.tables["tasks"] ?? []).ids.isEmpty)
+        history.undo.forEach{saved.apply($0)};XCTAssertEqual(saved.tables["tasks"]?.first?["subtasks"],root["subtasks"]);XCTAssertEqual(saved.tables["tasks"]?.first?.string("project_id"),"")
+        XCTAssertEqual(before.tables["tasks"]?.first,root,"Opening or cancelling the review has no mutation")
+    }
+    func testHeadingMoveReviewRejectsSourceDestinationArchiveAndAccountRaces() throws {
+        let root=inboxHeading([task("child"),task("sibling")]),workspace=WorkspaceBinding(account:owner,generation:UUID()),selected=ProductiveTaskReading(tasks:[root]).work[0]
+        let review=try InboxHeadingMoveReview(task:selected,tasks:[root],projects:[inboxDestination],destination:project,workspace:workspace)
+        var changed=root;changed["subtasks"] = SubtaskTree.changing(root["subtasks"],id:"sibling",fields:["title":.string("Changed sibling")])
+        XCTAssertThrowsError(try review.changes(tasks:[changed],projects:[inboxDestination],workspace:workspace))
+        var target=inboxDestination;target["name"] = .string("Renamed");XCTAssertThrowsError(try review.changes(tasks:[root],projects:[target],workspace:workspace))
+        target=inboxDestination;target["is_archived"] = .bool(true);XCTAssertThrowsError(try review.changes(tasks:[root],projects:[target],workspace:workspace))
+        XCTAssertThrowsError(try review.changes(tasks:[root],projects:[inboxDestination],workspace:.init(account:owner,generation:UUID())))
+        target=inboxDestination;target["team_id"] = .string("team");XCTAssertThrowsError(try InboxHeadingMoveReview(task:selected,tasks:[root],projects:[target],destination:project,workspace:workspace))
+        XCTAssertThrowsError(try InboxHeadingMoveReview(task:selected,tasks:[root,root],projects:[inboxDestination],destination:project,workspace:workspace))
+        var unreadable=root;unreadable["subtasks"] = SubtaskTree.changing(root["subtasks"],id:"sibling",fields:["is_heading":.string("future")])
+        XCTAssertThrowsError(try InboxHeadingMoveReview(task:selected,tasks:[unreadable],projects:[inboxDestination],destination:project,workspace:workspace))
+    }
+    func testPrimaryChildWidgetCompletesOnlyRealRootAndBindsItsExactRoute() throws {
+        let root=inboxHeading([task("child"),task("sibling")]);var snapshot=Snapshot(tables:["tasks":[root],"projects":[inboxDestination]])
+        WidgetCompletion.prepare(&snapshot);let widget=try widgetSnapshot(snapshot),row=try XCTUnwrap(widget.tasks.first),token=try XCTUnwrap(row.completionToken)
+        let workspace=WorkspaceBinding(account:owner,generation:UUID()),url=row.url(account:owner)
+        XCTAssertEqual(try WidgetRecordLink.task(url,roots:[root],projects:[inboxDestination],workspace:workspace).id,row.id)
+        let request=try WidgetCompletionRequest(account:owner,taskID:row.id,token:token,at:now)
+        guard case .complete(let changes)=WidgetCompletion.plan(request,snapshot:snapshot,account:owner) else{return XCTFail("No primary child action")}
+        XCTAssertEqual(changes.map(\.recordID),[root.id]);changes.forEach{snapshot.apply($0)}
+        XCTAssertFalse(snapshot.tables["tasks"]![0].completed);XCTAssertTrue(Record(snapshot.tables["tasks"]![0]["subtasks"].list[0].object).completed);XCTAssertFalse(Record(snapshot.tables["tasks"]![0]["subtasks"].list[1].object).completed)
+        WidgetCompletion.prepare(&snapshot);XCTAssertEqual(try widgetSnapshot(snapshot).inboxReading().count,1)
+        var moved=root;moved["project_id"] = .string(project)
+        XCTAssertThrowsError(try WidgetRecordLink.task(url,roots:[moved],projects:[inboxDestination],workspace:workspace))
+        guard case .stale=WidgetCompletion.plan(request,snapshot:snapshot,account:"other") else{return XCTFail("Foreign action accepted")}
+    }
+    func testRemovingChildFilterOrConvertingHeadingInvalidatesOldNonproductiveActions() throws {
+        let root=inboxHeading([task("child",children:[task("checklist")])]),other=inboxHeading([task("other")])
+        var otherRoot=other;otherRoot["id"] = .string("other-root")
+        let view=Record(["id":.string("subtasks"),"query_ast":FilterRule.predicate("subtask","").document])
+        var snapshot=Snapshot(tables:["tasks":[root,otherRoot],"projects":[inboxDestination],"saved_views":[view]]);WidgetCompletion.prepare(&snapshot)
+        let child=SubtaskTree.reference(parent:root.id,key:"child"),checklist=SubtaskTree.reference(parent:child,key:"checklist")
+        let token=try XCTUnwrap(WidgetCompletion.tokens(snapshot)[checklist]);let old=try WidgetCompletionRequest(account:owner,taskID:checklist,token:token,at:now)
+        snapshot.tables["saved_views"] = [];guard case .stale=WidgetCompletion.plan(old,snapshot:snapshot,account:owner) else{return XCTFail("Removed filter still authorizes checklist")}
+        let childRequest=try WidgetCompletionRequest(account:owner,taskID:child,token:XCTUnwrap(WidgetCompletion.tokens(snapshot)[child]),at:now)
+        var converted=root;converted["is_heading"] = .bool(false);snapshot.tables["tasks"] = [converted,otherRoot]
+        guard case .stale=WidgetCompletion.plan(childRequest,snapshot:snapshot,account:owner) else{return XCTFail("Converted heading still authorizes independent child")}
+        WidgetCompletion.prepare(&snapshot);XCTAssertNil(WidgetCompletion.tokens(snapshot)[child]);XCTAssertNil(WidgetCompletion.tokens(snapshot)[checklist])
+    }
+    func testUnreadableGroupedWorkNeverClaimsAnEmptyInboxOrDropsLegacyData() throws {
+        var root=inboxHeading([]);root["subtasks"] = .array([.string("Legacy")]);let original=root
+        let request=InboxReviewRequest(workspace:.init(account:owner,generation:UUID()),tasks:[root]);XCTAssertTrue(request.ids.isEmpty)
+        let widget=try widgetSnapshot(Snapshot(tables:["tasks":[root]]));XCTAssertNil(widget.inboxReading().count);XCTAssertEqual(widget.workIncomplete,true)
+        XCTAssertEqual(root,original);let cache=TaskCache();cache.update([root]);XCTAssertTrue(cache.inboxProductiveReading().incomplete)
     }
 }

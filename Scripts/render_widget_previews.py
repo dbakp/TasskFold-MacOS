@@ -25,7 +25,8 @@ extension PreviewLink where Content == Text {
         let dark = CommandLine.arguments[2] == "dark"
         let mode = CommandLine.arguments[2]
         let empty = mode == "empty"
-        let entry = empty ? TodayEntry(date: Date(), snapshot: .empty) : TodayEntry.preview
+        let supplied: WidgetSnapshot? = CommandLine.arguments.count > 3 ? try JSONDecoder().decode(WidgetSnapshot.self, from: Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[3]))) : nil
+        let entry = supplied.map { TodayEntry(date: Date(), snapshot: $0) } ?? (empty ? TodayEntry(date: Date(), snapshot: .empty) : TodayEntry.preview)
         let productivity = mode.hasPrefix("productivity")
         let snapshot: WidgetSnapshot = mode == "productivity-empty" ? WidgetSnapshot(updated: Date().timeIntervalSinceReferenceDate, tasks: [], account: "preview") : mode == "productivity-legacy" ? WidgetSnapshot(updated: Date().timeIntervalSinceReferenceDate, tasks: entry.snapshot.tasks, version: 1) : entry.snapshot
         let privateTitles = mode == "productivity-private"
@@ -142,6 +143,8 @@ extension PreviewLink where Content == Text {
 
         let inbox = mode.hasPrefix("inbox")
         var inboxEntry = InboxEntry.preview
+        if let supplied { inboxEntry.date = Date(); inboxEntry.snapshot = supplied }
+        if mode == "inbox-grouped-review" { inboxEntry.snapshot.workIncomplete = true }
         if mode == "inbox-empty" { inboxEntry.snapshot.tasks = [] }
         if mode == "inbox-private" { inboxEntry.hideDetails = true }
         if mode == "inbox-legacy" { inboxEntry.snapshot.version = 1 }
@@ -219,5 +222,8 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
         modes = [(mode, mode) for mode in ["lists-hierarchy", "lists-hierarchy-dark", "lists-hierarchy-private"]]
     if "--heading-capacity" in sys.argv:
         modes = [(mode, mode) for mode in ["capacity-grouped", "capacity-grouped-review", "capacity-grouped-review-dark"]]
+    if "--grouped-work" in sys.argv:
+        modes = [(mode, mode) for mode in ["light", "dark", "inbox", "inbox-dark", "inbox-grouped-review"]]
+    supplied = [str(Path(sys.argv[sys.argv.index('--payload') + 1]).resolve())] if '--payload' in sys.argv else []
     for mode, name in modes:
-        subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode], check=True)
+        subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode] + supplied, check=True)

@@ -1367,6 +1367,12 @@ final class TaskCache {
     private var source: [Record] = []
     private var results: [TaskQuery: [Record]] = [:]
     private var productiveResult: ProductiveTaskReading?
+    private var inboxProductiveResult: ProductiveTaskReading?
+    func inboxProductiveReading() -> ProductiveTaskReading {
+        if let inboxProductiveResult { return inboxProductiveResult }
+        let value = ProductiveTaskReading(tasks: tasks.filter { $0.string("project_id").isEmpty })
+        inboxProductiveResult = value; return value
+    }
     private var productiveExcluded = Set<String>()
     func productiveReading(excluding projects: Set<String> = []) -> ProductiveTaskReading {
         if let productiveResult, productiveExcluded == projects { return productiveResult }
@@ -1406,7 +1412,7 @@ final class TaskCache {
     }
     @discardableResult func update(_ rows: [Record]) -> Bool {
         guard source != rows else { return false }
-        source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil
+        source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; inboxProductiveResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
         results.removeAll(keepingCapacity: true)
         return true
@@ -1511,7 +1517,7 @@ enum DayPlacement {
 extension TaskScope {
     /// Global dated lists show independent work beneath headings. Project and
     /// explicit hierarchy filters retain their own tree/membership semantics.
-    var usesProductiveWork: Bool { self == .today || self == .upcoming }
+    var usesProductiveWork: Bool { self == .today || self == .upcoming || self == .inbox }
     var preferenceKey: String {
         switch self {
         case .today: return "today"
@@ -1766,7 +1772,9 @@ enum WidgetProjection {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }
         let lists = listPayload(tasks: tasks, projects: projects, labels: labels, sections: sections, savedViews: savedViews, account: account, now: now, calendar: calendar, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
         let pulse = pulsePayload(tasks: tasks, projects: projects, activity: pulseActivity, epoch: pulseEpoch, account: account, readable: focusReadable, now: now, calendar: calendar)
-        let nested = WidgetCompletion.hierarchy(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account)?.items.filter { $0.isSubtask && TaskKind.mayComplete($0.record) && !$0.record.completed } ?? []
+        let nested = WidgetCompletion.childItems(Snapshot(tables: ["tasks": tasks, "projects": projects, "saved_views": savedViews]), account: account).filter { TaskKind.mayComplete($0.record) && !$0.record.completed }
+        let reading = ProductiveTaskReading(tasks: tasks)
+        let nestedByID = Dictionary(nested.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let projects = Dictionary(projects.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         func projected(_ task: Record, parent: String? = nil, routeContext: String? = nil) -> JSON {
             let project = projects[task.string("project_id")]
@@ -1779,9 +1787,19 @@ enum WidgetProjection {
                 "duration": task.durationMinutes.map { .number(Double($0)) } ?? .null,
                 "scheduledAt": instant.map(JSON.string) ?? .null, "timeZone": task.string("time_zone").isEmpty ? .null : .string(task.string("time_zone"))])
         }
-        let rows = tasks.filter { TaskKind.mayComplete($0) && !$0.completed }.map { projected($0) }
-        let nestedRows = nested.map { projected($0.record, parent: $0.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext($0)) }
-        return ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "nestedTasks": .array(nestedRows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+        var incomplete = reading.incomplete
+        let rows = reading.presentation.filter { TaskKind.mayComplete($0) && !$0.completed }.compactMap { task -> JSON? in
+            if SubtaskTree.referencePath(task.id) != nil {
+                guard let item = nestedByID[task.id] else { incomplete = true; return nil }
+                return projected(task, parent: item.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext(item))
+            }
+            return projected(task)
+        }
+        let filterChildren = WidgetCompletion.hasChildFilter(Snapshot(tables: ["saved_views": savedViews])) ? nested : []
+        let nestedRows = filterChildren.map { projected($0.record, parent: $0.parentTitles.joined(separator: " › "), routeContext: WidgetCompletion.routeContext($0)) }
+        var payload: [String: JSON] = ["version": .number(2), "updated": .number(now.timeIntervalSinceReferenceDate), "account": .string(account), "tasks": .array(rows), "nestedTasks": .array(nestedRows), "notes": .array(PinnedNotes.payload(tasks: tasks, pins: notePins, account: account)), "lists": .array(lists), "projectPulse": pulse, "focusSession": focusReadable ? focusPayload(focusRecord, tasks: tasks, account: account, conflict: focusConflict) : .null, "pendingSync": .number(Double(max(0, pendingSync))), "capacity": capacityPayload(tasks: tasks, account: account, hours: workingHours, window: calendarWindow, fallback: calendarFallback, now: now, calendar: calendar)]
+        if incomplete { payload["workIncomplete"] = .bool(true) }
+        return payload
     }
 
     static func focusPayload(_ row: Record?, tasks: [Record], account: String, conflict: Bool) -> JSON {

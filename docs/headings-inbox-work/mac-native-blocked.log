@@ -1,0 +1,72 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project Taskfold.xcodeproj -scheme Taskfold -configuration Debug -destination platform=macOS -derivedDataPath /tmp/taskfold-mac-recovery-build -parallel-testing-enabled NO "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testHeadingInboxGroupMoveReviewCancelUndoAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testHeadingPlannerChildScheduleUndoCompleteAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testHeadingTodayChildDetailsCompletionUndoAndColdReturn" -resultBundlePath /tmp/taskfold-inbox-mac-native-v2.xcresult test-without-building
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/tmp/taskfold-inbox-mac-native-v2.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-26 09:59:56.978607+0100 TaskfoldUITests-Runner[12673:22146004] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-26 09:59:57.239.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 09:59:57.239.
+Test Suite 'TaskfoldMacUITests' started at 2026-10-26 09:59:57.239.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testHeadingInboxGroupMoveReviewCancelUndoAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 09:59:57.240
+    t =     1.03s Set Up
+    t =     1.09s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.09s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-26 09:59:58.406 xcodebuild[12649:22145666] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 09:59:58.406 xcodebuild[12649:22145666] [MT] IDELaunchParametersSnapshot: no debugger version
+/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:4399: error: -[TaskfoldUITests.TaskfoldMacUITests testHeadingInboxGroupMoveReviewCancelUndoAndColdReturn] : Failed to activate application 'com.dbakp.taskfold.mac.workflowteststeameditbridge at /private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app' (current state: Running Background)
+    t =    62.90s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testHeadingInboxGroupMoveReviewCancelUndoAndColdReturn]' failed (70.020 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testHeadingPlannerChildScheduleUndoCompleteAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 10:01:07.263
+    t =     0.19s Set Up
+    t =     0.27s         Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.27s             Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.28s                 Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:12679
+2026-10-26 10:01:08.608 xcodebuild[12649:22145666] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 10:01:08.608 xcodebuild[12649:22145666] [MT] IDELaunchParametersSnapshot: no debugger version
+/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:4399: error: -[TaskfoldUITests.TaskfoldMacUITests testHeadingPlannerChildScheduleUndoCompleteAndColdReturn] : Failed to activate application 'com.dbakp.taskfold.mac.workflowteststeameditbridge at /private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app' (current state: Running Background)
+    t =    62.01s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testHeadingPlannerChildScheduleUndoCompleteAndColdReturn]' failed (65.457 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testHeadingTodayChildDetailsCompletionUndoAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-26 10:02:12.718
+    t =     0.53s Set Up
+    t =     0.58s                 Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.59s                     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.59s                         Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:13014
+2026-10-26 10:02:14.374 xcodebuild[12649:22145666] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 10:02:14.374 xcodebuild[12649:22145666] [MT] IDELaunchParametersSnapshot: no debugger version
+/tmp/taskfold-mac-recovery-host/TaskfoldUITests/TaskfoldMacUITests.swift:4399: error: -[TaskfoldUITests.TaskfoldMacUITests testHeadingTodayChildDetailsCompletionUndoAndColdReturn] : Failed to activate application 'com.dbakp.taskfold.mac.workflowteststeameditbridge at /private/tmp/taskfold-mac-recovery-build/Build/Products/Debug/Taskfold.app' (current state: Running Background)
+    t =    62.83s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testHeadingTodayChildDetailsCompletionUndoAndColdReturn]' failed (65.223 seconds).
+Test Suite 'TaskfoldMacUITests' failed at 2026-10-26 10:03:17.942.
+	 Executed 3 tests, with 3 failures (0 unexpected) in 200.700 (200.702) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 10:03:17.943.
+	 Executed 3 tests, with 3 failures (0 unexpected) in 200.700 (200.703) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 10:03:17.943.
+	 Executed 3 tests, with 3 failures (0 unexpected) in 200.700 (200.704) seconds
+2026-10-26 10:03:28.667 xcodebuild[12649:22145666] [MT] IDETestOperationsObserverDebug: 212.480 elapsed -- Testing started completed.
+2026-10-26 10:03:28.667 xcodebuild[12649:22145666] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 10:03:28.667 xcodebuild[12649:22145666] [MT] IDETestOperationsObserverDebug: 212.480 sec, +212.480 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-inbox-mac-native-v2.xcresult
+
+Failing tests:
+	TaskfoldMacUITests.testHeadingInboxGroupMoveReviewCancelUndoAndColdReturn()
+	TaskfoldMacUITests.testHeadingPlannerChildScheduleUndoCompleteAndColdReturn()
+	TaskfoldMacUITests.testHeadingTodayChildDetailsCompletionUndoAndColdReturn()
+
+** TEST EXECUTE FAILED **
+
+Testing started

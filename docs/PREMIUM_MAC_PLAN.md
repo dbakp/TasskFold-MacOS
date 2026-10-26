@@ -7562,3 +7562,46 @@ moves, then matching primary widget rows/token/link authority. Wider badges,
 calendar/project/label projections, child history and native/shared/cross-device
 acceptance remain open. No normal-authoring, hosted or release gate changes;
 this milestone does not close headings or Px.
+
+
+## Heading work in Inbox and primary widgets — 26 October 2026
+
+Default Inbox and its review cards now use the cached productive work reading.
+Independent tasks beneath headings show their own details, plans and parent
+context. Child completion/editing uses the strict real-root transaction path.
+The Mac Inbox badge counts the same eligible work.
+
+Moving one of these cards presents a review of the entire containing root
+heading, including completed work. The review names the destination, lists the
+affected tasks and warns when assignments will be cleared. Confirmation checks
+the captured root, destination and workspace again; Cancel makes no change,
+and one Undo restores the group. Direct synthetic-child project PATCHes are
+rejected. This stage intentionally offers a whole-group move, not detachment.
+
+Primary Today, Inbox reset, Focus, Week and planning-widget task data now
+publishes independent work with exact child routes and completion authority.
+Ordinary checklist children require an explicit child filter. Removing that
+filter or converting a heading rejects stale completion authority. Ambiguous or
+unreadable groups produce a review state rather than an empty-Inbox claim.
+Five light/dark/review SwiftUI source renders use the synthetic app's saved
+widget projection; these are not installed WidgetKit host acceptance.
+
+164 iOS and 163 Mac focused Core checks pass, including seven new cases per
+repo. App/widget/test builds and signatures pass. Native runtime results and
+source bindings are recorded in `p2-task-headings-inbox-evidence.json` and
+`headings-inbox-work/`; do not infer Mac app-flow acceptance from its build.
+
+Next: project/label/default saved-filter projections and remaining badges,
+wider calendar projections, separate child history, then broader native,
+installed-widget, shared/service and cross-device acceptance. Normal heading
+authoring remains disabled. This milestone does not close headings or Px,
+and all user-deferred release/provider/device gates remain unchanged.
+
+The final iPhone and iPad native scenarios both pass, with Cancel preserving the
+root exactly, edited child title retained, completion/Undo, confirmed whole-group
+move/Undo, published Inbox counts 2→0→2→1, and exact cold-return root equality.
+Four native screenshots were inspected. The debug-only publication panel can
+overlap the iPad toolbar; it is absent from normal app runs. The independent Mac
+Inbox/planner/Today attempts all stop at foreground activation while the Mac
+reports locked, before app-flow checks. Those remain unverified, with the prepared
+Mac host preserved for a later unlocked run.

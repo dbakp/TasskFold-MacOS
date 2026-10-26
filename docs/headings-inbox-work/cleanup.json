@@ -1,0 +1,237 @@
+{
+  "date": "2026-10-26",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-inbox-mac-native-v1.xcresult",
+      "bytes": 2918
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-native-v2.xcresult",
+      "bytes": 1770446698
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-native-v1.xcresult",
+      "bytes": 50785736
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-native-v2.xcresult",
+      "bytes": 51336989
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-native-v3.xcresult",
+      "bytes": 52289929
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-native-v1.xcresult",
+      "bytes": 50867347
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-native-v2.xcresult",
+      "bytes": 51860215
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-native-v3.xcresult",
+      "bytes": 53331853
+    },
+    {
+      "path": "/tmp/taskfold-inbox-work-tests.swift",
+      "bytes": 10735
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-core-bound.log",
+      "bytes": 63022
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-build-final.log",
+      "bytes": 80153
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-core-v1.log",
+      "bytes": 57104
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-result.json",
+      "bytes": 1015
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-native-v4.xcresult",
+      "bytes": 3098959
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-signing-v3.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-result.json",
+      "bytes": 999
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-core-v2.log",
+      "bytes": 52299
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-prepare-v2.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-export.log",
+      "bytes": 531
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-signing-v5.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-native-v1.log",
+      "bytes": 10173
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-build",
+      "bytes": 1299010851
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-prepare-v4.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-core-final.log",
+      "bytes": 63823
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-native-v3.log",
+      "bytes": 10520
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-build-v5.log",
+      "bytes": 40066
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-build-v4.log",
+      "bytes": 43735
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-native-v2.log",
+      "bytes": 8213
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-host",
+      "bytes": 7146264
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-build-v1.log",
+      "bytes": 516816
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-result.json",
+      "bytes": 3245
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-prepare-v5.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-build-v3.log",
+      "bytes": 87962
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-signing-v4.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-native-v4.log",
+      "bytes": 68857
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-build-v2.log",
+      "bytes": 269279
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-native-v4.xcresult",
+      "bytes": 2489495
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-signing.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-inbox-widget.json",
+      "bytes": 4854
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-build-final.log",
+      "bytes": 37731
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-core-final.log",
+      "bytes": 63064
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-build-v1.log",
+      "bytes": 100596
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-native-v4.log",
+      "bytes": 60525
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-native-v1.log",
+      "bytes": 1314
+    },
+    {
+      "path": "/tmp/taskfold-inbox-widget-renders",
+      "bytes": 1925817
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-native-v2.log",
+      "bytes": 6245
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-export.log",
+      "bytes": 533
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-core-v1.log",
+      "bytes": 57306
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ipad-attachments",
+      "bytes": 710903
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-native-v3.log",
+      "bytes": 7461
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-attachments",
+      "bytes": 318369
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-native-v2.log",
+      "bytes": 7013
+    },
+    {
+      "path": "/tmp/taskfold-inbox-ios-core-bound.log",
+      "bytes": 63791
+    },
+    {
+      "path": "/tmp/taskfold-inbox-mac-core-v2.log",
+      "bytes": 51516
+    },
+    {
+      "path": "/tmp/taskfold-inbox-widget-render.log",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-inbox-iphone-native-v1.log",
+      "bytes": 7533
+    }
+  ],
+  "bytesRemoved": 3397483723,
+  "preserved": [
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "Both repo .build caches",
+    "Committed compact evidence and inspected images"
+  ],
+  "ownedNativeSessions": "Both Simulator apps/runners uninstalled; no isolated Mac runner/app remains running"
+}

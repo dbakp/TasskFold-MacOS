@@ -1,0 +1,12 @@
+{
+  "appWidgetTestBuild": "passed",
+  "platform": "mac",
+  "date": "2026-10-26",
+  "runtimeNamespace": "isolated synthetic only",
+  "debugHeadingAuthoring": "enabled only in isolated host; shipping flag unchanged",
+  "signature": "codesign --verify --deep --strict passed for Mac app",
+  "knownAttemptFailures": [
+    "Initial command named source class as target; corrected to TaskfoldUITests target",
+    "All three real native cases reached runner but failed app foreground activation while Mac reports locked"
+  ]
+}

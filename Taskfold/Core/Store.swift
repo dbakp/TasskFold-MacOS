@@ -788,6 +788,10 @@ final class Store {
         PersonalConnectionDestination.resolve(project: project, projects: allProjects, cache: nativeConversationTeamCache, account: userID, origin: try? backend.accountRemovalOrigin)
     }
     var archivedProjects: [ProjectOrganization.Item] { ProjectOrganization.outline(allProjects, archived: true) }
+    var inboxProductiveReading: ProductiveTaskReading {
+        _ = taskRevision
+        return taskCache.inboxProductiveReading()
+    }
     var productiveReading: ProductiveTaskReading {
         _ = taskRevision
         return taskCache.productiveReading(excluding: ProjectOrganization.archivedIDs(in: allProjects))
@@ -954,7 +958,7 @@ final class Store {
     func makeInboxReview(batch: InboxReviewBatch = .five, excluding: Set<String> = []) -> InboxReviewRequest? {
         guard signedIn || localMode, workspaceCacheReadable else { error = "Open a readable workspace before reviewing Inbox."; return nil }
         let order = record(DayPlacement.table, id: "scope:inbox")?["ids"].list.map(\.text) ?? []
-        return InboxReviewRequest(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), tasks: tasks, batch: batch, order: order, excluding: excluding)
+        return InboxReviewRequest(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), tasks: tasks, batch: batch, order: order, excluding: excluding, reading: inboxProductiveReading)
     }
 
     static let appGroup = "group.com.dbakp.taskfold"
@@ -3156,6 +3160,12 @@ extension Store {
             heading["duration_minutes"] = .number(999)
             heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000001", fields: ["due_date": .string(today), "duration_minutes": .number(45)])
             heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000004", fields: ["due_date": .string(today), "due_time": .string("09:00"), "duration_minutes": .number(30)])
+            snapshot.tables["tasks"] = [heading]
+        }
+        if ProcessInfo.processInfo.arguments.contains("--heading-inbox-work-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true,
+           var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
+            heading["project_id"] = .null; heading["section_id"] = .null
             snapshot.tables["tasks"] = [heading]
         }
         do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }

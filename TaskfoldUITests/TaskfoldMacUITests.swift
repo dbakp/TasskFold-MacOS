@@ -4533,3 +4533,24 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(title.waitForExistence(timeout:10));XCTAssertEqual(try root(),restored);app.buttons["Upcoming"].firstMatch.click();XCTAssertTrue(title.waitForExistence(timeout:8))
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testHeadingInboxGroupMoveReviewCancelUndoAndColdReturn() throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner","com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else {throw XCTSkip("Reserved isolated host required")}
+        continueAfterFailure=false
+        let app=XCUIApplication();defer{app.terminate()}
+        app.launchArguments=["--uitesting","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","--heading-inbox-work-fixture","--widget-action-testing","--inbox-review-testing","-localMode","YES"]
+        try launchHeadingWorkspace(app)
+        let cache=URL(fileURLWithPath:"/Users/"+NSUserName()+"/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        func root() throws -> NSDictionary {let data=try XCTUnwrap(try JSONSerialization.jsonObject(with:Data(contentsOf:cache)) as? [String:Any]);return try XCTUnwrap(((data["tables"] as? [String:Any])?["tasks"] as? [NSDictionary])?.first{$0["id"] as? String == "f1810000-0000-4000-8000-000000000001"})}
+        let projection=app.staticTexts["inboxProjection"];XCTAssertTrue(projection.waitForExistence(timeout:15));XCTAssertEqual(renderedText(projection),"Inbox: 2");let original=try root()
+        app.buttons["reviewInbox"].click();XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout:8));XCTAssertEqual(renderedText(app.staticTexts["inboxReviewTitle"]),"Draft the launch note")
+        func chooseProject(){app.buttons["inboxReviewMove"].click();let target=app.descendants(matching:.any).matching(identifier:"inboxReviewProject-f0742000-1111-4111-8111-000000000001").firstMatch;XCTAssertTrue(target.waitForExistence(timeout:5));target.click();XCTAssertTrue(app.staticTexts["inboxHeadingMoveSummary"].waitForExistence(timeout:5))}
+        chooseProject();retainWindow(app,name:"Mac Inbox whole-heading move review");app.buttons["inboxHeadingMoveCancel"].click();XCTAssertEqual(try root(),original)
+        chooseProject();app.buttons["inboxHeadingMoveConfirm"].click();XCTAssertTrue(app.staticTexts["inboxReviewSummary"].waitForExistence(timeout:8));XCTAssertEqual(try root()["project_id"] as? String,"f0742000-1111-4111-8111-000000000001")
+        app.buttons["inboxReviewUndo"].click();XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout:8));XCTAssertEqual((try root())["subtasks"] as? NSArray,original["subtasks"] as? NSArray)
+        app.buttons["inboxReviewComplete"].click();XCTAssertTrue(app.staticTexts["inboxReviewTitle"].waitForExistence(timeout:5));XCTAssertEqual(renderedText(app.staticTexts["inboxReviewTitle"]),"Check the layout");let saved=try root()
+        app.terminate();app.launchArguments=["--uitesting","--widget-action-testing","--inbox-review-testing","--section=inbox","-localMode","YES"];try launchHeadingWorkspace(app)
+        XCTAssertTrue(projection.waitForExistence(timeout:15));XCTAssertEqual(renderedText(projection),"Inbox: 1");XCTAssertEqual(try root(),saved)
+    }
+}

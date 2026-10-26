@@ -10,6 +10,12 @@ extension EnvironmentValues {
     }
 }
 
+private struct InboxReviewEditor: Identifiable {
+    let opening: TaskEditorOpening
+    let hierarchy: TaskHierarchyIndex.Selection?
+    var id: String { opening.id }
+}
+
 /// Decisions use the normal durable queue. Keeping a card does not manufacture a task change.
 struct InboxReviewView: View {
     @Environment(Store.self) private var store
@@ -19,17 +25,19 @@ struct InboxReviewView: View {
     #endif
     @State private var request: InboxReviewRequest
     @State private var decisions: [String: InboxReviewDecision] = [:]
-    @State private var editing: TaskEditorOpening?
+    @State private var editing: InboxReviewEditor?
+    @State private var headingMove: InboxHeadingMoveReview?
+    @State private var headingMoveFailure: String?
     @State private var failure: String?
     @State private var feedback: String?
     @State private var lastDecision: (String, [String: InboxReviewDecision], [UUID]?)?
     init(request: InboxReviewRequest) { _request = State(initialValue: request) }
     private var available: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) }
-    private var remaining: [Record] { available ? request.remaining(tasks: store.tasks, decisions: decisions) : [] }
+    private var remaining: [Record] { available ? request.remaining(tasks: store.tasks, decisions: decisions, reading: store.inboxProductiveReading) : [] }
     private var current: Record? { remaining.first }
-    private var inboxCount: Int { store.tasks.filter(InboxReviewRequest.eligible).count }
+    private var inboxCount: Int { store.inboxProductiveReading.work.filter(InboxReviewRequest.eligible).count }
     private var reviewedCount: Int { request.ids.filter { decisions[$0] != nil }.count }
-    private var hasUnreviewed: Bool { store.tasks.contains { InboxReviewRequest.eligible($0) && decisions[$0.id] == nil } }
+    private var hasUnreviewed: Bool { InboxReviewRequest.candidates(tasks: store.tasks, reading: store.inboxProductiveReading).contains { decisions[$0.id] == nil } }
     private var undoIDs: [UUID]? { store.undoStack.last?.redo.map(\.id) }
     private var canUndo: Bool { available && lastDecision.map { $0.2 == nil || $0.2 == undoIDs } == true }
     var body: some View {
@@ -44,6 +52,10 @@ struct InboxReviewView: View {
                         card(task)
                         actions(task)
                     } else { summary }
+                    if available && store.inboxProductiveReading.incomplete {
+                        Label("Some grouped tasks need review. Open their heading in Inbox to review them.", systemImage: "exclamationmark.circle")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxGroupedWorkReview")
+                    }
                     if let feedback {
                         Text(feedback).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxReviewFeedback")
                     }
@@ -66,9 +78,14 @@ struct InboxReviewView: View {
                 }
             }
             .alert("Could not save decision", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
-            .sheet(item: $editing) { opening in
+            .sheet(item: $editing) { editor in
+                let opening = editor.opening
                 #if os(iOS)
-                TaskEditor(task:opening.task,admission:opening.admission)
+                if let selection = editor.hierarchy {
+                    TaskEditor(task: opening.task, admission: opening.admission, embeddedSave: { draft in
+                        try store.commitHierarchy([TaskHierarchyIndex.Edit.editing(selection, draft: draft)])
+                    }, embeddedDepth: selection.item.path.count)
+                } else { TaskEditor(task:opening.task,admission:opening.admission) }
                 #else
                 NavigationStack {
                     TaskInspectorForm(taskID: opening.task.id,admission:opening.admission).id(opening.id)
@@ -77,7 +94,8 @@ struct InboxReviewView: View {
                 }.frame(minWidth: 460, idealWidth: 560, minHeight: 540)
                 #endif
             }
-            .onChange(of: store.workspaceGeneration) { _, _ in editing = nil; dismiss() }
+            .sheet(item: $headingMove) { review in headingMoveSheet(review) }
+            .onChange(of: store.workspaceGeneration) { _, _ in editing = nil; headingMove = nil; dismiss() }
             #if DEBUG
             .onAppear { if ProcessInfo.processInfo.arguments.contains("--inbox-review-fail-save") { store.inboxFixtureFailSave = true } }
             #endif
@@ -96,6 +114,7 @@ struct InboxReviewView: View {
     private func card(_ task: Record) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(task.title).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxReviewTitle")
+            if let context = store.inboxProductiveReading.parents[task.id] { Label(context, systemImage: "arrow.turn.down.right").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
             if task.priority < 4 { Label("Priority \(task.priority)", systemImage: "flag").foregroundStyle(Color.taskfold) }
             if let date = Dates.parse(TaskPlanner.plannedDay(task)) {
                 let time = TaskPlanner.clockValue(task), zone = TaskPlanner.zoneLabel(task)
@@ -112,13 +131,13 @@ struct InboxReviewView: View {
         VStack(alignment: .leading, spacing: 10) {
             Menu {
                 if store.projects.isEmpty { Text("Create a project from Browse to organize tasks.") }
-                ForEach(store.projects) { project in
+                ForEach(store.projects.filter { SubtaskTree.referencePath(task.id) == nil || $0["team_id"] == .null }) { project in
                     Button(project.name) { move(task, to: project.id) }.accessibilityIdentifier("inboxReviewProject-" + project.id)
                 }
             } label: { actionLabel("Move to project", "folder", primary: true) }
                 .accessibilityIdentifier("inboxReviewMove").disabled(store.projects.isEmpty)
             if store.projects.isEmpty { Text("No projects yet. You can edit, finish, or keep this task here.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
-            Button { guard let row = live(task) else { return }; editing=TaskEditorOpening(task:row,admission:store.editorAdmission(row,workspace:request.workspace)) } label: { actionLabel("Edit details", "pencil") }.accessibilityIdentifier("inboxReviewEdit")
+            Button { openEditor(task) } label: { actionLabel("Edit details", "pencil") }.accessibilityIdentifier("inboxReviewEdit")
             Button { complete(task) } label: { actionLabel("Complete", "checkmark.circle") }.accessibilityIdentifier("inboxReviewComplete")
             Button { keep(task) } label: { actionLabel("Keep in Inbox", "tray") }.accessibilityIdentifier("inboxReviewKeep")
         }.buttonStyle(.plain)
@@ -159,13 +178,66 @@ struct InboxReviewView: View {
     }
     private func move(_ shown: Record, to project: String) {
         guard let row = live(shown), store.record("projects", id: project) != nil else { return }
-        guard save([InboxReviewRequest.move(row, to: project)], name: "Move Inbox Task") else { return }
-        finish(row, decision: .moved, message: "Moved to " + (store.record("projects", id: project)?.name ?? "project"), undo: undoIDs)
+        do {
+            if SubtaskTree.referencePath(row.id) != nil {
+                headingMoveFailure = nil
+                headingMove = try InboxHeadingMoveReview(task: row, tasks: store.tasks, projects: store.projects, destination: project, workspace: request.workspace)
+                return
+            }
+            guard save([try InboxReviewRequest.move(row, to: project)], name: "Move Inbox Task") else { return }
+            finish(row, decision: .moved, message: "Moved to " + (store.record("projects", id: project)?.name ?? "project"), undo: undoIDs)
+        } catch { failure = error.localizedDescription }
     }
     private func complete(_ shown: Record) {
         guard let row = live(shown) else { return }
-        guard save(store.toggleChanges(row), name: "Complete Inbox Task") else { return }
-        finish(row, decision: .completed, message: "Completed “\(row.title)”", undo: undoIDs)
+        do {
+            let changes: [Mutation]
+            if SubtaskTree.referencePath(row.id) != nil {
+                changes = try TaskSelectionPlan.changes([.init(task: row, action: .completion(true, Date()), workspace: request.workspace)], accessibleRoots: store.activeTasks, projects: store.projects, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+            } else { changes = store.toggleChanges(row) }
+            guard save(changes, name: "Complete Inbox Task") else { return }
+            finish(row, decision: .completed, message: "Completed “\(row.title)”", undo: undoIDs)
+        } catch { failure = error.localizedDescription }
+    }
+    private func openEditor(_ task: Record) {
+        guard let row = live(task) else { return }
+        do {
+            let selected = SubtaskTree.referencePath(row.id) != nil ? try store.hierarchySelection(for: row) : nil
+            editing = InboxReviewEditor(opening: TaskEditorOpening(task: row, admission: store.editorAdmission(row, workspace: request.workspace, root: selected?.item.root)), hierarchy: selected)
+        } catch { failure = error.localizedDescription }
+    }
+    private func headingMoveSheet(_ review: InboxHeadingMoveReview) -> some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("Move “\(review.root.title)” and its \(review.taskCount) grouped \(review.taskCount == 1 ? "task" : "tasks")?").font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("inboxHeadingMoveSummary")
+                    Label(review.destination.name, systemImage: "folder").font(.headline)
+                    Text("The heading and its tasks stay together. Dates, notes and task order are preserved.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    ForEach(Array(review.previewTasks.prefix(6).enumerated()), id: \.offset) { _, task in Label(task.title, systemImage: task.completed ? "checkmark.circle" : "circle").fixedSize(horizontal: false, vertical: true) }
+                    if review.taskCount > 6 { Text("And \(review.taskCount - 6) more tasks").foregroundStyle(.secondary) }
+                    if review.assignmentCount > 0 { Text("Assignments will be cleared when the group moves.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                    if let headingMoveFailure { Text(headingMoveFailure).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxHeadingMoveFailure") }
+                }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+            }.navigationTitle("Move heading")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { headingMove = nil }.accessibilityIdentifier("inboxHeadingMoveCancel") }
+                    ToolbarItem(placement: .confirmationAction) { Button("Move group") { confirmHeadingMove(review) }.accessibilityIdentifier("inboxHeadingMoveConfirm") }
+                }
+        }
+        #if os(macOS)
+        .frame(minWidth: 440, idealWidth: 520, minHeight: 440)
+        #endif
+    }
+    private func confirmHeadingMove(_ review: InboxHeadingMoveReview) {
+        do {
+            let changes = try review.changes(tasks: store.tasks, projects: store.projects, workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+            guard save(changes, name: "Move Inbox Heading") else { headingMoveFailure = failure; failure = nil; return }
+            lastDecision = (review.root.id, decisions, undoIDs)
+            for id in request.ids where review.contains(id) { decisions[id] = .moved }
+            feedback = "Moved \(review.taskCount) grouped tasks to \(review.destination.name)"
+            headingMove = nil
+        } catch { headingMoveFailure = error.localizedDescription }
     }
     private func keep(_ shown: Record) {
         guard let row = live(shown) else { return }
@@ -186,15 +258,15 @@ struct InboxReviewView: View {
     private var summary: some View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: inboxCount == 0 ? "tray" : "sparkles").font(.system(size: 40)).foregroundStyle(Color.taskfold)
-            Text(inboxCount == 0 ? "Inbox is clear" : "Review finished").font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxReviewSummary")
-            Text(inboxCount == 0 ? "A little room for what comes next." : "\(inboxCount) open \(inboxCount == 1 ? "task remains" : "tasks remain") in Inbox.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxReviewRemaining")
+            Text(store.inboxProductiveReading.incomplete ? "Review grouped tasks" : inboxCount == 0 ? "Inbox is clear" : "Review finished").font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxReviewSummary")
+            Text(store.inboxProductiveReading.incomplete ? "Some grouped work needs review in Inbox." : inboxCount == 0 ? "A little room for what comes next." : "\(inboxCount) open \(inboxCount == 1 ? "task remains" : "tasks remain") in Inbox.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("inboxReviewRemaining")
             if !decisions.isEmpty {
                 Text([InboxReviewDecision.moved, .completed, .kept].compactMap { decision -> String? in
                     let count = decisions.values.filter { $0 == decision }.count
                     return count > 0 ? "\(count) \(decision.rawValue)" : nil
                 }.joined(separator: " · ")).font(.callout).foregroundStyle(.secondary)
             }
-            if inboxCount > 0 {
+            if inboxCount > 0 && !InboxReviewRequest.candidates(tasks: store.tasks, reading: store.inboxProductiveReading).isEmpty {
                 Button {
                     let continuing = hasUnreviewed
                     guard let fresh = store.makeInboxReview(batch: request.batch, excluding: continuing ? Set(decisions.keys) : []) else { return }

@@ -209,6 +209,7 @@ struct WidgetSnapshot: Codable {
     var updated: TimeInterval
     var tasks: [WidgetTask]
     var nestedTasks: [WidgetTask]? = nil
+    var workIncomplete: Bool? = nil
     var version: Int
     var account: String
     var lists: [WidgetList] = []
@@ -222,7 +223,7 @@ struct WidgetSnapshot: Codable {
     init(updated: TimeInterval, tasks: [WidgetTask], version: Int = 2, account: String = "", lists: [WidgetList] = []) {
         self.updated = updated; self.tasks = tasks; self.version = version; self.account = account; self.lists = lists
     }
-    private enum CodingKeys: String, CodingKey { case updated, tasks, nestedTasks, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse, completionFeedback }
+    private enum CodingKeys: String, CodingKey { case updated, tasks, nestedTasks, workIncomplete, version, account, lists, pendingSync, capacity, notes, focusSession, projectPulse, completionFeedback }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         version = try row.decodeIfPresent(Int.self, forKey: .version) ?? 1
@@ -230,6 +231,7 @@ struct WidgetSnapshot: Codable {
         updated = try row.decode(TimeInterval.self, forKey: .updated)
         tasks = try row.decode([WidgetTask].self, forKey: .tasks)
         nestedTasks = try row.decodeIfPresent([WidgetTask].self, forKey: .nestedTasks)
+        workIncomplete = try row.decodeIfPresent(Bool.self, forKey: .workIncomplete)
         account = try row.decodeIfPresent(String.self, forKey: .account) ?? ""
         lists = try row.decodeIfPresent([WidgetList].self, forKey: .lists) ?? []
         pendingSync = max(0, try row.decodeIfPresent(Int.self, forKey: .pendingSync) ?? 0)
@@ -410,11 +412,11 @@ struct WidgetSnapshot: Codable {
     }
     func scoped(to id: String?, at date: Date, calendar: Calendar = .current) -> WidgetSnapshot {
         guard let id else { return self }
-        var copy = self; copy.tasks = listTasks(id, at: date, calendar: calendar); return copy
+        var copy = self; copy.tasks = listTasks(id, at: date, calendar: calendar); copy.workIncomplete = nil; return copy
     }
 
     func inboxReading() -> WidgetInboxReading {
-        guard version == 2, !account.isEmpty, updated.isFinite, updated > 0,
+        guard version == 2, !account.isEmpty, updated.isFinite, updated > 0, workIncomplete != true,
               tasks.allSatisfy({ !$0.id.isEmpty && $0.projectID != nil }) else { return WidgetInboxReading(tasks: nil) }
         var seen = Set<String>()
         let inbox = tasks.filter { seen.insert($0.id).inserted }.filter { $0.projectID == "" }
@@ -553,6 +555,8 @@ struct WidgetFooter: View {
             Link("Open Taskfold to finish", destination: URL(string: "taskfold://all")!).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         } else if entry.snapshot.pendingSync > 0 {
             Text("Saved · sync pending").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+        } else if entry.snapshot.workIncomplete == true {
+            Text("Grouped tasks need review").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         } else if entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 {
             Label("Open app to refresh", systemImage: "arrow.clockwise").font(.caption2).foregroundStyle(.secondary).lineLimit(1)
         } else {
@@ -586,8 +590,8 @@ struct TodayWidgetView: View {
     let entry: TodayEntry
     var tasks: [WidgetTask] { entry.snapshot.today(at: entry.date) }
     var hasSnapshot: Bool { entry.snapshot.updated > 0 }
-    var countText: String { hasSnapshot ? "\(tasks.count)" : "—" }
-    var countAccessibilityLabel: String { hasSnapshot ? "\(tasks.count) scheduled \(tasks.count == 1 ? "task" : "tasks")" : "Task count unavailable" }
+    var countText: String { hasSnapshot ? (entry.snapshot.workIncomplete == true ? "≥" : "") + "\(tasks.count)" : "—" }
+    var countAccessibilityLabel: String { hasSnapshot ? (entry.snapshot.workIncomplete == true ? "At least " : "") + "\(tasks.count) scheduled \(tasks.count == 1 ? "task" : "tasks")" : "Task count unavailable" }
     var limit: Int { family == .systemLarge ? 7 : 2 }
     var body: some View {
         Group {
@@ -658,8 +662,8 @@ struct TodayWidgetView: View {
                 Text("Refresh your tasks.").font(.caption).foregroundStyle(.secondary)
             } else if tasks.isEmpty {
                 Spacer(minLength: 0)
-                Label("All clear for today", systemImage: "sun.max").font(.subheadline.weight(.medium))
-                Text("No scheduled tasks outstanding.").font(.caption).foregroundStyle(.secondary)
+                Label(entry.snapshot.workIncomplete == true ? "Review grouped tasks" : "All clear for today", systemImage: "sun.max").font(.subheadline.weight(.medium))
+                Text(entry.snapshot.workIncomplete == true ? "Open Taskfold to review the remaining groups." : "No scheduled tasks outstanding.").font(.caption).foregroundStyle(.secondary)
             } else {
                 ForEach(tasks.prefix(limit)) { task in
                     Link(destination: task.url(account: entry.snapshot.account)) {
@@ -667,7 +671,7 @@ struct TodayWidgetView: View {
                             RoundedRectangle(cornerRadius: 2).fill(widgetColor(task.color)).frame(width: 3, height: 22)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(task.title).font(.caption.weight(.medium)).lineLimit(1)
-                                Text(task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : task.time.isEmpty ? "P\(task.priority)" : task.time).font(.system(size: 9)).foregroundStyle(task.due < WidgetSnapshot.day(entry.date) ? brand : .secondary).lineLimit(1)
+                                Text([task.parent ?? "", task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : task.time.isEmpty ? "P\(task.priority)" : task.time].filter { !$0.isEmpty }.joined(separator: " · ")).font(.system(size: 9)).foregroundStyle(task.due < WidgetSnapshot.day(entry.date) ? brand : .secondary).lineLimit(1)
                             }.privacySensitive()
                             Spacer(minLength: 0)
                         }
@@ -712,10 +716,10 @@ struct FocusWidgetView: View {
                     .fixedSize(horizontal: false, vertical: family == .systemMedium).privacySensitive()
                 Text(task.due.isEmpty ? "Unscheduled priority · P\(task.priority)" : task.due < WidgetSnapshot.day(entry.date) ? "Overdue · P\(task.priority)" : "Today · P\(task.priority)\(task.time.isEmpty ? "" : " · \(task.time)")").font(.caption2).foregroundStyle(.secondary).lineLimit(2).privacySensitive()
                 Spacer(minLength: 0)
-                HStack { if family == .systemSmall && entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400 { WidgetFooter(entry: entry) } else { Text(task.project.isEmpty ? "Inbox" : task.project).font(.caption2).lineLimit(1).privacySensitive() }; Spacer(); Image(systemName: "arrow.up.right.circle.fill").font(.title2).foregroundStyle(plum) }
+                HStack { if family == .systemSmall && (entry.snapshot.workIncomplete == true || entry.date.timeIntervalSinceReferenceDate - entry.snapshot.updated > 86_400) { WidgetFooter(entry: entry) } else { Text(task.parent.flatMap { $0.isEmpty ? nil : $0 } ?? (task.project.isEmpty ? "Inbox" : task.project)).font(.caption2).lineLimit(1).privacySensitive() }; Spacer(); Image(systemName: "arrow.up.right.circle.fill").font(.title2).foregroundStyle(plum) }
             } else {
-                Text("Space to focus").font(.headline)
-                Text("Nothing due or high priority. Capture your next step.").font(.caption).foregroundStyle(.secondary)
+                Text(entry.snapshot.workIncomplete == true ? "Review grouped tasks" : "Space to focus").font(.headline)
+                Text(entry.snapshot.workIncomplete == true ? "Open Taskfold to review the remaining work." : "Nothing due or high priority. Capture your next step.").font(.caption).foregroundStyle(.secondary)
                 Spacer(minLength: 0)
             }
             if task == nil { WidgetFooter(entry: entry) }
@@ -740,7 +744,7 @@ struct WeekWidgetView: View {
     }
     private var normalContent: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack { Label("Next 7 days", systemImage: "calendar").font(.headline); Spacer(); Text("\(days.reduce(0) { $0 + $1.count }) scheduled").font(.caption).foregroundStyle(mint) }
+            HStack { Label("Next 7 days", systemImage: "calendar").font(.headline); Spacer(); Text((entry.snapshot.workIncomplete == true ? "≥" : "") + "\(days.reduce(0) { $0 + $1.count }) scheduled").font(.caption).foregroundStyle(mint) }
             HStack(alignment: .bottom, spacing: 8) {
                 ForEach(days) { day in
                     VStack(spacing: 4) {
@@ -925,8 +929,8 @@ struct PlanningWidgetEmpty: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if !compact { Image(systemName: symbol).font(.title2).foregroundStyle(.secondary) }
-            Text(snapshot.updated == 0 ? "Make it yours" : !snapshot.hasPlanningFields ? "Refresh your widgets" : title).font(compact ? .subheadline.weight(.semibold) : .headline).lineLimit(2)
-            Text(snapshot.updated == 0 ? "Open Taskfold to load your tasks." : !snapshot.hasPlanningFields ? "Open Taskfold for deadline and estimate data." : message).font(.caption2).foregroundStyle(.secondary).lineLimit(compact ? 2 : 3)
+            Text(snapshot.updated == 0 ? "Make it yours" : snapshot.workIncomplete == true ? "Review grouped tasks" : !snapshot.hasPlanningFields ? "Refresh your widgets" : title).font(compact ? .subheadline.weight(.semibold) : .headline).lineLimit(2)
+            Text(snapshot.updated == 0 ? "Open Taskfold to load your tasks." : snapshot.workIncomplete == true ? "Some grouped work needs review in Taskfold." : !snapshot.hasPlanningFields ? "Open Taskfold for deadline and estimate data." : message).font(.caption2).foregroundStyle(.secondary).lineLimit(compact ? 2 : 3)
         }
     }
 }
@@ -1440,7 +1444,7 @@ struct InboxWidgetView: View {
                 Spacer(minLength: 0)
             } else {
                 Spacer(minLength: 0)
-                Text(entry.snapshot.updated == 0 ? "A fresh start" : "Refresh Inbox").font(.headline).lineLimit(2)
+                Text(entry.snapshot.workIncomplete == true ? "Review grouped tasks" : entry.snapshot.updated == 0 ? "A fresh start" : "Refresh Inbox").font(.headline).lineLimit(2)
                 Text("Open Taskfold to load your Inbox.").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
                 Spacer(minLength: 0)
             }

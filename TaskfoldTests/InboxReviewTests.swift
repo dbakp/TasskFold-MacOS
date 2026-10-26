@@ -76,7 +76,7 @@ final class InboxReviewTests: XCTestCase {
         row["description"] = .string("Keep these instructions")
         row["reminder_specs"] = .array([.object(["id": .string("reminder"), "kind": .string("relative"), "anchor": .string("due"), "offset_minutes": .number(-30)])])
         row["subtasks"] = .array([.object(["id": .string("child"), "title": .string("Child"), "assigned_to": .string("old-member")])])
-        let move = InboxReviewRequest.move(row, to: "project")
+        let move = try InboxReviewRequest.move(row, to: "project")
         XCTAssertEqual(Set(move.fields.keys), ["project_id", "section_id"])
         let changes = TaskAssignment.mutations(move, existing: row).map { change -> Mutation in
             var value = change; value.fields = TaskPlanning.fields(value.fields, existing: row); return value
@@ -126,7 +126,8 @@ final class InboxReviewTests: XCTestCase {
         let rows = [task("one", project: "project"), task("one"), task("two"), task("two")]
         let request = InboxReviewRequest(workspace: binding, tasks: rows, batch: .all)
         XCTAssertEqual(request.ids, ["two"])
-        XCTAssertEqual(try snapshot(rows).inboxReading().tasks?.map(\.id), ["two"])
+        XCTAssertNil(try snapshot(rows).inboxReading().count, "Conflicting identities cannot establish an honest Inbox total")
+        XCTAssertEqual(try snapshot(rows).workIncomplete, true)
     }
     func testWidgetReviewLinksRoundTripBatchAccountEscapingAndRejectMalformedRoutes() throws {
         let owner = "a b/?#% &ø"

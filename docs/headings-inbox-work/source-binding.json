@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-26",
+  "baseCommit": "62fde574f269d8ec7009e8de3741dc156609554b",
+  "sha256": {
+    "Scripts/render_widget_previews.py": "964f8eec6d89481e429fc1aa102f3015fa677479c76d6e89c353284a31f497e3",
+    "Taskfold/Core/InboxReview.swift": "1147d98499f067183d11d8ce13bcc9aadaaab6fe8b2b3b649a02349c51730bd7",
+    "Taskfold/Core/Models.swift": "e06c51a82c85f19a4b7928ba2daa3432ccdb673dd363e8b367fb8c137b862795",
+    "Taskfold/Core/Store.swift": "d2f1c79ae7626eb54b25a148c0ff26503e833bf63385a79fed32f25a6105f4f2",
+    "Taskfold/Core/WidgetCompletion.swift": "fd60867b48e954825a3e4139c9d2ab2f4933bd1f82fb3d96842fa8138819ffaf",
+    "Taskfold/Views/InboxReviewView.swift": "761b985b6799071e7b05770969ec3f774cac08c617ae65803471261985445a17",
+    "Taskfold/Views/SidebarView.swift": "ea7390fcd791071f3ecb0947d602a4f8ac7287e29916e1c18391f6b9db9ed5dc",
+    "TaskfoldTests/HeadingProjectProgressTests.swift": "f2e381a9353091fe39493b8fdc3ce58b0496c956da67f685931efb6f971a9b8a",
+    "TaskfoldTests/InboxReviewTests.swift": "a753d6450a23d525c734a65a2520077b0e8bd33c74052bf65532dcb8f75e9cf1",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "3a6b14114a5ca961bea0797f12b67723e17dfb222d8f53b4020a7d86288f46ea",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "0a6664a5ac9e56c9778e1688b6b598f3d3a599703b0809d7048af113c861ecd0"
+  },
+  "isolatedNamespace": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "normalHeadingAuthoringEnabled": false,
+  "realTaskDataTouched": false,
+  "hostSHA256": {
+    "Taskfold/Core/InboxReview.swift": "1147d98499f067183d11d8ce13bcc9aadaaab6fe8b2b3b649a02349c51730bd7",
+    "Taskfold/Core/Models.swift": "e06c51a82c85f19a4b7928ba2daa3432ccdb673dd363e8b367fb8c137b862795",
+    "Taskfold/Core/Store.swift": "7dd98719745eb5b37e97bba818b4f9b54054f4c03478f8982162407cb93f68ad",
+    "Taskfold/Core/WidgetCompletion.swift": "fd60867b48e954825a3e4139c9d2ab2f4933bd1f82fb3d96842fa8138819ffaf",
+    "Taskfold/Views/InboxReviewView.swift": "761b985b6799071e7b05770969ec3f774cac08c617ae65803471261985445a17",
+    "Taskfold/Views/SidebarView.swift": "ea7390fcd791071f3ecb0947d602a4f8ac7287e29916e1c18391f6b9db9ed5dc",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "816e00d24495f7ba3bbc7d121d2c96df9238dbb2aaa57154e652d039f1a41cc0",
+    "TaskfoldWidgets/TaskfoldWidgets.swift": "0a6664a5ac9e56c9778e1688b6b598f3d3a599703b0809d7048af113c861ecd0"
+  },
+  "isolatedHostTransformations": [
+    "Reserved bundle/app group/keychain namespace",
+    "Heading authoring true only in copied Info.plist",
+    "Normal taskfold URL registration intentionally excluded by isolation preparer"
+  ],
+  "widgetSourceSHA256SameAcrossOwnedRepos": true
+}

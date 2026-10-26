@@ -19,7 +19,7 @@ enum WidgetCompletion {
     enum Plan { case complete([Mutation]), saved, stale }
     static func prepare(_ snapshot: inout Snapshot) {
         let tasks = snapshot.tables["tasks"] ?? []
-        let children = hierarchy(snapshot, account: "widget-index")?.items.filter(\.isSubtask) ?? []
+        let children = childItems(snapshot, account: "widget-index")
         let ids = Set(tasks.map { WidgetTaskIdentity.key($0.id) } + children.map(\.id))
         snapshot.widgetCompletion.states = snapshot.widgetCompletion.states.filter { ids.contains($0.key) }
         for task in tasks where !task.id.isEmpty {
@@ -38,10 +38,20 @@ enum WidgetCompletion {
             }
         }
     }
-    /// Only filters explicitly opting into child results publish child action state.
+    static func hasChildFilter(_ snapshot: Snapshot) -> Bool {
+        (snapshot.tables["saved_views"] ?? []).contains { (try? FilterRule(document: $0["query_ast"]).needsChildCandidates) == true }
+    }
+    /// Primary widgets opt into independent work beneath headings. Ordinary
+    /// checklists still require an explicit child filter, including at replay.
     static func hierarchy(_ snapshot: Snapshot, account: String) -> TaskHierarchyIndex? {
-        guard (snapshot.tables["saved_views"] ?? []).contains(where: { (try? FilterRule(document: $0["query_ast"]).needsChildCandidates) == true }) else { return nil }
+        guard hasChildFilter(snapshot) || (snapshot.tables["tasks"] ?? []).contains(where: { TaskKind($0) == .heading }) else { return nil }
         return try? TaskHierarchyIndex(roots: snapshot.tables["tasks"] ?? [], projects: snapshot.tables["projects"] ?? [], workspace: WorkspaceBinding(account: account, generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+    }
+    static func childItems(_ snapshot: Snapshot, account: String) -> [TaskHierarchyIndex.Item] {
+        guard let index = hierarchy(snapshot, account: account) else { return [] }
+        if hasChildFilter(snapshot) { return index.items.filter(\.isSubtask) }
+        let reading = ProductiveTaskReading(tasks: snapshot.tables["tasks"] ?? [])
+        return index.items.filter { $0.isSubtask && reading.contains($0.id) }
     }
     /// Root incarnation and path bind a link without making completion/editing invalidate it.
     static func routeContext(_ item: TaskHierarchyIndex.Item) -> String? {
@@ -63,6 +73,7 @@ enum WidgetCompletion {
         if snapshot.widgetCompletion.saved(request) { return .saved }
         if request.taskID.hasPrefix("subtask:") {
             guard let index = hierarchy(snapshot, account: account), let selection = index.selection(request.taskID),
+                  hasChildFilter(snapshot) || ProductiveTaskReading(tasks: snapshot.tables["tasks"] ?? []).contains(request.taskID),
                   let state = snapshot.widgetCompletion.states[request.taskID], state.token == request.token,
                   childSignature(selection.item) == state.signature else { return .stale }
             guard TaskKind.mayComplete(selection.item.record) else { return .stale }
