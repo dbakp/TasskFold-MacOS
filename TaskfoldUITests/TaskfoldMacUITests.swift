@@ -4554,3 +4554,26 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(projection.waitForExistence(timeout:15));XCTAssertEqual(renderedText(projection),"Inbox: 1");XCTAssertEqual(try root(),saved)
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor func testHeadingProjectLabelFilterCompletionUndoAndColdReturn() throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner","com.dbakp.taskfold.mac.workflowteststeameditbridge.runner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
+        continueAfterFailure=false
+        let app=XCUIApplication();defer{app.terminate()}
+        app.launchArguments=["--uitesting","--workflow-fixture","--task-heading-fixture","--heading-progress-fixture","--heading-planner-fixture","--heading-list-work-fixture","-localMode","YES"]
+        try launchHeadingWorkspace(app)
+        let cache=URL(fileURLWithPath:"/Users/"+NSUserName()+"/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        func root() throws -> NSDictionary {let data=try XCTUnwrap(try JSONSerialization.jsonObject(with:Data(contentsOf:cache)) as? [String:Any]);return try XCTUnwrap(((data["tables"] as? [String:Any])?["tasks"] as? [NSDictionary])?.first{$0["id"] as? String == "f1810000-0000-4000-8000-000000000001"})}
+        let child="subtask:"+(try JSONEncoder().encode(["f1810000-0000-4000-8000-000000000001","f5810000-0000-4000-8000-000000000001"])).base64EncodedString()
+        let title=app.staticTexts.matching(NSPredicate(format:"identifier == %@","title-"+child)).firstMatch
+        func choose(_ name:String){let row=app.staticTexts.matching(NSPredicate(format:"value == %@ OR label == %@",name,name)).firstMatch;XCTAssertTrue(row.waitForExistence(timeout:8));row.click()}
+        choose("Launch lab");XCTAssertTrue(title.waitForExistence(timeout:8));retainWindow(app,name:"Mac project independent heading work")
+        choose("Design work");XCTAssertTrue(title.waitForExistence(timeout:8));retainWindow(app,name:"Mac label own child metadata")
+        choose("Priority work");XCTAssertTrue(title.waitForExistence(timeout:8));retainWindow(app,name:"Mac default saved filter child priority")
+        let complete=app.buttons.matching(NSPredicate(format:"identifier == %@","complete-"+child)).firstMatch;XCTAssertTrue(complete.waitForExistence(timeout:5));complete.click()
+        func state(_ expected:Bool){let ready=XCTNSPredicateExpectation(predicate:NSPredicate{_,_ in guard let row=try? root(),let children=row["subtasks"] as? [[String:Any]] else{return false};return children.first?["completed"] as? Bool == expected},object:nil);XCTAssertEqual(XCTWaiter.wait(for:[ready],timeout:8),.completed)}
+        state(true);app.typeKey("z",modifierFlags:.command);state(false);XCTAssertTrue(title.waitForExistence(timeout:8));complete.click();state(true);let saved=try root();XCTAssertEqual(saved["completed"] as? Bool,false)
+        app.terminate();app.launchArguments=["--uitesting","-localMode","YES"];try launchHeadingWorkspace(app)
+        choose("Design work");XCTAssertFalse(title.waitForExistence(timeout:3));choose("Completed");XCTAssertTrue(title.waitForExistence(timeout:8));XCTAssertEqual(try root(),saved)
+    }
+}

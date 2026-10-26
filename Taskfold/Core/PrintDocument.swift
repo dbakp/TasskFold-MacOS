@@ -10,6 +10,8 @@ struct PrintDocument: Equatable, Sendable {
         let notes: String
         let completed: Bool
         let depth: Int
+        var heading = false
+        var completable = true
     }
     struct Group: Equatable, Sendable { let title: String; let items: [Item] }
     let title: String
@@ -17,8 +19,8 @@ struct PrintDocument: Equatable, Sendable {
     let groups: [Group]
     let noteOnly: Bool
     let hierarchyResults: Bool
-    var count: Int { Set(groups.flatMap { $0.items.filter { $0.depth == 0 }.map(\.sourceID) }).count }
-    static func capture(title: String, subtitle: String, groups: [(String, [Record])], projects: [Record], labels: [Record], noteOnly: Bool = false, hierarchyRoots: [Record]? = nil, assigneeName: (Record) -> String = { _ in "" }) throws -> Self {
+    var count: Int { Set(groups.flatMap { $0.items.filter { $0.depth == 0 && $0.completable }.map(\.sourceID) }).count }
+    static func capture(title: String, subtitle: String, groups: [(String, [Record])], projects: [Record], labels: [Record], noteOnly: Bool = false, hierarchyRoots: [Record]? = nil, expandOrdinaryChecklists: Bool = false, assigneeName: (Record) -> String = { _ in "" }) throws -> Self {
         var parentContext: [String: String] = [:]
         if let hierarchyRoots {
             let displayed = groups.flatMap { $0.1 }
@@ -42,13 +44,14 @@ struct PrintDocument: Equatable, Sendable {
             let name = task.title.isEmpty ? "Untitled task" : task.title
             let notes = task.string("description")
             var detail: [String] = []
+            if TaskKind(task) == .unsupported { detail.append("Task type needs review") }
             if depth == 0, !project.isEmpty { detail.append(project) }
             if depth == 0, let parent = parentContext[task.id] { detail.append("Subtask of " + parent) }
             if (1...3).contains(task.priority) { detail.append("P\(task.priority)") }
             let date = task.string("due_date"), time = task.string("due_time"), zone = task.string("time_zone")
             if !date.isEmpty { detail.append("Due " + date + (time.isEmpty ? "" : " " + time) + (time.isEmpty || zone.isEmpty ? "" : " " + zone)) }
             if !task.string("deadline_date").isEmpty { detail.append("Deadline " + task.string("deadline_date")) }
-            if let duration = task.durationMinutes { detail.append("\(duration) min") }
+            if TaskKind.mayComplete(task), let duration = task.durationMinutes { detail.append("\(duration) min") }
             for label in task["labels"].list {
                 if let named = labels.first(where: { $0.id == label.text || $0.name == label.text }) { detail.append("@" + named.name) }
             }
@@ -58,8 +61,8 @@ struct PrintDocument: Equatable, Sendable {
             let metadata = detail.joined(separator: " · ")
             bytes += name.utf8.count + notes.utf8.count + metadata.utf8.count
             guard bytes <= 16_000_000 else { throw AppFailure(message: "This selection is too large to print completely. Choose a smaller list.") }
-            var result = [Item(sourceID: task.id, title: name, metadata: metadata, notes: notes, completed: task.completed, depth: depth)]
-            if noteOnly || hierarchyRoots != nil { return result }
+            var result = [Item(sourceID: task.id, title: name, metadata: metadata, notes: notes, completed: task.completed, depth: depth, heading: TaskKind(task) == .heading, completable: TaskKind.mayComplete(task))]
+            if noteOnly || (hierarchyRoots != nil && (!expandOrdinaryChecklists || TaskKind(task) != .task)) { return result }
             guard task["subtasks"] == .null || { if case .array = task["subtasks"] { return true }; return false }() else { throw AppFailure(message: "A checklist uses an unsupported format. Its saved content is unchanged.") }
             for value in task["subtasks"].list {
                 guard case .object = value else { throw AppFailure(message: "A checklist item uses an unsupported format. Its saved content is unchanged.") }
@@ -75,6 +78,6 @@ struct PrintDocument: Equatable, Sendable {
             })
         }
         guard bytes <= 16_000_000 else { throw AppFailure(message: "Choose a smaller list to print completely.") }
-        return Self(title: title, subtitle: subtitle, groups: captured, noteOnly: noteOnly, hierarchyResults: hierarchyRoots != nil)
+        return Self(title: title, subtitle: subtitle, groups: captured, noteOnly: noteOnly, hierarchyResults: hierarchyRoots != nil && !expandOrdinaryChecklists)
     }
 }

@@ -1,0 +1,285 @@
+{
+  "date": "2026-10-26",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-list-work-iphone-live-shot.log",
+      "bytes": 213
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ipad-export.log",
+      "bytes": 835
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-signing-final.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-prepare-print-followup.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build",
+      "bytes": 753162736
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-v4.log",
+      "bytes": 5555
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-v5.log",
+      "bytes": 29469
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-v1.log",
+      "bytes": 5427
+    },
+    {
+      "path": "/tmp/taskfold-list-work-iphone-result.json",
+      "bytes": 999
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build-v1.log",
+      "bytes": 526648
+    },
+    {
+      "path": "/tmp/taskfold-list-work-iphone-native-v1.log",
+      "bytes": 71614
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build-native-final.log",
+      "bytes": 40802
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-v2.log",
+      "bytes": 28213
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build-bound.log",
+      "bytes": 54734
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-prepare.log",
+      "bytes": 41
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-build-complete.log",
+      "bytes": 39865
+    },
+    {
+      "path": "/tmp/taskfold-list-work-edit.py",
+      "bytes": 5426
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-verified.log",
+      "bytes": 68781
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-bound.log",
+      "bytes": 68291
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-v3.log",
+      "bytes": 33672
+    },
+    {
+      "path": "/tmp/taskfold-list-work-tests.swift",
+      "bytes": 9247
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-prepare-rebuild.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ipad-result.json",
+      "bytes": 1015
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ipad-native-final.xcresult",
+      "bytes": 1760473
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-prepare-order-followup.json",
+      "bytes": 177
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-final.log",
+      "bytes": 69580
+    },
+    {
+      "path": "/tmp/taskfold-list-work-iphone-live.png",
+      "bytes": 274241
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-complete.log",
+      "bytes": 68865
+    },
+    {
+      "path": "/tmp/taskfold-list-work-widget-render-final.log",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-broad.log",
+      "bytes": 51833
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ipad-native-v1.log",
+      "bytes": 36137
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ipad-native-final.log",
+      "bytes": 35228
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-verified.log",
+      "bytes": 69595
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-final.log",
+      "bytes": 68837
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-final-signatures.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-build-final-verified.log",
+      "bytes": 35864
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build-final.log",
+      "bytes": 80104
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-build-v1.log",
+      "bytes": 73635
+    },
+    {
+      "path": "/tmp/taskfold-list-work-widget-renders",
+      "bytes": 2942928
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-build-print-followup.log",
+      "bytes": 35899
+    },
+    {
+      "path": "/tmp/taskfold-list-work-widget.json",
+      "bytes": 10364
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-broad.log",
+      "bytes": 52597
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build-complete.log",
+      "bytes": 55931
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build-acceptance.log",
+      "bytes": 50036
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-build-bound.log",
+      "bytes": 44028
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ui.py",
+      "bytes": 3770
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ipad-attachments",
+      "bytes": 805497
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-build-acceptance.log",
+      "bytes": 39814
+    },
+    {
+      "path": "/tmp/taskfold-list-work-iphone-export.log",
+      "bytes": 837
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ipad-native-v1.xcresult",
+      "bytes": 1520765
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-signing-print-followup.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-complete.log",
+      "bytes": 69730
+    },
+    {
+      "path": "/tmp/taskfold-list-work-iphone-attachments",
+      "bytes": 848378
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-v3.log",
+      "bytes": 34589
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-bound.log",
+      "bytes": 69144
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-signing.json",
+      "bytes": 705
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-core-final-bound.log",
+      "bytes": 69330
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-v2.log",
+      "bytes": 27445
+    },
+    {
+      "path": "/tmp/taskfold-list-work-widget-render.log",
+      "bytes": 0
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-final-bound.log",
+      "bytes": 68532
+    },
+    {
+      "path": "/tmp/taskfold-list-work-iphone-native-v1.xcresult",
+      "bytes": 111533347
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build-print-followup.log",
+      "bytes": 46425
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-build-final-verified.log",
+      "bytes": 46390
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-v5.log",
+      "bytes": 28753
+    },
+    {
+      "path": "/tmp/taskfold-list-work-iphone-native-final.xcresult",
+      "bytes": 1671932
+    },
+    {
+      "path": "/tmp/taskfold-list-work-ios-host",
+      "bytes": 7156574
+    },
+    {
+      "path": "/tmp/taskfold-list-work-mac-core-v4.log",
+      "bytes": 5558
+    },
+    {
+      "path": "/tmp/taskfold-list-work-iphone-native-final.log",
+      "bytes": 27335
+    }
+  ],
+  "bytesRemoved": 884047254,
+  "preserved": [
+    "/tmp/taskfold-mac-recovery-host",
+    "/tmp/taskfold-mac-recovery-build",
+    "Both .build caches",
+    "Compact native/Core evidence, inspected source renders and screenshots"
+  ],
+  "ownedNativeSessions": "Both Simulator apps/runners were uninstalled after terminal results; no new Mac app was launched while locked"
+}

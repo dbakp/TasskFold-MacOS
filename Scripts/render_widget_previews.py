@@ -85,7 +85,9 @@ extension PreviewLink where Content == Text {
             let list = WidgetList(id: (try! JSONEncoder().encode([listSnapshot.account, "filter", "nested-work"])).base64EncodedString(), recordID: "nested-work", kind: "filter", name: "Nested work", days: [WidgetSnapshot.day(entry.date, calendar: .current): listSnapshot.nestedTasks!.map(\.id)], timeZone: TimeZone.current.identifier, invalid: false)
             listSnapshot.lists = [list]
         }
-        let chosen = mode == "lists-unavailable" ? "deleted-list" : listSnapshot.availableLists.first?.id
+        let selectedKind = mode.hasPrefix("lists-project") || mode == "lists-missing-child" ? "project" : mode.hasPrefix("lists-label") ? "label" : mode.hasPrefix("lists-filter") ? "filter" : nil
+        let chosen = mode == "lists-unavailable" ? "deleted-list" : selectedKind.flatMap { kind in (listSnapshot.availableLists.first { $0.kind == kind && $0.days.values.contains { !$0.isEmpty } } ?? listSnapshot.availableLists.first { $0.kind == kind })?.id } ?? listSnapshot.availableLists.first?.id
+        if mode == "lists-missing-child", let child = listSnapshot.tasks.first(where: { $0.id.hasPrefix("subtask:") }) { listSnapshot.tasks.removeAll { $0.id == child.id } }
         let listPrivate = mode == "lists-private" || mode == "lists-completed-private" || mode == "lists-hierarchy-private"
         if mode.hasPrefix("lists-completed"), let chosen {
             listSnapshot.completionFeedback = WidgetCompletionFeedback(account: listSnapshot.account, taskID: "completed-proof", title: "Prepare the quarterly planning notes and share the final draft", listIDs: [chosen], savedAt: entry.date)
@@ -200,7 +202,7 @@ extension PreviewLink where Content == Text {
             }
         }.environment(\.dynamicTypeSize, mode == "notes-largest" ? .accessibility3 : .large)
 
-        let actual = Group { if notes { noteContent.padding(32).background(mode == "notes-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "notes-dark" ? .dark : .light) } else if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode.hasSuffix("dark") ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode.hasSuffix("dark") ? .dark : .light) } else if lists { listContent.padding(32).background((mode == "lists-dark" || mode == "lists-hierarchy-dark") ? Color(white: 0.09) : Color.white).environment(\.colorScheme, (mode == "lists-dark" || mode == "lists-hierarchy-dark") ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
+        let actual = Group { if notes { noteContent.padding(32).background(mode == "notes-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "notes-dark" ? .dark : .light) } else if inbox { inboxContent.padding(32).background(mode == "inbox-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "inbox-dark" ? .dark : .light) } else if capacity { capacityContent.padding(32).background(mode.hasSuffix("dark") ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode.hasSuffix("dark") ? .dark : .light) } else if lists { listContent.padding(32).background(mode.hasSuffix("dark") ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode.hasSuffix("dark") ? .dark : .light) } else if productivity { newContent.padding(32).background(mode == "productivity-dark" ? Color(white: 0.09) : Color.white).environment(\.colorScheme, mode == "productivity-dark" ? .dark : .light).environment(\.dynamicTypeSize, .large) } else { content } }
         let renderer = ImageRenderer(content: actual)
         renderer.scale = 2
         if let image = renderer.cgImage {
@@ -224,6 +226,8 @@ with tempfile.TemporaryDirectory(prefix='taskfold-widget-previews-') as temporar
         modes = [(mode, mode) for mode in ["capacity-grouped", "capacity-grouped-review", "capacity-grouped-review-dark"]]
     if "--grouped-work" in sys.argv:
         modes = [(mode, mode) for mode in ["light", "dark", "inbox", "inbox-dark", "inbox-grouped-review"]]
+    if "--productive-lists" in sys.argv:
+        modes = [(mode, mode) for mode in ["lists-project", "lists-project-dark", "lists-label", "lists-filter", "lists-missing-child"]]
     supplied = [str(Path(sys.argv[sys.argv.index('--payload') + 1]).resolve())] if '--payload' in sys.argv else []
     for mode, name in modes:
         subprocess.run([str(path / 'preview'), str(output / f'{name}.png'), mode] + supplied, check=True)

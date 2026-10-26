@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-26",
+  "scope": "Project/All/Completed/label/default saved-filter productive work, per-section explicit hierarchy semantics, list widgets, badges, manual heading order and print continuity",
+  "implementation": [
+    "Default native candidates expose each nearest ordinary task under headings using own metadata and exact references",
+    "Explicit root/subtask/parent clauses retain their checklist semantics, including independent mixed query sections",
+    "Manual project outline and sparse saved root-heading order keep grouped work together; explicit child positions remain respected",
+    "Project/label/filter widgets resolve primary child rows without needing an unrelated explicit child filter",
+    "Missing published child members and unreadable grouped data cannot appear as an empty ready list",
+    "Mac badges and iOS project badges use productive counts with scoped lower-bound uncertainty",
+    "Unknown future task types remain reachable review context without task/print credit",
+    "Default print output validates exact child sources and expands an ordinary task checklist once; headings do not recurse into already-listed work or receive completion boxes"
+  ],
+  "core": {
+    "passed": 190,
+    "failed": 0,
+    "newCases": 13,
+    "log": "headings-list-work/core-tests.log"
+  },
+  "widgetRenders": {
+    "inspected": 5,
+    "kind": "Current SwiftUI source views rendered from actual isolated app-published initial JSON, plus a removed-child catalog variant; not an installed widget host test"
+  },
+  "remaining": [
+    "Native print options/PDF and native manual ordering with search-hidden headings",
+    "Separate child activity history and wider calendar projections",
+    "Broader native kind creation/conversion, source races, legacy/malformed, largest text and spoken acceptance",
+    "Actual installed widget route/completion/privacy replay for the expanded projection",
+    "Shared/service/cross-device adapters and generic source portability mapping",
+    "Normal heading authoring stays disabled; all user-deferred release/provider/device gates remain deferred"
+  ],
+  "nativeBuild": "Final independent app/widget/test builds and signatures passed",
+  "native": {
+    "iPhone": "passed project/label/default-filter/edit/completion/Undo/cold-return flow",
+    "iPad": "passed same native flow",
+    "screenshotsInspected": 8,
+    "macOS": "prepared and built; CUA reports locked; no new runtime acceptance",
+    "postNativeLimit": "The final print-options classification and search-hidden root-order corrections are Core/build verified after the native list runs; no native print/PDF or hidden-heading search-order acceptance claim."
+  },
+  "sourceBinding": "headings-list-work/source-binding.json",
+  "buildValidation": "headings-list-work/build-validation.json"
+}

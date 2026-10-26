@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-26",
+  "appWidgetTestBuild": "passed",
+  "signature": "Mac strict deep app verification passed",
+  "initialAttemptFindings": [
+    "Core expectations that intentionally asserted root-only Project/All membership were updated to the new productive contract",
+    "An overbroad missing-row widget guard conflicted with existing ordinary-root deletion tolerance; the final guard verifies child membership while retaining root deduplication/missing-row behavior",
+    "Initial iPhone Browse helper swiped outside the interactive list; final per-case helper uses normal list swipes",
+    "Preview renderer initially selected the empty first project; final project modes select a populated project from the actual payload"
+  ],
+  "limits": [
+    "Source-rendered widgets are not installed WidgetKit acceptance",
+    "No new hosted schema/configuration, provider credentials, release gate or normal heading authoring switch changed"
+  ],
+  "postNativeFollowups": [
+    "PrintDocument.hierarchyResults classification keeps the default Include checklists option available",
+    "DayPlacement expands saved root anchors even when search hides heading context"
+  ],
+  "postNativeVerification": "Final focused Core suites, independent builds and signatures passed. Native list flows precede these two corrections."
+}

@@ -376,14 +376,12 @@ struct WidgetSnapshot: Codable {
                   date.timeIntervalSinceReferenceDate >= start, date.timeIntervalSinceReferenceDate < end else { return .refresh }
         }
         if target.kind == "filter", (target.timeZone != calendar.timeZone.identifier || target.days[Self.day(date, calendar: calendar)] == nil) { return .refresh }
-        if target.kind == "filter" {
-            let members = target.days[Self.day(date, calendar: calendar)] ?? []
-            let children = members.filter { $0.hasPrefix("subtask:") }
-            if !children.isEmpty {
-                guard let nestedTasks else { return .refresh }
-                let available = Set(nestedTasks.map(\.id))
-                guard children.allSatisfy(available.contains) else { return .unavailable }
-            }
+        let members = target.kind == "filter" ? target.days[Self.day(date, calendar: calendar)] ?? [] : target.days["*"] ?? []
+        let available = Set((tasks + (target.kind == "filter" ? (nestedTasks ?? []) : [])).map(\.id))
+        guard members.filter({ $0.hasPrefix("subtask:") }).allSatisfy(available.contains) else {
+            // Older child-filter snapshots may predate their optional catalog.
+            if target.kind == "filter", nestedTasks == nil, members.contains(where: { $0.hasPrefix("subtask:") && !available.contains($0) }) { return .refresh }
+            return .unavailable
         }
         return .ready
     }

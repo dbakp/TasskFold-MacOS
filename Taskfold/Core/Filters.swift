@@ -513,6 +513,12 @@ indirect enum FilterRule: Hashable, Sendable {
     }
     /// Prove root-only expressions without parsing unrelated legacy checklists.
     /// nil is an unknown child value, not an assumed match or an omitted branch.
+    /// Ordinary query sections use productive work; explicit hierarchy clauses
+    /// retain their existing root/subtask/parent meaning.
+    var hasProductiveBranches: Bool {
+        if case .sections(let rules) = self { return rules.contains { !$0.usesTaskHierarchy } }
+        return !usesTaskHierarchy
+    }
     var needsChildCandidates: Bool {
         if case .sections(let rules) = self { return rules.contains { $0.needsChildCandidates } }
         guard usesTaskHierarchy else { return false }
@@ -600,13 +606,14 @@ indirect enum FilterRule: Hashable, Sendable {
         }
     }
     func matches(_ task: Record, today: String, userID: String, labels: [FilterReference], timeZone: String,
-                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [FilterReference] = [], hierarchyScope: Bool? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> Bool {
-        evaluate(task,today:today,userID:userID,labels:labels,timeZone:timeZone,projects:projects,sections:sections,nameBindings:supplied,now:now,datePreferences:datePreferences,people:people,hierarchyScope:hierarchyScope,assignments:assignments) == true
+                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [FilterReference] = [], hierarchyScope: Bool? = nil, productiveWork: Bool? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> Bool {
+        evaluate(task,today:today,userID:userID,labels:labels,timeZone:timeZone,projects:projects,sections:sections,nameBindings:supplied,now:now,datePreferences:datePreferences,people:people,hierarchyScope:hierarchyScope,productiveWork:productiveWork,assignments:assignments) == true
     }
     private func evaluate(_ task: Record, today: String, userID: String, labels: [FilterReference], timeZone: String,
-                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [FilterReference] = [], hierarchyScope: Bool? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> Bool? {
+                 projects: [FilterReference] = [], sections: [FilterReference] = [], nameBindings supplied: [FilterNameBinding]? = nil, now: Date? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [FilterReference] = [], hierarchyScope: Bool? = nil, productiveWork: Bool? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> Bool? {
         if !hasQuerySections, usesAssignmentHistory, !assignments.available || userID.isEmpty { return nil }
-        let hierarchyScope = hierarchyScope ?? usesTaskHierarchy
+        if !hasQuerySections && !usesTaskHierarchy && productiveWork == false { return false }
+        let hierarchyScope = hierarchyScope ?? (productiveWork == true || usesTaskHierarchy)
         let childPath = SubtaskTree.referencePath(task.id)
         guard !task.id.hasPrefix("subtask:") || childPath != nil else { return false }
         if !hasQuerySections, !hierarchyScope, childPath != nil { return false }
@@ -619,7 +626,7 @@ indirect enum FilterRule: Hashable, Sendable {
         case .sections(let rules):
             var unknown = false
             for rule in rules {
-                let result = rule.evaluate(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people, hierarchyScope: nil, assignments: assignments)
+                let result = rule.evaluate(task, today: today, userID: userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: datePreferences, people: people, hierarchyScope: nil, productiveWork: productiveWork, assignments: assignments)
                 if result == true { return true }; if result == nil { unknown = true }
             }
             return unknown ? nil : false
@@ -1028,7 +1035,7 @@ struct TaskGrouping {
     struct Group: Identifiable { var id: String; var name: String; var tasks: [Record] }
     /// Sections keep query order and overlap; union results stay unique for bulk actions/widgets.
     /// Content identity keeps manual ordering attached to the query through reordering/renames.
-    static func queryGroups(_ tasks: [Record], rule: FilterRule?, by field: String, context: FilterContext, today: String, timeZone: String, includeCompleted: Bool = false, now: Date? = nil) -> [Group] {
+    static func queryGroups(_ tasks: [Record], rule: FilterRule?, by field: String, context: FilterContext, today: String, timeZone: String, includeCompleted: Bool = false, now: Date? = nil, work: ProductiveTaskReading? = nil) -> [Group] {
         guard case .sections(let queries) = rule else { return groups(tasks, by: field, projects: context.projects, timeZone: timeZone) }
         let keys = rule?.querySectionKeys ?? []
         let projects = context.projectReferences
@@ -1039,7 +1046,7 @@ struct TaskGrouping {
             let key = keys[index]
             let bindings = query.nameBindings(projects: projects, sections: sections, labels: labels, people: people)
             let name = "\(index + 1) · " + query.sectionTitle(in: context)
-            let matches = tasks.filter { (includeCompleted || query.includesCompletion || !$0.completed) && query.matches($0, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: context.datePreferences, people: people, assignments: context.assignments) }
+            let matches = tasks.filter { task in (includeCompleted || query.includesCompletion || !task.completed) && query.matches(task, today: today, userID: context.userID, labels: labels, timeZone: timeZone, projects: projects, sections: sections, nameBindings: bindings, now: now, datePreferences: context.datePreferences, people: people, productiveWork: work.map { reading in reading.contains(task.id) }, assignments: context.assignments) }
             let nested = groups(matches, by: field, projects: context.projects, timeZone: timeZone)
             if nested.isEmpty { return [Group(id: key + ":all", name: name, tasks: [])] }
             return nested.map { Group(id: key + ":" + $0.id, name: field == "none" ? name : name + " / " + $0.name, tasks: $0.tasks) }

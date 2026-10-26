@@ -310,6 +310,7 @@ struct ProjectWorkScope {
     }
     private(set) var items: [Item] = []
     private(set) var contexts: [Record] = []
+    private(set) var outline: [Record] = []
     private(set) var incompleteProjects = Set<String>()
     private var groups: [String: [Item]] = [:]
     func items(project: String) -> [Item] { groups[project.lowercased()] ?? [] }
@@ -328,7 +329,12 @@ struct ProjectWorkScope {
                 visited += 1
                 guard depth <= SubtaskTree.readableDepth, visited <= TaskHierarchyIndex.maximumItems else { incompleteProjects.insert(project); return }
                 switch TaskKind(source) {
-                case .unsupported: incompleteProjects.insert(project)
+                case .unsupported:
+                    incompleteProjects.insert(project)
+                    if let reference {
+                        let context = TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: reference).record
+                        contexts.append(context); outline.append(context)
+                    }
                 case .task:
                     let id: String
                     if positions.isEmpty { id = root.id }
@@ -341,8 +347,12 @@ struct ProjectWorkScope {
                     let navigation = reference.map { TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: $0).record }
                     let item = Item(id: id, task: task, root: root, navigationTask: navigation, parentTitles: titles)
                     items.append(item); groups[project, default: []].append(item)
+                    if let navigation { outline.append(navigation) }
                 case .heading:
-                    if let reference { contexts.append(TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: reference).record) }
+                    if let reference {
+                        let context = TaskHierarchyIndex.Item(source: source, root: root, path: keys, parentTitles: titles, id: reference).record
+                        contexts.append(context); outline.append(context)
+                    }
                     if source.completed { incompleteProjects.insert(project) }
                     let children = source["subtasks"]
                     guard SubtaskTree.hasListContainer(children) else { incompleteProjects.insert(project); return }
@@ -383,7 +393,13 @@ struct ProjectWorkScope {
 struct ProductiveTaskReading {
     let work: [Record]
     let presentation: [Record]
+    let outline: [Record]
     let incomplete: Bool
+    let incompleteProjects: Set<String>
+    func countLabel(_ count: Int, project: String? = nil) -> String {
+        let partial = project.map { incompleteProjects.contains($0.lowercased()) } ?? incomplete
+        return (partial ? "≥" : "") + String(count)
+    }
     let unavailable: Int
     let parents: [String: String]
     private let presentationIDs: Set<String>
@@ -413,7 +429,10 @@ struct ProductiveTaskReading {
         var contexts = Set<String>()
         rows += scope.contexts.filter { contexts.insert($0.id.lowercased()).inserted }
         self.work = work; presentation = rows; presentationIDs = Set(rows.map(\.id))
-        incomplete = !scope.incompleteProjects.isEmpty || unavailable > 0
+        var outlineIDs = Set<String>()
+        outline = (scope.outline + rows).filter { outlineIDs.insert($0.id).inserted }
+        incompleteProjects = scope.incompleteProjects.union(scope.items.filter { $0.navigationTask == nil }.map { $0.root.string("project_id").lowercased() })
+        incomplete = !incompleteProjects.isEmpty
         self.unavailable = unavailable
         self.parents = parents
     }

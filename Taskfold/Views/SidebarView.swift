@@ -16,7 +16,7 @@ struct SidebarView: View {
     @State private var projectsExpanded = true
     @State private var labelsExpanded = true
     private var today: String { Dates.day(Date()) }
-    private var open: [Record] { store.activeTasks.filter { TaskKind.mayComplete($0) && !$0.completed } }
+    private var open: [Record] { store.productiveReading.work.filter { TaskKind.mayComplete($0) && !$0.completed } }
     var body: some View {
         @Bindable var workspace = workspace
         VStack(spacing: 0) {
@@ -32,13 +32,13 @@ struct SidebarView: View {
             .accessibilityIdentifier("openFinder")
         List(selection: Binding(get: { Optional(workspace.section) }, set: { if let value = $0 { workspace.section = value } })) {
             Section {
-                item(.today, "Today", count: store.matching(TaskQuery(scope: .today)).filter { TaskKind.mayComplete($0) && !$0.completed }.count, dropDay: today)
-                item(.inbox, "Inbox", count: store.inboxProductiveReading.work.filter(InboxReviewRequest.eligible).count, dropProject: "")
+                item(.today, "Today", count: store.matching(TaskQuery(scope: .today)).filter { TaskKind.mayComplete($0) && !$0.completed }.count, incomplete: store.productiveReading.incomplete, dropDay: today)
+                item(.inbox, "Inbox", count: store.inboxProductiveReading.work.filter(InboxReviewRequest.eligible).count, incomplete: store.inboxProductiveReading.incomplete, dropProject: "")
                 item(.upcoming, "Upcoming", count: nil, dropDay: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!))
                 item(.calendar, "Calendar", count: nil)
             }
             Section("Browse") {
-                item(.all, "All Tasks", count: open.count)
+                item(.all, "All Tasks", count: open.count, incomplete: store.productiveReading.incomplete)
                 item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { TaskKind.mayComplete($0) && !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
                 Button { openMentions() } label: { HStack { Label("Mentions", systemImage: "at"); Spacer(); if let count = store.mentionUnreadCount, count > 0 { Text("\(count)").foregroundStyle(.secondary) } } }.accessibilityIdentifier("openMentions")
@@ -77,7 +77,7 @@ struct SidebarView: View {
                             HStack {
                                 Text(project.name).lineLimit(1)
                                 Spacer()
-                                count(open.filter { $0.string("project_id") == project.id }.count)
+                                count(open.filter { $0.string("project_id") == project.id }.count, incomplete: store.productiveReading.incompleteProjects.contains(project.id.lowercased()))
                             }
                         } icon: { Image(systemName: "folder.fill").foregroundStyle(Color.project(project.string("color"))) }
                     }
@@ -102,7 +102,7 @@ struct SidebarView: View {
             Section(isExpanded: $labelsExpanded) {
                 ForEach(store.labels) { label in
                     Label {
-                        HStack { Text(label.name).lineLimit(1); Spacer(); count(open.filter { $0["labels"].list.contains(.string(label.id)) || $0["labels"].list.contains(.string(label.name)) }.count) }
+                        HStack { Text(label.name).lineLimit(1); Spacer(); count(open.filter { $0["labels"].list.contains(.string(label.id)) || $0["labels"].list.contains(.string(label.name)) }.count, incomplete: store.productiveReading.incomplete) }
                     } icon: { Image(systemName: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }
                     .tag(SidebarItem.label(label.id))
                     .contextMenu { Button("Edit Label…") { labelEditor = label }; Button(store.isFavorite(.label(label.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.label(label.id)) } }
@@ -143,11 +143,11 @@ struct SidebarView: View {
     private func newProject() {
         projectEditor = Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": .string(""), "color": .string("#e31e4b"), "order_index": .number(Double(store.projects.count))])
     }
-    @ViewBuilder private func count(_ value: Int) -> some View {
-        if value > 0 { Text("\(value)").font(.callout).monospacedDigit().foregroundStyle(.secondary).id(value).transition(.textSwap).animation(Transitions.Ease.smoothOut, value: value) }
+    @ViewBuilder private func count(_ value: Int, incomplete: Bool = false) -> some View {
+        if value > 0 || incomplete { Text((incomplete ? "≥" : "") + String(value)).font(.callout).monospacedDigit().foregroundStyle(.secondary).id(value).transition(.textSwap).animation(Transitions.Ease.smoothOut, value: value) }
     }
-    @ViewBuilder private func item(_ item: SidebarItem, _ title: String, count value: Int?, dropDay: String? = nil, dropProject: String? = nil) -> some View {
-        let label = Label { HStack { Text(title); Spacer(); if let value { count(value) } } } icon: { Image(systemName: item.symbol) }
+    @ViewBuilder private func item(_ item: SidebarItem, _ title: String, count value: Int?, incomplete: Bool = false, dropDay: String? = nil, dropProject: String? = nil) -> some View {
+        let label = Label { HStack { Text(title); Spacer(); if let value { count(value, incomplete: incomplete) } } } icon: { Image(systemName: item.symbol) }
             .tag(item).accessibilityLabel(title)
         if dropDay != nil || dropProject != nil {
             TaskDropTarget(onDrop: { ids in

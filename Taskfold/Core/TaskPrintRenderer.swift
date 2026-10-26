@@ -79,7 +79,7 @@ enum TaskPrintRenderer {
                 let inset = CGFloat(min(6, item.depth)) * 12
                 let printedNotes = options.notes || document.noteOnly ? noteBlocks(item.notes, inset: inset + (document.noteOnly ? 0 : 15)) : []
                 if !document.noteOnly {
-                    blocks.append(Block(text: inline((item.completed ? "☑ " : "☐ ") + item.title, size: 12.5, bold: true), inset: inset, following: item.metadata.isEmpty ? (printedNotes.isEmpty ? 0 : 26) : 20))
+                    blocks.append(Block(text: inline((!item.completable ? "" : item.completed ? "☑ " : "☐ ") + item.title, size: 12.5, bold: true), inset: inset, following: item.metadata.isEmpty ? (printedNotes.isEmpty ? 0 : 26) : 20))
                     if !item.metadata.isEmpty { blocks.append(Block(text: text(item.metadata, size: 9.5, color: secondary), inset: inset + 15, following: printedNotes.isEmpty ? 0 : 24)) }
                 }
                 blocks += printedNotes

@@ -725,7 +725,7 @@ final class Store {
     func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {
         let view: Record? = { if case .saved(let id) = scope { return record("saved_views", id: id) }; return nil }()
         let rule = view.flatMap { try? FilterRule(document: $0["query_ast"]) }
-        return TaskGrouping.queryGroups(tasks, rule: rule, by: viewValue(scope, field: "grouping", fallback: .string("none")).text, context: filterContext, today: calendarContext.today, timeZone: calendarContext.timeZone, includeCompleted: includeCompleted || view?["include_completed"].flag == true, now: calendarContext.minute)
+        return TaskGrouping.queryGroups(tasks, rule: rule, by: viewValue(scope, field: "grouping", fallback: .string("none")).text, context: filterContext, today: calendarContext.today, timeZone: calendarContext.timeZone, includeCompleted: includeCompleted || view?["include_completed"].flag == true, now: calendarContext.minute, work: productiveReading)
     }
     func captureDefaults(_ scope: TaskScope) -> [String: JSON] {
         guard case .saved(let id) = scope, let view = record("saved_views", id: id), let rule = try? FilterRule(document: view["query_ast"]), (try? rule.validate(in: filterContext)) != nil else { return [:] }
@@ -3167,6 +3167,17 @@ extension Store {
            var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
             heading["project_id"] = .null; heading["section_id"] = .null
             snapshot.tables["tasks"] = [heading]
+        }
+        if ProcessInfo.processInfo.arguments.contains("--heading-list-work-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true,
+           var heading = record("tasks", id: "f1810000-0000-4000-8000-000000000001"), TaskKind(heading) == .heading {
+            let label = "f6820000-0000-4000-8000-000000000001", view = "f6820000-0000-4000-8000-000000000002"
+            heading["priority"] = .number(3)
+            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000001", fields: ["priority": .number(1), "labels": .array([.string(label)])])
+            heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f5810000-0000-4000-8000-000000000004", fields: ["priority": .number(2)])
+            snapshot.tables["tasks"] = [heading]
+            snapshot.tables["labels"] = [Record(["id": .string(label), "user_id": .string(userID), "name": .string("Design work"), "color": .string("#7c5cbf")])]
+            snapshot.tables["saved_views"] = [Record(["id": .string(view), "user_id": .string(userID), "name": .string("Priority work"), "query_ast": FilterRule.predicate("priority", "1").document, "sort_by": .string("priority"), "grouping": .string("none")])]
         }
         do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }
     }

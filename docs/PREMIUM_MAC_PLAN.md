@@ -7605,3 +7605,54 @@ overlap the iPad toolbar; it is absent from normal app runs. The independent Mac
 Inbox/planner/Today attempts all stop at foreground activation while the Mac
 reports locked, before app-flow checks. Those remain unverified, with the prepared
 Mac host preserved for a later unlocked run.
+
+
+## Heading work in project, label and filter lists — 26 October 2026
+
+Default Project, All Tasks, Completed, label and ordinary saved-filter queries now
+read independent work beneath headings. Each child keeps its own labels, plans,
+priority and completion. Explicit root/subtask/parent predicates retain their
+existing checklist semantics, including mixed independent query sections. A
+mixed filter cannot reintroduce roots from unavailable projects.
+
+Manual project queries preserve the source outline. Existing sparse saved orders
+containing only heading roots expand their anchors to retain the grouped work;
+explicitly saved child positions remain respected. Project sections and widget
+ordering use the same rule. Native project/label badges count productive work,
+and affected badges show a lower bound when grouped data needs review. Unknown
+future task types remain reachable review context without work-count credit.
+
+Configured project, label and ordinary-filter widgets resolve primary published
+children without requiring an unrelated child filter. Missing child catalog
+members cannot appear as an empty ready list. Unreadable project/group data
+produces an unavailable/review state; ordinary missing-root deletion tolerance
+and duplicate suppression remain intact. Five actual SwiftUI source renders from
+the app-published synthetic snapshot were inspected, including populated project,
+label/filter and missing-child states. Installed WidgetKit action/route replay is
+still a separate runtime gate.
+
+Print capture validates the exact projected sources, retains an ordinary task's
+checklist once, and avoids recursively duplicating heading work already listed.
+Headings and unknown types receive no printed task total or completion box.
+Default-list print keeps the existing Include checklists option; explicit
+hierarchy-filter output retains its matching-only setting. The final print-review
+classification and search-hidden heading-anchor corrections are Core/build
+verified. Native list scenarios ran just before those two corrections; no new
+native print-dialog, exported-PDF or hidden-heading search-order acceptance is
+claimed by this milestone.
+
+191 iOS and 190 Mac focused Core checks pass, including 13 new cases per repo.
+App/widget/test builds and signatures pass. Both iPhone and iPad native scenarios
+pass project membership, exact child details/Cancel, own-label filtering, child
+editing, ordinary saved-filter membership, completion/Undo, and exact saved-root
+cold return into label/Completed views. Eight native screenshots were inspected.
+The Mac still reports locked; its independent project/label/filter case is built
+and prepared alongside the prior Inbox/planner/Today cases, with no new native
+Mac acceptance claim. See `p2-task-headings-list-evidence.json` and
+`headings-list-work/` for source variants, signatures, results and exact limits.
+
+Next: separate child activity history and broader calendar periods, then remaining
+native creation/conversion/race/legacy/largest-text/spoken acceptance, installed
+widgets, shared/service and cross-device adapters and generic provider mapping.
+Normal heading authoring remains disabled. This does not close headings or Px;
+all user-deferred release/provider/device gates remain unchanged.

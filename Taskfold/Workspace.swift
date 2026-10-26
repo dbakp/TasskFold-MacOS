@@ -706,7 +706,9 @@ final class Workspace {
         return rows.first { $0.id == key }?["ids"].list.map(\.text) ?? []
     }
     /// The app's default order for any list: priority bands first, the user's manual order inside each band.
-    func arranged(_ tasks: [Record], key: String) -> [Record] { DayPlacement.arranged(tasks, ids: placementIDs(key)) }
+    func arranged(_ tasks: [Record], key: String) -> [Record] {
+        key.hasPrefix("group:") ? DayPlacement.arrangedOutline(tasks, ids: placementIDs(key)) : DayPlacement.arranged(tasks, ids: placementIDs(key))
+    }
     func ordered(_ tasks: [Record], day: String) -> [Record] { arranged(tasks, key: day) }
 
     /// Moves tasks into a list at a slot. Days change the due date through the shared DayPlacement rules;

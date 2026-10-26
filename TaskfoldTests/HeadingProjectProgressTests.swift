@@ -243,8 +243,8 @@ extension HeadingProjectProgressTests {
         var child = task("child"); child["due_date"] = .string("2026-10-06")
         let parent = root([child]), cache = TaskCache(); cache.update([ordinary,parent])
         XCTAssertEqual(Set(cache.matching(TaskQuery(scope: .today, today: "2026-10-06")).map(\.title)), ["ordinary","child"])
-        XCTAssertEqual(cache.matching(TaskQuery(scope: .project(project))).map(\.id), [parent.id])
-        XCTAssertEqual(cache.matching(TaskQuery(scope: .all)).count, 2)
+        XCTAssertEqual(Set(cache.matching(TaskQuery(scope: .project(project))).map(\.title)), [parent.title,"child"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope: .all)).count, 3)
         XCTAssertEqual(cache.matching(TaskQuery(scope: .inbox)).map(\.id), [ordinary.id])
         var parser = try FilterParser("subtask", context: FilterContext(projects: [Record(["id": .string(project), "name": .string("Studio")])], sections: [], labels: [], userID: owner))
         let rule = try parser.parse()
@@ -380,5 +380,166 @@ extension HeadingProjectProgressTests {
         let request=InboxReviewRequest(workspace:.init(account:owner,generation:UUID()),tasks:[root]);XCTAssertTrue(request.ids.isEmpty)
         let widget=try widgetSnapshot(Snapshot(tables:["tasks":[root]]));XCTAssertNil(widget.inboxReading().count);XCTAssertEqual(widget.workIncomplete,true)
         XCTAssertEqual(root,original);let cache=TaskCache();cache.update([root]);XCTAssertTrue(cache.inboxProductiveReading().incomplete)
+    }
+}
+
+extension HeadingProjectProgressTests {
+    func listWorkFixture() -> (rows: [Record], projects: [Record], labels: [Record]) {
+        var first = task("first", children: [task("checklist")]); first["priority"] = .number(1); first["labels"] = .array([.string("child-label")])
+        var second = task("second"); second["priority"] = .number(2)
+        var heading = root([first, task("phase", heading: true, children: [second, task("finished", done: true)])]); heading["priority"] = .number(3); heading["labels"] = .array([.string("heading-label")]); heading["section_id"] = .string("design")
+        var ordinary = task("ordinary", children: [task("ordinary-checklist")]); ordinary["project_id"] = .string(project); ordinary["priority"] = .number(4)
+        let projects = [Record(["id":.string(project),"name":.string("Studio"),"user_id":.string(owner)])]
+        let labels = [Record(["id":.string("child-label"),"name":.string("Child")]),Record(["id":.string("heading-label"),"name":.string("Heading")])]
+        return ([heading,ordinary],projects,labels)
+    }
+    func listRule(_ text: String, fixture: (rows: [Record], projects: [Record], labels: [Record])) throws -> FilterRule {
+        var parser = try FilterParser(text, context: FilterContext(projects:fixture.projects,sections:[],labels:fixture.labels,userID:owner)); return try parser.parse()
+    }
+    func listQuery(_ rule: FilterRule, fixture: (rows: [Record], projects: [Record], labels: [Record])) -> TaskQuery {
+        TaskQuery(scope:.saved("view"),filter:rule,filterLabels:fixture.labels.map{FilterReference(id:$0.id,name:$0.name)},filterProjects:fixture.projects.map{FilterReference(id:$0.id,name:$0.name)},userID:owner)
+    }
+    func testProjectAllCompletedAndLabelQueriesReadOwnIndependentWork() {
+        let f=listWorkFixture(),cache=TaskCache();cache.update(f.rows)
+        let rows=cache.matching(TaskQuery(scope:.project(project)))
+        XCTAssertEqual(Set(rows.filter{TaskKind.mayComplete($0)}.map(\.title)),["first","second","ordinary"])
+        XCTAssertEqual(Set(cache.matching(TaskQuery(scope:.all)).map(\.id)),Set(rows.map(\.id)))
+        XCTAssertEqual(cache.matching(TaskQuery(scope:.completed)).map(\.title),["finished"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope:.label("child-label"),labelName:"Child")).map(\.title),["first"])
+        XCTAssertEqual(cache.matching(TaskQuery(scope:.label("heading-label"),labelName:"Heading")).map(\.title),["root"])
+        let first=rows.first{$0.title=="first"}!
+        XCTAssertEqual(first.string("project_id"),project);XCTAssertEqual(first.string("section_id"),"design");XCTAssertEqual(first.priority,1)
+        XCTAssertFalse(rows.contains{$0.title.contains("checklist")})
+    }
+    func testDefaultSavedFiltersMatchChildMetadataAndDoNotFlattenOrdinaryChecklists() throws {
+        let f=listWorkFixture(),cache=TaskCache();cache.update(f.rows)
+        for (text,expected) in [("p1",Set(["first"])),("search:second",Set(["second"])),("completed",Set(["finished"]))] {
+            let rule=try listRule(text,fixture:f);var query=listQuery(rule,fixture:f);query.includeCompleted=rule.includesCompletion
+            XCTAssertEqual(Set(cache.matching(query).map(\.title)),expected,text)
+        }
+        let rule=try listRule("p3",fixture:f)
+        XCTAssertEqual(cache.matching(listQuery(rule,fixture:f)).map(\.title),["root"])
+        // The general parser matcher retains its root-only default unless a list
+        // provides explicit productive membership.
+        let first=cache.productiveReading().presentation.first{$0.title=="first"}!
+        XCTAssertFalse(try listRule("p1",fixture:f).matches(first,today:"2026-10-06",userID:owner,labels:[],timeZone:calendar.timeZone.identifier))
+    }
+    func testMixedRootAndDefaultQuerySectionsKeepTheirDistinctMembership() throws {
+        let f=listWorkFixture(),cache=TaskCache();cache.update(f.rows)
+        let rule=try listRule("root, p1",fixture:f),rows=cache.matching(listQuery(rule,fixture:f))
+        XCTAssertEqual(Set(rows.map(\.title)),["root","ordinary","first"])
+        let context=FilterContext(projects:f.projects,sections:[],labels:f.labels,userID:owner)
+        let groups=TaskGrouping.queryGroups(rows,rule:rule,by:"none",context:context,today:"2026-10-06",timeZone:calendar.timeZone.identifier,work:cache.productiveReading())
+        XCTAssertEqual(groups.count,2);XCTAssertEqual(Set(groups[0].tasks.map(\.title)),["root","ordinary"]);XCTAssertEqual(groups[1].tasks.map(\.title),["first"])
+    }
+    func testExplicitSubtaskAndParentFiltersRetainChecklistAuthorityInMixedSections() throws {
+        let f=listWorkFixture(),cache=TaskCache();cache.update(f.rows)
+        let rule=try listRule("subtask, p1",fixture:f),rows=cache.matching(listQuery(rule,fixture:f))
+        XCTAssertTrue(rows.contains{$0.title=="checklist"});XCTAssertTrue(rows.contains{$0.title=="ordinary-checklist"})
+        let context=FilterContext(projects:f.projects,sections:[],labels:f.labels,userID:owner)
+        let groups=TaskGrouping.queryGroups(rows,rule:rule,by:"none",context:context,today:"2026-10-06",timeZone:calendar.timeZone.identifier,work:cache.productiveReading())
+        XCTAssertTrue(groups[0].tasks.contains{$0.title=="checklist"});XCTAssertEqual(groups[1].tasks.map(\.title),["first"])
+        let parent=try listRule("parent & !subtask",fixture:f)
+        XCTAssertEqual(Set(cache.matching(listQuery(parent,fixture:f)).map(\.title)),["root","ordinary"])
+    }
+    func testManualProjectOutlineRetainsHeadingOrderAndOwnChecklistContainment() {
+        let f=listWorkFixture(),cache=TaskCache();cache.update(f.rows)
+        let rows=cache.matching(TaskQuery(scope:.project(project),sort:"manual"))
+        XCTAssertEqual(rows.map(\.title),["root","first","phase","second","ordinary"])
+        XCTAssertEqual(rows.first{$0.title=="first"}?["subtasks"].list.count,1)
+    }
+    func testProjectLabelAndDefaultFilterWidgetsResolvePublishedPrimaryChildren() throws {
+        let f=listWorkFixture(),rule=try listRule("p1",fixture:f)
+        let view=Record(["id":.string("view"),"name":.string("Priority"),"query_ast":rule.document])
+        var prepared=Snapshot(tables:["tasks":f.rows,"projects":f.projects,"saved_views":[view]]);WidgetCompletion.prepare(&prepared)
+        let payload=WidgetProjection.payload(tasks:f.rows,projects:f.projects,account:owner,now:now,labels:f.labels,savedViews:[view],calendar:calendar,completionTokens:WidgetCompletion.tokens(prepared))
+        let snapshot=try JSONDecoder().decode(WidgetModel.WidgetSnapshot.self,from:JSONEncoder().encode(payload))
+        XCTAssertTrue(snapshot.nestedTasks?.isEmpty==true)
+        for (kind,id,titles) in [("project",project,Set(["first","second","ordinary"])),("label","child-label",Set(["first"])),("filter","view",Set(["first"]))] {
+            let list=try XCTUnwrap(snapshot.lists.first{$0.kind==kind && $0.recordID==id})
+            XCTAssertEqual(snapshot.listStatus(list.id,at:now,calendar:calendar),.ready)
+            let rows=snapshot.listTasks(list.id,at:now,calendar:calendar)
+            XCTAssertEqual(Set(rows.map(\.title)),titles);XCTAssertTrue(rows.filter{$0.id.hasPrefix("subtask:")}.allSatisfy{$0.completionToken != nil && $0.routeContext != nil})
+        }
+    }
+    func testMissingPublishedListMembersNeverProduceFalseAllClear() throws {
+        let f=listWorkFixture(),payload=WidgetProjection.payload(tasks:f.rows,projects:f.projects,account:owner,now:now,labels:f.labels,calendar:calendar)
+        var snapshot=try JSONDecoder().decode(WidgetModel.WidgetSnapshot.self,from:JSONEncoder().encode(payload));let list=try XCTUnwrap(snapshot.lists.first{$0.kind=="project"})
+        snapshot.tasks.removeAll{$0.title=="first"}
+        XCTAssertEqual(snapshot.listStatus(list.id,at:now,calendar:calendar),.unavailable);XCTAssertTrue(snapshot.listTasks(list.id,at:now,calendar:calendar).isEmpty)
+        var legacy=f.rows[0];legacy["subtasks"] = .array([.string("Legacy work")])
+        let damaged=WidgetProjection.payload(tasks:[legacy],projects:f.projects,account:owner,now:now,labels:f.labels,calendar:calendar)
+        let partial=try JSONDecoder().decode(WidgetModel.WidgetSnapshot.self,from:JSONEncoder().encode(damaged));let projectList=try XCTUnwrap(partial.lists.first{$0.kind=="project"})
+        XCTAssertTrue(projectList.invalid);XCTAssertEqual(partial.listStatus(projectList.id,at:now,calendar:calendar),.unavailable)
+    }
+    func testProductiveListCacheInvalidatesAfterKindLabelsAndCompletionChanges() throws {
+        let f=listWorkFixture(),cache=TaskCache();cache.update(f.rows);let rule=try listRule("p1",fixture:f),query=listQuery(rule,fixture:f)
+        XCTAssertEqual(cache.matching(query).map(\.title),["first"])
+        var ordinary=f.rows[0];ordinary["is_heading"] = .bool(false);cache.update([ordinary,f.rows[1]])
+        XCTAssertTrue(cache.matching(query).isEmpty);XCTAssertTrue(cache.matching(TaskQuery(scope:.label("child-label"))).isEmpty)
+        var changed=f.rows[0];changed["subtasks"] = SubtaskTree.changing(changed["subtasks"],id:"first",fields:["completed":.bool(true),"labels":.array([.string("new-label")])]);cache.update([changed,f.rows[1]])
+        XCTAssertTrue(cache.matching(query).isEmpty);XCTAssertTrue(cache.matching(TaskQuery(scope:.label("child-label"))).isEmpty)
+        XCTAssertEqual(Set(cache.matching(TaskQuery(scope:.completed)).map(\.title)),["first","finished"])
+    }
+}
+
+
+extension HeadingProjectProgressTests {
+    func testMixedDefaultSectionsDoNotReintroduceUnavailableProjectRoots() throws {
+        let f=listWorkFixture(),cache=TaskCache();var hidden=root([task("hidden-child")],id:"hidden");hidden["project_id"] = .string("unavailable");hidden["priority"] = .number(1)
+        cache.update(f.rows+[hidden]);let rule=try listRule("root, p1",fixture:f)
+        XCTAssertEqual(Set(cache.matching(listQuery(rule,fixture:f)).map(\.title)),["root","ordinary","first"])
+    }
+    func testProductivePrintKeepsOrdinaryChecklistOnceAndHeadingsOutOfWorkTotals() throws {
+        let f=listWorkFixture(),cache=TaskCache();cache.update(f.rows)
+        let rows=cache.matching(TaskQuery(scope:.project(project),sort:"manual"))
+        let document=try PrintDocument.capture(title:"Studio",subtitle:"",groups:[("",rows)],projects:f.projects,labels:f.labels,hierarchyRoots:f.rows,expandOrdinaryChecklists:true)
+        XCTAssertEqual(document.count,3);XCTAssertFalse(document.hierarchyResults)
+        let items=document.groups.flatMap(\.items)
+        XCTAssertEqual(items.map(\.title),["root","first","checklist","phase","second","ordinary","ordinary-checklist"])
+        XCTAssertEqual(items.filter(\.heading).map(\.title),["root","phase"])
+        let explicit=try PrintDocument.capture(title:"Filtered",subtitle:"",groups:[("",rows.filter{$0.title=="first"})],projects:f.projects,labels:f.labels,hierarchyRoots:f.rows)
+        XCTAssertEqual(explicit.groups.flatMap(\.items).map(\.title),["first"]);XCTAssertTrue(explicit.hierarchyResults)
+    }
+}
+
+
+extension HeadingProjectProgressTests {
+    func testIncompleteBadgesKeepKnownCountsAndScopeUncertaintyToTheirProject() {
+        var legacy=root([]);legacy["subtasks"] = .array([.string("Legacy work")])
+        var healthy=task("healthy");healthy["project_id"] = .string("other")
+        let reading=ProductiveTaskReading(tasks:[legacy,healthy])
+        XCTAssertEqual(reading.countLabel(2),"≥2");XCTAssertEqual(reading.countLabel(1,project:project),"≥1");XCTAssertEqual(reading.countLabel(1,project:"other"),"1")
+    }
+}
+
+
+extension HeadingProjectProgressTests {
+    func testUnknownTypesRemainReachableReviewContextWithoutWorkOrPrintCredit() throws {
+        var opaque=task("future");opaque["is_heading"] = .string("future-type");opaque["description"] = .string("Keep my opaque notes")
+        var nested=task("future-child");nested["is_heading"] = .number(2)
+        let heading=root([task("known"),nested]),cache=TaskCache();cache.update([opaque,heading])
+        let rows=cache.matching(TaskQuery(scope:.all));XCTAssertEqual(Set(rows.map(\.title)),["future","root","known","future-child"])
+        XCTAssertEqual(cache.productiveReading().work.map(\.title),["known"]);XCTAssertTrue(cache.productiveReading().incomplete)
+        XCTAssertEqual(rows.first{$0.title=="future"}?.string("description"),"Keep my opaque notes")
+        let document=try PrintDocument.capture(title:"Work",subtitle:"",groups:[("",[opaque])],projects:[],labels:[])
+        XCTAssertEqual(document.count,0);XCTAssertFalse(document.groups[0].items[0].completable);XCTAssertTrue(document.groups[0].items[0].metadata.contains("needs review"))
+    }
+}
+
+
+extension HeadingProjectProgressTests {
+    func testSparseProjectHeadingOrderKeepsWorkTogetherAndRespectsExplicitChildOrder() throws {
+        let a=root([task("a-child")],id:"a"),b=root([task("b-child")],id:"b"),cache=TaskCache();cache.update([a,b])
+        let rows=cache.matching(TaskQuery(scope:.project(project),sort:"manual"))
+        XCTAssertEqual(DayPlacement.arrangedOutline(rows,ids:["b","a"]).map(\.title),["b","b-child","a","a-child"])
+        XCTAssertEqual(DayPlacement.arrangedOutline(rows.filter{TaskKind.mayComplete($0)},ids:["b","a"]).map(\.title),["b-child","a-child"],"Search may hide headings without losing their saved anchors")
+        let child=try XCTUnwrap(rows.first{$0.title=="a-child"})
+        XCTAssertEqual(DayPlacement.arrangedOutline(rows,ids:[child.id,"b","a"]).map(\.title),["a-child","b","b-child","a"])
+        let projects=[Record(["id":.string(project),"name":.string("Studio")])]
+        let order=Record(["id":.string("group:"+project+":none"),"user_id":.string(owner),"ids":.array([.string("b"),.string("a")])])
+        let payload=WidgetProjection.payload(tasks:[a,b],projects:projects,account:owner,now:now,calendar:calendar,viewOrders:[order])
+        let snapshot=try JSONDecoder().decode(WidgetModel.WidgetSnapshot.self,from:JSONEncoder().encode(payload)),list=try XCTUnwrap(snapshot.lists.first)
+        XCTAssertEqual(snapshot.listTasks(list.id,at:now,calendar:calendar).map(\.title),["b-child","a-child"])
     }
 }

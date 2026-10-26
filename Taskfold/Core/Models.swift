@@ -1428,8 +1428,17 @@ final class TaskCache {
         let candidates: [Record]
         if let filter = query.filter, filter.usesTaskHierarchy {
             guard let rows = try? hierarchyCandidates(for: filter, projects: query.filterProjects, userID: query.userID) else { return [] }
-            candidates = rows
-        } else { candidates = incoming.scope.usesProductiveWork ? productiveReading().presentation : tasks }
+            if filter.hasProductiveBranches {
+                let visible = Set(Dictionary(grouping: query.filterProjects, by: \.id).filter { $0.value.count == 1 && !$0.value[0].unavailable }.keys)
+                let work = productiveReading().presentation.filter { $0.string("project_id").isEmpty || visible.contains($0.string("project_id")) }
+                var seen = Set<String>()
+                candidates = (rows + work).filter { seen.insert($0.id).inserted }
+            } else { candidates = rows }
+        } else {
+            let reading = productiveReading()
+            if incoming.sort == "manual", case .project = incoming.scope { candidates = reading.outline }
+            else { candidates = reading.presentation }
+        }
         let matched = candidates.filter { task in
             if query.scope == .completed { if !task.completed { return false } }
             else if !query.includeCompleted && task.completed && !(query.filter?.hasQuerySections == true && query.filter?.includesCompletion == true) { return false }
@@ -1437,8 +1446,8 @@ final class TaskCache {
             if !query.text.isEmpty && !(task.title + " " + task.string("description")).localizedCaseInsensitiveContains(query.text) { return false }
             if let filter = query.filter {
                 if case .sections(let rules) = filter {
-                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, assignments: query.filterAssignments) }) else { return false }
-                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, assignments: query.filterAssignments) { return false }
+                    guard rules.contains(where: { (query.includeCompleted || $0.includesCompletion || !task.completed) && $0.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, productiveWork: productiveReading().contains(task.id), assignments: query.filterAssignments) }) else { return false }
+                } else if !filter.matches(task, today: query.today, userID: query.userID, labels: query.filterLabels, timeZone: query.timeZone, projects: query.filterProjects, sections: query.filterSections, nameBindings: nameBindings, now: query.now, datePreferences: query.datePreferences, people: query.filterPeople, productiveWork: productiveReading().contains(task.id), assignments: query.filterAssignments) { return false }
             }
             let day = FilterRule.plannedDay(task, timeZone: query.timeZone)
             switch query.scope {
@@ -1468,6 +1477,20 @@ final class TaskCache {
 
 /// Day placement and due-date mutations share the durable, account-owned sync queue.
 enum DayPlacement {
+    /// Existing project orders may contain only heading roots. Expand those
+    /// sparse anchors without overriding any child positions explicitly saved.
+    static func arrangedOutline(_ tasks: [Record], ids: [String]) -> [Record] {
+        let explicit = Set(ids)
+        let anchors = Set(tasks.compactMap { task -> String? in
+            if let root = SubtaskTree.referencePath(task.id)?.first { return root }
+            return TaskKind(task) == .heading ? task.id : nil
+        })
+        let groups = Dictionary(grouping: tasks) { SubtaskTree.referencePath($0.id)?.first ?? $0.id }
+        let expanded = ids.flatMap { id in
+            [id] + (anchors.contains(id) ? (groups[id] ?? []).filter { !explicit.contains($0.id) }.map(\.id) : [])
+        }
+        return arranged(tasks, ids: expanded)
+    }
     static let table = "view_orders"
     static func ordered(_ tasks: [Record], ids: [String]) -> [Record] {
         let ranks = Dictionary(ids.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
@@ -1515,9 +1538,9 @@ enum DayPlacement {
 }
 
 extension TaskScope {
-    /// Global dated lists show independent work beneath headings. Project and
-    /// explicit hierarchy filters retain their own tree/membership semantics.
-    var usesProductiveWork: Bool { self == .today || self == .upcoming || self == .inbox }
+    /// Default lists expose independent work. Explicit hierarchy predicates use
+    /// their own candidate semantics in TaskCache.
+    var usesProductiveWork: Bool { true }
     var preferenceKey: String {
         switch self {
         case .today: return "today"
@@ -1850,13 +1873,16 @@ enum WidgetProjection {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         let context = FilterContext(projects: projects, sections: sections, labels: labels, userID: account, people: people, datePreferences: preferences, collaborators: collaborators, assignments: assignments)
         let cache = TaskCache(); cache.update(tasks)
+        let workScope = ProjectWorkScope(tasks: tasks)
+        let incompleteProjects = workScope.incompleteProjects.union(workScope.items.filter { $0.navigationTask == nil }.map { $0.root.string("project_id").lowercased() })
         let settings = viewPreferences.filter { $0.string("user_id") == account }
         let orders = viewOrders.filter { $0.string("user_id") == account }
         func sort(_ scope: TaskScope) -> String { settings.first { $0.id == scope.preferenceKey }?.fields["sort_by"]?.text ?? "manual" }
         func supportedSort(_ value:String) -> Bool { ["manual","priority","title","date","deadline","duration"].contains(value) }
         func arranged(_ rows: [Record], key: String, sort: String) -> [Record] {
             guard ["manual", "priority"].contains(sort) else { return rows }
-            return DayPlacement.arranged(rows, ids: orders.first { $0.id == key }?["ids"].list.map(\.text) ?? [])
+            let ids = orders.first { $0.id == key }?["ids"].list.map(\.text) ?? []
+            return key.hasPrefix("group:") ? DayPlacement.arrangedOutline(rows, ids: ids) : DayPlacement.arranged(rows, ids: ids)
         }
         func projection(_ groups: [TaskGrouping.Group]) -> (ids: [String], groups: [JSON]) {
             var seen=Set<String>(), ids:[String]=[], values:[JSON]=[]
@@ -1880,7 +1906,7 @@ enum WidgetProjection {
         }
         var result = projects.filter { !$0.id.isEmpty }.map { project in
             let scope=TaskScope.project(project.id), ordering=sort(scope)
-            guard supportedSort(ordering) else { return row(project,kind:"project",days:[:],error:true) }
+            guard supportedSort(ordering), !incompleteProjects.contains(project.id.lowercased()) else { return row(project,kind:"project",days:[:],error:true) }
             let rows=cache.matching(TaskQuery(scope:scope,sort:ordering))
             let selected=OrganizationOrder.sorted(sections.filter { $0.string("project_id")==project.id })
             let valid=Set(selected.map(\.id))
@@ -1891,7 +1917,7 @@ enum WidgetProjection {
         }
         result += labels.filter { !$0.id.isEmpty }.map { label in
             let scope=TaskScope.label(label.id), ordering=sort(scope)
-            guard supportedSort(ordering) else { return row(label,kind:"label",days:[:],error:true) }
+            guard supportedSort(ordering), !cache.productiveReading().incomplete else { return row(label,kind:"label",days:[:],error:true) }
             let rows=cache.matching(TaskQuery(scope:scope,sort:ordering,labelName:label.name))
             let value=projection([TaskGrouping.Group(id:"all",name:"",tasks:arranged(rows,key:"scope:"+scope.preferenceKey,sort:ordering))])
             return row(label,kind:"label",days:["*":value.ids],groups:["*":value.groups])
@@ -1901,6 +1927,7 @@ enum WidgetProjection {
                 result.append(row(view, kind: "filter", days: [:], error: true)); continue
             }
             if rule.usesTaskHierarchy, (try? cache.hierarchyCandidates(for: rule, projects: context.projectReferences, userID: account)) == nil { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
+            if rule.hasProductiveBranches, cache.productiveReading().incomplete { result.append(row(view, kind: "filter", days: [:], error: true)); continue }
             let ordering=view.fields["sort_by"]?.text ?? "manual", grouping=view.fields["grouping"]?.text ?? "none"
             guard supportedSort(ordering),["none","project","priority","date","deadline"].contains(grouping) else { result.append(row(view,kind:"filter",days:[:],error:true));continue }
             var days: [String: [String]] = [:], dayGroups:[String:[JSON]]=[:]
@@ -1912,7 +1939,7 @@ enum WidgetProjection {
                     filterProjects: context.projectReferences,
                     filterSections: sections.map { FilterReference(id: $0.id, name: $0.name, projectID: $0.string("project_id").isEmpty ? nil : $0.string("project_id")) }, filterPeople: context.personReferences, filterAssignments: assignments, userID: account, timeZone: calendar.timeZone.identifier)
                 let matches=cache.matching(query).filter{!$0.completed}
-                var groups=TaskGrouping.queryGroups(matches,rule:rule,by:grouping,context:context,today:day,timeZone:calendar.timeZone.identifier,now:query.now)
+                var groups=TaskGrouping.queryGroups(matches,rule:rule,by:grouping,context:context,today:day,timeZone:calendar.timeZone.identifier,now:query.now,work:cache.productiveReading())
                 for index in groups.indices {
                     groups[index].tasks=arranged(groups[index].tasks,key:"scope:view:"+view.id+":group:"+groups[index].id,sort:ordering)
                     // Query text stays in the app. Ordinals retain its displayed section order.

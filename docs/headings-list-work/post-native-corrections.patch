@@ -1,0 +1,24 @@
+--- native-accepted/Taskfold/Core/Models.swift
++++ final/Taskfold/Core/Models.swift
+@@ -1481,7 +1481,10 @@
+     /// sparse anchors without overriding any child positions explicitly saved.
+     static func arrangedOutline(_ tasks: [Record], ids: [String]) -> [Record] {
+         let explicit = Set(ids)
+-        let anchors = Set(tasks.filter { TaskKind($0) == .heading && SubtaskTree.referencePath($0.id) == nil }.map(\.id))
++        let anchors = Set(tasks.compactMap { task -> String? in
++            if let root = SubtaskTree.referencePath(task.id)?.first { return root }
++            return TaskKind(task) == .heading ? task.id : nil
++        })
+         let groups = Dictionary(grouping: tasks) { SubtaskTree.referencePath($0.id)?.first ?? $0.id }
+         let expanded = ids.flatMap { id in
+             [id] + (anchors.contains(id) ? (groups[id] ?? []).filter { !explicit.contains($0.id) }.map(\.id) : [])
+--- native-accepted/Taskfold/Core/PrintDocument.swift
++++ final/Taskfold/Core/PrintDocument.swift
+@@ -78,6 +78,6 @@
+             })
+         }
+         guard bytes <= 16_000_000 else { throw AppFailure(message: "Choose a smaller list to print completely.") }
+-        return Self(title: title, subtitle: subtitle, groups: captured, noteOnly: noteOnly, hierarchyResults: hierarchyRoots != nil)
++        return Self(title: title, subtitle: subtitle, groups: captured, noteOnly: noteOnly, hierarchyResults: hierarchyRoots != nil && !expandOrdinaryChecklists)
+     }
+ }

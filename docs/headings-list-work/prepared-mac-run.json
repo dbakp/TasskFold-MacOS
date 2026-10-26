@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-26",
+  "status": "Prepared and built; native access still reports Mac locked; no runtime acceptance claimed",
+  "target": "TaskfoldUITests",
+  "class": "TaskfoldMacUITests",
+  "case": "testHeadingProjectLabelFilterCompletionUndoAndColdReturn",
+  "preservedHost": "/tmp/taskfold-mac-recovery-host",
+  "preservedBuild": "/tmp/taskfold-mac-recovery-build",
+  "otherPreparedCases": [
+    "testHeadingInboxGroupMoveReviewCancelUndoAndColdReturn",
+    "testHeadingPlannerChildScheduleUndoCompleteAndColdReturn",
+    "testHeadingTodayChildDetailsCompletionUndoAndColdReturn"
+  ]
+}
