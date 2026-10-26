@@ -59,6 +59,79 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     }
 }
 
+/// Explicit persisted task behavior. Missing/null is the legacy ordinary task;
+/// unknown future values never gain completion authority from a permissive read.
+enum TaskKind: Equatable, Sendable {
+    case task, heading, unsupported
+    init(_ row: Record) {
+        switch row["is_heading"] {
+        case .null, .bool(false): self = .task
+        case .bool(true): self = .heading
+        default: self = .unsupported
+        }
+    }
+    static func mayComplete(_ row: Record) -> Bool { Self(row) == .task }
+    private static func validHeading(_ row: Record) -> Bool {
+        Self(row) != .unsupported && (Self(row) != .heading || row["completed"] == .bool(false) && row["completed_at"] == .null)
+    }
+    /// Iterate only recognized checklist containment, never arbitrary metadata.
+    /// Normal legacy strings/containers are preserved rather than reinterpreted.
+    static func checklistNodes(_ value: JSON) -> [Record]? {
+        if value == .null { return [] }
+        guard case .array(let list) = value else { return [] }
+        var stack = list.map { ($0, 1) }, nodes: [Record] = []
+        while let (item, depth) = stack.popLast() {
+            guard depth <= 32, nodes.count < 100_000 else { return nil }
+            guard case .object(let fields) = item else { continue }
+            let row = Record(fields); nodes.append(row)
+            if case .array(let children) = row["subtasks"] { stack.append(contentsOf: children.map { ($0, depth + 1) }) }
+        }
+        return nodes
+    }
+    static func permits(_ change: Mutation, existing: Record?) -> Bool {
+        guard change.table == "tasks", ["POST", "PATCH"].contains(change.method) else { return true }
+        if let existing, let type = change.fields["is_heading"] {
+            guard Self(existing) != .unsupported, !(Self(existing) == .heading && type == .null) else { return false }
+        }
+        if change.method == "POST" || change.fields["is_heading"] != nil || TaskCompletionRevision.touches(change.fields) {
+            let resulting = Record((existing?.fields ?? [:]).merging(change.fields) { _, new in new })
+            guard validHeading(resulting) else { return false }
+        }
+        if let children = change.fields["subtasks"], children != existing?["subtasks"] {
+            guard let next = checklistNodes(children) else { return false }
+            for child in next {
+                guard validHeading(child) else { return false }
+                if Self(child) == .heading { guard !child.id.isEmpty, child.id.count <= 400 else { return false } }
+            }
+            // An old checklist writer cannot erase the new behavior merely by
+            // dropping an unknown field from an otherwise identical child ID.
+            let old = checklistNodes(existing?["subtasks"] ?? .null) ?? []
+            let headings = Set(old.filter { Self($0) == .heading }.map(\.id))
+            for row in next where headings.contains(row.id) {
+                guard case .bool = row["is_heading"] else { return false }
+            }
+        }
+        return true
+    }
+    static func change(_ row: Record, heading: Bool) throws -> Mutation? {
+        guard Self(row) != .unsupported, UUID(uuidString: row.id) != nil,
+              UUID(uuidString: row.string("task_generation")) != nil else {
+            throw AppFailure(message: "Reopen this task before changing its type. Your work is unchanged.")
+        }
+        guard Self(row) != (heading ? .heading : .task) else { return nil }
+        guard !heading || !row.completed else {
+            throw AppFailure(message: "Reopen the task before making it a heading.")
+        }
+        var fields: [String: JSON] = ["is_heading": .bool(heading)]
+        if heading {
+            if row["completed"] != .bool(false) { fields["completed"] = .bool(false) }
+            if row["completed_at"] != .null { fields["completed_at"] = .null }
+        }
+        return Mutation(table: "tasks", recordID: row.id, method: "PATCH", fields: fields,
+                        baseline: TaskCompletionRevision.editBaseline(for: fields, from: row))
+    }
+}
+
 enum Dates {
     static func day(_ date: Date) -> String {
         let parts = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: date)
@@ -123,14 +196,18 @@ enum TaskGeneration {
 
 /// A local prediction follows the server counter; only the server owns confirmed revisions.
 enum TaskCompletionRevision {
-    static func touches(_ fields: [String: JSON]) -> Bool { fields["completed"] != nil || fields["completed_at"] != nil }
+    static func touches(_ fields: [String: JSON]) -> Bool { fields["completed"] != nil || fields["completed_at"] != nil || fields["is_heading"] != nil }
     static func editBaseline(for fields: [String: JSON], from original: Record) -> [String: JSON] {
         var baseline = Dictionary(uniqueKeysWithValues: fields.keys.map { ($0, original[$0]) })
         baseline["task_generation"] = original["task_generation"]
         if TeamTaskRecurrence.touches(fields) {
             for key in TeamTaskRecurrence.cohort { baseline[key] = original[key] }
         }
-        if touches(fields) { baseline["completion_version"] = original.fields["completion_version"] ?? .number(0) }
+        if touches(fields) {
+            baseline["completion_version"] = original.fields["completion_version"] ?? .number(0)
+            if original.fields["is_heading"] != nil || fields["is_heading"] != nil { baseline["is_heading"] = original["is_heading"] }
+        }
+        if fields["is_heading"] != nil { baseline["completed"] = original["completed"]; baseline["completed_at"] = original["completed_at"] }
         return baseline
     }
     static func capturing(_ change: Mutation, existing: Record?) -> Mutation {
@@ -159,7 +236,7 @@ enum TaskCompletionRevision {
     static func applying(_ fields: [String: JSON], to old: Record) -> Record {
         var row = old; row.fields.merge(fields.filter { $0.key != "task_generation" }) { _, new in new }
         if fields["completion_version"] == nil, touches(fields),
-           old.completed != row.completed || instant(old["completed_at"]) != instant(row["completed_at"]) {
+           old.completed != row.completed || instant(old["completed_at"]) != instant(row["completed_at"]) || TaskKind(old) != TaskKind(row) {
             row["completion_version"] = .number(Double(old["completion_version"].integer + 1))
         }
         return row
@@ -430,6 +507,7 @@ struct Snapshot: Codable, Equatable, Sendable {
         let assignmentBefore = change.table == "tasks" ? rows.first { $0.id == change.recordID } : nil
         // A fetched recreated task must remain visible while its older queued action needs review.
         if !TaskGeneration.permitsLocalAction(change, existing: rows.first(where: { $0.id == change.recordID })) { return }
+        if !TaskKind.permits(change, existing: rows.first(where: { $0.id == change.recordID })) { return }
         if change.table == ReminderSnooze.table, change.method == "POST", change.insertOnly != true {
             let index = rows.firstIndex { $0.id == change.recordID }
             guard let replayed = ReminderAutomatic.replay(change, onto: index.map { rows[$0] }) else { return }
@@ -1033,7 +1111,10 @@ struct EditHistory {
                 continue
             }
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
-                let fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
+                var fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
+                if change.table == "tasks", change.method == "PATCH", change.fields["is_heading"] != nil, old["is_heading"] == .null {
+                    fields["is_heading"] = .bool(false) // An explicit ordinary task, not removal of an unknown field.
+                }
                 inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(change.fields, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope))
                 var forward = change
                 if change.method == "PATCH" { forward.baseline = change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: change.fields, from: old) : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
@@ -1511,7 +1592,7 @@ enum TaskCompletion {
         return toggle(task, tasks: tasks, at: now, calendar: input, account: account)
     }
     static func toggle(_ task: Record, tasks: [Record], at now: Date = Date(), calendar input: Calendar = .current, account: String? = nil) -> [Mutation] {
-        guard !task.id.isEmpty else { return [] }
+        guard !task.id.isEmpty, TaskKind.mayComplete(task) else { return [] }
         let stamp = ISO8601DateFormatter().string(from: now)
         let fields: [String: JSON] = ["completed": .bool(!task.completed), "completed_at": task.completed ? .null : .string(stamp)]
         var changes = [Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: fields,

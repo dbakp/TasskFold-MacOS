@@ -24,7 +24,7 @@ enum WidgetCompletion {
         snapshot.widgetCompletion.states = snapshot.widgetCompletion.states.filter { ids.contains($0.key) }
         for task in tasks where !task.id.isEmpty {
             let id = task.id.lowercased()
-            var values: [JSON] = [.bool(task.completed), .string(instant(task.string("created_at"))), .string(instant(task.string("completed_at"))), task["completion_version"]]
+            var values: [JSON] = [.bool(task.completed), .string(instant(task.string("created_at"))), .string(instant(task.string("completed_at"))), task["completion_version"], task["is_heading"]]
             if !task.string("task_generation").isEmpty { values.append(task["task_generation"]) }
             let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
             let signature = (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) } ?? ""
@@ -65,11 +65,13 @@ enum WidgetCompletion {
             guard let index = hierarchy(snapshot, account: account), let selection = index.selection(request.taskID),
                   let state = snapshot.widgetCompletion.states[request.taskID], state.token == request.token,
                   childSignature(selection.item) == state.signature else { return .stale }
+            guard TaskKind.mayComplete(selection.item.record) else { return .stale }
             if selection.item.record.completed { return .saved }
             guard let changes = try? TaskHierarchyIndex.changes([.completion(selection, completed: true, at: request.createdAt)], accessibleRoots: snapshot.tables["tasks"] ?? [], projects: snapshot.tables["projects"] ?? [], workspace: index.workspace) else { return .stale }
             return .complete(changes)
         }
         guard let task = snapshot.tables["tasks"]?.first(where: { $0.id.lowercased() == WidgetTaskIdentity.key(request.taskID) }) else { return .stale }
+        guard TaskKind.mayComplete(task) else { return .stale }
         if task.completed { return .saved }
         guard !ProjectOrganization.archived(task.string("project_id"), in: snapshot.tables["projects"] ?? []) else { return .stale }
         guard snapshot.widgetCompletion.states[task.id.lowercased()]?.token == request.token else { return .stale }

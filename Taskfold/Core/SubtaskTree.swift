@@ -420,6 +420,7 @@ struct TaskHierarchyIndex {
                     throw failure("This subtask changed while you were editing it. Reopen its current details to keep both versions.")
                 }
                 if fields["completed"] != nil || fields["completed_at"] != nil {
+                    guard TaskKind.mayComplete(now.source) else { throw failure("Headings stay open. Select tasks to complete.") }
                     guard case .bool(let completed)? = fields["completed"], let stamp = fields["completed_at"],
                           completed ? (stamp.text.isEmpty == false && ISO8601DateFormatter().date(from: stamp.text) != nil) : stamp == .null else {
                         throw failure("Choose a valid subtask completion state and timestamp.")
@@ -515,6 +516,10 @@ enum TaskSelectionPlan {
         var rootRequests: [String: Request] = [:]
         for request in requests {
             let row = request.task
+            if case .completion = request.action {
+                let current = SubtaskTree.referencePath(row.id) != nil ? index.item(row.id)?.source : roots[row.id]
+                guard let current, TaskKind.mayComplete(current) else { throw failure("Headings stay open. Select tasks to complete.") }
+            }
             if SubtaskTree.referencePath(row.id) != nil {
                 guard let selected = index.selection(row.id), selected.item.record == row else { throw failure("A selected subtask changed. Select its current row again.") }
                 selectedChildren[row.id] = selected

@@ -1,0 +1,22 @@
+Actual team service correctly returned default-off PT503; fixture now asserts that gate before enabling its own disposable configuration and asserting heading-specific 23514.
+
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: actual team completion service rejects heading
++ actual - expected
+
++ 'PT503'
+- '23514'
+    at check (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-task-headings.mjs:8:58)
+    at file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-task-headings.mjs:77:91
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'PT503',
+  expected: '23514',
+  operator: 'deepStrictEqual'
+}
+
+Node.js v20.19.0

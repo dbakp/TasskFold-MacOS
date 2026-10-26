@@ -1,0 +1,15 @@
+Host command argument limit on large fixture; moved the unchanged 2,000-node fixture generation inside SQL.
+
+file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/postgres-fixture.mjs:39
+      const failure = new Error("Owned PostgreSQL query failed");
+                      ^
+
+Error: Owned PostgreSQL query failed
+    at Object.raw (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/postgres-fixture.mjs:39:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async create (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-task-headings.mjs:19:3)
+    at async file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-task-headings.mjs:67:114 {
+  code: 255
+}
+
+Node.js v20.19.0

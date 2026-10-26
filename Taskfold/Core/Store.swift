@@ -1405,6 +1405,11 @@ final class Store {
                 error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
                 return false
             }
+            guard TaskKind.permits(change, existing: record(change.table, id: change.recordID)) else {
+                snapshot = old
+                error = "This task type or checklist needs review before completion. Your work is unchanged."
+                return false
+            }
             if let scope = change.teamTaskScope {
                 do {
                     guard !localMode, scope.account == userID, scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditScope.invalid }
@@ -1544,7 +1549,10 @@ final class Store {
     }
 
     /// Completes or reopens several tasks as one undoable change.
-    func toggleAll(_ tasks: [Record]) { let changes = tasks.flatMap(toggleChanges); if !changes.isEmpty { commit(changes) } }
+    func toggleAll(_ tasks: [Record]) {
+        guard tasks.allSatisfy(TaskKind.mayComplete) else { error = "Headings stay open. Select tasks to complete."; return }
+        let changes = tasks.flatMap(toggleChanges); if !changes.isEmpty { commit(changes) }
+    }
     /// Patches the same fields on several tasks as one undoable change.
     func update(_ ids: [String], fields: [String: JSON]) {
         let changes = ids.compactMap { id -> Mutation? in

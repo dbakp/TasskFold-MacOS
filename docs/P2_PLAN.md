@@ -4,6 +4,13 @@ Updated 26 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Non-completable headings now have a source-only persisted contract and completion
+safety foundation in both clients. Creation/type controls remain unexposed. Next
+is native presentation and captured type editing, followed by counts, full
+interaction and portability integration; see `TASK_HEADINGS.md` and
+`p2-task-headings-contract-evidence.json`. This does not close headings or rank 3.
+The outstanding rank-6 and Watch acceptance below remains open.
+
 Native completion recovery and permanent encrypted selection drafts are implemented
 in both clients. Missing-source/occurrence authored task/comment work now also has
 an explicit encrypted saved-edits path with review, copy and export. After cold startup, readable blocked individual/group actions can

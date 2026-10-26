@@ -7202,3 +7202,38 @@ native typing/dictation/VoiceOver or wider layouts. Watch stays disabled and
 unembedded in shipping inputs. Wear OS, the rest of Px and every user-deferred
 release/provider/device gate remain open. The Mac gains no Watch target,
 transport or iOS build dependency.
+
+
+### 2026-10-26 — Task-heading contract and completion safety (rank 3 in progress)
+
+Both repository-owned clients now recognize an explicit persisted heading type,
+retain its details and refuse completion/recurring successors. Root/child mixed
+completion selections reject the whole action, while an ordinary descendant
+remains completable. Widget actions reject headings without success feedback and
+rotate their token after a root type change. Type edits capture generation and
+completion authority; Undo restores explicit ordinary type rather than removing
+the field. Missing/NULL/false remains ordinary and `* ` titles remain literal.
+
+The source-only nullable database column preserves legacy ordinary defaults and
+whole-row baselines. Its invoker trigger rejects root/nested heading completion
+and omission by older checklist writers. The personal patch service captures type
+changes without bypassing its existing team guard, generation, merge or RLS. The
+actual team completion service rejects headings while legacy ordinary team
+completion still succeeds. No hosted schema or configuration changed.
+
+Each repo passes 355 selected Core tests (one existing optional transport skip,
+zero failures), 18 new heading cases, 58 real isolated PostgreSQL checks with
+advisors and an arm64 Debug build-for-testing. Strict app signatures verify;
+the Mac app is development signed and the iOS Simulator build is ad hoc compile
+evidence only. Both disposable SQL containers were removed. Earlier harness
+failures and their corrections are retained with the accepted reports.
+
+No native/spoken heading acceptance is claimed. Mac controls still reported a
+locked screen after the unlock reply; earlier UI Automation authentication also
+remains pending. No temporary app was launched for this stage. Heading creation
+and type controls remain unexposed; native display/editing, counts/projections,
+all completion channels, portability, shared adapters/capabilities and native
+acceptance remain open. See TASK_HEADINGS.md and
+p2-task-headings-contract-evidence.json. Headings, rank 3, rank 6, Watch and the
+full Px objective stay active. All user-deferred rollout/release/provider/device
+work remains deferred.
