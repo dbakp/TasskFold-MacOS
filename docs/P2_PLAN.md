@@ -5,7 +5,8 @@ Updated 26 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 ## Current implementation focus
 
 Rank 3 remains active. Headings have a compatible persisted contract and gated
-local native editors; normal authoring stays off. Productive child work now feeds
+native editors, including separately negotiated personal cloud support; normal
+authoring stays off. Productive child work now feeds
 Today/Upcoming, Inbox, project/label/filter lists, primary widgets, day planning,
 week/month/year calendars, current project progress, combined activity and Insights.
 Separate immutable child history, custody and reviewed project-adoption history
@@ -22,8 +23,9 @@ acceptance on Mac, iPhone and iPad; see PRIVATE_HEADING_WORKFLOWS.md.
 
 Reusable definition authoring now admits explicitly mapped CSV headings in a
 signed-in private workspace and offers root/nested Task / Heading editing. This
-uses the separate client opt-in; personal live heading creation keeps its existing
-guard. See DEFINITION_HEADING_AUTHORING.md for acceptance and remaining limits.
+uses the separate client opt-in; personal live heading creation now checks its
+own service compatibility signal. See DEFINITION_HEADING_AUTHORING.md and
+PERSONAL_TASK_HEADINGS.md for acceptance and remaining limits.
 
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
 widget acceptance, provider/file-handoff and cross-device checks, flat task-row
@@ -5329,3 +5331,29 @@ keyboard and unobstructed Mac visual checks remain open, alongside source/accoun
 races, external-provider delivery, spoken/largest-text and cross-device work.
 No print job, real data, hosted configuration, normal authoring flag or user-
 deferred release/provider/reminder/upgrade setting changed. Rank 3/Px stay active.
+
+## 26 October — personal cloud heading compatibility
+
+Connected the personal heading adapter to a separate exact service compatibility
+signal. Cached support allows an opted-in personal draft; fresh preflight support
+controls delivery. Missing support keeps the optimistic work and durable intention
+visible, without team-access quarantine or automatic legacy fallback. Restored
+support resumes the original queued command. The signal does not authorize team
+writes; ordinary personal editing stays independent.
+
+Each owned repo passes 119 selected Core cases and 36 actual-role isolated SQL
+checks, including partial-install refusal and unchanged grants/RLS. Three signed
+installed scenarios pass on each Mac/iPhone/iPad (nine final native passes): a lost
+reply followed by a cold unsupported-service pause and exact retry, support removed
+before Save/autosave with no write and preserved cold queue, and ordinary editing
+with heading controls unavailable. The HTTP peer exercises Store sync and Backend
+requests; genuine hosted transport and paired-device acceptance remain separate.
+The three retained images were inspected; phone/tablet images show the test wrapper
+and confirmed empty queue, while the Mac image shows the actual heading inspector.
+
+See PERSONAL_TASK_HEADINGS.md and personal-task-headings/. Root cloud transport
+is now accepted to that scope. Wider nested/workflow/import/restore, personal
+Undo/Redo, source/account races, spoken/largest-text, installed widgets and cross-
+device acceptance remain open. Normal app flags and hosted configuration were not
+changed. Older-client rollout, release/distribution, remote reminders and other
+user-deferred work stays deferred; rank 3/Px remain active.

@@ -1,0 +1,224 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-personal-headings-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378" -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TaskfoldUITests/testPersonalHeadingLostReplyPauseColdExactRetry" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPersonalHeadingMissingSupportBeforeSaveKeepsVisibleQueue" "-only-testing:TaskfoldUITests/TaskfoldUITests/testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing" -resultBundlePath /tmp/taskfold-personal-headings-tablet.xcresult
+
+Writing result bundle at path:
+	/tmp/taskfold-personal-headings-tablet.xcresult
+
+2026-10-26 20:13:45.553992+0100 TaskfoldUITests-Runner[35131:23394122] [Default] Running tests...
+2026-10-26 20:13:46.403680+0100 TaskfoldUITests-Runner[35131:23394122] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 20:13:53.635.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 20:13:53.636.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 20:13:53.636.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingLostReplyPauseColdExactRetry]' started.
+    t =     0.03s Start Test at 2026-10-26 20:13:53.662
+    t =     0.07s Set Up
+    t =     0.09s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.09s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 20:13:53.943 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:13:53.944 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[35131]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x101f34398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1030f8310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     3.37s         Setting up automation session
+    t =     9.52s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.32s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =    13.36s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =    13.36s         Checking existence of `"openTeamEditorFixture" Button`
+    t =    13.53s Tap "openTeamEditorFixture" Button
+    t =    13.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.53s     Find the "openTeamEditorFixture" Button
+    t =    13.56s     Check for interrupting elements affecting "openTeamEditorFixture" Button
+    t =    13.62s         Wait for com.apple.springboard to idle
+    t =    13.73s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    13.73s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    13.75s     Synthesize event
+    t =    14.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.26s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    16.30s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    16.30s         Checking existence of `"taskKindPicker" Any`
+    t =    16.64s Tap "taskKindPicker" Any
+    t =    16.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.65s     Find the "taskKindPicker" Any
+    t =    16.91s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    16.99s         Wait for com.apple.springboard to idle
+    t =    17.03s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    17.03s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    17.07s     Synthesize event
+    t =    17.37s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.60s Waiting 5.0s for "Heading" Button to exist
+    t =    19.65s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    19.65s         Checking existence of `"Heading" Button`
+    t =    19.75s Tap "Heading" Button
+    t =    19.75s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.75s     Find the "Heading" Button
+    t =    19.80s     Check for interrupting elements affecting "Heading" Button
+    t =    19.87s         Wait for com.apple.springboard to idle
+    t =    19.90s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    19.90s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    19.91s     Synthesize event
+    t =    20.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.88s Tap "saveTask" Button
+    t =    21.88s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.89s     Find the "saveTask" Button
+    t =    22.81s     Check for interrupting elements affecting "saveTask" Button
+    t =    23.04s         Wait for com.apple.springboard to idle
+    t =    23.25s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    23.25s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    23.28s     Synthesize event
+    t =    23.58s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+/tmp/taskfold-personal-headings-ios-host/TaskfoldUITests/TaskfoldUITests.swift:15867: error: -[TaskfoldUITests.TaskfoldUITests testPersonalHeadingLostReplyPauseColdExactRetry] : XCTAssertEqual failed: ("XCTWaiterResult(rawValue: 2)") is not equal to ("XCTWaiterResult(rawValue: 1)")
+    t =    45.09s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingLostReplyPauseColdExactRetry]' failed (45.396 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingMissingSupportBeforeSaveKeepsVisibleQueue]' started.
+    t =     0.00s Start Test at 2026-10-26 20:14:39.063
+    t =     0.05s Set Up
+    t =     0.05s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.05s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.05s         Terminate com.dbakp.taskfold.workflowteststeameditbridge:35159
+2026-10-26 20:14:40.512 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:14:40.512 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.08s         Setting up automation session
+    t =     7.96s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.42s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =    11.46s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =    11.46s         Checking existence of `"openTeamEditorFixture" Button`
+    t =    11.82s Tap "openTeamEditorFixture" Button
+    t =    11.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.82s     Find the "openTeamEditorFixture" Button
+    t =    11.85s     Check for interrupting elements affecting "openTeamEditorFixture" Button
+    t =    11.90s         Wait for com.apple.springboard to idle
+    t =    11.96s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    11.96s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    11.96s     Synthesize event
+    t =    12.31s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.46s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    14.50s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    14.50s         Checking existence of `"taskKindPicker" Any`
+    t =    14.82s Tap "taskKindPicker" Any
+    t =    14.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.83s     Find the "taskKindPicker" Any
+    t =    15.11s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    15.19s         Wait for com.apple.springboard to idle
+    t =    15.21s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    15.22s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    15.25s     Synthesize event
+    t =    15.54s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.76s Waiting 5.0s for "Heading" Button to exist
+    t =    17.79s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    17.79s         Checking existence of `"Heading" Button`
+    t =    17.85s Tap "Heading" Button
+    t =    17.85s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.85s     Find the "Heading" Button
+    t =    17.89s     Check for interrupting elements affecting "Heading" Button
+    t =    17.96s         Wait for com.apple.springboard to idle
+    t =    17.98s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    17.98s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    17.99s     Synthesize event
+    t =    18.28s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.83s Tap "saveTask" Button
+    t =    19.83s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.83s     Find the "saveTask" Button
+    t =    19.93s     Check for interrupting elements affecting "saveTask" Button
+    t =    20.00s         Wait for com.apple.springboard to idle
+    t =    20.02s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    20.03s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    20.03s     Synthesize event
+    t =    20.33s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.88s Terminate com.dbakp.taskfold.workflowteststeameditbridge:35265
+    t =    22.97s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    22.97s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 20:15:02.030 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:15:02.030 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    23.18s         Setting up automation session
+    t =    27.31s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.18s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =    30.21s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =    30.21s         Checking existence of `"openTeamEditorFixture" Button`
+    t =    31.40s Terminate com.dbakp.taskfold.workflowteststeameditbridge:35304
+    t =    32.48s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    32.48s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 20:15:11.550 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:15:11.550 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    32.70s         Setting up automation session
+    t =    36.87s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.06s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =    40.09s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =    40.09s         Checking existence of `"openTeamEditorFixture" Button`
+    t =    41.27s Terminate com.dbakp.taskfold.workflowteststeameditbridge:35344
+    t =    42.33s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingMissingSupportBeforeSaveKeepsVisibleQueue]' passed (42.795 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing]' started.
+    t =     0.00s Start Test at 2026-10-26 20:15:21.855
+    t =     0.03s Set Up
+    t =     0.03s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.03s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 20:15:21.884 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 20:15:21.884 xcodebuild[35104:23393424] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.24s         Setting up automation session
+    t =     4.39s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.47s Waiting 15.0s for "openTeamEditorFixture" Button to exist
+    t =     7.50s     Checking `Expect predicate `existsNoRetry == 1` for object "openTeamEditorFixture" Button`
+    t =     7.50s         Checking existence of `"openTeamEditorFixture" Button`
+    t =     7.61s Tap "openTeamEditorFixture" Button
+    t =     7.61s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     7.62s     Find the "openTeamEditorFixture" Button
+    t =     7.64s     Check for interrupting elements affecting "openTeamEditorFixture" Button
+    t =     7.66s         Wait for com.apple.springboard to idle
+    t =     7.69s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =     7.69s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =     7.70s     Synthesize event
+    t =     8.04s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.81s Waiting 10.0s for "taskTitle" TextField to exist
+    t =     9.85s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =     9.85s         Checking existence of `"taskTitle" TextField`
+    t =     9.97s Checking existence of `"taskKindPicker" Any`
+    t =    10.04s Tap "taskTitle" TextField
+    t =    10.04s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.04s     Find the "taskTitle" TextField
+    t =    10.11s     Check for interrupting elements affecting "taskTitle" TextField
+    t =    10.17s         Wait for com.apple.springboard to idle
+    t =    10.19s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    10.19s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    10.20s     Synthesize event
+    t =    10.50s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.56s Type ' revised' into "taskTitle" TextField
+    t =    11.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.91s     Find the "taskTitle" TextField
+    t =    12.05s     Check for interrupting elements affecting "taskTitle" TextField
+    t =    12.13s         Wait for com.apple.springboard to idle
+    t =    12.17s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    12.17s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    12.18s     Synthesize event
+    t =    12.53s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.06s Tap "saveTask" Button
+    t =    13.06s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.19s     Find the "saveTask" Button
+    t =    13.28s     Check for interrupting elements affecting "saveTask" Button
+    t =    13.34s         Wait for com.apple.springboard to idle
+    t =    13.37s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    13.37s Ignoring failure to get hierarchy for remote element in process 27888 (Error getting main window kAXErrorServerNotFound)
+    t =    13.38s     Synthesize event
+    t =    13.68s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    73.73s App animations complete notification not received, will attempt to continue.
+/tmp/taskfold-personal-headings-ios-host/TaskfoldUITests/TaskfoldUITests.swift:15867: error: -[TaskfoldUITests.TaskfoldUITests testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing] : XCTAssertEqual failed: ("XCTWaiterResult(rawValue: 2)") is not equal to ("XCTWaiterResult(rawValue: 1)")
+    t =    93.78s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing]' failed (94.142 seconds).
+Test Suite 'TaskfoldUITests' failed at 2026-10-26 20:16:55.997.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 182.333 (182.361) seconds
+Test Suite 'TaskfoldUITests.xctest' failed at 2026-10-26 20:16:55.999.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 182.333 (182.363) seconds
+Test Suite 'Selected tests' failed at 2026-10-26 20:16:55.999.
+	 Executed 3 tests, with 2 failures (0 unexpected) in 182.333 (182.364) seconds
+2026-10-26 20:16:56.361 xcodebuild[35104:23393424] [MT] IDETestOperationsObserverDebug: 198.681 elapsed -- Testing started completed.
+2026-10-26 20:16:56.361 xcodebuild[35104:23393424] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 20:16:56.361 xcodebuild[35104:23393424] [MT] IDETestOperationsObserverDebug: 198.681 sec, +198.681 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-personal-headings-tablet.xcresult
+
+Failing tests:
+	TaskfoldUITests.testPersonalHeadingLostReplyPauseColdExactRetry()
+	TaskfoldUITests.testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing()
+
+** TEST EXECUTE FAILED **
+
+Testing started

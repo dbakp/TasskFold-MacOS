@@ -188,3 +188,82 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
     }
 }
 #endif
+
+#if DEBUG
+/// Reserved-host personal transport peer. Real SQL contract acceptance is separate.
+@MainActor enum PersonalHeadingNativePeer {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--personal-heading-testing") }
+    static var file: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json") }
+    struct State: Codable {
+        var row: Record
+        var support = 1
+        var attempts: [[String: JSON]] = []
+        var transitions = 0
+        var loseNext = false
+    }
+    static func read() throws -> State { try JSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func write(_ value: State) throws { try JSONEncoder().encode(value).write(to: file, options: .atomic) }
+    static func reset(_ row: Record) throws {
+        var state = State(row: row)
+        if ProcessInfo.processInfo.arguments.contains("--personal-heading-capability-off") { state.support = 0 }
+        state.loseNext = ProcessInfo.processInfo.arguments.contains("--personal-heading-lose-reply")
+        try write(state)
+    }
+    static func boundary() throws -> TeamWorkspaceBoundary {
+        let support = (try? read().support) ?? 1
+        return try TeamWorkspaceBoundary(["workspace_boundary_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account),
+            "native_team_reads_enabled": .bool(false), "setup_paused": .bool(true), "task_types_protocol": .number(0), "task_type_lifecycle_protocol": .number(0),
+            "personal_task_types_protocol": .number(Double(support)), "projects": .array([]), "teams": .array([]), "token": .string(String(repeating: support == 1 ? "a" : "b", count: 64))],
+            account: TeamEditorNativeFixture.account, origin: "https://synthetic.example")
+    }
+    static func body(_ request: URLRequest) throws -> [String: JSON] {
+        var data = request.httpBody
+        if data == nil, let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096), result = Data()
+            while stream.hasBytesAvailable && result.count < 2_100_000 {
+                let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; result.append(contentsOf: bytes.prefix(count))
+            }; data = result
+        }
+        return try JSONDecoder().decode([String: JSON].self, from: data ?? Data("{}".utf8))
+    }
+    static func response(_ request: URLRequest) throws -> (Data, Bool) {
+        guard enabled, request.url?.host == "synthetic.example", request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-auth" else { throw URLError(.userAuthenticationRequired) }
+        let path = request.url!.path
+        let value: JSON
+        if path == "/rest/v1/rpc/taskfold_workspace_boundary" { value = .object(try boundary().raw) }
+        else if path == "/auth/v1/user" { value = .object(["id": .string(TeamEditorNativeFixture.account), "email": .string("personal-heading@example.invalid")]) }
+        else if path == "/rest/v1/rpc/taskfold_patch_task" {
+            let request = try body(request); var state = try read()
+            state.attempts.append(request)
+            let fields = request["_changes"]!.object, base = request["_base"]!.object
+            let change = Mutation(table: "tasks", recordID: state.row.id, method: "PATCH", fields: fields, baseline: base)
+            guard (!PersonalTaskTypes.requiresService(change) || state.support == 1), request["_id"] == state.row["id"], base["task_generation"] == state.row["task_generation"] else { try write(state); throw URLError(.badServerResponse) }
+            let replay = fields.allSatisfy { state.row[$0.key] == $0.value }
+            if !replay {
+                guard !TaskCompletionRevision.touches(fields) || base["completion_version"] == state.row["completion_version"] else { try write(state); throw URLError(.badServerResponse) }
+                let before = TaskKind(state.row)
+                for (key, value) in fields { state.row[key] = value }
+                guard TaskKind(state.row) != .heading || !state.row.completed else { throw URLError(.badServerResponse) }
+                if before != TaskKind(state.row) { state.row["completion_version"] = .number(Double(state.row["completion_version"].integer + 1)); state.transitions += 1 }
+            }
+            let lose = state.loseNext; state.loseNext = false
+            if lose { state.support = 0 }
+            try write(state)
+            return (try JSONEncoder().encode(state.row), lose)
+        }
+        else if path == "/rest/v1/tasks" { value = .array([.object(try read().row.fields)]) }
+        else { value = .array([]) }
+        return (try JSONEncoder().encode(value), false)
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func setPersonalHeadingSupportFixture(_ support: Int) {
+        guard PersonalHeadingNativePeer.enabled, [0, 1].contains(support) else { return }
+        do { var state = try PersonalHeadingNativePeer.read(); state.support = support; try PersonalHeadingNativePeer.write(state) }
+        catch { self.error = error.localizedDescription }
+    }
+}
+#endif

@@ -1178,7 +1178,12 @@ struct TeamEditorNativeFixtureView: View {
              .safeAreaInset(edge: .top) {
                 if ProcessInfo.processInfo.arguments.contains("--team-heading-testing") {
                     HStack {
+                        if PersonalHeadingNativePeer.enabled {
+                            Button("Pause personal support") { store.setPersonalHeadingSupportFixture(0) }.accessibilityIdentifier("pausePersonalHeadingSupport")
+                            Button("Restore personal support") { store.setPersonalHeadingSupportFixture(1) }.accessibilityIdentifier("restorePersonalHeadingSupport")
+                        } else {
                         Button("Pause heading support") { store.pauseTeamHeadingCapabilityFixture() }.accessibilityIdentifier("pauseTeamHeadingCapability")
+                        }
                         Button("Undo task edit") { store.undo() }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("undoTeamHeading")
                         Button("Redo task edit") { store.redo() }.disabled(store.redoStack.isEmpty).accessibilityIdentifier("redoTeamHeading")
                     }.padding(8)

@@ -56,6 +56,29 @@ struct TeamWorkspaceBoundary: Equatable, Sendable, Codable {
     func belongs(account:String,origin:String)->Bool {self.account==account && self.origin==origin}
 }
 
+/// Personal task types certify writer compatibility, independently of team rollout.
+/// They never grant ownership, project access or a shared-writer fallback.
+enum PersonalTaskTypes {
+    static func authoringAvailable(boundary: TeamWorkspaceBoundary?, account: String, origin: String?, enabled: Bool) -> Bool {
+        guard enabled, let boundary, let origin, boundary.belongs(account: account, origin: origin) else { return false }
+        return boundary.raw["personal_task_types_protocol"] == .number(1)
+    }
+    /// Use the captured baseline, not the optimistic row already showing the new type.
+    /// Any explicit root column needs the compatible schema, including false/NULL.
+    static func requiresService(_ change: Mutation) -> Bool {
+        guard change.table == "tasks", ["POST", "PATCH"].contains(change.method),
+              change.teamTaskScope == nil, change.teamCompletion == nil, change.teamTaskBatch == nil else { return false }
+        if change.fields["is_heading"] != nil { return true }
+        guard change.fields["subtasks"] != nil else { return false }
+        let original = change.baseline.map { Record($0) }
+        if TaskKind.requiresAuthoring(change, existing: original) { return true }
+        return change.baseline?["subtasks"] == nil && TaskKind.containsTypeMetadata([Record(change.fields)])
+    }
+    static func canSend(_ change: Mutation, boundary: TeamWorkspaceBoundary?) -> Bool {
+        !requiresService(change) || boundary?.raw["personal_task_types_protocol"] == .number(1)
+    }
+}
+
 /// UUID-only historical custody prevents an old team edit from later being
 /// mistaken for an ordinary personal edit. It never grants read or write access.
 struct TeamWorkspaceCache: Equatable, Sendable, Codable {

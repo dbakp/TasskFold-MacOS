@@ -1419,7 +1419,7 @@ final class Store {
                 error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
                 return false
             }
-            guard taskHeadingsAuthoringEnabled || teamHeadingAuthoringAvailable(change.teamTaskScope) || !TaskKind.requiresAuthoring(change, existing: record(change.table, id: change.recordID)) else {
+            guard (change.teamTaskScope == nil && taskHeadingsAuthoringEnabled) || teamHeadingAuthoringAvailable(change.teamTaskScope) || !TaskKind.requiresAuthoring(change, existing: record(change.table, id: change.recordID)) else {
                 snapshot = old; error = "Heading creation is not available in this workspace yet. Your source and saved draft are unchanged."; return false
             }
             guard TaskKind.permits(change, existing: record(change.table, id: change.recordID)) else {
@@ -1560,7 +1560,11 @@ final class Store {
     /// Authoring a portable definition does not create live tasks or grant shared access.
     var workflowTemplateHeadingsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true }
     var taskHeadingsAuthoringEnabled: Bool {
-        localMode && (Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true)
+        let enabled = Bundle.main.object(forInfoDictionaryKey: "TaskfoldHeadingsEnabled") as? Bool == true
+        if localMode { return enabled }
+        guard workspaceCacheReadable, signedIn, !signingOut, !accountRemovalBlocked else { return false }
+        return PersonalTaskTypes.authoringAvailable(boundary: nativeConversationTeamCache?.boundary, account: userID,
+            origin: try? backend.accountRemovalOrigin, enabled: enabled)
     }
     private func teamHeadingAuthoringAvailable(_ scope: TeamTaskEditScope?) -> Bool {
         guard let scope, workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
@@ -1688,7 +1692,7 @@ final class Store {
     }
     func sync() async {
         #if DEBUG
-        if (TeamEditorNativeFixture.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
+        if (TeamEditorNativeFixture.enabled && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
         #endif
         guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}
         consumeWidgetCompletions()
@@ -1712,7 +1716,7 @@ final class Store {
         }
         do {
             let boundary:TeamWorkspaceBoundary?
-            let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil}
+            let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil || PersonalTaskTypes.requiresService($0)}
             do {boundary=try await backend.workspaceBoundary(account:account)}
             catch is TeamWorkspaceUnavailable {guard allowLegacy else {throw TeamWorkspaceUnavailable()};boundary=nil}
             guard generation==accountGeneration else {return}
@@ -1731,6 +1735,9 @@ final class Store {
                     if let access, try await discoverBlockedTeamCompletion(access: access) { return }
                     break
                 }
+                // Compatibility pauses delivery, not access or the optimistic draft.
+                // Continue the read so restored support can resume this exact intention.
+                if !PersonalTaskTypes.canSend(mutation, boundary: boundary) { break }
                 sending = mutation
                 let saved = try await backend.send(mutation, expectedAccount: account)
                 guard generation == accountGeneration else { return }
@@ -1847,9 +1854,11 @@ final class Store {
         guard generation == accountGeneration else { return }
         syncSignInWorkspace = nil
         let accessBlocked=snapshot.pending.first.map{snapshot.teamWorkspace?.blocked(snapshot).contains($0.id)==true} ?? false
-        if !accessBlocked && !hadConflict {notice = widgetActionStatus}
+        let headingBlocked = snapshot.pending.first.map { !PersonalTaskTypes.canSend($0, boundary: snapshot.teamWorkspace?.boundary) } ?? false
+        if headingBlocked, syncSignInWorkspace == nil { notice = "Your heading changes are saved on this device. This service needs heading support before they can sync." }
+        if !accessBlocked && !headingBlocked && !hadConflict {notice = widgetActionStatus}
         // A blocked head needs review, not an immediate busy retry loop.
-        if !snapshot.pending.isEmpty && !accessBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.sync()}}
+        if !snapshot.pending.isEmpty && !accessBlocked && !headingBlocked && syncConflict==nil && focusSyncConflict==nil {Task {await self.sync()}}
     }
     /// Only fill missing remote rows after a successful fetch. Existing synchronized choices win.
     private func migrateOrganization() {
@@ -3593,6 +3602,7 @@ extension Store {
         return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
     }
     static func boundary(viewer: Bool = false) throws -> TeamWorkspaceBoundary {
+        if PersonalHeadingNativePeer.enabled { return try PersonalHeadingNativePeer.boundary() }
         var rows: [JSON] = [.object(["id": .string(projectID), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)])]
         if ProcessInfo.processInfo.arguments.contains("--team-move-testing") {
             rows.append(.object(["id": .string(TeamTaskMoveNativePeer.destination), "team_id": .string(teamID), "role": .string(viewer ? "viewer" : "editor"), "archived": .bool(false), "can_send_tasks": .bool(!viewer)]))
@@ -3618,6 +3628,15 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
     override func startLoading() {
         let request = self.request
         Task { @MainActor in
+            if PersonalHeadingNativePeer.enabled {
+                do {
+                    let (data, lose) = try PersonalHeadingNativePeer.response(request)
+                    if lose { client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost)); return }
+                    let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+                    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
+                } catch { client?.urlProtocol(self, didFailWithError: error) }
+                return
+            }
             TeamRecoveryRaceNativeFixture.observe(request)
             if let data = TeamBatchRecoveryNativePeer.response(request), let url = request.url {
                 let delivered: Data
@@ -3759,6 +3778,13 @@ extension Store {
                 tasks[0]["labels"] = .array([.string("Launch shared")])
                 tasks[0]["subtasks"] = SubtaskTree.changing(tasks[0]["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["labels": .array([.string("Outline shared")])])
                 labels = [Record(["id": .string("Launch shared"), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Private catalog name"), "color": .string("#112233")])]
+            }
+            if PersonalHeadingNativePeer.enabled {
+                row["user_id"] = .string(TeamEditorNativeFixture.account); row["project_id"] = .null
+                row["title"] = .string("Personal heading proof"); row["is_heading"] = .null
+                row["task_generation"] = .string(UUID().uuidString.lowercased()); row["completion_version"] = .number(0)
+                tasks = [row]; projects = []; labels = []
+                try PersonalHeadingNativePeer.reset(row)
             }
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
             if TeamTaskMoveNativePeer.enabled {

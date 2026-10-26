@@ -1,0 +1,63 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "modelName" : "MacBook Pro",
+        "osBuildNumber" : "25G83",
+        "osVersion" : "26.6.2",
+        "platform" : "macOS"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 1,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1793042076.385,
+  "passedTests" : 1,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions"
+    }
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793042017.366,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertEqual failed: (\"XCTWaiterResult(rawValue: 2)\") is not equal to (\"XCTWaiterResult(rawValue: 1)\")",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "SharedHeadingNativeTests/testPersonalHeadingLostReplyPauseColdExactRetry()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPersonalHeadingLostReplyPauseColdExactRetry",
+      "testName" : "testPersonalHeadingLostReplyPauseColdExactRetry()"
+    },
+    {
+      "failureText" : "failed: caught error: \"Error Domain=NSCocoaErrorDomain Code=513 \"You don’t have permission to save the file “TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json” in the folder “Application Support”.\" UserInfo={NSFilePath=/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json, NSURL=file:///Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application%20Support/TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json, NSUnderlyingError=0x9c6c902a0 {Error Domain=NSPOSIXErrorDomain Code=1 \"Operation not permitted\"}}\"",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 2,
+      "testIdentifierString" : "SharedHeadingNativeTests/testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue",
+      "testName" : "testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 3
+}

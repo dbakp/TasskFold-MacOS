@@ -4960,3 +4960,74 @@ extension TeamWorkflowMacUITests {
         app.terminate(); try launch(app, reset: false, headings: true); XCTAssertEqual(try definitionSaved(id) as NSDictionary, saved as NSDictionary)
     }
 }
+
+extension SharedHeadingNativeTests {
+    private func personalStateFile() -> URL {
+        URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/" + bundle + "/Data/Library/Application Support/TaskfoldPersonalHeadingNativeFixture-workflowteststeameditbridge.json")
+    }
+    private func personalState() throws -> [String: Any] { try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: personalStateFile())) as? [String: Any]) }
+    private func personalCachedSupport() throws -> Int? {
+        let cache = try saved()
+        return (((cache["teamWorkspace"] as? [String: Any])?["boundary"] as? [String: Any])?["raw"] as? [String: Any])?["personal_task_types_protocol"] as? Int
+    }
+    private func personalDelivered(_ attempts: Int) throws -> Bool {
+        let cache = try saved(), state = try personalState()
+        return (cache["pending"] as? [Any])?.isEmpty == true && (state["attempts"] as? [Any])?.count == attempts
+    }
+    private func personalUnconfirmed(_ attempts: Int) throws -> Bool {
+        let cache = try saved(), state = try personalState()
+        return (cache["pending"] as? [Any])?.count == 1 && (state["attempts"] as? [Any])?.count == attempts
+    }
+    private func personalPaused(_ attempts: Int) throws -> Bool {
+        let cache = try saved(), state = try personalState(), support = try personalCachedSupport()
+        return (cache["pending"] as? [Any])?.count == 1 && support == 0 && (state["attempts"] as? [Any])?.count == attempts
+    }
+    @MainActor private func personalWait(_ condition: @escaping () throws -> Bool) {
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (try? condition()) == true }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 20), .completed)
+    }
+    @MainActor private func personalStart(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false, unsupported: Bool = false) throws {
+        guard [bundle + ".runner", bundle + ".runner.xctrunner"].contains(Bundle(for: Self.self).bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated Mac host required") }
+        continueAfterFailure = false
+        app.launchArguments = ["--team-editor-testing", "--team-heading-testing", "--personal-heading-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--personal-heading-lose-reply"] : []) + (unsupported ? ["--personal-heading-capability-off"] : [])
+        try open(app); XCTAssertTrue(app.descendants(matching: .any)["taskTitle"].waitForExistence(timeout: 15), app.debugDescription)
+    }
+    @MainActor private func personalChooseHeading(_ app: XCUIApplication, pause: Bool = false) throws {
+        if pause { app.buttons["pausePersonalHeadingSupport"].click() }
+        let picker = app.descendants(matching: .any)["taskKindPicker"]; XCTAssertTrue(picker.waitForExistence(timeout: 8)); picker.click()
+        XCTAssertTrue(app.menuItems["Heading"].waitForExistence(timeout: 5)); app.menuItems["Heading"].click()
+    }
+    @MainActor func testPersonalHeadingLostReplyPauseColdExactRetry() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try personalStart(app, lost: true)
+        let before = try root(); try personalChooseHeading(app)
+        personalWait { try self.personalUnconfirmed(1) }
+        let state = try personalState(), queued = try XCTUnwrap((try saved()["pending"] as? [[String: Any]])?.first)
+        XCTAssertNil(queued["teamTaskScope"]); XCTAssertEqual(state["transitions"] as? Int, 1); XCTAssertEqual(try root()["is_heading"] as? Bool, true)
+        app.terminate(); try personalStart(app, reset: false)
+        personalWait { try self.personalPaused(1) }
+        app.buttons["restorePersonalHeadingSupport"].click(); app.terminate(); try personalStart(app, reset: false)
+        personalWait { try self.personalDelivered(2) }
+        let after = try root(), final = try personalState(), attempts = try XCTUnwrap(final["attempts"] as? [[String: Any]])
+        XCTAssertEqual(attempts[0] as NSDictionary, attempts[1] as NSDictionary); XCTAssertEqual(final["transitions"] as? Int, 1); XCTAssertEqual(after["completion_version"] as? Int, 1)
+        for key in ["title", "description", "subtasks", "task_generation", "user_id", "project_id", "opaque_future"] { XCTAssertEqual(after[key] as? NSObject, before[key] as? NSObject, key) }
+        let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); image.name = "Mac personal heading original response confirmed after cold retry"; image.lifetime = .keepAlways; add(image)
+    }
+    @MainActor func testPersonalHeadingMissingSupportBeforeAutosaveKeepsVisibleQueue() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try personalStart(app); try personalChooseHeading(app, pause: true)
+        personalWait { (try self.saved()["pending"] as? [Any])?.count == 1 }
+        app.terminate(); try personalStart(app, reset: false)
+        personalWait { try self.personalPaused(0) }
+        XCTAssertEqual(try root()["is_heading"] as? Bool, true)
+        app.buttons["restorePersonalHeadingSupport"].click(); app.terminate(); try personalStart(app, reset: false)
+        personalWait { try self.personalDelivered(1) }
+        XCTAssertEqual(try personalState()["transitions"] as? Int, 1); XCTAssertEqual(try root()["is_heading"] as? Bool, true)
+    }
+    @MainActor func testPersonalHeadingUnsupportedServiceKeepsOrdinaryEditing() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try personalStart(app, unsupported: true)
+        let before = try root(); XCTAssertFalse(app.descendants(matching: .any)["taskKindPicker"].exists)
+        let title = app.textFields["taskTitle"]; XCTAssertTrue(title.exists); title.click(); title.typeKey("a", modifierFlags: .command); title.typeText("Personal heading proof revised"); title.typeKey(.tab, modifierFlags: [])
+        personalWait { try self.personalDelivered(1) }
+        XCTAssertEqual(try root()["title"] as? String, "Personal heading proof revised"); XCTAssertTrue(try root()["is_heading"] is NSNull)
+        XCTAssertEqual(try root()["description"] as? String, before["description"] as? String); XCTAssertEqual(try personalState()["transitions"] as? Int, 0)
+    }
+}

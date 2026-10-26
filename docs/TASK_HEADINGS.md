@@ -1,8 +1,10 @@
 # Task headings — contract and implementation gates
 
 Updated 26 October 2026. Rank 3 is in progress. This is an independently owned
-source contract with gated local native authoring in each app repository, not a
-shipped heading feature.
+source contract with gated native authoring in each app repository, not a
+shipped heading feature. Personal cloud compatibility and its exact acceptance
+are now recorded in PERSONAL_TASK_HEADINGS.md; older local-only checkpoints
+below retain their original scope.
 
 ## Intended experience
 
@@ -783,3 +785,29 @@ The synthetic iOS peer pauses sync, so genuine delivery/receipt recovery, broade
 native races/lifecycle/accessibility and shared template/import adapters remain
 open. Normal flags and hosted rollout are unchanged. See TEAM_TASK_TYPE_NATIVE.md
 and shared-heading-native/. The wider rank-3/Px goal stays active.
+
+## 26 October — personal cloud heading compatibility
+
+Connected the personal heading adapter to a separate exact service compatibility
+signal. Cached support allows an opted-in personal draft; fresh preflight support
+controls delivery. Missing support keeps the optimistic work and durable intention
+visible, without team-access quarantine or automatic legacy fallback. Restored
+support resumes the original queued command. The signal does not authorize team
+writes; ordinary personal editing stays independent.
+
+Each owned repo passes 119 selected Core cases and 36 actual-role isolated SQL
+checks, including partial-install refusal and unchanged grants/RLS. Three signed
+installed scenarios pass on each Mac/iPhone/iPad (nine final native passes): a lost
+reply followed by a cold unsupported-service pause and exact retry, support removed
+before Save/autosave with no write and preserved cold queue, and ordinary editing
+with heading controls unavailable. The HTTP peer exercises Store sync and Backend
+requests; genuine hosted transport and paired-device acceptance remain separate.
+The three retained images were inspected; phone/tablet images show the test wrapper
+and confirmed empty queue, while the Mac image shows the actual heading inspector.
+
+See PERSONAL_TASK_HEADINGS.md and personal-task-headings/. Root cloud transport
+is now accepted to that scope. Wider nested/workflow/import/restore, personal
+Undo/Redo, source/account races, spoken/largest-text, installed widgets and cross-
+device acceptance remain open. Normal app flags and hosted configuration were not
+changed. Older-client rollout, release/distribution, remote reminders and other
+user-deferred work stays deferred; rank 3/Px remain active.
