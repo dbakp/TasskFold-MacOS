@@ -25,6 +25,7 @@ struct TeamWorkflowRunCommand: ReviewedTeamCommand, ReviewedTeamFileCommand, Cus
         guard case .object(let source)? = body["source"], Set(source.keys) == ["kind", "id", "team_id", "revision", "document"], let document = source["document"] else { throw Self.invalid }
         _ = try TeamOrganizationValue.id(source["id"])
         let definition = try WorkflowTemplate(document: document)
+            guard !definition.requiresHeadingSupport else { throw Self.invalid }
         switch source["kind"] {
         case .string("personal"): guard source["team_id"] == .null, source["revision"] == .null else { throw Self.invalid }
         case .string("shared"): _ = try TeamOrganizationValue.id(source["team_id"]); _ = try TeamProjectValue.revision(source["revision"])

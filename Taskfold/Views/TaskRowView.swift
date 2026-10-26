@@ -193,9 +193,11 @@ struct TaskRowView: View {
         }
         if !task["subtasks"].list.isEmpty {
                 let progress = SubtaskTree.progress(task["subtasks"])
-            Label("\(progress.completed)/\(progress.total)", systemImage: "checklist")
+            if progress.total > 0 {
+Label("\(progress.completed)/\(progress.total)", systemImage: "checklist")
                 .accessibilityLabel("\(progress.completed) of \(progress.total) subtasks completed")
                 .accessibilityIdentifier("subtaskSummary-" + task.id)
+                            }
         }
         if !task["comments"].list.isEmpty {
             Label("\(task["comments"].list.count)", systemImage: "text.bubble")

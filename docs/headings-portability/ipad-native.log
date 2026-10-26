@@ -1,0 +1,518 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-heading-portability-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378" -resultBundlePath /tmp/taskfold-heading-portability-ipad-final.xcresult -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 180 "-only-testing:TaskfoldUITests/TaskfoldUITests/testHeadingTemplateDecodedFileReviewCancelCreateAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldUITests/testNativeNestedHeadingKeepsDescendantsAndParentCancelThenSave"
+
+Writing result bundle at path:
+	/tmp/taskfold-heading-portability-ipad-final.xcresult
+
+2026-10-26 06:10:56.883320+0100 TaskfoldUITests-Runner[68375:21718572] [Default] Running tests...
+2026-10-26 06:10:57.112364+0100 TaskfoldUITests-Runner[68375:21718572] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 06:11:02.984.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-26 06:11:02.985.
+Test Suite 'TaskfoldUITests' started at 2026-10-26 06:11:02.985.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testHeadingTemplateDecodedFileReviewCancelCreateAndColdReturn]' started.
+    t =     0.02s Start Test at 2026-10-26 06:11:03.004
+    t =     0.10s Set Up
+    t =     0.10s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.11s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 06:11:03.343 xcodebuild[68366:21718339] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 06:11:03.343 xcodebuild[68366:21718339] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[68375]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x106a30398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10a8d4310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     2.13s         Setting up automation session
+    t =     6.38s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.95s Checking existence of `"Browse" Button`
+    t =    11.42s Checking existence of `Button (First Match)`
+    t =    11.49s Checking existence of `"square.grid.2x2" Cell`
+    t =    11.57s Waiting 2.0s for "Browse" Button to exist
+    t =    12.59s     Checking `Expect predicate `existsNoRetry == 1` for object "Browse" Button`
+    t =    12.59s         Checking existence of `"Browse" Button`
+    t =    12.62s Find the "Browse" Button
+    t =    12.67s Tap "square.grid.2x2" Button
+    t =    12.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.68s     Find the "square.grid.2x2" Button
+    t =    12.70s     Check for interrupting elements affecting "square.grid.2x2" Button
+    t =    12.78s         Wait for com.apple.springboard to idle
+    t =    12.88s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    12.88s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    12.90s     Synthesize event
+    t =    13.21s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    14.79s Get all elements bound by index for: Descendants matching type CollectionView
+    t =    14.88s Find the CollectionView (Element at index 0)
+    t =    14.95s Find the "Browse" NavigationBar
+    t =    15.06s Find the CollectionView at {{0.0, 0.0}, {1032.0, 1376.0}}
+    t =    15.12s Checking existence of `TabBar (First Match)`
+    t =    15.25s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    15.30s Checking existence of `"openTemplates" Button`
+    t =    15.36s Find the "openTemplates" Button
+    t =    15.44s Find the "openTemplates" Button
+    t =    15.51s Find the "openTemplates" Button
+    t =    15.58s Checking existence of `"openTemplates" Button`
+    t =    15.65s Find the "openTemplates" Button
+    t =    15.73s Find the "openTemplates" Button
+    t =    15.80s Find the "openTemplates" Button
+    t =    15.87s Tap "openTemplates" Button
+    t =    15.87s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    15.87s     Find the "openTemplates" Button
+    t =    15.94s     Check for interrupting elements affecting "openTemplates" Button
+    t =    16.00s         Wait for com.apple.springboard to idle
+    t =    16.02s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    16.02s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    16.03s     Synthesize event
+    t =    16.31s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.61s Waiting 8.0s for "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button to exist
+    t =    17.64s     Checking `Expect predicate `existsNoRetry == 1` for object "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button`
+    t =    17.64s         Checking existence of `"workflowTemplate-f2810000-0000-4000-8000-000000000003" Button`
+    t =    17.73s Tap "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    17.73s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.73s     Find the "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    17.78s     Check for interrupting elements affecting "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    17.83s         Wait for com.apple.springboard to idle
+    t =    17.85s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    17.85s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    17.85s     Synthesize event
+    t =    18.14s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.32s Waiting 5.0s for "templateDestination" Button to exist
+    t =    19.38s     Checking `Expect predicate `existsNoRetry == 1` for object "templateDestination" Button`
+    t =    19.38s         Checking existence of `"templateDestination" Button`
+    t =    19.47s Tap "Done" Button
+    t =    19.47s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    19.47s     Find the "Done" Button
+    t =    19.55s     Check for interrupting elements affecting "Done" Button
+    t =    19.62s         Wait for com.apple.springboard to idle
+    t =    19.64s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    19.64s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    19.65s     Synthesize event
+    t =    19.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.39s Tap "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    20.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.39s     Find the "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    20.44s     Check for interrupting elements affecting "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button
+    t =    20.49s         Wait for com.apple.springboard to idle
+    t =    20.51s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    20.51s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    20.52s     Synthesize event
+    t =    20.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.26s Tap "templateDestination" Button
+    t =    21.26s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    21.27s     Find the "templateDestination" Button
+    t =    21.36s     Check for interrupting elements affecting "templateDestination" Button
+    t =    21.43s         Wait for com.apple.springboard to idle
+    t =    21.45s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    21.45s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    21.46s     Synthesize event
+    t =    21.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.96s Waiting 5.0s for "templateInboxDestination" Button to exist
+    t =    24.00s     Checking `Expect predicate `existsNoRetry == 1` for object "templateInboxDestination" Button`
+    t =    24.01s         Checking existence of `"templateInboxDestination" Button`
+    t =    24.11s Tap "templateInboxDestination" Button
+    t =    24.11s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    24.12s     Find the "templateInboxDestination" Button
+    t =    24.19s     Check for interrupting elements affecting "templateInboxDestination" Button
+    t =    24.26s         Wait for com.apple.springboard to idle
+    t =    24.28s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    24.28s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    24.28s     Synthesize event
+    t =    24.58s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.00s Checking existence of `"applyWorkflowTemplate" Button`
+    t =    26.08s Swipe up Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    26.08s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.09s     Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    26.14s     Check for interrupting elements affecting "Taskfold Heading Test" Application
+    t =    26.21s         Wait for com.apple.springboard to idle
+    t =    26.23s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    26.23s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    26.23s     Synthesize event
+    t =    26.65s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    27.62s Checking existence of `"applyWorkflowTemplate" Button`
+    t =    27.70s Find the "applyWorkflowTemplate" Button
+    t =    27.79s Find the "applyWorkflowTemplate" Button
+    t =    27.86s Find the "applyWorkflowTemplate" Button
+    t =    27.93s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    28.17s Added attachment named 'Typed heading workflow contents before Create'
+    t =    28.17s Tap "applyWorkflowTemplate" Button
+    t =    28.17s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.18s     Find the "applyWorkflowTemplate" Button
+    t =    28.25s     Check for interrupting elements affecting "applyWorkflowTemplate" Button
+    t =    28.32s         Wait for com.apple.springboard to idle
+    t =    28.34s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    28.34s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    28.34s     Synthesize event
+    t =    28.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    29.11s Waiting 8.0s for "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button to exist
+    t =    30.16s     Checking `Expect predicate `existsNoRetry == 1` for object "workflowTemplate-f2810000-0000-4000-8000-000000000003" Button`
+    t =    30.16s         Checking existence of `"workflowTemplate-f2810000-0000-4000-8000-000000000003" Button`
+    t =    30.25s Terminate com.dbakp.taskfold.workflowteststeameditbridge:68412
+    t =    31.33s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    31.33s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 06:11:34.319 xcodebuild[68366:21718339] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 06:11:34.319 xcodebuild[68366:21718339] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    31.54s         Setting up automation session
+    t =    35.12s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    37.97s Checking existence of `"Inbox" Button`
+    t =    38.27s Checking existence of `Button (First Match)`
+    t =    38.34s Checking existence of `"tray" Cell`
+    t =    38.44s Waiting 2.0s for "Inbox" Button to exist
+    t =    39.47s     Checking `Expect predicate `existsNoRetry == 1` for object "Inbox" Button`
+    t =    39.47s         Checking existence of `"Inbox" Button`
+    t =    39.51s Find the "Inbox" Button
+    t =    39.55s Tap "tray" Button
+    t =    39.55s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    39.55s     Find the "tray" Button
+    t =    39.57s     Check for interrupting elements affecting "tray" Button
+    t =    39.61s         Wait for com.apple.springboard to idle
+    t =    39.63s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    39.63s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    39.64s     Synthesize event
+    t =    39.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    41.20s Waiting 8.0s for "taskDetails-acce7fbf-dc81-8297-8e62-e0113c166e33" Button to exist
+    t =    42.24s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-acce7fbf-dc81-8297-8e62-e0113c166e33" Button`
+    t =    42.24s         Checking existence of `"taskDetails-acce7fbf-dc81-8297-8e62-e0113c166e33" Button`
+    t =    42.31s Checking existence of `"Complete Prepare workflow brief" Button`
+    t =    42.36s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    42.55s Added attachment named 'Heading workflow copied into Inbox after cold return'
+    t =    42.55s Terminate com.dbakp.taskfold.workflowteststeameditbridge:68587
+    t =    43.61s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testHeadingTemplateDecodedFileReviewCancelCreateAndColdReturn]' passed (44.049 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testNativeNestedHeadingKeepsDescendantsAndParentCancelThenSave]' started.
+    t =     0.00s Start Test at 2026-10-26 06:11:47.053
+    t =     0.02s Set Up
+    t =     0.02s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.02s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 06:11:47.072 xcodebuild[68366:21718339] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 06:11:47.072 xcodebuild[68366:21718339] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.23s         Setting up automation session
+    t =     3.77s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     6.59s Checking existence of `"Today" Button`
+    t =     6.93s Checking existence of `Button (First Match)`
+    t =     6.99s Checking existence of `"sun.max" Cell`
+    t =     7.05s Waiting 2.0s for "Today" Button to exist
+    t =     8.07s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =     8.07s         Checking existence of `"Today" Button`
+    t =     8.11s Find the "Today" Button
+    t =     8.14s Tap "sun.max" Button
+    t =     8.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =     8.15s     Find the "sun.max" Button
+    t =     8.16s     Check for interrupting elements affecting "sun.max" Button
+    t =     8.20s         Wait for com.apple.springboard to idle
+    t =     8.22s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =     8.22s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =     8.23s     Synthesize event
+    t =     8.52s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    10.05s Waiting 10.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    11.09s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    11.09s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    11.19s Tap "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    11.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    11.19s     Find the "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    11.23s     Check for interrupting elements affecting "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    11.27s         Wait for com.apple.springboard to idle
+    t =    11.29s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    11.30s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    11.30s     Synthesize event
+    t =    11.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    12.27s Waiting 5.0s for "taskTitle" TextField to exist
+    t =    13.31s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    13.31s         Checking existence of `"taskTitle" TextField`
+    t =    13.45s Checking existence of `"organizeSubtasks" Button`
+    t =    13.51s Get number of matches for: Elements matching predicate '"taskEditorForm" IN identifiers'
+    t =    13.58s Swipe up "taskEditorForm" CollectionView
+    t =    13.58s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.58s     Find the "taskEditorForm" CollectionView
+    t =    13.65s     Check for interrupting elements affecting "taskEditorForm" CollectionView
+    t =    13.72s         Wait for com.apple.springboard to idle
+    t =    13.74s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    13.74s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    13.74s     Synthesize event
+    t =    14.19s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.32s Checking existence of `"organizeSubtasks" Button`
+    t =    16.43s Find the "organizeSubtasks" Button
+    t =    16.51s Tap "organizeSubtasks" Button
+    t =    16.51s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    16.51s     Find the "organizeSubtasks" Button
+    t =    16.58s     Check for interrupting elements affecting "organizeSubtasks" Button
+    t =    16.65s         Wait for com.apple.springboard to idle
+    t =    16.67s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    16.67s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    16.68s     Synthesize event
+    t =    16.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    17.46s Waiting 5.0s for "saveSubtaskOrganizer" Button to exist
+    t =    18.49s     Checking `Expect predicate `existsNoRetry == 1` for object "saveSubtaskOrganizer" Button`
+    t =    18.49s         Checking existence of `"saveSubtaskOrganizer" Button`
+    t =    18.64s Tap "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    18.64s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    18.65s     Find the "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    18.75s     Check for interrupting elements affecting "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    18.84s         Wait for com.apple.springboard to idle
+    t =    18.86s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    18.86s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    18.86s     Synthesize event
+    t =    19.15s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.36s Tap "Edit details" Button
+    t =    20.36s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    20.37s     Find the "Edit details" Button
+    t =    20.50s     Check for interrupting elements affecting "slider.horizontal.3" Button
+    t =    20.59s         Wait for com.apple.springboard to idle
+    t =    20.61s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    20.61s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    20.62s     Synthesize event
+    t =    20.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    22.34s Waiting 5.0s for "Subtask details" NavigationBar to exist
+    t =    23.39s     Checking `Expect predicate `existsNoRetry == 1` for object "Subtask details" NavigationBar`
+    t =    23.40s         Checking existence of `"Subtask details" NavigationBar`
+    t =    23.57s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    24.60s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    24.61s         Checking existence of `"taskKindPicker" Any`
+    t =    25.01s Tap "taskKindPicker" Any
+    t =    25.01s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.02s     Find the "taskKindPicker" Any
+    t =    25.40s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    25.51s         Wait for com.apple.springboard to idle
+    t =    25.53s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    25.53s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    25.56s     Synthesize event
+    t =    25.85s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    26.96s Waiting 5.0s for "Heading" Button to exist
+    t =    28.00s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    28.01s         Checking existence of `"Heading" Button`
+    t =    28.10s Tap "Heading" Button
+    t =    28.10s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.11s     Find the "Heading" Button
+    t =    28.17s     Check for interrupting elements affecting "Heading" Button
+    t =    28.28s         Wait for com.apple.springboard to idle
+    t =    28.30s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    28.30s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    28.30s     Synthesize event
+    t =    28.59s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.04s Tap "Save" Button
+    t =    30.04s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.05s     Find the "Save" Button
+    t =    30.18s     Check for interrupting elements affecting "saveTask" Button
+    t =    30.30s         Wait for com.apple.springboard to idle
+    t =    30.32s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    30.32s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    30.33s     Synthesize event
+    t =    30.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.33s Checking existence of `"organizedCompletion-f1710000-0000-4000-8000-000000000002" Button`
+    t =    31.45s Checking existence of `"organizedCompletion-f1710000-0000-4000-8000-000000000004" Button`
+    t =    31.56s Tap "Cancel" Button
+    t =    31.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.56s     Find the "Cancel" Button
+    t =    31.67s     Check for interrupting elements affecting "cancelSubtaskOrganizer" Button
+    t =    31.76s         Wait for com.apple.springboard to idle
+    t =    31.78s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    31.79s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    31.79s     Synthesize event
+    t =    32.09s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.52s Checking existence of `"organizeSubtasks" Button`
+    t =    32.59s Find the "organizeSubtasks" Button
+    t =    32.68s Tap "organizeSubtasks" Button
+    t =    32.68s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    32.69s     Find the "organizeSubtasks" Button
+    t =    32.76s     Check for interrupting elements affecting "organizeSubtasks" Button
+    t =    32.84s         Wait for com.apple.springboard to idle
+    t =    32.86s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    32.86s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    32.86s     Synthesize event
+    t =    33.16s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    33.54s Waiting 5.0s for "saveSubtaskOrganizer" Button to exist
+    t =    34.59s     Checking `Expect predicate `existsNoRetry == 1` for object "saveSubtaskOrganizer" Button`
+    t =    34.59s         Checking existence of `"saveSubtaskOrganizer" Button`
+    t =    34.74s Tap "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    34.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    34.75s     Find the "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    34.85s     Check for interrupting elements affecting "organizedActions-f1710000-0000-4000-8000-000000000002" Button
+    t =    34.94s         Wait for com.apple.springboard to idle
+    t =    34.96s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    34.96s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    34.96s     Synthesize event
+    t =    35.25s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.38s Tap "Edit details" Button
+    t =    36.38s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    36.38s     Find the "Edit details" Button
+    t =    36.51s     Check for interrupting elements affecting "slider.horizontal.3" Button
+    t =    36.60s         Wait for com.apple.springboard to idle
+    t =    36.62s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    36.62s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    36.63s     Synthesize event
+    t =    36.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    38.36s Waiting 5.0s for "Subtask details" NavigationBar to exist
+    t =    39.39s     Checking `Expect predicate `existsNoRetry == 1` for object "Subtask details" NavigationBar`
+    t =    39.39s         Checking existence of `"Subtask details" NavigationBar`
+    t =    39.56s Waiting 5.0s for "taskKindPicker" Any to exist
+    t =    40.61s     Checking `Expect predicate `existsNoRetry == 1` for object "taskKindPicker" Any`
+    t =    40.61s         Checking existence of `"taskKindPicker" Any`
+    t =    41.02s Tap "taskKindPicker" Any
+    t =    41.02s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    41.03s     Find the "taskKindPicker" Any
+    t =    41.41s     Check for interrupting elements affecting "taskKindPicker" Button
+    t =    41.52s         Wait for com.apple.springboard to idle
+    t =    41.54s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    41.54s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    41.56s     Synthesize event
+    t =    41.85s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.94s Waiting 5.0s for "Heading" Button to exist
+    t =    43.97s     Checking `Expect predicate `existsNoRetry == 1` for object "Heading" Button`
+    t =    43.98s         Checking existence of `"Heading" Button`
+    t =    44.06s Tap "Heading" Button
+    t =    44.06s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    44.06s     Find the "Heading" Button
+    t =    44.12s     Check for interrupting elements affecting "Heading" Button
+    t =    44.24s         Wait for com.apple.springboard to idle
+    t =    44.26s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    44.27s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    44.27s     Synthesize event
+    t =    44.56s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.03s Tap "Save" Button
+    t =    46.03s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.03s     Find the "Save" Button
+    t =    46.18s     Check for interrupting elements affecting "saveTask" Button
+    t =    46.29s         Wait for com.apple.springboard to idle
+    t =    46.31s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    46.32s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    46.32s     Synthesize event
+    t =    46.62s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.33s Tap "saveSubtaskOrganizer" Button
+    t =    47.33s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.34s     Find the "saveSubtaskOrganizer" Button
+    t =    47.46s     Check for interrupting elements affecting "saveSubtaskOrganizer" Button
+    t =    47.55s         Wait for com.apple.springboard to idle
+    t =    47.57s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    47.57s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    47.58s     Synthesize event
+    t =    47.87s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.34s Tap "saveTask" Button
+    t =    48.34s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.34s     Find the "saveTask" Button
+    t =    48.42s     Check for interrupting elements affecting "saveTask" Button
+    t =    48.49s         Wait for com.apple.springboard to idle
+    t =    48.51s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    48.51s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    48.52s     Synthesize event
+    t =    48.81s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    49.35s Waiting 8.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    50.37s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    50.37s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    50.43s Terminate com.dbakp.taskfold.workflowteststeameditbridge:68613
+    t =    51.48s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    51.48s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-10-26 06:12:38.536 xcodebuild[68366:21718339] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 06:12:38.536 xcodebuild[68366:21718339] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    51.70s         Setting up automation session
+    t =    55.23s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    58.04s Checking existence of `"Today" Button`
+    t =    58.38s Checking existence of `Button (First Match)`
+    t =    58.45s Checking existence of `"sun.max" Cell`
+    t =    58.50s Waiting 2.0s for "Today" Button to exist
+    t =    59.53s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    59.54s         Checking existence of `"Today" Button`
+    t =    59.57s Find the "Today" Button
+    t =    59.61s Tap "sun.max" Button
+    t =    59.61s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    59.61s     Find the "sun.max" Button
+    t =    59.63s     Check for interrupting elements affecting "sun.max" Button
+    t =    59.67s         Wait for com.apple.springboard to idle
+    t =    59.69s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    59.69s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    59.69s     Synthesize event
+    t =    59.99s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    61.46s Waiting 8.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    62.49s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    62.49s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    62.60s Find the "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    62.64s Checking existence of `"Today" Button`
+    t =    62.69s Checking existence of `Button (First Match)`
+    t =    62.73s Checking existence of `"sun.max" Cell`
+    t =    62.78s Waiting 2.0s for "Today" Button to exist
+    t =    63.82s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    63.82s         Checking existence of `"Today" Button`
+    t =    63.84s Find the "Today" Button
+    t =    63.87s Tap "sun.max" Button
+    t =    63.87s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    63.87s     Find the "sun.max" Button
+    t =    63.89s     Check for interrupting elements affecting "sun.max" Button
+    t =    63.92s         Wait for com.apple.springboard to idle
+    t =    63.94s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    63.95s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    63.95s     Synthesize event
+    t =    64.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    65.49s Waiting 10.0s for "taskDetails-f1810000-0000-4000-8000-000000000001" Button to exist
+    t =    66.54s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    66.54s         Checking existence of `"taskDetails-f1810000-0000-4000-8000-000000000001" Button`
+    t =    66.60s Tap "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    66.60s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    66.60s     Find the "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    66.64s     Check for interrupting elements affecting "taskDetails-f1810000-0000-4000-8000-000000000001" Button
+    t =    66.69s         Wait for com.apple.springboard to idle
+    t =    66.71s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    66.71s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    66.71s     Synthesize event
+    t =    67.01s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    67.56s Waiting 5.0s for "taskTitle" TextField to exist
+    t =    68.60s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    68.61s         Checking existence of `"taskTitle" TextField`
+    t =    68.73s Checking existence of `"organizeSubtasks" Button`
+    t =    68.80s Get number of matches for: Elements matching predicate '"taskEditorForm" IN identifiers'
+    t =    68.86s Swipe up "taskEditorForm" CollectionView
+    t =    68.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    68.87s     Find the "taskEditorForm" CollectionView
+    t =    68.93s     Check for interrupting elements affecting "taskEditorForm" CollectionView
+    t =    69.00s         Wait for com.apple.springboard to idle
+    t =    69.02s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    69.02s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    69.02s     Synthesize event
+    t =    69.48s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    71.61s Checking existence of `"organizeSubtasks" Button`
+    t =    71.73s Find the "organizeSubtasks" Button
+    t =    71.82s Tap "organizeSubtasks" Button
+    t =    71.82s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    71.82s     Find the "organizeSubtasks" Button
+    t =    71.90s     Check for interrupting elements affecting "organizeSubtasks" Button
+    t =    71.96s         Wait for com.apple.springboard to idle
+    t =    71.98s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    71.98s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    71.99s     Synthesize event
+    t =    72.27s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    72.76s Waiting 5.0s for "saveSubtaskOrganizer" Button to exist
+    t =    73.80s     Checking `Expect predicate `existsNoRetry == 1` for object "saveSubtaskOrganizer" Button`
+    t =    73.80s         Checking existence of `"saveSubtaskOrganizer" Button`
+    t =    73.96s Checking existence of `"organizedCompletion-f1710000-0000-4000-8000-000000000002" Button`
+    t =    74.06s Checking existence of `"organizedCompletion-f1710000-0000-4000-8000-000000000004" Button`
+    t =    74.18s Find the Target Application 'com.dbakp.taskfold.workflowteststeameditbridge'
+    t =    74.43s Added attachment named 'Nested heading retains actionable ordinary descendant'
+    t =    74.43s Tap "Cancel" Button
+    t =    74.43s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    74.44s     Find the "Cancel" Button
+    t =    74.54s     Check for interrupting elements affecting "cancelSubtaskOrganizer" Button
+    t =    74.63s         Wait for com.apple.springboard to idle
+    t =    74.65s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    74.66s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    74.66s     Synthesize event
+    t =    74.96s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    75.39s Tap "Cancel" Button
+    t =    75.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    75.39s     Find the "Cancel" Button
+    t =    75.47s     Check for interrupting elements affecting "Cancel" Button
+    t =    75.54s         Wait for com.apple.springboard to idle
+    t =    75.56s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    75.56s Ignoring failure to get hierarchy for remote element in process 60207 (Error getting main window kAXErrorServerNotFound)
+    t =    75.56s     Synthesize event
+    t =    75.86s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    76.34s Terminate com.dbakp.taskfold.workflowteststeameditbridge:68717
+    t =    77.40s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testNativeNestedHeadingKeepsDescendantsAndParentCancelThenSave]' passed (77.512 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-26 06:13:04.566.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 121.562 (121.581) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-26 06:13:04.569.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 121.562 (121.584) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 06:13:04.569.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 121.562 (121.585) seconds
+2026-10-26 06:13:04.882 xcodebuild[68366:21718339] [MT] IDETestOperationsObserverDebug: 131.958 elapsed -- Testing started completed.
+2026-10-26 06:13:04.882 xcodebuild[68366:21718339] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 06:13:04.882 xcodebuild[68366:21718339] [MT] IDETestOperationsObserverDebug: 131.958 sec, +131.958 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-heading-portability-ipad-final.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

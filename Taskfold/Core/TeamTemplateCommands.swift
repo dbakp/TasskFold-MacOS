@@ -38,7 +38,8 @@ struct TeamTemplateCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
             fields.formUnion(["name", "document"])
             let name = try TeamTemplateLibraryValue.name(body["name"])
             guard name == name.trimmingCharacters(in: .whitespacesAndNewlines), let document = body["document"] else { throw Self.invalid }
-            _ = try WorkflowTemplate(document: document)
+            let definition = try WorkflowTemplate(document: document)
+            guard !definition.requiresHeadingSupport else { throw Self.invalid }
         }
         guard Set(body.keys) == fields, try JSONEncoder().encode(body).count <= 2_050_000 else { throw Self.invalid }
         self.account = account; self.origin = origin; self.action = action; self.body = body

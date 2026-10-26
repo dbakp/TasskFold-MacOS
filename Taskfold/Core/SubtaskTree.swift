@@ -146,7 +146,7 @@ enum SubtaskTree {
         return result
     }
     static func progress(_ value: JSON) -> (completed: Int, total: Int) {
-        let items = outline(value)
+        let items = outline(value).filter { TaskKind.mayComplete($0.record) }
         return (items.filter { $0.record.completed }.count, items.count)
     }
     static func changing(_ value: JSON, id: String, fields: [String: JSON]) -> JSON {
@@ -631,6 +631,7 @@ extension TaskSelectionPlan {
             guard value == .null || { if case .array = value { return true }; return false }() else { throw failure("This checklist uses an unsupported format. Open its parent before duplicating it.") }
             return .array(try value.list.map { node in
                 guard depth <= SubtaskTree.readableDepth, case .object(let fields) = node, case .string? = fields["title"], count < TaskHierarchyIndex.maximumItems else { throw failure("This checklist is too large or uses an unsupported format to duplicate.") }
+                guard TaskKind(Record(fields)) != .unsupported else { throw failure("This subtask type cannot be duplicated yet. Its source is unchanged.") }
                 count += 1; var row = Record(fields)
                 row["id"] = .string(UUID().uuidString.lowercased()); row["completed"] = .bool(false); row["completed_at"] = .null
                 if row.fields["task_generation"] != nil { row["task_generation"] = .string(UUID().uuidString.lowercased()) }
@@ -663,6 +664,7 @@ extension TaskSelectionPlan {
                 working[path[0]] = updated
             } else {
                 guard let original = roots[task.id], original == task else { throw failure("A selected task changed. Review its current content before duplicating it.") }
+                guard TaskKind(original) != .unsupported else { throw failure("This task type cannot be duplicated yet. Its source is unchanged.") }
                 var copy = original
                 copy["id"] = .string(UUID().uuidString.lowercased()); copy["task_generation"] = .string(UUID().uuidString.lowercased())
                 copy["user_id"] = .string(workspace.account); copy["completion_version"] = .number(0)

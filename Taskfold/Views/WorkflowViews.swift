@@ -489,24 +489,30 @@ struct TemplateRunView: View {
         WorkflowShell(title: "Use template") {
             Form {
                 Text(template.name).font(.title2.bold())
-                if store.teamWorkflowCreationAvailable, (try? WorkflowTemplate(document: template["document"])) != nil { Section { Button("Use in shared workspace…", systemImage: "person.3") { sharedWorkflow = .init(source: .personal(template)) }.accessibilityIdentifier("runPrivateTemplateShared") } }
+                if store.teamWorkflowCreationAvailable, (try? WorkflowTemplate(document: template["document"]))?.requiresHeadingSupport == false { Section { Button("Use in shared workspace…", systemImage: "person.3") { sharedWorkflow = .init(source: .personal(template)) }.accessibilityIdentifier("runPrivateTemplateShared") } }
 
                 Button("Edit template",systemImage:"pencil") { editingDefinition=true }.accessibilityIdentifier("editTemplateDefinition").disabled(pending != nil)
                 if let definition = try? WorkflowTemplate(document: template["document"]) {
                     Section("New workflow") {
                         if definition.kind == .project { TextField("New project name", text: $name).accessibilityIdentifier("templateProjectName") }
                         else {
-                            Picker("Destination", selection: $project) { if definition.kind == .task { Text("Inbox").tag("") }; Text("Choose a project").tag("__choose__"); ForEach(store.projects) { Text($0.name).tag($0.id) } }
+                            Picker("Destination", selection: $project) { if definition.kind == .task { Text("Inbox").tag("").accessibilityIdentifier("templateInboxDestination") }; Text("Choose a project").tag("__choose__"); ForEach(store.projects) { Text($0.name).tag($0.id) } }.accessibilityIdentifier("templateDestination")
                         }
                         Toggle("Schedule from a start date", isOn: $dated)
                         if dated { DatePicker("Start date", selection: $date, displayedComponents: .date) }
                         Text(dated ? "Dated tasks keep their spacing from the first planned day, or first deadline. Tasks without dates stay unscheduled." : "New tasks start without planned dates or deadlines.").font(.caption).foregroundStyle(.secondary)
                     }.disabled(pending != nil)
                     Section("Preview") {
-                        ForEach(definition.tasks.prefix(25)) { Text($0.title) }
-                        if definition.tasks.count > 25 { Text("And \(definition.tasks.count - 25) more tasks").foregroundStyle(.secondary) }
+                        if definition.requiresHeadingSupport { TemplateDefinitionPreview(document: definition.document, scope: "run") }
+                        else {
+                            ForEach(definition.tasks.prefix(25)) { Text($0.title) }
+                            if definition.tasks.count > 25 { Text("And \(definition.tasks.count - 25) more tasks").foregroundStyle(.secondary) }
+                        }
+                        if definition.requiresHeadingSupport && !store.taskHeadingsAuthoringEnabled {
+                            Text("Heading workflows are not available in this workspace yet. You can keep or export this template.").font(.caption).foregroundStyle(.secondary)
+                        }
                         Button { apply(definition) } label: { Text("Create workflow").frame(maxWidth:.infinity,minHeight:44) }
-                            .buttonStyle(.borderedProminent).accessibilityIdentifier("applyWorkflowTemplate")
+                            .buttonStyle(.borderedProminent).accessibilityIdentifier("applyWorkflowTemplate").disabled(definition.requiresHeadingSupport && !store.taskHeadingsAuthoringEnabled)
                     }
                 } else { ContentUnavailableView("Template needs an update", systemImage: "arrow.down.app", description: Text("Update Taskfold to use this template. Its definition is still saved.")) }
                 if let message { Text(message).foregroundStyle(.red) }
@@ -518,6 +524,7 @@ struct TemplateRunView: View {
     private func apply(_ definition: WorkflowTemplate) {
         guard store.workflowReady(binding), store.record(WorkflowTemplate.table, id: template.id)?["document"] == template["document"] else { message = "The workspace or template changed. Reopen it before creating a workflow."; return }
         do {
+            guard !definition.requiresHeadingSupport || store.taskHeadingsAuthoringEnabled else { throw AppFailure(message: "Heading workflows are not available in this workspace yet. The template is still saved.") }
             let target = project == "__choose__" ? "" : project
             guard definition.kind == .project || (definition.kind == .task && project != "__choose__") || !target.isEmpty else { throw AppFailure(message: "Choose a destination first.") }
             guard target.isEmpty || store.projects.contains(where: { $0.id == target }) else { throw AppFailure(message: "This destination is no longer active.") }

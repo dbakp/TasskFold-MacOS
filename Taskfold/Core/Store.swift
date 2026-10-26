@@ -1405,6 +1405,9 @@ final class Store {
                 error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
                 return false
             }
+            guard taskHeadingsAuthoringEnabled || !TaskKind.requiresAuthoring(change, existing: record(change.table, id: change.recordID)) else {
+                snapshot = old; error = "Heading creation is not available in this workspace yet. Your source and saved draft are unchanged."; return false
+            }
             guard TaskKind.permits(change, existing: record(change.table, id: change.recordID)) else {
                 snapshot = old
                 error = "This task type or checklist needs review before completion. Your work is unchanged."
@@ -3115,6 +3118,19 @@ extension Store {
             snapshot.tables["tasks"] = [mine,legacy,other,unassigned]
             TaskAssignmentProvenance.recordLocal(Mutation(table:"tasks",recordID:mine.id,method:"POST",fields:mine.fields),before:nil,after:mine,snapshot:&snapshot,account:userID)
             snapshot.tables[TaskAssignmentProvenance.table,default:[]].append(Record(["id":.string(UUID().uuidString.lowercased()),"task_id":.string(other.id),"task_generation":other["task_generation"],"node_key":.string(""),"node_path":.array([]),"assignee_id":.string(member),"actor_id":.string(member),"event_id":.string(UUID().uuidString.lowercased()),"assigned_at":.string(TaskActivity.stamp(Date())),"origin":.string("recorded"),"active":.bool(true)]))
+        }
+        if ProcessInfo.processInfo.arguments.contains("--heading-portability-template-fixture"),
+           Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
+            do {
+                guard let current = record("tasks", id: "f1810000-0000-4000-8000-000000000001") else { throw AppFailure(message: "The heading fixture is unavailable.") }
+                var heading = try TaskKind.setting(current, heading: true)
+                heading["subtasks"] = SubtaskTree.changing(heading["subtasks"], id: "f1710000-0000-4000-8000-000000000002", fields: ["is_heading": .bool(true)])
+                snapshot.tables["tasks"] = [heading]
+                let definition = try WorkflowTemplate.capture(kind: .task, id: heading.id, snapshot: snapshot)
+                let file = try WorkflowTemplateFile(name: "Reference workflow", document: definition.document)
+                let decoded = try WorkflowTemplateFile(data: file.encoded())
+                snapshot.tables[WorkflowTemplate.table] = [Record(["id": .string("f2810000-0000-4000-8000-000000000003"), "user_id": .string(userID), "name": .string(decoded.name), "document": decoded.template.document])]
+            } catch { self.error = error.localizedDescription }
         }
         do { try persist(); seedSharedCaptureFixture() } catch { self.error = error.localizedDescription }
     }

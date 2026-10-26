@@ -82,6 +82,55 @@ capability and changes no production settings. Use the existing signing and
 isolated-build scripts before runtime testing. See
 `p2-task-headings-native-evidence.json` for exact accepted build/test scope.
 
+## Typed portability and checklist progress
+
+Checklist progress now counts ordinary descendants and excludes heading and
+unsupported-type nodes. Expansion and the full tree remain intact; a heading
+container does not hide its ordinary descendants from the checklist count. Empty
+work progress is omitted rather than presenting 0/0. Version-2 workflow review
+summaries count ordinary tasks/subtasks separately from headings.
+
+Heading workflow definitions use version 2 with the exact capability declaration
+`["task_headings"]`. The matching `taskfold-template` file envelope also uses
+version 2. Ordinary captures remove nullable/false type metadata from the fresh
+definition and keep version 1, preserving ordinary file compatibility. A newer
+version without the declared capability, an unknown capability, malformed type or
+mismatched file/document version is refused. Capturing an unsupported live task
+type refuses rather than dropping it. Relative plans, notes, labels, hierarchy
+and header flags survive file roundtrip and fresh runs. Existing intentional
+template exclusions—completion, discussion, attachments and assignments—remain
+visible in the review; workspace backup is the full work-transfer format.
+
+Workspace exports containing a root or recognized nested `is_heading` field use
+version 2 and the same capability. Version 1 and original unversioned exports
+remain readable for ordinary work. Typed work cannot be smuggled into a version-1
+or unversioned file; root/nested boolean and open-heading invariants validate
+before restore planning. Restore mapping preserves the flag while giving copied
+work its proper account and identities. Unsupported future template definitions
+remain preservable as opaque saved definitions under the existing backup rules.
+
+Root/branch duplication keeps known types and content while replacing identities
+and refusing unknown types for the whole selection. A saved editor draft's
+independent Inbox copy also retains known heading flags instead of turning the
+reference into completable work. The full encrypted original remains preserved.
+
+Final Store admission checks authoring availability for introduced headings and
+explicit conversions, including nested writes, restore and duplication. Existing
+metadata/deletion remain available. Private workflow creation checks the captured
+workspace and heading capability before preparing mutations. Heading previews
+show the nested contents and type status; a capability refusal leaves the saved
+template intact. Shared publication/run requests explicitly refuse version 2
+until their server/capability adapters support it. No cloud capability or hosted
+schema was enabled by this stage.
+
+See `p2-task-headings-portability-evidence.json` for the exact Core, coordinated
+file-I/O, native and build scope. Broader action/count/history consistency,
+source-specific Todoist/CSV/clipboard mapping and shared type support remain open.
+In particular, project totals still use the existing root-occurrence/checklist
+policy; descendant work under headings needs a deliberate broader review before
+exposure. Largest-text, spoken, Mac runtime and cross-device acceptance are also
+not established by these scoped checks.
+
 ## Ordered work before exposure
 
 1. Finish native acceptance of the implemented local presentation/type editors:
@@ -95,12 +144,13 @@ isolated-build scripts before runtime testing. See
 3. Define actionable totals consistently across Today, Inbox review, project
    progress, day capacity, productivity, filters, notifications and wearables.
    Retain dated headings as readable context without treating them as work that
-   can be completed. Checklist progress still counts heading nodes (visible in
-   the recorded organizer screenshot); exclude those while retaining ordinary
-   descendants. Verify the remaining counters/history independently.
-4. Preserve the type through duplication, templates, backup/export/import,
-   clipboard capture and reviewed Todoist mapping. Reject any incompatible
-   template or export instead of silently dropping the type or its content.
+   can be completed. Checklist progress now excludes heading nodes and retains
+   ordinary descendants; verify the remaining root/descendant totals and history
+   independently before exposure.
+4. Finish clipboard/CSV and reviewed source-specific Todoist mapping. Scoped
+   duplication, versioned template files/runs and workspace backup/restore now
+   preserve known types; wider provider/file-handoff/cross-device and native
+   recovery acceptance remain open.
 5. Finish team type-edit command/receipt/recovery adapters and capability
    negotiation. Resolve the user-deferred older-client rollout dependency before
    hosted deployment/exposure. Missing server capability must leave current work

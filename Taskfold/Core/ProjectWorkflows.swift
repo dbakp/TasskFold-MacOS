@@ -27,7 +27,7 @@ struct WorkflowTemplateFile: Sendable {
         do { value = try JSONDecoder().decode(JSON.self, from: data) }
         catch { throw AppFailure(message: "This isn’t a readable Taskfold template file.") }
         let root = value.object
-        guard Set(root.keys) == ["format", "version", "name", "document"], root["format"] == .string("taskfold-template"), root["version"] == .number(1), case .string? = root["name"] else {
+        guard Set(root.keys) == ["format", "version", "name", "document"], root["format"] == .string("taskfold-template"), [JSON.number(1), .number(2)].contains(root["version"] ?? .null), root["document"]?.object["version"] == root["version"], case .string? = root["name"] else {
             throw AppFailure(message: "Choose a supported Taskfold template file. Workspace backups belong in Restore from file.")
         }
         try self.init(name: root["name"]!.text, document: root["document"]!)
@@ -93,7 +93,7 @@ struct WorkflowTemplateFile: Sendable {
         let portable = JSON.object(document)
         _ = try WorkflowTemplate(document: portable)
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(JSON.object(["format": .string("taskfold-template"), "version": .number(1), "name": .string(name), "document": portable]))
+        let data = try encoder.encode(JSON.object(["format": .string("taskfold-template"), "version": template.document.object["version"]!, "name": .string(name), "document": portable]))
         guard data.count <= Self.maximumBytes else { throw AppFailure(message: "This template is too large to share as a file.") }
         return data
     }
@@ -216,15 +216,17 @@ struct WorkflowTemplate: Sendable {
     enum Kind: String { case project, section, task }
     static let table = "project_templates"
     let document: JSON
+    var requiresHeadingSupport: Bool { document.object["version"] == .number(2) }
     var kind: Kind { Kind(rawValue: document.object["kind"]?.text ?? "")! }
     var projects: [Record] { document.object["projects"]?.list.map { Record($0.object) } ?? [] }
     var sections: [Record] { document.object["sections"]?.list.map { Record($0.object) } ?? [] }
     var tasks: [Record] { document.object["tasks"]?.list.map { Record($0.object) } ?? [] }
-    private static let taskFields: Set<String> = ["id","title","description","priority","project_id","section_id","duration_minutes","labels","subtasks","is_recurring","recurrence_pattern","due_time","time_zone","planned_offset","deadline_offset","repeat_start_offset","repeat_end_offset"]
+    private static let taskFields: Set<String> = ["is_heading","id","title","description","priority","project_id","section_id","duration_minutes","labels","subtasks","is_recurring","recurrence_pattern","due_time","time_zone","planned_offset","deadline_offset","repeat_start_offset","repeat_end_offset"]
     init(document: JSON) throws {
         let root = document.object
-        guard root["version"] == .number(1), Kind(rawValue: root["kind"]?.text ?? "") != nil,
-              Set(root.keys).isSubset(of: ["version","kind","projects","sections","tasks"]),
+        let headingFormat = root["version"] == .number(2) && root["capabilities"] == .array([.string("task_headings")])
+        guard (root["version"] == .number(1) && root["capabilities"] == nil || headingFormat), Kind(rawValue: root["kind"]?.text ?? "") != nil,
+              Set(root.keys).isSubset(of: ["version","capabilities","kind","projects","sections","tasks"]),
               ["projects","sections","tasks"].allSatisfy({ if case .array? = root[$0] { return true }; return false }) else {
             throw AppFailure(message: "This template needs a newer version of Taskfold.")
         }
@@ -259,6 +261,9 @@ struct WorkflowTemplate: Sendable {
             }
         }
         func checkTask(_ task: Record, depth: Int) throws {
+            if let type = task.fields["is_heading"] {
+                guard headingFormat, case .bool = type else { throw AppFailure(message: "This template task type needs a supported heading format.") }
+            }
             guard depth <= 10, Set(task.fields.keys).isSubset(of: Self.taskFields), !task.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   task.title.count <= 10000, (task.string("project_id").isEmpty || projectIDs.contains(task.string("project_id"))) else { throw AppFailure(message: "The template contains an invalid task.") }
             if !task.string("section_id").isEmpty { guard sectionRows[task.string("section_id")]?.string("project_id") == task.string("project_id") else { throw AppFailure(message: "A template section belongs to another project.") } }
@@ -310,7 +315,9 @@ struct WorkflowTemplate: Sendable {
         func offset(_ day: String) -> JSON? { Dates.parse(day).flatMap { calendar.dateComponents([.day], from: anchor, to: $0).day }.map { .number(Double($0)) } }
         func clean(_ task: Record, depth: Int, shared: Bool) throws -> Record {
             guard depth <= 10 else { throw AppFailure(message: "This task has too many subtask levels for a template.") }
+            guard TaskKind(task) != .unsupported else { throw AppFailure(message: "This task type cannot be copied into a template yet. Its source is unchanged.") }
             var fields = task.fields.filter { Self.taskFields.contains($0.key) }
+            if TaskKind(task) != .heading { fields.removeValue(forKey: "is_heading") }
             if shared {
                 let draft = TeamTaskLabelsDraft(task["labels"])
                 guard draft.supported else { throw AppFailure(message: "These shared labels need a newer version before saving a template. The source is unchanged.") }
@@ -344,7 +351,11 @@ struct WorkflowTemplate: Sendable {
             if !projectIDs.contains(row.string("parent_id")) { fields["parent_id"] = .null }
             return .object(fields)
         }
-        return try Self(document: .object(["version": .number(1), "kind": .string(kind.rawValue), "projects": .array(projectRows), "sections": .array(selectedSections.map { .object($0.fields.filter { ["id","name","project_id","order_index"].contains($0.key) }) }), "tasks": .array(try orderedTasks.map { .object(try clean($0, depth: 0, shared: !TeamTaskLabelsDraft.usesPersonalCatalog($0, cache: teamCache)).fields) })]))
+        let cleaned = try orderedTasks.map { try clean($0, depth: 0, shared: !TeamTaskLabelsDraft.usesPersonalCatalog($0, cache: teamCache)) }
+        let headings = TaskKind.containsTypeMetadata(cleaned)
+        var definition: [String: JSON] = ["version": .number(headings ? 2 : 1), "kind": .string(kind.rawValue), "projects": .array(projectRows), "sections": .array(selectedSections.map { .object($0.fields.filter { ["id","name","project_id","order_index"].contains($0.key) }) }), "tasks": .array(cleaned.map { .object($0.fields) })]
+        if headings { definition["capabilities"] = .array([.string("task_headings")]) }
+        return try Self(document: .object(definition))
     }
     func instantiate(account: String, name: String, targetProject: String = "", start: Date? = nil, labels: [Record] = [], run: UUID = UUID()) throws -> [Mutation] {
         guard !account.isEmpty, kind != .project || !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, kind != .section || !targetProject.isEmpty else { throw AppFailure(message: "Choose a project name or destination before using this template.") }
@@ -371,7 +382,7 @@ struct WorkflowTemplate: Sendable {
         func task(_ source: Record, path: String) -> Record {
             var row = Record.task(user: account, project: projectIDs[source.string("project_id")] ?? targetProject)
             row["id"] = .string(fresh("task", path)); row["task_generation"] = .string(fresh("generation", path))
-            for field in ["title","description","priority","duration_minutes"] where source.fields[field] != nil { row[field] = source[field] }
+            for field in ["is_heading","title","description","priority","duration_minutes"] where source.fields[field] != nil { row[field] = source[field] }
             row["section_id"] = sectionIDs[source.string("section_id")].map(JSON.string) ?? .null
             row["due_date"] = day(source, "planned_offset").map(JSON.string) ?? .null; row["deadline_date"] = day(source, "deadline_offset").map(JSON.string) ?? .null
             if row["due_date"] != .null { row["due_time"] = source["due_time"]; row["time_zone"] = source["time_zone"] }
@@ -531,6 +542,7 @@ enum TemplateEditing {
     }
     static func taskSummary(_ task: Record) -> String {
         var parts=[task.priority==4 ? "No priority" : "Priority \(task.priority)"]
+        if TaskKind(task) == .heading { parts.insert("Heading · stays open", at: 0) }
         if let minutes=task.durationMinutes { parts.append("\(minutes) min") }
         for (key,title) in [("planned_offset","Planned day"),("deadline_offset","Deadline day"),("repeat_start_offset","Repeat starts day"),("repeat_end_offset","Repeat ends day")] {
             if case .number(let value)=task[key] { parts.append(title+" "+String(Int(value))) }
@@ -562,9 +574,10 @@ enum TemplateEditing {
     }
     static func summary(_ document: JSON) -> String {
         guard let definition=try? WorkflowTemplate(document:document) else { return "Unsupported template definition" }
-        let count=tasks(document).count
+        let items=tasks(document), headings=items.filter { TaskKind($0.record) == .heading }.count
+        let count=items.count-headings
         func label(_ count:Int,_ noun:String) -> String { "\(count) "+noun+(count==1 ? "" : "s") }
-        return label(definition.projects.count,"project")+" · "+label(definition.sections.count,"section")+" · "+(count==1 ? "1 task" : "\(count) tasks and subtasks")
+        return label(definition.projects.count,"project")+" · "+label(definition.sections.count,"section")+" · "+(count==1 ? "1 task" : "\(count) tasks and subtasks")+(headings == 0 ? "" : " · "+label(headings,"heading"))
     }
 }
 

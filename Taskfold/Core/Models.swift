@@ -71,6 +71,27 @@ enum TaskKind: Equatable, Sendable {
         }
     }
     static func mayComplete(_ row: Record) -> Bool { Self(row) == .task }
+    static func containsTypeMetadata(_ rows: [Record]) -> Bool {
+        rows.contains { row in
+            row.fields["is_heading"] != nil || (checklistNodes(row["subtasks"]).map { $0.contains { $0.fields["is_heading"] != nil } } ?? true)
+        }
+    }
+    /// Existing headings can still be read/edited/deleted when authoring is off.
+    /// New headings and explicit conversions must use the workspace's capability.
+    static func requiresAuthoring(_ change: Mutation, existing: Record?) -> Bool {
+        guard change.table == "tasks", ["POST", "PATCH"].contains(change.method) else { return false }
+        if change.fields["is_heading"] != nil {
+            let next = Record((existing?.fields ?? [:]).merging(change.fields) { _, value in value })
+            if Self(next) == .heading && existing == nil || existing.map({ Self($0) != Self(next) }) == true { return true }
+        }
+        guard let children = change.fields["subtasks"] else { return false }
+        let old = Dictionary((checklistNodes(existing?["subtasks"] ?? .null) ?? []).map { ($0.id, Self($0)) }, uniquingKeysWith: { first, _ in first })
+        guard let next = checklistNodes(children) else { return true }
+        return next.contains { row in
+            Self(row) == .heading && old[row.id] != .heading || old[row.id] == .heading && Self(row) != .heading
+        }
+    }
+
     private static func validHeading(_ row: Record) -> Bool {
         Self(row) != .unsupported && (Self(row) != .heading || row["completed"] == .bool(false) && row["completed_at"] == .null)
     }

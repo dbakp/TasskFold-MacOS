@@ -1,0 +1,12 @@
+{
+  "Taskfold/Core/Backups.swift": "5894e2aeeee979fce3e82210d2c1aebfed8ce7a18528ea6bc410ed4bc1ad1af9",
+  "Taskfold/Core/Models.swift": "5550bdcc1e372bbe7e6a73bb2f4201c07c4a4bc44f1f2fa67b9b4597e1514dbc",
+  "Taskfold/Core/ProjectWorkflows.swift": "9e7892b02d294b8a81b679f636a1d081bb9ccbd9f7993e1170812a2d715e953d",
+  "Taskfold/Core/Store.swift": "92c2a98806d241785aae6e43e45fb614d28b99f4ee95f9f1c92ea34bc6eeffc1",
+  "Taskfold/Core/SubtaskTree.swift": "fd0e9e91052c5ae9034d0a7bf925bdc8dbe7d88e796dda6779cafae39889c094",
+  "Taskfold/Core/TeamTemplateCommands.swift": "a88eb5ace4825154046c980037c23308af92d8f2237da895dd0fa83f16d2d4b0",
+  "Taskfold/Core/TeamWorkflowRunCommands.swift": "f11f967504961ca4dc1a659cae2916f4e5bc7b1598531dfd820ef4569b420b9f",
+  "Taskfold/Views/TaskRowView.swift": "1a136959fe0e334bb60b59674e68dc9eb68d265a210e44ebcb10af81f3885aa8",
+  "Taskfold/Views/WorkflowViews.swift": "cf1a363368b25c510a17c89ad83c538f7c379752aca4fa0cb7183b0cda3245d4",
+  "TaskfoldTests/HeadingPortabilityTests.swift": "c04abca1f4d388856e144981a240165a485ad1c62ba348ccd08b3551528e932e"
+}

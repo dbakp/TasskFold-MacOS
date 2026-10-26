@@ -1,0 +1,11 @@
+This stage uses synthetic, reserved local fixtures only. No hosted schema or configuration was changed.
+
+Rejected/interrupted observations are retained as limits, not acceptance:
+- Initial iOS compile: test named TeamTemplatePublication instead of TeamTemplateCommand; corrected.
+- Initial Core assertion compared JSON object byte ordering; changed to content/identity assertions.
+- First iPhone native run used the template name as navigation title; corrected to Use template.
+- First iPad native run targeted the sidebar Inbox rather than the destination choice; choice now has a unique accessibility identifier.
+- First Mac prepare stopped on an existing isolated Backups.swift allowlist difference; its subsequent stale-input build is not acceptance. The current build preserves that established test-harness difference.
+- Unfiltered Core runs were interrupted after roughly 90 seconds without progress in unrelated location-private tests. They are not a whole-suite pass. The changed paths were then verified with the explicit scoped filter recorded in the report.
+
+The retained current Mac host keeps its private services and existing backupcanceltests provider-presenter allowlist. Native Mac UI/spoken acceptance remains unverified; earlier interactive UI Automation authentication is pending.

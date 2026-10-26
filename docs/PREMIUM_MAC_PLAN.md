@@ -7282,3 +7282,43 @@ The owned phone/tablet app and runner installations are removed and no test app
 is running. This stage removed 814.8 MiB of logical scratch files; both Core
 build caches and the ready Mac host/build remain available. Existing Simulator
 boot states were preserved. See headings-native/cleanup.json.
+
+
+### 2026-10-26 — Heading portability and checklist progress (rank 3 in progress)
+
+Checklist progress now excludes heading/unsupported nodes while retaining ordinary
+descendants; zero-work progress is omitted. Typed workflow review counts headings
+separately. Root and branch duplication, template capture/file roundtrip/fresh run,
+workspace backup/restore and saved-editor Inbox copy preserve known heading flags
+and notes. Typed definitions/files use explicit version 2 plus task_headings;
+ordinary captures stay version 1. Unsupported types and downgraded formats refuse
+before creating partial work. Normal authoring remains disabled; final Store
+admission covers new roots/children and conversions. Shared v2 publication/runs
+remain refused pending their command/capability support.
+
+Both independently owned apps pass 318 scoped Core cases, with five optional
+cloud-fixture skips and zero failures; 16 cases cover typed portability. Real
+coordinated temporary-file reads exercise template and backup content. These are
+local file-I/O checks, not provider-picker/iCloud acceptance. Both current Debug
+builds and strict signatures pass. Installed iPad review/cancel/create/cold return
+and nested Save/Cancel/checklist tests pass. Final iPhone evidence is recorded in
+p2-task-headings-portability-evidence.json. No new native/spoken Mac acceptance is
+claimed: interactive UI Automation authentication remains pending. Unfiltered
+Core runs were stopped without further log progress in unrelated location-private
+tests, so no full-suite pass is claimed.
+
+Heading authoring is still local/test opt-in. Broader list/project totals and
+action/history policy, Todoist/CSV/clipboard mapping, shared adapters, largest-text,
+spoken, Mac and cross-device heading acceptance remain open. The library's root
+row count also still uses its established task label; the typed review has separate
+task/heading totals. No hosted SQL/configuration or deferred rollout, reminder,
+provider, physical-device or distribution work changed. The full Px goal remains
+active. See TASK_HEADINGS.md and headings-portability/ for exact evidence/limits.
+
+Both final installed iPhone and iPad scenarios pass (two per device, zero failures
+or skips); six light/dark images are inspected. Both synthetic final snapshots
+retain the nested heading and ordinary descendant. Owned phone/tablet app/runner
+installations are removed, with no native Mac test app launched. This stage
+removed 858.7 MiB of logical scratch; both Core caches and the ready isolated
+Mac host/build remain. Simulator boot states are preserved. See
+headings-portability/cleanup.json.

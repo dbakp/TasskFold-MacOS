@@ -14,6 +14,7 @@ struct BackupFailure: LocalizedError, Equatable {
 struct WorkspaceBackup: Codable, Sendable {
     var format = "com.taskfold.workspace"
     var version = 1
+    var capabilities: [String]? = nil
     var id: String
     var createdAt: String
     var sourceAccount: String
@@ -31,7 +32,8 @@ struct WorkspaceBackup: Codable, Sendable {
             if let session = FocusSessionChange.session(in: row, account: account), let checkpoint = try? session.checkpoint(at: now) { row["state"] = checkpoint.document }
             return row
         }
-        return Self(id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
+        let headings = TaskKind.containsTypeMetadata(tables["tasks"] ?? [])
+        return Self(version: headings ? 2 : 1, capabilities: headings ? ["task_headings"] : nil, id: UUID().uuidString.lowercased(), createdAt: ISO8601DateFormatter().string(from: now), sourceAccount: account,
                     tables: tables, unsyncedChanges: snapshot.pending.count + ConversationOutbox.rows(snapshot, account: account).count)
     }
     func data() throws -> Data {
@@ -53,7 +55,7 @@ struct WorkspaceBackup: Codable, Sendable {
             guard case .object(let object) = root else { throw BackupFailure(message: "A Taskfold backup must be a JSON object.") }
             var backup: Self
             if object["format"] != nil || object["version"] != nil {
-                guard object["format"] == .string("com.taskfold.workspace"), object["version"] == .number(1) else {
+                guard object["format"] == .string("com.taskfold.workspace"), [JSON.number(1), .number(2)].contains(object["version"] ?? .null) else {
                     throw BackupFailure(message: "This backup format or version is unsupported. Update Taskfold before restoring it.")
                 }
                 backup = try JSONDecoder().decode(Self.self, from: data)
@@ -81,7 +83,7 @@ struct WorkspaceBackup: Codable, Sendable {
         "labels": ["id","user_id","name","color","created_at"],
         WorkflowTemplate.table: ["id","user_id","name","document","created_at","updated_at"],
         "sections": ["id","user_id","project_id","name","created_at","order_index"],
-        "tasks": ["id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
+        "tasks": ["is_heading","id","user_id","title","description","completed","completion_version","task_generation","priority","due_date","due_time","project_id","section_id","labels","subtasks","reminders","attachments","comments","created_at","completed_at","recurrence_pattern","is_recurring","recurrence_parent_id","recurrence_end_date","notification_sent_at","assigned_to","deadline_date","duration_minutes","time_zone","reminder_specs","source_metadata","scheduled_at"],
         "saved_views": ["id","user_id","name","query_ast","layout","grouping","sort_by","include_completed","order_index","created_at","updated_at"],
         "favorites": ["id","user_id","order_index","created_at"],
         "view_preferences": ["id","user_id","layout","grouping","sort_by","include_completed","priority_filter","overdue_collapsed","updated_at","working_hours","date_preferences",ProductivityGoals.field],
@@ -90,6 +92,10 @@ struct WorkspaceBackup: Codable, Sendable {
         ReminderSnooze.table: ["id","user_id","settings","updated_at"]
     ]
     func validate() throws {
+        guard version == 1 && capabilities == nil || version == 2 && capabilities == ["task_headings"],
+              !TaskKind.containsTypeMetadata(tables["tasks"] ?? []) || version == 2 else {
+            throw BackupFailure(message: "This backup requires the supported task-heading format. Its contents are unchanged.")
+        }
         guard tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw BackupFailure(message: "This backup exceeds the 50,000-record limit.") }
         for (table, rows) in tables {
             let activity = table == TaskActivity.table || table == TaskActivity.epochTable
@@ -121,11 +127,14 @@ struct WorkspaceBackup: Codable, Sendable {
                 for key in ["id","user_id","name","title","description","color","project_id","parent_id","section_id","assigned_to","recurrence_parent_id","time_zone","due_date","due_time","deadline_date","recurrence_end_date","scheduled_at"] {
                     if let value = row.fields[key], value != .null, case .string = value {} else if let value = row.fields[key], value != .null { throw BackupFailure(message: "\(table).\(key) must be text.") }
                 }
+                if table == "tasks", !TaskKind.permits(Mutation(table: "tasks", recordID: row.id, method: "POST", fields: row.fields), existing: nil) {
+                    throw BackupFailure(message: "A heading or checklist task type is invalid. The saved file is unchanged.")
+                }
                 if let generation = row.fields["task_generation"], generation != .null {
                     guard case .string(let value) = generation, UUID(uuidString: value) != nil,
                           value.lowercased() != "00000000-0000-0000-0000-000000000000" else { throw BackupFailure(message: "A task has an invalid generation ID.") }
                 }
-                for key in ["completed","is_recurring","include_completed","overdue_collapsed","is_archived","ancestor_archived"] {
+                for key in ["is_heading","completed","is_recurring","include_completed","overdue_collapsed","is_archived","ancestor_archived"] {
                     if let value = row.fields[key], value != .null, case .bool = value {} else if row.fields[key] != nil && row.fields[key] != .null { throw BackupFailure(message: "\(table).\(key) must be a boolean.") }
                 }
                 for (key, low, high) in [("priority",1,4),("priority_filter",0,4),("duration_minutes",1,10080),("order_index",0,2147483647),("completion_version",0,9007199254740991)] {
@@ -154,7 +163,7 @@ struct WorkspaceBackup: Codable, Sendable {
                           !row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, row.name.count <= 160,
                           (try JSONEncoder().encode(row["document"])).count <= 2_000_000 else { throw BackupFailure(message: "A template document is invalid.") }
                     // Preserve newer definitions losslessly; applying one still requires a supported reader.
-                    if version == 1 { _ = try WorkflowTemplate(document: row["document"]) }
+                    if version == 1 || version == 2 && document["capabilities"] == .array([.string("task_headings")]) { _ = try WorkflowTemplate(document: row["document"]) }
                 }
                 for key in ["source_metadata","recurrence_pattern"] where row.fields[key] != nil && row[key] != .null {
                     guard case .object = row[key] else { throw BackupFailure(message: "\(table).\(key) must be an object.") }
@@ -832,12 +841,13 @@ struct TaskEditorRecovery: Codable, Equatable, Sendable {
     func copyBackup(current: Snapshot) throws -> WorkspaceBackup {
         try validate()
         guard ![original.id.lowercased(),draft.id.lowercased()].contains(copyID), !(current.tables["tasks"] ?? []).contains(where:{$0.id.lowercased()==copyID}) else {throw BackupFailure(message:"A task with this recovery identity is already present. It has not been changed; your saved edit is kept.")}
-        let fields: Set<String>=["title","description","completed","priority","due_date","due_time","time_zone","deadline_date","duration_minutes","attachments","labels","subtasks"]
+        let fields: Set<String>=["is_heading","title","description","completed","priority","due_date","due_time","time_zone","deadline_date","duration_minutes","attachments","labels","subtasks"]
         let off=JSON.array([.object(ReminderSpec.relative(0,id:ReminderSpec.plannedID,enabled:false).raw)])
         var count=0
         func clean(_ source: Record, path: String, depth: Int) throws -> Record {
             count+=1
             guard depth<=SubtaskTree.maximumDepth,count<=10000 else {throw BackupFailure(message:"This saved edit is too large for an Inbox copy in this version. The full original is kept for export.")}
+            guard TaskKind(source) != .unsupported else { throw BackupFailure(message: "This saved task type needs a supported editor. The full original is kept for export.") }
             var row=Record(source.fields.filter{fields.contains($0.key)})
             row["id"] = .string(depth==0 ? copyID:WorkspaceBackup.stableID(id.uuidString.lowercased(),"child:"+path))
             row["assigned_to"] = .null;row["reminders"] = .array([]);row["reminder_specs"] = off
