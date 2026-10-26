@@ -194,3 +194,94 @@ final class TeamTaskEditTests: XCTestCase {
         XCTAssertEqual(root["_body"],.object(try scope.body(for:change)))
     }
 }
+
+
+final class TeamTaskTypeTests: XCTestCase {
+    let account = UUID().uuidString.lowercased(), project = UUID().uuidString.lowercased(), team = UUID().uuidString.lowercased()
+    func source() -> Record {
+        var row = Record.task(user: account, project: project); row["title"] = .string("Design workshop")
+        row["task_generation"] = .string(UUID().uuidString.lowercased()); row["completion_version"] = .number(0); return row
+    }
+    func scope(_ enabled: Bool = true) -> TeamTaskEditScope { TeamTaskEditScope(account: account, origin: "https://synthetic.example", team: team, project: project, taskTypesProtocol: enabled ? 1 : nil) }
+    func patch(_ source: Record, _ fields: [String: JSON], enabled: Bool = true) -> Mutation {
+        var base = TaskCompletionRevision.editBaseline(for: fields, from: source); base["project_id"] = .string(project)
+        return Mutation(table: "tasks", recordID: source.id, method: "PATCH", fields: fields, baseline: base, teamTaskScope: scope(enabled))
+    }
+    func testRootTypeBodyNeedsAdvertisedVersionAndFullCompletionContext() throws {
+        let row = source(), change = patch(row, ["is_heading": .bool(true)])
+        XCTAssertEqual(try scope().body(for: change)["task_types_protocol"], .number(1))
+        XCTAssertThrowsError(try scope(false).body(for: change))
+        for key in ["is_heading", "completed", "completed_at", "completion_version"] {
+            var missing = change; missing.baseline?.removeValue(forKey: key); XCTAssertThrowsError(try scope().body(for: missing), key)
+        }
+        for fields in [["is_heading": JSON.null], ["is_heading": .string("true")], ["is_heading": .bool(true), "completed": .bool(false)]] { XCTAssertThrowsError(try scope().body(for: patch(row, fields))) }
+    }
+    func testChangedRootCompletionOrTypeCannotBeCaptured() throws {
+        let row = source(), change = patch(row, ["is_heading": .bool(true)])
+        _ = try scope().capturing(change, existing: row)
+        for pair in [("completed", JSON.bool(true)), ("completion_version", .number(2)), ("is_heading", .bool(true))] {
+            var current = row; current[pair.0] = pair.1; XCTAssertThrowsError(try scope().capturing(change, existing: current))
+        }
+        var completed = row; completed["completed"] = .bool(true)
+        XCTAssertThrowsError(try scope().body(for: patch(completed, ["is_heading": .bool(true)])))
+    }
+    func testOrdinaryEditsStayWireCompatible() throws {
+        let row = source(), change = patch(row, ["title": .string("Updated")], enabled: false)
+        XCTAssertNil(try scope(false).body(for: change)["task_types_protocol"])
+        let encoded = try JSONEncoder().encode(scope(false)), decoded = try JSONDecoder().decode(TeamTaskEditScope.self, from: encoded)
+        XCTAssertNil(decoded.taskTypesProtocol)
+    }
+    func testTypedReceiptMustConfirmVersionAndReadableType() throws {
+        let row = source(), change = patch(row, ["is_heading": .bool(true)])
+        var saved = try TaskKind.setting(row, heading: true); saved["completion_version"] = .number(1)
+        var reply: [String: JSON] = ["protocol": .number(1), "task_types_protocol": .number(1), "account": .string(account), "team_id": .string(team), "project_id": .string(project), "request_id": .string(change.id.uuidString.lowercased()), "task_generation": row["task_generation"], "replayed": .bool(false), "task": .object(saved.fields)]
+        XCTAssertEqual(try scope().saved(reply, for: change), saved)
+        reply.removeValue(forKey: "task_types_protocol"); XCTAssertThrowsError(try scope().saved(reply, for: change))
+        reply["task_types_protocol"] = .number(1); saved["is_heading"] = .string("future"); reply["task"] = .object(saved.fields)
+        XCTAssertThrowsError(try scope().saved(reply, for: change))
+    }
+    func testNestedTypeChangesAdvanceCheckboxRevisionAndNeedCapability() throws {
+        var row = source(); let epoch = UUID().uuidString.lowercased()
+        let child: [String: JSON] = ["id": .string("child"), "title": .string("Design"), "completed": .bool(false), "taskfold_completion_v1": .object(["epoch": .string(epoch), "version": .number(3)])]
+        row["subtasks"] = .array([.object(child)]); var next = child; next["is_heading"] = .bool(true)
+        let change = patch(row, ["subtasks": .array([.object(next)])]), prepared = try scope().capturing(change, existing: row)
+        XCTAssertEqual(prepared.fields["subtasks"]?.list[0].object["taskfold_completion_v1"]?.object["version"], .number(4))
+        XCTAssertEqual(try scope().body(for: prepared)["task_types_protocol"], .number(1))
+        XCTAssertThrowsError(try scope(false).capturing(patch(row, ["subtasks": .array([.object(next)])], enabled: false), existing: row))
+        next = child; next["description"] = .string("New notes")
+        let plain = try scope(false).capturing(patch(row, ["subtasks": .array([.object(next)])], enabled: false), existing: row)
+        XCTAssertNil(try scope(false).body(for: plain)["task_types_protocol"])
+        XCTAssertEqual(plain.fields["subtasks"]?.list[0].object["taskfold_completion_v1"]?.object["version"], .number(3))
+    }
+    func testUndoRetainsTypedScopeAndUsesExplicitOrdinaryType() throws {
+        let row = source(), change = patch(row, ["is_heading": .bool(true)])
+        let journal = EditHistory(changes: [change], snapshot: Snapshot(tables: ["tasks": [row]]))
+        let inverse = try XCTUnwrap(journal.undo.first)
+        XCTAssertEqual(inverse.fields["is_heading"], .bool(false)); XCTAssertEqual(inverse.teamTaskScope?.taskTypesProtocol, 1)
+        XCTAssertEqual(try scope().body(for: inverse)["task_types_protocol"], .number(1))
+    }
+}
+
+
+extension TeamTaskTypeTests {
+    func testNestedTypeCaptureRefusesAnInterveningRevisionOrRemovedNode() throws {
+        var row = source(); let child: [String: JSON] = ["id": .string("child"), "title": .string("Design"), "completed": .bool(false), "taskfold_completion_v1": .object(["epoch": .string(UUID().uuidString.lowercased()), "version": .number(0)])]
+        row["subtasks"] = .array([.object(child)]); var next = child; next["is_heading"] = .bool(true)
+        let change = patch(row, ["subtasks": .array([.object(next)])]); var current = row, changed = child
+        changed["taskfold_completion_v1"] = .object(["epoch": child["taskfold_completion_v1"]!.object["epoch"]!, "version": .number(2)])
+        current["subtasks"] = .array([.object(changed)]); XCTAssertThrowsError(try scope().capturing(change, existing: current))
+        current["subtasks"] = .array([]); XCTAssertThrowsError(try scope().capturing(change, existing: current))
+        changed = child; changed["completed"] = .bool(true); row["subtasks"] = .array([.object(changed)])
+        XCTAssertThrowsError(try scope().capturing(patch(row, ["subtasks": .array([.object(next)])]), existing: row))
+    }
+}
+
+
+extension TeamTaskTypeTests {
+    func testQueuedTypeChoiceRetainsProtocolBaselineAndRetryIdentity() throws {
+        let row = source(), original = patch(row, ["is_heading": .bool(true)])
+        let decoded = try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(original))
+        XCTAssertEqual(decoded.id, original.id); XCTAssertEqual(decoded.teamTaskScope?.taskTypesProtocol, 1)
+        XCTAssertEqual(try scope().body(for: decoded), try scope().body(for: original))
+    }
+}

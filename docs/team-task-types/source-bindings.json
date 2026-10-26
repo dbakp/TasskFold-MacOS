@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-26",
+  "sources": {
+    "Taskfold/Core/TeamChecklist.swift": "8b10bf86208b3040d6a64e339f01f8077a25a34e80e3ce500f59d24f3bec7867",
+    "Taskfold/Core/TeamProjectAccess.swift": "8212c76a85a5999351a842e536ace9d99b3043f1ffbd39adc855521f746dc5c1",
+    "Taskfold/Core/TeamWorkspace.swift": "593fa35870de0a40af731f3284db6a5742667faa3db75bc79d266c7d1a65ac4b",
+    "TaskfoldTests/TeamTaskEditTests.swift": "2eaa1dec12b1860840e08d3a53fd10567665b9a0a186ade4994ed450aaecefb0",
+    "Scripts/Database/test-team-task-types.mjs": "69fd246951c99f79297875c58ca88b9744621a8a20720afdc6bb68814ea466ed",
+    "supabase/migrations/20261026155711_team_task_heading_commands.sql": "bf8c7ab22709bda362a9df909bd8e8888ba0c61201740540aaf1e85bae7dab32"
+  },
+  "hostedChanges": false,
+  "nativeAuthoringChanged": false
+}

@@ -40,7 +40,7 @@ enum TeamChecklist {
                 let id = row["id"]!.text
                 let old = base[id]
                 let freshEpoch = TaskCompletion.successorID(parent: "team-checklist:" + change.id.uuidString.lowercased(), day: id)
-                let changed = old != nil && (old?["completed"] ?? .bool(false)) != (row["completed"] ?? .bool(false))
+                let changed = old != nil && ((old?["completed"] ?? .bool(false)) != (row["completed"] ?? .bool(false)) || TaskKind(Record(old!)) != TaskKind(Record(row)))
                 let epoch: String
                 let version: Double
                 if let original = token(old?[key]) {
@@ -66,4 +66,57 @@ enum TeamChecklist {
             if let value = row[key], token(value) == nil { throw TeamTaskEditScope.invalid }
         }
     }
+}
+
+
+/// Versioned editing capability. It does not authorize creation, import or rollout.
+enum TeamTaskTypes {
+    static func requiresProtocol(_ change: Mutation) -> Bool {
+        if change.fields["is_heading"] != nil { return true }
+        guard let next = change.fields["subtasks"] else { return false }
+        let old = (try? TeamChecklist.indexed(change.baseline?["subtasks"] ?? .array([]))) ?? [:]
+        guard let nodes = try? TeamChecklist.indexed(next) else { return true }
+        return nodes.contains { id, node in
+            let kind = TaskKind(Record(node))
+            return kind == .unsupported || (old[id].map { TaskKind(Record($0)) } ?? .task) != kind
+        }
+    }
+    static func validate(_ change: Mutation, protocolVersion: Int?) throws {
+        guard requiresProtocol(change) else { return }
+        guard protocolVersion == 1, change.method == "PATCH", let base = change.baseline else { throw unavailable }
+        if let type = change.fields["is_heading"] {
+            guard case .bool = type, base["is_heading"] != nil,
+                  base["completed"] == .bool(false), base["completed_at"] == .null,
+                  change.fields["completed"] == nil, change.fields["completed_at"] == nil,
+                  TaskKind(Record(base)) != .unsupported,
+                  case .number(let version)? = base["completion_version"], version.isFinite,
+                  version >= 0, version <= TeamChecklist.maximumVersion, version.rounded(.down) == version else { throw TeamTaskEditScope.invalid }
+        }
+        if let tree = change.fields["subtasks"] {
+            let old = try TeamChecklist.indexed(base["subtasks"] ?? .array([]))
+            for (id, node) in try TeamChecklist.indexed(tree) {
+                if let previous = old[id], TaskKind(Record(previous)) != TaskKind(Record(node)) {
+                    guard (previous["completed"] ?? .bool(false)) == .bool(false), (previous["completed_at"] ?? .null) == .null,
+                          (node["completed"] ?? .bool(false)) == .bool(false), (node["completed_at"] ?? .null) == .null else { throw TeamTaskEditScope.invalid }
+                }
+            }
+        }
+        guard TaskKind.permits(change, existing: Record(base)) else { throw TeamTaskEditScope.invalid }
+    }
+    static func requireCurrent(_ change: Mutation, current: Record) throws {
+        guard requiresProtocol(change), let base = change.baseline else { return }
+        if change.fields["is_heading"] != nil {
+            guard ["is_heading", "completed", "completed_at", "completion_version"].allSatisfy({ (base[$0] ?? .null) == current[$0] }) else { throw TeamTaskEditScope.conflict }
+        }
+        if let tree = change.fields["subtasks"] {
+            let before = try TeamChecklist.indexed(base["subtasks"] ?? .array([]))
+            let live = try TeamChecklist.indexed(current["subtasks"])
+            for (id, node) in try TeamChecklist.indexed(tree) where TaskKind(Record(node)) != (before[id].map { TaskKind(Record($0)) } ?? .task) {
+                if let old = before[id] {
+                    guard let now = live[id], ["is_heading", "completed", "completed_at", TeamChecklist.key].allSatisfy({ (old[$0] ?? .null) == (now[$0] ?? .null) }) else { throw TeamTaskEditScope.conflict }
+                } else if live[id] != nil { throw TeamTaskEditScope.conflict }
+            }
+        }
+    }
+    static var unavailable: AppFailure { AppFailure(message: "Heading editing is not available for this team workspace yet. Your draft is kept on this device.") }
 }

@@ -214,8 +214,9 @@ need work before normal heading exposure.
 
 1. Finish native acceptance of the implemented local presentation/type editors:
    completed/new task handling, durable Undo/Redo/recovery, source/access races,
-   Mac keyboard/window behavior, largest text and spoken feedback. Shared type
-   authoring and role-restricted command adapters remain unimplemented.
+   Mac keyboard/window behavior, largest text and spoken feedback. Shared native type
+   authoring remains open; negotiated role-restricted edit commands are implemented
+   in TEAM_TASK_TYPES.md. Creation/lifecycle adapters remain open.
 2. Complete every interaction path: detail and checklist controls, keyboard and
    swipe actions, bulk actions, Focus/shortcut/notification actions, widgets and
    Watch projection. A refused action must neither report success nor discard
@@ -732,3 +733,18 @@ spoken/largest-text and shared/cloud/cross-device acceptance remain open.
 Normal heading authoring and all user-deferred rollout/provider gates are unchanged.
 See [TODOIST_HEADING_CONVERSION.md](TODOIST_HEADING_CONVERSION.md) and
 heading-conversion/. Rank 3 and the full Px goal remain active.
+
+
+### Shared type command protocol — 26 October 2026
+
+Both independently owned clients and service sources now support negotiated root
+and nested task-type edit commands. The capability defaults off and participates
+in the workspace boundary token. Typed receipts, durable retry identity, explicit
+Undo and root/nested completion revisions are checked. Each repo passes 158
+selected Core checks, 72 isolated PostgreSQL checks/advisors and an unsigned app
+build. No hosted configuration or native UI authoring gate changed.
+
+Native Store/editor integration, creation/lifecycle, shared templates/import,
+recovery/runtime and wider accessibility/cross-device acceptance are next; the
+existing lifecycle whitelist still refuses typed root payloads. This does not
+close shared heading editing or rank 3. See TEAM_TASK_TYPES.md and team-task-types/.

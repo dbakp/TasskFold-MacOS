@@ -150,8 +150,9 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     var restoreRequest: UUID? = nil
     var parentGeneration: String? = nil
     var checklistRestoreRequest: UUID? = nil
+    var taskTypesProtocol: Int? = nil
 
-    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "subtasks", "is_recurring", "recurrence_pattern", "recurrence_end_date"]
+    static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "subtasks", "is_recurring", "recurrence_pattern", "recurrence_end_date", "is_heading"]
     static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
     static var conflict: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: This team task changed. Review the synced task and your saved edit.") }
 
@@ -168,6 +169,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
         guard let existing, existing.id == change.recordID, existing["project_id"] == .string(project),
               change.baseline?["task_generation"] == existing["task_generation"] else { throw Self.conflict }
         var captured = change
+        try TeamTaskTypes.requireCurrent(captured, current: existing)
         if TeamTaskRecurrence.touches(captured.fields) {
             try TeamTaskRecurrence.validate(base: captured.baseline ?? [:], changes: captured.fields)
             try TeamTaskRecurrence.requireCurrent(base: captured.baseline ?? [:], current: existing)
@@ -200,6 +202,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
                       let id = UUID(uuidString: text), ids.insert(id).inserted else { throw Self.invalid }
             }
         }
+        try TeamTaskTypes.validate(change, protocolVersion: taskTypesProtocol)
         try TeamTaskRecurrence.validate(base: base, changes: change.fields)
         if let tree = change.fields["subtasks"] { try TeamChecklist.validate(tree) }
         if checklistRestoreRequest != nil, change.fields["subtasks"] == nil { throw Self.invalid }
@@ -209,12 +212,14 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
         }
         var body: [String: JSON] = ["team_id": .string(team), "project_id": .string(project), "task_id": .string(change.recordID),
             "request_id": .string(change.id.uuidString.lowercased()), "task_generation": .string(generation), "base": .object(base), "changes": .object(change.fields)]
+        if TeamTaskTypes.requiresProtocol(change) { body["task_types_protocol"] = .number(1) }
         if let checklistRestoreRequest { body["checklist_restore_from"] = .string(checklistRestoreRequest.uuidString.lowercased()) }
         guard try JSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
         return body
     }
     func saved(_ reply: [String: JSON], for change: Mutation) throws -> Record {
         let body = try body(for: change)
+        if TeamTaskTypes.requiresProtocol(change), reply["task_types_protocol"] != .number(1) { throw Self.invalid }
         guard reply["protocol"] == .number(1), reply["account"] == .string(account),
               reply["team_id"] == .string(team), reply["project_id"] == .string(project),
               reply["request_id"] == body["request_id"], reply["task_generation"] == body["task_generation"],
@@ -224,6 +229,9 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
               TeamProjectValue.id(creator), case .string? = fields["title"], case .bool? = fields["completed"],
               case .number(let version)? = fields["completion_version"], version.isFinite, version >= 0,
               version <= 9_007_199_254_740_991, version.rounded(.down) == version else { throw Self.invalid }
+        if TeamTaskTypes.requiresProtocol(change) {
+            guard fields["is_heading"] != nil, TaskKind.permits(Mutation(table: "tasks", recordID: change.recordID, method: "POST", fields: fields), existing: nil) else { throw Self.invalid }
+        }
         // A replay can return another person's newer values. Confirm identity,
         // not equality with our desired edit, so a retry cannot overwrite them.
         return Record(fields)
@@ -247,6 +255,7 @@ extension TeamTaskEditScope {
     }
     func lifecycleBody(for change: Mutation) throws -> [String: JSON] {
         let action = try lifecycleAction(for: change)
+        if action == "create", TaskKind.requiresAuthoring(change, existing: nil) { throw TeamTaskTypes.unavailable }
         guard [account,team,project,change.recordID].allSatisfy(TeamProjectValue.id) else { throw Self.invalid }
         let record = action == "delete" ? change.baseline : change.fields
         guard let record, record["id"] == .string(change.recordID), record["project_id"] == .string(project),
