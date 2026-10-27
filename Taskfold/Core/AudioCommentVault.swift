@@ -62,8 +62,8 @@ struct AudioCommentSavedDraft: Equatable, Sendable {
               let targetData = fields["target"] as? Data, targetData.count <= 4096,
               let descriptorData = fields["descriptor"] as? Data, descriptorData.count <= 4096,
               let caption = fields["caption"] as? String, let audio = fields["audio"] as? Data else { throw AudioCommentStorageFailure.unreadable }
-        let clip = try AudioCommentClip(data: audio)
-        guard clip.verifies(try JSONDecoder().decode(AudioCommentDescriptor.self, from: descriptorData)) else { throw AudioCommentStorageFailure.unreadable }
+        let descriptor = try JSONDecoder().decode(AudioCommentDescriptor.self, from: descriptorData)
+        let clip = try AudioCommentClip(restoring: audio, descriptor: descriptor)
         try self.init(owner: owner, target: JSONDecoder().decode(AudioCommentTarget.self, from: targetData), caption: caption, clip: clip, id: id, revision: revision)
     }
 }
@@ -300,6 +300,7 @@ struct AudioCommentVault: Sendable {
 actor AudioCommentDraftStorage {
     private let vault: AudioCommentVault
     init(applicationSupport: URL, owner: AudioCommentOwner) { vault = .init(applicationSupport: applicationSupport, owner: owner) }
+    init(vault: AudioCommentVault) { self.vault = vault }
     func drafts() throws -> [AudioCommentSavedDraft] { try vault.drafts() }
     func save(_ draft: AudioCommentSavedDraft, replacing revision: UUID? = nil) throws { try vault.save(draft, replacing: revision) }
     func discardDraft(_ id: UUID, revision: UUID) throws { try vault.discardDraft(id, revision: revision) }

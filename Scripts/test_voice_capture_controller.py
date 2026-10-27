@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix='taskfold-voice-controller-') as name:
     folder = Path(name)
     (folder/'Proof.swift').write_text(proof)
     (folder/'Bindings.swift').write_text(binding+'\n'+error)
-    command = ['xcrun','swiftc','-parse-as-library',str(folder/'Proof.swift'),str(folder/'Bindings.swift'),str(repo/'Taskfold/Core/VoiceDraft.swift'),str(repo/'Taskfold/VoiceCapture.swift'),'-o',str(folder/'Proof')]
+    command = ['xcrun','swiftc','-parse-as-library',str(folder/'Proof.swift'),str(folder/'Bindings.swift'),str(repo/'Taskfold/Core/VoiceDraft.swift'),str(repo/'Taskfold/VoiceCapture.swift'),str(repo/'Taskfold/AudioSessionLease.swift'),'-o',str(folder/'Proof')]
     result = subprocess.run(command,text=True,capture_output=True)
     if result.returncode:
         raise RuntimeError(result.stderr)
@@ -30,6 +30,6 @@ with tempfile.TemporaryDirectory(prefix='taskfold-voice-controller-') as name:
     if result.returncode:
         raise RuntimeError(result.stdout+result.stderr)
 checks = json.loads(args.output.read_text())
-evidence = {'checks':checks,'sourceSHA256':{name:hashlib.sha256((repo/name).read_bytes()).hexdigest() for name in ['Taskfold/Core/VoiceDraft.swift','Taskfold/VoiceCapture.swift','Scripts/fixtures/VoiceCaptureControllerProof.swift']},'limits':['Mac-native controller with a synthetic recorder; no microphone or permission prompt was opened.','The real recorder is invoked only with a false context gate to verify rejection before permission access.','No genuine speech-recognition accuracy, audio interruption or TCC recovery acceptance.']}
+evidence = {'checks':checks,'sourceSHA256':{name:hashlib.sha256((repo/name).read_bytes()).hexdigest() for name in ['Taskfold/Core/VoiceDraft.swift','Taskfold/VoiceCapture.swift','Taskfold/AudioSessionLease.swift','Scripts/fixtures/VoiceCaptureControllerProof.swift']},'limits':['Mac-native controller with a synthetic recorder; no microphone or permission prompt was opened.','The real recorder is invoked only with a false context gate to verify rejection before permission access.','No genuine speech-recognition accuracy, audio interruption or TCC recovery acceptance.']}
 args.output.write_text(json.dumps(evidence,indent=2)+'\n')
 print(f'{len(checks)} voice controller checks passed')

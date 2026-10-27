@@ -1,5 +1,6 @@
 import XCTest
 import CryptoKit
+import AVFoundation
 @testable import TaskfoldCore
 
 final class AudioCommentTests: XCTestCase {
@@ -157,7 +158,7 @@ final class AudioCommentTests: XCTestCase {
     }
     func testNativeDecoderReadsTheEntireGeneratedClipWithoutPlayback() async throws {
         let clip = try await AudioCommentDecoding.validate(fixture())
-        XCTAssertEqual(clip.descriptor.milliseconds, 1069)
+        XCTAssertEqual(clip.descriptor.milliseconds, 1000)
     }
     func testNativeDecoderRejectsContainerWithDamagedAACPayload() async throws {
         var data = try fixture()
@@ -191,7 +192,7 @@ final class AudioCommentTests: XCTestCase {
         var draft = try ready()
         let intent = try draft.preparePublication(workspace: workspace, target: draft.target)
         let clip = try XCTUnwrap(draft.clip)
-        let changed = try AudioCommentDescriptor(byteCount: clip.data.count, milliseconds: 1068, sha256: clip.descriptor.sha256)
+        let changed = try AudioCommentDescriptor(byteCount: clip.data.count, milliseconds: 1068, sha256: String(repeating: "0", count: 64))
         let altered = try AudioCommentPublication(account: intent.account, target: intent.target, caption: intent.caption, descriptor: changed)
         XCTAssertThrowsError(try AudioCommentPending(publication: altered, clip: clip))
         let pending = try AudioCommentPending(publication: intent, clip: clip)
@@ -214,6 +215,49 @@ final class AudioCommentTests: XCTestCase {
         let data = try PropertyListSerialization.data(fromPropertyList: fields, format: .binary, options: 0)
         XCTAssertThrowsError(try AudioCommentPending(encoded: data, account: intent.account))
         XCTAssertThrowsError(try AudioCommentPending(encoded: Data(repeating: 0, count: 8_100_001), account: intent.account))
+    }
+
+    func testNativeTwoMinuteBoundaryAllowsAACPaddingButRejectsLongerPresentation() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-audio-limit-" + UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44100)); buffer.frameLength = 44100
+        for index in 0..<44100 { buffer.floatChannelData![0][index] = Float(sin(Double(index) * 2 * .pi * 440 / 44100) * 0.04) }
+        for extraFrames in [0, 4410] {
+            buffer.frameLength = 44100
+            let url = folder.appendingPathComponent("limit-\(extraFrames).m4a")
+            do {
+                let file = try AVAudioFile(forWriting: url, settings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 44100, AVNumberOfChannelsKey: 1, AVEncoderBitRateKey: 64000])
+                for _ in 0..<120 { try file.write(from: buffer) }
+                if extraFrames > 0 { buffer.frameLength = AVAudioFrameCount(extraFrames); try file.write(from: buffer) }
+            }
+            let data = try Data(contentsOf: url)
+            if extraFrames == 0 {
+                XCTAssertGreaterThan(try AudioCommentClip.encodedMilliseconds(in: data), 120000)
+                let clip = try await AudioCommentDecoding.validate(data)
+                XCTAssertEqual(clip.descriptor.milliseconds, 120000)
+                let restored = try AudioCommentClip(restoring: data, descriptor: clip.descriptor)
+                XCTAssertEqual(restored.descriptor, clip.descriptor)
+                XCTAssertEqual(restored.data, data)
+            } else {
+                XCTAssertLessThan(try AudioCommentClip.encodedMilliseconds(in: data), 121000)
+                do { _ = try await AudioCommentDecoding.validate(data); XCTFail("Overlong audio admitted") }
+                catch { XCTAssertTrue(error is AudioCommentFailure) }
+            }
+        }
+    }
+
+    func testRestoreIsScopeBoundAndCloseRemovesPrivateMediaAndCaption() throws {
+        var draft = try ready()
+        let clip = try XCTUnwrap(draft.clip)
+        XCTAssertThrowsError(try draft.restore(clip, caption: "Wrong", workspace: WorkspaceBinding(account: workspace.account, generation: UUID()), target: draft.target))
+        XCTAssertThrowsError(try AudioCommentClip(decoded: fixture(), milliseconds: Int.min))
+        XCTAssertThrowsError(try AudioCommentClip(decoded: fixture(), milliseconds: Int.max))
+        try draft.restore(clip, caption: "Private caption", workspace: workspace, target: draft.target)
+        draft.close()
+        XCTAssertNil(draft.clip); XCTAssertTrue(draft.caption.isEmpty); XCTAssertNil(draft.publication)
+        XCTAssertThrowsError(try draft.restore(clip, caption: "Late", workspace: workspace, target: draft.target))
     }
 
 }

@@ -8857,3 +8857,15 @@ explicit interrupted-write recovery. A separate actor keeps disk work away from
 UI execution. The 45 focused Core cases pass on this Mac. No recording controls,
 playback or cloud delivery are exposed yet; their full lifecycle remains open.
 See [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
+
+
+## 2026-10-27 — audio recording/review candidate
+
+Added gated native private-draft review, explicit recording/playback adapters,
+scoped caption/save/restore/delete handling and the shared exclusive dictation
+lease. Core now passes 47 focused audio cases, with 19 synthetic audio-controller
+and 17 dictation-controller checks. Native review/save/cold return and refusal
+checks use generated tone bytes and a silent player. No actual microphone or
+speaker acceptance is claimed; the user explicitly deferred it. Ordinary entry
+points, server delivery, full lifecycle and spoken acceptance remain open.
+See [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md) and audio-comment-media/.

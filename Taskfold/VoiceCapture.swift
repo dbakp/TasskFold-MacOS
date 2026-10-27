@@ -19,11 +19,6 @@ struct VoiceRecordingFailure: LocalizedError {
     func cancel()
 }
 
-@MainActor private enum VoiceRecordingLease {
-    static var owner: UUID?
-    static func claim(_ id: UUID) -> Bool { guard owner == nil || owner == id else { return false }; owner = id; return true }
-    static func release(_ id: UUID) { if owner == id { owner = nil } }
-}
 
 /// Serializes the tap's final append against endAudio. No audio buffer is retained by Taskfold.
 private final class VoiceAudioSink: @unchecked Sendable {
@@ -54,7 +49,7 @@ private final class VoiceAudioSink: @unchecked Sendable {
         guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: locale)), recognizer.supportsOnDeviceRecognition else {
             throw VoiceRecordingFailure(message: "On-device dictation isn’t available for this language on this device. You can keep typing instead.")
         }
-        guard VoiceRecordingLease.claim(owner) else { throw VoiceRecordingFailure(message: "Finish the other Taskfold recording first.") }
+        guard TaskfoldAudioLease.claim(owner) else { throw VoiceRecordingFailure(message: "Finish the other Taskfold recording first.") }
         let token = UUID(); attempt = token
         do {
             let speech = await withCheckedContinuation { continuation in SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) } }
@@ -129,7 +124,7 @@ private final class VoiceAudioSink: @unchecked Sendable {
     func cancel() {
         attempt = nil
         stopInput(); recognition?.cancel(); recognition = nil; recognizer = nil
-        VoiceRecordingLease.release(owner)
+        TaskfoldAudioLease.release(owner)
     }
 }
 

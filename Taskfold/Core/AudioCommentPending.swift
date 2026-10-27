@@ -31,6 +31,6 @@ struct AudioCommentPending: Sendable {
               let audio = fields["audio"] as? Data else { throw AudioCommentFailure.invalid }
         let publication = try JSONDecoder().decode(AudioCommentPublication.self, from: intent)
         guard publication.account == account else { throw AudioCommentFailure.changed }
-        try self.init(publication: publication, clip: AudioCommentClip(data: audio))
+        try self.init(publication: publication, clip: AudioCommentClip(restoring: audio, descriptor: publication.descriptor))
     }
 }

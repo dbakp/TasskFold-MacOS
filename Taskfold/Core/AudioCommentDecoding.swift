@@ -8,7 +8,7 @@ enum AudioCommentDecoding {
         try Task.checkCancellation()
         let worker = Task.detached(priority: .utility) { () throws -> AudioCommentClip in
             try Task.checkCancellation()
-            let clip = try AudioCommentClip(data: data)
+            let encodedMilliseconds = try AudioCommentClip.encodedMilliseconds(in: data)
             let directory = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-audio-validation-" + UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
             defer { try? FileManager.default.removeItem(at: directory) }
@@ -33,8 +33,8 @@ enum AudioCommentDecoding {
                 }
                 let milliseconds = Double(frames) * 1000 / format.sampleRate
                 guard frames > 0, frames == file.length,
-                      abs(milliseconds - Double(clip.descriptor.milliseconds)) <= 1000 else { throw AudioCommentFailure.invalid }
-                return clip
+                      abs(milliseconds - Double(encodedMilliseconds)) <= 1000 else { throw AudioCommentFailure.invalid }
+                return try AudioCommentClip(decoded: data, milliseconds: Int(ceil(milliseconds)))
             } catch is CancellationError { throw CancellationError() }
               catch { throw AudioCommentFailure.invalid }
         }

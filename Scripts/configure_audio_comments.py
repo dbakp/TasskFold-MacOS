@@ -39,8 +39,11 @@ def add_source(phase, path):
 
 app = next(row for row in objects.values() if row.get("isa") == "PBXNativeTarget" and row.get("name") == "Taskfold")
 phase = next(key for key in app["buildPhases"] if objects[key]["isa"] == "PBXSourcesBuildPhase")
-for path in ["Taskfold/Core/AudioComments.swift", "Taskfold/Core/AudioCommentDecoding.swift", "Taskfold/Core/AudioCommentPending.swift", "Taskfold/Core/AudioCommentVault.swift"]:
+for path in ["Taskfold/Core/AudioComments.swift", "Taskfold/Core/AudioCommentDecoding.swift", "Taskfold/Core/AudioCommentPending.swift", "Taskfold/Core/AudioCommentVault.swift", "Taskfold/AudioSessionLease.swift", "Taskfold/AudioCommentMedia.swift", "Taskfold/AudioCommentCapture.swift", "Taskfold/Views/AudioCommentDraftView.swift", "Taskfold/AudioCommentNativeFixture.swift"]:
     add_source(phase, path)
+tests = next(row for row in objects.values() if row.get("isa") == "PBXNativeTarget" and row.get("name") == "TaskfoldUITests")
+test_phase = next(key for key in tests["buildPhases"] if objects[key]["isa"] == "PBXSourcesBuildPhase")
+add_source(test_phase, "TaskfoldUITests/AudioCommentUITests.swift")
 if lines:
     source = source.replace("}; rootObject", "\n" + "\n".join(lines) + "\n}; rootObject", 1)
     project.write_text(source)

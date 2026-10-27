@@ -1,0 +1,266 @@
+Building for debugging...
+[2 / 5] TaskfoldCoreTests-product
+[4 / 7] TaskfoldCoreTests-product
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionBatchTests.swift:5:66: warning: 'CompletionBatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+   3 | @testable import TaskfoldCore
+   4 |
+   5 | private final class CompletionBatchHTTP: URLProtocol, @unchecked Sendable {
+     |                     |                                            `- warning: 'CompletionBatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+     |                     `- note: 'CompletionBatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+   6 |     static var handler: ((URLRequest, CompletionBatchHTTP) -> Void)?
+   7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamCompletionTests.swift:5:61: warning: 'CompletionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+   3 | @testable import TaskfoldCore
+   4 |
+   5 | private final class CompletionHTTP: URLProtocol, @unchecked Sendable {
+     |                     |                                       `- warning: 'CompletionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+     |                     `- note: 'CompletionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+   6 |     static var handler: ((URLRequest,CompletionHTTP)->Void)?
+   7 |     override class func canInit(with request:URLRequest)->Bool {true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamOrganizationCommandTests.swift:30:58: warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 28 |     }
+ 29 | }
+ 30 | private final class CommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'CommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'CommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 31 |     static var handler: ((URLRequest, CommandHTTP) -> Void)?
+ 32 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamOrganizationTests.swift:8:63: warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  6 | private let orgOther = "ea300000-0000-4000-8000-000000000003"
+  7 | private let orgOrigin = "https://backend.example"
+  8 | private final class OrganizationHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'OrganizationHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'OrganizationHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  9 |     static var handler: ((URLRequest, OrganizationHTTP) -> Void)?
+ 10 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamProjectAccessTests.swift:7:62: warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  5 | private let tpTeam = "f07dcafe-0000-4000-8000-000000000011", tpProject = "f07dcafe-0000-4000-8000-000000000021"
+  6 | private let tpOrigin = "https://backend.example"
+  7 | private final class TeamProjectHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                        `- warning: 'TeamProjectHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamProjectHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  8 |     static var handler: ((URLRequest, TeamProjectHTTP) -> Void)?
+  9 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamProjectAdoptionTests.swift:32:59: warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 30 |     }
+ 31 | }
+ 32 | private final class AdoptionHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'AdoptionHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'AdoptionHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 33 |     static var handler: ((URLRequest, AdoptionHTTP) -> Void)?
+ 34 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskBatchTests.swift:5:54: warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let batchOrigin="https://backend.example"
+  5 | private final class BatchHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                `- warning: 'BatchHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'BatchHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler:((URLRequest,BatchHTTP)->Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool{true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskEditTests.swift:5:59: warning: 'TeamEditHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let editOrigin = "https://backend.example"
+  5 | private final class TeamEditHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'TeamEditHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamEditHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, TeamEditHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskLifecycleTests.swift:5:59: warning: 'TeamLifeHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private let lifeOrigin = "https://backend.example"
+  5 | private final class TeamLifeHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'TeamLifeHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TeamLifeHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, TeamLifeHTTP) -> Void)?
+  7 |     override class func canInit(with request:URLRequest)->Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskMoveTests.swift:157:55: warning: 'MoveHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+155 |     }
+156 | }
+157 | private final class MoveHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                 `- warning: 'MoveHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'MoveHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+158 |     static var handler: ((URLRequest, MoveHTTP) -> Void)?
+159 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTaskRecipientTests.swift:4:60: warning: 'RecipientHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 |
+  4 | private final class RecipientHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                      `- warning: 'RecipientHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'RecipientHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     static var handler: ((URLRequest, RecipientHTTP) -> Void)?
+  6 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTemplateCommandTests.swift:35:66: warning: 'TemplateCommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 33 | }
+ 34 | private extension Int { var double: Double { Double(self) } }
+ 35 | private final class TemplateCommandHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                            `- warning: 'TemplateCommandHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'TemplateCommandHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 36 |     static var handler: ((URLRequest, TemplateCommandHTTP) -> Void)?
+ 37 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamTemplateLibraryTests.swift:6:58: warning: 'LibraryHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  4 | private let libraryAccount = "ec250000-0000-4000-8000-000000000001", libraryTeam = "ec250000-0000-4000-8000-000000000002", libraryOrigin = "https://library.example"
+  5 | private func libraryID(_ n: Int) -> String { String(format: "ec250000-0000-4000-8001-%012d", n) }
+  6 | private final class LibraryHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'LibraryHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'LibraryHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  7 |     static var handler: ((URLRequest, LibraryHTTP) -> Void)?
+  8 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkflowDestinationsTests.swift:5:63: warning: 'WorkflowReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  3 |
+  4 | private func destinationID(_ n: Int) -> String { String(format: "ec270000-0000-4000-8000-%012d", n) }
+  5 | private final class WorkflowReadHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                         `- warning: 'WorkflowReadHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkflowReadHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  6 |     static var handler: ((URLRequest, WorkflowReadHTTP) -> Void)?
+  7 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkflowRunCommandTests.swift:34:59: warning: 'WorkflowHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+ 32 |     func remove(key: String) throws { lock.lock(); let fail = failing; lock.unlock(); if fail { throw URLError(.cannotRemoveFile) }; try base.remove(key: key) }
+ 33 | }
+ 34 | private final class WorkflowHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                     `- warning: 'WorkflowHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkflowHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+ 35 |     static var handler: ((URLRequest, WorkflowHTTP) -> Void)?
+ 36 |     override class func canInit(with request: URLRequest) -> Bool { true }
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TeamWorkspaceTests.swift:4:58: warning: 'WorkspaceHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+  2 | @testable import TaskfoldCore
+  3 |
+  4 | private final class WorkspaceHTTP:URLProtocol,@unchecked Sendable {
+    |                     |                                    `- warning: 'WorkspaceHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WorkspaceHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+  5 |     static var handler:((URLRequest,WorkspaceHTTP)->Void)?
+  6 |     override class func canInit(with request:URLRequest)->Bool {true}
+
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/WebhookAccessTests.swift:135:58: warning: 'WebhookHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+133 | }
+134 |
+135 | private final class WebhookHTTP: URLProtocol, @unchecked Sendable {
+    |                     |                                    `- warning: 'WebhookHTTP' inherits an unavailable 'Sendable' conformance; conforming here risks data races [#UnavailableSendableConformance]
+    |                     `- note: 'WebhookHTTP' inherits unavailable conformance to protocol 'Sendable' from superclass here
+136 |     static var handler: ((URLRequest,WebhookHTTP)->Void)?
+137 |     override class func canInit(with request:URLRequest)->Bool { true }
+
+[#UnavailableSendableConformance]: <https://docs.swift.org/compiler/documentation/diagnostics/unavailable-sendable-conformance>
+[10 / 12] TaskfoldCoreTests-product
+[12 / 12] TaskfoldCoreTests-product
+Build complete! (4,23 secs)
+Test Suite 'Selected tests' started at 2026-10-27 19:00:56.204.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 19:00:56.205.
+Test Suite 'AudioCommentTests' started at 2026-10-27 19:00:56.205.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testCancelledDecoderDoesNotDeliverReviewedClip]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testCancelledDecoderDoesNotDeliverReviewedClip]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testCanonicalEquivalentCaptionDoesNotConfirmAnotherRawIntent]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testCanonicalEquivalentCaptionDoesNotConfirmAnotherRawIntent]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testDescriptorWireRejectsExtraFieldsFractionalValuesAndInvalidDigest]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testDescriptorWireRejectsExtraFieldsFractionalValuesAndInvalidDigest]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testEmptyOversizedAndTruncatedContainersRefuseWithoutPartialAudio]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testEmptyOversizedAndTruncatedContainersRefuseWithoutPartialAudio]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testGeneratedAACHasBoundedDurationAndExactBinaryDigest]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testGeneratedAACHasBoundedDurationAndExactBinaryDigest]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testInvalidDurationVersionZeroTimescaleAndExcessiveLengthRefuse]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testInvalidDurationVersionZeroTimescaleAndExcessiveLengthRefuse]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testLatePermissionAndRecordingCallbacksCannotCrossScope]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testLatePermissionAndRecordingCallbacksCannotCrossScope]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testLocalWorkspaceCanReviewButCannotInventCloudAccount]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testLocalWorkspaceCanReviewButCannotInventCloudAccount]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testMalformedSampleDescriptionRefusesRatherThanReadingOutsidePayload]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testMalformedSampleDescriptionRefusesRatherThanReadingOutsidePayload]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeDecoderReadsTheEntireGeneratedClipWithoutPlayback]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeDecoderReadsTheEntireGeneratedClipWithoutPlayback]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeDecoderRejectsContainerWithDamagedAACPayload]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeDecoderRejectsContainerWithDamagedAACPayload]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeTwoMinuteBoundaryAllowsAACPaddingButRejectsLongerPresentation]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeTwoMinuteBoundaryAllowsAACPaddingButRejectsLongerPresentation]' passed (1.018 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testOversizedExtendedAtomAndTrailingGarbageRefuse]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testOversizedExtendedAtomAndTrailingGarbageRefuse]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingEnvelopeRefusesUnexpectedFieldsAndOversizedInput]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingEnvelopeRefusesUnexpectedFieldsAndOversizedInput]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingPublicationRefusesChangedAudioOrDescriptor]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingPublicationRefusesChangedAudioOrDescriptor]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingPublicationSurvivesRelaunchWithoutChangingIntentOrAudio]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingPublicationSurvivesRelaunchWithoutChangingIntentOrAudio]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPublicationRoundTripAndCaptionBounds]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPublicationRoundTripAndCaptionBounds]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPublishingRequiresReviewAndUnchangedScope]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPublishingRequiresReviewAndUnchangedScope]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testReplacementFailureKeepsReviewedClipAndOldCallbackCannotOverwriteIt]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testReplacementFailureKeepsReviewedClipAndOldCallbackCannotOverwriteIt]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testRestoreIsScopeBoundAndCloseRemovesPrivateMediaAndCaption]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testRestoreIsScopeBoundAndCloseRemovesPrivateMediaAndCaption]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testTargetRequiresTaskIncarnationAndNeverAcceptsArbitraryObjectPath]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testTargetRequiresTaskIncarnationAndNeverAcceptsArbitraryObjectPath]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testUncertainRetryPreservesEveryIdentifierAndExactCaption]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testUncertainRetryPreservesEveryIdentifierAndExactCaption]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testVideoUnknownCodecDuplicateTrackAndFragmentedAudioRefuse]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testVideoUnknownCodecDuplicateTrackAndFragmentedAudioRefuse]' passed (0.000 seconds).
+Test Suite 'AudioCommentTests' passed at 2026-10-27 19:00:57.253.
+	 Executed 23 tests, with 0 failures (0 unexpected) in 1.046 (1.048) seconds
+Test Suite 'AudioCommentVaultTests' started at 2026-10-27 19:00:57.253.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testActorStorageRoundTripUsesIndependentAccountAndCurrentRevision]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testActorStorageRoundTripUsesIndependentAccountAndCurrentRevision]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testAggregateByteQuotaIncludesInterruptedStagingFiles]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testAggregateByteQuotaIncludesInterruptedStagingFiles]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testChangedStageCannotReplaceAnAlreadyReviewedRecovery]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testChangedStageCannotReplaceAnAlreadyReviewedRecovery]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCompleteInterruptedLocalReviewCanRecoverWithoutCloudIdentity]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCompleteInterruptedLocalReviewCanRecoverWithoutCloudIdentity]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptDraftIsPreservedRatherThanReplacedByAnEmptyList]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptDraftIsPreservedRatherThanReplacedByAnEmptyList]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardRequiresCurrentRevisionAndNeverRemovesPending]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardRequiresCurrentRevisionAndNeverRemovesPending]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDraftRevisionPreventsLostEditsAndSilentRetargeting]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDraftRevisionPreventsLostEditsAndSilentRetargeting]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testEntryQuotaRefusesWholeNewDraftAndRecoversAfterReviewedDiscard]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testEntryQuotaRefusesWholeNewDraftAndRecoversAfterReviewedDiscard]' passed (0.030 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFailureBeforeRenameKeepsPriorDraftAndRemovesOnlyOwnedStage]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFailureBeforeRenameKeepsPriorDraftAndRemovesOnlyOwnedStage]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFileAndDirectoryPermissionsArePrivate]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFileAndDirectoryPermissionsArePrivate]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testIncompleteStageRemainsRecoverableWithoutHidingTheSavedDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testIncompleteStageRemainsRecoverableWithoutHidingTheSavedDraft]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedPendingPromotesSameOperationAndDeduplicatesAnIdenticalStage]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedPendingPromotesSameOperationAndDeduplicatesAnIdenticalStage]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedUpdateNeedsReviewedCurrentRevisionAndDoesNotHideSavedWork]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedUpdateNeedsReviewedCurrentRevisionAndDoesNotHideSavedWork]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testLocalReviewedRecordingSurvivesANewStoreInstanceWithExactCaption]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testLocalReviewedRecordingSurvivesANewStoreInstanceWithExactCaption]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPendingIsImmutableAndWrongAccountCannotWriteOrSettleIt]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPendingIsImmutableAndWrongAccountCannotWriteOrSettleIt]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testProcessLockIsNonblockingAndLeavesTheCurrentDraftIntact]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testProcessLockIsNonblockingAndLeavesTheCurrentDraftIntact]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRawOwnerIsolationIncludesCanonicallyEquivalentNames]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRawOwnerIsolationIncludesCanonicallyEquivalentNames]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRenamedPayloadCannotMasqueradeAsAnotherDraftOrOperation]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRenamedPayloadCannotMasqueradeAsAnotherDraftOrOperation]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRootAndAccountSymlinksRefuseWithoutTouchingOtherFolder]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRootAndAccountSymlinksRefuseWithoutTouchingOtherFolder]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSparseOversizedFileRefusesBeforeReadingPayload]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSparseOversizedFileRefusesBeforeReadingPayload]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSymlinkAndHardLinkedDraftsAreNeverFollowedOrReplaced]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSymlinkAndHardLinkedDraftsAreNeverFollowedOrReplaced]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUncertainPendingSaveRecoversExactlyOneOperationAndAudio]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUncertainPendingSaveRecoversExactlyOneOperationAndAudio]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUncertainRenameCanRetryExactDraftWithoutDuplicateOrOverwrite]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUncertainRenameCanRetryExactDraftWithoutDuplicateOrOverwrite]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUnchangedDraftAndRetryDoNotMintAnotherRevision]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUnchangedDraftAndRetryDoNotMintAnotherRevision]' passed (0.003 seconds).
+Test Suite 'AudioCommentVaultTests' passed at 2026-10-27 19:00:57.370.
+	 Executed 24 tests, with 0 failures (0 unexpected) in 0.115 (0.117) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 19:00:57.370.
+	 Executed 47 tests, with 0 failures (0 unexpected) in 1.160 (1.165) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 19:00:57.370.
+	 Executed 47 tests, with 0 failures (0 unexpected) in 1.160 (1.166) seconds

@@ -55,14 +55,26 @@ struct AudioCommentDescriptor: Codable, Equatable, Sendable {
 struct AudioCommentClip: Sendable {
     let data: Data
     let descriptor: AudioCommentDescriptor
-    init(data: Data) throws {
+    /// Encoded-duration admission for callers that do not yet have native decode proof.
+    init(data: Data) throws { try self.init(data: data, milliseconds: Self.encodedMilliseconds(in: data)) }
+    /// A saved descriptor is bound to exact bytes; native decoding is still required
+    /// before playback. This accepts AAC priming/remainder without trusting a URL.
+    init(restoring data: Data, descriptor: AudioCommentDescriptor) throws {
+        try self.init(data: data, milliseconds: descriptor.milliseconds)
+        guard self.descriptor == descriptor else { throw AudioCommentFailure.invalid }
+    }
+    /// Called after complete native PCM decoding, using the presentation frame count.
+    init(decoded data: Data, milliseconds: Int) throws { try self.init(data: data, milliseconds: milliseconds) }
+    static func encodedMilliseconds(in data: Data) throws -> Int {
         guard !data.isEmpty, data.count <= AudioCommentDescriptor.maximumBytes else { throw AudioCommentFailure.invalid }
-        let parser = AudioM4A(data)
-        let milliseconds = try parser.validate()
+        return try AudioM4A(data).validate()
+    }
+    private init(data: Data, milliseconds: Int) throws {
+        let encoded = try Self.encodedMilliseconds(in: data)
+        guard (1...AudioCommentDescriptor.maximumMilliseconds).contains(milliseconds), abs(encoded - milliseconds) <= 1000 else { throw AudioCommentFailure.invalid }
         self.data = data
         let alphabet = Array("0123456789abcdef".utf8)
-        let digest = SHA256.hash(data: data)
-        let hex = digest.flatMap { [alphabet[Int($0 >> 4)], alphabet[Int($0 & 15)]] }
+        let hex = SHA256.hash(data: data).flatMap { [alphabet[Int($0 >> 4)], alphabet[Int($0 & 15)]] }
         descriptor = try AudioCommentDescriptor(byteCount: data.count, milliseconds: milliseconds, sha256: String(decoding: hex, as: UTF8.self))
     }
     func verifies(_ descriptor: AudioCommentDescriptor) -> Bool { self.descriptor == descriptor }
@@ -99,7 +111,7 @@ private struct AudioM4A {
         guard let version = bytes[atom.payload].first, version <= 1 else { throw AudioCommentFailure.invalid }
         let offset = atom.payload.lowerBound + (version == 0 ? 12 : 20)
         let scale = try number(offset, 4, in: atom.payload), ticks = try number(offset + 4, version == 0 ? 4 : 8, in: atom.payload)
-        guard scale > 0, ticks > 0, ticks <= UInt64(AudioCommentDescriptor.maximumMilliseconds) * scale / 1000 else { throw AudioCommentFailure.invalid }
+        guard scale > 0, ticks > 0, ticks <= UInt64(AudioCommentDescriptor.maximumMilliseconds + 1000) * scale / 1000 else { throw AudioCommentFailure.invalid }
         return Int((ticks * 1000 + scale - 1) / scale)
     }
     func validate() throws -> Int {
@@ -187,5 +199,11 @@ struct AudioCommentDraft: Sendable {
     @discardableResult mutating func confirmed(_ intent: AudioCommentPublication, workspace: WorkspaceBinding, target: AudioCommentTarget) -> Bool {
         guard [.sending, .unconfirmed].contains(phase), matches(workspace: workspace, target: target), publication?.sameIntent(as: intent) == true else { return false }; phase = .published; return true
     }
-    mutating func close() { token = nil; phase = .closed }
+    mutating func restore(_ clip: AudioCommentClip, caption: String, workspace: WorkspaceBinding, target: AudioCommentTarget) throws {
+        guard matches(workspace: workspace, target: target), [.ready, .review].contains(phase), publication == nil else { throw AudioCommentFailure.changed }
+        try AudioCommentPublication.validateCaption(caption)
+        self.clip = clip; self.caption = caption; token = nil; phase = .review
+    }
+    mutating func close() { token = nil; phase = .closed; clip = nil; caption = ""; publication = nil }
+
 }

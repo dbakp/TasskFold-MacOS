@@ -112,9 +112,10 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 - [ ] Broader role/recovery/Mac/spoken checks and production exposure of gated
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
-- [ ] Audio comments: bounded clip/decode, scoped drafts and account-private durable
-  storage/recovery pass 45 focused Core cases per repo. Recording/review/playback,
-  app integration and private server lifecycle remain open; see
+- [ ] Audio comments: bounded clip/decode, scoped private storage and a native review
+  candidate now have 47 Core, 19 synthetic audio-controller and 17 dictation-controller
+  checks per repo. Ordinary app entry points, private server lifecycle and genuine
+  microphone/speaker/accessibility acceptance remain open; see
   [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
 - [ ] Inbound email provider/domain configuration and genuine delivery — prepare
   only until the user supplies configuration.
@@ -166,3 +167,17 @@ Evidence and exact scope: [prepared workflow Undo](prepared-workflow-undo/README
   cloud-settle timeouts. Current passes alone do not establish those causes.
 
 [Measurements, source bindings and exact acceptance scope](workflow-cache-encoding/README.md).
+
+
+## 2026-10-27 — audio draft review candidate
+
+- [x] Native recorder/player sources, exclusive lease shared with dictation,
+  two-minute presentation-duration validation and private review/save/restore.
+- [x] 47 focused Core, 19 synthetic audio-controller and 17 dictation-controller
+  checks per repo; four distinct native screen cases each on Mac/phone/iPad,
+  with the iPhone replacement case accepted in a targeted rerun. No reported
+  runtime warnings in those accepted scopes. See audio-comment-media/.
+- [ ] Complete ordinary app entry points, private cloud publication/access/custody,
+  full save-conflict/account/window/Quit/background/backup lifecycle and genuine
+  recording/playback/spoken acceptance before exposing audio comments.
+- [ ] Genuine microphone/speaker testing stays deferred per the user's request.

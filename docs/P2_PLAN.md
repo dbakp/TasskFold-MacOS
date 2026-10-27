@@ -6375,3 +6375,17 @@ can retain reviewed recordings without a cloud account. The focused Core suites
 pass 45 cases each on the Mac; the feature remains unexposed, with native controls,
 app lifecycle integration and private server delivery still unfinished. See
 [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md) and audio-comment-vault/.
+
+
+## 2026-10-27 — native audio review candidate
+
+Added real recording/player adapters and a shared audio lease with dictation, plus
+an account/task-bound review controller and native private-draft screen. The screen
+is available only in the reserved synthetic fixture; ordinary conversation/task
+entry points remain gated until private server access and lifecycle are complete.
+The AAC limit now uses decoded presentation frames, allowing a valid two-minute
+recording's padding while rejecting a 120.1-second presentation. Each repo passes
+47 focused Core, 19 synthetic audio-controller and 17 dictation-controller checks.
+Native screen evidence/limits are recorded in audio-comment-media/ and
+[AUDIO_COMMENTS.md](AUDIO_COMMENTS.md). Real microphone/speaker testing is deferred
+at the user's request; this work opens neither a permission prompt nor sound output.
