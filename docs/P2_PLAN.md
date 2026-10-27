@@ -34,13 +34,15 @@ installed passing coverage on each phone, tablet and Mac; the former workflow UI
 See workflow-creation-scale/ for exact matrix/targeted evidence and scope.
 Widget construction/encoding now uses a serialized latest-request worker after
 the durable workflow save. Immediate privacy changes and widget receipts retain
-their synchronous path. The full 20,001-command save returns in 6.82/6.96s on
-phone/tablet and 4.45s on Mac; the complete widget projection is ready at
-19.27/20.08/18.63s respectively. This moves work off the save path; it does not
-make total widget availability faster or prove smooth production-screen input.
-Durable-cache I/O, local-history scaling, production rendering and hosted/paired
-bulk delivery remain open. See workflow-widget-publication/ for acceptance and
-its explicit matrix/targeted scope. Prior source migrations remain
+their synchronous path. Timestamp preparation now reuses parsers within each save
+without changing old signatures, including invalid Unicode spellings. The full
+20,001-command save returns in 2.48/2.47s on phone/tablet; full widget readiness is
+14.44/14.40s. The final Mac signed build/Core checks pass, while its native UI
+recheck is open at XCTest automation initialization. These Debug results do not
+prove release latency or smooth production-screen input. Durable-cache I/O,
+local-history scaling, production rendering and hosted/paired bulk delivery
+remain open. See workflow-widget-publication/ and workflow-token-preparation/
+for exact scope and evidence. Prior source migrations remain
 undeployed, and normal authoring/rollout gates remain unchanged.
 
 Remaining rank-3 work includes wider native Mac/spoken/largest-text and installed
@@ -5677,3 +5679,50 @@ source/binary/equivalence bindings. Only synthetic data was used. One current
 native source/build cache per platform remains for ongoing work; obsolete owned
 scratch copies, raw result bundles and test sessions are cleaned after evidence
 retention.
+
+
+## 27 October: stable token preparation without repeated formatter setup
+
+Sampling the previous committed full Mac workflow save found repeated timestamp
+formatter construction/parsing inside WidgetCompletion.prepare. Preparation now
+owns two lazy parsers, an exact UTF-8 memo and one sorted-key encoder for a single
+call. No parser or memo is shared across accounts, threads or saves. Signature
+fields, digest, token/receipt formats, child signatures and error fallback remain
+unchanged; no migration or token reset is introduced.
+
+Compatibility review caught a subtle prototype regression: canonically equivalent
+invalid Unicode strings could share a Swift String memo entry despite producing
+different old signature bytes. The new red test demonstrates that failure. Byte
+keys fix it. The final seven-case family passes mixed/invalid Unicode dates,
+5,000 retained old tokens, 5,000 distinct instants, heading/child stability,
+equivalent-date spelling, encoder failure recovery and independent concurrent
+saves. Combined selected Core coverage is 110 distinct passing cases in the iOS
+repo and 109 in the Mac repo, with no failures in accepted rounds.
+
+The final iPhone/iPad signed hosts each pass three actual native cases: 1,000/5,000
+task Store saving (all commands, one Undo/revision and every widget list), then
+intent completion/retry/Undo/cold return. Six final platform/case pairs pass with
+no runtime warnings. In these Debug runs, Store save return is 0.53/0.52s for
+1,000 tasks and 2.48/2.47s for 5,000 tasks (phone/tablet); full widget readiness is
+1.38/1.38s and 14.44/14.40s. Prior-stage 5,000-task save return was 6.82/6.96s.
+These are isolated measurements, not release or production-input guarantees.
+
+The final Mac app and extension build/sign successfully and its Core cases pass,
+but the final three native UI cases remain open: XCTest failed while enabling
+automation before any requested application test ran. The Mac was confirmed
+unlocked with developer mode enabled. A test-service restart was denied by System
+Integrity Protection; no protection or permission setting was changed. The command
+continued after that failed setup and another initialization attempt failed;
+further unchanged-state retries stopped. A single user question asks whether the
+system automation prompt is visible. Earlier String-key prototype Mac passes are
+retained as intermediate evidence and are not counted for the final byte-key code.
+The sampled control timing includes profiler overhead and is not the comparison.
+
+The remaining roughly 2.5s phone/tablet save pause, final Mac UI check, background
+widget readiness, local history scaling, production rendering, hosted/paired bulk
+delivery and wider ranked Px work remain open. Normal rollout flags and the
+user's release/provider/reminder/older-client/geofence deferrals are unchanged.
+No real workspace, schema or hosted service was changed. See
+workflow-token-preparation/validation.json, source/binary bindings, retained
+prototype regression and accepted metrics. One reusable native source/build cache
+per platform remains; obsolete owned test artifacts are pruned after retention.

@@ -1,0 +1,23 @@
+Test Suite 'Selected tests' started at 2026-10-27 06:37:30.316.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 06:37:30.318.
+Test Suite 'WidgetCompletionPreparationTests' started at 2026-10-27 06:37:30.318.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testEncoderFailureDoesNotPolluteFollowingRootSignature]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testEncoderFailureDoesNotPolluteFollowingRootSignature]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testEquivalentTimestampSpellingKeepsTokenButNewInstantRotatesIt]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testEquivalentTimestampSpellingKeepsTokenButNewInstantRotatesIt]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testFiveThousandDistinctInstantsKeepCanonicalSignaturesAndTokens]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testFiveThousandDistinctInstantsKeepCanonicalSignaturesAndTokens]' passed (1.188 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testFullSizePreparationRetainsEveryLegacyTokenAndSignature]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testFullSizePreparationRetainsEveryLegacyTokenAndSignature]' passed (0.714 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testHeadingRootRetainsLegacySignatureAndExistingChildToken]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testHeadingRootRetainsLegacySignatureAndExistingChildToken]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testSimultaneousIndependentSavesKeepTheirOwnCanonicalization]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testSimultaneousIndependentSavesKeepTheirOwnCanonicalization]' passed (0.099 seconds).
+Test Suite 'WidgetCompletionPreparationTests' passed at 2026-10-27 06:37:32.342.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 2.024 (2.024) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 06:37:32.342.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 2.024 (2.025) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 06:37:32.342.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 2.024 (2.026) seconds
+WIDGET_PREPARE_5000_DISTINCT_SECONDS 0.464831333
+WIDGET_PREPARE_5000_SECONDS 0.230969666

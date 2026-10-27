@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-27",
+  "status": "Implementation verified by Core and final iPhone/iPad cases; final Mac UI runtime remains open.",
+  "coreDistinctCasesPassed": 109,
+  "finalCompatibilityFamilyPassed": 7,
+  "nativeAcceptedPlatformCasePairsPassed": 6,
+  "nativeAccepted": {
+    "phone": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    },
+    "tablet": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  },
+  "macUI": "Three requested cases not executed after runner automation initialization failed. Earlier String-key prototype Mac passes are not counted for the final byte-key source.",
+  "prototypeRegression": {
+    "case": "testInvalidCanonicallyEquivalentStringsKeepExactSignatureBytes",
+    "beforeByteKeys": "One expected failing Core test demonstrates two raw Unicode forms incorrectly sharing a String memo entry.",
+    "afterByteKeys": "All seven compatibility cases pass with exact UTF-8 memo keys."
+  },
+  "compatibility": [
+    "All 5,000 prior tokens/signatures retained across mixed date representations, including invalid Unicode",
+    "5,000 distinct canonical timestamps and reordering preserve every signature/token",
+    "Equivalent timestamp spelling retains token; a changed instant rotates it",
+    "Encoder failure does not contaminate later records",
+    "Heading root and productive child tokens remain stable",
+    "Simultaneous independent saves keep separate parser/memo state"
+  ],
+  "scope": "Per-save timestamp/encoder reuse only; no stored contract, normal rollout, hosted service/schema, provider configuration or release change.",
+  "remaining": [
+    "Final Mac UI acceptance after test-runner recovery",
+    "Remaining 2.5s phone/tablet full-save pause",
+    "Background widget readiness",
+    "Local history scaling",
+    "Full production-screen input responsiveness",
+    "Genuine paired/hosted bulk delivery",
+    "Wider ranked Px backlog"
+  ],
+  "coreFinalRound": {
+    "passed": 109,
+    "failed": 0,
+    "log": "accepted-core.log",
+    "note": "All selected widget/heading/hierarchy callers and the seven-case compatibility family rerun together against final byte-key source."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "validation": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/workflow-token-preparation/validation.json",
+  "sourceSHA256": {
+    "Taskfold/Core/WidgetCompletion.swift": "7265f18f935d8a01c5f25a9474d19313255946b462a2d2815155c476a9595337",
+    "TaskfoldTests/WidgetCompletionPreparationTests.swift": "165aa7c6736622c9d28f1bec9ebaa726f74705233afc854ba2721ee20216c4b1",
+    "Taskfold/TeamTemplateNativeFixture.swift": "bc199d5e1291885b508824164edc4b4f36c89ec7948529b3ed11fe010ffc9a4c",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "b75f0ac9385fb865395a14d25412dbf1d21cf8d2334f5b5989141a4c99f4e4a7",
+    "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd",
+    "Package.swift": "5477db7bb42e0f5072fbecaccddde693cafdd9d470ba8588b3bf1675e25b6346"
+  },
+  "preparedSHA256": {
+    "Taskfold/Core/WidgetCompletion.swift": "7265f18f935d8a01c5f25a9474d19313255946b462a2d2815155c476a9595337",
+    "Taskfold/TeamTemplateNativeFixture.swift": "bc199d5e1291885b508824164edc4b4f36c89ec7948529b3ed11fe010ffc9a4c",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "b75f0ac9385fb865395a14d25412dbf1d21cf8d2334f5b5989141a4c99f4e4a7",
+    "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+    "Taskfold/Info.plist": "266e1dec43d400a089a76ec68c4a8b7b0adf6104890f71f0b428cb38530523a5"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "a448f32d2dc8fc7a7756e09530c6ff4df341fec11a9917a09070af5a29d441fc",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "f2594c989d3f26c4e9e5fe7ca9f01def77777adf380f0d1798a6762e1b1b277e",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "ff1981efa1c1bdaceff776f3e4d5f5c8ef11534e9a926edbe0b46fd392d46ea6"
+  },
+  "scopeNote": "Superseded String-key prototype before the Unicode regression repair; not acceptance of the final byte-key implementation."
+}

@@ -1,0 +1,70 @@
+{
+  "phone": {
+    "1000": {
+      "widgetLists": 1001,
+      "count": 1000,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "commands": 4001,
+      "proof": "1dd77bb0-f5c0-4376-b33f-931921f03567",
+      "tasks": 1001,
+      "seconds": 0.532092667,
+      "widgetReadySeconds": 1.384370125,
+      "undoCommands": 1,
+      "pending": 4001,
+      "widgetIdle": true,
+      "taskRevisionDelta": 1,
+      "saved": true,
+      "error": null
+    },
+    "5000": {
+      "widgetLists": 5001,
+      "saved": true,
+      "taskRevisionDelta": 1,
+      "tasks": 5001,
+      "widgetReadySeconds": 14.437626125,
+      "seconds": 2.482966958,
+      "commands": 20001,
+      "proof": "cc2d86ac-a94a-43f3-bf49-3e95bf1ade08",
+      "count": 5000,
+      "error": null,
+      "undoCommands": 1,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "pending": 20001,
+      "widgetIdle": true
+    }
+  },
+  "tablet": {
+    "5000": {
+      "error": null,
+      "widgetReadySeconds": 14.395295708,
+      "count": 5000,
+      "widgetIdle": true,
+      "undoCommands": 1,
+      "proof": "0a3c3fe2-078c-45d3-a49e-2486e0d1bd46",
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "taskRevisionDelta": 1,
+      "pending": 20001,
+      "saved": true,
+      "widgetLists": 5001,
+      "seconds": 2.472656125,
+      "tasks": 5001,
+      "commands": 20001
+    },
+    "1000": {
+      "undoCommands": 1,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "widgetReadySeconds": 1.382957833,
+      "saved": true,
+      "taskRevisionDelta": 1,
+      "seconds": 0.524210458,
+      "proof": "d5a1cc29-af12-41ec-a603-2bfde39eaaa9",
+      "commands": 4001,
+      "error": null,
+      "count": 1000,
+      "pending": 4001,
+      "tasks": 1001,
+      "widgetLists": 1001,
+      "widgetIdle": true
+    }
+  }
+}

@@ -19,14 +19,15 @@ enum WidgetCompletion {
     enum Plan { case complete([Mutation]), saved, stale }
     static func prepare(_ snapshot: inout Snapshot) {
         let tasks = snapshot.tables["tasks"] ?? []
+        let instants = InstantNormalizer()
+        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
         let children = childItems(snapshot, account: "widget-index")
         let ids = Set(tasks.map { WidgetTaskIdentity.key($0.id) } + children.map(\.id))
         snapshot.widgetCompletion.states = snapshot.widgetCompletion.states.filter { ids.contains($0.key) }
         for task in tasks where !task.id.isEmpty {
             let id = task.id.lowercased()
-            var values: [JSON] = [.bool(task.completed), .string(instant(task.string("created_at"))), .string(instant(task.string("completed_at"))), task["completion_version"], task["is_heading"]]
+            var values: [JSON] = [.bool(task.completed), .string(instants.canonical(task.string("created_at"))), .string(instants.canonical(task.string("completed_at"))), task["completion_version"], task["is_heading"]]
             if !task.string("task_generation").isEmpty { values.append(task["task_generation"]) }
-            let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
             let signature = (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) } ?? ""
             if snapshot.widgetCompletion.states[id]?.signature != signature {
                 snapshot.widgetCompletion.states[id] = .init(token: UUID().uuidString.lowercased(), signature: signature)
@@ -88,9 +89,23 @@ enum WidgetCompletion {
         guard snapshot.widgetCompletion.states[task.id.lowercased()]?.token == request.token else { return .stale }
         return .complete(TaskCompletion.complete(task, tasks: snapshot.tables["tasks"] ?? [], at: request.createdAt, calendar: calendar, account: account))
     }
-    private static func instant(_ value: String) -> String {
-        let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        guard let date = formatter.date(from: value) ?? ISO8601DateFormatter().date(from: value) else { return value }
-        return formatter.string(from: date)
+    /// One canonicalization pass owns its parsers and memo. Never share mutable
+    /// formatters, cached dates or account metadata between saves or workers.
+    private final class InstantNormalizer {
+        private lazy var fractional: ISO8601DateFormatter = {
+            let value = ISO8601DateFormatter(); value.formatOptions = [.withInternetDateTime, .withFractionalSeconds]; return value
+        }()
+        private lazy var whole = ISO8601DateFormatter()
+        // Invalid Unicode spellings can compare equal as Swift Strings while
+        // producing different persisted signature bytes. Preserve raw UTF-8 keys.
+        private var memo: [Data: String] = [:]
+        func canonical(_ value: String) -> String {
+            guard !value.isEmpty else { return value }
+            let key = Data(value.utf8)
+            if let cached = memo[key] { return cached }
+            let normalized = (fractional.date(from: value) ?? whole.date(from: value)).map { fractional.string(from: $0) } ?? value
+            memo[key] = normalized
+            return normalized
+        }
     }
 }

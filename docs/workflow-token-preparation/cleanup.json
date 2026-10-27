@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-27",
+  "allNativeAttemptsTerminal": true,
+  "removedScratchDirectories": 18,
+  "logicalBytesRemoved": 81662136,
+  "uninstalledReservedSimulatorBundles": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    }
+  ],
+  "retained": [
+    "One native host/build per platform and source package caches",
+    "Filtered Core/native logs, legacy regression, metrics and source/binary bindings in each repo",
+    "One latest Mac UI initialization failure bundle/log in /tmp/taskfold-workflow-native-mac-build/Validation for the unresolved runner issue"
+  ],
+  "note": "Logical bytes only; not a claimed physical free-space delta. No real workspace, general Simulator runtime, security protection or unrelated app was removed."
+}

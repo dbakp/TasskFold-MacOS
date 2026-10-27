@@ -1,0 +1,25 @@
+Test Suite 'Selected tests' started at 2026-10-27 06:41:15.908.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 06:41:15.909.
+Test Suite 'WidgetCompletionPreparationTests' started at 2026-10-27 06:41:15.909.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testEncoderFailureDoesNotPolluteFollowingRootSignature]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testEncoderFailureDoesNotPolluteFollowingRootSignature]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testEquivalentTimestampSpellingKeepsTokenButNewInstantRotatesIt]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testEquivalentTimestampSpellingKeepsTokenButNewInstantRotatesIt]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testFiveThousandDistinctInstantsKeepCanonicalSignaturesAndTokens]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testFiveThousandDistinctInstantsKeepCanonicalSignaturesAndTokens]' passed (1.240 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testFullSizePreparationRetainsEveryLegacyTokenAndSignature]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testFullSizePreparationRetainsEveryLegacyTokenAndSignature]' passed (0.711 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testHeadingRootRetainsLegacySignatureAndExistingChildToken]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testHeadingRootRetainsLegacySignatureAndExistingChildToken]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testInvalidCanonicallyEquivalentStringsKeepExactSignatureBytes]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testInvalidCanonicallyEquivalentStringsKeepExactSignatureBytes]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testSimultaneousIndependentSavesKeepTheirOwnCanonicalization]' started.
+Test Case '-[TaskfoldCoreTests.WidgetCompletionPreparationTests testSimultaneousIndependentSavesKeepTheirOwnCanonicalization]' passed (0.089 seconds).
+Test Suite 'WidgetCompletionPreparationTests' passed at 2026-10-27 06:41:17.970.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 2.060 (2.061) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 06:41:17.970.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 2.060 (2.061) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 06:41:17.970.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 2.060 (2.062) seconds
+WIDGET_PREPARE_5000_DISTINCT_SECONDS 0.479966167
+WIDGET_PREPARE_5000_SECONDS 0.235051542

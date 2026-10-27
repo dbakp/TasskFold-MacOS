@@ -1,0 +1,39 @@
+{
+  "attempts": {
+    "automation-timeout": {
+      "result": "Failed",
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "requestedAppCasesExecuted": 0,
+      "note": "Runner initialization issue; reported failed infrastructure case is not an executed requested application test."
+    },
+    "automation-timeout-2": {
+      "result": "Failed",
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "requestedAppCasesExecuted": 0,
+      "note": "Runner initialization issue; reported failed infrastructure case is not an executed requested application test."
+    },
+    "automation-restart-denied": {
+      "result": "Failed",
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "runtimeWarnings": [],
+      "requestedAppCasesExecuted": 0,
+      "note": "Runner initialization issue; reported failed infrastructure case is not an executed requested application test."
+    }
+  },
+  "developerModeEnabled": true,
+  "unlockedConsoleConfirmed": true,
+  "serviceRestart": "Denied by macOS System Integrity Protection; no security changes made, service PID unchanged.",
+  "lastAttempt": "Command continued after reset denial and terminated with the same initialization error; no further unchanged-state retries.",
+  "userQuestion": "A single asynchronous question asks whether the Enable UI Automation prompt is visible; no response inferred."
+}

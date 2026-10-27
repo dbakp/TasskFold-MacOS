@@ -1,0 +1,11 @@
+{
+  "result": "Passed",
+  "totalTestCount": 3,
+  "passedTests": 3,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "runtimeWarnings": [],
+  "startTime": 1793079238.937,
+  "finishTime": 1793079329.448,
+  "scopeNote": "Superseded String-key prototype before the Unicode regression repair; not acceptance of the final byte-key implementation."
+}

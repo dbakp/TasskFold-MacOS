@@ -1,0 +1,41 @@
+{
+  "commit": "646cac9d6b4a842627dd329f191b8c7e2f92e5e0",
+  "priorStageBindings": {
+    "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+    "validation": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/workflow-widget-publication/validation.json",
+    "sourceSHA256": {
+      "Taskfold/Core/Store.swift": "e27e15fa3c65c5330fef7f45c85f39f4b3912bd571f88a9703691a610718c2ac",
+      "Taskfold/Core/Models.swift": "dc793fed8e0137e5d2a4ced93a249c14e6a60e5225c5a1b73854c1d312e91de4",
+      "Taskfold/Core/WidgetActions.swift": "0aa626784a49f197b7c1c11969b7194cbdded7cff116455c338a4487cd30373c",
+      "Taskfold/Core/WidgetActionTestPanel.swift": "bdde3720250edd895edaa612cb897a5fca112d30df15580196916ae942d1a910",
+      "Taskfold/Core/TaskActivity.swift": "36514b51a005b25fb047a9a52f2920ad11906650df61e712135eeae2dfd92416",
+      "Taskfold/TeamTemplateNativeFixture.swift": "bc199d5e1291885b508824164edc4b4f36c89ec7948529b3ed11fe010ffc9a4c",
+      "TaskfoldUITests/TaskfoldMacUITests.swift": "b75f0ac9385fb865395a14d25412dbf1d21cf8d2334f5b5989141a4c99f4e4a7",
+      "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+      "TaskfoldTests/WidgetListTests.swift": "7a8afdd377feb387db24ea0dcfbdd6a31c5a6fcfa4293ad261deb98098b10710",
+      "TaskfoldTests/WidgetPublicationTests.swift": "f66107048e832d55d6e9c6d314c576c5d327e5a3f37d6e6ed7234299472a9694",
+      "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd",
+      "Package.swift": "5477db7bb42e0f5072fbecaccddde693cafdd9d470ba8588b3bf1675e25b6346"
+    },
+    "preparedSHA256": {
+      "Taskfold/Core/Store.swift": "c84ccb3af7e3a0a21e8c4978c882956449ca8e984ed9bb20ea393ca33cd7335e",
+      "Taskfold/Core/Models.swift": "dc793fed8e0137e5d2a4ced93a249c14e6a60e5225c5a1b73854c1d312e91de4",
+      "Taskfold/Core/WidgetActions.swift": "867ad62b74d5421b7269aa4c57093c30b9f5304410c38f48cebfaf4f303191ba",
+      "Taskfold/Core/WidgetActionTestPanel.swift": "bdde3720250edd895edaa612cb897a5fca112d30df15580196916ae942d1a910",
+      "Taskfold/Core/TaskActivity.swift": "36514b51a005b25fb047a9a52f2920ad11906650df61e712135eeae2dfd92416",
+      "Taskfold/TeamTemplateNativeFixture.swift": "bc199d5e1291885b508824164edc4b4f36c89ec7948529b3ed11fe010ffc9a4c",
+      "TaskfoldUITests/TaskfoldMacUITests.swift": "b75f0ac9385fb865395a14d25412dbf1d21cf8d2334f5b5989141a4c99f4e4a7",
+      "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+      "Taskfold/Info.plist": "266e1dec43d400a089a76ec68c4a8b7b0adf6104890f71f0b428cb38530523a5"
+    },
+    "binarySHA256": {
+      "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "133db772496d739ec08194af890906599a4194826f8528afda5013147a2b4dca",
+      "Debug/Taskfold.app/Contents/MacOS/Taskfold": "7e760829e6809575e2b381fb30638de6810092f1e08f76588c71bcaf0b4622ad",
+      "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "ffbdbb44edc2d4512e5e205f86c7682a1e02eb697b81b6d2b2e4d4831c228eb7"
+    },
+    "currentProof": "*-checks",
+    "note": "Final targeted two-case runs bind the current binary. Broader matrix coverage has exact prepared source hashes, without retrospective binary hashes; production-body equivalence is checked separately."
+  },
+  "note": "Control uses the last committed implementation and existing signed native cache. The Mac sample observes that implementation before parser reuse.",
+  "widgetCompletionSHA256AtControlCommit": "fd60867b48e954825a3e4139c9d2ab2f4933bd1f82fb3d96842fa8138819ffaf"
+}

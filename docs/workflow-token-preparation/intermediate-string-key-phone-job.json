@@ -1,0 +1,29 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-token-phone.xcresult",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCommitScale5000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "cases": [
+    "TaskfoldUITests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+    "TaskfoldUITests/testPrivateWorkflowNativeCommitScale5000PublishesOnce",
+    "TaskfoldUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "started": 1793079237.9283378,
+  "widgetCompletionSourceSHA256": "7265f18f935d8a01c5f25a9474d19313255946b462a2d2815155c476a9595337",
+  "returncode": 0,
+  "finished": 1793079329.518192,
+  "scopeNote": "Superseded String-key prototype before the Unicode regression repair; not acceptance of the final byte-key implementation."
+}
