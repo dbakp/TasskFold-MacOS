@@ -5731,3 +5731,109 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? NSDictionary, try JSONSerialization.jsonObject(with: before) as? NSDictionary)
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor private func voiceMacTables() throws -> [String: Any] {
+        let file = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+        return try XCTUnwrap(cache["tables"] as? [String: Any])
+    }
+    @MainActor private func voiceMacTasks() throws -> [[String: Any]] { try XCTUnwrap(voiceMacTables()["tasks"] as? [[String: Any]]) }
+    private func voiceMacBytes(_ object: Any) throws -> Data { try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]) }
+    @MainActor private func voiceMacWait(_ condition: @escaping () throws -> Bool) {
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (try? condition()) == true }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 15), .completed)
+    }
+    @MainActor private func voiceMacStart(_ app: XCUIApplication, denied: Bool = false) throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated voice host required") }
+        continueAfterFailure = false
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--voice-fixture", "-localMode", "YES", "-appearance", denied ? "dark" : "light"]
+        if denied { app.launchArguments.append("--voice-denial-fixture") }
+        try launchHeadingWorkspace(app)
+        let open = app.buttons["openMultiLineCapture"]
+        XCTAssertTrue(open.waitForExistence(timeout: 15), app.debugDescription); app.activate(); open.click()
+        XCTAssertTrue(app.textViews["multiLineText"].waitForExistence(timeout: 8), app.debugDescription)
+    }
+    @MainActor private func voiceMacRecord(_ app: XCUIApplication) throws -> XCUIElement {
+        app.buttons["openVoiceDraft"].click()
+        let transcript = app.textViews["voiceTranscript"]
+        XCTAssertTrue(transcript.waitForExistence(timeout: 8), app.debugDescription)
+        app.buttons["voiceStart"].click()
+        voiceMacWait { app.buttons["voiceApply"].isEnabled }
+        XCTAssertEqual(transcript.value as? String, "Review the layout tomorrow p2\nSend the design notes")
+        return transcript
+    }
+    @MainActor func testMacVoiceReviewCorrectionCancelApplySaveUndoAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try voiceMacStart(app)
+        let before = try voiceMacTables(), originalTasks = try voiceMacTasks(), originalIDs = Set(originalTasks.compactMap { $0["id"] as? String })
+        let source = app.textViews["multiLineText"]; source.click(); source.typeText("Typed starting task")
+        _ = try voiceMacRecord(app)
+        app.buttons["voiceCancel"].click()
+        XCTAssertEqual(source.value as? String, "Typed starting task")
+        XCTAssertEqual(try voiceMacBytes(voiceMacTables()), try voiceMacBytes(before))
+        let transcript = try voiceMacRecord(app)
+        transcript.click(); transcript.typeKey("a", modifierFlags: .command); transcript.typeText("Approve color contrast tomorrow p1\nSend the design notes")
+        XCTAssertEqual(transcript.value as? String, "Approve color contrast tomorrow p1\nSend the design notes")
+        app.buttons["voiceApply"].click()
+        XCTAssertTrue(source.waitForExistence(timeout: 5))
+        XCTAssertEqual(source.value as? String, "Typed starting task\nApprove color contrast tomorrow p1\nSend the design notes")
+        XCTAssertEqual(try voiceMacBytes(voiceMacTables()), try voiceMacBytes(before), "Apply must change only draft text")
+        app.buttons["reviewMultiLine"].click()
+        XCTAssertTrue(app.textFields["multiLineTitle-2"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.textFields["multiLineTitle-2"].value as? String, "Approve color contrast")
+        app.buttons["saveMultiLine"].click()
+        voiceMacWait { try self.voiceMacTasks().count == originalTasks.count + 3 }
+        let created = try voiceMacTasks().filter { !originalIDs.contains($0["id"] as? String ?? "") }
+        XCTAssertEqual(Set(created.compactMap { $0["title"] as? String }), ["Typed starting task", "Approve color contrast", "Send the design notes"])
+        let scheduled = try XCTUnwrap(created.first { $0["title"] as? String == "Approve color contrast" })
+        XCTAssertEqual(scheduled["priority"] as? Int, 1); XCTAssertFalse((scheduled["due_date"] as? String ?? "").isEmpty)
+        XCTAssertTrue(created.allSatisfy { ($0["project_id"] as? String ?? "").isEmpty })
+        app.staticTexts["Inbox"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        voiceMacWait { try Set(self.voiceMacTasks().compactMap { $0["id"] as? String }) == originalIDs }
+        XCTAssertEqual(try voiceMacBytes(voiceMacTasks()), try voiceMacBytes(originalTasks))
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        let createdIDs = Set(created.compactMap { $0["id"] as? String })
+        voiceMacWait { try Set(self.voiceMacTasks().compactMap { $0["id"] as? String }) == originalIDs.union(createdIDs) }
+        let redone = try voiceMacTasks().filter { createdIDs.contains($0["id"] as? String ?? "") }
+        for prior in created {
+            var before = prior, after = try XCTUnwrap(redone.first { $0["id"] as? String == prior["id"] as? String })
+            XCTAssertNotEqual(after["task_generation"] as? String, before["task_generation"] as? String)
+            before.removeValue(forKey: "task_generation"); after.removeValue(forKey: "task_generation")
+            XCTAssertEqual(try voiceMacBytes(after), try voiceMacBytes(before))
+        }
+        let saved = try voiceMacBytes(voiceMacTables())
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
+        try launchHeadingWorkspace(app)
+        XCTAssertTrue(app.buttons["openMultiLineCapture"].waitForExistence(timeout: 10))
+        XCTAssertEqual(try voiceMacBytes(voiceMacTables()), saved)
+        let proof = XCTAttachment(data: try voiceMacBytes(redone), uniformTypeIdentifier: "public.json")
+        proof.name = "Mac reviewed voice tasks after explicit Add Undo Redo and cold return"; proof.lifetime = .keepAlways; add(proof)
+    }
+    @MainActor func testMacVoiceSyntheticRefusalKeepsCorrectionAndParentDraft() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try voiceMacStart(app, denied: true)
+        let before = try voiceMacBytes(voiceMacTables())
+        let source = app.textViews["multiLineText"]; source.click(); source.typeText("Keep original draft")
+        app.buttons["openVoiceDraft"].click()
+        let transcript = app.textViews["voiceTranscript"]; XCTAssertTrue(transcript.waitForExistence(timeout: 8)); transcript.click(); transcript.typeText("Keep corrected transcript")
+        app.buttons["voiceStart"].click()
+        XCTAssertTrue(app.staticTexts["voiceNotice"].waitForExistence(timeout: 5))
+        XCTAssertEqual(transcript.value as? String, "Keep corrected transcript"); XCTAssertTrue(app.buttons["voiceApply"].isEnabled)
+        XCTAssertEqual(try voiceMacBytes(voiceMacTables()), before)
+        app.buttons["voiceCancel"].click()
+        XCTAssertEqual(source.value as? String, "Keep original draft")
+        app.buttons["openVoiceDraft"].click()
+        XCTAssertTrue(transcript.waitForExistence(timeout: 5)); transcript.click(); transcript.typeText("Recovered typed task")
+        app.buttons["voiceStart"].click(); XCTAssertTrue(app.staticTexts["voiceNotice"].waitForExistence(timeout: 5))
+        app.buttons["voiceApply"].click()
+        XCTAssertEqual(source.value as? String, "Keep original draft\nRecovered typed task")
+        XCTAssertEqual(try voiceMacBytes(voiceMacTables()), before)
+        app.buttons["Done"].firstMatch.click()
+        XCTAssertEqual(try voiceMacBytes(voiceMacTables()), before, "Closing an unapplied task draft must never save voice proposals")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "dark"]
+        try launchHeadingWorkspace(app)
+        XCTAssertTrue(app.buttons["openMultiLineCapture"].waitForExistence(timeout: 10))
+        XCTAssertEqual(try voiceMacBytes(voiceMacTables()), before)
+    }
+}

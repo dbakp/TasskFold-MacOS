@@ -5,6 +5,9 @@ struct VoiceDraftRequest: Identifiable {
     let id = UUID()
     let workspace: WorkspaceBinding
     let original: String
+    /// Swift String equality normalizes Unicode. A proposal must stay bound to
+    /// the exact authored source, including canonically equivalent edits.
+    func matchesOriginal(_ text: String) -> Bool { original.utf8.elementsEqual(text.utf8) }
 }
 
 struct VoiceDraftSession {
@@ -56,8 +59,8 @@ struct VoiceDraftSession {
         try validate(result); return result
     }
     func applying(to original: String, request: VoiceDraftRequest, account: String, generation: UUID) throws -> String {
-        guard !busy, phase != .closed, request.id == self.request.id, request.original == self.request.original, request.workspace == workspace,
-              workspace.matches(account: account, generation: generation), original == request.original else {
+        guard !busy, phase != .closed, request.id == self.request.id, self.request.matchesOriginal(request.original), request.workspace == workspace,
+              workspace.matches(account: account, generation: generation), self.request.matchesOriginal(original) else {
             throw AppFailure(message: "The workspace or original draft changed. Reopen dictation from the intended draft.")
         }
         return try Self.appending(text, to: original)

@@ -101,3 +101,21 @@ final class VoiceDraftTests: XCTestCase {
         XCTAssertThrowsError(try MultiLineCapture.preview(VoiceDraftSession.appending(tooMany, to: ""), account: binding.account))
     }
 }
+
+
+extension VoiceDraftTests {
+    func testCanonicallyEquivalentParentEditsCannotReceiveAnOlderTranscript() throws {
+        let spellings = [("Café", "Cafe\u{301}"), ("각", "\u{1100}\u{1161}\u{11a8}"), ("a\u{323}\u{301}", "a\u{301}\u{323}")]
+        for (captured, edited) in spellings {
+            XCTAssertEqual(captured, edited, "The regression needs semantically equal but raw-different text")
+            XCTAssertNotEqual(Array(captured.utf8), Array(edited.utf8))
+            let request = VoiceDraftRequest(workspace: binding, original: captured)
+            XCTAssertFalse(request.matchesOriginal(edited), "The parent adapter uses the same exact-source guard")
+            XCTAssertTrue(request.matchesOriginal(captured))
+            var session = VoiceDraftSession(request: request); try session.edit("Reviewed task")
+            XCTAssertThrowsError(try session.applying(to: edited, request: request, account: binding.account, generation: binding.generation))
+            XCTAssertEqual(Array(try session.applying(to: captured, request: request, account: binding.account, generation: binding.generation).utf8), Array((captured + "\nReviewed task").utf8))
+            XCTAssertEqual(session.text, "Reviewed task", "Refusal must preserve the transcript for recovery")
+        }
+    }
+}

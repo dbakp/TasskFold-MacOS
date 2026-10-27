@@ -4,6 +4,16 @@ Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Reviewed voice drafts now keep exact raw source binding in both apps. Each repo
+passes 81 focused Core cases; the old model reproduces three raw Unicode refusal
+failures within one new case. Two Mac native synthetic-recorder journeys pass,
+including correction, parent preservation, explicit Add, keyboard Undo/Redo and
+normal cold return. Three final phone/tablet cases pass each without runtime
+warnings. The iOS review uses a larger native page sheet; final largest-text
+screens were inspected. One Mac QoS warning keeps its strict runtime gate open.
+Genuine recording/permissions and the requested real-audio approval remain open.
+See [voice-draft-native](voice-draft-native/README.md) for exact scope.
+
 Fresh local workflows now prepare full snapshot encoding in the background and
 reuse it only after final table-buffer/raw-metadata admission. Each repo passes
 104 distinct selected Core cases, including a strengthened independent projection

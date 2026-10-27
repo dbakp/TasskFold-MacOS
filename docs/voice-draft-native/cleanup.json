@@ -1,0 +1,18 @@
+{
+  "remainingTestProcesses": {
+    "Taskfold": [],
+    "TaskfoldUITests-Runner": [],
+    "xcodebuild": []
+  },
+  "duplicateExtractedImageBytesRemoved": 3209758,
+  "retained": "Original result bundles, selected original PNG evidence and current owned signed products",
+  "realAudioTest": "Approval requested but not received; no microphone/speech permission request, audio playback or recording performed",
+  "bootedDevicesAfter": {
+    "devices": {
+      "com.apple.CoreSimulator.SimRuntime.iOS-27-0": [],
+      "com.apple.CoreSimulator.SimRuntime.watchOS-27-0": [],
+      "com.apple.CoreSimulator.SimRuntime.iOS-26-2": [],
+      "com.apple.CoreSimulator.SimRuntime.iOS-26-5": []
+    }
+  }
+}

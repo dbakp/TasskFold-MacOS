@@ -86,6 +86,9 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 ### 4. Reviewed voice drafts
 
 - [x] Device-transcription draft/review, correction and explicit Apply implementation.
+- [x] Exact parent-draft UTF-8 binding, Mac native correction/Cancel/Apply/Add/Undo/Redo
+  and cold return with synthetic recording/refusal; final phone/tablet review and
+  roomy iPad largest-text presentation. See voice-draft-native/ for scoped evidence.
 - [ ] Genuine microphone/permission/audio/cancellation and Mac speech acceptance.
 - [ ] Cloud AI assistance: provider, cost and data handling undecided; disabled.
 

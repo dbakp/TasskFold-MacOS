@@ -8828,3 +8828,13 @@ Debug run, versus 0.873 s previously; total processing is not claimed faster.
 final four-case result still has one QoS warning, and earlier geometry warnings
 remain open. The Mac driver now verifies a measurement click actually starts.
 See [evidence and remaining polish](workflow-cache-encoding/README.md).
+
+### 27 October — exact reviewed voice drafts and Mac keyboard acceptance
+
+Voice Apply now refuses raw-edited parent text, including equivalent Unicode
+spellings, while preserving the transcript. Both local Mac native journeys pass
+with the synthetic recorder: correction/Cancel/Apply, explicit Add, Undo/Redo and
+normal cold return, plus refusal/typed recovery without an unintended task save.
+The 81 focused Core cases and 17 Mac controller checks pass. One native QoS
+warning remains; actual microphone/speech permission and audio acceptance await
+approval. See [voice-draft-native](voice-draft-native/README.md).

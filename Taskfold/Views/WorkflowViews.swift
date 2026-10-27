@@ -125,7 +125,7 @@ struct MultiLineCaptureView: View {
         }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) } }
         .sheet(item: $voiceRequest) { request in
             VoiceDraftView(request: request) { proposed in
-                guard store.workflowReady(request.workspace), text == request.original else { return false }
+                guard store.workflowReady(request.workspace), request.matchesOriginal(text) else { return false }
                 text = proposed; return true
             }
         }

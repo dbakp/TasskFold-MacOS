@@ -28,4 +28,22 @@ The iOS review uses a normal inline title, a shorter Apply control with a full a
 
 The iOS native fixture is compiled only in Debug and requires the exact disposable app bundle, `ui-testing` workspace, `--uitesting` and `--voice-fixture`. It supplies synthetic transcription/refusal events; it never represents real microphone/TCC acceptance. Phone/tablet UI cases cover correction, Cancel/source preservation, Apply without a task write, explicit bulk save, exact persisted tasks after relaunch, refusal and largest-text dark layouts. Exact runs and follow-ups are in `p2-voice-drafts-evidence.json`.
 
-Open gates: genuine on-device recognition on supported hardware/languages; real permission denial/recovery; microphone/route/call interruptions and iOS audio-session restoration; foreground/background and simultaneous-window recording; actual account/draft changes during capture; Mac native keyboard/selection/Undo and VoiceOver; wider localization/RTL/large-system-text layouts. The Mac desktop is locked, so full native interaction is unverified. Model/fixture/build success does not close those gates. Cloud AI assistance, the user's release/provider/push/older-client deferrals and the rest of Px remain unchanged.
+Open gates: genuine on-device recognition on supported hardware/languages; real permission denial/recovery; microphone/route/call interruptions and iOS audio-session restoration; foreground/background and simultaneous-window recording; actual account/draft changes during capture; Mac native keyboard/selection/Undo and VoiceOver; wider localization/RTL/large-system-text layouts. Mac reviewed-draft interaction now has the synthetic-recorder native scope below; real recording acceptance remains open. Model/fixture/build success does not close those gates. Cloud AI assistance, the user's release/provider/push/older-client deferrals and the rest of Px remain unchanged.
+
+
+## 27 October — exact parent draft and Mac native review
+
+Apply now compares the original UTF-8 bytes in both the session and parent adapter;
+canonically equivalent edits do not authorize an older transcript. The regression
+fails against both old models, then each owned 81-case focused suite passes. Two
+Mac native cases now cover correction/Cancel/Apply, explicit task creation,
+keyboard Undo/Redo, synthetic refusal and normal cold return. The Mac controller
+also passes 17 synthetic lifecycle checks. Three final native cases pass on each
+phone/tablet, including dark largest text. The iOS review now uses a roomy page
+sheet, and its visual driver requires complete control frames. Images were
+inspected; the earlier cramped/transitional iPad captures are retained separately.
+
+One Mac runtime warning remains and its strict verifier rejects clean acceptance.
+These tests use synthetic recording/refusal, not genuine microphone or speech
+permissions, accuracy or audio-session restoration. Actual audio testing is still
+awaiting approval. See [exact bindings, native results and scope](voice-draft-native/README.md).
