@@ -23,8 +23,13 @@
   ],
   "retained": [
     "One native host/build per platform and source package caches",
-    "Filtered Core/native logs, legacy regression, metrics and source/binary bindings in each repo",
-    "One latest Mac UI initialization failure bundle/log in /tmp/taskfold-workflow-native-mac-build/Validation for the unresolved runner issue"
+    "Filtered Core/native logs, legacy regression, metrics and source/binary bindings in each repo"
   ],
-  "note": "Logical bytes only; not a claimed physical free-space delta. No real workspace, general Simulator runtime, security protection or unrelated app was removed."
+  "note": "Logical bytes only; not a claimed physical free-space delta. No real workspace, general Simulator runtime, security protection or unrelated app was removed.",
+  "recoveryCleanup": {
+    "allJobsTerminal": true,
+    "testAppTerminatedByTestTeardown": true,
+    "logicalBytesRemoved": 626323,
+    "retained": "Compact test cases, summaries, metrics and verified bindings. One reusable native host/build per platform remains."
+  }
 }

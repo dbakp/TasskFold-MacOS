@@ -42,18 +42,18 @@ client exposure and physical geofence deferrals are unchanged. No real workspace
 or hosted schema/service was changed. One current native cache per platform is
 retained for the next active-goal work; obsolete owned test artifacts are pruned.
 
-Final status: all three cases pass on each Simulator, with no runtime warnings.
-Mac's final signed build/Core checks pass, but its three requested app UI cases
-did not start because automation initialization failed. See
-mac-automation-initialization.json. No security setting was changed when macOS
-denied a service restart. The old prototype's Mac results are not final runtime
-acceptance. The goal remains active and this validation gap stays open.
+Final status: all three cases pass on each Mac/iPhone/iPad host, with no runtime
+warnings (nine platform/case pairs). After the user's explicit automation approval,
+the same signed final Mac binary completed the requested cases. Prior initialization
+failures remain historical evidence; the earlier String-key prototype is superseded.
+See mac-summary.json, mac-final-bindings.json and mac-automation-initialization.json.
+The broader goal remains active.
 
 | Final byte-key implementation | 1,000-task save return | Widget ready | 5,000-task save return | Widget ready |
 | --- | ---: | ---: | ---: | ---: |
 | iPhone Simulator | 0.53s | 1.38s | 2.48s | 14.44s |
 | iPad Simulator | 0.52s | 1.38s | 2.47s | 14.40s |
-| Mac | Open: test runner initialization | — | Open | — |
+| Mac | 0.45s | 1.28s | 2.23s | 16.22s |
 
 The previous committed stage measured 6.82/6.96s full save return on phone/tablet.
 The current roughly 2.5s pause remains too long. These are Debug observations,

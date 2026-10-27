@@ -1,7 +1,7 @@
 {
   "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
   "validation": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/workflow-token-preparation/validation.json",
-  "nativeValidationScope": "Signed build and Core pass; final UI runner could not initialize. Do not treat current Mac binary hashes as app-runtime acceptance.",
+  "nativeValidationScope": "Final three requested Mac app cases pass after explicit user approval; no runtime warnings. Same source/prepared/binary hashes as the prior signed build.",
   "sourceSHA256": {
     "Taskfold/Core/WidgetCompletion.swift": "5433588dbec27535fbfa887dd41c10c528c7ee1c368714e4309d0322d3f0b439",
     "TaskfoldTests/WidgetCompletionPreparationTests.swift": "1dc1475c03d88939a47e69a56b2ef3febe1d3f6943e20b4dbaae5fa43f8a51aa",

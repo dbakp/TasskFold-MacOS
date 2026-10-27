@@ -5726,3 +5726,25 @@ No real workspace, schema or hosted service was changed. See
 workflow-token-preparation/validation.json, source/binary bindings, retained
 prototype regression and accepted metrics. One reusable native source/build cache
 per platform remains; obsolete owned test artifacts are pruned after retention.
+
+
+## 27 October: Mac automation recovered; local history control frozen
+
+The user approved the system automation prompt. The same final signed byte-key
+Mac build now executes all three requested application tests: 1,000/5,000-task
+Store saves plus widget intent completion/retry/Undo/cold return. Three pass with
+zero failures, skips or runtime warnings; final acceptance is nine platform/case
+pairs across Mac/iPhone/iPad. Source, prepared-source and binary hashes were
+rechecked against the earlier binding without rebuilding. The Mac saves return
+in 0.45s/2.23s; complete widget readiness takes 1.28s/16.22s. These are Debug
+isolated-fixture observations, not production responsiveness or release guarantees.
+This supersedes the final-Mac-runner gap in the preceding entry.
+
+A new synthetic Core control freezes existing local history before optimizing it:
+100 new roots with 200 children, 20 pre-existing root events and 40 child events,
+including duplicate command IDs and deleted-root history. Each repo passes its
+one-case control against the same pre-refactor SHA-256. No local-history production
+optimization has landed yet. The remaining save pause, background readiness,
+production rendering, paired/hosted delivery and wider ranked backlog stay open.
+User release/provider/reminder/older-client/geofence deferrals remain unchanged.
+See workflow-token-preparation/mac-summary.json and local-history-control.json.

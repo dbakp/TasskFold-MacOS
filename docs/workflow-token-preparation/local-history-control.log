@@ -1,0 +1,7 @@
+Test Case '-[TaskfoldCoreTests.FreshLocalActivityTests testLegacyLocalHistoryControlIsDeterministic]' started.
+Test Case '-[TaskfoldCoreTests.FreshLocalActivityTests testLegacyLocalHistoryControlIsDeterministic]' passed (2.487 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.487 (2.488) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.487 (2.488) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 2.487 (2.489) seconds
+LOCAL_HISTORY_CONTROL_SECONDS 1.184176208
+LOCAL_HISTORY_CONTROL_SHA b7d5c92f934e1e2af8103699b1d895b9d92f7c94fdcb0f8885e065d92c40ab4e

@@ -1,9 +1,9 @@
 {
   "date": "2026-10-27",
-  "status": "Implementation verified by Core and final iPhone/iPad cases; final Mac UI runtime remains open.",
+  "status": "Final implementation verified by Core and all three selected native cases on Mac, iPhone and iPad.",
   "coreDistinctCasesPassed": 109,
   "finalCompatibilityFamilyPassed": 7,
-  "nativeAcceptedPlatformCasePairsPassed": 6,
+  "nativeAcceptedPlatformCasePairsPassed": 9,
   "nativeAccepted": {
     "phone": {
       "result": "Passed",
@@ -20,9 +20,20 @@
       "failedTests": 0,
       "skippedTests": 0,
       "runtimeWarnings": []
+    },
+    "mac": {
+      "result": "Passed",
+      "totalTestCount": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "runtimeWarnings": [],
+      "startTime": 1793083073.31,
+      "finishTime": 1793083122.047
     }
   },
-  "macUI": "Three requested cases not executed after runner automation initialization failed. Earlier String-key prototype Mac passes are not counted for the final byte-key source.",
+  "macUI": "Closed after explicit user approval: same signed byte-key build executes all three requested cases, zero failures/skips/runtime warnings.",
   "prototypeRegression": {
     "case": "testInvalidCanonicallyEquivalentStringsKeepExactSignatureBytes",
     "beforeByteKeys": "One expected failing Core test demonstrates two raw Unicode forms incorrectly sharing a String memo entry.",
@@ -38,7 +49,6 @@
   ],
   "scope": "Per-save timestamp/encoder reuse only; no stored contract, normal rollout, hosted service/schema, provider configuration or release change.",
   "remaining": [
-    "Final Mac UI acceptance after test-runner recovery",
     "Remaining 2.5s phone/tablet full-save pause",
     "Background widget readiness",
     "Local history scaling",

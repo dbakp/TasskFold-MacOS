@@ -1,0 +1,26 @@
+{
+  "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "validation": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/workflow-token-preparation/validation.json",
+  "nativeValidationScope": "Final three requested Mac app cases pass after explicit user approval; no runtime warnings. Same source/prepared/binary hashes as the prior signed build.",
+  "sourceSHA256": {
+    "Taskfold/Core/WidgetCompletion.swift": "5433588dbec27535fbfa887dd41c10c528c7ee1c368714e4309d0322d3f0b439",
+    "TaskfoldTests/WidgetCompletionPreparationTests.swift": "1dc1475c03d88939a47e69a56b2ef3febe1d3f6943e20b4dbaae5fa43f8a51aa",
+    "Taskfold/TeamTemplateNativeFixture.swift": "bc199d5e1291885b508824164edc4b4f36c89ec7948529b3ed11fe010ffc9a4c",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "b75f0ac9385fb865395a14d25412dbf1d21cf8d2334f5b5989141a4c99f4e4a7",
+    "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd",
+    "Package.swift": "5477db7bb42e0f5072fbecaccddde693cafdd9d470ba8588b3bf1675e25b6346"
+  },
+  "preparedSHA256": {
+    "Taskfold/Core/WidgetCompletion.swift": "5433588dbec27535fbfa887dd41c10c528c7ee1c368714e4309d0322d3f0b439",
+    "Taskfold/TeamTemplateNativeFixture.swift": "bc199d5e1291885b508824164edc4b4f36c89ec7948529b3ed11fe010ffc9a4c",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "b75f0ac9385fb865395a14d25412dbf1d21cf8d2334f5b5989141a4c99f4e4a7",
+    "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+    "Taskfold/Info.plist": "266e1dec43d400a089a76ec68c4a8b7b0adf6104890f71f0b428cb38530523a5"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "c8c108ae430fe7c3f45aff6bd07d3f1803cef7d54c97199275ce4e0adac125bd",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "9aa65f764daa9d0a1f4109f25648c5d00e12fab84ab541de8a6077f7f5fece5d",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "d1a1af12439a5de9143ae76474fbece36bc553a967e99976e78a5388f6ab053b"
+  }
+}

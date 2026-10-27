@@ -66,5 +66,39 @@
       "widgetLists": 1001,
       "widgetIdle": true
     }
+  },
+  "mac": {
+    "5000": {
+      "error": null,
+      "count": 5000,
+      "saved": true,
+      "widgetLists": 5001,
+      "widgetIdle": true,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "widgetReadySeconds": 16.224074125,
+      "undoCommands": 1,
+      "commands": 20001,
+      "seconds": 2.234880709,
+      "taskRevisionDelta": 1,
+      "proof": "dc304f76-0798-43f6-afe4-417e1618af13",
+      "tasks": 5001,
+      "pending": 20001
+    },
+    "1000": {
+      "saved": true,
+      "seconds": 0.447796625,
+      "widgetIdle": true,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "tasks": 1001,
+      "count": 1000,
+      "widgetLists": 1001,
+      "taskRevisionDelta": 1,
+      "commands": 4001,
+      "undoCommands": 1,
+      "widgetReadySeconds": 1.283191167,
+      "error": null,
+      "pending": 4001,
+      "proof": "363afaa0-c423-4ea7-9002-dba26b71ff45"
+    }
   }
 }

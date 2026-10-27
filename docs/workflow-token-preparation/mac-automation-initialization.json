@@ -35,5 +35,12 @@
   "unlockedConsoleConfirmed": true,
   "serviceRestart": "Denied by macOS System Integrity Protection; no security changes made, service PID unchanged.",
   "lastAttempt": "Command continued after reset denial and terminated with the same initialization error; no further unchanged-state retries.",
-  "userQuestion": "A single asynchronous question asks whether the Enable UI Automation prompt is visible; no response inferred."
+  "userQuestion": "Answered by user: Prompt approved. Recovery accepted after that new state.",
+  "recovery": {
+    "userReply": "Prompt approved",
+    "unchangedBinary": true,
+    "result": "Three requested cases passed; no runtime warnings",
+    "summary": "mac-summary.json",
+    "bindings": "mac-final-bindings.json"
+  }
 }

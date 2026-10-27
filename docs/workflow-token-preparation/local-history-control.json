@@ -1,0 +1,7 @@
+{
+  "status": "Pre-optimization control only; production unchanged",
+  "actualCasesPassed": 1,
+  "expectedDigest": "b7d5c92f934e1e2af8103699b1d895b9d92f7c94fdcb0f8885e065d92c40ab4e",
+  "testSourceSHA256": "68145283271031b37856f8176ff130bc7dd38a85a95a24c5ecc79b2b7f769621",
+  "scope": "Frozen sorted metadata bytes for 100 root creations, 200 children and prior immutable history; includes duplicate command IDs. Timing is observational, no latency threshold."
+}
