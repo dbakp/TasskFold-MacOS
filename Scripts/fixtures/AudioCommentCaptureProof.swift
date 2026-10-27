@@ -285,7 +285,7 @@ final class AudioProofSaveGate: @unchecked Sendable {
         cold.close()
         let coldReturn = make(AudioProofRecorder(data), AudioProofPlayer(), coldDisk)
         await coldReturn.refresh()
-        checks["relaunchListsOriginalSaveAndHidesItsRecoveryCopies"] = coldReturn.pendingSaves == coldIntents && coldReturn.recoverable.isEmpty && coldReturn.available == coldDrafts
+        checks["relaunchListsOriginalSaveAndHidesItsRecoveryCopies"] = coldReturn.pendingSaves == coldIntents && coldReturn.recoverable.isEmpty && coldReturn.available.isEmpty
         let foreignScope = AudioCommentLiveScope(workspace: .init(account: "another-save-account", generation: UUID()), target: target)
         let foreign = AudioCommentCapture(request: .init(scope: foreignScope, title: "Other account"), recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: coldDisk)
         foreign.currentScope = { foreignScope }
@@ -363,6 +363,70 @@ final class AudioProofSaveGate: @unchecked Sendable {
         let otherOwnerSaved = try await otherOwnerStore.drafts()
         checks["inFlightDurableSaveFinishesOnlyOriginalOwnerAndClearsClosedPreview"] = reachedSave && !shownSave && originalOwnerSaved.count == 1 && originalOwnerSaved.first?.caption == "Frozen original owner Save" && originalOwnerJournals.isEmpty && otherOwnerSaved.isEmpty && scopedSave.session.clip == nil && !scopedSave.recovery.durable
         context.scope = request.scope
+        let sharedDisk = try store("shared-review")
+        let sharedRoot = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Shared exact cafe\u{301}", clip: await AudioCommentDecoding.validate(data))
+        try await sharedDisk.checkpoint(sharedRoot)
+        let editorA = make(AudioProofRecorder(data), AudioProofPlayer(), sharedDisk), editorB = make(AudioProofRecorder(data), AudioProofPlayer(), sharedDisk)
+        await editorA.restore(sharedRoot, recovering: true); await editorB.restore(sharedRoot, recovering: true)
+        let firstEditorSave = await editorA.save(), secondEditorSave = await editorB.save()
+        let sharedSaved = try await sharedDisk.drafts(), sharedReviews = try await sharedDisk.reviews()
+        checks["twoLoadedEditorsSaveSameReviewAsOneAuthoritativeDraft"] = firstEditorSave && secondEditorSave && sharedSaved.count == 1 && editorA.saved?.id == editorB.saved?.id && sharedReviews.isEmpty && sharedSaved.first?.origin == AudioCommentReviewReference(sharedRoot)
+        editorA.close(); editorB.close()
+
+        let editedDisk = try store("different-review")
+        try await editedDisk.checkpoint(sharedRoot)
+        let editedA = make(AudioProofRecorder(data), AudioProofPlayer(), editedDisk), editedB = make(AudioProofRecorder(data), AudioProofPlayer(), editedDisk)
+        await editedA.restore(sharedRoot, recovering: true); await editedB.restore(sharedRoot, recovering: true)
+        editedB.editCaption("Keep my independently edited caption")
+        _ = await editedA.save(); let implicitlyCopied = await editedB.save()
+        checks["differentEditorContentIsPreservedBehindExplicitCopyChoice"] = !implicitlyCopied && editedB.reviewClaimed && editedB.saveConflict && editedB.session.caption == "Keep my independently edited caption"
+        let explicitEditedCopy = await editedB.saveSeparateDraft(), independentVersions = try await editedDisk.drafts()
+        checks["explicitClaimedReviewCopyKeepsBothVersionsWithoutOriginCollision"] = explicitEditedCopy && independentVersions.count == 2 && independentVersions.contains { $0.origin == nil && $0.caption == "Keep my independently edited caption" } && independentVersions.contains { $0.origin == AudioCommentReviewReference(sharedRoot) }
+        editedA.close(); editedB.close()
+
+        let joiningDisk = try store("join-prepared-review", fault: { if $0 == .afterSaveJournal { throw AudioCommentStorageFailure.unreadable } })
+        try await joiningDisk.checkpoint(sharedRoot)
+        let joiningA = make(AudioProofRecorder(data), AudioProofPlayer(), joiningDisk), joiningB = make(AudioProofRecorder(data), AudioProofPlayer(), joiningDisk)
+        await joiningA.restore(sharedRoot, recovering: true); await joiningB.restore(sharedRoot, recovering: true)
+        _ = await joiningA.save(); let firstPrepared = try await joiningDisk.saves()
+        let joinedPrepared = await joiningB.save(), joinedDrafts = try await joiningDisk.drafts(), joinedIntents = try await joiningDisk.saves()
+        checks["secondEditorJoinsPreparedOperationWithoutCreatingOwnJournal"] = joinedPrepared && firstPrepared.count == 1 && joinedDrafts.count == 1 && joinedDrafts.first?.id == firstPrepared.first?.next.id && joinedIntents.isEmpty
+        joiningA.close(); joiningB.close()
+
+        let discardGate = AudioProofOneShotFault(point: .afterDiscardJournal)
+        let discardingDisk = try store("cancel-pending", fault: { point in
+            if point == .afterSaveJournal { throw AudioCommentStorageFailure.unreadable }
+            try discardGate.check(point)
+        })
+        let preparingDiscard = make(AudioProofRecorder(data), AudioProofPlayer(), discardingDisk)
+        preparingDiscard.start(); _ = await wait { preparingDiscard.session.phase == .recording }; preparingDiscard.stop(); _ = await wait { preparingDiscard.session.phase == .review }
+        preparingDiscard.editCaption("Only synthetic unfinished audio")
+        _ = await preparingDiscard.save(); let beforeDiscard = try await discardingDisk.saves(); preparingDiscard.close()
+        let discardReturn = make(AudioProofRecorder(data), AudioProofPlayer(), discardingDisk); await discardReturn.refresh()
+        if let pending = discardReturn.pendingSaves.first { await discardReturn.discardPendingSave(pending) }
+        let markedDiscard = try await discardingDisk.saves()
+        checks["cancelAcknowledgementLossListsDurableDiscardInsteadOfSave"] = markedDiscard.count == 1 && markedDiscard.first?.phase == .discarding && discardReturn.pendingSaves.first?.phase == .discarding && discardReturn.session.clip == nil
+        discardReturn.close()
+        let finalDiscardReturn = make(AudioProofRecorder(data), AudioProofPlayer(), discardingDisk); await finalDiscardReturn.refresh()
+        if let stale = beforeDiscard.first { await finalDiscardReturn.resumeSave(stale) }
+        let discardedFinalDrafts = try await discardingDisk.drafts(), discardedFinalIntents = try await discardingDisk.saves(), discardedFinalReviews = try await discardingDisk.reviews()
+        checks["coldStaleFinishCompletesAuthoritativeDiscardWithoutPlaybackOrResurrection"] = discardedFinalDrafts.isEmpty && discardedFinalIntents.isEmpty && discardedFinalReviews.isEmpty && finalDiscardReturn.session.clip == nil
+        finalDiscardReturn.close()
+
+        let savedCancelDisk = try store("cancel-already-saved", fault: { if $0 == .afterDraftCommit { throw AudioCommentStorageFailure.unreadable } })
+        let alreadySaved = make(AudioProofRecorder(data), AudioProofPlayer(), savedCancelDisk)
+        alreadySaved.start(); _ = await wait { alreadySaved.session.phase == .recording }; alreadySaved.stop(); _ = await wait { alreadySaved.session.phase == .review }
+        _ = await alreadySaved.save(); alreadySaved.close()
+        let savedCancelReturn = make(AudioProofRecorder(data), AudioProofPlayer(), savedCancelDisk); await savedCancelReturn.refresh()
+        let primaryBeforeCancel = try await savedCancelDisk.drafts()
+        if let pending = savedCancelReturn.pendingSaves.first { await savedCancelReturn.discardPendingSave(pending) }
+        let primaryAfterCancel = try await savedCancelDisk.drafts()
+        checks["pendingDiscardRefusesAlreadyCommittedAudioAndKeepsFinishAction"] = primaryBeforeCancel == primaryAfterCancel && primaryAfterCancel.count == 1 && savedCancelReturn.pendingSaves.count == 1 && savedCancelReturn.notice == AudioCommentStorageFailure.alreadySaved.localizedDescription
+        if let pending = savedCancelReturn.pendingSaves.first { await savedCancelReturn.resumeSave(pending) }
+        let finalSavedAfterRefusal = try await savedCancelDisk.drafts()
+        checks["alreadySavedRefusalCanFinishWithoutASecondDraft"] = finalSavedAfterRefusal == primaryBeforeCancel && savedCancelReturn.pendingSaves.isEmpty
+        savedCancelReturn.close()
+
         let realRecorder = DeviceAudioCommentRecording(), realPlayer = DeviceAudioCommentPlaying()
         var falseGate = false, falsePlay = false
         do { try await realRecorder.start(isCurrent: { false }, receive: { _ in }) } catch is CancellationError { falseGate = true }

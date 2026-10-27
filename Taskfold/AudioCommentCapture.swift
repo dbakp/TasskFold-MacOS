@@ -24,6 +24,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     private(set) var pendingSaves: [AudioCommentSaveIntent] = []
     private(set) var saveDurable = false
     private(set) var saveConflict = false
+    private(set) var reviewClaimed = false
     private(set) var retainedRecoveryFailed = false
     let recovery: AudioCommentReviewRecovery
     private(set) var loading = false
@@ -53,6 +54,11 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     var recordingBusy: Bool { [.authorizing, .recording, .finishing].contains(session.phase) }
     var busy: Bool { recordingBusy || loading || saving }
     var editable: Bool { isCurrent && !busy && !saveUnconfirmed && !saveConflict }
+    private var reviewOrigin: AudioCommentReviewReference? {
+        if let saved { return saved.origin }
+        if let restoredRecovery { return restoredRecovery.origin ?? .init(restoredRecovery) }
+        return nil
+    }
     var needsSave: Bool {
         guard let clip = session.clip else { return false }
         return saveUnconfirmed || saved?.clip.data != clip.data || saved?.caption.utf8.elementsEqual(session.caption.utf8) != true
@@ -94,7 +100,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
                     let clip = try await AudioCommentDecoding.validate(data)
                     guard let self else { return }; guard self.isCurrent else { self.close(); return }
                     guard self.accepts(token), self.session.phase == .finishing else { return }
-                    try self.recovery.submit(clip: clip, caption: self.session.caption)
+                    try self.recovery.submit(clip: clip, caption: self.session.caption, origin: self.reviewOrigin)
                     guard self.session.receive(clip, token: token, workspace: self.request.scope.workspace, target: self.request.scope.target) else { return }
                     self.recorder.cancel(); self.elapsed = Double(clip.descriptor.milliseconds) / 1000
                     self.notice = "Ready to review. Save the draft to keep it on this device."
@@ -116,7 +122,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     func editCaption(_ text: String) {
         guard editable else { return }
         do {
-            if let clip = session.clip { try recovery.submit(clip: clip, caption: text) }
+            if let clip = session.clip { try recovery.submit(clip: clip, caption: text, origin: reviewOrigin) }
             try session.editCaption(text); notice = nil
         } catch { notice = error.localizedDescription }
     }
@@ -125,19 +131,15 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         do {
             let owner = try AudioCommentOwner(request.scope.workspace.account)
             retainedRecoveryFailed = AudioCommentReviewRecovery.hasRetainedFailure(owner: owner, target: request.scope.target)
-            let prepared = try await storage.saves().filter { $0.next.target == request.scope.target }
+            let before = try await storage.catalog(target: request.scope.target)
             guard isCurrent else { close(); return }
-            pendingSaves = prepared
-            let protectedIDs = Set(prepared.flatMap { $0.reviews.map(\.id) })
+            let protectedIDs = Set(before.saves.flatMap { $0.reviews.map(\.id) })
             let retried = await AudioCommentReviewRecovery.retryRetained(owner: owner, target: request.scope.target, excluding: protectedIDs)
             guard isCurrent else { close(); return }
             retainedRecoveryFailed = !retried
-            let drafts = try await storage.drafts()
+            let catalog = try await storage.catalog(target: request.scope.target)
             guard isCurrent else { close(); return }
-            available = drafts.filter { $0.target == request.scope.target }
-            let reviews = try await storage.reviews()
-            guard isCurrent else { close(); return }
-            recoverable = reviews.filter { $0.target == request.scope.target && !protectedIDs.contains($0.id) }
+            pendingSaves = catalog.saves; available = catalog.drafts; recoverable = catalog.reviews
             if !retried { notice = "An interrupted review still needs a recovery retry. Keep Taskfold open before quitting." }
         } catch { if isCurrent { notice = error.localizedDescription } else { close() } }
     }
@@ -150,7 +152,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             try session.restore(clip, caption: draft.caption, workspace: request.scope.workspace, target: request.scope.target)
             saved = recovering ? nil : draft; restoredRecovery = recovering ? draft : nil; candidate = nil; candidateBase = nil
             elapsed = Double(clip.descriptor.milliseconds) / 1000; notice = recovering ? "Recovered review. Save a draft when you’re ready." : "Saved on this device."
-            if recovering { try recovery.submit(clip: clip, caption: draft.caption) }
+            if recovering { try recovery.submit(clip: clip, caption: draft.caption, origin: reviewOrigin) }
         } catch { if isCurrent { notice = error.localizedDescription } else { close() } }
     }
     func resumeSave(_ requested: AudioCommentSaveIntent) async {
@@ -172,6 +174,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
                 }
                 intent = requested
             }
+            if intent.phase == .discarding { loading = false; await discardPendingSave(intent); return }
             let clip = try await AudioCommentDecoding.validate(intent.next.clip.data)
             guard isCurrent else { close(); loading = false; return }
             try session.restore(clip, caption: intent.next.caption, workspace: request.scope.workspace, target: request.scope.target)
@@ -189,33 +192,40 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             let next: AudioCommentSavedDraft
             if let candidate { next = candidate }
             else if let saved { next = try saved.replacing(caption: session.caption, clip: clip); candidate = next; candidateBase = saved.revision }
-            else { next = try .init(owner: .init(request.scope.workspace.account), target: request.scope.target, caption: session.caption, clip: clip); candidate = next; candidateBase = nil }
+            else { next = try .init(owner: .init(request.scope.workspace.account), target: request.scope.target, caption: session.caption, clip: clip, origin: reviewOrigin); candidate = next; candidateBase = nil }
             if saveIntent == nil {
                 var refs = await recovery.freezeForSave()
                 guard isCurrent else { recovery.resumeAfterSave(); close(); return false }
                 if let restoredRecovery { refs.append(.init(restoredRecovery)) }
+                if reviewClaimed, let origin = reviewOrigin { refs.removeAll { $0 == origin } }
                 refs = Array(Set(refs)).sorted { $0.id.uuidString + $0.revision.uuidString < $1.id.uuidString + $1.revision.uuidString }
                 saveIntent = try .init(next: next, base: candidateBase, reviews: refs)
             }
             guard let intent = saveIntent else { throw AudioCommentStorageFailure.unreadable }
             submittedIntent = intent
-            try await storage.commitSave(intent, replacing: replacingIntent, existingOnly: saveDurable)
+            let committed = try await storage.commitSave(intent, replacing: replacingIntent, existingOnly: saveDurable)
             recovery.finishSave()
             AudioCommentReviewRecovery.settleRetained(owner: next.owner, target: next.target, ids: Set(intent.reviews.map(\.id)))
             guard isCurrent else { close(); return false }
-            saved = next; candidate = nil; candidateBase = nil; saveUnconfirmed = false; saveConflict = false
+            saved = committed; candidate = nil; candidateBase = nil; saveUnconfirmed = false; saveConflict = false; reviewClaimed = false
             restoredRecovery = nil; saveIntent = nil; replacingIntent = nil; saveDurable = false
-            let remainingSaves = try? await storage.saves()
+            let catalog = try? await storage.catalog(target: request.scope.target)
             guard isCurrent else { close(); return false }
-            if let remainingSaves { pendingSaves = remainingSaves.filter { $0.next.target == request.scope.target } }
-            let protectedIDs = Set(pendingSaves.flatMap { $0.reviews.map(\.id) })
-            let remainingReviews = try? await storage.reviews()
-            guard isCurrent else { close(); return false }
-            if let remainingReviews { recoverable = remainingReviews.filter { $0.target == request.scope.target && !protectedIDs.contains($0.id) } }
-            available.removeAll { $0.id == next.id }; available.insert(next, at: 0)
+            if let catalog { pendingSaves = catalog.saves; recoverable = catalog.reviews; available = catalog.drafts }
+            if !available.contains(where: { $0.id == committed.id }) { available.insert(committed, at: 0) }
             notice = "Saved on this device."; return true
         } catch {
             let failure = error
+            if let redirect = failure as? AudioCommentSaveRedirect {
+                guard isCurrent else { close(); return false }
+                // The durable operation belongs to the same owner, target and
+                // exact content. Its IDs, not this editor's volatile proposal,
+                // are authoritative through a second interruption/relaunch.
+                saveIntent = redirect.intent; candidate = redirect.intent.next; candidateBase = redirect.intent.base
+                replacingIntent = nil; saveDurable = true; saveUnconfirmed = true
+                saving = false
+                return await save()
+            }
             let original = submittedIntent ?? saveIntent
             let state: AudioCommentLocalSaveState?
             if let original { state = try? await storage.saveState(original) } else { state = nil }
@@ -235,7 +245,19 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             guard isCurrent else { close(); return false }
             if state == .prepared { saveDurable = true }
             else if state == .unprepared { saveDurable = false }
-            if (failure as? AudioCommentStorageFailure) == .conflict {
+            if (failure as? AudioCommentStorageFailure) == .reviewClaimed {
+                reviewClaimed = true; saveConflict = true; saveUnconfirmed = false
+                if state == .unprepared { saveIntent = nil; candidate = nil; candidateBase = nil; replacingIntent = nil; saveDurable = false; recovery.resumeAfterSave() }
+                notice = AudioCommentStorageFailure.reviewClaimed.localizedDescription
+            } else if (failure as? AudioCommentStorageFailure) == .discardPending {
+                saveIntent = nil; candidate = nil; candidateBase = nil; replacingIntent = nil; saved = nil; restoredRecovery = nil
+                session = .init(workspace: request.scope.workspace, target: request.scope.target); elapsed = 0
+                saveDurable = false; saveUnconfirmed = false; saveConflict = false; reviewClaimed = false; recovery.finishSave()
+                let catalog = try? await storage.catalog(target: request.scope.target)
+                guard isCurrent else { close(); return false }
+                if let catalog { pendingSaves = catalog.saves; recoverable = catalog.reviews; available = catalog.drafts }
+                notice = AudioCommentStorageFailure.discardPending.localizedDescription
+            } else if (failure as? AudioCommentStorageFailure) == .conflict {
                 saveConflict = true; saveUnconfirmed = false
                 notice = "This draft changed in another window. Your review is still here. Save a separate draft to keep both versions."
             } else if !saveDurable, let failure = failure as? AudioCommentStorageFailure, failure == .full || failure == .busy {
@@ -258,6 +280,18 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             candidateBase = nil; saveConflict = false
             return await save()
         } catch { notice = error.localizedDescription; return false }
+    }
+    func discardPendingSave(_ intent: AudioCommentSaveIntent) async {
+        guard isCurrent, !busy, !needsSave, intent.next.owner == storage.owner, intent.next.target == request.scope.target else { return }
+        saving = true; stopPlayback()
+        var message = "Pending recording discarded."
+        do { try await storage.discardSave(intent) }
+        catch { message = error.localizedDescription }
+        guard isCurrent else { saving = false; close(); return }
+        let catalog = try? await storage.catalog(target: request.scope.target)
+        guard isCurrent else { saving = false; close(); return }
+        if let catalog { pendingSaves = catalog.saves; recoverable = catalog.reviews; available = catalog.drafts }
+        notice = message; saving = false
     }
     @discardableResult func discardReviewAndClose() async -> Bool {
         guard isCurrent, !busy, !saveUnconfirmed, !saveDurable, saveIntent == nil else { return false }
@@ -292,7 +326,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     func close() {
         starting?.cancel(); ticker?.cancel(); decoding?.cancel(); recorder.cancel(); stopPlayback()
         if saveDurable { recovery.finishSave() }
-        session.close(); saved = nil; candidate = nil; available = []; recoverable = []; pendingSaves = []; saveIntent = nil; replacingIntent = nil; saveDurable = false; restoredRecovery = nil; notice = nil; elapsed = 0; saveUnconfirmed = false; saveConflict = false; retainedRecoveryFailed = false
+        session.close(); saved = nil; candidate = nil; available = []; recoverable = []; pendingSaves = []; saveIntent = nil; replacingIntent = nil; saveDurable = false; restoredRecovery = nil; notice = nil; elapsed = 0; saveUnconfirmed = false; saveConflict = false; reviewClaimed = false; retainedRecoveryFailed = false
         currentScope = { nil }
     }
 }
@@ -318,10 +352,10 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         self.account = account; self.target = target; self.storage = storage
     }
     var durable: Bool { desired != nil && desired == committed && !pending && failure == nil }
-    func submit(clip: AudioCommentClip, caption: String) throws {
+    func submit(clip: AudioCommentClip, caption: String, origin: AudioCommentReviewReference? = nil) throws {
         guard !clearing else { throw AudioCommentStorageFailure.busy }
         guard let owner else { throw AudioCommentFailure.changed }
-        let next = try desired?.replacing(caption: caption, clip: clip) ?? AudioCommentSavedDraft(owner: owner, target: target, caption: caption, clip: clip, id: id)
+        let next = try (desired?.replacing(caption: caption, clip: clip) ?? AudioCommentSavedDraft(owner: owner, target: target, caption: caption, clip: clip, id: id)).carryingOrigin(origin)
         if next == desired { return }
         let others = Self.retained.values.filter { $0 !== self }
         let bytes = others.reduce(0) { $0 + ($1.desired?.clip.data.count ?? 0) + ($1.attempt?.clip.data.count ?? 0) }
@@ -344,7 +378,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
                     committed = next; attempt = nil
                 } catch {
                     if (error as? AudioCommentStorageFailure) == .conflict, !forked, let latest = desired, let owner,
-                       let copy = try? AudioCommentSavedDraft(owner: owner, target: target, caption: latest.caption, clip: latest.clip) {
+                       let copy = try? AudioCommentSavedDraft(owner: owner, target: target, caption: latest.caption, clip: latest.clip, origin: latest.origin) {
                         // Another window may have explicitly settled/deleted the
                         // source copy. Keep this window's review independently;
                         // never overwrite a changed recovery revision.

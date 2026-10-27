@@ -6,6 +6,7 @@ import SwiftUI
     @State private var capture: AudioCommentCapture
     @State private var leaving = false
     @State private var deleting = false
+    @State private var pendingDiscard: AudioCommentSaveIntent?
     @FocusState private var captionFocused: Bool
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -132,6 +133,10 @@ import SwiftUI
                 if !capture.saveUnconfirmed { Button("Discard unsaved changes", role: .destructive) { Task { if await capture.discardReviewAndClose() { dismiss() } } } }
                 Button("Keep reviewing", role: .cancel) { }
             } message: { Text(capture.saveUnconfirmed ? "Retry to confirm the save before closing. Your recording is still here." : "Save this recording to keep it on this device. Any earlier saved draft remains if you discard these changes.") }
+            .confirmationDialog("Discard this pending recording?", isPresented: Binding(get: { pendingDiscard != nil }, set: { if !$0 { pendingDiscard = nil } }), titleVisibility: .visible, presenting: pendingDiscard) { intent in
+                Button("Discard pending recording", role: .destructive) { Task { await capture.discardPendingSave(intent) } }.accessibilityIdentifier("audioConfirmDiscardPending")
+                Button("Cancel", role: .cancel) { }
+            } message: { _ in Text("This removes the unfinished recording from this device. Earlier saved drafts stay.") }
             .confirmationDialog("Delete this recording draft?", isPresented: $deleting, titleVisibility: .visible) {
                 Button("Delete recording draft", role: .destructive) { Task { _ = await capture.deleteSaved() } }
                 Button("Cancel", role: .cancel) { }
@@ -161,14 +166,21 @@ import SwiftUI
     }
     private var pendingSaveSection: some View {
         Section("Saves to finish") {
-            Text("Your recording is kept privately. Finish the original Save without creating another draft.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text("Your recording is kept privately. Finish saving or discarding it below.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             ForEach(capture.pendingSaves, id: \.id) { intent in
-                Button { Task { await capture.resumeSave(intent) } } label: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(intent.next.caption.isEmpty ? "Finish saving recording" : intent.next.caption).lineLimit(3)
-                        Label("Finish saving", systemImage: "arrow.clockwise").font(.caption).foregroundStyle(.secondary)
-                    }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                }.disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioPendingSave-" + intent.id.uuidString.lowercased())
+                VStack(alignment: .leading, spacing: 12) {
+                    Button { Task { await capture.resumeSave(intent) } } label: {
+                        VStack(alignment: .leading, spacing: 6) {
+                            if intent.phase == .saving { Text(intent.next.caption.isEmpty ? "Finish saving recording" : intent.next.caption).lineLimit(3) }
+                            Label(intent.phase == .discarding ? "Finish discarding recording" : "Finish saving", systemImage: intent.phase == .discarding ? "trash" : "arrow.clockwise")
+                                .font(intent.phase == .discarding ? .body : .caption).foregroundStyle(intent.phase == .discarding ? .primary : .secondary)
+                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    }.buttonStyle(.borderless).disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioPendingSave-" + intent.id.uuidString.lowercased())
+                    if intent.phase == .saving {
+                        Button("Discard pending recording", role: .destructive) { pendingDiscard = intent }
+                            .buttonStyle(.borderless).disabled(!capture.editable || capture.needsSave).frame(minHeight: 44).accessibilityIdentifier("audioDiscardPending-" + intent.id.uuidString.lowercased())
+                    }
+                }
             }
         }
     }

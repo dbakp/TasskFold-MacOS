@@ -464,4 +464,132 @@ final class AudioCommentVaultTests: XCTestCase {
         XCTAssertTrue(try vault().drafts().isEmpty); XCTAssertTrue(try vault().saves().isEmpty)
     }
 
+    func rootedReview(_ file: AudioCommentVault) throws -> AudioCommentSavedDraft {
+        let root = try draft(file.owner); try file.save(root, recovery: true); return root
+    }
+    func rootedIntent(_ root: AudioCommentSavedDraft, caption: String? = nil) throws -> AudioCommentSaveIntent {
+        let next = try AudioCommentSavedDraft(owner: root.owner, target: root.target, caption: caption ?? root.caption, clip: root.clip, origin: .init(root))
+        return try saveIntent(next, copies: [root])
+    }
+    func testSecondEditorReusesDurableReceiptWithoutAnotherDraft() throws {
+        let file = try vault(), root = try rootedReview(file), a = try rootedIntent(root), b = try rootedIntent(root)
+        let winner = try file.commitSave(a), joined = try file.commitSave(b)
+        XCTAssertEqual(winner, joined); XCTAssertNotEqual(joined.id, b.next.id)
+        XCTAssertEqual(try file.drafts(), [winner]); XCTAssertTrue(try file.saves().isEmpty)
+    }
+    func testSecondEditorRedirectsToPreparedOperationAndFinishesItsIDs() throws {
+        var file = try vault(); let root = try rootedReview(file), a = try rootedIntent(root), b = try rootedIntent(root)
+        file.fault = { if $0 == .afterSaveJournal { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(a))
+        var redirected: AudioCommentSaveIntent?
+        XCTAssertThrowsError(try vault().commitSave(b)) { redirected = ($0 as? AudioCommentSaveRedirect)?.intent }
+        XCTAssertEqual(redirected, a); XCTAssertEqual(try vault().saves(), [a])
+        let saved = try vault().commitSave(XCTUnwrap(redirected), existingOnly: true)
+        XCTAssertEqual(saved, a.next); XCTAssertEqual(try vault().drafts(), [a.next])
+    }
+    func testDifferentEditedReviewRequiresDeliberateDetachedCopy() throws {
+        let file = try vault(), root = try rootedReview(file), first = try rootedIntent(root)
+        try file.commitSave(first)
+        let changed = try rootedIntent(root, caption: "Different version")
+        XCTAssertThrowsError(try file.commitSave(changed)) { XCTAssertEqual($0 as? AudioCommentStorageFailure, .reviewClaimed) }
+        XCTAssertTrue(try file.saves().isEmpty)
+        let copy = try changed.separateCopy(); XCTAssertNil(copy.next.origin)
+        try file.commitSave(copy)
+        XCTAssertEqual(try file.drafts().count, 2); XCTAssertTrue(try file.drafts().contains(first.next)); XCTAssertTrue(try file.drafts().contains(copy.next))
+    }
+    func testConsumedReviewCannotResurrectAfterWinningDraftIsDeleted() throws {
+        let file = try vault(), root = try rootedReview(file), first = try rootedIntent(root), stale = try rootedIntent(root)
+        try file.commitSave(first); try file.discardDraft(first.next.id, revision: first.next.revision)
+        XCTAssertThrowsError(try file.commitSave(stale)) { XCTAssertEqual($0 as? AudioCommentStorageFailure, .reviewClaimed) }
+        XCTAssertTrue(try file.drafts().isEmpty); XCTAssertTrue(try file.saves().isEmpty)
+    }
+    func testReceiptProvenanceSurvivesLegitimateSavedDraftEditing() throws {
+        let file = try vault(), root = try rootedReview(file), first = try rootedIntent(root)
+        try file.commitSave(first)
+        let edited = try first.next.replacing(caption: "Edited saved recording", clip: first.next.clip)
+        XCTAssertEqual(edited.origin, first.next.origin)
+        try file.commitSave(saveIntent(edited, base: first.next.revision))
+        XCTAssertEqual(try file.drafts(), [edited])
+        XCTAssertThrowsError(try file.commitSave(rootedIntent(root)))
+    }
+    func testCatalogDeduplicatesClonesAndTrimsOnlyExactlyCoveredCopies() throws {
+        let file = try vault(), root = try rootedReview(file)
+        let clone = try AudioCommentSavedDraft(owner: root.owner, target: root.target, caption: root.caption, clip: root.clip, origin: .init(root))
+        let changed = try clone.replacing(caption: "Keep independent edited work", clip: clone.clip)
+        try file.save(clone, recovery: true)
+        XCTAssertEqual(try file.catalog(target: root.target).reviews.count, 1)
+        try file.save(changed, replacing: clone.revision, recovery: true)
+        XCTAssertEqual(try file.catalog(target: root.target).reviews.count, 2)
+        try file.commitSave(rootedIntent(root))
+        XCTAssertEqual(try file.catalog(target: root.target).reviews, [changed])
+        XCTAssertEqual(try file.drafts(recovery: true), [changed])
+    }
+    func testCatalogShowsOnePendingCardInsteadOfDuplicateSavedCard() throws {
+        var file = try vault(); let root = try rootedReview(file), intent = try rootedIntent(root)
+        file.fault = { if $0 == .afterDraftCommit { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(intent))
+        let catalog = try vault().catalog(target: root.target)
+        XCTAssertEqual(catalog.saves, [intent]); XCTAssertTrue(catalog.drafts.isEmpty); XCTAssertTrue(catalog.reviews.isEmpty)
+        XCTAssertEqual(try vault().drafts(), [intent.next])
+    }
+    func testDiscardingIntentSurvivesLostAcknowledgementAndRejectsStaleSave() throws {
+        var file = try vault(); let root = try rootedReview(file), intent = try rootedIntent(root)
+        file.fault = { if $0 == .afterSaveJournal || $0 == .afterDiscardJournal { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(intent))
+        XCTAssertThrowsError(try file.discardSave(intent))
+        let pending = try XCTUnwrap(vault().saves().first)
+        XCTAssertEqual(pending.phase, .discarding); XCTAssertTrue(pending.sameAuthorization(as: intent))
+        XCTAssertThrowsError(try vault().commitSave(intent, existingOnly: true)) { XCTAssertEqual($0 as? AudioCommentStorageFailure, .discardPending) }
+        XCTAssertTrue(try vault().drafts().isEmpty)
+        try vault().discardSave(pending)
+        XCTAssertTrue(try vault().saves().isEmpty); XCTAssertTrue(try vault().drafts(recovery: true).isEmpty); XCTAssertTrue(try vault().drafts().isEmpty)
+    }
+    func testDiscardUnfinishedReplacementKeepsExactEarlierSavedDraft() throws {
+        var file = try vault(); let old = try draft(); try file.save(old)
+        let review = try old.replacing(caption: "Unfinished edit", clip: old.clip); try file.save(review, recovery: true)
+        let intent = try saveIntent(review, base: old.revision, copies: [review])
+        file.fault = { if $0 == .afterSaveJournal { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(intent)); try vault().discardSave(intent)
+        XCTAssertEqual(try vault().drafts(), [old]); XCTAssertTrue(try vault().saves().isEmpty); XCTAssertTrue(try vault().drafts(recovery: true).isEmpty)
+    }
+    func testDiscardCannotDeleteARecordingThatAlreadyCommitted() throws {
+        var file = try vault(); let next = try draft(), intent = try saveIntent(next)
+        file.fault = { if $0 == .afterDraftCommit { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(intent))
+        XCTAssertThrowsError(try vault().discardSave(intent)) { XCTAssertEqual($0 as? AudioCommentStorageFailure, .alreadySaved) }
+        XCTAssertEqual(try vault().drafts(), [next]); XCTAssertEqual(try vault().saves(), [intent])
+        try vault().commitSave(intent, existingOnly: true); XCTAssertEqual(try vault().drafts(), [next])
+    }
+    func testFullPendingQuotaCanBeFreedByDiscardWithoutAnotherEntry() throws {
+        var file = try vault(); file.fault = { if $0 == .afterSaveJournal { throw InjectedFailure() } }
+        var intents: [AudioCommentSaveIntent] = []
+        for _ in 0..<AudioCommentVault.maximumEntries { let intent = try saveIntent(draft()); XCTAssertThrowsError(try file.commitSave(intent)); intents.append(intent) }
+        XCTAssertEqual(try vault().saves().count, AudioCommentVault.maximumEntries)
+        try vault().discardSave(intents[0])
+        for intent in intents.dropFirst() { try vault().commitSave(intent, existingOnly: true) }
+        XCTAssertTrue(try vault().saves().isEmpty); XCTAssertEqual(try vault().drafts().count, AudioCommentVault.maximumEntries - 1)
+    }
+    func testPendingSaveOwnsDraftAgainstLowLevelConcurrentReplacement() throws {
+        var file = try vault(); let old = try draft(); try file.save(old)
+        let update = try old.replacing(caption: "Prepared update", clip: old.clip), intent = try saveIntent(update, base: old.revision)
+        file.fault = { if $0 == .afterSaveJournal { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(intent))
+        XCTAssertThrowsError(try vault().save(old.replacing(caption: "Bypass", clip: old.clip), replacing: old.revision))
+        XCTAssertEqual(try vault().drafts(), [old]); try vault().discardSave(intent); XCTAssertEqual(try vault().drafts(), [old])
+    }
+    func testNewProvenanceAndDiscardPhaseCodecsRetainLegacyReads() throws {
+        let root = try draft(), value = try root.carryingOrigin(.init(root))
+        XCTAssertEqual(try AudioCommentSavedDraft(encoded: value.encoded(), owner: root.owner).origin, .init(root))
+        var fields = try XCTUnwrap(PropertyListSerialization.propertyList(from: root.encoded(), format: nil) as? [String: Any])
+        fields.removeValue(forKey: "origin"); fields["format"] = "taskfold-audio-review-v1"
+        let legacy = try PropertyListSerialization.data(fromPropertyList: fields, format: .binary, options: 0)
+        XCTAssertEqual(try AudioCommentSavedDraft(encoded: legacy, owner: root.owner), root)
+        let intent = try saveIntent(value), discarding = try intent.markingDiscard()
+        XCTAssertEqual(try AudioCommentSaveIntent(encoded: discarding.encoded(), owner: root.owner), discarding)
+        var journal = try XCTUnwrap(PropertyListSerialization.propertyList(from: intent.encoded(), format: nil) as? [String: Any])
+        journal.removeValue(forKey: "phase"); journal["format"] = "taskfold-audio-save-v1"; journal["next"] = legacy
+        let oldJournal = try PropertyListSerialization.data(fromPropertyList: journal, format: .binary, options: 0)
+        XCTAssertEqual(try AudioCommentSaveIntent(encoded: oldJournal, owner: root.owner).phase, .saving)
+    }
+
 }

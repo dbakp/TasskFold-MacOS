@@ -1,0 +1,11 @@
+{
+  "logSHA256": "df7e282556567bfca15c075fbb0aceca4e5ecaeb6e08bde799977ecd266d55ee",
+  "result": "TEST BUILD SUCCEEDED",
+  "warnings": [
+    "/tmp/taskfold-workflow-native-mac-host/Taskfold/Views/KeyRouter.swift:22:106: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used",
+    "/tmp/taskfold-workflow-native-mac-host/Taskfold/Views/Links.swift:227:23: warning: conformance of 'NSEvent' to 'Sendable' is unavailable; this is an error in the Swift 6 language mode",
+    "/tmp/taskfold-workflow-native-mac-host/Taskfold/Workspace.swift:287:13: warning: result of call to 'withAnimation' is unused [#NoUsage]",
+    "2026-10-27 22:02:15.424 appintentsmetadataprocessor[78679:26099776] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+  ],
+  "note": "Build warnings are recorded separately from XCTest runtime warnings; broader existing diagnostics are not closed by this scoped acceptance."
+}

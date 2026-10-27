@@ -9,6 +9,9 @@ struct AudioCommentStorageFailure: LocalizedError, Equatable {
     static let conflict = Self(message: "This audio draft changed in another window. Reload it before saving.")
     static let busy = Self(message: "Audio drafts are being saved. Try again in a moment.")
     static let unconfirmedSave = Self(message: "The audio Save is prepared on this device. Retry the same Save to finish safely.")
+    static let reviewClaimed = Self(message: "This recovered review was saved or changed in another editor. Save a separate draft to keep your version.")
+    static let discardPending = Self(message: "Discard is kept on this device. Finish discarding this recording.")
+    static let alreadySaved = Self(message: "This recording is already saved. Finish saving before deleting the saved draft.")
     static let full = Self(message: "Audio draft storage is full. Review your saved drafts before recording more.")
 }
 
@@ -31,41 +34,58 @@ struct AudioCommentSavedDraft: Equatable, Sendable {
     let target: AudioCommentTarget
     let caption: String
     let clip: AudioCommentClip
-    init(owner: AudioCommentOwner, target: AudioCommentTarget, caption: String, clip: AudioCommentClip, id: UUID = UUID(), revision: UUID = UUID()) throws {
+    let origin: AudioCommentReviewReference?
+    init(owner: AudioCommentOwner, target: AudioCommentTarget, caption: String, clip: AudioCommentClip, id: UUID = UUID(), revision: UUID = UUID(), origin: AudioCommentReviewReference? = nil) throws {
         guard id != AudioCommentTarget.zero, revision != AudioCommentTarget.zero else { throw AudioCommentFailure.changed }
         try AudioCommentPublication.validateCaption(caption)
+        if let origin { guard origin.id != AudioCommentTarget.zero, origin.revision != AudioCommentTarget.zero else { throw AudioCommentFailure.changed } }
+        self.origin = origin
         self.owner = owner; self.target = target; self.caption = caption; self.clip = clip; self.id = id; self.revision = revision
     }
     func replacing(caption: String, clip: AudioCommentClip) throws -> Self {
         if self.caption.utf8.elementsEqual(caption.utf8), self.clip.data == clip.data { return self }
-        return try .init(owner: owner, target: target, caption: caption, clip: clip, id: id)
+        return try .init(owner: owner, target: target, caption: caption, clip: clip, id: id, origin: origin)
+    }
+    func carryingOrigin(_ origin: AudioCommentReviewReference?) throws -> Self {
+        if self.origin == origin { return self }
+        return try .init(owner: owner, target: target, caption: caption, clip: clip, id: id, origin: origin)
+    }
+    func sameContent(as other: Self) -> Bool {
+        owner == other.owner && target == other.target && caption.utf8.elementsEqual(other.caption.utf8) && clip.data == other.clip.data
     }
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id && lhs.revision == rhs.revision && lhs.owner == rhs.owner && lhs.target == rhs.target && lhs.caption.utf8.elementsEqual(rhs.caption.utf8) && lhs.clip.data == rhs.clip.data
+        lhs.id == rhs.id && lhs.revision == rhs.revision && lhs.origin == rhs.origin && lhs.owner == rhs.owner && lhs.target == rhs.target && lhs.caption.utf8.elementsEqual(rhs.caption.utf8) && lhs.clip.data == rhs.clip.data
     }
     func encoded(recovery: Bool = false) throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return try PropertyListSerialization.data(fromPropertyList: [
-            "format": recovery ? "taskfold-audio-recovery-v1" : "taskfold-audio-review-v1", "account": owner.account,
+            "format": recovery ? "taskfold-audio-recovery-v2" : "taskfold-audio-review-v2", "account": owner.account,
             "id": id.uuidString.lowercased(), "revision": revision.uuidString.lowercased(),
             "target": try encoder.encode(target), "caption": caption,
-            "descriptor": try encoder.encode(clip.descriptor), "audio": clip.data
+            "descriptor": try encoder.encode(clip.descriptor), "audio": clip.data, "origin": try encoder.encode(origin)
         ], format: .binary, options: 0)
     }
     init(encoded data: Data, owner: AudioCommentOwner, recovery: Bool = false) throws {
         guard !data.isEmpty, data.count <= AudioCommentVault.maximumFileBytes else { throw AudioCommentStorageFailure.unreadable }
         var format = PropertyListSerialization.PropertyListFormat.binary
         guard let fields = try PropertyListSerialization.propertyList(from: data, format: &format) as? [String: Any], format == .binary,
-              Set(fields.keys) == ["format", "account", "id", "revision", "target", "caption", "descriptor", "audio"],
-              fields["format"] as? String == (recovery ? "taskfold-audio-recovery-v1" : "taskfold-audio-review-v1"), let account = fields["account"] as? String,
+              ((fields["format"] as? String == (recovery ? "taskfold-audio-recovery-v1" : "taskfold-audio-review-v1") && Set(fields.keys) == ["format", "account", "id", "revision", "target", "caption", "descriptor", "audio"]) ||
+               (fields["format"] as? String == (recovery ? "taskfold-audio-recovery-v2" : "taskfold-audio-review-v2") && Set(fields.keys) == ["format", "account", "id", "revision", "target", "caption", "descriptor", "audio", "origin"])) , let account = fields["account"] as? String,
               account.utf8.elementsEqual(owner.account.utf8), let idText = fields["id"] as? String, let id = UUID(uuidString: idText),
               let revisionText = fields["revision"] as? String, let revision = UUID(uuidString: revisionText),
               let targetData = fields["target"] as? Data, targetData.count <= 4096,
               let descriptorData = fields["descriptor"] as? Data, descriptorData.count <= 4096,
               let caption = fields["caption"] as? String, let audio = fields["audio"] as? Data else { throw AudioCommentStorageFailure.unreadable }
+        let origin: AudioCommentReviewReference?
+        if let data = fields["origin"] as? Data {
+            guard data.count <= 512 else { throw AudioCommentStorageFailure.unreadable }
+            origin = try JSONDecoder().decode(AudioCommentReviewReference?.self, from: data)
+        } else {
+            guard fields["origin"] == nil else { throw AudioCommentStorageFailure.unreadable }; origin = nil
+        }
         let descriptor = try JSONDecoder().decode(AudioCommentDescriptor.self, from: descriptorData)
         let clip = try AudioCommentClip(restoring: audio, descriptor: descriptor)
-        try self.init(owner: owner, target: JSONDecoder().decode(AudioCommentTarget.self, from: targetData), caption: caption, clip: clip, id: id, revision: revision)
+        try self.init(owner: owner, target: JSONDecoder().decode(AudioCommentTarget.self, from: targetData), caption: caption, clip: clip, id: id, revision: revision, origin: origin)
     }
 }
 
@@ -81,35 +101,51 @@ struct AudioCommentReviewReference: Codable, Hashable, Sendable {
 /// remains until the exact draft and recovery cleanup are durably acknowledged.
 enum AudioCommentLocalSaveState: Sendable { case unprepared, prepared, settled }
 
+enum AudioCommentSavePhase: String, Sendable { case saving, discarding }
+struct AudioCommentSaveRedirect: Error { let intent: AudioCommentSaveIntent }
+struct AudioCommentDraftCatalog: Sendable {
+    let drafts: [AudioCommentSavedDraft]
+    let reviews: [AudioCommentSavedDraft]
+    let saves: [AudioCommentSaveIntent]
+}
+
 struct AudioCommentSaveIntent: Equatable, Sendable {
     let id: UUID
     let next: AudioCommentSavedDraft
     let base: UUID?
     let reviews: [AudioCommentReviewReference]
-    init(next: AudioCommentSavedDraft, base: UUID?, reviews: [AudioCommentReviewReference], id: UUID = UUID()) throws {
+    let phase: AudioCommentSavePhase
+    init(next: AudioCommentSavedDraft, base: UUID?, reviews: [AudioCommentReviewReference], id: UUID = UUID(), phase: AudioCommentSavePhase = .saving) throws {
         guard id != AudioCommentTarget.zero, base != AudioCommentTarget.zero,
               reviews.count <= 3, Set(reviews).count == reviews.count,
               reviews.allSatisfy({ $0.id != AudioCommentTarget.zero && $0.revision != AudioCommentTarget.zero }) else { throw AudioCommentStorageFailure.conflict }
-        self.id = id; self.next = next; self.base = base; self.reviews = reviews
+        self.id = id; self.next = next; self.base = base; self.reviews = reviews; self.phase = phase
     }
     func separateCopy() throws -> Self {
-        try .init(next: .init(owner: next.owner, target: next.target, caption: next.caption, clip: next.clip), base: nil, reviews: reviews, id: id)
+        guard phase == .saving else { throw AudioCommentStorageFailure.discardPending }
+        return try .init(next: .init(owner: next.owner, target: next.target, caption: next.caption, clip: next.clip), base: nil, reviews: reviews, id: id)
     }
+    func markingDiscard() throws -> Self { try .init(next: next, base: base, reviews: reviews, id: id, phase: .discarding) }
+    func sameAuthorization(as other: Self) -> Bool { id == other.id && next == other.next && base == other.base && reviews == other.reviews }
     func encoded() throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
-        return try PropertyListSerialization.data(fromPropertyList: ["format": "taskfold-audio-save-v1", "account": next.owner.account, "id": id.uuidString.lowercased(), "next": try next.encoded(), "base": base?.uuidString.lowercased() ?? "", "reviews": try encoder.encode(reviews)], format: .binary, options: 0)
+        return try PropertyListSerialization.data(fromPropertyList: ["format": "taskfold-audio-save-v2", "phase": phase.rawValue, "account": next.owner.account, "id": id.uuidString.lowercased(), "next": try next.encoded(), "base": base?.uuidString.lowercased() ?? "", "reviews": try encoder.encode(reviews)], format: .binary, options: 0)
     }
     init(encoded data: Data, owner: AudioCommentOwner) throws {
         guard !data.isEmpty, data.count <= AudioCommentVault.maximumFileBytes else { throw AudioCommentStorageFailure.unreadable }
         var format = PropertyListSerialization.PropertyListFormat.binary
         guard let fields = try PropertyListSerialization.propertyList(from: data, format: &format) as? [String: Any], format == .binary,
-              Set(fields.keys) == ["format", "account", "id", "next", "base", "reviews"], fields["format"] as? String == "taskfold-audio-save-v1",
+              ((Set(fields.keys) == ["format", "account", "id", "next", "base", "reviews"] && fields["format"] as? String == "taskfold-audio-save-v1") ||
+               (Set(fields.keys) == ["format", "account", "id", "next", "base", "reviews", "phase"] && fields["format"] as? String == "taskfold-audio-save-v2")),
               let account = fields["account"] as? String, account.utf8.elementsEqual(owner.account.utf8),
               let idText = fields["id"] as? String, let id = UUID(uuidString: idText),
               let payload = fields["next"] as? Data, let baseText = fields["base"] as? String,
               baseText.isEmpty || UUID(uuidString: baseText) != nil,
               let refs = fields["reviews"] as? Data, refs.count <= 4096 else { throw AudioCommentStorageFailure.unreadable }
-        try self.init(next: AudioCommentSavedDraft(encoded: payload, owner: owner), base: UUID(uuidString: baseText), reviews: JSONDecoder().decode([AudioCommentReviewReference].self, from: refs), id: id)
+        let phase: AudioCommentSavePhase
+        if let text = fields["phase"] as? String, let value = AudioCommentSavePhase(rawValue: text) { phase = value }
+        else { guard fields["phase"] == nil else { throw AudioCommentStorageFailure.unreadable }; phase = .saving }
+        try self.init(next: AudioCommentSavedDraft(encoded: payload, owner: owner), base: UUID(uuidString: baseText), reviews: JSONDecoder().decode([AudioCommentReviewReference].self, from: refs), id: id, phase: phase)
     }
 }
 
@@ -126,7 +162,7 @@ struct AudioCommentVault: Sendable {
     static let maximumFileBytes = 8_100_000
     static let maximumEntries = 20
     static let maximumTotalBytes = 50_000_000
-    enum Checkpoint: Sendable { case beforeRename, afterRename, afterSaveJournal, afterDraftCommit }
+    enum Checkpoint: Sendable { case beforeRename, afterRename, afterSaveJournal, afterDraftCommit, afterDiscardJournal }
     let applicationSupport: URL
     let owner: AudioCommentOwner
     var fault: (@Sendable (Checkpoint) throws -> Void)? = nil
@@ -292,10 +328,13 @@ struct AudioCommentVault: Sendable {
         guard draft.owner == owner else { throw AudioCommentFailure.changed }
         try locked { folder in
             let filename = name(recovery ? "review-" : "draft-", draft.id)
+            if !recovery {
+                for pending in try records(folder: folder).saves where pending.next.id == draft.id { throw AudioCommentStorageFailure.unconfirmedSave }
+            }
             if let data = try read(filename, folder: folder) {
                 let current = try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: recovery)
                 if current == draft { guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }; return }
-                guard current.id == draft.id, current.target == draft.target, current.revision == revision, current.revision != draft.revision else { throw AudioCommentStorageFailure.conflict }
+                guard current.id == draft.id, current.target == draft.target, current.origin == draft.origin, current.revision == revision, current.revision != draft.revision else { throw AudioCommentStorageFailure.conflict }
             } else if revision != nil { throw AudioCommentStorageFailure.conflict }
             let data = try draft.encoded(recovery: recovery); try admit(data, replacing: filename, folder: folder); try write(data, name: filename, folder: folder)
         }
@@ -363,12 +402,118 @@ struct AudioCommentVault: Sendable {
             return intent
         } }
     }
+    private func records(folder: Int32) throws -> (drafts: [AudioCommentSavedDraft], reviews: [AudioCommentSavedDraft], saves: [AudioCommentSaveIntent]) {
+        var drafts: [AudioCommentSavedDraft] = [], reviews: [AudioCommentSavedDraft] = [], saves: [AudioCommentSaveIntent] = []
+        for filename in try names(folder: folder) {
+            if filename.hasPrefix("draft-") || filename.hasPrefix("review-") {
+                guard let data = try read(filename, folder: folder) else { throw AudioCommentStorageFailure.unreadable }
+                let recovery = filename.hasPrefix("review-")
+                let value = try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: recovery)
+                guard filename == name(recovery ? "review-" : "draft-", value.id) else { throw AudioCommentStorageFailure.unreadable }
+                if recovery { reviews.append(value) } else { drafts.append(value) }
+            } else if filename.hasPrefix("save-") {
+                guard let data = try read(filename, folder: folder) else { throw AudioCommentStorageFailure.unreadable }
+                let value = try AudioCommentSaveIntent(encoded: data, owner: owner)
+                guard filename == name("save-", value.id) else { throw AudioCommentStorageFailure.unreadable }
+                saves.append(value)
+            }
+        }
+        return (drafts, reviews, saves)
+    }
+    private func cleanupReviews(_ refs: [AudioCommentReviewReference], target: AudioCommentTarget, folder: Int32) throws {
+        for id in Set(refs.map(\.id)) {
+            let filename = name("review-", id)
+            if let data = try read(filename, folder: folder) {
+                let value = try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: true)
+                if value.target == target && refs.contains(.init(value)) {
+                    guard unlinkat(folder, filename, 0) == 0 else { throw AudioCommentStorageFailure.unreadable }
+                }
+            }
+        }
+        guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
+    }
+    /// One locked snapshot prevents a recovery row being listed independently
+    /// while another editor prepares its Save. Covered copies are safe cleanup:
+    /// their exact content/provenance already has a durable primary recording.
+    func catalog(target: AudioCommentTarget) throws -> AudioCommentDraftCatalog {
+        try locked { folder in
+            let all = try records(folder: folder)
+            let saves = all.saves.filter { $0.next.target == target }
+            let primary = all.drafts.filter { $0.target == target }
+            var reviews: [AudioCommentSavedDraft] = []
+            for review in all.reviews where review.target == target {
+                let origin = review.origin ?? .init(review)
+                if primary.contains(where: { $0.origin == origin && $0.sameContent(as: review) }) {
+                    try cleanupReviews([.init(review)], target: target, folder: folder); continue
+                }
+                let protected = saves.contains { intent in
+                    intent.reviews.contains(.init(review)) || (intent.next.origin == origin && intent.next.sameContent(as: review))
+                }
+                if !protected {
+                    // Identical clones share one listing, but different edited
+                    // content stays visible and requires a deliberate copy.
+                    if let previous = reviews.first(where: { ($0.origin ?? .init($0)) == origin && $0.sameContent(as: review) }) {
+                        if review.origin == nil, previous.origin != nil { reviews.removeAll { $0.id == previous.id }; reviews.append(review) }
+                    } else { reviews.append(review) }
+                }
+            }
+            let pendingIDs = Set(saves.map { $0.next.id })
+            return .init(drafts: primary.filter { !pendingIDs.contains($0.id) }, reviews: reviews, saves: saves)
+        }
+    }
+    /// Cancellation is first persisted under the same operation. A stale Finish
+    /// can never switch a durable discard back to saving after relaunch.
+    func discardSave(_ requested: AudioCommentSaveIntent) throws {
+        guard requested.next.owner == owner else { throw AudioCommentFailure.changed }
+        try locked { folder in
+            let journal = name("save-", requested.id)
+            guard let bytes = try read(journal, folder: folder) else { return }
+            var current = try AudioCommentSaveIntent(encoded: bytes, owner: owner)
+            guard current.sameAuthorization(as: requested) else { throw AudioCommentStorageFailure.conflict }
+            if let data = try read(name("draft-", current.next.id), folder: folder), try AudioCommentSavedDraft(encoded: data, owner: owner) == current.next {
+                throw AudioCommentStorageFailure.alreadySaved
+            }
+            do {
+                if current.phase == .saving {
+                    current = try current.markingDiscard()
+                    let data = try current.encoded(); try admit(data, replacing: journal, folder: folder); try write(data, name: journal, folder: folder)
+                    try fault?(.afterDiscardJournal)
+                }
+                try cleanupReviews(current.reviews, target: current.next.target, folder: folder)
+                guard unlinkat(folder, journal, 0) == 0, fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
+            } catch { throw AudioCommentStorageFailure.discardPending }
+        }
+    }
+
     /// Journal first, then the exact optimistic draft, then recovery removals,
     /// then the journal removal. Every uncertain retry keeps the original IDs.
-    func commitSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, existingOnly: Bool = false) throws {
+    @discardableResult func commitSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, existingOnly: Bool = false) throws -> AudioCommentSavedDraft {
         guard intent.next.owner == owner else { throw AudioCommentFailure.changed }
-        try locked { folder in
+        return try locked { folder in
             let journal = name("save-", intent.id), destination = name("draft-", intent.next.id)
+            let own = try read(journal, folder: folder).map { try AudioCommentSaveIntent(encoded: $0, owner: owner) }
+            guard intent.phase == .saving, own?.phase != .discarding else { throw AudioCommentStorageFailure.discardPending }
+            let all = try records(folder: folder)
+            if let other = all.saves.first(where: { $0.id != intent.id && $0.next.id == intent.next.id }) {
+                if other.phase == .saving && other.next.sameContent(as: intent.next) { throw AudioCommentSaveRedirect(intent: other) }
+                throw AudioCommentStorageFailure.reviewClaimed
+            }
+            if let origin = intent.next.origin {
+                let claimed = all.drafts.filter { $0.target == intent.next.target && $0.origin == origin }
+                if let winner = claimed.first(where: { $0.id != intent.next.id }) {
+                    guard winner.sameContent(as: intent.next) else { throw AudioCommentStorageFailure.reviewClaimed }
+                    try cleanupReviews(intent.reviews, target: intent.next.target, folder: folder)
+                    return winner
+                }
+                if let other = all.saves.first(where: { $0.id != intent.id && $0.next.target == intent.next.target && ($0.next.origin == origin || $0.reviews.contains(origin)) }) {
+                    guard other.phase == .saving && other.next.sameContent(as: intent.next) else { throw AudioCommentStorageFailure.reviewClaimed }
+                    throw AudioCommentSaveRedirect(intent: other)
+                }
+                if own == nil && !claimed.contains(where: { $0.id == intent.next.id }) {
+                    guard let root = all.reviews.first(where: { $0.id == origin.id && $0.revision == origin.revision && $0.target == intent.next.target }) else { throw AudioCommentStorageFailure.reviewClaimed }
+                    _ = root
+                }
+            }
             func currentDraft(_ id: UUID) throws -> AudioCommentSavedDraft? {
                 try read(name("draft-", id), folder: folder).map { try AudioCommentSavedDraft(encoded: $0, owner: owner) }
             }
@@ -396,7 +541,7 @@ struct AudioCommentVault: Sendable {
                         let copy = try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: true)
                         return copy.target == intent.next.target && copy.revision == ref.revision
                     }
-                    if !hasOldCopy { guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }; return }
+                    if !hasOldCopy { guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }; return intent.next }
                 }
                 guard !existingOnly, old == nil else { throw AudioCommentStorageFailure.conflict }
                 try admit(bytes, replacing: journal, folder: folder); try write(bytes, name: journal, folder: folder); preparedNow = true
@@ -432,6 +577,7 @@ struct AudioCommentVault: Sendable {
                 if unlinkat(folder, journal, 0) == 0 { _ = fsync(folder) }
             } catch let error as AudioCommentStorageFailure where error == .conflict { throw error }
             catch { throw AudioCommentStorageFailure.unconfirmedSave }
+            return intent.next
         }
     }
 
@@ -486,7 +632,9 @@ actor AudioCommentDraftStorage {
     func reviews() throws -> [AudioCommentSavedDraft] { try vault.drafts(recovery: true) }
     func saves() throws -> [AudioCommentSaveIntent] { try vault.saves() }
     func saveState(_ intent: AudioCommentSaveIntent) throws -> AudioCommentLocalSaveState { try vault.saveState(intent) }
-    func commitSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, existingOnly: Bool = false) throws { try vault.commitSave(intent, replacing: old, existingOnly: existingOnly) }
+    @discardableResult func commitSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, existingOnly: Bool = false) throws -> AudioCommentSavedDraft { try vault.commitSave(intent, replacing: old, existingOnly: existingOnly) }
+    func catalog(target: AudioCommentTarget) throws -> AudioCommentDraftCatalog { try vault.catalog(target: target) }
+    func discardSave(_ intent: AudioCommentSaveIntent) throws { try vault.discardSave(intent) }
     func discardReviewCopies(_ expected: [AudioCommentSavedDraft]) throws { try vault.discardReviewCopies(expected) }
     func checkpoint(_ draft: AudioCommentSavedDraft, replacing revision: UUID? = nil) throws { try vault.save(draft, replacing: revision, recovery: true) }
     func discardReview(_ id: UUID, revision: UUID) throws { try vault.discardDraft(id, revision: revision, recovery: true) }

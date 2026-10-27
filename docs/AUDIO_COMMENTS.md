@@ -266,3 +266,40 @@ recovery and prepared-Save recovery (dark/largest text on mobile). Inspected Fin
 Save captures, exact source/binary hashes, strict verifiers and cleanup are in
 audio-comment-save/. Temporary Taskfold/test processes are closed and the used
 Simulators are shut down. These results leave the broader lifecycle gates open.
+
+
+## 2026-10-27 — concurrent recovery ownership and pending cancellation
+
+- [x] Atomic recovered-review ownership using the actual private file lock. Equal
+  reviews reuse the winning saved draft or its durable Save operation; different
+  edits require an explicit separate copy and preserve both versions.
+- [x] One catalog snapshot suppresses duplicate-looking pending/saved/review rows,
+  coalesces identical recovery clones and preserves differently edited reviews.
+- [x] Durable pending-discard phase survives lost acknowledgement and relaunch;
+  stale Finish cannot turn it back into Save. Cancelling an unfinished replacement
+  preserves the earlier draft; an already committed recording refuses cancellation.
+- [x] Full logical entry-quota cancellation, strict v2 format with legacy v1 reads,
+  exact caption/media/provenance checks and stale-deletion guards.
+- [x] 79 focused Core tests and 62 executable controller checks in each independently
+  owned repo; separate executable processes establish both source snapshots before
+  racing through the actual file store and converge on one saved recording.
+- [ ] Remaining audio gates: orphan/corrupt-file recovery, retained attempts after
+  unreadable state lookup, full recording/Quit/background/removal/backup lifecycle,
+  ordinary task integration and private server publication/access/custody.
+- [ ] Real dictation, microphone, playback, permissions and spoken acceptance stay
+  deferred by the user. No real audio permission or speaker output was requested.
+
+Current evidence and native acceptance are in [audio-comment-claims](audio-comment-claims/README.md).
+This supersedes the two concurrent-claim/cancellation gaps in earlier checkpoints;
+other lifecycle requirements remain open and ordinary audio entry points stay gated.
+
+
+Final acceptance: four selected native cases pass each on ARM64 Mac, iPhone
+Simulator and iPad Simulator, with zero failures/skips/reported runtime warnings.
+They cover ordinary reviewed Save/cold return, preserved already-committed audio
+after refused pending cancellation, durable discard after acknowledgement loss
+and relaunch, and exact single-draft Finish Save recovery. The last two use dark
+largest mobile text. Final captures were inspected; the phone action is fully
+visible after normal scrolling. Native initial failures and the Form-action/test
+query corrections are recorded in audio-comment-claims/. Hardware, spoken and
+full application/server lifecycle acceptance are not implied.

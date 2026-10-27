@@ -1,0 +1,7 @@
+{
+  "logSHA256": "ef418dc12b6ab6fb31065d724d0ed2613ef60df0e9d5b3fb0c8f49b663ec2944",
+  "succeeded": true,
+  "warnings": [
+    "2026-10-27 22:14:37.135 appintentsmetadataprocessor[80993:26132361] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+  ]
+}

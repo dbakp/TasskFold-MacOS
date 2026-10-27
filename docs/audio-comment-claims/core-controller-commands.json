@@ -1,0 +1,26 @@
+{
+  "core": [
+    "swift",
+    "test",
+    "--scratch-path",
+    "/tmp/taskfold-audio-recovery-core-mac",
+    "--filter",
+    "AudioComment"
+  ],
+  "controller": [
+    "python3",
+    "Scripts/test_audio_comment_capture.py",
+    "--scratch",
+    "/tmp/taskfold-audio-recovery-core-mac",
+    "--output",
+    "/tmp/taskfold-audio-claims-controller-mac.json"
+  ],
+  "processes": [
+    "python3",
+    "Scripts/test_audio_claim_processes.py",
+    "--scratch",
+    "/tmp/taskfold-audio-recovery-core-mac",
+    "--output",
+    "/tmp/taskfold-audio-claims-process-mac.json"
+  ]
+}

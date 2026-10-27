@@ -8,8 +8,11 @@ import Observation
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldAudioNative", isDirectory: true) }
     static func storage(_ scope: AudioCommentLiveScope) -> AudioCommentDraftStorage {
         let fail = enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-lost-ack")
+        let before = enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-before-draft")
+        let discard = enabled && ProcessInfo.processInfo.arguments.contains("--audio-discard-lost-ack")
         return .init(vault: .init(applicationSupport: root, owner: try! .init(scope.workspace.account), fault: { point in
-            if fail && point == .afterDraftCommit { throw AudioCommentStorageFailure.unreadable }
+            if discard && point == .afterDiscardJournal { throw AudioCommentStorageFailure.unreadable }
+            if fail && point == (before ? .afterSaveJournal : .afterDraftCommit) { throw AudioCommentStorageFailure.unreadable }
         }))
     }
     static func prepare() throws {

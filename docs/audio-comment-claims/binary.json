@@ -1,0 +1,5 @@
+{
+  "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold",
+  "sha256": "9e5c5f62072ac3fc699ce263f4027ccdd642042d8473062491e611deb1ab010d",
+  "scope": "Final signed action-isolation build; source hashes in source-bindings.json"
+}

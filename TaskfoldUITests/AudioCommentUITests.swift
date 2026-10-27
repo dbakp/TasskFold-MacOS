@@ -30,10 +30,12 @@ extension TaskfoldMacUITests {
         }
         XCTAssertTrue(element.exists && element.isHittable, app.debugDescription)
     }
-    @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false, lostSave: Bool = false) {
+    @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false, lostSave: Bool = false, beforeDraft: Bool = false, lostDiscard: Bool = false) {
         app.launchArguments = ["--uitesting", "--team-editor-testing", "--audio-comment-testing", "-appearance", large || denied ? "dark" : "light"]
         if reset { app.launchArguments.append("--audio-comment-reset") }
         if lostSave { app.launchArguments.append("--audio-save-lost-ack") }
+        if beforeDraft { app.launchArguments.append("--audio-save-before-draft") }
+        if lostDiscard { app.launchArguments.append("--audio-discard-lost-ack") }
         if denied { app.launchArguments.append("--audio-comment-denied") }
         if large { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
         app.launch()
@@ -46,6 +48,7 @@ extension TaskfoldMacUITests {
         wait(for: [opened], timeout: 10); app.activate()
         let open = app.buttons["audioFixtureOpen"]; XCTAssertTrue(open.waitForExistence(timeout: 15)); audioPress(open)
         XCTAssertTrue(app.buttons["audioRecord"].waitForExistence(timeout: 8))
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["audioRecord"])], timeout: 10) == .completed)
     }
     @MainActor private func audioRecord(_ app: XCUIApplication) {
         let record = app.buttons["audioRecord"]; audioReveal(record, app); audioPress(record)
@@ -204,6 +207,7 @@ extension TaskfoldMacUITests {
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch.exists)
         audioScreenshot(app, "Finish prepared Save after cold launch at largest text")
         audioPress(pending)
+        XCTAssertFalse(app.sheets["Discard this pending recording?"].exists, "Finish must not also open Discard")
         XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["audioSaveClose"])], timeout: 12) == .completed)
         #if os(iOS)
         audioReveal(save, app, towardTop: true)
@@ -227,6 +231,92 @@ extension TaskfoldMacUITests {
         #endif
         XCTAssertEqual(restored.value as? String, "Keep this Save exactly once")
         audioScreenshot(app, "One exact saved recording after prepared Save recovery")
+    }
+
+    @MainActor func testAudioPendingDiscardSurvivesColdLaunchWithoutSavingAtLargestText() throws {
+        try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
+        audioOpen(app, large: true, lostSave: true, beforeDraft: true); audioRecord(app)
+        let save = app.buttons["audioSave"]; audioReveal(save, app); audioPress(save)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@ AND enabled == true", "Retry save"), object: save)], timeout: 10) == .completed)
+        audioPress(app.buttons["audioClose"]); XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false, large: true, lostDiscard: true)
+        let discard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioDiscardPending-")).firstMatch
+        audioReveal(discard, app); audioPress(discard)
+        #if os(macOS)
+        let confirm = app.sheets.buttons["audioConfirmDiscardPending"]
+        #else
+        let controls = app.sheets["Discard this pending recording?"].buttons.matching(identifier: "audioConfirmDiscardPending")
+        XCTAssertTrue(controls.firstMatch.waitForExistence(timeout: 8))
+        let count = controls.count
+        XCTAssertTrue((1...2).contains(count), "One logical discard action expected")
+        // UIKit exposes SwiftUI's action as a nested pair on this runtime.
+        // Check it is one action before selecting its innermost control.
+        if count == 2 {
+            XCTAssertEqual(controls.element(boundBy: 0).frame, controls.element(boundBy: 1).frame)
+            XCTAssertEqual(controls.element(boundBy: 0).label, controls.element(boundBy: 1).label)
+        }
+        let confirm = controls.element(boundBy: max(0, count - 1))
+        #endif
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.textViews["audioCaption"].exists, "Opening discard must not also resume the Save")
+        audioPress(confirm)
+        let pending = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label CONTAINS[c] %@", "Finish discarding"), object: pending)], timeout: 12) == .completed)
+        audioReveal(pending, app); audioScreenshot(app, "Discard kept after acknowledgement loss")
+        audioPress(app.buttons["audioClose"]); XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false, large: true)
+        audioReveal(pending, app)
+        XCTAssertTrue(pending.label.localizedCaseInsensitiveContains("Finish discarding"))
+        audioScreenshot(app, "Finish durable discard after cold launch at largest text")
+        audioPress(pending)
+        XCTAssertFalse(app.sheets["Discard this pending recording?"].exists, "Finish must not also open Discard")
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: pending)], timeout: 10) == .completed)
+        audioPress(app.buttons["audioClose"]); XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false, large: true)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch.exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-")).firstMatch.exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch.exists)
+        audioScreenshot(app, "Durable discard leaves no recording after cold return")
+    }
+    @MainActor func testAudioPendingDiscardRefusesAlreadySavedRecording() throws {
+        try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
+        audioOpen(app, lostSave: true); audioRecord(app)
+        let save = app.buttons["audioSave"]; audioReveal(save, app); audioPress(save)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@ AND enabled == true", "Retry save"), object: save)], timeout: 10) == .completed)
+        audioPress(app.buttons["audioClose"]); XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false)
+        let discard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioDiscardPending-")).firstMatch
+        audioReveal(discard, app); audioPress(discard)
+        #if os(macOS)
+        let confirm = app.sheets.buttons["audioConfirmDiscardPending"]
+        #else
+        let controls = app.sheets["Discard this pending recording?"].buttons.matching(identifier: "audioConfirmDiscardPending")
+        XCTAssertTrue(controls.firstMatch.waitForExistence(timeout: 8))
+        let count = controls.count
+        XCTAssertTrue((1...2).contains(count), "One logical discard action expected")
+        // UIKit exposes SwiftUI's action as a nested pair on this runtime.
+        // Check it is one action before selecting its innermost control.
+        if count == 2 {
+            XCTAssertEqual(controls.element(boundBy: 0).frame, controls.element(boundBy: 1).frame)
+            XCTAssertEqual(controls.element(boundBy: 0).label, controls.element(boundBy: 1).label)
+        }
+        let confirm = controls.element(boundBy: max(0, count - 1))
+        #endif
+        XCTAssertTrue(confirm.waitForExistence(timeout: 8))
+        XCTAssertFalse(app.textViews["audioCaption"].exists, "Opening discard must not also resume the Save")
+        audioPress(confirm)
+        let notice = app.staticTexts["audioNotice"]; audioReveal(notice, app)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND (label CONTAINS[c] %@ OR value CONTAINS[c] %@)", "already saved", "already saved"), object: notice)], timeout: 10) == .completed)
+        audioScreenshot(app, "Already saved recording cannot be discarded as pending")
+        let pending = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch
+        audioReveal(pending, app); audioPress(pending)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["audioSaveClose"])], timeout: 12) == .completed)
+        audioPress(app.buttons["audioClose"]); XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false)
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-"))
+        audioReveal(saved.firstMatch, app); XCTAssertEqual(saved.count, 1)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch.exists)
+        audioScreenshot(app, "Refused pending discard preserves one saved recording")
     }
 
 }

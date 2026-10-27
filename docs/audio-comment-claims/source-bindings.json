@@ -1,0 +1,30 @@
+{
+  "sha256": {
+    "Taskfold/Core/AudioCommentVault.swift": "61b54ce0eff5715b511903bee919620afbbb9a172addd66a1fb4422e42952fd0",
+    "Taskfold/AudioCommentCapture.swift": "25f427b2367bdc39e46656f16d999689635b171575d4bf1e1518f726c04d9fc2",
+    "Taskfold/AudioCommentNativeFixture.swift": "5d28c501620959988ee47eb58878804b3d6cb24396157b254f623c409dd8d694",
+    "Taskfold/Views/AudioCommentDraftView.swift": "7dfc1c0a058f7969754752c5cfb4d030b3ae07ef4e291e263608b5d62318b289",
+    "TaskfoldTests/AudioCommentVaultTests.swift": "5a310b13ae9ce1f1df531d4195a5e63dc88a50b2dc475b48950a5b32cc200da9",
+    "TaskfoldUITests/AudioCommentUITests.swift": "a5a8aa98fabb48e278241763bb8bd3ffa7bd6770d73716bb28f01a54f3644991",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "73e6c4961cdbc8f9647e30b90c0f575f5ea7f9f132e28bcadcb3fbe314162814",
+    "Scripts/fixtures/AudioClaimsProcessProbe.swift": "bc88004d36b64f8545782ed69b1ee24c5c571cfc375fbf121fff084f7ac56225",
+    "Scripts/test_audio_claim_processes.py": "b8942ed20131bfada9faaee42662b671491945e50a836be778eb9a00c1341d6c"
+  },
+  "coreTests": 79,
+  "controllerChecks": 62,
+  "realAudio": "User-deferred; generated synthetic tone and silent player only",
+  "scope": "Concurrent local recovered-review Save ownership and durable pending cancellation; not full app/server lifecycle",
+  "nativeBehaviorSourcesBeforeWordingPolish": {
+    "Taskfold/Core/AudioCommentVault.swift": "61b54ce0eff5715b511903bee919620afbbb9a172addd66a1fb4422e42952fd0",
+    "Taskfold/AudioCommentCapture.swift": "25f427b2367bdc39e46656f16d999689635b171575d4bf1e1518f726c04d9fc2",
+    "Taskfold/AudioCommentNativeFixture.swift": "5d28c501620959988ee47eb58878804b3d6cb24396157b254f623c409dd8d694",
+    "Taskfold/Views/AudioCommentDraftView.swift": "de949224e46aae63d1bc8b5420e3efa5f145a56601195e765c544b852b0284bc",
+    "TaskfoldTests/AudioCommentVaultTests.swift": "5a310b13ae9ce1f1df531d4195a5e63dc88a50b2dc475b48950a5b32cc200da9",
+    "TaskfoldUITests/AudioCommentUITests.swift": "4495fa340d5e5a4e94811dbb0850a21033d24d01cb94b0d0a6e8d80f26f8ed85",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "73e6c4961cdbc8f9647e30b90c0f575f5ea7f9f132e28bcadcb3fbe314162814",
+    "Scripts/fixtures/AudioClaimsProcessProbe.swift": "bc88004d36b64f8545782ed69b1ee24c5c571cfc375fbf121fff084f7ac56225",
+    "Scripts/test_audio_claim_processes.py": "b8942ed20131bfada9faaee42662b671491945e50a836be778eb9a00c1341d6c"
+  },
+  "wordingPolish": "Visual inspection replaced Save-only guidance with guidance covering Save and Discard; final four-case reruns include this text.",
+  "nativeCorrection": "Initial mobile run found nested duplicate confirmation accessibility controls and Form automatic-button action coupling. Explicit borderless buttons isolate actions; tests assert no accidental resume on Discard and no discard dialog on Finish. Final four-case reruns use this correction."
+}
