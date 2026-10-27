@@ -4,6 +4,18 @@ Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Workflow Undo body sizing now counts JSON structure/UTF-8 escaping directly,
+retains Foundation's numeric spelling with a per-call raw-bit memo, and keeps the
+original encoder/scanner as an unchanged fallback. The frozen 1,377-case corpus
+and exact byte-budget boundaries match; no admission or depth quota changed.
+Each repo reports 173 selected Core passes and four existing live-fixture skips.
+All five native cases pass on Mac, iPhone and iPad with no XCTest runtime warnings.
+The same flat 5,000-root fixture saves in 1.66/1.67/1.85s on phone/tablet/Mac.
+A fresh Mac baseline was 1.95s; mobile comparisons use the previous stage. These
+are variable-load Debug observations, not release or smooth-rendering guarantees.
+The remaining main-thread pause and background widget work are still open.
+See workflow-body-size/validation.json and its exact evidence.
+
 Mac Print now uses a persistent window command target with owner-checked list
 registration, rather than publishing fresh callbacks from replaceable list views.
 The original build reproduced a silent Print failure after navigating to empty
@@ -5874,3 +5886,38 @@ Final Mac note acceptance additionally compares the complete saved snapshot for
 Cancel, failed Apply, stale Apply and stale cold return, including queues/widget
 metadata. All four cases pass on that final build; four priority warnings remain
 open. The preceding table-only round is superseded by this stronger coverage.
+
+## 27 October: workflow Undo byte-count preparation
+
+Profiling the current isolated 5,000-root native case found substantial work in
+Undo construction and local recording, rather than only cache rereading. The Undo
+budget path encoded a whole payload and copied its bytes merely to count the
+PostgreSQL-style representation. It now counts structural spacing and raw UTF-8
+escaping directly. Foundation still chooses number spellings; a raw-bit memo lasts
+only for the count. Unsupported/deep cases fall back to the original encoder and
+scanner, preserved byte-for-byte. Limits, exponent expansion, negative zero,
+refusals and persisted data are unchanged. No field/history/list quota was reduced.
+
+Before changing production code, both repositories passed a frozen 1,377-case
+output digest, including every valid Unicode scalar, controls/escaping/combining
+forms, floating-point bit patterns, nonfinite refusals, deep nesting and a large
+row set. The direct counter matches that digest and the independent fallback.
+The exact maximum-minus-one/maximum/maximum-plus-one boundary is covered. Earlier
+history and date digests also remain unchanged.
+
+Each owned selected Core run reports 177 tests: 173 passes, four existing live
+fixture skips and zero failures. No new hosted acceptance is claimed. Fifteen
+native platform/case pairs pass, with zero failures/skips/XCTest runtime warnings:
+cloud-mode 1,000-root append, local 1,000/5,000-root append with prior history,
+file-save failure, and real widget intent completion/retry/Undo/cold return.
+The ordinary fixture UI displays counts instead of rendering 5,000 production
+rows. Native child-rich creation and assignment-heavy scaling remain open.
+
+The fresh unprofiled Mac observation is 1.95s before and 1.85s after. Current phone
+and tablet saves are 1.66s and 1.67s versus the preceding stage's 1.90s and 1.88s.
+Load varied; sampled timing is excluded from comparisons. Widget readiness remains
+8.49/8.54/9.57s from save start on phone/tablet/Mac; this does not prove a faster
+widget worker. The roughly 1.7–1.9s save pause remains too long for premium input.
+See workflow-body-size/ for source bindings, metrics, actual summaries, explicit
+skip reasons and the rejected zero-test selector attempt. Full ranked work and
+all user deferrals remain active. Only synthetic local fixtures changed.

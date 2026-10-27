@@ -1266,6 +1266,67 @@ enum WorkflowUndo {
     /// expands exponent notation. Count that representation before admitting a
     /// durable command, without changing whitespace inside authored strings.
     static func bodyBytes(_ change: Mutation) -> Int? {
+        var counter = BodySizeCounter()
+        // Keep the original encoder path for unusual depth or values the direct
+        // counter cannot certify. This is an optimization, not a new quota.
+        return counter.bytes(.object(change.fields)) ?? encodedBodyBytes(change)
+    }
+    private struct BodySizeCounter {
+        private let numbersEncoder = JSONEncoder()
+        private var numbers: [UInt64: Int] = [:]
+        mutating func bytes(_ value: JSON, depth: Int = 0) -> Int? {
+            guard depth < 128 else { return nil }
+            switch value {
+            case .null: return 4
+            case .bool(let value): return value ? 4 : 5
+            case .string(let value): return stringBytes(value)
+            case .number(let value):
+                if let size = numbers[value.bitPattern] { return size }
+                // Let Foundation choose the same shortest spelling as the old
+                // full encoder. Cache only within this one count, by raw bits.
+                guard let data = try? numbersEncoder.encode(value) else { return nil }
+                let text = String(decoding: data, as: UTF8.self)
+                let size: Int
+                if let e = text.firstIndex(where: { $0 == "e" || $0 == "E" }), let exponent = Int(text[text.index(after: e)...]) {
+                    let mantissa = String(text[..<e]), sign = mantissa.hasPrefix("-") ? 1 : 0
+                    let unsigned = sign == 1 ? String(mantissa.dropFirst()) : mantissa
+                    let parts = unsigned.split(separator: ".", omittingEmptySubsequences: false)
+                    let digits = parts.reduce(0) { $0 + $1.utf8.count }, position = parts[0].utf8.count + exponent
+                    size = sign + (position >= digits ? position : position > 0 ? digits + 1 : 2 - position + digits)
+                } else if text.hasPrefix("-"), text.dropFirst().allSatisfy({ $0 == "0" || $0 == "." }) {
+                    size = text.utf8.count - 1
+                } else { size = text.utf8.count }
+                numbers[value.bitPattern] = size
+                return size
+            case .array(let values):
+                var size = 2 + max(0, values.count - 1) * 2
+                for value in values {
+                    guard let count = bytes(value, depth: depth + 1) else { return nil }
+                    size += count
+                }
+                return size
+            case .object(let values):
+                var size = 2 + max(0, values.count - 1) * 2
+                for (key, value) in values {
+                    guard let count = bytes(value, depth: depth + 1) else { return nil }
+                    size += stringBytes(key) + 2 + count
+                }
+                return size
+            }
+        }
+        private func stringBytes(_ value: String) -> Int {
+            var size = 2
+            for byte in value.utf8 {
+                switch byte {
+                case 8, 9, 10, 12, 13, 34, 92: size += 2
+                case 0...31: size += 6
+                default: size += 1
+                }
+            }
+            return size
+        }
+    }
+    static func encodedBodyBytes(_ change: Mutation) -> Int? {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
         guard let data = try? encoder.encode(JSON.object(change.fields)) else { return nil }
         let bytes = Array(data)

@@ -8439,3 +8439,38 @@ as rejected evidence. A type-checker limit in the large outer RootView body was
 avoided by placing the stable target on the smaller persistent WorkspaceView,
 outside its replaceable navigation detail. The independently owned iOS repo
 receives documentation/evidence only; this change is Mac-specific.
+
+## 27 October: workflow Undo byte-count preparation
+
+Profiling the current isolated 5,000-root native case found substantial work in
+Undo construction and local recording, rather than only cache rereading. The Undo
+budget path encoded a whole payload and copied its bytes merely to count the
+PostgreSQL-style representation. It now counts structural spacing and raw UTF-8
+escaping directly. Foundation still chooses number spellings; a raw-bit memo lasts
+only for the count. Unsupported/deep cases fall back to the original encoder and
+scanner, preserved byte-for-byte. Limits, exponent expansion, negative zero,
+refusals and persisted data are unchanged. No field/history/list quota was reduced.
+
+Before changing production code, both repositories passed a frozen 1,377-case
+output digest, including every valid Unicode scalar, controls/escaping/combining
+forms, floating-point bit patterns, nonfinite refusals, deep nesting and a large
+row set. The direct counter matches that digest and the independent fallback.
+The exact maximum-minus-one/maximum/maximum-plus-one boundary is covered. Earlier
+history and date digests also remain unchanged.
+
+Each owned selected Core run reports 177 tests: 173 passes, four existing live
+fixture skips and zero failures. No new hosted acceptance is claimed. Fifteen
+native platform/case pairs pass, with zero failures/skips/XCTest runtime warnings:
+cloud-mode 1,000-root append, local 1,000/5,000-root append with prior history,
+file-save failure, and real widget intent completion/retry/Undo/cold return.
+The ordinary fixture UI displays counts instead of rendering 5,000 production
+rows. Native child-rich creation and assignment-heavy scaling remain open.
+
+The fresh unprofiled Mac observation is 1.95s before and 1.85s after. Current phone
+and tablet saves are 1.66s and 1.67s versus the preceding stage's 1.90s and 1.88s.
+Load varied; sampled timing is excluded from comparisons. Widget readiness remains
+8.49/8.54/9.57s from save start on phone/tablet/Mac; this does not prove a faster
+widget worker. The roughly 1.7–1.9s save pause remains too long for premium input.
+See workflow-body-size/ for source bindings, metrics, actual summaries, explicit
+skip reasons and the rejected zero-test selector attempt. Full ranked work and
+all user deferrals remain active. Only synthetic local fixtures changed.

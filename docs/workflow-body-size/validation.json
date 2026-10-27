@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-27",
+  "coreReported": 177,
+  "corePassed": 173,
+  "coreSkipped": 4,
+  "coreFailures": 0,
+  "skips": "Existing goals/monthly dates/template/cloud handoff fixtures require disposable live accounts; not new hosted acceptance",
+  "nativeCasesPassed": 15,
+  "nativeRuntimeWarnings": 0,
+  "byteCountCorpusCases": 1377,
+  "byteCountCorpusSHA256": "61adeb48f306dd1a3e94f15647507e6227a67af0e1221eb2d262de442bd3acf6",
+  "boundary": "maximumBytes - 1, exact maximum and maximum + 1; original 16,800,000-byte budget unchanged",
+  "fallback": "Original encoder/scanner code preserved byte-for-byte for unsupported/deep direct-count cases; no new depth quota",
+  "implementation": "Count JSON structure and raw UTF-8 escaping directly; retain Foundation numeric spelling with per-call raw-bit memo; no full encoded payload/byte array on ordinary count path",
+  "nativeScope": "Same flat 20,001-command Debug fixture, prior local root/child history, file-save failure, Undo and real widget intent retry/Undo/cold return. Count-only fixture UI, not production 5,000-row rendering.",
+  "comparison": "Fresh unprofiled Mac before/after; phone/tablet against preceding stage observations. Variable load; no release latency or widget-worker speedup claim.",
+  "remaining": [
+    "Main-thread save still about 1.7-1.9 seconds",
+    "Background widget work, production rendering, assignment-heavy and child-rich native creation scale",
+    "Hosted/paired bulk delivery, wider rank 3 and ranked backlog",
+    "Existing user deferrals unchanged"
+  ],
+  "realDataChanged": false,
+  "serverOrRolloutChanged": false
+}
