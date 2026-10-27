@@ -1,0 +1,30 @@
+{
+  "Taskfold/Core/Models.swift": {
+    "source": "fa972e978f4b78726f12a7ed7c086d5f304a88f8f017ebc891dcb8edb10f9b9f",
+    "staged": "fa972e978f4b78726f12a7ed7c086d5f304a88f8f017ebc891dcb8edb10f9b9f"
+  },
+  "Taskfold/Core/Store.swift": {
+    "source": "4dbb13ce3befd7a858d4e4cb0d3b7b3d91350a85273cbad8c01ec85bb027056b",
+    "staged": "a54518613718952603048c7fa7c50e0a77b533be5a275c165b0e5b153074176f"
+  },
+  "Taskfold/Core/TaskActivity.swift": {
+    "source": "c2ed50ab08fce2cb61a4a2cdea43c35fde1ea8a47d96e9252109c422c7584b41",
+    "staged": "c2ed50ab08fce2cb61a4a2cdea43c35fde1ea8a47d96e9252109c422c7584b41"
+  },
+  "Taskfold/Core/ProjectWorkflows.swift": {
+    "source": "fbba378f66d5c91e22b4686c3729d420b609ebb23835318a36c389e45cfe8d30",
+    "staged": "fbba378f66d5c91e22b4686c3729d420b609ebb23835318a36c389e45cfe8d30"
+  },
+  "Taskfold/Views/WorkflowViews.swift": {
+    "source": "69e6b022978c3028e25b7b201fea68db733fbf17971dcbc8d6b9472fa40fb86b",
+    "staged": "69e6b022978c3028e25b7b201fea68db733fbf17971dcbc8d6b9472fa40fb86b"
+  },
+  "Taskfold/TeamTemplateNativeFixture.swift": {
+    "source": "1e193e38c505a133b43f9d57cb5902723d407cf87f16a32d8b53e4dc01ff62f3",
+    "staged": "1e193e38c505a133b43f9d57cb5902723d407cf87f16a32d8b53e4dc01ff62f3"
+  },
+  "TaskfoldUITests/TaskfoldMacUITests.swift": {
+    "source": "234c0dfc3a387e783cda5a5a09ddcb361ccee822e432f5f1c829945783d8eac3",
+    "staged": "234c0dfc3a387e783cda5a5a09ddcb361ccee822e432f5f1c829945783d8eac3"
+  }
+}

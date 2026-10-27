@@ -31,6 +31,7 @@ final class Store {
     #if DEBUG
     @ObservationIgnored private(set) var workflowPreparedLocalHistoryUsed = false
     @ObservationIgnored private(set) var workflowPreparedNormalizationUsed = false
+    @ObservationIgnored private(set) var workflowPreparedUndoUsed = false
     #endif
     var snapshot = Snapshot() {
         didSet {
@@ -1453,6 +1454,7 @@ final class Store {
         #if DEBUG
         workflowPreparedLocalHistoryUsed = false
         workflowPreparedNormalizationUsed = false
+        workflowPreparedUndoUsed = false
         #endif
         guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
         guard workspaceCacheDecoded else {error="Your saved workspace needs recovery before more changes can be saved. Its original file is kept.";return false}
@@ -1576,7 +1578,8 @@ final class Store {
         let projectsFreshCreation = freshCreation != nil
         var working = old
         var localCreations: [LocalActivityCreation.Entry] = []
-        var committedChanges: [Mutation] = []
+        let retainCapturedChanges = projectsFreshCreation && admittedHistory?.canRetainCapturedChanges == true
+        var committedChanges: [Mutation] = retainCapturedChanges ? changes : []
         for var change in changes {
             let current = projectsFreshCreation ? nil : record(change.table, id: change.recordID)
             if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = current {
@@ -1588,7 +1591,9 @@ final class Store {
             if change.table == WorkflowTemplate.table, ["PATCH","DELETE"].contains(change.method), let existing=current {
                 change.baseline = existing.fields.merging(change.baseline ?? [:]) { _, original in original }
             }
-            change = TaskCompletionRevision.capturing(change, existing: current)
+            // Admitted fresh local commands were already captured in the worker.
+            // All validations below still run; only idempotent rewriting is skipped.
+            if !retainCapturedChanges { change = TaskCompletionRevision.capturing(change, existing: current) }
             guard TaskGeneration.permitsLocalAction(change, existing: current) else {
                 snapshot = old
                 error = "This task was deleted and restored while you were editing. Reopen its current copy before applying this change."
@@ -1610,8 +1615,10 @@ final class Store {
                     change = try scope.capturing(change, existing: current)
                 } catch { snapshot = old; self.error = error.localizedDescription; return false }
             }
-            if change.table == "view_orders" { change = capturingTaskOrderRecovery(change) }
-            committedChanges.append(change)
+            if !retainCapturedChanges {
+                if change.table == "view_orders" { change = capturingTaskOrderRecovery(change) }
+                committedChanges.append(change)
+            }
             if projectsFreshCreation {
                 guard let after = freshCreation?.append(change, to: &working) else {
                     snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
@@ -1646,9 +1653,15 @@ final class Store {
             if snapshot.sharedCaptureReceipts == nil { snapshot.sharedCaptureReceipts = [:] }
             snapshot.sharedCaptureReceipts?[draft.taskID] = draft.taskID
         }
-        let historyChanges = committedChanges.filter { $0.table != FocusSessionChange.table }
+        // Fresh workflow capture excludes Focus commands by construction. Keep
+        // its original immutable array so prepared Undo can prove exact identity.
+        let historyChanges = retainCapturedChanges ? changes : committedChanges.filter { $0.table != FocusSessionChange.table }
         let workflowCreation = historyChanges.first?.workflowRun != nil && historyChanges.allSatisfy { $0.method == "POST" && $0.workflowRun == historyChanges.first?.workflowRun }
-        let history = (remember || workflowCreation) && !historyChanges.isEmpty ? EditHistory(changes: historyChanges, snapshot: old) : nil
+        let preparedUndo = admittedHistory?.editHistory(matching: historyChanges, source: historySourceRevision, account: userID)
+        let history = (remember || workflowCreation) && !historyChanges.isEmpty ? (preparedUndo ?? EditHistory(changes: historyChanges, snapshot: old)) : nil
+        #if DEBUG
+        workflowPreparedUndoUsed = preparedUndo != nil
+        #endif
         if workflowCreation {
             let existing = old.tables.mapValues { Set($0.map(\.id)) }
             if historyChanges.contains(where: { !(existing[$0.table] ?? []).contains($0.recordID) }), history?.undo.isEmpty != false {

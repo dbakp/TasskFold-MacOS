@@ -326,3 +326,103 @@ final class FreshLocalActivityTests: XCTestCase {
     }
 
 }
+
+extension FreshLocalActivityTests {
+    func testPreparedUndoMatchesOrdinaryCompleteDefinitionAndRetainsOneIdentity() throws {
+        let original = seed(), source = UUID(), run = UUID()
+        let project = Mutation(table: "projects", recordID: "project", method: "POST", fields: ["id": .string("project"), "user_id": .string(account), "name": .string("Résumé project")], insertOnly: true, workflowRun: run)
+        let section = Mutation(table: "sections", recordID: "section", method: "POST", fields: ["id": .string("section"), "user_id": .string(account), "project_id": .string("project"), "name": .string("Review")], insertOnly: true, workflowRun: run)
+        let label = Mutation(table: "labels", recordID: "label", method: "POST", fields: ["id": .string("label"), "user_id": .string(account), "name": .string("Résumé")], insertOnly: true, workflowRun: run)
+        var changes = workflowChanges().map { change -> Mutation in
+            var change = change; change.workflowRun = run
+            change.fields["project_id"] = .string("project"); change.fields["section_id"] = .string("section")
+            return change
+        }
+        changes.insert(contentsOf: [project, section, label], at: 0)
+        changes.append(Mutation(table: "view_orders", recordID: "group:project:section", method: "POST", fields: ["id": .string("group:project:section"), "user_id": .string(account), "ids": .array(changes.filter { $0.table == "tasks" }.map { .string($0.recordID) })], insertOnly: true, workflowRun: run))
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        let prepared = try XCTUnwrap(admission.editHistory(matching: admission.changes, source: source, account: account))
+        var ordinary = EditHistory(changes: admission.changes, snapshot: original, id: prepared.id)
+        XCTAssertEqual(prepared.undo.count, 1)
+        // The ordinary constructor chooses a fresh transport nonce; compare all
+        // other command content against the existing synchronous constructor.
+        ordinary.undo[0].id = prepared.undo[0].id
+        XCTAssertEqual(prepared.undo, ordinary.undo)
+        XCTAssertEqual(prepared.redo, ordinary.redo)
+        let again = try XCTUnwrap(admission.editHistory(matching: admission.changes, source: source, account: account))
+        XCTAssertEqual(prepared.id, again.id); XCTAssertEqual(prepared.undo.map(\.id), again.undo.map(\.id))
+        XCTAssertEqual(try metadata(original), try metadata(seed()))
+    }
+    func testPreparedUndoRejectsRawUnicodeNumbersAndCommandMetadata() throws {
+        let original = seed(), source = UUID(), changes = workflowChanges()
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        var variants: [[Mutation]] = []
+        variants.append(admission.changes.map { $0 })
+        var edited = admission.changes; edited[0].fields["description"] = .string("e\u{301}"); variants.append(edited)
+        XCTAssertEqual(edited, admission.changes, "Semantic String equality must not admit raw-edited fields")
+        edited = admission.changes; edited[0].baseline = [:]; variants.append(edited)
+        edited = admission.changes; edited[0].id = UUID(); variants.append(edited)
+        edited = admission.changes; edited[0].workflowRun = UUID(); variants.append(edited)
+        edited = admission.changes; edited[0].reminderPreferenceField = "enabled"; variants.append(edited)
+        edited = admission.changes; edited[0].fields["future_metadata"] = .object(["raw": .string("é")]); variants.append(edited)
+        edited = Array(admission.changes.reversed()); variants.append(edited)
+        for variant in variants { XCTAssertNil(admission.editHistory(matching: variant, source: source, account: account)) }
+        XCTAssertNil(admission.editHistory(matching: admission.changes, source: UUID(), account: account))
+        XCTAssertNil(admission.editHistory(matching: admission.changes, source: source, account: "other"))
+        XCTAssertNotNil(admission.editHistory(matching: admission.changes, source: source, account: account))
+    }
+    func testPreparedUndoRefusesRawSignedZeroChange() throws {
+        let original = seed(), source = UUID()
+        var changes = workflowChanges(); changes[0].fields["future_number"] = .number(0)
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        var edited = admission.changes; edited[0].fields["future_number"] = .number(-0.0)
+        XCTAssertEqual(edited, admission.changes)
+        XCTAssertNil(admission.editHistory(matching: edited, source: source, account: account))
+    }
+}
+
+extension FreshLocalActivityTests {
+    func testPreparedUndoScaleMatchesOrdinaryConstructor() throws {
+        let count = 5000, source = UUID(), original = Snapshot()
+        let document: JSON = .object(["version": .number(1), "kind": .string("project"),
+            "projects": .array([.object(["id": .string("root"), "name": .string("Scale workflow")])]),
+            "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
+            "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
+        let changes = try WorkflowTemplate(document: document).instantiate(account: account, name: "Scale workflow")
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        let final = admission.changes
+        let clock = ContinuousClock()
+        func seconds(_ elapsed: Duration) -> Double { Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18 }
+        var matching: [Double] = [], constructing: [Double] = []
+        for _ in 0..<3 {
+            let start = clock.now
+            let prepared = try XCTUnwrap(admission.editHistory(matching: final, source: source, account: account))
+            matching.append(seconds(start.duration(to: clock.now)))
+            let ordinaryStart = clock.now
+            var ordinary = EditHistory(changes: final, snapshot: original, id: prepared.id)
+            constructing.append(seconds(ordinaryStart.duration(to: clock.now)))
+            XCTAssertEqual(prepared.undo.count, 1); XCTAssertEqual(ordinary.undo.count, 1)
+            ordinary.undo[0].id = prepared.undo[0].id
+            XCTAssertEqual(prepared.undo, ordinary.undo); XCTAssertEqual(prepared.redo, ordinary.redo)
+        }
+        print("WORKFLOW_UNDO_MATCH_5000_SECONDS \(matching)")
+        print("WORKFLOW_UNDO_CONSTRUCT_5000_SECONDS \(constructing)")
+        // Timing observations are not a flaky performance assertion or release guarantee.
+    }
+}
+
+extension FreshLocalActivityTests {
+    func testPreparedUndoKeepsNonstandardCaptureMetadataOnOrdinaryPath() throws {
+        let original = seed(), source = UUID()
+        var changes = workflowChanges(); changes[0].baseline = [:]
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        XCTAssertFalse(admission.canRetainCapturedChanges)
+        XCTAssertNil(admission.editHistory(matching: admission.changes, source: source, account: account))
+        XCTAssertEqual(EditHistory(changes: admission.changes, snapshot: original).undo.count, 1)
+    }
+}

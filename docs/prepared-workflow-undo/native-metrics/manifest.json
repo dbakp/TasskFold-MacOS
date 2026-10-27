@@ -1,0 +1,47 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "189C8A71-015F-4880-AA8B-2EC68238D336.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 5000_0_83B993F6-0DF7-4946-B5E9-59D89E9724EC.json",
+        "timestamp" : 1793109718.241
+      }
+    ],
+    "testIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "3B748FBF-D4BA-445D-964A-8AFF9CF8171A.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 1000_0_9B948747-766F-4090-B496-3F9730B88123.json",
+        "timestamp" : 1793109731.954
+      }
+    ],
+    "testIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "1140A10B-C613-4365-8277-96189BEDF35E.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Workflow commit scale 1000_0_808CFB0D-E6CB-4965-A557-07BF44203B0A.json",
+        "timestamp" : 1793109834.258
+      }
+    ],
+    "testIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource"
+  }
+]

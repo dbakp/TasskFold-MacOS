@@ -1173,7 +1173,7 @@ private struct QuickEntryReferences {
 }
 
 
-struct EditHistory {
+struct EditHistory: Sendable {
     let id: UUID
     var undo: [Mutation]
     var redo: [Mutation]

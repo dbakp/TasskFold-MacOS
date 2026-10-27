@@ -5207,9 +5207,11 @@ extension SharedHeadingNativeTests {
         let data = try Data(contentsOf: file), value = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         let receipt = XCTAttachment(data: data, uniformTypeIdentifier: "public.json"); receipt.name = "Workflow commit scale \(count)"; receipt.lifetime = .keepAlways; add(receipt)
         XCTAssertEqual(value["proof"] as? String, proof)
+        XCTAssertNil(value["widgetError"], "Native widget publication failed: \(value["widgetError"] ?? "unknown")")
         if localHistory {
             XCTAssertEqual(value["preparedLocalHistoryUsed"] as? Bool, !staleHistory)
             XCTAssertEqual(value["preparedNormalizationUsed"] as? Bool, !staleHistory)
+            XCTAssertEqual(value["preparedUndoUsed"] as? Bool, !staleHistory)
             XCTAssertGreaterThan(value["mainActorPreparationPulses"] as? Int ?? 0, 0)
             XCTAssertEqual(value["sourceEditPreserved"] as? Bool, true)
         }

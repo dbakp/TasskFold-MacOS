@@ -1,0 +1,14 @@
+{
+  "removedObsoleteUnsignedBuild": "/tmp/taskfold-workflow-commit-ios-build",
+  "bytesRemoved": 1152943491,
+  "retained": "Original native results/logs, source copies and current signed products",
+  "taskfoldProcessesBeforeCleanup": "No app, runner or xcodebuild processes remained",
+  "remainingBootedDevices": {
+    "devices": {
+      "com.apple.CoreSimulator.SimRuntime.iOS-27-0": [],
+      "com.apple.CoreSimulator.SimRuntime.watchOS-27-0": [],
+      "com.apple.CoreSimulator.SimRuntime.iOS-26-2": [],
+      "com.apple.CoreSimulator.SimRuntime.iOS-26-5": []
+    }
+  }
+}

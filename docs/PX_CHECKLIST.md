@@ -131,3 +131,16 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 The whole Px objective remains active. This checklist deliberately has no overall
 percentage: these packages differ greatly in size, and implemented source is not
 equivalent to a feature being ready to expose or release.
+
+## 2026-10-27 — prepared local workflow Undo
+
+- [x] Move bounded Undo construction for eligible fresh local workflows into the
+  existing background preparation; keep final validation, durable save and fallback.
+- [x] Verify 96 distinct focused Core cases per repo and selected native local
+  creation, cancellation, failed-save, source-change and 5,000-task publication.
+- [ ] Remove the remaining synchronous encoding/save pause; broader performance
+  work is still open.
+- [ ] Resolve intermittent mobile cloud-workflow settle timeouts and Mac runtime
+  warnings. Passing diagnostic retries do not explain earlier failures.
+
+Evidence and exact scope: [prepared workflow Undo](prepared-workflow-undo/README.md).

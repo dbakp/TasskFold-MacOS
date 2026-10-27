@@ -1,0 +1,1270 @@
+{
+  "resultBundle": "taskfold-prepared-undo-mac-v3.xcresult",
+  "referencePID": 22098,
+  "method": "UUID-matched current image base plus archived image offset; atos reads the live process only. Missing images remain unresolved.",
+  "reportedQoSWarningCount": 3,
+  "archivedQoSEventCount": 3,
+  "archiveCoversReportedWarnings": true,
+  "events": [
+    {
+      "timestamp": "2026-10-27 15:00:51.151190+0100",
+      "process": "Taskfold",
+      "processUUID": "664C3473-C96F-3B25-8091-8DD71B75C214",
+      "sender": "/usr/lib/libRPAC.dylib",
+      "metadata": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition waitUntilDate:]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "frames": [
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 575796,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 580976,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 26876,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cda88fc",
+          "symbol": "_dispatch_block_sync_invoke (in libdispatch.dylib) + 240"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 111792,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cdbd4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 16"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 70496,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cdb3360",
+          "symbol": "_dispatch_lane_barrier_sync_invoke_and_complete (in libdispatch.dylib) + 56"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 31688,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cda9bc8",
+          "symbol": "_dispatch_sync_block_with_privdata (in libdispatch.dylib) + 452"
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 574396,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 572388,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 566932,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "91DACE39-FA28-3191-818D-1FCC6A0E615A",
+          "offset": 231868,
+          "image": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+          "relocatedAddress": "0x18e8469bc",
+          "symbol": "-[NSConditionLock lockWhenCondition:beforeDate:] (in Foundation) + 80"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2645740,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19169eeec",
+          "symbol": "_getDataDetectorsScanner (in AppKit) + 292"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 15719716,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x192316d24",
+          "symbol": "-[_NSMenuContext filterEntriesByDataDetectors:] (in AppKit) + 204"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3481576,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19176afe8",
+          "symbol": "-[_NSMenuContext filterEntriesByTheirFilters:] (in AppKit) + 504"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3476820,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191769d54",
+          "symbol": "-[_NSMenuContext _preconcurrentPortionOfQualifyEntries:returningEntriesNeedingURLTypecheckingIntoSet:] (in AppKit) + 220"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3476252,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191769b1c",
+          "symbol": "-[_NSMenuContext qualifyEntries:withCompletionHandler:] (in AppKit) + 328"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 14453548,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1921e1b2c",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateVisibilityOfServicesItemsForMenu:isForDisplay:] (in AppKit) + 260"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2721816,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1916b1818",
+          "symbol": "-[_NSServicesMenuUpdater insertServicesIntoMenu:withKeyEvent:isForDisplay:] (in AppKit) + 200"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2721560,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1916b1718",
+          "symbol": "-[_NSServicesMenuUpdater updateMenu:withEvent:withFlags:] (in AppKit) + 64"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2632252,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19169ba3c",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateMenu:withEvent:withFlags:] (in AppKit) + 216"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10842584,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e701d8",
+          "symbol": "-[NSMenu _populateFromDelegateWithEventProvider:] (in AppKit) + 352"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10845728,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e70e20",
+          "symbol": "-[NSMenu _populateWithEventProvider:] (in AppKit) + 236"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 1656032,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1915ad4e0",
+          "symbol": "-[NSMenu _populateWithEventRef:] (in AppKit) + 96"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846616,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e71198",
+          "symbol": "__49-[NSMenu _populateWithFlags:eventRef:incomplete:]_block_invoke (in AppKit) + 32"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846712,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e711f8",
+          "symbol": "-[NSMenu _withUpdateFlags:do:] (in AppKit) + 72"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846380,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e710ac",
+          "symbol": "-[NSMenu _populateWithFlags:eventRef:incomplete:] (in AppKit) + 272"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10827376,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c670",
+          "symbol": "__27-[NSMenu _simulateOpening:]_block_invoke (in AppKit) + 116"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10825960,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c0e8",
+          "symbol": "-[NSMenu _forEachLinkedMenu:] (in AppKit) + 68"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10827244,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c5ec",
+          "symbol": "-[NSMenu _simulateOpening:] (in AppKit) + 120"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9994340,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da1064",
+          "symbol": "-[NSMenu(Accessibility) _openForInspection:] (in AppKit) + 264"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9996524,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da18ec",
+          "symbol": "-[NSMenu(Accessibility) _accessibilityArrayAttributeCount:] (in AppKit) + 240"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9996040,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da1708",
+          "symbol": "-[NSMenu(Accessibility) accessibilityArrayAttributeCount:] (in AppKit) + 60"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 8229368,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191bf21f8",
+          "symbol": "-[NSObject(NSAccessibilityInternal) _accessibilityArrayAttributeCount:clientError:] (in AppKit) + 120"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 8243660,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191bf59cc",
+          "symbol": "GetAttributeValueCount (in AppKit) + 180"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 169180,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x19462f4dc",
+          "symbol": "__AXCopyAttributeValueForHierarchy (in HIServices) + 156"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 162200,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x19462d998",
+          "symbol": "_AXXMIGCopyHierarchy (in HIServices) + 1588"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 136676,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x1946275e4",
+          "symbol": "AXUIElementCopyHierarchy (in HIServices) + 1144"
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 35420,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 68784,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 69232,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 67500,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 183452,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 514816,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01cb00",
+          "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ (in CoreFoundation) + 28"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 514624,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01ca40",
+          "symbol": "__CFRunLoopDoBlocks (in CoreFoundation) + 396"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 511620,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01be84",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 2356"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 1372772,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d0ee264",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 532"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 775520,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199e07560",
+          "symbol": "RunCurrentEventLoopInMode (in HIToolbox) + 320"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 788668,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199e0a8bc",
+          "symbol": "ReceiveNextEventCommon (in HIToolbox) + 488"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 2400588,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199f9414c",
+          "symbol": "_BlockUntilNextEventMatchingListInMode (in HIToolbox) + 48"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 7230416,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191afe3d0",
+          "symbol": "_DPSBlockUntilNextEventMatchingListInMode (in AppKit) + 228"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 233604,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191452084",
+          "symbol": "_DPSNextEvent (in AppKit) + 576"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 12380524,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191fe796c",
+          "symbol": "-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] (in AppKit) + 688"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 12379768,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191fe7678",
+          "symbol": "-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:] (in AppKit) + 72"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 180540,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19144513c",
+          "symbol": "-[NSApplication run] (in AppKit) + 368"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 18352,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19141d7b0",
+          "symbol": "NSApplicationMain (in AppKit) + 880"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 1096440,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c24b1af8",
+          "symbol": "specialized runApp(_:) (in SwiftUI) + 140"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 5007576,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c286c8d8",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 104"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 7939960,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c2b38778",
+          "symbol": "static App.main() (in SwiftUI) + 224"
+        },
+        {
+          "uuid": "11A7BD82-BA4C-3E6E-9FA6-975FB90994E2",
+          "offset": 16835896,
+          "image": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib",
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "11A7BD82-BA4C-3E6E-9FA6-975FB90994E2",
+          "offset": 16924696,
+          "image": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib",
+          "relocatedAddress": null
+        }
+      ],
+      "dataDetectorsServicesMenuInspectionObserved": true
+    },
+    {
+      "timestamp": "2026-10-27 15:01:15.154463+0100",
+      "process": "Taskfold",
+      "processUUID": "664C3473-C96F-3B25-8091-8DD71B75C214",
+      "sender": "/usr/lib/libRPAC.dylib",
+      "metadata": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition waitUntilDate:]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "frames": [
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 575796,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 580976,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 26876,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cda88fc",
+          "symbol": "_dispatch_block_sync_invoke (in libdispatch.dylib) + 240"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 111792,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cdbd4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 16"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 70496,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cdb3360",
+          "symbol": "_dispatch_lane_barrier_sync_invoke_and_complete (in libdispatch.dylib) + 56"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 31688,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cda9bc8",
+          "symbol": "_dispatch_sync_block_with_privdata (in libdispatch.dylib) + 452"
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 574396,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 572388,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 566932,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "91DACE39-FA28-3191-818D-1FCC6A0E615A",
+          "offset": 231868,
+          "image": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+          "relocatedAddress": "0x18e8469bc",
+          "symbol": "-[NSConditionLock lockWhenCondition:beforeDate:] (in Foundation) + 80"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2645740,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19169eeec",
+          "symbol": "_getDataDetectorsScanner (in AppKit) + 292"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 15719716,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x192316d24",
+          "symbol": "-[_NSMenuContext filterEntriesByDataDetectors:] (in AppKit) + 204"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3481576,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19176afe8",
+          "symbol": "-[_NSMenuContext filterEntriesByTheirFilters:] (in AppKit) + 504"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3476820,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191769d54",
+          "symbol": "-[_NSMenuContext _preconcurrentPortionOfQualifyEntries:returningEntriesNeedingURLTypecheckingIntoSet:] (in AppKit) + 220"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3476252,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191769b1c",
+          "symbol": "-[_NSMenuContext qualifyEntries:withCompletionHandler:] (in AppKit) + 328"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 14453548,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1921e1b2c",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateVisibilityOfServicesItemsForMenu:isForDisplay:] (in AppKit) + 260"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2721816,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1916b1818",
+          "symbol": "-[_NSServicesMenuUpdater insertServicesIntoMenu:withKeyEvent:isForDisplay:] (in AppKit) + 200"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2721560,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1916b1718",
+          "symbol": "-[_NSServicesMenuUpdater updateMenu:withEvent:withFlags:] (in AppKit) + 64"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2632252,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19169ba3c",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateMenu:withEvent:withFlags:] (in AppKit) + 216"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10842584,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e701d8",
+          "symbol": "-[NSMenu _populateFromDelegateWithEventProvider:] (in AppKit) + 352"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10845728,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e70e20",
+          "symbol": "-[NSMenu _populateWithEventProvider:] (in AppKit) + 236"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 1656032,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1915ad4e0",
+          "symbol": "-[NSMenu _populateWithEventRef:] (in AppKit) + 96"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846616,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e71198",
+          "symbol": "__49-[NSMenu _populateWithFlags:eventRef:incomplete:]_block_invoke (in AppKit) + 32"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846712,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e711f8",
+          "symbol": "-[NSMenu _withUpdateFlags:do:] (in AppKit) + 72"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846380,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e710ac",
+          "symbol": "-[NSMenu _populateWithFlags:eventRef:incomplete:] (in AppKit) + 272"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10827376,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c670",
+          "symbol": "__27-[NSMenu _simulateOpening:]_block_invoke (in AppKit) + 116"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10825960,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c0e8",
+          "symbol": "-[NSMenu _forEachLinkedMenu:] (in AppKit) + 68"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10827244,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c5ec",
+          "symbol": "-[NSMenu _simulateOpening:] (in AppKit) + 120"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9994340,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da1064",
+          "symbol": "-[NSMenu(Accessibility) _openForInspection:] (in AppKit) + 264"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9996524,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da18ec",
+          "symbol": "-[NSMenu(Accessibility) _accessibilityArrayAttributeCount:] (in AppKit) + 240"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9996040,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da1708",
+          "symbol": "-[NSMenu(Accessibility) accessibilityArrayAttributeCount:] (in AppKit) + 60"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 8229368,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191bf21f8",
+          "symbol": "-[NSObject(NSAccessibilityInternal) _accessibilityArrayAttributeCount:clientError:] (in AppKit) + 120"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 8243660,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191bf59cc",
+          "symbol": "GetAttributeValueCount (in AppKit) + 180"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 169180,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x19462f4dc",
+          "symbol": "__AXCopyAttributeValueForHierarchy (in HIServices) + 156"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 162200,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x19462d998",
+          "symbol": "_AXXMIGCopyHierarchy (in HIServices) + 1588"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 136676,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x1946275e4",
+          "symbol": "AXUIElementCopyHierarchy (in HIServices) + 1144"
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 35420,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 68784,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 69232,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 67500,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 183452,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 514816,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01cb00",
+          "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ (in CoreFoundation) + 28"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 514624,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01ca40",
+          "symbol": "__CFRunLoopDoBlocks (in CoreFoundation) + 396"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 511620,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01be84",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 2356"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 1372772,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d0ee264",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 532"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 775520,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199e07560",
+          "symbol": "RunCurrentEventLoopInMode (in HIToolbox) + 320"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 788668,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199e0a8bc",
+          "symbol": "ReceiveNextEventCommon (in HIToolbox) + 488"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 2400588,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199f9414c",
+          "symbol": "_BlockUntilNextEventMatchingListInMode (in HIToolbox) + 48"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 7230416,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191afe3d0",
+          "symbol": "_DPSBlockUntilNextEventMatchingListInMode (in AppKit) + 228"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 233604,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191452084",
+          "symbol": "_DPSNextEvent (in AppKit) + 576"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 12380524,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191fe796c",
+          "symbol": "-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] (in AppKit) + 688"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 12379768,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191fe7678",
+          "symbol": "-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:] (in AppKit) + 72"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 180540,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19144513c",
+          "symbol": "-[NSApplication run] (in AppKit) + 368"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 18352,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19141d7b0",
+          "symbol": "NSApplicationMain (in AppKit) + 880"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 1096440,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c24b1af8",
+          "symbol": "specialized runApp(_:) (in SwiftUI) + 140"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 5007576,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c286c8d8",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 104"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 7939960,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c2b38778",
+          "symbol": "static App.main() (in SwiftUI) + 224"
+        },
+        {
+          "uuid": "11A7BD82-BA4C-3E6E-9FA6-975FB90994E2",
+          "offset": 16835896,
+          "image": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib",
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "11A7BD82-BA4C-3E6E-9FA6-975FB90994E2",
+          "offset": 16924696,
+          "image": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib",
+          "relocatedAddress": null
+        }
+      ],
+      "dataDetectorsServicesMenuInspectionObserved": true
+    },
+    {
+      "timestamp": "2026-10-27 15:02:24.895857+0100",
+      "process": "Taskfold",
+      "processUUID": "664C3473-C96F-3B25-8091-8DD71B75C214",
+      "sender": "/usr/lib/libRPAC.dylib",
+      "metadata": {
+        "message": "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+        "antipattern trigger": "-[NSCondition waitUntilDate:]",
+        "message type": "elevatable",
+        "category type": 3,
+        "subcategory type": -1,
+        "show in console": "0"
+      },
+      "frames": [
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 575796,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 580976,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 26876,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cda88fc",
+          "symbol": "_dispatch_block_sync_invoke (in libdispatch.dylib) + 240"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 111792,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cdbd4b0",
+          "symbol": "_dispatch_client_callout (in libdispatch.dylib) + 16"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 70496,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cdb3360",
+          "symbol": "_dispatch_lane_barrier_sync_invoke_and_complete (in libdispatch.dylib) + 56"
+        },
+        {
+          "uuid": "B2000CD5-F580-314A-A141-E036719D854E",
+          "offset": 31688,
+          "image": "/usr/lib/system/libdispatch.dylib",
+          "relocatedAddress": "0x18cda9bc8",
+          "symbol": "_dispatch_sync_block_with_privdata (in libdispatch.dylib) + 452"
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 574396,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 572388,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "87AA7E4A-22BE-3F39-ADEE-11158136E315",
+          "offset": 566932,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "91DACE39-FA28-3191-818D-1FCC6A0E615A",
+          "offset": 231868,
+          "image": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+          "relocatedAddress": "0x18e8469bc",
+          "symbol": "-[NSConditionLock lockWhenCondition:beforeDate:] (in Foundation) + 80"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2645740,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19169eeec",
+          "symbol": "_getDataDetectorsScanner (in AppKit) + 292"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 15719716,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x192316d24",
+          "symbol": "-[_NSMenuContext filterEntriesByDataDetectors:] (in AppKit) + 204"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3481576,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19176afe8",
+          "symbol": "-[_NSMenuContext filterEntriesByTheirFilters:] (in AppKit) + 504"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3476820,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191769d54",
+          "symbol": "-[_NSMenuContext _preconcurrentPortionOfQualifyEntries:returningEntriesNeedingURLTypecheckingIntoSet:] (in AppKit) + 220"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 3476252,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191769b1c",
+          "symbol": "-[_NSMenuContext qualifyEntries:withCompletionHandler:] (in AppKit) + 328"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 14453548,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1921e1b2c",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateVisibilityOfServicesItemsForMenu:isForDisplay:] (in AppKit) + 260"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2721816,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1916b1818",
+          "symbol": "-[_NSServicesMenuUpdater insertServicesIntoMenu:withKeyEvent:isForDisplay:] (in AppKit) + 200"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2721560,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1916b1718",
+          "symbol": "-[_NSServicesMenuUpdater updateMenu:withEvent:withFlags:] (in AppKit) + 64"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 2632252,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19169ba3c",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateMenu:withEvent:withFlags:] (in AppKit) + 216"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10842584,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e701d8",
+          "symbol": "-[NSMenu _populateFromDelegateWithEventProvider:] (in AppKit) + 352"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10845728,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e70e20",
+          "symbol": "-[NSMenu _populateWithEventProvider:] (in AppKit) + 236"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 1656032,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x1915ad4e0",
+          "symbol": "-[NSMenu _populateWithEventRef:] (in AppKit) + 96"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846616,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e71198",
+          "symbol": "__49-[NSMenu _populateWithFlags:eventRef:incomplete:]_block_invoke (in AppKit) + 32"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846712,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e711f8",
+          "symbol": "-[NSMenu _withUpdateFlags:do:] (in AppKit) + 72"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10846380,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e710ac",
+          "symbol": "-[NSMenu _populateWithFlags:eventRef:incomplete:] (in AppKit) + 272"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10827376,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c670",
+          "symbol": "__27-[NSMenu _simulateOpening:]_block_invoke (in AppKit) + 116"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10825960,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c0e8",
+          "symbol": "-[NSMenu _forEachLinkedMenu:] (in AppKit) + 68"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 10827244,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191e6c5ec",
+          "symbol": "-[NSMenu _simulateOpening:] (in AppKit) + 120"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9994340,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da1064",
+          "symbol": "-[NSMenu(Accessibility) _openForInspection:] (in AppKit) + 264"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9996524,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da18ec",
+          "symbol": "-[NSMenu(Accessibility) _accessibilityArrayAttributeCount:] (in AppKit) + 240"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 9996040,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191da1708",
+          "symbol": "-[NSMenu(Accessibility) accessibilityArrayAttributeCount:] (in AppKit) + 60"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 8229368,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191bf21f8",
+          "symbol": "-[NSObject(NSAccessibilityInternal) _accessibilityArrayAttributeCount:clientError:] (in AppKit) + 120"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 8243660,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191bf59cc",
+          "symbol": "GetAttributeValueCount (in AppKit) + 180"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 169180,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x19462f4dc",
+          "symbol": "__AXCopyAttributeValueForHierarchy (in HIServices) + 156"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 162200,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x19462d998",
+          "symbol": "_AXXMIGCopyHierarchy (in HIServices) + 1588"
+        },
+        {
+          "uuid": "CD16C3FB-D2A0-3F68-98DC-CE67FCBFDFF2",
+          "offset": 136676,
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "relocatedAddress": "0x1946275e4",
+          "symbol": "AXUIElementCopyHierarchy (in HIServices) + 1144"
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 35420,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 68784,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 69232,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 67500,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "7D7911F7-D80A-3958-8C48-82F2B8CDD37F",
+          "offset": 183452,
+          "image": null,
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 514816,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01cb00",
+          "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ (in CoreFoundation) + 28"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 514624,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01ca40",
+          "symbol": "__CFRunLoopDoBlocks (in CoreFoundation) + 396"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 511620,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d01be84",
+          "symbol": "__CFRunLoopRun (in CoreFoundation) + 2356"
+        },
+        {
+          "uuid": "9B672762-7B1F-30BC-96DE-F176B372D66D",
+          "offset": 1372772,
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "relocatedAddress": "0x18d0ee264",
+          "symbol": "_CFRunLoopRunSpecificWithOptions (in CoreFoundation) + 532"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 775520,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199e07560",
+          "symbol": "RunCurrentEventLoopInMode (in HIToolbox) + 320"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 788668,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199e0a8bc",
+          "symbol": "ReceiveNextEventCommon (in HIToolbox) + 488"
+        },
+        {
+          "uuid": "38408482-CE3B-359E-9465-7FEB4BB79B54",
+          "offset": 2400588,
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "relocatedAddress": "0x199f9414c",
+          "symbol": "_BlockUntilNextEventMatchingListInMode (in HIToolbox) + 48"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 7230416,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191afe3d0",
+          "symbol": "_DPSBlockUntilNextEventMatchingListInMode (in AppKit) + 228"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 233604,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191452084",
+          "symbol": "_DPSNextEvent (in AppKit) + 576"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 12380524,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191fe796c",
+          "symbol": "-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] (in AppKit) + 688"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 12379768,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x191fe7678",
+          "symbol": "-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:] (in AppKit) + 72"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 180540,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19144513c",
+          "symbol": "-[NSApplication run] (in AppKit) + 368"
+        },
+        {
+          "uuid": "B6B4BDAD-6428-3E64-8747-275700109B46",
+          "offset": 18352,
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "relocatedAddress": "0x19141d7b0",
+          "symbol": "NSApplicationMain (in AppKit) + 880"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 1096440,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c24b1af8",
+          "symbol": "specialized runApp(_:) (in SwiftUI) + 140"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 5007576,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c286c8d8",
+          "symbol": "runApp<A>(_:) (in SwiftUI) + 104"
+        },
+        {
+          "uuid": "53E79875-60E4-3B8D-BA48-02F6A4CBC429",
+          "offset": 7939960,
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "relocatedAddress": "0x1c2b38778",
+          "symbol": "static App.main() (in SwiftUI) + 224"
+        },
+        {
+          "uuid": "11A7BD82-BA4C-3E6E-9FA6-975FB90994E2",
+          "offset": 16835896,
+          "image": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib",
+          "relocatedAddress": null
+        },
+        {
+          "uuid": "11A7BD82-BA4C-3E6E-9FA6-975FB90994E2",
+          "offset": 16924696,
+          "image": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib",
+          "relocatedAddress": null
+        }
+      ],
+      "dataDetectorsServicesMenuInspectionObserved": true
+    }
+  ],
+  "limits": [
+    "Historical runtime warnings remain recorded; no clean-runtime pass is inferred.",
+    "Zero matching archived events does not mean zero reported warnings. Missing archival coverage remains unclassified.",
+    "A known system stack is evidence of the observed trigger, not proof that every hang has this cause.",
+    "No app launch, input, network request or persistent data mutation occurs."
+  ]
+}

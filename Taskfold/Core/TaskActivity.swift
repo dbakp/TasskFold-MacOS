@@ -1308,6 +1308,7 @@ enum LocalActivityCreation {
         private let cache: TeamWorkspaceCache?
         private let entries: [Entry]
         private let tables: [String: [Record]]
+        private let undoHistory: EditHistory?
         private static let owned = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable, TaskAssignmentProvenance.table]
         init?(changes: [Mutation], snapshot: Snapshot, source: UUID, account: String, labels: [Record], cache: TeamWorkspaceCache?, at date: Date = Date(), checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
             try checkCancellation()
@@ -1337,6 +1338,13 @@ enum LocalActivityCreation {
             self.source = source; self.account = account; self.entries = entries
             originals = changes; self.normalized = normalized; self.calendar = calendar; self.cache = cache
             tables = working.tables.filter { Self.owned.contains($0.key) }
+            // Build the bounded workflow inverse in the worker too. The Store
+            // still admits its exact final changes before using this history.
+            let unmodifiedCapture = normalized.allSatisfy {
+                $0.baseline == nil && $0.reminderPreferenceField == nil && $0.orderRecovery == nil
+            }
+            undoHistory = unmodifiedCapture ? EditHistory(changes: normalized, snapshot: snapshot) : nil
+            try checkCancellation()
         }
         /// Copy-on-write storage identity proves the entire immutable input is
         /// unchanged, including Unicode bytes that semantic equality can hide.
@@ -1352,6 +1360,20 @@ enum LocalActivityCreation {
         struct Admission: Sendable {
             let changes: [Mutation]
             fileprivate let preparation: Preparation
+            /// These commands already include planning, labels and completion
+            /// capture. The Store may retain them unchanged after validation.
+            var canRetainCapturedChanges: Bool { preparation.undoHistory != nil }
+            func editHistory(matching changes: [Mutation], source: UUID, account: String) -> EditHistory? {
+                guard preparation.source == source, preparation.account.utf8.elementsEqual(account.utf8),
+                      preparation.calendar == .current, !changes.isEmpty,
+                      changes.count == preparation.normalized.count else { return nil }
+                // A retained immutable buffer proves every raw field and command
+                // property is unchanged, without another deep scan of the run.
+                let identical = preparation.normalized.withUnsafeBufferPointer { captured in
+                    changes.withUnsafeBufferPointer { final in captured.baseAddress == final.baseAddress }
+                }
+                return identical ? preparation.undoHistory : nil
+            }
             func apply(to snapshot: inout Snapshot, source: UUID, account: String) -> Bool {
                 guard preparation.source == source, preparation.account.utf8.elementsEqual(account.utf8), preparation.calendar == .current else { return false }
                 for table in Preparation.owned { snapshot.tables[table] = preparation.tables[table] }

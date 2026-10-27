@@ -504,6 +504,7 @@ import CryptoKit
                 "mainActorPreparationPulses": .number(Double(mainActorPulses)),
                 "preparedLocalHistoryUsed": .bool(store.workflowPreparedLocalHistoryUsed),
                 "preparedNormalizationUsed": .bool(store.workflowPreparedNormalizationUsed),
+                "preparedUndoUsed": .bool(store.workflowPreparedUndoUsed),
                 "sourceEditPreserved": .bool(!changeSource || store.snapshot.tables["tasks"]?.first?.title == "Edited while history prepared"),
                 "taskRevisionDelta": .number(Double(store.taskRevision - revision)),
                 "tasks": .number(Double(store.tasks.count)), "pending": .number(Double(store.snapshot.pending.count)),
@@ -528,7 +529,15 @@ import CryptoKit
                         data = .object(fields)
                     }
                     try JSONEncoder().encode(data).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
-                } catch { store.error = error.localizedDescription }
+                } catch {
+                    // Publish a terminal diagnostic instead of making the native
+                    // runner wait three minutes when test widget storage is absent.
+                    if case .object(var fields) = data {
+                        fields["widgetError"] = .string(error.localizedDescription)
+                        try? JSONEncoder().encode(JSON.object(fields)).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
+                    }
+                    store.error = error.localizedDescription
+                }
             }
         } catch { store.error = error.localizedDescription }
     }

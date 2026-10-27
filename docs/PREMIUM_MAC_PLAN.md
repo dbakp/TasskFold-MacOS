@@ -8805,3 +8805,15 @@ These were driver refinements, not speculative layout fixes.
 No source work, hosted schema, production opt-in, provider configuration, release
 setting or user-deferred item changes. Wider shared/cloud/source-race, spoken,
 cross-device, installed-widget and full Px work remain open.
+
+### 2026-10-27 — local workflow Undo preparation
+
+Fresh local workflow Undo is prepared in the worker and admitted only for the
+unchanged captured commands, source revision, account and calendar. All final
+validation and the synchronous durable save remain. Focused Core and selected
+native checks cover creation, Undo, cancellation, failed save and source changes.
+The 5,000-task Mac/Simulator commits remain about 0.85–0.87 s in this run; this
+is a reduction in main-actor work, not completion of performance polish.
+Mac runtime warnings and intermittent mobile cloud-settle failures remain open;
+separate diagnostic retries passed without a shipping app change.
+See [source bindings, measurements and limitations](prepared-workflow-undo/README.md).
