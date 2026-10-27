@@ -5054,10 +5054,10 @@ extension SharedHeadingNativeTests {
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (try? condition()) == true }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 25), .completed)
     }
-    @MainActor private func workflowStart(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false, hold: Bool = false, scale: Int? = nil, scaleProof: String? = nil) throws {
+    @MainActor private func workflowStart(_ app: XCUIApplication, reset: Bool = true, lost: Bool = false, hold: Bool = false, scale: Int? = nil, scaleProof: String? = nil, localHistory: Bool = false, failSave: Bool = false) throws {
         guard [bundle + ".runner", bundle + ".runner.xctrunner"].contains(Bundle(for: Self.self).bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated Mac host required") }
         continueAfterFailure = false
-        app.launchArguments = ["--team-editor-testing", "--team-heading-testing", "--personal-heading-testing", "--personal-workflow-undo-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-undo-lose-reply"] : []) + (hold ? ["--workflow-preparation-hold"] : []) + (scale.map { ["--workflow-commit-scale", "--workflow-commit-count=\($0)"] } ?? []) + (scaleProof.map { ["--workflow-commit-proof=\($0)"] } ?? [])
+        app.launchArguments = ["--team-editor-testing", "--team-heading-testing", "--personal-heading-testing", "--personal-workflow-undo-testing", "-appearance", "light"] + (reset ? ["--team-editor-reset"] : []) + (lost ? ["--workflow-undo-lose-reply"] : []) + (hold ? ["--workflow-preparation-hold"] : []) + (scale.map { ["--workflow-commit-scale", "--workflow-commit-count=\($0)"] } ?? []) + (scaleProof.map { ["--workflow-commit-proof=\($0)"] } ?? []) + (localHistory ? ["--workflow-local-history-scale"] : []) + (failSave ? ["--workflow-local-history-fail-save"] : [])
         try open(app)
         XCTAssertTrue(app.buttons["openNativeWorkflow"].waitForExistence(timeout: 15), app.debugDescription)
         workflowWait { try self.workflowCachedSupport() == 1 || !reset }
@@ -5184,14 +5184,14 @@ extension SharedHeadingNativeTests {
         XCTAssertEqual(try workflowRows() as NSDictionary, remote as NSDictionary)
     }
 
-    @MainActor private func workflowMeasureCommit(count: Int) throws {
+    @MainActor private func workflowMeasureCommit(count: Int, localHistory: Bool = false, failSave: Bool = false) throws {
         let app = XCUIApplication()
         defer {
             if app.state != .notRunning && app.buttons["restoreScaleFixture"].exists && app.buttons["restoreScaleFixture"].isEnabled { app.buttons["restoreScaleFixture"].click() }
             app.terminate()
         }
         let proof = UUID().uuidString.lowercased()
-        try workflowStart(app, scale: count, scaleProof: proof)
+        try workflowStart(app, scale: count, scaleProof: proof, localHistory: localHistory, failSave: failSave)
         let file = personalStateFile().deletingLastPathComponent().appendingPathComponent("TaskfoldTeamLibraryNativeFixture-workflowteststeameditbridge/commit-scale-\(proof).json")
         let initial = try XCTUnwrap((try workflowCache())["tables"] as? [String: [[String: Any]]])
         app.buttons["measureWorkflowCommit"].click()
@@ -5200,16 +5200,58 @@ extension SharedHeadingNativeTests {
         let data = try Data(contentsOf: file), value = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         let receipt = XCTAttachment(data: data, uniformTypeIdentifier: "public.json"); receipt.name = "Workflow commit scale \(count)"; receipt.lifetime = .keepAlways; add(receipt)
         XCTAssertEqual(value["proof"] as? String, proof)
+        if failSave {
+            XCTAssertTrue(localHistory)
+            XCTAssertEqual(value["saved"] as? Bool, false)
+            XCTAssertFalse((value["error"] as? String ?? "").isEmpty)
+            XCTAssertEqual(value["tasks"] as? Int, 1)
+            XCTAssertEqual(value["pending"] as? Int, 0)
+            XCTAssertEqual(value["undoCommands"] as? Int, 0)
+            XCTAssertEqual(value["rootHistoryCount"] as? Int, 100)
+            XCTAssertEqual(value["nodeHistoryCount"] as? Int, 200)
+            XCTAssertEqual(value["priorRootHistoryPreserved"] as? Bool, true)
+            XCTAssertEqual(value["priorNodeHistoryPreserved"] as? Bool, true)
+            let file = personalStateFile().deletingLastPathComponent().appendingPathComponent("Taskfold/local.json")
+            let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+            let tables = try XCTUnwrap(cache["tables"] as? [String: [[String: Any]]])
+            XCTAssertEqual(tables["tasks"]?.count, 1)
+            XCTAssertEqual(tables["task_activity"]?.count, 100)
+            XCTAssertEqual(tables["task_node_activity"]?.count, 200)
+            XCTAssertEqual((cache["pending"] as? [Any])?.count, 0)
+            return
+        }
         XCTAssertEqual(value["saved"] as? Bool, true, String(decoding: data, as: UTF8.self))
         XCTAssertEqual(value["commands"] as? Int, count * 4 + 1)
         XCTAssertEqual(value["tasks"] as? Int, count + (initial["tasks"]?.count ?? 0))
-        XCTAssertEqual(value["pending"] as? Int, count * 4 + 1)
+        XCTAssertEqual(value["pending"] as? Int, localHistory ? 0 : count * 4 + 1)
         XCTAssertEqual(value["undoCommands"] as? Int, 1)
-        let cache = try workflowCache(), tables = try XCTUnwrap(cache["tables"] as? [String: [[String: Any]]])
-        for table in ["tasks", "sections", "labels", "view_orders"] { XCTAssertEqual(tables[table]?.count, count + (initial[table]?.count ?? 0), table) }
+        let localFile = personalStateFile().deletingLastPathComponent().appendingPathComponent("Taskfold/local.json")
+        let cache = localHistory ? try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: localFile)) as? [String: Any]) : try workflowCache()
+        let tables = try XCTUnwrap(cache["tables"] as? [String: [[String: Any]]])
+        for table in ["tasks", "sections", "labels", "view_orders"] { XCTAssertEqual(tables[table]?.count, count + (localHistory ? (table == "tasks" ? 1 : 0) : (initial[table]?.count ?? 0)), table) }
         XCTAssertEqual(value["taskRevisionDelta"] as? Int, 1, "Creating one workflow should publish its task list once")
         XCTAssertEqual(value["widgetIdle"] as? Bool, true)
-        XCTAssertEqual(value["widgetAccount"] as? String, "ec240000-0000-4000-8000-000000000001")
+        XCTAssertEqual(value["widgetAccount"] as? String, localHistory ? "local" : "ec240000-0000-4000-8000-000000000001")
+        if localHistory {
+            XCTAssertEqual(value["localHistory"] as? Bool, true)
+            XCTAssertEqual(value["priorRootHistoryPreserved"] as? Bool, true)
+            XCTAssertEqual(value["priorNodeHistoryPreserved"] as? Bool, true)
+            XCTAssertEqual(value["rootHistoryCount"] as? Int, count + 100)
+            XCTAssertEqual(value["nodeHistoryCount"] as? Int, 200)
+            XCTAssertEqual(tables["task_activity"]?.count, count + 100)
+            XCTAssertEqual(tables["task_node_activity"]?.count, 200)
+            XCTAssertEqual((cache["pending"] as? [Any])?.count, 0)
+            if count == 1000 {
+                app.buttons["undoNativeWorkflow"].click()
+                workflowWait {
+                    guard let data = try? Data(contentsOf: localFile),
+                          let current = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                          let rows = current["tables"] as? [String: [[String: Any]]] else { return false }
+                    return rows["tasks"]?.count == 1 && (current["pending"] as? [Any])?.isEmpty == true &&
+                        rows["task_activity"]?.count == count + 100 && rows["task_node_activity"]?.count == 200
+                }
+            }
+        }
         XCTAssertEqual(value["widgetLists"] as? Int, count + 1, "Background publication must retain all label/project lists")
     }
     @MainActor func testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery() throws {
@@ -5228,6 +5270,9 @@ extension SharedHeadingNativeTests {
     }
     @MainActor func testPrivateWorkflowNativeCommitScale1000PublishesOnce() throws { try workflowMeasureCommit(count: 1000) }
     @MainActor func testPrivateWorkflowNativeCommitScale5000PublishesOnce() throws { try workflowMeasureCommit(count: 5000) }
+    @MainActor func testPrivateWorkflowNativeLocalHistory1000PublishesOnce() throws { try workflowMeasureCommit(count: 1000, localHistory: true) }
+    @MainActor func testPrivateWorkflowNativeLocalHistory5000PublishesOnce() throws { try workflowMeasureCommit(count: 5000, localHistory: true) }
+    @MainActor func testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory() throws { try workflowMeasureCommit(count: 1000, localHistory: true, failSave: true) }
 
     @MainActor func testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries() throws {
         let app = XCUIApplication(); defer { app.terminate() }; try workflowStart(app)

@@ -328,17 +328,22 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
         return result
     }
     static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
+        var cursor = LocalRootActivityCursor(snapshot.tables[table] ?? [])
+        recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, cursor: &cursor)
+    }
+    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, cursor: inout LocalRootActivityCursor) {
         guard change.table == "tasks", validID(account), let task = after ?? before, validID(task.id) else { return }
         let b = state(before), a = state(after), kinds = changes(before: b, after: a)
         guard !kinds.isEmpty else { return }
-        let existing = snapshot.tables[table] ?? []
-        guard !existing.contains(where: { $0.id.lowercased() == change.id.uuidString.lowercased() }) else { return }
-        let last = existing.compactMap { integer($0["sequence"]) }.max() ?? 0
+        cursor.prepare()
+        guard !cursor.ids.contains(change.id.uuidString.lowercased()) else { return }
+        let last = cursor.last
         guard last < 9_007_199_254_740_991 else { return }
         let effective = kinds.contains(.completed) ? TaskPlanning.instant(task.string("completed_at")) ?? now : now
         let row = Record(["id": .string(change.id.uuidString.lowercased()), "sequence": .number(Double(last + 1)), "user_id": .string(account), "task_id": .string(task.id), "actor_id": .string(account), "recorded_at": .string(stamp(now)), "effective_at": .string(stamp(effective)), "completion_version": task.fields["completion_version"] ?? .number(0), "kinds": .array(kinds.map { .string($0.rawValue) }), "before_state": .object(b), "after_state": .object(a), "root_context": TaskRootActivityContext.document(before: before, after: after)])
         guard Self(row: row) != nil else { return }
         snapshot.tables[table, default: []].append(row)
+        cursor.ids.insert(row.id.lowercased()); cursor.last = last + 1
         if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(stamp(now))])] }
     }
     func involves(project: String) -> Bool { before["project_id"]?.text.lowercased() == project.lowercased() || after["project_id"]?.text.lowercased() == project.lowercased() }
@@ -523,14 +528,16 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         return overflow ? [] : result
     }
     static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
-        let existing = snapshot.tables[table] ?? []
-        let parser = Parser()
-        guard existing.allSatisfy({ parser.event($0) != nil }), Set(existing.compactMap { TaskActivity.integer($0["sequence"]) }).count == existing.count else { return }
-        let ids = Set(existing.map { $0.id.lowercased() })
-        let start = existing.compactMap { TaskActivity.integer($0["sequence"]) }.max() ?? 0
-        let rows = localRows(change, before: before, after: after, account: account, recordedAt: now, afterSequence: start).filter { !ids.contains($0.id.lowercased()) }
+        var cursor = LocalNodeActivityCursor(snapshot.tables[table] ?? [])
+        recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, cursor: &cursor)
+    }
+    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, cursor: inout LocalNodeActivityCursor) {
+        guard change.table == "tasks", cursor.prepare() else { return }
+        let rows = localRows(change, before: before, after: after, account: account, recordedAt: now, afterSequence: cursor.last).filter { !cursor.ids.contains($0.id.lowercased()) }
         guard !rows.isEmpty else { return }
         snapshot.tables[table, default: []] += rows
+        cursor.ids.formUnion(rows.map { $0.id.lowercased() })
+        cursor.last = rows.compactMap { TaskActivity.integer($0["sequence"]) }.max() ?? cursor.last
         if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])] }
     }
     /// One parser belongs to one immutable read/validation pass. Formatters and
@@ -1210,5 +1217,76 @@ struct ChildWorkReading {
             if e.kinds.contains(.deleted) { if let credit = active.removeValue(forKey: subject) { archived.append(credit) }; deleted.insert(subject) }
         }
         return archived + Array(active.values)
+    }
+}
+
+
+// Cursors never escape a synchronous creation pass. Ordinary edits get a new
+// cursor; no index can survive an account change, rollback or ledger replacement.
+// Lazy setup keeps irrelevant/non-history edits from scanning existing history.
+fileprivate struct LocalRootActivityCursor {
+    private var source: [Record]?
+    var ids = Set<String>()
+    var last: Int64 = 0
+    init(_ rows: [Record]) { source = rows }
+    mutating func prepare() {
+        guard let rows = source else { return }
+        ids = Set(rows.map { $0.id.lowercased() })
+        last = rows.compactMap { TaskActivity.integer($0["sequence"]) }.max() ?? 0
+        source = nil
+    }
+}
+fileprivate struct LocalNodeActivityCursor {
+    private var source: [Record]?
+    private var valid = false
+    var ids = Set<String>()
+    var last: Int64 = 0
+    init(_ rows: [Record]) { source = rows }
+    mutating func prepare() -> Bool {
+        guard let rows = source else { return valid }
+        source = nil
+        let parser = TaskNodeActivity.Parser()
+        guard rows.allSatisfy({ parser.event($0) != nil }),
+              Set(rows.compactMap { TaskActivity.integer($0["sequence"]) }).count == rows.count else { return false }
+        ids = Set(rows.map { $0.id.lowercased() })
+        last = rows.compactMap { TaskActivity.integer($0["sequence"]) }.max() ?? 0
+        valid = true
+        return true
+    }
+}
+
+/// Metadata for already projected, wholly fresh local task creations. Scope is
+/// validated before any write. Existing edits, retries and deletes use the
+/// ordinary recorder; assignment provenance keeps its established repair rules.
+enum LocalActivityCreation {
+    struct Entry {
+        let change: Mutation
+        let after: Record
+        var recordedAt: Date = Date()
+    }
+    static func record(_ entries: [Entry], snapshot: inout Snapshot, account: String) -> Bool {
+        guard !entries.isEmpty else { return true }
+        guard !account.isEmpty else { return false }
+        var tasks: [String: Record] = [:], duplicates = Set<String>()
+        for row in snapshot.tables["tasks"] ?? [] {
+            if tasks.updateValue(row, forKey: row.id) != nil { duplicates.insert(row.id) }
+        }
+        var seen = Set<String>()
+        guard entries.allSatisfy({ entry in
+            entry.change.table == "tasks" && entry.change.method == "POST" &&
+            entry.change.recordID == entry.after.id && !entry.after.id.isEmpty &&
+            entry.change.fields["id"]?.text == entry.after.id && entry.change.fields["user_id"]?.text == account &&
+            entry.after.string("user_id") == account &&
+            !duplicates.contains(entry.after.id) && seen.insert(entry.after.id.lowercased()).inserted &&
+            tasks[entry.after.id] == entry.after
+        }) else { return false }
+        var roots = LocalRootActivityCursor(snapshot.tables[TaskActivity.table] ?? [])
+        var nodes = LocalNodeActivityCursor(snapshot.tables[TaskNodeActivity.table] ?? [])
+        for entry in entries {
+            TaskActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &roots)
+            TaskNodeActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &nodes)
+            TaskAssignmentProvenance.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt)
+        }
+        return true
     }
 }

@@ -1553,6 +1553,7 @@ final class Store {
         var freshCreation = FreshWorkflowCreation(changes, snapshot: old, account: userID)
         let projectsFreshCreation = freshCreation != nil
         var working = old
+        var localCreations: [LocalActivityCreation.Entry] = []
         var committedChanges: [Mutation] = []
         for var change in changes {
             let current = projectsFreshCreation ? nil : record(change.table, id: change.recordID)
@@ -1594,9 +1595,7 @@ final class Store {
                     snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
                 }
                 if localMode {
-                    TaskActivity.recordLocal(change, before: nil, after: after, snapshot: &working, account: userID)
-                    TaskNodeActivity.recordLocal(change, before: nil, after: after, snapshot: &working, account: userID)
-                    TaskAssignmentProvenance.recordLocal(change, before: nil, after: after, snapshot: &working, account: userID)
+                    if change.table == "tasks" { localCreations.append(.init(change: change, after: after)) }
                 } else { working.pending.append(change) }
                 continue
             }
@@ -1610,7 +1609,12 @@ final class Store {
             }
             if !localMode { snapshot.pending.append(change) }
         }
-        if projectsFreshCreation { snapshot = working }
+        if projectsFreshCreation {
+            guard !localMode || LocalActivityCreation.record(localCreations, snapshot: &working, account: userID) else {
+                snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
+            }
+            snapshot = working
+        }
         if let widgetReceipt { snapshot.widgetCompletion.record(widgetReceipt); snapshot.widgetCompletion.feedback = widgetFeedback }
         if let draft = sharedCaptureReceipt {
             if snapshot.sharedCaptureReceipts == nil { snapshot.sharedCaptureReceipts = [:] }

@@ -37,11 +37,14 @@ the durable workflow save. Immediate privacy changes and widget receipts retain
 their synchronous path. Timestamp preparation now reuses parsers within each save
 without changing old signatures, including invalid Unicode spellings. The full
 20,001-command save returns in 2.48/2.47s on phone/tablet; full widget readiness is
-14.44/14.40s. The final Mac signed build/Core checks pass, while its native UI
-recheck is open at XCTest automation initialization. These Debug results do not
-prove release latency or smooth production-screen input. Durable-cache I/O,
-local-history scaling, production rendering and hosted/paired bulk delivery
-remain open. See workflow-widget-publication/ and workflow-token-preparation/
+14.44/14.40s. The final Mac automation recheck now passes after the user's
+approval. Fresh local creation now indexes root/child history once per transaction;
+all five selected native cases pass on each platform. The distinct local-history
+5,000-root fixture still takes 12.45/12.23/7.59s to save on phone/tablet/Mac.
+These Debug results do not prove release latency or smooth production-screen
+input. Per-event local metadata cost, durable-cache I/O, assignment-heavy scaling,
+production rendering and hosted/paired bulk delivery remain open. See
+local-creation-history/ for the new scoped evidence. See workflow-widget-publication/ and workflow-token-preparation/
 for exact scope and evidence. Prior source migrations remain
 undeployed, and normal authoring/rollout gates remain unchanged.
 
@@ -5748,3 +5751,37 @@ optimization has landed yet. The remaining save pause, background readiness,
 production rendering, paired/hosted delivery and wider ranked backlog stay open.
 User release/provider/reminder/older-client/geofence deferrals remain unchanged.
 See workflow-token-preparation/mac-summary.json and local-history-control.json.
+
+
+## 27 October: index fresh local creation history once
+
+Fresh local workflow saves now reuse transaction-private root/child history
+indices, before publishing the working snapshot. They no longer scan root
+IDs/sequences or revalidate the whole child ledger for each command. Ordinary
+edits keep individual recording; provenance keeps its original orphan/recurrence
+repair. Case-aliased task IDs fall back to sequential projection. All scope is
+checked before metadata writes. A task's captured recording time is shared by its
+root/child/provenance annotations. No persisted contract or migration changes.
+
+Each repo passes 162 selected Core cases, including nine history-family cases,
+the frozen pre-change metadata digest, malformed/duplicate/overflow/epoch cases,
+assignment/orphan parity, atomic scope refusal and complete 5,000-root/child
+encoding. The expanded partial-duplicate gap assertion is rerun separately in
+each repo after the full round. Five signed native cases pass on each Mac,
+iPhone and iPad host: cloud 1,000-root creation; local 1,000/5,000-root creation
+with prior immutable history; local Undo; injected save failure; and real intent
+completion/retry/Undo/cold return. Those behaviors share five cases per host,
+not six independent cases. Fifteen platform/case pairs pass with no runtime
+warnings. Normal rollout and all user deferrals remain unchanged.
+
+The local 5,000-root saves return in 12.45/12.23/7.59s (phone/tablet/Mac); widget
+readiness is 19.53/19.18/15.54s. This is a different dataset from the earlier cloud
+figures and has no pre-change native local control; it is not a regression or
+speedup comparison. The pause is still too long. Per-event local metadata work,
+durable encoding/I/O, production rendering, assignment-heavy scaling, background
+readiness, hosted/paired acceptance and the broader backlog remain open. The
+fixtures show counts instead of 5,000 production rows; child-rich native workflow
+creation is unproven (Core child-history scale is covered). No new installed Mac
+desktop-widget claim: its reserved host runs the intent through a test panel.
+No real workspace, Todoist data or hosted service was changed. See
+local-creation-history/README.md and validation.json for exact evidence and limits.

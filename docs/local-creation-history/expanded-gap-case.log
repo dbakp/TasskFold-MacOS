@@ -1,0 +1,5 @@
+Test Case '-[TaskfoldCoreTests.FreshLocalActivityTests testSequenceLimitsAndFilteredDuplicateRowsKeepLegacyGaps]' started.
+Test Case '-[TaskfoldCoreTests.FreshLocalActivityTests testSequenceLimitsAndFilteredDuplicateRowsKeepLegacyGaps]' passed (1.557 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.557 (1.558) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.557 (1.558) seconds
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.557 (1.565) seconds

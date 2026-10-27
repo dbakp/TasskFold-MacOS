@@ -440,19 +440,47 @@ import CryptoKit
               let proofArgument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
               let proof = UUID(uuidString: String(proofArgument.dropFirst("--workflow-commit-proof=".count))) else { return }
         do {
+            let localHistory = ProcessInfo.processInfo.arguments.contains("--workflow-local-history-scale")
+            if localHistory {
+                store.startLocal()
+                scaleOriginal = store.snapshot
+                var seed = Snapshot()
+                let time = Date(timeIntervalSince1970: 1793095200)
+                for index in 0..<100 {
+                    var root = Record.task(user: store.userID)
+                    root["title"] = .string("Prior local history \(index)")
+                    root["subtasks"] = .array((0..<2).map { .object(["id": .string(UUID().uuidString.lowercased()), "title": .string("Prior step \($0)"), "completed": .bool(false)]) })
+                    let change = Mutation(table: "tasks", recordID: root.id, method: "POST", fields: root.fields)
+                    TaskActivity.recordLocal(change, before: nil, after: root, snapshot: &seed, account: store.userID, now: time.addingTimeInterval(Double(index)))
+                    seed.tables[TaskNodeActivity.table, default: []] += TaskNodeActivity.localRows(change, before: nil, after: root, account: store.userID, recordedAt: time.addingTimeInterval(Double(index)), afterSequence: Int64(index * 2))
+                }
+                seed.tables[TaskNodeActivity.epochTable] = [Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(time))])]
+                var root = Record.task(user: store.userID); root["title"] = .string("Existing local task")
+                seed.tables["tasks"] = [root]
+                store.snapshot = seed
+                try store.persist()
+            }
+            let historyBefore = store.snapshot.tables[TaskActivity.table] ?? []
+            let nodeHistoryBefore = store.snapshot.tables[TaskNodeActivity.table] ?? []
             let document: JSON = .object(["version": .number(1), "kind": .string("project"),
                 "projects": .array([.object(["id": .string("root"), "name": .string("Scale workflow")])]),
                 "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
                 "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
             let changes = try WorkflowTemplate(document: document).instantiate(account: store.userID, name: "Scale workflow")
-            scaleOriginal = store.snapshot
+            if !localHistory { scaleOriginal = store.snapshot }
             let revision = store.taskRevision, clock = ContinuousClock(), started = clock.now
+            if localHistory && ProcessInfo.processInfo.arguments.contains("--workflow-local-history-fail-save") { store.failNextWorkflowNativeSave() }
             let saved = store.commit(changes), elapsed = started.duration(to: clock.now)
             var data: JSON = .object(["proof": .string(proof.uuidString.lowercased()), "count": .number(Double(count)), "commands": .number(Double(changes.count)), "saved": .bool(saved),
                 "seconds": .number(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18),
                 "taskRevisionDelta": .number(Double(store.taskRevision - revision)),
                 "tasks": .number(Double(store.tasks.count)), "pending": .number(Double(store.snapshot.pending.count)),
-                "undoCommands": .number(Double(store.undoStack.last?.undo.count ?? 0)), "error": store.error.map(JSON.string) ?? .null])
+                "undoCommands": .number(Double(store.undoStack.last?.undo.count ?? 0)), "error": store.error.map(JSON.string) ?? .null,
+                "localHistory": .bool(localHistory),
+                "rootHistoryCount": .number(Double(store.snapshot.tables[TaskActivity.table]?.count ?? 0)),
+                "nodeHistoryCount": .number(Double(store.snapshot.tables[TaskNodeActivity.table]?.count ?? 0)),
+                "priorRootHistoryPreserved": .bool(Array((store.snapshot.tables[TaskActivity.table] ?? []).prefix(historyBefore.count)) == historyBefore),
+                "priorNodeHistoryPreserved": .bool(Array((store.snapshot.tables[TaskNodeActivity.table] ?? []).prefix(nodeHistoryBefore.count)) == nodeHistoryBefore)])
             try FileManager.default.createDirectory(at: TeamTemplateNativeFixture.root, withIntermediateDirectories: true)
             Task {
                 let deadline = clock.now.advanced(by: .seconds(60))

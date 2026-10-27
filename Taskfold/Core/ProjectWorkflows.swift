@@ -1194,8 +1194,11 @@ struct FreshWorkflowCreation {
     init?(_ changes: [Mutation], snapshot: Snapshot, account: String) {
         guard let run = WorkflowUndo.creationRun(changes), !account.isEmpty else { return nil }
         let existing = snapshot.tables.mapValues { Set($0.map(\.id)) }
-        var keys = Set<String>()
+        var keys = Set<String>(), taskNamespaces = Set<String>()
         for change in changes {
+            // Local assignment history uses case-folded root identities. Aliases
+            // must keep sequential invalidate/record ordering on the ordinary path.
+            if change.table == "tasks", !taskNamespaces.insert(change.recordID.lowercased()).inserted { return nil }
             guard change.fields["id"]?.text == change.recordID, !change.recordID.isEmpty,
                   change.fields["user_id"]?.text == account,
                   !(existing[change.table] ?? []).contains(change.recordID),
