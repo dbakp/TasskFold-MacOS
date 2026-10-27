@@ -1,0 +1,19 @@
+{
+  "removedOwnedPaths": [
+    "/tmp/taskfold-pin-mac-attachments",
+    "/tmp/taskfold-pin-phone-attachments",
+    "/tmp/taskfold-pin-tablet-attachments",
+    "/tmp/taskfold-hierarchy-mac-final.xcresult",
+    "/tmp/taskfold-hierarchy-phone-final.xcresult",
+    "/tmp/taskfold-hierarchy-tablet-final.xcresult"
+  ],
+  "logicalBytesRemoved": 1549271,
+  "temporaryMainAppsRunning": 0,
+  "retained": [
+    "Current accepted native results for Mac/phone/tablet",
+    "Diagnostic profile result and raw sample",
+    "Current signed per-platform products and owned build caches",
+    "Previous result summaries/metrics/logs committed in each repo"
+  ],
+  "scope": "Only owned extracts and preceding stage result bundles; no app/device data or simulator runtime removed. Logical bytes are not measured disk-free change."
+}

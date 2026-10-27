@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-27",
+  "corePassed": 122,
+  "coreSkipped": 0,
+  "coreFailures": 0,
+  "nativeCasesPassed": 18,
+  "nativeSkipped": 0,
+  "nativeFailures": 0,
+  "nativeRuntimeWarnings": 0,
+  "implementation": "Build one first-row-wins registry lookup for bulk note selection instead of searching all view-order rows for every task. Keep exact ownership, reference, ID-validity, source order and first-task semantics; single-pin reader and write paths unchanged.",
+  "equivalence": "36 edge-case owner/order/registry comparisons against unchanged contains reader; malformed and foreign first rows cannot fall through to later duplicates. Includes duplicate task identities, NFC/NFD, case variants, invalid separators and byte boundaries. Full 5,000-task/5,002-row registry keeps only two explicit notes and no foreign-account notes.",
+  "before": "Two new Mac tests passed before production edit; both repos old PinnedNotes.swift SHA256 08f717c1b50705193a1b763bb2b549bc24966336fb551e6e2f24370102eeb991. No pre-edit iOS test run claimed.",
+  "diagnostic": "Nine-second sampled Mac native run found repeated PinnedNotes.contains registry scans on widget worker. Sampled latency is excluded from comparisons; exact unsampled preceding metrics retained.",
+  "focusedTimingSeconds": {
+    "oldMac": 5.852023,
+    "newMac": 0.007545167,
+    "newIOSOwnedCore": 0.007573375
+  },
+  "nativeScope": "Flat 20,001-command Debug fixture; 1,000-root cloud queue, local 1,000/5,000 roots with history, save failure rollback, native 1,000-root Undo, real widget intent retry/Undo/cold return and background publication fences. Count-only UI; no new installed-note visual or genuine hosted acceptance.",
+  "fenceChecks": {
+    "mac": {
+      "latestRecovered": true,
+      "savedDataUnchanged": true,
+      "accessFenceRejected": true,
+      "staleResultRejected": true,
+      "signOutRedactedImmediately": true
+    },
+    "phone": {
+      "staleResultRejected": true,
+      "signOutRedactedImmediately": true,
+      "savedDataUnchanged": true,
+      "latestRecovered": true,
+      "accessFenceRejected": true
+    },
+    "tablet": {
+      "staleResultRejected": true,
+      "accessFenceRejected": true,
+      "signOutRedactedImmediately": true,
+      "latestRecovered": true,
+      "savedDataUnchanged": true
+    }
+  },
+  "limits": "Variable-load Debug observations; not release, hardware, full production-rendering or general latency guarantees. No note content/size limits, data format or rollout changed.",
+  "remaining": [
+    "Synchronous save pause",
+    "Project-pulse history parsing and remaining background projection cost",
+    "Production rendering and child-rich/assignment-heavy native scale",
+    "Wider ranked backlog and user deferrals unchanged"
+  ],
+  "realDataChanged": false,
+  "serverOrRolloutChanged": false
+}

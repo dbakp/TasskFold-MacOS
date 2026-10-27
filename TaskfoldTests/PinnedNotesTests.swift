@@ -16,6 +16,51 @@ final class PinnedNotesTests: XCTestCase {
     private func snapshot(tasks: [Record], pins: [Record], account: String? = nil) throws -> WidgetSnapshot {
         try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(WidgetProjection.payload(tasks: tasks, projects: [], account: account ?? self.account, notePins: pins)))
     }
+    func testRegistryLookupPreservesFirstMatchAndTaskIdentityRules() {
+        let ids = ["", "a", "A", "with:colon", "with|pipe", String(repeating: "x", count: 200), String(repeating: "x", count: 201), "é", "e\u{301}", "👩🏽‍💻"]
+        let tasks = ids.flatMap { id -> [Record] in
+            var first = task(id); first["title"] = .string("First " + id)
+            var duplicate = first; duplicate["title"] = .string("Later " + id)
+            return [first, duplicate]
+        }
+        for owner in [account, other, ""] {
+            for variant in 0..<6 {
+                let pins = ids.flatMap { id -> [Record] in
+                    var malformed = pin(id); malformed["ids"] = .array([.string(id), .string(id)])
+                    switch variant {
+                    case 0: return [pin(id)]
+                    case 1: return [pin(id, user: other), pin(id)]
+                    case 2: return [malformed, pin(id)]
+                    case 3: return [pin(id), malformed, pin(id, user: other)]
+                    case 4: return [Record(["id": .string("scope:" + id), "user_id": .string(account)]), pin(id)]
+                    default: return []
+                    }
+                }
+                // The single-pin reader remains the independent legacy oracle.
+                var seen = Set<String>()
+                let expected = tasks.filter { seen.insert($0.id).inserted && PinnedNotes.contains($0.id, pins: pins, account: owner) }
+                XCTAssertEqual(PinnedNotes.tasks(tasks, pins: pins, account: owner), expected, "Owner \(owner), registry \(variant)")
+                XCTAssertEqual(PinnedNotes.tasks(tasks, pins: pins.reversed(), account: owner), {
+                    var seen = Set<String>()
+                    return tasks.filter { seen.insert($0.id).inserted && PinnedNotes.contains($0.id, pins: pins.reversed(), account: owner) }
+                }())
+            }
+        }
+    }
+
+    func testLargeUnrelatedOrderingRegistryKeepsOnlyExplicitPins() {
+        let rows = (0..<5000).map { Record(["id": .string("task-\($0)"), "title": .string("Task \($0)"), "description": .string("Private \($0)")]) }
+        var pins = (0..<5000).map { Record(["id": .string("group:project:section-\($0)"), "user_id": .string(account), "ids": .array([.string("task-\($0)")])]) }
+        pins += [pin(rows[17].id), pin(rows[4999].id)]
+        let clock = ContinuousClock(), start = clock.now
+        let selected = PinnedNotes.tasks(rows, pins: pins, account: account)
+        let elapsed = start.duration(to: clock.now)
+        print("PIN_REGISTRY_5000_SECONDS \(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18)")
+        XCTAssertEqual(selected, [rows[17], rows[4999]])
+        XCTAssertEqual(PinnedNotes.payload(tasks: rows, pins: pins, account: account).compactMap { $0.object["taskID"]?.text }, [rows[17].id, rows[4999].id])
+        XCTAssertTrue(PinnedNotes.tasks(rows, pins: pins, account: other).isEmpty)
+    }
+
     func testOnlyExplicitlyPinnedDescriptionsLeaveAppIncludingCompletedTasks() throws {
         let tasks = [task(id, done: true), task("private", text: "private text"), task("second")]
         let projection = WidgetProjection.payload(tasks: tasks, projects: [], account: account, notePins: [pin(id)])

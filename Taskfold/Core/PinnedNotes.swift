@@ -10,8 +10,16 @@ enum PinnedNotes {
         return pins.first(where: { $0.id == key(taskID) }).map { $0.string("user_id") == account && $0["ids"] == .array([.string(taskID)]) } == true
     }
     static func tasks(_ tasks: [Record], pins: [Record], account: String) -> [Record] {
+        guard !account.isEmpty else { return [] }
+        // Preserve the first registry row even if foreign or malformed. Filtering
+        // before indexing could let a later duplicate expose an unselected note.
+        let registry = Dictionary(pins.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         var seen = Set<String>()
-        return tasks.filter { seen.insert($0.id).inserted && contains($0.id, pins: pins, account: account) }
+        return tasks.filter { task in
+            let id = task.id
+            guard seen.insert(id).inserted, validID(id), let pin = registry[key(id)] else { return false }
+            return pin.string("user_id") == account && pin["ids"] == .array([.string(id)])
+        }
     }
     static func change(taskID: String, enabled: Bool, pins: [Record], account: String) -> Mutation? {
         guard !account.isEmpty, validID(taskID) else { return nil }

@@ -8512,3 +8512,46 @@ peak-memory guarantee. The native fixture displays counts rather than rendering
 synchronous cache encoding/I/O, widget background cost, hosted/paired delivery
 and broader rank-3 acceptance remain open. The full ranked objective and all
 explicit user deferrals remain unchanged. Only synthetic fixtures were used.
+
+## 27 October: remove repeated pinned-note registry scans
+
+A nine-second sampled native Mac workflow run found bulk pinned-note selection
+searching every saved view-order row separately for each task. With 5,000 tasks
+and 5,000 ordering records, even an empty note selection performed millions of
+comparisons. Bulk selection now builds one first-row-wins dictionary and walks
+the task source once. It deliberately indexes foreign/malformed rows too: a later
+valid duplicate must never bypass the original first-row refusal. The unchanged
+single-pin reader and writer retain their existing behavior. Task deduplication,
+source order, ID validity and exact account/reference checks are preserved. No
+note limit, projection schema, content, styling or release setting changed.
+
+Before the production edit, the two new Mac regressions passed on the old code.
+Both old repository files had the same SHA256; no pre-edit iOS test execution is
+claimed. Thirty-six owner/registry/order comparisons use the unchanged single-pin
+reader as an independent oracle, including foreign/malformed duplicates, duplicate
+task records, Unicode equivalence, case, separators and byte boundaries. A
+5,000-task/5,002-row fixture selects exactly two explicitly pinned notes and zero
+foreign-account notes. Its selection-only Mac observation fell from 5.852s to
+0.0075s; iOS-owned Core observes 0.0076s after. Those are diagnostic observations,
+not a universal timing threshold. Each owned focused Core run passes 122 cases
+with no failures or skips, including full structured-workflow projection, note
+privacy/content, list ordering, completion and queue behavior.
+
+Six native cases pass strictly on each platform (18 platform/case pairs): 1,000
+queued-cloud roots, local 1,000/5,000 roots with preserved history, injected save
+failure, actual widget-intent retry/Undo/cold return, and background publication
+privacy/access/stale-result/recovery fences. The local 1,000-root case also runs
+native Undo. The 5,000-root fixture retains 20,001 commands, all 5,001 list
+projections and prior history. Widget readiness from save start is 3.46/3.45/3.85s on
+phone/tablet/Mac, compared with 8.37/8.38/9.77s in the immediately preceding stage.
+The synchronous saves remain 1.66/1.63/1.77s; this repair targets worker cost.
+
+The before/after native runs were unprofiled and sequential after compilation,
+but host load varies. No repeated benchmark, release latency, peak-memory,
+physical-host, newly installed-note visual, or production 5,000-row rendering
+acceptance is claimed. The sampled run is diagnostic only. Project-pulse history
+parsing, synchronous cache work, production rendering, child-rich/assignment-heavy
+scale, hosted/paired bulk flows and the wider ranked backlog remain open. User
+deferrals and default-off rollouts are unchanged. Exact job/result summaries,
+source/prepared/binary hashes and scoped evidence are in pinned-note-registry/.
+Only synthetic fixtures changed.

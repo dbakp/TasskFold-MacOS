@@ -1,0 +1,14 @@
+Test Suite 'Selected tests' started at 2026-10-27 10:51:11.201.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 10:51:11.201.
+Test Suite 'PinnedNotesTests' started at 2026-10-27 10:51:11.201.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testLargeUnrelatedOrderingRegistryKeepsOnlyExplicitPins]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testLargeUnrelatedOrderingRegistryKeepsOnlyExplicitPins]' passed (17.581 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testRegistryLookupPreservesFirstMatchAndTaskIdentityRules]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testRegistryLookupPreservesFirstMatchAndTaskIdentityRules]' passed (0.006 seconds).
+Test Suite 'PinnedNotesTests' passed at 2026-10-27 10:51:28.789.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 17.587 (17.587) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 10:51:28.789.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 17.587 (17.587) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 10:51:28.789.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 17.587 (17.588) seconds
+PIN_REGISTRY_5000_SECONDS 5.852023
