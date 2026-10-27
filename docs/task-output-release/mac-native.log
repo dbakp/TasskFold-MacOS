@@ -1,0 +1,969 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -parallel-testing-enabled NO -collect-test-diagnostics never -resultBundlePath /tmp/taskfold-output-release-accepted-mac.xcresult "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testTaskCSVActualSaveOptionsCancelAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testPDFReviewedTransferSaveReadbackAndCancel" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testPDFSavePanelRevokesChangedSourceWithoutWriting" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testCSVSavePanelRevokesWorkspaceWithoutWriting"
+
+Writing result bundle at path:
+	/tmp/taskfold-output-release-accepted-mac.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-27 23:15:22.243517+0100 TaskfoldUITests-Runner[91622:26257711] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-27 23:15:22.377.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 23:15:22.378.
+Test Suite 'TaskfoldMacUITests' started at 2026-10-27 23:15:22.378.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testCSVSavePanelRevokesWorkspaceWithoutWriting]' started.
+    t =     0.00s Start Test at 2026-10-27 23:15:22.379
+    t =     0.23s Set Up
+    t =     0.25s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.25s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 23:15:23.036 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 23:15:23.037 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.07s         Wait for accessibility to load
+    t =     2.22s         Setting up automation session
+    t =     2.25s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.33s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.33s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     2.34s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.26s Waiting 15.0s for "Today" StaticText to exist
+    t =     4.30s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =     4.30s         Checking existence of `"Today" StaticText`
+    t =     4.52s Click "Today" StaticText
+    t =     4.53s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.55s     Find the "Today" StaticText
+    t =     4.60s     Check for interrupting elements affecting "Today" StaticText
+    t =     4.63s     Synthesize event
+    t =     5.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.57s Waiting 10.0s for "Task options" MenuButton to exist
+    t =     6.61s     Checking `Expect predicate `existsNoRetry == 1` for object "Task options" MenuButton`
+    t =     6.62s         Checking existence of `"Task options" MenuButton`
+    t =     6.73s Click "Task options" MenuButton
+    t =     6.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.75s     Find the "Task options" MenuButton
+    t =     6.81s     Check for interrupting elements affecting "Task options" MenuButton
+    t =     6.90s     Found 1 interrupting element:
+    t =     6.90s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =     6.90s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =     6.90s Checking for user permission dialogs...
+    t =     6.90s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =     7.46s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =     7.94s Checking for Bluetooth Setup Assistant...
+    t =     7.94s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =     8.42s Checking for Notification Center Banners...
+    t =     8.42s Checking for basic alerts
+    t =     8.43s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =     8.87s             Find the "Plan productive widgets and Todoist" Window
+    t =     9.31s             Find the "Plan productive widgets and Todoist" Window
+    t =     9.75s No monitors handled UI interruption, checking to see if element still exists...
+    t =     9.75s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    10.19s Did not handle the interruption, but will attempt to continue…
+    t =    10.20s     Synthesize event
+    t =    10.69s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.69s Waiting 5.0s for "openPrintReview" MenuItem to exist
+    t =    11.74s     Checking `Expect predicate `existsNoRetry == 1` for object "openPrintReview" MenuItem`
+    t =    11.74s         Checking existence of `"openPrintReview" MenuItem`
+    t =    11.88s Click "openPrintReview" MenuItem
+    t =    11.88s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.89s     Find the "openPrintReview" MenuItem
+    t =    12.01s     Check for interrupting elements affecting "openPrintReview" MenuItem
+    t =    12.01s     Synthesize event
+    t =    12.02s         Checking existence of `"openPrintReview" MenuItem`
+    t =    12.10s         Hover menu item 'Print or Export…'
+    t =    12.10s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.11s             Find the "openPrintReview" MenuItem
+    t =    12.19s             Check for interrupting elements affecting "openPrintReview" MenuItem
+    t =    12.19s             Synthesize event
+    t =    12.41s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.42s         Find the "openPrintReview" MenuItem
+    t =    13.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.26s Waiting 15.0s for "printPageCount" StaticText to exist
+    t =    15.30s     Checking `Expect predicate `existsNoRetry == 1` for object "printPageCount" StaticText`
+    t =    15.30s         Checking existence of `"printPageCount" StaticText`
+    t =    15.63s Click "openTaskCSV" Button
+    t =    15.63s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.63s     Find the "openTaskCSV" Button
+    t =    15.84s     Check for interrupting elements affecting "openTaskCSV" Button
+    t =    15.90s     Synthesize event
+    t =    16.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.93s Waiting 10.0s for "csvRowCount" StaticText to exist
+    t =    17.96s     Checking `Expect predicate `existsNoRetry == 1` for object "csvRowCount" StaticText`
+    t =    17.97s         Checking existence of `"csvRowCount" StaticText`
+    t =    18.15s Find the "saveTaskCSV" Button
+    t =    18.31s Find the "saveTaskCSV" Button
+    t =    18.45s Find the "saveTaskCSV" Button
+    t =    18.61s Find the "saveTaskCSV" Button
+    t =    18.77s Find the "saveTaskCSV" Button
+    t =    18.94s Find the "saveTaskCSV" Button
+    t =    19.10s Find the "saveTaskCSV" Button
+    t =    19.29s Find the "saveTaskCSV" Button
+    t =    19.45s Find the "saveTaskCSV" Button
+    t =    19.62s Find the "saveTaskCSV" Button
+    t =    19.77s Find the "saveTaskCSV" Button
+    t =    19.93s Find the "saveTaskCSV" Button
+    t =    20.08s Find the "saveTaskCSV" Button
+    t =    20.23s Find the "saveTaskCSV" Button
+    t =    20.38s Find the "saveTaskCSV" Button
+    t =    20.53s Checking existence of `"saveTaskCSV" Button`
+    t =    20.65s Find the "saveTaskCSV" Button
+    t =    20.82s Click "saveTaskCSV" Button
+    t =    20.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.82s     Find the "saveTaskCSV" Button
+    t =    20.95s     Check for interrupting elements affecting "saveTaskCSV" Button
+    t =    20.96s     Synthesize event
+    t =    21.46s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.84s Waiting 10.0s for "OKButton" Button to exist
+    t =    23.88s     Checking `Expect predicate `existsNoRetry == 1` for object "OKButton" Button`
+    t =    23.88s         Checking existence of `"OKButton" Button`
+    t =    24.09s Click "saveAsNameTextField" TextField
+    t =    24.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.10s     Find the "saveAsNameTextField" TextField
+    t =    24.29s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    24.30s     Synthesize event
+    t =    24.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.81s Type 'a' key with modifiers '⌘' (0x10)
+    t =    24.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.83s     Find the "saveAsNameTextField" TextField
+    t =    25.00s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    25.04s     Synthesize event
+2026-10-27 23:15:47.416614+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    25.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.12s Type 'taskfold-output-re...' into "saveAsNameTextField" TextField
+    t =    25.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.14s     Find the "saveAsNameTextField" TextField
+    t =    25.40s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    25.44s     Synthesize event
+2026-10-27 23:15:47.828607+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    30.35s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.37s Type 'g' key with modifiers '⌘⇧' (0x12)
+    t =    30.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.38s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    30.65s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    30.65s     Synthesize event
+2026-10-27 23:15:53.035762+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:15:53.037832+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    31.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.69s Get number of matches for: Descendants matching type Sheet
+    t =    32.00s Get number of matches for: Descendants matching type Sheet
+    t =    32.18s Waiting 5.0s for TextField (First Match) to exist
+    t =    33.20s     Checking `Expect predicate `existsNoRetry == 1` for object TextField (First Match)`
+    t =    33.20s         Checking existence of `TextField (First Match)`
+    t =    33.36s Click TextField (First Match)
+    t =    33.36s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.37s     Find the TextField (First Match)
+    t =    33.51s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    33.52s     Synthesize event
+2026-10-27 23:15:55.900772+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    34.03s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.05s Type 'a' key with modifiers '⌘' (0x10)
+    t =    34.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.06s     Find the "PathTextField" TextField
+    t =    34.20s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    34.23s     Synthesize event
+2026-10-27 23:15:56.619493+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:15:56.632040+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    34.32s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.33s Type '/tmp' into "PathTextField" TextField
+    t =    34.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.34s     Find the "PathTextField" TextField
+    t =    34.51s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    34.53s     Synthesize event
+2026-10-27 23:15:56.914824+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:15:56.919596+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    34.62s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.63s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =    34.63s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.64s     Find the "PathTextField" TextField
+    t =    34.80s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    34.83s     Synthesize event
+2026-10-27 23:15:57.205901+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:15:57.207211+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    35.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.32s Waiting 12.0s for "OKButton" Button to not exist
+    t =    37.34s     Checking `Expect predicate `existsNoRetry == 0` for object "OKButton" Button`
+    t =    37.34s         Checking existence of `"OKButton" Button`
+    t =    37.50s Checking existence of `"saveTaskPDF" Button`
+    t =    37.63s Checking existence of `"saveTaskCSV" Button`
+    t =    37.82s Checking existence of `"printStatus" StaticText`
+    t =    37.97s Checking existence of `"csvExportStatus" StaticText`
+    t =    38.11s Checking existence of `Window (First Match)`
+    t =    38.12s Find the Window (First Match)
+2026-10-27 23:16:00.506132+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    38.38s Added attachment named 'CSV Save revoked by workspace incarnation'
+    t =    38.38s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:91625
+    t =    39.43s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    39.43s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 23:16:01.815 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 23:16:01.815 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    40.89s         Wait for accessibility to load
+    t =    41.09s         Setting up automation session
+    t =    41.15s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    41.21s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    41.21s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    41.21s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    42.41s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:91763
+    t =    43.50s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testCSVSavePanelRevokesWorkspaceWithoutWriting]' passed (44.117 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testPDFReviewedTransferSaveReadbackAndCancel]' started.
+    t =     0.00s Start Test at 2026-10-27 23:16:06.500
+    t =     0.38s Set Up
+    t =     0.39s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 23:16:06.895 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 23:16:06.895 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.39s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.12s         Wait for accessibility to load
+    t =     1.21s         Setting up automation session
+    t =     1.23s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.27s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.28s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.28s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.12s Waiting 15.0s for "Today" StaticText to exist
+    t =     3.15s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =     3.15s         Checking existence of `"Today" StaticText`
+    t =     3.50s Click "Today" StaticText
+    t =     3.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.54s     Find the "Today" StaticText
+    t =     3.60s     Check for interrupting elements affecting "Today" StaticText
+    t =     3.63s     Synthesize event
+    t =     4.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.80s Click "File" MenuBarItem
+    t =     4.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.43s     Find the "File" MenuBarItem
+    t =     5.69s     Check for interrupting elements affecting "File" MenuBarItem
+    t =     5.69s     Synthesize event
+    t =     6.19s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.21s Waiting 5.0s for "Print or Export…" MenuItem to exist
+    t =     7.21s     Checking `Expect predicate `existsNoRetry == 1` for object "Print or Export…" MenuItem`
+    t =     7.21s         Checking existence of `"Print or Export…" MenuItem`
+    t =     7.36s Find the "Print or Export…" MenuItem
+    t =     7.49s Click "menuAction:" MenuItem
+    t =     7.49s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.50s     Find the "menuAction:" MenuItem
+    t =     7.60s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     7.60s     Synthesize event
+    t =     7.62s         Checking existence of `"menuAction:" MenuItem`
+    t =     7.69s         Hover menu item 'Print or Export…'
+    t =     7.69s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.70s             Find the "menuAction:" MenuItem
+    t =     7.78s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     7.78s             Synthesize event
+    t =     8.03s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.05s         Find the "menuAction:" MenuItem
+    t =     9.17s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.16s Waiting 15.0s for "printPageCount" StaticText to exist
+    t =    11.19s     Checking `Expect predicate `existsNoRetry == 1` for object "printPageCount" StaticText`
+    t =    11.19s         Checking existence of `"printPageCount" StaticText`
+    t =    11.38s Find the "saveTaskPDF" Button
+    t =    11.58s Find the "saveTaskPDF" Button
+    t =    11.72s Find the "saveTaskPDF" Button
+    t =    11.85s Find the "saveTaskPDF" Button
+    t =    11.97s Find the "saveTaskPDF" Button
+    t =    12.11s Find the "saveTaskPDF" Button
+    t =    12.25s Find the "saveTaskPDF" Button
+    t =    12.40s Find the "saveTaskPDF" Button
+    t =    12.52s Find the "saveTaskPDF" Button
+    t =    12.66s Find the "saveTaskPDF" Button
+    t =    12.78s Find the "saveTaskPDF" Button
+    t =    12.90s Find the "saveTaskPDF" Button
+    t =    13.03s Find the "saveTaskPDF" Button
+    t =    13.16s Find the "saveTaskPDF" Button
+    t =    13.31s Find the "saveTaskPDF" Button
+    t =    13.47s Checking existence of `"saveTaskPDF" Button`
+    t =    13.61s Find the "saveTaskPDF" Button
+    t =    13.76s Click "saveTaskPDF" Button
+    t =    13.76s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.77s     Find the "saveTaskPDF" Button
+    t =    13.90s     Check for interrupting elements affecting "saveTaskPDF" Button
+    t =    13.92s     Synthesize event
+    t =    14.48s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.88s Waiting 10.0s for "OKButton" Button to exist
+    t =    16.90s     Checking `Expect predicate `existsNoRetry == 1` for object "OKButton" Button`
+    t =    16.91s         Checking existence of `"OKButton" Button`
+    t =    17.16s Click "saveAsNameTextField" TextField
+    t =    17.16s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.16s     Find the "saveAsNameTextField" TextField
+    t =    17.31s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    17.34s     Synthesize event
+    t =    17.79s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.81s Type 'a' key with modifiers '⌘' (0x10)
+    t =    17.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.82s     Find the "saveAsNameTextField" TextField
+    t =    17.96s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    17.97s     Synthesize event
+2026-10-27 23:16:24.472456+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    18.08s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.09s Type 'taskfold-output-pr...' into "saveAsNameTextField" TextField
+    t =    18.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.10s     Find the "saveAsNameTextField" TextField
+    t =    18.25s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    18.28s     Synthesize event
+2026-10-27 23:16:24.783858+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    19.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.83s Type 'g' key with modifiers '⌘⇧' (0x12)
+    t =    19.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.84s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    19.98s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    19.98s     Synthesize event
+2026-10-27 23:16:26.478093+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:16:26.480517+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    20.44s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.50s Get number of matches for: Descendants matching type Sheet
+    t =    20.67s Get number of matches for: Descendants matching type Sheet
+    t =    20.78s Waiting 5.0s for TextField (First Match) to exist
+    t =    21.80s     Checking `Expect predicate `existsNoRetry == 1` for object TextField (First Match)`
+    t =    21.80s         Checking existence of `TextField (First Match)`
+    t =    22.00s Click TextField (First Match)
+    t =    22.00s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.00s     Find the TextField (First Match)
+    t =    22.19s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    22.21s     Synthesize event
+2026-10-27 23:16:28.706995+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    22.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.75s Type 'a' key with modifiers '⌘' (0x10)
+    t =    22.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.77s     Find the "PathTextField" TextField
+    t =    22.99s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    23.04s     Synthesize event
+2026-10-27 23:16:29.534093+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:16:29.535803+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    23.14s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.14s Type '/tmp' into "PathTextField" TextField
+    t =    23.14s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.15s     Find the "PathTextField" TextField
+    t =    23.42s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    23.54s     Synthesize event
+2026-10-27 23:16:30.039303+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:16:30.208173+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    24.08s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.08s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =    24.08s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.09s     Find the "PathTextField" TextField
+    t =    24.30s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    24.34s     Synthesize event
+2026-10-27 23:16:30.836053+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:16:30.837049+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    24.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.83s Click "OKButton" Button
+    t =    24.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.84s     Find the "OKButton" Button
+    t =    25.16s     Check for interrupting elements affecting "OKButton" Button
+    t =    25.26s     Synthesize event
+2026-10-27 23:16:31.770951+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    25.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.18s Added attachment named 'Guarded native PDF saved on Mac'
+    t =    27.18s Click "saveTaskPDF" Button
+    t =    27.18s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.18s     Find the "saveTaskPDF" Button
+    t =    27.34s     Check for interrupting elements affecting "saveTaskPDF" Button
+    t =    27.35s     Synthesize event
+2026-10-27 23:16:33.861184+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    27.88s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.45s Waiting 10.0s for "CancelButton" Button to exist
+    t =    29.48s     Checking `Expect predicate `existsNoRetry == 1` for object "CancelButton" Button`
+    t =    29.48s         Checking existence of `"CancelButton" Button`
+    t =    29.64s Click "CancelButton" Button
+    t =    29.64s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.64s     Find the "CancelButton" Button
+    t =    29.77s     Check for interrupting elements affecting "CancelButton" Button
+    t =    29.78s     Synthesize event
+2026-10-27 23:16:36.275824+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    30.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.55s Waiting 10.0s for "CancelButton" Button to not exist
+    t =    31.57s     Checking `Expect predicate `existsNoRetry == 0` for object "CancelButton" Button`
+    t =    31.57s         Checking existence of `"CancelButton" Button`
+    t =    31.73s Checking existence of `"printStatus" StaticText`
+    t =    31.84s Click "closePrintReview" Button
+    t =    31.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.84s     Find the "closePrintReview" Button
+    t =    31.99s     Check for interrupting elements affecting "closePrintReview" Button
+    t =    32.01s     Synthesize event
+2026-10-27 23:16:38.510892+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    32.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    32.93s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:91768
+    t =    34.00s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    34.00s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 23:16:40.505 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 23:16:40.505 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    35.27s         Wait for accessibility to load
+    t =    35.55s         Setting up automation session
+    t =    35.60s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    35.65s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    35.65s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    35.66s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.57s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:91851
+    t =    37.64s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testPDFReviewedTransferSaveReadbackAndCancel]' passed (38.121 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testPDFSavePanelRevokesChangedSourceWithoutWriting]' started.
+    t =     0.00s Start Test at 2026-10-27 23:16:44.623
+    t =     0.18s Set Up
+    t =     0.19s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.19s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 23:16:44.814 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 23:16:44.815 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.76s         Wait for accessibility to load
+    t =     0.87s         Setting up automation session
+    t =     0.89s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.95s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.95s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.96s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.92s Waiting 15.0s for "Today" StaticText to exist
+    t =     2.93s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =     2.93s         Checking existence of `"Today" StaticText`
+    t =     3.22s Click "Today" StaticText
+    t =     3.22s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.25s     Find the "Today" StaticText
+    t =     3.31s     Check for interrupting elements affecting "Today" StaticText
+    t =     3.34s     Synthesize event
+    t =     4.19s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.21s Click "File" MenuBarItem
+    t =     4.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.23s     Find the "File" MenuBarItem
+    t =     4.69s     Check for interrupting elements affecting "File" MenuBarItem
+    t =     4.70s     Synthesize event
+    t =     5.36s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.39s Waiting 5.0s for "Print or Export…" MenuItem to exist
+    t =     6.40s     Checking `Expect predicate `existsNoRetry == 1` for object "Print or Export…" MenuItem`
+    t =     6.40s         Checking existence of `"Print or Export…" MenuItem`
+    t =     6.54s Find the "Print or Export…" MenuItem
+    t =     6.68s Click "menuAction:" MenuItem
+    t =     6.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.69s     Find the "menuAction:" MenuItem
+    t =     6.81s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     6.81s     Synthesize event
+    t =     6.81s         Checking existence of `"menuAction:" MenuItem`
+    t =     6.90s         Hover menu item 'Print or Export…'
+    t =     6.90s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.92s             Find the "menuAction:" MenuItem
+    t =     7.05s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =     7.05s             Synthesize event
+    t =     7.29s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.30s         Find the "menuAction:" MenuItem
+    t =     8.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.35s Waiting 15.0s for "printPageCount" StaticText to exist
+    t =     9.38s     Checking `Expect predicate `existsNoRetry == 1` for object "printPageCount" StaticText`
+    t =     9.38s         Checking existence of `"printPageCount" StaticText`
+    t =     9.66s Find the "saveTaskPDF" Button
+    t =     9.87s Find the "saveTaskPDF" Button
+    t =    10.07s Find the "saveTaskPDF" Button
+    t =    10.29s Find the "saveTaskPDF" Button
+    t =    10.46s Find the "saveTaskPDF" Button
+    t =    10.64s Find the "saveTaskPDF" Button
+    t =    10.80s Find the "saveTaskPDF" Button
+    t =    10.96s Find the "saveTaskPDF" Button
+    t =    11.13s Find the "saveTaskPDF" Button
+    t =    11.31s Find the "saveTaskPDF" Button
+    t =    11.47s Find the "saveTaskPDF" Button
+    t =    11.66s Find the "saveTaskPDF" Button
+    t =    11.81s Find the "saveTaskPDF" Button
+    t =    11.97s Find the "saveTaskPDF" Button
+    t =    12.14s Find the "saveTaskPDF" Button
+    t =    12.32s Checking existence of `"saveTaskPDF" Button`
+    t =    12.49s Find the "saveTaskPDF" Button
+    t =    12.71s Click "saveTaskPDF" Button
+    t =    12.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.72s     Find the "saveTaskPDF" Button
+    t =    12.89s     Check for interrupting elements affecting "saveTaskPDF" Button
+    t =    12.93s     Synthesize event
+    t =    13.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.45s Waiting 10.0s for "OKButton" Button to exist
+    t =    16.46s     Checking `Expect predicate `existsNoRetry == 1` for object "OKButton" Button`
+    t =    16.46s         Checking existence of `"OKButton" Button`
+    t =    16.64s Click "saveAsNameTextField" TextField
+    t =    16.64s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.64s     Find the "saveAsNameTextField" TextField
+    t =    16.79s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    16.82s     Synthesize event
+    t =    17.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.35s Type 'a' key with modifiers '⌘' (0x10)
+    t =    17.35s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.36s     Find the "saveAsNameTextField" TextField
+    t =    17.50s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    17.52s     Synthesize event
+2026-10-27 23:17:02.143959+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    17.59s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.60s Type 'taskfold-output-re...' into "saveAsNameTextField" TextField
+    t =    17.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.61s     Find the "saveAsNameTextField" TextField
+    t =    17.77s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    17.80s     Synthesize event
+2026-10-27 23:17:02.430634+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    19.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.24s Type 'g' key with modifiers '⌘⇧' (0x12)
+    t =    19.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.25s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    19.39s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    19.39s     Synthesize event
+2026-10-27 23:17:04.019836+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:17:04.023779+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    19.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.89s Get number of matches for: Descendants matching type Sheet
+    t =    20.01s Get number of matches for: Descendants matching type Sheet
+    t =    20.14s Waiting 5.0s for TextField (First Match) to exist
+    t =    21.16s     Checking `Expect predicate `existsNoRetry == 1` for object TextField (First Match)`
+    t =    21.16s         Checking existence of `TextField (First Match)`
+    t =    21.33s Click TextField (First Match)
+    t =    21.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.34s     Find the TextField (First Match)
+    t =    21.47s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    21.50s     Synthesize event
+2026-10-27 23:17:06.127563+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    22.02s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.04s Type 'a' key with modifiers '⌘' (0x10)
+    t =    22.04s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.05s     Find the "PathTextField" TextField
+    t =    22.21s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    22.26s     Synthesize event
+2026-10-27 23:17:06.881384+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:17:06.883287+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    22.32s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.32s Type '/tmp' into "PathTextField" TextField
+    t =    22.32s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.32s     Find the "PathTextField" TextField
+    t =    22.50s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    22.53s     Synthesize event
+2026-10-27 23:17:07.152566+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:17:07.155083+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    22.64s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.64s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =    22.64s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.65s     Find the "PathTextField" TextField
+    t =    22.79s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    22.82s     Synthesize event
+2026-10-27 23:17:07.442133+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:17:07.443659+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    23.17s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.19s Waiting 12.0s for "OKButton" Button to not exist
+    t =    25.22s     Checking `Expect predicate `existsNoRetry == 0` for object "OKButton" Button`
+    t =    25.22s         Checking existence of `"OKButton" Button`
+    t =    25.36s Checking existence of `"saveTaskPDF" Button`
+    t =    25.48s Checking existence of `"saveTaskCSV" Button`
+    t =    25.58s Checking existence of `"printStatus" StaticText`
+    t =    25.69s Checking existence of `"csvExportStatus" StaticText`
+    t =    25.80s Checking existence of `Window (First Match)`
+    t =    25.81s Find the Window (First Match)
+2026-10-27 23:17:10.433995+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    26.15s Added attachment named 'PDF Save revoked by changed source'
+    t =    26.15s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:91860
+    t =    27.17s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    27.17s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 23:17:11.799 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 23:17:11.799 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    28.26s         Wait for accessibility to load
+    t =    28.36s         Setting up automation session
+    t =    28.44s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.48s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    28.48s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    28.53s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.83s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:91929
+    t =    30.94s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testPDFSavePanelRevokesChangedSourceWithoutWriting]' passed (31.904 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTaskCSVActualSaveOptionsCancelAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-27 23:17:16.528
+    t =     0.43s Set Up
+    t =     0.45s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.45s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 23:17:16.991 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 23:17:16.991 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.11s         Wait for accessibility to load
+    t =     1.18s         Setting up automation session
+    t =     1.20s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.26s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.26s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.27s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.02s Waiting 15.0s for "Today" StaticText to exist
+    t =     3.03s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =     3.04s         Checking existence of `"Today" StaticText`
+    t =     3.42s Click "Today" StaticText
+    t =     3.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.45s     Find the "Today" StaticText
+    t =     3.51s     Check for interrupting elements affecting "Today" StaticText
+    t =     3.57s     Synthesize event
+    t =     4.65s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.65s Waiting 10.0s for "Task options" MenuButton to exist
+    t =     5.66s     Checking `Expect predicate `existsNoRetry == 1` for object "Task options" MenuButton`
+    t =     5.66s         Checking existence of `"Task options" MenuButton`
+    t =     5.77s Click "Task options" MenuButton
+    t =     5.77s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.82s     Find the "Task options" MenuButton
+    t =     5.88s     Check for interrupting elements affecting "Task options" MenuButton
+    t =     6.02s     Found 1 interrupting element:
+    t =     6.02s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =     6.02s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =     6.02s Checking for user permission dialogs...
+    t =     6.02s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =     6.71s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =     7.28s Checking for Bluetooth Setup Assistant...
+    t =     7.28s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =     7.82s Checking for Notification Center Banners...
+    t =     7.82s Checking for basic alerts
+    t =     7.83s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =     8.45s             Find the "Plan productive widgets and Todoist" Window
+    t =     8.99s             Find the "Plan productive widgets and Todoist" Window
+    t =     9.57s No monitors handled UI interruption, checking to see if element still exists...
+    t =     9.58s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    10.10s Did not handle the interruption, but will attempt to continue…
+    t =    10.11s     Synthesize event
+    t =    10.55s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    10.56s Waiting 5.0s for "openPrintReview" MenuItem to exist
+    t =    11.57s     Checking `Expect predicate `existsNoRetry == 1` for object "openPrintReview" MenuItem`
+    t =    11.57s         Checking existence of `"openPrintReview" MenuItem`
+    t =    11.73s Click "openPrintReview" MenuItem
+    t =    11.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.74s     Find the "openPrintReview" MenuItem
+    t =    11.85s     Check for interrupting elements affecting "openPrintReview" MenuItem
+    t =    11.85s     Synthesize event
+    t =    11.87s         Checking existence of `"openPrintReview" MenuItem`
+    t =    11.94s         Hover menu item 'Print or Export…'
+    t =    11.94s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.95s             Find the "openPrintReview" MenuItem
+    t =    12.03s             Check for interrupting elements affecting "openPrintReview" MenuItem
+    t =    12.03s             Synthesize event
+    t =    12.28s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.29s         Find the "openPrintReview" MenuItem
+    t =    13.30s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.97s Waiting 15.0s for "printPageCount" StaticText to exist
+    t =    14.99s     Checking `Expect predicate `existsNoRetry == 1` for object "printPageCount" StaticText`
+    t =    14.99s         Checking existence of `"printPageCount" StaticText`
+    t =    15.15s Click "openTaskCSV" Button
+    t =    15.15s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    15.17s     Find the "openTaskCSV" Button
+    t =    15.27s     Check for interrupting elements affecting "openTaskCSV" Button
+    t =    15.29s     Synthesize event
+    t =    15.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.20s Waiting 10.0s for "csvRowCount" StaticText to exist
+    t =    17.23s     Checking `Expect predicate `existsNoRetry == 1` for object "csvRowCount" StaticText`
+    t =    17.23s         Checking existence of `"csvRowCount" StaticText`
+    t =    17.43s Find the "csvRowCount" StaticText
+    t =    17.59s Find the "saveTaskCSV" Button
+    t =    17.75s Find the "saveTaskCSV" Button
+    t =    17.91s Find the "saveTaskCSV" Button
+    t =    18.05s Find the "saveTaskCSV" Button
+    t =    18.21s Find the "saveTaskCSV" Button
+    t =    18.36s Find the "saveTaskCSV" Button
+    t =    18.52s Find the "saveTaskCSV" Button
+    t =    18.67s Find the "saveTaskCSV" Button
+    t =    18.82s Find the "saveTaskCSV" Button
+    t =    18.97s Find the "saveTaskCSV" Button
+    t =    19.13s Find the "saveTaskCSV" Button
+    t =    19.28s Find the "saveTaskCSV" Button
+    t =    19.43s Find the "saveTaskCSV" Button
+    t =    19.59s Find the "saveTaskCSV" Button
+    t =    19.75s Find the "saveTaskCSV" Button
+    t =    19.89s Checking existence of `"saveTaskCSV" Button`
+    t =    20.03s Find the "saveTaskCSV" Button
+    t =    20.18s Click "saveTaskCSV" Button
+    t =    20.18s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.18s     Find the "saveTaskCSV" Button
+    t =    20.31s     Check for interrupting elements affecting "saveTaskCSV" Button
+    t =    20.35s     Synthesize event
+    t =    20.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.89s Waiting 10.0s for "OKButton" Button to exist
+    t =    22.91s     Checking `Expect predicate `existsNoRetry == 1` for object "OKButton" Button`
+    t =    22.91s         Checking existence of `"OKButton" Button`
+    t =    23.11s Click "saveAsNameTextField" TextField
+    t =    23.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.12s     Find the "saveAsNameTextField" TextField
+    t =    23.28s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    23.30s     Synthesize event
+    t =    23.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.81s Type 'a' key with modifiers '⌘' (0x10)
+    t =    23.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.82s     Find the "saveAsNameTextField" TextField
+    t =    23.98s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    23.99s     Synthesize event
+2026-10-27 23:17:40.528508+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    24.07s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.08s Type 'taskfold-output-pr...' into "saveAsNameTextField" TextField
+    t =    24.08s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.09s     Find the "saveAsNameTextField" TextField
+    t =    24.29s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    24.31s     Synthesize event
+2026-10-27 23:17:40.852969+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    25.62s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.63s Type 'g' key with modifiers '⌘⇧' (0x12)
+    t =    25.63s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.64s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    25.77s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    25.77s     Synthesize event
+2026-10-27 23:17:42.298271+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:17:42.300657+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    25.97s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    26.21s Get number of matches for: Descendants matching type Sheet
+    t =    26.36s Get number of matches for: Descendants matching type Sheet
+    t =    26.51s Waiting 5.0s for TextField (First Match) to exist
+    t =    27.52s     Checking `Expect predicate `existsNoRetry == 1` for object TextField (First Match)`
+    t =    27.52s         Checking existence of `TextField (First Match)`
+    t =    27.68s Click TextField (First Match)
+    t =    27.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.68s     Find the TextField (First Match)
+    t =    27.81s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    27.83s     Synthesize event
+2026-10-27 23:17:44.361186+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    28.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.35s Type 'a' key with modifiers '⌘' (0x10)
+    t =    28.35s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.35s     Find the "PathTextField" TextField
+    t =    28.51s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    28.55s     Synthesize event
+2026-10-27 23:17:45.073778+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:17:45.074943+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    28.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.61s Type '/tmp' into "PathTextField" TextField
+    t =    28.61s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.62s     Find the "PathTextField" TextField
+    t =    28.79s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    28.81s     Synthesize event
+2026-10-27 23:17:45.341189+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:17:45.353374+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    28.92s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.93s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =    28.93s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.94s     Find the "PathTextField" TextField
+    t =    29.09s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    29.13s     Synthesize event
+2026-10-27 23:17:45.669961+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:17:45.671356+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 518.0, 344.0, 22.0): [1]
+    t =    29.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.50s Click "OKButton" Button
+    t =    29.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.51s     Find the "OKButton" Button
+    t =    29.68s     Check for interrupting elements affecting "OKButton" Button
+    t =    29.71s     Synthesize event
+2026-10-27 23:17:46.239092+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    30.22s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.54s Added attachment named 'Actual Mac task-row CSV'
+    t =    31.54s Click "csvIncludeNotes" Switch
+    t =    31.54s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.55s     Find the "csvIncludeNotes" Switch
+    t =    31.75s     Check for interrupting elements affecting "csvIncludeNotes" Switch
+    t =    31.78s     Found 1 interrupting element:
+    t =    31.78s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    31.78s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    31.78s Checking for user permission dialogs...
+    t =    31.78s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    32.36s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    32.88s Checking for Bluetooth Setup Assistant...
+    t =    32.88s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    33.46s Checking for Notification Center Banners...
+    t =    33.46s Checking for basic alerts
+    t =    33.59s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    34.11s             Find the "Plan productive widgets and Todoist" Window
+    t =    34.62s             Find the "Plan productive widgets and Todoist" Window
+    t =    35.15s No monitors handled UI interruption, checking to see if element still exists...
+    t =    35.16s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    35.62s Did not handle the interruption, but will attempt to continue…
+    t =    35.62s     Synthesize event
+2026-10-27 23:17:52.156728+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    36.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.23s Click "csvIncludeChecklists" Switch
+    t =    36.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.24s     Find the "csvIncludeChecklists" Switch
+    t =    36.45s     Check for interrupting elements affecting "csvIncludeChecklists" Switch
+    t =    36.51s     Found 1 interrupting element:
+    t =    36.51s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    36.51s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    36.51s Checking for user permission dialogs...
+    t =    36.51s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    37.14s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    37.74s Checking for Bluetooth Setup Assistant...
+    t =    37.74s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    38.33s Checking for Notification Center Banners...
+    t =    38.33s Checking for basic alerts
+    t =    38.34s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    38.86s             Find the "Plan productive widgets and Todoist" Window
+    t =    39.44s             Find the "Plan productive widgets and Todoist" Window
+    t =    39.96s No monitors handled UI interruption, checking to see if element still exists...
+    t =    39.97s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    40.47s Did not handle the interruption, but will attempt to continue…
+    t =    40.47s     Synthesize event
+2026-10-27 23:17:56.998095+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    41.02s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    42.09s Checking `Expect predicate `value == "3 rows · CSV" OR label == "3 rows · CSV"` for object "csvRowCount" StaticText`
+    t =    42.09s     Find the "csvRowCount" StaticText
+    t =    42.33s Find the "saveTaskCSV" Button
+    t =    42.51s Find the "saveTaskCSV" Button
+    t =    42.69s Find the "saveTaskCSV" Button
+    t =    42.86s Find the "saveTaskCSV" Button
+    t =    43.05s Find the "saveTaskCSV" Button
+    t =    43.23s Find the "saveTaskCSV" Button
+    t =    43.45s Find the "saveTaskCSV" Button
+    t =    43.66s Find the "saveTaskCSV" Button
+    t =    43.88s Find the "saveTaskCSV" Button
+    t =    44.08s Find the "saveTaskCSV" Button
+    t =    44.25s Find the "saveTaskCSV" Button
+    t =    44.43s Find the "saveTaskCSV" Button
+    t =    44.59s Find the "saveTaskCSV" Button
+    t =    44.78s Find the "saveTaskCSV" Button
+    t =    44.95s Find the "saveTaskCSV" Button
+    t =    45.11s Checking existence of `"saveTaskCSV" Button`
+    t =    45.38s Find the "saveTaskCSV" Button
+    t =    45.65s Click "saveTaskCSV" Button
+    t =    45.65s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    45.66s     Find the "saveTaskCSV" Button
+    t =    45.81s     Check for interrupting elements affecting "saveTaskCSV" Button
+    t =    45.84s     Synthesize event
+2026-10-27 23:18:02.366742+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    46.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    47.18s Waiting 10.0s for "OKButton" Button to exist
+    t =    48.21s     Checking `Expect predicate `existsNoRetry == 1` for object "OKButton" Button`
+    t =    48.21s         Checking existence of `"OKButton" Button`
+    t =    48.46s Click "saveAsNameTextField" TextField
+    t =    48.46s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    48.47s     Find the "saveAsNameTextField" TextField
+    t =    48.66s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    48.70s     Synthesize event
+2026-10-27 23:18:05.230498+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    49.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    49.23s Type 'a' key with modifiers '⌘' (0x10)
+    t =    49.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    49.24s     Find the "saveAsNameTextField" TextField
+    t =    49.50s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    49.58s     Synthesize event
+2026-10-27 23:18:06.102254+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:18:06.103464+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    49.67s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    49.67s Type 'taskfold-output-pr...' into "saveAsNameTextField" TextField
+    t =    49.67s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    49.67s     Find the "saveAsNameTextField" TextField
+    t =    49.89s     Check for interrupting elements affecting "saveAsNameTextField" TextField
+    t =    49.92s     Synthesize event
+2026-10-27 23:18:06.457850+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:18:06.461590+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (947.5, 630.0, 232.0, 26.0): [1]
+    t =    52.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    52.51s Type 'g' key with modifiers '⌘⇧' (0x12)
+    t =    52.51s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    52.52s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    52.66s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    52.66s     Synthesize event
+2026-10-27 23:18:09.198514+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:18:09.201515+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    52.85s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    53.11s Get number of matches for: Descendants matching type Sheet
+    t =    53.28s Get number of matches for: Descendants matching type Sheet
+    t =    53.55s Waiting 5.0s for TextField (First Match) to exist
+    t =    54.55s     Checking `Expect predicate `existsNoRetry == 1` for object TextField (First Match)`
+    t =    54.56s         Checking existence of `TextField (First Match)`
+    t =    54.72s Click TextField (First Match)
+    t =    54.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    54.72s     Find the TextField (First Match)
+    t =    54.85s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    54.87s     Synthesize event
+2026-10-27 23:18:11.400532+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    55.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    55.34s Type 'a' key with modifiers '⌘' (0x10)
+    t =    55.34s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    55.35s     Find the "PathTextField" TextField
+    t =    55.49s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    55.51s     Synthesize event
+2026-10-27 23:18:12.039839+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:18:12.040827+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 599.0, 344.0, 22.0): [1]
+    t =    55.58s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    55.59s Type '/tmp' into "PathTextField" TextField
+    t =    55.59s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    55.60s     Find the "PathTextField" TextField
+    t =    55.76s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    55.80s     Synthesize event
+2026-10-27 23:18:12.324104+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:18:12.335814+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 599.0, 344.0, 22.0): [1]
+    t =    55.89s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    55.90s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =    55.90s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    55.91s     Find the "PathTextField" TextField
+    t =    56.05s     Check for interrupting elements affecting "PathTextField" TextField
+    t =    56.07s     Synthesize event
+2026-10-27 23:18:12.602853+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-10-27 23:18:12.604228+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (813.0, 599.0, 344.0, 22.0): [1]
+    t =    56.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    56.43s Click "OKButton" Button
+    t =    56.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    56.44s     Find the "OKButton" Button
+    t =    56.61s     Check for interrupting elements affecting "OKButton" Button
+    t =    56.63s     Synthesize event
+2026-10-27 23:18:13.164690+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    57.14s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    58.47s Added attachment named 'Actual Mac CSV without notes or checklists'
+    t =    58.47s Checking existence of `Window (First Match)`
+    t =    58.47s Find the Window (First Match)
+2026-10-27 23:18:15.009585+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    58.59s Added attachment named 'Mac task CSV review'
+    t =    58.59s Click "saveTaskCSV" Button
+    t =    58.59s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    58.60s     Find the "saveTaskCSV" Button
+    t =    58.75s     Check for interrupting elements affecting "saveTaskCSV" Button
+    t =    58.78s     Synthesize event
+2026-10-27 23:18:15.305008+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    59.31s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    59.82s Waiting 10.0s for "CancelButton" Button to exist
+    t =    60.84s     Checking `Expect predicate `existsNoRetry == 1` for object "CancelButton" Button`
+    t =    60.84s         Checking existence of `"CancelButton" Button`
+    t =    61.09s Click "CancelButton" Button
+    t =    61.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    61.10s     Find the "CancelButton" Button
+    t =    61.34s     Check for interrupting elements affecting "CancelButton" Button
+    t =    61.41s     Synthesize event
+2026-10-27 23:18:17.935696+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    61.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    62.16s Waiting 10.0s for "CancelButton" Button to not exist
+    t =    63.20s     Checking `Expect predicate `existsNoRetry == 0` for object "CancelButton" Button`
+    t =    63.20s         Checking existence of `"CancelButton" Button`
+    t =    63.36s Checking existence of `"csvExportStatus" StaticText`
+    t =    63.50s Click "closeTaskCSV" Button
+    t =    63.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    63.50s     Find the "closeTaskCSV" Button
+    t =    63.65s     Check for interrupting elements affecting "closeTaskCSV" Button
+    t =    63.68s     Found 1 interrupting element:
+    t =    63.68s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    63.68s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    63.68s Checking for user permission dialogs...
+    t =    63.68s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    64.26s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    64.82s Checking for Bluetooth Setup Assistant...
+    t =    64.82s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    65.50s Checking for Notification Center Banners...
+    t =    65.50s Checking for basic alerts
+    t =    65.51s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    66.11s             Find the "Plan productive widgets and Todoist" Window
+    t =    66.72s             Find the "Plan productive widgets and Todoist" Window
+    t =    67.33s No monitors handled UI interruption, checking to see if element still exists...
+    t =    67.34s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    67.88s Did not handle the interruption, but will attempt to continue…
+    t =    67.89s     Synthesize event
+2026-10-27 23:18:24.422862+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    68.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    68.75s Click "closePrintReview" Button
+    t =    68.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    68.76s     Find the "closePrintReview" Button
+    t =    68.95s     Check for interrupting elements affecting "closePrintReview" Button
+    t =    68.97s     Synthesize event
+2026-10-27 23:18:25.506451+0100 TaskfoldUITests-Runner[91622:26257711] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    69.52s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    70.05s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:91937
+    t =    71.09s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    71.09s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 23:18:27.625 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 23:18:27.625 xcodebuild[91609:26257400] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    71.83s         Wait for accessibility to load
+    t =    71.96s         Setting up automation session
+    t =    71.99s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    72.05s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    72.05s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    72.06s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    73.06s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:92109
+    t =    74.16s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTaskCSVActualSaveOptionsCancelAndColdReturn]' passed (74.713 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-10-27 23:18:31.242.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 188.854 (188.864) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 23:18:31.244.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 188.854 (188.865) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 23:18:31.244.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 188.854 (188.867) seconds
+2026-10-27 23:18:31.751 xcodebuild[91609:26257400] [MT] IDETestOperationsObserverDebug: 190.315 elapsed -- Testing started completed.
+2026-10-27 23:18:31.751 xcodebuild[91609:26257400] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 23:18:31.751 xcodebuild[91609:26257400] [MT] IDETestOperationsObserverDebug: 190.315 sec, +190.315 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-output-release-accepted-mac.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

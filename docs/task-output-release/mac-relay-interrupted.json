@@ -1,0 +1,25 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "-destination",
+    "platform=macOS,arch=arm64",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-output-release-final-mac.xcresult",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testTaskCSVActualSaveOptionsCancelAndColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testPDFReviewedTransferSaveReadbackAndCancel",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testPDFSavePanelRevokesChangedSourceWithoutWriting",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testCSVSavePanelRevokesWorkspaceWithoutWriting"
+  ],
+  "processID": 86564,
+  "exitCode": -15,
+  "relays": [],
+  "driverError": "[Errno 1] Operation not permitted: '/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/task-output-race-control.txt'",
+  "scope": "Reserved local synthetic Mac Store fixture only; no export callback or permission bypass."
+}

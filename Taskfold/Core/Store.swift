@@ -13,6 +13,71 @@ import WidgetKit
 
 @MainActor @Observable
 final class Store {
+    #if DEBUG
+    func recordTaskOutputFixtureResult(kind: String, url: URL) {
+        let args = ProcessInfo.processInfo.arguments
+        guard userID == "ui-testing", localMode, args.contains("--uitesting"), args.contains("--workflow-fixture"), url.isFileURL,
+              ["com.dbakp.taskfold.mac.workflowteststeameditbridge", "com.dbakp.taskfold.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? ""),
+              kind == "pdf" || kind == "csv" else { return }
+        let receipt = cacheURL.deletingLastPathComponent().appendingPathComponent("task-output-fixture-result.json")
+        if let data = try? JSONSerialization.data(withJSONObject: ["kind": kind, "url": url.absoluteString], options: [.sortedKeys]) {
+            try? data.write(to: receipt, options: .atomic)
+        }
+    }
+    /// Synthetic backchannel changes real Store state only after XCTest has
+    /// observed the native Save panel. No provider or export callback is mocked.
+    func beginTaskOutputRaceFixture() {
+        let args = ProcessInfo.processInfo.arguments
+        guard userID == "ui-testing", args.contains("--uitesting"), args.contains("--workflow-fixture"),
+              ["com.dbakp.taskfold.mac.workflowteststeameditbridge", "com.dbakp.taskfold.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? ""),
+              localMode else { return }
+        let receipt = cacheURL.deletingLastPathComponent().appendingPathComponent("task-output-fixture-result.json")
+        try? FileManager.default.removeItem(at: receipt)
+        guard args.contains("--task-output-race-source") || args.contains("--task-output-race-workspace") else { return }
+        let workspace = args.contains("--task-output-race-workspace")
+        let signal = cacheURL.deletingLastPathComponent().appendingPathComponent("task-output-race-control.txt")
+        outputRaceTask?.cancel()
+        do { try Data("waiting".utf8).write(to: signal, options: .atomic) } catch { return }
+        #if os(macOS)
+        let center = DistributedNotificationCenter.default()
+        if let previous = outputRaceObserver { center.removeObserver(previous) }
+        let name = Notification.Name("com.dbakp.taskfold.output-race." + UUID().uuidString.lowercased())
+        let observer = center.addObserver(forName: name, object: nil, queue: .main) { _ in
+            try? Data("invalidate".utf8).write(to: signal, options: .atomic)
+        }
+        outputRaceObserver = observer
+        do { try Data(name.rawValue.utf8).write(to: signal.deletingLastPathComponent().appendingPathComponent("task-output-race-notification.txt"), options: .atomic) }
+        catch { center.removeObserver(observer); return }
+        #endif
+        outputRaceTask = Task { @MainActor [weak self] in
+            #if os(macOS)
+            defer { DistributedNotificationCenter.default().removeObserver(observer) }
+            #endif
+            let deadline = Date().addingTimeInterval(90)
+            while !Task.isCancelled, Date() < deadline {
+                guard let self, self.userID == "ui-testing" else { return }
+                if let data = try? Data(contentsOf: signal), data == Data("invalidate".utf8) {
+                    if workspace { self.accountGeneration = UUID() }
+                    else if var tasks = self.snapshot.tables["tasks"], !tasks.isEmpty {
+                        var changed = false
+                        for index in tasks.indices {
+                            let original = tasks[index].string("description")
+                            let edited = original.replacingOccurrences(of: "Résumé", with: "Re\u{301}sume\u{301}")
+                            guard original == edited else { return }
+                            if !original.utf8.elementsEqual(edited.utf8) { tasks[index]["description"] = .string(edited); changed = true }
+                        }
+                        guard changed else { try? Data("fixture-missing-accented-source".utf8).write(to: signal, options: .atomic); return }
+                        self.snapshot.tables["tasks"] = tasks
+                    }
+                    try? Data((workspace ? "applied-workspace" : "applied-source").utf8).write(to: signal, options: .atomic)
+                    return
+                }
+                do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+            }
+        }
+    }
+    #endif
+
     /// One store per process so notification actions and App Intents share the app's data.
     static let shared = Store()
     #if DEBUG
@@ -20,6 +85,10 @@ final class Store {
     private(set) var recordedDraftAdmissionStatus = "Ready"
     #endif
     #if DEBUG
+    @ObservationIgnored private var outputRaceTask: Task<Void, Never>?
+    #if os(macOS)
+    @ObservationIgnored private var outputRaceObserver: NSObjectProtocol?
+    #endif
     @ObservationIgnored private var workflowFixtureFailureConsumed = false
     @ObservationIgnored private var sharedCaptureFixtureFailureConsumed = false
     #endif

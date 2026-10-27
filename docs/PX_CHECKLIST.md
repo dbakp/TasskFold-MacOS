@@ -253,3 +253,26 @@ largest mobile text. Final captures were inspected; the phone action is fully
 visible after normal scrolling. Native initial failures and the Form-action/test
 query corrections are recorded in audio-comment-claims/. Hardware, spoken and
 full application/server lifecycle acceptance are not implied.
+
+
+## 2026-10-27 — reviewed PDF/CSV byte release and exact source refresh
+
+- [x] Live source, workspace incarnation, selected options and presentation checks
+  at PDF/CSV byte release, including CSV Share. Separate Save identities reject
+  stale callbacks; closing or cancelling permanently revokes old permits.
+- [x] Exact UTF-8 source comparison and task-cache refresh for canonically equivalent
+  edits. Two failing-before regressions reproduce the original comparison/cache bugs;
+  unchanged rows retain cached results. Pinned-note checks use the whole record.
+- [x] Actual local PDF/CSV Save/readback and cancellation, source/incarnation changes
+  while Save is open, unchanged saved tables and cold return: four native Mac cases
+  and five each on iPhone/iPad Simulator, no failures/skips/reported runtime warnings.
+- [x] Fourteen new Core cases per repo. Focused totals: Mac 105 passed plus two
+  existing fixture-dependent skips; iOS 106 passed. Full saved CSV bytes agree on all
+  three platforms; PDF readback preserves multiple pages and final instructions.
+- [ ] Real authenticated account-picker/multi-window races, external cloud-provider
+  delivery, native pinned-note source changes, spoken/largest-text output acceptance
+  and hardware printing remain open. Already-released provider copies cannot be recalled.
+
+Evidence: [task-output-release](task-output-release/README.md). This closes a scoped
+rank-3 output-safety checkpoint, not the full Px goal. Real audio tests remain
+user-deferred; no microphone/speech permissions or speaker test was requested.

@@ -1,0 +1,80 @@
+[
+  {
+    "file": "mac-workspace.png",
+    "attachment": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "00006000-000C59161EC3801E",
+      "deviceName": "My Mac",
+      "exportedFileName": "149990F2-A736-4F2E-9783-ADFC18E56F9D.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "CSV Save revoked by workspace incarnation_0_D35DAFA1-EF39-4398-B433-82BD9B422ABC.png",
+      "timestamp": 1793139360.763
+    },
+    "inspected": true,
+    "inspection": "Save panel dismissed after workspace incarnation revocation; the normal task list is readable. The cold-return preservation assertions separately verify unchanged saved tables."
+  },
+  {
+    "file": "mac-source.png",
+    "attachment": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "00006000-000C59161EC3801E",
+      "deviceName": "My Mac",
+      "exportedFileName": "D1DFF421-C4FF-4945-AC3D-44B82DC950C7.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "PDF Save revoked by changed source_0_879D2CF7-BBBE-431C-832D-66FE7C1C6177.png",
+      "timestamp": 1793139430.769
+    },
+    "inspected": true,
+    "inspection": "Source recovery message and Close controls readable; CSV content uses normal vertical scrolling. Mac navigation title remains at the top of the recovery sheet."
+  },
+  {
+    "file": "mac-csv-review.png",
+    "attachment": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "00006000-000C59161EC3801E",
+      "deviceName": "My Mac",
+      "exportedFileName": "0532135C-D09A-4051-A47C-11042E33554C.png",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Mac task CSV review_0_F4331C7A-FCDB-4A1F-80B4-00B2A1B38370.png",
+      "timestamp": 1793139495.119
+    },
+    "inspected": true,
+    "inspection": "Source recovery message and Close controls readable; CSV content uses normal vertical scrolling. Mac navigation title remains at the top of the recovery sheet."
+  },
+  {
+    "file": "mac-full.csv",
+    "attachment": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "00006000-000C59161EC3801E",
+      "deviceName": "My Mac",
+      "exportedFileName": "7E853CEF-2ACE-4F46-9369-73A3638949ED.csv",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Actual Mac task-row CSV_0_C21FC579-894F-444E-8A7F-35AD738C9D87.csv",
+      "timestamp": 1793139468.069
+    }
+  },
+  {
+    "file": "mac-reduced.csv",
+    "attachment": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "00006000-000C59161EC3801E",
+      "deviceName": "My Mac",
+      "exportedFileName": "9CF829A0-17BB-40D7-9D97-703EC836C141.csv",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Actual Mac CSV without notes or checklists_0_E1B9D8A0-93B3-4A3E-9E96-8081CAB462E3.csv",
+      "timestamp": 1793139494.995
+    }
+  },
+  {
+    "file": "mac-output.pdf",
+    "attachment": {
+      "configurationName": "Test Scheme Action",
+      "deviceId": "00006000-000C59161EC3801E",
+      "deviceName": "My Mac",
+      "exportedFileName": "E1975B7B-E02E-48E4-A0E0-AC3971AD5FA6.pdf",
+      "isAssociatedWithFailure": false,
+      "suggestedHumanReadableName": "Guarded native PDF saved on Mac_0_E3434970-7F40-4BD4-A957-08CD75ECBBD6.pdf",
+      "timestamp": 1793139393.677
+    }
+  }
+]

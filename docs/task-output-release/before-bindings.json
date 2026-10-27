@@ -1,0 +1,10 @@
+{
+  "originalSources": {
+    "Taskfold/Core/Models.swift": "e772a69ed12dbae35370ebf5e3e68c2f9fdb77a89ad55e7d1e218edcd2a6aa1b",
+    "Taskfold/Core/PrintDocument.swift": "78770ee66c1c6c3d6d943ee53a17d3ca40ad64e09597f6f0f3bd7b2ca0137bfd"
+  },
+  "sourceBefore": "one case, seven assertion failures",
+  "cacheBefore": "one case, three assertion failures",
+  "originalCommit": "b2a5e4201b398d293c2526010c6df5ea60e8d62c",
+  "scope": "Separate controlled source-level before runs: PrintDocument.swift for the text regression; Models.swift for the cache regression. Not a combined native before build."
+}

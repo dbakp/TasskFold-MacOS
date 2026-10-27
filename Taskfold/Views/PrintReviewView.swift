@@ -48,13 +48,22 @@ struct PrintReviewRequest: Identifiable {
     let workspace: WorkspaceBinding
     let isCurrent: @MainActor () -> Bool
 }
-private struct PDFFileDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.pdf] }
-    var data: Data
-    init(data: Data) { self.data = data }
-    init(configuration: ReadConfiguration) throws { data = configuration.file.regularFileContents ?? Data() }
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
+/// Each Save owns an immutable item and callback identity. Removing this child
+/// revokes late provider requests; an earlier callback cannot settle a later Save.
+@MainActor private struct TaskOutputSavePresenter<Item: ReviewedTaskOutputTransfer>: View {
+    let item: Item
+    let filename: String
+    let finish: (UUID, Result<URL, Error>?) -> Void
+    @State private var showing = false
+    var body: some View {
+        Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity).allowsHitTesting(false)
+            .fileExporter(isPresented: $showing, item: item, contentTypes: [Item.contentType], defaultFilename: filename,
+                          onCompletion: { finish(item.id, $0) }, onCancellation: { finish(item.id, nil) })
+            .task { showing = true }
+            .onDisappear { item.permit.invalidate() }
+    }
 }
+
 
 struct PrintReviewView: View {
     @Environment(Store.self) private var store
@@ -64,11 +73,11 @@ struct PrintReviewView: View {
     @State private var options = TaskPrintRenderer.Options()
     @State private var output: TaskPrintRenderer.Output?
     @State private var renderedOptions: TaskPrintRenderer.Options?
-    @State private var exportData = Data()
+    @State private var exportItem: TaskPDFTransfer?
+    @State private var outputLifetime = ReviewedTaskOutputLifetime()
     @State private var failure: String?
     @State private var status: String?
     @State private var retry = 0
-    @State private var exporting = false
     @State private var printing = false
     @State private var showingOptions = false
     @State private var showingCSV = false
@@ -97,7 +106,7 @@ struct PrintReviewView: View {
                     if let failure {
                         ScrollView { VStack(alignment: .leading, spacing: 12) { Text(failure).foregroundStyle(.red).accessibilityIdentifier("printError"); Button("Try again") { retry += 1 } }.padding() }
                     }
-                    if let output = prepared { NativePDFPreview(data: output.data).accessibilityIdentifier("printPDFPreview") }
+                    if let output = prepared { NativePDFPreview(data: output.data).accessibilityIdentifier("printPDFPreview").accessibilityHidden(exportItem != nil || showingOptions || showingCSV || printing) }
                     else if failure == nil { ProgressView("Preparing pages…").frame(maxWidth: .infinity, maxHeight: .infinity) }
                     else { Spacer(minLength: 12) }
                     ViewThatFits(in: .horizontal) {
@@ -108,7 +117,7 @@ struct PrintReviewView: View {
                     ContentUnavailableView("Document changed", systemImage: "doc.badge.clock", description: Text("Close this preview and reopen it from your current workspace. Your saved work is unchanged."))
                         .accessibilityIdentifier("printSourceChanged")
                 }
-            }.navigationTitle("Print & export")
+            }.frame(maxWidth: .infinity, maxHeight: .infinity).navigationTitle("Print & export")
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
@@ -119,11 +128,15 @@ struct PrintReviewView: View {
                 .sheet(isPresented: $showingOptions) { optionsSheet }
                 .sheet(isPresented: $showingCSV) { TaskCSVReview(request: request, options: .init(notes: options.notes, checklists: options.checklists)) }
                 .task(id: RenderKey(options: options, retry: retry, available: available)) { await render() }
-                .onChange(of: available) { _, valid in if !valid { output = nil; renderedOptions = nil; exportData = Data(); exporting = false; printing = false; showingOptions = false; showingCSV = false } }
-                .fileExporter(isPresented: $exporting, document: PDFFileDocument(data: exportData), contentType: .pdf, defaultFilename: filename) { result in
-                    guard available else { return }
-                    switch result { case .success: status = "PDF saved"; case .failure(let error): if (error as NSError).code != NSUserCancelledError { failure = error.localizedDescription } }
+                .onChange(of: available) { _, valid in
+                    invalidateExport(); outputLifetime.close()
+                    if valid { outputLifetime = ReviewedTaskOutputLifetime() }
+                    else { output = nil; renderedOptions = nil; printing = false; showingOptions = false; showingCSV = false }
                 }
+                .onChange(of: options) { _, _ in invalidateExport(); outputLifetime.close(); outputLifetime = ReviewedTaskOutputLifetime() }
+                .onAppear { if available, !outputLifetime.isActive { outputLifetime = ReviewedTaskOutputLifetime() } }
+                .onDisappear { outputLifetime.close(); invalidateExport() }
+                .background { exportPresenter }
                 #if os(iOS)
                 .sheet(isPresented: $printing) { NativePrintPanel(data: prepared?.data ?? Data(), title: request.document.title, allowed: available, finish: { error in printing = false; if let error { failure = error } }) }
                 #endif
@@ -170,8 +183,38 @@ struct PrintReviewView: View {
         }
     }
     private var saveButton: some View {
-        Button("Save PDF…", systemImage: "square.and.arrow.down") { guard available, let output = prepared else { return }; exportData = output.data; status = nil; exporting = true }
-            .disabled(!available || prepared == nil).accessibilityIdentifier("saveTaskPDF")
+        Button("Save PDF…", systemImage: "square.and.arrow.down") {
+            guard available, exportItem == nil, let output = prepared else { return }
+            let selected = options, currentOptions = $options
+            let store = store, binding = request.workspace, check = request.isCurrent, lifetime = outputLifetime
+            exportItem = TaskPDFTransfer(permit: ReviewedTaskOutput(data: output.data, allowed: {
+                lifetime.isActive && currentOptions.wrappedValue == selected && binding.matches(account: store.userID, generation: store.workspaceGeneration) && check()
+            }))
+            status = nil
+            #if DEBUG
+            store.beginTaskOutputRaceFixture()
+            #endif
+        }
+            .disabled(!available || prepared == nil || exportItem != nil).accessibilityIdentifier("saveTaskPDF")
+    }
+    private func invalidateExport() { exportItem?.permit.invalidate(); exportItem = nil }
+    @ViewBuilder private var exportPresenter: some View {
+        if let item = exportItem {
+            TaskOutputSavePresenter(item: item, filename: filename) { id, result in
+                guard exportItem?.id == id else { return }
+                defer { invalidateExport() }
+                guard item.permit.isAllowed else { return }
+                switch result {
+                case .some(.success(let url)):
+                    #if DEBUG
+                    store.recordTaskOutputFixtureResult(kind: "pdf", url: url)
+                    #endif
+                    status = "PDF saved"
+                case .some(.failure(let error)): if (error as NSError).code != NSUserCancelledError { failure = error.localizedDescription }
+                case .none: break
+                }
+            }.id(item.id)
+        }
     }
     private var printButton: some View {
         Button("Print…", systemImage: "printer") {
@@ -247,24 +290,6 @@ private struct NativePDFPreview: NSViewRepresentable {
 #endif
 
 
-private struct TaskCSVFileDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.commaSeparatedText] }
-    let data: Data
-    init(data: Data) { self.data = data }
-    init(configuration: ReadConfiguration) throws { data = configuration.file.regularFileContents ?? Data() }
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
-}
-private struct TaskCSVShare: Transferable {
-    let data: Data
-    let allowed: @MainActor () -> Bool
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(exportedContentType: .commaSeparatedText) { value in
-            guard await value.allowed() else { throw AppFailure(message: "The source or workspace changed. Reopen this export from the current list.") }
-            return value.data
-        }.suggestedFileName("Taskfold-tasks.csv")
-    }
-}
-
 /// A second, explicit data review uses the same immutable source/access contract as PDF.
 private struct TaskCSVReview: View {
     @Environment(Store.self) private var store
@@ -276,8 +301,8 @@ private struct TaskCSVReview: View {
     private var prepared: TaskRowCSV.Output? { renderedOptions == options ? output : nil }
     @State private var failure: String?
     @State private var status: String?
-    @State private var exporting = false
-    @State private var exportData = Data()
+    @State private var exportItem: TaskCSVTransfer?
+    @State private var outputLifetime = ReviewedTaskOutputLifetime()
     private var available: Bool { request.workspace.matches(account: store.userID, generation: store.workspaceGeneration) && request.isCurrent() }
     private struct Key: Equatable { let options: TaskRowCSV.Options; let available: Bool }
     var body: some View {
@@ -295,7 +320,13 @@ private struct TaskCSVReview: View {
                         Section {
                             Text("\(output.rows.count) rows · CSV").font(.headline).accessibilityIdentifier("csvRowCount")
                             Text("Formula-like text is protected for spreadsheets. Taskfold reads it back as the original text.").font(.caption).foregroundStyle(.secondary)
-                            Button("Save CSV…", systemImage: "square.and.arrow.down") { guard available, let current = prepared else { return }; exportData = current.data; status = nil; exporting = true }.accessibilityIdentifier("saveTaskCSV")
+                            Button("Save CSV…", systemImage: "square.and.arrow.down") {
+                                guard available, exportItem == nil, let current = prepared else { return }
+                                exportItem = transfer(current.data, selected: options); status = nil
+                                #if DEBUG
+                                store.beginTaskOutputRaceFixture()
+                                #endif
+                            }.disabled(exportItem != nil).accessibilityIdentifier("saveTaskCSV")
                             ShareLink(item: transfer(output.data, selected: options), preview: SharePreview(request.document.title, image: Image(systemName: "tablecells"))) { Label("Share CSV…", systemImage: "square.and.arrow.up") }.accessibilityIdentifier("shareTaskCSV")
                             if let status { Text(status).foregroundStyle(.secondary).accessibilityIdentifier("csvExportStatus") }
                         }
@@ -313,14 +344,15 @@ private struct TaskCSVReview: View {
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("closeTaskCSV") } }
             .task(id: Key(options: options, available: available)) { await prepare() }
-            .onChange(of: available) { _, valid in if !valid { output = nil; renderedOptions = nil; exportData = Data(); exporting = false } }
-            .fileExporter(isPresented: $exporting, document: TaskCSVFileDocument(data: exportData), contentType: .commaSeparatedText, defaultFilename: "Taskfold-tasks") { result in
-                guard available else { return }
-                switch result {
-                case .success: status = "CSV saved"
-                case .failure(let error): if (error as NSError).code != NSUserCancelledError { failure = error.localizedDescription }
-                }
+            .onChange(of: available) { _, valid in
+                invalidateExport(); outputLifetime.close()
+                if valid { outputLifetime = ReviewedTaskOutputLifetime() }
+                else { output = nil; renderedOptions = nil }
             }
+            .onChange(of: options) { _, _ in invalidateExport(); outputLifetime.close(); outputLifetime = ReviewedTaskOutputLifetime() }
+            .onAppear { if available, !outputLifetime.isActive { outputLifetime = ReviewedTaskOutputLifetime() } }
+            .onDisappear { outputLifetime.close(); invalidateExport() }
+            .background { exportPresenter }
         }
         #if os(macOS)
         .frame(minWidth: 600, idealWidth: 720, minHeight: 580, idealHeight: 760)
@@ -344,10 +376,31 @@ private struct TaskCSVReview: View {
             }
         }.accessibilityIdentifier("csvRow-" + row[1])
     }
-    private func transfer(_ data: Data, selected: TaskRowCSV.Options) -> TaskCSVShare {
-        let store = store, binding = request.workspace, check = request.isCurrent
+    private func invalidateExport() { exportItem?.permit.invalidate(); exportItem = nil }
+    @ViewBuilder private var exportPresenter: some View {
+        if let item = exportItem {
+            TaskOutputSavePresenter(item: item, filename: "Taskfold-tasks") { id, result in
+                guard exportItem?.id == id else { return }
+                defer { invalidateExport() }
+                guard item.permit.isAllowed else { return }
+                switch result {
+                case .some(.success(let url)):
+                    #if DEBUG
+                    store.recordTaskOutputFixtureResult(kind: "csv", url: url)
+                    #endif
+                    status = "CSV saved"
+                case .some(.failure(let error)): if (error as NSError).code != NSUserCancelledError { failure = error.localizedDescription }
+                case .none: break
+                }
+            }.id(item.id)
+        }
+    }
+    private func transfer(_ data: Data, selected: TaskRowCSV.Options) -> TaskCSVTransfer {
+        let store = store, binding = request.workspace, check = request.isCurrent, lifetime = outputLifetime
         let currentOptions = $options
-        return TaskCSVShare(data: data, allowed: { currentOptions.wrappedValue == selected && binding.matches(account: store.userID, generation: store.workspaceGeneration) && check() })
+        return TaskCSVTransfer(permit: ReviewedTaskOutput(data: data, allowed: {
+            lifetime.isActive && currentOptions.wrappedValue == selected && binding.matches(account: store.userID, generation: store.workspaceGeneration) && check()
+        }))
     }
     @MainActor private func prepare() async {
         output = nil; renderedOptions = nil; failure = nil; status = nil

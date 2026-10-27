@@ -1,0 +1,60 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "modelName" : "MacBook Pro",
+        "osBuildNumber" : "25G83",
+        "osVersion" : "26.6.2",
+        "platform" : "macOS"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 2,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1793137070.354,
+  "passedTests" : 2,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793136805.487,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "failed: caught error: \"Error Domain=NSCocoaErrorDomain Code=513 \"You don’t have permission to save the file “task-output-race-control.txt” in the folder “Taskfold”.\" UserInfo={NSFilePath=/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/task-output-race-control.txt, NSURL=file:///Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application%20Support/Taskfold/task-output-race-control.txt, NSUnderlyingError=0x7d4b750b0 {Error Domain=NSPOSIXErrorDomain Code=1 \"Operation not permitted\"}}\"",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TaskfoldMacUITests/testCSVSavePanelRevokesWorkspaceWithoutWriting()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testCSVSavePanelRevokesWorkspaceWithoutWriting",
+      "testName" : "testCSVSavePanelRevokesWorkspaceWithoutWriting()"
+    },
+    {
+      "failureText" : "failed: caught error: \"Error Domain=NSCocoaErrorDomain Code=513 \"You don’t have permission to save the file “task-output-race-control.txt” in the folder “Taskfold”.\" UserInfo={NSFilePath=/Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/task-output-race-control.txt, NSURL=file:///Users/davidbakposada/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application%20Support/Taskfold/task-output-race-control.txt, NSUnderlyingError=0x7d3d25a70 {Error Domain=NSPOSIXErrorDomain Code=1 \"Operation not permitted\"}}\"",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 3,
+      "testIdentifierString" : "TaskfoldMacUITests/testPDFSavePanelRevokesChangedSourceWithoutWriting()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testPDFSavePanelRevokesChangedSourceWithoutWriting",
+      "testName" : "testPDFSavePanelRevokesChangedSourceWithoutWriting()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 4
+}

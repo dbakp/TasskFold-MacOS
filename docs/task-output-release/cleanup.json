@@ -1,0 +1,48 @@
+{
+  "removedObsoleteOwnedResults": [
+    {
+      "path": "/tmp/taskfold-output-release-mac.xcresult",
+      "allocatedBytes": 66437120
+    },
+    {
+      "path": "/tmp/taskfold-output-release-phone.xcresult",
+      "allocatedBytes": 36773888
+    },
+    {
+      "path": "/tmp/taskfold-output-release-ipad.xcresult",
+      "allocatedBytes": 22900736
+    },
+    {
+      "path": "/tmp/taskfold-output-release-final-mac.xcresult",
+      "allocatedBytes": 1929216
+    },
+    {
+      "path": "/tmp/taskfold-output-release-verified-mac.xcresult",
+      "allocatedBytes": 2699264
+    },
+    {
+      "path": "/tmp/taskfold-output-release-verified-phone.xcresult",
+      "allocatedBytes": 13037568
+    },
+    {
+      "path": "/tmp/taskfold-output-release-verified-ipad.xcresult",
+      "allocatedBytes": 29351936
+    },
+    {
+      "path": "/tmp/taskfold-output-release-accepted-phone.xcresult",
+      "allocatedBytes": 444878848
+    },
+    {
+      "path": "/tmp/taskfold-output-release-accepted-ipad.xcresult",
+      "allocatedBytes": 465190912
+    }
+  ],
+  "allocatedBytesRemoved": 1083199488,
+  "retainedFinalResults": [
+    "/tmp/taskfold-output-release-accepted-mac.xcresult",
+    "/tmp/taskfold-output-release-final-phone.xcresult",
+    "/tmp/taskfold-output-release-final-ipad.xcresult"
+  ],
+  "sessionCleanup": "No Taskfold app or xcodebuild process remained; the two used Simulators were shut down. Reused signed builds and Core caches retained.",
+  "qualification": "Allocated bytes are not a guarantee of physical space recovered on APFS."
+}

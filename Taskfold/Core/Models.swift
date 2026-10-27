@@ -1,5 +1,40 @@
 import Foundation
 
+/// Exact authored-source comparison for caches and reviewed output. Domain-level
+/// Record/JSON equality keeps its existing semantic behavior.
+enum AuthoredValueComparison {
+    static func sameRows(_ lhs: [Record], _ rhs: [Record]) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        let identical = lhs.withUnsafeBufferPointer { a in rhs.withUnsafeBufferPointer { a.baseAddress == $0.baseAddress } }
+        if identical { return true }
+        return zip(lhs, rhs).allSatisfy { exactJSON(.object($0.fields), .object($1.fields)) }
+    }
+    /// Iterative traversal avoids adding recursive stack depth for opaque fields
+    /// in a pinned note. Object ordering is irrelevant; key/value bytes are exact.
+    static func exactJSON(_ lhs: JSON, _ rhs: JSON) -> Bool {
+        var pending = [(lhs, rhs)]
+        while let (a, b) = pending.popLast() {
+            switch (a, b) {
+            case (.null, .null): break
+            case (.bool(let x), .bool(let y)): if x != y { return false }
+            case (.number(let x), .number(let y)): if x.bitPattern != y.bitPattern { return false }
+            case (.string(let x), .string(let y)): if !x.utf8.elementsEqual(y.utf8) { return false }
+            case (.array(let x), .array(let y)):
+                guard x.count == y.count else { return false }
+                pending.append(contentsOf: zip(x, y))
+            case (.object(let x), .object(let y)):
+                guard x.count == y.count else { return false }
+                for (key, value) in x {
+                    guard let index = y.index(forKey: key), key.utf8.elementsEqual(y[index].key.utf8) else { return false }
+                    pending.append((value, y[index].value))
+                }
+            default: return false
+            }
+        }
+        return true
+    }
+}
+
 /// Lossless JSON keeps optional and future backend fields intact across edits.
 enum JSON: Codable, Equatable, Sendable {
     case string(String), number(Double), bool(Bool), array([JSON]), object([String: JSON]), null
@@ -1490,7 +1525,7 @@ final class TaskCache {
         return roots
     }
     @discardableResult func update(_ rows: [Record]) -> Bool {
-        guard source != rows else { return false }
+        guard !AuthoredValueComparison.sameRows(source, rows) else { return false }
         projectPresentation = nil; projectOutline = nil; labelPositions = nil
         source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; inboxProductiveResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }

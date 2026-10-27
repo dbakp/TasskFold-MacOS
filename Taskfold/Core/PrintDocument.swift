@@ -13,18 +13,43 @@ struct PrintDocument: Equatable, Sendable {
         var heading = false
         var completable = true
         var csv: CSVSource? = nil
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.sourceID.utf8.elementsEqual(rhs.sourceID.utf8) && lhs.title.utf8.elementsEqual(rhs.title.utf8) &&
+            lhs.metadata.utf8.elementsEqual(rhs.metadata.utf8) && lhs.notes.utf8.elementsEqual(rhs.notes.utf8) &&
+            lhs.completed == rhs.completed && lhs.depth == rhs.depth && lhs.heading == rhs.heading &&
+            lhs.completable == rhs.completable && lhs.csv == rhs.csv
+        }
     }
     struct CSVSource: Equatable, Sendable {
         var values: [String: JSON]
         var project: String, labels: [String], assignee: String, parentPath: String, parentSource: String
         var readable: Bool
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.readable == rhs.readable && lhs.project.utf8.elementsEqual(rhs.project.utf8) &&
+            lhs.assignee.utf8.elementsEqual(rhs.assignee.utf8) && lhs.parentPath.utf8.elementsEqual(rhs.parentPath.utf8) &&
+            lhs.parentSource.utf8.elementsEqual(rhs.parentSource.utf8) && lhs.labels.count == rhs.labels.count &&
+            zip(lhs.labels, rhs.labels).allSatisfy { $0.utf8.elementsEqual($1.utf8) } &&
+            AuthoredValueComparison.exactJSON(.object(lhs.values), .object(rhs.values))
+        }
     }
-    struct Group: Equatable, Sendable { let title: String; let items: [Item] }
+    struct Group: Equatable, Sendable {
+        let title: String; let items: [Item]
+        static func == (lhs: Self, rhs: Self) -> Bool { lhs.title.utf8.elementsEqual(rhs.title.utf8) && lhs.items == rhs.items }
+    }
     let title: String
     let subtitle: String
     let groups: [Group]
     let noteOnly: Bool
     let hierarchyResults: Bool
+    /// Review fences compare authored bytes, not String's canonical equivalence.
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.title.utf8.elementsEqual(rhs.title.utf8) && lhs.subtitle.utf8.elementsEqual(rhs.subtitle.utf8) &&
+        lhs.noteOnly == rhs.noteOnly && lhs.hierarchyResults == rhs.hierarchyResults && lhs.groups == rhs.groups
+    }
+    static func matchesSource(_ current: Record?, _ captured: Record) -> Bool {
+        guard let current else { return false }
+        return AuthoredValueComparison.exactJSON(.object(current.fields), .object(captured.fields))
+    }
     var count: Int { Set(groups.flatMap { $0.items.filter { $0.depth == 0 && $0.completable }.map(\.sourceID) }).count }
     static func capture(title: String, subtitle: String, groups: [(String, [Record])], projects: [Record], labels: [Record], noteOnly: Bool = false, hierarchyRoots: [Record]? = nil, expandOrdinaryChecklists: Bool = false, assigneeName: (Record) -> String = { _ in "" }) throws -> Self {
         var parentContext: [String: String] = [:]

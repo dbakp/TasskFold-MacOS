@@ -121,7 +121,7 @@ private struct PinnedNoteDetail: View {
         guard let task = live else { return }
         do {
             let document = try PrintDocument.capture(title: task.title, subtitle: "Pinned note", groups: [("", [task])], projects: [], labels: [], noteOnly: true)
-            printReview = PrintReviewRequest(document: document, workspace: binding, isCurrent: { live == task })
+            printReview = PrintReviewRequest(document: document, workspace: binding, isCurrent: { PrintDocument.matchesSource(live, task) })
         } catch { failureTitle = "Could not prepare document"; failure = error.localizedDescription }
     }
     private func unpin() {

@@ -1,0 +1,39 @@
+{
+  "mac-full.csv": {
+    "sha256": "162ff465368100472ad44405378b4dc5e845d3383abf36e0cca4ca3449e750d9",
+    "rows": 4,
+    "columns": 19,
+    "headingRows": 1,
+    "notesIncluded": true,
+    "localParentReferencesResolve": true,
+    "parsedIndependently": true
+  },
+  "phone-full.csv": {
+    "sha256": "162ff465368100472ad44405378b4dc5e845d3383abf36e0cca4ca3449e750d9",
+    "rows": 4,
+    "columns": 19,
+    "headingRows": 1,
+    "notesIncluded": true,
+    "localParentReferencesResolve": true,
+    "parsedIndependently": true
+  },
+  "ipad-full.csv": {
+    "sha256": "162ff465368100472ad44405378b4dc5e845d3383abf36e0cca4ca3449e750d9",
+    "rows": 4,
+    "columns": 19,
+    "headingRows": 1,
+    "notesIncluded": true,
+    "localParentReferencesResolve": true,
+    "parsedIndependently": true
+  },
+  "mac-reduced.csv": {
+    "sha256": "b8640ae71e4a1b909f791e704647ff552c734dd01164fd2b545bd54977c65b20",
+    "rows": 3,
+    "columns": 19,
+    "headingRows": 1,
+    "notesIncluded": false,
+    "localParentReferencesResolve": true,
+    "parsedIndependently": true
+  },
+  "fullFilesByteIdenticalAcrossPlatforms": true
+}

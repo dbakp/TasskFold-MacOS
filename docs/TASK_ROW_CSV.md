@@ -81,3 +81,15 @@ now pass; iPhone/iPad actual Save/readback also pass. Mac options/cancellation,
 byte-identical full CSVs and exact saved-table/cold preservation are verified.
 See NATIVE_TASK_OUTPUT.md for exact results, remaining keyboard/visual limits and
 source/account/provider/spoken gates; this does not close the broader rank.
+
+
+### Reviewed output safety checkpoint (2026-10-27)
+
+PDF/CSV Save and CSV Share now check the exact source, selected options, workspace
+incarnation and presentation at byte release. Old Save callbacks cannot settle a
+new Save. UTF-8 source changes invalidate the task cache and the captured review.
+Actual native local Save/readback, cancellation, source/incarnation revocation and
+cold-return preservation pass on Mac/iPhone/iPad (4/5/5 selected cases). External
+providers, authenticated account-picker/multi-window and spoken/largest-text gates
+remain open. Already-released bytes cannot be recalled. See
+[verification and limits](task-output-release/README.md).
