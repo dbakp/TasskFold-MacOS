@@ -8183,3 +8183,62 @@ Only synthetic data was used. Scale fixtures restore their initial state; test
 apps are closed after acceptance. One current host/build per platform may remain
 as a bounded working cache for the next active-goal checks, instead of repeatedly
 rebuilding it. Older cache bindings in earlier stages remain historical.
+
+
+## 27 October: background workflow widget publication
+
+Fresh personal workflow saves now capture a value-only widget input after the
+private cache is durable and render/encode it on one utility worker. Only the
+newest pending input is retained. A cancelled success or failure cannot publish
+or clear a newer projection. Workspace generation, session, access revision and
+current readable account are checked again before the file replacement on the
+app actor. Sign-out/access redaction and widget completion receipts retain their
+immediate publication path. Failed project saves requeue their restored state;
+cold startup still republishes the durable workspace synchronously.
+
+The full 5,000-task input exactly matches the original projection, including all
+5,001 lists, 5,000 groups and membership. Each repo has 88 passing selected Core
+cases; Mac additionally skips one existing note/Focus fixture-dependent case.
+The strengthened full-size input check and five queue cases pass again in a
+six-case targeted round. Both final signed native builds pass. Twelve distinct
+workflow/widget cases have passing coverage on each phone, tablet and Mac (36
+platform/case pairs), combining the broad matrix and final two-case retries.
+The final retries verify fresh nonce-scoped result creation, held-render privacy
+fences/recovery with unchanged data, and actual intent completion/retry/Undo/cold
+return. They have no runtime warnings. The broad Mac matrix retains seven
+internal XCTest QoS warnings, matching the previous scale stage; its explicit
+warning allowance is not clean-runtime evidence.
+
+Some initial native attempts failed because the disposable host omitted heading
+opt-in, a scale assertion expected the wrong synthetic account, Cocoa text was
+queried only through its empty label, or fresh test output had no directory.
+iOS DEBUG entry also seeded the widget before opening its local workspace.
+Preparation now offers an explicit test-only --headings flag and checks the
+actual authoring state; result folders are unique and created before use; empty
+fixtures show Unavailable and completion waits for a captured token. The retained
+coverage map records the passing job for every case. Production queue/capture/
+persistence bodies are unchanged between the matrix and targeted fixture fixes.
+Current binary hashes bind the final targeted checks; old matrix binaries were
+not retrospectively hashed. Exact prepared source hashes are retained for them.
+
+Debug timing now separates durable save return from complete widget readiness:
+
+| Device | 1,000-task save return | Widget ready | 5,000-task save return | Widget ready |
+| --- | ---: | ---: | ---: | ---: |
+| iPhone Simulator | 1.52s | 2.34s | 6.82s | 19.27s |
+| iPad Simulator | 1.39s | 2.23s | 6.96s | 20.08s |
+| Mac | 0.89s | 1.76s | 4.45s | 18.63s |
+
+The earlier 5,000-task synchronous save, including its widget publication, took
+13.30/13.54/11.38s. Moving rendering off that path does not make total widget
+availability faster, or prove responsive production input. The remaining 4–7s
+save pause is still too long. Durable-cache I/O, normalization/local-history
+scaling, full production rendering and hosted/paired bulk delivery remain open,
+along with wider ranked Px work. All normal rollout flags and user deferrals
+remain unchanged. No real workspace, hosted schema or service was changed.
+
+See workflow-widget-publication/validation.json, accepted-metrics.json and the
+source/binary/equivalence bindings. Only synthetic data was used. One current
+native source/build cache per platform remains for ongoing work; obsolete owned
+scratch copies, raw result bundles and test sessions are cleaned after evidence
+retention.

@@ -33,7 +33,11 @@ final class WidgetListTests: XCTestCase {
         let tables = Dictionary(grouping: changes, by: \.table).mapValues { $0.map { Record($0.fields) } }
         let tasks = try XCTUnwrap(tables["tasks"])
         let payload = WidgetProjection.payload(tasks: tasks, projects: tables["projects"]!, account: account, now: now, labels: tables["labels"]!, sections: tables["sections"]!, calendar: cph, viewOrders: tables["view_orders"]!)
-        let data = try JSONEncoder().encode(JSON.object(payload)), snapshot = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+        var input = WidgetPublicationInput(tasks: tasks, projects: tables["projects"]!, account: account)
+        input.now = now; input.calendar = cph; input.labels = tables["labels"]!
+        input.sections = tables["sections"]!; input.viewOrders = tables["view_orders"]!
+        let data = try input.encoded(), snapshot = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+        XCTAssertEqual(try JSONDecoder().decode([String: JSON].self, from: data), payload, "The captured worker input must preserve the entire full-size projection")
         XCTAssertEqual(snapshot.tasks.count, count); XCTAssertEqual(snapshot.lists.count, count + 1)
         let projectList = try XCTUnwrap(snapshot.lists.first { $0.kind == "project" })
         XCTAssertEqual(projectList.days["*"], tasks.map(\.id))

@@ -1,0 +1,104 @@
+{
+  "mac": {
+    "1000": {
+      "widgetLists": 1001,
+      "tasks": 1001,
+      "widgetReadySeconds": 1.764113584,
+      "error": null,
+      "proof": "54ba60c7-0bdd-4d75-b1f2-b49484fc7ca0",
+      "saved": true,
+      "commands": 4001,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "taskRevisionDelta": 1,
+      "seconds": 0.891726084,
+      "widgetIdle": true,
+      "pending": 4001,
+      "count": 1000,
+      "undoCommands": 1
+    },
+    "5000": {
+      "undoCommands": 1,
+      "error": null,
+      "widgetLists": 5001,
+      "widgetIdle": true,
+      "pending": 20001,
+      "seconds": 4.453689625,
+      "tasks": 5001,
+      "widgetReadySeconds": 18.632121084,
+      "saved": true,
+      "count": 5000,
+      "taskRevisionDelta": 1,
+      "proof": "9c43722f-0b49-4304-afd5-44276776ff3d",
+      "commands": 20001,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001"
+    }
+  },
+  "phone": {
+    "1000": {
+      "widgetIdle": true,
+      "widgetReadySeconds": 2.336311583,
+      "commands": 4001,
+      "taskRevisionDelta": 1,
+      "pending": 4001,
+      "saved": true,
+      "count": 1000,
+      "tasks": 1001,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "error": null,
+      "undoCommands": 1,
+      "widgetLists": 1001,
+      "proof": "7bbedf05-2971-49d3-98e2-6fb98ea1fa9c",
+      "seconds": 1.516498625
+    },
+    "5000": {
+      "pending": 20001,
+      "proof": "c9e5fa0f-26af-4ca8-a980-ca52d76c6aa7",
+      "saved": true,
+      "count": 5000,
+      "taskRevisionDelta": 1,
+      "tasks": 5001,
+      "widgetReadySeconds": 19.269248291,
+      "error": null,
+      "seconds": 6.823741541,
+      "widgetIdle": true,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "undoCommands": 1,
+      "widgetLists": 5001,
+      "commands": 20001
+    }
+  },
+  "tablet": {
+    "5000": {
+      "undoCommands": 1,
+      "saved": true,
+      "widgetReadySeconds": 20.084704042,
+      "commands": 20001,
+      "tasks": 5001,
+      "widgetIdle": true,
+      "seconds": 6.957215042,
+      "count": 5000,
+      "error": null,
+      "pending": 20001,
+      "widgetLists": 5001,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "taskRevisionDelta": 1,
+      "proof": "6e97a049-246b-47bd-8241-6c44e447cec0"
+    },
+    "1000": {
+      "widgetReadySeconds": 2.232983084,
+      "commands": 4001,
+      "saved": true,
+      "pending": 4001,
+      "widgetLists": 1001,
+      "widgetAccount": "ec240000-0000-4000-8000-000000000001",
+      "seconds": 1.390376042,
+      "undoCommands": 1,
+      "widgetIdle": true,
+      "tasks": 1001,
+      "proof": "b34eaa50-608a-47ed-89eb-45a924e9759f",
+      "error": null,
+      "count": 1000,
+      "taskRevisionDelta": 1
+    }
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "date": "2026-10-27",
+  "allNativeInvocationsTerminal": true,
+  "uninstalledReservedSimulatorBundles": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "bundle": "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"
+    }
+  ],
+  "removedScratchDirectories": [
+    {
+      "name": "taskfold-background-ios-prepared",
+      "logicalBytes": 7411267
+    },
+    {
+      "name": "taskfold-background-ios-ready",
+      "logicalBytes": 7411285
+    },
+    {
+      "name": "taskfold-background-ios-final",
+      "logicalBytes": 7411285
+    },
+    {
+      "name": "taskfold-background-ios-verified",
+      "logicalBytes": 7411311
+    },
+    {
+      "name": "taskfold-background-ios-headings",
+      "logicalBytes": 7411938
+    },
+    {
+      "name": "taskfold-background-ios-finalinput",
+      "logicalBytes": 7411975
+    },
+    {
+      "name": "taskfold-background-ios-proof",
+      "logicalBytes": 7414180
+    },
+    {
+      "name": "taskfold-background-ios-checks",
+      "logicalBytes": 7414802
+    },
+    {
+      "name": "taskfold-background-mac-prepared",
+      "logicalBytes": 31888696
+    },
+    {
+      "name": "taskfold-background-mac-ready",
+      "logicalBytes": 31888682
+    },
+    {
+      "name": "taskfold-background-mac-final",
+      "logicalBytes": 31888682
+    },
+    {
+      "name": "taskfold-background-mac-headings",
+      "logicalBytes": 31889709
+    },
+    {
+      "name": "taskfold-background-mac-finalinput",
+      "logicalBytes": 31889748
+    },
+    {
+      "name": "taskfold-background-mac-proof",
+      "logicalBytes": 31891948
+    },
+    {
+      "name": "taskfold-background-mac-checks",
+      "logicalBytes": 31892310
+    },
+    {
+      "name": "taskfold-background-mac.xcresult",
+      "logicalBytes": 209140285
+    },
+    {
+      "name": "taskfold-background-mac-final.xcresult",
+      "logicalBytes": 1806351
+    },
+    {
+      "name": "taskfold-background-mac-checks.xcresult",
+      "logicalBytes": 323397
+    },
+    {
+      "name": "taskfold-background-mac-proof.xcresult",
+      "logicalBytes": 279070
+    },
+    {
+      "name": "taskfold-background-mac-initial-json",
+      "logicalBytes": 2939
+    },
+    {
+      "name": "taskfold-background-mac-final-json",
+      "logicalBytes": 2938
+    },
+    {
+      "name": "taskfold-background-mac-checks-json",
+      "logicalBytes": 866
+    },
+    {
+      "name": "taskfold-background-mac-proof-json",
+      "logicalBytes": 866
+    },
+    {
+      "name": "taskfold-background-phone.xcresult",
+      "logicalBytes": 274145
+    },
+    {
+      "name": "taskfold-background-phone-final.xcresult",
+      "logicalBytes": 8841430
+    },
+    {
+      "name": "taskfold-background-phone-checks.xcresult",
+      "logicalBytes": 411509
+    },
+    {
+      "name": "taskfold-background-phone-final-json",
+      "logicalBytes": 2075
+    },
+    {
+      "name": "taskfold-background-phone-checks-json",
+      "logicalBytes": 866
+    },
+    {
+      "name": "taskfold-background-tablet-final.xcresult",
+      "logicalBytes": 8076727
+    },
+    {
+      "name": "taskfold-background-tablet-checks.xcresult",
+      "logicalBytes": 419029
+    },
+    {
+      "name": "taskfold-background-tablet-final-json",
+      "logicalBytes": 2091
+    },
+    {
+      "name": "taskfold-background-tablet-checks-json",
+      "logicalBytes": 874
+    }
+  ],
+  "logicalBytesRemoved": 514602046,
+  "retained": [
+    "One current native host/build per platform, with updated source/binary bindings",
+    "Source package build caches",
+    "Filtered test-case logs, sanitized result summaries, metrics, current hashes and signed identity receipts in each repo"
+  ],
+  "note": "Logical bytes, not a claimed physical free-space delta. No real workspace, general Simulator runtime or unrelated app was removed."
+}

@@ -1,4 +1,74 @@
 import Foundation
+
+/// One renderer at a time, with only the newest pending projection retained.
+/// Cancellation is advisory: a renderer that finishes after invalidation must
+/// never publish its result (or clear a newer projection on failure).
+@MainActor final class WidgetPublicationQueue {
+    typealias Render = @Sendable () async throws -> Data
+    private struct Request {
+        let id: UUID
+        let render: Render
+        let complete: @MainActor (Result<Data, Error>) -> Void
+    }
+    private var pending: Request?
+    private var latest: UUID?
+    private var active: Task<Data, Error>?
+    private(set) var isIdle = true
+
+    func enqueue(render: @escaping Render, complete: @escaping @MainActor (Result<Data, Error>) -> Void) {
+        let request = Request(id: UUID(), render: render, complete: complete)
+        latest = request.id; pending = request
+        active?.cancel()
+        guard isIdle else { return }
+        isIdle = false
+        Task { await drain() }
+    }
+
+    func invalidate() {
+        latest = nil; pending = nil; active?.cancel()
+    }
+
+    private func drain() async {
+        while let request = pending {
+            pending = nil
+            let render = request.render
+            let worker = Task.detached(priority: .utility) {
+                try Task.checkCancellation()
+                let data = try await render()
+                try Task.checkCancellation()
+                return data
+            }
+            active = worker
+            let result = await worker.result
+            active = nil
+            if latest == request.id { request.complete(result) }
+        }
+        isIdle = true
+    }
+}
+
+
+#if DEBUG
+/// A deliberately uncooperative renderer for the reserved synthetic native host.
+actor WidgetPublicationNativeGate {
+    private var started = false
+    private var waiting: [CheckedContinuation<Void, Never>] = []
+    private var release: CheckedContinuation<Void, Never>?
+    func hold() async {
+        await withCheckedContinuation { continuation in
+            release = continuation; started = true
+            waiting.forEach { $0.resume() }; waiting = []
+        }
+    }
+    func hasStarted() -> Bool { started }
+    func waitUntilStarted() async {
+        if started { return }
+        await withCheckedContinuation { waiting.append($0) }
+    }
+    func resume() { release?.resume(); release = nil }
+}
+#endif
+
 #if canImport(Darwin)
 import Darwin
 #else

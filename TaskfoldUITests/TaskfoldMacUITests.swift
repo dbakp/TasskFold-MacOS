@@ -986,16 +986,19 @@ final class TaskfoldMacUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["widgetDraftCount"].label, "Drafts: 1"); app.terminate()
     }
     @MainActor func testWidgetIntentRecurringCompletionRetryUndoAndOldTap() throws {
+        func text(_ element: XCUIElement) -> String { (element.value as? String).flatMap { $0.isEmpty ? nil : $0 } ?? element.label }
         let app = XCUIApplication(); app.launchArguments = ["--uitesting", "--widget-action-testing", "--widget-action-seed"]; app.launch()
         XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10))
-        XCTAssertEqual(app.staticTexts["widgetRootState"].label, "Original: open")
+        XCTAssertEqual(text(app.staticTexts["widgetRootState"]), "Original: open")
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["widgetCompleteFixture"])
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 10), .completed, "The seeded task and captured completion token must be ready before invoking the real intent")
         app.buttons["widgetCompleteFixture"].click()
-        XCTAssertEqual(app.staticTexts["widgetRootState"].label, "Original: completed"); XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 1")
-        app.buttons["widgetRetryFixture"].click(); XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 1")
+        XCTAssertEqual(text(app.staticTexts["widgetRootState"]), "Original: completed"); XCTAssertEqual(text(app.staticTexts["widgetCopyCount"]), "Next copies: 1")
+        app.buttons["widgetRetryFixture"].click(); XCTAssertEqual(text(app.staticTexts["widgetCopyCount"]), "Next copies: 1")
         app.buttons["widgetUndoFixture"].click(); app.buttons["widgetRetryFixture"].click()
-        XCTAssertEqual(app.staticTexts["widgetRootState"].label, "Original: open"); XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 0")
+        XCTAssertEqual(text(app.staticTexts["widgetRootState"]), "Original: open"); XCTAssertEqual(text(app.staticTexts["widgetCopyCount"]), "Next copies: 0")
         app.terminate(); app.launchArguments = ["--uitesting", "--widget-action-testing"]; app.launch()
-        XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10)); XCTAssertEqual(app.staticTexts["widgetCopyCount"].label, "Next copies: 0")
+        XCTAssertTrue(app.staticTexts["widgetRootState"].waitForExistence(timeout: 10)); XCTAssertEqual(text(app.staticTexts["widgetCopyCount"]), "Next copies: 0")
     }
 
     @MainActor func testDeletionReviewKeepsTaskContentsAndRelaunch() throws {
@@ -5058,6 +5061,8 @@ extension SharedHeadingNativeTests {
         try open(app)
         XCTAssertTrue(app.buttons["openNativeWorkflow"].waitForExistence(timeout: 15), app.debugDescription)
         workflowWait { try self.workflowCachedSupport() == 1 || !reset }
+        let authoring = app.staticTexts.matching(NSPredicate(format: "identifier == %@ AND (label == %@ OR value == %@)", "nativeHeadingAuthoringState", "Heading authoring ready", "Heading authoring ready")).firstMatch
+        XCTAssertTrue(authoring.waitForExistence(timeout: 8), "Prepare this reserved host with --headings before running heading workflow acceptance")
     }
     private func workflowCachedSupport() throws -> Int? {
         let cache = try workflowCache()
@@ -5203,6 +5208,23 @@ extension SharedHeadingNativeTests {
         let cache = try workflowCache(), tables = try XCTUnwrap(cache["tables"] as? [String: [[String: Any]]])
         for table in ["tasks", "sections", "labels", "view_orders"] { XCTAssertEqual(tables[table]?.count, count + (initial[table]?.count ?? 0), table) }
         XCTAssertEqual(value["taskRevisionDelta"] as? Int, 1, "Creating one workflow should publish its task list once")
+        XCTAssertEqual(value["widgetIdle"] as? Bool, true)
+        XCTAssertEqual(value["widgetAccount"] as? String, "ec240000-0000-4000-8000-000000000001")
+        XCTAssertEqual(value["widgetLists"] as? Int, count + 1, "Background publication must retain all label/project lists")
+    }
+    @MainActor func testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        let proof = UUID().uuidString.lowercased()
+        try workflowStart(app, scale: 1000, scaleProof: proof)
+        let file = personalStateFile().deletingLastPathComponent().appendingPathComponent("TaskfoldTeamLibraryNativeFixture-workflowteststeameditbridge/WidgetPublicationChecks/\(proof)/result.json")
+        app.buttons["checkBackgroundWidgets"].click()
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: file.path) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 45), .completed)
+        let data = try Data(contentsOf: file)
+        let checks = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Bool], String(decoding: data, as: UTF8.self))
+        XCTAssertEqual(checks.count, 5)
+        XCTAssertTrue(checks.values.allSatisfy { $0 }, String(decoding: data, as: UTF8.self))
+        let evidence = XCTAttachment(data: data, uniformTypeIdentifier: "public.json"); evidence.name = "Background widget fences"; evidence.lifetime = .keepAlways; add(evidence)
     }
     @MainActor func testPrivateWorkflowNativeCommitScale1000PublishesOnce() throws { try workflowMeasureCommit(count: 1000) }
     @MainActor func testPrivateWorkflowNativeCommitScale5000PublishesOnce() throws { try workflowMeasureCommit(count: 5000) }

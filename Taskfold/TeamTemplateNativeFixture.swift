@@ -373,8 +373,30 @@ import CryptoKit
         NavigationStack {
             Form {
                 Text("Private workflow acceptance").font(.title2)
+                Text(store.taskHeadingsAuthoringEnabled ? "Heading authoring ready" : "Heading authoring unavailable").accessibilityIdentifier("nativeHeadingAuthoringState")
                 if ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") {
                     Button("Measure workflow commit", action: measureCommit).accessibilityIdentifier("measureWorkflowCommit")
+                    Button("Check background widgets") {
+                        Task {
+                            do {
+                                guard let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
+                                      let proof = UUID(uuidString: String(argument.dropFirst("--workflow-commit-proof=".count))) else { return }
+                                let directory = TeamTemplateNativeFixture.root.appendingPathComponent("WidgetPublicationChecks/\(proof.uuidString.lowercased())", isDirectory: true)
+                                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                                let result = try await store.verifyWorkflowWidgetPublication()
+                                try JSONEncoder().encode(result).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                            } catch {
+                                store.error = error.localizedDescription
+                                if let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
+                                   let proof = UUID(uuidString: String(argument.dropFirst("--workflow-commit-proof=".count))) {
+                                    let failure: [String: JSON] = ["error": .string(error.localizedDescription), "phase": .string(store.notice ?? "none")]
+                                    let directory = TeamTemplateNativeFixture.root.appendingPathComponent("WidgetPublicationChecks/\(proof.uuidString.lowercased())", isDirectory: true)
+                                    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                                    try? JSONEncoder().encode(failure).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                                }
+                            }
+                        }
+                    }.accessibilityIdentifier("checkBackgroundWidgets")
                     Button("Restore scale fixture", action: restoreScale).disabled(scaleOriginal == nil).accessibilityIdentifier("restoreScaleFixture")
                 }
                 Button("Use native workflow") { presenting = true }.accessibilityIdentifier("openNativeWorkflow")
@@ -426,13 +448,28 @@ import CryptoKit
             scaleOriginal = store.snapshot
             let revision = store.taskRevision, clock = ContinuousClock(), started = clock.now
             let saved = store.commit(changes), elapsed = started.duration(to: clock.now)
-            let data: JSON = .object(["proof": .string(proof.uuidString.lowercased()), "count": .number(Double(count)), "commands": .number(Double(changes.count)), "saved": .bool(saved),
+            var data: JSON = .object(["proof": .string(proof.uuidString.lowercased()), "count": .number(Double(count)), "commands": .number(Double(changes.count)), "saved": .bool(saved),
                 "seconds": .number(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18),
                 "taskRevisionDelta": .number(Double(store.taskRevision - revision)),
                 "tasks": .number(Double(store.tasks.count)), "pending": .number(Double(store.snapshot.pending.count)),
                 "undoCommands": .number(Double(store.undoStack.last?.undo.count ?? 0)), "error": store.error.map(JSON.string) ?? .null])
             try FileManager.default.createDirectory(at: TeamTemplateNativeFixture.root, withIntermediateDirectories: true)
-            try JSONEncoder().encode(data).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
+            Task {
+                let deadline = clock.now.advanced(by: .seconds(60))
+                while !store.workflowWidgetPublicationIdle, clock.now < deadline { try? await Task.sleep(for: .milliseconds(10)) }
+                do {
+                    let projection = try store.workflowWidgetNativeProjection()
+                    if case .object(var fields) = data {
+                        let total = started.duration(to: clock.now)
+                        fields["widgetReadySeconds"] = .number(Double(total.components.seconds) + Double(total.components.attoseconds) / 1e18)
+                        fields["widgetIdle"] = .bool(store.workflowWidgetPublicationIdle)
+                        fields["widgetLists"] = .number(Double(projection["lists"]?.list.count ?? 0))
+                        fields["widgetAccount"] = projection["account"] ?? .null
+                        data = .object(fields)
+                    }
+                    try JSONEncoder().encode(data).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
+                } catch { store.error = error.localizedDescription }
+            }
         } catch { store.error = error.localizedDescription }
     }
     private func update(_ edit: (inout WorkflowUndoNativePeer.State) -> Void) {

@@ -18,6 +18,7 @@ import sys
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--output", type=Path, required=True)
+parser.add_argument("--headings", action="store_true", help="Enable heading authoring only in this reserved disposable host")
 args = parser.parse_args()
 root = args.output.expanduser().resolve()
 subprocess.run([sys.executable, str(Path(__file__).with_name("prepare_workflow_ui_test.py")),
@@ -25,6 +26,8 @@ subprocess.run([sys.executable, str(Path(__file__).with_name("prepare_workflow_u
 info = root / "Taskfold/Info.plist"
 value = plistlib.loads(info.read_bytes())
 value["TaskfoldTeamsEnabled"] = True
+if args.headings:
+    value["TaskfoldHeadingsEnabled"] = True
 value["CFBundleDisplayName"] = "Taskfold Team Editor Test"
 info.write_bytes(plistlib.dumps(value))
 for path in root.rglob("Backend.plist"):
@@ -39,6 +42,7 @@ receipt = root / "team-editor-test-receipt.json"
 files = ["Taskfold/Core/Store.swift", "Taskfold/Core/Backups.swift", "Taskfold/Core/Backend.swift", "Taskfold/TeamTemplateNativeFixture.swift", "Taskfold/Views/TeamTemplateLibraryView.swift", "Taskfold/Core/TeamWorkflowRunCommands.swift", "Taskfold/Views/TeamWorkflowRunView.swift", "Taskfold/Views/WorkflowViews.swift", "Taskfold/Info.plist"]
 receipt.write_text(json.dumps({
     "namespace": "workflowteststeameditbridge", "teamRolloutInCopyOnly": True,
+    "headingAuthoringInCopyOnly": args.headings,
     "network": "All HTTP requests intercepted locally; scoped synthetic recipients are answered; task moves and template libraries use separate file-backed peers only with --team-move-testing / --team-library-testing in the reserved DEBUG host",
     "files": {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in files}
 }, indent=2) + "\n")

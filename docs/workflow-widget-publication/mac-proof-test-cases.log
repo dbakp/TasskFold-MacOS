@@ -1,0 +1,11 @@
+Test Suite 'Selected tests' started at 2026-10-27 06:10:11.151.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 06:10:11.152.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-27 06:10:11.152.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' passed (9.191 seconds).
+Test Suite 'SharedHeadingNativeTests' passed at 2026-10-27 06:10:20.343.
+	 Executed 1 test, with 0 failures (0 unexpected) in 9.191 (9.192) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 06:10:20.344.
+	 Executed 1 test, with 0 failures (0 unexpected) in 9.191 (9.192) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 06:10:20.344.
+	 Executed 1 test, with 0 failures (0 unexpected) in 9.191 (9.193) seconds

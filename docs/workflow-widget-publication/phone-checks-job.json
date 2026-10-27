@@ -1,0 +1,26 @@
+{
+  "platform": "phone",
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-background-phone-checks.xcresult",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "tests": [
+    "testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery",
+    "testWidgetIntentRecurringCompletionRetryUndoAndOldTap"
+  ],
+  "started": 1793078170.526765,
+  "returncode": 0,
+  "finished": 1793078229.5360918
+}

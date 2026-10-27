@@ -1072,7 +1072,7 @@ struct ProjectActivityContext {
 }
 
 /// Optional child history is distinct from a loaded empty ledger.
-struct ChildWorkHistory {
+struct ChildWorkHistory: Sendable {
     let rows: [Record]?
     let epoch: [Record]?
     var recordedFrom: Date? {

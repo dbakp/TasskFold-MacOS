@@ -1,0 +1,10 @@
+{
+  "equal": true,
+  "excluded": "Only the reserved DEBUG widget-check helper declarations in Store and WidgetActions; all other bytes compared unchanged between matrix and final proof preparation.",
+  "SHA256": {
+    "Taskfold/Core/Models.swift": "dc793fed8e0137e5d2a4ced93a249c14e6a60e5225c5a1b73854c1d312e91de4",
+    "Taskfold/Core/Store.swift": "728231f3e970c8cf757f332aa7cd855fc0c687d7be5befc11b27af7e28714731",
+    "Taskfold/Core/TaskActivity.swift": "36514b51a005b25fb047a9a52f2920ad11906650df61e712135eeae2dfd92416",
+    "Taskfold/Core/WidgetActions.swift": "88adef4551430df7b70f22aefdadb168ca6a5e8eeb5036e09b3f89c54d2cce61"
+  }
+}

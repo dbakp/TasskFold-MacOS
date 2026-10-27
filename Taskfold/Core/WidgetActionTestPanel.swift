@@ -125,14 +125,14 @@ struct WidgetActionTestPanel: View {
         } else {
             VStack(spacing: 4) {
                 HStack {
-                    Text("Original: \(store.record("tasks", id: rootID)?.completed == true ? "completed" : "open")").accessibilityIdentifier("widgetRootState")
+                    Text("Original: \(store.record("tasks", id: rootID).map { $0.completed ? "completed" : "open" } ?? "unavailable")").accessibilityIdentifier("widgetRootState")
                     Text("Next copies: \(store.tasks.filter { $0.string("recurrence_parent_id") == rootID }.count)").accessibilityIdentifier("widgetCopyCount")
                     Text("Queued: \(pending)").accessibilityIdentifier("widgetPendingCount")
                 }.font(.caption)
                 Text("Drafts: \(store.tasks.filter { $0.title == "Saved occurrence draft" }.count)").font(.caption).accessibilityIdentifier("widgetDraftCount")
                 Text(store.notice ?? "No widget warning").font(.caption).accessibilityIdentifier("widgetNoticeFixture")
                 HStack {
-                    Button("Complete via intent") { perform(captured) }.accessibilityIdentifier("widgetCompleteFixture")
+                    Button("Complete via intent") { perform(captured) }.accessibilityIdentifier("widgetCompleteFixture").disabled(captured == nil)
                     Button("Queue only") {
                         do { if let captured { try store.queueWidgetActionFixture(captured) }; pending = store.widgetActionFixturePending() }
                         catch { message = error.localizedDescription }

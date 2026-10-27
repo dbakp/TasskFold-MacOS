@@ -1837,6 +1837,37 @@ enum TaskCompletion {
 }
 
 /// Versioned widget payload. The extension receives bounded planning/Focus data, never authentication sessions or executable mutations.
+/// Capture value types on the app actor; construct and encode the full projection
+/// on a worker. The final disk replacement stays on the app actor, after its
+/// workspace/session/access checks, so sign-out cannot race a late file write.
+struct WidgetPublicationInput: Sendable {
+    var tasks: [Record], projects: [Record], account: String
+    var now = Date()
+    var labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = []
+    var calendar = Calendar.current
+    var completionTokens: [String: String] = [:]
+    var pendingSync = 0
+    var workingHours: WorkingHours? = WorkingHours()
+    var calendarWindow: CalendarCapacityWindow?
+    var calendarFallback = "off"
+    var notePins: [Record] = [], focusRecord: Record?
+    var focusConflict = false, focusReadable = true
+    var pulseActivity: [Record] = [], pulseEpoch: [Record] = []
+    var pulseChildren: ChildWorkHistory?
+    var datePreferences: DatePhrasePreferences? = DatePhrasePreferences()
+    var people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = []
+    var collaborators: [Record]?
+    var assignments = TaskAssignmentProvenance.Catalog(nil)
+    var feedback: WidgetCompletionFeedback?
+
+    func encoded() throws -> Data {
+        var payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, now: now, labels: labels, sections: sections, savedViews: savedViews, calendar: calendar, completionTokens: completionTokens, pendingSync: pendingSync, workingHours: workingHours, calendarWindow: calendarWindow, calendarFallback: calendarFallback, notePins: notePins, focusRecord: focusRecord, focusConflict: focusConflict, focusReadable: focusReadable, pulseActivity: pulseActivity, pulseEpoch: pulseEpoch, pulseChildren: pulseChildren, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
+        if let feedback, !account.isEmpty, feedback.account == account, now < feedback.expiresAt {
+            payload["completionFeedback"] = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
+        }
+        return try JSONEncoder().encode(payload)
+    }
+}
 enum WidgetProjection {
     static func payload(tasks: [Record], projects: [Record], account: String, now: Date = Date(), labels: [Record] = [], sections: [Record] = [], savedViews: [Record] = [], calendar: Calendar = .current, completionTokens: [String: String] = [:], pendingSync: Int = 0, workingHours: WorkingHours? = WorkingHours(), calendarWindow: CalendarCapacityWindow? = nil, calendarFallback: String = "off", notePins: [Record] = [], focusRecord: Record? = nil, focusConflict: Bool = false, focusReadable: Bool = true, pulseActivity: [Record] = [], pulseEpoch: [Record] = [], pulseChildren: ChildWorkHistory? = nil, datePreferences: DatePhrasePreferences? = DatePhrasePreferences(), people: [Record] = [], viewPreferences: [Record] = [], viewOrders: [Record] = [], collaborators: [Record]? = nil, assignments: TaskAssignmentProvenance.Catalog = .init(nil)) -> [String: JSON] {
         guard !account.isEmpty else { return ["version": .number(2), "updated": .number(0), "account": .string(""), "tasks": .array([])] }

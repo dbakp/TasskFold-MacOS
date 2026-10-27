@@ -1,0 +1,36 @@
+Test Suite 'Selected tests' started at 2026-10-27 06:03:26.003.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 06:03:26.004.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-27 06:03:26.004.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' passed (8.958 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (9.310 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale5000PublishesOnce]' passed (28.363 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' passed (23.671 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeIncomingWorkRefusesWholeUndo]' passed (19.915 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLostUndoReplyPausesAndRetriesExactly]' passed (20.609 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeOversizeRefusalRollsBackBeforeSave]' passed (15.451 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' passed (38.756 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' passed (29.611 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' passed (13.887 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeUnsupportedUndoPreservesWorkspace]' passed (19.516 seconds).
+Test Suite 'SharedHeadingNativeTests' passed at 2026-10-27 06:07:14.060.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 228.047 (228.056) seconds
+Test Suite 'TaskfoldMacUITests' started at 2026-10-27 06:07:14.062.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (10.933 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-10-27 06:07:24.996.
+	 Executed 1 test, with 0 failures (0 unexpected) in 10.933 (10.934) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 06:07:24.997.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 238.980 (238.993) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 06:07:24.997.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 238.980 (238.995) seconds

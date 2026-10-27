@@ -265,6 +265,7 @@ final class Store {
     #endif
     private let monitor = NWPathMonitor()
     private var accountGeneration = UUID() { didSet {
+        widgetPublicationQueue.invalidate()
         syncSignInWorkspace = nil; syncAfterSignInRequested = nil; conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
     @ObservationIgnored var sharedCapturePublishedWorkspace: SharedCaptureWorkspace?
@@ -272,6 +273,7 @@ final class Store {
     @ObservationIgnored private var widgetCalendarWindow: CalendarCapacityWindow?
     @ObservationIgnored private var widgetCalendarRevision = -1
     @ObservationIgnored private var capacityRequest: (UUID, String)?
+    @ObservationIgnored private let widgetPublicationQueue = WidgetPublicationQueue()
     private(set) var widgetPublicationRevision = 0
     private var workspaceRepairFingerprint: String?
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
@@ -939,7 +941,7 @@ final class Store {
         savedFilterFixtureFailNextPersist = true
     }
     #endif
-    func persist(acceptingTimeSnooze timeSnooze: TimeSnoozeIntent? = nil) throws {
+    func persist(acceptingTimeSnooze timeSnooze: TimeSnoozeIntent? = nil, backgroundWidgets: Bool = false) throws {
         #if DEBUG
         if savedFilterFixtureFailNextPersist {
             savedFilterFixtureFailNextPersist = false
@@ -963,7 +965,7 @@ final class Store {
             }
         } else { try data.write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
         snapshot = durable
-        publishWidgetSnapshot()
+        publishWidgetSnapshot(background: backgroundWidgets)
         #if DEBUG
         if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-diagnostics"), Bundle.main.bundleIdentifier?.contains(".workflowtests") == true {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
@@ -980,29 +982,133 @@ final class Store {
 
     static let appGroup = "group.com.dbakp.taskfold"
     /// The private cache is saved before its actionable projection is published.
-    private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true) {
+    private func publishWidgetSnapshot(scheduleCapacityRefresh: Bool = true, background: Bool = false) {
+        if !background { widgetPublicationQueue.invalidate() }
         publishSharedCaptureWorkspace()
-        guard let disk = try? widgetActionDisk() else { return }
+        guard let disk = try? widgetActionDisk() else { widgetPublicationQueue.invalidate(); return }
         let account = sharedCaptureAvailable ? userID : ""
         let busy = CalendarBusyStore.shared; busy.bind(account: account)
         let current = widgetCalendarWindow.flatMap { value -> CalendarCapacityWindow? in
             value.account == account && value.timeZone == TimeZone.current.identifier && busy.revision == widgetCalendarRevision && Date() < value.updated.addingTimeInterval(3600) ? value : nil
         }
         let fallback = busy.anyConnected ? (busy.connected && busy.selected.isEmpty && busy.links?.active != true ? "choose" : "refresh") : "off"
-        var payload = WidgetProjection.payload(tasks: activeTasks, projects: projects, account: account, labels: labels, sections: rows("sections"), savedViews: savedViews, completionTokens: (activeTeamMask ?? snapshot.teamWorkspace)?.widgetTokens(presentationSnapshot) ?? WidgetCompletion.tokens(snapshot), pendingSync: pendingCount, workingHours: workingHours, calendarWindow: current, calendarFallback: fallback, notePins: rows("view_orders"), focusRecord: focusRecord, focusConflict: focusSyncConflict != nil, focusReadable: workspaceCacheReadable, pulseActivity: rows(TaskActivity.table), pulseEpoch: rows(TaskActivity.epochTable), pulseChildren: childActivityHistory, datePreferences: datePhrasePreferences, people: filterContext.people, viewPreferences: rows("view_preferences"), viewOrders: rows("view_orders"), collaborators: filterCollaborators, assignments: assignmentCatalog)
-        if let feedback = snapshot.widgetCompletion.feedback, feedback.account == account,
-           Date() < feedback.expiresAt, widgetFeedbackIsCurrent(feedback) {
-            payload["completionFeedback"] = try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
+        var input = WidgetPublicationInput(tasks: activeTasks, projects: projects, account: account)
+        input.labels = labels; input.sections = rows("sections"); input.savedViews = savedViews
+        input.completionTokens = (activeTeamMask ?? snapshot.teamWorkspace)?.widgetTokens(presentationSnapshot) ?? WidgetCompletion.tokens(snapshot)
+        input.pendingSync = pendingCount; input.workingHours = workingHours
+        input.calendarWindow = current; input.calendarFallback = fallback
+        input.notePins = rows("view_orders"); input.focusRecord = focusRecord
+        input.focusConflict = focusSyncConflict != nil; input.focusReadable = workspaceCacheReadable
+        input.pulseActivity = rows(TaskActivity.table); input.pulseEpoch = rows(TaskActivity.epochTable)
+        input.pulseChildren = childActivityHistory; input.datePreferences = datePhrasePreferences
+        input.people = filterContext.people; input.viewPreferences = rows("view_preferences")
+        input.viewOrders = rows("view_orders"); input.collaborators = filterCollaborators; input.assignments = assignmentCatalog
+        if let feedback = snapshot.widgetCompletion.feedback, widgetFeedbackIsCurrent(feedback) { input.feedback = feedback }
+        if background, !account.isEmpty {
+            let captured = input, generation = accountGeneration, revision = workspaceReadRevision
+            let session = backend.reminderSessionIncarnation
+            #if DEBUG
+            let gate = WorkflowUndoNativePeer.enabled ? workflowWidgetGate : nil
+            #endif
+            widgetPublicationQueue.enqueue(render: {
+                #if DEBUG
+                await gate?.hold()
+                #endif
+                return try captured.encoded()
+            }) { [weak self] result in
+                guard let self, self.accountGeneration == generation, self.workspaceReadRevision == revision,
+                      self.backend.reminderSessionIncarnation == session, self.sharedCaptureAvailable,
+                      self.userID == account else { return }
+                self.finishWidgetPublication(result, disk: disk)
+            }
+        } else {
+            // Account removal, sign-out and widget receipts keep their immediate
+            // publication/acknowledgement semantics. No late worker may undo them.
+            widgetPublicationQueue.invalidate()
+            finishWidgetPublication(Result { try input.encoded() }, disk: disk)
         }
-        do { try disk.publish(JSONEncoder().encode(payload)); widgetPublicationRevision += 1 }
-        catch { try? disk.clearProjection() } // A failed publication must not leave actionable old data.
-        #if canImport(WidgetKit)
-        WidgetCenter.shared.reloadAllTimelines()
-        #endif
         if scheduleCapacityRefresh, !account.isEmpty, workspaceCacheReadable, current == nil, capacityRequest?.1 != account {
             capacityRequest = (UUID(), account)
             Task { await refreshWidgetCapacity() }
         }
+    }
+
+    #if DEBUG
+    @ObservationIgnored private var workflowWidgetGate: WidgetPublicationNativeGate?
+    var workflowWidgetPublicationIdle: Bool { widgetPublicationQueue.isIdle }
+    func workflowWidgetNativeProjection() throws -> [String: JSON] {
+        guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
+        return try JSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data ?? Data())
+    }
+    func verifyWorkflowWidgetPublication() async throws -> [String: JSON] {
+        guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
+        let original = snapshot, disk = try widgetActionDisk()
+        let oldGate = WidgetPublicationNativeGate(), accessGate = WidgetPublicationNativeGate()
+        defer {
+            Task { await oldGate.resume(); await accessGate.resume() }
+            workflowWidgetGate = nil; snapshot = original; try? persist()
+        }
+        func mark(_ phase: String) {
+            notice = "Widget check: " + phase
+        }
+        func waitForStart(_ gate: WidgetPublicationNativeGate, phase: String) async throws {
+            let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+            while !(await gate.hasStarted()) {
+                guard ContinuousClock.now < deadline else {
+                    throw AppFailure(message: phase + " did not start; queue idle: \(widgetPublicationQueue.isIdle), readable workspace: \(sharedCaptureAvailable)")
+                }
+                try await Task.sleep(for: .milliseconds(10))
+            }
+        }
+        func waitForIdle() async throws {
+            let deadline = ContinuousClock.now.advanced(by: .seconds(20))
+            while !widgetPublicationQueue.isIdle {
+                guard ContinuousClock.now < deadline else { throw AppFailure(message: "Widget renderer did not settle") }
+                try await Task.sleep(for: .milliseconds(10))
+            }
+        }
+        func require(_ valid: Bool, _ message: String) throws {
+            guard valid else { throw AppFailure(message: message) }
+        }
+        mark("first renderer"); workflowWidgetGate = oldGate
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
+        try await waitForStart(oldGate, phase: "First renderer")
+        mark("redaction")
+        // Exercise the real immediate redaction path while the old renderer is
+        // still held. Restoring access must not make its cancelled result valid.
+        signingOut = true; publishWidgetSnapshot(scheduleCapacityRefresh: false); signingOut = false
+        let redacted = try workflowWidgetNativeProjection()
+        try require(redacted["account"] == .string(""), "Sign-out did not redact widgets immediately")
+        await oldGate.resume(); try await waitForIdle()
+        try require(try workflowWidgetNativeProjection() == redacted, "Old renderer revived signed-out content")
+
+        mark("access renderer"); workflowWidgetGate = accessGate
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
+        try await waitForStart(accessGate, phase: "Access renderer")
+        mark("access fence")
+        // No queue invalidation here: independently prove the Store access fence
+        // rejects a successful current-ticket callback after its context changes.
+        workspaceReadRevision = UUID(); try disk.clearProjection()
+        await accessGate.resume(); try await waitForIdle()
+        try require(try disk.read().data == nil, "Old access context was republished")
+
+        mark("latest recovery"); workflowWidgetGate = nil
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
+        try await waitForIdle()
+        try require(try workflowWidgetNativeProjection()["account"] == .string(userID), "Latest workspace did not recover")
+        try require(snapshot == original, "Projection check modified saved work")
+        let durable = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+        try require(durable == original, "Projection check modified durable work")
+        return ["signOutRedactedImmediately": .bool(true), "staleResultRejected": .bool(true), "accessFenceRejected": .bool(true), "latestRecovered": .bool(true), "savedDataUnchanged": .bool(true)]
+    }
+    #endif
+
+    private func finishWidgetPublication(_ result: Result<Data, Error>, disk: WidgetActionDisk) {
+        do { try disk.publish(result.get()); widgetPublicationRevision += 1 }
+        catch { try? disk.clearProjection() }
+        #if canImport(WidgetKit)
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
     }
 
     /// Calendar reads remain in the app. Publication never blocks a durable task save.
@@ -1014,13 +1120,13 @@ final class Store {
         let busy = CalendarBusyStore.shared; busy.bind(account: account)
         let revision = busy.revision
         widgetCalendarWindow = nil
-        publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
         let window = await busy.capacityWindow()
         guard capacityRequest?.0 == request else { return }
         capacityRequest = nil
         guard generation == accountGeneration, account == userID, !Task.isCancelled, busy.revision == revision, let window else { return }
         widgetCalendarWindow = window; widgetCalendarRevision = revision
-        publishWidgetSnapshot(scheduleCapacityRefresh: false)
+        publishWidgetSnapshot(scheduleCapacityRefresh: false, background: true)
     }
 
     private func widgetActionDisk() throws -> WidgetActionDisk {
@@ -1429,12 +1535,19 @@ final class Store {
         // This synchronous creation path reads rows directly, not cached task
         // queries. Publish once after validation/history admission, before disk
         // save and widget publication; every early return restores the old view.
+        let widgetAccessBefore = workspaceReadRevision
+        var workflowSaveSucceeded = false
         var deferringPresentation = WorkflowUndo.creationRun(changes) != nil && !workflowPresentationDeferred
         if deferringPresentation { workflowPresentationDeferred = true }
         defer {
             if deferringPresentation {
                 workflowPresentationDeferred = false
                 refreshSnapshotPresentation(from: old)
+            }
+        }
+        defer {
+            if !workflowSaveSucceeded, workspaceReadRevision != widgetAccessBefore {
+                publishWidgetSnapshot(background: true)
             }
         }
         var freshCreation = FreshWorkflowCreation(changes, snapshot: old, account: userID)
@@ -1516,7 +1629,8 @@ final class Store {
             workflowPresentationDeferred = false; deferringPresentation = false
             refreshSnapshotPresentation(from: old)
         }
-        do { try persist() } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
+        do { try persist(backgroundWidgets: projectsFreshCreation && widgetReceipt == nil && sharedCaptureReceipt == nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
+        workflowSaveSucceeded = true
         if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }
         return true

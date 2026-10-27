@@ -1,0 +1,218 @@
+Test Suite 'Selected tests' started at 2026-10-27 00:01:08.258.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 00:01:08.259.
+Test Suite 'CapacityWidgetTests' started at 2026-10-27 00:01:08.259.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testCalendarOmissionUnavailableAndPartialDataNeverClaimCompleteRoom]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testCalendarOmissionUnavailableAndPartialDataNeverClaimCompleteRoom]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testCapacityMatchesPlannerUnionClippingWorkloadAndMissingEstimates]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testCapacityMatchesPlannerUnionClippingWorkloadAndMissingEstimates]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testCrossMidnightFixedTaskAndCompletedWorkAgreeWithEachLocalDay]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testCrossMidnightFixedTaskAndCompletedWorkAgreeWithEachLocalDay]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testDayLinksValidateGregorianDatesAndMinuteLabelsKeepOverloadSignSeparate]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testDayLinksValidateGregorianDatesAndMinuteLabelsKeepOverloadSignSeparate]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testDSTWholeDayHoursUseRealElapsedTimeAndOffDaysDoNotInventCapacity]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testDSTWholeDayHoursUseRealElapsedTimeAndOffDaysDoNotInventCapacity]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testExpiryIsAnExplicitTimelineEntryAndOldDaysOrTravelRequireRefresh]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testExpiryIsAnExplicitTimelineEntryAndOldDaysOrTravelRequireRefresh]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testOldOrUnsupportedCapacityDoesNotBreakOtherWidgets]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testOldOrUnsupportedCapacityDoesNotBreakOtherWidgets]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testProjectionRetainsOnlyTotalsAndSignOutOmitsCalendarData]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testProjectionRetainsOnlyTotalsAndSignOutOmitsCalendarData]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testUnreadableWorkingHoursDoNotInventCapacityOrHideTasks]' started.
+Test Case '-[TaskfoldCoreTests.CapacityWidgetTests testUnreadableWorkingHoursDoNotInventCapacityOrHideTasks]' passed (0.001 seconds).
+Test Suite 'CapacityWidgetTests' passed at 2026-10-27 00:01:08.312.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.051 (0.053) seconds
+Test Suite 'FocusWidgetTests' started at 2026-10-27 00:01:08.312.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testAccountBoundRouteRoundTripsAndRejectsDuplicateExtraForgedComponents]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testAccountBoundRouteRoundTripsAndRejectsDuplicateExtraForgedComponents]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testActualProjectionMatchesNativeClockAcrossPauseResumeAndFinish]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testActualProjectionMatchesNativeClockAcrossPauseResumeAndFinish]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testEndedTimeIsSpentAndPausesNeverAcquireNewElapsedTime]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testEndedTimeIsSpentAndPausesNeverAcquireNewElapsedTime]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testMissingCompletedAndConflictStateRemainExplicitWithoutAnotherTaskFallback]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testMissingCompletedAndConflictStateRemainExplicitWithoutAnotherTaskFallback]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testOwnerIsolationSignedOutLegacyMalformedRowsAndUnknownProjectionVersion]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testOwnerIsolationSignedOutLegacyMalformedRowsAndUnknownProjectionVersion]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testProjectionBoundsUnicodeTitlesAndNeverCopiesDescriptionOrCredential]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testProjectionBoundsUnicodeTitlesAndNeverCopiesDescriptionOrCredential]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testStrictClockBoundsAndDecoderRejectMalformedTypesWithoutCrashes]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testStrictClockBoundsAndDecoderRejectMalformedTypesWithoutCrashes]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testTimelineIncludesExactFinishExpiryAndRejectsFutureOrStalePublication]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testTimelineIncludesExactFinishExpiryAndRejectsFutureOrStalePublication]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testTimerIntervalCarriesAccumulatedProgressAndCannotCountUpPastFinish]' started.
+Test Case '-[TaskfoldCoreTests.FocusWidgetTests testTimerIntervalCarriesAccumulatedProgressAndCannotCountUpPastFinish]' passed (0.001 seconds).
+Test Suite 'FocusWidgetTests' passed at 2026-10-27 00:01:08.346.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.033 (0.034) seconds
+Test Suite 'NativeContinuityTests' started at 2026-10-27 00:01:08.346.
+Test Case '-[TaskfoldCoreTests.NativeContinuityTests testMacTransportReadsPinnedNoteAndEndedFocusAfterOfflineTabletEdit]' started.
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/NativeBehaviorTests.swift:244: -[TaskfoldCoreTests.NativeContinuityTests testMacTransportReadsPinnedNoteAndEndedFocusAfterOfflineTabletEdit] : Test skipped - Disposable note/Focus fixture not supplied
+Test Case '-[TaskfoldCoreTests.NativeContinuityTests testMacTransportReadsPinnedNoteAndEndedFocusAfterOfflineTabletEdit]' skipped (0.001 seconds).
+Test Suite 'NativeContinuityTests' passed at 2026-10-27 00:01:08.348.
+	 Executed 1 test, with 1 test skipped and 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'PinnedNotesTests' started at 2026-10-27 00:01:08.348.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testDeletionUnpinForeignAndMalformedRegistryNeverFallBackToAnotherNote]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testDeletionUnpinForeignAndMalformedRegistryNeverFallBackToAnotherNote]' passed (0.022 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testForeignBackupRemapsPinKeyAndReferenceTogether]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testForeignBackupRemapsPinKeyAndReferenceTogether]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testIdentityBoundsDuplicatesRenameAndLiteralText]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testIdentityBoundsDuplicatesRenameAndLiteralText]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testIndependentPinRowsAndUnpinDoNotModifyNotesOrOtherPins]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testIndependentPinRowsAndUnpinDoNotModifyNotesOrOtherPins]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testOldPublisherAndStaleSnapshotRequireRefreshButEmptyCatalogueOffersSelection]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testOldPublisherAndStaleSnapshotRequireRefreshButEmptyCatalogueOffersSelection]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testOnlyExplicitlyPinnedDescriptionsLeaveAppIncludingCompletedTasks]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testOnlyExplicitlyPinnedDescriptionsLeaveAppIncludingCompletedTasks]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testStrictAccountLinksDecodeEscapedPathExactlyOnce]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testStrictAccountLinksDecodeEscapedPathExactlyOnce]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testTaskEditKeepsConcurrentUntouchedFieldsAndCompletionBaseline]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testTaskEditKeepsConcurrentUntouchedFieldsAndCompletionBaseline]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testTimelineSchedulesExactExpiryBetweenDailyEntriesAcrossDST]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testTimelineSchedulesExactExpiryBetweenDailyEntriesAcrossDST]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testUnicodeNewlinesAndBothBoundsPreserveCanonicalFullText]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testUnicodeNewlinesAndBothBoundsPreserveCanonicalFullText]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testUntouchedSelectionFollowsSyncAndFirstTapCapturesTheVisibleState]' started.
+Test Case '-[TaskfoldCoreTests.PinnedNotesTests testUntouchedSelectionFollowsSyncAndFirstTapCapturesTheVisibleState]' passed (0.000 seconds).
+Test Suite 'PinnedNotesTests' passed at 2026-10-27 00:01:08.395.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.046 (0.047) seconds
+Test Suite 'PrintDocumentTests' started at 2026-10-27 00:01:08.395.
+Test Case '-[TaskfoldCoreTests.PrintDocumentTests testChecklistsAreCompleteOrderedAndOptionalAndPinnedNotePrintsOnlyItsOwnText]' started.
+Test Case '-[TaskfoldCoreTests.PrintDocumentTests testChecklistsAreCompleteOrderedAndOptionalAndPinnedNotePrintsOnlyItsOwnText]' passed (0.203 seconds).
+Test Suite 'PrintDocumentTests' passed at 2026-10-27 00:01:08.598.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.203 (0.203) seconds
+Test Suite 'ProjectPulseWidgetTests' started at 2026-10-27 00:01:08.598.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testActualAppProjectionMatchesCurrentScopeAndNativeEventCounts]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testActualAppProjectionMatchesCurrentScopeAndNativeEventCounts]' passed (0.018 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testCatalogueBoundsAndRenameUseStableAccountProjectKeys]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testCatalogueBoundsAndRenameUseStableAccountProjectKeys]' passed (6.123 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testExactExpiryTimezoneAndMissingProjectKeepSelectedIdentity]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testExactExpiryTimezoneAndMissingProjectKeepSelectedIdentity]' passed (0.018 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testNoEpochAndMalformedHistoryHaveExplicitStatesWithoutChangingCurrentCompletion]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testNoEpochAndMalformedHistoryHaveExplicitStatesWithoutChangingCurrentCompletion]' passed (0.032 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testStrictAccountBoundLinkAndSelectionEscapingRejectForgedURLs]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testStrictAccountBoundLinkAndSelectionEscapingRejectForgedURLs]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testStrictProjectionBoundsVersionForeignOwnerDuplicateAndMalformedDays]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testStrictProjectionBoundsVersionForeignOwnerDuplicateAndMalformedDays]' passed (0.016 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testTomorrowRollsSevenLocalDaysWithoutInventingUnreceivedActivityAcrossDST]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testTomorrowRollsSevenLocalDaysWithoutInventingUnreceivedActivityAcrossDST]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testUnicodeBoundsPrivateContentAndSignedOutProjection]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testUnicodeBoundsPrivateContentAndSignedOutProjection]' passed (0.020 seconds).
+Test Suite 'ProjectPulseWidgetTests' passed at 2026-10-27 00:01:14.835.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 6.236 (6.237) seconds
+Test Suite 'TeamCompletionTests' started at 2026-10-27 00:01:14.835.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationFindsDependenciesInsideBatchesHistoryAndPinnedNotes]' started.
+Test Case '-[TaskfoldCoreTests.TeamCompletionTests testCancellationFindsDependenciesInsideBatchesHistoryAndPinnedNotes]' passed (0.012 seconds).
+Test Suite 'TeamCompletionTests' passed at 2026-10-27 00:01:14.847.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.012 (0.012) seconds
+Test Suite 'TeamWorkspaceTests' started at 2026-10-27 00:01:14.847.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedTaskCannotAppearInWidgetOrPinnedNotePayload]' started.
+Test Case '-[TaskfoldCoreTests.TeamWorkspaceTests testRevokedTaskCannotAppearInWidgetOrPinnedNotePayload]' passed (0.012 seconds).
+Test Suite 'TeamWorkspaceTests' passed at 2026-10-27 00:01:14.859.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.012 (0.012) seconds
+Test Suite 'WidgetActionTests' started at 2026-10-27 00:01:14.859.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testCompleteReopenAndDeletionInvalidateOldWidgetTaps]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testCompleteReopenAndDeletionInvalidateOldWidgetTaps]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testCompletionFeedbackIsScopedBoundedAndCompatibleWithOldCaches]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testCompletionFeedbackIsScopedBoundedAndCompatibleWithOldCaches]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testCorruptQueueAndFutureVersionAreNeverSilentlyOverwritten]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testCorruptQueueAndFutureVersionAreNeverSilentlyOverwritten]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testDiskAccountChangesAndSignOutRejectStaleTapsButRetainAcceptedOtherWorkspaceRequests]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testDiskAccountChangesAndSignOutRejectStaleTapsButRetainAcceptedOtherWorkspaceRequests]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testDiskEnqueueIsDurableDeduplicatedAndShowsPendingWithoutCompletingProjection]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testDiskEnqueueIsDurableDeduplicatedAndShowsPendingWithoutCompletingProjection]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testDismissalIsExactDurableAndNeverMutatesTasksOrHidesNewFeedback]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testDismissalIsExactDurableAndNeverMutatesTasksOrHidesNewFeedback]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testLegacyCacheDecodesAndExportNeverContainsLocalTokensOrReceipts]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testLegacyCacheDecodesAndExportNeverContainsLocalTokensOrReceipts]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testProducerAndDecoderExposeOpaqueTokensPendingSyncAndReadOnlyLegacyCompatibility]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testProducerAndDecoderExposeOpaqueTokensPendingSyncAndReadOnlyLegacyCompatibility]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testReceiptAndTaskQueueSurviveCrashBeforeAcknowledgementAndLaterUndo]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testReceiptAndTaskQueueSurviveCrashBeforeAcknowledgementAndLaterUndo]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testRecurringWidgetPlanUsesCurrentRecordAndOneCreateOnlySuccessor]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testRecurringWidgetPlanUsesCurrentRecordAndOneCreateOnlySuccessor]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testSharedRecurringWidgetCompletionCreatesForItsBoundAccount]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testSharedRecurringWidgetCompletionCreatesForItsBoundAccount]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testTokenPersistsAcrossRelaunchUnrelatedEditsAndEquivalentServerTimestampSpellings]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testTokenPersistsAcrossRelaunchUnrelatedEditsAndEquivalentServerTimestampSpellings]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testWorkspaceMismatchAndMalformedTokensCannotApply]' started.
+Test Case '-[TaskfoldCoreTests.WidgetActionTests testWorkspaceMismatchAndMalformedTokensCannotApply]' passed (0.002 seconds).
+Test Suite 'WidgetActionTests' passed at 2026-10-27 00:01:14.915.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.055 (0.056) seconds
+Test Suite 'WidgetListTests' started at 2026-10-27 00:01:14.915.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testChangedSearchDescriptionAndAccountInvalidateWidgetMembership]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testChangedSearchDescriptionAndAccountInvalidateWidgetMembership]' passed (0.019 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testCompletionTimelineDoesNotScheduleOtherListOrAccountFeedback]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testCompletionTimelineDoesNotScheduleOtherListOrAccountFeedback]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testCompletionTimelineExpiresLastTaskMessageWithoutDroppingListTransitions]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testCompletionTimelineExpiresLastTaskMessageWithoutDroppingListTransitions]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testConfiguredListLinksRetainTheirWorkspaceWhenRecordIDsAreReused]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testConfiguredListLinksRetainTheirWorkspaceWhenRecordIDsAreReused]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testCreationProjectionUsesCivilDaysAndExpiresWithoutPublishingCreationMetadata]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testCreationProjectionUsesCivilDaysAndExpiresWithoutPublishingCreationMetadata]' passed (0.044 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testDatePreferenceWidgetProjectionsMatchNativeWithoutExportingPreferences]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testDatePreferenceWidgetProjectionsMatchNativeWithoutExportingPreferences]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testElapsedListMembershipExpiryTimelineAndPrivatePayload]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testElapsedListMembershipExpiryTimelineAndPrivatePayload]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testElapsedListRejectsMalformedWindowsAndLegacyListsKeepDailyProjection]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testElapsedListRejectsMalformedWindowsAndLegacyListsKeepDailyProjection]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testExpiredFilterAndTravelAskForRefreshInsteadOfReportingZeroTasks]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testExpiredFilterAndTravelAskForRefreshInsteadOfReportingZeroTasks]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testFullStructuredWorkflowPublishesAllWidgetListsGroupsAndMembership]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testFullStructuredWorkflowPublishesAllWidgetListsGroupsAndMembership]' passed (1.915 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testFutureSettingsCannotBroadenSavedWidgetSelection]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testFutureSettingsCannotBroadenSavedWidgetSelection]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testGroupedQueryWidgetUsesPerGroupOrderAndUniqueFirstMembership]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testGroupedQueryWidgetUsesPerGroupOrderAndUniqueFirstMembership]' passed (0.021 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testIndependentSelectedListsNarrowWindowAndDeadlineResultsWithoutChangingSnapshot]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testIndependentSelectedListsNarrowWindowAndDeadlineResultsWithoutChangingSnapshot]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testIndexedProjectAndLabelCandidatesKeepAliasesOrderingAndSourceUpdates]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testIndexedProjectAndLabelCandidatesKeepAliasesOrderingAndSourceUpdates]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testInvalidOrDeletedReferencesUnderNegationCannotBecomeAllTasks]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testInvalidOrDeletedReferencesUnderNegationCannotBecomeAllTasks]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testKeywordTimeLabelsAndRecurringFiltersUsePrivateNativeProjection]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testKeywordTimeLabelsAndRecurringFiltersUsePrivateNativeProjection]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testLabelWidgetFollowsManualOrderAndExplicitSortWithoutForeignSettings]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testLabelWidgetFollowsManualOrderAndExplicitSortWithoutForeignSettings]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testLegacyWidgetListsKeepOrderWithoutGroupMetadata]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testLegacyWidgetListsKeepOrderWithoutGroupMetadata]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testMembershipDeduplicatesSkipsMissingRowsAndRejectsUnownedListKeys]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testMembershipDeduplicatesSkipsMissingRowsAndRejectsUnownedListKeys]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testPayloadExposesOnlyListDisplayMetadataAndOpenIDsAndScopeLinksEscapeIDs]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testPayloadExposesOnlyListDisplayMetadataAndOpenIDsAndScopeLinksEscapeIDs]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testProjectsLabelsAndCompletedWorkUseTheNativeMembershipContract]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testProjectsLabelsAndCompletedWorkUseTheNativeMembershipContract]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testProjectWidgetKeepsSectionOrderPriorityBandsAndNewTasksAfterSavedOrder]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testProjectWidgetKeepsSectionOrderPriorityBandsAndNewTasksAfterSavedOrder]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testRelativePlanAndDeadlineFallbackProjectionChangesAtCivilMidnightAcrossDST]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testRelativePlanAndDeadlineFallbackProjectionChangesAtCivilMidnightAcrossDST]' passed (0.047 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testRenameKeepsIdentityAndAccountSwitchCannotReuseSelectedList]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testRenameKeepsIdentityAndAccountSwitchCannotReuseSelectedList]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testSameNamesAndCrossKindIDsRemainDistinctAndOnlyDuplicatesNeedDisambiguation]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testSameNamesAndCrossKindIDsRemainDistinctAndOnlyDuplicatesNeedDisambiguation]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testSavedFilterUsesNativeEvaluatorAtEachLocalMidnightAcrossDST]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testSavedFilterUsesNativeEvaluatorAtEachLocalMidnightAcrossDST]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testSignedOutSnapshotClearsListsAndLegacySnapshotsOfferNoFalseFallback]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testSignedOutSnapshotClearsListsAndLegacySnapshotsOfferNoFalseFallback]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testTimedSavedFiltersProjectExactNativeMembershipAcrossDSTAndRelativeDays]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testTimedSavedFiltersProjectExactNativeMembershipAcrossDSTAndRelativeDays]' passed (0.210 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testUnknownWidgetSortAndGroupingRequireRefreshInsteadOfInventingAnOrder]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testUnknownWidgetSortAndGroupingRequireRefreshInsteadOfInventingAnOrder]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetListTests testWidgetGroupsFollowDayAndAccountValidityWithoutAddingOrDuplicatingTasks]' started.
+Test Case '-[TaskfoldCoreTests.WidgetListTests testWidgetGroupsFollowDayAndAccountValidityWithoutAddingOrDuplicatingTasks]' passed (0.008 seconds).
+Test Suite 'WidgetListTests' passed at 2026-10-27 00:01:17.359.
+	 Executed 30 tests, with 0 failures (0 unexpected) in 2.440 (2.443) seconds
+Test Suite 'WidgetPublicationTests' started at 2026-10-27 00:01:17.359.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testCapturedInputPreservesProjectionAndFeedback]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testCapturedInputPreservesProjectionAndFeedback]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testInvalidatedSuccessCannotResurrectProjectionAfterSignOut]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testInvalidatedSuccessCannotResurrectProjectionAfterSignOut]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testLatestFailureIsDeliveredAndNextRequestCanRecover]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testLatestFailureIsDeliveredAndNextRequestCanRecover]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testNewestPendingReplacesIntermediateWithoutConcurrentRendering]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testNewestPendingReplacesIntermediateWithoutConcurrentRendering]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testStaleFailureCannotClearNewerPublication]' started.
+Test Case '-[TaskfoldCoreTests.WidgetPublicationTests testStaleFailureCannotClearNewerPublication]' passed (0.000 seconds).
+Test Suite 'WidgetPublicationTests' passed at 2026-10-27 00:01:17.374.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.015 (0.015) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 00:01:17.374.
+	 Executed 89 tests, with 1 test skipped and 0 failures (0 unexpected) in 9.105 (9.115) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 00:01:17.374.
+	 Executed 89 tests, with 1 test skipped and 0 failures (0 unexpected) in 9.105 (9.116) seconds

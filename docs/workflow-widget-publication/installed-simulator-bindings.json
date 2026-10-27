@@ -1,0 +1,16 @@
+{
+  "phone": {
+    "executableSHA256": {
+      "Taskfold": "23302ac617e9bad7907e46ead12fbfa7dac646ab4e22d85672e75de08af321af",
+      "Taskfold.debug.dylib": "3f5c56009637fc40b0bc9f7e5a1799f99de644375e190c65ad4538bdb3602dfa"
+    },
+    "matchesFinalSignedProducts": true
+  },
+  "tablet": {
+    "executableSHA256": {
+      "Taskfold": "23302ac617e9bad7907e46ead12fbfa7dac646ab4e22d85672e75de08af321af",
+      "Taskfold.debug.dylib": "3f5c56009637fc40b0bc9f7e5a1799f99de644375e190c65ad4538bdb3602dfa"
+    },
+    "matchesFinalSignedProducts": true
+  }
+}
