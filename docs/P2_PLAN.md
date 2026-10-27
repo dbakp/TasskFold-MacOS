@@ -4,7 +4,20 @@ Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Pinned-note publication now indexes saved ordering rows once per bulk read,
+Project pulse widget publication now retains typed validated root events and
+prepares per-project deduplication/sorting once for its eight timeline days.
+There is no cache across refreshes; daily windows, credits, child history and
+coverage checks retain their behavior. Both old implementations passed the frozen
+64-case output corpus before editing; the new output matches it. Each repo passes
+161 selected Core cases. Six native cases pass on each platform with zero
+failures/skips/reported runtime warnings. The same flat 5,000-root Debug fixture
+reaches widget readiness in 2.94/2.95/3.32s on phone/tablet/Mac, compared with
+3.46/3.45/3.85s in the preceding stage; save itself is 1.61/1.62/1.75s. Variable-load
+observations do not prove release latency or production rendering. The synchronous
+save pause and remaining projection/encoding work remain open.
+See pulse-history-preparation/validation.json for exact evidence and limits.
+
+The preceding pinned-note stage indexes saved ordering rows once per bulk read,
 instead of searching the entire registry for every task. A sampled native trace
 identified that repeated scan; first-row, ownership, exact-reference and task-order
 semantics remain intact. Each repo passes 122 focused Core checks. Six native
@@ -6026,3 +6039,45 @@ scale, hosted/paired bulk flows and the wider ranked backlog remain open. User
 deferrals and default-off rollouts are unchanged. Exact job/result summaries,
 source/prepared/binary hashes and scoped evidence are in pinned-note-registry/.
 Only synthetic fixtures changed.
+
+## 27 October: prepare Project pulse history once per refresh
+
+The widget publisher already validated each parent activity row while grouping by
+project, then reparsed those same rows in every one of eight daily readings. It
+now keeps the typed events from that first validation. A per-project immutable
+History performs first-ID deduplication, involvement filtering, unreadable-context
+accounting and sequence/ID sorting once. Daily readings reuse it while retaining
+all their date/window, work-credit, current-count, child-event, attention and
+coverage rules. Ordinary app callers still parse their supplied raw rows. A
+prepared history with a different exact project key is refused and falls back to
+that caller's raw input. No global/account/workspace cache or action authority is
+introduced. No schema, activity quota or rollout flag changes.
+
+Before changing production source, both repositories passed a frozen 64-case
+full pulse-output digest. It covers four time zones at spring/autumn DST instants,
+creation/completion/reopen/move/deletion, malformed and unknown context, duplicate
+and future suppression/input order, coverage epochs, duplicate project identities
+and unreadable state. The digest remains identical. An additional 48 complete
+reading comparisons cover eight days, case variants/another project, malformed
+counts, future events, timeline order and wrong-project fallback. Existing root,
+child, generation, activity-context and Insights/history tests remain selected.
+Each independent Core suite passes 161 cases with zero failures/skips.
+
+Six native cases pass strictly on each platform (18 platform/case pairs, zero
+failures/skips/reported XCTest runtime warnings): cloud-mode 1,000-root queue,
+local 1,000/5,000-root append with prior history, file-save failure rollback,
+actual widget intent completion/retry/Undo/cold return, and background-publication
+privacy/access/stale-result/recovery fences. The local 1,000-root case additionally
+runs native Undo. The 5,000-root fixture retains all 20,001 commands, 5,001 widget
+lists and original root/child history. Widget readiness from save start is
+2.94/2.95/3.32s on phone/tablet/Mac versus 3.46/3.45/3.85s in the preceding accepted
+stage. The synchronous saves are 1.61/1.62/1.75s, so the input pause remains open.
+
+These are unprofiled sequential Debug observations after compilation, with varying
+host load. No repeated benchmark, release latency, peak-memory or full production
+5,000-row rendering guarantee is made. There is no new installed Project pulse
+visual or genuine hosted/paired bulk acceptance. Remaining projection/encoding,
+cache/save responsiveness, child-rich/assignment-heavy native scale and wider
+rank-3/ranked-backlog gates remain. Existing user deferrals are unchanged. Exact
+commands, result summaries, source/prepared/binary hashes, frozen old output and
+metrics are in pulse-history-preparation/. Only synthetic fixtures changed.

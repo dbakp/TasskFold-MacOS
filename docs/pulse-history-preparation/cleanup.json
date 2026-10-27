@@ -1,0 +1,19 @@
+{
+  "removedOwnedPaths": [
+    "/tmp/taskfold-pulse-mac-attachments",
+    "/tmp/taskfold-pulse-phone-attachments",
+    "/tmp/taskfold-pulse-tablet-attachments",
+    "/tmp/taskfold-pin-mac-final.xcresult",
+    "/tmp/taskfold-pin-phone-final.xcresult",
+    "/tmp/taskfold-pin-tablet-final.xcresult"
+  ],
+  "logicalBytesRemoved": 1626400,
+  "temporaryMainAppsRunning": 0,
+  "retained": [
+    "Current per-platform native result bundles",
+    "Current signed products and one host/build per platform",
+    "Original diagnostic profile/raw sample",
+    "Preceding accepted summaries/metrics in each repository"
+  ],
+  "scope": "Only obsolete owned extracts and preceding result bundles. No real account/device data or simulator runtime removed. Logical bytes are not measured disk-free change."
+}

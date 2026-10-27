@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-27",
+  "corePassed": 161,
+  "coreSkipped": 0,
+  "coreFailures": 0,
+  "nativeCasesPassed": 18,
+  "nativeFailures": 0,
+  "nativeSkipped": 0,
+  "nativeRuntimeWarnings": 0,
+  "corpusCases": 64,
+  "corpusSHA256": "8b8a1210f63dafb2d1a9d66b084d49068dad1fef3727b92e1daac8c07fecda12",
+  "before": "Both repo old implementations passed the frozen assertion before production edits; first capture was Mac",
+  "implementation": "Widget validates root activity once, retains typed parsed events, and prepares per-project deduplication/sort once for eight timeline days. Ordinary ProjectPulseReading still parses its raw rows. Prepared history with a different exact project key falls back to supplied raw rows. No global/cross-refresh cache or authority added.",
+  "equivalence": "Frozen full pulse output covers four time zones, spring/autumn DST instants, creation/completion/reopen/moves/deletion, malformed/unknown context, duplicate/future suppression and input order, coverage epochs, duplicate project identities and unreadable state. 48 reading comparisons additionally cover daily field/timeline/malformed results and wrong-project fallback. Existing child/root history and activity-context suites pass.",
+  "nativeScope": "Same flat 20,001-command Debug fixture, retained local history, 1,000-root Undo, file-save failure rollback, actual widget intent retry/Undo/cold return and publication privacy/access/stale-result/recovery fences. Count-only UI, no new installed Project pulse visual or hosted acceptance.",
+  "comparison": "Unprofiled sequential native runs after compilation, against immediately preceding accepted stage. Variable load; no repeated benchmark, release latency, peak-memory or production-rendering guarantee.",
+  "remaining": [
+    "Synchronous workflow save pause",
+    "Remaining projection/encoding and actual production rendering costs",
+    "Child-rich/assignment-heavy native scale and hosted/paired bulk flows",
+    "Wider ranked Px backlog and user deferrals unchanged"
+  ],
+  "realDataChanged": false,
+  "serverOrRolloutChanged": false
+}

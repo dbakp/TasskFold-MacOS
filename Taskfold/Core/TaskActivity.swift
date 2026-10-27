@@ -734,6 +734,33 @@ struct ProductiveTaskReading {
 }
 
 struct ProjectPulseReading {
+    /// Immutable validated history for one project and one read pass. Sharing it
+    /// across timeline days does not retain account state or grant edit authority.
+    struct History {
+        let project: String
+        let events: [TaskActivity]
+        private(set) var malformed: Int
+        init(project: String, activity: [Record]) {
+            let parser = TaskNodeActivity.Parser()
+            var invalid = 0
+            let parsed = activity.compactMap { row -> TaskActivity? in
+                guard let event = parser.parent(row) else { invalid += 1; return nil }
+                return event
+            }
+            self.init(project: project, parsed: parsed)
+            malformed += invalid
+        }
+        init(project: String, parsed: [TaskActivity]) {
+            self.project = project
+            var seen = Set<String>(), invalid = 0
+            events = parsed.filter { event in
+                guard seen.insert(event.id).inserted, event.involves(project: project) else { return false }
+                if let context = event.rootContext, !context.readable { invalid += 1 }
+                return true
+            }.sorted { $0.sequence == $1.sequence ? $0.id > $1.id : $0.sequence > $1.sequence }
+            malformed = invalid
+        }
+    }
     var countsIncomplete = false
     var total = 0
     var completed = 0
@@ -748,21 +775,15 @@ struct ProjectPulseReading {
     var malformed = 0
     var start: Date
     var end: Date
-    init(project: String, tasks: [Record], activity: [Record], now: Date = Date(), calendar input: Calendar = .current, work suppliedWork: ProjectWorkScope? = nil, children: ChildWorkHistory? = nil, childReading suppliedChildren: ChildWorkReading? = nil) {
+    init(project: String, tasks: [Record], activity: [Record], now: Date = Date(), calendar input: Calendar = .current, work suppliedWork: ProjectWorkScope? = nil, children: ChildWorkHistory? = nil, childReading suppliedChildren: ChildWorkReading? = nil, history preparedHistory: History? = nil) {
         var calendar = Calendar(identifier: .gregorian); calendar.timeZone = input.timeZone
         end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))!
         start = calendar.date(byAdding: .day, value: -7, to: end)!
         let work = suppliedWork ?? ProjectWorkScope(tasks: tasks), scope = work.items(project: project)
         countsIncomplete = work.incomplete(project: project)
         total = scope.count; completed = scope.filter { $0.task.completed }.count
-        var seen = Set<String>(); malformed = 0
-        let parser = TaskNodeActivity.Parser()
-        events = activity.compactMap { row in
-            guard let event = parser.parent(row) else { malformed += 1; return nil }
-            guard seen.insert(event.id).inserted, event.involves(project: project) else { return nil }
-            if let context = event.rootContext, !context.readable { malformed += 1 }
-            return event
-        }.sorted { $0.sequence == $1.sequence ? $0.id > $1.id : $0.sequence > $1.sequence }
+        let history = preparedHistory.flatMap { $0.project == project ? $0 : nil } ?? History(project: project, activity: activity)
+        events = history.events; malformed = history.malformed
         let child = suppliedChildren ?? children.map { ChildWorkReading($0, now: now) }
         let childEvents = child?.events(project: project) ?? []
         historyIncomplete = child.map { $0.incomplete(project: project) || ($0.recordedFrom.map { $0 > start } ?? true) } ?? false

@@ -107,14 +107,14 @@ extension WidgetProjection {
         var seen = Set<String>()
         let work = ProjectWorkScope(tasks: tasks)
         let groups = Dictionary(grouping: tasks, by: { $0.string("project_id").lowercased() })
-        var events: [String: [Record]] = [:], malformed = false; seen = []
+        var events: [String: [TaskActivity]] = [:], malformed = false; seen = []
         let parser = TaskNodeActivity.Parser()
         for row in activity {
             guard let event = parser.parent(row) else { malformed = true; continue }
             guard seen.insert(event.id).inserted, event.recordedAt <= now else { continue }
             if let context = event.rootContext, !context.readable { malformed = true }
             let ids = Set([event.before["project_id"]?.text.lowercased() ?? "", event.after["project_id"]?.text.lowercased() ?? ""]).subtracting([""])
-            for id in ids { events[id, default: []].append(row) }
+            for id in ids { events[id, default: []].append(event) }
         }
         seen = []
         let all = projects.filter { PulseProject.validID($0.id) && seen.insert($0.id.lowercased()).inserted }.sorted { $0.id < $1.id }
@@ -122,12 +122,13 @@ extension WidgetProjection {
         let recorded = [rootRecorded, child?.recordedFrom?.timeIntervalSince1970].compactMap { $0 }.min()
         let cards = all.prefix(2048).map { project -> PulseProject in
             let id = project.id.lowercased(), rows = groups[id] ?? []
+            let history = ProjectPulseReading.History(project: id, parsed: events[id] ?? [])
             var days: [String: PulseDay] = [:]
             var partial = children != nil && rootRecorded == nil
             for offset in 0..<8 {
                 let date = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now))!
                 let key = ProjectPulseSnapshot.day(date, calendar: calendar)
-                let reading = ProjectPulseReading(project: id, tasks: rows, activity: events[id] ?? [], now: offset == 0 ? now : date, calendar: calendar, work: work, childReading: child)
+                let reading = ProjectPulseReading(project: id, tasks: rows, activity: [], now: offset == 0 ? now : date, calendar: calendar, work: work, childReading: child, history: history)
                 partial = partial || reading.historyIncomplete || (rootRecorded.map { Date(timeIntervalSince1970: $0) > reading.start } ?? false)
                 let attention = work.attention(project: id, now: date, calendar: calendar)
                 days[key] = PulseDay(completions: reading.completions, reopens: reading.reopens, additions: reading.additions, movedIn: reading.movedIn, movedOut: reading.movedOut, attentionCount: attention.count, attention: attention.prefix(3).map { PulseAttention(id: $0.id, title: PinnedNotes.excerpt($0.task.title, characters: 120, bytes: 800).0) })

@@ -1,0 +1,12 @@
+Test Suite 'Selected tests' started at 2026-10-27 11:01:36.143.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 11:01:36.144.
+Test Suite 'ProjectPulseWidgetTests' started at 2026-10-27 11:01:36.144.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testPulseProjectionRetainsFrozenHistoryAndBoundaryCorpus]' started.
+Test Case '-[TaskfoldCoreTests.ProjectPulseWidgetTests testPulseProjectionRetainsFrozenHistoryAndBoundaryCorpus]' passed (1.125 seconds).
+Test Suite 'ProjectPulseWidgetTests' passed at 2026-10-27 11:01:37.269.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.125 (1.125) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 11:01:37.269.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.125 (1.125) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 11:01:37.269.
+	 Executed 1 test, with 0 failures (0 unexpected) in 1.125 (1.126) seconds
+PULSE_HISTORY_CORPUS 64 8b8a1210f63dafb2d1a9d66b084d49068dad1fef3727b92e1daac8c07fecda12
