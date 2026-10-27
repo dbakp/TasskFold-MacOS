@@ -1,0 +1,22 @@
+{
+  "isolatedBundle": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "observed": [
+    "Opened Pinned notes through real toolbar, then synthetic note reader and Print or export.",
+    "Review showed Prepare workflow brief; Pinned note; 2 pages / 1 note; Save PDF and Print; no CSV action.",
+    "Real native Save panel exported taskfold-note-output-cua-20261027.pdf into its observed tmp destination.",
+    "Review reported PDF saved. A second Save and native Cancel returned with no PDF saved status.",
+    "Screenshot inspected: review title, page preview, both actions and Close/Options readable.",
+    "Closed review and quit the isolated app; process absence verified."
+  ],
+  "actualPDF": {
+    "pages": 2,
+    "firstAndEighthSections": true,
+    "finalInstruction": true,
+    "sha256": "da80ca8f84c20dcbc30adac0511b2e8b3575145376fe39c099df3da94fd130a9"
+  },
+  "limits": [
+    "CUA UI observation, not a passing XCTest suite or runtime-warning audit.",
+    "Private container read refused by macOS; no exact saved-table/cold-return or Mac source-race claim.",
+    "No permissions relaxed; no genuine provider, printing hardware or spoken check."
+  ]
+}

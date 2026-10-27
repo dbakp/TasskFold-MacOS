@@ -1,0 +1,16 @@
+{
+  "mac-cua-note.pdf": "da80ca8f84c20dcbc30adac0511b2e8b3575145376fe39c099df3da94fd130a9",
+  "mac-cua.json": "7c6b9591ec5c4bac4f5f0afc989297fc2d3cd31c5b494af8edc3aea2da17bf6f",
+  "source-binding.json": "0af41c2c59c9f923868f8ab00af042819f33f142c2d4f675d00bb4e5c4dab92d",
+  "readback.swift": "1251e7d2ea6b334b8b3074ddfc441a2b4dde3bc415053ed308fa3b3b05974d48",
+  "diagnostic-log-sha256.json": "48acbd3e93e19de713f24bae4851bd13a305f854e6659c89eb73309cb903aa21",
+  "commands.json": "c4b5c16a9e39e8c02477f608a46b31fc3c363f7e1219743f192a5449d714c100",
+  "README.md": "e977a126463eede3e3a94d24480b02051e717568f69e57da3dea502c16e8ead8",
+  "cleanup.json": "d692217187de1840f90a2c8709fb28e5b6d84cb0f487abe686e1efeed780d59f",
+  "taskfold-note-output-mac-retry-ui.log": "e9b3724836abe7f757e5765c25bb26c49d68340118c630cb8b7f8c4afff5085e",
+  "taskfold-note-output-mac-ui.log": "439f42a08afc199220de87e7d5a9a4fea9a757cdc9bd3a8d77866b48646d5ea2",
+  "mac-initial-summary.json": "0726bd4013bd2de11ae06417de038b7e5ab25c6b8d3d776c848f91eb0ade2837",
+  "mac-retry-initial-summary.json": "3bfe164341c6c5ed46a3b6a101f121f51a0b11a2612e9f82608058b07ded69d5",
+  "final-mac-build.json": "060a229b57a3c53252d664a86ce6ec839bddcbb5419320e2f8b80cf3146b2457",
+  "taskfold-note-output-mac-build.json": "ea07d11c04036b780aff45f34682e842cecf60a88a7e7951cf2d5aac4b40dbfb"
+}

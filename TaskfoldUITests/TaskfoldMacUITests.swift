@@ -15,15 +15,21 @@ extension TaskfoldMacUITests {
         for _ in 0..<15 where !control.isHittable { outputFront(app).scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -280) }
         XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
     }
-    @MainActor private func outputStart(_ app: XCUIApplication, longNotes: Bool, race: String? = nil) throws {
+    @MainActor private func outputStart(_ app: XCUIApplication, longNotes: Bool, race: String? = nil, pinned: Bool = false) throws {
         guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
         continueAfterFailure = false
         app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "-localMode", "YES", "-appearance", "light"]
         app.launchArguments += longNotes ? ["--print-output-fixture"] : ["--heading-progress-fixture", "--heading-planner-fixture"]
+        if pinned { app.launchArguments.append("--pinned-output-fixture") }
         if let race { app.launchArguments.append("--task-output-race-" + race) }
         try launchHeadingWorkspace(app)
         let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 15), app.debugDescription); today.click()
-        if longNotes {
+        if pinned {
+            app.buttons["openPinnedNotes"].click()
+            let note = app.buttons["pinnedNote-f1810000-0000-4000-8000-000000000001"]
+            XCTAssertTrue(note.waitForExistence(timeout: 8), app.debugDescription); note.click()
+            let printNote = app.buttons["printPinnedNote"]; outputReveal(printNote, app); printNote.click()
+        } else if longNotes {
             app.menuBars.menuBarItems["File"].click()
             let command = app.menuItems["Print or Export…"]
             XCTAssertTrue(command.waitForExistence(timeout: 5)); XCTAssertTrue(command.isEnabled); command.click()
@@ -5840,9 +5846,9 @@ extension TaskfoldMacUITests {
 }
 
 extension TaskfoldMacUITests {
-    @MainActor private func outputRace(csv: Bool) throws {
+    @MainActor private func outputRace(csv: Bool, pinned: Bool = false) throws {
         let app = XCUIApplication(); defer { app.terminate() }
-        try outputStart(app, longNotes: !csv, race: csv ? "workspace" : "source")
+        try outputStart(app, longNotes: !csv, race: csv ? "workspace" : "source", pinned: pinned)
         let before = try outputTables()
         if csv { app.buttons["openTaskCSV"].click(); XCTAssertTrue(app.staticTexts["csvRowCount"].waitForExistence(timeout: 10)) }
         let control = app.buttons[csv ? "saveTaskCSV" : "saveTaskPDF"]; outputReveal(control, app); control.click()
@@ -5870,14 +5876,17 @@ extension TaskfoldMacUITests {
         app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES"]; try launchHeadingWorkspace(app)
         XCTAssertEqual(try outputTables(), before)
     }
+    @MainActor func testPinnedNotePDFSaveRevokesChangedSourceWithoutWriting() throws { try outputRace(csv: false, pinned: true) }
     @MainActor func testPDFSavePanelRevokesChangedSourceWithoutWriting() throws { try outputRace(csv: false) }
     @MainActor func testCSVSavePanelRevokesWorkspaceWithoutWriting() throws { try outputRace(csv: true) }
 }
 
 
 extension TaskfoldMacUITests {
-    @MainActor func testPDFReviewedTransferSaveReadbackAndCancel() throws {
-        let app = XCUIApplication(); defer { app.terminate() }; try outputStart(app, longNotes: true)
+    @MainActor func testPDFReviewedTransferSaveReadbackAndCancel() throws { try outputPDFSave(pinned: false) }
+    @MainActor func testPinnedNotePDFSaveReadbackCancelAndColdReturn() throws { try outputPDFSave(pinned: true) }
+    @MainActor private func outputPDFSave(pinned: Bool) throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try outputStart(app, longNotes: true, pinned: pinned)
         let before = try outputTables(), file = try outputSave("saveTaskPDF", suffix: "pdf", app)
         let bytes = try Data(contentsOf: file), pdf = try XCTUnwrap(PDFDocument(data: bytes)), text = try XCTUnwrap(pdf.string)
         XCTAssertGreaterThan(pdf.pageCount, 1); XCTAssertTrue(text.contains("Design section 1")); XCTAssertTrue(text.contains("Design section 8")); XCTAssertTrue(text.contains("FINAL-NATIVE-PRINT-INSTRUCTION"))

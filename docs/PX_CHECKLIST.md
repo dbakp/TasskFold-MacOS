@@ -1,4 +1,4 @@
-# Px checklist — 27 October 2026
+# Px checklist — 28 October 2026
 
 This is a feature-level progress snapshot, not a release-readiness certificate.
 Checked items are complete within their recorded acceptance scope. Open items
@@ -65,6 +65,8 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   Save/cold return with long edited wording at dark largest text. Mac runtime
   warnings and broader shared/cloud/spoken acceptance remain open.
 - [x] Native print/PDF implementation and representative output verification.
+- [x] Pinned-note mobile largest-text Save/readback, Cancel/cold return and changed-
+  source refusal; Mac CUA Save/Cancel/readback. Exact limits: pinned-note-output/.
 - [x] Expanded saved filters, grouping and gesture controls in recorded scopes.
 - [x] Heading contracts and guarded native editors; ordinary authoring remains gated.
 - [x] Child-work integration with lists, planning, calendars, widgets and progress
@@ -276,3 +278,21 @@ full application/server lifecycle acceptance are not implied.
 Evidence: [task-output-release](task-output-release/README.md). This closes a scoped
 rank-3 output-safety checkpoint, not the full Px goal. Real audio tests remain
 user-deferred; no microphone/speech permissions or speaker test was requested.
+
+
+## 2026-10-28 — pinned-note native PDF acceptance
+
+- [x] Two selected native cases each on iPhone/iPad Simulator: dark largest-text
+  note PDF Save/readback, repeat Save/Cancel, unchanged saved tables/cold return,
+  and raw source revocation while the native Save picker is open. No reported
+  XCTest runtime warnings; all six retained mobile captures inspected.
+- [x] Mac CUA local pinned-note Save and repeat Cancel; actual two-page PDF readback.
+  This is a manual native scope, not a passing Mac XCTest/runtime suite.
+- [ ] Mac automated pinned-note source-change/cold-return preservation remains open:
+  the runner twice failed to enable automation before launching the app.
+- [ ] Other output largest-text/spoken/provider/account-picker/multi-window and
+  hardware-print gates remain open. See [pinned-note-output](pinned-note-output/README.md).
+
+Largest-text entry failures were test navigation mistakes: the lazy note row was
+below the library viewport. The driver now uses normal scrolling. No speculative
+tap-target/layout fix or temporary callback instrumentation remains in app code.

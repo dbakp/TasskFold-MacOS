@@ -97,7 +97,7 @@ private struct PinnedNoteDetail: View {
                         Button(action: unpin) { Label("Unpin note", systemImage: "pin.slash").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("unpinNote")
                         Text("Unpinning keeps the task and its notes. Widgets show a shortened preview; this screen shows the full text.").font(.caption).foregroundStyle(.secondary)
                     }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
-                }
+                }.accessibilityIdentifier("pinnedNoteReader")
             } else {
                 ContentUnavailableView("Note unavailable", systemImage: "pin.slash", description: Text("This task was removed, unpinned, or belongs to a different workspace. Open Pinned notes to choose another."))
             }

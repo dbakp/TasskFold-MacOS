@@ -8970,3 +8970,21 @@ user-deferred; no microphone/speech permissions or speaker test was requested.
 
 The Print & export recovery stack now fills its sheet so the navigation title
 stays at the top after source revocation. Final recovery/CSV captures were inspected.
+
+
+## 2026-10-28 — pinned-note native PDF acceptance
+
+- [x] Two selected native cases each on iPhone/iPad Simulator: dark largest-text
+  note PDF Save/readback, repeat Save/Cancel, unchanged saved tables/cold return,
+  and raw source revocation while the native Save picker is open. No reported
+  XCTest runtime warnings; all six retained mobile captures inspected.
+- [x] Mac CUA local pinned-note Save and repeat Cancel; actual two-page PDF readback.
+  This is a manual native scope, not a passing Mac XCTest/runtime suite.
+- [ ] Mac automated pinned-note source-change/cold-return preservation remains open:
+  the runner twice failed to enable automation before launching the app.
+- [ ] Other output largest-text/spoken/provider/account-picker/multi-window and
+  hardware-print gates remain open. See [pinned-note-output](pinned-note-output/README.md).
+
+Largest-text entry failures were test navigation mistakes: the lazy note row was
+below the library viewport. The driver now uses normal scrolling. No speculative
+tap-target/layout fix or temporary callback instrumentation remains in app code.

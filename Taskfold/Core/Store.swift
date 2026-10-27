@@ -3457,6 +3457,10 @@ extension Store {
             task["subtasks"] = .array([child("000000000001", "Planning", [child("000000000002", "Research", [child("000000000004", "Collect references")])]), child("000000000003", "Review")])
         }
         snapshot = Snapshot(tables: ["projects": projects, "tasks": [task]])
+        if ProcessInfo.processInfo.arguments.contains("--pinned-output-fixture"),
+           ["com.dbakp.taskfold.mac.workflowteststeameditbridge", "com.dbakp.taskfold.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") {
+            snapshot.tables["view_orders"] = [Record(["id": .string(PinnedNotes.key(task.id)), "user_id": .string(userID), "ids": .array([.string(task.id)])])]
+        }
         if ProcessInfo.processInfo.arguments.contains("--sharing-filter-fixture"), Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowtestsnotes1" {
             task["title"] = .string("Review shared layout")
             var personal = Record.task(user: userID, project: parent, date: Date()); personal["title"] = .string("Prepare private draft")
