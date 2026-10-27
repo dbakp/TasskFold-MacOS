@@ -217,3 +217,52 @@ ordinary reviewed save/cold return, synthetic refusal and replacement preservati
 dark review (largest mobile text), recovery after an acknowledged checkpoint and
 explicit discard/cold return. See audio-comment-recovery/ for exact current sources,
 commands, binary hashes, strict result summaries and inspected captures.
+
+
+## 2026-10-27 — durable local Save across relaunch
+
+An explicit local Save now writes an account-private, bounded binary intent before
+writing the reviewed draft. The intent retains the exact recording, UTF-8 caption,
+draft/revision/operation IDs, optimistic base and eligible recovery revisions.
+A relaunch lists **Saves to finish** separately and hides the recovery copies
+associated with that intent. Finish loads the current on-disk intent, performs a
+full native decode, and retries the original IDs. A stale Finish after deliberate
+deletion cannot recreate a draft. Deletion of a draft is refused while its Save
+still needs settlement.
+
+Save as separate draft atomically replaces the conflicted intent under its same
+operation ID, retaining the exact review and its newly chosen draft ID across
+another interrupted write. Different intent bytes cannot silently replace that
+journal. The primary draft is synchronized before eligible recovery removals are
+synchronized; only then may the intent disappear. Failed final bookkeeping can
+leave/replay an intent safely. This is a local file transaction, not a cloud
+publication or authenticated server receipt.
+
+The controller binds to the disk actor's immutable raw owner before any action or
+refresh. A deliberately mismatched store previously exposed draft summaries in a
+controlled synthetic test; the before result is retained, and the current test
+refuses those rows. Current focused evidence is 66 Core cases and 54 controller
+checks per independently owned repo, using actual private files and synthetic
+media. The controller checks include fresh-presentation resume, conflict-copy
+resume, quota after journal preparation, stale actions after deletion, wrong
+account/task generation, and a real in-flight file-write barrier during a workspace
+switch. See audio-comment-save/ for native acceptance, source/binary bindings and
+captures.
+
+Still open before exposure: atomic arbitration when independent editors try to Save
+the same recovered review concurrently; cancellation/management of prepared Saves
+when quota cannot be freed; reviewed orphan-stage export/recovery and corrupted
+metadata UX; full normal-Quit/background/raw-recording ownership; account removal
+and backup/export rules; private server publication/access/custody; real microphone,
+playback, permissions, interruption and spoken acceptance. These scoped guarantees
+do not claim the complete multi-editor/app lifecycle. Ordinary entry points remain
+gated and the user's real-audio deferral remains in force.
+
+
+Current local-Save native acceptance passes four selected cases each on ARM64 Mac,
+iPhone Simulator and iPad Simulator, with zero failures/skips/reported runtime
+warnings. These cover ordinary Save/cold return, explicit Discard, unsaved-review
+recovery and prepared-Save recovery (dark/largest text on mobile). Inspected Finish
+Save captures, exact source/binary hashes, strict verifiers and cleanup are in
+audio-comment-save/. Temporary Taskfold/test processes are closed and the used
+Simulators are shut down. These results leave the broader lifecycle gates open.

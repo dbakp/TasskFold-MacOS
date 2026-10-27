@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Scripts/test_audio_comment_capture.py", line 24, in <module>
+    if result.returncode: raise RuntimeError(result.stdout + result.stderr)
+RuntimeError: Failed audio checks: wrongStoreCannotExposeAnotherOwnersPendingOrSavedRows

@@ -6,6 +6,12 @@ import Observation
 @MainActor enum AudioCommentNativeFixture {
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-comment-testing") }
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldAudioNative", isDirectory: true) }
+    static func storage(_ scope: AudioCommentLiveScope) -> AudioCommentDraftStorage {
+        let fail = enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-lost-ack")
+        return .init(vault: .init(applicationSupport: root, owner: try! .init(scope.workspace.account), fault: { point in
+            if fail && point == .afterDraftCommit { throw AudioCommentStorageFailure.unreadable }
+        }))
+    }
     static func prepare() throws {
         guard enabled else { throw CancellationError() }
         if ProcessInfo.processInfo.arguments.contains("--audio-comment-reset") { try? FileManager.default.removeItem(at: root) }
@@ -32,7 +38,7 @@ struct AudioCommentNativeFixtureView: View {
         .task { do { try AudioCommentNativeFixture.prepare(); ready = true } catch { problem = error.localizedDescription } }
         .sheet(item: $opening) { request in
             AudioCommentDraftView(request: request,
-                                  storage: AudioCommentDraftStorage(applicationSupport: AudioCommentNativeFixture.root, owner: try! .init(request.scope.workspace.account)),
+                                  storage: AudioCommentNativeFixture.storage(request.scope),
                                   recorder: AudioCommentFixtureRecording(), player: AudioCommentFixturePlaying(), liveScope: { context.scope })
         }
     }

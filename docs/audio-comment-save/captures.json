@@ -1,0 +1,20 @@
+[
+  {
+    "file": "mac-saved.png",
+    "source": "/tmp/taskfold-audio-save-mac-final.xcresult",
+    "test": "TaskfoldMacUITests/testAudioPreparedSaveFinishesOnceAfterColdLaunchAtLargestText()",
+    "title": "One exact saved recording after prepared Save recovery"
+  },
+  {
+    "file": "mac-finish.png",
+    "source": "/tmp/taskfold-audio-save-mac-final.xcresult",
+    "test": "TaskfoldMacUITests/testAudioPreparedSaveFinishesOnceAfterColdLaunchAtLargestText()",
+    "title": "Finish prepared Save after cold launch at largest text"
+  },
+  {
+    "file": "mac-prepared.png",
+    "source": "/tmp/taskfold-audio-save-mac-final.xcresult",
+    "test": "TaskfoldMacUITests/testAudioPreparedSaveFinishesOnceAfterColdLaunchAtLargestText()",
+    "title": "Prepared Save after lost acknowledgement"
+  }
+]

@@ -81,6 +81,7 @@ import SwiftUI
                                 Button("Retry interrupted reviews") { Task { await capture.refresh() } }.disabled(capture.busy).accessibilityIdentifier("audioRetryInterrupted")
                             }
                         }
+                        if !capture.pendingSaves.isEmpty { pendingSaveSection }
                         if !capture.recoverable.isEmpty {
                             Section("Interrupted reviews") {
                                 Text("Review a recovered recording before saving it. Earlier saved drafts stay separate.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -158,6 +159,19 @@ import SwiftUI
             }
         }
     }
+    private var pendingSaveSection: some View {
+        Section("Saves to finish") {
+            Text("Your recording is kept privately. Finish the original Save without creating another draft.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            ForEach(capture.pendingSaves, id: \.id) { intent in
+                Button { Task { await capture.resumeSave(intent) } } label: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(intent.next.caption.isEmpty ? "Finish saving recording" : intent.next.caption).lineLimit(3)
+                        Label("Finish saving", systemImage: "arrow.clockwise").font(.caption).foregroundStyle(.secondary)
+                    }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                }.disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioPendingSave-" + intent.id.uuidString.lowercased())
+            }
+        }
+    }
     private var stackStatus: Bool {
         #if os(iOS)
         return textSize.isAccessibilitySize && sizeClass == .compact
@@ -181,6 +195,7 @@ import SwiftUI
     private func clock(_ seconds: TimeInterval) -> String { let total = max(0, Int(seconds.rounded(.down))); return String(format: "%d:%02d", total / 60, total % 60) }
     private func leave() {
         capture.cancelRecording(); capture.stopPlayback()
-        if capture.needsSave { leaving = true } else { capture.close(); dismiss() }
+        if capture.saveDurable { capture.close(); dismiss() }
+        else if capture.needsSave { leaving = true } else { capture.close(); dismiss() }
     }
 }

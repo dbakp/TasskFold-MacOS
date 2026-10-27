@@ -32,13 +32,25 @@ final class AudioProofOneShotFault: @unchecked Sendable {
     private var remaining: Bool
     private var writes = 0
     var writeCount: Int { lock.lock(); defer { lock.unlock() }; return writes }
-    init(enabled: Bool = true) { remaining = enabled }
+    private let point: AudioCommentVault.Checkpoint
+    init(enabled: Bool = true, point: AudioCommentVault.Checkpoint = .afterRename) { remaining = enabled; self.point = point }
     func arm() { lock.lock(); remaining = true; lock.unlock() }
     func check(_ point: AudioCommentVault.Checkpoint) throws {
-        guard point == .afterRename else { return }
+        guard point == self.point else { return }
         lock.lock(); writes += 1; let fail = remaining; remaining = false; lock.unlock()
         if fail { throw AudioCommentStorageFailure.unreadable }
     }
+}
+final class AudioProofSaveGate: @unchecked Sendable {
+    private let lock = NSLock(), semaphore = DispatchSemaphore(value: 0)
+    private var reached = false
+    var entered: Bool { lock.lock(); defer { lock.unlock() }; return reached }
+    func check(_ point: AudioCommentVault.Checkpoint) throws {
+        guard point == .afterSaveJournal else { return }
+        lock.lock(); reached = true; lock.unlock()
+        guard semaphore.wait(timeout: .now() + 3) == .success else { throw AudioCommentStorageFailure.unreadable }
+    }
+    func release() { semaphore.signal() }
 }
 @main struct AudioControllerProof {
     @MainActor static func wait(_ condition: () -> Bool) async -> Bool {
@@ -101,7 +113,7 @@ final class AudioProofOneShotFault: @unchecked Sendable {
         checks["cancelledPermissionCannotStartLateRecording"] = p.session.phase == .ready && p.session.clip == nil && pending.permits.first?() == false
         p.close()
         struct LostAcknowledgement: Error {}
-        let failing = try store("lost-save", fault: { if $0 == .afterRename { throw LostAcknowledgement() } })
+        let failing = try store("lost-save", fault: { if $0 == .afterDraftCommit { throw LostAcknowledgement() } })
         let retry = make(AudioProofRecorder(data), AudioProofPlayer(), failing)
         retry.start(); _ = await wait { retry.session.phase == .recording }; retry.stop(); _ = await wait { retry.session.phase == .review }
         retry.editCaption("Frozen retry caption")
@@ -184,7 +196,7 @@ final class AudioProofOneShotFault: @unchecked Sendable {
 
         // Conflicts are different from uncertain acknowledgements. A deliberate
         // copy preserves both exact versions, while Delete cannot drop dirty work.
-        let copyFault = AudioProofOneShotFault(enabled: false)
+        let copyFault = AudioProofOneShotFault(enabled: false, point: .afterDraftCommit)
         let conflictDisk = try store("save-conflict", fault: { try copyFault.check($0) })
         let base = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Original saved caption", clip: await AudioCommentDecoding.validate(data))
         try await conflictDisk.save(base)
@@ -264,6 +276,93 @@ final class AudioProofOneShotFault: @unchecked Sendable {
         let afterUncertainDiscard = try await uncertainDiscardDisk.reviews()
         checks["explicitDiscardSettlesExactUnacknowledgedRecoveryWithoutSavingNewerCaption"] = explicitlyDiscardedUncertain && beforeUncertainDiscard.count == 1 && afterUncertainDiscard.isEmpty && discardFault.writeCount == writesBeforeDiscard
 
+        let coldDisk = try store("cold-save", fault: { if $0 == .afterDraftCommit { throw AudioCommentStorageFailure.unreadable } })
+        let cold = make(AudioProofRecorder(data), AudioProofPlayer(), coldDisk)
+        cold.start(); _ = await wait { cold.session.phase == .recording }; cold.stop(); _ = await wait { cold.session.phase == .review }
+        cold.editCaption("Exact cafe\u{301}\nKeep this Save once")
+        let coldSaved = await cold.save(), coldIntents = try await coldDisk.saves(), coldDrafts = try await coldDisk.drafts()
+        checks["uncertainPrimarySaveHasDurableIntentAndSafeClose"] = !coldSaved && cold.saveDurable && cold.saveUnconfirmed && coldIntents.count == 1 && coldDrafts.count == 1
+        cold.close()
+        let coldReturn = make(AudioProofRecorder(data), AudioProofPlayer(), coldDisk)
+        await coldReturn.refresh()
+        checks["relaunchListsOriginalSaveAndHidesItsRecoveryCopies"] = coldReturn.pendingSaves == coldIntents && coldReturn.recoverable.isEmpty && coldReturn.available == coldDrafts
+        let foreignScope = AudioCommentLiveScope(workspace: .init(account: "another-save-account", generation: UUID()), target: target)
+        let foreign = AudioCommentCapture(request: .init(scope: foreignScope, title: "Other account"), recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: coldDisk)
+        foreign.currentScope = { foreignScope }
+        if let intent = coldIntents.first { await foreign.resumeSave(intent) }
+        checks["pendingSaveCannotExposeClipUnderAnotherAccountEvenWithWrongStoreInjection"] = foreign.session.clip == nil && foreign.pendingSaves.isEmpty
+        await foreign.refresh()
+        checks["wrongStoreCannotExposeAnotherOwnersPendingOrSavedRows"] = foreign.pendingSaves.isEmpty && foreign.available.isEmpty && foreign.recoverable.isEmpty
+        foreign.close()
+        let nextScope = AudioCommentLiveScope(workspace: workspace, target: nextGeneration)
+        let laterTask = AudioCommentCapture(request: .init(scope: nextScope, title: "New task incarnation"), recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: coldDisk)
+        laterTask.currentScope = { nextScope }
+        if let intent = coldIntents.first { await laterTask.resumeSave(intent) }
+        checks["pendingSaveCannotExposeClipUnderAnotherTaskGeneration"] = laterTask.session.clip == nil
+        laterTask.close()
+        if let intent = coldReturn.pendingSaves.first { await coldReturn.resumeSave(intent) }
+        let afterColdSave = try await coldDisk.drafts(), afterColdJournals = try await coldDisk.saves(), afterColdReviews = try await coldDisk.reviews()
+        checks["relaunchFinishesExactOriginalDraftWithoutDuplicate"] = afterColdSave == coldDrafts && afterColdJournals.isEmpty && afterColdReviews.isEmpty && coldReturn.saved == coldDrafts.first && !coldReturn.saveUnconfirmed
+        if let intent = coldIntents.first { await coldReturn.resumeSave(intent) }
+        checks["lateFinishCallbackIsIdempotentForAlreadySavedDraft"] = try await coldDisk.drafts() == afterColdSave
+        coldReturn.close()
+        if let saved = afterColdSave.first { try await coldDisk.discardDraft(saved.id, revision: saved.revision) }
+        let afterDeletion = make(AudioProofRecorder(data), AudioProofPlayer(), coldDisk)
+        if let intent = coldIntents.first { await afterDeletion.resumeSave(intent) }
+        let afterStaleResume = try await coldDisk.drafts()
+        checks["lateFinishCallbackCannotResurrectDeletedAudio"] = afterStaleResume.isEmpty && afterDeletion.session.clip == nil && afterDeletion.notice != nil
+        afterDeletion.close()
+
+        let quotaDisk = try store("prepared-quota")
+        for _ in 0..<(AudioCommentVault.maximumEntries - 2) {
+            try await quotaDisk.save(AudioCommentSavedDraft(owner: owner, target: target, caption: "Earlier recording", clip: AudioCommentClip(data: data)))
+        }
+        let earlierQuota = try await quotaDisk.drafts()
+        let quotaSave = make(AudioProofRecorder(data), AudioProofPlayer(), quotaDisk)
+        quotaSave.start(); _ = await wait { quotaSave.session.phase == .recording }; quotaSave.stop(); _ = await wait { quotaSave.session.phase == .review }
+        quotaSave.editCaption("Durable Save waiting for space")
+        let savedAtQuota = await quotaSave.save(), pendingAtQuota = try await quotaDisk.saves()
+        checks["quotaAfterJournalIsDurableUncertainSaveNotEditableNewIntent"] = !savedAtQuota && quotaSave.saveDurable && quotaSave.saveUnconfirmed && !quotaSave.editable && pendingAtQuota.count == 1
+        quotaSave.close()
+        let quotaReturn = make(AudioProofRecorder(data), AudioProofPlayer(), quotaDisk); await quotaReturn.refresh()
+        if let earlier = earlierQuota.first { await quotaReturn.restore(earlier); _ = await quotaReturn.deleteSaved() }
+        if let pending = quotaReturn.pendingSaves.first { await quotaReturn.resumeSave(pending) }
+        let quotaCompleted = try await quotaDisk.drafts(), quotaCompletedIntents = try await quotaDisk.saves()
+        checks["returnedEditorCanFreeSpaceThenFinishSamePreparedSave"] = quotaCompleted.count == earlierQuota.count && quotaCompletedIntents.isEmpty && quotaCompleted.contains { $0.id == pendingAtQuota.first?.next.id && $0.caption == "Durable Save waiting for space" }
+        quotaReturn.close()
+
+        let replacementFault = AudioProofOneShotFault(enabled: false, point: .afterSaveJournal)
+        let replacementDisk = try store("cold-conflict-copy", fault: { try replacementFault.check($0) })
+        let originalCopy = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Original", clip: AudioCommentClip(data: data))
+        try await replacementDisk.save(originalCopy)
+        let replacement = make(AudioProofRecorder(data), AudioProofPlayer(), replacementDisk)
+        await replacement.restore(originalCopy); replacement.editCaption("My exact cafe\u{301} copy")
+        let changedCopy = try originalCopy.replacing(caption: "Other window", clip: originalCopy.clip)
+        try await replacementDisk.save(changedCopy, replacing: originalCopy.revision)
+        _ = await replacement.save(); replacementFault.arm(); _ = await replacement.saveSeparateDraft()
+        let preparedCopy = try await replacementDisk.saves()
+        replacement.close()
+        let replacementReturn = make(AudioProofRecorder(data), AudioProofPlayer(), replacementDisk); await replacementReturn.refresh()
+        if let pending = replacementReturn.pendingSaves.first { await replacementReturn.resumeSave(pending) }
+        let completedCopies = try await replacementDisk.drafts(), remainingCopyIntents = try await replacementDisk.saves()
+        checks["interruptedSeparateCopyResumesPersistedCopyIdentity"] = preparedCopy.count == 1 && completedCopies.count == 2 && completedCopies.contains(changedCopy) && completedCopies.contains { $0.id == preparedCopy.first?.next.id && $0.caption.utf8.elementsEqual("My exact cafe\u{301} copy".utf8) } && remainingCopyIntents.isEmpty
+        replacementReturn.close()
+
+        let scopeGate = AudioProofSaveGate()
+        let scopeDisk = try store("save-scope-change", fault: { try scopeGate.check($0) })
+        let scopedSave = make(AudioProofRecorder(data), AudioProofPlayer(), scopeDisk)
+        scopedSave.start(); _ = await wait { scopedSave.session.phase == .recording }; scopedSave.stop(); _ = await wait { scopedSave.session.phase == .review }
+        scopedSave.editCaption("Frozen original owner Save")
+        let inFlightSave = Task { await scopedSave.save() }
+        let reachedSave = await wait { scopeGate.entered }
+        context.scope = .init(workspace: .init(account: "another-save-account", generation: UUID()), target: target)
+        scopedSave.contextChanged(); scopeGate.release()
+        let shownSave = await inFlightSave.value
+        let originalOwnerSaved = try await scopeDisk.drafts(), originalOwnerJournals = try await scopeDisk.saves()
+        let otherOwnerStore = AudioCommentDraftStorage(applicationSupport: root.appendingPathComponent("save-scope-change"), owner: try .init("another-save-account"))
+        let otherOwnerSaved = try await otherOwnerStore.drafts()
+        checks["inFlightDurableSaveFinishesOnlyOriginalOwnerAndClearsClosedPreview"] = reachedSave && !shownSave && originalOwnerSaved.count == 1 && originalOwnerSaved.first?.caption == "Frozen original owner Save" && originalOwnerJournals.isEmpty && otherOwnerSaved.isEmpty && scopedSave.session.clip == nil && !scopedSave.recovery.durable
+        context.scope = request.scope
         let realRecorder = DeviceAudioCommentRecording(), realPlayer = DeviceAudioCommentPlaying()
         var falseGate = false, falsePlay = false
         do { try await realRecorder.start(isCurrent: { false }, receive: { _ in }) } catch is CancellationError { falseGate = true }

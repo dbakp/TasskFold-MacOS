@@ -113,7 +113,7 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
 - [ ] Audio comments: bounded clip/decode, scoped private storage and a native review
-  candidate now have 55 Core and 42 synthetic audio-controller checks per repo,
+  candidate now have 66 Core and 54 synthetic audio-controller checks per repo,
   including private interrupted-review recovery and explicit conflict copies.
   The unchanged shared dictation lease passed 17 controller checks at the prior checkpoint. Ordinary app entry points, private server lifecycle and genuine
   microphone/speaker/accessibility acceptance remain open; see
@@ -198,3 +198,19 @@ Evidence and exact scope: [prepared workflow Undo](prepared-workflow-undo/README
 - [ ] Complete normal-Quit/background/raw-recording, account-removal, storage-full/
   cleanup and private server lifecycle before ordinary exposure. Genuine audio
   acceptance remains user-deferred. See audio-comment-recovery/ for native evidence.
+
+
+## 2026-10-27 — finish interrupted local audio Saves
+
+- [x] Durable exact Save identity before primary replacement; original-ID resume
+  across fresh presentations and separate-copy journal replacement.
+- [x] Saves to finish UI, protected recovery rows, full decode before resume,
+  idempotent late Finish, refusal to resurrect a deliberately deleted recording.
+- [x] Immutable storage-owner binding; a failing-before/passing-after synthetic
+  wrong-store summary-isolation check; original-owner in-flight Save completion.
+- [x] 66 focused Core / 54 actual-controller checks per repo, plus four current
+  native cases each on Mac/iPhone/iPad with no reported runtime warnings; largest
+  mobile text is covered. See audio-comment-save/; hardware/speech is not implied.
+- [ ] Concurrent-editor recovery claiming, prepared-Save cancellation/quota and
+  orphan/corrupt-file recovery; full account/Quit/background/backup lifecycle,
+  ordinary app integration and private server audio delivery. Feature stays gated.

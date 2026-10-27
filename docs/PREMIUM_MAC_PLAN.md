@@ -8889,3 +8889,21 @@ Simulator, no failures/skips/reported runtime warnings. Selected actual captures
 and result verifiers are retained in audio-comment-recovery/. Temporary apps/runners
 are closed, both used Simulators are shut down, and 295.4 MiB of allocated obsolete
 owned output was pruned (allocated-before-removal, not guaranteed physical free space).
+
+
+## 2026-10-27 — finish interrupted local audio Saves
+
+Local Save now retains its exact operation/draft IDs and media in a private intent
+before primary replacement; ordered cleanup and original-ID resume survive the
+recorded interruptions. Saves to finish is separate from interrupted reviews.
+Late callbacks cannot resurrect deleted audio, and a mismatched disk owner cannot
+expose private summary rows. Each repo passes 66 focused Core / 54 controller
+checks; see audio-comment-save/ for native scope, captures and remaining limits.
+Concurrent-editor claiming, prepared-Save cancellation/quota, orphan recovery,
+full normal-Quit/background/removal/export and private server delivery remain
+open. Genuine audio acceptance remains user-deferred; ordinary exposure stays off.
+
+Current local-Save native evidence: four selected cases each on Mac/iPhone/iPad,
+all passing with no reported runtime warnings; largest mobile text is included.
+Selected Finish Save captures were inspected. Test apps/runners are closed, used
+Simulators shut down, and superseded owned output pruned; see the cleanup receipt.

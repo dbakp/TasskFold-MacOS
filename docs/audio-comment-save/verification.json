@@ -1,0 +1,50 @@
+{
+  "status": "Gated local audio Save recovery; full audio comments and Px remain unfinished",
+  "core": {
+    "host": "macOS Swift Package, independently built from each repo; not mobile runtime",
+    "tests": 66,
+    "failures": 0,
+    "rawLogSHA256": "87e4f88152672c5b261d99c6db7b22804f27bca791e3119224f7543d60b75b1d",
+    "logNormalization": "Trailing whitespace removed only."
+  },
+  "controller": {
+    "checks": 54,
+    "compilerWarnings": [],
+    "scope": "Actual controller/codec/private vault with synthetic media; includes fresh-presentation retry, interrupted copy, quota, stale/deleted callback, owner/generation guards and a real in-flight write barrier."
+  },
+  "native": {
+    "mac": {
+      "tests": 4,
+      "failures": 0,
+      "runtimeWarnings": [],
+      "scope": "Synthetic interrupted-ack + real app termination/relaunch; normal Save, Discard, review recovery, prepared Save. Largest text/dark on mobile; ordinary text/dark on Mac. Silent player; no genuine capture/speech/power-loss claim."
+    }
+  },
+  "sources": {
+    "Taskfold/Core/AudioCommentVault.swift": "8836f96738312e0a9d40c4e05a22276058564e68d651bc44ab73697bbe562feb",
+    "Taskfold/AudioCommentCapture.swift": "4219f4d86b8f70bd71335f6ff390adab20e892d9e61d477f8ff3cbeb9c076fd9",
+    "Taskfold/AudioCommentNativeFixture.swift": "08ec95c4b533dcea0203072da7fa8bff4a7d44200b1cb45b97020e258e722091",
+    "Taskfold/Views/AudioCommentDraftView.swift": "11583fd08eb58a1199a14304f40a8d0c513f9f97dc3fcc5e943f0c334651d08f",
+    "TaskfoldTests/AudioCommentVaultTests.swift": "aece68e2d239ead76a0f624045cddf7b463a2e8170fece86f97c7cde178d66da",
+    "TaskfoldUITests/AudioCommentUITests.swift": "4c621b61462b84a8a59f02f9f2eb9a21cd9b8ff2209621707646f26b6a6fb4f9",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "1e8b2d20a396fab47656af0e5c3773502af851b94e23849a173bf003ae217281"
+  },
+  "regression": "Before owner-binding patch, only wrongStoreCannotExposeAnotherOwnersPendingOrSavedRows fails among 54 checks. Current actor owner is immutable and Capture validates it before any action/read. Only synthetic data used.",
+  "deferrals": [
+    "No genuine microphone, speech-permission, speaker, interruption or spoken acceptance. User real-audio deferral remains in force.",
+    "Existing remote reminders, older-client rollout, distribution and provider deferrals unchanged."
+  ],
+  "remaining": [
+    "Atomic arbitration of independent editors saving the same recovery copy",
+    "Prepared-Save cancellation/quota management and orphan/corrupt-file recovery",
+    "Retained in-memory attempts after unreadable state lookups; full normal-Quit/background/raw-recording lifecycle",
+    "Account removal and backup/export policy",
+    "Ordinary task/conversation entry points and private server publication/access/custody"
+  ],
+  "binarySHA256": {
+    "Taskfold": "26a60cfd9982a986ed10cc21c0124f605395fb50b1ba93755ebd4a5bef4f6c67",
+    "Taskfold.debug.dylib": "2bfd47c8ba408ed018f0fa48083f1ef61043d495bdf3f0dbb29953907503cd99"
+  },
+  "deepStrictSignatureVerification": true,
+  "nativeBuildLog": "/tmp/taskfold-audio-save-native-mac-owner-build.log"
+}

@@ -30,9 +30,10 @@ extension TaskfoldMacUITests {
         }
         XCTAssertTrue(element.exists && element.isHittable, app.debugDescription)
     }
-    @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false) {
+    @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false, lostSave: Bool = false) {
         app.launchArguments = ["--uitesting", "--team-editor-testing", "--audio-comment-testing", "-appearance", large || denied ? "dark" : "light"]
         if reset { app.launchArguments.append("--audio-comment-reset") }
+        if lostSave { app.launchArguments.append("--audio-save-lost-ack") }
         if denied { app.launchArguments.append("--audio-comment-denied") }
         if large { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
         app.launch()
@@ -182,6 +183,50 @@ extension TaskfoldMacUITests {
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-")).firstMatch.exists)
         XCTAssertFalse(app.textViews["audioCaption"].exists)
         audioScreenshot(app, "Explicitly discarded review stays discarded after relaunch")
+    }
+
+    @MainActor func testAudioPreparedSaveFinishesOnceAfterColdLaunchAtLargestText() throws {
+        try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
+        audioOpen(app, large: true, lostSave: true); audioRecord(app)
+        let caption = app.textViews["audioCaption"]; audioReveal(caption, app); audioPress(caption)
+        caption.typeText("Keep this Save exactly once")
+        #if os(iOS)
+        if app.buttons["audioHideKeyboard"].exists { audioPress(app.buttons["audioHideKeyboard"]) }
+        #endif
+        let save = app.buttons["audioSave"]; audioReveal(save, app); audioPress(save)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@ AND enabled == true", "Retry save"), object: save)], timeout: 10) == .completed)
+        audioScreenshot(app, "Prepared Save after lost acknowledgement")
+        audioPress(app.buttons["audioClose"])
+        XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false, large: true)
+        let pending = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch
+        audioReveal(pending, app)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch.exists)
+        audioScreenshot(app, "Finish prepared Save after cold launch at largest text")
+        audioPress(pending)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["audioSaveClose"])], timeout: 12) == .completed)
+        #if os(iOS)
+        audioReveal(save, app, towardTop: true)
+        #else
+        audioReveal(save, app)
+        #endif
+        XCTAssertEqual(save.label, "Saved on this device"); XCTAssertFalse(save.isEnabled)
+        audioPress(app.buttons["audioClose"])
+        XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false, large: true)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch.exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch.exists)
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-"))
+        audioReveal(saved.firstMatch, app); XCTAssertEqual(saved.count, 1); audioPress(saved.firstMatch)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["audioSaveClose"])], timeout: 12) == .completed)
+        let restored = app.textViews["audioCaption"]
+        #if os(iOS)
+        audioReveal(restored, app, towardTop: true)
+        #else
+        audioReveal(restored, app)
+        #endif
+        XCTAssertEqual(restored.value as? String, "Keep this Save exactly once")
+        audioScreenshot(app, "One exact saved recording after prepared Save recovery")
     }
 
 }

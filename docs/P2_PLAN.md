@@ -6402,3 +6402,16 @@ Each repo passes 55 focused Core and 42 synthetic controller checks. Native evid
 is in audio-comment-recovery/. Ordinary exposure, full application/background/Quit
 and removal/export lifecycle, private cloud audio and real audio acceptance remain
 unfinished; the overall Px goal stays active.
+
+
+## 2026-10-27 — durable local audio Save intent
+
+Explicit local audio Save now journals its exact recording/caption and IDs before
+writing the draft, then settles exact recovery copies in order. Relaunch offers
+Saves to finish; a stale callback cannot resurrect deleted audio. A separate copy
+replaces the conflicted journal atomically, and disk actors expose an immutable
+owner used to reject mismatched controller/store bindings. Each repo passes 66
+focused Core and 54 executable controller checks. Native evidence and limits are
+in audio-comment-save/. Concurrent-editor claiming, pending-Save management and
+full application/private-server lifecycle remain unfinished; no ordinary entry
+point or release/provider gate was enabled.
