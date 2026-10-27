@@ -1,0 +1,6 @@
+{
+  "removed": "/tmp/taskfold-history-admission-mac-final.xcresult",
+  "logicalBytes": 1096607068,
+  "reason": "Locked Mac activation failures and canceled run; retained failed summary, job and case excerpts before pruning. Current products and warning-bearing probe retained.",
+  "finalCleanup": "Current native tests terminate their hosts; process inventory found no Taskfold main app, UI runner or reference process. Both owned acceptance Simulators shut down after final runs."
+}

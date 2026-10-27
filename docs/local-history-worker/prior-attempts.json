@@ -1,0 +1,6 @@
+{
+  "macLocked": "Two activation failures while locked, then canceled; zero passes. Obsolete 1.096 GB result pruned after preserving summary/job/case excerpts.",
+  "phoneBeforeScroll": "11 cases passed; actual local view case failed before Create. Entire suite rejected.",
+  "phoneProbe": "Local view still failed before Create during startup experiment. Screenshot showed normal long preview and Create below viewport. Current fixture restored explicit setup; test now scrolls as existing helper does.",
+  "macWarningProbe": "Earlier preparation implementation passed local native case with one priority-inversion warning. Archived diagnostics did not contain its event; matching live PID/time found 59 unresolved frames. No system/AppKit attribution established; old result remains warning-bearing. Current acceptance is separate."
+}

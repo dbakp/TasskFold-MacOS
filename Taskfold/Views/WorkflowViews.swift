@@ -576,6 +576,7 @@ struct TemplateRunView: View {
     @State private var message: String?
     @State private var pending: [Mutation]?
     @State private var pendingContext: WorkflowPreparationContext?
+    @State private var pendingHistory: LocalActivityCreation.Preparation?
     @State private var run = UUID()
     @State private var editingDefinition = false
     @State private var preparation: Task<Void, Never>?
@@ -658,7 +659,12 @@ struct TemplateRunView: View {
         do {
             try validate(definition, target: target)
             guard definition.kind == .project || (definition.kind == .task && project != "__choose__") || !target.isEmpty else { throw AppFailure(message: "Choose a destination first.") }
-            if pending != nil { savePrepared(); return }
+            if pending != nil, pendingContext.map({ current($0) }) != true {
+                pending = nil; pendingContext = nil; pendingHistory = nil
+                throw AppFailure(message: "The workspace or template changed while preparing. Try creating the workflow again.")
+            }
+            let existing = pending
+            let historySnapshot = store.snapshot, historyRevision = store.snapshotRevision, localHistory = store.localMode, historyCache = store.nativeConversationTeamCache
             let account = store.userID, title = name, start = dated ? date : nil, labels = store.labels, run = run
             let context = WorkflowPreparationContext(workspace: WorkspaceBinding(account: account, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, document: template["document"], labels: labels, target: target)
             let ticket = UUID(); preparationID = ticket; message = nil
@@ -668,7 +674,9 @@ struct TemplateRunView: View {
                     try await Task.sleep(for: .seconds(10))
                 }
                 #endif
-                return try definition.instantiate(account: account, name: title, targetProject: target, start: start, labels: labels, run: run)
+                let changes = try existing ?? definition.instantiate(account: account, name: title, targetProject: target, start: start, labels: labels, run: run)
+                let history = localHistory ? try LocalActivityCreation.Preparation(changes: changes, snapshot: historySnapshot, source: historyRevision, account: account, labels: labels, cache: historyCache) : nil
+                return (changes: changes, history: history)
             }
             preparation = Task { @MainActor in
                 defer { if preparationID == ticket { preparation = nil; preparationID = nil } }
@@ -678,7 +686,7 @@ struct TemplateRunView: View {
                     // Preparation may outlive its source, destination or account.
                     try validate(definition, target: target)
                     guard current(context) else { throw AppFailure(message: "The workspace or template changed while preparing. Try creating the workflow again.") }
-                    pending = result; pendingContext = context
+                    pending = result.changes; pendingHistory = result.history; pendingContext = context
                     savePrepared()
                 } catch is CancellationError { }
                 catch { if preparationID == ticket { message = error.localizedDescription } }
@@ -693,9 +701,9 @@ struct TemplateRunView: View {
         }
         var saved = false
         #if os(macOS)
-        workspace.run("Create Workflow") { saved = store.commit(pending) }
+        workspace.run("Create Workflow") { saved = store.commit(pending, localHistory: pendingHistory) }
         #else
-        saved = store.commit(pending)
+        saved = store.commit(pending, localHistory: pendingHistory)
         #endif
         if saved { store.error = nil; dismiss() } else { message = store.error }
     }

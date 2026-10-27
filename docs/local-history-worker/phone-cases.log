@@ -1,0 +1,34 @@
+Test Suite 'Selected tests' started at 2026-10-27 12:25:55.793.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 12:25:55.794.
+Test Suite 'TaskfoldUITests' started at 2026-10-27 12:25:55.794.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo]' passed (24.929 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' passed (11.735 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (12.827 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' passed (35.424 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' passed (14.086 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' passed (16.717 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' passed (12.445 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' passed (47.916 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' passed (41.452 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparedHistoryRejectsChangedSource]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativePreparedHistoryRejectsChangedSource]' passed (14.374 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' passed (21.648 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (33.031 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-27 12:30:42.408.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 286.584 (286.614) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 12:30:42.409.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 286.584 (286.615) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 12:30:42.410.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 286.584 (286.617) seconds
+** TEST EXECUTE SUCCEEDED **

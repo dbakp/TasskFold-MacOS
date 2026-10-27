@@ -41,6 +41,87 @@ final class FreshLocalActivityTests: XCTestCase {
         let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
         return try encoder.encode(value.tables.filter { keys.contains($0.key) })
     }
+    private func workflowChanges() -> [Mutation] {
+        let run = UUID()
+        return (100..<104).map { index in
+            var (change, _) = action(index)
+            change.workflowRun = run; change.insertOnly = true
+            change.fields["description"] = .string("é")
+            return change
+        }
+    }
+    private func finalEntries(_ changes: [Mutation], seed: Snapshot) -> (Snapshot, [LocalActivityCreation.Entry]) {
+        var value = seed, entries: [LocalActivityCreation.Entry] = []
+        for original in changes {
+            var change = original
+            change.fields = TaskPlanning.fields(change.fields, existing: nil)
+            change = TaskCompletionRevision.capturing(change, existing: nil)
+            value.apply(change)
+            entries.append(.init(change: change, after: value.tables["tasks"]!.first { $0.id == change.recordID }!, recordedAt: now))
+        }
+        return (value, entries)
+    }
+    func testDetachedHistoryMatchesOrdinaryMetadataWithoutChangingInput() async throws {
+        let original = seed(), changes = workflowChanges(), source = UUID(), account = account, time = now
+        let prepared = try await Task.detached {
+            try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: time)
+        }.value
+        let plan = try XCTUnwrap(prepared)
+        var (actual, entries) = finalEntries(changes, seed: original)
+        var expected = actual
+        XCTAssertTrue(LocalActivityCreation.record(entries, snapshot: &expected, account: account))
+        XCTAssertTrue(plan.apply(entries, to: &actual, source: source, account: account))
+        XCTAssertEqual(withoutProvenanceNonces(actual), withoutProvenanceNonces(expected))
+        XCTAssertEqual(try metadata(original), try metadata(seed()))
+    }
+    func testPreparedHistoryRejectsRevisionOwnerAndRawUnicodeChangesAtomically() throws {
+        let original = seed(), changes = workflowChanges(), source = UUID()
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let (projected, entries) = finalEntries(changes, seed: original)
+        for wrongOwner in [false, true] {
+            var actual = projected
+            XCTAssertFalse(plan.apply(entries, to: &actual, source: wrongOwner ? source : UUID(), account: wrongOwner ? "other" : account))
+            XCTAssertEqual(actual, projected)
+        }
+        var changed = entries, after = changed[0].after, mutation = changed[0].change
+        after["description"] = .string("e\u{301}"); mutation.fields["description"] = after["description"]
+        changed[0] = .init(change: mutation, after: after, recordedAt: now)
+        XCTAssertEqual(entries[0].after, changed[0].after, "Semantic String equality alone cannot bind prepared records")
+        var actual = projected
+        XCTAssertFalse(plan.apply(changed, to: &actual, source: source, account: account)); XCTAssertEqual(actual, projected)
+    }
+    func testHistoryAdmissionRequiresSameImmutableInputAndContext() throws {
+        let original = seed(), changes = workflowChanges(), source = UUID()
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admitted = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        var (actual, entries) = finalEntries(changes, seed: original)
+        var expected = actual
+        XCTAssertTrue(LocalActivityCreation.record(entries, snapshot: &expected, account: account))
+        XCTAssertTrue(admitted.apply(to: &actual, source: source, account: account))
+        XCTAssertEqual(withoutProvenanceNonces(actual), withoutProvenanceNonces(expected))
+        var changed = changes
+        changed[0].fields["description"] = .string("e\u{301}")
+        XCTAssertEqual(changes, changed)
+        XCTAssertNil(plan.admit(changed, source: source, account: account, cache: nil), "Copy-on-write rejects a raw Unicode change even when semantic equality says equal")
+        XCTAssertNil(plan.admit(changes, source: UUID(), account: account, cache: nil))
+        XCTAssertNil(plan.admit(changes, source: source, account: "other", cache: nil))
+        var calendar = Calendar.current; calendar.timeZone = TimeZone(secondsFromGMT: calendar.timeZone.secondsFromGMT() == 10800 ? 0 : 10800)!
+        XCTAssertNil(plan.admit(changes, source: source, account: account, cache: nil, calendar: calendar))
+        var untagged = changes; untagged[0].insertOnly = nil
+        XCTAssertNil(try LocalActivityCreation.Preparation(changes: untagged, snapshot: original, source: source, account: account, labels: [], cache: nil))
+    }
+
+    func testPreparedHistoryCancellationAndExistingIdentityDoNotWrite() throws {
+        let original = seed(), changes = workflowChanges(), source = UUID()
+        var checks = 0
+        XCTAssertThrowsError(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, checkCancellation: {
+            checks += 1; if checks == 3 { throw CancellationError() }
+        }))
+        var collision = original; collision.tables["tasks"] = [Record(changes[0].fields)]
+        XCTAssertNil(try LocalActivityCreation.Preparation(changes: changes, snapshot: collision, source: source, account: account, labels: [], cache: nil))
+        XCTAssertEqual(try metadata(original), try metadata(seed()))
+    }
+
     func testLegacyLocalHistoryControlIsDeterministic() throws {
         let actions = (0..<100).map { action($0) }, original = seed(), start = ContinuousClock.now
         let value = legacy(actions, seed: original), elapsed = start.duration(to: .now)

@@ -27,8 +27,14 @@ final class Store {
     var workspaceAccessToken: String? { (activeTeamMask ?? snapshot.teamWorkspace)?.boundary.raw["token"]?.text }
     var nativeConversationTeamCache: TeamWorkspaceCache? { activeTeamMask ?? snapshot.teamWorkspace }
     @ObservationIgnored private var workflowPresentationDeferred = false
+    @ObservationIgnored private(set) var snapshotRevision = UUID()
+    #if DEBUG
+    @ObservationIgnored private(set) var workflowPreparedLocalHistoryUsed = false
+    @ObservationIgnored private(set) var workflowPreparedNormalizationUsed = false
+    #endif
     var snapshot = Snapshot() {
         didSet {
+            snapshotRevision = UUID()
             guard !workflowPresentationDeferred else { return }
             refreshSnapshotPresentation(from: oldValue)
         }
@@ -265,6 +271,7 @@ final class Store {
     #endif
     private let monitor = NWPathMonitor()
     private var accountGeneration = UUID() { didSet {
+        snapshotRevision = UUID()
         widgetPublicationQueue.invalidate()
         syncSignInWorkspace = nil; syncAfterSignInRequested = nil; conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
     @ObservationIgnored private var consumingWidgetActions = false
@@ -1440,7 +1447,13 @@ final class Store {
         clearScheduledReminders()
     }
     @discardableResult
-    func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil) -> Bool {
+    func commit(_ changes: [Mutation], remember: Bool = true, widgetReceipt: WidgetCompletionRequest? = nil, widgetFeedback: WidgetCompletionFeedback? = nil, sharedCaptureReceipt: SharedCaptureDraft? = nil, localHistory: LocalActivityCreation.Preparation? = nil) -> Bool {
+        let historySourceRevision = snapshotRevision
+        let admittedHistory = localMode ? localHistory?.admit(changes, source: historySourceRevision, account: userID, cache: nativeConversationTeamCache) : nil
+        #if DEBUG
+        workflowPreparedLocalHistoryUsed = false
+        workflowPreparedNormalizationUsed = false
+        #endif
         guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
         guard workspaceCacheDecoded else {error="Your saved workspace needs recovery before more changes can be saved. Its original file is kept.";return false}
         if let access=activeTeamMask ?? snapshot.teamWorkspace,
@@ -1516,7 +1529,7 @@ final class Store {
         func normalizationRecord(_ table: String, id: String) -> Record? { normalizationRows[table]?[id] }
         let normalizationLabels = orderingCommands.contains { $0.table == "tasks" && $0.method != "DELETE" } ? labels : []
         let normalizationCache = nativeConversationTeamCache
-        let changes = orderingCommands.flatMap { TaskAssignment.mutations($0, existing: normalizationRecord($0.table, id: $0.recordID)) }.map { change in
+        let changes = admittedHistory?.changes ?? orderingCommands.flatMap { TaskAssignment.mutations($0, existing: normalizationRecord($0.table, id: $0.recordID)) }.map { change in
             var change = change
             if change.table == "tasks", change.method != "DELETE" {
                 change.fields = TaskPlanning.fields(change.fields, existing: normalizationRecord("tasks", id: change.recordID))
@@ -1538,6 +1551,9 @@ final class Store {
             }
             return change
         }
+        #if DEBUG
+        workflowPreparedNormalizationUsed = admittedHistory != nil
+        #endif
         // This synchronous creation path reads rows directly, not cached task
         // queries. Publish once after validation/history admission, before disk
         // save and widget publication; every early return restores the old view.
@@ -1616,7 +1632,11 @@ final class Store {
             if !localMode { snapshot.pending.append(change) }
         }
         if projectsFreshCreation {
-            guard !localMode || LocalActivityCreation.record(localCreations, snapshot: &working, account: userID) else {
+            let preparedHistory = localMode && (admittedHistory?.apply(to: &working, source: snapshotRevision, account: userID) ?? localHistory?.apply(localCreations, to: &working, source: snapshotRevision, account: userID) ?? false)
+            #if DEBUG
+            workflowPreparedLocalHistoryUsed = preparedHistory
+            #endif
+            guard !localMode || preparedHistory || LocalActivityCreation.record(localCreations, snapshot: &working, account: userID) else {
                 snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
             }
             snapshot = working

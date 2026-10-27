@@ -1,0 +1,31 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-commit-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+    "-destination",
+    "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-history-admission-tablet-accepted.xcresult",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistory1000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries"
+  ],
+  "started": 1793100642.8307579,
+  "returncode": 0,
+  "finished": 1793100939.131335
+}

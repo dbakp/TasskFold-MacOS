@@ -375,7 +375,7 @@ import CryptoKit
                 Text("Private workflow acceptance").font(.title2)
                 Text(store.taskHeadingsAuthoringEnabled ? "Heading authoring ready" : "Heading authoring unavailable").accessibilityIdentifier("nativeHeadingAuthoringState")
                 if ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") {
-                    Button("Measure workflow commit", action: measureCommit).accessibilityIdentifier("measureWorkflowCommit")
+                    Button("Measure workflow commit") { Task { await measureCommit() } }.accessibilityIdentifier("measureWorkflowCommit")
                     Button("Check background widgets") {
                         Task {
                             do {
@@ -398,6 +398,17 @@ import CryptoKit
                         }
                     }.accessibilityIdentifier("checkBackgroundWidgets")
                     Button("Restore scale fixture", action: restoreScale).disabled(scaleOriginal == nil).accessibilityIdentifier("restoreScaleFixture")
+                }
+                if ProcessInfo.processInfo.arguments.contains("--workflow-local-preparation-testing") {
+                    Button("Prepare local workflow") {
+                        store.startLocal(); scaleOriginal = store.snapshot
+                        var template = WorkflowUndoNativePeer.template; template["user_id"] = .string(store.userID)
+                        store.snapshot = Snapshot(tables: [WorkflowTemplate.table: [template]])
+                        do { try store.persist() } catch { store.error = error.localizedDescription }
+                    }.accessibilityIdentifier("prepareLocalWorkflow")
+                    Text(store.localMode && store.record(WorkflowTemplate.table, id: WorkflowUndoNativePeer.templateID) != nil ? "Local workflow ready" : "Preparing local workflow").accessibilityIdentifier("localWorkflowFixtureState")
+                    Text(store.workflowPreparedLocalHistoryUsed && store.workflowPreparedNormalizationUsed ? "Prepared history used" : "Ordinary history used").accessibilityIdentifier("preparedHistoryState")
+                    Button("Restore local fixture", action: restoreScale).accessibilityIdentifier("restoreLocalWorkflowFixture")
                 }
                 Button("Use native workflow") { presenting = true }.accessibilityIdentifier("openNativeWorkflow")
                 Button("Attempt oversized workflow") {
@@ -428,12 +439,12 @@ import CryptoKit
             } message: { Text(store.error ?? "") }
     }
     private func restoreScale() {
-        guard WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale"), let scaleOriginal else { return }
+        guard WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") || ProcessInfo.processInfo.arguments.contains("--workflow-local-preparation-testing"), let scaleOriginal else { return }
         store.snapshot = scaleOriginal
         do { try store.persist(); self.scaleOriginal = nil; store.error = nil }
         catch { store.error = error.localizedDescription }
     }
-    private func measureCommit() {
+    private func measureCommit() async {
         guard WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale"),
               let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-count=") }),
               let count = Int(argument.split(separator: "=").last ?? ""), [1000, 5000].contains(count),
@@ -468,11 +479,32 @@ import CryptoKit
                 "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
             let changes = try WorkflowTemplate(document: document).instantiate(account: store.userID, name: "Scale workflow")
             if !localHistory { scaleOriginal = store.snapshot }
-            let revision = store.taskRevision, clock = ContinuousClock(), started = clock.now
+            let clock = ContinuousClock(), started = clock.now
+            var prepared: LocalActivityCreation.Preparation?, mainActorPulses = 0
+            if localHistory {
+                let snapshot = store.snapshot, source = store.snapshotRevision, account = store.userID, labels = store.labels, cache = store.nativeConversationTeamCache
+                let heartbeat = Task { @MainActor in
+                    while !Task.isCancelled { mainActorPulses += 1; try? await Task.sleep(for: .milliseconds(1)) }
+                }
+                defer { heartbeat.cancel() }
+                prepared = try await Task.detached(priority: .userInitiated) {
+                    try LocalActivityCreation.Preparation(changes: changes, snapshot: snapshot, source: source, account: account, labels: labels, cache: cache)
+                }.value
+            }
+            let preparationElapsed = started.duration(to: clock.now)
+            let changeSource = localHistory && ProcessInfo.processInfo.arguments.contains("--workflow-history-change-source")
+            if changeSource { store.snapshot.tables["tasks"]?[0]["title"] = .string("Edited while history prepared") }
+            let revision = store.taskRevision, commitStarted = clock.now
             if localHistory && ProcessInfo.processInfo.arguments.contains("--workflow-local-history-fail-save") { store.failNextWorkflowNativeSave() }
-            let saved = store.commit(changes), elapsed = started.duration(to: clock.now)
+            let saved = store.commit(changes, localHistory: prepared), commitElapsed = commitStarted.duration(to: clock.now), elapsed = started.duration(to: clock.now)
             var data: JSON = .object(["proof": .string(proof.uuidString.lowercased()), "count": .number(Double(count)), "commands": .number(Double(changes.count)), "saved": .bool(saved),
                 "seconds": .number(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18),
+                "synchronousCommitSeconds": .number(Double(commitElapsed.components.seconds) + Double(commitElapsed.components.attoseconds) / 1e18),
+                "historyPreparationSeconds": .number(Double(preparationElapsed.components.seconds) + Double(preparationElapsed.components.attoseconds) / 1e18),
+                "mainActorPreparationPulses": .number(Double(mainActorPulses)),
+                "preparedLocalHistoryUsed": .bool(store.workflowPreparedLocalHistoryUsed),
+                "preparedNormalizationUsed": .bool(store.workflowPreparedNormalizationUsed),
+                "sourceEditPreserved": .bool(!changeSource || store.snapshot.tables["tasks"]?.first?.title == "Edited while history prepared"),
                 "taskRevisionDelta": .number(Double(store.taskRevision - revision)),
                 "tasks": .number(Double(store.tasks.count)), "pending": .number(Double(store.snapshot.pending.count)),
                 "undoCommands": .number(Double(store.undoStack.last?.undo.count ?? 0)), "error": store.error.map(JSON.string) ?? .null,

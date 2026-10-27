@@ -1,0 +1,37 @@
+Test Suite 'Selected tests' started at 2026-10-27 12:22:32.039.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 12:22:32.040.
+Test Suite 'SharedHeadingNativeTests' started at 2026-10-27 12:22:32.040.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo]' passed (15.864 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery]' passed (7.253 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (8.740 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeCreateUndoRedoAndColdReturn]' passed (23.154 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' passed (10.391 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' passed (13.652 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' passed (8.299 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry]' passed (38.589 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn]' passed (29.633 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparedHistoryRejectsChangedSource]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativePreparedHistoryRejectsChangedSource]' passed (11.458 seconds).
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' started.
+Test Case '-[TaskfoldUITests.SharedHeadingNativeTests testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries]' passed (14.084 seconds).
+Test Suite 'SharedHeadingNativeTests' passed at 2026-10-27 12:25:33.169.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 181.119 (181.129) seconds
+Test Suite 'TaskfoldMacUITests' started at 2026-10-27 12:25:33.170.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (11.770 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-10-27 12:25:44.942.
+	 Executed 1 test, with 0 failures (0 unexpected) in 11.770 (11.773) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 12:25:44.945.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 192.889 (192.905) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 12:25:44.946.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 192.889 (192.907) seconds
+** TEST EXECUTE SUCCEEDED **

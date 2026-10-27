@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-27",
+  "corePassed": 204,
+  "coreFailures": 0,
+  "coreSkipped": 0,
+  "nativeCasesPassed": 36,
+  "nativeFailures": 0,
+  "nativeSkipped": 0,
+  "nativeRuntimeWarnings": 5,
+  "strictRuntimeGate": "Open: Mac runtime warnings remain; functional passing cases do not close it",
+  "implementation": "Prepare eligible fresh personal local workflow normalization and activity metadata in the existing detached preparation task. Store rechecks revision, raw account, calendar, team context and immutable original input before applying metadata; changed inputs use ordinary normalization/history. Durable validation, save, Undo and publication remain on the existing path.",
+  "timestampContract": "One operation timestamp is captured after instantiation, before worker history recording; final commit retains it. Cancel writes nothing. Failed-save retry prepares fresh history for the retained run identities.",
+  "inputAdmission": "Copy-on-write array storage addresses are compared only inside simultaneous scoped read-only borrows of retained immutable arrays; no address escapes. This proves raw input identity. General metadata application separately validates exact raw fields with conservative fallback at depth 128.",
+  "nativeScope": "Actual local template sheet create/Undo plus cloud cancel/dismiss/save retry/cold return; local 1,000/5,000-root append, prior root/child history, stale-source fallback, file failure rollback, widget intent retry/Undo/cold return and five publication fences. Scale fixture displays counts, not production task rows.",
+  "responsivenessScope": "MainActor heartbeat is observed during background preparation; final synchronous commit, preparation and total are measured separately. This does not prove production animation/input latency, release performance or peak memory.",
+  "retainedCorpora": "Metadata digest, 176 hierarchy cases, 375 date compatibility cases and 1,377 workflow body-size cases retain frozen outputs. Pulse corpus was not rerun in this stage.",
+  "comparison": "Sequential unprofiled Debug observations compared with prior digest stage under variable host load. Total time may rise even when final blocking interval decreases.",
+  "remaining": [
+    "Remaining synchronous save pause and durable encoding/I/O",
+    "Child-rich/assignment-heavy native scale, hosted/paired bulk delivery and production rendering",
+    "Wider ranked backlog and all explicit user deferrals"
+  ],
+  "realDataChanged": false,
+  "serverOrRolloutChanged": false,
+  "observedTradeoff": "Final synchronous interval is lower on all three platforms, but total processing and widget readiness are higher than the prior stage. Both metrics remain explicit; this stage is not accepted as an overall speedup."
+}

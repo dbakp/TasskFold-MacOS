@@ -4,7 +4,20 @@ Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Stable action-signature encoding now uses a fixed lowercase hexadecimal table,
+Fresh personal local workflow normalization and history now prepare in the existing
+background task before final save. Reuse requires the unchanged workspace revision,
+raw account, calendar, team context and original immutable input. Changed input
+falls back to the ordinary path. Each repo passes 204 selected Core cases. Twelve
+native cases pass functionally on each platform; five Mac runtime warnings remain,
+with matching stacks through AppKit Services-menu accessibility inspection and the
+system data-detector scanner. The strict Mac runtime gate stays open. Current
+5,000-root Debug observations separate final synchronous commit (1.10/1.10/1.16s on
+phone/tablet/Mac), background history (0.52/0.52/0.59s), total processing (1.62/1.62/1.75s) and
+widget readiness (3.90/3.78/4.30s). Prior synchronous save was 1.54/1.46/1.62s. Total processing
+is not claimed faster; production input/animation smoothness remains unverified.
+See local-history-worker/validation.json and mac-runtime-attribution.json.
+
+The preceding stable action-signature stage uses a fixed lowercase hexadecimal table,
 avoiding 32 Foundation number-formatting calls per SHA-256 result. Raw UTF-8 input,
 CryptoKit hashing and persisted output stay identical. Both old implementations
 passed a 2,054-input corpus that covers all 256 digest-byte values; the new output
@@ -6137,3 +6150,80 @@ scale and wider ranked acceptance remain open. All user deferrals and rollout
 settings remain unchanged. Exact source/prepared/binary bindings, actual result
 summaries, before logs and metrics are in digest-encoding/. Only synthetic data
 was used; temporary main apps are closed after acceptance.
+
+## 27 October: background local workflow history with guarded final save
+
+Fresh personal local workflow preparation now includes planning/label normalization,
+completion revision capture and local root/child/assignment history. It runs in the
+existing detached template preparation task. The UI retains its current layout,
+Preparing workflow status and Cancel action. No background operation writes files,
+queues mutations, publishes widgets or changes Store. Cloud workflows retain the
+ordinary normalization/history behavior. Each repository owns its implementation.
+
+Store changes its opaque revision whenever the snapshot or account generation
+changes, including presentation-deferred writes. Final save admits the prepared
+normalization only for the captured revision, raw account, calendar, team context
+and unchanged original immutable mutation array. Copy-on-write storage identity is
+checked within simultaneous scoped read-only borrows; no addresses are retained.
+A changed or separately buffered input uses ordinary normalization. General history
+application can still reuse metadata after comparing exact raw fields, including Unicode spelling,
+numeric bit patterns and dictionary keys; excessive comparison depth falls back
+rather than imposing an input quota. Preparation validates original insert-only
+personal workflow eligibility before normalization and builds history with the
+existing recorder. Only its five owned history/provenance tables can be copied.
+
+Permission, read-only table, task-kind/generation, workflow budget, durable save,
+Undo and publication checks remain on the established save path. Source admission
+is rechecked before history is applied. A stale source uses ordinary processing
+and retains intervening edits. Cancellation discards prepared work. A failed-save
+retry retains run identities and prepares history again from current state.
+One operation timestamp is captured after instantiation, before worker history
+recording; final save retains it. This deliberately replaces per-row synchronous
+recording instants with one preparation operation time, not a claim of identical
+wall-clock timestamps. No schema, rollout, delivery, quota or public UI change.
+
+Both owned selected Core runs pass 204 cases with zero failures/skips. Four new
+cases cover detached metadata equivalence/input preservation, raw Unicode/source/
+account rejection, immutable-input/calendar admission and cancellation/colliding
+identity refusal. Existing frozen metadata, 176-case hierarchy, 375-case date and
+1,377-case body-size outputs retain their digests. The pulse corpus was not rerun.
+No new full-suite acceptance is inferred from this selected run.
+
+Twelve native cases pass functionally on each Mac, phone and tablet. They include
+actual local template-sheet creation and Undo with prepared normalization/history,
+normal cloud create/Undo/Redo/cold return, preparation Cancel and dismissal, save
+failure/retry, 1,000/5,000-root local append with prior history, changed-source
+fallback, durable failure rollback, widget completion/retry/Undo/cold return and
+five background-publication privacy/access/recovery fences. Debug scale screens
+show counts, not thousands of production rows. The actual local-view case uses a
+small nested fixture; it is not claimed as large-screen rendering or local cold-
+launch acceptance. All final build/source/prepared/binary bindings are retained.
+
+Mac's five priority-inversion warnings remain in the accepted functional result;
+the strict verifier rejects that result as clean runtime evidence. All five exact
+live PID/timestamp events have UUID-matched system frames through
+_getDataDetectorsScanner, _NSServicesMenuUpdater and NSMenu accessibility inspection.
+The reference reads its own loaded Mach-O images and dladdr symbols, opens no
+window and never relocates old app frames against a new binary. This establishes
+the observed menu-inspection trigger, not that every pause is harmless or has the
+same cause. No Services menu or warning is disabled; the runtime gate remains open.
+
+Final synchronous save observations are 1.10/1.10/1.16s on phone/tablet/Mac, compared
+with prior synchronous 1.54/1.46/1.62s. Background history is 0.52/0.52/0.59s; current total is
+1.62/1.62/1.75s and widget readiness is 3.90/3.78/4.30s. A MainActor heartbeat runs during
+worker preparation. These are separate metrics: total processing may rise while
+the final blocking interval falls. Sequential unprofiled Debug observations under
+variable load do not prove release latency, animation/input smoothness or peak
+memory. Remaining synchronous validation/Undo/durable encoding/I/O, child-rich/
+assignment-heavy scale, production rendering and hosted/paired bulk delivery
+remain open, alongside the full ranked backlog and all user deferrals.
+
+Earlier attempts remain explicit: a locked Mac produced two activation failures
+and cancellation, not app acceptance; its 1.096 GB bundle was pruned after saving
+the failed summary/job/case excerpts. The initial phone matrix had 11 passes and
+one missing-scroll test failure; a separate startup experiment also failed before
+Create. Its screenshot showed the normal long preview with Create below view.
+The setup experiment was reverted and the native test now scrolls as the existing
+helper does. An earlier Mac local-view probe passed with one unresolved warning;
+it remains warning-bearing and separate from the final five-event attribution.
+No real tasks/accounts or release inputs were changed.

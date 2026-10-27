@@ -1,0 +1,8 @@
+--- /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/Taskfold/Core/Store.swift	2026-10-27 11:56:39
++++ /tmp/taskfold-workflow-native-mac-host/Taskfold/Core/Store.swift	2026-10-27 11:56:39
+@@ -991 +991 @@
+-    static let appGroup = "group.com.dbakp.taskfold"
++    static let appGroup = "group.com.dbakp.taskfold.mac.workflowteststeameditbridge"
+@@ -1153 +1153 @@
+-            "com.dbakp.taskfold.mac.p0grammaruitests", "com.dbakp.taskfold.mac.p0signeduitests",
++            "com.dbakp.taskfold.mac.p0grammaruitests", "com.dbakp.taskfold.mac.workflowteststeameditbridge",

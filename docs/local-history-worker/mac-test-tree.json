@@ -1,0 +1,190 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "00006000-000C59161EC3801E",
+      "deviceName" : "My Mac",
+      "modelName" : "MacBook Pro",
+      "osBuildNumber" : "25G83",
+      "osVersion" : "26.6.2",
+      "platform" : "macOS"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "children" : [
+                    {
+                      "name" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+                      "nodeType" : "Runtime Warning"
+                    }
+                  ],
+                  "duration" : "15s",
+                  "durationInSeconds" : 15.864341974258423,
+                  "name" : "testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowActualLocalViewUsesPreparedHistoryAndUndo",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "7s",
+                  "durationInSeconds" : 7.2529590129852295,
+                  "name" : "testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeBackgroundWidgetFencesAndRecovery",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "8s",
+                  "durationInSeconds" : 8.739868998527527,
+                  "name" : "testPrivateWorkflowNativeCommitScale1000PublishesOnce()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale1000PublishesOnce()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCommitScale1000PublishesOnce",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "children" : [
+                    {
+                      "name" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+                      "nodeType" : "Runtime Warning"
+                    }
+                  ],
+                  "duration" : "23s",
+                  "durationInSeconds" : 23.153705954551697,
+                  "name" : "testPrivateWorkflowNativeCreateUndoRedoAndColdReturn()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeCreateUndoRedoAndColdReturn",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "10s",
+                  "durationInSeconds" : 10.391492009162903,
+                  "name" : "testPrivateWorkflowNativeLocalHistory1000PublishesOnce()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory1000PublishesOnce()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory1000PublishesOnce",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "13s",
+                  "durationInSeconds" : 13.651826024055481,
+                  "name" : "testPrivateWorkflowNativeLocalHistory5000PublishesOnce()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "8s",
+                  "durationInSeconds" : 8.299356937408447,
+                  "name" : "testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "children" : [
+                    {
+                      "name" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+                      "nodeType" : "Runtime Warning"
+                    }
+                  ],
+                  "duration" : "38s",
+                  "durationInSeconds" : 38.58946096897125,
+                  "name" : "testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativePreparationCancelKeepsWorkspaceAndCanRetry",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "children" : [
+                    {
+                      "name" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+                      "nodeType" : "Runtime Warning"
+                    }
+                  ],
+                  "duration" : "29s",
+                  "durationInSeconds" : 29.633487105369568,
+                  "name" : "testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativePreparationDismissKeepsWorkspaceAfterColdReturn",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "duration" : "11s",
+                  "durationInSeconds" : 11.458317041397095,
+                  "name" : "testPrivateWorkflowNativePreparedHistoryRejectsChangedSource()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativePreparedHistoryRejectsChangedSource",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "children" : [
+                    {
+                      "name" : "[Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions",
+                      "nodeType" : "Runtime Warning"
+                    }
+                  ],
+                  "duration" : "14s",
+                  "durationInSeconds" : 14.083927989006042,
+                  "name" : "testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries()",
+                  "nodeIdentifier" : "SharedHeadingNativeTests/testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeSaveFailureRestoresPresentationAndRetries",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "SharedHeadingNativeTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/SharedHeadingNativeTests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            },
+            {
+              "children" : [
+                {
+                  "duration" : "11s",
+                  "durationInSeconds" : 11.769769072532654,
+                  "name" : "testWidgetIntentRecurringCompletionRetryUndoAndOldTap()",
+                  "nodeIdentifier" : "TaskfoldMacUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testWidgetIntentRecurringCompletionRetryUndoAndOldTap",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                }
+              ],
+              "name" : "TaskfoldMacUITests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests",
+              "nodeType" : "Test Suite",
+              "result" : "Passed"
+            }
+          ],
+          "name" : "TaskfoldUITests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests",
+          "nodeType" : "UI test bundle",
+          "result" : "Passed"
+        }
+      ],
+      "name" : "Taskfold",
+      "nodeType" : "Test Plan",
+      "result" : "Passed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

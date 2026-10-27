@@ -1292,10 +1292,98 @@ fileprivate struct LocalNodeActivityCursor {
 /// validated before any write. Existing edits, retries and deletes use the
 /// ordinary recorder; assignment provenance keeps its established repair rules.
 enum LocalActivityCreation {
-    struct Entry {
+    struct Entry: Sendable {
         let change: Mutation
         let after: Record
         var recordedAt: Date = Date()
+    }
+    /// A detached worker may prepare metadata, but only the Store's unchanged
+    /// source revision and byte-exact final records can admit it. No disk writes.
+    struct Preparation: Sendable {
+        private let source: UUID
+        private let account: String
+        private let originals: [Mutation]
+        private let normalized: [Mutation]
+        private let calendar: Calendar
+        private let cache: TeamWorkspaceCache?
+        private let entries: [Entry]
+        private let tables: [String: [Record]]
+        private static let owned = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable, TaskAssignmentProvenance.table]
+        init?(changes: [Mutation], snapshot: Snapshot, source: UUID, account: String, labels: [Record], cache: TeamWorkspaceCache?, at date: Date = Date(), checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
+            try checkCancellation()
+            guard WorkflowUndo.creationRun(changes) != nil else { return nil }
+            let calendar = Calendar.current
+            let normalized = try changes.map { original -> Mutation in
+                try checkCancellation()
+                var change = original
+                if change.table == "tasks", change.method == "POST" {
+                    change.fields = TaskPlanning.fields(change.fields, existing: nil, calendar: calendar)
+                    change = TeamTaskLabelsDraft.normalizing(change, existing: nil, catalog: labels, cache: cache)
+                }
+                if change.table == DayPlacement.table, change.method != "DELETE" {
+                    change.method = "POST"; change.fields["id"] = .string(change.recordID); change.fields["user_id"] = .string(account)
+                }
+                return TaskCompletionRevision.capturing(change, existing: nil)
+            }
+            guard var fresh = FreshWorkflowCreation(normalized, snapshot: snapshot, account: account) else { return nil }
+            var working = snapshot, entries: [Entry] = []
+            for change in normalized {
+                try checkCancellation()
+                guard let after = fresh.append(change, to: &working) else { return nil }
+                if change.table == "tasks" { entries.append(Entry(change: change, after: after, recordedAt: date)) }
+            }
+            guard LocalActivityCreation.record(entries, snapshot: &working, account: account) else { return nil }
+            try checkCancellation()
+            self.source = source; self.account = account; self.entries = entries
+            originals = changes; self.normalized = normalized; self.calendar = calendar; self.cache = cache
+            tables = working.tables.filter { Self.owned.contains($0.key) }
+        }
+        /// Copy-on-write storage identity proves the entire immutable input is
+        /// unchanged, including Unicode bytes that semantic equality can hide.
+        /// Addresses are compared only inside the two scoped read-only borrows.
+        func admit(_ changes: [Mutation], source: UUID, account: String, cache: TeamWorkspaceCache?, calendar: Calendar = .current) -> Admission? {
+            guard self.source == source, self.account.utf8.elementsEqual(account.utf8), self.calendar == calendar, self.cache == cache,
+                  !changes.isEmpty, changes.count == originals.count else { return nil }
+            let identical = originals.withUnsafeBufferPointer { original in
+                changes.withUnsafeBufferPointer { current in original.baseAddress == current.baseAddress }
+            }
+            return identical ? Admission(changes: normalized, preparation: self) : nil
+        }
+        struct Admission: Sendable {
+            let changes: [Mutation]
+            fileprivate let preparation: Preparation
+            func apply(to snapshot: inout Snapshot, source: UUID, account: String) -> Bool {
+                guard preparation.source == source, preparation.account.utf8.elementsEqual(account.utf8), preparation.calendar == .current else { return false }
+                for table in Preparation.owned { snapshot.tables[table] = preparation.tables[table] }
+                return true
+            }
+        }
+        func apply(_ entries: [Entry], to snapshot: inout Snapshot, source: UUID, account: String) -> Bool {
+            guard self.source == source, self.account.utf8.elementsEqual(account.utf8), calendar == .current, entries.count == self.entries.count,
+                  zip(self.entries, entries).allSatisfy({ original, current in
+                      original.change == current.change && Self.exact(.object(original.change.fields), .object(current.change.fields)) && Self.exact(.object(original.after.fields), .object(current.after.fields))
+                  }) else { return false }
+            for table in Self.owned { snapshot.tables[table] = tables[table] }
+            return true
+        }
+        /// String equality normalizes Unicode. Prepared data must instead retain
+        /// its raw UTF-8 spelling. Excessive depth chooses the ordinary recorder.
+        private static func exact(_ a: JSON, _ b: JSON, depth: Int = 0) -> Bool {
+            guard depth < 128 else { return false }
+            switch (a, b) {
+            case (.null, .null): return true
+            case (.bool(let x), .bool(let y)): return x == y
+            case (.number(let x), .number(let y)): return x.bitPattern == y.bitPattern
+            case (.string(let x), .string(let y)): return x.utf8.elementsEqual(y.utf8)
+            case (.array(let x), .array(let y)): return x.count == y.count && zip(x, y).allSatisfy { exact($0, $1, depth: depth + 1) }
+            case (.object(let x), .object(let y)):
+                return x.count == y.count && x.allSatisfy { key, value in
+                    guard let index = y.index(forKey: key) else { return false }
+                    return key.utf8.elementsEqual(y[index].key.utf8) && exact(value, y[index].value, depth: depth + 1)
+                }
+            default: return false
+            }
+        }
     }
     static func record(_ entries: [Entry], snapshot: inout Snapshot, account: String) -> Bool {
         guard !entries.isEmpty else { return true }
