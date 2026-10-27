@@ -1309,6 +1309,7 @@ enum LocalActivityCreation {
         private let entries: [Entry]
         private let tables: [String: [Record]]
         private let undoHistory: EditHistory?
+        private let encodedCache: PreparedSnapshotEncoding?
         private static let owned = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable, TaskAssignmentProvenance.table]
         init?(changes: [Mutation], snapshot: Snapshot, source: UUID, account: String, labels: [Record], cache: TeamWorkspaceCache?, at date: Date = Date(), checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
             try checkCancellation()
@@ -1344,6 +1345,13 @@ enum LocalActivityCreation {
                 $0.baseline == nil && $0.reminderPreferenceField == nil && $0.orderRecovery == nil
             }
             undoHistory = unmodifiedCapture ? EditHistory(changes: normalized, snapshot: snapshot) : nil
+            if unmodifiedCapture {
+                try checkCancellation()
+                WidgetCompletion.prepare(&working)
+                try checkCancellation()
+                // Encoding failure keeps the existing final-save error path.
+                encodedCache = try? PreparedSnapshotEncoding(working)
+            } else { encodedCache = nil }
             try checkCancellation()
         }
         /// Copy-on-write storage identity proves the entire immutable input is
@@ -1363,6 +1371,7 @@ enum LocalActivityCreation {
             /// These commands already include planning, labels and completion
             /// capture. The Store may retain them unchanged after validation.
             var canRetainCapturedChanges: Bool { preparation.undoHistory != nil }
+            var encodedCache: PreparedSnapshotEncoding? { preparation.encodedCache }
             func editHistory(matching changes: [Mutation], source: UUID, account: String) -> EditHistory? {
                 guard preparation.source == source, preparation.account.utf8.elementsEqual(account.utf8),
                       preparation.calendar == .current, !changes.isEmpty,
@@ -1374,9 +1383,16 @@ enum LocalActivityCreation {
                 }
                 return identical ? preparation.undoHistory : nil
             }
-            func apply(to snapshot: inout Snapshot, source: UUID, account: String) -> Bool {
+            func apply(to snapshot: inout Snapshot, source: UUID, account: String, retainingValidatedCommands: Bool = false) -> Bool {
                 guard preparation.source == source, preparation.account.utf8.elementsEqual(account.utf8), preparation.calendar == .current else { return false }
-                for table in Preparation.owned { snapshot.tables[table] = preparation.tables[table] }
+                if retainingValidatedCommands, canRetainCapturedChanges, let encodedCache {
+                    // Store has validated every retained command. These are the
+                    // same projected tables, with the worker's widget tokens.
+                    snapshot.tables = encodedCache.snapshot.tables
+                    snapshot.widgetCompletion = encodedCache.snapshot.widgetCompletion
+                } else {
+                    for table in Preparation.owned { snapshot.tables[table] = preparation.tables[table] }
+                }
                 return true
             }
         }

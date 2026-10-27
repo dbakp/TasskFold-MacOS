@@ -426,3 +426,38 @@ extension FreshLocalActivityTests {
         XCTAssertEqual(EditHistory(changes: admission.changes, snapshot: original).undo.count, 1)
     }
 }
+
+
+extension FreshLocalActivityTests {
+    func testRetainedWorkflowTablesAdmitPreparedEncodingAfterFinalProjection() throws {
+        let original = seed(), changes = workflowChanges(), source = UUID()
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        let encoded = try XCTUnwrap(admission.encodedCache)
+        var (actual, entries) = finalEntries(admission.changes, seed: original)
+        var expected = actual
+        XCTAssertTrue(LocalActivityCreation.record(entries, snapshot: &expected, account: account))
+        WidgetCompletion.prepare(&expected)
+        XCTAssertTrue(admission.apply(to: &actual, source: source, account: account, retainingValidatedCommands: true))
+        XCTAssertEqual(actual.widgetCompletion.states.mapValues(\.signature), expected.widgetCompletion.states.mapValues(\.signature))
+        // New widget tokens and assignment transport nonces are random; all
+        // projected rows, private metadata and signatures must otherwise match
+        // the independent ordinary projection/recording path byte for byte.
+        expected.widgetCompletion.states = actual.widgetCompletion.states
+        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        XCTAssertEqual(try encoder.encode(withoutProvenanceNonces(actual)), try encoder.encode(withoutProvenanceNonces(expected)))
+        let widgetStates = actual.widgetCompletion
+        WidgetCompletion.prepare(&actual)
+        XCTAssertEqual(actual.widgetCompletion, widgetStates, "Final preparation must preserve the worker's exact completion tokens")
+        let bytes = try XCTUnwrap(encoded.matching(actual))
+        let saved = try JSONDecoder().decode(Snapshot.self, from: bytes)
+        XCTAssertEqual(saved, actual)
+        XCTAssertEqual(saved.tables["tasks"], actual.tables["tasks"])
+        XCTAssertEqual(actual.tables["tasks"]?.count, original.tables["tasks", default: []].count + changes.count)
+        actual.sharedCaptureReceipts = ["new": "receipt"]
+        XCTAssertNil(try encoded.matching(actual), "Late receipt staging must force ordinary encoding")
+        var unchanged = original
+        XCTAssertFalse(admission.apply(to: &unchanged, source: UUID(), account: account, retainingValidatedCommands: true))
+        XCTAssertEqual(unchanged, original)
+    }
+}

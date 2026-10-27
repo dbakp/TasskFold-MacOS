@@ -8817,3 +8817,14 @@ is a reduction in main-actor work, not completion of performance polish.
 Mac runtime warnings and intermittent mobile cloud-settle failures remain open;
 separate diagnostic retries passed without a shipping app change.
 See [source bindings, measurements and limitations](prepared-workflow-undo/README.md).
+
+### 2026-10-27 — background workflow snapshot encoding
+
+Eligible local workflows prepare full cache encoding in the worker, with exact
+final table/metadata admission and ordinary fallback. Durable writes and final
+validation remain synchronous. The 5,000-root commit measures 0.605 s in this
+Debug run, versus 0.873 s previously; total processing is not claimed faster.
+104 distinct Core checks and recorded split native functional cases pass. The
+final four-case result still has one QoS warning, and earlier geometry warnings
+remain open. The Mac driver now verifies a measurement click actually starts.
+See [evidence and remaining polish](workflow-cache-encoding/README.md).

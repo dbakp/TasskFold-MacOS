@@ -144,3 +144,18 @@ equivalent to a feature being ready to expose or release.
   warnings. Passing diagnostic retries do not explain earlier failures.
 
 Evidence and exact scope: [prepared workflow Undo](prepared-workflow-undo/README.md).
+
+## 2026-10-27 — background local workflow encoding
+
+- [x] Prepare the ordinary snapshot encoding in the worker; reuse only unchanged
+  table buffers and raw metadata after final validation and receipt staging.
+- [x] Keep atomic durable save, final widget-token validation, cancellation,
+  failed-save preservation, changed-source fallback and Undo behavior.
+- [x] Verify 104 distinct focused Core cases per repo, warning-free six-case
+  phone/tablet results and the recorded split Mac functional scope.
+- [ ] Reduce the remaining roughly 0.6-second synchronous 5,000-root commit and
+  validate richer workloads and production rendering.
+- [ ] Close Mac runtime/geometry warnings and explain earlier intermittent mobile
+  cloud-settle timeouts. Current passes alone do not establish those causes.
+
+[Measurements, source bindings and exact acceptance scope](workflow-cache-encoding/README.md).

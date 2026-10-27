@@ -4,6 +4,18 @@ Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Fresh local workflows now prepare full snapshot encoding in the background and
+reuse it only after final table-buffer/raw-metadata admission. Each repo passes
+104 distinct selected Core cases, including a strengthened independent projection
+comparison. All six selected phone/tablet native cases pass without reported
+runtime warnings. Mac covers six distinct journeys across interrupted completed
+cases and the final four-case result; one final QoS warning and earlier geometry
+warnings keep its strict runtime gate open. At 5,000 roots the synchronous commit
+measures 0.605/0.595/0.627 s on Mac/phone/tablet; preparation and total time are
+recorded separately. This moves work off the main actor, not a claim of faster
+total processing or a completed responsiveness goal. See
+[workflow-cache-encoding](workflow-cache-encoding/README.md).
+
 Template-file Cancel now cancels provider coordination in each owned app, including
 replacement reads, dismissal and workspace changes. Five final reader tests per
 repo cover real held/failing Foundation presenters, fresh retry and bounded bytes;

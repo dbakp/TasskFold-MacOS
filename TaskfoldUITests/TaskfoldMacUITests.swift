@@ -5201,7 +5201,17 @@ extension SharedHeadingNativeTests {
         try workflowStart(app, scale: count, scaleProof: proof, localHistory: localHistory, failSave: failSave, staleHistory: staleHistory)
         let file = personalStateFile().deletingLastPathComponent().appendingPathComponent("TaskfoldTeamLibraryNativeFixture-workflowteststeameditbridge/commit-scale-\(proof).json")
         let initial = try XCTUnwrap((try workflowCache())["tables"] as? [String: [[String: Any]]])
-        app.buttons["measureWorkflowCommit"].click()
+        app.activate()
+        let measure = app.buttons["measureWorkflowCommit"]
+        XCTAssertTrue(measure.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(measure.isHittable, app.debugDescription)
+        measure.click()
+        // A successful UI event must actually enter the measurement action.
+        // Otherwise a foreground-window interruption looks like a slow save.
+        let started = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            app.buttons["restoreScaleFixture"].exists && app.buttons["restoreScaleFixture"].isEnabled
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [started], timeout: 10), .completed, "The measurement action did not start; no save result is expected")
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: file.path) }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 180), .completed)
         let data = try Data(contentsOf: file), value = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -5212,6 +5222,7 @@ extension SharedHeadingNativeTests {
             XCTAssertEqual(value["preparedLocalHistoryUsed"] as? Bool, !staleHistory)
             XCTAssertEqual(value["preparedNormalizationUsed"] as? Bool, !staleHistory)
             XCTAssertEqual(value["preparedUndoUsed"] as? Bool, !staleHistory)
+            XCTAssertEqual(value["preparedEncodingUsed"] as? Bool, !staleHistory && !failSave)
             XCTAssertGreaterThan(value["mainActorPreparationPulses"] as? Int ?? 0, 0)
             XCTAssertEqual(value["sourceEditPreserved"] as? Bool, true)
         }

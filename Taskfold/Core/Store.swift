@@ -32,6 +32,7 @@ final class Store {
     @ObservationIgnored private(set) var workflowPreparedLocalHistoryUsed = false
     @ObservationIgnored private(set) var workflowPreparedNormalizationUsed = false
     @ObservationIgnored private(set) var workflowPreparedUndoUsed = false
+    @ObservationIgnored private(set) var workflowPreparedEncodingUsed = false
     #endif
     var snapshot = Snapshot() {
         didSet {
@@ -950,7 +951,7 @@ final class Store {
         savedFilterFixtureFailNextPersist = true
     }
     #endif
-    func persist(acceptingTimeSnooze timeSnooze: TimeSnoozeIntent? = nil, backgroundWidgets: Bool = false) throws {
+    func persist(acceptingTimeSnooze timeSnooze: TimeSnoozeIntent? = nil, backgroundWidgets: Bool = false, preparedEncoding: PreparedSnapshotEncoding? = nil) throws {
         #if DEBUG
         if savedFilterFixtureFailNextPersist {
             savedFilterFixtureFailNextPersist = false
@@ -967,7 +968,11 @@ final class Store {
         durable.locationImports = try LocationHandoffImportLedger.staging(previous: previous, proposed: durable)
         durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
         durable = try WearableReceiptLedger.applying(previous: previous, proposed: durable)
-        let data = try JSONEncoder().encode(durable)
+        let preparedData = try preparedEncoding?.matching(durable)
+        #if DEBUG
+        if preparedEncoding != nil { workflowPreparedEncodingUsed = preparedData != nil }
+        #endif
+        let data = try preparedData ?? JSONEncoder().encode(durable)
         if UUID(uuidString: userID) != nil {
             try AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).writable {
                 try data.write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -1455,6 +1460,7 @@ final class Store {
         workflowPreparedLocalHistoryUsed = false
         workflowPreparedNormalizationUsed = false
         workflowPreparedUndoUsed = false
+        workflowPreparedEncodingUsed = false
         #endif
         guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
         guard workspaceCacheDecoded else {error="Your saved workspace needs recovery before more changes can be saved. Its original file is kept.";return false}
@@ -1639,7 +1645,7 @@ final class Store {
             if !localMode { snapshot.pending.append(change) }
         }
         if projectsFreshCreation {
-            let preparedHistory = localMode && (admittedHistory?.apply(to: &working, source: snapshotRevision, account: userID) ?? localHistory?.apply(localCreations, to: &working, source: snapshotRevision, account: userID) ?? false)
+            let preparedHistory = localMode && (admittedHistory?.apply(to: &working, source: snapshotRevision, account: userID, retainingValidatedCommands: retainCapturedChanges) ?? localHistory?.apply(localCreations, to: &working, source: snapshotRevision, account: userID) ?? false)
             #if DEBUG
             workflowPreparedLocalHistoryUsed = preparedHistory
             #endif
@@ -1672,7 +1678,7 @@ final class Store {
             workflowPresentationDeferred = false; deferringPresentation = false
             refreshSnapshotPresentation(from: old)
         }
-        do { try persist(backgroundWidgets: projectsFreshCreation && widgetReceipt == nil && sharedCaptureReceipt == nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
+        do { try persist(backgroundWidgets: projectsFreshCreation && widgetReceipt == nil && sharedCaptureReceipt == nil, preparedEncoding: retainCapturedChanges ? admittedHistory?.encodedCache : nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
         workflowSaveSucceeded = true
         if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }

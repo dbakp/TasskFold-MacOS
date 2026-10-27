@@ -1,0 +1,16 @@
+{
+  "processes": {
+    "xcodebuild": [],
+    "Taskfold": [],
+    "TaskfoldUITests-Runner": []
+  },
+  "bootedDevicesAfter": {
+    "devices": {
+      "com.apple.CoreSimulator.SimRuntime.iOS-27-0": [],
+      "com.apple.CoreSimulator.SimRuntime.watchOS-27-0": [],
+      "com.apple.CoreSimulator.SimRuntime.iOS-26-2": [],
+      "com.apple.CoreSimulator.SimRuntime.iOS-26-5": []
+    }
+  },
+  "pruning": "No additional builds created for this stage; reused current owned signed products. Original results and useful current products retained."
+}

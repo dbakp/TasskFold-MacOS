@@ -757,6 +757,40 @@ extension Snapshot {
     }
 }
 
+/// A worker may encode an immutable snapshot before the final durable save.
+/// Reuse proves table-buffer identity and byte-exact encoded metadata; changed
+/// input takes the ordinary encoder. No files, clocks or account state are read.
+struct PreparedSnapshotEncoding: Sendable {
+    let snapshot: Snapshot
+    private let data: Data
+    private let metadata: Data
+    init(_ snapshot: Snapshot) throws {
+        self.snapshot = snapshot
+        data = try JSONEncoder().encode(snapshot)
+        metadata = try Self.encodeMetadata(snapshot)
+    }
+    func matching(_ current: Snapshot) throws -> Data? {
+        guard snapshot.tables.count == current.tables.count else { return nil }
+        for (key, original) in snapshot.tables {
+            guard let index = current.tables.index(forKey: key),
+                  key.utf8.elementsEqual(current.tables[index].key.utf8) else { return nil }
+            let final = current.tables[index].value
+            guard original.count == final.count else { return nil }
+            let identical = original.withUnsafeBufferPointer { captured in
+                final.withUnsafeBufferPointer { captured.baseAddress == $0.baseAddress }
+            }
+            guard identical else { return nil }
+        }
+        guard try metadata == Self.encodeMetadata(current) else { return nil }
+        return data
+    }
+    private static func encodeMetadata(_ value: Snapshot) throws -> Data {
+        var metadata = value; metadata.tables = [:]
+        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        return try encoder.encode(metadata)
+    }
+}
+
 /// Recognize an entire clock before validation so malformed input cannot become a partial time.
 private enum QuickPlannedClockText {
     static let period = #"(?:morning|afternoon|evening|night)"#
