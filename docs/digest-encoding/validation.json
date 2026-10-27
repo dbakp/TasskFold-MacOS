@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-27",
+  "corePassed": 258,
+  "coreFailures": 0,
+  "coreSkipped": 0,
+  "nativeCasesPassed": 18,
+  "nativeFailures": 0,
+  "nativeSkipped": 0,
+  "nativeRuntimeWarnings": 0,
+  "implementation": "Keep CryptoKit SHA-256 over identical raw UTF-8 input; encode each digest byte as two lowercase ASCII hexadecimal digits with an immutable nibble table instead of 32 Foundation format calls. No shared mutable state or algorithm/format change.",
+  "legacySourceSHA256": "d27402065a2a2722d7e8a243511484d7c76ac81655f48a48391b071d104016f1",
+  "before": "Both old implementations passed the new corpus before production editing. Legacy conversion is retained only as the independent test oracle.",
+  "digestInputs": 2054,
+  "digestByteValuesCovered": 256,
+  "vectors": "Empty/abc known vectors, raw Unicode canonical equivalents, embedded NUL/control/quote/backslash, long emoji text and deterministic widget-signature inputs. Every output equals the legacy formatter; all are 64 UTF-8 bytes.",
+  "retainedCorpora": "History metadata, 176 hierarchy cases, date compatibility, 64 pulse cases and 1,377 workflow body-size cases keep their frozen digests.",
+  "nativeScope": "Flat 20,001-command Debug fixture, prior root/child history, 1,000-root native Undo, save-failure rollback, real widget intent retry/Undo/cold return and privacy/access/stale-worker/recovery fences. Count-only UI; no genuine hosted/physical or production rendering acceptance.",
+  "comparison": "Unprofiled sequential native observations after compilation, compared with immediately preceding accepted stage. Diagnostic sampled timing excluded; variable load prevents a general benchmark or release guarantee.",
+  "remaining": [
+    "Synchronous save pause and other validation/history/Undo work",
+    "Remaining background projection/encoding and production rendering",
+    "Child-rich/assignment-heavy native scale and hosted/paired bulk delivery",
+    "Wider ranked backlog and explicit user deferrals unchanged"
+  ],
+  "realDataChanged": false,
+  "serverOrRolloutChanged": false
+}

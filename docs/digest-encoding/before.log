@@ -1,0 +1,12 @@
+Test Suite 'Selected tests' started at 2026-10-27 11:13:12.177.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 11:13:12.180.
+Test Suite 'ReminderTests' started at 2026-10-27 11:13:12.180.
+Test Case '-[TaskfoldCoreTests.ReminderTests testStableDigestEncodingMatchesLegacyForEveryByte]' started.
+Test Case '-[TaskfoldCoreTests.ReminderTests testStableDigestEncodingMatchesLegacyForEveryByte]' passed (0.175 seconds).
+Test Suite 'ReminderTests' passed at 2026-10-27 11:13:12.355.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.175 (0.175) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-27 11:13:12.355.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.175 (0.176) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 11:13:12.355.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.175 (0.178) seconds
+DIGEST_ENCODING_CORPUS 2054 BYTES 256 SECONDS 0.080596709

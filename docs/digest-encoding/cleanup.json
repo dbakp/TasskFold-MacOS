@@ -1,0 +1,19 @@
+{
+  "removedOwnedPaths": [
+    "/tmp/taskfold-digest-mac-attachments",
+    "/tmp/taskfold-digest-phone-attachments",
+    "/tmp/taskfold-digest-tablet-attachments",
+    "/tmp/taskfold-pulse-mac-final.xcresult",
+    "/tmp/taskfold-pulse-phone-final.xcresult",
+    "/tmp/taskfold-pulse-tablet-final.xcresult"
+  ],
+  "logicalBytesRemoved": 1630759,
+  "temporaryMainAppsRunning": 0,
+  "retained": [
+    "Current accepted Mac/phone/tablet native results",
+    "Fresh diagnostic profile result and raw sample",
+    "Current signed products and one host/build per platform",
+    "Preceding accepted summaries/metrics in each repository"
+  ],
+  "scope": "Only obsolete owned extracts and preceding result bundles. No account/device data, general cache or simulator runtime removed. Logical bytes are not measured disk-free change."
+}

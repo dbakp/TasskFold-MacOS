@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 import UserNotifications
 @testable import TaskfoldCore
 
@@ -29,6 +30,25 @@ private actor TestReminderCenter: ReminderCenter {
 }
 
 final class ReminderTests: XCTestCase {
+    func testStableDigestEncodingMatchesLegacyForEveryByte() {
+        let values = ["", "abc", "é", "e\u{301}", "\u{0}\n\r\t\"\\", String(repeating: "👩🏽‍💻", count: 10000)] + (0..<2048).map { "widget-signature-\($0)|2026-10-27T10:00:00Z|\u{0}|café" }
+        let clock = ContinuousClock(), start = clock.now
+        let actual = values.map(DueReminder.digest)
+        let elapsed = start.duration(to: clock.now)
+        var seen = Set<UInt8>()
+        for (value, result) in zip(values, actual) {
+            let bytes = SHA256.hash(data: Data(value.utf8)); seen.formUnion(bytes)
+            let legacy = bytes.map { String(format: "%02x", $0) }.joined()
+            XCTAssertEqual(result, legacy)
+            XCTAssertEqual(result.utf8.count, 64)
+        }
+        XCTAssertEqual(seen.count, 256, "The corpus exercises every possible digest-byte value")
+        XCTAssertNotEqual(actual[2], actual[3], "Canonical Unicode equivalents keep their distinct raw UTF-8 identity")
+        XCTAssertEqual(actual[0], "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        XCTAssertEqual(actual[1], "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+        print("DIGEST_ENCODING_CORPUS \(values.count) BYTES \(seen.count) SECONDS \(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18)")
+    }
+
     var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "Europe/Copenhagen")!; return c }
     var now: Date { TaskPlanning.instant("2026-10-24T00:00:00Z")! }
     func task(_ id: String = "task", specs: [ReminderSpec] = []) -> Record {

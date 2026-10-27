@@ -8597,3 +8597,47 @@ cache/save responsiveness, child-rich/assignment-heavy native scale and wider
 rank-3/ranked-backlog gates remain. Existing user deferrals are unchanged. Exact
 commands, result summaries, source/prepared/binary hashes, frozen old output and
 metrics are in pulse-history-preparation/. Only synthetic fixtures changed.
+
+## 27 October: stable action digests without per-byte number formatting
+
+A fresh four-second native Mac sample showed per-byte Foundation formatting in
+the main-thread widget-signature preparation path. DueReminder.digest still uses
+CryptoKit SHA-256 over the same raw UTF-8 input. Only the textual conversion changes:
+an immutable 16-character table supplies two lowercase ASCII hexadecimal digits
+for every digest byte. It keeps zero padding and the exact 64-byte spelling while
+avoiding 32 separate locale/number-formatting calls. No signature/token identifier,
+algorithm, schema, permission, quota or delivery setting changes. Other digest
+implementations are untouched; there is no memo of user/account content.
+
+Both old implementations passed the new regression before production editing.
+The 2,054 inputs include empty/abc known vectors, NFC/NFD raw spellings, embedded
+NUL/control/quote/backslash characters, long emoji input and deterministic widget
+signature strings. The corpus exercises every one of 256 digest-byte values.
+Every result matches the unchanged legacy formatter retained as a test oracle;
+Unicode-equivalent strings keep different raw-byte identities. Existing frozen
+history metadata, hierarchy (176), date compatibility, pulse (64) and workflow
+body-size (1,377) digests stay identical. Each owned selected Core suite passes
+258 tests with no failures/skips, including reminder scheduling/actions/device
+boundaries and widget signature/retry/receipt behavior. Timings printed by the
+Core corpus ran under varying compilation load and are diagnostic only.
+
+Six native cases pass strictly on each platform (18 platform/case pairs, zero
+failures/skips/reported XCTest runtime warnings): cloud-mode 1,000-root queue,
+local 1,000/5,000-root append with prior history, file-save failure rollback,
+real widget intent completion/retry/Undo/cold return, and background publication
+privacy/access/stale-result/recovery fences. The local 1,000-root case also runs
+native Undo. The 5,000-root fixture keeps all 20,001 commands, 5,001 widget lists
+and prior root/child history. Save observations are 1.54/1.46/1.62s on
+phone/tablet/Mac versus 1.61/1.62/1.75s in the immediately preceding stage; widget
+readiness is 2.87/2.79/3.21s. The main-thread pause remains a distinct open gap.
+
+Native timing comparisons are unprofiled sequential Debug runs after compilation,
+with variable load, not a repeated benchmark or release/input-smoothness guarantee.
+The diagnostic sample is excluded. The fixture displays counts rather than 5,000
+production rows. No new real reminder delivery, physical/hosted acceptance,
+peak-memory or distribution/upgrade claim is made. Remaining normalization,
+validation/history/Undo, projection/encoding, child-rich/assignment-heavy native
+scale and wider ranked acceptance remain open. All user deferrals and rollout
+settings remain unchanged. Exact source/prepared/binary bindings, actual result
+summaries, before logs and metrics are in digest-encoding/. Only synthetic data
+was used; temporary main apps are closed after acceptance.

@@ -1,0 +1,21 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "-destination",
+    "platform=macOS,arch=arm64",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-save-current-profile.xcresult",
+    "-only-testing:TaskfoldUITests/SharedHeadingNativeTests/testPrivateWorkflowNativeLocalHistory5000PublishesOnce"
+  ],
+  "returncode": 0,
+  "started": 1793095827.273514,
+  "finished": 1793095844.845228,
+  "sampled": true
+}

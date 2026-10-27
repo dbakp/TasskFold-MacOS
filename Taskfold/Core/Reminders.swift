@@ -566,7 +566,17 @@ struct DueReminder: Equatable, Sendable {
         a.kind == b.kind && a.id == b.id && a.title == b.title && a.body == b.body && a.date == b.date &&
         a.taskID == b.taskID && a.specID == b.specID && a.signature == b.signature && a.calendarOccurrence == b.calendarOccurrence && a.timeSensitive == b.timeSensitive
     }
-    static func digest(_ value: String) -> String { SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined() }
+    private static let hexadecimal = Array("0123456789abcdef".utf8)
+    static func digest(_ value: String) -> String {
+        // Persisted action signatures keep the same SHA-256 and lowercase,
+        // two-character byte spelling without per-byte locale/number formatting.
+        var encoded: [UInt8] = []; encoded.reserveCapacity(64)
+        for byte in SHA256.hash(data: Data(value.utf8)) {
+            encoded.append(hexadecimal[Int(byte >> 4)])
+            encoded.append(hexadecimal[Int(byte & 15)])
+        }
+        return String(decoding: encoded, as: UTF8.self)
+    }
     private static func specifications(_ task: Record, channels: Set<String>) -> [ReminderSpec] {
         guard TaskKind.mayComplete(task), !task.completed else { return [] }
         if let generation = task.fields["task_generation"], generation != .null {
