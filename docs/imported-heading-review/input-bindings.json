@@ -1,0 +1,26 @@
+{
+  "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "sourceSHA256": {
+    "Taskfold/Core/TodoistImport.swift": "a14ef64ff5629a1ab6d1e952cab874f0d4096a8cb35a19f4dec8263255c8d476",
+    "Taskfold/Core/Store.swift": "6c5a729260201184ff1c55cf235f9924b859c9f54ed53c62b45355d6461738c9",
+    "Taskfold/Views/TodoistHeadingConversionReview.swift": "e0fbe54441f861939a31a5ba2ac5622e2ce0f7acd7ad05aeea854775bd1a6d6b",
+    "Taskfold/Views/TaskInspector.swift": "58b4f3fa8b0a29630adc32a3fb4007c154f325a5a3d8a41bb3a6ca77923226a7",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "502ebfda3425d54678da129c2b5613eb5c25cd1a43875390ac9af995c909874e",
+    "TaskfoldTests/TaskKindTests.swift": "5376c71f2f12d32a59c4d9f9f2e1fddd940cb84cec0d3408b6fef73a10f7e9e1",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd"
+  },
+  "preparedSHA256": {
+    "Taskfold/Core/TodoistImport.swift": "a14ef64ff5629a1ab6d1e952cab874f0d4096a8cb35a19f4dec8263255c8d476",
+    "Taskfold/Core/Store.swift": "9b88d44ded6d580673b297d8d6ed46147b0ee3c979cba1f18e147f1f53fbbb5a",
+    "Taskfold/Views/TodoistHeadingConversionReview.swift": "e0fbe54441f861939a31a5ba2ac5622e2ce0f7acd7ad05aeea854775bd1a6d6b",
+    "Taskfold/Views/TaskInspector.swift": "58b4f3fa8b0a29630adc32a3fb4007c154f325a5a3d8a41bb3a6ca77923226a7",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "502ebfda3425d54678da129c2b5613eb5c25cd1a43875390ac9af995c909874e",
+    "Taskfold/Info.plist": "266e1dec43d400a089a76ec68c4a8b7b0adf6104890f71f0b428cb38530523a5"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "2fb73931faa9af33a3610f5f1e2560c6ceb05b5259fe183463aefc8bc1eec2bc",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "ca47e2822e9f4d22ee8b92011ef7684621d6d7511e18f958c65d976ab5f36bb5",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "c64f3a3424454c7d29b0a71a4c6b0ecb0b5b6ca549bcc6101acc649baf07164b"
+  },
+  "scope": "Each repository owns implementation and native tests; retained host keeps namespace isolation and explicit test-only heading opt-in. Mac and final iPad use the current UI runner. Phone uses phone-run-inputs.json: its app sources and binaries are identical; a subsequent iPad-only test scrolling correction changes the UI runner only."
+}

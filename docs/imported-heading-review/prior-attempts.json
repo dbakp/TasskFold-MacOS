@@ -1,0 +1,7 @@
+{
+  "macInitial": "One case passed, one failed on an invalid numeric-value assumption for a generic Mac switch wrapper. Title/default and actual marker changes remain the behavior checks.",
+  "phoneInitial": "Normal case passed; largest-text tap occurred while only switch label entered viewport. Recorded frame shows physical switch below viewport. Corrected driver requires full visible control and actual state/title changes.",
+  "preTitleMobile": "Both cases passed on each phone and tablet before iOS-only adaptive navigation title. These are distinct from final post-polish app acceptance.",
+  "tabletAfterTitle": "Normal case passed; largest-text case converted successfully but old one-way helper overscrolled the child and continued at 100%. Current iPad-only slow bidirectional gutter driver passes with an entire reachable checkbox frame. App code and both phone application binaries stay identical; original phone runner/source bindings retained.",
+  "macWarnings": "Both final cases functionally pass with two XCTest warnings; four current-run live system-menu events remain attributed, not suppressed."
+}

@@ -53,6 +53,10 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 ### 3. Notes, output and view control — active
 
 - [x] Note formatting and readable plain-text fallback implementation.
+- [x] Gated imported-heading review for root tasks: exact captured-draft checks, local Mac
+  Cancel/autosave/Undo/Redo/child-completion/cold return, and phone/tablet reviewed
+  Save/cold return with long edited wording at dark largest text. Mac runtime
+  warnings and broader shared/cloud/spoken acceptance remain open.
 - [x] Native print/PDF implementation and representative output verification.
 - [x] Expanded saved filters, grouping and gesture controls in recorded scopes.
 - [x] Heading contracts and guarded native editors; ordinary authoring remains gated.

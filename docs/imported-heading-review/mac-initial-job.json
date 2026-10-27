@@ -1,0 +1,21 @@
+{
+  "command": [
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+    "-destination",
+    "platform=macOS,arch=arm64",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-resultBundlePath",
+    "/tmp/taskfold-heading-review-mac-initial.xcresult",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testMacImportedHeadingReviewCancelUndoRedoChildAndColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testMacImportedHeadingLongEditedTitleReviewAndColdReturn"
+  ],
+  "started": 1793101824.48569,
+  "returncode": 65,
+  "finished": 1793101897.5083032
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "file": "phone-edited-choice.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text explicit marker choice and preserved-work explanation_0_C35405D9-9811-44C0-9C1E-93E52F1FB06B.png"
+  },
+  {
+    "file": "phone-visible-switch.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text marker switch fully visible before activation_0_8D11A3BD-25FE-48E2-A51F-5D2FCF47DA95.png"
+  },
+  {
+    "file": "phone-current-wording.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text current edited heading wording_0_8782AC27-52B6-4E23-9245-930C3F2BB151.png"
+  },
+  {
+    "file": "phone-source.png",
+    "test": "TaskfoldUITests/testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn()",
+    "title": "Largest text imported heading source_0_2611F56E-F9AB-4F51-A5D1-89A3135CA9A7.png"
+  },
+  {
+    "file": "phone-review.png",
+    "test": "TaskfoldUITests/testImportedHeadingReviewCancelApplySaveAndColdReturn()",
+    "title": "Reviewed older import heading conversion_0_460AD8BF-B0D5-495F-BD11-5F0C83FB40A6.png"
+  }
+]

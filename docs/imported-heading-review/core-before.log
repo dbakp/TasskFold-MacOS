@@ -1,0 +1,33 @@
+Test Suite 'Selected tests' started at 2026-10-27 12:47:19.492.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-27 12:47:19.494.
+Test Suite 'TodoistHeadingConversionTests' started at 2026-10-27 12:47:19.494.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testCanonicallyEquivalentEditedTitleDoesNotDefaultToRemovingMarker]' started.
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TaskKindTests.swift:358: error: -[TaskfoldCoreTests.TodoistHeadingConversionTests testCanonicallyEquivalentEditedTitleDoesNotDefaultToRemovingMarker] : XCTAssertFalse failed
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testCanonicallyEquivalentEditedTitleDoesNotDefaultToRemovingMarker]' failed (0.701 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testCompletedUnsupportedAndInvalidStateNeedExplicitRecoveryFirst]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testCompletedUnsupportedAndInvalidStateNeedExplicitRecoveryFirst]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testEditedTitleIsNeverReplacedBySourceTitle]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testEditedTitleIsNeverReplacedBySourceTitle]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testLiteralMarkerCanBeKeptAndOnlyOneMarkerIsRemoved]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testLiteralMarkerCanBeKeptAndOnlyOneMarkerIsRemoved]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testOnlyKnownImportEvidenceOffersReview]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testOnlyKnownImportEvidenceOffersReview]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testRawDraftChangesCannotReuseAnOlderReview]' started.
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TaskKindTests.swift:341: error: -[TaskfoldCoreTests.TodoistHeadingConversionTests testRawDraftChangesCannotReuseAnOlderReview] : XCTAssertThrowsError failed: did not throw an error
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TaskKindTests.swift:341: error: -[TaskfoldCoreTests.TodoistHeadingConversionTests testRawDraftChangesCannotReuseAnOlderReview] : XCTAssertThrowsError failed: did not throw an error
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TaskKindTests.swift:341: error: -[TaskfoldCoreTests.TodoistHeadingConversionTests testRawDraftChangesCannotReuseAnOlderReview] : XCTAssertThrowsError failed: did not throw an error
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TaskKindTests.swift:341: error: -[TaskfoldCoreTests.TodoistHeadingConversionTests testRawDraftChangesCannotReuseAnOlderReview] : XCTAssertThrowsError failed: did not throw an error
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/TaskKindTests.swift:341: error: -[TaskfoldCoreTests.TodoistHeadingConversionTests testRawDraftChangesCannotReuseAnOlderReview] : XCTAssertThrowsError failed: did not throw an error
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testRawDraftChangesCannotReuseAnOlderReview]' failed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testReviewDoesNotMutateAndApplyChangesOnlyTypeAndReviewedTitle]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testReviewDoesNotMutateAndApplyChangesOnlyTypeAndReviewedTitle]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testReviewedLiteralTitleDoesNotCreateQuickEntryEdits]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testReviewedLiteralTitleDoesNotCreateQuickEntryEdits]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testWholeDraftAndCapabilityAreRechecked]' started.
+Test Case '-[TaskfoldCoreTests.TodoistHeadingConversionTests testWholeDraftAndCapabilityAreRechecked]' passed (0.000 seconds).
+Test Suite 'TodoistHeadingConversionTests' failed at 2026-10-27 12:47:20.209.
+	 Executed 9 tests, with 6 failures (0 unexpected) in 0.714 (0.715) seconds
+Test Suite 'TaskfoldCoreTests.xctest' failed at 2026-10-27 12:47:20.209.
+	 Executed 9 tests, with 6 failures (0 unexpected) in 0.714 (0.715) seconds
+Test Suite 'Selected tests' failed at 2026-10-27 12:47:20.209.
+	 Executed 9 tests, with 6 failures (0 unexpected) in 0.714 (0.717) seconds

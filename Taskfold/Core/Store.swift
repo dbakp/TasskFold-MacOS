@@ -3348,6 +3348,13 @@ extension Store {
         if ProcessInfo.processInfo.arguments.contains("--task-heading-fixture"),
            Bundle.main.bundleIdentifier?.hasSuffix("workflowteststeameditbridge") == true {
             task["id"] = .string("f1810000-0000-4000-8000-000000000001")
+            if ProcessInfo.processInfo.arguments.contains("--heading-conversion-fixture") {
+                let suffix = ProcessInfo.processInfo.arguments.contains("--heading-conversion-long-title") ? String(repeating: " Keep the revised workshop instructions, original references and every follow-up step together.", count: 4) : ""
+                let imported = "* Plan tomorrow #work p1" + suffix
+                task["title"] = .string(ProcessInfo.processInfo.arguments.contains("--heading-conversion-edited-title") ? "* My revised plan tomorrow #work p1" + suffix : imported)
+                task["source_metadata"] = .object(["provider": .string("todoist"), "account": .string("synthetic-account"), "original": .object(["id": .string("synthetic-task"), "content": .string(imported)])])
+                task["opaque_future"] = .object(["keep": .array([.string("é"), .string("e\u{301}"), .number(7)])])
+            }
         }
         if ProcessInfo.processInfo.arguments.contains("--print-output-fixture") {
             task["description"] = .string((1...8).map { index in

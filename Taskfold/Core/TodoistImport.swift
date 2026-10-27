@@ -127,10 +127,35 @@ struct TodoistHeadingConversion: Identifiable, Sendable {
         captured = row; sourceTitle = title
     }
     var canRemoveMarker: Bool { captured.title.hasPrefix("* ") && !captured.title.dropFirst(2).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-    var removeMarkerByDefault: Bool { canRemoveMarker && captured.title == sourceTitle }
+    var titleChangedSinceImport: Bool { !captured.title.utf8.elementsEqual(sourceTitle.utf8) }
+    var removeMarkerByDefault: Bool { canRemoveMarker && !titleChangedSinceImport }
+    /// A review binds the complete draft, including raw Unicode spelling and
+    /// future fields. Iteration avoids imposing a new nesting limit on metadata.
+    func matches(_ current: Record) -> Bool {
+        var pending: [(JSON, JSON)] = [(.object(captured.fields), .object(current.fields))]
+        while let (original, current) = pending.popLast() {
+            switch (original, current) {
+            case (.null, .null): break
+            case (.bool(let a), .bool(let b)): if a != b { return false }
+            case (.number(let a), .number(let b)): if a.bitPattern != b.bitPattern { return false }
+            case (.string(let a), .string(let b)): if !a.utf8.elementsEqual(b.utf8) { return false }
+            case (.array(let a), .array(let b)):
+                guard a.count == b.count else { return false }
+                pending.append(contentsOf: zip(a, b))
+            case (.object(let a), .object(let b)):
+                guard a.count == b.count else { return false }
+                for (key, value) in a {
+                    guard let index = b.index(forKey: key), key.utf8.elementsEqual(b[index].key.utf8) else { return false }
+                    pending.append((value, b[index].value))
+                }
+            default: return false
+            }
+        }
+        return true
+    }
     func title(removingMarker: Bool) -> String { removingMarker && canRemoveMarker ? String(captured.title.dropFirst(2)) : captured.title }
     func applying(to current: Record, removingMarker: Bool, authoringEnabled: Bool) throws -> Record {
-        guard authoringEnabled, current == captured, Self(current) != nil else {
+        guard authoringEnabled, matches(current), Self(current) != nil else {
             throw AppFailure(message: "This task or heading availability changed. Close this review and reopen it from the current task. Your work is unchanged.")
         }
         guard !removingMarker || canRemoveMarker else { throw AppFailure(message: "Keep the current title; it has no removable imported marker.") }

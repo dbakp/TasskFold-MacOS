@@ -324,3 +324,38 @@ final class TodoistHeadingConversionTests: XCTestCase {
         XCTAssertEqual(parsed.title, edited.title); XCTAssertTrue(parsed.updates.isEmpty)
     }
 }
+
+extension TodoistHeadingConversionTests {
+    func testRawDraftChangesCannotReuseAnOlderReview() throws {
+        var row = imported("* Café")
+        row["description"] = .string("é")
+        row["opaque"] = .object(["é": .array([.string("é"), .number(0)])])
+        let review = try XCTUnwrap(TodoistHeadingConversion(row))
+        var title = row; title["title"] = .string("* Cafe\u{301}")
+        var notes = row; notes["description"] = .string("e\u{301}")
+        var key = row; key["opaque"] = .object(["e\u{301}": .array([.string("é"), .number(0)])])
+        var value = row; value["opaque"] = .object(["é": .array([.string("e\u{301}"), .number(0)])])
+        var number = row; number["opaque"] = .object(["é": .array([.string("é"), .number(-0.0)])])
+        for changed in [title, notes, key, value, number] {
+            XCTAssertEqual(changed, row, "Semantic equality is insufficient for binding a captured review")
+            XCTAssertThrowsError(try review.applying(to: changed, removingMarker: false, authoringEnabled: true))
+        }
+        let reordered = Record(Dictionary(uniqueKeysWithValues: row.fields.reversed()))
+        let applied = try review.applying(to: reordered, removingMarker: false, authoringEnabled: true)
+        XCTAssertEqual(applied.title.utf8.map { $0 }, row.title.utf8.map { $0 })
+        var nested: JSON = .string("Keep the complete original")
+        for _ in 0..<256 { nested = .object(["future": nested]) }
+        row["opaque"] = nested
+        let deep = try XCTUnwrap(TodoistHeadingConversion(row))
+        XCTAssertEqual(try deep.applying(to: row, removingMarker: false, authoringEnabled: true)["opaque"], nested)
+    }
+    func testCanonicallyEquivalentEditedTitleDoesNotDefaultToRemovingMarker() throws {
+        var row = imported("* Cafe\u{301}")
+        row["source_metadata"] = .object(["provider": .string("todoist"), "original": .object(["content": .string("* Café")])])
+        let review = try XCTUnwrap(TodoistHeadingConversion(row))
+        XCTAssertEqual(row.title, review.sourceTitle)
+        XCTAssertTrue(review.canRemoveMarker)
+        XCTAssertFalse(review.removeMarkerByDefault)
+        XCTAssertEqual(try review.applying(to: row, removingMarker: false, authoringEnabled: true).title.utf8.map { $0 }, row.title.utf8.map { $0 })
+    }
+}

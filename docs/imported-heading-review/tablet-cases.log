@@ -1,0 +1,14 @@
+Test Suite 'Selected tests' started at 2026-10-27 13:23:58.546.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 13:23:58.546.
+Test Suite 'TaskfoldUITests' started at 2026-10-27 13:23:58.546.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testImportedHeadingLongEditedTitleLargestTextChildAndColdReturn]' passed (128.988 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testImportedHeadingReviewCancelApplySaveAndColdReturn]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testImportedHeadingReviewCancelApplySaveAndColdReturn]' passed (72.189 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-10-27 13:27:19.786.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 201.177 (201.239) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 13:27:19.792.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 201.177 (201.246) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 13:27:19.792.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 201.177 (201.247) seconds
+** TEST EXECUTE SUCCEEDED **

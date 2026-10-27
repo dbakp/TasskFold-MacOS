@@ -5556,3 +5556,85 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(try outputTables(), before)
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor private func importedHeadingTask() throws -> [String: Any] {
+        try XCTUnwrap((try outputTables()["tasks"] as? [[String: Any]])?.first { $0["id"] as? String == "f1810000-0000-4000-8000-000000000001" })
+    }
+    @MainActor private func importedHeadingAssert(_ before: [String: Any], title: String, heading: Bool, revision: Int) throws {
+        var actual = try importedHeadingTask(), expected = before
+        XCTAssertEqual(actual["title"] as? String, title)
+        XCTAssertEqual(actual["is_heading"] as? Bool, heading)
+        XCTAssertEqual(actual["completion_version"] as? Int, revision)
+        for key in ["title", "is_heading", "completion_version"] { actual.removeValue(forKey: key); expected.removeValue(forKey: key) }
+        XCTAssertEqual(actual as NSDictionary, expected as NSDictionary, "Conversion preserves every other field, including source metadata and nested work")
+    }
+    @MainActor private func importedHeadingReview(_ app: XCUIApplication) -> XCUIElement {
+        let review = app.buttons["reviewImportedHeading"]; outputReveal(review, app); review.click()
+        let title = app.staticTexts["headingConversionTitle"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8), app.debugDescription)
+        return title
+    }
+    @MainActor func testMacImportedHeadingReviewCancelUndoRedoChildAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        try noteProofStart(app, flags: ["--heading-conversion-fixture", "--subtask-organizer-fixture"])
+        let before = try importedHeadingTask(), tables = try outputTables()
+        let title = importedHeadingReview(app)
+        XCTAssertEqual(title.value as? String ?? title.label, "Plan tomorrow #work p1")
+        app.buttons["headingConversionCancel"].click()
+        XCTAssertEqual(try outputTables(), tables)
+        _ = importedHeadingReview(app)
+        let toggle = app.descendants(matching: .any).matching(identifier: "headingConversionRemoveMarker").firstMatch
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5)); toggle.click()
+        XCTAssertEqual(title.value as? String ?? title.label, "* Plan tomorrow #work p1")
+        toggle.click(); noteProofShot(app, "Mac imported heading complete review")
+        app.buttons["headingConversionApply"].click()
+        noteProofWait { try self.importedHeadingTask()["is_heading"] as? Bool == true }
+        try importedHeadingAssert(before, title: "Plan tomorrow #work p1", heading: true, revision: 1)
+        for key in tables.allKeys.compactMap({ $0 as? String }) where key != "tasks" { XCTAssertEqual(try outputTables()[key] as? NSObject, tables[key] as? NSObject, key) }
+        app.staticTexts["Today"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        noteProofWait { try self.importedHeadingTask()["is_heading"] as? Bool == false }
+        try importedHeadingAssert(before, title: "* Plan tomorrow #work p1", heading: false, revision: 2)
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        noteProofWait { try self.importedHeadingTask()["is_heading"] as? Bool == true }
+        try importedHeadingAssert(before, title: "Plan tomorrow #work p1", heading: true, revision: 3)
+        noteProofOpen(app)
+        let child = app.buttons["subtaskCompletion-0"]
+        for _ in 0..<12 where !child.isHittable { app.scrollViews.containing(.textView, identifier: "taskDescription").firstMatch.scroll(byDeltaX: 0, deltaY: -240) }
+        XCTAssertTrue(child.isHittable, app.debugDescription); XCTAssertEqual(child.label, "Complete Planning"); child.click()
+        noteProofWait { ((try self.importedHeadingTask()["subtasks"] as? [[String: Any]])?.first?["completed"] as? Bool) == true }
+        let completed = try importedHeadingTask()
+        XCTAssertEqual(completed["completed"] as? Bool, false); XCTAssertEqual(completed["is_heading"] as? Bool, true)
+        XCTAssertEqual((try outputTables()["tasks"] as? [Any])?.count, 1, "Completing a child does not complete or duplicate its heading")
+        app.staticTexts["Today"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        noteProofWait { ((try self.importedHeadingTask()["subtasks"] as? [[String: Any]])?.first?["completed"] as? Bool) == false }
+        try importedHeadingAssert(before, title: "Plan tomorrow #work p1", heading: true, revision: 3)
+        let saved = try outputTables(); app.typeKey("q", modifierFlags: .command)
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
+        try launchHeadingWorkspace(app); noteProofOpen(app)
+        XCTAssertTrue(app.descendants(matching: .any)["taskKindStatus"].exists)
+        XCTAssertFalse(app.buttons["reviewImportedHeading"].exists)
+        XCTAssertEqual(try outputTables(), saved)
+    }
+    @MainActor func testMacImportedHeadingLongEditedTitleReviewAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        try noteProofStart(app, flags: ["--heading-conversion-fixture", "--heading-conversion-long-title", "--heading-conversion-edited-title", "--subtask-organizer-fixture"])
+        let before = try importedHeadingTask(), original = try XCTUnwrap(before["title"] as? String)
+        let title = importedHeadingReview(app)
+        XCTAssertEqual(title.value as? String ?? title.label, original)
+        noteProofShot(app, "Mac long imported heading source and current wording")
+        let toggle = app.descendants(matching: .any).matching(identifier: "headingConversionRemoveMarker").firstMatch
+        outputReveal(toggle, app); toggle.click()
+        XCTAssertEqual(title.value as? String ?? title.label, String(original.dropFirst(2)))
+        toggle.click(); noteProofShot(app, "Mac long edited heading explicit marker choice")
+        app.buttons["headingConversionApply"].click()
+        noteProofWait { try self.importedHeadingTask()["is_heading"] as? Bool == true }
+        try importedHeadingAssert(before, title: original, heading: true, revision: 1)
+        let saved = try outputTables(); app.typeKey("q", modifierFlags: .command)
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 10))
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
+        try launchHeadingWorkspace(app); noteProofOpen(app)
+        XCTAssertEqual(try outputTables(), saved)
+    }
+}

@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-27",
+  "corePassedPerRepository": 62,
+  "coreFailures": 0,
+  "coreSkipped": 0,
+  "newCoreCases": 2,
+  "nativeCasesPassed": 6,
+  "nativeFailures": 0,
+  "nativeSkipped": 0,
+  "macRuntimeWarnings": 2,
+  "strictMacRuntimeGate": "Open; both cases functionally pass but strict verifier rejects runtime warnings",
+  "scope": "Synthetic local imported Taskfold root copies only. Mac Cancel/autosave/Undo/Redo, ordinary child completion/Undo and normal Quit/cold return; long edited wording/explicit marker choice. Phone/tablet draft Apply vs parent Cancel, Save/relaunch; largest-text dark long-wording review, real visible-switch activation, child Save, full task field preservation and cold return. No genuine Todoist/cloud/shared/spoken acceptance.",
+  "implementation": "Compare exact raw draft strings/keys/numeric bits iteratively before review Apply; edited Unicode-equivalent titles keep their marker by default; native editors and review availability use the same check. iOS accessibility-size navigation title is Review; normal and Mac titles remain Review heading.",
+  "compatibility": "No new metadata depth quota, file format, service, schema, permission, signing or normal feature switch changes. Existing guarded Save/Undo remains responsible for persistence.",
+  "remaining": [
+    "Normal heading authoring/hosted exposure remains gated with deferred old-client rollout",
+    "Broader shared/cloud/source-race, spoken, cross-device and installed-widget acceptance",
+    "Full Px backlog and all explicit user deferrals"
+  ],
+  "realTaskDataChanged": false,
+  "todoistRequests": false,
+  "hostedChanges": false,
+  "phoneBinding": "Accepted phone application source and both app binary hashes match current products exactly. Only the later iPad test-driver path changes; original phone UI runner/source are recorded in phone-run-inputs.json and compressed tested UI patch."
+}

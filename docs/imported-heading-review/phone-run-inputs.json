@@ -1,0 +1,15 @@
+{
+  "nativeSourceSHA256": "8a1368a11b5761967e89355aed12f3ef02dcb37ef1acd1314f5b03b96d7049c7",
+  "productionSourceSHA256": {
+    "Taskfold/Core/TodoistImport.swift": "a14ef64ff5629a1ab6d1e952cab874f0d4096a8cb35a19f4dec8263255c8d476",
+    "Taskfold/Core/Store.swift": "723231c2a8e1142186a8792acb1e292534ca35e9c8baadfcbaa281784af9d189",
+    "Taskfold/Views/TaskEditor.swift": "dfb851da77d279e6549b7a3e5f154f8d9430badc0b15732d347c5100858819c5",
+    "Taskfold/Views/TodoistHeadingConversionReview.swift": "997b7baaa15f5b5759853f28235e1d6cab47db87cfb562b3f5daee375628ddb9"
+  },
+  "binarySHA256": {
+    "Debug-iphonesimulator/Taskfold.app/Taskfold": "d825fee062bf4e9640747843b0df8b88c638c72b448ca42b4d3352a2e2bced8e",
+    "Debug-iphonesimulator/Taskfold.app/Taskfold.debug.dylib": "4a98b007a3403e1b376dfd20ef700a8d98f9eb0dba11568c13fc98eed3246104",
+    "Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests": "5c36d891ac40ae239e50902213d438f8345a332ee9101600039a2da7c452a4d6"
+  },
+  "scope": "Phone accepted two cases before an iPad-only test scrolling correction; no app source change follows that run."
+}

@@ -197,7 +197,7 @@ struct TaskInspectorForm: View {
         .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
         .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
         .sheet(item: $headingConversion) { request in
-            TodoistHeadingConversionReview(request: request, available: { editorAvailable && store.canAuthorTaskHeadings(teamDraft: teamDraft) && draft == request.captured }, apply: { remove in
+            TodoistHeadingConversionReview(request: request, available: { editorAvailable && store.canAuthorTaskHeadings(teamDraft: teamDraft) && request.matches(draft) }, apply: { remove in
                 guard editorAvailable else { throw AppFailure(message: "The workspace changed. Reopen the task.") }
                 let edited = try request.applying(to: draft, removingMarker: remove, authoringEnabled: store.canAuthorTaskHeadings(teamDraft: teamDraft))
                 saveTask?.cancel(); titleParsingBaseline = edited.title; draft = edited

@@ -26,7 +26,7 @@ struct TodoistHeadingConversionReview: View {
                     if request.canRemoveMarker {
                         Toggle("Remove the leading * marker", isOn: $removeMarker).accessibilityIdentifier("headingConversionRemoveMarker")
                     }
-                    if request.captured.title != request.sourceTitle {
+                    if request.titleChangedSinceImport {
                         Text("Your title has changed since import. Your current wording is kept; the imported title will not replace it.").font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -37,7 +37,7 @@ struct TodoistHeadingConversionReview: View {
                     if !available() { Text("The task or workspace changed. Close this review and open the current task.").foregroundStyle(.secondary).accessibilityIdentifier("headingConversionChanged") }
                     if let failure { Text(failure).foregroundStyle(.red).accessibilityIdentifier("headingConversionError") }
                 }
-            }.formStyle(.grouped).navigationTitle("Review heading")
+            }.formStyle(.grouped).accessibilityIdentifier("headingConversionForm").navigationTitle("Review heading")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
