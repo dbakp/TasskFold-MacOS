@@ -289,6 +289,7 @@ final class Store {
     var focusFixtureFailSave = false
     @ObservationIgnored private var savedFilterFixtureFailureConsumed = false
     @ObservationIgnored private var savedFilterFixtureFailNextPersist = false
+    @ObservationIgnored private var noteSaveFixtureFailureConsumed = false
     var widgetFixtureReady = false
     #endif
     #if !DEBUG
@@ -1477,6 +1478,11 @@ final class Store {
                   preparedChanges[0].recordID == draft.taskID, preparedChanges[0].insertOnly == true else { return false }
         }
         #if DEBUG
+        if noteConcurrentFixtureScope, ProcessInfo.processInfo.arguments.contains("--note-save-failure-once"),
+           !noteSaveFixtureFailureConsumed,
+           preparedChanges.contains(where: { $0.table == "tasks" && $0.method == "PATCH" && $0.fields["description"] != nil }) {
+            noteSaveFixtureFailureConsumed = true; savedFilterFixtureFailNextPersist = true
+        }
         if userID == "ui-testing", sharedCaptureReceipt != nil,
            ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--shared-capture-save-failure-once"),
            !sharedCaptureFixtureFailureConsumed {
@@ -3298,6 +3304,19 @@ extension Store {
 
 #if DEBUG
 extension Store {
+    var noteConcurrentFixtureScope: Bool {
+        localMode && userID == "ui-testing" &&
+        Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowteststeameditbridge" &&
+        ProcessInfo.processInfo.arguments.contains("--uitesting") && ProcessInfo.processInfo.arguments.contains("--workflow-fixture")
+    }
+    var noteConcurrentFixtureEnabled: Bool { noteConcurrentFixtureScope && ProcessInfo.processInfo.arguments.contains("--note-format-concurrent-edit") }
+    @discardableResult func simulateConcurrentNoteEditForTesting(taskID: String, original: String) -> Bool {
+        guard noteConcurrentFixtureEnabled, var current = record("tasks", id: taskID), current.title == "Prepare workflow brief",
+              current.string("user_id") == "ui-testing", current.string("description") == original else { return false }
+        let baseline = current
+        current["description"] = .string("Updated elsewhere while formatting.")
+        return save("tasks", current, baseline: baseline)
+    }
     func seedWorkflowFixture() {
         guard userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-fixture") else { return }
         dailyBackupsEnabled = false; disableNotifications(); undoStack = []; redoStack = []

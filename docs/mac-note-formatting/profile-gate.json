@@ -1,0 +1,24 @@
+{
+  "checked": "2026-10-27",
+  "localProfiles": {
+    "iOS": 2,
+    "macOS": 0
+  },
+  "matchingMacPrivateKeychainProfileAvailable": false,
+  "action": "Kept genuine Mac account-removal profile/Keychain acceptance deferred; no profile/signing setting change",
+  "scope": "Read-only platform/entitlement inspection of standard user/system provisioning-profile directories; no certificate/private-key export or profile changes.",
+  "standardDirectoriesChecked": [
+    {
+      "path": "/Users/davidbakposada/Library/Developer/Xcode/UserData/Provisioning Profiles",
+      "exists": true
+    },
+    {
+      "path": "/Users/davidbakposada/Library/MobileDevice/Provisioning Profiles",
+      "exists": false
+    },
+    {
+      "path": "/Library/MobileDevice/Provisioning Profiles",
+      "exists": false
+    }
+  ]
+}

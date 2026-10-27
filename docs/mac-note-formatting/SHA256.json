@@ -1,0 +1,22 @@
+{
+  "README.md": "0d8b95decd992f233de29ccf129fabd477f2c6af3fdc2d7e661ba9b9d1cf1481",
+  "captures.json": "f0a37fb5107bea80086bc6a96d1501c7cee57b5550d89febc52db69dcafc8d91",
+  "cleanup.json": "45b1f0754b331abc4e934f7a89f2bc141903d5db76dba090b43ae705b52a9fc4",
+  "core.log": "ceb6a8f2af438996060b9f2908270d4b11914021eaa0fd8a4ea92fafcb7bd37b",
+  "earlier-attempts.json": "370ac3f31108712bbf23b23d882ce572414fff917f062dea0034dd97732c09c9",
+  "earlier-table-preservation-round.json": "82ea475cfb776b79a9bb9bfb44b97da31aa49e1e68de9059aa22c00bf46b40c0",
+  "first-harness-failure.log": "6644e98f968bcec104c7a141105121fca1248a1e74a5d1cae57ecf03ef4271d5",
+  "functional-verifier.log": "b2a82eb9fbd9d8fe540e3720cd603fd658b5cb9ade6b49e3421c2b44de451236",
+  "mac-input-bindings.json": "8509b5ec1709de55b9b3aae4e1ebf1fc754c55ceed6f6d79b71dcc26073904fa",
+  "mac-job.json": "df71f8989a7df46addfcd805a80d62153a02a6788a537d5eefa413c71e8bbfbd",
+  "mac-notes-1.png": "4aa2b73befde89eb0bace19d754ee8ee1a4d22b1850021f67fc4b7bdf4445dfe",
+  "mac-notes-2.png": "ab7b4769a68cce866316ef90a170e17da13c5d187c630b9d8770d7b3408e1cba",
+  "mac-notes-3.png": "be058b538b51e4107d42ce89cf691be3256b1d5b249cb991caae048fd494d84a",
+  "mac-notes-4.png": "3b161c83ba44e41da491be0fa278d4ebc7bb2cf925c6b21d7790b40df457e5ef",
+  "mac-summary.json": "48024ad387ea48e4c0bc90591b342e1b88cdee668e4f02bfb7f9db0198e7c159",
+  "mac-test-cases.log": "afe7fa5cfbdf7a7e095d26c0bf9bb1adb252a8af77194671d5b654420518999c",
+  "profile-gate.json": "036f5b906c957193ac780f3720e7e34707f50870b1737f41121b540a36d73eb9",
+  "second-harness-failure.log": "70c8fa9992fcaa9f9fe057b91f6a41c4a9b4ec0a2d0cba3d14c427faf4cc3f75",
+  "strict-verifier.log": "044037e8721e0dee5d1600bf0c2070385879b2a61a47df176db5b8f3c6ca3bd5",
+  "validation.json": "a5681afff5efce1b0a682e67d81481af614340e5aa6075f65802b10f3ad78451"
+}

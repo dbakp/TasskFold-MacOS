@@ -8379,3 +8379,42 @@ remain open. Fixtures render counts rather than 5,000 production rows. No new
 installed-desktop-widget or release claim is made. Normal flags and all user
 deferrals remain unchanged; no real workspace or hosted service was touched.
 See history-date-preparation/README.md and validation.json.
+
+
+## 27 October: representative Mac note-formatting acceptance
+
+Four signed isolated Mac native cases pass on the production inspector/formatter:
+selection-based Bold and rendered preview; Apply with exact unrelated-field/table
+preservation, Undo/Redo and ordinary Quit/cold return; modified formatting Cancel
+with explicit discard; injected disk-save failure with retained text/readable
+warning/retry; and refusal to overwrite a newer saved note, with preserved draft,
+Cancel and cold return. These behaviors share four composite cases. The newer
+edit is injected through the real local Store, not a live cloud peer. Four actual
+window captures are individually inspected and retained.
+
+Fifteen focused note-markup/formatting Core cases pass in each repo. Mac source
+changes are DEBUG-only isolated fixture controls and native tests; normal app
+formatting/save policy and iOS implementation are unchanged. Initial lookup by a
+clipped title, Touch Bar duplicate selection and a non-rendered fixture toolbar
+button caused harness failures. Stable task IDs, visible-window controls and a
+scoped inline fixture control repair them. Earlier failed results are retained
+as summaries; they are not counted as accepted cases.
+
+The strict verifier rejects the final run's four thread priority-inversion
+warnings, one around opening each inspector. Explicit functional verification
+accepts the four passing cases with these warnings retained. Their origin is not
+proven; no framework-only attribution or clean-runtime claim is made. Runtime
+quality, VoiceOver, broader text/layout/workspace and genuine cross-device
+concurrency remain open, along with the wider ranked backlog.
+
+Read-only signing recheck finds only two iOS development profiles and no matching
+Mac profile. Account-removal's genuine Mac Data Protection Keychain/profile gate
+stays with the user's deferred signing work. No profile, backend function/schema,
+real account/task or security setting was changed. Current Supabase auth docs
+were consulted; no service work was performed. See mac-note-formatting/README.md
+and validation.json for scope, warnings, bindings, captures and remaining gates.
+
+Final Mac note acceptance additionally compares the complete saved snapshot for
+Cancel, failed Apply, stale Apply and stale cold return, including queues/widget
+metadata. All four cases pass on that final build; four priority warnings remain
+open. The preceding table-only round is superseded by this stronger coverage.

@@ -1,0 +1,34 @@
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testCodeEscapesItsOwnDelimitersAndPreservesMultilineContent]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testCodeEscapesItsOwnDelimitersAndPreservesMultilineContent]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testEmptyEditorOffersSelectedPlaceholders]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testEmptyEditorOffersSelectedPlaceholders]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testInvalidAndStaleUTF16SelectionsAreRejectedWithoutChangingText]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testInvalidAndStaleUTF16SelectionsAreRejectedWithoutChangingText]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testLargeSourceIsRefusedByToolsWithoutTruncatingIt]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testLargeSourceIsRefusedByToolsWithoutTruncatingIt]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testLineFormattingPreservesBlankLinesIndentationAndFinalNewline]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testLineFormattingPreservesBlankLinesIndentationAndFinalNewline]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testLinkCreationEscapesBracketsAndURLParentheses]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testLinkCreationEscapesBracketsAndURLParentheses]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testSelectingOnlyMarkersNeverDeletesThem]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testSelectingOnlyMarkersNeverDeletesThem]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testUnicodeSelectionAndRepeatedBoldToggleKeepSurroundingText]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testUnicodeSelectionAndRepeatedBoldToggleKeepSurroundingText]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testWindowsLineEndingsRemainSelectable]' started.
+Test Case '-[TaskfoldCoreTests.NoteFormattingTests testWindowsLineEndingsRemainSelectable]' passed (0.000 seconds).
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.015 (0.015) seconds
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testHeadingsListsQuotesCodeAndInlineStylesReadClearly]' started.
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testHeadingsListsQuotesCodeAndInlineStylesReadClearly]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testImagesHTMLAndExtendedAttributesStayLiteralWithoutLoadingResources]' started.
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testImagesHTMLAndExtendedAttributesStayLiteralWithoutLoadingResources]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testOnlyWebLinksWithoutCredentialsCanBeOpened]' started.
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testOnlyWebLinksWithoutCredentialsCanBeOpened]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testOversizedAndExcessivelyFragmentedNotesUseCompleteOriginalFallback]' started.
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testOversizedAndExcessivelyFragmentedNotesUseCompleteOriginalFallback]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testParagraphsUnicodeAndOriginalTextRemainLossless]' started.
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testParagraphsUnicodeAndOriginalTextRemainLossless]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testUnclosedCodeFenceAndTabbedListDoNotLoseContent]' started.
+Test Case '-[TaskfoldCoreTests.NoteMarkupTests testUnclosedCodeFenceAndTabbedListDoNotLoseContent]' passed (0.000 seconds).
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.011 (0.011) seconds
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.025 (0.027) seconds
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.025 (0.028) seconds

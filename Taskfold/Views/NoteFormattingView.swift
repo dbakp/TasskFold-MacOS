@@ -110,6 +110,12 @@ struct NoteFormattingView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
                 if available {
+                    #if DEBUG
+                    if store.noteConcurrentFixtureEnabled, let original = request.storedText {
+                        Button("Other edit") { store.simulateConcurrentNoteEditForTesting(taskID: request.taskID, original: original) }
+                            .accessibilityIdentifier("simulateConcurrentNoteEdit").padding(.horizontal)
+                    }
+                    #endif
                     Group {
                         if textSize.isAccessibilitySize { modePicker.pickerStyle(.menu) }
                         else { modePicker.pickerStyle(.segmented) }

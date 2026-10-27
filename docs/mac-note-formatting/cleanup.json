@@ -1,0 +1,13 @@
+{
+  "allNativeJobsTerminal": true,
+  "testHostTerminatedByTeardown": true,
+  "ownedIntermediateDirectoriesRemoved": 11,
+  "logicalBytesRemoved": 314476114,
+  "retained": [
+    "One current source/build cache per platform",
+    "Latest /tmp/taskfold-mac-notes-cache.xcresult and its log for unresolved thread-performance investigation",
+    "Own source package caches",
+    "Final source/binary bindings, summaries, warning logs and inspected captures in each repo"
+  ],
+  "note": "No real app/data, general Simulator runtime or unrelated build removed. Logical bytes only, not a measured physical free-space delta."
+}

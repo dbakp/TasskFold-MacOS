@@ -1,0 +1,15 @@
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry]' passed (22.934 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace]' passed (20.304 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn]' passed (34.781 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote]' passed (31.819 seconds).
+	 Executed 4 tests, with 0 failures (0 unexpected) in 109.838 (109.843) seconds
+	 Executed 4 tests, with 0 failures (0 unexpected) in 109.838 (109.844) seconds
+	 Executed 4 tests, with 0 failures (0 unexpected) in 109.838 (109.846) seconds

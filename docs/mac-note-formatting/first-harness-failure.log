@@ -1,0 +1,15 @@
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5341: error: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry] : XCTAssertTrue failed
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry]' failed (16.237 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5341: error: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace] : XCTAssertTrue failed
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace]' failed (15.558 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5341: error: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn] : XCTAssertTrue failed
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn]' failed (15.624 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote]' started.
+/tmp/taskfold-workflow-native-mac-host/TaskfoldUITests/TaskfoldMacUITests.swift:5341: error: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote] : XCTAssertTrue failed
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote]' failed (15.488 seconds).
+	 Executed 4 tests, with 4 failures (0 unexpected) in 62.908 (62.912) seconds
+	 Executed 4 tests, with 4 failures (0 unexpected) in 62.908 (62.913) seconds
+	 Executed 4 tests, with 4 failures (0 unexpected) in 62.908 (62.914) seconds

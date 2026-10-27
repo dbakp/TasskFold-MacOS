@@ -5324,3 +5324,123 @@ extension SharedHeadingNativeTests {
         app.buttons["undoNativeWorkflow"].click(); workflowWait { try self.workflowSettled(tasks: 1, attempts: 1) }
     }
 }
+
+extension TaskfoldMacUITests {
+    @MainActor private func noteProofTables() throws -> NSDictionary { try outputTables() }
+    @MainActor private func noteProofCache() throws -> NSDictionary {
+        let file = URL(fileURLWithPath: "/Users/" + NSUserName()).appendingPathComponent("Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+        return try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? NSDictionary)
+    }
+    @MainActor private func noteProofTask() throws -> [String: Any] {
+        let tables = try noteProofTables()
+        return try XCTUnwrap((tables["tasks"] as? [[String: Any]])?.first { $0["title"] as? String == "Prepare workflow brief" })
+    }
+    @MainActor private func noteProofWait(_ condition: @escaping () throws -> Bool) {
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in (try? condition()) == true }, object: nil)], timeout: 12), .completed)
+    }
+    @MainActor private func noteProofOpen(_ app: XCUIApplication) {
+        let today = app.staticTexts["Today"].firstMatch
+        XCTAssertTrue(today.waitForExistence(timeout: 15)); today.click()
+        let row = app.staticTexts["title-f1810000-0000-4000-8000-000000000001"]
+        XCTAssertTrue(row.waitForExistence(timeout: 10), app.debugDescription); row.click(); app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(app.textViews["taskDescription"].waitForExistence(timeout: 8), app.debugDescription)
+    }
+    @MainActor private func noteProofStart(_ app: XCUIApplication, flags: [String] = []) throws {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved isolated host required") }
+        continueAfterFailure = false
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--task-heading-fixture", "-localMode", "YES", "-appearance", "light"] + flags
+        try launchHeadingWorkspace(app); noteProofOpen(app)
+        XCTAssertEqual(app.textViews["taskDescription"].value as? String, "Keep the original notes.")
+    }
+    @MainActor private func noteProofFormat(_ app: XCUIApplication) -> XCUIElement {
+        let button = app.buttons["openNoteFormatting"]
+        for _ in 0..<8 where !button.isHittable { app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -250) }
+        XCTAssertTrue(button.exists && button.isHittable); button.click()
+        let editor = app.textViews["noteFormatText"]
+        XCTAssertTrue(editor.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertEqual(editor.value as? String, "Keep the original notes.")
+        return editor
+    }
+    @MainActor private func noteProofAssertOnlyDescription(_ expected: String, before: NSDictionary) throws {
+        let after = try noteProofTables(), oldTasks = try XCTUnwrap(before["tasks"] as? [[String: Any]])
+        var normalized = try XCTUnwrap(after as? [String: Any]), tasks = try XCTUnwrap(after["tasks"] as? [[String: Any]])
+        let index = try XCTUnwrap(tasks.firstIndex { $0["title"] as? String == "Prepare workflow brief" })
+        XCTAssertEqual(tasks[index]["description"] as? String, expected)
+        tasks[index]["description"] = oldTasks.first { $0["id"] as? String == tasks[index]["id"] as? String }?["description"]
+        normalized["tasks"] = tasks
+        XCTAssertEqual(normalized as NSDictionary, before, "Formatting must preserve every unrelated table and field")
+    }
+    @MainActor private func noteProofShot(_ app: XCUIApplication, _ name: String) {
+        let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); image.name = name; image.lifetime = .keepAlways; add(image)
+    }
+    @MainActor func testMacNotesSelectionPreviewApplyUndoAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app)
+        let before = try noteProofTables(), editor = noteProofFormat(app)
+        editor.click(); editor.typeKey("a", modifierFlags: .command); app.buttons["noteFormat-bold"].click()
+        XCTAssertEqual(editor.value as? String, "**Keep the original notes.**")
+        let preview = app.buttons["Preview"].exists ? app.buttons["Preview"] : app.radioButtons["Preview"]
+        XCTAssertTrue(preview.exists); preview.click()
+        XCTAssertTrue(app.staticTexts["Keep the original notes."].waitForExistence(timeout: 8), app.debugDescription)
+        noteProofShot(app, "Mac formatted note preview")
+        app.buttons["applyNoteFormatting"].click()
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        noteProofWait { try self.noteProofTask()["description"] as? String == "**Keep the original notes.**" }
+        try noteProofAssertOnlyDescription("**Keep the original notes.**", before: before)
+        app.staticTexts["Today"].firstMatch.click(); app.typeKey("z", modifierFlags: .command)
+        noteProofWait { try self.noteProofTables() == before }
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        noteProofWait { try self.noteProofTask()["description"] as? String == "**Keep the original notes.**" }
+        let saved = try noteProofTables()
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
+        try launchHeadingWorkspace(app); noteProofOpen(app)
+        XCTAssertEqual(app.textViews["taskDescription"].value as? String, "**Keep the original notes.**")
+        XCTAssertEqual(try noteProofTables(), saved)
+    }
+    @MainActor func testMacNotesFormattingCancelPreservesWholeWorkspace() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app)
+        let before = try noteProofTables(), cacheBefore = try noteProofCache(), editor = noteProofFormat(app)
+        app.buttons["noteFormat-heading"].click(); XCTAssertEqual(editor.value as? String, "## Keep the original notes.")
+        XCTAssertEqual(try noteProofTables(), before)
+        app.sheets.buttons["Cancel"].firstMatch.click()
+        let discard = app.windows.buttons["Discard changes"].firstMatch; XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.click()
+        XCTAssertTrue(editor.waitForNonExistence(timeout: 8)); XCTAssertEqual(app.textViews["taskDescription"].value as? String, "Keep the original notes.")
+        XCTAssertEqual(try noteProofTables(), before)
+        XCTAssertEqual(try noteProofCache(), cacheBefore, "Cancel also preserves queues, widget tokens and all other snapshot metadata")
+        noteProofShot(app, "Mac formatter cancellation preserves original notes")
+    }
+    @MainActor func testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app, flags: ["--note-save-failure-once"])
+        let before = try noteProofTables(), cacheBefore = try noteProofCache(), editor = noteProofFormat(app)
+        app.buttons["noteFormat-heading"].click(); app.buttons["applyNoteFormatting"].click()
+        let error = app.staticTexts["noteFormatError"]; XCTAssertTrue(error.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(error.isHittable); XCTAssertTrue(app.buttons["Copy text"].isHittable); XCTAssertTrue(app.buttons["applyNoteFormatting"].isHittable)
+        XCTAssertEqual(editor.value as? String, "## Keep the original notes."); XCTAssertEqual(try noteProofTables(), before)
+        XCTAssertEqual(try noteProofCache(), cacheBefore, "A failed Apply cannot change any persisted snapshot metadata")
+        noteProofShot(app, "Mac failed note save keeps complete warning and retry")
+        app.buttons["applyNoteFormatting"].click(); XCTAssertTrue(editor.waitForNonExistence(timeout: 8))
+        noteProofWait { try self.noteProofTask()["description"] as? String == "## Keep the original notes." }
+        try noteProofAssertOnlyDescription("## Keep the original notes.", before: before)
+    }
+    @MainActor func testMacNotesStaleApplyPreservesNewerSavedNote() throws {
+        let app = XCUIApplication(); defer { app.terminate() }; try noteProofStart(app, flags: ["--note-format-concurrent-edit"])
+        let editor = noteProofFormat(app); app.buttons["noteFormat-heading"].click()
+        app.buttons["simulateConcurrentNoteEdit"].click()
+        noteProofWait { try self.noteProofTask()["description"] as? String == "Updated elsewhere while formatting." }
+        let newer = try noteProofTables(), newerCache = try noteProofCache()
+        app.buttons["applyNoteFormatting"].click()
+        let error = app.staticTexts["noteFormatError"]; XCTAssertTrue(error.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue((error.value as? String ?? error.label).contains("notes changed"))
+        XCTAssertTrue(error.isHittable); XCTAssertTrue(app.buttons["Copy text"].isHittable)
+        XCTAssertEqual(editor.value as? String, "## Keep the original notes."); XCTAssertEqual(try noteProofTables(), newer)
+        XCTAssertEqual(try noteProofCache(), newerCache, "Stale Apply preserves the complete newer snapshot")
+        noteProofShot(app, "Mac stale formatting keeps newer note and original draft")
+        app.sheets.buttons["Cancel"].firstMatch.click(); let discard = app.windows.buttons["Discard changes"].firstMatch
+        XCTAssertTrue(discard.waitForExistence(timeout: 5)); discard.click(); XCTAssertEqual(try noteProofTables(), newer)
+        app.terminate(); app.launchArguments = ["--uitesting", "-localMode", "YES", "-appearance", "light"]
+        try launchHeadingWorkspace(app); noteProofOpen(app)
+        XCTAssertEqual(app.textViews["taskDescription"].value as? String, "Updated elsewhere while formatting.")
+        XCTAssertEqual(try noteProofTables(), newer)
+        XCTAssertEqual(try noteProofCache(), newerCache, "Cold return preserves the complete newer snapshot")
+    }
+}

@@ -1,0 +1,26 @@
+{
+  "TaskfoldMacUITests/testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry()": {
+    "file": "mac-notes-1.png",
+    "description": "Mac failed note save keeps complete warning and retry_0_3EB740CB-5736-474D-958D-30672DDC7E4C.png",
+    "visuallyInspected": true,
+    "scope": "Target app window; final full-snapshot acceptance round; synthetic fixture only"
+  },
+  "TaskfoldMacUITests/testMacNotesFormattingCancelPreservesWholeWorkspace()": {
+    "file": "mac-notes-2.png",
+    "description": "Mac formatter cancellation preserves original notes_0_C1DA07A0-1FE9-4602-BA17-3FF236FB37A8.png",
+    "visuallyInspected": true,
+    "scope": "Target app window; final full-snapshot acceptance round; synthetic fixture only"
+  },
+  "TaskfoldMacUITests/testMacNotesSelectionPreviewApplyUndoAndColdReturn()": {
+    "file": "mac-notes-3.png",
+    "description": "Mac formatted note preview_0_F6FFDE71-7A60-4F81-AD19-87F94A9B94B7.png",
+    "visuallyInspected": true,
+    "scope": "Target app window; final full-snapshot acceptance round; synthetic fixture only"
+  },
+  "TaskfoldMacUITests/testMacNotesStaleApplyPreservesNewerSavedNote()": {
+    "file": "mac-notes-4.png",
+    "description": "Mac stale formatting keeps newer note and original draft_0_A077BC96-A7DB-4D23-9EBD-6E2F136AB222.png",
+    "visuallyInspected": true,
+    "scope": "Target app window; final full-snapshot acceptance round; synthetic fixture only"
+  }
+}
