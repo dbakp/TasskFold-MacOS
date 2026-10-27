@@ -8,9 +8,13 @@ Template-file Cancel now cancels provider coordination in each owned app, includ
 replacement reads, dismissal and workspace changes. Five final reader tests per
 repo cover real held/failing Foundation presenters, fresh retry and bounded bytes;
 85 distinct selected Core cases pass across the two runs. Both native apps build,
-and current Mac file selection/review/Cancel preserves exact cache bytes. Native
-held-provider cancellation, spoken and real external-provider transfer remain open.
-See template-file-recovery/validation.json.
+and current Mac file selection/review/Cancel preserves exact cache bytes. Native Mac/phone/tablet
+wait/Cancel, late-response suppression, retry and cold return now pass with a
+separate-process file presenter. Mobile is warning-free; Mac reports one runtime
+warning with matching AppKit Services-menu/data-detector inspection frames. The
+strict Mac runtime gate stays open. Spoken and real external-provider transfer
+remain open. See template-file-recovery/validation.json and
+template-provider-native/validation.json.
 
 Imported-heading review now refuses a changed draft using exact raw field values,
 including Unicode spelling, rather than semantic String equality. Canonically

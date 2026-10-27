@@ -5638,3 +5638,83 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(try outputTables(), saved)
     }
 }
+
+/// A genuine cross-process file presenter owned by the test runner. The shipping
+/// app receives an ordinary picker URL and uses its normal NSFileCoordinator.
+private final class TemplateProviderHold: NSObject, NSFilePresenter, @unchecked Sendable {
+    let presentedItemURL: URL?
+    let presentedItemOperationQueue = OperationQueue()
+    private let lock = NSLock()
+    private var completions: [(Error?) -> Void] = []
+    private var released = false
+    private var requests = 0
+    var wasAsked: Bool { lock.lock(); defer { lock.unlock() }; return requests > 0 }
+    init(_ url: URL) { presentedItemURL = url; presentedItemOperationQueue.maxConcurrentOperationCount = 1 }
+    func savePresentedItemChanges(completionHandler: @escaping (Error?) -> Void) {
+        lock.lock(); requests += 1
+        let finish = released
+        if !finish { completions.append(completionHandler) }
+        lock.unlock()
+        if finish { completionHandler(nil) }
+    }
+    func release() {
+        lock.lock(); released = true
+        let callbacks = completions; completions = []
+        lock.unlock(); callbacks.forEach { $0(nil) }
+    }
+}
+
+extension TaskfoldMacUITests {
+    @MainActor func testTemplateProviderCancelRetryAndColdReturn() throws {
+        guard Bundle(for: Self.self).bundleIdentifier == "com.dbakp.taskfold.mac.workflowteststemplatecancel.runner" else {
+            throw XCTSkip("Dedicated template-provider host required")
+        }
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("Taskfold-template-provider-proof.json")
+        try Data(#"{"format":"taskfold-template","version":1,"name":"Provider retry workflow","document":{"version":1,"kind":"project","projects":[{"id":"p","name":"Synthetic retry"}],"sections":[],"tasks":[{"id":"t","title":"Review recovered workflow","description":"Synthetic provider cancellation proof.","project_id":"p","labels":[],"subtasks":[],"planned_offset":0}]}}"#.utf8).write(to: file, options: .atomic)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--section=inbox"]
+        app.launch(); defer { app.terminate() }
+        let cache = URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststemplatecancel/Data/Library/Application Support/Taskfold/ui-testing.json")
+        let before = try Data(contentsOf: cache)
+        app.buttons["openTemplates"].click()
+        func choose() {
+            let button = app.buttons["importWorkflowTemplate"]
+            XCTAssertTrue(button.waitForExistence(timeout: 8), app.debugDescription); button.click()
+            XCTAssertTrue(app.sheets.buttons["Open"].firstMatch.waitForExistence(timeout: 8), app.debugDescription)
+            app.typeKey("g", modifierFlags: [.command, .shift])
+            let path = app.sheets.comboBoxes.firstMatch.exists ? app.sheets.comboBoxes.firstMatch : app.sheets.textFields.firstMatch
+            XCTAssertTrue(path.waitForExistence(timeout: 5), app.debugDescription)
+            path.click(); app.typeKey("a", modifierFlags: .command); path.typeText(file.path)
+            app.typeKey(.return, modifierFlags: [])
+            let row = app.sheets.textFields.matching(NSPredicate(format: "value == %@", file.lastPathComponent)).firstMatch
+            XCTAssertTrue(row.waitForExistence(timeout: 8), app.debugDescription); row.click()
+            let open = app.sheets.buttons["Open"].firstMatch
+            XCTAssertTrue(open.isEnabled); open.click()
+        }
+        let presenter = TemplateProviderHold(file)
+        NSFileCoordinator.addFilePresenter(presenter)
+        defer { presenter.release(); NSFileCoordinator.removeFilePresenter(presenter) }
+        choose()
+        let cancel = app.buttons["cancelTemplateFileRead"]
+        XCTAssertTrue(cancel.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(presenter.wasAsked, "Normal app read must reach the real cross-process presenter")
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "Held template provider offers Cancel"; shot.lifetime = .keepAlways; add(shot)
+        cancel.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        XCTAssertTrue(cancel.waitForNonExistence(timeout: 8), app.debugDescription)
+        XCTAssertEqual(try Data(contentsOf: cache), before)
+        presenter.release(); NSFileCoordinator.removeFilePresenter(presenter)
+        let late = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true"), object: app.textFields["importTemplateName"])
+        late.isInverted = true
+        XCTAssertEqual(XCTWaiter.wait(for: [late], timeout: 2), .completed)
+        choose()
+        XCTAssertTrue(app.textFields["importTemplateName"].waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertEqual(app.textFields["importTemplateName"].value as? String, "Provider retry workflow")
+        app.buttons["cancelImportTemplateReview"].click()
+        XCTAssertEqual(try Data(contentsOf: cache), before)
+        app.terminate(); app.launchArguments = ["--uitesting", "--section=inbox"]; app.launch()
+        app.buttons["openTemplates"].click()
+        XCTAssertTrue(app.buttons["importWorkflowTemplate"].waitForExistence(timeout: 8))
+        XCTAssertEqual(try JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? NSDictionary, try JSONSerialization.jsonObject(with: before) as? NSDictionary)
+    }
+}

@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-27",
+  "shippingSourceCommit": "faa0b580d13d276239ef91dcbb92ce9d971e27f8",
+  "test": "testTemplateProviderCancelRetryAndColdReturn",
+  "shippingFilesSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "fbba378f66d5c91e22b4686c3729d420b609ebb23835318a36c389e45cfe8d30",
+    "Taskfold/Views/WorkflowViews.swift": "69e6b022978c3028e25b7b201fea68db733fbf17971dcbc8d6b9472fa40fb86b"
+  },
+  "runnerSHA256": "42a97d95606a37b89d042637b5ddf8b874fe397d69c864c2a0773624a9f7b961",
+  "stagedFilesMatchOwnedSource": true,
+  "appBinarySHA256": "22a88057dc9744687e738cb56c4b8eefc2a607b10bbe2fe6fd42cfec2acdc009",
+  "results": {
+    "mac": {
+      "resultBundle": "taskfold-template-provider-mac-v1.xcresult",
+      "passedTests": 1,
+      "failures": 0,
+      "skips": 0,
+      "runtimeWarnings": 1,
+      "strictVerifier": "rejected: runtime warning"
+    }
+  },
+  "coverage": [
+    "Ordinary native picker selects a synthetic local template",
+    "A genuine separate-process NSFilePresenter registered by the runner is consulted and holds its response",
+    "Opening template and enabled Cancel are present",
+    "Native Cancel removes the wait and exact saved cache bytes remain unchanged",
+    "Releasing the late presenter response does not open a review",
+    "A fresh picker selection reads the same file and opens the complete named review",
+    "Review Cancel preserves exact cache bytes",
+    "Normal app relaunch without fixture reset preserves the full saved snapshot"
+  ],
+  "limits": [
+    "Controlled Foundation coordination across processes is not real iCloud/OneDrive transfer, provider eviction or network-outage acceptance.",
+    "Core tests separately prove cancellation interrupts coordinator waiting before presenter release; the native case verifies visible Cancel, late-response suppression, retry and persisted state.",
+    "No account-switch-during-read, spoken-control or real external-provider acceptance.",
+    "Isolated Simulator screenshots show an account-removal recovery banner; its cause is not established by this test. No account-removal or signing acceptance is claimed."
+  ],
+  "warningAttribution": {
+    "reportedWarnings": 1,
+    "archivedMatchingEvents": 1,
+    "resolvedSystemFrames": 47,
+    "totalArchivedFrames": 59,
+    "observedTrigger": "AppKit _getDataDetectorsScanner, _NSServicesMenuUpdater, NSMenu(Accessibility) inspection",
+    "firstAttempt": "Safari reference emitted no symbol image map; retained as unresolved, not a negative diagnosis",
+    "finalMethod": "UUID-matched system image offsets relocated against the live isolated development app",
+    "cleanRuntimeAccepted": false
+  },
+  "screenshots": "The held-read screenshot was inspected; it also contains unrelated desktop content, so it is not copied into repository evidence. Original result remains local."
+}

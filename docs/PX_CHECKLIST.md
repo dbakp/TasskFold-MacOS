@@ -44,6 +44,9 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   incompatible-file refusal; opening a definition does not create tasks.
 - [x] Cancellation now reaches the template file reader; bounded reads and useful
   unavailable-file recovery pass controlled provider checks in each app.
+- [x] Native Mac/phone/tablet picker wait, Cancel, late-response suppression,
+  retry and unchanged cold-return scope using a separate-process file presenter.
+  Mac runtime warning remains open; this is not real cloud-provider transfer.
 - [ ] Remaining external file-provider transfer and recovery acceptance.
 
 ### 2. Share and browser capture

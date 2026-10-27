@@ -68,3 +68,17 @@ Both apps build, and the current Mac native picker/review/Cancel smoke preserves
 exact cache bytes. This is controlled Foundation provider proof, not a real
 cloud-provider transfer or native held-provider-cancellation acceptance. See
 template-file-recovery/validation.json.
+
+
+Native template-provider follow-up: the independently owned Mac and mobile runners
+now register a real file presenter in a separate process, while the app uses its
+ordinary picker and reader. Mac, iPhone and iPad pass visible wait/Cancel,
+late-response suppression, fresh retry, review Cancel and unchanged cold-return
+checks. Mobile reports no runtime warnings. Mac has one reported QoS warning with
+matching archived frames through AppKit Services-menu accessibility inspection and
+the data-detector scanner; strict clean-runtime acceptance remains open. Original
+Core evidence separately proves interruption before provider release. The mobile
+screenshots show a recovery banner in these isolated builds; this test does not
+establish its cause or accept account-removal behavior. No shipping fixture or
+provider override was added. Real external-provider transfer, account changes and
+spoken checks remain open. See template-provider-native/validation.json.

@@ -8,8 +8,11 @@ local host Cancel/Add, Undo/Redo and cold return; the setting is restored Off.
 Wider cloud/account/spoken checks remain open. Template imports now cancel their
 actual coordinated reader; five controlled-provider cases and 85 distinct selected
 Core cases pass per repo, both native builds pass, and current Mac native
-file selection/review/Cancel preserves exact saved cache bytes. Real external
-provider transfer and native held-provider cancellation remain open. See [SHARE_CAPTURE.md](SHARE_CAPTURE.md).
+file selection/review/Cancel preserves exact saved cache bytes. Native wait/Cancel, late-response suppression, retry and unchanged cold return
+now pass with a runner-owned separate-process file presenter. One Mac runtime
+warning remains, with matching archived AppKit Services-menu/data-detector
+inspection frames. Strict clean-runtime and real external-provider transfer
+remain open. See template-provider-native/validation.json. See [SHARE_CAPTURE.md](SHARE_CAPTURE.md).
 
 Current release-gate order and external dependencies: [P0_RELEASE_STATUS.md](P0_RELEASE_STATUS.md).
 
