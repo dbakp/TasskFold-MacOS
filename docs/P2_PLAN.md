@@ -6355,3 +6355,13 @@ is a reduction in main-actor work, not completion of performance polish.
 Mac runtime warnings and intermittent mobile cloud-settle failures remain open;
 separate diagnostic retries passed without a shipping app change.
 See [source bindings, measurements and limitations](prepared-workflow-undo/README.md).
+
+
+## 2026-10-27 — audio-comment foundation, feature remains open
+
+Both independently owned apps now have bounded AAC/M4A admission, full off-main
+AVFoundation decoding, exact binary integrity, scoped recording draft state and a
+frozen publication/journal payload. Each repo passes 21 focused Mac-host Core cases.
+No recording UI, playback, durable outbox integration, server upload, migration or
+feature exposure is claimed. The complete remaining lifecycle and acceptance
+checklist is in [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).

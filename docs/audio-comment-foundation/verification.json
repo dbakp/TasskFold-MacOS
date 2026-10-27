@@ -1,0 +1,28 @@
+{
+  "status": "foundation only; full feature remains open",
+  "core": {
+    "tests": 21,
+    "failures": 0,
+    "host": "macOS Swift Package; not Simulator runtime"
+  },
+  "nativeBuild": {
+    "result": "TEST BUILD SUCCEEDED",
+    "command": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /tmp/taskfold-workflow-native-mac-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-workflow-native-mac-build -destination platform=macOS,arch=arm64 CODE_SIGNING_ALLOWED=YES CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=3UZ4C73FM2 CODE_SIGN_IDENTITY=9421BFBE87503809AB8274B2B84048C65BE9D2FC",
+    "audioSourceCompilerWarnings": [],
+    "deepStrictSignatureVerification": true,
+    "binaryHashes": {
+      "Contents/MacOS/Taskfold": "d3e98121ee9a0638dbfb7a711fb040f439bbc73416f036d68f3d536dbf89bf8c",
+      "Contents/MacOS/Taskfold.debug.dylib": "762ff43ff9f0f0b7f1eb20cb9f4da19b14279f690fca91bd367c780ddfffe860"
+    }
+  },
+  "registrationIdempotent": true,
+  "sources": {
+    "Taskfold/Core/AudioComments.swift": "df56bbd8381194d986a08ed34ad0036f6dabc9df5d014865e5d9cba9b11e7698",
+    "Taskfold/Core/AudioCommentPending.swift": "dba5fb755f85429481ff73c4a6306669989a5cbf1088a6019510a1d49c37bc1f",
+    "Taskfold/Core/AudioCommentDecoding.swift": "89b16c4888544461143fac4812824e2d939cc143b8860402a48193f49ff025b1",
+    "TaskfoldTests/AudioCommentTests.swift": "81a3441f9d7024a0fbe6367f8123ad087cb88151bb294306a66cfb1e0fa6df66",
+    "TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb"
+  },
+  "noMicrophoneOrPlayback": true,
+  "remaining": "See docs/AUDIO_COMMENTS.md"
+}

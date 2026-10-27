@@ -8838,3 +8838,12 @@ normal cold return, plus refusal/typed recovery without an unintended task save.
 The 81 focused Core cases and 17 Mac controller checks pass. One native QoS
 warning remains; actual microphone/speech permission and audio acceptance await
 approval. See [voice-draft-native](voice-draft-native/README.md).
+
+
+## 2026-10-27 — audio-comment foundation
+
+Added bounded AAC/M4A validation, complete off-main decoding, exact task/workspace
+binding, uncertain-publication retry identity and a private-journal payload codec.
+The 21 focused Core cases pass. This adds no visible controls or microphone use;
+the premium recording/review/playback flow and private server lifecycle remain
+unfinished. See [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
