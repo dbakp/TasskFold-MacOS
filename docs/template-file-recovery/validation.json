@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-27",
+  "scope": "Cancellation-aware bounded template file reading; independently owned implementation",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "fbba378f66d5c91e22b4686c3729d420b609ebb23835318a36c389e45cfe8d30",
+    "Taskfold/Views/WorkflowViews.swift": "69e6b022978c3028e25b7b201fea68db733fbf17971dcbc8d6b9472fa40fb86b",
+    "TaskfoldTests/TemplateFileReadTests.swift": "1b43afb089d55ebcb99d12a6ef95e25b7eb7eb6e4255d6252c9f7f0d1aa0d9a3"
+  },
+  "core": {
+    "initialSelectedCases": 84,
+    "failures": 0,
+    "finalReaderCases": 5,
+    "finalReaderFailures": 0,
+    "uniqueCasesAcrossRuns": 85,
+    "coverage": [
+      "cancel before touching file",
+      "real NSFilePresenter holds coordination; cancel returns before presenter is released",
+      "retry reads exact bytes",
+      "real presenter supplies offline error; unchanged source and fresh retry",
+      "missing file recovery",
+      "large Unicode bytes and oversize refusal",
+      "existing template definitions and CSV contracts"
+    ]
+  },
+  "nativeBuild": {
+    "platform": "mac",
+    "result": "BUILD SUCCEEDED",
+    "binarySHA256": "c88a1a5ce3013a58bff9a25928c5cee4ffa5948f04beaa7faa2237fc5ccac700",
+    "stagedProductionFilesMatch": true,
+    "strictDeepSignatureVerified": true
+  },
+  "limits": [
+    "Controlled Foundation file presenter is not a real iCloud/OneDrive outage.",
+    "Native Cancel during a held provider read, account switching during it, spoken controls and external-provider transfer remain unverified.",
+    "Existing compiler concurrency warnings remain in raw logs; clean warning-free build is not claimed."
+  ],
+  "nativeSmoke": {
+    "result": "Real fileImporter selected local synthetic JSON; complete Review template; Cancel",
+    "reviewName": "Portable recovery proof",
+    "cacheBytesUnchanged": true,
+    "notClaimed": "Native cancellation of a held provider; smoke exercises normal read and review cancellation only."
+  }
+}

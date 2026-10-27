@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-27",
+  "testedSourceCommit": "e66a7c6e4c7b66d7781fab9fbecd0025fb090d9d",
+  "captureSourcesStillMatchCurrent": {
+    "Taskfold/Core/SharedCapture.swift": "6c818d7a4aadef3997d41a36cab14e3bc6305394df838b75186c126d121e2fbf",
+    "Taskfold/Core/SharedCapturePlan.swift": "3c6e288c609afb963849f6a3f3fcd89981fa1f08931106720ef22993033e438e",
+    "Taskfold/SharedCaptureStore.swift": "566bf5e7e024af31a1bbd0e31417b59de65f6d07828a55a9fdfd84167aa197ba",
+    "Taskfold/Views/SharedDraftsView.swift": "ef7b64116d06ac900e9e9db0e3238b9983d03cf10fae8b7e57806a5adf609dd4",
+    "TaskfoldShare/ShareViewController.swift": "51d8af361a0ac33e64acd6b99d7603563705d1f8bd2108ce5d833a355936ab33"
+  },
+  "isolation": "Unique local host, extension and App Group; synthetic content; no production Taskfold data or real account mutation",
+  "nativeActions": [
+    "Safari toolbar Share > Taskfold Share Test; genuine link intake",
+    "Safari edited Cancel; exact host/cache and mailbox unchanged",
+    "Safari Save draft while host fully quit; one draft only; exact multiline notes and source URL",
+    "Cold host launch > Shared drafts > Review; Inbox default; host Cancel preserves draft and account snapshot",
+    "Explicit Add; original tasks preserved; one literal Inbox task; mailbox acknowledged",
+    "Command-Z removes created task; receipt retained; creation/deletion activity remains",
+    "Command-Shift-Z restores task; only task_generation changes as required for resurrection",
+    "Normal Quit and cold return; exact post-Redo saved snapshot preserved",
+    "TextEdit selected-text context Share > Taskfold Share Test; first-line title, full selected text notes, no invented URL",
+    "Cold host review > choose Getting started > Add; one task, selected project, no parsed date/priority/labels; two receipts and empty mailbox"
+  ],
+  "snapshotAssertionsPassed": true,
+  "approval": "User approved temporary enablement; switch verified restored Off in UI and pluginkit",
+  "extensionRestoredOff": true,
+  "binariesSHA256": {
+    "Contents/MacOS/Taskfold": "f5e026877ef24953ea5c0b7323fc726c104927a13d0bea60b071e46e36f5ff0a",
+    "Contents/PlugIns/TaskfoldShare.appex/Contents/MacOS/TaskfoldShare": "c0a16ae84a7d437cf0994400f2c0cba24c4cac1ea09b8936c9e937c907f737ac"
+  },
+  "limits": [
+    "Local native source-app scope only; wider Mac cloud/account-switch/spoken/permission and source-app cases remain open.",
+    "This native build precedes the unrelated template reader change; captured Share implementation files match current source exactly.",
+    "No clean runtime-warning, distribution or provider delivery acceptance is claimed.",
+    "AX UI observations are recorded in this conversation; screenshots containing system contact suggestions were not retained."
+  ],
+  "correctedAssertions": [
+    "Whole-table equality after Undo was too strict: task_activity legitimately retains the created/deleted events. Original task/project/label data is unchanged.",
+    "Whole-task equality after Redo was too strict: resurrecting the task correctly refreshes task_generation. All other task fields and the receipt match."
+  ]
+}

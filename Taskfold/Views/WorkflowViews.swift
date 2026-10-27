@@ -178,6 +178,7 @@ struct TemplateLibraryView: View {
     @State private var exportRequest: ExportedWorkflowTemplate?
     @State private var captured: WorkflowTemplateCapture?
     @State private var readingFile: UUID?
+    @State private var fileRead: WorkflowTemplateReadOperation?
     private var sources: [Record] {
         switch sourceKind {
         case "section": return OrganizationOrder.sorted(store.rows("sections").filter { row in store.allProjects.contains { $0.id == row.string("project_id") } })
@@ -227,32 +228,34 @@ struct TemplateLibraryView: View {
                     ProgressView().controlSize(.small)
                     Text("Opening template…")
                     Spacer()
-                    Button("Cancel") { readingFile = nil }
+                    Button("Cancel", action: cancelFileRead).accessibilityIdentifier("cancelTemplateFileRead")
                 }.padding().background(.regularMaterial)
             }
         }
-        .onDisappear { readingFile = nil }
+        .onDisappear(perform: cancelFileRead)
         .onChange(of: store.workspaceGeneration) { _, _ in
-            readingFile = nil; importing = false; imported = nil; csvSource = nil; exportRequest = nil
+            cancelFileRead(); importing = false; imported = nil; csvSource = nil; exportRequest = nil
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .commaSeparatedText]) { result in
             guard store.workflowReady(binding) else { message = store.error; return }
             do {
                 let url = try result.get(), request = UUID(), mapped = mappingFile
+                cancelFileRead()
+                let operation = WorkflowTemplateReadOperation(); fileRead = operation
                 readingFile = request; message = nil
                 Task {
                     do {
                         let result = try await Task.detached(priority: .userInitiated) { () -> (WorkflowTemplateFile?, WorkflowCSVSource?) in
-                            if mapped { return (nil, try WorkflowCSVSource(data: WorkflowTemplateFile.readData(url))) }
-                            return (try WorkflowTemplateFile.read(url), nil)
+                            if mapped { return (nil, try WorkflowCSVSource(data: operation.readData(url))) }
+                            return (try WorkflowTemplateFile(data: operation.readData(url)), nil)
                         }.value
                         guard readingFile == request else { return }
-                        readingFile = nil
+                        readingFile = nil; fileRead = nil
                         guard store.workflowReady(binding) else { message = store.error; return }
                         if let file = result.0 { imported = ImportedWorkflowTemplate(file: file) }; csvSource = result.1
                     } catch {
                         guard readingFile == request else { return }
-                        readingFile = nil; message = error.localizedDescription
+                        readingFile = nil; fileRead = nil; message = error.localizedDescription
                     }
                 }
             } catch {
@@ -269,6 +272,10 @@ struct TemplateLibraryView: View {
         .confirmationDialog("Delete this template?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
             Button("Delete template", role: .destructive) { if store.workflowReady(binding), let row = deleting { workspace.run("Delete Template") { store.remove(WorkflowTemplate.table, row.id) } }; deleting = nil }
         } message: { Text("Tasks and projects created from it stay saved.") }
+    }
+    private func cancelFileRead() {
+        readingFile = nil
+        fileRead?.cancel(); fileRead = nil
     }
     private func export(_ row: Record) {
         guard store.workflowReady(binding) else { message = store.error; return }

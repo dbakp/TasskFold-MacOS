@@ -42,13 +42,17 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 
 - [x] Versioned workflow files, reviewed import/export, private copies and malformed/
   incompatible-file refusal; opening a definition does not create tasks.
+- [x] Cancellation now reaches the template file reader; bounded reads and useful
+  unavailable-file recovery pass controlled provider checks in each app.
 - [ ] Remaining external file-provider transfer and recovery acceptance.
 
 ### 2. Share and browser capture
 
 - [x] Native share extensions, bounded reviewed text/link intake and account-bound
   saved drafts, with representative offline/relaunch/isolation checks.
-- [ ] Remaining Mac share-menu, spoken accessibility and wider source-app cases.
+- [x] Native Mac Safari and TextEdit intake, local host review/Cancel/Add,
+  Undo/Redo and cold-return scope; temporary extension setting restored Off.
+- [ ] Remaining Mac cloud/account/spoken accessibility and wider source-app cases.
 
 ### 3. Notes, output and view control — active
 

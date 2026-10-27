@@ -44,9 +44,27 @@ Production inputs are checked unchanged. The independent extension-configuration
 suite passes two checks; the existing multi-process mailbox check preserves 64
 complete drafts across four independent writers.
 
-A separately prepared current-source Share host builds and verifies its deep,
-strict code signature. Its local workspace publishes an empty mailbox, and native
-Safari Share settings list “Taskfold Share Test” switched Off. Temporarily enabling
-it awaits user approval. These setup checks do not accept Safari capture,
-cancellation, host Add/Undo, a second source app or spoken accessibility; those
-genuine native workflow checks remain open.
+The separately prepared Share host builds and verifies its deep, strict code
+signature. With the user's approval, its extension was enabled temporarily and
+then restored Off. Genuine native Safari link intake and TextEdit selected-text
+intake now pass the recorded local scope. Safari Cancel preserves exact mailbox
+and host cache bytes; Save creates one draft while the host stays quit. Host
+Cancel preserves it, explicit Add creates one literal task, and Undo/Redo plus
+normal cold return preserve the expected task data and durable receipt. Undo
+retains creation/deletion history; Redo intentionally refreshes task_generation.
+TextEdit review preserves full selected text, invents no URL, and Add respects the
+chosen project. Original tasks remain unchanged. See mac-native-share/validation.json
+and synthetic snapshots. These checks do not close broader Mac cloud/account,
+spoken, permission, external-provider or source-app acceptance.
+
+Template imports also now own a cancellable coordinated reader. Cancel,
+dismissal, workspace change or a replacement read cancels the old coordinator;
+request checks continue to discard late results. Chunk reads check cancellation
+and the existing 2.1 MB bound. An unavailable provider explains how to retry
+without suggesting that saved templates changed. Both owned implementations pass
+five final reader cases using real held/failing NSFilePresenter coordination;
+85 distinct selected Core cases pass across the broader and final runs per repo.
+Both apps build, and the current Mac native picker/review/Cancel smoke preserves
+exact cache bytes. This is controlled Foundation provider proof, not a real
+cloud-provider transfer or native held-provider-cancellation acceptance. See
+template-file-recovery/validation.json.

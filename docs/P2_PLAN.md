@@ -4,6 +4,14 @@ Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Template-file Cancel now cancels provider coordination in each owned app, including
+replacement reads, dismissal and workspace changes. Five final reader tests per
+repo cover real held/failing Foundation presenters, fresh retry and bounded bytes;
+85 distinct selected Core cases pass across the two runs. Both native apps build,
+and current Mac file selection/review/Cancel preserves exact cache bytes. Native
+held-provider cancellation, spoken and real external-provider transfer remain open.
+See template-file-recovery/validation.json.
+
 Imported-heading review now refuses a changed draft using exact raw field values,
 including Unicode spelling, rather than semantic String equality. Canonically
 equivalent edited wording also keeps its marker by default. Both owned selected

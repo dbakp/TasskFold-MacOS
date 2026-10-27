@@ -52,30 +52,7 @@ struct WorkflowTemplateFile: Sendable {
     /// Coordinate provider-backed reads; never load an unbounded file into memory.
     static func read(_ url: URL) throws -> Self { try Self(data: readData(url)) }
     static func readData(_ url: URL) throws -> Data {
-        let access = url.startAccessingSecurityScopedResource()
-        defer { if access { url.stopAccessingSecurityScopedResource() } }
-        if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > maximumBytes {
-            throw AppFailure(message: "Choose a template file no larger than 2.1 MB.")
-        }
-        let coordinator = NSFileCoordinator()
-        var coordinationError: NSError?
-        var result: Result<Data, Error>?
-        coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
-            result = Result {
-                let handle = try FileHandle(forReadingFrom: readableURL)
-                defer { try? handle.close() }
-                var data = Data()
-                while data.count <= maximumBytes {
-                    let count = min(65_536, maximumBytes + 1 - data.count)
-                    guard let chunk = try handle.read(upToCount: count), !chunk.isEmpty else { break }
-                    data.append(chunk)
-                }
-                return data
-            }
-        }
-        if let coordinationError { throw coordinationError }
-        guard let result else { throw AppFailure(message: "The template file could not be opened. Make sure it is downloaded, then choose it again.") }
-        return try result.get()
+        try WorkflowTemplateReadOperation().readData(url)
     }
 
     func encoded() throws -> Data {
@@ -113,6 +90,65 @@ struct WorkflowTemplateFile: Sendable {
         let data = try encoder.encode(JSON.object(["format": .string("taskfold-template"), "version": template.document.object["version"]!, "name": .string(name), "document": portable]))
         guard data.count <= Self.maximumBytes else { throw AppFailure(message: "This template is too large to share as a file.") }
         return data
+    }
+}
+
+/// Owns one external read so dismissing a review also cancels provider coordination.
+/// Security-scoped access remains paired with the actual read, even if a provider
+/// finishes late. The UI separately fences results by request and workspace.
+final class WorkflowTemplateReadOperation: @unchecked Sendable {
+    private let coordinator = NSFileCoordinator()
+    private let lock = NSLock()
+    private var cancelled = false
+    private static var unavailable: AppFailure {
+        AppFailure(message: "The template file could not be opened. Make sure it is downloaded and available, then choose it again. Your saved templates are unchanged.")
+    }
+    func cancel() {
+        lock.lock(); cancelled = true; lock.unlock()
+        coordinator.cancel()
+    }
+    private func checkCancellation() throws {
+        lock.lock(); let stopped = cancelled; lock.unlock()
+        if stopped { throw CocoaError(.userCancelled) }
+    }
+    func readData(_ url: URL) throws -> Data {
+        try checkCancellation()
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        var coordinationError: NSError?
+        var result: Result<Data, Error>?
+        coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
+            result = Result {
+                try self.checkCancellation()
+                do {
+                    if let size = try readableURL.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+                       size > WorkflowTemplateFile.maximumBytes {
+                        throw AppFailure(message: "Choose a template file no larger than 2.1 MB.")
+                    }
+                    let handle = try FileHandle(forReadingFrom: readableURL)
+                    defer { try? handle.close() }
+                    var data = Data()
+                    while data.count <= WorkflowTemplateFile.maximumBytes {
+                        try self.checkCancellation()
+                        let count = min(65_536, WorkflowTemplateFile.maximumBytes + 1 - data.count)
+                        guard let chunk = try handle.read(upToCount: count), !chunk.isEmpty else { break }
+                        data.append(chunk)
+                    }
+                    guard data.count <= WorkflowTemplateFile.maximumBytes else {
+                        throw AppFailure(message: "Choose a template file no larger than 2.1 MB.")
+                    }
+                    return data
+                } catch let error as AppFailure { throw error }
+                catch {
+                    try self.checkCancellation()
+                    throw Self.unavailable
+                }
+            }
+        }
+        try checkCancellation()
+        if coordinationError != nil { throw Self.unavailable }
+        guard let result else { throw Self.unavailable }
+        return try result.get()
     }
 }
 

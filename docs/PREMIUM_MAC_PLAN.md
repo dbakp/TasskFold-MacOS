@@ -3,9 +3,13 @@
 27 October follow-up: Mac Share workflow preparation now supports a separately
 named native extension with matching isolated host/extension storage and accurate
 post-rename receipt hashes. Three real preparation checks pass; the current native
-Share build and strict deep signature verify. Safari lists the test extension Off;
-temporary enablement awaits approval. Native capture/Add/Undo and spoken checks
-remain open. See [SHARE_CAPTURE.md](SHARE_CAPTURE.md).
+Share build and strict deep signature verify. Approved temporary enablement now verifies genuine Safari and TextEdit capture,
+local host Cancel/Add, Undo/Redo and cold return; the setting is restored Off.
+Wider cloud/account/spoken checks remain open. Template imports now cancel their
+actual coordinated reader; five controlled-provider cases and 85 distinct selected
+Core cases pass per repo, both native builds pass, and current Mac native
+file selection/review/Cancel preserves exact saved cache bytes. Real external
+provider transfer and native held-provider cancellation remain open. See [SHARE_CAPTURE.md](SHARE_CAPTURE.md).
 
 Current release-gate order and external dependencies: [P0_RELEASE_STATUS.md](P0_RELEASE_STATUS.md).
 
