@@ -190,6 +190,46 @@ final class FreshLocalActivityTests: XCTestCase {
         XCTAssertEqual(decoded, value)
         print("LOCAL_HISTORY_BATCH_5000_SECONDS \(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18)")
     }
+    func testRecordingHierarchyEdgeCorpusRetainsLegacyMetadata() throws {
+        let child: JSON = .object(["id": .string("a9300000-0000-4000-8000-000000000001"), "title": .string("Child"), "completed": .bool(false)])
+        let shapes: [JSON] = [.null, .array([]), .array([child]), .array([.string("Legacy child")]), .string("future"), .object(["future": .bool(true)]), .array([child, child]),
+            .array([.object(["id": child.object["id"]!, "title": .string(" ")])]),
+            .array([.object(["id": child.object["id"]!, "title": .string("Child"), "completed": .string("future")])]),
+            .array([.object(["id": child.object["id"]!, "title": .string("Heading"), "is_heading": .bool(true), "completed": .bool(true)])]),
+            .array([.object(["id": child.object["id"]!, "title": .string("Heading"), "is_heading": .bool(true), "subtasks": .array([child])])]),
+            .array([.object(["id": .string("é"), "title": .string("First")]), .object(["id": .string("e\u{301}"), "title": .string("Equivalent identity")])])]
+        let types: [JSON] = [.null, .bool(false), .bool(true), .string("future")]
+        let generations: [JSON] = [.null, .string("a9200000-0000-4000-8000-000000000001"), .string("invalid")]
+        let completions: [JSON] = [.null, .bool(false), .bool(true), .string("future")]
+        let recipients: [JSON] = [.null, .string(""), .string("a9400000-0000-4000-8000-000000000001"), .string("unknown")]
+        var cases: [(JSON, JSON, JSON, JSON, JSON)] = []
+        for (i, shape) in shapes.enumerated() {
+            for (j, kind) in types.enumerated() {
+                for (k, generation) in generations.enumerated() {
+                    cases.append((shape, kind, generation, completions[(i+j+k)%4], recipients[(i*7+j*3+k)%4]))
+                }
+            }
+        }
+        for shape: JSON in [.null, .array([])] {
+            for completion in completions { for recipient in recipients { cases.append((shape, .bool(false), generations[1], completion, recipient)) } }
+        }
+        var digests: [String] = []
+        for (index, values) in cases.enumerated() {
+            var (change, row) = action(1000+index, children: 0)
+            row["subtasks"] = values.0; row["is_heading"] = values.1; row["task_generation"] = values.2; row["completed"] = values.3; row["assigned_to"] = values.4
+            change.fields = row.fields
+            let original = Snapshot(), ordinary = withoutProvenanceNonces(legacy([(change, row)], seed: original))
+            let fresh = withoutProvenanceNonces(batch([(change, row)], seed: original))
+            XCTAssertEqual(fresh, ordinary, "Hierarchy corpus case \(index)")
+            let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+            digests.append(DueReminder.digest(String(decoding: try encoder.encode(ordinary), as: UTF8.self)))
+        }
+        let digest = DueReminder.digest(digests.joined(separator: "\n"))
+        print("RECORDING_HIERARCHY_CORPUS \(cases.count) \(digest)")
+        XCTAssertEqual(cases.count, 176)
+        XCTAssertEqual(digest, "38a18fe66c316e6be6e90f3b4663831e8d9753a79f37bc939a77eec68449d68a", "Frozen before sharing structural reads; keep independently validated histories and refusal metadata")
+    }
+
     func testCaseAliasedRootsUseOrdinaryProjectionInsteadOfReorderingProvenance() throws {
         let action = action(30)
         var change = action.0; let row = action.1

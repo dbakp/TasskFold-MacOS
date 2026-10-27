@@ -107,11 +107,12 @@ enum TaskAssignmentProvenance {
         return value
     }
     /// An index validates stable identities without normalizing or generating any.
-    private static func nodes(_ root: Record) -> [String: TaskHierarchyIndex.Item]? {
-        let project = root.string("project_id")
-        let projects = project.isEmpty ? [] : [Record(["id":.string(project),"name":.string("Containment")])]
-        guard let index = try? TaskHierarchyIndex(roots:[root],projects:projects,workspace:WorkspaceBinding(account:"assignment-index",generation:UUID())) else { return nil }
-        return Dictionary(uniqueKeysWithValues:index.items.map { ($0.path.last ?? "",$0) })
+    private static func nodes(_ root: Record, hierarchy: LocalActivityHierarchy? = nil) -> [String: TaskHierarchyIndex.Item]? {
+        let items: [TaskHierarchyIndex.Item]?
+        if let hierarchy { items = hierarchy.items }
+        else { items = LocalActivityHierarchy.read(root, scope: "assignment-index") }
+        guard let items else { return nil }
+        return Dictionary(uniqueKeysWithValues: items.map { ($0.path.last ?? "", $0) })
     }
     /// Cloud optimism never certifies an actor. Invalidate every real transition,
     /// including A→B→A, and retain a proven event across a pure child move.
@@ -161,13 +162,13 @@ enum TaskAssignmentProvenance {
         let dates = LocalActivityDates()
         recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, stamp: dates.stamp)
     }
-    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, stamp: (Date) -> String) {
+    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, stamp: (Date) -> String, hierarchy: LocalActivityHierarchy? = nil) {
         guard change.table == "tasks", !account.isEmpty, let root = after ?? before, UUID(uuidString:root.id) != nil else { return }
         var rows = snapshot.tables[table] ?? []
         let rootID = root.id.lowercased(), incarnation = generation(root)
         guard let after else { rows.removeAll { $0.string("task_id").lowercased() == rootID }; snapshot.tables[table] = rows; return }
         if let before, recipient(before["assigned_to"]) == recipient(after["assigned_to"]), before["subtasks"] == after["subtasks"] { return }
-        let prior = before.flatMap(nodes), current = nodes(after)
+        let prior = before.flatMap { nodes($0) }, current = nodes(after, hierarchy: hierarchy)
         var values = current ?? [:]
         var positions: [String:Int] = [:]
         for i in rows.indices where rows[i].string("task_id").lowercased() == rootID && rows[i].string("task_generation").lowercased() == incarnation {
@@ -244,6 +245,7 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
     static let table = "task_activity"
     static let epochTable = "task_activity_epoch"
     static let stateKeys: Set<String> = ["project_id", "section_id", "completed", "completed_at", "due_date", "due_time", "scheduled_at", "time_zone", "deadline_date", "recurrence_parent_id"]
+    private static let plannedStateKeys = stateKeys.subtracting(["project_id", "section_id", "completed", "completed_at", "recurrence_parent_id"])
     enum Kind: String, CaseIterable, Sendable {
         case created, completed, reopened, completion_time, rescheduled, moved, deleted
         var title: String {
@@ -272,7 +274,7 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
               let version = Self.integer(row["completion_version"]),
               case .array(let values) = row["kinds"], !values.isEmpty, values.count <= Kind.allCases.count,
               values.allSatisfy({ if case .string(let value) = $0 { return Kind(rawValue: value) != nil }; return false }),
-              Set(values.map(\.text)).count == values.count,
+              (values.count == 1 || Set(values.map(\.text)).count == values.count),
               case .object(let before) = row["before_state"], case .object(let after) = row["after_state"],
               Self.validState(before,parseInstant:parseInstant,validDay:validDay), Self.validState(after,parseInstant:parseInstant,validDay:validDay),
               Self.changes(before: before, after: after).map(\.rawValue) == values.map(\.text) else { return nil }
@@ -292,7 +294,7 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
         return Int64(n)
     }
     static func validState(_ state: [String: JSON],parseInstant:(String)->Date? = TaskPlanning.instant,validDay:(String)->Bool = {Dates.parse($0) != nil}) -> Bool {
-        guard state.isEmpty || Set(state.keys) == stateKeys && { if case .bool = state["completed"] { return true }; return false }() else { return false }
+        guard state.isEmpty || (state.count == stateKeys.count && state.keys.allSatisfy { stateKeys.contains($0) }) && { if case .bool = state["completed"] { return true }; return false }() else { return false }
         for (key, value) in state {
             if value == .null { continue }
             if key == "completed" { guard case .bool = value else { return false } }
@@ -329,8 +331,7 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
         if before["completed"] != after["completed"] { result.append(after["completed"] == .bool(true) ? .completed : .reopened) }
         else if before["completed_at"] != after["completed_at"] { result.append(.completion_time) }
         if before["project_id"] != after["project_id"] || before["section_id"] != after["section_id"] { result.append(.moved) }
-        let planned = stateKeys.subtracting(["project_id", "section_id", "completed", "completed_at", "recurrence_parent_id"])
-        if planned.contains(where: { before[$0] != after[$0] }) { result.append(.rescheduled) }
+        if plannedStateKeys.contains(where: { before[$0] != after[$0] }) { result.append(.rescheduled) }
         return result
     }
     static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
@@ -474,15 +475,17 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         if root["task_generation"] == .null { return legacyGeneration }
         return UUID(uuidString: root.string("task_generation"))?.uuidString.lowercased()
     }
-    private static func nodes(_ root: Record?, dates: LocalActivityDates) -> [String: Node]? {
+    private static func nodes(_ root: Record?, dates: LocalActivityDates, hierarchy: LocalActivityHierarchy? = nil) -> [String: Node]? {
         guard let root else { return [:] }
         guard let generation = generation(root), TaskKind(root) != .unsupported,
               let bytes = try? JSONEncoder().encode(root["subtasks"]), bytes.count <= ChecklistRecovery.maximumBytes else { return nil }
-        let p = root.string("project_id"), projects = p.isEmpty ? [] : [Record(["id": .string(p), "name": .string("Containment")])]
-        guard let index = try? TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: "node-history", generation: UUID())) else { return nil }
+        let items: [TaskHierarchyIndex.Item]?
+        if let hierarchy { items = hierarchy.items }
+        else { items = LocalActivityHierarchy.read(root, scope: "node-history") }
+        guard let items else { return nil }
         let work = ProductiveTaskReading(tasks: [root]); guard !work.incomplete else { return nil }
         var result: [String: Node] = [:]
-        for item in index.items where item.isSubtask {
+        for item in items where item.isSubtask {
             guard TaskKind(item.source) != .unsupported,
                   !item.source.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   item.source["completed"] == .null || { if case .bool = item.source["completed"] { return true }; return false }() else { return nil }
@@ -500,7 +503,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     static func localRows(_ change: Mutation, before: Record?, after: Record?, account: String, recordedAt: Date, afterSequence: Int64 = 0) -> [Record] {
         localRows(change, before: before, after: after, account: account, recordedAt: recordedAt, afterSequence: afterSequence, dates: LocalActivityDates())
     }
-    fileprivate static func localRows(_ change: Mutation, before: Record?, after: Record?, account: String, recordedAt: Date, afterSequence: Int64, dates: LocalActivityDates) -> [Record] {
+    fileprivate static func localRows(_ change: Mutation, before: Record?, after: Record?, account: String, recordedAt: Date, afterSequence: Int64, dates: LocalActivityDates, hierarchy: LocalActivityHierarchy? = nil) -> [Record] {
         guard change.table == "tasks", ["POST", "PATCH", "DELETE"].contains(change.method),
               TaskActivity.validID(account), let root = after ?? before, TaskActivity.validID(root.id),
               change.recordID == root.id, before == nil || before?.id == root.id,
@@ -509,7 +512,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
               (change.method == "POST" && before == nil && after != nil) || (change.method == "PATCH" && before != nil && after != nil) || (change.method == "DELETE" && before != nil && after == nil) else { return [] }
         if let before, let after, before["subtasks"] == after["subtasks"], before["is_heading"] == after["is_heading"],
            before["project_id"] == after["project_id"], before["section_id"] == after["section_id"], before["task_generation"] == after["task_generation"] { return [] }
-        let prior = nodes(before, dates: dates), current = nodes(after, dates: dates)
+        let prior = nodes(before, dates: dates), current = nodes(after, dates: dates, hierarchy: hierarchy)
         var result: [Record] = [], sequence = afterSequence, overflow = false
         func append(_ key: String, generation: String?, nodeKey: String, b: [String: JSON], a: [String: JSON], oldPath: [String], newPath: [String], oldWork: Bool, newWork: Bool, oldType: String?, newType: String?, revision: Int64, kinds: [Kind]) {
             guard !kinds.isEmpty else { return }
@@ -540,9 +543,9 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         var cursor = LocalNodeActivityCursor(snapshot.tables[table] ?? [])
         recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, cursor: &cursor, dates: LocalActivityDates())
     }
-    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, cursor: inout LocalNodeActivityCursor, dates: LocalActivityDates) {
+    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, cursor: inout LocalNodeActivityCursor, dates: LocalActivityDates, hierarchy: LocalActivityHierarchy? = nil) {
         guard change.table == "tasks", cursor.prepare() else { return }
-        let rows = localRows(change, before: before, after: after, account: account, recordedAt: now, afterSequence: cursor.last, dates: dates).filter { !cursor.ids.contains($0.id.lowercased()) }
+        let rows = localRows(change, before: before, after: after, account: account, recordedAt: now, afterSequence: cursor.last, dates: dates, hierarchy: hierarchy).filter { !cursor.ids.contains($0.id.lowercased()) }
         guard !rows.isEmpty else { return }
         snapshot.tables[table, default: []] += rows
         cursor.ids.formUnion(rows.map { $0.id.lowercased() })
@@ -1293,14 +1296,31 @@ enum LocalActivityCreation {
         var roots = LocalRootActivityCursor(snapshot.tables[TaskActivity.table] ?? [])
         var nodes = LocalNodeActivityCursor(snapshot.tables[TaskNodeActivity.table] ?? [])
         for entry in entries {
+            let hierarchy = LocalActivityHierarchy(entry.after)
             TaskActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &roots, dates: dates)
-            TaskNodeActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &nodes, dates: dates)
-            TaskAssignmentProvenance.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, stamp: dates.stamp)
+            TaskNodeActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &nodes, dates: dates, hierarchy: hierarchy)
+            TaskAssignmentProvenance.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, stamp: dates.stamp, hierarchy: hierarchy)
         }
         return true
     }
 }
 
+
+/// One immutable root owns this lazy structural read. The two recording paths
+/// retain their independent semantic checks; failed indexes are memoized too.
+/// No lookup key, normalized identity, account state or cache survives the entry.
+fileprivate final class LocalActivityHierarchy {
+    private let root: Record
+    private lazy var indexed: [TaskHierarchyIndex.Item]? = Self.read(root, scope: "node-history")
+    init(_ root: Record) { self.root = root }
+    var items: [TaskHierarchyIndex.Item]? { indexed }
+    static func read(_ root: Record, scope: String) -> [TaskHierarchyIndex.Item]? {
+        let project = root.string("project_id")
+        let projects = project.isEmpty ? [] : [Record(["id": .string(project), "name": .string("Containment")])]
+        guard let index = try? TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: scope, generation: UUID())) else { return nil }
+        return index.items
+    }
+}
 
 /// One synchronous local recording pass owns its formatters and raw-byte memo.
 /// No formatter, locale-sensitive day result or parsed instant survives the pass.

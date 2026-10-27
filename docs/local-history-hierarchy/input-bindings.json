@@ -1,0 +1,31 @@
+{
+  "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "validation": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/local-history-hierarchy/validation.json",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "26639f0185de341a9e83179f62a6c60434f88264cebe4b760a81a8734013681a",
+    "Taskfold/Core/Models.swift": "dc793fed8e0137e5d2a4ced93a249c14e6a60e5225c5a1b73854c1d312e91de4",
+    "Taskfold/Core/Store.swift": "2e3c17facadcb4d0437e85d2e029afc489b16e58e35de90c3d8c82c7a3808f2c",
+    "Taskfold/Core/TaskActivity.swift": "c1585215d85892e1dfedebcce7d5d14e1f620b1cc2d4a0ff0bc11d3e336d2d8a",
+    "Taskfold/TeamTemplateNativeFixture.swift": "09d0c14cafed31f1a0da882fd20e504209f98f3e73645ef307de4a8514d7ba14",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "a9a820a6d026baf547944a57152900532ba18f3c35c18f0e3cb63a12e726d4cc",
+    "TaskfoldTests/WorkflowBodySizeTests.swift": "8fe550db4dfa073cc6f9adbfda89f94743a093cde2227b4a51de7c1c3b3e026d",
+    "TaskfoldTests/FreshLocalActivityTests.swift": "c54046b22b9f5c088924eb674987f3b56d75e70934884d4fe548dbfbac27d2e8",
+    "Taskfold/Core/SubtaskTree.swift": "fd0e9e91052c5ae9034d0a7bf925bdc8dbe7d88e796dda6779cafae39889c094"
+  },
+  "preparedSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "26639f0185de341a9e83179f62a6c60434f88264cebe4b760a81a8734013681a",
+    "Taskfold/Core/Models.swift": "dc793fed8e0137e5d2a4ced93a249c14e6a60e5225c5a1b73854c1d312e91de4",
+    "Taskfold/Core/Store.swift": "6bf369c818a9a80f1a7fcfc1b87b5ca951c299619efa0a6e7223cac9b0899416",
+    "Taskfold/Core/TaskActivity.swift": "c1585215d85892e1dfedebcce7d5d14e1f620b1cc2d4a0ff0bc11d3e336d2d8a",
+    "Taskfold/TeamTemplateNativeFixture.swift": "09d0c14cafed31f1a0da882fd20e504209f98f3e73645ef307de4a8514d7ba14",
+    "Taskfold/Info.plist": "266e1dec43d400a089a76ec68c4a8b7b0adf6104890f71f0b428cb38530523a5",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "a9a820a6d026baf547944a57152900532ba18f3c35c18f0e3cb63a12e726d4cc"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "432dfaed1fc0f9fdb61d3877593924458373118acc9b9ceed673062275fc1b4b",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "ae9f3bb7fb3f6a4bdcf0143199420cb15d9139ce214ffb5dd3a0926427d9db54",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "e4da204caa0eb1ef8b3b70a49ec3af3a6f38b2a3d992bc29eee26c4e44ed7eaa"
+  },
+  "scope": "Each repo owns its source and isolated host. Prepared Store/Info retain the existing isolation transformations. TaskActivity exact source hash must match. New Core corpus runs in real repository, not host test cache."
+}

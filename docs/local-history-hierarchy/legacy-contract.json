@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-27",
+  "cases": 176,
+  "frozenBeforeProductionEdit": true,
+  "sha256": "38a18fe66c316e6be6e90f3b4663831e8d9753a79f37bc939a77eec68449d68a",
+  "scope": "Complete normalized recording snapshot; only random provenance IDs/event IDs normalized by existing test helper. Both batch and ordinary readers checked. Not a cloud or native child-rich scale test.",
+  "structuralRead": "One immutable after root; independent node-history and assignment checks retained. No cross-root cache or identity lookup key.",
+  "unchangedLimits": true
+}

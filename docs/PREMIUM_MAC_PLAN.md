@@ -8474,3 +8474,41 @@ widget worker. The roughly 1.7–1.9s save pause remains too long for premium in
 See workflow-body-size/ for source bindings, metrics, actual summaries, explicit
 skip reasons and the rejected zero-test selector attempt. Full ranked work and
 all user deferrals remain active. Only synthetic local fixtures changed.
+
+## 27 October: share structural reads while recording new local work
+
+New task creation previously indexed the same hierarchy separately for child
+history and assignment provenance. It now shares one lazy read of the immutable
+after-record, including a failed index, only within that recording entry. The
+helper exposes structural items, never a workspace-bound action selection. It
+retains both semantic readers: supported types, generation, checklist byte bounds,
+productive work, completion, title, dates and assignment validation keep their
+existing independent rules. Before-state and ordinary callers retain their own
+read. State-key validation avoids building a transient set, the planned-key set
+is static, and singleton activity kinds avoid unnecessary deduplication work.
+No persisted format, quota, authority or history-preservation rule changes.
+
+Before editing production source, both old implementations passed the frozen
+176-case full-output corpus. It covers malformed checklists, duplicate and
+Unicode-equivalent identities, headings, invalid generations/completion and
+assignment variants. The updated batch and ordinary recording paths retain that
+digest plus the prior metadata/date/body-size digests. Each owned selected Core
+suite reports 178 cases: 174 passes, four existing disposable-live-fixture skips
+and no failures. The frozen corpus is not a substitute for genuine hosted tests.
+
+Five existing native cases pass strictly on each platform (15 platform/case
+pairs, zero failures/skips/reported runtime warnings): simulated cloud queue,
+local 1,000/5,000-root save with prior root/child history, injected file-save
+failure, and actual widget intent retry/Undo/cold return. The local 1,000-root
+case additionally executes native Undo. Exact source/prepared/binary bindings,
+job commands, result summaries and metrics are in local-history-hierarchy/.
+
+The 5,000-root local save observations are 1.61/1.64/1.74s on phone/tablet/Mac,
+compared with 1.66/1.67/1.85s in the immediately preceding stage. Widget readiness
+from save start is 8.37/8.38/9.77s. These sequential Debug observations have variable
+host load, no repeated fresh before/after benchmark, and no release latency or
+peak-memory guarantee. The native fixture displays counts rather than rendering
+5,000 production task rows; child-rich and assignment-heavy native scale,
+synchronous cache encoding/I/O, widget background cost, hosted/paired delivery
+and broader rank-3 acceptance remain open. The full ranked objective and all
+explicit user deferrals remain unchanged. Only synthetic fixtures were used.
