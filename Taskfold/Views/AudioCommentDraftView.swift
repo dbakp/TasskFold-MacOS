@@ -45,7 +45,7 @@ import SwiftUI
                                 Button(capture.session.clip == nil ? "Record" : "Replace recording", systemImage: "mic.fill") { capture.start() }
                                     .buttonStyle(.borderedProminent).disabled(!capture.editable).accessibilityIdentifier("audioRecord")
                             }
-                            Text("Up to 2 minutes. Replacements keep this draft until ready.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            Text("Up to 2 minutes. Reviewed audio has a private recovery copy; Save keeps a draft.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             if let clip = capture.session.clip {
                                 Button(capture.playing ? "Stop playback" : "Play recording", systemImage: capture.playing ? "stop.fill" : "play.fill") {
                                     if capture.playing { capture.stopPlayback() } else { capture.play() }
@@ -59,8 +59,39 @@ import SwiftUI
                                     .frame(minHeight: textSize.isAccessibilitySize ? 220 : 120).font(.body).focused($captionFocused).disabled(!capture.editable)
                                     .accessibilityLabel("Recording caption").accessibilityIdentifier("audioCaption")
                                 Button(capture.saveUnconfirmed ? "Retry save" : capture.saved != nil && !capture.needsSave ? "Saved on this device" : "Save draft", systemImage: capture.saved != nil && !capture.needsSave ? "checkmark.circle.fill" : "square.and.arrow.down") { Task { _ = await capture.save() } }
-                                    .disabled(capture.busy || !valid || capture.saved != nil && !capture.needsSave).accessibilityIdentifier("audioSave")
+                                    .disabled(capture.busy || !valid || capture.saveConflict || capture.saved != nil && !capture.needsSave).accessibilityIdentifier("audioSave")
                                 if let notice = capture.notice { noticeText(notice) }
+                                if capture.saveConflict {
+                                    Button("Save as separate draft", systemImage: "doc.badge.plus") { Task { _ = await capture.saveSeparateDraft() } }
+                                        .disabled(capture.busy).accessibilityIdentifier("audioSaveCopy")
+                                }
+                                if let failure = capture.recovery.failure {
+                                    Text(failure).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                    Button("Retry recovery copy") { Task { _ = await capture.preserveReview() } }.disabled(capture.busy).accessibilityIdentifier("audioRetryRecovery")
+                                } else if capture.recovery.pending {
+                                    Text("Keeping a recovery copy…").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("audioRecoveryStatus")
+                                } else if capture.recovery.durable {
+                                    Text("Recovery copy kept privately on this device.").font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("audioRecoveryStatus")
+                                }
+                            }
+                        }
+                        if capture.retainedRecoveryFailed {
+                            Section("Recovery needs attention") {
+                                Text("An interrupted review is waiting for a recovery copy. Keep Taskfold open and retry before quitting.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                Button("Retry interrupted reviews") { Task { await capture.refresh() } }.disabled(capture.busy).accessibilityIdentifier("audioRetryInterrupted")
+                            }
+                        }
+                        if !capture.recoverable.isEmpty {
+                            Section("Interrupted reviews") {
+                                Text("Review a recovered recording before saving it. Earlier saved drafts stay separate.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                ForEach(capture.recoverable, id: \.id) { draft in
+                                    Button { Task { await capture.restore(draft, recovering: true) } } label: {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(draft.caption.isEmpty ? "Recovered recording" : draft.caption).lineLimit(3)
+                                            Text(clock(Double(draft.clip.descriptor.milliseconds) / 1000)).font(.caption).foregroundStyle(.secondary)
+                                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    }.disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioRecovery-" + draft.id.uuidString.lowercased())
+                                }
                             }
                         }
                         if !capture.available.isEmpty {
@@ -97,7 +128,7 @@ import SwiftUI
             }
             .confirmationDialog("Keep this recording?", isPresented: $leaving, titleVisibility: .visible) {
                 Button("Save draft and close") { Task { if await capture.save() { capture.close(); dismiss() } } }
-                if !capture.saveUnconfirmed { Button("Discard unsaved changes", role: .destructive) { capture.close(); dismiss() } }
+                if !capture.saveUnconfirmed { Button("Discard unsaved changes", role: .destructive) { Task { if await capture.discardReviewAndClose() { dismiss() } } } }
                 Button("Keep reviewing", role: .cancel) { }
             } message: { Text(capture.saveUnconfirmed ? "Retry to confirm the save before closing. Your recording is still here." : "Save this recording to keep it on this device. Any earlier saved draft remains if you discard these changes.") }
             .confirmationDialog("Delete this recording draft?", isPresented: $deleting, titleVisibility: .visible) {
@@ -120,7 +151,11 @@ import SwiftUI
         .onDisappear { capture.close() }
         .onChange(of: valid) { _, active in if !active { capture.contextChanged(); dismiss() } }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { capture.stopPlayback(); if capture.session.phase == .recording { capture.stop() } }
+            if phase != .active {
+                capture.stopPlayback()
+                if capture.session.phase == .recording { capture.stop() }
+                Task { _ = await capture.preserveReview() }
+            }
         }
     }
     private var stackStatus: Bool {

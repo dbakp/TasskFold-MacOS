@@ -6389,3 +6389,16 @@ recording's padding while rejecting a 120.1-second presentation. Each repo passe
 Native screen evidence/limits are recorded in audio-comment-media/ and
 [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md). Real microphone/speaker testing is deferred
 at the user's request; this work opens neither a permission prompt nor sound output.
+
+
+## 2026-10-27 — recoverable private audio review
+
+Validated unsaved audio and captions now have a separate private recovery copy.
+A bounded original-owner writer survives editor/context closure within the running
+process, with explicit Retry when blocked. Returning reviews remain separate from
+saved drafts, decode before display/playback and settle through deliberate Save or
+Discard. Saved-draft conflicts offer a separate copy with stable uncertain retries.
+Each repo passes 55 focused Core and 42 synthetic controller checks. Native evidence
+is in audio-comment-recovery/. Ordinary exposure, full application/background/Quit
+and removal/export lifecycle, private cloud audio and real audio acceptance remain
+unfinished; the overall Px goal stays active.

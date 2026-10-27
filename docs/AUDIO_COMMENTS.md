@@ -38,7 +38,8 @@ remain gated, and no server migration or production flag was changed.
 - [x] Native review controller and screen: stop/cancel, bounded full decode,
   replacement/refusal preservation, caption, explicit playback, private Save,
   stable uncertain-save retry, reopening and revision-checked draft deletion.
-  Closing or changing context erases in-memory media and stops playback.
+  Closing or changing context clears the visible preview and stops playback.
+  A bounded private recovery writer may retain an unconfirmed original-owner snapshot.
 - [x] Synthetic controller checks and isolated native screen test implementation.
   This is not real microphone, speaker, interruption or TCC acceptance.
 - [x] Independently owned app and Swift Package source registration in each repo.
@@ -155,3 +156,64 @@ of unsaved work across access changes/normal window close/Quit/backgrounding,
 crash-leftover recording-file ownership/cleanup and the account-removal lifecycle.
 The current private review candidate must not be called a complete audio-comment
 feature merely because its synthetic screen passes.
+
+
+## 2026-10-27 — private recovery of interrupted audio reviews
+
+A validated review now checkpoints its recording and exact caption in a separate
+account-private recovery namespace. It does not silently replace an explicitly
+saved draft. Caption updates coalesce behind the serial writer; an unconfirmed
+write retries the identical revision before advancing to a newer edit. These
+copies share the vault's existing byte/entry quotas, file protections and strict
+binary integrity checks. Complete staged recovery files retain their own format
+and recover only into the recovery namespace.
+
+Closing the editor or losing its workspace clears the visible preview and stops
+media. A bounded private writer finishes the frozen owner's queued checkpoint
+without consulting the new account. A failed checkpoint remains retained in this
+process and can retry only for its exact owner and task incarnation. Returning to
+that task offers an explicit Retry when persistence is still blocked. This is
+not a promise that unsynchronized bytes survive process termination or disk
+failure: keep Taskfold open while a recovery warning remains.
+
+Interrupted reviews are listed separately and undergo full native decoding before
+review. Explicit Save settles exact recovery revisions; explicit Discard removes
+only this review's copy and preserves earlier saved drafts. A concurrent recovery
+settlement causes an independent recovery copy, never an overwrite. A saved-draft
+conflict now offers **Save as separate draft**, preserving both versions. Uncertain
+acknowledgement of that copy freezes its identity and caption until retry within
+the running presentation. The
+model also refuses deletion while the reviewed recording has unsaved changes.
+
+Both independently owned repos pass 55 focused Core cases and 42 executable
+controller checks with real private files and synthetic drivers. These include
+actual writer-lock refusal, return/retry, exact last-caption preservation after
+an immediate workspace switch, recovery namespace/revision/quota checks,
+coalescing after lost acknowledgement and stable conflicting-copy retries.
+Native results, captures and limitations are recorded in audio-comment-recovery/.
+
+Still required before exposure: ordinary task/conversation integration; Mac
+normal-Quit coordination and mobile background execution; active/partially
+recorded media and crash-leftover ownership/cleanup; fuller storage-full and
+cleanup recovery; durable linkage between an explicit Save attempt and its
+recovery copy across an uncertain-save relaunch; account removal and backup/export policy; private server
+publication/access/custody; genuine microphone/playback/permissions/interruptions
+and spoken accessibility. Source recovery and acknowledged-checkpoint cold return
+do not establish those broader lifecycle guarantees. Audio comments remain gated.
+
+
+Quota failure refinement: explicit recovery settlement/discard now waits only for
+an already issued write, then removes one of its exact possible committed
+revisions. It does not write a newer caption just to delete it. Known pre-write
+quota/lock failures leave the review editable instead of misclassifying it as an
+uncertain commit. A before/after executable check reproduces four failures in the
+pre-fix controller and passes all 42 checks in the current controller. Full-quota
+discard preserves every earlier saved recording's exact data and metadata.
+
+
+Current native acceptance passes six cases each on this ARM64 Mac, iPhone Simulator
+and iPad Simulator, with zero failures/skips/reported runtime warnings. This includes
+ordinary reviewed save/cold return, synthetic refusal and replacement preservation,
+dark review (largest mobile text), recovery after an acknowledged checkpoint and
+explicit discard/cold return. See audio-comment-recovery/ for exact current sources,
+commands, binary hashes, strict result summaries and inspected captures.

@@ -27,6 +27,19 @@ import Darwin
     func play(_ clip: AudioCommentClip, isCurrent: @escaping @MainActor () -> Bool, ended: @escaping @MainActor () -> Void) throws { guard isCurrent() else { throw CancellationError() }; plays += 1 }
     func stop() { stops += 1 }
 }
+final class AudioProofOneShotFault: @unchecked Sendable {
+    private let lock = NSLock()
+    private var remaining: Bool
+    private var writes = 0
+    var writeCount: Int { lock.lock(); defer { lock.unlock() }; return writes }
+    init(enabled: Bool = true) { remaining = enabled }
+    func arm() { lock.lock(); remaining = true; lock.unlock() }
+    func check(_ point: AudioCommentVault.Checkpoint) throws {
+        guard point == .afterRename else { return }
+        lock.lock(); writes += 1; let fail = remaining; remaining = false; lock.unlock()
+        if fail { throw AudioCommentStorageFailure.unreadable }
+    }
+}
 @main struct AudioControllerProof {
     @MainActor static func wait(_ condition: () -> Bool) async -> Bool {
         let deadline = Date().addingTimeInterval(3)
@@ -106,6 +119,151 @@ import Darwin
             checks["staleDeleteCannotRemoveAnotherWindowsEdit"] = !deleted && preserved == [concurrent]
         }
         retry.close()
+        // Real private recovery files, without explicit Save: close/context loss
+        // must not discard the last admitted recording or its exact caption.
+        let recoveryDisk = try store("recovery-lifecycle")
+        let review = make(AudioProofRecorder(data), AudioProofPlayer(), recoveryDisk)
+        review.start(); _ = await wait { review.session.phase == .recording }; review.stop(); _ = await wait { review.session.phase == .review }
+        for index in 0..<30 { review.editCaption("Recovery \(index) cafe\u{301}\nمراجعة 🪴") }
+        let reviewedCaption = review.session.caption
+        let kept = await review.preserveReview()
+        let automatic = try await recoveryDisk.reviews()
+        checks["reviewAndRapidCaptionEditsCheckpointWithoutExplicitSave"] = kept && automatic.count == 1 && automatic.first?.caption.utf8.elementsEqual(reviewedCaption.utf8) == true && automatic.first?.clip.data == data
+        checks["recoveryDoesNotPretendToBeAnExplicitSavedDraft"] = try await recoveryDisk.drafts().isEmpty
+        context.scope = .init(workspace: .init(account: "other-workspace", generation: UUID()), target: target)
+        review.contextChanged()
+        let observedRecoveryState1 = try await recoveryDisk.reviews()
+        checks["scopeChangeErasesPreviewAndRetainsOriginalPrivateRecovery"] = review.session.phase == .closed && review.session.clip == nil && review.session.caption.isEmpty && observedRecoveryState1 == automatic
+        context.scope = request.scope
+        let recovered = make(AudioProofRecorder(data), AudioProofPlayer(), recoveryDisk)
+        await recovered.refresh()
+        if let first = recovered.recoverable.first { await recovered.restore(first, recovering: true) }
+        checks["freshPresentationFullyDecodesRecoveredUnsavedReview"] = recovered.session.phase == .review && recovered.session.caption.utf8.elementsEqual(reviewedCaption.utf8) && recovered.session.clip?.data == data && recovered.saved == nil && recovered.needsSave
+        let savedRecovery = await recovered.save()
+        let observedRecoveryState2 = try await recoveryDisk.drafts()
+        let observedRecoveryState3 = try await recoveryDisk.reviews()
+        checks["explicitSaveSettlesRecoveryWithoutDuplicatingSavedDraft"] = savedRecovery && observedRecoveryState2.count == 1 && observedRecoveryState3.isEmpty
+        recovered.editCaption("Discard only this edit")
+        _ = await recovered.preserveReview()
+        let discarded = await recovered.discardReviewAndClose()
+        let observedRecoveryState4 = try await recoveryDisk.reviews()
+        let observedRecoveryState5 = try await recoveryDisk.drafts()
+        checks["explicitDiscardRemovesOnlyReviewAndKeepsSavedDraft"] = discarded && observedRecoveryState4.isEmpty && observedRecoveryState5.first?.caption.utf8.elementsEqual(reviewedCaption.utf8) == true
+
+        // Actual writer-lock failure: process-owned retention is scoped and
+        // resumes when the original owner/task is reopened, not on logout.
+        let retainedDisk = try store("retained-lock")
+        let retainedVault = AudioCommentVault(applicationSupport: root.appendingPathComponent("retained-lock"), owner: owner)
+        _ = try await retainedDisk.drafts()
+        let lockedFD = Darwin.open(retainedVault.directory.appendingPathComponent(".lock").path, O_RDWR)
+        guard lockedFD >= 0, flock(lockedFD, LOCK_EX | LOCK_NB) == 0 else { throw AudioCommentStorageFailure.unreadable }
+        let retainedReview = make(AudioProofRecorder(data), AudioProofPlayer(), retainedDisk)
+        retainedReview.start(); _ = await wait { retainedReview.session.phase == .recording }; retainedReview.stop(); _ = await wait { retainedReview.session.phase == .review }
+        retainedReview.editCaption("Keep through writer lock")
+        let lockedSave = await retainedReview.preserveReview()
+        let explicitlyLocked = await retainedReview.save()
+        checks["knownPrewriteBusyFailureKeepsReviewEditable"] = !explicitlyLocked && !retainedReview.saveUnconfirmed && retainedReview.editable
+        retainedReview.close()
+        checks["failedCheckpointIsRetainedAfterViewCloses"] = !lockedSave && retainedReview.recovery.failure != nil && retainedReview.session.clip == nil
+        let attention = make(AudioProofRecorder(data), AudioProofPlayer(), retainedDisk)
+        await attention.refresh()
+        checks["returningWhileWriteIsBlockedExposesExplicitRecoveryRetry"] = attention.retainedRecoveryFailed && attention.notice != nil && attention.session.clip == nil
+        _ = flock(lockedFD, LOCK_UN); Darwin.close(lockedFD)
+        let stranger = try AudioCommentOwner("other-workspace")
+        _ = await AudioCommentReviewRecovery.retryRetained(owner: stranger, target: target)
+        let observedRecoveryState6 = try await retainedDisk.reviews()
+        checks["anotherAccountCannotRetryOrReadRetainedReview"] = observedRecoveryState6.isEmpty && retainedReview.recovery.failure != nil
+        let nextGeneration = try AudioCommentTarget(task: target.task, generation: UUID(), project: target.project)
+        _ = await AudioCommentReviewRecovery.retryRetained(owner: owner, target: nextGeneration)
+        let observedRecoveryState7 = try await retainedDisk.reviews()
+        checks["anotherTaskIncarnationCannotRetryRetainedReview"] = observedRecoveryState7.isEmpty
+        let returning = attention
+        await returning.refresh()
+        checks["originalOwnerAndTaskResumeRetainedRecovery"] = !returning.retainedRecoveryFailed && returning.recoverable.count == 1 && returning.recoverable.first?.caption == "Keep through writer lock" && retainedReview.recovery.durable
+        returning.close()
+
+        // Conflicts are different from uncertain acknowledgements. A deliberate
+        // copy preserves both exact versions, while Delete cannot drop dirty work.
+        let copyFault = AudioProofOneShotFault(enabled: false)
+        let conflictDisk = try store("save-conflict", fault: { try copyFault.check($0) })
+        let base = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Original saved caption", clip: await AudioCommentDecoding.validate(data))
+        try await conflictDisk.save(base)
+        let conflictReview = make(AudioProofRecorder(data), AudioProofPlayer(), conflictDisk)
+        await conflictReview.restore(base); conflictReview.editCaption("My unsaved cafe\u{301}")
+        _ = await conflictReview.preserveReview()
+        let dirtyDelete = await conflictReview.deleteSaved()
+        let observedRecoveryState8 = try await conflictDisk.drafts()
+        let observedRecoveryState9 = try await conflictDisk.reviews()
+        checks["modelRejectsDeletionWhileReviewHasUnsavedChanges"] = !dirtyDelete && observedRecoveryState8 == [base] && !observedRecoveryState9.isEmpty
+        let concurrent = try base.replacing(caption: "Another window", clip: base.clip)
+        try await conflictDisk.save(concurrent, replacing: base.revision)
+        let conflictSave = await conflictReview.save()
+        checks["saveConflictIsDistinguishedFromUncertainCommit"] = !conflictSave && conflictReview.saveConflict && !conflictReview.saveUnconfirmed && !conflictReview.editable && conflictReview.session.caption == "My unsaved cafe\u{301}"
+        copyFault.arm()
+        let firstCopySave = await conflictReview.saveSeparateDraft()
+        let unconfirmedCopy = try await conflictDisk.drafts()
+        let frozenCopyCaption = conflictReview.session.caption
+        conflictReview.editCaption("Cannot change an uncertain copy")
+        checks["uncertainConflictCopyFreezesExactReviewForRetry"] = !firstCopySave && conflictReview.saveUnconfirmed && !conflictReview.saveConflict && conflictReview.session.caption.utf8.elementsEqual(frozenCopyCaption.utf8) && unconfirmedCopy.count == 2
+        let copySave = await conflictReview.save()
+        let copies = try await conflictDisk.drafts()
+        checks["uncertainConflictCopyRetryDoesNotDuplicateEitherVersion"] = copySave && Set(copies.map(\.id)) == Set(unconfirmedCopy.map(\.id)) && copies.count == 2
+        checks["explicitConflictCopyKeepsBothExactVersions"] = copySave && !conflictReview.saveConflict && copies.count == 2 && copies.contains(concurrent) && copies.contains { $0.id != base.id && $0.caption.utf8.elementsEqual("My unsaved cafe\u{301}".utf8) && $0.clip.data == data }
+        conflictReview.close()
+
+        let checkpointFault = AudioProofOneShotFault()
+        let uncertainDisk = try store("recovery-uncertain", fault: { try checkpointFault.check($0) })
+        let uncertainReview = make(AudioProofRecorder(data), AudioProofPlayer(), uncertainDisk)
+        uncertainReview.start(); _ = await wait { uncertainReview.session.phase == .recording }; uncertainReview.stop(); _ = await wait { uncertainReview.session.phase == .review }
+        _ = await wait { uncertainReview.recovery.failure != nil }
+        let committedBeforeRetry = try await uncertainDisk.reviews()
+        uncertainReview.editCaption("Newest caption after lost acknowledgement")
+        let recoveredUncertain = await uncertainReview.preserveReview()
+        let committedAfterRetry = try await uncertainDisk.reviews()
+        checks["recoveryRetriesFrozenCommitBeforeAdvancingToLatestCaption"] = recoveredUncertain && committedBeforeRetry.count == 1 && committedAfterRetry.count == 1 && committedBeforeRetry.first?.id == committedAfterRetry.first?.id && committedAfterRetry.first?.caption == "Newest caption after lost acknowledgement" && committedAfterRetry.first?.clip.data == data
+        let sourceRecovery = try await uncertainDisk.reviews()
+        if let current = sourceRecovery.first { try await uncertainDisk.discardReview(current.id, revision: current.revision) }
+        uncertainReview.editCaption("Keep reviewing after another window settled the copy")
+        let keptAfterConcurrentSettlement = await uncertainReview.preserveReview()
+        let afterConcurrentSettlement = try await uncertainDisk.reviews()
+        checks["concurrentRecoverySettlementForksWithoutLosingActiveReview"] = keptAfterConcurrentSettlement && afterConcurrentSettlement.count == 1 && afterConcurrentSettlement.first?.id != sourceRecovery.first?.id && afterConcurrentSettlement.first?.caption == "Keep reviewing after another window settled the copy"
+        uncertainReview.editCaption("Last keystroke before switching workspace")
+        context.scope = .init(workspace: .init(account: "other-workspace", generation: UUID()), target: target)
+        uncertainReview.contextChanged()
+        let lastKeystrokeSaved = await uncertainReview.preserveReview()
+        let afterImmediateSwitch = try await uncertainDisk.reviews()
+        let foreignDisk = AudioCommentDraftStorage(applicationSupport: root.appendingPathComponent("recovery-uncertain"), owner: stranger)
+        let foreignReviews = try await foreignDisk.reviews()
+        checks["queuedLastKeystrokeFinishesOnlyInFrozenOwnerAfterScopeLoss"] = lastKeystrokeSaved && afterImmediateSwitch.first?.caption == "Last keystroke before switching workspace" && foreignReviews.isEmpty && uncertainReview.session.clip == nil && uncertainReview.session.caption.isEmpty
+        context.scope = request.scope
+        uncertainReview.close()
+        let fullDisk = try store("quota-exit")
+        for _ in 0..<AudioCommentVault.maximumEntries {
+            let item = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Keep earlier saved recording", clip: AudioCommentClip(data: data))
+            try await fullDisk.save(item)
+        }
+        let beforeFullReview = try await fullDisk.drafts()
+        let fullReview = make(AudioProofRecorder(data), AudioProofPlayer(), fullDisk)
+        fullReview.start(); _ = await wait { fullReview.session.phase == .recording }; fullReview.stop(); _ = await wait { fullReview.session.phase == .review }
+        _ = await fullReview.preserveReview()
+        let fullSave = await fullReview.save()
+        checks["knownPrewriteQuotaFailureDoesNotFreezeReviewAsUncertainSave"] = !fullSave && !fullReview.saveUnconfirmed && fullReview.editable && fullReview.session.clip?.data == data
+        fullReview.editCaption("Deliberately discard only this unsaved review")
+        let fullDiscard = await fullReview.discardReviewAndClose()
+        let afterFullReview = try await fullDisk.drafts(), afterFullRecoveries = try await fullDisk.reviews()
+        checks["explicitDiscardWorksAtFullQuotaWithoutWritingAnotherCopy"] = fullDiscard && afterFullRecoveries.isEmpty && afterFullReview == beforeFullReview
+        let discardFault = AudioProofOneShotFault()
+        let uncertainDiscardDisk = try store("discard-uncertain", fault: { try discardFault.check($0) })
+        let uncertainDiscardReview = make(AudioProofRecorder(data), AudioProofPlayer(), uncertainDiscardDisk)
+        uncertainDiscardReview.start(); _ = await wait { uncertainDiscardReview.session.phase == .recording }; uncertainDiscardReview.stop(); _ = await wait { uncertainDiscardReview.session.phase == .review }
+        _ = await wait { uncertainDiscardReview.recovery.failure != nil }
+        let beforeUncertainDiscard = try await uncertainDiscardDisk.reviews()
+        uncertainDiscardReview.editCaption("Discard this newer unsaved caption too")
+        let writesBeforeDiscard = discardFault.writeCount
+        let explicitlyDiscardedUncertain = await uncertainDiscardReview.discardReviewAndClose()
+        let afterUncertainDiscard = try await uncertainDiscardDisk.reviews()
+        checks["explicitDiscardSettlesExactUnacknowledgedRecoveryWithoutSavingNewerCaption"] = explicitlyDiscardedUncertain && beforeUncertainDiscard.count == 1 && afterUncertainDiscard.isEmpty && discardFault.writeCount == writesBeforeDiscard
+
         let realRecorder = DeviceAudioCommentRecording(), realPlayer = DeviceAudioCommentPlaying()
         var falseGate = false, falsePlay = false
         do { try await realRecorder.start(isCurrent: { false }, receive: { _ in }) } catch is CancellationError { falseGate = true }

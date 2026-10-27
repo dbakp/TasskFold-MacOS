@@ -113,8 +113,9 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
 - [ ] Audio comments: bounded clip/decode, scoped private storage and a native review
-  candidate now have 47 Core, 19 synthetic audio-controller and 17 dictation-controller
-  checks per repo. Ordinary app entry points, private server lifecycle and genuine
+  candidate now have 55 Core and 42 synthetic audio-controller checks per repo,
+  including private interrupted-review recovery and explicit conflict copies.
+  The unchanged shared dictation lease passed 17 controller checks at the prior checkpoint. Ordinary app entry points, private server lifecycle and genuine
   microphone/speaker/accessibility acceptance remain open; see
   [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
 - [ ] Inbound email provider/domain configuration and genuine delivery — prepare
@@ -181,3 +182,19 @@ Evidence and exact scope: [prepared workflow Undo](prepared-workflow-undo/README
   full save-conflict/account/window/Quit/background/backup lifecycle and genuine
   recording/playback/spoken acceptance before exposing audio comments.
 - [ ] Genuine microphone/speaker testing stays deferred per the user's request.
+
+
+## 2026-10-27 — interrupted audio-review recovery checkpoint
+
+- [x] Separate account-private recovery copies for validated unsaved recordings and
+  exact captions, including coalesced edits and frozen uncertain-write retries.
+- [x] Original-owner completion after context loss, bounded failed-write retention,
+  exact-owner/task retry, explicit Retry UI and native review of recovered media.
+- [x] Explicit Save/Discard settlement and separate-copy resolution of conflicting
+  saved drafts; dirty deletion refused in the controller as well as the UI.
+- [x] 55 focused Core and 42 synthetic controller checks per independently owned repo.
+- [x] Six current native cases each on Mac, iPhone and iPad, with no reported
+  runtime warnings, including interrupted-review recovery and explicit discard.
+- [ ] Complete normal-Quit/background/raw-recording, account-removal, storage-full/
+  cleanup and private server lifecycle before ordinary exposure. Genuine audio
+  acceptance remains user-deferred. See audio-comment-recovery/ for native evidence.

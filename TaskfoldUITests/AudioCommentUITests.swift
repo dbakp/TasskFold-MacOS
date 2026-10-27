@@ -138,4 +138,50 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
     }
 
+    @MainActor func testAudioInterruptedReviewRecoversAfterColdLaunchWithoutExplicitSave() throws {
+        try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
+        audioOpen(app); audioRecord(app)
+        let caption = app.textViews["audioCaption"]; audioReveal(caption, app); audioPress(caption)
+        caption.typeText("Keep this interrupted review with its original audio.")
+        #if os(iOS)
+        if app.buttons["audioHideKeyboard"].exists { audioPress(app.buttons["audioHideKeyboard"]) }
+        #endif
+        let status = app.staticTexts["audioRecoveryStatus"]; audioReveal(status, app)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND (label == %@ OR value == %@)", "Recovery copy kept privately on this device.", "Recovery copy kept privately on this device."), object: status)], timeout: 10) == .completed)
+        audioScreenshot(app, "Private recovery copy before interrupted review")
+        app.terminate(); audioOpen(app, reset: false)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-")).firstMatch.exists)
+        let recovery = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch
+        XCTAssertTrue(recovery.waitForExistence(timeout: 8)); audioReveal(recovery, app); audioPress(recovery)
+        let restored = app.textViews["audioCaption"]; XCTAssertTrue(restored.waitForExistence(timeout: 10))
+        audioReveal(restored, app)
+        XCTAssertEqual(restored.value as? String, "Keep this interrupted review with its original audio.")
+        audioScreenshot(app, "Recovered unsaved review after cold launch")
+        let save = app.buttons["audioSave"]; audioReveal(save, app); audioPress(save)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@ AND enabled == false", "Saved on this device"), object: save)], timeout: 10) == .completed)
+        audioPress(app.buttons["audioClose"])
+        XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch.exists)
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 8)); audioReveal(saved, app); audioPress(saved)
+        XCTAssertTrue(app.textViews["audioCaption"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.textViews["audioCaption"].value as? String, "Keep this interrupted review with its original audio.")
+    }
+    @MainActor func testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft() throws {
+        try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
+        audioOpen(app); audioRecord(app)
+        let status = app.staticTexts["audioRecoveryStatus"]; audioReveal(status, app)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND (label == %@ OR value == %@)", "Recovery copy kept privately on this device.", "Recovery copy kept privately on this device."), object: status)], timeout: 10) == .completed)
+        audioPress(app.buttons["audioClose"])
+        let discard = app.sheets.buttons["Discard unsaved changes"]
+        XCTAssertTrue(discard.waitForExistence(timeout: 8)); audioPress(discard)
+        XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch.exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-")).firstMatch.exists)
+        XCTAssertFalse(app.textViews["audioCaption"].exists)
+        audioScreenshot(app, "Explicitly discarded review stays discarded after relaunch")
+    }
+
 }

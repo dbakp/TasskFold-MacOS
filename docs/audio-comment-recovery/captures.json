@@ -1,0 +1,26 @@
+[
+  {
+    "file": "mac-dark.png",
+    "source": "taskfold-audio-recovery-mac-final.xcresult",
+    "title": "Mac audio caption dark",
+    "test": "TaskfoldMacUITests/testAudioDraftDarkReviewControlsRemainReachable()"
+  },
+  {
+    "file": "mac-discarded.png",
+    "source": "taskfold-audio-recovery-mac-final.xcresult",
+    "title": "Explicitly discarded review stays discarded after relaunch",
+    "test": "TaskfoldMacUITests/testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft()"
+  },
+  {
+    "file": "mac-recovered.png",
+    "source": "taskfold-audio-recovery-mac-final.xcresult",
+    "title": "Recovered unsaved review after cold launch",
+    "test": "TaskfoldMacUITests/testAudioInterruptedReviewRecoversAfterColdLaunchWithoutExplicitSave()"
+  },
+  {
+    "file": "mac-checkpoint.png",
+    "source": "taskfold-audio-recovery-mac-final.xcresult",
+    "title": "Private recovery copy before interrupted review",
+    "test": "TaskfoldMacUITests/testAudioInterruptedReviewRecoversAfterColdLaunchWithoutExplicitSave()"
+  }
+]

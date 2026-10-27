@@ -257,4 +257,90 @@ final class AudioCommentVaultTests: XCTestCase {
         let emptyPending = try await store.pending(); XCTAssertTrue(emptyPending.isEmpty)
     }
 
+    func testRecoveryCopiesHaveSeparateStrictNamespaceAndNeverReplaceSavedDrafts() throws {
+        let file = try vault("local"), original = try draft(file.owner)
+        try file.save(original)
+        let review = try original.replacing(caption: "Unsaved review", clip: original.clip)
+        try file.save(review, recovery: true)
+        XCTAssertEqual(try file.drafts(), [original])
+        XCTAssertEqual(try file.drafts(recovery: true), [review])
+        XCTAssertThrowsError(try AudioCommentSavedDraft(encoded: review.encoded(recovery: true), owner: file.owner))
+        XCTAssertThrowsError(try AudioCommentSavedDraft(encoded: original.encoded(), owner: file.owner, recovery: true))
+        try file.discardDraft(review.id, revision: review.revision, recovery: true)
+        XCTAssertEqual(try file.drafts(), [original]); XCTAssertTrue(try file.drafts(recovery: true).isEmpty)
+    }
+    func testRecoveryRevisionsRefuseStaleReplacementAndDeletion() throws {
+        let file = try vault(), initial = try draft(); try file.save(initial, recovery: true)
+        let newer = try initial.replacing(caption: "New recovery", clip: initial.clip)
+        try file.save(newer, replacing: initial.revision, recovery: true)
+        XCTAssertThrowsError(try file.save(initial, replacing: initial.revision, recovery: true))
+        XCTAssertThrowsError(try file.discardDraft(initial.id, revision: initial.revision, recovery: true))
+        XCTAssertEqual(try file.drafts(recovery: true), [newer])
+    }
+    func testRecoveryLostAcknowledgementRetriesExactRevision() throws {
+        var file = try vault(); let initial = try draft()
+        file.fault = { if $0 == .afterRename { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.save(initial, recovery: true))
+        XCTAssertEqual(try vault().drafts(recovery: true), [initial])
+        try file.save(initial, recovery: true)
+        XCTAssertEqual(try file.drafts(recovery: true), [initial]); XCTAssertTrue(try file.drafts().isEmpty)
+    }
+    func testRecoveryInterruptedStageRestoresOnlyToRecoveryNamespace() throws {
+        let file = try vault("local"), review = try draft(file.owner)
+        _ = try file.drafts()
+        let id = UUID(), stage = file.directory.appendingPathComponent(".write-" + id.uuidString.lowercased())
+        try review.encoded(recovery: true).write(to: stage)
+        let candidates = try file.interruptedWrites()
+        XCTAssertEqual(candidates.count, 1)
+        guard case .review(let recovered) = candidates[0].payload else { return XCTFail("Expected a recovery copy") }
+        XCTAssertEqual(recovered, review)
+        try file.recover(candidates[0])
+        XCTAssertTrue(try file.drafts().isEmpty)
+        XCTAssertEqual(try file.drafts(recovery: true), [review])
+    }
+    func testRecoverySharesAccountQuotaAndDoesNotReplaceAnotherAccount() throws {
+        let file = try vault(), initial = try draft()
+        for _ in 0..<AudioCommentVault.maximumEntries {
+            let item = try AudioCommentSavedDraft(owner: file.owner, target: initial.target, caption: "Review", clip: initial.clip)
+            try file.save(item, recovery: true)
+        }
+        XCTAssertThrowsError(try file.save(initial)) { XCTAssertEqual($0 as? AudioCommentStorageFailure, .full) }
+        let other = try vault("other")
+        XCTAssertTrue(try other.drafts(recovery: true).isEmpty)
+        XCTAssertThrowsError(try other.save(initial, recovery: true))
+        XCTAssertEqual(try file.drafts(recovery: true).count, AudioCommentVault.maximumEntries)
+    }
+    func testCorruptRecoveryRefusesWithoutHidingOrReplacingSavedDraft() throws {
+        let file = try vault(), initial = try draft(); try file.save(initial)
+        let url = file.directory.appendingPathComponent("review-" + UUID().uuidString.lowercased() + ".bin")
+        try Data("corrupt".utf8).write(to: url)
+        XCTAssertThrowsError(try file.drafts(recovery: true))
+        XCTAssertEqual(try file.drafts(), [initial])
+        XCTAssertEqual(try Data(contentsOf: url), Data("corrupt".utf8))
+    }
+
+    func testExplicitRecoveryDiscardNeedsNoFreeQuotaAndKeepsEverySavedDraft() throws {
+        let file = try vault(), review = try draft()
+        var saved: [AudioCommentSavedDraft] = []
+        for _ in 0..<AudioCommentVault.maximumEntries {
+            let item = try draft(); try file.save(item); saved.append(item)
+        }
+        XCTAssertThrowsError(try file.save(review, recovery: true))
+        try file.discardReviewCopies([review])
+        XCTAssertEqual(try file.drafts(), saved.sorted { $0.id.uuidString < $1.id.uuidString })
+        XCTAssertTrue(try file.drafts(recovery: true).isEmpty)
+    }
+    func testExplicitRecoveryDiscardAcceptsOnlyExactPossibleCommitAndLeavesChangedBytes() throws {
+        let file = try vault(), original = try draft(); try file.save(original, recovery: true)
+        let attempted = try original.replacing(caption: "Uncertain replacement", clip: original.clip)
+        let other = try original.replacing(caption: "Other window", clip: original.clip)
+        try file.save(other, replacing: original.revision, recovery: true)
+        XCTAssertThrowsError(try file.discardReviewCopies([original, attempted]))
+        XCTAssertEqual(try file.drafts(recovery: true), [other])
+        try file.discardReviewCopies([attempted, other])
+        XCTAssertTrue(try file.drafts(recovery: true).isEmpty)
+        XCTAssertThrowsError(try file.discardReviewCopies([]))
+        XCTAssertThrowsError(try file.discardReviewCopies([try draft(), try draft()]))
+    }
+
 }

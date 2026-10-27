@@ -2,7 +2,7 @@ import Foundation
 import CryptoKit
 import Darwin
 
-struct AudioCommentStorageFailure: LocalizedError {
+struct AudioCommentStorageFailure: LocalizedError, Equatable {
     let message: String
     var errorDescription: String? { message }
     static let unreadable = Self(message: "Audio drafts could not be read safely. Your saved recordings have not been replaced.")
@@ -42,21 +42,21 @@ struct AudioCommentSavedDraft: Equatable, Sendable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id && lhs.revision == rhs.revision && lhs.owner == rhs.owner && lhs.target == rhs.target && lhs.caption.utf8.elementsEqual(rhs.caption.utf8) && lhs.clip.data == rhs.clip.data
     }
-    func encoded() throws -> Data {
+    func encoded(recovery: Bool = false) throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return try PropertyListSerialization.data(fromPropertyList: [
-            "format": "taskfold-audio-review-v1", "account": owner.account,
+            "format": recovery ? "taskfold-audio-recovery-v1" : "taskfold-audio-review-v1", "account": owner.account,
             "id": id.uuidString.lowercased(), "revision": revision.uuidString.lowercased(),
             "target": try encoder.encode(target), "caption": caption,
             "descriptor": try encoder.encode(clip.descriptor), "audio": clip.data
         ], format: .binary, options: 0)
     }
-    init(encoded data: Data, owner: AudioCommentOwner) throws {
+    init(encoded data: Data, owner: AudioCommentOwner, recovery: Bool = false) throws {
         guard !data.isEmpty, data.count <= AudioCommentVault.maximumFileBytes else { throw AudioCommentStorageFailure.unreadable }
         var format = PropertyListSerialization.PropertyListFormat.binary
         guard let fields = try PropertyListSerialization.propertyList(from: data, format: &format) as? [String: Any], format == .binary,
               Set(fields.keys) == ["format", "account", "id", "revision", "target", "caption", "descriptor", "audio"],
-              fields["format"] as? String == "taskfold-audio-review-v1", let account = fields["account"] as? String,
+              fields["format"] as? String == (recovery ? "taskfold-audio-recovery-v1" : "taskfold-audio-review-v1"), let account = fields["account"] as? String,
               account.utf8.elementsEqual(owner.account.utf8), let idText = fields["id"] as? String, let id = UUID(uuidString: idText),
               let revisionText = fields["revision"] as? String, let revision = UUID(uuidString: revisionText),
               let targetData = fields["target"] as? Data, targetData.count <= 4096,
@@ -70,7 +70,7 @@ struct AudioCommentSavedDraft: Equatable, Sendable {
 
 
 struct AudioCommentInterruptedWrite: Sendable {
-    enum Payload: Sendable { case draft(AudioCommentSavedDraft), pending(AudioCommentPending) }
+    enum Payload: Sendable { case draft(AudioCommentSavedDraft), review(AudioCommentSavedDraft), pending(AudioCommentPending) }
     let id: UUID
     let payload: Payload
     fileprivate let bytes: Data
@@ -138,7 +138,7 @@ struct AudioCommentVault: Sendable {
             if value == "." || value == ".." || value == ".lock" { continue }
             // An interrupted pre-rename staging file is preserved, not treated as published work.
             let staged = value.hasPrefix(".write-") && UUID(uuidString: String(value.dropFirst(7))) != nil
-            let committed = ["draft-", "pending-"].contains(where: { value.hasPrefix($0) }) && value.hasSuffix(".bin") && UUID(uuidString: String(value.dropFirst(value.hasPrefix("draft-") ? 6 : 8).dropLast(4))) != nil
+            let committed = ["draft-", "pending-", "review-"].contains { prefix in value.hasPrefix(prefix) && value.hasSuffix(".bin") && UUID(uuidString: String(value.dropFirst(prefix.count).dropLast(4))) != nil }
             guard staged || committed else { throw AudioCommentStorageFailure.unreadable }
             var info = stat()
             guard fstatat(folder, value, &info, AT_SYMLINK_NOFOLLOW) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_nlink == 1, info.st_uid == getuid(), info.st_size >= 0, info.st_size <= Self.maximumFileBytes else { throw AudioCommentStorageFailure.unreadable }
@@ -184,6 +184,7 @@ struct AudioCommentVault: Sendable {
             guard let id = UUID(uuidString: String(filename.dropFirst(7))), let data = try read(filename, folder: folder) else { throw AudioCommentStorageFailure.unreadable }
             let payload: AudioCommentInterruptedWrite.Payload
             if let draft = try? AudioCommentSavedDraft(encoded: data, owner: owner) { payload = .draft(draft) }
+            else if let review = try? AudioCommentSavedDraft(encoded: data, owner: owner, recovery: true) { payload = .review(review) }
             else { payload = .pending(try AudioCommentPending(encoded: data, account: cloudAccount())) }
             return .init(id: id, payload: payload, bytes: data)
         } }
@@ -197,11 +198,13 @@ struct AudioCommentVault: Sendable {
             let destination: String
             var identical = false
             switch candidate.payload {
-            case .draft(let draft):
-                guard draft.owner == owner, try AudioCommentSavedDraft(encoded: data, owner: owner) == draft else { throw AudioCommentStorageFailure.conflict }
-                destination = name("draft-", draft.id)
+            case .draft(let draft), .review(let draft):
+                let recovery: Bool
+                if case .review = candidate.payload { recovery = true } else { recovery = false }
+                guard draft.owner == owner, try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: recovery) == draft else { throw AudioCommentStorageFailure.conflict }
+                destination = name(recovery ? "review-" : "draft-", draft.id)
                 if let bytes = try read(destination, folder: folder) {
-                    let current = try AudioCommentSavedDraft(encoded: bytes, owner: owner)
+                    let current = try AudioCommentSavedDraft(encoded: bytes, owner: owner, recovery: recovery)
                     identical = current == draft
                     guard identical || current.id == draft.id && current.target == draft.target && current.revision == revision && current.revision != draft.revision else { throw AudioCommentStorageFailure.conflict }
                 } else if revision != nil { throw AudioCommentStorageFailure.conflict }
@@ -225,31 +228,48 @@ struct AudioCommentVault: Sendable {
         }
     }
 
-    func drafts() throws -> [AudioCommentSavedDraft] {
-        try locked { folder in try names(folder: folder).filter { $0.hasPrefix("draft-") }.map { filename in
+    func drafts(recovery: Bool = false) throws -> [AudioCommentSavedDraft] {
+        let prefix = recovery ? "review-" : "draft-"
+        return try locked { folder in try names(folder: folder).filter { $0.hasPrefix(prefix) }.map { filename in
             guard let data = try read(filename, folder: folder) else { throw AudioCommentStorageFailure.unreadable }
-            let draft = try AudioCommentSavedDraft(encoded: data, owner: owner)
-            guard filename == name("draft-", draft.id) else { throw AudioCommentStorageFailure.unreadable }; return draft
+            let draft = try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: recovery)
+            guard filename == name(prefix, draft.id) else { throw AudioCommentStorageFailure.unreadable }; return draft
         } }
     }
-    func save(_ draft: AudioCommentSavedDraft, replacing revision: UUID? = nil) throws {
+    func save(_ draft: AudioCommentSavedDraft, replacing revision: UUID? = nil, recovery: Bool = false) throws {
         guard draft.owner == owner else { throw AudioCommentFailure.changed }
         try locked { folder in
-            let filename = name("draft-", draft.id)
+            let filename = name(recovery ? "review-" : "draft-", draft.id)
             if let data = try read(filename, folder: folder) {
-                let current = try AudioCommentSavedDraft(encoded: data, owner: owner)
+                let current = try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: recovery)
                 if current == draft { guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }; return }
                 guard current.id == draft.id, current.target == draft.target, current.revision == revision, current.revision != draft.revision else { throw AudioCommentStorageFailure.conflict }
             } else if revision != nil { throw AudioCommentStorageFailure.conflict }
-            let data = try draft.encoded(); try admit(data, replacing: filename, folder: folder); try write(data, name: filename, folder: folder)
+            let data = try draft.encoded(recovery: recovery); try admit(data, replacing: filename, folder: folder); try write(data, name: filename, folder: folder)
         }
     }
-    func discardDraft(_ id: UUID, revision: UUID) throws {
+    func discardDraft(_ id: UUID, revision: UUID, recovery: Bool = false) throws {
         try locked { folder in
-            let filename = name("draft-", id)
+            let filename = name(recovery ? "review-" : "draft-", id)
             if let data = try read(filename, folder: folder) {
-                let draft = try AudioCommentSavedDraft(encoded: data, owner: owner)
+                let draft = try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: recovery)
                 guard draft.id == id, draft.revision == revision else { throw AudioCommentStorageFailure.conflict }
+                guard unlinkat(folder, filename, 0) == 0 else { throw AudioCommentStorageFailure.unreadable }
+            }
+            guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
+        }
+    }
+    /// Explicit discard/settlement must not require space for a new checkpoint.
+    /// A failed rename acknowledgement can leave either of these exact revisions;
+    /// another window's changed bytes are never eligible for deletion.
+    func discardReviewCopies(_ expected: [AudioCommentSavedDraft]) throws {
+        guard let first = expected.first, expected.count <= 2,
+              expected.allSatisfy({ $0.owner == owner && $0.id == first.id && $0.target == first.target }) else { throw AudioCommentStorageFailure.conflict }
+        try locked { folder in
+            let filename = name("review-", first.id)
+            if let bytes = try read(filename, folder: folder) {
+                let current = try AudioCommentSavedDraft(encoded: bytes, owner: owner, recovery: true)
+                guard expected.contains(current) else { throw AudioCommentStorageFailure.conflict }
                 guard unlinkat(folder, filename, 0) == 0 else { throw AudioCommentStorageFailure.unreadable }
             }
             guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
@@ -302,6 +322,10 @@ actor AudioCommentDraftStorage {
     init(applicationSupport: URL, owner: AudioCommentOwner) { vault = .init(applicationSupport: applicationSupport, owner: owner) }
     init(vault: AudioCommentVault) { self.vault = vault }
     func drafts() throws -> [AudioCommentSavedDraft] { try vault.drafts() }
+    func reviews() throws -> [AudioCommentSavedDraft] { try vault.drafts(recovery: true) }
+    func discardReviewCopies(_ expected: [AudioCommentSavedDraft]) throws { try vault.discardReviewCopies(expected) }
+    func checkpoint(_ draft: AudioCommentSavedDraft, replacing revision: UUID? = nil) throws { try vault.save(draft, replacing: revision, recovery: true) }
+    func discardReview(_ id: UUID, revision: UUID) throws { try vault.discardDraft(id, revision: revision, recovery: true) }
     func save(_ draft: AudioCommentSavedDraft, replacing revision: UUID? = nil) throws { try vault.save(draft, replacing: revision) }
     func discardDraft(_ id: UUID, revision: UUID) throws { try vault.discardDraft(id, revision: revision) }
     func pending() throws -> [AudioCommentPending] { try vault.pending() }

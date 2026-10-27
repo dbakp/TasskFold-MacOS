@@ -1,0 +1,1307 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun -destination platform=macOS,arch=arm64 -resultBundlePath /tmp/taskfold-audio-recovery-mac-final.xcresult -parallel-testing-enabled NO -collect-test-diagnostics never "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioDraftReviewSavePlaybackAndColdReturn" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioDraftSyntheticPermissionRefusalDoesNotCreateRecording" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioDraftDarkReviewControlsRemainReachable" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioDraftReplacementRefusalPreservesSavedCaptionAndDuration" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioInterruptedReviewRecoversAfterColdLaunchWithoutExplicitSave" "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft"
+
+Writing result bundle at path:
+	/tmp/taskfold-audio-recovery-mac-final.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Mac Catalyst, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:DriverKit, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:00006000-000C59161EC3801E, name:My Mac }
+2026-10-27 20:31:05.633553+0100 TaskfoldUITests-Runner[68206:25975865] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-10-27 20:31:05.706.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-10-27 20:31:05.706.
+Test Suite 'TaskfoldMacUITests' started at 2026-10-27 20:31:05.707.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioDraftDarkReviewControlsRemainReachable]' started.
+    t =     0.00s Start Test at 2026-10-27 20:31:05.707
+    t =     0.18s Set Up
+    t =     0.19s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.19s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:31:06.093 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:31:06.093 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.62s         Wait for accessibility to load
+    t =     1.72s         Setting up automation session
+    t =     1.74s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.82s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.82s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     1.83s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     1.97s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =     3.01s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =     3.01s         Checking existence of `"audioFixtureOpen" Button`
+    t =     3.21s Click "audioFixtureOpen" Button
+    t =     3.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.22s     Find the "audioFixtureOpen" Button
+    t =     3.26s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =     3.28s     Synthesize event
+    t =     3.88s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.17s Waiting 8.0s for "audioRecord" Button to exist
+    t =     5.21s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =     5.21s         Checking existence of `"audioRecord" Button`
+    t =     5.32s Find the "audioRecord" Button
+    t =     5.39s Find the "audioRecord" Button
+    t =     5.47s Find the "audioRecord" Button
+    t =     5.54s Find the "audioRecord" Button
+    t =     5.60s Find the "audioRecord" Button
+    t =     5.67s Find the "audioRecord" Button
+    t =     5.73s Find the "audioRecord" Button
+    t =     5.80s Find the "audioRecord" Button
+    t =     5.86s Find the "audioRecord" Button
+    t =     5.92s Find the "audioRecord" Button
+    t =     5.99s Find the "audioRecord" Button
+    t =     6.07s Find the "audioRecord" Button
+    t =     6.15s Find the "audioRecord" Button
+    t =     6.21s Find the "audioRecord" Button
+    t =     6.28s Checking existence of `"audioRecord" Button`
+    t =     6.33s Find the "audioRecord" Button
+    t =     6.42s Click "audioRecord" Button
+    t =     6.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.42s     Find the "audioRecord" Button
+    t =     6.48s     Check for interrupting elements affecting "audioRecord" Button
+    t =     6.49s     Synthesize event
+    t =     7.00s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.05s Checking `Expect predicate `exists == 1 AND label == "Stop recording"` for object "audioStop" Button`
+    t =     8.05s     Checking existence of `"audioStop" Button`
+    t =     8.22s     Find the "audioStop" Button
+    t =     8.28s Click "audioStop" Button
+    t =     8.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.29s     Find the "audioStop" Button
+    t =     8.35s     Check for interrupting elements affecting "audioStop" Button
+    t =     8.36s     Synthesize event
+    t =     8.85s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.86s Waiting 10.0s for "audioCaption" TextView to exist
+    t =     9.90s     Checking `Expect predicate `existsNoRetry == 1` for object "audioCaption" TextView`
+    t =     9.90s         Checking existence of `"audioCaption" TextView`
+    t =     9.97s Find the "audioRecord" Button
+    t =    10.04s Find the "audioRecord" Button
+    t =    10.13s Find the "audioRecord" Button
+    t =    10.21s Find the "audioRecord" Button
+    t =    10.28s Find the "audioRecord" Button
+    t =    10.36s Find the "audioRecord" Button
+    t =    10.44s Find the "audioRecord" Button
+    t =    10.51s Find the "audioRecord" Button
+    t =    10.58s Find the "audioRecord" Button
+    t =    10.66s Find the "audioRecord" Button
+    t =    10.73s Find the "audioRecord" Button
+    t =    10.81s Find the "audioRecord" Button
+    t =    10.88s Find the "audioRecord" Button
+    t =    10.96s Find the "audioRecord" Button
+    t =    11.04s Checking existence of `"audioRecord" Button`
+    t =    11.11s Find the "audioRecord" Button
+    t =    11.18s Find the "audioRecord" Button
+    t =    11.26s Checking existence of `Window (First Match)`
+    t =    11.26s Find the Window (First Match)
+2026-10-27 20:31:16.980929+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    11.35s Added attachment named 'Mac audio review controls dark'
+    t =    11.35s Find the "audioCaption" TextView
+    t =    11.41s Find the "audioCaption" TextView
+    t =    11.47s Find the "audioCaption" TextView
+    t =    11.54s Find the "audioCaption" TextView
+    t =    11.61s Find the "audioCaption" TextView
+    t =    11.69s Find the "audioCaption" TextView
+    t =    11.77s Find the "audioCaption" TextView
+    t =    11.84s Find the "audioCaption" TextView
+    t =    11.91s Find the "audioCaption" TextView
+    t =    11.99s Find the "audioCaption" TextView
+    t =    12.07s Find the "audioCaption" TextView
+    t =    12.28s Find the "audioCaption" TextView
+    t =    12.36s Find the "audioCaption" TextView
+    t =    12.43s Find the "audioCaption" TextView
+    t =    12.51s Checking existence of `"audioCaption" TextView`
+    t =    12.57s Find the "audioCaption" TextView
+    t =    12.66s Get number of matches for: Descendants matching type Sheet
+    t =    12.71s Find the Sheet (First Match)
+    t =    12.72s Find the "audioCaption" TextView
+    t =    12.79s Checking existence of `Window (First Match)`
+    t =    12.79s Find the Window (First Match)
+2026-10-27 20:31:18.513077+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    12.88s Added attachment named 'Mac audio caption dark'
+    t =    12.88s Find the "audioSaveClose" Button
+    t =    12.94s Click "audioSaveClose" Button
+    t =    12.94s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.94s     Find the "audioSaveClose" Button
+    t =    13.00s     Check for interrupting elements affecting "audioSaveClose" Button
+    t =    13.02s     Found 1 interrupting element:
+    t =    13.02s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    13.02s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    13.02s Checking for user permission dialogs...
+    t =    13.02s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    13.56s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    14.03s Checking for Bluetooth Setup Assistant...
+    t =    14.03s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    14.44s Checking for Notification Center Banners...
+    t =    14.45s Checking for basic alerts
+    t =    14.46s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    14.87s             Find the "Plan productive widgets and Todoist" Window
+    t =    15.29s             Find the "Plan productive widgets and Todoist" Window
+    t =    15.67s No monitors handled UI interruption, checking to see if element still exists...
+    t =    15.68s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    16.07s Did not handle the interruption, but will attempt to continue…
+    t =    16.08s     Synthesize event
+    t =    16.59s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.61s Waiting 8.0s for "audioFixtureOpen" Button to exist
+    t =    17.65s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    17.65s         Checking existence of `"audioFixtureOpen" Button`
+    t =    17.72s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68240
+    t =    18.81s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioDraftDarkReviewControlsRemainReachable]' passed (19.180 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioDraftReplacementRefusalPreservesSavedCaptionAndDuration]' started.
+    t =     0.00s Start Test at 2026-10-27 20:31:24.889
+    t =     0.15s Set Up
+    t =     0.15s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.16s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:31:25.046 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:31:25.046 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.71s         Wait for accessibility to load
+    t =     0.79s         Setting up automation session
+    t =     0.81s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.87s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.87s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.88s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.95s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =     1.99s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =     1.99s         Checking existence of `"audioFixtureOpen" Button`
+    t =     2.12s Click "audioFixtureOpen" Button
+    t =     2.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.12s     Find the "audioFixtureOpen" Button
+    t =     2.17s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =     2.18s     Synthesize event
+    t =     2.77s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.07s Waiting 8.0s for "audioRecord" Button to exist
+    t =     4.10s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =     4.10s         Checking existence of `"audioRecord" Button`
+    t =     4.19s Find the "audioRecord" Button
+    t =     4.25s Find the "audioRecord" Button
+    t =     4.32s Find the "audioRecord" Button
+    t =     4.38s Find the "audioRecord" Button
+    t =     4.44s Find the "audioRecord" Button
+    t =     4.50s Find the "audioRecord" Button
+    t =     4.56s Find the "audioRecord" Button
+    t =     4.63s Find the "audioRecord" Button
+    t =     4.69s Find the "audioRecord" Button
+    t =     4.75s Find the "audioRecord" Button
+    t =     4.81s Find the "audioRecord" Button
+    t =     4.87s Find the "audioRecord" Button
+    t =     4.93s Find the "audioRecord" Button
+    t =     5.00s Find the "audioRecord" Button
+    t =     5.05s Checking existence of `"audioRecord" Button`
+    t =     5.10s Find the "audioRecord" Button
+    t =     5.28s Click "audioRecord" Button
+    t =     5.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.29s     Find the "audioRecord" Button
+    t =     5.35s     Check for interrupting elements affecting "audioRecord" Button
+    t =     5.36s     Synthesize event
+    t =     5.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.91s Checking `Expect predicate `exists == 1 AND label == "Stop recording"` for object "audioStop" Button`
+    t =     6.91s     Checking existence of `"audioStop" Button`
+    t =     6.98s     Find the "audioStop" Button
+    t =     7.03s Click "audioStop" Button
+    t =     7.03s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.04s     Find the "audioStop" Button
+    t =     7.09s     Check for interrupting elements affecting "audioStop" Button
+    t =     7.10s     Synthesize event
+    t =     7.56s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.57s Waiting 10.0s for "audioCaption" TextView to exist
+    t =     8.61s     Checking `Expect predicate `existsNoRetry == 1` for object "audioCaption" TextView`
+    t =     8.61s         Checking existence of `"audioCaption" TextView`
+    t =     8.70s Find the "audioCaption" TextView
+    t =     8.78s Find the "audioCaption" TextView
+    t =     8.85s Find the "audioCaption" TextView
+    t =     8.93s Find the "audioCaption" TextView
+    t =     9.00s Find the "audioCaption" TextView
+    t =     9.07s Find the "audioCaption" TextView
+    t =     9.14s Find the "audioCaption" TextView
+    t =     9.21s Find the "audioCaption" TextView
+    t =     9.28s Find the "audioCaption" TextView
+    t =     9.34s Find the "audioCaption" TextView
+    t =     9.41s Find the "audioCaption" TextView
+    t =     9.49s Find the "audioCaption" TextView
+    t =     9.55s Find the "audioCaption" TextView
+    t =     9.64s Find the "audioCaption" TextView
+    t =     9.71s Checking existence of `"audioCaption" TextView`
+    t =     9.77s Find the "audioCaption" TextView
+    t =     9.84s Click "audioCaption" TextView
+    t =     9.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.86s     Find the "audioCaption" TextView
+    t =     9.92s     Check for interrupting elements affecting "audioCaption" TextView
+    t =     9.94s     Found 1 interrupting element:
+    t =     9.94s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =     9.94s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =     9.95s Checking for user permission dialogs...
+    t =     9.95s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    10.42s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    10.83s Checking for Bluetooth Setup Assistant...
+    t =    10.83s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    11.23s Checking for Notification Center Banners...
+    t =    11.23s Checking for basic alerts
+    t =    11.23s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    11.62s             Find the "Plan productive widgets and Todoist" Window
+    t =    12.03s             Find the "Plan productive widgets and Todoist" Window
+    t =    12.42s No monitors handled UI interruption, checking to see if element still exists...
+    t =    12.43s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    12.83s Did not handle the interruption, but will attempt to continue…
+    t =    12.83s     Synthesize event
+    t =    13.30s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.32s Type 'Keep this saved re...' into "audioCaption" TextView
+    t =    13.32s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.32s     Find the "audioCaption" TextView
+    t =    13.40s     Check for interrupting elements affecting "audioCaption" TextView
+    t =    13.42s     Found 1 interrupting element:
+    t =    13.42s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    13.42s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    13.42s Checking for user permission dialogs...
+    t =    13.42s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    13.80s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    14.21s Checking for Bluetooth Setup Assistant...
+    t =    14.21s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    14.61s Checking for Notification Center Banners...
+    t =    14.62s Checking for basic alerts
+    t =    14.62s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    15.00s             Find the "Plan productive widgets and Todoist" Window
+    t =    15.40s             Find the "Plan productive widgets and Todoist" Window
+    t =    15.80s No monitors handled UI interruption, checking to see if element still exists...
+    t =    15.81s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    16.20s Did not handle the interruption, but will attempt to continue…
+    t =    16.20s     Synthesize event
+2026-10-27 20:31:41.099864+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (778.0, 720.0, 500.0, 120.0): [1]
+    t =    17.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.12s Click "audioSaveClose" Button
+    t =    17.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.12s     Find the "audioSaveClose" Button
+    t =    17.19s     Check for interrupting elements affecting "audioSaveClose" Button
+    t =    17.21s     Found 1 interrupting element:
+    t =    17.21s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    17.21s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    17.21s Checking for user permission dialogs...
+    t =    17.21s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    17.58s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    17.98s Checking for Bluetooth Setup Assistant...
+    t =    17.98s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    18.37s Checking for Notification Center Banners...
+    t =    18.37s Checking for basic alerts
+    t =    18.38s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    18.78s             Find the "Plan productive widgets and Todoist" Window
+    t =    19.18s             Find the "Plan productive widgets and Todoist" Window
+    t =    19.57s No monitors handled UI interruption, checking to see if element still exists...
+    t =    19.58s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    19.97s Did not handle the interruption, but will attempt to continue…
+    t =    19.97s     Synthesize event
+    t =    20.47s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    20.50s Waiting 8.0s for "audioFixtureOpen" Button to exist
+    t =    21.52s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    21.52s         Checking existence of `"audioFixtureOpen" Button`
+    t =    21.58s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68432
+    t =    22.62s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    22.63s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:31:47.521 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:31:47.521 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    23.13s         Wait for accessibility to load
+    t =    23.20s         Setting up automation session
+    t =    23.22s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.27s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    23.27s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    23.28s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.35s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =    24.36s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    24.36s         Checking existence of `"audioFixtureOpen" Button`
+    t =    24.49s Click "audioFixtureOpen" Button
+    t =    24.49s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.49s     Find the "audioFixtureOpen" Button
+    t =    24.53s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =    24.55s     Synthesize event
+    t =    25.13s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.43s Waiting 8.0s for "audioRecord" Button to exist
+    t =    26.45s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =    26.45s         Checking existence of `"audioRecord" Button`
+    t =    26.54s Find the Button (First Match)
+    t =    26.60s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    26.65s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    26.70s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    26.74s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    26.79s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    26.84s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    26.88s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    26.93s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    26.98s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.03s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.08s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.12s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.16s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.21s Checking existence of `"audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button`
+    t =    27.24s Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.29s Click "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.29s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.29s     Find the "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.33s     Check for interrupting elements affecting "audioSaved-26c115e8-b2b1-4bfc-b5a2-8ea5884e9131" Button
+    t =    27.34s     Found 1 interrupting element:
+    t =    27.34s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    27.34s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    27.34s Checking for user permission dialogs...
+    t =    27.34s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    27.75s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    28.12s Checking for Bluetooth Setup Assistant...
+    t =    28.12s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    28.47s Checking for Notification Center Banners...
+    t =    28.47s Checking for basic alerts
+    t =    28.48s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    28.82s             Find the "Plan productive widgets and Todoist" Window
+    t =    29.18s             Find the "Plan productive widgets and Todoist" Window
+    t =    29.52s No monitors handled UI interruption, checking to see if element still exists...
+    t =    29.53s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    29.89s Did not handle the interruption, but will attempt to continue…
+    t =    29.89s     Synthesize event
+    t =    30.41s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.46s Checking `Expect predicate `enabled == 1` for object "audioSaveClose" Button`
+    t =    31.46s     Find the "audioSaveClose" Button
+    t =    31.57s Find the "audioRecord" Button
+    t =    31.64s Find the "audioRecord" Button
+    t =    31.72s Find the "audioRecord" Button
+    t =    31.80s Find the "audioRecord" Button
+    t =    31.88s Find the "audioRecord" Button
+    t =    31.96s Find the "audioRecord" Button
+    t =    32.04s Find the "audioRecord" Button
+    t =    32.12s Find the "audioRecord" Button
+    t =    32.20s Find the "audioRecord" Button
+    t =    32.27s Find the "audioRecord" Button
+    t =    32.36s Find the "audioRecord" Button
+    t =    32.43s Find the "audioRecord" Button
+    t =    32.51s Find the "audioRecord" Button
+    t =    32.60s Find the "audioRecord" Button
+    t =    32.67s Checking existence of `"audioRecord" Button`
+    t =    32.74s Find the "audioRecord" Button
+    t =    32.82s Click "audioRecord" Button
+    t =    32.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    32.83s     Find the "audioRecord" Button
+    t =    32.89s     Check for interrupting elements affecting "audioRecord" Button
+    t =    32.91s     Synthesize event
+    t =    33.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.48s Checking `Expect predicate `exists == 1 AND label == "Replace recording"` for object "audioRecord" Button`
+    t =    34.48s     Checking existence of `"audioRecord" Button`
+    t =    34.58s     Find the "audioRecord" Button
+    t =    34.65s Find the "audioNotice" StaticText
+    t =    34.72s Find the "audioNotice" StaticText
+    t =    34.80s Find the "audioNotice" StaticText
+    t =    34.88s Find the "audioNotice" StaticText
+    t =    34.96s Find the "audioNotice" StaticText
+    t =    35.03s Find the "audioNotice" StaticText
+    t =    35.10s Find the "audioNotice" StaticText
+    t =    35.18s Find the "audioNotice" StaticText
+    t =    35.26s Find the "audioNotice" StaticText
+    t =    35.34s Find the "audioNotice" StaticText
+    t =    35.42s Find the "audioNotice" StaticText
+    t =    35.50s Find the "audioNotice" StaticText
+    t =    35.59s Find the "audioNotice" StaticText
+    t =    35.68s Find the "audioNotice" StaticText
+    t =    35.76s Checking existence of `"audioNotice" StaticText`
+    t =    35.82s Find the "audioNotice" StaticText
+    t =    37.04s Checking `Expect predicate `exists == 1 AND (label CONTAINS "Microphone access is off" OR value CONTAINS "Microphone access is off")` for object "audioNotice" StaticText`
+    t =    37.04s     Checking existence of `"audioNotice" StaticText`
+    t =    37.13s     Find the "audioNotice" StaticText
+    t =    37.19s     Find the "audioNotice" StaticText
+    t =    37.25s Find the "audioDuration" StaticText
+    t =    37.33s Find the "audioDuration" StaticText
+    t =    37.41s Find the "audioDuration" StaticText
+    t =    37.48s Find the "audioDuration" StaticText
+    t =    37.56s Find the "audioDuration" StaticText
+    t =    37.64s Find the "audioDuration" StaticText
+    t =    37.71s Find the "audioDuration" StaticText
+    t =    37.80s Find the "audioDuration" StaticText
+    t =    37.87s Find the "audioDuration" StaticText
+    t =    37.96s Find the "audioDuration" StaticText
+    t =    38.03s Find the "audioDuration" StaticText
+    t =    38.12s Find the "audioDuration" StaticText
+    t =    38.21s Find the "audioDuration" StaticText
+    t =    38.28s Find the "audioDuration" StaticText
+    t =    38.36s Checking existence of `"audioDuration" StaticText`
+    t =    38.42s Find the "audioDuration" StaticText
+    t =    38.50s Find the "audioDuration" StaticText
+    t =    38.56s Find the "audioCaption" TextView
+    t =    38.65s Find the "audioCaption" TextView
+    t =    38.72s Find the "audioCaption" TextView
+    t =    38.80s Find the "audioCaption" TextView
+    t =    38.87s Find the "audioCaption" TextView
+    t =    38.96s Find the "audioCaption" TextView
+    t =    39.03s Find the "audioCaption" TextView
+    t =    39.10s Find the "audioCaption" TextView
+    t =    39.18s Find the "audioCaption" TextView
+    t =    39.27s Find the "audioCaption" TextView
+    t =    39.34s Find the "audioCaption" TextView
+    t =    39.42s Find the "audioCaption" TextView
+    t =    39.50s Find the "audioCaption" TextView
+    t =    39.58s Find the "audioCaption" TextView
+    t =    39.66s Checking existence of `"audioCaption" TextView`
+    t =    39.72s Find the "audioCaption" TextView
+    t =    39.79s Find the "audioCaption" TextView
+    t =    39.86s Checking existence of `Window (First Match)`
+    t =    39.86s Find the Window (First Match)
+2026-10-27 20:32:04.758129+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    39.96s Added attachment named 'Refused replacement retains saved caption and duration'
+    t =    39.96s Click "audioClose" Button
+    t =    39.96s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    39.96s     Find the "audioClose" Button
+    t =    40.02s     Check for interrupting elements affecting "audioClose" Button
+    t =    40.03s     Synthesize event
+    t =    40.57s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    40.86s Waiting 8.0s for "audioFixtureOpen" Button to exist
+    t =    41.87s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    41.88s         Checking existence of `"audioFixtureOpen" Button`
+    t =    41.98s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68466
+    t =    43.07s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioDraftReplacementRefusalPreservesSavedCaptionAndDuration]' passed (43.478 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioDraftReviewSavePlaybackAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-10-27 20:32:08.368
+    t =     0.13s Set Up
+    t =     0.14s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.14s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:32:08.509 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:32:08.509 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.70s         Wait for accessibility to load
+    t =     0.80s         Setting up automation session
+    t =     0.81s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.87s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.87s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.88s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.96s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =     1.98s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =     1.98s         Checking existence of `"audioFixtureOpen" Button`
+    t =     2.11s Click "audioFixtureOpen" Button
+    t =     2.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.12s     Find the "audioFixtureOpen" Button
+    t =     2.16s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =     2.17s     Synthesize event
+    t =     2.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.04s Waiting 8.0s for "audioRecord" Button to exist
+    t =     4.04s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =     4.05s         Checking existence of `"audioRecord" Button`
+    t =     4.13s Find the "audioRecord" Button
+    t =     4.20s Find the "audioRecord" Button
+    t =     4.26s Find the "audioRecord" Button
+    t =     4.32s Find the "audioRecord" Button
+    t =     4.39s Find the "audioRecord" Button
+    t =     4.45s Find the "audioRecord" Button
+    t =     4.51s Find the "audioRecord" Button
+    t =     4.57s Find the "audioRecord" Button
+    t =     4.63s Find the "audioRecord" Button
+    t =     4.69s Find the "audioRecord" Button
+    t =     4.76s Find the "audioRecord" Button
+    t =     4.93s Find the "audioRecord" Button
+    t =     5.00s Find the "audioRecord" Button
+    t =     5.07s Find the "audioRecord" Button
+    t =     5.14s Checking existence of `"audioRecord" Button`
+    t =     5.18s Find the "audioRecord" Button
+    t =     5.25s Click "audioRecord" Button
+    t =     5.25s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.25s     Find the "audioRecord" Button
+    t =     5.30s     Check for interrupting elements affecting "audioRecord" Button
+    t =     5.31s     Synthesize event
+    t =     5.79s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.83s Checking `Expect predicate `exists == 1 AND label == "Stop recording"` for object "audioStop" Button`
+    t =     6.83s     Checking existence of `"audioStop" Button`
+    t =     6.89s     Find the "audioStop" Button
+    t =     6.95s Click "audioStop" Button
+    t =     6.95s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.96s     Find the "audioStop" Button
+    t =     7.02s     Check for interrupting elements affecting "audioStop" Button
+    t =     7.04s     Synthesize event
+    t =     7.54s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.55s Waiting 10.0s for "audioCaption" TextView to exist
+    t =     8.55s     Checking `Expect predicate `existsNoRetry == 1` for object "audioCaption" TextView`
+    t =     8.56s         Checking existence of `"audioCaption" TextView`
+    t =     8.65s Find the "audioCaption" TextView
+    t =     8.73s Find the "audioCaption" TextView
+    t =     8.90s Find the "audioCaption" TextView
+    t =     8.99s Find the "audioCaption" TextView
+    t =     9.07s Find the "audioCaption" TextView
+    t =     9.15s Find the "audioCaption" TextView
+    t =     9.22s Find the "audioCaption" TextView
+    t =     9.29s Find the "audioCaption" TextView
+    t =     9.38s Find the "audioCaption" TextView
+    t =     9.45s Find the "audioCaption" TextView
+    t =     9.53s Find the "audioCaption" TextView
+    t =     9.61s Find the "audioCaption" TextView
+    t =     9.69s Find the "audioCaption" TextView
+    t =     9.76s Find the "audioCaption" TextView
+    t =     9.83s Checking existence of `"audioCaption" TextView`
+    t =     9.89s Find the "audioCaption" TextView
+    t =     9.97s Click "audioCaption" TextView
+    t =     9.97s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.97s     Find the "audioCaption" TextView
+    t =    10.03s     Check for interrupting elements affecting "audioCaption" TextView
+    t =    10.05s     Found 1 interrupting element:
+    t =    10.05s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    10.06s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    10.06s Checking for user permission dialogs...
+    t =    10.06s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    10.53s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    10.93s Checking for Bluetooth Setup Assistant...
+    t =    10.93s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    11.34s Checking for Notification Center Banners...
+    t =    11.34s Checking for basic alerts
+    t =    11.35s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    11.73s             Find the "Plan productive widgets and Todoist" Window
+    t =    12.13s             Find the "Plan productive widgets and Todoist" Window
+    t =    12.51s No monitors handled UI interruption, checking to see if element still exists...
+    t =    12.52s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    12.91s Did not handle the interruption, but will attempt to continue…
+    t =    12.91s     Synthesize event
+    t =    13.41s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.42s Type 'Review the design ...' into "audioCaption" TextView
+    t =    13.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.43s     Find the "audioCaption" TextView
+    t =    13.51s     Check for interrupting elements affecting "audioCaption" TextView
+    t =    13.55s     Found 1 interrupting element:
+    t =    13.55s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    13.55s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    13.55s Checking for user permission dialogs...
+    t =    13.55s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    13.93s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    14.33s Checking for Bluetooth Setup Assistant...
+    t =    14.33s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    14.74s Checking for Notification Center Banners...
+    t =    14.74s Checking for basic alerts
+    t =    14.75s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    15.14s             Find the "Plan productive widgets and Todoist" Window
+    t =    15.55s             Find the "Plan productive widgets and Todoist" Window
+    t =    15.93s No monitors handled UI interruption, checking to see if element still exists...
+    t =    15.94s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    16.33s Did not handle the interruption, but will attempt to continue…
+    t =    16.33s     Synthesize event
+2026-10-27 20:32:24.703760+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (778.0, 720.0, 500.0, 120.0): [1]
+    t =    18.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.13s Find the "audioSave" Button
+    t =    18.21s Find the "audioSave" Button
+    t =    18.28s Find the "audioSave" Button
+    t =    18.34s Find the "audioSave" Button
+    t =    18.45s Find the "audioSave" Button
+    t =    18.52s Find the "audioSave" Button
+    t =    18.59s Find the "audioSave" Button
+    t =    18.67s Find the "audioSave" Button
+    t =    18.74s Find the "audioSave" Button
+    t =    18.81s Find the "audioSave" Button
+    t =    18.89s Find the "audioSave" Button
+    t =    18.98s Find the "audioSave" Button
+    t =    19.05s Find the "audioSave" Button
+    t =    19.14s Find the "audioSave" Button
+    t =    19.22s Checking existence of `"audioSave" Button`
+    t =    19.28s Find the "audioSave" Button
+    t =    19.36s Click "audioSave" Button
+    t =    19.36s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.37s     Find the "audioSave" Button
+    t =    19.44s     Check for interrupting elements affecting "audioSave" Button
+    t =    19.45s     Synthesize event
+    t =    19.96s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.01s Checking `Expect predicate `label == "Saved on this device" AND enabled == 0` for object "audioSave" Button`
+    t =    21.01s     Find the "audioSave" Button
+    t =    21.11s     Find the "audioSave" Button
+    t =    21.18s Checking existence of `Window (First Match)`
+    t =    21.19s Find the Window (First Match)
+2026-10-27 20:32:29.561985+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    21.28s Added attachment named 'Reviewed and saved audio draft'
+    t =    21.28s Click "audioSaveClose" Button
+    t =    21.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    21.28s     Find the "audioSaveClose" Button
+    t =    21.34s     Check for interrupting elements affecting "audioSaveClose" Button
+    t =    21.35s     Found 1 interrupting element:
+    t =    21.35s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    21.35s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    21.35s Checking for user permission dialogs...
+    t =    21.35s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    21.76s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    22.16s Checking for Bluetooth Setup Assistant...
+    t =    22.17s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    22.56s Checking for Notification Center Banners...
+    t =    22.56s Checking for basic alerts
+    t =    22.56s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    22.96s             Find the "Plan productive widgets and Todoist" Window
+    t =    23.38s             Find the "Plan productive widgets and Todoist" Window
+    t =    23.78s No monitors handled UI interruption, checking to see if element still exists...
+    t =    23.78s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    24.18s Did not handle the interruption, but will attempt to continue…
+    t =    24.18s     Synthesize event
+    t =    24.69s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.73s Waiting 8.0s for "audioFixtureOpen" Button to exist
+    t =    25.73s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    25.74s         Checking existence of `"audioFixtureOpen" Button`
+    t =    25.80s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68521
+    t =    26.88s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    26.88s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:32:35.252 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:32:35.252 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    27.40s         Wait for accessibility to load
+    t =    27.50s         Setting up automation session
+    t =    27.51s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.56s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    27.57s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    27.57s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.64s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =    28.67s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    28.67s         Checking existence of `"audioFixtureOpen" Button`
+    t =    28.84s Click "audioFixtureOpen" Button
+    t =    28.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    28.85s     Find the "audioFixtureOpen" Button
+    t =    28.89s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =    28.91s     Synthesize event
+    t =    29.48s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.78s Waiting 8.0s for "audioRecord" Button to exist
+    t =    30.79s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =    30.79s         Checking existence of `"audioRecord" Button`
+    t =    30.87s Waiting 8.0s for Button (First Match) to exist
+    t =    31.88s     Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =    31.88s         Checking existence of `Button (First Match)`
+    t =    31.93s Find the Button (First Match)
+    t =    31.99s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.04s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.08s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.12s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.16s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.21s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.25s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.29s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.35s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.40s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.44s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.48s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.52s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.57s Checking existence of `"audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button`
+    t =    32.60s Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.65s Click "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.65s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    32.65s     Find the "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.68s     Check for interrupting elements affecting "audioSaved-1cede115-d53e-4605-96d6-7955ef3202e8" Button
+    t =    32.69s     Found 1 interrupting element:
+    t =    32.69s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    32.69s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    32.70s Checking for user permission dialogs...
+    t =    32.70s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    33.10s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    33.47s Checking for Bluetooth Setup Assistant...
+    t =    33.47s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    33.83s Checking for Notification Center Banners...
+    t =    33.83s Checking for basic alerts
+    t =    33.83s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    34.18s             Find the "Plan productive widgets and Todoist" Window
+    t =    34.66s             Find the "Plan productive widgets and Todoist" Window
+    t =    35.02s No monitors handled UI interruption, checking to see if element still exists...
+    t =    35.03s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    35.39s Did not handle the interruption, but will attempt to continue…
+    t =    35.40s     Synthesize event
+    t =    35.88s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    35.90s Waiting 8.0s for "audioCaption" TextView to exist
+    t =    36.92s     Checking `Expect predicate `existsNoRetry == 1` for object "audioCaption" TextView`
+    t =    36.93s         Checking existence of `"audioCaption" TextView`
+    t =    37.02s Find the "audioCaption" TextView
+    t =    37.08s Find the "audioPlayback" Button
+    t =    37.16s Find the "audioPlayback" Button
+    t =    37.24s Find the "audioPlayback" Button
+    t =    37.32s Find the "audioPlayback" Button
+    t =    37.39s Find the "audioPlayback" Button
+    t =    37.48s Find the "audioPlayback" Button
+    t =    37.56s Find the "audioPlayback" Button
+    t =    37.64s Find the "audioPlayback" Button
+    t =    37.71s Find the "audioPlayback" Button
+    t =    37.79s Find the "audioPlayback" Button
+    t =    37.99s Find the "audioPlayback" Button
+    t =    38.10s Find the "audioPlayback" Button
+    t =    38.18s Find the "audioPlayback" Button
+    t =    38.26s Find the "audioPlayback" Button
+    t =    38.34s Checking existence of `"audioPlayback" Button`
+    t =    38.40s Find the "audioPlayback" Button
+    t =    38.48s Click "audioPlayback" Button
+    t =    38.49s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    38.50s     Find the "audioPlayback" Button
+    t =    38.56s     Check for interrupting elements affecting "audioPlayback" Button
+    t =    38.58s     Synthesize event
+    t =    39.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    39.11s Find the "audioPlayback" Button
+    t =    39.19s Click "audioPlayback" Button
+    t =    39.19s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    39.19s     Find the "audioPlayback" Button
+    t =    39.26s     Check for interrupting elements affecting "audioPlayback" Button
+    t =    39.29s     Synthesize event
+    t =    39.80s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    39.81s Find the "audioPlayback" Button
+    t =    39.89s Checking existence of `Window (First Match)`
+    t =    39.89s Find the Window (First Match)
+2026-10-27 20:32:48.274431+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    39.99s Added attachment named 'Restored audio recording after cold launch'
+    t =    39.99s Click "audioClose" Button
+    t =    39.99s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    40.00s     Find the "audioClose" Button
+    t =    40.06s     Check for interrupting elements affecting "audioClose" Button
+    t =    40.07s     Synthesize event
+    t =    40.61s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    40.90s Waiting 8.0s for "audioFixtureOpen" Button to exist
+    t =    41.92s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    41.92s         Checking existence of `"audioFixtureOpen" Button`
+    t =    41.98s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68567
+    t =    43.05s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioDraftReviewSavePlaybackAndColdReturn]' passed (43.477 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioDraftSyntheticPermissionRefusalDoesNotCreateRecording]' started.
+    t =     0.00s Start Test at 2026-10-27 20:32:51.847
+    t =     0.13s Set Up
+    t =     0.13s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.13s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:32:51.980 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:32:51.980 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.69s         Wait for accessibility to load
+    t =     0.78s         Setting up automation session
+    t =     0.80s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.86s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.86s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.87s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.94s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =     1.96s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =     1.96s         Checking existence of `"audioFixtureOpen" Button`
+    t =     2.09s Click "audioFixtureOpen" Button
+    t =     2.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.09s     Find the "audioFixtureOpen" Button
+    t =     2.13s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =     2.15s     Synthesize event
+    t =     2.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.02s Waiting 8.0s for "audioRecord" Button to exist
+    t =     4.05s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =     4.05s         Checking existence of `"audioRecord" Button`
+    t =     4.13s Click "audioRecord" Button
+    t =     4.13s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.14s     Find the "audioRecord" Button
+    t =     4.20s     Check for interrupting elements affecting "audioRecord" Button
+    t =     4.21s     Synthesize event
+    t =     4.69s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     4.70s Find the "audioNotice" StaticText
+    t =     4.77s Find the "audioNotice" StaticText
+    t =     4.84s Find the "audioNotice" StaticText
+    t =     4.90s Find the "audioNotice" StaticText
+    t =     4.96s Find the "audioNotice" StaticText
+    t =     5.02s Find the "audioNotice" StaticText
+    t =     5.08s Find the "audioNotice" StaticText
+    t =     5.25s Find the "audioNotice" StaticText
+    t =     5.32s Find the "audioNotice" StaticText
+    t =     5.38s Find the "audioNotice" StaticText
+    t =     5.44s Find the "audioNotice" StaticText
+    t =     5.50s Find the "audioNotice" StaticText
+    t =     5.56s Find the "audioNotice" StaticText
+    t =     5.62s Find the "audioNotice" StaticText
+    t =     5.68s Checking existence of `"audioNotice" StaticText`
+    t =     5.73s Find the "audioNotice" StaticText
+    t =     6.80s Checking `Expect predicate `exists == 1 AND (label CONTAINS "Microphone access is off" OR value CONTAINS "Microphone access is off")` for object "audioNotice" StaticText`
+    t =     6.80s     Checking existence of `"audioNotice" StaticText`
+    t =     6.86s     Find the "audioNotice" StaticText
+    t =     6.91s     Find the "audioNotice" StaticText
+    t =     6.98s Checking existence of `"audioCaption" TextView`
+    t =     7.02s Find the "audioNotice" StaticText
+    t =     7.10s Find the "audioNotice" StaticText
+    t =     7.16s Find the "audioNotice" StaticText
+    t =     7.23s Find the "audioNotice" StaticText
+    t =     7.29s Find the "audioNotice" StaticText
+    t =     7.36s Find the "audioNotice" StaticText
+    t =     7.43s Find the "audioNotice" StaticText
+    t =     7.50s Find the "audioNotice" StaticText
+    t =     7.56s Find the "audioNotice" StaticText
+    t =     7.62s Find the "audioNotice" StaticText
+    t =     7.68s Find the "audioNotice" StaticText
+    t =     7.76s Find the "audioNotice" StaticText
+    t =     7.82s Find the "audioNotice" StaticText
+    t =     7.90s Find the "audioNotice" StaticText
+    t =     7.97s Checking existence of `"audioNotice" StaticText`
+    t =     8.02s Find the "audioNotice" StaticText
+    t =     8.08s Checking existence of `Window (First Match)`
+    t =     8.08s Find the Window (First Match)
+2026-10-27 20:32:59.935354+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =     8.14s Added attachment named 'Audio draft synthetic permission refusal'
+    t =     8.14s Click "audioClose" Button
+    t =     8.14s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.14s     Find the "audioClose" Button
+    t =     8.18s     Check for interrupting elements affecting "audioClose" Button
+    t =     8.19s     Synthesize event
+    t =     8.69s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.97s Waiting 8.0s for "audioFixtureOpen" Button to exist
+    t =     9.99s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =     9.99s         Checking existence of `"audioFixtureOpen" Button`
+    t =    10.06s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68592
+    t =    11.10s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioDraftSyntheticPermissionRefusalDoesNotCreateRecording]' passed (11.444 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft]' started.
+    t =     0.00s Start Test at 2026-10-27 20:33:03.292
+    t =     0.17s Set Up
+    t =     0.18s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.18s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:33:03.473 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:33:03.473 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.71s         Wait for accessibility to load
+    t =     0.81s         Setting up automation session
+    t =     0.82s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.88s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.88s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.89s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.96s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =     1.96s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =     1.96s         Checking existence of `"audioFixtureOpen" Button`
+    t =     2.09s Click "audioFixtureOpen" Button
+    t =     2.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.10s     Find the "audioFixtureOpen" Button
+    t =     2.14s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =     2.15s     Synthesize event
+    t =     2.72s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.02s Waiting 8.0s for "audioRecord" Button to exist
+    t =     4.05s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =     4.05s         Checking existence of `"audioRecord" Button`
+    t =     4.15s Find the "audioRecord" Button
+    t =     4.22s Find the "audioRecord" Button
+    t =     4.28s Find the "audioRecord" Button
+    t =     4.36s Find the "audioRecord" Button
+    t =     4.42s Find the "audioRecord" Button
+    t =     4.48s Find the "audioRecord" Button
+    t =     4.55s Find the "audioRecord" Button
+    t =     4.61s Find the "audioRecord" Button
+    t =     4.67s Find the "audioRecord" Button
+    t =     4.85s Find the "audioRecord" Button
+    t =     4.92s Find the "audioRecord" Button
+    t =     4.98s Find the "audioRecord" Button
+    t =     5.04s Find the "audioRecord" Button
+    t =     5.11s Find the "audioRecord" Button
+    t =     5.17s Checking existence of `"audioRecord" Button`
+    t =     5.23s Find the "audioRecord" Button
+    t =     5.29s Click "audioRecord" Button
+    t =     5.29s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.30s     Find the "audioRecord" Button
+    t =     5.35s     Check for interrupting elements affecting "audioRecord" Button
+    t =     5.36s     Synthesize event
+    t =     5.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.88s Checking `Expect predicate `exists == 1 AND label == "Stop recording"` for object "audioStop" Button`
+    t =     6.88s     Checking existence of `"audioStop" Button`
+    t =     7.05s     Find the "audioStop" Button
+    t =     7.11s Click "audioStop" Button
+    t =     7.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.12s     Find the "audioStop" Button
+    t =     7.17s     Check for interrupting elements affecting "audioStop" Button
+    t =     7.18s     Synthesize event
+    t =     7.67s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.69s Waiting 10.0s for "audioCaption" TextView to exist
+    t =     8.71s     Checking `Expect predicate `existsNoRetry == 1` for object "audioCaption" TextView`
+    t =     8.71s         Checking existence of `"audioCaption" TextView`
+    t =     8.80s Find the "audioRecoveryStatus" StaticText
+    t =     8.89s Find the "audioRecoveryStatus" StaticText
+    t =     8.97s Find the "audioRecoveryStatus" StaticText
+    t =     9.06s Find the "audioRecoveryStatus" StaticText
+    t =     9.14s Find the "audioRecoveryStatus" StaticText
+    t =     9.22s Find the "audioRecoveryStatus" StaticText
+    t =     9.29s Find the "audioRecoveryStatus" StaticText
+    t =     9.36s Find the "audioRecoveryStatus" StaticText
+    t =     9.43s Find the "audioRecoveryStatus" StaticText
+    t =     9.51s Find the "audioRecoveryStatus" StaticText
+    t =     9.58s Find the "audioRecoveryStatus" StaticText
+    t =     9.66s Find the "audioRecoveryStatus" StaticText
+    t =     9.73s Find the "audioRecoveryStatus" StaticText
+    t =     9.81s Find the "audioRecoveryStatus" StaticText
+    t =     9.88s Checking existence of `"audioRecoveryStatus" StaticText`
+    t =     9.94s Find the "audioRecoveryStatus" StaticText
+    t =    11.03s Checking `Expect predicate `exists == 1 AND (label == "Recovery copy kept privately on this device." OR value == "Recovery copy kept privately on this device.")` for object "audioRecoveryStatus" StaticText`
+    t =    11.03s     Checking existence of `"audioRecoveryStatus" StaticText`
+    t =    11.12s     Find the "audioRecoveryStatus" StaticText
+    t =    11.18s     Find the "audioRecoveryStatus" StaticText
+    t =    11.24s Click "audioClose" Button
+    t =    11.24s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.25s     Find the "audioClose" Button
+    t =    11.32s     Check for interrupting elements affecting "audioClose" Button
+    t =    11.34s     Synthesize event
+    t =    11.90s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    12.20s Waiting 8.0s for "Discard unsaved changes" Button to exist
+    t =    13.20s     Checking `Expect predicate `existsNoRetry == 1` for object "Discard unsaved changes" Button`
+    t =    13.20s         Checking existence of `"Discard unsaved changes" Button`
+    t =    13.30s Click "Discard unsaved changes" Button
+    t =    13.30s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.31s     Find the "Discard unsaved changes" Button
+    t =    13.38s     Check for interrupting elements affecting "action-button-2" Button
+    t =    13.40s     Synthesize event
+    t =    14.17s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    14.18s Waiting 8.0s for "audioFixtureOpen" Button to exist
+    t =    15.19s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    15.19s         Checking existence of `"audioFixtureOpen" Button`
+    t =    15.26s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68606
+    t =    16.32s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    16.32s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:33:19.610 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:33:19.610 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    16.82s         Wait for accessibility to load
+    t =    16.91s         Setting up automation session
+    t =    16.92s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.98s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    16.98s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    16.99s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.05s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =    18.06s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    18.07s         Checking existence of `"audioFixtureOpen" Button`
+    t =    18.19s Click "audioFixtureOpen" Button
+    t =    18.19s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.19s     Find the "audioFixtureOpen" Button
+    t =    18.23s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =    18.26s     Synthesize event
+    t =    18.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    19.11s Waiting 8.0s for "audioRecord" Button to exist
+    t =    20.11s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =    20.11s         Checking existence of `"audioRecord" Button`
+    t =    20.19s Checking existence of `Button (First Match)`
+    t =    20.24s Checking existence of `Button (First Match)`
+    t =    20.29s Checking existence of `"audioCaption" TextView`
+    t =    20.34s Checking existence of `Window (First Match)`
+    t =    20.34s Find the Window (First Match)
+2026-10-27 20:33:23.641909+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    20.41s Added attachment named 'Explicitly discarded review stays discarded after relaunch'
+    t =    20.41s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68624
+    t =    21.46s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft]' passed (21.856 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioInterruptedReviewRecoversAfterColdLaunchWithoutExplicitSave]' started.
+    t =     0.00s Start Test at 2026-10-27 20:33:25.149
+    t =     0.16s Set Up
+    t =     0.17s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.17s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:33:25.316 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:33:25.316 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.72s         Wait for accessibility to load
+    t =     0.82s         Setting up automation session
+    t =     0.84s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.89s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.89s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.90s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     0.97s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =     1.98s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =     1.98s         Checking existence of `"audioFixtureOpen" Button`
+    t =     2.11s Click "audioFixtureOpen" Button
+    t =     2.11s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     2.12s     Find the "audioFixtureOpen" Button
+    t =     2.16s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =     2.18s     Synthesize event
+    t =     2.76s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.05s Waiting 8.0s for "audioRecord" Button to exist
+    t =     4.07s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =     4.07s         Checking existence of `"audioRecord" Button`
+    t =     4.16s Find the "audioRecord" Button
+    t =     4.23s Find the "audioRecord" Button
+    t =     4.29s Find the "audioRecord" Button
+    t =     4.35s Find the "audioRecord" Button
+    t =     4.41s Find the "audioRecord" Button
+    t =     4.59s Find the "audioRecord" Button
+    t =     4.66s Find the "audioRecord" Button
+    t =     4.72s Find the "audioRecord" Button
+    t =     4.77s Find the "audioRecord" Button
+    t =     4.83s Find the "audioRecord" Button
+    t =     4.89s Find the "audioRecord" Button
+    t =     4.96s Find the "audioRecord" Button
+    t =     5.02s Find the "audioRecord" Button
+    t =     5.08s Find the "audioRecord" Button
+    t =     5.14s Checking existence of `"audioRecord" Button`
+    t =     5.19s Find the "audioRecord" Button
+    t =     5.26s Click "audioRecord" Button
+    t =     5.26s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.26s     Find the "audioRecord" Button
+    t =     5.31s     Check for interrupting elements affecting "audioRecord" Button
+    t =     5.32s     Synthesize event
+    t =     5.82s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.85s Checking `Expect predicate `exists == 1 AND label == "Stop recording"` for object "audioStop" Button`
+    t =     6.86s     Checking existence of `"audioStop" Button`
+    t =     6.92s     Find the "audioStop" Button
+    t =     6.97s Click "audioStop" Button
+    t =     6.97s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     6.98s     Find the "audioStop" Button
+    t =     7.03s     Check for interrupting elements affecting "audioStop" Button
+    t =     7.04s     Synthesize event
+    t =     7.55s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.55s Waiting 10.0s for "audioCaption" TextView to exist
+    t =     8.57s     Checking `Expect predicate `existsNoRetry == 1` for object "audioCaption" TextView`
+    t =     8.57s         Checking existence of `"audioCaption" TextView`
+    t =     8.67s Find the "audioCaption" TextView
+    t =     8.75s Find the "audioCaption" TextView
+    t =     8.82s Find the "audioCaption" TextView
+    t =     8.89s Find the "audioCaption" TextView
+    t =     8.96s Find the "audioCaption" TextView
+    t =     9.02s Find the "audioCaption" TextView
+    t =     9.09s Find the "audioCaption" TextView
+    t =     9.16s Find the "audioCaption" TextView
+    t =     9.23s Find the "audioCaption" TextView
+    t =     9.31s Find the "audioCaption" TextView
+    t =     9.38s Find the "audioCaption" TextView
+    t =     9.46s Find the "audioCaption" TextView
+    t =     9.53s Find the "audioCaption" TextView
+    t =     9.61s Find the "audioCaption" TextView
+    t =     9.69s Checking existence of `"audioCaption" TextView`
+    t =     9.75s Find the "audioCaption" TextView
+    t =     9.83s Click "audioCaption" TextView
+    t =     9.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.84s     Find the "audioCaption" TextView
+    t =     9.91s     Check for interrupting elements affecting "audioCaption" TextView
+    t =     9.93s     Found 1 interrupting element:
+    t =     9.93s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =     9.93s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =     9.93s Checking for user permission dialogs...
+    t =     9.93s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    10.41s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    10.82s Checking for Bluetooth Setup Assistant...
+    t =    10.82s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    11.22s Checking for Notification Center Banners...
+    t =    11.22s Checking for basic alerts
+    t =    11.23s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    11.62s             Find the "Plan productive widgets and Todoist" Window
+    t =    12.14s             Find the "Plan productive widgets and Todoist" Window
+    t =    12.54s No monitors handled UI interruption, checking to see if element still exists...
+    t =    12.55s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    12.95s Did not handle the interruption, but will attempt to continue…
+    t =    12.95s     Synthesize event
+    t =    13.46s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.46s Type 'Keep this interrup...' into "audioCaption" TextView
+    t =    13.47s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.47s     Find the "audioCaption" TextView
+    t =    13.55s     Check for interrupting elements affecting "audioCaption" TextView
+    t =    13.56s     Found 1 interrupting element:
+    t =    13.56s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    13.56s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    13.56s Checking for user permission dialogs...
+    t =    13.56s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    13.96s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    14.37s Checking for Bluetooth Setup Assistant...
+    t =    14.37s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    14.77s Checking for Notification Center Banners...
+    t =    14.77s Checking for basic alerts
+    t =    14.78s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    15.17s             Find the "Plan productive widgets and Todoist" Window
+    t =    15.59s             Find the "Plan productive widgets and Todoist" Window
+    t =    15.98s No monitors handled UI interruption, checking to see if element still exists...
+    t =    15.98s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    16.38s Did not handle the interruption, but will attempt to continue…
+    t =    16.38s     Synthesize event
+2026-10-27 20:33:41.535704+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (778.0, 720.0, 500.0, 120.0): [1]
+    t =    18.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.07s Find the "audioRecoveryStatus" StaticText
+    t =    18.15s Find the "audioRecoveryStatus" StaticText
+    t =    18.22s Find the "audioRecoveryStatus" StaticText
+    t =    18.29s Find the "audioRecoveryStatus" StaticText
+    t =    18.37s Find the "audioRecoveryStatus" StaticText
+    t =    18.45s Find the "audioRecoveryStatus" StaticText
+    t =    18.52s Find the "audioRecoveryStatus" StaticText
+    t =    18.59s Find the "audioRecoveryStatus" StaticText
+    t =    18.66s Find the "audioRecoveryStatus" StaticText
+    t =    18.74s Find the "audioRecoveryStatus" StaticText
+    t =    18.83s Find the "audioRecoveryStatus" StaticText
+    t =    18.91s Find the "audioRecoveryStatus" StaticText
+    t =    18.98s Find the "audioRecoveryStatus" StaticText
+    t =    19.05s Find the "audioRecoveryStatus" StaticText
+    t =    19.12s Checking existence of `"audioRecoveryStatus" StaticText`
+    t =    19.19s Find the "audioRecoveryStatus" StaticText
+    t =    20.39s Checking `Expect predicate `exists == 1 AND (label == "Recovery copy kept privately on this device." OR value == "Recovery copy kept privately on this device.")` for object "audioRecoveryStatus" StaticText`
+    t =    20.39s     Checking existence of `"audioRecoveryStatus" StaticText`
+    t =    20.48s     Find the "audioRecoveryStatus" StaticText
+    t =    20.55s     Find the "audioRecoveryStatus" StaticText
+    t =    20.61s Checking existence of `Window (First Match)`
+    t =    20.62s Find the Window (First Match)
+2026-10-27 20:33:45.777274+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    20.73s Added attachment named 'Private recovery copy before interrupted review'
+    t =    20.73s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68629
+    t =    21.78s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    21.79s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:33:46.938 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:33:46.938 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    22.30s         Wait for accessibility to load
+    t =    22.39s         Setting up automation session
+    t =    22.41s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.46s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    22.46s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    22.47s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    22.53s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =    23.55s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    23.56s         Checking existence of `"audioFixtureOpen" Button`
+    t =    23.69s Click "audioFixtureOpen" Button
+    t =    23.69s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    23.69s     Find the "audioFixtureOpen" Button
+    t =    23.73s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =    23.76s     Synthesize event
+    t =    24.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    24.63s Waiting 8.0s for "audioRecord" Button to exist
+    t =    25.65s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =    25.65s         Checking existence of `"audioRecord" Button`
+    t =    25.76s Checking existence of `Button (First Match)`
+    t =    25.81s Waiting 8.0s for Button (First Match) to exist
+    t =    26.81s     Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =    26.81s         Checking existence of `Button (First Match)`
+    t =    26.86s Find the Button (First Match)
+    t =    26.92s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    26.98s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.03s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.07s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.12s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.16s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.21s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.26s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.31s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.35s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.40s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.44s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.48s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.53s Checking existence of `"audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button`
+    t =    27.56s Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.60s Click "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.60s     Find the "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.65s     Check for interrupting elements affecting "audioRecovery-417986b9-4287-463c-9f45-d4b69eddd5ee" Button
+    t =    27.66s     Found 1 interrupting element:
+    t =    27.66s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    27.66s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    27.66s Checking for user permission dialogs...
+    t =    27.66s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    28.07s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    28.43s Checking for Bluetooth Setup Assistant...
+    t =    28.43s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    28.78s Checking for Notification Center Banners...
+    t =    28.79s Checking for basic alerts
+    t =    28.79s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    29.13s             Find the "Plan productive widgets and Todoist" Window
+    t =    29.49s             Find the "Plan productive widgets and Todoist" Window
+    t =    29.85s No monitors handled UI interruption, checking to see if element still exists...
+    t =    29.86s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    30.23s Did not handle the interruption, but will attempt to continue…
+    t =    30.23s     Synthesize event
+    t =    30.73s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.75s Waiting 10.0s for "audioCaption" TextView to exist
+    t =    31.78s     Checking `Expect predicate `existsNoRetry == 1` for object "audioCaption" TextView`
+    t =    31.78s         Checking existence of `"audioCaption" TextView`
+    t =    31.88s Find the "audioCaption" TextView
+    t =    31.96s Find the "audioCaption" TextView
+    t =    32.04s Find the "audioCaption" TextView
+    t =    32.11s Find the "audioCaption" TextView
+    t =    32.20s Find the "audioCaption" TextView
+    t =    32.28s Find the "audioCaption" TextView
+    t =    32.36s Find the "audioCaption" TextView
+    t =    32.44s Find the "audioCaption" TextView
+    t =    32.52s Find the "audioCaption" TextView
+    t =    32.60s Find the "audioCaption" TextView
+    t =    32.67s Find the "audioCaption" TextView
+    t =    32.75s Find the "audioCaption" TextView
+    t =    32.82s Find the "audioCaption" TextView
+    t =    32.91s Find the "audioCaption" TextView
+    t =    33.00s Checking existence of `"audioCaption" TextView`
+    t =    33.06s Find the "audioCaption" TextView
+    t =    33.14s Find the "audioCaption" TextView
+    t =    33.19s Checking existence of `Window (First Match)`
+    t =    33.20s Find the Window (First Match)
+2026-10-27 20:33:58.360525+0100 TaskfoldUITests-Runner[68206:25975865] [DisplayManager] Found 1 displays containing rect (338.0, 264.0, 1380.0, 840.0): [1]
+    t =    33.30s Added attachment named 'Recovered unsaved review after cold launch'
+    t =    33.30s Find the "audioSave" Button
+    t =    33.37s Find the "audioSave" Button
+    t =    33.43s Find the "audioSave" Button
+    t =    33.49s Find the "audioSave" Button
+    t =    33.55s Find the "audioSave" Button
+    t =    33.62s Find the "audioSave" Button
+    t =    33.71s Find the "audioSave" Button
+    t =    33.79s Find the "audioSave" Button
+    t =    33.87s Find the "audioSave" Button
+    t =    33.95s Find the "audioSave" Button
+    t =    34.03s Find the "audioSave" Button
+    t =    34.11s Find the "audioSave" Button
+    t =    34.19s Find the "audioSave" Button
+    t =    34.27s Find the "audioSave" Button
+    t =    34.34s Checking existence of `"audioSave" Button`
+    t =    34.41s Find the "audioSave" Button
+    t =    34.60s Click "audioSave" Button
+    t =    34.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.61s     Find the "audioSave" Button
+    t =    34.69s     Check for interrupting elements affecting "audioSave" Button
+    t =    34.71s     Synthesize event
+    t =    35.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.26s Checking `Expect predicate `label == "Saved on this device" AND enabled == 0` for object "audioSave" Button`
+    t =    36.26s     Find the "audioSave" Button
+    t =    36.35s     Find the "audioSave" Button
+    t =    36.42s Click "audioClose" Button
+    t =    36.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    36.42s     Find the "audioClose" Button
+    t =    36.48s     Check for interrupting elements affecting "audioClose" Button
+    t =    36.49s     Synthesize event
+    t =    36.99s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    37.28s Waiting 8.0s for "audioFixtureOpen" Button to exist
+    t =    38.29s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    38.29s         Checking existence of `"audioFixtureOpen" Button`
+    t =    38.47s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68661
+    t =    39.51s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    39.51s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-10-27 20:34:04.663 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 20:34:04.663 xcodebuild[68185:25975592] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    40.00s         Wait for accessibility to load
+    t =    40.08s         Setting up automation session
+    t =    40.10s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    40.15s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    40.15s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    40.16s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    40.23s Waiting 15.0s for "audioFixtureOpen" Button to exist
+    t =    41.25s     Checking `Expect predicate `existsNoRetry == 1` for object "audioFixtureOpen" Button`
+    t =    41.25s         Checking existence of `"audioFixtureOpen" Button`
+    t =    41.43s Click "audioFixtureOpen" Button
+    t =    41.43s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    41.43s     Find the "audioFixtureOpen" Button
+    t =    41.48s     Check for interrupting elements affecting "audioFixtureOpen" Button
+    t =    41.49s     Synthesize event
+    t =    42.09s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    42.38s Waiting 8.0s for "audioRecord" Button to exist
+    t =    43.38s     Checking `Expect predicate `existsNoRetry == 1` for object "audioRecord" Button`
+    t =    43.38s         Checking existence of `"audioRecord" Button`
+    t =    43.47s Checking existence of `Button (First Match)`
+    t =    43.52s Waiting 8.0s for Button (First Match) to exist
+    t =    44.54s     Checking `Expect predicate `existsNoRetry == 1` for object Button (First Match)`
+    t =    44.55s         Checking existence of `Button (First Match)`
+    t =    44.59s Find the Button (First Match)
+    t =    44.64s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    44.69s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    44.85s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    44.90s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    44.95s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.00s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.04s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.08s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.13s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.17s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.22s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.26s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.30s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.34s Checking existence of `"audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button`
+    t =    45.37s Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.42s Click "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    45.42s     Find the "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.45s     Check for interrupting elements affecting "audioSaved-5ea45ee1-067d-4e30-a33d-b02717e2784c" Button
+    t =    45.46s     Found 1 interrupting element:
+    t =    45.47s Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    45.47s     Invoking UI interruption monitors for Window at {{0.0, 39.0}, {2056.0, 1290.0}} from Application 'com.openai.codex'
+    t =    45.47s Checking for user permission dialogs...
+    t =    45.47s             Checking existence of `StaticText (Elements matching predicate 'value MATCHES[c] ".+ would like ((to|full) access|to find) .+"')`
+    t =    45.89s             Checking existence of `StaticText (Elements matching predicate 'title CONTAINS[c] "Trust This "')`
+    t =    46.28s Checking for Bluetooth Setup Assistant...
+    t =    46.28s             Find the Window at {{0.0, 39.0}, {2056.0, 1290.0}}
+    t =    46.65s Checking for Notification Center Banners...
+    t =    46.66s Checking for basic alerts
+    t =    46.66s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    47.03s             Find the "Plan productive widgets and Todoist" Window
+    t =    47.41s             Find the "Plan productive widgets and Todoist" Window
+    t =    47.76s No monitors handled UI interruption, checking to see if element still exists...
+    t =    47.76s             Checking existence of `"Plan productive widgets and Todoist" Window`
+    t =    48.13s Did not handle the interruption, but will attempt to continue…
+    t =    48.13s     Synthesize event
+    t =    48.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    48.62s Waiting 10.0s for "audioCaption" TextView to exist
+    t =    49.62s     Checking `Expect predicate `existsNoRetry == 1` for object "audioCaption" TextView`
+    t =    49.62s         Checking existence of `"audioCaption" TextView`
+    t =    49.72s Find the "audioCaption" TextView
+    t =    49.79s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:68686
+    t =    50.87s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testAudioInterruptedReviewRecoversAfterColdLaunchWithoutExplicitSave]' passed (51.356 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-10-27 20:34:16.505.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 190.792 (190.798) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-10-27 20:34:16.507.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 190.792 (190.800) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 20:34:16.508.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 190.792 (190.802) seconds
+2026-10-27 20:34:16.801 xcodebuild[68185:25975592] [MT] IDETestOperationsObserverDebug: 191.846 elapsed -- Testing started completed.
+2026-10-27 20:34:16.802 xcodebuild[68185:25975592] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 20:34:16.802 xcodebuild[68185:25975592] [MT] IDETestOperationsObserverDebug: 191.846 sec, +191.846 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-audio-recovery-mac-final.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

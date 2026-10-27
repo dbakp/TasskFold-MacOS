@@ -8869,3 +8869,23 @@ checks use generated tone bytes and a silent player. No actual microphone or
 speaker acceptance is claimed; the user explicitly deferred it. Ordinary entry
 points, server delivery, full lifecycle and spoken acceptance remain open.
 See [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md) and audio-comment-media/.
+
+
+## 2026-10-27 — interrupted audio review recovery
+
+The gated audio editor now checkpoints validated unsaved recordings/captions into
+an independent private recovery namespace, resumes only for the original owner
+and task, and offers explicit Retry when a retained write is blocked. Deliberate
+Save/Discard settles exact copies; concurrent saved-draft changes offer Save as
+separate draft while preserving both versions and stable uncertain retries.
+Each app owns its sources and passes 55 focused Core / 42 synthetic controller
+checks. See audio-comment-recovery/ and AUDIO_COMMENTS.md for native evidence and
+limits. Mac normal-Quit/background/raw-recording ownership, storage-full/cleanup,
+account removal, private server delivery and genuine audio/spoken acceptance are
+still open. No ordinary feature entry point or release gate was enabled.
+
+Current native acceptance: six passes each on Mac, iPhone Simulator and iPad
+Simulator, no failures/skips/reported runtime warnings. Selected actual captures
+and result verifiers are retained in audio-comment-recovery/. Temporary apps/runners
+are closed, both used Simulators are shut down, and 295.4 MiB of allocated obsolete
+owned output was pruned (allocated-before-removal, not guaranteed physical free space).

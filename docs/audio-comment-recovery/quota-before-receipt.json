@@ -1,0 +1,11 @@
+{
+  "exit": 1,
+  "failed": [
+    "explicitDiscardSettlesExactUnacknowledgedRecoveryWithoutSavingNewerCaption",
+    "explicitDiscardWorksAtFullQuotaWithoutWritingAnotherCopy",
+    "knownPrewriteBusyFailureKeepsReviewEditable",
+    "knownPrewriteQuotaFailureDoesNotFreezeReviewAsUncertainSave"
+  ],
+  "sourceSHA256": "242a9c9cca225e282ff2e9fc729f937d7e185207dbf72a150db177c9eec075c7",
+  "patch": "Restored pre-fix generic save-error classification and recovery clear that flushes a new copy before discard; all other current controller/Core/proof sources unchanged."
+}

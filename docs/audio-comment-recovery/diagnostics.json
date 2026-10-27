@@ -1,0 +1,47 @@
+{
+  "supersededMacRun": {
+    "exit": 73,
+    "accepted": false,
+    "reason": "Stopped intentionally when adding the visible retained-review Retry control; observed terminal interruption before rebuilding. Not restarted because of an observation timeout."
+  },
+  "earlierMacQuery": {
+    "result": {
+      "result": "Failed",
+      "totalTestCount": 6,
+      "passedTests": 5,
+      "failedTests": 1,
+      "skippedTests": 0,
+      "expectedFailures": 0,
+      "runtimeWarnings": [],
+      "testFailures": [
+        {
+          "failureText": "Failed to click \"Discard unsaved changes\" Button: Find single matching element. Multiple matching elements found for <XCUIElementQuery: 0x8b20f2260>.\nSparse tree of matches:\n\u2192Application, pid: 66140, title: 'Taskfold Workflow Test'\n  \u21b3TouchBar\n  \u22c5 \u21b3Button, title: 'Discard unsaved changes'\n  \u21b3Window, identifier: 'SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.AudioCommentNativeFixtureView, Taskfold.ProjectAdoptionNativeFixtureView>, SwiftUI._ConditionalContent<Taskfold.WorkflowUndoNativeFixtureView, Taskfold.TeamEditorNativeFixtureView>>, SwiftUI._Conditi', title: 'Taskfold'\n    \u21b3Sheet\n      \u21b3Sheet, identifier: '_NS:87', label: 'alert'\n        \u21b3Button, identifier: 'action-button-2', label: 'Discard unsaved changes'",
+          "targetName": "TaskfoldUITests",
+          "testIdentifier": 5,
+          "testIdentifierString": "TaskfoldMacUITests/testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft()",
+          "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft",
+          "testName": "testAudioExplicitDiscardRemovesRecoveryWithoutCreatingSavedDraft()"
+        }
+      ]
+    },
+    "reason": "The unscoped confirmation button matched Touch Bar and dialog. The test now selects the dialog button; no app behaviour/assertion relaxed. The current full Mac suite also passes all six cases.",
+    "targetedRerun": {
+      "result": "Passed",
+      "totalTestCount": 1,
+      "passedTests": 1,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "runtimeWarnings": []
+    }
+  },
+  "initialMobileBuild": {
+    "result": "failed for extra x86_64 simulator link",
+    "reason": "Missing cached Intel AppAuth symbols; current build explicitly selects the ARM64 Simulator architecture, with signing enabled. Production architectures/settings unchanged."
+  },
+  "quotaRegression": {
+    "receipt": "quota-before-receipt.json",
+    "checks": "quota-before-checks.json",
+    "current": "controller.json",
+    "scope": "Restored pre-fix controller paths against the current actual Core store; four expected failures, then 42 current passes."
+  }
+}
