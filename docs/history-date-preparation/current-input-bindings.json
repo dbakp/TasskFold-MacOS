@@ -1,0 +1,33 @@
+{
+  "repository": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS",
+  "validation": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/docs/history-date-preparation/validation.json",
+  "sourceSHA256": {
+    "Taskfold/Core/TaskActivity.swift": "8b6de3a6b644eae2b2c7fbe6649607a238207791c5b4be6d26c665b92a7cdafe",
+    "Taskfold/Core/Store.swift": "cacf2a422c4548266dee9c9b3a9a967cc63c28c2dcbd1f2b48b99ddbb5ad0311",
+    "Taskfold/Core/ProjectWorkflows.swift": "019059469d6f4bf724db1b8234a51b40d07b5c17e951d75f3f6129db10deaa30",
+    "Taskfold/TeamTemplateNativeFixture.swift": "09d0c14cafed31f1a0da882fd20e504209f98f3e73645ef307de4a8514d7ba14",
+    "TaskfoldTests/ActivityDateCompatibilityTests.swift": "c1d751f560d262f27b994dfe9df15c8f9746935332c6efe21066064d2c741e68",
+    "TaskfoldTests/FreshLocalActivityTests.swift": "6b9683df8b6ba43168400f7eee32ceaa0fba27a74c396576df0c9018e3e1079f",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "eae7e6da1d598b508a39f1b714449100fd6d94cb2beef22b905aa64eab3f6eae",
+    "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+    "Scripts/verify_ui_result.py": "48af0dfe0f2127898e880af92425a04ea8fff86f7e7809e9a09700f1d7104d26",
+    "Taskfold/Info.plist": "186b53a66e038e9102ab065fcbece82f0f23e6f3bf0b2d5a995cbc78b7e54dcd",
+    "Package.swift": "5477db7bb42e0f5072fbecaccddde693cafdd9d470ba8588b3bf1675e25b6346"
+  },
+  "preparedSHA256": {
+    "Taskfold/Core/TaskActivity.swift": "8b6de3a6b644eae2b2c7fbe6649607a238207791c5b4be6d26c665b92a7cdafe",
+    "Taskfold/Core/Store.swift": "cc1c4870b97b7b03448abc304a5bfd0defe95d4022db5686c59771aebffd4fba",
+    "Taskfold/Core/ProjectWorkflows.swift": "019059469d6f4bf724db1b8234a51b40d07b5c17e951d75f3f6129db10deaa30",
+    "Taskfold/TeamTemplateNativeFixture.swift": "09d0c14cafed31f1a0da882fd20e504209f98f3e73645ef307de4a8514d7ba14",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "eae7e6da1d598b508a39f1b714449100fd6d94cb2beef22b905aa64eab3f6eae",
+    "Scripts/prepare_team_editor_native_test.py": "af3fc568539119955d076b3c57cad0c5c46d05906e456ea595a140a91246a880",
+    "Scripts/verify_ui_result.py": "48af0dfe0f2127898e880af92425a04ea8fff86f7e7809e9a09700f1d7104d26",
+    "Taskfold/Info.plist": "266e1dec43d400a089a76ec68c4a8b7b0adf6104890f71f0b428cb38530523a5"
+  },
+  "binarySHA256": {
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold": "4342342420899cf7d2809b0f61f7aaee8a44a5c91d8069e8b162b87c47b4cfc3",
+    "Debug/Taskfold.app/Contents/MacOS/Taskfold.debug.dylib": "f21fdff8b6b5fde15b9866726c10bbba8aa3aaebf9c47f62066cefc67bbc98d8",
+    "Debug/TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "7936b4c17fe9e32a9a768dfc77ae896ba088efc6dc9954da81f4135c2de44e88"
+  },
+  "nativeValidationScope": "Final signed date-context implementation with ordinary assignment context; all five requested native cases pass per host without runtime warnings. Store/UI source preparation differs only by validated reserved namespace strings."
+}

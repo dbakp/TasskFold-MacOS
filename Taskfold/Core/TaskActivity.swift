@@ -158,6 +158,10 @@ enum TaskAssignmentProvenance {
     /// Called only by Store's explicit local-workspace commit path. These records
     /// are never accepted as server evidence or exported to another workspace.
     static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
+        let dates = LocalActivityDates()
+        recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, stamp: dates.stamp)
+    }
+    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, stamp: (Date) -> String) {
         guard change.table == "tasks", !account.isEmpty, let root = after ?? before, UUID(uuidString:root.id) != nil else { return }
         var rows = snapshot.tables[table] ?? []
         let rootID = root.id.lowercased(), incarnation = generation(root)
@@ -177,7 +181,6 @@ enum TaskAssignmentProvenance {
             }
         }
         for i in rows.indices where rows[i].string("task_id").lowercased() == rootID && rows[i].string("task_generation").lowercased() == incarnation && !rows[i].string("node_key").isEmpty && values[rows[i].string("node_key")] == nil { rows[i]["active"] = .bool(false) }
-        let recordedAt = JSON.string(TaskActivity.stamp(now))
         for (key,item) in values {
             let recipient = Self.recipient(item.source["assigned_to"])
             let previous = key.isEmpty ? before : prior?[key]?.source
@@ -190,7 +193,7 @@ enum TaskAssignmentProvenance {
             let legacy = before != nil && ((!key.isEmpty && prior == nil) || (previous != nil && recipient == oldRecipient))
             let recurrence = before == nil && (!after.string("recurrence_parent_id").isEmpty || after["source_metadata"].object["taskfold_recurrence_v1"] != nil)
             let origin = recipient == .null ? "unassigned" : legacy ? "legacy" : recurrence ? "recurrence" : "local"
-            let row = Record(["id":.string(index.map { rows[$0].id } ?? UUID().uuidString.lowercased()),"task_id":.string(rootID),"task_generation":.string(incarnation),"node_key":.string(key),"node_path":.array(item.path.map(JSON.string)),"assignee_id":recipient,"actor_id":origin == "local" ? .string(account) : .null,"scope_account":.string(account),"event_id":.string(UUID().uuidString.lowercased()),"assigned_at":origin == "local" ? recordedAt : .null,"origin":.string(origin),"active":.bool(recipient != .null)])
+            let row = Record(["id":.string(index.map { rows[$0].id } ?? UUID().uuidString.lowercased()),"task_id":.string(rootID),"task_generation":.string(incarnation),"node_key":.string(key),"node_path":.array(item.path.map(JSON.string)),"assignee_id":recipient,"actor_id":origin == "local" ? .string(account) : .null,"scope_account":.string(account),"event_id":.string(UUID().uuidString.lowercased()),"assigned_at":origin == "local" ? .string(stamp(now)) : .null,"origin":.string(origin),"active":.bool(recipient != .null)])
             if let index { rows[index] = row } else { rows.append(row); positions[key] = rows.count-1 }
         }
         snapshot.tables[table] = rows
@@ -305,12 +308,15 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
         return true
     }
     static func state(_ task: Record?) -> [String: JSON] {
+        state(task, parseInstant: TaskPlanning.instant, stamp: Self.stamp)
+    }
+    fileprivate static func state(_ task: Record?, parseInstant: (String) -> Date?, stamp: (Date) -> String) -> [String: JSON] {
         guard let task else { return [:] }
         var result = Dictionary(uniqueKeysWithValues: stateKeys.map { ($0, task[$0]) })
         result["completed"] = .bool(task.completed)
         // SQL time/timestamp comparisons are semantic, not spelling comparisons.
         for key in ["completed_at", "scheduled_at"] {
-            if let instant = TaskPlanning.instant(task.string(key)) { result[key] = .string(stamp(instant)) }
+            if let instant = parseInstant(task.string(key)) { result[key] = .string(stamp(instant)) }
         }
         if !task.string("due_time").isEmpty { result["due_time"] = .string(task.string("due_time").count == 5 ? task.string("due_time") + ":00" : task.string("due_time")) }
         return result
@@ -329,22 +335,22 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
     }
     static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
         var cursor = LocalRootActivityCursor(snapshot.tables[table] ?? [])
-        recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, cursor: &cursor)
+        recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, cursor: &cursor, dates: LocalActivityDates())
     }
-    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, cursor: inout LocalRootActivityCursor) {
+    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, cursor: inout LocalRootActivityCursor, dates: LocalActivityDates) {
         guard change.table == "tasks", validID(account), let task = after ?? before, validID(task.id) else { return }
-        let b = state(before), a = state(after), kinds = changes(before: b, after: a)
+        let b = dates.state(before), a = dates.state(after), kinds = changes(before: b, after: a)
         guard !kinds.isEmpty else { return }
         cursor.prepare()
         guard !cursor.ids.contains(change.id.uuidString.lowercased()) else { return }
         let last = cursor.last
         guard last < 9_007_199_254_740_991 else { return }
-        let effective = kinds.contains(.completed) ? TaskPlanning.instant(task.string("completed_at")) ?? now : now
-        let row = Record(["id": .string(change.id.uuidString.lowercased()), "sequence": .number(Double(last + 1)), "user_id": .string(account), "task_id": .string(task.id), "actor_id": .string(account), "recorded_at": .string(stamp(now)), "effective_at": .string(stamp(effective)), "completion_version": task.fields["completion_version"] ?? .number(0), "kinds": .array(kinds.map { .string($0.rawValue) }), "before_state": .object(b), "after_state": .object(a), "root_context": TaskRootActivityContext.document(before: before, after: after)])
-        guard Self(row: row) != nil else { return }
+        let effective = kinds.contains(.completed) ? dates.instant(task.string("completed_at")) ?? now : now
+        let row = Record(["id": .string(change.id.uuidString.lowercased()), "sequence": .number(Double(last + 1)), "user_id": .string(account), "task_id": .string(task.id), "actor_id": .string(account), "recorded_at": .string(dates.stamp(now)), "effective_at": .string(dates.stamp(effective)), "completion_version": task.fields["completion_version"] ?? .number(0), "kinds": .array(kinds.map { .string($0.rawValue) }), "before_state": .object(b), "after_state": .object(a), "root_context": TaskRootActivityContext.document(before: before, after: after)])
+        guard dates.parent(row) != nil else { return }
         snapshot.tables[table, default: []].append(row)
         cursor.ids.insert(row.id.lowercased()); cursor.last = last + 1
-        if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(stamp(now))])] }
+        if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(dates.stamp(now))])] }
     }
     func involves(project: String) -> Bool { before["project_id"]?.text.lowercased() == project.lowercased() || after["project_id"]?.text.lowercased() == project.lowercased() }
 }
@@ -468,7 +474,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         if root["task_generation"] == .null { return legacyGeneration }
         return UUID(uuidString: root.string("task_generation"))?.uuidString.lowercased()
     }
-    private static func nodes(_ root: Record?) -> [String: Node]? {
+    private static func nodes(_ root: Record?, dates: LocalActivityDates) -> [String: Node]? {
         guard let root else { return [:] }
         guard let generation = generation(root), TaskKind(root) != .unsupported,
               let bytes = try? JSONEncoder().encode(root["subtasks"]), bytes.count <= ChecklistRecovery.maximumBytes else { return nil }
@@ -481,8 +487,8 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
                   !item.source.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   item.source["completed"] == .null || { if case .bool = item.source["completed"] { return true }; return false }() else { return nil }
             if TaskKind(item.source) == .heading && (item.source.completed || item.source["completed_at"] != .null) { return nil }
-            let state = TaskActivity.state(item.record)
-            guard TaskActivity.validState(state), path(.array(item.path.map(JSON.string))) != nil,
+            let state = dates.state(item.record)
+            guard TaskActivity.validState(state, parseInstant: dates.instant, validDay: dates.validDay), path(.array(item.path.map(JSON.string))) != nil,
                   let revision = item.source["completion_version"] == .null ? 0 : TaskActivity.integer(item.source["completion_version"]) else { return nil }
             let node = Node(generation: generation, path: item.path, state: state, type: TaskKind(item.source) == .heading ? "heading" : "task", work: TaskKind.mayComplete(item.source) && work.contains(item.id), revision: revision)
             result[node.key] = node
@@ -492,6 +498,9 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     /// Stable retry identities derive from the actual mutation and node occurrence.
     /// This is a ledger record, never a client-supplied table mutation.
     static func localRows(_ change: Mutation, before: Record?, after: Record?, account: String, recordedAt: Date, afterSequence: Int64 = 0) -> [Record] {
+        localRows(change, before: before, after: after, account: account, recordedAt: recordedAt, afterSequence: afterSequence, dates: LocalActivityDates())
+    }
+    fileprivate static func localRows(_ change: Mutation, before: Record?, after: Record?, account: String, recordedAt: Date, afterSequence: Int64, dates: LocalActivityDates) -> [Record] {
         guard change.table == "tasks", ["POST", "PATCH", "DELETE"].contains(change.method),
               TaskActivity.validID(account), let root = after ?? before, TaskActivity.validID(root.id),
               change.recordID == root.id, before == nil || before?.id == root.id,
@@ -500,7 +509,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
               (change.method == "POST" && before == nil && after != nil) || (change.method == "PATCH" && before != nil && after != nil) || (change.method == "DELETE" && before != nil && after == nil) else { return [] }
         if let before, let after, before["subtasks"] == after["subtasks"], before["is_heading"] == after["is_heading"],
            before["project_id"] == after["project_id"], before["section_id"] == after["section_id"], before["task_generation"] == after["task_generation"] { return [] }
-        let prior = nodes(before), current = nodes(after)
+        let prior = nodes(before, dates: dates), current = nodes(after, dates: dates)
         var result: [Record] = [], sequence = afterSequence, overflow = false
         func append(_ key: String, generation: String?, nodeKey: String, b: [String: JSON], a: [String: JSON], oldPath: [String], newPath: [String], oldWork: Bool, newWork: Bool, oldType: String?, newType: String?, revision: Int64, kinds: [Kind]) {
             guard !kinds.isEmpty else { return }
@@ -509,15 +518,15 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
             let hash = SHA256.hash(data: identity).map { String(format: "%02x", $0) }.joined()
             let raw = String(hash.prefix(32)), points = [8,12,16,20]
             let id = raw.enumerated().map { (points.contains($0.offset) ? "-" : "") + String($0.element) }.joined()
-            let effective = kinds.contains(.completed) ? a["completed_at"].flatMap { TaskPlanning.instant($0.text) } ?? recordedAt : recordedAt
+            let effective = kinds.contains(.completed) ? a["completed_at"].flatMap { dates.instant($0.text) } ?? recordedAt : recordedAt
             let row = Record(["id": .string(id), "format_version": .number(1), "sequence": .number(Double(sequence)), "user_id": .string(account), "task_id": .string(root.id), "task_generation": generation.map(JSON.string) ?? .null,
                 "node_key": .string(nodeKey), "before_path": .array(oldPath.map(JSON.string)), "after_path": .array(newPath.map(JSON.string)), "actor_id": .string(account),
-                "recorded_at": .string(TaskActivity.stamp(recordedAt)), "effective_at": .string(TaskActivity.stamp(effective)), "completion_version": .number(Double(revision)),
+                "recorded_at": .string(dates.stamp(recordedAt)), "effective_at": .string(dates.stamp(effective)), "completion_version": .number(Double(revision)),
                 "before_state": .object(b), "after_state": .object(a), "type_before": oldType.map(JSON.string) ?? .null, "type_after": newType.map(JSON.string) ?? .null, "work_before": .bool(oldWork), "work_after": .bool(newWork), "kinds": .array(kinds.map { .string($0.rawValue) })])
-            if Self(row: row) != nil { result.append(row) }
+            if dates.node(row) != nil { result.append(row) }
         }
         guard let prior, let current else {
-            append("coverage-gap", generation: generation(root), nodeKey: "", b: TaskActivity.state(before), a: TaskActivity.state(after), oldPath: [], newPath: [], oldWork: false, newWork: false, oldType: nil, newType: nil, revision: 0, kinds: [.coverage_gap]); return result
+            append("coverage-gap", generation: generation(root), nodeKey: "", b: dates.state(before), a: dates.state(after), oldPath: [], newPath: [], oldWork: false, newWork: false, oldType: nil, newType: nil, revision: 0, kinds: [.coverage_gap]); return result
         }
         for key in Set(prior.keys).union(current.keys).sorted() {
             let old = prior[key], new = current[key], node = new ?? old!
@@ -529,16 +538,16 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     }
     static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date = Date()) {
         var cursor = LocalNodeActivityCursor(snapshot.tables[table] ?? [])
-        recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, cursor: &cursor)
+        recordLocal(change, before: before, after: after, snapshot: &snapshot, account: account, now: now, cursor: &cursor, dates: LocalActivityDates())
     }
-    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, cursor: inout LocalNodeActivityCursor) {
+    fileprivate static func recordLocal(_ change: Mutation, before: Record?, after: Record?, snapshot: inout Snapshot, account: String, now: Date, cursor: inout LocalNodeActivityCursor, dates: LocalActivityDates) {
         guard change.table == "tasks", cursor.prepare() else { return }
-        let rows = localRows(change, before: before, after: after, account: account, recordedAt: now, afterSequence: cursor.last).filter { !cursor.ids.contains($0.id.lowercased()) }
+        let rows = localRows(change, before: before, after: after, account: account, recordedAt: now, afterSequence: cursor.last, dates: dates).filter { !cursor.ids.contains($0.id.lowercased()) }
         guard !rows.isEmpty else { return }
         snapshot.tables[table, default: []] += rows
         cursor.ids.formUnion(rows.map { $0.id.lowercased() })
         cursor.last = rows.compactMap { TaskActivity.integer($0["sequence"]) }.max() ?? cursor.last
-        if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(TaskActivity.stamp(now))])] }
+        if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(dates.stamp(now))])] }
     }
     /// One parser belongs to one immutable read/validation pass. Formatters and
     /// memoized dates are never shared between accounts, threads or refreshes.
@@ -1280,13 +1289,50 @@ enum LocalActivityCreation {
             !duplicates.contains(entry.after.id) && seen.insert(entry.after.id.lowercased()).inserted &&
             tasks[entry.after.id] == entry.after
         }) else { return false }
+        let dates = LocalActivityDates()
         var roots = LocalRootActivityCursor(snapshot.tables[TaskActivity.table] ?? [])
         var nodes = LocalNodeActivityCursor(snapshot.tables[TaskNodeActivity.table] ?? [])
         for entry in entries {
-            TaskActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &roots)
-            TaskNodeActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &nodes)
-            TaskAssignmentProvenance.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt)
+            TaskActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &roots, dates: dates)
+            TaskNodeActivity.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, cursor: &nodes, dates: dates)
+            TaskAssignmentProvenance.recordLocal(entry.change, before: nil, after: entry.after, snapshot: &snapshot, account: account, now: entry.recordedAt, stamp: dates.stamp)
         }
         return true
     }
+}
+
+
+/// One synchronous local recording pass owns its formatters and raw-byte memo.
+/// No formatter, locale-sensitive day result or parsed instant survives the pass.
+/// Invalid spellings remain invalid; semantic normalization uses the same
+/// fractional-first, whole-second fallback as TaskPlanning.instant.
+fileprivate final class LocalActivityDates {
+    private lazy var fractional: ISO8601DateFormatter = {
+        let value = ISO8601DateFormatter(); value.formatOptions = [.withInternetDateTime, .withFractionalSeconds]; return value
+    }()
+    private lazy var whole = ISO8601DateFormatter()
+    private var instants: [Data: Date] = [:]
+    private var invalid = Set<Data>()
+    private var days: [Data: Bool] = [:]
+    private var lastStamp: (Date, String)?
+    func instant(_ text: String) -> Date? {
+        guard !text.isEmpty else { return nil }
+        let key = Data(text.utf8)
+        if let value = instants[key] { return value }
+        if invalid.contains(key) { return nil }
+        guard let value = fractional.date(from: text) ?? whole.date(from: text) else { invalid.insert(key); return nil }
+        instants[key] = value; return value
+    }
+    func stamp(_ date: Date) -> String {
+        if let (previous, value) = lastStamp, previous == date { return value }
+        let value = fractional.string(from: date); lastStamp = (date, value); return value
+    }
+    func validDay(_ text: String) -> Bool {
+        let key = Data(text.utf8)
+        if let value = days[key] { return value }
+        let value = Dates.parse(text) != nil; days[key] = value; return value
+    }
+    func state(_ task: Record?) -> [String: JSON] { TaskActivity.state(task, parseInstant: instant, stamp: stamp) }
+    func parent(_ row: Record) -> TaskActivity? { TaskActivity(row: row, parseInstant: instant, validDay: validDay) }
+    func node(_ row: Record) -> TaskNodeActivity? { TaskNodeActivity(row: row, parseInstant: instant, validDay: validDay) }
 }

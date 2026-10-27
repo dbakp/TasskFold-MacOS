@@ -39,12 +39,15 @@ without changing old signatures, including invalid Unicode spellings. The full
 20,001-command save returns in 2.48/2.47s on phone/tablet; full widget readiness is
 14.44/14.40s. The final Mac automation recheck now passes after the user's
 approval. Fresh local creation now indexes root/child history once per transaction;
-all five selected native cases pass on each platform. The distinct local-history
-5,000-root fixture still takes 12.45/12.23/7.59s to save on phone/tablet/Mac.
-These Debug results do not prove release latency or smooth production-screen
-input. Per-event local metadata cost, durable-cache I/O, assignment-heavy scaling,
-production rendering and hosted/paired bulk delivery remain open. See
-local-creation-history/ for the new scoped evidence. See workflow-widget-publication/ and workflow-token-preparation/
+all five selected native cases pass on each platform. Local date processing now
+reuses per-pass formatters/memos while preserving a frozen 375-case output corpus.
+The same local-history 5,000-root fixture saves in 1.90/1.88/2.03s on phone/tablet/Mac,
+with widget readiness at 8.83/8.83/10.09s from save start. The remaining save pause
+and background work still need improvement. These Debug results do not prove
+release latency or smooth production-screen input. Durable-cache encoding/I/O,
+assignment-heavy scaling, production rendering and hosted/paired bulk delivery
+remain open. See history-date-preparation/ and local-creation-history/ for the
+new scoped evidence. See workflow-widget-publication/ and workflow-token-preparation/
 for exact scope and evidence. Prior source migrations remain
 undeployed, and normal authoring/rollout gates remain unchanged.
 
@@ -5785,3 +5788,37 @@ creation is unproven (Core child-history scale is covered). No new installed Mac
 desktop-widget claim: its reserved host runs the intent through a test panel.
 No real workspace, Todoist data or hosted service was changed. See
 local-creation-history/README.md and validation.json for exact evidence and limits.
+
+
+## 27 October: reuse local history date processing
+
+Scoped sampling of a signed Mac 5,000-root local save identified repeated ISO8601
+formatter setup in state normalization, validation and timestamp construction.
+Local root/child/provenance recording now owns per-pass lazy formatters and raw
+UTF-8 memos. Single edits own separate contexts; ordinary assigned checklists
+reuse their call's timestamp. Unassigned/legacy/recurrence annotations skip an
+unused stamp. No mutable formatter survives the call or crosses an account or
+worker. Default read helpers and all ledger/type/sequence/epoch guards remain.
+
+A 375-case date/state corpus frozen before the change preserves exact root/child
+output and refusals, including offsets, fractions, empty/invalid/Unicode/day
+values, headings, completion/reopen/reschedule/delete and boundary dates. Both
+repos retain that SHA-256 and the earlier history digest; each passes 164 selected
+Core tests on the final source. Five native cases pass on each final signed Mac,
+iPhone and iPad host (15 platform/case pairs, no failures/skips/runtime warnings):
+large local save, Undo, history preservation, injected save-failure recovery,
+cloud save and actual intent completion/retry/Undo/cold return are covered by
+those composite cases. Earlier intermediate native passes are superseded.
+
+The same 5,000-root local fixture now saves in 1.90/1.88/2.03s on phone/tablet/Mac,
+previously 12.45/12.23/7.59s. Widget readiness from save start is 8.83/8.83/10.09s,
+previously 19.53/19.18/15.54s. These are Debug observations with load variation.
+The sampled run has profiling overhead and is not used for comparison. Earlier
+widget readiness reflects the shorter save; its own roughly 7–8s of background
+work is unchanged. The remaining roughly two-second save pause, durable
+encoding/I/O, production input responsiveness, assignment-heavy scaling,
+child-rich native creation, hosted/paired bulk delivery and wider ranked backlog
+remain open. Fixtures render counts rather than 5,000 production rows. No new
+installed-desktop-widget or release claim is made. Normal flags and all user
+deferrals remain unchanged; no real workspace or hosted service was touched.
+See history-date-preparation/README.md and validation.json.

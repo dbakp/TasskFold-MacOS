@@ -1,0 +1,14 @@
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeCommitScale1000PublishesOnce]' passed (16.983 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory1000PublishesOnce]' passed (14.875 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistory5000PublishesOnce]' passed (21.892 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testPrivateWorkflowNativeLocalHistoryFailureKeepsSavedHistory]' passed (13.142 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' started.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testWidgetIntentRecurringCompletionRetryUndoAndOldTap]' passed (33.289 seconds).
+	 Executed 5 tests, with 0 failures (0 unexpected) in 100.182 (100.204) seconds
+	 Executed 5 tests, with 0 failures (0 unexpected) in 100.182 (100.205) seconds
+	 Executed 5 tests, with 0 failures (0 unexpected) in 100.182 (100.207) seconds
+** TEST EXECUTE SUCCEEDED **
