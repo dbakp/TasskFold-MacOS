@@ -19,8 +19,17 @@ an audio-comment button yet, and no server migration or production flag was chan
   retries. Semantic Unicode equality cannot confirm a different raw intent.
 - [x] One bounded binary journal payload retains the frozen publication plus exact
   audio bytes. Decode checks the owning account and complete descriptor/digest.
-  This is the payload codec; the app still needs to persist it atomically before
-  making any network request and reconcile it after relaunch.
+  The account-private vault now persists this atomically; the app still needs to
+  connect that store before network requests and reconcile it after relaunch.
+- [x] Account-private file vault and actor adapter for both local reviewed clips and
+  immutable cloud-pending intents. Exact owner keys, optimistic draft revisions,
+  file/directory synchronization, nonblocking writer locks, link refusal and
+  20-entry / 50 MB quotas per account. One bounded staging overhead is allowed
+  while recovering an interrupted atomic replacement.
+- [x] Explicit recovery of complete interrupted writes; a changed draft needs the
+  current saved revision, and pending operations retain their original intent.
+  Incomplete/corrupt writes stay on disk. Already committed drafts stay readable.
+  No automatic cleanup, overwrite, publication or network retry is implied.
 - [x] Independently owned app and Swift Package source registration in each repo.
 
 ## Remaining acceptance and implementation
@@ -29,8 +38,10 @@ an audio-comment button yet, and no server migration or production flag was chan
   recovery, elapsed time, caption, explicit Publish and accessible playback.
   Handle AAC priming/trailing frames correctly at the two-minute recording limit;
   the current container limit must not become a surprise refusal at auto-stop.
-- [ ] Local/personal media ownership and persistence, including Inbox; do not make
-  this a feature available only to shared projects or silently drop local clips.
+- [ ] Connect local/personal media persistence to the app, including Inbox; do not
+  make this a feature available only to shared projects or silently drop local clips.
+  Add reviewed recovery/export for incomplete staged files and account-removal
+  cleanup before exposure; the vault alone does not establish the app lifecycle.
 - [ ] Private Storage reservation/finalization and authenticated reads, exact live
   task generation and membership checks, quotas and atomic idempotent receipts.
   An echoed publication intent alone is not an authenticated success receipt.
@@ -65,3 +76,23 @@ It encodes PCM in memory and does not capture or play sound.
 AVFoundation reads use the file's processing format and stop at its known frame
 length, rather than attempting a read past EOF. Reference:
 [Apple AVAudioFile](https://developer.apple.com/documentation/avfaudio/avaudiofile).
+
+
+## 2026-10-27 — durable file storage checkpoint
+
+The focused suites now pass 45 cases per repo (the original 21 plus 24 storage
+cases), running on this Mac. Checks cover store-instance reconstruction, exact owner
+and caption identity, optimistic edits, immutable pending operations, failures
+before/after rename, reviewed interrupted-write recovery, changed recovery refusal,
+nonblocking lock contention, corrupt/sparse/linked files, quotas and permissions,
+and the actor adapter. The actor keeps disk work away from the UI actor; the UI
+must revalidate its current account/task after every await. Neither real app
+recording nor Simulator playback acceptance is claimed. See audio-comment-vault/.
+
+Four independent executable processes per repo also verify exact local/cloud-draft
+and pending-intent restoration, refusal under a different process's writer lock,
+unchanged bytes after that refusal, and successful read after unlocking. The probe
+links each repo's actual built Core library; it does not substitute a file-store
+model. Its temporary tree is removed. These are Mac process checks, not a native
+app relaunch or iPhone/iPad runtime claim. Both final native app/test builds pass;
+the verification manifest retains source hashes and build commands.

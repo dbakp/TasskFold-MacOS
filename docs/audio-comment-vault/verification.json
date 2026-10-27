@@ -1,0 +1,27 @@
+{
+  "status": "private storage implementation; full audio feature remains unfinished",
+  "core": {
+    "host": "macOS Swift Package, not mobile runtime",
+    "tests": 45,
+    "failures": 0
+  },
+  "separateProcessVerification": "separate-processes.json",
+  "nativeBuild": {
+    "result": "TEST BUILD SUCCEEDED",
+    "command": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build-for-testing -project /tmp/taskfold-workflow-native-mac-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-workflow-native-mac-build -destination platform=macOS,arch=arm64 CODE_SIGNING_ALLOWED=YES CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=3UZ4C73FM2 CODE_SIGN_IDENTITY=9421BFBE87503809AB8274B2B84048C65BE9D2FC",
+    "newSourceCompilerWarnings": [],
+    "deepStrictSignatureVerification": true,
+    "binaryHashes": {
+      "Contents/MacOS/Taskfold": "607382dddc063aaf9d1cc50291233c9dd55712ea433be151c8a5ad461b206452",
+      "Contents/MacOS/Taskfold.debug.dylib": "9fac97c0ad15f88584e981705513731f5fd6a5dbf7b0bc9b4c255f912e133656"
+    }
+  },
+  "registrationIdempotent": true,
+  "sources": {
+    "Taskfold/Core/AudioCommentVault.swift": "24f91729b83c9621840791f898cd7bf0ceeb2dadc1b887427daf23976e702254",
+    "TaskfoldTests/AudioCommentVaultTests.swift": "4c5661720cdffc1ae542e24e626fe170bfeb29a0c858190df21bc727a3eb5171",
+    "Scripts/AudioCommentVaultProbe.swift": "eec5343c44ddfff23e7909ce04a720c706beb3141ad82659e34299bcfd249f12",
+    "Scripts/test_audio_comment_vault_processes.py": "aeb4043252d43df97b30c2ef9b9f1da79f7d9f9286f0d6481a526d4c182233bd"
+  },
+  "remaining": "docs/AUDIO_COMMENTS.md; UI, account lifecycle, playback, private server delivery and complete acceptance remain open"
+}

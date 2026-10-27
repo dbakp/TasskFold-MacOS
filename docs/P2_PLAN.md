@@ -6365,3 +6365,13 @@ frozen publication/journal payload. Each repo passes 21 focused Mac-host Core ca
 No recording UI, playback, durable outbox integration, server upload, migration or
 feature exposure is claimed. The complete remaining lifecycle and acceptance
 checklist is in [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
+
+
+## 2026-10-27 — durable audio drafts and pending operations
+
+Added the private per-account vault, serial disk actor, optimistic draft revisions,
+immutable pending saves and reviewed interrupted-write recovery. Local workspaces
+can retain reviewed recordings without a cloud account. The focused Core suites
+pass 45 cases each on the Mac; the feature remains unexposed, with native controls,
+app lifecycle integration and private server delivery still unfinished. See
+[AUDIO_COMMENTS.md](AUDIO_COMMENTS.md) and audio-comment-vault/.

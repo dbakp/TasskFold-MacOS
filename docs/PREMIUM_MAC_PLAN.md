@@ -8847,3 +8847,13 @@ binding, uncertain-publication retry identity and a private-journal payload code
 The 21 focused Core cases pass. This adds no visible controls or microphone use;
 the premium recording/review/playback flow and private server lifecycle remain
 unfinished. See [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
+
+
+## 2026-10-27 — durable audio draft storage
+
+The private audio vault now saves local reviewed clips and immutable pending
+publication intents, with revision conflicts, bounded storage, safe file IO and
+explicit interrupted-write recovery. A separate actor keeps disk work away from
+UI execution. The 45 focused Core cases pass on this Mac. No recording controls,
+playback or cloud delivery are exposed yet; their full lifecycle remains open.
+See [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).

@@ -112,9 +112,9 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 - [ ] Broader role/recovery/Mac/spoken checks and production exposure of gated
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
-- [ ] Audio comments: bounded clip/decode, scoped draft and retry-journal payload
-  foundations pass 21 focused Core cases per repo. Recording/review/playback,
-  durable app integration and private server lifecycle remain open; see
+- [ ] Audio comments: bounded clip/decode, scoped drafts and account-private durable
+  storage/recovery pass 45 focused Core cases per repo. Recording/review/playback,
+  app integration and private server lifecycle remain open; see
   [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
 - [ ] Inbound email provider/domain configuration and genuine delivery — prepare
   only until the user supplies configuration.

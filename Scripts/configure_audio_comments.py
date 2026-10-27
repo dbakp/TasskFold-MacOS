@@ -39,7 +39,7 @@ def add_source(phase, path):
 
 app = next(row for row in objects.values() if row.get("isa") == "PBXNativeTarget" and row.get("name") == "Taskfold")
 phase = next(key for key in app["buildPhases"] if objects[key]["isa"] == "PBXSourcesBuildPhase")
-for path in ["Taskfold/Core/AudioComments.swift", "Taskfold/Core/AudioCommentDecoding.swift", "Taskfold/Core/AudioCommentPending.swift"]:
+for path in ["Taskfold/Core/AudioComments.swift", "Taskfold/Core/AudioCommentDecoding.swift", "Taskfold/Core/AudioCommentPending.swift", "Taskfold/Core/AudioCommentVault.swift"]:
     add_source(phase, path)
 if lines:
     source = source.replace("}; rootObject", "\n" + "\n".join(lines) + "\n}; rootObject", 1)
