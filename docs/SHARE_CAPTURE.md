@@ -24,3 +24,29 @@ Native source-app tests use isolated identities and a synthetic public place. Fo
 Real disposable cloud accounts now verify stale extension Save refusal across A → B and durable offline Add across A → B → A. Server tasks remain empty while the original account is offline; only that account receives one task after return, with its queue drained and receipt retained. `p2-share-cloud-evidence.json` separates the real Auth/HTTP/native checks from the controlled app-transport outage. Source errors are pinned below the header so the keyboard cannot hide recovery guidance. Native Mac/VoiceOver and wider device/physical-network acceptance remain open.
 
 The iOS repository owns the native phone cloud-walk controller and private-fixture preparation commands. Its evidence is recorded here for the shared capture contract; it is not a Mac build dependency or native Mac acceptance. This repository independently owns its Mac implementation, Debug outage scope and build inputs. Live Mac share/account/keyboard/VoiceOver acceptance remains open.
+
+## Reproducible Mac Share test preparation — 27 October 2026
+
+The Mac workflow preparer accepts `--share-extension --team TEAMID` with a fresh
+`--namespace workflowtests...` and unused temporary `--output` directory. It
+includes the native extension, names both components “Taskfold Share Test”, and
+assigns both the same team-prefixed isolated App Group. The receipt records the
+final renamed group and exact prepared source hashes. Default workflow preparation
+still omits extensions and the App Group. This prepares source only; it does not
+sign, install, register, enable or launch an app. Synthetic backend configuration
+is not substituted automatically: configure it in the copied workspace before
+building and retain that adjustment in build evidence.
+
+`python3 Scripts/test_workflow_share_preparation.py` passes three real preparation
+checks: matching private host/extension identities and fingerprints, unchanged
+default preparation, and missing/invalid-team rejection before creating output.
+Production inputs are checked unchanged. The independent extension-configuration
+suite passes two checks; the existing multi-process mailbox check preserves 64
+complete drafts across four independent writers.
+
+A separately prepared current-source Share host builds and verifies its deep,
+strict code signature. Its local workspace publishes an empty mailbox, and native
+Safari Share settings list “Taskfold Share Test” switched Off. Temporarily enabling
+it awaits user approval. These setup checks do not accept Safari capture,
+cancellation, host Add/Undo, a second source app or spoken accessibility; those
+genuine native workflow checks remain open.

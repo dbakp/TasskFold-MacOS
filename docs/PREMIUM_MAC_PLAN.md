@@ -1,5 +1,12 @@
 # Taskfold macOS polish plan
 
+27 October follow-up: Mac Share workflow preparation now supports a separately
+named native extension with matching isolated host/extension storage and accurate
+post-rename receipt hashes. Three real preparation checks pass; the current native
+Share build and strict deep signature verify. Safari lists the test extension Off;
+temporary enablement awaits approval. Native capture/Add/Undo and spoken checks
+remain open. See [SHARE_CAPTURE.md](SHARE_CAPTURE.md).
+
 Current release-gate order and external dependencies: [P0_RELEASE_STATUS.md](P0_RELEASE_STATUS.md).
 
 The goal is a calm, fast native Mac app: daily actions should take few steps, navigation should preserve context, and motion should explain changes without disrupting work.
