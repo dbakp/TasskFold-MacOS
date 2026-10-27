@@ -10,6 +10,7 @@ struct TaskListView: View {
     @Environment(\.openProjectPulse) private var openProjectPulse
     @Environment(\.startInboxReview) private var startInboxReview
     @Environment(Workspace.self) private var workspace
+    @Environment(TaskPrintCommand.self) private var printCommand
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let scope: TaskScope
     let preferenceKey: String
@@ -26,6 +27,7 @@ struct TaskListView: View {
     private var projectLayout: String { get { store.viewValue(scope, field: "layout", fallback: .string("list")).text } nonmutating set { store.setViewValue(scope, field: "layout", value: .string(newValue)) } }
     @State private var multiLinePresented = false
     @State private var printReview: PrintReviewRequest?
+    @State private var printOwner = UUID()
     @State private var printFailure: String?
     @State private var captureSection = ""
     @State private var nativeList = ListNativeHandle()
@@ -238,7 +240,11 @@ struct TaskListView: View {
         .onChange(of: subtitle) { _, value in if workspace.section.scope == scope { workspace.navigationSubtitle = value } }
         .animation(Transitions.Ease.smoothOut, value: subtitle)
         .toolbar { if workspace.section.scope == scope { toolbar } }
-        .focusedSceneValue(\.taskfoldPrint, printAction)
+        .onAppear {
+            printCommand.install(owner: printOwner, enabled: canPrint, action: { preparePrint() })
+        }
+        .onChange(of: canPrint) { _, enabled in printCommand.update(owner: printOwner, enabled: enabled) }
+        .onDisappear { printCommand.remove(owner: printOwner) }
         .sheet(item: $printReview) { PrintReviewView(request: $0) }
         .alert("Could not prepare document", isPresented: Binding(get: { printFailure != nil }, set: { if !$0 { printFailure = nil } })) { Button("OK") { printFailure = nil } } message: { Text(printFailure ?? "") }
         .onChange(of: store.workspaceGeneration) { _, _ in printReview = nil; printFailure = nil; rowSwipe.cancel() }
@@ -439,10 +445,7 @@ struct TaskListView: View {
         let detail = Date().formatted(.dateTime.day().month(.wide).year()) + (workspace.search.isEmpty ? "" : " · Search: " + workspace.search) + (priorityFilter == 0 ? "" : " · Priority \(priorityFilter)")
         return try PrintDocument.capture(title: workspace.section == .assigned ? "Assigned to me" : title, subtitle: detail, groups: named, projects: store.allProjects, labels: store.labels, hierarchyRoots: workspace.hierarchyPresentation ? store.tasks : nil, expandOrdinaryChecklists: !workspace.hierarchyFilter, assigneeName: store.assigneeName)
     }
-    private var printAction: (() -> Void)? {
-        guard printReview == nil, store.filterError(scope) == nil else { return nil }
-        return { preparePrint() }
-    }
+    private var canPrint: Bool { printReview == nil && store.filterError(scope) == nil }
     private func preparePrint() {
         do {
             let document = try printableDocument(), binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)

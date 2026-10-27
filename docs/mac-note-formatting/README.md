@@ -37,3 +37,32 @@ The final accepted round strengthens Cancel, failed Apply, stale Apply and stale
 cold return to compare the complete persisted snapshot, including queues and
 widget metadata. All four cases pass again; the four priority warnings remain.
 The earlier table-only passing round is retained separately and superseded.
+
+## 27 October follow-up: Print focus and command routing
+
+The original production Print implementation fails the new repeated-command /
+empty-Inbox navigation regression while its existing long-PDF check passes.
+A persistent per-window target now keeps the focused scene value stable; the
+visible list registers a live action and enabled state. Owner checks prevent a
+late disappearing list from removing the incoming list's action. Calendar removes
+the list action and returning to a list restores it. No document is captured
+until invocation. The existing typography, preview, rendering and save flow remain.
+
+Three distinct print checks pass strict verification with no runtime warnings.
+Four note cases individually pass with full-snapshot preservation against the
+same production binary. Their five-case suite is retained as FAILED because the
+Calendar harness used a clipped task title; it is not presented as a passing
+suite. The corrected standalone Calendar check uses the View menu and stable
+child identity and passes strictly. Test-only additions do not change the app
+binary. See ../mac-print-focus/ for summaries, exact inputs and rejected attempts.
+No new Core or iOS native result is claimed.
+
+The app's FocusedValue-update warning is absent in all final diagnostic scopes.
+Separately, all four original priority-warning stacks now resolve through
+NSConditionLock, AppKit Services-menu data-detector initialization and AX hierarchy
+inspection. Window-only queries did not remove that wait and were reverted.
+These are diagnostic attribution and a distinct app focus fix, not proof that the
+priority wait is fixed: strict note-runtime acceptance stays OPEN. VoiceOver,
+large text, broader account/access, real concurrency and new pinned-note variants
+remain outside this follow-up. All data was synthetic and local; rollout and
+user-deferred dependencies are unchanged.

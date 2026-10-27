@@ -8418,3 +8418,24 @@ Final Mac note acceptance additionally compares the complete saved snapshot for
 Cancel, failed Apply, stale Apply and stale cold return, including queues/widget
 metadata. All four cases pass on that final build; four priority warnings remain
 open. The preceding table-only round is superseded by this stronger coverage.
+
+## 27 October: stable window-owned Print command
+
+Mac Print now uses a persistent window command target with owner-checked list
+registration, rather than publishing fresh callbacks from replaceable list views.
+The original build reproduced a silent Print failure after navigating to empty
+Inbox. Three print cases now pass strict native verification: repeated shortcut /
+Inbox routing, actual long PDF Save / Print cancellation / cold return, and
+Calendar disable / explicit return to a list. Four note recovery cases individually
+pass against the identical app binary; their mixed suite was not accepted as a
+passing suite because its Calendar harness matched a clipped title. The corrected
+standalone Calendar case passes. App focus-update logging is absent in these
+runs. Four Services-menu / accessibility data-detector priority warnings remain,
+so the strict note-runtime gate stays open. See mac-print-focus/validation.json.
+No new iOS implementation or native acceptance is claimed by this Mac follow-up.
+
+The native baseline and earlier binding / per-list wrapper candidates are retained
+as rejected evidence. A type-checker limit in the large outer RootView body was
+avoided by placing the stable target on the smaller persistent WorkspaceView,
+outside its replaceable navigation detail. The independently owned iOS repo
+receives documentation/evidence only; this change is Mac-specific.

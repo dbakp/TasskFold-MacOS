@@ -1,0 +1,1483 @@
+{
+  "sourceResult": "/tmp/taskfold-mac-notes-cache.xcresult",
+  "osBuild": "25G83",
+  "method": "Legacy per-test warning sourceCodeContext.callStack; unslid shared-cache addresses plus current AppKit dyld image slide 0xca60000; dladdr after loading AppKit/Foundation/SwiftUI. Only resolved symbols reported; null frames retained. All four stacks resolve the same NSConditionLock / AppKit Services data-detector / accessibility hierarchy path.",
+  "tests": [
+    {
+      "test": "testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry()",
+      "frames": [
+        {
+          "address": "0x18e8469bc",
+          "image": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+          "symbol": "-[NSConditionLock lockWhenCondition:beforeDate:]",
+          "offset": 80,
+          "reportedUnslidAddress": "0x181de69bc"
+        },
+        {
+          "address": "0x19169eeec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_getDataDetectorsScanner",
+          "offset": 292,
+          "reportedUnslidAddress": "0x184c3eeec"
+        },
+        {
+          "address": "0x192316d24",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext filterEntriesByDataDetectors:]",
+          "offset": 204,
+          "reportedUnslidAddress": "0x1858b6d24"
+        },
+        {
+          "address": "0x19176afe8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext filterEntriesByTheirFilters:]",
+          "offset": 504,
+          "reportedUnslidAddress": "0x184d0afe8"
+        },
+        {
+          "address": "0x191769d54",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext _preconcurrentPortionOfQualifyEntries:returningEntriesNeedingURLTypecheckingIntoSet:]",
+          "offset": 220,
+          "reportedUnslidAddress": "0x184d09d54"
+        },
+        {
+          "address": "0x191769b1c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext qualifyEntries:withCompletionHandler:]",
+          "offset": 328,
+          "reportedUnslidAddress": "0x184d09b1c"
+        },
+        {
+          "address": "0x1921e1b2c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateVisibilityOfServicesItemsForMenu:isForDisplay:]",
+          "offset": 260,
+          "reportedUnslidAddress": "0x185781b2c"
+        },
+        {
+          "address": "0x1916b1818",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesMenuUpdater insertServicesIntoMenu:withKeyEvent:isForDisplay:]",
+          "offset": 200,
+          "reportedUnslidAddress": "0x184c51818"
+        },
+        {
+          "address": "0x1916b1718",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesMenuUpdater updateMenu:withEvent:withFlags:]",
+          "offset": 64,
+          "reportedUnslidAddress": "0x184c51718"
+        },
+        {
+          "address": "0x19169ba3c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateMenu:withEvent:withFlags:]",
+          "offset": 216,
+          "reportedUnslidAddress": "0x184c3ba3c"
+        },
+        {
+          "address": "0x191e701d8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateFromDelegateWithEventProvider:]",
+          "offset": 352,
+          "reportedUnslidAddress": "0x1854101d8"
+        },
+        {
+          "address": "0x191e70e20",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithEventProvider:]",
+          "offset": 236,
+          "reportedUnslidAddress": "0x185410e20"
+        },
+        {
+          "address": "0x1915ad4e0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithEventRef:]",
+          "offset": 96,
+          "reportedUnslidAddress": "0x184b4d4e0"
+        },
+        {
+          "address": "0x191e71198",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "__49-[NSMenu _populateWithFlags:eventRef:incomplete:]_block_invoke",
+          "offset": 32,
+          "reportedUnslidAddress": "0x185411198"
+        },
+        {
+          "address": "0x191e711f8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _withUpdateFlags:do:]",
+          "offset": 72,
+          "reportedUnslidAddress": "0x1854111f8"
+        },
+        {
+          "address": "0x191e710ac",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithFlags:eventRef:incomplete:]",
+          "offset": 272,
+          "reportedUnslidAddress": "0x1854110ac"
+        },
+        {
+          "address": "0x191e6c670",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "__27-[NSMenu _simulateOpening:]_block_invoke",
+          "offset": 116,
+          "reportedUnslidAddress": "0x18540c670"
+        },
+        {
+          "address": "0x191e6c0e8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _forEachLinkedMenu:]",
+          "offset": 68,
+          "reportedUnslidAddress": "0x18540c0e8"
+        },
+        {
+          "address": "0x191e6c5ec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _simulateOpening:]",
+          "offset": 120,
+          "reportedUnslidAddress": "0x18540c5ec"
+        },
+        {
+          "address": "0x191da1064",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) _openForInspection:]",
+          "offset": 264,
+          "reportedUnslidAddress": "0x185341064"
+        },
+        {
+          "address": "0x191da18ec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) _accessibilityArrayAttributeCount:]",
+          "offset": 240,
+          "reportedUnslidAddress": "0x1853418ec"
+        },
+        {
+          "address": "0x191da1708",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) accessibilityArrayAttributeCount:]",
+          "offset": 60,
+          "reportedUnslidAddress": "0x185341708"
+        },
+        {
+          "address": "0x191bf21f8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSObject(NSAccessibilityInternal) _accessibilityArrayAttributeCount:clientError:]",
+          "offset": 120,
+          "reportedUnslidAddress": "0x1851921f8"
+        },
+        {
+          "address": "0x191bf59cc",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "GetAttributeValueCount",
+          "offset": 180,
+          "reportedUnslidAddress": "0x1851959cc"
+        },
+        {
+          "address": "0x19462f4dc",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "__AXCopyAttributeValueForHierarchy",
+          "offset": 156,
+          "reportedUnslidAddress": "0x187bcf4dc"
+        },
+        {
+          "address": "0x19462d998",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "_AXXMIGCopyHierarchy",
+          "offset": 1588,
+          "reportedUnslidAddress": "0x187bcd998"
+        },
+        {
+          "address": "0x1946275e4",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "AXUIElementCopyHierarchy",
+          "offset": 1144,
+          "reportedUnslidAddress": "0x187bc75e4"
+        },
+        {
+          "address": "0x1f2b42a5c",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTAccessibilityFramework hierarchyForElement:attributes:options:error:]",
+          "offset": 140,
+          "reportedUnslidAddress": "0x1e60e2a5c"
+        },
+        {
+          "address": "0x1f2b4acb0",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTElementSnapshotRequest(PlatformImplementation) _accessibilitySnapshotForElement:error:]",
+          "offset": 512,
+          "reportedUnslidAddress": "0x1e60eacb0"
+        },
+        {
+          "address": "0x1f2b4ae70",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTElementSnapshotRequest(PlatformImplementation) accessibilitySnapshotOrError:]",
+          "offset": 84,
+          "reportedUnslidAddress": "0x1e60eae70"
+        },
+        {
+          "address": "0x1f2b4a7ac",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "__56-[XCTElementSnapshotRequest loadSnapshotAndReturnError:]_block_invoke_2",
+          "offset": 56,
+          "reportedUnslidAddress": "0x1e60ea7ac"
+        },
+        {
+          "address": "0x1f2b66c9c",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "__XCTPerformOnMainRunLoop_block_invoke",
+          "offset": 412,
+          "reportedUnslidAddress": "0x1e6106c9c"
+        },
+        {
+          "address": "0x18d01cb00",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__",
+          "offset": 28,
+          "reportedUnslidAddress": "0x1805bcb00"
+        },
+        {
+          "address": "0x18d01ca40",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRunLoopDoBlocks",
+          "offset": 396,
+          "reportedUnslidAddress": "0x1805bca40"
+        },
+        {
+          "address": "0x18d01be84",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRunLoopRun",
+          "offset": 2356,
+          "reportedUnslidAddress": "0x1805bbe84"
+        },
+        {
+          "address": "0x18d0ee264",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "_CFRunLoopRunSpecificWithOptions",
+          "offset": 532,
+          "reportedUnslidAddress": "0x18068e264"
+        },
+        {
+          "address": "0x199e07560",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "RunCurrentEventLoopInMode",
+          "offset": 320,
+          "reportedUnslidAddress": "0x18d3a7560"
+        },
+        {
+          "address": "0x199e0a8bc",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "ReceiveNextEventCommon",
+          "offset": 488,
+          "reportedUnslidAddress": "0x18d3aa8bc"
+        },
+        {
+          "address": "0x199f9414c",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "_BlockUntilNextEventMatchingListInMode",
+          "offset": 48,
+          "reportedUnslidAddress": "0x18d53414c"
+        },
+        {
+          "address": "0x191afe3d0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_DPSBlockUntilNextEventMatchingListInMode",
+          "offset": 228,
+          "reportedUnslidAddress": "0x18509e3d0"
+        },
+        {
+          "address": "0x191452084",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_DPSNextEvent",
+          "offset": 576,
+          "reportedUnslidAddress": "0x1849f2084"
+        },
+        {
+          "address": "0x191fe796c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:]",
+          "offset": 688,
+          "reportedUnslidAddress": "0x18558796c"
+        },
+        {
+          "address": "0x191fe7678",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:]",
+          "offset": 72,
+          "reportedUnslidAddress": "0x185587678"
+        },
+        {
+          "address": "0x19144513c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication run]",
+          "offset": 368,
+          "reportedUnslidAddress": "0x1849e513c"
+        },
+        {
+          "address": "0x19141d7b0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "NSApplicationMain",
+          "offset": 880,
+          "reportedUnslidAddress": "0x1849bd7b0"
+        },
+        {
+          "address": "0x1c24b1af8",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI6runAppys5NeverOSo21NSApplicationDelegate_So11NSResponderCXcFTf4e_nAA07TestingdG0C_Tg5Tm",
+          "offset": 140,
+          "reportedUnslidAddress": "0x1b5a51af8"
+        },
+        {
+          "address": "0x1c286c8d8",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI6runAppys5NeverOxAA0D0RzlF",
+          "offset": 104,
+          "reportedUnslidAddress": "0x1b5e0c8d8"
+        },
+        {
+          "address": "0x1c2b38778",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI3AppPAAE4mainyyFZ",
+          "offset": 224,
+          "reportedUnslidAddress": "0x1b60d8778"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        },
+        {
+          "address": "0x18cb944e4",
+          "image": "/usr/lib/dyld",
+          "symbol": "start",
+          "offset": 6992,
+          "reportedUnslidAddress": "0x1801344e4"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        }
+      ]
+    },
+    {
+      "test": "testMacNotesFormattingCancelPreservesWholeWorkspace()",
+      "frames": [
+        {
+          "address": "0x18e8469bc",
+          "image": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+          "symbol": "-[NSConditionLock lockWhenCondition:beforeDate:]",
+          "offset": 80,
+          "reportedUnslidAddress": "0x181de69bc"
+        },
+        {
+          "address": "0x19169eeec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_getDataDetectorsScanner",
+          "offset": 292,
+          "reportedUnslidAddress": "0x184c3eeec"
+        },
+        {
+          "address": "0x192316d24",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext filterEntriesByDataDetectors:]",
+          "offset": 204,
+          "reportedUnslidAddress": "0x1858b6d24"
+        },
+        {
+          "address": "0x19176afe8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext filterEntriesByTheirFilters:]",
+          "offset": 504,
+          "reportedUnslidAddress": "0x184d0afe8"
+        },
+        {
+          "address": "0x191769d54",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext _preconcurrentPortionOfQualifyEntries:returningEntriesNeedingURLTypecheckingIntoSet:]",
+          "offset": 220,
+          "reportedUnslidAddress": "0x184d09d54"
+        },
+        {
+          "address": "0x191769b1c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext qualifyEntries:withCompletionHandler:]",
+          "offset": 328,
+          "reportedUnslidAddress": "0x184d09b1c"
+        },
+        {
+          "address": "0x1921e1b2c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateVisibilityOfServicesItemsForMenu:isForDisplay:]",
+          "offset": 260,
+          "reportedUnslidAddress": "0x185781b2c"
+        },
+        {
+          "address": "0x1916b1818",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesMenuUpdater insertServicesIntoMenu:withKeyEvent:isForDisplay:]",
+          "offset": 200,
+          "reportedUnslidAddress": "0x184c51818"
+        },
+        {
+          "address": "0x1916b1718",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesMenuUpdater updateMenu:withEvent:withFlags:]",
+          "offset": 64,
+          "reportedUnslidAddress": "0x184c51718"
+        },
+        {
+          "address": "0x19169ba3c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateMenu:withEvent:withFlags:]",
+          "offset": 216,
+          "reportedUnslidAddress": "0x184c3ba3c"
+        },
+        {
+          "address": "0x191e701d8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateFromDelegateWithEventProvider:]",
+          "offset": 352,
+          "reportedUnslidAddress": "0x1854101d8"
+        },
+        {
+          "address": "0x191e70e20",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithEventProvider:]",
+          "offset": 236,
+          "reportedUnslidAddress": "0x185410e20"
+        },
+        {
+          "address": "0x1915ad4e0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithEventRef:]",
+          "offset": 96,
+          "reportedUnslidAddress": "0x184b4d4e0"
+        },
+        {
+          "address": "0x191e71198",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "__49-[NSMenu _populateWithFlags:eventRef:incomplete:]_block_invoke",
+          "offset": 32,
+          "reportedUnslidAddress": "0x185411198"
+        },
+        {
+          "address": "0x191e711f8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _withUpdateFlags:do:]",
+          "offset": 72,
+          "reportedUnslidAddress": "0x1854111f8"
+        },
+        {
+          "address": "0x191e710ac",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithFlags:eventRef:incomplete:]",
+          "offset": 272,
+          "reportedUnslidAddress": "0x1854110ac"
+        },
+        {
+          "address": "0x191e6c670",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "__27-[NSMenu _simulateOpening:]_block_invoke",
+          "offset": 116,
+          "reportedUnslidAddress": "0x18540c670"
+        },
+        {
+          "address": "0x191e6c0e8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _forEachLinkedMenu:]",
+          "offset": 68,
+          "reportedUnslidAddress": "0x18540c0e8"
+        },
+        {
+          "address": "0x191e6c5ec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _simulateOpening:]",
+          "offset": 120,
+          "reportedUnslidAddress": "0x18540c5ec"
+        },
+        {
+          "address": "0x191da1064",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) _openForInspection:]",
+          "offset": 264,
+          "reportedUnslidAddress": "0x185341064"
+        },
+        {
+          "address": "0x191da18ec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) _accessibilityArrayAttributeCount:]",
+          "offset": 240,
+          "reportedUnslidAddress": "0x1853418ec"
+        },
+        {
+          "address": "0x191da1708",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) accessibilityArrayAttributeCount:]",
+          "offset": 60,
+          "reportedUnslidAddress": "0x185341708"
+        },
+        {
+          "address": "0x191bf21f8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSObject(NSAccessibilityInternal) _accessibilityArrayAttributeCount:clientError:]",
+          "offset": 120,
+          "reportedUnslidAddress": "0x1851921f8"
+        },
+        {
+          "address": "0x191bf59cc",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "GetAttributeValueCount",
+          "offset": 180,
+          "reportedUnslidAddress": "0x1851959cc"
+        },
+        {
+          "address": "0x19462f4dc",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "__AXCopyAttributeValueForHierarchy",
+          "offset": 156,
+          "reportedUnslidAddress": "0x187bcf4dc"
+        },
+        {
+          "address": "0x19462d998",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "_AXXMIGCopyHierarchy",
+          "offset": 1588,
+          "reportedUnslidAddress": "0x187bcd998"
+        },
+        {
+          "address": "0x1946275e4",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "AXUIElementCopyHierarchy",
+          "offset": 1144,
+          "reportedUnslidAddress": "0x187bc75e4"
+        },
+        {
+          "address": "0x1f2b42a5c",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTAccessibilityFramework hierarchyForElement:attributes:options:error:]",
+          "offset": 140,
+          "reportedUnslidAddress": "0x1e60e2a5c"
+        },
+        {
+          "address": "0x1f2b4acb0",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTElementSnapshotRequest(PlatformImplementation) _accessibilitySnapshotForElement:error:]",
+          "offset": 512,
+          "reportedUnslidAddress": "0x1e60eacb0"
+        },
+        {
+          "address": "0x1f2b4ae70",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTElementSnapshotRequest(PlatformImplementation) accessibilitySnapshotOrError:]",
+          "offset": 84,
+          "reportedUnslidAddress": "0x1e60eae70"
+        },
+        {
+          "address": "0x1f2b4a7ac",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "__56-[XCTElementSnapshotRequest loadSnapshotAndReturnError:]_block_invoke_2",
+          "offset": 56,
+          "reportedUnslidAddress": "0x1e60ea7ac"
+        },
+        {
+          "address": "0x1f2b66c9c",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "__XCTPerformOnMainRunLoop_block_invoke",
+          "offset": 412,
+          "reportedUnslidAddress": "0x1e6106c9c"
+        },
+        {
+          "address": "0x18d01cb00",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__",
+          "offset": 28,
+          "reportedUnslidAddress": "0x1805bcb00"
+        },
+        {
+          "address": "0x18d01ca40",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRunLoopDoBlocks",
+          "offset": 396,
+          "reportedUnslidAddress": "0x1805bca40"
+        },
+        {
+          "address": "0x18d01be84",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRunLoopRun",
+          "offset": 2356,
+          "reportedUnslidAddress": "0x1805bbe84"
+        },
+        {
+          "address": "0x18d0ee264",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "_CFRunLoopRunSpecificWithOptions",
+          "offset": 532,
+          "reportedUnslidAddress": "0x18068e264"
+        },
+        {
+          "address": "0x199e07560",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "RunCurrentEventLoopInMode",
+          "offset": 320,
+          "reportedUnslidAddress": "0x18d3a7560"
+        },
+        {
+          "address": "0x199e0a8bc",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "ReceiveNextEventCommon",
+          "offset": 488,
+          "reportedUnslidAddress": "0x18d3aa8bc"
+        },
+        {
+          "address": "0x199f9414c",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "_BlockUntilNextEventMatchingListInMode",
+          "offset": 48,
+          "reportedUnslidAddress": "0x18d53414c"
+        },
+        {
+          "address": "0x191afe3d0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_DPSBlockUntilNextEventMatchingListInMode",
+          "offset": 228,
+          "reportedUnslidAddress": "0x18509e3d0"
+        },
+        {
+          "address": "0x191452084",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_DPSNextEvent",
+          "offset": 576,
+          "reportedUnslidAddress": "0x1849f2084"
+        },
+        {
+          "address": "0x191fe796c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:]",
+          "offset": 688,
+          "reportedUnslidAddress": "0x18558796c"
+        },
+        {
+          "address": "0x191fe7678",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:]",
+          "offset": 72,
+          "reportedUnslidAddress": "0x185587678"
+        },
+        {
+          "address": "0x19144513c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication run]",
+          "offset": 368,
+          "reportedUnslidAddress": "0x1849e513c"
+        },
+        {
+          "address": "0x19141d7b0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "NSApplicationMain",
+          "offset": 880,
+          "reportedUnslidAddress": "0x1849bd7b0"
+        },
+        {
+          "address": "0x1c24b1af8",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI6runAppys5NeverOSo21NSApplicationDelegate_So11NSResponderCXcFTf4e_nAA07TestingdG0C_Tg5Tm",
+          "offset": 140,
+          "reportedUnslidAddress": "0x1b5a51af8"
+        },
+        {
+          "address": "0x1c286c8d8",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI6runAppys5NeverOxAA0D0RzlF",
+          "offset": 104,
+          "reportedUnslidAddress": "0x1b5e0c8d8"
+        },
+        {
+          "address": "0x1c2b38778",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI3AppPAAE4mainyyFZ",
+          "offset": 224,
+          "reportedUnslidAddress": "0x1b60d8778"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        },
+        {
+          "address": "0x18cb944e4",
+          "image": "/usr/lib/dyld",
+          "symbol": "start",
+          "offset": 6992,
+          "reportedUnslidAddress": "0x1801344e4"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        }
+      ]
+    },
+    {
+      "test": "testMacNotesSelectionPreviewApplyUndoAndColdReturn()",
+      "frames": [
+        {
+          "address": "0x18e8469bc",
+          "image": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+          "symbol": "-[NSConditionLock lockWhenCondition:beforeDate:]",
+          "offset": 80,
+          "reportedUnslidAddress": "0x181de69bc"
+        },
+        {
+          "address": "0x19169eeec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_getDataDetectorsScanner",
+          "offset": 292,
+          "reportedUnslidAddress": "0x184c3eeec"
+        },
+        {
+          "address": "0x192316d24",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext filterEntriesByDataDetectors:]",
+          "offset": 204,
+          "reportedUnslidAddress": "0x1858b6d24"
+        },
+        {
+          "address": "0x19176afe8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext filterEntriesByTheirFilters:]",
+          "offset": 504,
+          "reportedUnslidAddress": "0x184d0afe8"
+        },
+        {
+          "address": "0x191769d54",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext _preconcurrentPortionOfQualifyEntries:returningEntriesNeedingURLTypecheckingIntoSet:]",
+          "offset": 220,
+          "reportedUnslidAddress": "0x184d09d54"
+        },
+        {
+          "address": "0x191769b1c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext qualifyEntries:withCompletionHandler:]",
+          "offset": 328,
+          "reportedUnslidAddress": "0x184d09b1c"
+        },
+        {
+          "address": "0x1921e1b2c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateVisibilityOfServicesItemsForMenu:isForDisplay:]",
+          "offset": 260,
+          "reportedUnslidAddress": "0x185781b2c"
+        },
+        {
+          "address": "0x1916b1818",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesMenuUpdater insertServicesIntoMenu:withKeyEvent:isForDisplay:]",
+          "offset": 200,
+          "reportedUnslidAddress": "0x184c51818"
+        },
+        {
+          "address": "0x1916b1718",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesMenuUpdater updateMenu:withEvent:withFlags:]",
+          "offset": 64,
+          "reportedUnslidAddress": "0x184c51718"
+        },
+        {
+          "address": "0x19169ba3c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateMenu:withEvent:withFlags:]",
+          "offset": 216,
+          "reportedUnslidAddress": "0x184c3ba3c"
+        },
+        {
+          "address": "0x191e701d8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateFromDelegateWithEventProvider:]",
+          "offset": 352,
+          "reportedUnslidAddress": "0x1854101d8"
+        },
+        {
+          "address": "0x191e70e20",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithEventProvider:]",
+          "offset": 236,
+          "reportedUnslidAddress": "0x185410e20"
+        },
+        {
+          "address": "0x1915ad4e0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithEventRef:]",
+          "offset": 96,
+          "reportedUnslidAddress": "0x184b4d4e0"
+        },
+        {
+          "address": "0x191e71198",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "__49-[NSMenu _populateWithFlags:eventRef:incomplete:]_block_invoke",
+          "offset": 32,
+          "reportedUnslidAddress": "0x185411198"
+        },
+        {
+          "address": "0x191e711f8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _withUpdateFlags:do:]",
+          "offset": 72,
+          "reportedUnslidAddress": "0x1854111f8"
+        },
+        {
+          "address": "0x191e710ac",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithFlags:eventRef:incomplete:]",
+          "offset": 272,
+          "reportedUnslidAddress": "0x1854110ac"
+        },
+        {
+          "address": "0x191e6c670",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "__27-[NSMenu _simulateOpening:]_block_invoke",
+          "offset": 116,
+          "reportedUnslidAddress": "0x18540c670"
+        },
+        {
+          "address": "0x191e6c0e8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _forEachLinkedMenu:]",
+          "offset": 68,
+          "reportedUnslidAddress": "0x18540c0e8"
+        },
+        {
+          "address": "0x191e6c5ec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _simulateOpening:]",
+          "offset": 120,
+          "reportedUnslidAddress": "0x18540c5ec"
+        },
+        {
+          "address": "0x191da1064",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) _openForInspection:]",
+          "offset": 264,
+          "reportedUnslidAddress": "0x185341064"
+        },
+        {
+          "address": "0x191da18ec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) _accessibilityArrayAttributeCount:]",
+          "offset": 240,
+          "reportedUnslidAddress": "0x1853418ec"
+        },
+        {
+          "address": "0x191da1708",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) accessibilityArrayAttributeCount:]",
+          "offset": 60,
+          "reportedUnslidAddress": "0x185341708"
+        },
+        {
+          "address": "0x191bf21f8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSObject(NSAccessibilityInternal) _accessibilityArrayAttributeCount:clientError:]",
+          "offset": 120,
+          "reportedUnslidAddress": "0x1851921f8"
+        },
+        {
+          "address": "0x191bf59cc",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "GetAttributeValueCount",
+          "offset": 180,
+          "reportedUnslidAddress": "0x1851959cc"
+        },
+        {
+          "address": "0x19462f4dc",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "__AXCopyAttributeValueForHierarchy",
+          "offset": 156,
+          "reportedUnslidAddress": "0x187bcf4dc"
+        },
+        {
+          "address": "0x19462d998",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "_AXXMIGCopyHierarchy",
+          "offset": 1588,
+          "reportedUnslidAddress": "0x187bcd998"
+        },
+        {
+          "address": "0x1946275e4",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "AXUIElementCopyHierarchy",
+          "offset": 1144,
+          "reportedUnslidAddress": "0x187bc75e4"
+        },
+        {
+          "address": "0x1f2b42a5c",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTAccessibilityFramework hierarchyForElement:attributes:options:error:]",
+          "offset": 140,
+          "reportedUnslidAddress": "0x1e60e2a5c"
+        },
+        {
+          "address": "0x1f2b4acb0",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTElementSnapshotRequest(PlatformImplementation) _accessibilitySnapshotForElement:error:]",
+          "offset": 512,
+          "reportedUnslidAddress": "0x1e60eacb0"
+        },
+        {
+          "address": "0x1f2b4ae70",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTElementSnapshotRequest(PlatformImplementation) accessibilitySnapshotOrError:]",
+          "offset": 84,
+          "reportedUnslidAddress": "0x1e60eae70"
+        },
+        {
+          "address": "0x1f2b4a7ac",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "__56-[XCTElementSnapshotRequest loadSnapshotAndReturnError:]_block_invoke_2",
+          "offset": 56,
+          "reportedUnslidAddress": "0x1e60ea7ac"
+        },
+        {
+          "address": "0x1f2b66c9c",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "__XCTPerformOnMainRunLoop_block_invoke",
+          "offset": 412,
+          "reportedUnslidAddress": "0x1e6106c9c"
+        },
+        {
+          "address": "0x18d01cb00",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__",
+          "offset": 28,
+          "reportedUnslidAddress": "0x1805bcb00"
+        },
+        {
+          "address": "0x18d01ca40",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRunLoopDoBlocks",
+          "offset": 396,
+          "reportedUnslidAddress": "0x1805bca40"
+        },
+        {
+          "address": "0x18d01be84",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRunLoopRun",
+          "offset": 2356,
+          "reportedUnslidAddress": "0x1805bbe84"
+        },
+        {
+          "address": "0x18d0ee264",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "_CFRunLoopRunSpecificWithOptions",
+          "offset": 532,
+          "reportedUnslidAddress": "0x18068e264"
+        },
+        {
+          "address": "0x199e07560",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "RunCurrentEventLoopInMode",
+          "offset": 320,
+          "reportedUnslidAddress": "0x18d3a7560"
+        },
+        {
+          "address": "0x199e0a8bc",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "ReceiveNextEventCommon",
+          "offset": 488,
+          "reportedUnslidAddress": "0x18d3aa8bc"
+        },
+        {
+          "address": "0x199f9414c",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "_BlockUntilNextEventMatchingListInMode",
+          "offset": 48,
+          "reportedUnslidAddress": "0x18d53414c"
+        },
+        {
+          "address": "0x191afe3d0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_DPSBlockUntilNextEventMatchingListInMode",
+          "offset": 228,
+          "reportedUnslidAddress": "0x18509e3d0"
+        },
+        {
+          "address": "0x191452084",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_DPSNextEvent",
+          "offset": 576,
+          "reportedUnslidAddress": "0x1849f2084"
+        },
+        {
+          "address": "0x191fe796c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:]",
+          "offset": 688,
+          "reportedUnslidAddress": "0x18558796c"
+        },
+        {
+          "address": "0x191fe7678",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:]",
+          "offset": 72,
+          "reportedUnslidAddress": "0x185587678"
+        },
+        {
+          "address": "0x19144513c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication run]",
+          "offset": 368,
+          "reportedUnslidAddress": "0x1849e513c"
+        },
+        {
+          "address": "0x19141d7b0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "NSApplicationMain",
+          "offset": 880,
+          "reportedUnslidAddress": "0x1849bd7b0"
+        },
+        {
+          "address": "0x1c24b1af8",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI6runAppys5NeverOSo21NSApplicationDelegate_So11NSResponderCXcFTf4e_nAA07TestingdG0C_Tg5Tm",
+          "offset": 140,
+          "reportedUnslidAddress": "0x1b5a51af8"
+        },
+        {
+          "address": "0x1c286c8d8",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI6runAppys5NeverOxAA0D0RzlF",
+          "offset": 104,
+          "reportedUnslidAddress": "0x1b5e0c8d8"
+        },
+        {
+          "address": "0x1c2b38778",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI3AppPAAE4mainyyFZ",
+          "offset": 224,
+          "reportedUnslidAddress": "0x1b60d8778"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        },
+        {
+          "address": "0x18cb944e4",
+          "image": "/usr/lib/dyld",
+          "symbol": "start",
+          "offset": 6992,
+          "reportedUnslidAddress": "0x1801344e4"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        }
+      ]
+    },
+    {
+      "test": "testMacNotesStaleApplyPreservesNewerSavedNote()",
+      "frames": [
+        {
+          "address": "0x18e8469bc",
+          "image": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+          "symbol": "-[NSConditionLock lockWhenCondition:beforeDate:]",
+          "offset": 80,
+          "reportedUnslidAddress": "0x181de69bc"
+        },
+        {
+          "address": "0x19169eeec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_getDataDetectorsScanner",
+          "offset": 292,
+          "reportedUnslidAddress": "0x184c3eeec"
+        },
+        {
+          "address": "0x192316d24",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext filterEntriesByDataDetectors:]",
+          "offset": 204,
+          "reportedUnslidAddress": "0x1858b6d24"
+        },
+        {
+          "address": "0x19176afe8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext filterEntriesByTheirFilters:]",
+          "offset": 504,
+          "reportedUnslidAddress": "0x184d0afe8"
+        },
+        {
+          "address": "0x191769d54",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext _preconcurrentPortionOfQualifyEntries:returningEntriesNeedingURLTypecheckingIntoSet:]",
+          "offset": 220,
+          "reportedUnslidAddress": "0x184d09d54"
+        },
+        {
+          "address": "0x191769b1c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSMenuContext qualifyEntries:withCompletionHandler:]",
+          "offset": 328,
+          "reportedUnslidAddress": "0x184d09b1c"
+        },
+        {
+          "address": "0x1921e1b2c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateVisibilityOfServicesItemsForMenu:isForDisplay:]",
+          "offset": 260,
+          "reportedUnslidAddress": "0x185781b2c"
+        },
+        {
+          "address": "0x1916b1818",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesMenuUpdater insertServicesIntoMenu:withKeyEvent:isForDisplay:]",
+          "offset": 200,
+          "reportedUnslidAddress": "0x184c51818"
+        },
+        {
+          "address": "0x1916b1718",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesMenuUpdater updateMenu:withEvent:withFlags:]",
+          "offset": 64,
+          "reportedUnslidAddress": "0x184c51718"
+        },
+        {
+          "address": "0x19169ba3c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[_NSServicesPrincipalMenuUpdater updateMenu:withEvent:withFlags:]",
+          "offset": 216,
+          "reportedUnslidAddress": "0x184c3ba3c"
+        },
+        {
+          "address": "0x191e701d8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateFromDelegateWithEventProvider:]",
+          "offset": 352,
+          "reportedUnslidAddress": "0x1854101d8"
+        },
+        {
+          "address": "0x191e70e20",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithEventProvider:]",
+          "offset": 236,
+          "reportedUnslidAddress": "0x185410e20"
+        },
+        {
+          "address": "0x1915ad4e0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithEventRef:]",
+          "offset": 96,
+          "reportedUnslidAddress": "0x184b4d4e0"
+        },
+        {
+          "address": "0x191e71198",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "__49-[NSMenu _populateWithFlags:eventRef:incomplete:]_block_invoke",
+          "offset": 32,
+          "reportedUnslidAddress": "0x185411198"
+        },
+        {
+          "address": "0x191e711f8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _withUpdateFlags:do:]",
+          "offset": 72,
+          "reportedUnslidAddress": "0x1854111f8"
+        },
+        {
+          "address": "0x191e710ac",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _populateWithFlags:eventRef:incomplete:]",
+          "offset": 272,
+          "reportedUnslidAddress": "0x1854110ac"
+        },
+        {
+          "address": "0x191e6c670",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "__27-[NSMenu _simulateOpening:]_block_invoke",
+          "offset": 116,
+          "reportedUnslidAddress": "0x18540c670"
+        },
+        {
+          "address": "0x191e6c0e8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _forEachLinkedMenu:]",
+          "offset": 68,
+          "reportedUnslidAddress": "0x18540c0e8"
+        },
+        {
+          "address": "0x191e6c5ec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu _simulateOpening:]",
+          "offset": 120,
+          "reportedUnslidAddress": "0x18540c5ec"
+        },
+        {
+          "address": "0x191da1064",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) _openForInspection:]",
+          "offset": 264,
+          "reportedUnslidAddress": "0x185341064"
+        },
+        {
+          "address": "0x191da18ec",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) _accessibilityArrayAttributeCount:]",
+          "offset": 240,
+          "reportedUnslidAddress": "0x1853418ec"
+        },
+        {
+          "address": "0x191da1708",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSMenu(Accessibility) accessibilityArrayAttributeCount:]",
+          "offset": 60,
+          "reportedUnslidAddress": "0x185341708"
+        },
+        {
+          "address": "0x191bf21f8",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSObject(NSAccessibilityInternal) _accessibilityArrayAttributeCount:clientError:]",
+          "offset": 120,
+          "reportedUnslidAddress": "0x1851921f8"
+        },
+        {
+          "address": "0x191bf59cc",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "GetAttributeValueCount",
+          "offset": 180,
+          "reportedUnslidAddress": "0x1851959cc"
+        },
+        {
+          "address": "0x19462f4dc",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "__AXCopyAttributeValueForHierarchy",
+          "offset": 156,
+          "reportedUnslidAddress": "0x187bcf4dc"
+        },
+        {
+          "address": "0x19462d998",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "_AXXMIGCopyHierarchy",
+          "offset": 1588,
+          "reportedUnslidAddress": "0x187bcd998"
+        },
+        {
+          "address": "0x1946275e4",
+          "image": "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/HIServices.framework/Versions/A/HIServices",
+          "symbol": "AXUIElementCopyHierarchy",
+          "offset": 1144,
+          "reportedUnslidAddress": "0x187bc75e4"
+        },
+        {
+          "address": "0x1f2b42a5c",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTAccessibilityFramework hierarchyForElement:attributes:options:error:]",
+          "offset": 140,
+          "reportedUnslidAddress": "0x1e60e2a5c"
+        },
+        {
+          "address": "0x1f2b4acb0",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTElementSnapshotRequest(PlatformImplementation) _accessibilitySnapshotForElement:error:]",
+          "offset": 512,
+          "reportedUnslidAddress": "0x1e60eacb0"
+        },
+        {
+          "address": "0x1f2b4ae70",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "-[XCTElementSnapshotRequest(PlatformImplementation) accessibilitySnapshotOrError:]",
+          "offset": 84,
+          "reportedUnslidAddress": "0x1e60eae70"
+        },
+        {
+          "address": "0x1f2b4a7ac",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "__56-[XCTElementSnapshotRequest loadSnapshotAndReturnError:]_block_invoke_2",
+          "offset": 56,
+          "reportedUnslidAddress": "0x1e60ea7ac"
+        },
+        {
+          "address": "0x1f2b66c9c",
+          "image": "/System/Library/PrivateFrameworks/XCTAutomationSupport.framework/Versions/A/XCTAutomationSupport",
+          "symbol": "__XCTPerformOnMainRunLoop_block_invoke",
+          "offset": 412,
+          "reportedUnslidAddress": "0x1e6106c9c"
+        },
+        {
+          "address": "0x18d01cb00",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__",
+          "offset": 28,
+          "reportedUnslidAddress": "0x1805bcb00"
+        },
+        {
+          "address": "0x18d01ca40",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRunLoopDoBlocks",
+          "offset": 396,
+          "reportedUnslidAddress": "0x1805bca40"
+        },
+        {
+          "address": "0x18d01be84",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "__CFRunLoopRun",
+          "offset": 2356,
+          "reportedUnslidAddress": "0x1805bbe84"
+        },
+        {
+          "address": "0x18d0ee264",
+          "image": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+          "symbol": "_CFRunLoopRunSpecificWithOptions",
+          "offset": 532,
+          "reportedUnslidAddress": "0x18068e264"
+        },
+        {
+          "address": "0x199e07560",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "RunCurrentEventLoopInMode",
+          "offset": 320,
+          "reportedUnslidAddress": "0x18d3a7560"
+        },
+        {
+          "address": "0x199e0a8bc",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "ReceiveNextEventCommon",
+          "offset": 488,
+          "reportedUnslidAddress": "0x18d3aa8bc"
+        },
+        {
+          "address": "0x199f9414c",
+          "image": "/System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox",
+          "symbol": "_BlockUntilNextEventMatchingListInMode",
+          "offset": 48,
+          "reportedUnslidAddress": "0x18d53414c"
+        },
+        {
+          "address": "0x191afe3d0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_DPSBlockUntilNextEventMatchingListInMode",
+          "offset": 228,
+          "reportedUnslidAddress": "0x18509e3d0"
+        },
+        {
+          "address": "0x191452084",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "_DPSNextEvent",
+          "offset": 576,
+          "reportedUnslidAddress": "0x1849f2084"
+        },
+        {
+          "address": "0x191fe796c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:]",
+          "offset": 688,
+          "reportedUnslidAddress": "0x18558796c"
+        },
+        {
+          "address": "0x191fe7678",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:]",
+          "offset": 72,
+          "reportedUnslidAddress": "0x185587678"
+        },
+        {
+          "address": "0x19144513c",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "-[NSApplication run]",
+          "offset": 368,
+          "reportedUnslidAddress": "0x1849e513c"
+        },
+        {
+          "address": "0x19141d7b0",
+          "image": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+          "symbol": "NSApplicationMain",
+          "offset": 880,
+          "reportedUnslidAddress": "0x1849bd7b0"
+        },
+        {
+          "address": "0x1c24b1af8",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI6runAppys5NeverOSo21NSApplicationDelegate_So11NSResponderCXcFTf4e_nAA07TestingdG0C_Tg5Tm",
+          "offset": 140,
+          "reportedUnslidAddress": "0x1b5a51af8"
+        },
+        {
+          "address": "0x1c286c8d8",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI6runAppys5NeverOxAA0D0RzlF",
+          "offset": 104,
+          "reportedUnslidAddress": "0x1b5e0c8d8"
+        },
+        {
+          "address": "0x1c2b38778",
+          "image": "/System/Library/Frameworks/SwiftUI.framework/Versions/A/SwiftUI",
+          "symbol": "$s7SwiftUI3AppPAAE4mainyyFZ",
+          "offset": 224,
+          "reportedUnslidAddress": "0x1b60d8778"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        },
+        {
+          "address": "0x18cb944e4",
+          "image": "/usr/lib/dyld",
+          "symbol": "start",
+          "offset": 6992,
+          "reportedUnslidAddress": "0x1801344e4"
+        },
+        {
+          "address": "0x0",
+          "image": null,
+          "symbol": null,
+          "offset": null,
+          "reportedUnslidAddress": "0x0"
+        }
+      ]
+    }
+  ]
+}

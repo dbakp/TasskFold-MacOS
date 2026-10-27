@@ -169,7 +169,7 @@ struct TaskfoldCommands: Commands {
     let store: Store
     var body: some Commands {
         CommandGroup(replacing: .printItem) {
-            Button("Print or Export…") { printAction?() }.keyboardShortcut("p", modifiers: .command).disabled(printAction == nil)
+            Button("Print or Export…") { printAction?.perform() }.keyboardShortcut("p", modifiers: .command).disabled(printAction?.isEnabled != true)
         }
         CommandGroup(replacing: .newItem) {
             Button("New Task") { workspace.quickAddFocusRequest += 1 }.keyboardShortcut("n", modifiers: .command)

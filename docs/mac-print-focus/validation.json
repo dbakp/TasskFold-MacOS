@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-27",
+  "distinctNativeCasesPassed": 7,
+  "printCasesStrictlyAccepted": 3,
+  "noteCasesIndividuallyPassed": 4,
+  "noteWholeSuiteAccepted": false,
+  "noteSuiteFailure": "Calendar test matched a clipped title; corrected standalone Calendar case passes against the identical app binary",
+  "runtimeWarningCount": 4,
+  "appFocusUpdateWarningCount": 0,
+  "allStrictRuntimeAccepted": false,
+  "productionBaseline": "Original code fails Print after selecting empty Inbox; original long-PDF test passes",
+  "fix": "Persistent per-window command target; visible list registers its action and availability; departed owners cannot clear incoming actions",
+  "scope": "Signed isolated macOS Debug app, synthetic local task/heading data; standard light presentation. Actual PDF Save/complete pages/Print cancellation/cold return; repeated shortcut, Inbox navigation and Calendar availability. Four existing full-snapshot note recovery cases.",
+  "unchanged": "No Core/iOS implementation, persisted contract, server, release configuration or real data changes",
+  "remaining": [
+    "AppKit Services-menu data-detector priority waits during accessibility snapshots; strict note runtime gate stays open",
+    "Broader VoiceOver/text/layout, account/access and cloud concurrency acceptance",
+    "Remaining ranked product backlog and explicit user deferrals"
+  ]
+}

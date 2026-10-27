@@ -1,0 +1,31 @@
+{
+  "removedOwnedPaths": [
+    "taskfold-note-diagnostics",
+    "taskfold-print-focus-diagnostics",
+    "taskfold-print-failures",
+    "taskfold-print-recheck-failures",
+    "taskfold-print-recheck-all",
+    "taskfold-print-baseline-attachments",
+    "taskfold-print-window-owner-diagnostics",
+    "taskfold-print-five-diagnostics",
+    "taskfold-print-calendar-attachments",
+    "taskfold-print-note-accepted-diagnostics",
+    "taskfold-print-calendar-accepted-diagnostics",
+    "taskfold-mac-notes-window.xcresult",
+    "taskfold-mac-print-focus.xcresult",
+    "taskfold-mac-print-focus-recheck.xcresult",
+    "taskfold-mac-print-identity.xcresult",
+    "taskfold-mac-print-owner.xcresult",
+    "taskfold-mac-print-baseline.xcresult",
+    "taskfold-mac-print-final.xcresult"
+  ],
+  "logicalBytesRemoved": 377565837,
+  "retained": [
+    "One current native host/build cache per platform",
+    "Original note-warning result for recorded stack attribution",
+    "Accepted Print pair, latest note mixed-run evidence and corrected Calendar result",
+    "Both source repositories and synthetic app data"
+  ],
+  "temporaryMainAppsRunning": 0,
+  "scope": "Only obsolete outputs created/used in this follow-up; no general caches, simulator runtimes or real data removed. Logical file sizes, not a measured free-space delta."
+}

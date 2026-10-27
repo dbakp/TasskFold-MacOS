@@ -1,0 +1,20 @@
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacPrintCommandReopensAndTracksCurrentList]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacPrintCommandReopensAndTracksCurrentList]' passed (23.552 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testTaskPDFActualSaveCompletePagesPrintCancelAndColdReturn]' passed (34.642 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFailedApplyRetainsFormattedDraftAndCanRetry]' passed (22.036 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesFormattingCancelPreservesWholeWorkspace]' passed (20.321 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesSelectionPreviewApplyUndoAndColdReturn]' passed (34.044 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote]' started.
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacNotesStaleApplyPreservesNewerSavedNote]' passed (32.125 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacPrintCommandDisablesInCalendarAndReturnsToList]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacPrintCommandDisablesInCalendarAndReturnsToList]' failed (28.996 seconds).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacPrintCommandDisablesInCalendarAndReturnsToList]' started.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testMacPrintCommandDisablesInCalendarAndReturnsToList]' passed (27.120 seconds).

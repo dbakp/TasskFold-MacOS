@@ -1,4 +1,5 @@
 import SwiftUI
+import Observation
 import PDFKit
 import UniformTypeIdentifiers
 #if os(iOS)
@@ -8,9 +9,33 @@ import AppKit
 #endif
 
 #if os(macOS)
-private struct TaskPrintActionKey: FocusedValueKey { typealias Value = () -> Void }
+/// One command target per window. Lists may be replaced during navigation;
+/// the focused scene keeps this stable object while the visible list registers.
+@MainActor @Observable final class TaskPrintCommand {
+    private(set) var isEnabled = false
+    @ObservationIgnored private var owner: UUID?
+    @ObservationIgnored private var action: (() -> Void)?
+
+    func install(owner: UUID, enabled: Bool, action: @escaping () -> Void) {
+        self.owner = owner; self.action = action; isEnabled = enabled
+    }
+    func update(owner: UUID, enabled: Bool) {
+        guard self.owner == owner else { return }
+        isEnabled = enabled
+    }
+    func remove(owner: UUID) {
+        // An outgoing list can disappear after the incoming list registers.
+        guard self.owner == owner else { return }
+        self.owner = nil; action = nil; isEnabled = false
+    }
+    func perform() {
+        guard isEnabled else { return }
+        action?()
+    }
+}
+private struct TaskPrintActionKey: FocusedValueKey { typealias Value = TaskPrintCommand }
 extension FocusedValues {
-    var taskfoldPrint: (() -> Void)? {
+    var taskfoldPrint: TaskPrintCommand? {
         get { self[TaskPrintActionKey.self] }
         set { self[TaskPrintActionKey.self] = newValue }
     }

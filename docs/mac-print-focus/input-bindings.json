@@ -1,0 +1,26 @@
+{
+  "scope": "Current final test source includes explicit View-menu and stable child-row navigation. App code/binary unchanged across accepted print pair, four individually passing note cases, and Calendar recheck.",
+  "sourceSHA256": {
+    "Taskfold/TaskfoldMacApp.swift": "9e5a4a0228b3a13878079d8be82eb849bde337b5bbe3dbf022adca2f275f393c",
+    "Taskfold/Views/PrintReviewView.swift": "31fb8d9485a4287fd832f3b3afd57f8b2963a0eae2c91bc2b5cbc9be1d9f5c6d",
+    "Taskfold/Views/TaskListView.swift": "6f8db9804b1d829466e1152408a1188a7dfd9ba5cb7f82983209ad7ddd01d528",
+    "Taskfold/Views/RootView.swift": "7f4bab3686bde8386c254a4f9f7f2ca008c92cdebc52d32ee5b8e252b91ea638",
+    "Taskfold/Core/Store.swift": "2e3c17facadcb4d0437e85d2e029afc489b16e58e35de90c3d8c82c7a3808f2c",
+    "Taskfold/Views/NoteFormattingView.swift": "fae3c90f361b5a964e138e90033c2d526098e1cf936302531313f966f560ab0a",
+    "Taskfold/Views/TaskInspector.swift": "93f4faed9d74583d346788e38386c7fb72237c4eb35209d6eeb1d6031c68ca4d",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "a9a820a6d026baf547944a57152900532ba18f3c35c18f0e3cb63a12e726d4cc"
+  },
+  "preparedSHA256": {
+    "Taskfold/TaskfoldMacApp.swift": "9e5a4a0228b3a13878079d8be82eb849bde337b5bbe3dbf022adca2f275f393c",
+    "Taskfold/Views/PrintReviewView.swift": "31fb8d9485a4287fd832f3b3afd57f8b2963a0eae2c91bc2b5cbc9be1d9f5c6d",
+    "Taskfold/Views/TaskListView.swift": "6f8db9804b1d829466e1152408a1188a7dfd9ba5cb7f82983209ad7ddd01d528",
+    "Taskfold/Views/RootView.swift": "7f4bab3686bde8386c254a4f9f7f2ca008c92cdebc52d32ee5b8e252b91ea638",
+    "Taskfold/Core/Store.swift": "6bf369c818a9a80f1a7fcfc1b87b5ca951c299619efa0a6e7223cac9b0899416",
+    "Taskfold/Views/NoteFormattingView.swift": "fae3c90f361b5a964e138e90033c2d526098e1cf936302531313f966f560ab0a",
+    "Taskfold/Views/TaskInspector.swift": "93f4faed9d74583d346788e38386c7fb72237c4eb35209d6eeb1d6031c68ca4d",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "a9a820a6d026baf547944a57152900532ba18f3c35c18f0e3cb63a12e726d4cc"
+  },
+  "appDylibSHA256": "c43df3a4425848cccb6ff83440e3329c3e93579c89b327554199f5bed4d04ddb",
+  "testBinarySHA256": "e4da204caa0eb1ef8b3b70a49ec3af3a6f38b2a3d992bc29eee26c4e44ed7eaa",
+  "sameProductionBinaryAsAcceptedPrintPair": true
+}

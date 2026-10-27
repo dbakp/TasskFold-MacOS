@@ -4,6 +4,19 @@ Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Mac Print now uses a persistent window command target with owner-checked list
+registration, rather than publishing fresh callbacks from replaceable list views.
+The original build reproduced a silent Print failure after navigating to empty
+Inbox. Three print cases now pass strict native verification: repeated shortcut /
+Inbox routing, actual long PDF Save / Print cancellation / cold return, and
+Calendar disable / explicit return to a list. Four note recovery cases individually
+pass against the identical app binary; their mixed suite was not accepted as a
+passing suite because its Calendar harness matched a clipped title. The corrected
+standalone Calendar case passes. App focus-update logging is absent in these
+runs. Four Services-menu / accessibility data-detector priority warnings remain,
+so the strict note-runtime gate stays open. See mac-print-focus/validation.json.
+No new iOS implementation or native acceptance is claimed by this Mac follow-up.
+
 Rank 3 remains active. Headings have a compatible persisted contract and gated
 native editors, including separately negotiated personal cloud support; normal
 authoring stays off. Productive child work now feeds

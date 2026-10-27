@@ -32,7 +32,12 @@ extension TaskfoldMacUITests {
             let command = app.menuItems["openPrintReview"]
             XCTAssertTrue(command.waitForExistence(timeout: 5), app.debugDescription); command.click()
         }
-        XCTAssertTrue(app.staticTexts["printPageCount"].waitForExistence(timeout: 15), app.debugDescription)
+        let ready = app.staticTexts["printPageCount"].waitForExistence(timeout: 15)
+        if !ready {
+            let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+            image.name = "Print preview did not become ready"; image.lifetime = .keepAlways; add(image)
+        }
+        XCTAssertTrue(ready, "The actual print preview must finish preparing")
     }
     @MainActor private func outputSave(_ button: String, suffix: String, _ app: XCUIApplication) throws -> URL {
         let control = app.buttons[button]; outputReveal(control, app); control.click()
@@ -5442,5 +5447,71 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(app.textViews["taskDescription"].value as? String, "Updated elsewhere while formatting.")
         XCTAssertEqual(try noteProofTables(), newer)
         XCTAssertEqual(try noteProofCache(), newerCache, "Cold return preserves the complete newer snapshot")
+    }
+}
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testMacPrintCommandReopensAndTracksCurrentList() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        try outputStart(app, longNotes: false)
+        let before = try outputTables()
+        let title = app.staticTexts["printDocumentTitle"]
+        XCTAssertTrue(title.label == "Today" || title.value as? String == "Today")
+        app.buttons["closePrintReview"].click()
+        XCTAssertTrue(title.waitForNonExistence(timeout: 8))
+        app.typeKey("p", modifierFlags: .command)
+        XCTAssertTrue(title.waitForExistence(timeout: 10))
+        XCTAssertTrue(title.label == "Today" || title.value as? String == "Today")
+        app.buttons["closePrintReview"].click()
+        XCTAssertTrue(title.waitForNonExistence(timeout: 8))
+        app.staticTexts["Inbox"].firstMatch.click()
+        app.typeKey("p", modifierFlags: .command)
+        let inboxReady = title.waitForExistence(timeout: 10)
+        if !inboxReady {
+            let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+            image.name = "Print command after selecting Inbox"; image.lifetime = .keepAlways; add(image)
+        }
+        XCTAssertTrue(inboxReady)
+        XCTAssertTrue(title.label == "Inbox" || title.value as? String == "Inbox")
+        XCTAssertTrue(app.staticTexts["printPageCount"].waitForExistence(timeout: 10))
+        app.buttons["closePrintReview"].click()
+        XCTAssertEqual(try outputTables(), before, "Print commands must not mutate saved work")
+    }
+}
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testMacPrintCommandDisablesInCalendarAndReturnsToList() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        try outputStart(app, longNotes: false)
+        let before = try outputTables()
+        app.buttons["closePrintReview"].click()
+        XCTAssertTrue(app.staticTexts["printDocumentTitle"].waitForNonExistence(timeout: 8))
+        app.staticTexts["Calendar"].firstMatch.click()
+        app.menuBars.menuBarItems["File"].click()
+        let command = app.menuItems["Print or Export…"].firstMatch
+        XCTAssertTrue(command.waitForExistence(timeout: 5))
+        XCTAssertFalse(command.isEnabled, "A departed list cannot remain printable over Calendar")
+        app.typeKey(.escape, modifierFlags: [])
+        let navigation = app.menuBars.menuBarItems["View"]
+        navigation.click()
+        navigation.menuItems["Today"].firstMatch.click()
+        let child = "subtask:" + (try JSONEncoder().encode(["f1810000-0000-4000-8000-000000000001", "f5810000-0000-4000-8000-000000000001"])).base64EncodedString()
+        XCTAssertTrue(app.staticTexts["title-" + child].waitForExistence(timeout: 10), "Return to the task list, not Calendar's Today control")
+        app.menuBars.menuBarItems["File"].click()
+        XCTAssertTrue(command.waitForExistence(timeout: 5))
+        XCTAssertTrue(command.isEnabled, "Returning to a list restores its window's Print command")
+        command.click()
+        let title = app.staticTexts["printDocumentTitle"]
+        let ready = title.waitForExistence(timeout: 10)
+        if !ready {
+            let image = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+            image.name = "Print after returning from Calendar"; image.lifetime = .keepAlways; add(image)
+        }
+        XCTAssertTrue(ready)
+        XCTAssertTrue(title.label == "Today" || title.value as? String == "Today")
+        app.buttons["closePrintReview"].click()
+        XCTAssertEqual(try outputTables(), before)
     }
 }

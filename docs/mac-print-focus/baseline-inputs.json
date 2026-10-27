@@ -1,0 +1,12 @@
+{
+  "productionBaselineCommit": "321bb133d01cdc73aaf2f89efbe2d32d5e1bfe2b",
+  "scope": "Original production print implementation; new regression test and failure capture only",
+  "preparedSHA256": {
+    "Taskfold/TaskfoldMacApp.swift": "38cbbd0c3762e99badefee5e4cd0bcd1479390c6d908d2693c5be6929d661ffe",
+    "Taskfold/Views/PrintReviewView.swift": "55449cc64d2874ca24c550c48d03cb27b44336811c7a3c181b45dc1ed8d3a5ee",
+    "Taskfold/Views/TaskListView.swift": "1db1f885a4af751d087b06a91ec0db3db10741e1f438d4f6e6c7cc291772fdac",
+    "Taskfold/Views/RootView.swift": "72eaceee16f9fcb8d03474b80c36eaabb159705f2c034c469378ae156d0f44b7",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "abfaa656f369696413b692f2e1d2c6d8191ddb0592afdffba9803beafeac67b1"
+  },
+  "appDylibSHA256": "d8ef97b89bbd55b112000f93da4b831c150e7fe6a3b844064b14a31a826f87ee"
+}

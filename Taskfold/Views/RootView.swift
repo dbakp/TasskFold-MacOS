@@ -510,6 +510,7 @@ struct WorkspaceView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @State private var columns = NavigationSplitViewVisibility.all
+    @State private var printCommand = TaskPrintCommand()
     var body: some View {
         @Bindable var workspace = workspace
         // Read during body evaluation so selection invalidates the inspector's
@@ -555,6 +556,8 @@ struct WorkspaceView: View {
             }
         }
         .modifier(KeyRouter())
+        .environment(printCommand)
+        .focusedSceneValue(\.taskfoldPrint, printCommand)
         .accessibilityIdentifier("nativeWorkspace")
     }
 }
