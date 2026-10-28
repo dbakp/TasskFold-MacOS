@@ -1,0 +1,35 @@
+{
+  "scope": "Synthetic isolated local native test only",
+  "sourceSHA256": "9311db4bb77e2ca8918f1204de1b313c4d72b6f1b62747d98700d3a76dc3472d",
+  "sourceBytes": 79544,
+  "savedDrafts": [
+    {
+      "file": "draft-93309502-3336-48e7-9033-a8b916a94a03.bin",
+      "fileSHA256": "2430c4dc482b70f2930366a6773b3bd97c7d8727a6328de4b50d57bec1e22de6",
+      "id": "93309502-3336-48e7-9033-a8b916a94a03",
+      "revision": "2c1487c2-d35b-4b35-abb7-4ab2c7afe455",
+      "audioSHA256": "de48f46fb2f9515ec85b573453fc3e717cc5911c4d3dc62edd2bbda46e364b05",
+      "caption": "Imported recording proof\nKeep a separate private copy.",
+      "target": {
+        "project_id": null,
+        "task_generation": "ac290000-0000-4000-8000-000000000004",
+        "task_id": "ac290000-0000-4000-8000-000000000001"
+      },
+      "format": "taskfold-audio-review-v2"
+    },
+    {
+      "file": "draft-33828610-0188-45c9-9b6a-3c5b2dd42fc1.bin",
+      "fileSHA256": "c3501ba20b025b6b96443cd1019c7a50662f873facdef16559b4d15d18a7c973",
+      "id": "33828610-0188-45c9-9b6a-3c5b2dd42fc1",
+      "revision": "7ecf18b3-ac96-4388-9c21-171e2db54dc1",
+      "audioSHA256": "de48f46fb2f9515ec85b573453fc3e717cc5911c4d3dc62edd2bbda46e364b05",
+      "caption": "Imported recording proof\nKeep a separate private copy.",
+      "target": {
+        "project_id": null,
+        "task_generation": "ac290000-0000-4000-8000-000000000004",
+        "task_id": "ac290000-0000-4000-8000-000000000001"
+      },
+      "format": "taskfold-audio-review-v2"
+    }
+  ]
+}

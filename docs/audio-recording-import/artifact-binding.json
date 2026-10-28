@@ -1,0 +1,7 @@
+{
+  "platform": "mac",
+  "editedProductSourcesMatchBuiltHost": true,
+  "ordinaryAudioFlagAbsentOrFalse": true,
+  "currentAppDylibSHA256": "c2d0014f51a8f19215e215bdd3bbd2b04edfe8823fe2d6919ab9c3430f83f651",
+  "nativeScope": "Build/sign and actual controller/codec/vault checks; Mac native picker/spoken acceptance remains open."
+}

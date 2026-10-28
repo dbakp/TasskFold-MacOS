@@ -37,6 +37,65 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     let title: String
 }
 
+/// A coordinated external-file read never writes to the recording vault.
+/// Cancellation reaches both the provider and the bounded streaming loop.
+final class AudioCommentRecordingFileRead: @unchecked Sendable {
+    private let coordinator = NSFileCoordinator()
+    private let lock = NSLock()
+    private var cancelled = false
+    func cancel() {
+        lock.lock(); cancelled = true; lock.unlock()
+        coordinator.cancel()
+    }
+    private func checkCancellation() throws {
+        lock.lock(); let stopped = cancelled; lock.unlock()
+        if stopped { throw CancellationError() }
+    }
+    func read(_ url: URL) throws -> AudioCommentPortableRecording {
+        try checkCancellation()
+        guard url.isFileURL else { throw AudioCommentFailure.invalid }
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        var coordinationError: NSError?
+        var result: Result<AudioCommentPortableRecording, Error>?
+        coordinator.coordinate(readingItemAt: url, options: [], error: &coordinationError) { readableURL in
+            result = Result {
+                try self.checkCancellation()
+                let values = try readableURL.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+                guard values.isRegularFile == true,
+                      (values.fileSize ?? 0) <= AudioCommentPortableRecording.maximumFileBytes else { throw AudioCommentFailure.invalid }
+                let file = try FileHandle(forReadingFrom: readableURL)
+                defer { try? file.close() }
+                var bytes = Data()
+                while true {
+                    try self.checkCancellation()
+                    let chunk = try file.read(upToCount: min(65_536, AudioCommentPortableRecording.maximumFileBytes + 1 - bytes.count)) ?? Data()
+                    if chunk.isEmpty { break }
+                    bytes.append(chunk)
+                    guard bytes.count <= AudioCommentPortableRecording.maximumFileBytes else { throw AudioCommentFailure.invalid }
+                }
+                try self.checkCancellation()
+                return try AudioCommentPortableRecording(encoded: bytes)
+            }
+        }
+        try checkCancellation()
+        if let coordinationError { throw coordinationError }
+        guard let result else { throw AudioCommentFailure.invalid }
+        return try result.get()
+    }
+    static func load(_ url: URL) async throws -> AudioCommentPortableRecording {
+        let operation = AudioCommentRecordingFileRead()
+        let worker = Task.detached(priority: .userInitiated) { try operation.read(url) }
+        return try await withTaskCancellationHandler {
+            let recording = try await worker.value
+            try Task.checkCancellation()
+            _ = try await AudioCommentDecoding.validate(recording.clip.data)
+            try Task.checkCancellation()
+            return recording
+        } onCancel: { operation.cancel(); worker.cancel() }
+    }
+}
+
 @MainActor @Observable final class AudioCommentCapture {
     private final class LiveCapture { weak var value: AudioCommentCapture?; init(_ value: AudioCommentCapture) { self.value = value } }
     @ObservationIgnored private let lifecycleID = UUID()
@@ -256,6 +315,28 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             if success || !needsSave { await refresh() }
             return success
         } catch { loading = false; if isCurrent { notice = error.localizedDescription } else { close() }; return false }
+    }
+    /// Import starts a fresh review only. Existing drafts and source files are
+    /// never replacement candidates; the normal Save journal owns confirmation.
+    var canImportRecording: Bool { editable && session.phase == .ready && session.clip == nil && !needsSave }
+    @discardableResult func importRecording(_ recording: AudioCommentPortableRecording) async -> Bool {
+        guard canImportRecording, !Task.isCancelled else { return false }
+        stopPlayback(); loading = true; defer { loading = false }
+        do {
+            let clip = try await AudioCommentDecoding.validate(recording.clip.data)
+            try Task.checkCancellation()
+            guard isCurrent else { close(); return false }
+            // No await between the final scope check and binding the new review.
+            try recovery.submit(clip: clip, caption: recording.caption)
+            try session.restore(clip, caption: recording.caption, workspace: request.scope.workspace, target: request.scope.target)
+            elapsed = Double(clip.descriptor.milliseconds) / 1000
+            notice = "Recording imported for review. Save a separate draft when ready."
+            return true
+        } catch {
+            if isCurrent { notice = error is CancellationError ? "Import cancelled." : "This recording could not be imported. Choose a valid Taskfold recording backup." }
+            else { close() }
+            return false
+        }
     }
     func restore(_ draft: AudioCommentSavedDraft, recovering: Bool = false) async {
         guard editable, !needsSave, draft.target == request.scope.target, draft.owner.account.utf8.elementsEqual(request.scope.workspace.account.utf8) else { return }

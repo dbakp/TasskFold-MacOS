@@ -9,6 +9,7 @@ import AppKit
     @State private var capture: AudioCommentCapture
     @State private var leaving = false
     @State private var deleting = false
+    @State private var importing = false
     @State private var copyReview: AudioCommentInterruptedWrite?
     @State private var pendingDiscard: AudioCommentSaveIntent?
     @FocusState private var captionFocused: Bool
@@ -118,6 +119,13 @@ import AppKit
                                 if capture.needsSave { Text("Save this recording before opening another draft.").font(.caption).foregroundStyle(.secondary) }
                             }
                         }
+                        Section {
+                            Button("Import recording backup…", systemImage: "square.and.arrow.down") { importing = true }
+                                .disabled(!capture.canImportRecording).accessibilityIdentifier("audioImport")
+                            if !capture.canImportRecording {
+                                Text("Close this recording and reopen the task’s audio drafts to import another file.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
                         if capture.saved != nil {
                             Section { Button("Delete recording draft", role: .destructive) { deleting = true }.disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioDelete") }
                         }
@@ -162,6 +170,12 @@ import AppKit
         #if os(iOS)
         .safeAreaInset(edge: .bottom) { if captionFocused { HStack { Spacer(); Button("Hide keyboard") { captionFocused = false }.accessibilityIdentifier("audioHideKeyboard") }.padding(.horizontal, 16).padding(.vertical, 8).background(.bar) } }
         #endif
+        .sheet(isPresented: $importing) {
+            AudioRecordingImportView(isCurrent: { valid && capture.isCurrent }, accept: { recording in
+                guard await capture.importRecording(recording) else { return false }
+                return await capture.save()
+            })
+        }
         .sheet(item: $copyReview) { write in
             NavigationStack {
                 Group {
@@ -533,6 +547,88 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
         let seconds = max(1, (draft.clip.descriptor.milliseconds + 999) / 1000)
         return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
+}
+
+/// The picker and its asynchronous result belong to this single modal instance.
+/// Closing it cancels the provider read and prevents any late review or Save.
+@MainActor private struct AudioRecordingImportView: View {
+    let isCurrent: () -> Bool
+    let accept: (AudioCommentPortableRecording) async -> Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var picking = false
+    @State private var recording: AudioCommentPortableRecording?
+    @State private var operation: Task<Void, Never>?
+    @State private var reading = false
+    @State private var saving = false
+    @State private var closed = false
+    @State private var failure: String?
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Save a separate private draft. The file and existing recordings stay unchanged.")
+                        .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if reading { Section { ProgressView("Checking recording…") } }
+                if let recording, isCurrent() {
+                    Section("Caption") { Text(recording.caption.isEmpty ? "No caption" : recording.caption).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioImportCaption") }
+                    Section {
+                        Text(Duration.milliseconds(recording.clip.descriptor.milliseconds).formatted(.time(pattern: .minuteSecond)))
+                        Button("Save separate draft", systemImage: "doc.badge.plus") {
+                            saving = true
+                            operation = Task {
+                                guard !closed, isCurrent(), !Task.isCancelled else { saving = false; return }
+                                _ = await accept(recording)
+                                // The ordinary editor owns any Save retry after confirmation.
+                                saving = false; dismiss()
+                            }
+                        }.disabled(saving).accessibilityIdentifier("audioImportConfirm")
+                    }
+                } else if !reading {
+                    Section {
+                        if let failure { Text(failure).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioImportError") }
+                        Button("Choose recording backup…") { picking = true }.disabled(!isCurrent()).accessibilityIdentifier("audioImportChoose")
+                    }
+                }
+            }.formStyle(.grouped).accessibilityIdentifier("audioImportForm")
+            .navigationTitle("Import recording")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { close(); dismiss() }.disabled(saving).accessibilityIdentifier("audioImportCancel") } }
+        }
+        #if os(macOS)
+        .frame(minWidth: 520, idealWidth: 580, minHeight: 460, idealHeight: 620)
+        #else
+        .presentationSizing(.page).presentationDetents([.large])
+        #endif
+        .interactiveDismissDisabled(saving)
+        .fileImporter(isPresented: $picking, allowedContentTypes: [.json]) { result in
+            guard !closed, isCurrent() else { return }
+            switch result {
+            case .failure(let error):
+                if (error as NSError).code == NSUserCancelledError { close(); dismiss() }
+                else { failure = "The file could not be opened. Make sure it is downloaded, then choose it again." }
+            case .success(let url):
+                reading = true; failure = nil
+                operation = Task {
+                    do {
+                        let value = try await AudioCommentRecordingFileRead.load(url)
+                        guard !closed, isCurrent(), !Task.isCancelled else { return }
+                        recording = value
+                    } catch {
+                        guard !closed, isCurrent(), !Task.isCancelled else { return }
+                        failure = "Choose a valid Taskfold recording backup. Your existing recordings are unchanged."
+                    }
+                    reading = false
+                }
+            }
+        }
+        .task { picking = true }
+        .onChange(of: isCurrent()) { _, current in if !current { close(); dismiss() } }
+        .onDisappear { close() }
+    }
+    private func close() { closed = true; operation?.cancel(); operation = nil; recording = nil }
 }
 
 private struct AudioRecordingTransfer: Transferable, Identifiable, Sendable {

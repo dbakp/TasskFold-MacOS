@@ -1,0 +1,5 @@
+{
+  "sourceSHA256": "949aa889f9a730b9a88d9ba7c3b1b12ba45775a626e8594a5feb6e8620df9945",
+  "appDylibSHA256": "f616180ee80f4e03f428d9da524d8c4c2fa94f92a76adce91753b45c6cd2d11e",
+  "scope": "Passed phone driver before the later iPad-only observed-sidebar navigation fallback."
+}

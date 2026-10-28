@@ -148,6 +148,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
             if bound { c.currentScope = { context.scope } }; return c
         }
         checks.merge(try await libraryChecks(root: root, data: data, request: request)) { _, new in new }
+        checks.merge(try await portableImportChecks(root: root, data: data, request: request)) { _, new in new }
         checks.merge(try await portableExportChecks(root: root, data: data, request: request)) { _, new in new }
         checks.merge(try await departureChecks(root:root,data:data,request:request,context:context)) { _, new in new }
         checks.merge(try await interruptedChecks(root: root, data: data, request: request)) { _, new in new }
@@ -1243,6 +1244,74 @@ extension AudioControllerProof {
 }
 
 extension AudioControllerProof {
+    @MainActor private static func portableImportChecks(root: URL, data: Data, request: AudioCommentDraftRequest) async throws -> [String: Bool] {
+        let folder = root.appendingPathComponent("portable-recording-import", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let owner = try AudioCommentOwner(request.scope.workspace.account)
+        let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+        let original = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "Original stays", clip: .init(data: data))
+        try vault.save(original)
+        let storage = AudioCommentDraftStorage(vault: vault)
+        let context = AudioProofContext(request.scope)
+        let player = AudioProofPlayer(), recorder = AudioProofRecorder(data)
+        func make() -> AudioCommentCapture {
+            let value = AudioCommentCapture(request: request, recorder: recorder, player: player, storage: storage)
+            value.currentScope = { context.scope }; return value
+        }
+        let caption = "  cafe\u{301}\nمراجعة 🪴 literal https://example.invalid  "
+        let portable = try AudioCommentPortableRecording(caption: caption, clip: .init(data: data))
+        let file = folder.appendingPathComponent("external-recording.json"), bytes = try portable.encoded()
+        try bytes.write(to: file)
+        var checks: [String: Bool] = [:]
+        let read = try await AudioCommentRecordingFileRead.load(file)
+        checks["externalRecordingReadKeepsExactCaptionAudioAndDescriptor"] = read.caption.utf8.elementsEqual(caption.utf8) && read.clip.data == data && read.clip.descriptor == portable.clip.descriptor
+        checks["externalRecordingReviewDoesNotWriteThePrivateVault"] = try vault.drafts() == [original] && vault.drafts(recovery: true).isEmpty && vault.saves().isEmpty
+        let stopped = AudioCommentRecordingFileRead(); stopped.cancel()
+        do { _ = try stopped.read(file); checks["cancelledRecordingReadRefusesBeforeProviderAccess"] = false }
+        catch { checks["cancelledRecordingReadRefusesBeforeProviderAccess"] = true }
+        do { _ = try AudioCommentRecordingFileRead().read(URL(string: "https://example.invalid/recording.json")!); checks["recordingImportRefusesNetworkURLs"] = false }
+        catch { checks["recordingImportRefusesNetworkURLs"] = true }
+        do { _ = try AudioCommentRecordingFileRead().read(folder); checks["recordingImportRefusesDirectories"] = false }
+        catch { checks["recordingImportRefusesDirectories"] = true }
+        let large = folder.appendingPathComponent("oversized.json")
+        try Data().write(to: large)
+        let handle = try FileHandle(forWritingTo: large); try handle.truncate(atOffset: UInt64(AudioCommentPortableRecording.maximumFileBytes + 1)); try handle.close()
+        do { _ = try AudioCommentRecordingFileRead().read(large); checks["recordingImportRefusesOversizedFilesBeforeDecode"] = false }
+        catch { checks["recordingImportRefusesOversizedFilesBeforeDecode"] = true }
+        let malformed = folder.appendingPathComponent("malformed.json"); try Data("{}".utf8).write(to: malformed)
+        do { _ = try await AudioCommentRecordingFileRead.load(malformed); checks["recordingImportRefusesMalformedFiles"] = false }
+        catch { checks["recordingImportRefusesMalformedFiles"] = true }
+        let cancelled = Task { try await AudioCommentRecordingFileRead.load(file) }; cancelled.cancel()
+        do { _ = try await cancelled.value; checks["cancelledImportLoadCannotReturnALateReview"] = false }
+        catch { checks["cancelledImportLoadCannotReturnALateReview"] = true }
+        let stale = make(); var calls = 0
+        stale.currentScope = { calls += 1; return calls == 1 ? request.scope : nil }
+        let staleResult = await stale.importRecording(read)
+        checks["importRechecksCurrentTaskAfterNativeDecode"] = !staleResult && stale.session.phase == .closed && stale.session.clip == nil
+        let cancelledCapture = make(), cancelledAction = Task { await cancelledCapture.importRecording(read) }; cancelledAction.cancel()
+        let cancelledResult = await cancelledAction.value
+        checks["cancelledImportConfirmationCannotCreateAReview"] = !cancelledResult && cancelledCapture.session.clip == nil
+        cancelledCapture.close()
+        let c = make(); await c.refresh()
+        let accepted = await c.importRecording(read)
+        checks["recordingImportCreatesBoundedNativeReviewWithoutHardware"] = accepted && c.needsSave && c.saved == nil && c.session.clip?.data == data && c.session.clip?.descriptor.milliseconds == 1000 && c.session.caption.utf8.elementsEqual(caption.utf8) && player.plays == 0 && recorder.callbacks.isEmpty
+        checks["importReviewCannotBeReplacedByASecondFile"] = !(await c.importRecording(read)) && c.session.caption.utf8.elementsEqual(caption.utf8)
+        let saved = await c.save(), imported = c.saved
+        checks["recordingImportSavesIndependentIDsForTheCurrentTask"] = saved && imported?.id != original.id && imported?.revision != original.revision && imported?.target == request.scope.target && imported?.owner == owner && imported?.origin == nil
+        checks["recordingImportKeepsThePriorSavedDraftExactly"] = try vault.drafts().contains(original) && vault.drafts().count == 2 && vault.saves().isEmpty
+        checks["importNeverModifiesItsExternalSourceFile"] = try Data(contentsOf: file) == bytes
+        let again = await c.save()
+        checks["importSaveRetryDoesNotDuplicateTheDraft"] = try again && c.saved == imported && vault.drafts().count == 2
+        checks["savedRecordingMustBeClosedBeforeAnotherImport"] = !(await c.importRecording(read)) && c.saved == imported
+        c.close()
+        let returned = make(); await returned.refresh()
+        checks["importedDraftRemainsAvailableAfterReopening"] = returned.available.count == 2 && returned.available.contains(where: { $0.id == imported?.id && $0.caption.utf8.elementsEqual(caption.utf8) && $0.clip.data == data })
+        returned.close()
+        let foreign = make(); context.scope = .init(workspace: .init(account: "another-account", generation: request.scope.workspace.generation), target: request.scope.target)
+        checks["recordingImportCannotBindToAnotherAccount"] = !(await foreign.importRecording(read))
+        foreign.close()
+        return checks
+    }
     @MainActor private static func portableExportChecks(root: URL, data: Data, request: AudioCommentDraftRequest) async throws -> [String: Bool] {
         let scope = AudioCommentLibraryScope(workspace: request.scope.workspace, origin: "https://export.example.invalid")
         let folder = root.appendingPathComponent("portable-recording-export", isDirectory: true)

@@ -6685,3 +6685,28 @@ verified gated candidate, not completion of audio comments or the full Px goal.
 
 [Evidence and exact scope](audio-recording-export/README.md). This advances backup
 custody; it does not complete audio comments or the overall Px objective.
+
+
+## 2026-10-28 — reviewed recording-backup import candidate
+
+- [x] Add a coordinated, bounded and cancellable recording-file reader plus full
+  native AAC validation before review. No microphone/speaker permission is used.
+- [x] Review the literal caption, then explicitly Save a separate private draft
+  for the currently admitted task. A fresh editor is required; source files and
+  existing recordings are preserved. Cancel and late cancelled results do not
+  write the vault. Confirmation uses the existing recovery writer/Save journal.
+- [x] Each independent repo passes 230 actual controller/codec/vault checks,
+  including 19 new import checks, with zero compiler warnings. Both native app
+  builds and strict deep development signatures pass. Core contracts are unchanged.
+- [x] iPhone/iPad Simulator: one native case each at dark Accessibility XXXL,
+  with no failures/skips/reported runtime warnings. Actual local Files selection,
+  full-caption review, Cancel, separate Save, source/task preservation and cold
+  return pass. The eight final explicit captures were inspected. Diagnostic
+  driver failures are retained separately and are excluded from acceptance.
+- [ ] Ordinary audio exposure, actual Mac picker/spoken, cloud/physical/genuine
+  media acceptance, bulk media backup, account-removal custody, unfinished orphan
+  recovery and private server delivery remain open. The user explicitly deferred
+  genuine dictation/microphone/speaker/TCC testing again; no new prompt was shown.
+
+[Evidence and exact scope](audio-recording-import/README.md). This completes the
+scoped local mobile import return path, not audio comments or the overall Px goal.
