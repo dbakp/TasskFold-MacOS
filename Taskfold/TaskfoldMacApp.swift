@@ -29,7 +29,8 @@ struct TaskfoldMacApp: App {
 
     @ViewBuilder private var mainContent: some View {
         #if DEBUG
-        if AudioCommentNativeFixture.conversationTesting { AudioConversationNativeFixtureView() }
+        if AudioCommentNativeFixture.ownerReviewTesting { AudioOwnerReviewNativeFixtureView() }
+        else if AudioCommentNativeFixture.conversationTesting { AudioConversationNativeFixtureView() }
         else if AudioCommentNativeFixture.enabled { AudioCommentNativeFixtureView() }
         else if ProjectAdoptionNativeFixture.enabled { ProjectAdoptionNativeFixtureView() }
         else if WorkflowUndoNativePeer.enabled { WorkflowUndoNativeFixtureView() }

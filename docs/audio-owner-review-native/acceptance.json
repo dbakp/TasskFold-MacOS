@@ -1,0 +1,61 @@
+{
+  "scope": "Actual production publication-copy review/controller; synthetic transport and silent player, real private disk and AAC decoding. Component UI only.",
+  "devices": {
+    "phone": {
+      "acceptedDistinctJourneys": 5,
+      "acceptedByPhase": {
+        "testAudioOwnerReviewVoiceOverStatusResult": "phone-voice-bare",
+        "testAudioOwnerReviewCloseKeepsPublishedHistory": "phone-functional-final",
+        "testAudioOwnerReviewFailedCheckPreservesOriginal": "phone-functional-final",
+        "testAudioOwnerReviewResumeNeedsSeparateConfirmation": "phone-functional-final",
+        "testAudioOwnerReviewCheckCloseCancelColdAndPrivateRemoval": "phone-focused-final"
+      },
+      "phaseResults": {
+        "phone-voice-bare": {
+          "passedTests": 1,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        },
+        "phone-functional-final": {
+          "passedTests": 3,
+          "failedTests": 1,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        },
+        "phone-focused-final": {
+          "passedTests": 1,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        }
+      },
+      "supersededFailure": "The earlier full phase stopped the long journey on an offscreen Check query after Cancel. The final focused phase verifies the full journey with correct scrolling; the other paths are unchanged."
+    },
+    "ipad": {
+      "acceptedDistinctJourneys": 5,
+      "acceptedByPhase": {
+        "testAudioOwnerReviewCloseKeepsPublishedHistory": "ipad-final",
+        "testAudioOwnerReviewFailedCheckPreservesOriginal": "ipad-final",
+        "testAudioOwnerReviewResumeNeedsSeparateConfirmation": "ipad-final",
+        "testAudioOwnerReviewVoiceOverStatusResult": "ipad-final",
+        "testAudioOwnerReviewCheckCloseCancelColdAndPrivateRemoval": "ipad-focused-final"
+      },
+      "phaseResults": {
+        "ipad-final": {
+          "passedTests": 4,
+          "failedTests": 1,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        },
+        "ipad-focused-final": {
+          "passedTests": 1,
+          "failedTests": 0,
+          "skippedTests": 0,
+          "runtimeWarnings": []
+        }
+      },
+      "supersededFailure": "The earlier full phase stopped the long journey on an offscreen Check query after Cancel. The final focused phase verifies the full journey with correct scrolling; the other paths are unchanged."
+    }
+  }
+}

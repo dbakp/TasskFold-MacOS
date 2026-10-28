@@ -1,0 +1,24 @@
+{
+  "phone": {
+    "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "bundleIdentifier": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/4BE23C5B-6E1B-40F4-BD51-8CE8D56BA2DA/Taskfold.app",
+    "binaries": {
+      "Taskfold": "40d4bc5041c687dbf322a7b86545578a2a1ce6439f72e59478f7a8f40963f0f0",
+      "Taskfold.debug.dylib": "28cbf58581033755228a453a579b3501fe243994bb83239660acf392e058639c"
+    },
+    "matchesFinalAppBuild": true,
+    "loadedDebugCodeUnchangedAcrossAcceptedPhases": true
+  },
+  "ipad": {
+    "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "bundleIdentifier": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/3ADF3A87-AD51-40F6-8BCB-DAD392EF2378/data/Containers/Bundle/Application/D22496A1-3C18-4A4A-8A85-EB3D4D846124/Taskfold.app",
+    "binaries": {
+      "Taskfold": "40d4bc5041c687dbf322a7b86545578a2a1ce6439f72e59478f7a8f40963f0f0",
+      "Taskfold.debug.dylib": "28cbf58581033755228a453a579b3501fe243994bb83239660acf392e058639c"
+    },
+    "matchesFinalAppBuild": true,
+    "loadedDebugCodeUnchangedAcrossAcceptedPhases": true
+  }
+}

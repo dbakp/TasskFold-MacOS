@@ -94,3 +94,8 @@ node Scripts/Database/test-audio-owner-native.mjs /tmp/taskfold-audio-recovery-c
 
 Replace `PLATFORM` with `ios` or `mac` for that repo's scratch build. These
 commands create and remove only their labeled disposable PostgreSQL fixture.
+
+Follow-up: [native original-send review](../audio-owner-review-native/README.md)
+accepts representative mobile component controls and unconfirmed-result speech.
+The earlier checkpoint above remains API/database scope; full Store/Mac/provider
+acceptance is still open.

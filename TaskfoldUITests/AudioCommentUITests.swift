@@ -675,3 +675,127 @@ extension TaskfoldMacUITests {
     }
 
 }
+
+extension TaskfoldMacUITests {
+    @MainActor private func ownerVoiceDisabled() throws -> Bool {
+        try audioGuard()
+        #if os(iOS)
+        if #available(iOS 27.0, *) {
+            let voice = XCUIDevice.shared.voiceOverService, previous = voice.isEnabled
+            if previous { try voice.disable() }; return previous
+        }
+        #endif
+        return false
+    }
+    @MainActor private func ownerRestoreVoice(_ enabled: Bool) {
+        #if os(iOS)
+        if #available(iOS 27.0, *) {
+            let voice = XCUIDevice.shared.voiceOverService
+            if enabled { try? voice.enable() } else { try? voice.disable() }
+        }
+        #endif
+    }
+    @MainActor private func ownerReviewOpen(_ app: XCUIApplication, reset: Bool = true, large: Bool = false, extra: String? = nil) throws {
+        try audioGuard()
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--audio-owner-review-testing", "-appearance", large ? "dark" : "light", "-UIPreferredContentSizeCategoryName", large ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
+        if reset { app.launchArguments.append("--audio-owner-reset") }; if let extra { app.launchArguments.append(extra) }
+        app.launch(); app.activate()
+        let open = app.buttons["audioOwnerFixtureOpen"]; XCTAssertTrue(open.waitForExistence(timeout: 20), app.debugDescription); audioPress(open)
+        XCTAssertTrue(app.buttons["audioPendingDismiss"].waitForExistence(timeout: 12), app.debugDescription)
+        ownerReveal(app.buttons["audioPendingPlay"], app)
+    }
+    @MainActor private func ownerReveal(_ element: XCUIElement, _ app: XCUIApplication, towardTop: Bool = false) {
+        #if os(iOS)
+        audioReveal(element, app, towardTop: towardTop, formIdentifier: "audioPendingForm", navigationTitle: "Publication review")
+        #else
+        for _ in 0..<30 { if element.exists && element.isHittable { break }; app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: towardTop ? 250 : -250) }
+        XCTAssertTrue(element.exists && element.isHittable, app.debugDescription)
+        #endif
+    }
+    @MainActor private func ownerSaved(_ app: XCUIApplication, _ expected: String, requests: String) {
+        audioPress(app.buttons["audioPendingDismiss"])
+        let saved = app.staticTexts["audioOwnerFixtureSaved"]
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", expected), object: saved)], timeout: 8) == .completed, app.debugDescription)
+        XCTAssertEqual(app.staticTexts["audioOwnerFixtureRequests"].label, requests)
+    }
+    @MainActor func testAudioOwnerReviewCheckCloseCancelColdAndPrivateRemoval() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate(); self.ownerRestoreVoice(voiceWasOn) }; try ownerReviewOpen(app, large: true)
+        ownerReveal(app.staticTexts["Original task unavailable"], app)
+        XCTAssertFalse(app.buttons["audioPendingResume"].exists)
+        let check = app.buttons["audioPendingRetry"]; ownerReveal(check, app); XCTAssertGreaterThanOrEqual(check.frame.height, 44); audioPress(check)
+        let notice = app.staticTexts["audioPendingNotice"]; ownerReveal(notice, app); XCTAssertTrue(notice.label.localizedCaseInsensitiveContains("still unconfirmed"))
+        ownerReveal(notice, app); audioScreenshot(app, "Sender metadata check at largest text")
+        let close = app.buttons["audioPendingCloseOriginal"]; ownerReveal(close, app); audioPress(close)
+        XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5)); audioPress(app.alerts.buttons["Cancel"])
+        ownerReveal(check, app, towardTop: true)
+        ownerReveal(close, app); audioPress(close); audioPress(app.alerts.buttons.matching(identifier: "audioPendingConfirm").firstMatch)
+        ownerReveal(app.buttons["audioPendingRemove"], app); XCTAssertFalse(check.exists)
+        ownerReveal(notice, app); XCTAssertTrue(notice.label.contains("Original publication closed")); audioScreenshot(app, "Closed original retains private recording")
+        ownerSaved(app, "Closed · private audio kept", requests: "Checks: 2 · closures: 1 · uploads: 0")
+        app.terminate(); try ownerReviewOpen(app, reset: false, large: true)
+        XCTAssertFalse(app.buttons["audioPendingRetry"].exists); XCTAssertFalse(app.buttons["audioPendingResume"].exists)
+        let remove = app.buttons["audioPendingRemove"]; ownerReveal(remove, app); audioPress(remove); audioPress(app.alerts.buttons["Cancel"])
+        ownerReveal(app.buttons["audioPendingPlay"], app, towardTop: true)
+        ownerReveal(remove, app); audioPress(remove); audioPress(app.alerts.buttons.matching(identifier: "audioPendingConfirm").firstMatch)
+        let saved = app.staticTexts["audioOwnerFixtureSaved"]; XCTAssertTrue(saved.waitForExistence(timeout: 8))
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Closed · private audio removed"), object: saved)], timeout: 8) == .completed)
+        XCTAssertEqual(app.staticTexts["audioOwnerFixtureRequests"].label, "Checks: 0 · closures: 0 · uploads: 0")
+    }
+    @MainActor func testAudioOwnerReviewCloseKeepsPublishedHistory() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate(); self.ownerRestoreVoice(voiceWasOn) }; try ownerReviewOpen(app, extra: "--audio-owner-published")
+        let close = app.buttons["audioPendingCloseOriginal"]; ownerReveal(close, app); audioPress(close); audioPress(app.alerts.buttons.matching(identifier: "audioPendingConfirm").firstMatch)
+        ownerReveal(app.buttons["audioPendingRemove"], app); XCTAssertTrue(app.staticTexts["This device kept the server confirmation"].exists)
+        ownerSaved(app, "Published · private audio kept", requests: "Checks: 1 · closures: 1 · uploads: 0")
+    }
+    @MainActor func testAudioOwnerReviewResumeNeedsSeparateConfirmation() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate(); self.ownerRestoreVoice(voiceWasOn) }; try ownerReviewOpen(app, extra: "--audio-owner-resumable")
+        let resume = app.buttons["audioPendingResume"]; ownerReveal(resume, app); audioPress(resume); audioPress(app.alerts.buttons["Cancel"])
+        ownerSaved(app, "Pending · private audio kept", requests: "Checks: 0 · closures: 0 · uploads: 0")
+        audioPress(app.buttons["audioOwnerFixtureOpen"]); XCTAssertTrue(app.buttons["audioPendingPlay"].waitForExistence(timeout: 8))
+        ownerReveal(resume, app); audioPress(resume); audioPress(app.alerts.buttons.matching(identifier: "audioPendingConfirm").firstMatch)
+        ownerReveal(app.buttons["audioPendingRemove"], app)
+        ownerSaved(app, "Published · private audio kept", requests: "Checks: 0 · closures: 0 · uploads: 1")
+    }
+    @MainActor func testAudioOwnerReviewFailedCheckPreservesOriginal() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate(); self.ownerRestoreVoice(voiceWasOn) }; try ownerReviewOpen(app, extra: "--audio-owner-error")
+        let check = app.buttons["audioPendingRetry"]; ownerReveal(check, app); audioPress(check)
+        let notice = app.staticTexts["audioPendingNotice"]; ownerReveal(notice, app); XCTAssertTrue(notice.label.contains("private recording is preserved"))
+        XCTAssertFalse(app.buttons["audioPendingRemove"].exists)
+        ownerSaved(app, "Pending · private audio kept", requests: "Checks: 1 · closures: 0 · uploads: 0")
+    }
+}
+
+#if os(iOS)
+extension TaskfoldMacUITests {
+    @MainActor func testAudioOwnerReviewVoiceOverStatusResult() throws {
+        try audioGuard()
+        guard #available(iOS 27.0, *) else { throw XCTSkip("System VoiceOver output requires iOS 27") }
+        let voice = XCUIDevice.shared.voiceOverService, previous = voice.isEnabled, app = XCUIApplication()
+        addTeardownBlock { @MainActor in
+            app.terminate()
+            if previous && !voice.isEnabled { try voice.enable() }
+            if !previous && voice.isEnabled { try voice.disable() }
+            XCTAssertEqual(voice.isEnabled, previous)
+        }
+        if previous { try voice.disable() }
+        try ownerReviewOpen(app, extra: "--audio-owner-wait-for-voiceover")
+        let check = app.buttons["audioPendingRetry"]; ownerReveal(check, app)
+        audioPress(check)
+        try voice.enable(); XCTAssertTrue(voice.isEnabled)
+        let initialSpeech = try voice.currentSpeech().utterance
+        let ready = try audioTaskHome().appendingPathComponent("Library/Application Support/TaskfoldAudioNative/owner-review/voiceover-ready")
+        try Data("ready".utf8).write(to: ready, options: .atomic)
+        var utterance = ""
+        let result = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            utterance = (try? voice.currentSpeech().utterance) ?? ""
+            return utterance.localizedCaseInsensitiveContains("still unconfirmed") && utterance.localizedCaseInsensitiveContains("did not upload audio")
+        }, object: nil)
+        let announced = XCTWaiter.wait(for: [result], timeout: 12) == .completed
+        let attachment = XCTAttachment(data: try JSONSerialization.data(withJSONObject: ["source": "XCUIVoiceOverService.Output.utterance", "initialSpeech": initialSpeech, "statusResult": utterance], options: [.prettyPrinted, .sortedKeys]), uniformTypeIdentifier: "public.json")
+        attachment.name = "Sender status VoiceOver output"; attachment.lifetime = .keepAlways; add(attachment)
+        XCTAssertTrue(announced, utterance)
+        try voice.disable()
+        ownerSaved(app, "Pending · private audio kept", requests: "Checks: 1 · closures: 0 · uploads: 0")
+    }
+}
+#endif

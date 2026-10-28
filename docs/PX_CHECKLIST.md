@@ -872,3 +872,19 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
   policy, team custody and hosted provider acceptance. Ordinary flags stay off.
 
 [Evidence and exact limits](audio-owner-status/README.md).
+
+## 2026-10-28 — native original-send review
+
+- [x] Shorten the unconfirmed result without implying the original send never
+  uploaded. Scroll results into view before requesting VoiceOver focus.
+- [x] Five distinct iPhone/iPad component journeys each across recorded phases:
+  Check without upload, Close/Cancel, cold proof/media retention, separately
+  confirmed private removal, published precedence, Resume/Cancel and failure.
+- [x] Real system speech for asynchronous unconfirmed results; four inspected
+  dark Accessibility XXXL images and both isolated app/test builds/signatures.
+- [ ] Mac native review/layout/spoken acceptance, full Store/main publisher and
+  shared-account/window lifecycle, other VoiceOver actions/result variants.
+- [ ] Legacy/history/marker policy, team custody and real provider/genuine audio
+  acceptance. Existing user deferrals remain; normal audio gates are off.
+
+[Exact phases, failures, fixes and limits](audio-owner-review-native/README.md).

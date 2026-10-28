@@ -5,6 +5,7 @@ import Observation
 import Darwin
 
 @MainActor enum AudioCommentNativeFixture {
+    static var ownerReviewTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-owner-review-testing") }
     static var conversationTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-conversation-testing") }
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-comment-testing") }
     static var taskEditorTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-task-editor-testing") }
@@ -503,4 +504,109 @@ struct AudioCommentNativeFixtureView: View {
         #endif
     }
 }
+
+// The reserved DEBUG host presents the production review, with real private vault
+// writes/full AAC validation and a metadata-only synthetic sender transport.
+@MainActor @Observable private final class AudioOwnerReviewContext: AudioCommentPublishingTransport {
+    let scope: AudioCommentLibraryScope
+    let storage: AudioCommentPublicationStorage
+    let journal: AudioCommentPublicationJournal
+    let controller: AudioCommentPendingLibrary
+    let session = UUID()
+    var active = true
+    var checks = 0
+    var closes = 0
+    var uploads = 0
+    var savedState = ""
+    init(clip: AudioCommentClip) async throws {
+        guard AudioCommentNativeFixture.ownerReviewTesting else { throw CancellationError() }
+        let owner = try AudioCommentOwner("ad410000-0000-4000-8000-000000000001")
+        let root = AudioCommentNativeFixture.root.appendingPathComponent("owner-review", isDirectory: true)
+        if ProcessInfo.processInfo.arguments.contains("--audio-owner-reset"), FileManager.default.fileExists(atPath: root.path) { try FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let origin = "https://owner-review.example.invalid"
+        scope = .init(workspace: .init(account: owner.account, generation: UUID()), origin: origin)
+        storage = .init(disk: try .init(root: root, account: UUID(uuidString: owner.account)!, origin: origin))
+        let existing = try await storage.journals()
+        if let saved = existing.first { journal = saved }
+        else {
+            let target = try AudioCommentTarget(task: UUID(), generation: UUID(), project: nil)
+            let source = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Original cafe\u{301} recording\nKeep the workshop notes 🪴", clip: clip)
+            journal = try await storage.prepare(source)
+        }
+        controller = .init(scope: scope, storage: storage, drafts: .init(vault: AudioCommentVault(applicationSupport: root, owner: owner)), player: AudioOwnerSilentPlayer())
+        controller.currentScope = { [weak self] in self?.active == true ? self?.scope : nil }
+        await snapshot()
+    }
+    func snapshot() async {
+        guard let value = try? await storage.journals().first else { savedState = "Journal unavailable"; return }
+        savedState = (value.closedReceipt != nil ? "Closed" : (value.receipt != nil ? "Published" : "Pending")) + (value.clip != nil ? " · private audio kept" : " · private audio removed")
+    }
+    func flow(_ value: AudioCommentPublicationJournal, publishing: Bool) throws -> AudioCommentPublicationFlow {
+        guard active, controller.selectedIsCurrent(value) else { throw AudioCommentFailure.changed }
+        return .init(storage: storage, transport: self, incarnation: session, target: value.publication.target, retainAudioOnConfirmation: true, allowsPublishing: publishing, isCurrent: { [weak self] in self?.active == true && self?.controller.selectedIsCurrent(value) == true })
+    }
+    func checkAudioPublication(_ publication: AudioCommentPublication, closing: Bool, origin: String, incarnation: UUID) async throws -> AudioCommentPublicationStatus {
+        guard active, origin == scope.origin, incarnation == session, publication.sameIntent(as: journal.publication) else { throw AudioCommentFailure.changed }
+        checks += 1; if closing { closes += 1 }
+        #if os(iOS)
+        // Hold a real asynchronous result while the test starts VoiceOver. This
+        // checks result focus without pretending an XCTest tap is a VO gesture.
+        if ProcessInfo.processInfo.arguments.contains("--audio-owner-wait-for-voiceover") {
+            let ready = AudioCommentNativeFixture.root.appendingPathComponent("owner-review/voiceover-ready")
+            while !FileManager.default.fileExists(atPath: ready.path) { try await Task.sleep(for: .milliseconds(100)) }
+            guard active, !Task.isCancelled else { throw CancellationError() }
+        }
+        #endif
+        if ProcessInfo.processInfo.arguments.contains("--audio-owner-error") { throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Your private recording is preserved.") }
+        if ProcessInfo.processInfo.arguments.contains("--audio-owner-published") { return .published(try receipt(publication)) }
+        if closing { return .closed(try .init(record: .init(["protocol": .number(1), "intent": .object(publication.record.fields), "state": .string("closed")]), publication: publication)) }
+        return .unconfirmed
+    }
+    func publishAudio(_ upload: AudioCommentPending, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
+        guard active, ProcessInfo.processInfo.arguments.contains("--audio-owner-resumable"), origin == scope.origin, incarnation == session else { throw AudioCommentFailure.changed }
+        uploads += 1; return try receipt(upload.publication)
+    }
+    private func receipt(_ publication: AudioCommentPublication) throws -> AudioCommentPublishedReceipt {
+        var fields = publication.record.fields; fields.removeValue(forKey: "version")
+        fields["protocol"] = .number(1); fields["author_id"] = .string(publication.account.uuidString.lowercased()); fields["state"] = .string("published")
+        fields["reserved_at"] = .string("2026-10-28T12:00:00Z"); fields["published_at"] = .string("2026-10-28T12:01:00Z"); fields["expires_at"] = .string("2026-10-29T12:00:00Z")
+        return try .init(record: .init(fields), publication: publication)
+    }
+}
+@MainActor private final class AudioOwnerSilentPlayer: AudioCommentPlaying {
+    func play(_ clip: AudioCommentClip, isCurrent: @escaping @MainActor () -> Bool, ended: @escaping @MainActor () -> Void) throws { guard AudioCommentNativeFixture.ownerReviewTesting, isCurrent() else { throw CancellationError() } }
+    func stop() {}
+}
+@MainActor struct AudioOwnerReviewNativeFixtureView: View {
+    @State private var context: AudioOwnerReviewContext?
+    @State private var opening = false
+    @State private var failure: String?
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let context {
+                    Button("Review original send") { opening = true }.accessibilityIdentifier("audioOwnerFixtureOpen")
+                    Text(context.savedState).accessibilityIdentifier("audioOwnerFixtureSaved")
+                    Text("Checks: \(context.checks) · closures: \(context.closes) · uploads: \(context.uploads)").accessibilityIdentifier("audioOwnerFixtureRequests")
+                }
+                if let failure { Text(failure) }
+            }.navigationTitle("Sender recovery fixture")
+        }
+        .task {
+            guard AudioCommentNativeFixture.ownerReviewTesting else { return }
+            do { let bytes = try await Task.detached { try AudioCommentNativeFixture.syntheticData() }.value; context = try await AudioOwnerReviewContext(clip: AudioCommentDecoding.validate(bytes)) }
+            catch { failure = error.localizedDescription }
+        }
+        .sheet(isPresented: $opening, onDismiss: { Task { await context?.snapshot() } }) {
+            if let context {
+                AudioPendingPublicationReview(journal: context.journal, controller: context.controller, taskTitle: { _ in nil }, canResume: { _ in ProcessInfo.processInfo.arguments.contains("--audio-owner-resumable") }, checker: { try context.flow($0, publishing: false) }, publisher: { try context.flow($0, publishing: true) })
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 650, minHeight: 650)
+        #endif
+    }
+}
+
 #endif

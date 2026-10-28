@@ -1,0 +1,6 @@
+{
+  "focusEvents" : "[{\"busy\":false,\"current\":true,\"focused\":false,\"stage\":\"row task\"},{\"busy\":false,\"current\":true,\"focused\":false,\"stage\":\"requested\"}]",
+  "initialSpeech" : "Taskfold Team Editor Test Close Button",
+  "source" : "XCUIVoiceOverService.Output.utterance",
+  "statusResult" : "Still unconfirmed. Checking did not upload audio. Your recording"
+}
