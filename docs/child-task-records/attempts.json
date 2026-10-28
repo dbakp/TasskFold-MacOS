@@ -1,0 +1,35 @@
+{
+  "provenance": "Transcribed from observed tool outputs. Raw early draft logs were overwritten during iteration and are not retained.",
+  "attempts": [
+    {
+      "phase": "draft harness parse",
+      "result": "failed before fixture creation",
+      "observed": "SyntaxError: Illegal await-expression in formal parameters of async function",
+      "fix": "Move asynchronous defaults into the function body."
+    },
+    {
+      "phase": "draft null write",
+      "result": "failed; owned container removed by finally",
+      "observed": "22023 while writing JSON null through the existing assignment guard",
+      "fix": "Keep the guard unchanged; test SQL-null roots, nested null children and pure JSON-null decoding separately."
+    },
+    {
+      "phase": "draft RLS catalog assertion",
+      "result": "failed; owned container removed by finally",
+      "observed": "Unexpected end of JSON input while reading PostgreSQL boolean t",
+      "fix": "Return to_jsonb for the assertion."
+    },
+    {
+      "phase": "iOS canonical loader",
+      "result": "failed before fixture creation",
+      "observed": "ENOENT referencing Mac CLI-generated filename in the iOS repository",
+      "fix": "Use the independently generated iOS migration filename."
+    },
+    {
+      "phase": "team regression initial command",
+      "result": "failed before assertions; owned container removed",
+      "observed": "Planning regression requires batch schema",
+      "fix": "Run with lifecycle, conversation, batch, planning and checklist schema flags."
+    }
+  ]
+}

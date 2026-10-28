@@ -183,6 +183,24 @@ try {
       lit(people.editor.id)
     },'Personal task');`,
   );
+  if (process.env.TASKFOLD_CHILD_RECORDS_REGRESSION === "1") {
+    const { loadChildTaskRecordsSchema, childTaskRecordsMigration } =
+      await import(
+        "./child-task-records-schema.mjs"
+      );
+    await loadChildTaskRecordsSchema(pg.raw);
+    report.childRecordsMigrationSHA256 = createHash("sha256").update(
+      await readFile(
+        new URL(
+          "../../supabase/migrations/" + childTaskRecordsMigration,
+          import.meta.url,
+        ),
+      ),
+    ).digest("hex");
+    await pg.raw(
+      `select taskfold_private.adopt_child_task_records(id,task_generation,subtasks) from public.tasks order by id`,
+    );
+  }
   const run = (who, expression, opts = {}) => {
     const u = people[who];
     return pg.scalar(
@@ -670,6 +688,23 @@ try {
       project,
       task,
     });
+  }
+  if (process.env.TASKFOLD_CHILD_RECORDS_REGRESSION === "1") {
+    check(
+      "adopted team roots retain exact current source",
+      await pg.scalar(`select to_jsonb(not exists(
+      select 1 from taskfold_private.child_task_projections p join public.tasks t on t.id=p.task_id
+      where p.source_tree is distinct from coalesce(t.subtasks,'null'::jsonb) or p.task_generation is distinct from t.task_generation))`),
+      true,
+    );
+    check(
+      "adopted team records match current decoded source",
+      await pg.scalar(`select to_jsonb(not exists(
+      select 1 from taskfold_private.child_task_projections p where p.state='ready' and
+      (select coalesce(jsonb_agg(n order by n->>'key' collate "C"),'[]') from jsonb_array_elements(taskfold_private.decode_child_task_tree(p.source_tree)->'nodes') n)
+      is distinct from (select coalesce(jsonb_agg(jsonb_build_object('key',r.node_key,'parent',r.parent_key,'position',r.sibling_order,'path',r.identity_path,'fields',r.fields,'children_kind',r.children_kind) order by r.node_key),'[]') from taskfold_private.child_task_records r where r.task_id=p.task_id)))`),
+      true,
+    );
   }
   report.advisors = await pg.advisors();
   check(

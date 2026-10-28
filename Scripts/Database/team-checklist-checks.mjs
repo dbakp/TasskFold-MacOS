@@ -599,6 +599,37 @@ export async function checkTeamChecklist(
     "PT409",
     "owner",
   );
+  if (process.env.TASKFOLD_CHILD_RECORDS_REGRESSION === "1") {
+    check(
+      "team checklist produced independent child rows",
+      await pg.scalar(
+        `select to_jsonb(count(*)>0) from taskfold_private.child_task_records where task_id=${
+          lit(task)
+        }`,
+      ),
+      true,
+    );
+    check(
+      "team checklist projection preserves exact final tree",
+      await pg.scalar(
+        `select to_jsonb(p.source_tree=t.subtasks and p.state='ready') from taskfold_private.child_task_projections p join public.tasks t on t.id=p.task_id where t.id=${
+          lit(task)
+        }`,
+      ),
+      true,
+    );
+    check(
+      "team checklist child fields match current tree",
+      await pg.scalar(
+        `select to_jsonb(not exists(select 1 from taskfold_private.child_task_records r where r.task_id=${
+          lit(task)
+        } and not exists(select 1 from jsonb_array_elements(taskfold_private.decode_child_task_tree((select subtasks from public.tasks where id=${
+          lit(task)
+        }))->'nodes') n where n->>'key' collate "C"=r.node_key and n->'fields'=r.fields and n->'path'=to_jsonb(r.identity_path))))`,
+      ),
+      true,
+    );
+  }
   await pg.raw(
     `update taskfold_private.teams set state='deleted',name=null,owner_id=null where id=${
       lit(team)
@@ -613,5 +644,16 @@ export async function checkTeamChecklist(
     ),
     0,
   );
+  if (process.env.TASKFOLD_CHILD_RECORDS_REGRESSION === "1") {
+    check(
+      "team deletion cascades independent child projection",
+      await pg.scalar(
+        `select to_jsonb(count(*)) from taskfold_private.child_task_projections where task_id=${
+          lit(task)
+        }`,
+      ),
+      0,
+    );
+  }
   return fixture;
 }
