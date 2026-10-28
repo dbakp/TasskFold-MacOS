@@ -126,3 +126,8 @@ were reviewed; this checkpoint adds no TLS/client transport implementation.
 - [PostgreSQL explicit locking](https://www.postgresql.org/docs/17/explicit-locking.html)
 - [Private Storage buckets](https://supabase.com/docs/guides/storage/buckets/fundamentals)
 - [Supabase changelog](https://supabase.com/changelog)
+
+Follow-up: the [disabled gateway candidate](../audio-comment-gateway/README.md)
+now implements authenticated delivery source and controlled HTTP/byte readback.
+Its acceptance limits and remaining work supersede the source-only next steps
+above; neither checkpoint accepts a deployed Storage service or native publication.

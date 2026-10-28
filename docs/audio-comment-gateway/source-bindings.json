@@ -1,0 +1,19 @@
+{
+  "repository": "TasskFold-MacOS",
+  "deployed": false,
+  "realProviderAcceptance": false,
+  "sources": {
+    "Scripts/Database/audio-comments-http-fixture.ts": "bcccf2190c8d5318bcab8d639d751f81b1cb7bfccf23b4fd796ef8ce0b2c8267",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "fa5c30788b7d61d11a548846d043796fa5a43b853b826ac19c7219848617e912",
+    "Scripts/Database/postgres-fixture.mjs": "4c2dcbffabe95e77976aa4afd9db43922ded408a66be46eee739de0da084b039",
+    "Scripts/Database/team-project-schema.mjs": "c338738c01855a14b85663064c6e25ed1b0205feeb51e16794b58d2e4bf565b9",
+    "Scripts/Database/test-audio-comment-gateway.mjs": "2a8d5ab74ac8d4bcce73dec356e34064d1487d8113382ba0bf8d9e8f652a3197",
+    "TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+    "supabase/functions/audio-comments/handler.ts": "ddf35b55eccdbd13918efb775eb4ba46b096c7bfc650c7bc177a0162c0086426",
+    "supabase/functions/audio-comments/handler_test.ts": "a55f42600474e0425fd8378ac0c1b3e5d28ea2f9b7c379e115fd8ff04c27aa02",
+    "supabase/functions/audio-comments/index.ts": "eb92330c381c508f34007bb02a9cdd91c7b7af7e2318e78fecb98d5c74460cdf",
+    "supabase/functions/audio-comments/wire.ts": "16b8940b5cefb4d232bb4959ce01e20051d81bc99919c19e84338541e42438e2",
+    "supabase/migrations/20261028134424_audio_comment_publication_ledger.sql": "3e6522149e52bdf52918ae66b2e7b68205fd7f290bd3276c8c09d464517efaa3",
+    "supabase/migrations/20261028145414_audio_comment_gateway_boundary.sql": "ac9a9005a8198994e2b0cec8adf4113e9d7bb8b80303b8d078a6d39cc169cb24"
+  }
+}

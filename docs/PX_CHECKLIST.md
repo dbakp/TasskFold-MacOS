@@ -635,3 +635,20 @@ scoped local mobile import return path, not audio comments or the overall Px goa
 
 [Evidence and next required work](audio-comment-ledger/README.md). This completes
 the coordinator foundation, not private delivery, audio comments or the Px goal.
+
+
+## 2026-10-28 — disabled authenticated audio gateway candidate
+
+- [x] Implement fixed-origin Auth/live-session verification, service-only admission
+  and shared request budgets, constrained private bucket/client denial, bounded
+  upload with full stored-byte/hash readback, original-ID retry/no overwrite,
+  authenticated download with a post-read authority check, listing and retirement.
+- [x] Independently pass 18 Deno tests and 54 real PostgreSQL/boundary/loopback HTTP
+  checks per repo; no introduced official CLI advisor findings. HTTP uses the
+  production handler, real SQL and controlled local Auth/Storage adapters.
+- [ ] Late-upload-safe physical cleanup, native publication journal/comment UI,
+  real Supabase Auth/Storage acceptance and remaining genuine/native audio
+  acceptance. No deployment or normal audio exposure; all gates stay off.
+
+[Evidence, reproducible commands and limits](audio-comment-gateway/README.md).
+This is a verified disabled delivery candidate, not completion of audio or Px.
