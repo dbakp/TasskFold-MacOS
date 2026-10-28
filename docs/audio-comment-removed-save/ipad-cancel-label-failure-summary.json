@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "modelName" : "iPad Air 13-inch (M4)",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1793167821.008,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793167678.39,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Failed to tap \"Keep reviewing\" Button: No matches found for Elements matching predicate '\"Keep reviewing\" IN identifiers' from input {(\n    Button, identifier: 'audioFixtureOpen', label: 'Open audio draft',\n    Button, identifier: 'audioFixtureSwitch', label: 'Change workspace',\n    Button, identifier: 'audioFixtureRemovePending', label: 'Pending Save removed outside this editor', Disabled,\n    Button, identifier: 'audioClose', label: 'Close',\n    Button, identifier: 'audioSaveClose', label: 'Done', Disabled,\n    Button, identifier: 'audioRecord', label: 'Replace recording', Disabled,\n    Button, identifier: 'audioPlayback', label: 'Play recording', Disabled,\n    Button, identifier: 'audioSave', label: 'Save draft', Disabled,\n    Button, identifier: 'audioSaveCopy', label: 'Save as separate draft',\n    Button, label: 'Save separate draft and close'\n)}",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TaskfoldUITests/testAudioRemovedPreparedSaveRequiresExplicitIndependentCopy()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testAudioRemovedPreparedSaveRequiresExplicitIndependentCopy",
+      "testName" : "testAudioRemovedPreparedSaveRequiresExplicitIndependentCopy()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

@@ -1,0 +1,22 @@
+{
+  "obsoleteOwnedDiagnosticPathsPruned": [
+    "/tmp/taskfold-audio-expired-phone.xcresult",
+    "/tmp/taskfold-audio-expired-ipad.xcresult",
+    "/tmp/taskfold-audio-expired-final-phone.xcresult",
+    "/tmp/taskfold-audio-expired-final-ipad.xcresult",
+    "/tmp/taskfold-audio-expired-phone-failed-attachments"
+  ],
+  "logicalBytesPruned": 348376881,
+  "failureLogsSummariesAndPhoneHierarchyRetainedInRepo": true,
+  "partialPhoneBundleNotAcceptedAsFinalResult": true,
+  "currentPhoneResultAndLiveIPadJobRetained": true,
+  "reusableBuildCachesRetained": true,
+  "macNativeProofProcessesExitedNormally": [
+    46147,
+    46627
+  ],
+  "emptyFinalMacWorkshopClosedAfterLock": 47403,
+  "emptyFinalMacWorkshopStopSignal": "SIGTERM; no recording or pending Save created in that reset workshop",
+  "liveIPadTestMustNotBeShutdown": true,
+  "noMicrophoneSpeakerSpeechOrPermissionAccess": true
+}

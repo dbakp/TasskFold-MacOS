@@ -1,0 +1,10 @@
+{
+  "source": "Recorded XCTest log; result collection interrupted after the actual failure. Not an xcresulttool summary.",
+  "failedTests": 1,
+  "failure": "No Keep reviewing button in native confirmation presentation",
+  "testFailureLine": "AudioCommentUITests.swift:521",
+  "collectorPID": 47407,
+  "collectorStoppedAfterCompletedTestFailure": true,
+  "collectorSIGINTThenSIGTERM": true,
+  "partialResultBundleNotAccepted": true
+}

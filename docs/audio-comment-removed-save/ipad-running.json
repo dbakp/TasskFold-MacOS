@@ -1,0 +1,9 @@
+{
+  "status": "running-not-accepted",
+  "execSession": 95200,
+  "xcodebuildPID": 48809,
+  "actualCommandVerifiedLive": "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun -destination platform=iOS Simulator,id=ECE507C1-5704-4243-A7F7-232BF745FDB8 -parallel-testing-enabled NO -resultBundlePath /tmp/taskfold-audio-expired-action-ipad.xcresult -only-testing:TaskfoldUITests/TaskfoldUITests/testAudioRemovedPreparedSaveRequiresExplicitIndependentCopy",
+  "resultBundle": "/tmp/taskfold-audio-expired-action-ipad.xcresult",
+  "scope": "Repeated 60-second animation waits; poll the same live handle, do not restart on an observation timeout.",
+  "observedRunningAtUTC": "2026-10-28T06:20:30.933180+00:00"
+}

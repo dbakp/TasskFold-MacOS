@@ -736,8 +736,26 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         _ = await known.save() // A retry may read the new nonce, but remains existing-only.
         let existingOnlyKept = await known.prepareForDeparture(), existingOnlyJournals = try await knownStore.saves()
         checks["departureCannotWidenKnownPreparedRetryEvenWithFreshNonce"] = !existingOnlyKept && existingOnlyJournals.isEmpty
-        known.recovery.finishSave(); known.close()
-        for journal in existingOnlyJournals { try knownVault.discardSave(journal) }
+        // Repeated explicit Retry must not drop the existing-only restriction
+        // after a positively missing lookup. A reopen must carry it as well.
+        let retryResults = [await known.save(), await known.save(), await known.save()]
+        let retryDrafts = try await knownStore.drafts(), retryJournals = try await knownStore.saves()
+        checks["repeatedRetryCannotRecreateAnExternallyDiscardedPreparedSave"] = retryResults.allSatisfy { !$0 } && retryDrafts.isEmpty && retryJournals.isEmpty
+        checks["missingPreparedSaveKeepsOriginalReviewInMemoryForExplicitChoice"] = known.session.clip?.data == data && known.session.caption == knownIntent.next.caption && known.saveConflict && !known.saveDurable
+        known.close()
+        let reopened = make(AudioProofRecorder(data),knownStore); await reopened.refresh()
+        checks["removedPreparedAuthorizationRemainsDiscoverableAfterViewReopen"] = reopened.pendingSaves == [knownIntent]
+        await reopened.resumeSave(knownIntent)
+        let reopenedDrafts = try await knownStore.drafts(), reopenedJournals = try await knownStore.saves()
+        checks["reopeningRemovedPreparedSaveDoesNotWidenFinishAuthorization"] = reopenedDrafts.isEmpty && reopenedJournals.isEmpty && reopened.saveConflict && reopened.session.clip?.data == data
+        knownFault.arm()
+        let copied = await reopened.saveSeparateDraft(), copyJournal = try await knownStore.saves().first
+        checks["explicitCopyOfRemovedSaveGetsNewOperationAndDraftWithoutOldCleanup"] = !copied && copyJournal?.id != knownIntent.id && copyJournal?.next.id != knownIntent.next.id && copyJournal?.reviews.isEmpty == true && copyJournal?.next.origin == nil && copyJournal?.next.clip.data == data && copyJournal?.next.caption.utf8.elementsEqual(knownIntent.next.caption.utf8) == true
+        let finishedCopy = await reopened.save(), copiedDrafts = try await knownStore.drafts(), copiedJournals = try await knownStore.saves()
+        checks["interruptedExplicitCopyFinishesOnlyItsNewFrozenAuthorization"] = finishedCopy && copiedDrafts.count == 1 && copiedDrafts.first == copyJournal?.next && copiedJournals.isEmpty && !copiedDrafts.contains(where: { $0.id == knownIntent.next.id })
+        checks["successfulExplicitCopyRetiresOnlyTheExpiredRetainedAuthorization"] = AudioCommentReviewRecovery.retainedSave(knownIntent) == nil && !AudioCommentCapture.hasUnpreservedWork
+        reopened.recovery.finishSave(); reopened.close(); known.recovery.finishSave()
+        for journal in try await knownStore.saves() { try knownVault.discardSave(journal) }
 
         let cancelFolder = root.appendingPathComponent("departure-cancel",isDirectory:true)
         try FileManager.default.createDirectory(at:cancelFolder,withIntermediateDirectories:false)

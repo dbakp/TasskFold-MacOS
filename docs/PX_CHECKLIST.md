@@ -115,7 +115,7 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
 - [ ] Audio comments: bounded clip/decode, scoped private storage and a native review
-  candidate now have 90 Core and 124 synthetic audio-controller checks per repo,
+  candidate now have 90 Core and 131 synthetic audio-controller checks per repo,
   including concurrent recovered-review ownership, durable pending cancellation,
   private interrupted-review recovery and explicit conflict copies.
   The unchanged shared dictation lease passed 17 controller checks at the prior checkpoint. Ordinary app entry points, private server lifecycle and genuine
@@ -397,3 +397,14 @@ Native output follow-up: iPad passes all three selected journeys; iPhone passes 
 - [ ] Busy-recording automatic Mac Quit, expired prepared-authorization recovery UX, forced-loss/orphan/removal/backup lifecycle, ordinary integration and private server custody remain open. Genuine audio/TCC/spoken testing stays deferred.
 
 [Evidence and exact acceptance scope](audio-comment-departure/README.md).
+
+## 2026-10-28 — removed pending audio Save recovery
+
+- [x] Keep an existing-only Save restriction through repeated Retry, peer handoff and reopening a retained authorization. A missing lookup no longer turns it into a fresh Save.
+- [x] Preserve the local review and offer an explicit independent copy with new operation/draft IDs, no old recovery claims and no mutation of other disk versions.
+- [x] Verify 131 synthetic capture-controller checks per repo, including seven new removed-Save/reopen/copy cases. Six new checks fail against the preceding controller.
+- [x] Current iPhone native separate-copy Close, interruption, new-ID journal readback and exact cold Finish; both app builds/signatures pass.
+- [ ] Final iPad case is still running through repeated 60-second animation waits (session 95200 / PID 48809); final Mac Close-dialog runtime inspection waits for an unlocked desktop. Earlier direct-copy Mac/iPad scopes do not accept the final dialog.
+- [ ] Dedicated expired-review discard at quota and broader lifecycle/account interleavings remain open.
+
+[Evidence and exact scope](audio-comment-removed-save/README.md). Ordinary audio entry points remain gated; genuine audio and release deferrals are unchanged.

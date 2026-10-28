@@ -8,6 +8,14 @@ import Darwin
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-comment-testing") }
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldAudioNative", isDirectory: true) }
     private static var lookupLocks: [String: AudioCommentFixtureLookupLock] = [:]
+    static var removedSaveTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-external-discard") }
+    static func removePreparedSave(_ scope: AudioCommentLiveScope) throws {
+        guard removedSaveTesting, scope.workspace.account == "local-audio-native" else { throw CancellationError() }
+        let vault = AudioCommentVault(applicationSupport: root, owner: try AudioCommentOwner(scope.workspace.account))
+        let matches = try vault.saves().filter { $0.next.target == scope.target && $0.phase == .saving }
+        guard matches.count == 1, let intent = matches.first else { throw AudioCommentStorageFailure.conflict }
+        try vault.discardSave(intent)
+    }
     static var beforeJournalTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-before-journal") }
     static func releaseCheckpoint(_ scope: AudioCommentLiveScope) {
         if let owner = try? AudioCommentOwner(scope.workspace.account) { lookupLocks[owner.directoryName]?.releaseCheckpoint() }
@@ -107,6 +115,7 @@ struct AudioCommentNativeFixtureView: View {
     @State private var ready = false
     @State private var storageResumed = false
     @State private var checkpointReleased = false
+    @State private var saveRemoved = false
     @State private var problem: String?
     var body: some View {
         VStack(spacing: 20) {
@@ -125,6 +134,12 @@ struct AudioCommentNativeFixtureView: View {
                 AudioCommentDraftView(request: request,
                                   storage: AudioCommentNativeFixture.storage(request.scope),
                                   recorder: AudioCommentFixtureRecording(), player: AudioCommentFixturePlaying(), liveScope: { context.scope })
+                if AudioCommentNativeFixture.removedSaveTesting {
+                    Button(saveRemoved ? "Pending Save removed outside this editor" : "Remove pending Save outside this editor") {
+                        do { try AudioCommentNativeFixture.removePreparedSave(request.scope); saveRemoved = true }
+                        catch { problem = error.localizedDescription }
+                    }.disabled(saveRemoved).padding().accessibilityIdentifier("audioFixtureRemovePending")
+                }
                 if AudioCommentNativeFixture.lookupTesting {
                     VStack(spacing: 8) {
                         TimelineView(.periodic(from: .now, by: 0.5)) { _ in Text(AudioCommentNativeFixture.lookupProbe(request.scope)).font(.caption).accessibilityIdentifier("audioFixtureLookupProbe") }

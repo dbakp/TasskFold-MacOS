@@ -4,6 +4,8 @@ Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Removed pending audio Saves now retain their existing-only restriction through repeated Retry and reopening. An explicit independent copy has new IDs and no old cleanup claims; conflict Done/Close controls offer only valid Save actions. Both repos pass 131 controller checks (six new failing-before regressions); current app builds/signatures and the final iPhone file-readback/Close/cold-Finish case pass. Final iPad verification is still live with animation waits, and final Mac Close-dialog runtime is open while locked. The earlier Mac direct-copy flow passes within its preceding-view scope. See [removed audio Save recovery](audio-comment-removed-save/README.md); ordinary audio stays gated.
+
 Reviewed audio and frozen local Saves now checkpoint before ready-state Mac Quit and iOS departure. Both apps pass 90 Core and 124 synthetic controller checks plus a 12-process journal proof. Phone/tablet native Home/cold-Finish cases and the final Mac refused-Quit/retry/cold-Finish journey pass in their recorded scopes. Busy Mac recording retains modal protection; real audio, broader lifecycle, ordinary exposure and server custody remain open. See [audio-comment-departure](audio-comment-departure/README.md).
 
 Filtered-task output now checks exact root/child source bytes before capture, matching the existing pinned-note guard. Two cases reproduce 13 failing assertions on each old model; final selected Core suites pass 104 Mac / 105 iOS cases, including refreshed PDF/CSV readback. Both native builds/signatures pass. See [filtered-output-source](filtered-output-source/README.md) for native scope and remaining gates.
