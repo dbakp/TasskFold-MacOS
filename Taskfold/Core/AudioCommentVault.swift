@@ -110,6 +110,28 @@ struct AudioCommentDraftCatalog: Sendable {
     let saves: [AudioCommentSaveIntent]
 }
 
+/// Account-private, read-only inventory. Counts describe files/operations, not
+/// distinct recordings. It neither authorizes task writes nor retargets clips.
+struct AudioCommentSavedLibrary: Sendable {
+    enum TaskLocation: Equatable, Sendable { case current, moved, unavailable }
+    let drafts: [AudioCommentSavedDraft]
+    let recoveryFileCount: Int
+    let pendingSaveCount: Int
+    let pendingPublicationCount: Int
+    let interruptedFileCount: Int
+
+    /// The caller supplies only targets currently admitted by its live workspace.
+    /// Ambiguous identities and recreated tasks must never look like a move.
+    static func location(of target: AudioCommentTarget, admitted: [AudioCommentTarget]) -> TaskLocation {
+        var matches: [AudioCommentTarget] = []
+        for candidate in admitted where candidate.task == target.task && candidate.generation == target.generation {
+            if !matches.contains(candidate) { matches.append(candidate) }
+        }
+        guard matches.count == 1, let current = matches.first else { return .unavailable }
+        return current == target ? .current : .moved
+    }
+}
+
 /// Exact cleanup permission for one interrupted local draft/review. No path or
 /// publication intent can be supplied through this reference.
 struct AudioCommentStageReference: Equatable, Codable, Sendable {
@@ -552,6 +574,41 @@ struct AudioCommentVault: Sendable {
             return .init(drafts: primary.filter { !pendingIDs.contains($0.id) }, reviews: reviews, saves: saves)
         }
     }
+    /// Unlike the task catalog, inventory never cleans up covered reviews. It
+    /// remains useful when the original task/project no longer exists. All reads
+    /// share the vault lock; pending Saves are not presented as finished drafts.
+    func savedLibrary() throws -> AudioCommentSavedLibrary {
+        try locked { folder in try savedLibrary(folder: folder) }
+    }
+    private func savedLibrary(folder: Int32) throws -> AudioCommentSavedLibrary {
+        let all = try records(folder: folder)
+        let filenames = try names(folder: folder)
+        var publicationCount = 0
+        for filename in filenames where filename.hasPrefix("pending-") {
+            guard let bytes = try read(filename, folder: folder) else { throw AudioCommentStorageFailure.unreadable }
+            let value = try AudioCommentPending(encoded: bytes, account: cloudAccount())
+            guard filename == name("pending-", value.publication.operation) else { throw AudioCommentStorageFailure.unreadable }
+            publicationCount += 1
+        }
+        let pendingIDs = Set(all.saves.map { $0.next.id })
+        return .init(drafts: all.drafts.filter { !pendingIDs.contains($0.id) },
+                     recoveryFileCount: all.reviews.count, pendingSaveCount: all.saves.count,
+                     pendingPublicationCount: publicationCount,
+                     interruptedFileCount: filenames.filter { $0.hasPrefix(".write-") }.count)
+    }
+    /// Revalidate an exact library selection before handing its bytes to a
+    /// consumer. A stale list cannot export/play a replacement or pending Save.
+    /// The caller must additionally recheck live account/realm scope and decode
+    /// the native codec; this is not task access or publication authorization.
+    func savedLibraryRecording(_ expected: AudioCommentSavedDraft) throws -> AudioCommentSavedDraft {
+        guard expected.owner == owner else { throw AudioCommentFailure.changed }
+        return try locked { folder in
+            guard let current = try savedLibrary(folder: folder).drafts.first(where: { $0.id == expected.id }), current == expected else {
+                throw AudioCommentStorageFailure.conflict
+            }
+            return current
+        }
+    }
     /// Cancellation is first persisted under the same operation. A stale Finish
     /// can never switch a durable discard back to saving after relaunch.
     func discardSave(_ requested: AudioCommentSaveIntent) throws {
@@ -802,6 +859,8 @@ actor AudioCommentDraftStorage {
     func prepareSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, fence: UUID? = nil, existingOnly: Bool = false) throws { try vault.prepareSave(intent, replacing: old, fence: fence, existingOnly: existingOnly) }
     @discardableResult func commitSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, existingOnly: Bool = false) throws -> AudioCommentSavedDraft { try vault.commitSave(intent, replacing: old, existingOnly: existingOnly) }
     func catalog(target: AudioCommentTarget) throws -> AudioCommentDraftCatalog { try vault.catalog(target: target) }
+    func savedLibrary() throws -> AudioCommentSavedLibrary { try vault.savedLibrary() }
+    func savedLibraryRecording(_ expected: AudioCommentSavedDraft) throws -> AudioCommentSavedDraft { try vault.savedLibraryRecording(expected) }
     func discardSave(_ intent: AudioCommentSaveIntent) throws { try vault.discardSave(intent) }
     func discardExpiredReview(_ intent: AudioCommentSaveIntent) throws { try vault.discardExpiredReview(intent) }
     func discardReviewCopies(_ expected: [AudioCommentSavedDraft]) throws { try vault.discardReviewCopies(expected) }

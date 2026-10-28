@@ -6614,3 +6614,22 @@ Mac desktop runtime/warnings and hosted/paired delivery remain open.
   account/window acceptance remain open. Production output behavior is unchanged.
 
 Exact scope, driver failures and readback: [CSV Share to Files](task-csv-share-files/README.md).
+
+
+## 2026-10-28 — retained recording inventory foundation
+
+- [x] Add an account-private inventory across original task/project identities;
+  moved/deleted/recreated-task classification does not retarget stored clips.
+- [x] Read one locked snapshot without trimming recovery files, promoting staged
+  bytes or finishing Save/publication operations. Report those categories apart.
+- [x] Revalidate exact saved selections; refuse changed/deleted recordings and
+  primaries covered by an unfinished Save, including lost commit acknowledgement.
+- [x] 135 focused Core cases pass independently in each repository, including
+  12 new inventory/selection/custody cases. Native app compilation/signature
+  results are recorded in the evidence directory.
+- [ ] Account-library presentation, playable/exportable orphan recovery,
+  removal/backup custody, real-media and broader cloud/lifecycle acceptance remain
+  open. Ordinary audio exposure remains off; microphone testing stays deferred.
+
+[Evidence and limits](audio-saved-library/README.md). This is storage groundwork,
+not a completed library feature or completion of audio comments/the Px objective.

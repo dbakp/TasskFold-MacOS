@@ -21,6 +21,140 @@ final class AudioCommentVaultTests: XCTestCase {
         return try .init(publication: .init(account: UUID(uuidString: account)!, target: draft.target, caption: draft.caption, descriptor: draft.clip.descriptor), clip: draft.clip)
     }
     func draftFile(_ draft: AudioCommentSavedDraft, in vault: AudioCommentVault) -> URL { vault.directory.appendingPathComponent("draft-" + draft.id.uuidString.lowercased() + ".bin") }
+    private func libraryFiles(_ file: AudioCommentVault) throws -> [String: Data] {
+        try Dictionary(uniqueKeysWithValues: FileManager.default.contentsOfDirectory(atPath: file.directory.path).map {
+            ($0, try Data(contentsOf: file.directory.appendingPathComponent($0)))
+        })
+    }
+    func testSavedLibraryKeepsOriginalTargetsAndExactBytesAcrossMovesAndDeletion() throws {
+        let file = try vault(), inbox = try draft()
+        let project = try AudioCommentSavedDraft(owner: file.owner, target: .init(task: UUID(), generation: UUID(), project: UUID()), caption: "Project recording", clip: inbox.clip)
+        try file.save(inbox); try file.save(project)
+        let before = try libraryFiles(file)
+        let library = try vault().savedLibrary()
+        XCTAssertEqual(Set(library.drafts.map(\.id)), Set([inbox.id, project.id]))
+        for original in [inbox, project] { XCTAssertEqual(try file.savedLibraryRecording(original), original) }
+        let moved = try AudioCommentTarget(task: inbox.target.task, generation: inbox.target.generation, project: UUID())
+        XCTAssertEqual(AudioCommentSavedLibrary.location(of: inbox.target, admitted: [moved]), .moved)
+        XCTAssertEqual(AudioCommentSavedLibrary.location(of: project.target, admitted: []), .unavailable)
+        XCTAssertEqual(try libraryFiles(file), before)
+        XCTAssertEqual(try vault().savedLibrary().drafts, library.drafts)
+    }
+    func testSavedLibraryLocationRejectsRecreatedAndAmbiguousTaskIdentities() throws {
+        let target = try draft().target
+        let moved = try AudioCommentTarget(task: target.task, generation: target.generation, project: UUID())
+        let recreated = try AudioCommentTarget(task: target.task, generation: UUID(), project: target.project)
+        XCTAssertEqual(AudioCommentSavedLibrary.location(of: target, admitted: [target, target]), .current)
+        XCTAssertEqual(AudioCommentSavedLibrary.location(of: target, admitted: [recreated]), .unavailable)
+        XCTAssertEqual(AudioCommentSavedLibrary.location(of: target, admitted: [target, moved]), .unavailable)
+        XCTAssertEqual(AudioCommentSavedLibrary.location(of: target, admitted: [recreated, moved]), .moved)
+    }
+    func testSavedLibraryIsolatesRawAccountsAndRejectsForeignSelection() throws {
+        let a = try vault("café"), b = try vault("cafe\u{301}")
+        let original = try draft(a.owner); try a.save(original)
+        XCTAssertTrue(try b.savedLibrary().drafts.isEmpty)
+        XCTAssertThrowsError(try b.savedLibraryRecording(original))
+        XCTAssertEqual(try a.savedLibraryRecording(original), original)
+    }
+    func testSavedLibraryRejectsStaleRevisionAndDeletedSelection() throws {
+        let file = try vault(), original = try draft(); try file.save(original)
+        let edited = try original.replacing(caption: "Edited", clip: original.clip)
+        try file.save(edited, replacing: original.revision)
+        XCTAssertThrowsError(try file.savedLibraryRecording(original))
+        XCTAssertEqual(try file.savedLibraryRecording(edited), edited)
+        try file.discardDraft(edited.id, revision: edited.revision)
+        XCTAssertThrowsError(try file.savedLibraryRecording(edited))
+    }
+    func testSavedLibrarySeparatesPendingSaveWithoutFinishingOrCleaningReviews() throws {
+        var file = try vault(); let original = try draft(); try file.save(original)
+        let next = try original.replacing(caption: "Pending edit", clip: original.clip)
+        let review = try AudioCommentSavedDraft(owner: file.owner, target: original.target, caption: "Pending edit", clip: original.clip); try file.save(review, recovery: true)
+        let intent = try AudioCommentSaveIntent(next: next, base: original.revision, reviews: [.init(review)])
+        // A journal alone owns the primary even before its replacement lands.
+        file.fault = { if $0 == .afterSaveJournal { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(intent))
+        let before = try libraryFiles(file)
+        let library = try vault().savedLibrary()
+        XCTAssertTrue(library.drafts.isEmpty); XCTAssertEqual(library.pendingSaveCount, 1)
+        XCTAssertEqual(library.recoveryFileCount, 1)
+        XCTAssertThrowsError(try file.savedLibraryRecording(original))
+        XCTAssertEqual(try libraryFiles(file), before)
+        XCTAssertEqual(try vault().drafts(), [original]); XCTAssertEqual(try vault().saves(), [intent])
+    }
+    func testSavedLibraryDoesNotTrimExactlyCoveredRecoveryCopies() throws {
+        let file = try vault(), review = try draft(); try file.save(review, recovery: true)
+        let primary = try AudioCommentSavedDraft(owner: file.owner, target: review.target, caption: review.caption, clip: review.clip, origin: .init(review))
+        try file.save(primary)
+        let before = try libraryFiles(file), library = try file.savedLibrary()
+        XCTAssertEqual(library.drafts, [primary]); XCTAssertEqual(library.recoveryFileCount, 1)
+        XCTAssertEqual(try libraryFiles(file), before)
+    }
+    func testSavedLibrarySeparatesPublicationAndIncompleteFileWithoutPromotion() throws {
+        let file = try vault(), original = try draft(), publication = try pending()
+        try file.save(original); try file.store(publication)
+        let stage = file.directory.appendingPathComponent(".write-" + UUID().uuidString.lowercased())
+        try Data([0, 1, 2, 3]).write(to: stage)
+        let before = try libraryFiles(file), library = try file.savedLibrary()
+        XCTAssertEqual(library.drafts, [original]); XCTAssertEqual(library.pendingPublicationCount, 1)
+        XCTAssertEqual(library.interruptedFileCount, 1); XCTAssertEqual(library.pendingSaveCount, 0)
+        XCTAssertEqual(try libraryFiles(file), before)
+    }
+    func testSavedLibraryRejectsCorruptCanonicalPublicationAndPreservesAllFiles() throws {
+        let file = try vault(), original = try draft(), publication = try pending()
+        try file.save(original); try file.store(publication)
+        let url = file.directory.appendingPathComponent("pending-" + publication.publication.operation.uuidString.lowercased() + ".bin")
+        try Data([0, 1, 2]).write(to: url)
+        let before = try libraryFiles(file)
+        XCTAssertThrowsError(try file.savedLibrary()); XCTAssertThrowsError(try file.savedLibraryRecording(original))
+        XCTAssertEqual(try libraryFiles(file), before)
+    }
+    func testSavedLibraryRejectsSymlinkWithoutFollowingOrRemovingIt() throws {
+        let file = try vault(), original = try draft(); try file.save(original)
+        let outside = root.appendingPathComponent("outside.bin"), bytes = Data("outside private bytes".utf8)
+        try bytes.write(to: outside)
+        let link = file.directory.appendingPathComponent(".write-" + UUID().uuidString.lowercased())
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: outside)
+        XCTAssertThrowsError(try file.savedLibrary()); XCTAssertThrowsError(try file.savedLibraryRecording(original))
+        XCTAssertEqual(try Data(contentsOf: outside), bytes)
+        XCTAssertEqual(try FileManager.default.destinationOfSymbolicLink(atPath: link.path), outside.path)
+    }
+    func testSavedLibraryRefusesConcurrentSaveLockInsteadOfReturningPartialInventory() throws {
+        var file = try vault(); let original = try draft(); try file.save(original)
+        let next = try original.replacing(caption: "Concurrent edit", clip: original.clip)
+        let intent = try AudioCommentSaveIntent(next: next, base: original.revision, reviews: [])
+        var observedBusy = false
+        file.fault = { point in
+            if point == .afterSaveJournal {
+                XCTAssertThrowsError(try self.vault().savedLibrary()) { error in
+                    XCTAssertEqual(error as? AudioCommentStorageFailure, .busy); observedBusy = true
+                }
+            }
+        }
+        try file.commitSave(intent)
+        XCTAssertTrue(observedBusy)
+        XCTAssertEqual(try vault().savedLibrary().drafts, [next])
+    }
+    func testSavedLibraryKeepsUnacknowledgedPrimaryBehindPendingOperation() throws {
+        var file = try vault(); let original = try draft()
+        let intent = try AudioCommentSaveIntent(next: original, base: nil, reviews: [])
+        file.fault = { if $0 == .afterDraftCommit { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(intent))
+        let before = try libraryFiles(file), library = try vault().savedLibrary()
+        XCTAssertTrue(library.drafts.isEmpty); XCTAssertEqual(library.pendingSaveCount, 1)
+        XCTAssertThrowsError(try vault().savedLibraryRecording(original))
+        XCTAssertEqual(try libraryFiles(file), before)
+        XCTAssertEqual(try vault().drafts(), [original])
+    }
+    func testSavedLibraryActorRechecksSelectionAfterIndependentWriterChangesIt() async throws {
+        let file = try vault(), original = try draft(); try file.save(original)
+        let storage = AudioCommentDraftStorage(applicationSupport: root, owner: file.owner)
+        let library = try await storage.savedLibrary(); XCTAssertEqual(library.drafts, [original])
+        let edited = try original.replacing(caption: "Other window", clip: original.clip)
+        try vault().save(edited, replacing: original.revision)
+        do { _ = try await storage.savedLibraryRecording(original); XCTFail("Stale selection was accepted") }
+        catch { XCTAssertEqual(error as? AudioCommentStorageFailure, .conflict) }
+        let current = try await storage.savedLibraryRecording(edited); XCTAssertEqual(current, edited)
+    }
     func testLocalReviewedRecordingSurvivesANewStoreInstanceWithExactCaption() throws {
         let file = try vault("local"), original = try draft(file.owner)
         try file.save(original)
