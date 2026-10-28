@@ -1090,6 +1090,8 @@ struct AudioCommentConversationRequest: Identifiable {
     @ObservationIgnored var currentScope: () -> AudioCommentLiveScope? = { nil }
     @ObservationIgnored var sessionIsCurrent: () -> Bool = { false }
     private(set) var entries: [AudioCommentRemote] = []
+    private(set) var hasMore = false
+    private var next: AudioCommentPageCursor?
     private(set) var playing: UUID?
     private(set) var working = false
     private(set) var notice: String?
@@ -1104,18 +1106,29 @@ struct AudioCommentConversationRequest: Identifiable {
     var isCurrent: Bool { !closed && active && sessionIsCurrent() && currentScope().map(scope.matches) == true }
     private func accepts(_ value: UUID) -> Bool { token == value && isCurrent && !Task.isCancelled }
     func stop() { token = UUID(); player.stop(); playing = nil; working = false }
-    func close() { stop(); entries = []; notice = nil; closed = true; Self.live.removeValue(forKey: id) }
-    func setActive(_ value: Bool) { active = value; if !value { stop(); entries = []; notice = nil } }
+    func close() { stop(); entries = []; next = nil; hasMore = false; notice = nil; closed = true; Self.live.removeValue(forKey: id) }
+    func setActive(_ value: Bool) { active = value; if !value { stop(); entries = []; next = nil; hasMore = false; notice = nil } }
     static func stopForInactivity() { for item in live.values.compactMap(\.value) { item.setActive(false) } }
     func refresh() async {
-        guard isCurrent else { setActive(false); return }; stop(); entries = []; notice = nil; working = true; let generation = token
-        defer { if token == generation { working = false } }
+        guard isCurrent else { setActive(false); return }; stop(); entries = []; next = nil; hasMore = false; notice = nil
+        await fetch(after:nil)
+    }
+    func loadMore() async {
+        guard isCurrent, !working, hasMore, let next else { return }; stop(); notice=nil
+        await fetch(after:next)
+    }
+    private func fetch(after: AudioCommentPageCursor?) async {
+        working=true; let generation=token
+        defer { if token==generation { working=false } }
         do {
-            let rows = try await transport.listAudio(account: account, target: scope.target, origin: origin, incarnation: incarnation)
+            let page=try await transport.pageAudio(account:account,target:scope.target,after:after,origin:origin,incarnation:incarnation)
             guard accepts(generation) else { return }
-            guard rows.count <= 20, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ $0.publication.account == account && $0.publication.target == scope.target }) else { throw AudioCommentFailure.invalid }
-            entries = rows
-        } catch { if accepts(generation) { notice = "Recordings couldn’t be loaded. Refresh to try again." } }
+            let combined=(after == nil ? [] : entries)+page.items
+            guard page.items.count<=20, Set(combined.map(\.id)).count==combined.count,
+                  combined.allSatisfy({ $0.publication.account==account && $0.publication.target==scope.target }),
+                  page.next == nil || page.next?.account==account && page.next?.target==scope.target && page.next != after else { throw AudioCommentFailure.invalid }
+            entries=combined;next=page.next;hasMore=next != nil
+        } catch { if accepts(generation) { notice="Recordings couldn’t be loaded. Try again or refresh the conversation." } }
     }
     private func contains(_ value: AudioCommentRemote) -> Bool { isCurrent && value.publication.account == account && value.publication.target == scope.target && entries.contains(value) }
     func play(_ value: AudioCommentRemote) async {

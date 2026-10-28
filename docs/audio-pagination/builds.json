@@ -1,0 +1,24 @@
+{
+  "ios": {
+    "build": "BUILD SUCCEEDED",
+    "signingAllowed": false,
+    "bundleIdentifier": "com.dbakp.taskfold.pagescompilecheck",
+    "architectures": "x86_64 arm64",
+    "executableStubSHA256": "285c1ec9cb0996be30613305634be9ab3c67edcb2e30f14c5dd4bd228659354f",
+    "loadedDebugCodeSHA256": "1e79093ad7d9ea610c0c0d67e56feac17f459cb2429a3241b11e578aea5a2331",
+    "normalDraftFlag": null,
+    "normalPublishingFlag": null,
+    "nativeUIRuntimeClaimed": false
+  },
+  "mac": {
+    "build": "BUILD SUCCEEDED",
+    "signingAllowed": false,
+    "bundleIdentifier": "com.dbakp.taskfold.pagescompilecheck",
+    "architectures": "arm64",
+    "executableStubSHA256": "7a2231c6327b65d5e81467bf1f793379f6c5b4a6c161b5fc8fdc1167deab7f2f",
+    "loadedDebugCodeSHA256": "d52c778dc3f31cfdd79b037fe2681e9cdb94b00827cb71f4c0992b52eeee7697",
+    "normalDraftFlag": null,
+    "normalPublishingFlag": null,
+    "nativeUIRuntimeClaimed": false
+  }
+}

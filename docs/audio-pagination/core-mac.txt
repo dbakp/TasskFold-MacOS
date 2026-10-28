@@ -1,0 +1,18 @@
+Test Suite 'Selected tests' started at 2026-10-28 19:59:06.907.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-28 19:59:06.908.
+Test Suite 'AudioCommentPublishingTests' started at 2026-10-28 19:59:06.908.
+Test Suite 'AudioCommentPublishingTests' passed at 2026-10-28 19:59:14.280.
+	 Executed 39 tests, with 0 failures (0 unexpected) in 7.366 (7.372) seconds
+Test Suite 'AudioCommentTaskAdmissionTests' started at 2026-10-28 19:59:14.280.
+Test Suite 'AudioCommentTaskAdmissionTests' passed at 2026-10-28 19:59:14.283.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'AudioCommentTests' started at 2026-10-28 19:59:14.283.
+Test Suite 'AudioCommentTests' passed at 2026-10-28 19:59:15.419.
+	 Executed 29 tests, with 0 failures (0 unexpected) in 1.134 (1.136) seconds
+Test Suite 'AudioCommentVaultTests' started at 2026-10-28 19:59:15.419.
+Test Suite 'AudioCommentVaultTests' passed at 2026-10-28 19:59:16.664.
+	 Executed 106 tests, with 0 failures (0 unexpected) in 1.235 (1.245) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-28 19:59:16.664.
+	 Executed 180 tests, with 0 failures (0 unexpected) in 9.736 (9.756) seconds
+Test Suite 'Selected tests' passed at 2026-10-28 19:59:16.664.
+	 Executed 180 tests, with 0 failures (0 unexpected) in 9.736 (9.757) seconds

@@ -63,6 +63,10 @@ export async function createAudioHttpFixture(pg, actor, session) {
           expression = `public.taskfold_audio_comment_admit(${lit(b._actor)},${
             lit(b._session)
           },${lit(b._action)})`;
+        } else if (req.url.endsWith("/taskfold_audio_comment_page")) {
+          expression = `public.taskfold_audio_comment_page(${lit(b._actor)},${
+            lit(b._session)
+          },${lit(JSON.stringify(b._body))}::jsonb)`;
         } else if (req.url.endsWith("/taskfold_audio_comment_command")) {
           expression = `public.taskfold_audio_comment_command(${
             lit(b._action)

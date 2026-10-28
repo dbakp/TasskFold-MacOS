@@ -18,6 +18,7 @@ const audio = createAudioCommentsHandler({
         "/auth/v1/user",
         "/rest/v1/rpc/taskfold_audio_comment_admit",
         "/rest/v1/rpc/taskfold_audio_comment_command",
+        "/rest/v1/rpc/taskfold_audio_comment_page",
       ].includes(u.pathname) ||
         /^\/storage\/v1\/object\/taskfold-audio-v1\/audio-comments\/v1\/[a-f0-9-]+\/[a-f0-9-]+\/[a-f0-9-]+\.m4a$/
           .test(u.pathname))

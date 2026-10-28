@@ -317,7 +317,41 @@ struct AudioCommentRemoteRemoval: Sendable {
     }
 }
 @MainActor protocol AudioCommentReadingTransport: AnyObject {
+    func pageAudio(account: UUID, target: AudioCommentTarget, after: AudioCommentPageCursor?, origin: String, incarnation: UUID) async throws -> AudioCommentPage
     func listAudio(account: UUID, target: AudioCommentTarget, origin: String, incarnation: UUID) async throws -> [AudioCommentRemote]
     func downloadAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentClip
     func removeAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentRemoteRemoval
+}
+
+/// Keep the original timestamp string: a Date formatter can discard PostgreSQL
+/// microseconds. Bind local cursors to the reader and exact target, not just time.
+struct AudioCommentPageCursor: Sendable, Equatable {
+    let account: UUID
+    let target: AudioCommentTarget
+    let position: Record
+    init(position: Record, account: UUID, target: AudioCommentTarget) throws {
+        guard Set(position.fields.keys) == ["published_at","comment_id"], case .string(let stamp) = position["published_at"], stamp.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|\+00:00)$"#, options:.regularExpression) != nil,
+              let id = UUID(uuidString: position.string("comment_id")), id != AudioCommentTarget.zero, position.string("comment_id") == id.uuidString.lowercased() else { throw AudioCommentFailure.invalid }
+        let formatter=ISO8601DateFormatter();formatter.formatOptions=[.withInternetDateTime,.withFractionalSeconds]
+        guard formatter.date(from:stamp) != nil || ISO8601DateFormatter().date(from:stamp) != nil else { throw AudioCommentFailure.invalid }
+        self.account=account;self.target=target;self.position=position
+    }
+}
+struct AudioCommentPage: Sendable {
+    let items: [AudioCommentRemote]
+    let next: AudioCommentPageCursor?
+    init(data: Data, account: UUID, target: AudioCommentTarget, after: AudioCommentPageCursor?) throws {
+        guard data.count <= 640_000, after == nil || after?.account == account && after?.target == target else { throw AudioCommentFailure.changed }
+        let row=try JSONDecoder().decode(Record.self,from:data)
+        guard Set(row.fields.keys)==["protocol","account","items","next"] else { throw AudioCommentFailure.invalid }
+        var list=row.fields;list.removeValue(forKey:"next")
+        items=try AudioCommentRemote.list(JSONEncoder().encode(Record(list)),account:account,target:target)
+        switch row["next"] {
+        case .null:next=nil
+        case .object(let fields):
+            let value=try AudioCommentPageCursor(position:Record(fields),account:account,target:target)
+            guard items.count==20, let last=items.last, value.position["published_at"]==last.record["published_at"], value.position["comment_id"]==last.record["comment_id"], value != after else { throw AudioCommentFailure.invalid };next=value
+        default:throw AudioCommentFailure.invalid
+        }
+    }
 }

@@ -60,6 +60,7 @@ try {
       "20261028145414_audio_comment_gateway_boundary.sql",
       "20261028151901_audio_comment_cleanup_fencing.sql",
       "20261028153218_audio_comment_upload_recovery.sql",
+      "20261028185429_audio_comment_keyset_pages.sql",
     ]
   ) {
     await pg.raw(

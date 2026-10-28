@@ -7,12 +7,20 @@ import Darwin
     var rows: [AudioCommentRemote] = []
     var clip: AudioCommentClip
     var lists = 0, downloads = 0, removals = 0
-    var failRemoval = false, holdList = false, holdDownload = false
+    var failList = false, failRemoval = false, holdList = false, holdDownload = false
     var continuation: CheckedContinuation<Void, Never>?
     init(_ clip: AudioCommentClip) { self.clip = clip }
     func release() { continuation?.resume(); continuation = nil }
+    func pageAudio(account: UUID, target: AudioCommentTarget, after: AudioCommentPageCursor?, origin: String, incarnation: UUID) async throws -> AudioCommentPage {
+        let values=try await listAudio(account:account,target:target,origin:origin,incarnation:incarnation)
+        let start = after.flatMap { cursor in values.firstIndex { $0.record["comment_id"] == cursor.position["comment_id"] }.map { $0 + 1 } } ?? 0
+        let items=Array(values.dropFirst(start).prefix(20))
+        let next:JSON
+        if values.count>start+20, let last=items.last { next = .object(["published_at":last.record["published_at"],"comment_id":last.record["comment_id"]]) } else { next = .null }
+        return try .init(data:JSONEncoder().encode(Record(["protocol":.number(1),"account":.string(account.uuidString.lowercased()),"items":.array(items.map { .object($0.record.fields) }),"next":next])),account:account,target:target,after:after)
+    }
     func listAudio(account: UUID, target: AudioCommentTarget, origin: String, incarnation: UUID) async throws -> [AudioCommentRemote] {
-        lists += 1; if holdList { await withCheckedContinuation { continuation = $0 } }; return rows
+        lists += 1; if holdList { await withCheckedContinuation { continuation = $0 } }; if failList { throw URLError(.networkConnectionLost) }; return rows
     }
     func downloadAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentClip {
         downloads += 1; if holdDownload { await withCheckedContinuation { continuation = $0 } }; return clip
@@ -1543,6 +1551,22 @@ extension AudioControllerProof {
         for _ in 0..<500 { if transport.continuation != nil { break }; await Task.yield() }
         let previousPlays = player.plays; returned.close(); transport.release(); await downloading.value
         checks["remoteClosedReviewCannotStartLatePlayback"] = player.plays == previousPlays && returned.entries.isEmpty && returned.playing == nil
+        context.scope=scope;transport.holdDownload=false
+        transport.rows=try (0..<45).map { n in
+            var row=fields;row["comment_id"] = .string(UUID().uuidString.lowercased());row["operation_id"] = .string(UUID().uuidString.lowercased());row["asset_id"] = .string(UUID().uuidString.lowercased());row["caption"] = .string("Recording \(n)")
+            return try AudioCommentRemote(record:Record(row),account:account,target:target)
+        }
+        let pages=try make();await pages.refresh()
+        checks["remotePagingStartsWithTwentyAndLoadMore"] = pages.entries.count==20 && pages.hasMore
+        transport.failList=true;await pages.loadMore()
+        checks["remotePagingFailureKeepsRowsAndRetryPosition"] = pages.entries.count==20 && pages.hasMore && pages.notice != nil
+        transport.failList=false;await pages.loadMore()
+        checks["remotePagingRetryAppendsWithoutDuplicates"] = pages.entries.count==40 && Set(pages.entries.map(\.id)).count==40 && pages.hasMore
+        await pages.loadMore()
+        checks["remotePagingReachesAllFortyFiveInPublicationOrder"] = pages.entries.map(\.publication.caption)==(0..<45).map { "Recording \($0)" } && !pages.hasMore
+        let listCalls=transport.lists;await pages.loadMore()
+        checks["remotePagingStopsAtTerminalPage"] = transport.lists==listCalls
+        pages.close();checks["remotePagingCloseClearsCursorAndRows"] = pages.entries.isEmpty && !pages.hasMore
         return checks
     }
 

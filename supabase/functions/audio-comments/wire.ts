@@ -255,3 +255,15 @@ export async function verifyAudio(bytes: Uint8Array, value: unknown) {
   ) throw Error("integrity");
   return { sha256: hash, byteCount: bytes.length };
 }
+
+export function position(value: unknown): Row {
+  const row = object(value);
+  exact(row, ["published_at", "comment_id"]);
+  if (
+    !identity(row.comment_id) || typeof row.published_at !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|\+00:00)$/.test(
+      row.published_at,
+    ) || !Number.isFinite(Date.parse(row.published_at))
+  ) throw Error("position");
+  return row;
+}

@@ -1252,7 +1252,7 @@ extension Backend: AudioCommentReadingTransport {
     private func audioReadRequest(action: String, body: Record, account: UUID, origin: String, incarnation: UUID, maximum: Int) async throws -> (Data, HTTPURLResponse) {
         try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
         try await refreshIfNeeded(); try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
-        guard ["list", "download", "remove"].contains(action), let session, let url = URL(string: origin + "/functions/v1/audio-comments?action=" + action) else { throw AudioCommentFailure.changed }
+        guard ["list", "page", "download", "remove"].contains(action), let session, let url = URL(string: origin + "/functions/v1/audio-comments?action=" + action) else { throw AudioCommentFailure.changed }
         var request = URLRequest(url: url); request.httpMethod = "POST"; request.timeoutInterval = 25
         request.cachePolicy = .reloadIgnoringLocalCacheData; request.httpShouldHandleCookies = false
         request.setValue(config["Key"], forHTTPHeaderField: "apikey"); request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
@@ -1278,6 +1278,12 @@ extension Backend: AudioCommentReadingTransport {
             try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
             return (data, response)
         } catch { bytes.task.cancel(); throw error }
+    }
+    func pageAudio(account: UUID, target: AudioCommentTarget, after: AudioCommentPageCursor?, origin: String, incarnation: UUID) async throws -> AudioCommentPage {
+        guard after == nil || after?.account == account && after?.target == target else { throw AudioCommentFailure.changed }
+        let body=Record(["target":.object(target.record.fields),"after":after.map { .object($0.position.fields) } ?? .null])
+        let (data,_)=try await audioReadRequest(action:"page",body:body,account:account,origin:origin,incarnation:incarnation,maximum:640_000)
+        return try AudioCommentPage(data:data,account:account,target:target,after:after)
     }
     func listAudio(account: UUID, target: AudioCommentTarget, origin: String, incarnation: UUID) async throws -> [AudioCommentRemote] {
         let (data, _) = try await audioReadRequest(action: "list", body: target.record, account: account, origin: origin, incarnation: incarnation, maximum: 640_000)

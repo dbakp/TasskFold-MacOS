@@ -8,6 +8,7 @@ import {
   maximumEnvelopeBytes,
   object,
   path,
+  position,
   publication,
   publicReceipt,
   receipt,
@@ -172,7 +173,7 @@ export function createAudioCommentsHandler(
       if (request.method !== "POST") throw new Failure(405, "method");
       if (
         !action ||
-        !["publish", "list", "download", "remove"].includes(action) ||
+        !["publish", "list", "page", "download", "remove"].includes(action) ||
         [...url.searchParams.keys()].some((k) => k !== "action") ||
         url.searchParams.getAll("action").length !== 1
       ) throw new Failure(400, "invalid");
@@ -278,7 +279,7 @@ export function createAudioCommentsHandler(
       const admitted = await rpc("taskfold_audio_comment_admit", {
         _actor: actor.account,
         _session: actor.session,
-        _action: action,
+        _action: action === "page" ? "list" : action,
       });
       if (admitted.allowed !== true) {
         if (
@@ -429,6 +430,52 @@ export function createAudioCommentsHandler(
         if (confirmed.state !== "published") throw new Failure(503, "retry");
         signal.throwIfAborted();
         return json({ receipt: publicReceipt(confirmed) });
+      }
+      if (action === "page") {
+        let after: Row | null;
+        try {
+          exact(body, ["target", "after"]);
+          target(body.target);
+          after = body.after === null ? null : position(body.after);
+        } catch {
+          throw new Failure(400, "invalid");
+        }
+        const result = await rpc("taskfold_audio_comment_page", {
+          _actor: actor.account,
+          _session: actor.session,
+          _body: body,
+        });
+        if (result.status) refused(result);
+        exact(result, ["protocol", "account", "items", "next"]);
+        if (
+          result.protocol !== 1 || result.account !== actor.account ||
+          !Array.isArray(result.items) || result.items.length > 20
+        ) throw new Failure(503, "retry");
+        const items = result.items.map((value) => {
+          const r = receipt(value, actor.account);
+          if (r.state !== "published" || key(r.target) !== key(body.target)) {
+            throw Error("page");
+          }
+          return publicReceipt(r);
+        });
+        if (new Set(items.map((r) => r.comment_id)).size !== items.length) {
+          throw new Failure(503, "retry");
+        }
+        if (result.next !== null) {
+          const next = position(result.next), last = items.at(-1);
+          if (
+            items.length !== 20 || !last ||
+            next.published_at !== last.published_at ||
+            next.comment_id !== last.comment_id || key(next) === key(after)
+          ) throw new Failure(503, "retry");
+        }
+        signal.throwIfAborted();
+        return json({
+          protocol: 1,
+          account: actor.account,
+          items,
+          next: result.next,
+        });
       }
       if (action === "list") {
         try {

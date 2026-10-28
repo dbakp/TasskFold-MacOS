@@ -39,3 +39,5 @@ node Scripts/Database/test-audio-native-publication.mjs /tmp/taskfold-audio-read
 Audio and the overall Px objective remain open. The previous [private publication-copy recovery](../audio-pending-review/README.md) remains independently recorded.
 
 Documentation consulted: [Supabase changelog](https://supabase.com/changelog) and [private Storage downloads](https://supabase.com/docs/guides/storage/serving/downloads). App reads continue through the existing authenticated gateway; no new direct Storage policy, provider dependency or schema change is introduced here.
+
+Follow-up: [audio pagination](../audio-pagination/README.md) implements keyset pages, native Load more and a 100-recording retained task count with existing byte/author quotas. The 20-item preview limit described above is historical. Native/shared/provider acceptance remains open.

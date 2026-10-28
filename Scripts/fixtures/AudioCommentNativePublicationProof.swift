@@ -14,7 +14,7 @@ private final class NativePublicationHTTP: URLProtocol {
     override func stopLoading() { operation?.cancel(); forwarding?.invalidateAndCancel() }
     override func startLoading() {
         guard let requestURL = request.url, let requested = URLComponents(url: requestURL, resolvingAgainstBaseURL: false),
-              requested.scheme == "https", requested.host == "native-publication.example.invalid", requested.path == "/functions/v1/audio-comments", let action = requested.queryItems?.first(where: { $0.name == "action" })?.value, ["publish", "list", "download", "remove"].contains(action),
+              requested.scheme == "https", requested.host == "native-publication.example.invalid", requested.path == "/functions/v1/audio-comments", let action = requested.queryItems?.first(where: { $0.name == "action" })?.value, ["publish", "list", "page", "download", "remove"].contains(action),
               let components = URLComponents(string: Self.endpoint), components.scheme == "http", components.host == "127.0.0.1", components.port != nil,
               let destination = URL(string: Self.endpoint + "/?action=" + action) else { client?.urlProtocol(self, didFailWithError: URLError(.badURL)); return }
         var body = request.httpBody ?? Data()
@@ -52,7 +52,9 @@ private final class NativePublicationHTTP: URLProtocol {
         if config["release_copy"] == .bool(true), let confirmed = try disk.journals().first { _ = try disk.releaseConfirmedAudio(confirmed) }
         guard let stored = try disk.journals().first else { throw AppFailure(message: "Missing native publication journal") }
         if config["read_remote"] == .bool(true) {
-            let rows = try await backend.listAudio(account: stored.publication.account, target: target, origin: backend.baseURL, incarnation: incarnation)
+            let page = try await backend.pageAudio(account: stored.publication.account, target: target, after: nil, origin: backend.baseURL, incarnation: incarnation)
+            guard page.next == nil else { throw AppFailure(message: "Unexpected next page") }
+            let rows = page.items
             guard rows.count == 1, let remote = rows.first, remote.id == stored.publication.comment, remote.publication.caption.utf8.elementsEqual(stored.publication.caption.utf8) else { throw AppFailure(message: "Remote list mismatch") }
             let downloaded = try await backend.downloadAudio(remote, origin: backend.baseURL, incarnation: incarnation)
             guard downloaded.data == clip.data else { throw AppFailure(message: "Remote bytes mismatch") }

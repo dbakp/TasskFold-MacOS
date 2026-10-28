@@ -79,6 +79,7 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
     corrupt: false,
     wrongReceipt: false,
     authID: account,
+    pageResult: undefined as Row | undefined,
   };
   const response = (x: unknown) =>
     new Response(JSON.stringify(x), {
@@ -100,6 +101,11 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
         state.admission
           ? { protocol: 1, account, allowed: true, retry_after: 0 }
           : { allowed: false, status: "rate_limited", retry_after: 37 },
+      );
+    }
+    if (u.pathname.endsWith("/taskfold_audio_comment_page")) {
+      return response(
+        state.pageResult ?? { protocol: 1, account, items: [row], next: null },
       );
     }
     if (u.pathname.endsWith("/taskfold_audio_comment_command")) {
@@ -436,4 +442,55 @@ Deno.test("stored M4A truncation and duration/hash changes are rejected", async 
     }
     equal(rejected, true);
   }
+});
+
+Deno.test("page validates target and strips custody fields", async () => {
+  const f = fixture();
+  await f.publish();
+  const response = await f.handler(
+    f.request("page", { target: f.intent.target, after: null }),
+  );
+  equal(response.status, 200);
+  const page = await response.json();
+  equal(page.items.length, 1);
+  equal(page.next, null);
+  equal(page.items[0].object_name, undefined);
+  equal(page.items[0].bucket, undefined);
+  equal(
+    (await f.handler(
+      f.request("page", {
+        target: f.intent.target,
+        after: { published_at: "infinity", comment_id: id() },
+      }),
+    )).status,
+    400,
+  );
+});
+Deno.test("page rejects mismatched next cursor and duplicate rows", async () => {
+  const f = fixture();
+  await f.publish();
+  f.state.pageResult = {
+    protocol: 1,
+    account: f.account,
+    items: [f.row],
+    next: { published_at: f.row.published_at, comment_id: f.row.comment_id },
+  };
+  equal(
+    (await f.handler(
+      f.request("page", { target: f.intent.target, after: null }),
+    )).status,
+    503,
+  );
+  f.state.pageResult = {
+    protocol: 1,
+    account: f.account,
+    items: [f.row, f.row],
+    next: null,
+  };
+  equal(
+    (await f.handler(
+      f.request("page", { target: f.intent.target, after: null }),
+    )).status,
+    503,
+  );
 });

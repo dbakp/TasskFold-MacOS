@@ -342,3 +342,37 @@ extension AudioCommentPublishingTests {
         }; PublicationHTTP.handler = nil
     }
 }
+
+extension AudioCommentPublishingTests {
+    func pageData(_ items:[AudioCommentRemote], next: Record? = nil) throws -> Data {
+        try JSONEncoder().encode(Record(["protocol":.number(1),"account":.string(account.uuidString.lowercased()),"items":.array(items.map { .object($0.record.fields) }),"next":next.map { .object($0.fields) } ?? .null]))
+    }
+    func testPageCursorPreservesExactMicrosecondsAndBindsAccountAndTarget() throws {
+        let first=try remote(),target=first.publication.target
+        let items=try (0..<20).map { _ in try remote(.init(account:account,target:target,caption:"Recording",descriptor:first.publication.descriptor)) }
+        let last=try XCTUnwrap(items.last),position=Record(["published_at":last.record["published_at"],"comment_id":last.record["comment_id"]])
+        let page=try AudioCommentPage(data:pageData(items,next:position),account:account,target:target,after:nil)
+        XCTAssertEqual(page.items.count,20);XCTAssertEqual(page.next?.position.string("published_at"),"2026-10-28T15:00:01.123456+00:00")
+        XCTAssertEqual(page.next?.account,account);XCTAssertEqual(page.next?.target,target)
+        XCTAssertThrowsError(try AudioCommentPage(data:pageData([]),account:UUID(),target:target,after:page.next))
+        XCTAssertThrowsError(try AudioCommentPage(data:pageData(items,next:position),account:account,target:target,after:page.next))
+        var wrong=position.fields;wrong["comment_id"] = .string(UUID().uuidString.lowercased())
+        XCTAssertThrowsError(try AudioCommentPage(data:pageData(items,next:Record(wrong)),account:account,target:target,after:nil))
+        XCTAssertThrowsError(try AudioCommentPage(data:pageData([first],next:position),account:account,target:target,after:nil))
+    }
+    @MainActor func testBackendPageUsesBoundCursorAndFixedAuthenticatedRoute() async throws {
+        let backend=try backend(),value=try remote(),position=try AudioCommentPageCursor(position:Record(["published_at":value.record["published_at"],"comment_id":value.record["comment_id"]]),account:account,target:value.publication.target)
+        var calls=0
+        PublicationHTTP.handler={request,http in
+            calls += 1;XCTAssertEqual(request.url?.absoluteString,self.origin+"/functions/v1/audio-comments?action=page")
+            var bytes=request.httpBody ?? Data()
+            if let stream=request.httpBodyStream { stream.open();defer { stream.close() };var buffer=[UInt8](repeating:0,count:4096);while stream.hasBytesAvailable { let n=stream.read(&buffer,maxLength:buffer.count);if n<=0 { break };bytes.append(buffer,count:n) } }
+            let body=try! JSONDecoder().decode(Record.self,from:bytes);XCTAssertEqual(body["after"],.object(position.position.fields));XCTAssertEqual(body["target"],.object(value.publication.target.record.fields))
+            http.finish(try! self.pageData([]))
+        };defer{PublicationHTTP.handler=nil}
+        let page=try await backend.pageAudio(account:account,target:value.publication.target,after:position,origin:origin,incarnation:backend.reminderSessionIncarnation)
+        XCTAssertTrue(page.items.isEmpty);XCTAssertNil(page.next)
+        do {_ = try await backend.pageAudio(account:account,target:.init(task:UUID(),generation:UUID(),project:nil),after:position,origin:origin,incarnation:backend.reminderSessionIncarnation);XCTFail()}catch{}
+        XCTAssertEqual(calls,1)
+    }
+}

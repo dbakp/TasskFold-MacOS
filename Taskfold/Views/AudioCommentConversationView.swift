@@ -35,9 +35,10 @@ import SwiftUI
                             }.padding(.vertical, 6)
                         }
                         if controller.entries.isEmpty, !controller.working { ContentUnavailableView("No audio comments", systemImage: "waveform", description: Text("Published recordings appear here after refreshing.")) }
+                        if controller.hasMore { Button("Load more recordings", systemImage: "chevron.down") { run { await controller.loadMore() } }.disabled(controller.working).accessibilityIdentifier("audioConversationMore") }
                         if controller.working { ProgressView("Loading recording…") }
                         if let notice = controller.notice { Text(notice).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("audioConversationNotice") }
-                    } footer: { Text("This preview shows up to 20 audio comments. Playback checks access again and does not save a private draft.") }
+                    } footer: { Text("Recordings load in publication order. Playback checks access again and does not save a private draft.") }
                 }
                 if let failure { Section { Text(failure).foregroundStyle(.secondary) } }
                 if allowed { Button("Refresh recordings", systemImage: "arrow.clockwise") { reload = UUID() }.disabled(controller?.working == true) }

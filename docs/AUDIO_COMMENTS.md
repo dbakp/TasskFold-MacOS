@@ -1,6 +1,6 @@
 # Audio comments — implementation work in progress
 
-Audio comments remain an unfinished, gated Px feature. Both repos now own private recording/recovery, publication controls and a live server conversation preview. The latest verified scope is [live audio preview](audio-live-preview/README.md): 178 Core, 265 controller and 24 native/gateway/PostgreSQL checks per repo. Native UI/runtime, full pagination, shared/read-only conversation integration, real hosted provider/custody and genuine audio remain open. No ordinary flag is enabled or hosted migration deployed by this checkpoint. Earlier sections and counts are historical checkpoints.
+Audio comments remain an unfinished, gated Px feature. Both repos now own private recording/recovery, publication controls and a live server conversation preview. The latest verified scope is [paged audio conversations](audio-pagination/README.md): 180 Core, 271 controller, 20 gateway, 25 database/page and 24 native/gateway/PostgreSQL checks per repo. Native UI/runtime, shared/read-only conversation integration, real hosted provider/custody and genuine audio remain open. No ordinary flag is enabled or hosted migration deployed by this checkpoint. Earlier sections and counts are historical checkpoints.
 
 ## Current source
 
@@ -611,3 +611,19 @@ the coordinator foundation, not private delivery, audio comments or the Px goal.
 
 [Evidence and limits](audio-live-preview/README.md). Native compilation does not
 establish visual/spoken/runtime acceptance or complete the audio/Px feature.
+
+
+## 2026-10-28 — paged audio conversations
+
+- [x] Add service-only, live-authorized keyset pages with exact timestamp/ID cursors;
+  preserve order across tied timestamps, microseconds and removal of a cursor row.
+- [x] Add native Load more, retry without losing loaded rows/position, terminal
+  stopping and context-bound cursor clearing. Legacy list responses stay compatible.
+- [x] Raise retained task count to 100 while preserving independent author/byte
+  quotas. Independently pass 180 Core, 271 controller, 20 gateway, 25 database/page
+  and 24 native integration checks; database advisors show no added findings.
+- [ ] Shared/read-only admission and text-conversation integration; native UI/runtime/
+  accessibility and real hosted provider/custody acceptance. Ordinary flags remain off.
+
+[Evidence and limits](audio-pagination/README.md). Pagination implementation closes
+the 20-comment preview gap; the full audio/Px objective remains open.

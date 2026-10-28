@@ -122,12 +122,12 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
 - [ ] Audio comments remain gated. Implemented: private recording/recovery/library
-  and portable backups; durable publication/retry; authenticated live metadata,
+  and portable backups; durable publication/retry; authenticated paged live metadata,
   native verified download/play and explicit removal in a personal-root preview.
-  Latest checks per repo: 178 Core, 265 controller and 24 native/gateway/PostgreSQL.
-  Pending: full pagination (preview capped at 20), shared/read-only integration,
+  Latest checks per repo: 180 Core, 271 controller, 20 gateway, 25 database/page and
+  24 native/gateway/PostgreSQL. Pending: shared/read-only integration,
   native UI/spoken acceptance, unknown-upload/legacy-history recovery, hosted
-  custody/provider and genuine audio acceptance. See [current evidence](audio-live-preview/README.md)
+  custody/provider and genuine audio acceptance. See [current evidence](audio-pagination/README.md)
   and [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
 - [ ] Inbound email provider/domain configuration and genuine delivery — prepare
   only until the user supplies configuration.
@@ -762,3 +762,19 @@ orphan-review/retention gap, with native acceptance and the overall Px goal open
 
 [Evidence and limits](audio-live-preview/README.md). Native compilation does not
 establish visual/spoken/runtime acceptance or complete the audio/Px feature.
+
+
+## 2026-10-28 — paged audio conversations
+
+- [x] Add service-only, live-authorized keyset pages with exact timestamp/ID cursors;
+  preserve order across tied timestamps, microseconds and removal of a cursor row.
+- [x] Add native Load more, retry without losing loaded rows/position, terminal
+  stopping and context-bound cursor clearing. Legacy list responses stay compatible.
+- [x] Raise retained task count to 100 while preserving independent author/byte
+  quotas. Independently pass 180 Core, 271 controller, 20 gateway, 25 database/page
+  and 24 native integration checks; database advisors show no added findings.
+- [ ] Shared/read-only admission and text-conversation integration; native UI/runtime/
+  accessibility and real hosted provider/custody acceptance. Ordinary flags remain off.
+
+[Evidence and limits](audio-pagination/README.md). Pagination implementation closes
+the 20-comment preview gap; the full audio/Px objective remains open.

@@ -4,7 +4,7 @@ Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Private audio now has independently owned gated publication/recovery and a live conversation preview in both apps. Authenticated list, verified native download/play and explicit removal pass 178 Core, 265 controller and 24 native/gateway/PostgreSQL checks per repo, including retry after a lost removal reply. The preview is capped by the current server's 20-comment list; pagination, shared/read-only integration, native runtime/accessibility, hosted custody/provider and remaining recovery acceptance stay open. Ordinary flags remain off and genuine audio stays deferred. See [current checkpoint](audio-live-preview/README.md). Earlier dated checkpoint counts below are historical.
+Private audio now supports authenticated keyset pages and native Load more across the retained conversation, with a 100-recording task count cap and existing byte/author quotas. Each repo passes 180 Core, 271 controller, 20 gateway, 25 actual database/page and 24 native/gateway/PostgreSQL checks; advisors show no added findings. Shared/read-only admission, native runtime/accessibility, hosted custody/provider and remaining recovery acceptance stay open. Ordinary flags remain off and genuine audio stays deferred. See [current checkpoint](audio-pagination/README.md). Earlier dated checkpoint counts below are historical.
 
 Private audio now connects to saved personal-root task editors/inspectors, including Inbox, behind an absent normal exposure flag. Live Store access, owner, task/project/generation and server origin bind each request; app/server/account storage stays private and outside task exports. Both repos pass 123 Core cases and 170 controller checks; two final native cases per iPhone/iPad pass without reported runtime warnings, preserving task bytes and verifying cold return plus fixture reset isolation. Shared/child/cloud runtime and full lifecycle remain open. See [task-editor integration](audio-task-editor/README.md).
 
@@ -6865,3 +6865,19 @@ orphan-review/retention gap, with native acceptance and the overall Px goal open
 
 [Evidence and limits](audio-live-preview/README.md). Native compilation does not
 establish visual/spoken/runtime acceptance or complete the audio/Px feature.
+
+
+## 2026-10-28 — paged audio conversations
+
+- [x] Add service-only, live-authorized keyset pages with exact timestamp/ID cursors;
+  preserve order across tied timestamps, microseconds and removal of a cursor row.
+- [x] Add native Load more, retry without losing loaded rows/position, terminal
+  stopping and context-bound cursor clearing. Legacy list responses stay compatible.
+- [x] Raise retained task count to 100 while preserving independent author/byte
+  quotas. Independently pass 180 Core, 271 controller, 20 gateway, 25 database/page
+  and 24 native integration checks; database advisors show no added findings.
+- [ ] Shared/read-only admission and text-conversation integration; native UI/runtime/
+  accessibility and real hosted provider/custody acceptance. Ordinary flags remain off.
+
+[Evidence and limits](audio-pagination/README.md). Pagination implementation closes
+the 20-comment preview gap; the full audio/Px objective remains open.
