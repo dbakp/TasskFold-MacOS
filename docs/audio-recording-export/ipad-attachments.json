@@ -1,0 +1,62 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "F7CFE658-A1E7-4150-AE0F-597C979F2DFA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Private recording and portable backup survive a cold return_0_5BE0E33E-CF9E-4085-A943-5DE2FC413C23.png",
+        "timestamp" : 1793191387.235
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "1F7916B5-64BA-437B-B69B-D8F8DCED7F80.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Native recording backup Save confirms delivery without changing source_0_00E2AE0D-6F99-4481-B0B7-8124E60C1AAC.png",
+        "timestamp" : 1793191338.241
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "B1933D7E-8654-4E1F-AEC0-96AB9B13B9C2.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Portable recording delivered by native Files Save_0_34DFAD58-005E-4C19-9936-C3736C196469.json",
+        "timestamp" : 1793191335.896
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "8624AD49-DAB9-40CA-94A5-4DBFD3D3D248.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Recording backup uses the observed local Files destination_0_66A0CAE7-7604-4A3D-9197-F366B01F6BC6.png",
+        "timestamp" : 1793191332.04
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "F8EF1F3D-EDEF-4F4C-B435-1FFB601035AC.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Recording export cancellation preserves the private recording_0_617CBC5D-19A6-47E1-9EC7-E5823715DEE0.png",
+        "timestamp" : 1793191320.324
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "74B5DCCC-92A9-4481-B46B-505882645AFE.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Recording backup candidate at largest dark text_0_D8EA456E-0AA9-436F-BE2C-E81C883D7C96.png",
+        "timestamp" : 1793191301.818
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testRecordingBackupCancelSaveReadbackAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testRecordingBackupCancelSaveReadbackAndColdReturn"
+  }
+]

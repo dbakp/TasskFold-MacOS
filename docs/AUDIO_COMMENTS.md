@@ -516,3 +516,31 @@ not a completed library feature or completion of audio comments/the Px objective
 
 [Evidence, captures and exact scope](audio-saved-library-ui/README.md). This is a
 verified gated candidate, not completion of audio comments or the full Px goal.
+
+
+## 2026-10-28 — portable recording backup export candidate
+
+- [x] Add explicit native Save export for a saved recording's exact audio/caption
+  and descriptor, without structural task/account/server links. Normal audio
+  exposure remains off; the JSON copy is unencrypted at its chosen destination.
+- [x] Recheck exact private source and live permission at provider byte release;
+  revoke on Cancel, new selection/export, manual refresh, Close or scope loss.
+  Preserve an explicitly requested Save through picker focus/foreground return.
+- [x] 141 Core cases and 211 actual controller/codec/vault checks pass separately
+  in both repos; both native builds and strict development signatures pass.
+  The maximum-size regression fails before the slash-escaping correction.
+- [x] Final iPhone/iPad Simulator: one actual native case each, no failures/skips
+  or reported runtime warnings, at dark Accessibility XXXL. After removing the
+  synthetic task: Cancel, observed local Files Save/readback, full media/caption/
+  descriptor preservation, fresh-selection feedback and cold return pass without
+  recreating the task. All ten final stage captures were inspected.
+- [x] Both delivered device files independently pass each repo's Core parser and
+  full native AAC decoder (four file/decoder combinations); exact bytes/caption
+  and integrity/duration metadata are recorded without playing sound.
+- [ ] Import/review UI, bulk workspace/media backups, account-removal custody,
+  unfinished orphan recovery, actual Mac Save interaction, cloud/physical/spoken
+  acceptance and private server delivery remain open. Genuine audio testing
+  stays deferred by the user; previously tabled rollout work remains tabled.
+
+[Evidence and exact scope](audio-recording-export/README.md). This advances backup
+custody; it does not complete audio comments or the overall Px objective.

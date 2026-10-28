@@ -1,4 +1,6 @@
 import SwiftUI
+import CoreTransferable
+import UniformTypeIdentifiers
 import AppKit
 
 @MainActor struct AudioCommentDraftView: View {
@@ -415,7 +417,7 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
         .onChange(of: current) { _, _ in controller?.contextChanged() }
         .onChange(of: scenePhase) { _, phase in
             controller?.setActive(phase == .active)
-            if phase == .active, current { Task { await controller?.refresh() } }
+            if phase == .active, current { Task { await controller?.refresh(preservingExports: true) } }
         }
         .onDisappear { controller?.close() }
     }
@@ -428,6 +430,8 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
 }
 
 @MainActor private struct AudioSavedLibraryContent: View {
+    @State private var exportItem: AudioRecordingTransfer?
+    @State private var exportStatus: String?
     let controller: AudioCommentLibraryController
     let taskLabel: (AudioCommentTarget) -> (title: String, location: AudioCommentSavedLibrary.TaskLocation)?
     @AccessibilityFocusState(for: .voiceOver) private var captionFocused: Bool
@@ -443,7 +447,15 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
                     Button(controller.playing ? "Stop playback" : "Play recording", systemImage: controller.playing ? "stop.fill" : "play.fill") {
                         if controller.playing { controller.stopPlayback() } else { Task { await controller.play() } }
                     }.disabled(controller.working).accessibilityIdentifier("audioLibraryPlay")
-                    Button("Back to recordings") { controller.clearSelection() }.accessibilityIdentifier("audioLibraryBack")
+                    Button("Export recording backup…", systemImage: "square.and.arrow.up") {
+                        exportStatus = nil
+                        Task {
+                            do { exportItem = AudioRecordingTransfer(permit: try await controller.prepareExport()) }
+                            catch { if controller.isCurrent, !(error is CancellationError) { exportStatus = error.localizedDescription } }
+                        }
+                    }.disabled(controller.working || exportItem != nil).accessibilityIdentifier("audioLibraryExport")
+                    Text("Includes audio and caption. Task and account links are left out.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Button("Back to recordings") { invalidateExport(); controller.clearSelection() }.disabled(exportItem != nil).accessibilityIdentifier("audioLibraryBack")
                 } header: { Text("Saved recording") } footer: {
                     Text("Your recording is kept independently of changes to its original task.")
                 }
@@ -474,10 +486,38 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
                     }.accessibilityIdentifier("audioLibraryRecoveryNotice")
                 }
             }
-            if controller.working { Section { ProgressView("Opening recording…").accessibilityIdentifier("audioLibraryProgress") } }
+            if controller.working { Section { ProgressView("Preparing…").accessibilityIdentifier("audioLibraryProgress") } }
+            if let exportStatus { Section { Text(exportStatus).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioLibraryExportStatus") } }
             if let notice = controller.notice { Section { Text(notice).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioLibraryNotice") } }
         }.formStyle(.grouped).accessibilityIdentifier("audioLibraryForm")
-            .onChange(of: controller.selected?.id) { _, value in captionFocused = value != nil }
+            .onChange(of: controller.selected?.id) { _, value in
+                captionFocused = value != nil
+                if value != nil { exportStatus = nil }
+            }
+            .onChange(of: controller.isCurrent) { _, value in if !value { invalidateExport(); exportStatus = nil } }
+            .onDisappear { invalidateExport() }
+            .background { exportPresenter }
+    }
+    private func invalidateExport() { exportItem?.permit.invalidate(); exportItem = nil }
+    @ViewBuilder private var exportPresenter: some View {
+        if let item = exportItem {
+            AudioRecordingSavePresenter(item: item) { id, result in
+                guard exportItem?.id == id else { return }
+                defer { invalidateExport() }
+                guard item.permit.isAllowed else { return }
+                switch result {
+                case .some(.success(let url)):
+                    #if DEBUG
+                    AudioCommentNativeFixture.recordExportResult(url, request: id)
+                    #endif
+                    exportStatus = "Recording backup saved."
+                case .some(.failure(let error)):
+                    let value = error as NSError
+                    exportStatus = value.domain == NSCocoaErrorDomain && value.code == NSUserCancelledError ? "Export cancelled." : error.localizedDescription
+                case .none: exportStatus = "Export cancelled."
+                }
+            }.id(item.id)
+        }
     }
     @ViewBuilder private func taskDescription(_ target: AudioCommentTarget) -> some View {
         if let label = taskLabel(target) {
@@ -492,5 +532,26 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
     private func duration(_ draft: AudioCommentSavedDraft) -> String {
         let seconds = max(1, (draft.clip.descriptor.milliseconds + 999) / 1000)
         return String(format: "%d:%02d", seconds / 60, seconds % 60)
+    }
+}
+
+private struct AudioRecordingTransfer: Transferable, Identifiable, Sendable {
+    let id = UUID()
+    let permit: AudioCommentRecordingExport
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(exportedContentType: .json) { item in try await item.permit.release() }
+            .suggestedFileName("Taskfold-recording.json")
+    }
+}
+@MainActor private struct AudioRecordingSavePresenter: View {
+    let item: AudioRecordingTransfer
+    let finish: (UUID, Result<URL, Error>?) -> Void
+    @State private var showing = false
+    var body: some View {
+        Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity).allowsHitTesting(false)
+            .fileExporter(isPresented: $showing, item: item, contentTypes: [.json], defaultFilename: "Taskfold-recording",
+                          onCompletion: { finish(item.id, $0) }, onCancellation: { finish(item.id, nil) })
+            .task { showing = true }
+            .onDisappear { item.permit.invalidate() }
     }
 }

@@ -261,3 +261,72 @@ final class AudioCommentTests: XCTestCase {
     }
 
 }
+
+extension AudioCommentTests {
+    func testPortableRecordingKeepsExactCaptionAndAudioWithoutSourceIdentity() throws {
+        let clip = try AudioCommentClip(data: fixture()), caption = "Keep cafe\u{301} 🪴\nhttps://example.invalid/a?b=c\nLiteral /private/path"
+        let value = try AudioCommentPortableRecording(caption: caption, clip: clip), bytes = try value.encoded()
+        let object = try XCTUnwrap(try JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        XCTAssertEqual(Set(object.keys), ["format", "caption", "descriptor", "audio_base64"])
+        let restored = try AudioCommentPortableRecording(encoded: bytes)
+        XCTAssertTrue(restored.caption.utf8.elementsEqual(caption.utf8))
+        XCTAssertEqual(restored.clip.data, clip.data); XCTAssertEqual(restored.clip.descriptor, clip.descriptor)
+        XCTAssertEqual(try restored.encoded(), bytes)
+    }
+    func testPortableRecordingRejectsForeignFormatsExtraFieldsAndWrongTypes() throws {
+        let clip = try AudioCommentClip(data: fixture())
+        let bytes = try AudioCommentPortableRecording(caption: "Original", clip: clip).encoded()
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        for (key, value) in [("format", "taskfold-workspace-v1" as Any), ("account", "other-owner" as Any), ("caption", 12 as Any), ("descriptor", "https://example.invalid/audio" as Any), ("audio_base64", ["url":"file:///private/audio.m4a"] as Any)] {
+            var changed = root; changed[key] = value
+            XCTAssertThrowsError(try AudioCommentPortableRecording(encoded: JSONSerialization.data(withJSONObject: changed)), key)
+        }
+        for key in root.keys {
+            var changed = root; changed.removeValue(forKey: key)
+            XCTAssertThrowsError(try AudioCommentPortableRecording(encoded: JSONSerialization.data(withJSONObject: changed)), key)
+        }
+    }
+    func testPortableRecordingRejectsMalformedBase64DigestMismatchAndTruncatedAudio() throws {
+        let clip = try AudioCommentClip(data: fixture())
+        let bytes = try AudioCommentPortableRecording(caption: "Original", clip: clip).encoded()
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+        for audio in ["%%%", "", Data(clip.data.dropLast(8)).base64EncodedString()] {
+            var changed = root; changed["audio_base64"] = audio
+            XCTAssertThrowsError(try AudioCommentPortableRecording(encoded: JSONSerialization.data(withJSONObject: changed)))
+        }
+        var changed = root, descriptor = try XCTUnwrap(root["descriptor"] as? [String: Any])
+        descriptor["sha256"] = String(repeating: "0", count: 64); changed["descriptor"] = descriptor
+        XCTAssertThrowsError(try AudioCommentPortableRecording(encoded: JSONSerialization.data(withJSONObject: changed)))
+    }
+    func testPortableRecordingBoundsFileAndCaptionBeforeAdmission() throws {
+        let clip = try AudioCommentClip(data: fixture())
+        XCTAssertThrowsError(try AudioCommentPortableRecording(caption: String(repeating: "a", count: 4001), clip: clip))
+        XCTAssertThrowsError(try AudioCommentPortableRecording(caption: "Hidden\0suffix", clip: clip))
+        XCTAssertThrowsError(try AudioCommentPortableRecording(encoded: Data()))
+        XCTAssertThrowsError(try AudioCommentPortableRecording(encoded: Data(repeating: 32, count: AudioCommentPortableRecording.maximumFileBytes + 1)))
+        let escaped = String(repeating: "\u{0001}", count: 4000)
+        let portable = try AudioCommentPortableRecording(caption: escaped, clip: clip)
+        XCTAssertTrue(try AudioCommentPortableRecording(encoded: portable.encoded()).caption.utf8.elementsEqual(escaped.utf8))
+    }
+
+    func testPortableRecordingAcceptsMaximumClipAndEscapedCaptionWithinFileBudget() throws {
+        var data = try fixture()
+        let padding = AudioCommentDescriptor.maximumBytes - data.count, length = UInt32(padding)
+        XCTAssertGreaterThan(padding, 8)
+        data.append(contentsOf: [UInt8((length >> 24) & 255), UInt8((length >> 16) & 255), UInt8((length >> 8) & 255), UInt8(length & 255)])
+        data.append(Data("free".utf8)); data.append(Data(repeating: 255, count: padding - 8))
+        let clip = try AudioCommentClip(data: data), caption = String(repeating: "\u{0001}", count: 4000)
+        let portable = try AudioCommentPortableRecording(caption: caption, clip: clip), encoded = try portable.encoded()
+        XCTAssertEqual(data.count, AudioCommentDescriptor.maximumBytes)
+        XCTAssertLessThanOrEqual(encoded.count, AudioCommentPortableRecording.maximumFileBytes)
+        let decoded = try AudioCommentPortableRecording(encoded: encoded)
+        XCTAssertEqual(decoded.clip.data, data); XCTAssertEqual(decoded.clip.descriptor, clip.descriptor)
+        XCTAssertTrue(decoded.caption.utf8.elementsEqual(caption.utf8))
+    }
+    func testPortableRecordingDoesNotNormalizeCanonicallyEquivalentCaptions() throws {
+        let clip = try AudioCommentClip(data: fixture())
+        let a = try AudioCommentPortableRecording(caption: "café", clip: clip), b = try AudioCommentPortableRecording(caption: "cafe\u{301}", clip: clip)
+        XCTAssertNotEqual(try a.encoded(), try b.encoded())
+        XCTAssertTrue(try AudioCommentPortableRecording(encoded: b.encoded()).caption.utf8.elementsEqual(b.caption.utf8))
+    }
+}

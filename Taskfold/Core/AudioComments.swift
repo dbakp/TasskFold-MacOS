@@ -245,3 +245,34 @@ enum AudioCommentTaskAdmission {
         return "origin-v1-" + SHA256.hash(data: Data(origin.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 }
+
+/// Portable, account-free copy. Decoding admits bounded container/integrity data;
+/// a consumer must still fully decode AAC before playback or importing a draft.
+struct AudioCommentPortableRecording: Sendable {
+    static let format = "taskfold-recording-backup-v1"
+    static let maximumFileBytes = ((AudioCommentDescriptor.maximumBytes + 2) / 3) * 4 + 40_000
+    let caption: String
+    let clip: AudioCommentClip
+    init(caption: String, clip: AudioCommentClip) throws {
+        try AudioCommentPublication.validateCaption(caption)
+        self.caption = caption; self.clip = clip
+    }
+    func encoded() throws -> Data {
+        let value = Record(["format": .string(Self.format), "caption": .string(caption),
+                            "descriptor": .object(clip.descriptor.record.fields), "audio_base64": .string(clip.data.base64EncodedString())])
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let data = try encoder.encode(value)
+        guard data.count <= Self.maximumFileBytes else { throw AudioCommentFailure.invalid }
+        return data
+    }
+    init(encoded data: Data) throws {
+        guard !data.isEmpty, data.count <= Self.maximumFileBytes else { throw AudioCommentFailure.invalid }
+        let value = try JSONDecoder().decode(Record.self, from: data)
+        guard Set(value.fields.keys) == ["format", "caption", "descriptor", "audio_base64"],
+              value["format"] == .string(Self.format), case .string(let caption) = value["caption"],
+              case .object(let descriptor) = value["descriptor"], case .string(let audio) = value["audio_base64"],
+              audio.utf8.count <= ((AudioCommentDescriptor.maximumBytes + 2) / 3) * 4,
+              let bytes = Data(base64Encoded: audio) else { throw AudioCommentFailure.invalid }
+        try self.init(caption: caption, clip: .init(restoring: bytes, descriptor: .init(record: Record(descriptor))))
+    }
+}

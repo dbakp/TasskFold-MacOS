@@ -741,8 +741,31 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
 }
 
 
-/// Read-only private library. A selection keeps its original task identity and
-/// cannot Save, retarget, discard, publish, repair or export a recording.
+/// A system provider can ask for bytes long after the Save button was tapped.
+/// This permit survives the picker taking focus, but not presentation revocation,
+/// a new export/selection, a source revision change, or account/realm departure.
+@MainActor final class AudioCommentRecordingExport {
+    private var bytes: Data?
+    private var source: AudioCommentSavedDraft?
+    private let storage: AudioCommentDraftStorage
+    private let allowed: @MainActor () -> Bool
+    init(bytes: Data, source: AudioCommentSavedDraft, storage: AudioCommentDraftStorage, allowed: @escaping @MainActor () -> Bool) {
+        self.bytes = bytes; self.source = source; self.storage = storage; self.allowed = allowed
+    }
+    var isAllowed: Bool { bytes != nil && source != nil && allowed() }
+    func invalidate() { bytes = nil; source = nil }
+    func release() async throws -> Data {
+        try Task.checkCancellation()
+        guard let bytes, let source, isAllowed else { throw AudioCommentFailure(message: "This recording or workspace changed. Reopen the recording before exporting.") }
+        _ = try await storage.savedLibraryRecording(source)
+        try Task.checkCancellation()
+        guard isAllowed else { throw AudioCommentFailure(message: "This recording or workspace changed. Reopen the recording before exporting.") }
+        return bytes
+    }
+}
+
+/// Saved private library. It can explicitly export an account-free backup; it
+/// cannot Save, retarget, discard, publish or repair a recording.
 @MainActor @Observable final class AudioCommentLibraryController {
     private final class WeakLibrary { weak var value: AudioCommentLibraryController?; init(_ value: AudioCommentLibraryController) { self.value = value } }
     @ObservationIgnored private static var live: [UUID: WeakLibrary] = [:]
@@ -759,6 +782,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     @ObservationIgnored private let decode: @Sendable (Data) async throws -> AudioCommentClip
     @ObservationIgnored private var validated: AudioCommentClip?
     @ObservationIgnored private var operation = UUID()
+    @ObservationIgnored private var exportGeneration = UUID()
     @ObservationIgnored private var closed = false
     @ObservationIgnored private var active = true
     init(scope: AudioCommentLibraryScope, storage: AudioCommentDraftStorage, player: any AudioCommentPlaying, decode: @escaping @Sendable (Data) async throws -> AudioCommentClip = { try await AudioCommentDecoding.validate($0) }) {
@@ -770,14 +794,14 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     private func accepts(_ token: UUID) -> Bool { token == operation && active && isCurrent && !Task.isCancelled }
     private func invalidate() { operation = UUID(); working = false; player.stop(); playing = false }
     func stopPlayback() { invalidate() }
-    func clearSelection() { invalidate(); selected = nil; validated = nil }
+    func clearSelection(revokeExports: Bool = true) { invalidate(); if revokeExports { exportGeneration = UUID() }; selected = nil; validated = nil }
     func close() { clearSelection(); library = nil; notice = nil; closed = true; Self.live.removeValue(forKey: lifecycleID) }
     func contextChanged() { if !isCurrent { close() } }
-    func setActive(_ value: Bool) { active = value; if !value { clearSelection() } }
+    func setActive(_ value: Bool) { active = value; if !value { clearSelection(revokeExports: false) } }
     static func stopForInactivity() { for value in live.values.compactMap(\.value) { value.setActive(false) } }
-    func refresh() async {
+    func refresh(preservingExports: Bool = false) async {
         guard active, isCurrent else { contextChanged(); return }
-        clearSelection(); library = nil; notice = nil; working = true
+        clearSelection(revokeExports: !preservingExports); library = nil; notice = nil; working = true
         let token = operation
         defer { if token == operation { working = false } }
         do {
@@ -804,6 +828,31 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             guard accepts(token) else { contextChanged(); return }
             validated = clip; selected = source
         } catch { if accepts(token) { notice = error.localizedDescription } else { contextChanged() } }
+    }
+    func prepareExport() async throws -> AudioCommentRecordingExport {
+        guard active, isCurrent, !working, let selected, let clip = validated, clip.data == selected.clip.data else { throw AudioCommentFailure.changed }
+        invalidate(); exportGeneration = UUID(); working = true; notice = nil
+        let token = operation, authorization = exportGeneration
+        defer { if token == operation { working = false } }
+        do {
+            _ = try await storage.savedLibraryRecording(selected)
+            guard accepts(token), self.selected == selected else { throw CancellationError() }
+            let worker = Task.detached(priority: .utility) {
+                try Task.checkCancellation()
+                let bytes = try AudioCommentPortableRecording(caption: selected.caption, clip: selected.clip).encoded()
+                try Task.checkCancellation(); return bytes
+            }
+            let bytes = try await withTaskCancellationHandler(operation: { try await worker.value }, onCancel: { worker.cancel() })
+            guard accepts(token), self.selected == selected else { throw CancellationError() }
+            _ = try await storage.savedLibraryRecording(selected)
+            guard accepts(token), self.selected == selected else { throw CancellationError() }
+            return AudioCommentRecordingExport(bytes: bytes, source: selected, storage: storage, allowed: { [weak self] in
+                guard let self else { return false }; return self.isCurrent && self.exportGeneration == authorization
+            })
+        } catch {
+            if isCurrent, token == operation { clearSelection() } else { contextChanged() }
+            throw error
+        }
     }
     func play() async {
         guard active, isCurrent, !working, let selected, let clip = validated else { contextChanged(); return }

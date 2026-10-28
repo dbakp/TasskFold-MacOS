@@ -9,6 +9,16 @@ import Darwin
     static var taskEditorTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-task-editor-testing") }
     static func taskEditorRecorder() -> any AudioCommentRecording { AudioCommentFixtureRecording() }
     static func taskEditorPlayer() -> any AudioCommentPlaying { AudioCommentFixturePlaying() }
+    static func recordExportResult(_ url: URL, request: UUID) {
+        guard taskEditorTesting, ProcessInfo.processInfo.arguments.contains("--audio-library-export-testing"), url.isFileURL else { return }
+        let directory = URL.applicationSupportDirectory.appendingPathComponent("Taskfold", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let data = try JSONSerialization.data(withJSONObject: ["url": url.absoluteString, "format": AudioCommentPortableRecording.format, "request": request.uuidString.lowercased()], options: [.sortedKeys])
+            try data.write(to: directory.appendingPathComponent("audio-recording-export-proof.json"), options: .atomic)
+        } catch { assertionFailure("Synthetic recording export receipt could not be written") }
+    }
+
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldAudioNative", isDirectory: true) }
     private static var lookupLocks: [String: AudioCommentFixtureLookupLock] = [:]
     static var removedSaveTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-external-discard") }

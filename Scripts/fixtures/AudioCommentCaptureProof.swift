@@ -148,6 +148,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
             if bound { c.currentScope = { context.scope } }; return c
         }
         checks.merge(try await libraryChecks(root: root, data: data, request: request)) { _, new in new }
+        checks.merge(try await portableExportChecks(root: root, data: data, request: request)) { _, new in new }
         checks.merge(try await departureChecks(root:root,data:data,request:request,context:context)) { _, new in new }
         checks.merge(try await interruptedChecks(root: root, data: data, request: request)) { _, new in new }
         checks.merge(try await interruptedCopyChecks(root: root, data: data, request: request)) { _, new in new }
@@ -1237,6 +1238,82 @@ extension AudioControllerProof {
         checks["libraryCanReopenAfterTheActualBackgroundPreservationHook"] = active.playing && active.selected == newer
         context.scope = nil; active.contextChanged()
         checks["libraryDepartureClosesPreviewWithoutDeletingSavedBytes"] = try !active.isCurrent && active.library == nil && active.selected == nil && !active.playing && vault.drafts() == [newer]
+        return checks
+    }
+}
+
+extension AudioControllerProof {
+    @MainActor private static func portableExportChecks(root: URL, data: Data, request: AudioCommentDraftRequest) async throws -> [String: Bool] {
+        let scope = AudioCommentLibraryScope(workspace: request.scope.workspace, origin: "https://export.example.invalid")
+        let folder = root.appendingPathComponent("portable-recording-export", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let owner = try AudioCommentOwner(scope.workspace.account), vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+        let source = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "Keep cafe\u{301} 🪴\nLiteral https://example.invalid/review", clip: .init(data: data))
+        try vault.save(source)
+        let storage = AudioCommentDraftStorage(vault: vault), context = AudioLibraryProofContext(scope)
+        func make() -> AudioCommentLibraryController {
+            let value = AudioCommentLibraryController(scope: scope, storage: storage, player: AudioLibraryProofPlayer())
+            value.currentScope = { context.scope }; return value
+        }
+        func refused(_ permit: AudioCommentRecordingExport) async -> Bool {
+            do { _ = try await permit.release(); return false } catch { return true }
+        }
+        var checks: [String: Bool] = [:]
+        let value = make(); await value.refresh()
+        do { _ = try await value.prepareExport(); checks["unselectedLibraryCannotPrepareRecordingExport"] = false }
+        catch { checks["unselectedLibraryCannotPrepareRecordingExport"] = true }
+        await value.select(source)
+        let first = try await value.prepareExport(), bytes = try await first.release()
+        let portable = try AudioCommentPortableRecording(encoded: bytes)
+        checks["recordingExportKeepsExactCaptionAudioAndOriginalDescriptor"] = portable.caption.utf8.elementsEqual(source.caption.utf8) && portable.clip.data == data && portable.clip.descriptor == source.clip.descriptor
+        checks["recordingProviderRetryReturnsByteIdenticalPortableCopy"] = try await first.release() == bytes
+        let object = try JSONDecoder().decode(Record.self, from: bytes)
+        checks["portableExportCarriesNoSourceTaskAccountOrServerFields"] = Set(object.fields.keys) == ["format", "caption", "descriptor", "audio_base64"]
+        value.setActive(false)
+        checks["explicitExportSurvivesPickerFocusWithoutKeepingAnAudioPreview"] = try await first.release() == bytes && value.selected == nil && !value.playing
+        value.setActive(true); await value.refresh(preservingExports: true)
+        checks["foregroundRefreshDoesNotRevokeAnOutstandingExplicitSave"] = try await first.release() == bytes
+        await value.select(source)
+        checks["newLibrarySelectionRevokesOlderProviderPermission"] = await refused(first)
+        let cancelled = try await value.prepareExport(); cancelled.invalidate()
+        checks["cancelledRecordingSaveRejectsLateProviderRequests"] = await refused(cancelled) && !cancelled.isAllowed
+        let again = try await value.prepareExport()
+        checks["cancelDoesNotPreventAFreshExplicitRecordingExport"] = try await again.release() == bytes
+        let latest = try await value.prepareExport()
+        let oldRefused = await refused(again), latestBytes = try await latest.release()
+        checks["newExportRevokesAnOlderOutstandingProviderItem"] = oldRefused && latestBytes == bytes
+        value.clearSelection()
+        checks["leavingSelectedRecordingRevokesPreparedOutput"] = await refused(latest)
+        await value.select(source); let refreshed = try await value.prepareExport(); await value.refresh()
+        checks["manualLibraryRefreshRevokesAnOldOutput"] = await refused(refreshed)
+        await value.select(source); let editedPermit = try await value.prepareExport()
+        let edited = try source.replacing(caption: "Edited after export preparation", clip: source.clip)
+        try vault.save(edited, replacing: source.revision)
+        checks["providerHandoffRejectsAnEditedSourceRevision"] = await refused(editedPermit)
+        await value.refresh(); await value.select(edited)
+        let pendingPermit = try await value.prepareExport(), next = try edited.replacing(caption: "Pending replacement", clip: edited.clip)
+        let intent = try AudioCommentSaveIntent(next: next, base: edited.revision, reviews: [])
+        try vault.prepareSave(intent, fence: vault.departureFence())
+        checks["providerHandoffRefusesASourceCoveredByAnUnfinishedSave"] = await refused(pendingPermit)
+        _ = try vault.commitSave(intent)
+        await value.refresh(); await value.select(next)
+        let switched = try await value.prepareExport()
+        context.scope = .init(workspace: scope.workspace, origin: "https://another.example.invalid")
+        checks["providerHandoffRejectsAnotherServerWithTheSameAccount"] = await refused(switched)
+        value.contextChanged(); context.scope = scope
+        checks["returningToAnOldScopeCannotReviveAClosedExport"] = await refused(switched) && !switched.isAllowed
+        let closing = make(); await closing.refresh(); await closing.select(next)
+        let closed = try await closing.prepareExport(); closing.close()
+        checks["closingLibraryRevokesOutstandingRecordingBytes"] = await refused(closed)
+        var allowed = true
+        let boundary = AudioCommentRecordingExport(bytes: bytes, source: next, storage: storage, allowed: { let result = allowed; allowed = false; return result })
+        checks["providerRechecksLivePermissionAfterItsStorageAwait"] = await refused(boundary)
+        let cancelledValue = make(); await cancelledValue.refresh(); await cancelledValue.select(next)
+        let task = Task { try await cancelledValue.prepareExport() }; task.cancel()
+        do { _ = try await task.value; checks["cancelledExportPreparationCannotReturnAProviderPermit"] = false }
+        catch { checks["cancelledExportPreparationCannotReturnAProviderPermit"] = true }
+        cancelledValue.close()
+        checks["allRecordingExportActionsPreserveTheCurrentPrivateSource"] = try vault.drafts() == [next] && vault.saves().isEmpty && vault.drafts(recovery: true).isEmpty
         return checks
     }
 }
