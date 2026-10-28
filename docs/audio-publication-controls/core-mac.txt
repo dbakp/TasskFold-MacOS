@@ -1,0 +1,346 @@
+Test Suite 'Selected tests' started at 2026-10-28 18:53:42.267.
+Test Suite 'TaskfoldCoreTests.xctest' started at 2026-10-28 18:53:42.268.
+Test Suite 'AudioCommentPublishingTests' started at 2026-10-28 18:53:42.268.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendEchoAndPendingReceiptsRemainUnconfirmed]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendEchoAndPendingReceiptsRemainUnconfirmed]' passed (0.051 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendLateAccountResponseCannotConfirm]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendLateAccountResponseCannotConfirm]' passed (0.017 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendOversizedResponseIsBoundedAndDoesNotSettle]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendOversizedResponseIsBoundedAndDoesNotSettle]' passed (1.310 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendPublishesExactFrozenBytesThroughPrivateFixedRoute]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendPublishesExactFrozenBytesThroughPrivateFixedRoute]' passed (0.042 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendRejectsWrongServerOrSessionBeforeHTTP]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendRejectsWrongServerOrSessionBeforeHTTP]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendSanitizesFailedProviderReply]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testBackendSanitizesFailedProviderReply]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testConfirmedEarlierRevisionAllowsExplicitEditedRecording]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testConfirmedEarlierRevisionAllowsExplicitEditedRecording]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testDepartureDiscardsLatePresentationAndKeepsPendingOperation]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testDepartureDiscardsLatePresentationAndKeepsPendingOperation]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testEchoPendingWrongAuthorWrongCaptionAndExtraFieldsCannotConfirm]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testEchoPendingWrongAuthorWrongCaptionAndExtraFieldsCannotConfirm]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testFailedDurablePrepareNeverCallsTransport]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testFailedDurablePrepareNeverCallsTransport]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testFailedReceiptRenameLeavesRetryablePendingJournal]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testFailedReceiptRenameLeavesRetryablePendingJournal]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testFlowCannotPublishAnotherTargetEvenIfCallbackIsTrue]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testFlowCannotPublishAnotherTargetEvenIfCallbackIsTrue]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testLostResponseRetriesOriginalIdentityAfterNewController]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testLostResponseRetriesOriginalIdentityAfterNewController]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testMaximumRecordingWithSlashHeavyBase64StaysInsideGatewayEnvelope]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testMaximumRecordingWithSlashHeavyBase64StaysInsideGatewayEnvelope]' passed (0.070 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testNetworkStartsOnlyAfterFrozenJournalIsDurable]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testNetworkStartsOnlyAfterFrozenJournalIsDurable]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testReceiptCompactsJournalAndPreventsRepublishAfterRelaunch]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testReceiptCompactsJournalAndPreventsRepublishAfterRelaunch]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testRelaunchKeepsFrozenIdentityExactBytesAndLiteralCaption]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testRelaunchKeepsFrozenIdentityExactBytesAndLiteralCaption]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testRestoringDifferentUnconfirmedRevisionRequiresEarlierReview]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testRestoringDifferentUnconfirmedRevisionRequiresEarlierReview]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testRestoringNewReviewDoesNotPrepareOrSend]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testRestoringNewReviewDoesNotPrepareOrSend]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testRestoringPendingAndConfirmedReviewNeverSends]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testRestoringPendingAndConfirmedReviewNeverSends]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testServerAndAccountNamespacesCannotAdoptEachOthersJournal]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testServerAndAccountNamespacesCannotAdoptEachOthersJournal]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testUnconfirmedEarlierRevisionBlocksAnotherIdentity]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testUnconfirmedEarlierRevisionBlocksAnotherIdentity]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testUnknownRenameOutcomeReusesOriginalOperation]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentPublishingTests testUnknownRenameOutcomeReusesOriginalOperation]' passed (0.004 seconds).
+Test Suite 'AudioCommentPublishingTests' passed at 2026-10-28 18:53:43.858.
+	 Executed 23 tests, with 0 failures (0 unexpected) in 1.588 (1.590) seconds
+Test Suite 'AudioCommentTaskAdmissionTests' started at 2026-10-28 18:53:43.858.
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testAppIdentitiesCannotShareAPrivateAudioDirectory]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testAppIdentitiesCannotShareAPrivateAudioDirectory]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testGenerationAndProjectMovesSelectADifferentRecordingTarget]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testGenerationAndProjectMovesSelectADifferentRecordingTarget]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testInboxAndOwnedProjectTargetsPreserveTheirCompleteSource]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testInboxAndOwnedProjectTargetsPreserveTheirCompleteSource]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testLocalAndDistinctServersHaveIndependentNonPathNamespaces]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testLocalAndDistinctServersHaveIndependentNonPathNamespaces]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testMalformedLegacyForeignAndFutureTaskIdentitiesRefuse]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testMalformedLegacyForeignAndFutureTaskIdentitiesRefuse]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testMissingSharedForeignArchivedAndAmbiguousProjectsRefuse]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTaskAdmissionTests testMissingSharedForeignArchivedAndAmbiguousProjectsRefuse]' passed (0.000 seconds).
+Test Suite 'AudioCommentTaskAdmissionTests' passed at 2026-10-28 18:53:43.861.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'AudioCommentTests' started at 2026-10-28 18:53:43.861.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testCancelledDecoderDoesNotDeliverReviewedClip]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testCancelledDecoderDoesNotDeliverReviewedClip]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testCanonicalEquivalentCaptionDoesNotConfirmAnotherRawIntent]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testCanonicalEquivalentCaptionDoesNotConfirmAnotherRawIntent]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testDescriptorWireRejectsExtraFieldsFractionalValuesAndInvalidDigest]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testDescriptorWireRejectsExtraFieldsFractionalValuesAndInvalidDigest]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testEmptyOversizedAndTruncatedContainersRefuseWithoutPartialAudio]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testEmptyOversizedAndTruncatedContainersRefuseWithoutPartialAudio]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testGeneratedAACHasBoundedDurationAndExactBinaryDigest]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testGeneratedAACHasBoundedDurationAndExactBinaryDigest]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testInvalidDurationVersionZeroTimescaleAndExcessiveLengthRefuse]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testInvalidDurationVersionZeroTimescaleAndExcessiveLengthRefuse]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testLatePermissionAndRecordingCallbacksCannotCrossScope]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testLatePermissionAndRecordingCallbacksCannotCrossScope]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testLocalWorkspaceCanReviewButCannotInventCloudAccount]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testLocalWorkspaceCanReviewButCannotInventCloudAccount]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testMalformedSampleDescriptionRefusesRatherThanReadingOutsidePayload]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testMalformedSampleDescriptionRefusesRatherThanReadingOutsidePayload]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeDecoderReadsTheEntireGeneratedClipWithoutPlayback]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeDecoderReadsTheEntireGeneratedClipWithoutPlayback]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeDecoderRejectsContainerWithDamagedAACPayload]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeDecoderRejectsContainerWithDamagedAACPayload]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeTwoMinuteBoundaryAllowsAACPaddingButRejectsLongerPresentation]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testNativeTwoMinuteBoundaryAllowsAACPaddingButRejectsLongerPresentation]' passed (1.105 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testOversizedExtendedAtomAndTrailingGarbageRefuse]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testOversizedExtendedAtomAndTrailingGarbageRefuse]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingEnvelopeRefusesUnexpectedFieldsAndOversizedInput]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingEnvelopeRefusesUnexpectedFieldsAndOversizedInput]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingPublicationRefusesChangedAudioOrDescriptor]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingPublicationRefusesChangedAudioOrDescriptor]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingPublicationSurvivesRelaunchWithoutChangingIntentOrAudio]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPendingPublicationSurvivesRelaunchWithoutChangingIntentOrAudio]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingAcceptsMaximumClipAndEscapedCaptionWithinFileBudget]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingAcceptsMaximumClipAndEscapedCaptionWithinFileBudget]' passed (0.055 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingBoundsFileAndCaptionBeforeAdmission]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingBoundsFileAndCaptionBeforeAdmission]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingDoesNotNormalizeCanonicallyEquivalentCaptions]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingDoesNotNormalizeCanonicallyEquivalentCaptions]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingKeepsExactCaptionAndAudioWithoutSourceIdentity]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingKeepsExactCaptionAndAudioWithoutSourceIdentity]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingRejectsForeignFormatsExtraFieldsAndWrongTypes]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingRejectsForeignFormatsExtraFieldsAndWrongTypes]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingRejectsMalformedBase64DigestMismatchAndTruncatedAudio]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPortableRecordingRejectsMalformedBase64DigestMismatchAndTruncatedAudio]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPublicationRoundTripAndCaptionBounds]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPublicationRoundTripAndCaptionBounds]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPublishingRequiresReviewAndUnchangedScope]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testPublishingRequiresReviewAndUnchangedScope]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testReplacementFailureKeepsReviewedClipAndOldCallbackCannotOverwriteIt]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testReplacementFailureKeepsReviewedClipAndOldCallbackCannotOverwriteIt]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testRestoreIsScopeBoundAndCloseRemovesPrivateMediaAndCaption]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testRestoreIsScopeBoundAndCloseRemovesPrivateMediaAndCaption]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testTargetRequiresTaskIncarnationAndNeverAcceptsArbitraryObjectPath]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testTargetRequiresTaskIncarnationAndNeverAcceptsArbitraryObjectPath]' passed (0.000 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testUncertainRetryPreservesEveryIdentifierAndExactCaption]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testUncertainRetryPreservesEveryIdentifierAndExactCaption]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testVideoUnknownCodecDuplicateTrackAndFragmentedAudioRefuse]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentTests testVideoUnknownCodecDuplicateTrackAndFragmentedAudioRefuse]' passed (0.000 seconds).
+Test Suite 'AudioCommentTests' passed at 2026-10-28 18:53:45.055.
+	 Executed 29 tests, with 0 failures (0 unexpected) in 1.192 (1.194) seconds
+Test Suite 'AudioCommentVaultTests' started at 2026-10-28 18:53:45.055.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testActorStorageRoundTripUsesIndependentAccountAndCurrentRevision]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testActorStorageRoundTripUsesIndependentAccountAndCurrentRevision]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testAggregateByteQuotaIncludesInterruptedStagingFiles]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testAggregateByteQuotaIncludesInterruptedStagingFiles]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testAppNamespaceRefusesASymlinkWithoutReadingOrChangingItsTarget]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testAppNamespaceRefusesASymlinkWithoutReadingOrChangingItsTarget]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testAutomaticDepartureCannotReviveCompletedDiscardAcrossVaultInstances]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testAutomaticDepartureCannotReviveCompletedDiscardAcrossVaultInstances]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCancellingInterruptedCopyKeepsOriginalStageAndSavedDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCancellingInterruptedCopyKeepsOriginalStageAndSavedDraft]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCatalogDeduplicatesClonesAndTrimsOnlyExactlyCoveredCopies]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCatalogDeduplicatesClonesAndTrimsOnlyExactlyCoveredCopies]' passed (0.010 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCatalogShowsOnePendingCardInsteadOfDuplicateSavedCard]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCatalogShowsOnePendingCardInsteadOfDuplicateSavedCard]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testChangedStageCannotReplaceAnAlreadyReviewedRecovery]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testChangedStageCannotReplaceAnAlreadyReviewedRecovery]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCompleteInterruptedLocalReviewCanRecoverWithoutCloudIdentity]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCompleteInterruptedLocalReviewCanRecoverWithoutCloudIdentity]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testConflictCopyReplacesOneJournalAtomicallyAndSurvivesAnotherInterruption]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testConflictCopyReplacesOneJournalAtomicallyAndSurvivesAnotherInterruption]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testConsumedReviewCannotResurrectAfterWinningDraftIsDeleted]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testConsumedReviewCannotResurrectAfterWinningDraftIsDeleted]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptDepartureFenceRefusesAutomaticWritesWithoutHidingSavedDrafts]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptDepartureFenceRefusesAutomaticWritesWithoutHidingSavedDrafts]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptDraftIsPreservedRatherThanReplacedByAnEmptyList]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptDraftIsPreservedRatherThanReplacedByAnEmptyList]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptRecoveryRefusesWithoutHidingOrReplacingSavedDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptRecoveryRefusesWithoutHidingOrReplacingSavedDraft]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptSaveJournalRefusesWithoutReplacingExistingSavedWork]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testCorruptSaveJournalRefusesWithoutReplacingExistingSavedWork]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointDoesNotRemoveAReviewClaimedByAnExistingWinner]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointDoesNotRemoveAReviewClaimedByAnExistingWinner]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointKeepsOnlyTheExactJournalAndPreservesReview]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointKeepsOnlyTheExactJournalAndPreservesReview]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointLostAcknowledgementLeavesRecoverableAuthorization]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointLostAcknowledgementLeavesRecoverableAuthorization]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointPreservesExplicitSeparateCopyWithoutCommittingIt]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointPreservesExplicitSeparateCopyWithoutCommittingIt]' passed (0.012 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointRefusesRawChangedIntentAndForeignOwner]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureCheckpointRefusesRawChangedIntentAndForeignOwner]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureStateFenceRecoversJournalAfterRenameAcknowledgementFailure]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDepartureStateFenceRecoversJournalAfterRenameAcknowledgementFailure]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDifferentEditedReviewRequiresDeliberateDetachedCopy]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDifferentEditedReviewRequiresDeliberateDetachedCopy]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardCannotDeleteARecordingThatAlreadyCommitted]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardCannotDeleteARecordingThatAlreadyCommitted]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardingIntentSurvivesLostAcknowledgementAndRejectsStaleSave]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardingIntentSurvivesLostAcknowledgementAndRejectsStaleSave]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardRequiresCurrentRevisionAndNeverRemovesPending]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardRequiresCurrentRevisionAndNeverRemovesPending]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardUnfinishedReplacementKeepsExactEarlierSavedDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDiscardUnfinishedReplacementKeepsExactEarlierSavedDraft]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDraftRevisionPreventsLostEditsAndSilentRetargeting]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testDraftRevisionPreventsLostEditsAndSilentRetargeting]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testEntryQuotaRefusesWholeNewDraftAndRecoversAfterReviewedDiscard]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testEntryQuotaRefusesWholeNewDraftAndRecoversAfterReviewedDiscard]' passed (0.097 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardLostAcknowledgementCanRetryWithoutResurrection]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardLostAcknowledgementCanRetryWithoutResurrection]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardPreservesChangedAuthorizationAndItsReviewClaims]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardPreservesChangedAuthorizationAndItsReviewClaims]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardRefusesAStillPreparedOrSettledAuthorization]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardRefusesAStillPreparedOrSettledAuthorization]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardRefusesForeignOwnerAndBusyLockWithoutMutation]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardRefusesForeignOwnerAndBusyLockWithoutMutation]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardRemovesOnlyExactOwnReviewsAndKeepsChangedRevisions]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardRemovesOnlyExactOwnReviewsAndKeepsChangedRevisions]' passed (0.013 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardWorksAtPayloadEntryQuotaWithoutAdmittingAReplacement]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExpiredDiscardWorksAtPayloadEntryQuotaWithoutAdmittingAReplacement]' passed (0.092 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExplicitRecoveryDiscardAcceptsOnlyExactPossibleCommitAndLeavesChangedBytes]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExplicitRecoveryDiscardAcceptsOnlyExactPossibleCommitAndLeavesChangedBytes]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExplicitRecoveryDiscardNeedsNoFreeQuotaAndKeepsEverySavedDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testExplicitRecoveryDiscardNeedsNoFreeQuotaAndKeepsEverySavedDraft]' passed (0.078 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFailureBeforeRenameKeepsPriorDraftAndRemovesOnlyOwnedStage]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFailureBeforeRenameKeepsPriorDraftAndRemovesOnlyOwnedStage]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFileAndDirectoryPermissionsArePrivate]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFileAndDirectoryPermissionsArePrivate]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFullPendingQuotaCanBeFreedByDiscardWithoutAnotherEntry]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testFullPendingQuotaCanBeFreedByDiscardWithoutAnotherEntry]' passed (0.241 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testIncompleteStageRemainsRecoverableWithoutHidingTheSavedDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testIncompleteStageRemainsRecoverableWithoutHidingTheSavedDraft]' passed (0.011 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testIndependentCopyEditorsJoinTheFirstDurableStageAuthorization]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testIndependentCopyEditorsJoinTheFirstDurableStageAuthorization]' passed (0.025 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogDoesNotExposeForeignOwnerPayload]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogDoesNotExposeForeignOwnerPayload]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogKeepsReadableStagesAlongsideIncompleteBytes]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogKeepsReadableStagesAlongsideIncompleteBytes]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogPreservesJournalAndPublicationKindsWithoutPromotingThem]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogPreservesJournalAndPublicationKindsWithoutPromotingThem]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogRejectsFilesystemLinksInsteadOfTreatingThemAsCorruptPayloads]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogRejectsFilesystemLinksInsteadOfTreatingThemAsCorruptPayloads]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogRemainsBoundedAndNeverDeletesAnExcessFile]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCatalogRemainsBoundedAndNeverDeletesAnExcessFile]' passed (0.015 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyDoesNotRemoveAChangedStageAfterAuthorization]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyDoesNotRemoveAChangedStageAfterAuthorization]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyJournalFinishesExactIDsAcrossEveryCommitCheckpoint]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyJournalFinishesExactIDsAcrossEveryCommitCheckpoint]' passed (0.035 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyJournalRejectsMalformedOrWidenedStageReferences]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyJournalRejectsMalformedOrWidenedStageReferences]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyKeepsAnUnrelatedSaveForTheOriginalDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyKeepsAnUnrelatedSaveForTheOriginalDraft]' passed (0.014 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyQuotaRefusalRetainsOneJournalAndCanFinishAfterSpaceIsFreed]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyQuotaRefusalRetainsOneJournalAndCanFinishAfterSpaceIsFreed]' passed (0.107 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyRefusesChangedOrMissingSourceBeforePreparingSave]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedCopyRefusesChangedOrMissingSourceBeforePreparingSave]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedKeepBothPreservesSavedVersionForEitherLocalStageKind]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedKeepBothPreservesSavedVersionForEitherLocalStageKind]' passed (0.027 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedLocalSaveJournalRecoversWithoutPublishingOrSavingImplicitly]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedLocalSaveJournalRecoversWithoutPublishingOrSavingImplicitly]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedPendingPromotesSameOperationAndDeduplicatesAnIdenticalStage]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedPendingPromotesSameOperationAndDeduplicatesAnIdenticalStage]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedPrimaryCannotReplaceADraftWithAnOutstandingSave]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedPrimaryCannotReplaceADraftWithAnOutstandingSave]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedReplacementCannotReassignRecoveryProvenance]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedReplacementCannotReassignRecoveryProvenance]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedUpdateNeedsReviewedCurrentRevisionAndDoesNotHideSavedWork]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testInterruptedUpdateNeedsReviewedCurrentRevisionAndDoesNotHideSavedWork]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testJournalIdentityCannotBeSilentlyReboundOrRetargeted]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testJournalIdentityCannotBeSilentlyReboundOrRetargeted]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testKnownPreparedDepartureCannotRecreateDiscardedJournalWithAFreshFence]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testKnownPreparedDepartureCannotRecreateDiscardedJournalWithAFreshFence]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testLocalReviewedRecordingSurvivesANewStoreInstanceWithExactCaption]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testLocalReviewedRecordingSurvivesANewStoreInstanceWithExactCaption]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testLostPrimaryAcknowledgementResumesWithoutDuplicateAndSettlesRecovery]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testLostPrimaryAcknowledgementResumesWithoutDuplicateAndSettlesRecovery]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testMissingFenceCannotCreateAuthorizationButMayKeepAnExactExistingJournal]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testMissingFenceCannotCreateAuthorizationButMayKeepAnExactExistingJournal]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testNewProvenanceAndDiscardPhaseCodecsRetainLegacyReads]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testNewProvenanceAndDiscardPhaseCodecsRetainLegacyReads]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPendingIsImmutableAndWrongAccountCannotWriteOrSettleIt]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPendingIsImmutableAndWrongAccountCannotWriteOrSettleIt]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPendingSaveOwnsDraftAgainstLowLevelConcurrentReplacement]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPendingSaveOwnsDraftAgainstLowLevelConcurrentReplacement]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPendingSavePreventsDeletionUntilItsExactCommitFinishes]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPendingSavePreventsDeletionUntilItsExactCommitFinishes]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPreparedAppNamespacesArePrivateBackupExcludedAndServerIsolated]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPreparedAppNamespacesArePrivateBackupExcludedAndServerIsolated]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPreparedSaveResumesExactIdentityBeforePrimaryWrite]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPreparedSaveResumesExactIdentityBeforePrimaryWrite]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPreRenameCopyJournalBlocksAnotherCopyWithoutBeingAutoPromoted]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPreRenameCopyJournalBlocksAnotherCopyWithoutBeingAutoPromoted]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPreRenameDiscardStageCannotBeBypassedByFinishingTheCopy]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testPreRenameDiscardStageCannotBeBypassedByFinishingTheCopy]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testProcessLockIsNonblockingAndLeavesTheCurrentDraftIntact]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testProcessLockIsNonblockingAndLeavesTheCurrentDraftIntact]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testQuotaAfterPrepareRetainsIntentAndCanFinishAfterSpaceIsFreed]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testQuotaAfterPrepareRetainsIntentAndCanFinishAfterSpaceIsFreed]' passed (0.094 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRawOwnerIsolationIncludesCanonicallyEquivalentNames]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRawOwnerIsolationIncludesCanonicallyEquivalentNames]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testReceiptProvenanceSurvivesLegitimateSavedDraftEditing]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testReceiptProvenanceSurvivesLegitimateSavedDraftEditing]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoveryCopiesHaveSeparateStrictNamespaceAndNeverReplaceSavedDrafts]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoveryCopiesHaveSeparateStrictNamespaceAndNeverReplaceSavedDrafts]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoveryInterruptedStageRestoresOnlyToRecoveryNamespace]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoveryInterruptedStageRestoresOnlyToRecoveryNamespace]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoveryLostAcknowledgementRetriesExactRevision]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoveryLostAcknowledgementRetriesExactRevision]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoveryRevisionsRefuseStaleReplacementAndDeletion]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoveryRevisionsRefuseStaleReplacementAndDeletion]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoverySharesAccountQuotaAndDoesNotReplaceAnotherAccount]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRecoverySharesAccountQuotaAndDoesNotReplaceAnotherAccount]' passed (0.026 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRenamedPayloadCannotMasqueradeAsAnotherDraftOrOperation]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRenamedPayloadCannotMasqueradeAsAnotherDraftOrOperation]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRootAndAccountSymlinksRefuseWithoutTouchingOtherFolder]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testRootAndAccountSymlinksRefuseWithoutTouchingOtherFolder]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSaveCleanupPreservesAnotherReviewRevision]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSaveCleanupPreservesAnotherReviewRevision]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryActorRechecksSelectionAfterIndependentWriterChangesIt]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryActorRechecksSelectionAfterIndependentWriterChangesIt]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryDoesNotTrimExactlyCoveredRecoveryCopies]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryDoesNotTrimExactlyCoveredRecoveryCopies]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryIsolatesRawAccountsAndRejectsForeignSelection]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryIsolatesRawAccountsAndRejectsForeignSelection]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryKeepsOriginalTargetsAndExactBytesAcrossMovesAndDeletion]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryKeepsOriginalTargetsAndExactBytesAcrossMovesAndDeletion]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryKeepsUnacknowledgedPrimaryBehindPendingOperation]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryKeepsUnacknowledgedPrimaryBehindPendingOperation]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryLocationRejectsRecreatedAndAmbiguousTaskIdentities]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryLocationRejectsRecreatedAndAmbiguousTaskIdentities]' passed (0.001 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryRefusesConcurrentSaveLockInsteadOfReturningPartialInventory]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryRefusesConcurrentSaveLockInsteadOfReturningPartialInventory]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryRejectsCorruptCanonicalPublicationAndPreservesAllFiles]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryRejectsCorruptCanonicalPublicationAndPreservesAllFiles]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryRejectsStaleRevisionAndDeletedSelection]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryRejectsStaleRevisionAndDeletedSelection]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryRejectsSymlinkWithoutFollowingOrRemovingIt]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibraryRejectsSymlinkWithoutFollowingOrRemovingIt]' passed (0.003 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibrarySeparatesPendingSaveWithoutFinishingOrCleaningReviews]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibrarySeparatesPendingSaveWithoutFinishingOrCleaningReviews]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibrarySeparatesPublicationAndIncompleteFileWithoutPromotion]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSavedLibrarySeparatesPublicationAndIncompleteFileWithoutPromotion]' passed (0.006 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSaveIntentStrictRoundTripAndWrongOwnerRefusal]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSaveIntentStrictRoundTripAndWrongOwnerRefusal]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSaveStateAndStaleResumeDoNotResurrectAnExplicitlyDeletedDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSaveStateAndStaleResumeDoNotResurrectAnExplicitlyDeletedDraft]' passed (0.007 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSaveStateRequiresEntirePreparedAuthorization]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSaveStateRequiresEntirePreparedAuthorization]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSecondEditorRedirectsToPreparedOperationAndFinishesItsIDs]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSecondEditorRedirectsToPreparedOperationAndFinishesItsIDs]' passed (0.009 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSecondEditorReusesDurableReceiptWithoutAnotherDraft]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSecondEditorReusesDurableReceiptWithoutAnotherDraft]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSparseOversizedFileRefusesBeforeReadingPayload]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSparseOversizedFileRefusesBeforeReadingPayload]' passed (0.002 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testStageCleanupAuthorizationCannotReplaceOrRetargetTheSource]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testStageCleanupAuthorizationCannotReplaceOrRetargetTheSource]' passed (0.008 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSymlinkAndHardLinkedDraftsAreNeverFollowedOrReplaced]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testSymlinkAndHardLinkedDraftsAreNeverFollowedOrReplaced]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUncertainPendingSaveRecoversExactlyOneOperationAndAudio]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUncertainPendingSaveRecoversExactlyOneOperationAndAudio]' passed (0.004 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUncertainRenameCanRetryExactDraftWithoutDuplicateOrOverwrite]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUncertainRenameCanRetryExactDraftWithoutDuplicateOrOverwrite]' passed (0.005 seconds).
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUnchangedDraftAndRetryDoNotMintAnotherRevision]' started.
+Test Case '-[TaskfoldCoreTests.AudioCommentVaultTests testUnchangedDraftAndRetryDoNotMintAnotherRevision]' passed (0.004 seconds).
+Test Suite 'AudioCommentVaultTests' passed at 2026-10-28 18:53:46.453.
+	 Executed 106 tests, with 0 failures (0 unexpected) in 1.385 (1.398) seconds
+Test Suite 'TaskfoldCoreTests.xctest' passed at 2026-10-28 18:53:46.453.
+	 Executed 164 tests, with 0 failures (0 unexpected) in 4.167 (4.186) seconds
+Test Suite 'Selected tests' passed at 2026-10-28 18:53:46.453.
+	 Executed 164 tests, with 0 failures (0 unexpected) in 4.167 (4.187) seconds

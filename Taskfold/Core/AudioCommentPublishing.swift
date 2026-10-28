@@ -185,9 +185,25 @@ actor AudioCommentPublicationStorage {
     private let incarnation: UUID
     private let target: AudioCommentTarget
     private var attempt = UUID()
+    var contextIsCurrent: Bool { current() }
     func invalidate() { attempt = UUID(); journal = nil; state = .ready }
     private func check(_ token: UUID) throws { guard token == attempt, current(), !Task.isCancelled else { throw CancellationError() } }
     init(storage: AudioCommentPublicationStorage, transport: any AudioCommentPublishingTransport, incarnation: UUID, target: AudioCommentTarget, isCurrent: @escaping @MainActor () -> Bool) { self.storage = storage; self.transport = transport; self.incarnation = incarnation; self.target = target; current = isCurrent }
+    /// Local review only: reopening a recording never starts a network request.
+    func restore(_ source: AudioCommentSavedDraft) async throws {
+        guard source.target == target, source.owner.account == storage.account.uuidString.lowercased(), current(), !Task.isCancelled, state != .saving, state != .sending else { throw CancellationError() }
+        let token = attempt; journal = nil; state = .saving
+        do {
+            let rows = try await storage.journals(); try check(token)
+            if let found = rows.first(where: { $0.source == source.id && $0.revision == source.revision }) {
+                guard found.publication.target == source.target, found.publication.caption.utf8.elementsEqual(source.caption.utf8), found.publication.descriptor == source.clip.descriptor else { throw AudioCommentStorageFailure.conflict }
+                journal = found; state = found.receipt == nil ? .unconfirmed : .published
+            } else {
+                guard !rows.contains(where: { $0.source == source.id && $0.receipt == nil }) else { throw AudioCommentFailure(message: "An earlier version is still awaiting confirmation. Its recording is preserved; check that version before publishing another.") }
+                state = .ready
+            }
+        } catch { if token == attempt { state = .unconfirmed }; throw error }
+    }
     func publish(_ source: AudioCommentSavedDraft) async throws {
         guard source.target == target, current(), !Task.isCancelled, state != .saving, state != .sending else { throw CancellationError() }
         let token = attempt; journal = nil; state = .saving

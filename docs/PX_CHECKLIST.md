@@ -711,3 +711,22 @@ The audio feature and full Px objective remain open.
 
 [Evidence and next required work](audio-native-publication/README.md). This is the
 verified client foundation; normal audio and the overall Px goal remain open.
+
+
+## 2026-10-28 — gated saved-recording publication controls
+
+- [x] Connect saved recording review to separate publishing admission and the
+  durable native flow. Bind library selection, server/account/workspace/task and
+  session; revalidate saved bytes/revision and preserve legacy pending operations.
+- [x] Add explicit Review/Publish, Check publication, preparation/sending progress,
+  historical confirmation, sign-in/error feedback and local-status Reload. Opening
+  review is local-only; context/scene departure invalidates late presentation.
+- [x] Independently pass 164 Core audio tests and 235 actual recording-controller
+  checks per repo. Complete unsigned app builds pass for Mac arm64 and iOS Simulator
+  arm64/x86_64; normal recording/publishing Info flags are absent/off.
+- [ ] Native runtime/visual/accessibility control acceptance, older/orphaned pending
+  publication review/management, live audio conversation/read/play/remove and real
+  provider acceptance. No app UI or release/signature acceptance is claimed.
+
+[Evidence and limits](audio-publication-controls/README.md). Normal publishing
+remains gated and the overall audio/Px requirements remain open.

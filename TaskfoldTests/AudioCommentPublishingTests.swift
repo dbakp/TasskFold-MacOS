@@ -72,6 +72,25 @@ final class AudioCommentPublishingTests: XCTestCase {
         let reopened = AudioCommentPublicationFlow(storage: storage, transport: transport, incarnation: UUID(), target: input.target, isCurrent: { true }); try await reopened.publish(sourceForJournal(try XCTUnwrap(flow.journal))); XCTAssertEqual(transport.requests.count, 1)
     }
     func sourceForJournal(_ journal: AudioCommentPublicationJournal) throws -> AudioCommentSavedDraft { let clip = try source().clip; return try .init(owner: .init(account.uuidString.lowercased()), target: journal.publication.target, caption: journal.publication.caption, clip: clip, id: journal.source, revision: journal.revision) }
+    @MainActor func testRestoringNewReviewDoesNotPrepareOrSend() async throws {
+        let input = try source(), storage = AudioCommentPublicationStorage(disk: try disk()), transport = Transport()
+        let flow = AudioCommentPublicationFlow(storage: storage, transport: transport, incarnation: UUID(), target: input.target, isCurrent: { true })
+        try await flow.restore(input); XCTAssertEqual(flow.state, .ready); XCTAssertNil(flow.journal); XCTAssertTrue(try disk().journals().isEmpty); XCTAssertTrue(transport.requests.isEmpty)
+    }
+    @MainActor func testRestoringPendingAndConfirmedReviewNeverSends() async throws {
+        let input = try source(), file = try disk(), pending = try file.prepare(input), storage = AudioCommentPublicationStorage(disk: file), transport = Transport()
+        let flow = AudioCommentPublicationFlow(storage: storage, transport: transport, incarnation: UUID(), target: input.target, isCurrent: { true })
+        try await flow.restore(input); XCTAssertEqual(flow.state, .unconfirmed); XCTAssertEqual(flow.journal?.publication.operation, pending.publication.operation)
+        _ = try file.confirm(pending, receipt: .init(record: record(pending.publication), publication: pending.publication))
+        try await flow.restore(input); XCTAssertEqual(flow.state, .published); XCTAssertTrue(transport.requests.isEmpty)
+    }
+    @MainActor func testRestoringDifferentUnconfirmedRevisionRequiresEarlierReview() async throws {
+        let input = try source(), file = try disk(); _ = try file.prepare(input)
+        let changed = try input.replacing(caption: "Edited review", clip: input.clip), transport = Transport()
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: input.target, isCurrent: { true })
+        do { try await flow.restore(changed); XCTFail() } catch { XCTAssertTrue(error.localizedDescription.contains("earlier version")) }
+        XCTAssertNil(flow.journal); XCTAssertTrue(transport.requests.isEmpty); XCTAssertEqual(try file.journals().count, 1)
+    }
     @MainActor func testLostResponseRetriesOriginalIdentityAfterNewController() async throws {
         let storage = AudioCommentPublicationStorage(disk: try disk()), transport = Transport(), source = try source()
         transport.response = { _ in throw URLError(.networkConnectionLost) }

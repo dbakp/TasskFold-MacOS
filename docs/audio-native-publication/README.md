@@ -121,3 +121,8 @@ hosted backend. No new third-party package/client/TLS dependency was introduced.
 4. Honor genuine microphone/dictation, release signing and all other user deferrals.
    Normal audio entry points and server feature flags stay off. This completes the
    journal/transport foundation, not audio comments or the overall Px objective.
+
+UI follow-up: [gated publication controls](../audio-publication-controls/README.md)
+now connect the foundation to saved-recording review. This foundation artifact
+and source bindings describe iOS `0ca1ffe` / Mac `448a00a`; the follow-up adds local
+status restoration/admission but does not claim native control runtime acceptance.

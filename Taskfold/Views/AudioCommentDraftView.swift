@@ -469,6 +469,7 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
                         }
                     }.disabled(controller.working || exportItem != nil).accessibilityIdentifier("audioLibraryExport")
                     Text("Includes audio and caption. Task and account links are left out.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    AudioCommentPublicationControls(source: selected, library: controller)
                     Button("Back to recordings") { invalidateExport(); controller.clearSelection() }.disabled(exportItem != nil).accessibilityIdentifier("audioLibraryBack")
                 } header: { Text("Saved recording") } footer: {
                     Text("Your recording is kept independently of changes to its original task.")

@@ -1182,6 +1182,10 @@ extension AudioControllerProof {
         checks["libraryLoadsSavedRecordingsWithoutCurrentTaskAdmission"] = value.library?.drafts == [original]
         await value.select(original)
         checks["librarySelectionKeepsFullCaptionBytesAndOriginalTarget"] = value.selected == original && value.selected?.caption.utf8.elementsEqual(original.caption.utf8) == true
+        var localPublicationBlocked = false
+        do { _ = try await value.preparePublicationSource(original) } catch { localPublicationBlocked = true }
+        checks["publicationCannotUseLocalWorkspaceRecording"] = localPublicationBlocked
+
         await value.play()
         checks["libraryPlaysOnlyAnAdmittedDecodedSavedSelection"] = player.plays == 1 && value.playing && player.permits.last?() == true
         value.stopPlayback(); player.callbacks.last?()
@@ -1194,6 +1198,10 @@ extension AudioControllerProof {
         try vault.save(changed, replacing: original.revision)
         let stale = make(); await stale.refresh(); await stale.select(original)
         checks["libraryStaleSelectionRefusesReplacementCaptionAndBytes"] = stale.selected == nil && stale.notice != nil
+        var stalePublicationBlocked = false
+        do { _ = try await stale.preparePublicationSource(original) } catch { stalePublicationBlocked = true }
+        checks["publicationCannotUseStaleSelectedSource"] = stalePublicationBlocked
+
         await stale.select(changed)
         checks["librarySelectionBeforePendingSaveIsValid"] = stale.selected == changed
         let next = try changed.replacing(caption: "Pending save", clip: changed.clip)
@@ -1239,6 +1247,22 @@ extension AudioControllerProof {
         checks["libraryCanReopenAfterTheActualBackgroundPreservationHook"] = active.playing && active.selected == newer
         context.scope = nil; active.contextChanged()
         checks["libraryDepartureClosesPreviewWithoutDeletingSavedBytes"] = try !active.isCurrent && active.library == nil && active.selected == nil && !active.playing && vault.drafts() == [newer]
+        let cloudOwner = try AudioCommentOwner(UUID().uuidString.lowercased())
+        let cloudScope = AudioCommentLibraryScope(workspace: .init(account: cloudOwner.account, generation: UUID()), origin: "https://publication.example.invalid")
+        let cloudFolder = root.appendingPathComponent("publication-library-source", isDirectory: true); try FileManager.default.createDirectory(at: cloudFolder, withIntermediateDirectories: false)
+        let cloudVault = AudioCommentVault(applicationSupport: cloudFolder, owner: cloudOwner)
+        let cloudSource = try AudioCommentSavedDraft(owner: cloudOwner, target: newer.target, caption: newer.caption, clip: newer.clip); try cloudVault.save(cloudSource)
+        let gate = AudioCommentLibraryController(scope: cloudScope, storage: .init(vault: cloudVault), player: AudioLibraryProofPlayer()); gate.currentScope = { cloudScope }
+        await gate.refresh(); await gate.select(cloudSource)
+        checks["publicationRevalidatesExactSelectedSavedSource"] = try await gate.preparePublicationSource(cloudSource) == cloudSource
+        let legacy = try AudioCommentPending(publication: .init(account: UUID(uuidString: cloudOwner.account)!, target: cloudSource.target, caption: cloudSource.caption, descriptor: cloudSource.clip.descriptor), clip: cloudSource.clip)
+        try cloudVault.store(legacy)
+        var legacyBlocked = false
+        do { _ = try await gate.preparePublicationSource(cloudSource) } catch { legacyBlocked = true }
+        let retained = try cloudVault.pending()
+        checks["publicationRefusesUnboundLegacyPendingWork"] = legacyBlocked && retained.count == 1
+        gate.setActive(false); checks["publicationImmediatelyLosesInactiveSelectionAuthority"] = !gate.publicationSourceIsCurrent(cloudSource)
+        gate.close()
         return checks
     }
 }

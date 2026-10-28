@@ -910,6 +910,21 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
             validated = clip; selected = source
         } catch { if accepts(token) { notice = error.localizedDescription } else { contextChanged() } }
     }
+    /// Selected bytes were fully decoded by select(). Revalidate the exact disk
+    /// revision and legacy pending work immediately before preparing publication.
+    func publicationSourceIsCurrent(_ expected: AudioCommentSavedDraft) -> Bool {
+        active && isCurrent && selected == expected && validated?.data == expected.clip.data
+    }
+    func preparePublicationSource(_ expected: AudioCommentSavedDraft) async throws -> AudioCommentSavedDraft {
+        guard publicationSourceIsCurrent(expected), !working, UUID(uuidString: expected.owner.account) != nil else { throw AudioCommentFailure.changed }
+        invalidate(); working = true; let token = operation
+        defer { if token == operation { working = false } }
+        let pending = try await storage.pending()
+        guard accepts(token), selected == expected else { throw CancellationError() }
+        guard !pending.contains(where: { $0.publication.target == expected.target }) else { throw AudioCommentFailure(message: "An earlier publication needs review. Its original recording and operation are preserved.") }
+        let current = try await storage.savedLibraryRecording(expected)
+        guard accepts(token), selected == expected else { throw CancellationError() }; return current
+    }
     func prepareExport() async throws -> AudioCommentRecordingExport {
         guard active, isCurrent, !working, let selected, let clip = validated, clip.data == selected.clip.data else { throw AudioCommentFailure.changed }
         invalidate(); exportGeneration = UUID(); working = true; notice = nil
@@ -961,6 +976,26 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
         if AudioCommentNativeFixture.taskEditorTesting { return true }
         #endif
         return Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioDraftsEnabled") as? Bool == true
+    }
+    var audioPublishingEnabled: Bool {
+        audioDraftsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioPublishingEnabled") as? Bool == true
+    }
+    func audioPublishingScope(_ target: AudioCommentTarget) -> AudioCommentLiveScope? {
+        guard audioPublishingEnabled, !localMode, signedIn, !workspaceNeedsRepair,
+              let scope = audioDraftScope(taskID: target.task.uuidString.lowercased()), scope.target == target,
+              UUID(uuidString: scope.workspace.account) != nil, backend.session?.user.id == scope.workspace.account,
+              scope.origin != nil else { return nil }; return scope
+    }
+    func audioPublisher(for scope: AudioCommentLiveScope, source: AudioCommentSavedDraft, library: AudioCommentLibraryController) throws -> AudioCommentPublicationFlow {
+        guard let current = audioPublishingScope(scope.target), scope.matches(current), let origin = scope.origin,
+              let account = UUID(uuidString: scope.workspace.account), source.target == scope.target,
+              library.scope.matches(.init(workspace: scope.workspace, origin: scope.origin)), library.publicationSourceIsCurrent(source) else { throw AudioCommentFailure.changed }
+        let root = try audioDraftDirectory(for: scope, taskID: scope.target.task.uuidString.lowercased())
+        let disk = try AudioCommentPublicationDisk(root: root, account: account, origin: origin), incarnation = backend.reminderSessionIncarnation
+        return AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: scope.target, isCurrent: { [weak self, weak library] in
+            guard let self, let library, library.publicationSourceIsCurrent(source), self.backend.reminderSessionIncarnation == incarnation,
+                  let current = self.audioPublishingScope(scope.target) else { return false }; return scope.matches(current)
+        })
     }
     func audioLibraryScope() -> AudioCommentLibraryScope? {
         guard audioDraftsEnabled, !workspaceNeedsRepair, (try? AudioCommentOwner(userID)) != nil else { return nil }
