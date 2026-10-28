@@ -21,6 +21,29 @@ func run() throws -> [String: Any] {
     let draft = try AudioCommentSavedDraft(owner: owner, target: target, caption: caption, clip: clip, id: id, revision: revision)
     let localDraft = try AudioCommentSavedDraft(owner: local, target: target, caption: caption, clip: clip, id: id, revision: revision)
     let publication = try AudioCommentPublication(account: UUID(uuidString: account)!, target: target, caption: caption, descriptor: clip.descriptor, operation: UUID(uuidString: "66666666-6666-4666-8666-666666666666")!, comment: UUID(uuidString: "77777777-7777-4777-8777-777777777777")!, asset: UUID(uuidString: "88888888-8888-4888-8888-888888888888")!)
+    if ["write-expired-review", "discard-expired-review", "verify-expired-review"].contains(mode) || mode.hasPrefix("reject-expired-review:") {
+        let review = try AudioCommentSavedDraft(owner:owner,target:target,caption:"Discard just this cafe\u{301} review",clip:clip,id:UUID(uuidString:"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee")!,revision:revision)
+        let next = try AudioCommentSavedDraft(owner:owner,target:target,caption:review.caption,clip:clip,id:UUID(uuidString:"dddddddd-dddd-4ddd-8ddd-dddddddddddd")!,revision:revision)
+        let intent = try AudioCommentSaveIntent(next:next,base:nil,reviews:[.init(review)],id:UUID(uuidString:"ffffffff-ffff-4fff-8fff-ffffffffffff")!)
+        var captured = ""
+        if mode == "write-expired-review" {
+            try vault.save(review,recovery:true)
+            let token = try vault.departureFence(); captured = token.uuidString.lowercased(); try vault.prepareSave(intent,fence:token)
+            // Synthetic external loss of only the journal; keep the exact review.
+            try FileManager.default.removeItem(at:vault.directory.appendingPathComponent("save-" + intent.id.uuidString.lowercased() + ".bin"))
+        }
+        if mode == "discard-expired-review" { try vault.discardExpiredReview(intent) }
+        if mode.hasPrefix("reject-expired-review:") {
+            guard let token = UUID(uuidString:String(mode.dropFirst("reject-expired-review:".count))) else { throw AudioCommentStorageFailure.unreadable }
+            do { try vault.prepareSave(intent,fence:token); throw AudioCommentFailure.invalid }
+            catch let error as AudioCommentStorageFailure where error == .conflict { }
+        }
+        let reviews = try vault.drafts(recovery:true), drafts = try vault.drafts(), journals = try vault.saves()
+        guard mode == "write-expired-review" ? reviews == [review] : reviews.isEmpty,
+              drafts.count == 2, drafts.contains(draft), !drafts.contains(where:{$0.id == next.id}), journals.isEmpty,
+              try localVault.drafts() == [localDraft] else { throw AudioCommentStorageFailure.conflict }
+        return ["status":"verified","pid":ProcessInfo.processInfo.processIdentifier,"fence":captured]
+    }
     if mode == "prepare-revoked" || mode == "discard-revoked" || mode == "verify-revoked" || mode.hasPrefix("reject-revoked:") {
         let next = try AudioCommentSavedDraft(owner:owner,target:target,caption:"Discarded operation must stay discarded",clip:clip,id:UUID(uuidString:"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")!,revision:revision)
         let intent = try AudioCommentSaveIntent(next:next,base:nil,reviews:[],id:UUID(uuidString:"cccccccc-cccc-4ccc-8ccc-cccccccccccc")!)

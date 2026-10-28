@@ -162,7 +162,7 @@ struct AudioCommentVault: Sendable {
     static let maximumFileBytes = 8_100_000
     static let maximumEntries = 20
     static let maximumTotalBytes = 50_000_000
-    enum Checkpoint: Sendable { case beforeRename, afterRename, afterSaveJournal, afterDraftCommit, afterDiscardJournal, beforeSaveState }
+    enum Checkpoint: Sendable { case beforeRename, afterRename, afterSaveJournal, afterDraftCommit, afterDiscardJournal, afterExpiredReviewDiscard, beforeSaveState }
     let applicationSupport: URL
     let owner: AudioCommentOwner
     var fault: (@Sendable (Checkpoint) throws -> Void)? = nil
@@ -520,6 +520,27 @@ struct AudioCommentVault: Sendable {
         }
     }
 
+    /// Discard only an expired editor's review. No new payload/journal is
+    /// admitted, so this works at the entry/byte quota. One lock validates the
+    /// missing authorization, protects claims belonging to other pending Saves,
+    /// revokes stale automatic checkpoints and removes only exact review refs.
+    func discardExpiredReview(_ requested: AudioCommentSaveIntent) throws {
+        guard requested.next.owner == owner, requested.phase == .saving else { throw AudioCommentFailure.changed }
+        try withLock { folder, lock in
+            let all = try records(folder: folder)
+            if let current = all.saves.first(where: { $0.sameAuthorization(as: requested) }) {
+                throw current.phase == .discarding ? AudioCommentStorageFailure.discardPending : .conflict
+            }
+            guard !all.drafts.contains(requested.next) else { throw AudioCommentStorageFailure.alreadySaved }
+            let removable = requested.reviews.filter { ref in
+                !all.saves.contains { $0.reviews.contains(ref) || $0.next.origin == ref }
+            }
+            try writeDepartureFence(UUID(), lock: lock)
+            try cleanupReviews(removable, target: requested.next.target, folder: folder)
+            try fault?(.afterExpiredReviewDiscard)
+        }
+    }
+
     /// Journal first, then the exact optimistic draft, then recovery removals,
     /// then the journal removal. Every uncertain retry keeps the original IDs.
     /// Keep an already-authorized Save across process loss without completing it,
@@ -687,6 +708,7 @@ actor AudioCommentDraftStorage {
     @discardableResult func commitSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, existingOnly: Bool = false) throws -> AudioCommentSavedDraft { try vault.commitSave(intent, replacing: old, existingOnly: existingOnly) }
     func catalog(target: AudioCommentTarget) throws -> AudioCommentDraftCatalog { try vault.catalog(target: target) }
     func discardSave(_ intent: AudioCommentSaveIntent) throws { try vault.discardSave(intent) }
+    func discardExpiredReview(_ intent: AudioCommentSaveIntent) throws { try vault.discardExpiredReview(intent) }
     func discardReviewCopies(_ expected: [AudioCommentSavedDraft]) throws { try vault.discardReviewCopies(expected) }
     func checkpoint(_ draft: AudioCommentSavedDraft, replacing revision: UUID? = nil) throws { try vault.save(draft, replacing: revision, recovery: true) }
     func discardReview(_ id: UUID, revision: UUID) throws { try vault.discardDraft(id, revision: revision, recovery: true) }

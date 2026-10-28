@@ -724,3 +724,78 @@ extension AudioCommentVaultTests {
         XCTAssertEqual(try file.saves(),[intent]); XCTAssertTrue(try file.drafts().isEmpty)
     }
 }
+
+extension AudioCommentVaultTests {
+    private func removeJournalOnly(_ intent: AudioCommentSaveIntent, file: AudioCommentVault) throws {
+        try FileManager.default.removeItem(at: file.directory.appendingPathComponent("save-" + intent.id.uuidString.lowercased() + ".bin"))
+    }
+    func testExpiredDiscardRemovesOnlyExactOwnReviewsAndKeepsChangedRevisions() throws {
+        let file = try vault(), review = try draft(), otherReview = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:"Independent review",clip:review.clip), saved = try draft()
+        try file.save(review,recovery:true); try file.save(otherReview,recovery:true); try file.save(saved)
+        // The exact review belongs to the target of the authorization.
+        let scoped = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:review.caption,clip:review.clip)
+        let request = try saveIntent(scoped,copies:[review,otherReview])
+        let fence = try file.departureFence(); try file.prepareSave(request,fence:fence); try removeJournalOnly(request,file:file)
+        let changed = try otherReview.replacing(caption:"Changed independently",clip:otherReview.clip)
+        try file.save(changed,replacing:otherReview.revision,recovery:true)
+        try file.discardExpiredReview(request)
+        XCTAssertEqual(try file.drafts(),[saved]); XCTAssertEqual(try file.drafts(recovery:true),[changed])
+        XCTAssertTrue(try file.saves().isEmpty); XCTAssertNotEqual(try file.departureFence(),fence)
+        XCTAssertThrowsError(try file.prepareSave(request,fence:fence))
+    }
+    func testExpiredDiscardRefusesAStillPreparedOrSettledAuthorization() throws {
+        let file = try vault(), request = try saveIntent(draft()), fence = try file.departureFence()
+        try file.prepareSave(request,fence:fence)
+        XCTAssertThrowsError(try file.discardExpiredReview(request)) { XCTAssertEqual($0 as? AudioCommentStorageFailure,.conflict) }
+        XCTAssertEqual(try file.saves(),[request]); XCTAssertEqual(try file.departureFence(),fence)
+        try file.commitSave(request,existingOnly:true)
+        XCTAssertThrowsError(try file.discardExpiredReview(request)) { XCTAssertEqual($0 as? AudioCommentStorageFailure,.alreadySaved) }
+        XCTAssertEqual(try file.drafts(),[request.next]); XCTAssertEqual(try file.departureFence(),fence)
+    }
+    func testExpiredDiscardPreservesChangedAuthorizationAndItsReviewClaims() throws {
+        let file = try vault(), review = try draft(); try file.save(review,recovery:true)
+        let next = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:review.caption,clip:review.clip)
+        let old = try saveIntent(next,copies:[review]), fence = try file.departureFence()
+        try file.prepareSave(old,fence:fence); try removeJournalOnly(old,file:file)
+        let other = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:"Another explicit copy",clip:review.clip,origin:.init(review))
+        let replacement = try AudioCommentSaveIntent(next:other,base:nil,reviews:[.init(review)],id:old.id)
+        try file.prepareSave(replacement,fence:fence)
+        let journal = file.directory.appendingPathComponent("save-" + old.id.uuidString.lowercased() + ".bin"), before = try Data(contentsOf:journal)
+        try file.discardExpiredReview(old)
+        XCTAssertEqual(try Data(contentsOf:journal),before); XCTAssertEqual(try file.saves(),[replacement])
+        XCTAssertEqual(try file.drafts(recovery:true),[review]); XCTAssertTrue(try file.drafts().isEmpty)
+    }
+    func testExpiredDiscardRefusesForeignOwnerAndBusyLockWithoutMutation() throws {
+        let file = try vault(), review = try draft(), request = try saveIntent(review), fence = try file.departureFence()
+        try file.save(review,recovery:true)
+        XCTAssertThrowsError(try vault("other-owner").discardExpiredReview(request))
+        let descriptor = open(file.directory.appendingPathComponent(".lock").path,O_RDWR | O_NOFOLLOW)
+        XCTAssertGreaterThanOrEqual(descriptor,0); defer { _ = flock(descriptor,LOCK_UN); Darwin.close(descriptor) }
+        XCTAssertEqual(flock(descriptor,LOCK_EX | LOCK_NB),0)
+        XCTAssertThrowsError(try file.discardExpiredReview(request)) { XCTAssertEqual($0 as? AudioCommentStorageFailure,.busy) }
+        _ = flock(descriptor,LOCK_UN)
+        XCTAssertEqual(try file.departureFence(),fence); XCTAssertEqual(try file.drafts(recovery:true),[review])
+    }
+    func testExpiredDiscardWorksAtPayloadEntryQuotaWithoutAdmittingAReplacement() throws {
+        let file = try vault(), review = try draft(); try file.save(review,recovery:true)
+        let next = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:review.caption,clip:review.clip)
+        let request = try saveIntent(next,copies:[review])
+        var kept: [AudioCommentSavedDraft] = []
+        for _ in 1..<AudioCommentVault.maximumEntries { let item = try draft(); try file.save(item); kept.append(item) }
+        XCTAssertThrowsError(try file.commitSave(request)) { XCTAssertEqual($0 as? AudioCommentStorageFailure,.full) }
+        try file.discardExpiredReview(request)
+        let after = try file.drafts(); XCTAssertEqual(after.count,kept.count); XCTAssertTrue(after.allSatisfy(kept.contains))
+        XCTAssertTrue(try file.saves().isEmpty); XCTAssertTrue(try file.drafts(recovery:true).isEmpty)
+    }
+    func testExpiredDiscardLostAcknowledgementCanRetryWithoutResurrection() throws {
+        var file = try vault(); let review = try draft(); try file.save(review,recovery:true)
+        let next = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:review.caption,clip:review.clip)
+        let request = try saveIntent(next,copies:[review]), fence = try file.departureFence()
+        file.fault = { if $0 == .afterExpiredReviewDiscard { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.discardExpiredReview(request))
+        let fresh = try vault(); XCTAssertTrue(try fresh.drafts(recovery:true).isEmpty)
+        XCTAssertThrowsError(try fresh.prepareSave(request,fence:fence))
+        try fresh.discardExpiredReview(request)
+        XCTAssertTrue(try fresh.saves().isEmpty); XCTAssertTrue(try fresh.drafts().isEmpty)
+    }
+}

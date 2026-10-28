@@ -1,0 +1,7 @@
+{
+  "parentCommit": "cd25da79df9ec2ef72000a7b9b6b6f194c964a89",
+  "insertSnippetBefore": "        let cancelFolder = root.appendingPathComponent(\"departure-cancel\",isDirectory:true)",
+  "reconstructedFullFixtureSHA256": "4aa6967c11500f224361990caac4eb40634fa43bdfd387b3e7c356d1269aa331",
+  "controllerAndCoreMatchParentCommit": true,
+  "scope": "Exact failing-before source reconstruction; no complete prior binary manifest is claimed."
+}

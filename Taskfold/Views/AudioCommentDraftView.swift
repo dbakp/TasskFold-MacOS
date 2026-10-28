@@ -135,9 +135,9 @@ import AppKit
                 } else {
                     Button("Save draft and close") { Task { if await capture.save() { capture.close(); dismiss() } } }
                 }
-                if !capture.saveUnconfirmed && !capture.saveConflict { Button("Discard unsaved changes", role: .destructive) { Task { if await capture.discardReviewAndClose() { dismiss() } } } }
+                if capture.canDiscardReview { Button(capture.saveConflict ? "Discard this review" : "Discard unsaved changes", role: .destructive) { Task { if await capture.discardReviewAndClose() { dismiss() } } } }
                 Button("Keep reviewing", role: .cancel) { }
-            } message: { Text(capture.saveConflict ? "Save a separate draft to keep this review without replacing another version." : capture.saveUnconfirmed ? "Retry to confirm the save before closing. Your recording is still here." : "Save this recording to keep it on this device. Any earlier saved draft remains if you discard these changes.") }
+            } message: { Text(capture.saveConflict ? (capture.canDiscardReview ? "Save a separate draft, or discard just this review. Other saved recordings and pending Saves stay on this device." : "Save a separate draft to keep this review without replacing another version.") : capture.saveUnconfirmed ? "Retry to confirm the save before closing. Your recording is still here." : "Save this recording to keep it on this device. Any earlier saved draft remains if you discard these changes.") }
             .confirmationDialog("Discard this pending recording?", isPresented: Binding(get: { pendingDiscard != nil }, set: { if !$0 { pendingDiscard = nil } }), titleVisibility: .visible, presenting: pendingDiscard) { intent in
                 Button("Discard pending recording", role: .destructive) { Task { await capture.discardPendingSave(intent) } }.accessibilityIdentifier("audioConfirmDiscardPending")
                 Button("Cancel", role: .cancel) { }

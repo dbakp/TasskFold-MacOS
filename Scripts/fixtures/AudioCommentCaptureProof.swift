@@ -757,6 +757,37 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         reopened.recovery.finishSave(); reopened.close(); known.recovery.finishSave()
         for journal in try await knownStore.saves() { try knownVault.discardSave(journal) }
 
+        let discardFolder = root.appendingPathComponent("expired-review-discard",isDirectory:true)
+        try FileManager.default.createDirectory(at:discardFolder,withIntermediateDirectories:false)
+        let discardVault = AudioCommentVault(applicationSupport:discardFolder,owner:owner)
+        let discardFault = AudioProofOneShotFault(point:.afterSaveJournal)
+        let discardAck = AudioProofOneShotFault(enabled:false,point:.afterExpiredReviewDiscard)
+        let discardStore = AudioCommentDraftStorage(vault:.init(applicationSupport:discardFolder,owner:owner,fault:{ try discardFault.check($0); try discardAck.check($0) }))
+        let abandoned = make(AudioProofRecorder(data),discardStore)
+        abandoned.start(); _ = await wait { abandoned.session.phase == .recording }; abandoned.stop(); _ = await wait { abandoned.session.phase == .review }
+        abandoned.editCaption("Discard only this cafe\u{301} review"); _ = await abandoned.preserveReview(); _ = await abandoned.save()
+        guard let abandonedIntent = try await discardStore.saves().first else { throw AudioCommentStorageFailure.unreadable }
+        try discardVault.discardSave(abandonedIntent); _ = await abandoned.save()
+        var unrelated: [AudioCommentSavedDraft] = []
+        for index in 0..<AudioCommentVault.maximumEntries {
+            let next = try AudioCommentSavedDraft(owner:owner,target:request.scope.target,caption:"Unrelated saved recording \(index)",clip:abandonedIntent.next.clip)
+            try discardVault.save(next); unrelated.append(next)
+        }
+        let discardLock = Darwin.open(discardVault.directory.appendingPathComponent(".lock").path,O_RDWR | O_NOFOLLOW)
+        guard discardLock >= 0, flock(discardLock,LOCK_EX | LOCK_NB) == 0 else { throw AudioCommentStorageFailure.unreadable }
+        let blockedDiscard = await abandoned.discardReviewAndClose()
+        _ = flock(discardLock,LOCK_UN); Darwin.close(discardLock)
+        checks["expiredDiscardBusyRefusalKeepsTheReviewAndRetryChoice"] = !blockedDiscard && abandoned.canDiscardReview && abandoned.session.clip?.data == data
+        discardAck.arm(); let uncertainDiscard = await abandoned.discardReviewAndClose()
+        let uncertainDeparture = await abandoned.prepareForDeparture()
+        checks["expiredDiscardLostAcknowledgementKeepsMemoryAndCannotClaimQuitSafety"] = !uncertainDiscard && !uncertainDeparture && abandoned.canDiscardReview && abandoned.session.clip?.data == data
+        let didDiscard = await abandoned.discardReviewAndClose()
+        let remaining = try discardVault.drafts(), remainingJournals = try discardVault.saves()
+        checks["removedSaveReviewCanBeDiscardedDirectlyAtEntryQuota"] = didDiscard && remainingJournals.isEmpty
+        checks["explicitExpiredDiscardClosesAndReleasesRetainedAuthorization"] = abandoned.session.phase == .closed && abandoned.session.clip == nil && !AudioCommentCapture.hasUnpreservedWork
+        checks["expiredDiscardPreservesEveryUnrelatedRecordingAtQuota"] = remaining.count == unrelated.count && remaining.allSatisfy(unrelated.contains)
+        abandoned.recovery.finishSave(); abandoned.close()
+
         let cancelFolder = root.appendingPathComponent("departure-cancel",isDirectory:true)
         try FileManager.default.createDirectory(at:cancelFolder,withIntermediateDirectories:false)
         let cancelStore = AudioCommentDraftStorage(applicationSupport:cancelFolder,owner:owner)

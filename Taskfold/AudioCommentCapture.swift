@@ -360,9 +360,26 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         if let catalog { pendingSaves = catalog.saves; recoverable = catalog.reviews; available = catalog.drafts }
         notice = message; saving = false
     }
+    var canDiscardReview: Bool {
+        isCurrent && !busy && !saveUnconfirmed && !saveDurable &&
+            (saveExpired && saveRequiresExisting && saveIntent != nil || !saveConflict && saveIntent == nil)
+    }
     @discardableResult func discardReviewAndClose() async -> Bool {
-        guard isCurrent, !busy, !saveUnconfirmed, !saveDurable, saveIntent == nil else { return false }
-        saving = true; defer { saving = false }
+        guard canDiscardReview else { return false }
+        saving = true; stopPlayback(); defer { saving = false }
+        if saveExpired, let expired = saveIntent {
+            do {
+                try await storage.discardExpiredReview(expired)
+                AudioCommentReviewRecovery.retireRetainedAuthorization(expired)
+                recovery.finishSave()
+                let current = isCurrent
+                close(); return current
+            } catch {
+                if isCurrent { notice = error.localizedDescription + " Your review is still here. Retry before closing." }
+                else { close() }
+                return false
+            }
+        }
         guard await recovery.clear() else { notice = recovery.failure; return false }
         guard isCurrent else { close(); return false }
         close(); return true

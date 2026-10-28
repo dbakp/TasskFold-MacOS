@@ -52,4 +52,9 @@ with tempfile.TemporaryDirectory(prefix='taskfold-audio-vault-process-') as temp
     refused = invoke('reject-revoked:' + revoked['fence'])
     still_absent = invoke('verify-revoked')
     assert len({item['pid'] for item in [revoked, discarded, refused, still_absent]}) == 4
-    print(json.dumps({'status': 'passed', 'separateProcesses': 12, 'completedDiscardCannotBeRevivedByAnOlderProcessFence': True, 'departureJournalSurvivesProcessExitWithoutCompletingDraft': True, 'explicitFinishUsesOriginalIDsAndAudioAcrossProcesses': True, 'localAndCloudDraftsRestored': True, 'exactPendingIntentAndAudioRestored': True, 'crossProcessLockRefusedWithoutMutation': True, 'noMicrophonePlaybackOrNetwork': True, 'ownedTemporaryDirectoryRemovedOnExit': True}, indent=2))
+    review = invoke('write-expired-review')
+    review_discarded = invoke('discard-expired-review')
+    review_refused = invoke('reject-expired-review:' + review['fence'])
+    review_absent = invoke('verify-expired-review')
+    assert len({item['pid'] for item in [review, review_discarded, review_refused, review_absent]}) == 4
+    print(json.dumps({'status': 'passed', 'separateProcesses': 16, 'expiredReviewDiscardSurvivesProcessExitWithoutTouchingOtherDrafts': True, 'staleAutomaticCheckpointRefusedAfterExpiredDiscard': True, 'completedDiscardCannotBeRevivedByAnOlderProcessFence': True, 'departureJournalSurvivesProcessExitWithoutCompletingDraft': True, 'explicitFinishUsesOriginalIDsAndAudioAcrossProcesses': True, 'localAndCloudDraftsRestored': True, 'exactPendingIntentAndAudioRestored': True, 'crossProcessLockRefusedWithoutMutation': True, 'noMicrophonePlaybackOrNetwork': True, 'ownedTemporaryDirectoryRemovedOnExit': True}, indent=2))

@@ -9,7 +9,6 @@
   "logicalBytesPruned": 348376881,
   "failureLogsSummariesAndPhoneHierarchyRetainedInRepo": true,
   "partialPhoneBundleNotAcceptedAsFinalResult": true,
-  "currentPhoneResultAndLiveIPadJobRetained": true,
   "reusableBuildCachesRetained": true,
   "macNativeProofProcessesExitedNormally": [
     46147,
@@ -17,6 +16,10 @@
   ],
   "emptyFinalMacWorkshopClosedAfterLock": 47403,
   "emptyFinalMacWorkshopStopSignal": "SIGTERM; no recording or pending Save created in that reset workshop",
-  "liveIPadTestMustNotBeShutdown": true,
-  "noMicrophoneSpeakerSpeechOrPermissionAccess": true
+  "liveIPadTestMustNotBeShutdown": false,
+  "noMicrophoneSpeakerSpeechOrPermissionAccess": true,
+  "sameIPadTestFinishedAndStrictlyVerified": true,
+  "ownedSimulatorsConfirmedShutdownAfterCompletion": true,
+  "earlierCheckpointKeptPhoneResultAndLiveIPadJob": true,
+  "earlierRawResultsPrunedAfterFinalEvidence": true
 }

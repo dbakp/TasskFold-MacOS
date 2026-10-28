@@ -381,7 +381,20 @@ the broader audio gate or the Px objective. Ordinary audio entry points stay gat
 - [x] Preserve the local review and offer an explicit independent copy with new operation/draft IDs, no old recovery claims and no mutation of other disk versions.
 - [x] Verify 131 synthetic capture-controller checks per repo, including seven new removed-Save/reopen/copy cases. Six new checks fail against the preceding controller.
 - [x] Current iPhone native separate-copy Close, interruption, new-ID journal readback and exact cold Finish; both app builds/signatures pass.
-- [ ] Final iPad case is still running through repeated 60-second animation waits (session 95200 / PID 48809); final Mac Close-dialog runtime inspection waits for an unlocked desktop. Earlier direct-copy Mac/iPad scopes do not accept the final dialog.
-- [ ] Dedicated expired-review discard at quota and broader lifecycle/account interleavings remain open.
+- [x] The same final iPad job completed the separate-copy Close/new-ID/cold-Finish case with no reported runtime warnings; repeated animation waits remain recorded.
+- [ ] Final Mac Close-dialog runtime inspection waits for an unlocked desktop; the earlier direct-copy Mac scope does not accept the final dialog.
+- [x] Direct expired-review discard at entry quota is implemented and verified in the next checkpoint below.
+- [ ] Broader lifecycle/account interleavings remain open.
 
 [Evidence and exact scope](audio-comment-removed-save/README.md). Ordinary audio entry points remain gated; genuine audio and release deferrals are unchanged.
+
+## 2026-10-28 — direct discard of an expired audio review
+
+- [x] Close offers Discard this review alongside an explicit separate copy after the prepared Save disappears/changes.
+- [x] One locked storage operation refuses still-prepared/settled requests, preserves other Save claims and changed review revisions, revokes old automatic checkpoints and removes only eligible exact references without admitting a replacement payload.
+- [x] Entry-quota, foreign-owner, busy-lock and lost-acknowledgement recovery; memory stays available until explicit cleanup is acknowledged.
+- [x] 96 selected Core tests and 136 synthetic controller checks per repo; 16-process storage proof per repo. Two behavioral regressions fail before the controller repair.
+- [x] Current iPhone Discard/cold return plus separate-copy regression (two tests); iPad Discard/cold return (one test), no reported runtime warnings. Readable dialogs/empty states visually inspected; actual private files checked.
+- [ ] Mac native dialog runtime remains open while locked; broader lifecycle/concurrency/backup/orphan/corruption, ordinary integration, private server custody and genuine audio acceptance remain open. No feature/Px completion claim.
+
+[Evidence and exact scope](audio-comment-expired-discard/README.md).
