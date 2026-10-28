@@ -1504,6 +1504,26 @@ extension AudioControllerProof {
         try await returned.updateAfterConfirmation()
         checks["pendingOtherWindowRemovalClearsStalePlayableSelection"] = returned.selected == nil && returned.entries.isEmpty && !returned.playing
         checks["pendingOtherWindowRemovalKeepsSavedDrafts"] = try draftVault.drafts().count == 2
+        let closedSource=try AudioCommentSavedDraft(owner:owner,target:target,caption:"Closed original 🪴",clip:source.clip)
+        let closing=try publicationDisk.prepare(closedSource)
+        await returned.refresh();await returned.select(closing)
+        let closedProof=try AudioCommentPublicationClosed(record:Record(["protocol":.number(1),"intent":.object(closing.publication.record.fields),"state":.string("closed")]),publication:closing.publication)
+        _=try publicationDisk.settleClosed(closing,proof:closedProof)
+        try await returned.updateAfterConfirmation()
+        checks["closedReviewReconcilesExactOriginalAndRetainsAudio"] = returned.selected?.closedReceipt != nil && returned.selected?.receipt == nil && returned.selected?.clip?.data == data
+        checks["closedReviewIsListedWithoutPendingStatus"] = returned.entries.count == 1 && returned.entries.first?.isPending == false
+        await returned.play();checks["closedOriginalStillPlaysPrivately"] = returned.playing
+        returned.stopPlayback();try await returned.keepPrivateCopy();try await returned.keepPrivateCopy()
+        let closedCopies=try draftVault.drafts()
+        checks["closedPrivateRecoveryRemainsIdempotent"] = closedCopies.count == 3 && closedCopies.contains{$0.id==closing.publication.asset && $0.clip.data==data}
+        checks["closedPrivateRecoveryPreservesEditedDraft"] = closedCopies.contains(edited)
+        var confirmedOnlyRefused=false;do {try await returned.removeConfirmedCopy()} catch {confirmedOnlyRefused=true}
+        checks["closedProofDoesNotMasqueradeAsPublicationConfirmation"] = confirmedOnlyRefused
+        try await returned.removeResolvedCopy()
+        let terminal=try publicationDisk.journals().first{$0.publication.operation==closing.publication.operation}
+        checks["closedExplicitRemovalRetainsTerminalProof"] = terminal?.closedReceipt != nil && terminal?.clip == nil
+        checks["closedExplicitRemovalClearsPlayableSelection"] = returned.entries.isEmpty && returned.selected == nil && !returned.playing && player.permits.last?() == false
+        await returned.refresh();checks["closedCompactProofDoesNotReturnAsPendingWork"] = returned.entries.isEmpty
         returned.close(); return checks
     }
 

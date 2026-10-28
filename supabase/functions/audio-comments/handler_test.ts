@@ -80,6 +80,10 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
     wrongReceipt: false,
     authID: account,
     pageResult: undefined as Row | undefined,
+    reserveResult: undefined as Row | undefined,
+    reserves: 0,
+    closeOnFresh: false,
+    finalizeResult: undefined as Row | undefined,
   };
   const response = (x: unknown) =>
     new Response(JSON.stringify(x), {
@@ -123,12 +127,21 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
         case "upload_settle":
           return response({ protocol: 1, settled: true });
         case "reserve":
+          state.reserves++;
+          if (state.closeOnFresh && state.reserves > 1) {
+            return response({
+              status: "expired",
+              operation_id: intent.operation_id,
+            });
+          }
+          if (state.reserveResult) return response(state.reserveResult);
           return response({
             ...row,
             ...state.wrongReceipt ? { comment_id: id() } : {},
           });
         case "finalize":
           state.finalizes++;
+          if (state.finalizeResult) return response(state.finalizeResult);
           equal(body._body.stored_sha256, descriptor.sha256);
           equal(body._body.stored_bytes, audio.length);
           row.state = "published";
@@ -493,4 +506,75 @@ Deno.test("page rejects mismatched next cursor and duplicate rows", async () => 
     )).status,
     503,
   );
+});
+
+Deno.test("exact expired and retired reservations return closed proof without Storage", async () => {
+  for (const status of ["expired", "retired"]) {
+    const f = fixture();
+    f.state.reserveResult = { status, operation_id: f.intent.operation_id };
+    const r = await f.publish();
+    equal(r.status, 200);
+    equal(await r.json(), {
+      closed: { protocol: 1, intent: f.intent, state: "closed" },
+    });
+    equal(f.state.uploads, 0);
+    equal(f.state.finalizes, 0);
+    equal(f.state.calls.some((x) => x.includes("/storage/")), false);
+  }
+});
+Deno.test("wrong terminal operation or unexpected fields cannot establish closure", async () => {
+  for (
+    const result of [{ status: "retired", operation_id: id() }, {
+      status: "expired",
+      operation_id: "same",
+      extra: true,
+    }]
+  ) {
+    const f = fixture();
+    f.state.reserveResult = {
+      ...result,
+      operation_id: result.operation_id === "same"
+        ? f.intent.operation_id
+        : result.operation_id,
+    };
+    const r = await f.publish();
+    equal(r.status, 503);
+    equal((await r.json()).closed, undefined);
+    equal(f.state.uploads, 0);
+  }
+});
+Deno.test("conflict unavailable and unresolved upload remain uncertain", async () => {
+  for (const status of ["conflict", "unavailable", "upload_unresolved"]) {
+    const f = fixture();
+    f.state.reserveResult = { status };
+    const r = await f.publish();
+    equal((await r.json()).closed, undefined);
+    equal(f.state.uploads, 0);
+  }
+});
+Deno.test("terminal finalize preserves the same full intent instead of confirming publication", async () => {
+  const f = fixture();
+  f.state.finalizeResult = {
+    status: "expired",
+    operation_id: f.intent.operation_id,
+  };
+  const r = await f.publish();
+  equal(r.status, 200);
+  equal(await r.json(), {
+    closed: { protocol: 1, intent: f.intent, state: "closed" },
+  });
+  equal(f.state.uploads, 1);
+});
+
+Deno.test("expiry between readback and fresh reservation closes without a new upload", async () => {
+  const f = fixture();
+  f.state.closeOnFresh = true;
+  const r = await f.publish();
+  equal(r.status, 200);
+  equal(await r.json(), {
+    closed: { protocol: 1, intent: f.intent, state: "closed" },
+  });
+  equal(f.state.reserves, 2);
+  equal(f.state.uploads, 0);
+  equal(f.state.finalizes, 0);
 });

@@ -144,6 +144,17 @@ const sameMedia = (a: Row, b: Row) =>
           .map((k) => [k, b[k]]),
       ),
     );
+// Only reserve/finalize can establish this: both validate the full immutable
+// intent hash before returning a matching terminal operation. No 404/timeout,
+// upload lease or Storage absence is accepted as terminal evidence.
+function closedPublication(value: Row, intent: Row): Response | null {
+  if (!["expired", "retired"].includes(String(value.status))) return null;
+  exact(value, ["status", "operation_id"]);
+  if (value.operation_id !== intent.operation_id) {
+    throw new Failure(503, "retry");
+  }
+  return json({ closed: { protocol: 1, intent, state: "closed" } });
+}
 export function createAudioCommentsHandler(
   config: Config,
   dependencies: Dependencies = {},
@@ -365,12 +376,16 @@ export function createAudioCommentsHandler(
           throw new Failure(400, "invalid");
         }
         const reserved = await command("reserve", intent);
+        const reservedClosed = closedPublication(reserved, intent);
+        if (reservedClosed) return reservedClosed;
         if (reserved.status) refused(reserved);
         let current = receipt(reserved, actor.account, intent),
           stored = await getStored(current, true);
         if (stored === null) {
           if (current.state === "published") throw new Failure(503, "retry"); // Never resurrect a missing acknowledged object.
           const fresh = await command("reserve", intent);
+          const freshClosed = closedPublication(fresh, intent);
+          if (freshClosed) return freshClosed;
           if (fresh.status) refused(fresh);
           current = receipt(fresh, actor.account, intent);
           if (current.state === "pending") {
@@ -425,6 +440,8 @@ export function createAudioCommentsHandler(
           stored_sha256: observed.sha256,
           stored_bytes: observed.byteCount,
         });
+        const finalizedClosed = closedPublication(finalized, intent);
+        if (finalizedClosed) return finalizedClosed;
         if (finalized.status) refused(finalized);
         const confirmed = receipt(finalized, actor.account, intent);
         if (confirmed.state !== "published") throw new Failure(503, "retry");

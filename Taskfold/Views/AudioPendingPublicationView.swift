@@ -20,9 +20,9 @@ private struct PendingAudioReview: Identifiable {
                     ForEach(controller.entries, id: \.publication.operation) { journal in
                         Button { review = .init(journal: journal) } label: {
                             VStack(alignment: .leading, spacing: 5) {
-                                Label(journal.publication.caption.isEmpty ? "Recording" : journal.publication.caption, systemImage: journal.receipt == nil ? "clock.arrow.circlepath" : "checkmark.circle")
+                                Label(journal.publication.caption.isEmpty ? "Recording" : journal.publication.caption, systemImage: journal.closedReceipt != nil ? "checkmark.shield" : (journal.isPending ? "clock.arrow.circlepath" : "checkmark.circle"))
                                     .lineLimit(2).foregroundStyle(.primary)
-                                Text(journal.receipt == nil ? "Awaiting confirmation · original version kept" : "Confirmed · private recording kept").font(.caption).foregroundStyle(.secondary)
+                                Text(journal.closedReceipt != nil ? "Closed · private recording kept" : (journal.isPending ? "Awaiting confirmation · original version kept" : "Confirmed · private recording kept")).font(.caption).foregroundStyle(.secondary)
                             }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         }.buttonStyle(.plain).accessibilityIdentifier("audioPendingRow-" + journal.publication.operation.uuidString.lowercased())
                     }
@@ -77,8 +77,8 @@ private struct PendingAudioReview: Identifiable {
                         Button("Keep a private copy", systemImage: "square.and.arrow.down") { run { try await controller.keepPrivateCopy() } }.disabled(busy).accessibilityIdentifier("audioPendingKeep")
                         Text("Keeps this original version in Saved recordings. Your edited draft stays unchanged.").font(.caption).foregroundStyle(.secondary)
                     }
-                    Section(journal.receipt == nil ? "Awaiting confirmation" : "Confirmed previously") {
-                        if journal.receipt == nil {
+                    Section(journal.closedReceipt != nil ? "Original publication closed" : (journal.isPending ? "Awaiting confirmation" : "Confirmed previously")) {
+                        if journal.isPending {
                             if store.audioPublishingScope(journal.publication.target) != nil {
                                 Button("Check original publication", systemImage: "arrow.clockwise") {
                                     run {
@@ -86,13 +86,16 @@ private struct PendingAudioReview: Identifiable {
                                         let publisher = try store.audioPendingPublisher(journal, library: controller); flow = publisher
                                         try await publisher.retry(journal)
                                         guard current, !Task.isCancelled else { return }; try await controller.updateAfterConfirmation()
-                                        notice = "Publication confirmed. This original recording is still kept here."
+                                        notice = publisher.state == .closed ? "Original publication closed. This private recording is still kept here." : "Publication confirmed. This original recording is still kept here."
                                     }
                                 }.disabled(busy).accessibilityIdentifier("audioPendingRetry")
                                 Text("Resumes the original reviewed send. Its recording and caption remain unchanged.").font(.caption).foregroundStyle(.secondary)
                             } else { Text("The original task is not available for publishing. You can still play or keep your private recording.").foregroundStyle(.secondary) }
                         } else {
-                            Label("This device kept the server confirmation", systemImage: "checkmark.circle").foregroundStyle(.green)
+                            if journal.closedReceipt != nil {
+                                Label("That send can’t resume",systemImage:"checkmark.shield")
+                                Text("It may have been visible earlier. You can keep this private recording; edit and save a new version if you want to publish again.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                            } else {Label("This device kept the server confirmation", systemImage: "checkmark.circle").foregroundStyle(.green)}
                             Button("Remove private publication copy…", role: .destructive) { removing = true }.disabled(busy).accessibilityIdentifier("audioPendingRemove")
                         }
                     }
@@ -108,7 +111,7 @@ private struct PendingAudioReview: Identifiable {
         #endif
         .task { await controller.select(request.journal) }
         .confirmationDialog("Remove this private copy?", isPresented: $removing, titleVisibility: .visible) {
-            Button("Remove private copy", role: .destructive) { run { try await controller.removeConfirmedCopy(); dismiss() } }
+            Button("Remove private copy", role: .destructive) { run { try await controller.removeResolvedCopy(); dismiss() } }
             Button("Cancel", role: .cancel) {}
         } message: { Text("This removes only the publication recording kept on this device. Keep a private copy first if you need it. The server comment and any saved draft are not removed.") }
         .onChange(of: current) { _, value in if !value { close(); dismiss() } }

@@ -1016,7 +1016,7 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
         defer { if generation == token { working = false } }
         do {
             let rows = try await storage.journals(); guard accepts(token) else { return }
-            entries = rows.filter { $0.receipt == nil || $0.clip != nil }
+            entries = rows.filter { $0.isPending || $0.clip != nil }
         } catch { if accepts(token) { notice = error.localizedDescription } }
     }
     func select(_ expected: AudioCommentPublicationJournal) async {
@@ -1052,17 +1052,21 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
         notice = "Private copy saved. It is available in Saved recordings."
     }
     func removeConfirmedCopy() async throws {
-        guard isCurrent, !working, let value = selected, value.receipt != nil else { throw AudioCommentStorageFailure.conflict }
+        guard selected?.receipt != nil else {throw AudioCommentStorageFailure.conflict}
+        try await removeResolvedCopy()
+    }
+    func removeResolvedCopy() async throws {
+        guard isCurrent, !working, let value = selected, value.isResolved else { throw AudioCommentStorageFailure.conflict }
         stopPlayback(); working = true; let token = generation
         defer { if generation == token { working = false } }
-        _ = try await storage.releaseConfirmedAudio(value); guard accepts(token) else { throw CancellationError() }
+        _ = try await storage.releaseResolvedAudio(value); guard accepts(token) else { throw CancellationError() }
         selected = nil; validated = nil; entries.removeAll { same($0, value) }; notice = "Private publication copy removed."
     }
     func updateAfterConfirmation() async throws {
         guard isCurrent, let expected = selected else { throw CancellationError() }
         let token = generation, rows = try await storage.journals(); guard accepts(token) else { throw CancellationError() }
         guard let value = rows.first(where: { same($0, expected) }) else { throw AudioCommentStorageFailure.conflict }
-        entries = rows.filter { $0.receipt == nil || $0.clip != nil }
+        entries = rows.filter { $0.isPending || $0.clip != nil }
         if value.clip == nil {
             player.stop(); playing = false; validated = nil; selected = nil
             notice = "This private publication copy was removed in another window."

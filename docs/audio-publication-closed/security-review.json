@@ -1,0 +1,19 @@
+{
+  "schemaChanged": false,
+  "hostedChanged": false,
+  "newPrivileges": false,
+  "inspected": [
+    "Existing SQL actor/session validation and account/task/operation lock order",
+    "Full immutable request_hash checked before expired/retired status",
+    "Only exact reserve/finalize statuses and matching operation can form closed envelope",
+    "Backend origin/current session/full intent checks; all other errors remain uncertain",
+    "Durable proof cannot overwrite published confirmation or be overwritten by it",
+    "Private original audio remains until explicit local removal; server upload fence unchanged"
+  ],
+  "nativeIntegrationAdvisors": "Baseline and final findings equal in each terminal report; owned containers removed.",
+  "notAccepted": [
+    "Hosted Auth/Storage custody",
+    "Native closed-state app UI",
+    "Owner status with unavailable original task/access"
+  ]
+}

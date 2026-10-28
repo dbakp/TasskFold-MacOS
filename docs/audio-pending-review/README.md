@@ -36,3 +36,5 @@ node Scripts/Database/test-audio-native-publication.mjs /tmp/taskfold-audio-revi
 The previous [publication-controls checkpoint](../audio-publication-controls/README.md) records the earlier compiled controls. This extends recovery/retention; audio comments and the overall Px objective remain open.
 
 Follow-up: [gated live conversation preview](../audio-live-preview/README.md) implements bounded personal-root listing, verified download/play and explicit removal. Pagination, shared/read-only integration and native/provider acceptance remain open.
+
+Follow-up: [exact closed-publication recovery](../audio-publication-closed/README.md) adds durable terminal proof without treating missing objects or timeouts as closure. Broader owner-status and native/provider acceptance remain open.

@@ -1,0 +1,22 @@
+{
+  "ios": {
+    "build": "BUILD SUCCEEDED",
+    "signing": "CODE_SIGNING_ALLOWED=NO",
+    "bundleIdentifier": "com.dbakp.taskfold",
+    "architecture": "x86_64 arm64",
+    "executableSHA256": "285c1ec9cb0996be30613305634be9ab3c67edcb2e30f14c5dd4bd228659354f",
+    "loadedDebugCodeSHA256": "3e6268bdc66d84739d6ab744ac7a60f83c6157896fa0443c2a152628487bfa78",
+    "launched": false,
+    "audioFlags": {}
+  },
+  "mac": {
+    "build": "BUILD SUCCEEDED",
+    "signing": "CODE_SIGNING_ALLOWED=NO",
+    "bundleIdentifier": "com.dbakp.taskfold.mac",
+    "architecture": "arm64",
+    "executableSHA256": "7a2231c6327b65d5e81467bf1f793379f6c5b4a6c161b5fc8fdc1167deab7f2f",
+    "loadedDebugCodeSHA256": "ab1577370e7e37b4509288c64205424a617d14083070fca6af8301ec8f0e8ed2",
+    "launched": false,
+    "audioFlags": {}
+  }
+}

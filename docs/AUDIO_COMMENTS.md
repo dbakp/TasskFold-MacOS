@@ -1,5 +1,7 @@
 # Audio comments — implementation work in progress
 
+Exact expired/retired audio operations now settle as a durable **Original publication closed** state, preserving private media and preventing another send of that operation across relaunch. Missing objects, timeouts and unavailable access remain uncertain. Each repo passes 195 Core, 282 controller, 25 gateway, 54 terminal native/database/gateway and 24 existing publication regression checks; full unsigned builds pass. Ordinary flags stay off. Owner status after task/access loss, native closed-state/Store UI and provider/legacy/history acceptance remain open. See [closed-publication recovery](audio-publication-closed/README.md).
+
 Shared conversations now merge admitted text and published recordings in one time-ordered timeline, reusing accessible audio controls and retaining independent paging and text actions. Server microseconds, literal content and task/account isolation pass 37 selected Core tests per repo (including eight new timeline cases). Native acceptance and remaining Store/provider lifecycle limits are recorded in [mixed conversation timeline](conversation-timeline/README.md). Ordinary audio stays gated; genuine audio remains deferred.
 
 Audio comments remain an unfinished, gated Px feature. Both repos now own private recording/recovery, publication controls and a live server conversation preview. The latest verified scope is [shared read-only conversations](audio-shared-read/README.md): 184 Core, 273 controller, 30 shared native/database/gateway and 24 publication regression checks per repo. Native UI/runtime, team publishing/removal/custody and unified timeline, real hosted provider/custody and genuine audio remain open. No ordinary flag is enabled or hosted migration deployed by this checkpoint. Earlier sections and counts are historical checkpoints.
@@ -683,3 +685,21 @@ accepts the synthetic conversation component scopes above; audio/Px remain open.
 - [ ] Mac mixed-timeline runtime and full Store/provider lifecycle remain open;
   see conversation-timeline/README.md. Ordinary audio flags stay off. Team audio
   writes/custody, uncertain-upload/legacy recovery and genuine audio remain open.
+
+## 2026-10-28 — exact closed-publication recovery
+
+- [x] Turn an exact expired/retired reserve/finalize response into durable closure,
+  preserving original audio and stable intent. Missing objects/timeouts/conflicts
+  remain uncertain; a closed operation is never silently republished.
+- [x] Restore v3 closed journals beside existing v1/v2 files, keep private originals,
+  allow explicit copy/compaction and retain proof. A new publication requires an
+  explicitly saved new revision; no automatic IDs or upload-fence release.
+- [x] Independently pass 195 Core, 282 actual controller, 25 gateway, 54 terminal
+  native/gateway/PostgreSQL and 24 existing publication regression checks per repo;
+  both full unsigned apps build. No new schema/exposure or hosted data changes.
+- [ ] Owner status after task/access loss, absent server reservations, native closed-
+  state/full Store UI, legacy/history policy and hosted provider/custody acceptance.
+  Genuine audio and existing user deferrals stay pending; ordinary flags stay off.
+
+[Evidence, exact limits and reproduction](audio-publication-closed/README.md).
+This closes the exact-reservation terminal gap; the full audio/Px feature stays open.

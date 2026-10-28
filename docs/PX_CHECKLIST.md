@@ -125,11 +125,12 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   and portable backups; durable publication/retry; authenticated paged live metadata,
   native verified download/play and explicit removal in a personal-root preview.
   Shared/archived project reads now have separate admission and denied-access clearing.
-  Latest checks: 184 Core, 273 controller, 30 shared native/database/gateway and
-  24 publication regression checks per repo. A mixed text/audio timeline is now
-  implemented with 37 selected shared-comment/timeline Core checks per repo.
+  Latest closure checks: 195 Core, 282 controller, 25 gateway, 54 terminal native/
+  database/gateway and 24 publication regression checks per repo. Prior shared-read
+  and mixed timeline evidence remain separately recorded. Exact expired/retired
+  operations now retain a closed proof and private media without resending.
   Pending: team audio writing/custody, full native Store/shared-account lifecycle,
-  remaining UI/spoken acceptance, unknown-upload/legacy-history recovery, hosted
+  remaining UI/spoken acceptance, status after task/access loss, legacy-history, hosted
   custody/provider and genuine audio acceptance. See [timeline evidence](conversation-timeline/README.md),
   [shared-read evidence](audio-shared-read/README.md)
   and [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
@@ -836,3 +837,21 @@ accepts the synthetic conversation component scopes above; audio/Px remain open.
 - [ ] Mac mixed-timeline runtime and full Store/provider lifecycle remain open;
   see conversation-timeline/README.md. Ordinary audio flags stay off. Team audio
   writes/custody, uncertain-upload/legacy recovery and genuine audio remain open.
+
+## 2026-10-28 — exact closed-publication recovery
+
+- [x] Turn an exact expired/retired reserve/finalize response into durable closure,
+  preserving original audio and stable intent. Missing objects/timeouts/conflicts
+  remain uncertain; a closed operation is never silently republished.
+- [x] Restore v3 closed journals beside existing v1/v2 files, keep private originals,
+  allow explicit copy/compaction and retain proof. A new publication requires an
+  explicitly saved new revision; no automatic IDs or upload-fence release.
+- [x] Independently pass 195 Core, 282 actual controller, 25 gateway, 54 terminal
+  native/gateway/PostgreSQL and 24 existing publication regression checks per repo;
+  both full unsigned apps build. No new schema/exposure or hosted data changes.
+- [ ] Owner status after task/access loss, absent server reservations, native closed-
+  state/full Store UI, legacy/history policy and hosted provider/custody acceptance.
+  Genuine audio and existing user deferrals stay pending; ordinary flags stay off.
+
+[Evidence, exact limits and reproduction](audio-publication-closed/README.md).
+This closes the exact-reservation terminal gap; the full audio/Px feature stays open.

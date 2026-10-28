@@ -30,6 +30,9 @@ import SwiftUI
                     case .published:
                         Label("Published previously", systemImage: "checkmark.circle.fill").foregroundStyle(.green).accessibilityIdentifier("audioPublicationConfirmed")
                         Text("This device kept its confirmation. Open Audio comments in the task to check its current contents.").font(.caption).foregroundStyle(.secondary)
+                    case .closed:
+                        Label("Original publication closed",systemImage:"checkmark.shield").accessibilityIdentifier("audioPublicationClosed")
+                        Text("That send can’t resume. It may have been visible earlier. Your private recording is preserved; edit and save a new version if you want to publish again.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
                     case .saving, .sending:
                         ProgressView(flow.state == .sending ? "Publishing recording…" : "Preparing publication…").accessibilityIdentifier("audioPublicationProgress")
                     case .ready, .unconfirmed:
@@ -98,7 +101,7 @@ import SwiftUI
                     try await flow.publish(fresh)
                 }
                 guard admitted, generation == token, !Task.isCancelled else { return }
-                notice = "Publication confirmed. Your saved recording is still here."; statusFocused = true
+                notice = flow.state == .closed ? "Original publication closed. Your private recording is preserved." : "Publication confirmed. Your saved recording is still here."; statusFocused = true
             } catch {
                 guard admitted, generation == token, !Task.isCancelled else { return }
                 if error is AccountSessionAuthorizationRequired { notice = "Sign in again before checking this publication. Your local recording is preserved." }

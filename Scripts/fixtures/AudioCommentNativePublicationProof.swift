@@ -60,7 +60,7 @@ private final class NativePublicationHTTP: URLProtocol {
         let flow = AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: target, retainAudioOnConfirmation: config["retain_audio"] == .bool(true), isCurrent: { backend.session?.user.id == config.string("account") && backend.reminderSessionIncarnation == incarnation })
         do { try await flow.publish(source); if NativePublicationHTTP.loseReply { throw AppFailure(message: "Expected a controlled lost reply") } }
         catch { if !NativePublicationHTTP.loseReply { throw error } }
-        if config["release_copy"] == .bool(true), let confirmed = try disk.journals().first { _ = try disk.releaseConfirmedAudio(confirmed) }
+        if config["release_copy"] == .bool(true), let confirmed = try disk.journals().first { _ = try disk.releaseResolvedAudio(confirmed) }
         guard let stored = try disk.journals().first else { throw AppFailure(message: "Missing native publication journal") }
         if config["read_remote"] == .bool(true) {
             let page = try await backend.pageAudio(account: stored.publication.account, target: target, after: nil, origin: backend.baseURL, incarnation: incarnation)
@@ -83,7 +83,7 @@ private final class NativePublicationHTTP: URLProtocol {
             guard blocked else { throw AppFailure(message: "Removed recording remains readable") }
             guard let persisted = try disk.journals().first, persisted.publication.sameIntent(as: stored.publication), persisted.receipt?.record == stored.receipt?.record, persisted.clip?.data == stored.clip?.data else { throw AppFailure(message: "Remote actions changed private publication storage") }
         }
-        let result = Record(["remote_checked": .bool(config["read_remote"] == .bool(true)), "operation_id": .string(stored.publication.operation.uuidString.lowercased()), "comment_id": .string(stored.publication.comment.uuidString.lowercased()), "asset_id": .string(stored.publication.asset.uuidString.lowercased()), "published": .bool(stored.receipt != nil), "has_audio": .bool(stored.clip != nil), "caption": .string(stored.publication.caption), "sha256": .string(stored.publication.descriptor.sha256)])
+        let result = Record(["closed":.bool(stored.closedReceipt != nil), "intent":.object(stored.publication.record.fields), "remote_checked": .bool(config["read_remote"] == .bool(true)), "operation_id": .string(stored.publication.operation.uuidString.lowercased()), "comment_id": .string(stored.publication.comment.uuidString.lowercased()), "asset_id": .string(stored.publication.asset.uuidString.lowercased()), "published": .bool(stored.receipt != nil), "has_audio": .bool(stored.clip != nil), "caption": .string(stored.publication.caption), "sha256": .string(stored.publication.descriptor.sha256)])
         print(String(decoding: try JSONEncoder().encode(result), as: UTF8.self))
     }
 }

@@ -376,3 +376,113 @@ extension AudioCommentPublishingTests {
         XCTAssertEqual(calls,1)
     }
 }
+
+extension AudioCommentPublishingTests {
+    func closedProof(_ publication:AudioCommentPublication) throws -> AudioCommentPublicationClosed {
+        try .init(record:Record(["protocol":.number(1),"intent":.object(publication.record.fields),"state":.string("closed")]),publication:publication)
+    }
+    func testClosedProofRejectsChangedIntentAndUnboundStatuses() throws {
+        let pending=try disk().prepare(source()),proof=try closedProof(pending.publication)
+        for (key,value) in [("state",JSON.string("expired")),("account",.string(account.uuidString.lowercased())),("protocol",.number(2))] {
+            var fields=proof.record.fields;fields[key]=value
+            XCTAssertThrowsError(try AudioCommentPublicationClosed(record:Record(fields),publication:pending.publication))
+        }
+        var changed=pending.publication.record.fields;changed["caption"] = .string("  café\nمراجعة 🪴  ")
+        var fields=proof.record.fields;fields["intent"] = .object(changed)
+        XCTAssertThrowsError(try AudioCommentPublicationClosed(record:Record(fields),publication:pending.publication))
+        XCTAssertThrowsError(try AudioCommentPublicationClosed(record:Record(["status":.string("retired"),"operation_id":.string(pending.publication.operation.uuidString.lowercased())]),publication:pending.publication))
+    }
+    func testClosedProofRoundTripsWithMediaThenExplicitCompaction() throws {
+        let input=try source(),file=try disk(),pending=try file.prepare(input)
+        let closed=try file.settleClosed(pending,proof:closedProof(pending.publication))
+        XCTAssertFalse(closed.isPending);XCTAssertNil(closed.receipt);XCTAssertEqual(closed.clip?.data,input.clip.data)
+        let reopened=try AudioCommentPublicationJournal(encoded:closed.encoded(),account:account,origin:origin)
+        XCTAssertEqual(reopened.closedReceipt?.record,closed.closedReceipt?.record);XCTAssertEqual(reopened.clip?.data,input.clip.data)
+        let compact=try file.releaseResolvedAudio(reopened)
+        XCTAssertNil(compact.clip);XCTAssertNotNil(compact.closedReceipt)
+        XCTAssertLessThan(try compact.encoded().count,10000)
+        XCTAssertNotNil(try file.prepare(input).closedReceipt)
+        XCTAssertThrowsError(try file.releaseConfirmedAudio(closed))
+    }
+    func testClosedFileNeedsExactNonemptyProofAndUnchangedMedia() throws {
+        let file=try disk(),pending=try file.prepare(source()),closed=try file.settleClosed(pending,proof:closedProof(pending.publication))
+        let fields=try XCTUnwrap(PropertyListSerialization.propertyList(from:closed.encoded(),format:nil) as? [String:Any])
+        for change in ["empty","missing","both","audio"] {
+            var value=fields
+            switch change {
+            case "empty":value["closed"]=Data()
+            case "missing":value.removeValue(forKey:"closed")
+            case "both":value["receipt"]=try JSONEncoder().encode(record(pending.publication))
+            default:value["audio"]=Data([1,2,3])
+            }
+            let bytes=try PropertyListSerialization.data(fromPropertyList:value,format:.binary,options:0)
+            XCTAssertThrowsError(try AudioCommentPublicationJournal(encoded:bytes,account:account,origin:origin),change)
+        }
+    }
+    func testClosedOriginalRequiresExplicitNewSavedRevision() throws {
+        let input=try source(),file=try disk(),pending=try file.prepare(input)
+        _=try file.settleClosed(pending,proof:closedProof(pending.publication))
+        let same=try file.prepare(input);XCTAssertEqual(same.publication.operation,pending.publication.operation);XCTAssertNotNil(same.closedReceipt)
+        let edited=try input.replacing(caption:"Reviewed new version",clip:input.clip)
+        let fresh=try file.prepare(edited);XCTAssertTrue(fresh.isPending);XCTAssertNotEqual(fresh.publication.operation,pending.publication.operation)
+        XCTAssertEqual(try file.journals().count,2)
+    }
+    func testClosedEntryDoesNotConsumePendingQuotaButRetainsMediaBytes() throws {
+        let file=try disk(),pending=try file.prepare(source()),closed=try file.settleClosed(pending,proof:closedProof(pending.publication))
+        for _ in 0..<20 {_=try file.prepare(source())}
+        XCTAssertEqual(try file.journals().filter(\.isPending).count,20)
+        XCTAssertThrowsError(try file.prepare(source()))
+        let compact=try file.releaseResolvedAudio(closed);XCTAssertNil(compact.clip);XCTAssertNotNil(compact.closedReceipt)
+    }
+    func testClosedWriteBeforeRenameFailurePreservesPendingAndAfterRenameReconciles() throws {
+        let file=try disk(),pending=try file.prepare(source()),proof=try closedProof(pending.publication)
+        var failing=file;failing.fault={if case .beforeRename=$0 {throw AudioCommentStorageFailure.unreadable}}
+        XCTAssertThrowsError(try failing.settleClosed(pending,proof:proof));XCTAssertTrue(try XCTUnwrap(file.journals().first).isPending)
+        failing.fault={if case .afterRename=$0 {throw AudioCommentStorageFailure.unreadable}}
+        XCTAssertThrowsError(try failing.settleClosed(pending,proof:proof))
+        let restored=try file.settleClosed(pending,proof:proof);XCTAssertNotNil(restored.closedReceipt);XCTAssertNotNil(restored.clip)
+        XCTAssertEqual(try file.journals().count,1)
+    }
+    func testPublishedAndClosedProofsCannotOverwriteEachOther() throws {
+        let file=try disk(),pending=try file.prepare(source()),proof=try closedProof(pending.publication)
+        _=try file.confirm(pending,receipt:.init(record:record(pending.publication),publication:pending.publication))
+        XCTAssertThrowsError(try file.settleClosed(pending,proof:proof))
+        let other=try file.prepare(source());_=try file.settleClosed(other,proof:closedProof(other.publication))
+        XCTAssertThrowsError(try file.confirm(other,receipt:.init(record:record(other.publication),publication:other.publication)))
+        let terminal=try XCTUnwrap(file.journals().first{$0.publication.operation==other.publication.operation})
+        XCTAssertThrowsError(try terminal.confirmed(.init(record:record(other.publication),publication:other.publication)))
+    }
+    func testPendingAndForeignClosedCopyCannotBeReleasedOrSettled() throws {
+        let file=try disk(),pending=try file.prepare(source()),other=try file.prepare(source())
+        XCTAssertThrowsError(try file.releaseResolvedAudio(pending))
+        XCTAssertThrowsError(try file.settleClosed(pending,proof:closedProof(other.publication)))
+        let closed=try file.settleClosed(pending,proof:closedProof(pending.publication))
+        XCTAssertThrowsError(try AudioCommentPublicationJournal(encoded:closed.encoded(),account:UUID(),origin:origin))
+        XCTAssertThrowsError(try AudioCommentPublicationJournal(encoded:closed.encoded(),account:account,origin:"https://another.example.invalid"))
+    }
+    @MainActor func testFlowPersistsClosedAndColdRetryNeverResends() async throws {
+        let file=try disk(),input=try source(),transport=Transport()
+        transport.response={pending in throw try self.closedProof(pending.publication)}
+        let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,isCurrent:{true})
+        try await flow.publish(input);XCTAssertEqual(flow.state,.closed);XCTAssertEqual(transport.requests.count,1)
+        let journal=try XCTUnwrap(flow.journal);XCTAssertEqual(journal.clip?.data,input.clip.data)
+        let restored=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,isCurrent:{true})
+        try await restored.restore(input);XCTAssertEqual(restored.state,.closed)
+        try await restored.retry(journal);try await restored.publish(input)
+        XCTAssertEqual(restored.state,.closed);XCTAssertEqual(transport.requests.count,1)
+    }
+    @MainActor func testTimeoutAndGenericRetiredMessageRemainUnconfirmed() async throws {
+        let file=try disk(),input=try source(),transport=Transport()
+        transport.response={_ in throw AudioCommentFailure(message:"retired")}
+        let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,isCurrent:{true})
+        do {try await flow.publish(input);XCTFail("Expected uncertainty")}catch{}
+        XCTAssertEqual(flow.state,.unconfirmed);XCTAssertTrue(try XCTUnwrap(file.journals().first).isPending)
+    }
+    @MainActor func testDepartureDuringClosedReplyDoesNotSettleOrUpdateNewContext() async throws {
+        let file=try disk(),input=try source(),transport=Transport();var current=true
+        transport.response={pending in current=false;throw try self.closedProof(pending.publication)}
+        let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,isCurrent:{current})
+        do {try await flow.publish(input);XCTFail("Expected departure")}catch{}
+        XCTAssertTrue(try XCTUnwrap(file.journals().first).isPending);XCTAssertNil(flow.journal?.closedReceipt)
+    }
+}

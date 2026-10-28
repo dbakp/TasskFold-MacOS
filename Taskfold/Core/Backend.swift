@@ -1224,9 +1224,13 @@ extension Backend: AudioCommentPublishingTransport {
         }
         do {
             let envelope = try JSONDecoder().decode(Record.self, from: data)
+            if Set(envelope.fields.keys) == ["closed"],case .object(let proof)=envelope["closed"] {
+                throw try AudioCommentPublicationClosed(record:Record(proof),publication:pending.publication)
+            }
             guard Set(envelope.fields.keys) == ["receipt"], case .object(let receipt) = envelope["receipt"] else { throw AudioCommentFailure.invalid }
             return try AudioCommentPublishedReceipt(record: Record(receipt), publication: pending.publication)
-        } catch { throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.") }
+        } catch let closed as AudioCommentPublicationClosed {throw closed}
+        catch { throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.") }
     }
 }
 
