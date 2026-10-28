@@ -4,6 +4,8 @@ Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Fresh local workflows now adopt their admitted worker projection without a second row append pass. 108 focused Core cases pass per repo; seven native cases pass on each phone/tablet with no reported runtime warnings. Clean Mac Create/Undo/Redo passes through native controls. One paired Mac Debug observation measures 0.634 → 0.490 s synchronous commit; the pause and wider responsiveness gates remain open. See [workflow-projection-adoption](workflow-projection-adoption/README.md).
+
 Reviewed voice drafts now keep exact raw source binding in both apps. Each repo
 passes 81 focused Core cases; the old model reproduces three raw Unicode refusal
 failures within one new case. Two Mac native synthetic-recorder journeys pass,

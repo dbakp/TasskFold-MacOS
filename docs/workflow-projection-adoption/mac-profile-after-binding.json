@@ -1,0 +1,12 @@
+{
+  "scope": "After-projection Mac profile with temporary DEBUG-only phase markers and readback UI; CUA Create/Undo/Redo verified.",
+  "sources": {
+    "Taskfold/Core/Store.swift": "eb70ae38a4cddd784fa4e833149f407e3a8230e39712aa20262921e46b8e3e04",
+    "Taskfold/Core/TaskActivity.swift": "a7021ae66938cb78f5fdb53fe16694f97644930b75d1872f0cd726c3cfa4f5cd",
+    "Taskfold/TeamTemplateNativeFixture.swift": "7a9e79209d7f46465c46fa1348163b67ad81ee5d97f266e84e8d74a93955cb28"
+  },
+  "binaries": {
+    "Contents/MacOS/Taskfold": "227dc2c1df754e6442be6007fa2d89f72d83a2ad71050be6fc2457f5e2d12109",
+    "Contents/MacOS/Taskfold.debug.dylib": "846e6952ac5b8f92408550f447f259a4a2c3bc283871066f186d69f15d091e65"
+  }
+}

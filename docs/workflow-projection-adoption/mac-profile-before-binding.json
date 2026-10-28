@@ -1,0 +1,11 @@
+{
+  "sources": {
+    "Taskfold/Core/Store.swift": "add677a7e0fc0bece1e412885d6cc1209a5fe183d9a1a1ddd6c711858834b398",
+    "Taskfold/TeamTemplateNativeFixture.swift": "58920ded0577b03b7d80ff033d087b4732421af9a43514d99747a1e2185899b1"
+  },
+  "binaries": {
+    "Contents/MacOS/Taskfold": "879defe1305c0703d89cc32e8c43f4fffff27558dec2837f900dd7864c317d97",
+    "Contents/MacOS/Taskfold.debug.dylib": "a1aad74331318dbaa44fbaa063e1c619e8c924958c27125e954b6f29abe05f9b"
+  },
+  "scope": "Initial 5000-root commit baseline, temporary host-only phase markers."
+}

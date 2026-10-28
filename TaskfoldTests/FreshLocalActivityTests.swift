@@ -461,3 +461,73 @@ extension FreshLocalActivityTests {
         XCTAssertEqual(unchanged, original)
     }
 }
+
+
+extension FreshLocalActivityTests {
+    func testWorkerProjectionAdoptsCompleteRowsWithoutASecondAppendPass() throws {
+        let original = seed(), changes = workflowChanges(), source = UUID()
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        XCTAssertTrue(admission.canAdoptProjectedCreation)
+        var actual = original
+        XCTAssertTrue(admission.apply(to: &actual, source: source, account: account, retainingValidatedCommands: true))
+        var (expected, entries) = finalEntries(admission.changes, seed: original)
+        XCTAssertTrue(LocalActivityCreation.record(entries, snapshot: &expected, account: account))
+        WidgetCompletion.prepare(&expected)
+        XCTAssertEqual(actual.widgetCompletion.states.mapValues(\.signature), expected.widgetCompletion.states.mapValues(\.signature))
+        expected.widgetCompletion = actual.widgetCompletion
+        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        XCTAssertEqual(try encoder.encode(withoutProvenanceNonces(actual)), try encoder.encode(withoutProvenanceNonces(expected)))
+        XCTAssertEqual(actual.tables["tasks"]?.count, changes.count)
+        XCTAssertEqual(try metadata(original), try metadata(seed()), "Capturing/adopting must leave the prior snapshot immutable")
+        XCTAssertNotNil(try admission.encodedCache?.matching(actual))
+    }
+    func testEncodingFailureCannotAuthorizeSkippingOrdinaryProjection() throws {
+        var original = seed()
+        original.tables["future"] = [Record(["id": .string("unknown"), "invalid": .number(.nan)])]
+        let changes = workflowChanges(), source = UUID()
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        XCTAssertTrue(admission.canRetainCapturedChanges)
+        XCTAssertFalse(admission.canAdoptProjectedCreation)
+        XCTAssertNil(admission.encodedCache)
+        var ordinary = original, fresh = try XCTUnwrap(FreshWorkflowCreation(admission.changes, snapshot: original, account: account))
+        for change in admission.changes { XCTAssertNotNil(fresh.append(change, to: &ordinary)) }
+        XCTAssertEqual(ordinary.tables["tasks"]?.count, changes.count)
+        XCTAssertThrowsError(try JSONEncoder().encode(ordinary), "The normal durable-save error remains visible; no rows may be presented as saved")
+    }
+    func testRejectedProjectionLeavesEveryTableUntouchedForOrdinaryReplay() throws {
+        let original = seed(), changes = workflowChanges(), source = UUID()
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        for wrongOwner in [false, true] {
+            var unchanged = original
+            XCTAssertFalse(admission.apply(to: &unchanged, source: wrongOwner ? source : UUID(), account: wrongOwner ? "other" : account, retainingValidatedCommands: true))
+            XCTAssertEqual(unchanged, original)
+        }
+        var replayed = original, fresh = try XCTUnwrap(FreshWorkflowCreation(admission.changes, snapshot: original, account: account))
+        for change in admission.changes { XCTAssertNotNil(fresh.append(change, to: &replayed)) }
+        XCTAssertEqual(replayed.tables["tasks"]?.count, changes.count)
+        var edited = changes; edited[0].fields["description"] = .string("e\u{301}")
+        XCTAssertNil(plan.admit(edited, source: source, account: account, cache: nil), "Raw edited commands cannot inherit the projection capability")
+    }
+    func testProjectOnlyWorkerProjectionIsCompleteWithoutTaskHistoryEntries() throws {
+        let original = seed(), source = UUID(), run = UUID(), project = UUID().uuidString.lowercased()
+        let change = Mutation(table: "projects", recordID: project, method: "POST", fields: ["id": .string(project), "user_id": .string(account), "name": .string("Project-only workflow")], insertOnly: true, workflowRun: run)
+        let changes = [change]
+        let plan = try XCTUnwrap(try LocalActivityCreation.Preparation(changes: changes, snapshot: original, source: source, account: account, labels: [], cache: nil, at: now))
+        let admission = try XCTUnwrap(plan.admit(changes, source: source, account: account, cache: nil))
+        XCTAssertTrue(admission.canAdoptProjectedCreation)
+        var adopted = original
+        XCTAssertTrue(admission.apply(to: &adopted, source: source, account: account, retainingValidatedCommands: true))
+        XCTAssertEqual(adopted.tables["projects"]?.map(\.id), [project])
+        XCTAssertEqual(try metadata(adopted), try metadata(original))
+        var fallback = original
+        XCTAssertFalse(admission.apply(to: &fallback, source: UUID(), account: account, retainingValidatedCommands: true))
+        var fresh = try XCTUnwrap(FreshWorkflowCreation(admission.changes, snapshot: fallback, account: account))
+        for command in admission.changes { XCTAssertNotNil(fresh.append(command, to: &fallback)) }
+        XCTAssertTrue(LocalActivityCreation.record([], snapshot: &fallback, account: account))
+        XCTAssertEqual(fallback.tables["projects"]?.map(\.id), [project], "An empty task-history list is not proof that the project's row was created")
+        XCTAssertEqual(EditHistory(changes: admission.changes, snapshot: original).undo.count, 1)
+    }
+}

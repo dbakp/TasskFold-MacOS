@@ -1371,6 +1371,10 @@ enum LocalActivityCreation {
             /// These commands already include planning, labels and completion
             /// capture. The Store may retain them unchanged after validation.
             var canRetainCapturedChanges: Bool { preparation.undoHistory != nil }
+            /// The immutable completed projection is retained only when encoding
+            /// succeeded. History/Undo admission alone cannot replace row creation.
+            var canAdoptProjectedCreation: Bool { canRetainCapturedChanges && preparation.encodedCache != nil }
+
             var encodedCache: PreparedSnapshotEncoding? { preparation.encodedCache }
             func editHistory(matching changes: [Mutation], source: UUID, account: String) -> EditHistory? {
                 guard preparation.source == source, preparation.account.utf8.elementsEqual(account.utf8),

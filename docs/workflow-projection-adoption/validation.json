@@ -1,0 +1,17 @@
+{
+  "scope": "Final clean source; no temporary profiler/readback. Mac Create/Undo/Redo via native CUA; iOS seven native cases per device.",
+  "sources": {
+    "Taskfold/Core/Store.swift": "ec3b8b1875bc60bf0dcac0531b30816e4261b04482bb0cc49b45eeb2d7c1e84e",
+    "Taskfold/Core/TaskActivity.swift": "a7021ae66938cb78f5fdb53fe16694f97644930b75d1872f0cd726c3cfa4f5cd",
+    "Taskfold/TeamTemplateNativeFixture.swift": "deeca137aa192c2303b74e6dc1141c5eb7f074014e529e0c382c6138c2170560",
+    "TaskfoldTests/FreshLocalActivityTests.swift": "ed65194e98ce38c45b63aad882d68df85509487239b575d197efcf1420e63a8b",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "e25764f3013234f1213624299c090b801a6652742a86b349d4100641dec16b20"
+  },
+  "appBinaries": {
+    "Contents/MacOS/Taskfold.debug.dylib": "ec8485cbda38c6b7871aedcfe297b657a7d8333b03801f54e574994e29ff2f3b",
+    "Contents/MacOS/__preview.dylib": "974c3f7c547e9a9a13e14a6bd087cd511af9f786e7be3e2736236c32c1c2d330",
+    "Contents/MacOS/Taskfold": "d8c54520b184cd6a53f1d259a9244917e597df8b4dff08ddccd979ef016b0dd8"
+  },
+  "strictSignatureVerified": true,
+  "coreDistinctPassingTests": 108
+}

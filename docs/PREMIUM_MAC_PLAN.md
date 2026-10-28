@@ -9047,3 +9047,13 @@ Ordinary audio entry points remain gated. This checkpoint does not complete Px.
 Evidence: [workspace-return recovery](audio-comment-workspace-return/README.md).
 This resolves the earlier workspace-switch pre-journal failure; it does not close
 the broader audio gate or the Px objective. Ordinary audio entry points stay gated.
+
+## 2026-10-28 — adopt prepared local workflow rows
+
+- [x] Avoid the second row append pass after full immutable projection admission; preserve final Store validation.
+- [x] Replay ordinary creation after late rejection, including empty/project-only workflows.
+- [x] 108 selected Core cases per repo; seven warning-free native cases each on phone/tablet; clean Mac Create/Undo/Redo.
+- [ ] Reduce the remaining ~0.49-second synchronous 5,000-root Mac commit; verify richer workloads and production rendering.
+- [ ] Close previously recorded Mac runtime and cloud-settle gates.
+
+[Evidence, measurements and exact limits](workflow-projection-adoption/README.md).

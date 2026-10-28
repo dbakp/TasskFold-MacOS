@@ -447,7 +447,7 @@ import CryptoKit
     private func measureCommit() async {
         guard WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale"),
               let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-count=") }),
-              let count = Int(argument.split(separator: "=").last ?? ""), [1000, 5000].contains(count),
+              let count = Int(argument.split(separator: "=").last ?? ""), [0, 1000, 5000].contains(count),
               let proofArgument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
               let proof = UUID(uuidString: String(proofArgument.dropFirst("--workflow-commit-proof=".count))) else { return }
         do {
@@ -506,6 +506,7 @@ import CryptoKit
                 "preparedNormalizationUsed": .bool(store.workflowPreparedNormalizationUsed),
                 "preparedUndoUsed": .bool(store.workflowPreparedUndoUsed),
                 "preparedEncodingUsed": .bool(store.workflowPreparedEncodingUsed),
+                "preparedProjectionUsed": .bool(store.workflowPreparedProjectionUsed),
                 "sourceEditPreserved": .bool(!changeSource || store.snapshot.tables["tasks"]?.first?.title == "Edited while history prepared"),
                 "taskRevisionDelta": .number(Double(store.taskRevision - revision)),
                 "tasks": .number(Double(store.tasks.count)), "pending": .number(Double(store.snapshot.pending.count)),

@@ -102,6 +102,7 @@ final class Store {
     @ObservationIgnored private(set) var workflowPreparedNormalizationUsed = false
     @ObservationIgnored private(set) var workflowPreparedUndoUsed = false
     @ObservationIgnored private(set) var workflowPreparedEncodingUsed = false
+    @ObservationIgnored private(set) var workflowPreparedProjectionUsed = false
     #endif
     var snapshot = Snapshot() {
         didSet {
@@ -1530,6 +1531,7 @@ final class Store {
         workflowPreparedNormalizationUsed = false
         workflowPreparedUndoUsed = false
         workflowPreparedEncodingUsed = false
+        workflowPreparedProjectionUsed = false
         #endif
         guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
         guard workspaceCacheDecoded else {error="Your saved workspace needs recovery before more changes can be saved. Its original file is kept.";return false}
@@ -1654,6 +1656,8 @@ final class Store {
         var working = old
         var localCreations: [LocalActivityCreation.Entry] = []
         let retainCapturedChanges = projectsFreshCreation && admittedHistory?.canRetainCapturedChanges == true
+        let canAdoptProjection = retainCapturedChanges && admittedHistory?.canAdoptProjectedCreation == true
+
         var committedChanges: [Mutation] = retainCapturedChanges ? changes : []
         for var change in changes {
             let current = projectsFreshCreation ? nil : record(change.table, id: change.recordID)
@@ -1695,6 +1699,10 @@ final class Store {
                 committedChanges.append(change)
             }
             if projectsFreshCreation {
+                // All Store gates above still run. The initial wholly-fresh plan
+                // and immutable command admission also cover append's identity
+                // checks; adopt its already-built rows after the final scope fence.
+                if canAdoptProjection { continue }
                 guard let after = freshCreation?.append(change, to: &working) else {
                     snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
                 }
@@ -1714,9 +1722,25 @@ final class Store {
             if !localMode { snapshot.pending.append(change) }
         }
         if projectsFreshCreation {
-            let preparedHistory = localMode && (admittedHistory?.apply(to: &working, source: snapshotRevision, account: userID, retainingValidatedCommands: retainCapturedChanges) ?? localHistory?.apply(localCreations, to: &working, source: snapshotRevision, account: userID) ?? false)
+            var projectionSource = snapshotRevision
+            #if DEBUG
+            if canAdoptProjection, WorkflowUndoNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-reject-prepared-projection") { projectionSource = UUID() }
+            #endif
+            let preparedHistory = localMode && (admittedHistory?.apply(to: &working, source: projectionSource, account: userID, retainingValidatedCommands: retainCapturedChanges) ?? localHistory?.apply(localCreations, to: &working, source: snapshotRevision, account: userID) ?? false)
+            if canAdoptProjection && !preparedHistory {
+                // A late scope/calendar rejection leaves working untouched. Replay
+                // the complete ordinary append path, including project-only runs;
+                // an empty history list must never stand in for uncreated rows.
+                for change in changes {
+                    guard let after = freshCreation?.append(change, to: &working) else {
+                        snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
+                    }
+                    if change.table == "tasks" { localCreations.append(.init(change: change, after: after)) }
+                }
+            }
             #if DEBUG
             workflowPreparedLocalHistoryUsed = preparedHistory
+            workflowPreparedProjectionUsed = canAdoptProjection && preparedHistory
             #endif
             guard !localMode || preparedHistory || LocalActivityCreation.record(localCreations, snapshot: &working, account: userID) else {
                 snapshot = old; error = "This workflow changed while being created. Your existing work was kept."; return false
