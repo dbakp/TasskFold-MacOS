@@ -1,0 +1,10 @@
+{
+  "TaskFold-iOS": {
+    "commit": "eb1f72178e424fb7855d60f4ec965acb3ba82351",
+    "vaultHash": "0cc2193a0995c701ba1c56ebfe43c29e0ea985cef845b2c5aaadd255c3375d2d"
+  },
+  "TasskFold-MacOS": {
+    "commit": "1c209aa6003984fa6a515b94fa11f0b91075cbfe",
+    "vaultHash": "0cc2193a0995c701ba1c56ebfe43c29e0ea985cef845b2c5aaadd255c3375d2d"
+  }
+}

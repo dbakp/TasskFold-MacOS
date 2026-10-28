@@ -148,6 +148,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
             if bound { c.currentScope = { context.scope } }; return c
         }
         checks.merge(try await departureChecks(root:root,data:data,request:request,context:context)) { _, new in new }
+        checks.merge(try await interruptedChecks(root: root, data: data, request: request)) { _, new in new }
         let recording = AudioProofRecorder(data), player = AudioProofPlayer(), disk = try store("ordinary")
         let unbound = make(recording, player, disk, bound: false); unbound.start()
         checks["unboundCannotRequestMicrophone"] = recording.callbacks.isEmpty
@@ -921,4 +922,76 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         return checks
     }
 
+}
+
+extension AudioControllerProof {
+    @MainActor private static func interruptedChecks(root: URL, data: Data, request: AudioCommentDraftRequest) async throws -> [String: Bool] {
+        var checks: [String: Bool] = [:]
+        let folder = root.appendingPathComponent("interrupted-stage-ui", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let owner = try AudioCommentOwner(request.scope.workspace.account)
+        let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+        let disk = AudioCommentDraftStorage(vault: vault), clip = try AudioCommentClip(data: data)
+        _ = try vault.drafts()
+        func stage(_ bytes: Data) throws -> URL {
+            let path = vault.directory.appendingPathComponent(".write-" + UUID().uuidString.lowercased())
+            try bytes.write(to: path); return path
+        }
+        let scope = AudioProofContext(request.scope)
+        func capture() -> AudioCommentCapture {
+            let value = AudioCommentCapture(request: request, recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: disk)
+            value.currentScope = { scope.scope }; return value
+        }
+        let original = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "Interrupted primary recording", clip: clip)
+        let path = try stage(original.encoded())
+        let foreign = try AudioCommentSavedDraft(owner: owner, target: .init(task: UUID(), generation: UUID(), project: nil), caption: "Other task", clip: clip)
+        let foreignPath = try stage(foreign.encoded())
+        let brokenBytes = Data("unfinished file payload".utf8), brokenPath = try stage(brokenBytes)
+        let journal = try AudioCommentSaveIntent(next: .init(owner: owner, target: request.scope.target, caption: "Pending action remains separate", clip: clip), base: nil, reviews: [])
+        let journalPath = try stage(journal.encoded())
+        let value = capture(); await value.refresh()
+        checks["interruptedDiscoveryShowsOnlyCurrentTaskAndDoesNotPromoteFiles"] = value.interrupted.count == 1 && value.available.isEmpty && value.recoverable.isEmpty && value.pendingSaves.isEmpty && FileManager.default.fileExists(atPath: path.path)
+        checks["corruptStageWarningDoesNotHideReadableCandidate"] = try value.interruptionFailure != nil && value.interrupted.count == 1 && (Data(contentsOf: brokenPath)) == brokenBytes
+        checks["journalStageIsNotReinterpretedAsARecordingOrAutoFinished"] = try value.interruptedActionsNeedAttention && (vault.saves()).isEmpty && (Data(contentsOf: journalPath)) == journal.encoded()
+        let other = try vault.interruptedCatalog().writes.first { if case .draft(let draft) = $0.payload { return draft.id == foreign.id }; return false }
+        if let other { checks["foreignTaskCannotBeRecoveredThroughCurrentController"] = !(await value.recoverInterrupted(other)) && FileManager.default.fileExists(atPath: foreignPath.path) }
+        let item = value.interrupted[0]
+        let recovered = await value.recoverInterrupted(item)
+        checks["explicitInterruptedPrimaryRecoveryListsExactSavedDraft"] = recovered && value.available == [original] && value.interrupted.isEmpty && !FileManager.default.fileExists(atPath: path.path)
+        checks["recoveryLeavesCurrentEditorEmptyUntilExplicitSelection"] = value.session.clip == nil && value.session.caption.isEmpty && value.saved == nil
+        checks["recoveryPreservesUnreadableForeignAndJournalFiles"] = try (Data(contentsOf: brokenPath)) == brokenBytes && FileManager.default.fileExists(atPath: foreignPath.path) && (Data(contentsOf: journalPath)) == journal.encoded()
+        value.close()
+        let reopened = capture(); await reopened.refresh()
+        checks["recoveredPrimarySurvivesASecondControllerAndCanBeReviewed"] = reopened.available == [original] && reopened.interruptionFailure != nil
+        await reopened.restore(original)
+        checks["explicitRecoveredPrimarySelectionDecodesSameAudioAndCaption"] = reopened.saved == original && reopened.session.clip?.data == original.clip.data && reopened.session.caption == original.caption
+        reopened.close()
+        let review = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "Unfinished review remains unsaved", clip: clip)
+        _ = try stage(review.encoded(recovery: true))
+        let reviewCapture = capture(); await reviewCapture.refresh()
+        if let candidate = reviewCapture.interrupted.first {
+            let result = await reviewCapture.recoverInterrupted(candidate)
+            checks["recoveredReviewRemainsAReviewRatherThanBecomingSaved"] = result && reviewCapture.recoverable == [review] && reviewCapture.available == [original]
+        }
+        reviewCapture.close()
+        let stale = try original.replacing(caption: "Stage changes after discovery", clip: original.clip)
+        let stalePath = try stage(stale.encoded())
+        let staleCapture = capture(); await staleCapture.refresh()
+        let replacement = try stale.replacing(caption: "A newer stage", clip: clip), replacementBytes = try replacement.encoded()
+        try replacementBytes.write(to: stalePath)
+        if let candidate = staleCapture.interrupted.first {
+            let result = await staleCapture.recoverInterrupted(candidate)
+            checks["changedStageIsRefusedAndItsNewBytesRemainIntact"] = try !result && (Data(contentsOf: stalePath)) == replacementBytes && (vault.drafts()) == [original]
+        }
+        staleCapture.close()
+        let offScope = capture(); await offScope.refresh()
+        if let candidate = offScope.interrupted.first {
+            scope.scope = .init(workspace: .init(account: "foreign-stage-workspace", generation: UUID()), target: request.scope.target)
+            offScope.contextChanged()
+            let result = await offScope.recoverInterrupted(candidate)
+            checks["workspaceDepartureClearsStageContentAndRefusesOldAction"] = try !result && offScope.interrupted.isEmpty && offScope.interruptionFailure == nil && offScope.session.clip == nil && (Data(contentsOf: stalePath)) == replacementBytes
+        }
+        offScope.close()
+        return checks
+    }
 }

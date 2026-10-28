@@ -1,0 +1,50 @@
+{
+  "simulatorsShutdown": true,
+  "ownedSessions": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "state": "Already shut down after test"
+    },
+    {
+      "device": "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+      "state": "Already shut down after test"
+    }
+  ],
+  "removed": [
+    {
+      "path": "/tmp/taskfold-audio-stage-phone-v1.xcresult",
+      "state": "Removed by preceding partial cleanup pass; byte total not retained"
+    },
+    {
+      "path": "/tmp/taskfold-audio-stage-phone-v1-attachments",
+      "state": "Removed by preceding partial cleanup pass; byte total not retained"
+    },
+    {
+      "path": "/tmp/taskfold-audio-stage-phone-final.xcresult",
+      "state": "Removed by preceding partial cleanup pass; byte total not retained"
+    },
+    {
+      "path": "/tmp/taskfold-audio-stage-phone-final-attachments",
+      "state": "Removed by preceding partial cleanup pass; byte total not retained"
+    },
+    {
+      "path": "/tmp/taskfold-audio-stage-ipad-v1.xcresult",
+      "state": "Removed by preceding partial cleanup pass; byte total not retained"
+    },
+    {
+      "path": "/tmp/taskfold-audio-stage-ipad-v1-attachments",
+      "state": "Not exported"
+    },
+    {
+      "path": "/tmp/taskfold-audio-stage-ipad-final.xcresult",
+      "logicalBytes": 2761401
+    },
+    {
+      "path": "/tmp/taskfold-audio-stage-ipad-final-attachments",
+      "logicalBytes": 1408382
+    }
+  ],
+  "finalPassAllocatedBytesEstimate": 4308992,
+  "earlierPassByteCount": "Not retained; excluded from this estimate",
+  "retained": "Compact summaries, compressed logs, source/build bindings and final images in both repositories. Active reusable build hosts and Core scratch caches retained."
+}

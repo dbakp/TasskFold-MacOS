@@ -30,7 +30,7 @@ extension TaskfoldMacUITests {
         }
         XCTAssertTrue(element.exists && element.isHittable, app.debugDescription)
     }
-    @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false, lostSave: Bool = false, beforeDraft: Bool = false, lostDiscard: Bool = false, lookupLock: Bool = false, prejournal: Bool = false) {
+    @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false, lostSave: Bool = false, beforeDraft: Bool = false, lostDiscard: Bool = false, lookupLock: Bool = false, prejournal: Bool = false, interrupted: Bool = false) {
         app.launchArguments = ["--uitesting", "--team-editor-testing", "--audio-comment-testing", "-appearance", large || denied ? "dark" : "light"]
         if reset { app.launchArguments.append("--audio-comment-reset") }
         if lostSave { app.launchArguments.append("--audio-save-lost-ack") }
@@ -39,6 +39,7 @@ extension TaskfoldMacUITests {
         if lookupLock { app.launchArguments.append("--audio-save-lookup-lock") }
         if prejournal { app.launchArguments.append("--audio-save-before-journal") }
         if denied { app.launchArguments.append("--audio-comment-denied") }
+        if interrupted { app.launchArguments.append("--audio-interrupted-stage-testing") }
         if large { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
         app.launch()
         let instances = NSRunningApplication.runningApplications(withBundleIdentifier: "com.dbakp.taskfold.mac.workflowteststeameditbridge")
@@ -433,3 +434,60 @@ extension TaskfoldMacUITests {
     }
 
 }
+
+#if os(iOS)
+extension TaskfoldUITests {
+    @MainActor func testInterruptedRecordingFilesRequireExplicitRecoveryAndSurviveColdReturn() throws {
+        try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
+        audioOpen(app, large: true, interrupted: true)
+        XCTAssertTrue(try audioPrivateFiles().isEmpty, "Discovering staged files must not promote them")
+        let warning = app.staticTexts["audioInterruptedWarning"]
+        audioReveal(warning, app); XCTAssertTrue(warning.label.contains("kept"))
+        audioScreenshot(app, "Interrupted recordings and kept incomplete-file warning at AX5")
+        let primary = app.buttons["audioInterrupted-ac282000-0000-4000-8000-000000000001"]
+        audioReveal(primary, app, towardTop: true); audioPress(primary)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: primary)], timeout: 12), .completed)
+        let files = try audioPrivateFiles()
+        XCTAssertEqual(files.count, 1)
+        let savedFile = try XCTUnwrap(files.first)
+        let original = try Data(contentsOf: savedFile)
+        let fields = try XCTUnwrap(try PropertyListSerialization.propertyList(from: original, format: nil) as? [String: Any])
+        XCTAssertEqual(fields["caption"] as? String, "Recovered workshop draft")
+        XCTAssertFalse((fields["audio"] as? Data ?? Data()).isEmpty)
+        let review = app.buttons["audioInterrupted-ac282000-0000-4000-8000-000000000002"]
+        audioReveal(review, app); audioPress(review)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: review)], timeout: 12), .completed)
+        let afterRecovery = try audioPrivateFiles()
+        XCTAssertEqual(afterRecovery.count, 2)
+        XCTAssertEqual(afterRecovery.filter { $0.lastPathComponent.hasPrefix("review-") }.count, 1, "Recovery must not save an unsaved review")
+        XCTAssertEqual(try Data(contentsOf: savedFile), original)
+        let recovered = app.buttons["audioRecovery-ac281000-0000-4000-8000-000000000002"]
+        audioReveal(recovered, app); audioPress(recovered)
+        let caption = app.textViews["audioCaption"]
+        audioReveal(caption, app, towardTop: true)
+        XCTAssertEqual(caption.value as? String, "Recovered workshop review")
+        let save = app.buttons["audioSave"]
+        audioReveal(save, app); audioPress(save)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@ AND enabled == false", "Saved on this device"), object: save)], timeout: 12), .completed)
+        let committed = try audioPrivateFiles()
+        XCTAssertEqual(committed.count, 2)
+        XCTAssertTrue(committed.allSatisfy { $0.lastPathComponent.hasPrefix("draft-") })
+        XCTAssertEqual(try Data(contentsOf: savedFile), original)
+        let incomplete = savedFile.deletingLastPathComponent().appendingPathComponent(".write-ac282000-0000-4000-8000-000000000003")
+        XCTAssertEqual(try Data(contentsOf: incomplete), Data("Synthetic incomplete recording payload".utf8))
+        audioScreenshot(app, "Explicitly reviewed interrupted recording saved locally at AX5")
+        app.terminate(); audioOpen(app, reset: false, large: true)
+        audioReveal(warning, app); XCTAssertTrue(warning.label.contains("kept"))
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-"))
+        audioReveal(saved.firstMatch, app); XCTAssertEqual(saved.count, 2)
+        let returnedReview = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "audioSaved-", "Recovered workshop review")).firstMatch
+        audioReveal(returnedReview, app); audioPress(returnedReview)
+        audioReveal(caption, app, towardTop: true)
+        XCTAssertEqual(caption.value as? String, "Recovered workshop review")
+        XCTAssertEqual(try Data(contentsOf: savedFile), original)
+        XCTAssertEqual(try Data(contentsOf: incomplete), Data("Synthetic incomplete recording payload".utf8))
+        XCTAssertEqual(try audioPrivateFiles().count, 2)
+        audioScreenshot(app, "Cold return keeps exact recovered review and original draft")
+    }
+}
+#endif

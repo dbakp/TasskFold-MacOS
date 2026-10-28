@@ -156,6 +156,11 @@ struct AudioCommentInterruptedWrite: Sendable {
     fileprivate let bytes: Data
 }
 
+struct AudioCommentInterruptedCatalog: Sendable {
+    let writes: [AudioCommentInterruptedWrite]
+    let unreadableCount: Int
+}
+
 /// An account-private, process-locked store. No App Group or portable snapshot refs.
 /// All payload IO uses the opened directory; symlinks and hard-linked files refuse.
 struct AudioCommentVault: Sendable {
@@ -288,15 +293,28 @@ struct AudioCommentVault: Sendable {
     /// Complete pre-rename writes are explicitly reviewed, never silently discarded.
     /// Incomplete stages remain on disk and produce a recovery error.
     func interruptedWrites() throws -> [AudioCommentInterruptedWrite] {
-        try locked { folder in try names(folder: folder).filter { $0.hasPrefix(".write-") }.map { filename in
-            guard let id = UUID(uuidString: String(filename.dropFirst(7))), let data = try read(filename, folder: folder) else { throw AudioCommentStorageFailure.unreadable }
-            let payload: AudioCommentInterruptedWrite.Payload
-            if let draft = try? AudioCommentSavedDraft(encoded: data, owner: owner) { payload = .draft(draft) }
-            else if let review = try? AudioCommentSavedDraft(encoded: data, owner: owner, recovery: true) { payload = .review(review) }
-            else if let save = try? AudioCommentSaveIntent(encoded: data, owner: owner) { payload = .save(save) }
-            else { payload = .pending(try AudioCommentPending(encoded: data, account: cloudAccount())) }
-            return .init(id: id, payload: payload, bytes: data)
-        } }
+        let catalog = try interruptedCatalog()
+        guard catalog.unreadableCount == 0 else { throw AudioCommentStorageFailure.unreadable }
+        return catalog.writes
+    }
+    /// Decode failures never remove a file or hide other complete stages. Unsafe
+    /// filesystem entries still fail the whole scan before any payload is read.
+    func interruptedCatalog() throws -> AudioCommentInterruptedCatalog {
+        try locked { folder in
+            var writes: [AudioCommentInterruptedWrite] = [], unreadable = 0
+            for filename in try names(folder: folder).filter({ $0.hasPrefix(".write-") }) {
+                guard let id = UUID(uuidString: String(filename.dropFirst(7))), let data = try read(filename, folder: folder) else { throw AudioCommentStorageFailure.unreadable }
+                let payload: AudioCommentInterruptedWrite.Payload
+                do {
+                    if let draft = try? AudioCommentSavedDraft(encoded: data, owner: owner) { payload = .draft(draft) }
+                    else if let review = try? AudioCommentSavedDraft(encoded: data, owner: owner, recovery: true) { payload = .review(review) }
+                    else if let save = try? AudioCommentSaveIntent(encoded: data, owner: owner) { payload = .save(save) }
+                    else { payload = .pending(try AudioCommentPending(encoded: data, account: cloudAccount())) }
+                } catch { unreadable += 1; continue }
+                writes.append(.init(id: id, payload: payload, bytes: data))
+            }
+            return .init(writes: writes, unreadableCount: unreadable)
+        }
     }
     /// A changed saved review requires an explicit current revision; pending
     /// publications can recover only their exact, immutable operation intent.
@@ -312,10 +330,13 @@ struct AudioCommentVault: Sendable {
                 if case .review = candidate.payload { recovery = true } else { recovery = false }
                 guard draft.owner == owner, try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: recovery) == draft else { throw AudioCommentStorageFailure.conflict }
                 destination = name(recovery ? "review-" : "draft-", draft.id)
+                if !recovery, try records(folder: folder).saves.contains(where: { $0.next.id == draft.id }) {
+                    throw AudioCommentStorageFailure.unconfirmedSave
+                }
                 if let bytes = try read(destination, folder: folder) {
                     let current = try AudioCommentSavedDraft(encoded: bytes, owner: owner, recovery: recovery)
                     identical = current == draft
-                    guard identical || current.id == draft.id && current.target == draft.target && current.revision == revision && current.revision != draft.revision else { throw AudioCommentStorageFailure.conflict }
+                    guard identical || current.id == draft.id && current.target == draft.target && current.origin == draft.origin && current.revision == revision && current.revision != draft.revision else { throw AudioCommentStorageFailure.conflict }
                 } else if revision != nil { throw AudioCommentStorageFailure.conflict }
             case .save(let save):
                 guard save.next.owner == owner, try AudioCommentSaveIntent(encoded: data, owner: owner) == save, revision == nil else { throw AudioCommentStorageFailure.conflict }
@@ -718,5 +739,6 @@ actor AudioCommentDraftStorage {
     func store(_ pending: AudioCommentPending) throws { try vault.store(pending) }
     func removeSettled(_ publication: AudioCommentPublication) throws { try vault.removeSettled(publication) }
     func interruptedWrites() throws -> [AudioCommentInterruptedWrite] { try vault.interruptedWrites() }
+    func interruptedCatalog() throws -> AudioCommentInterruptedCatalog { try vault.interruptedCatalog() }
     func recover(_ candidate: AudioCommentInterruptedWrite, replacing revision: UUID? = nil) throws { try vault.recover(candidate, replacing: revision) }
 }

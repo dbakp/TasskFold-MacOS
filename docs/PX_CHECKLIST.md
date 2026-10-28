@@ -122,7 +122,7 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
 - [ ] Audio comments: bounded clip/decode, scoped private storage and a native review
-  candidate now have 96 Core and 136 synthetic audio-controller checks per repo,
+  candidate now have 103 Core and 148 synthetic audio-controller checks per repo,
   including concurrent recovered-review ownership, durable pending cancellation,
   private interrupted-review recovery and explicit conflict copies.
   The unchanged shared dictation lease passed 17 controller checks at the prior checkpoint. Ordinary app entry points, private server lifecycle and genuine
@@ -438,3 +438,30 @@ Native output follow-up: iPad passes all three selected journeys; iPhone passes 
 - [ ] The native phone observation still has a ~0.47-second synchronous commit. Full save latency, production rendering, richer child/assignment workloads, hosted/paired delivery and Mac runtime/geometry remain open.
 
 [Evidence, timings and exact scope](workflow-history-guard/README.md). All user deferrals and the wider Px goal remain unchanged.
+
+
+## 2026-10-28 — discover complete interrupted recording files
+
+- [x] Discover complete private pre-rename draft/review files for the current
+  account, task and task incarnation without automatically promoting them.
+- [x] Offer explicit Recover recording after bounded codec validation; recovered
+  reviews still need review and Save. Existing saved drafts stay separate.
+- [x] Keep unreadable files with a warning while offering other readable stages.
+  Unsafe filesystem entries and storage scan failures still refuse the scan.
+- [x] Preserve Save/publication stage kinds and show a separate attention notice;
+  this local screen cannot authorize or finish those operations.
+- [x] Refuse recovery over an outstanding Save or with changed recovery provenance.
+  Both cases reproduce failures against the preceding Core implementation.
+- [x] 103 focused Core cases, 148 controller checks, the 16-process storage proof
+  and independent concurrent-editor convergence pass in each repository.
+- [x] Final-source iPhone and iPad Simulator recovery/review/explicit-Save/cold-return
+  cases pass at dark Accessibility XXXL with no reported runtime warnings. Exact
+  original-primary and incomplete-file bytes are preserved; all six final captures
+  were visually inspected. Mac native UI acceptance remains open (build/sign only).
+- [ ] Broader damaged-file repair/cleanup, conflicting-stage resolution,
+  Save/publication-stage recovery, account/removal/backup lifecycle, ordinary app
+  exposure and private server delivery remain open. Genuine media testing stays
+  deferred by the user.
+
+[Evidence and exact native scope](audio-interrupted-files/README.md). This advances
+private recovery; it does not complete audio comments or the Px objective.

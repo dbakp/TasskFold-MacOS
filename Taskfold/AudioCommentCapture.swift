@@ -38,6 +38,9 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     private(set) var available: [AudioCommentSavedDraft] = []
     private(set) var recoverable: [AudioCommentSavedDraft] = []
     private(set) var pendingSaves: [AudioCommentSaveIntent] = []
+    private(set) var interrupted: [AudioCommentInterruptedWrite] = []
+    private(set) var interruptionFailure: String?
+    private(set) var interruptedActionsNeedAttention = false
     private(set) var saveDurable = false
     @ObservationIgnored private var saveRequiresExisting = false
     @ObservationIgnored private var saveExpired = false
@@ -164,8 +167,46 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             pendingSaves = (catalog.saves.filter { !retainedIDs.contains($0.id) } + retained.map(\.intent)).sorted { $0.id.uuidString < $1.id.uuidString }
             available = catalog.drafts.filter { draft in !pendingSaves.contains { $0.next.id == draft.id } }
             recoverable = catalog.reviews.filter { review in !pendingSaves.contains { $0.reviews.contains(.init(review)) } }
+            do {
+                let catalog = try await storage.interruptedCatalog()
+                guard isCurrent else { close(); return }
+                interrupted = catalog.writes.filter { interruptedDraft($0) != nil }
+                interruptedActionsNeedAttention = catalog.writes.contains { write in
+                    switch write.payload {
+                    case .save(let intent): return intent.next.target == request.scope.target
+                    case .pending(let pending): return pending.publication.target == request.scope.target
+                    default: return false
+                    }
+                }
+                interruptionFailure = catalog.unreadableCount == 0 ? nil : "Some recordings can’t be opened. Original files are kept."
+            } catch {
+                guard isCurrent else { close(); return }
+                interrupted = []; interruptedActionsNeedAttention = false
+                interruptionFailure = "Recovery is unavailable. Original files are kept. Try again."
+            }
             if !retried { notice = hasUnwrittenSaves ? "Finish saving the recording below to keep it on this device." : "An interrupted review still needs a recovery retry. Keep Taskfold open before quitting." }
-        } catch { if isCurrent { notice = error.localizedDescription } else { close() } }
+        } catch { interrupted = []; interruptionFailure = nil; interruptedActionsNeedAttention = false; if isCurrent { notice = error.localizedDescription } else { close() } }
+    }
+    func interruptedDraft(_ write: AudioCommentInterruptedWrite) -> AudioCommentSavedDraft? {
+        let draft: AudioCommentSavedDraft
+        switch write.payload { case .draft(let value), .review(let value): draft = value; default: return nil }
+        guard draft.owner == storage.owner, draft.target == request.scope.target else { return nil }
+        return draft
+    }
+    /// Recover only a displayed local draft/review. Journal/publication stages
+    /// require their separate authorization workflow and are never auto-finished.
+    @discardableResult func recoverInterrupted(_ write: AudioCommentInterruptedWrite) async -> Bool {
+        guard editable, !needsSave, interrupted.contains(where: { $0.id == write.id }), let draft = interruptedDraft(write) else { return false }
+        stopPlayback(); loading = true; defer { loading = false }
+        do {
+            _ = try await AudioCommentDecoding.validate(draft.clip.data)
+            guard isCurrent else { close(); return false }
+            try await storage.recover(write)
+            guard isCurrent else { close(); return false }
+            notice = "Interrupted recording recovered privately. Choose it below to review."
+            loading = false; await refresh()
+            return isCurrent
+        } catch { if isCurrent { notice = error.localizedDescription } else { close() }; return false }
     }
     func restore(_ draft: AudioCommentSavedDraft, recovering: Bool = false) async {
         guard editable, !needsSave, draft.target == request.scope.target, draft.owner.account.utf8.elementsEqual(request.scope.workspace.account.utf8) else { return }
@@ -421,7 +462,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         starting?.cancel(); ticker?.cancel(); decoding?.cancel(); recorder.cancel(); stopPlayback()
         if saveDurable { recovery.finishSave() } else { recovery.detachSave() }
         saveRequiresExisting = false; saveExpired = false
-        session.close(); saved = nil; candidate = nil; available = []; recoverable = []; pendingSaves = []; saveIntent = nil; replacingIntent = nil; saveDurable = false; restoredRecovery = nil; notice = nil; elapsed = 0; saveUnconfirmed = false; saveConflict = false; reviewClaimed = false; retainedRecoveryFailed = false
+        session.close(); saved = nil; candidate = nil; available = []; recoverable = []; pendingSaves = []; interrupted = []; interruptionFailure = nil; interruptedActionsNeedAttention = false; saveIntent = nil; replacingIntent = nil; saveDurable = false; restoredRecovery = nil; notice = nil; elapsed = 0; saveUnconfirmed = false; saveConflict = false; reviewClaimed = false; retainedRecoveryFailed = false
         currentScope = { nil }
     }
 }

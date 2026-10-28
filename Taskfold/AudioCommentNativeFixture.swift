@@ -49,11 +49,36 @@ import Darwin
             if fail && point == (before ? .afterSaveJournal : .afterDraftCommit) { throw AudioCommentStorageFailure.unreadable }
         }))
     }
-    static func prepare() throws {
+    static func prepare() async throws {
         guard enabled else { throw CancellationError() }
         for value in lookupLocks.values { value.release() }; lookupLocks.removeAll()
         if ProcessInfo.processInfo.arguments.contains("--audio-comment-reset") { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        if ProcessInfo.processInfo.arguments.contains("--audio-interrupted-stage-testing"), ProcessInfo.processInfo.arguments.contains("--audio-comment-reset") {
+            let bytes = try await Task.detached { try syntheticData() }.value
+            let scope = AudioCommentFixtureContext().scope
+            let owner = try AudioCommentOwner(scope.workspace.account), vault = AudioCommentVault(applicationSupport: root, owner: owner)
+            _ = try vault.drafts()
+            for (suffix, caption, recovery) in [("1", "Recovered workshop draft", false), ("2", "Recovered workshop review", true)] {
+                let draft = try AudioCommentSavedDraft(owner: owner, target: scope.target, caption: caption, clip: .init(data: bytes), id: UUID(uuidString: "ac281000-0000-4000-8000-00000000000" + suffix)!, revision: UUID(uuidString: "ac283000-0000-4000-8000-00000000000" + suffix)!)
+                let path = vault.directory.appendingPathComponent(".write-ac282000-0000-4000-8000-00000000000" + suffix)
+                try draft.encoded(recovery: recovery).write(to: path)
+                try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path.path)
+            }
+            let incomplete = vault.directory.appendingPathComponent(".write-ac282000-0000-4000-8000-000000000003")
+            try Data("Synthetic incomplete recording payload".utf8).write(to: incomplete)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: incomplete.path)
+        }
+    }
+    nonisolated static func syntheticData() throws -> Data {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-audio-native-tone-" + UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700]); defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("tone.m4a")
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44100)!; buffer.frameLength = 44100
+        for index in 0..<44100 { buffer.floatChannelData![0][index] = Float(sin(Double(index) * 2 * .pi * 440 / 44100) * 0.04) }
+        do { let file = try AVAudioFile(forWriting: url, settings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 44100, AVNumberOfChannelsKey: 1, AVEncoderBitRateKey: 64000]); try file.write(from: buffer) }
+        return try Data(contentsOf: url)
     }
 }
 
@@ -128,7 +153,7 @@ struct AudioCommentNativeFixtureView: View {
             }
             if let problem { Text(problem).accessibilityIdentifier("audioFixtureError") }
         }.padding(24)
-        .task { do { try AudioCommentNativeFixture.prepare(); ready = true } catch { problem = error.localizedDescription } }
+        .task { do { try await AudioCommentNativeFixture.prepare(); ready = true } catch { problem = error.localizedDescription } }
         .sheet(item: $opening) { request in
             VStack(spacing: 0) {
                 AudioCommentDraftView(request: request,
@@ -178,14 +203,7 @@ struct AudioCommentNativeFixtureView: View {
         finishing = Task { [weak self] in
             do {
                 let data = try await Task.detached(priority: .utility) {
-                    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-audio-native-tone-" + UUID().uuidString, isDirectory: true)
-                    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700]); defer { try? FileManager.default.removeItem(at: folder) }
-                    let url = folder.appendingPathComponent("tone.m4a")
-                    let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!
-                    let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44100)!; buffer.frameLength = 44100
-                    for index in 0..<44100 { buffer.floatChannelData![0][index] = Float(sin(Double(index) * 2 * .pi * 440 / 44100) * 0.04) }
-                    do { let file = try AVAudioFile(forWriting: url, settings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 44100, AVNumberOfChannelsKey: 1, AVEncoderBitRateKey: 64000]); try file.write(from: buffer) }
-                    return try Data(contentsOf: url)
+                    try AudioCommentNativeFixture.syntheticData()
                 }.value
                 guard let self, self.token == token, self.current?() == true, !Task.isCancelled else { return }
                 self.receive?(.finished(data))

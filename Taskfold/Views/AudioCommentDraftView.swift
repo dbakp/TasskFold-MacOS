@@ -84,6 +84,9 @@ import AppKit
                             }
                         }
                         if !capture.pendingSaves.isEmpty { pendingSaveSection }
+                        if !capture.interrupted.isEmpty || capture.interruptionFailure != nil || capture.interruptedActionsNeedAttention {
+                            interruptedSection
+                        }
                         if !capture.recoverable.isEmpty {
                             Section("Interrupted reviews") {
                                 Text("Review a recovered recording before saving it. Earlier saved drafts stay separate.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -166,6 +169,26 @@ import AppKit
             if phase != .active {
                 Task { _ = await capture.prepareForDeparture() }
             }
+        }
+    }
+    private var interruptedSection: some View {
+        Section("Recordings to recover") {
+            Text("Recover a recording to review it privately. Nothing is sent.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            ForEach(capture.interrupted, id: \.id) { write in
+                if let draft = capture.interruptedDraft(write) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(draft.caption.isEmpty ? "Interrupted recording" : draft.caption).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                        Text(clock(Double(draft.clip.descriptor.milliseconds) / 1000)).font(.caption).foregroundStyle(.secondary)
+                        Button("Recover recording", systemImage: "arrow.clockwise") { Task { _ = await capture.recoverInterrupted(write) } }
+                            .disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioInterrupted-" + write.id.uuidString.lowercased())
+                    }
+                }
+            }
+            if let failure = capture.interruptionFailure { Text(failure).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioInterruptedWarning") }
+            if capture.interruptedActionsNeedAttention {
+                Text("An interrupted action is kept privately and needs a separate recovery review.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioInterruptedPending")
+            }
+            Button("Check again") { Task { await capture.refresh() } }.disabled(capture.busy).accessibilityIdentifier("audioCheckInterrupted")
         }
     }
     private var pendingSaveSection: some View {

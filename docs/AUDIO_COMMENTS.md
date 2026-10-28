@@ -398,3 +398,30 @@ the broader audio gate or the Px objective. Ordinary audio entry points stay gat
 - [ ] Mac native dialog runtime remains open while locked; broader lifecycle/concurrency/backup/orphan/corruption, ordinary integration, private server custody and genuine audio acceptance remain open. No feature/Px completion claim.
 
 [Evidence and exact scope](audio-comment-expired-discard/README.md).
+
+
+## 2026-10-28 — discover complete interrupted recording files
+
+- [x] Discover complete private pre-rename draft/review files for the current
+  account, task and task incarnation without automatically promoting them.
+- [x] Offer explicit Recover recording after bounded codec validation; recovered
+  reviews still need review and Save. Existing saved drafts stay separate.
+- [x] Keep unreadable files with a warning while offering other readable stages.
+  Unsafe filesystem entries and storage scan failures still refuse the scan.
+- [x] Preserve Save/publication stage kinds and show a separate attention notice;
+  this local screen cannot authorize or finish those operations.
+- [x] Refuse recovery over an outstanding Save or with changed recovery provenance.
+  Both cases reproduce failures against the preceding Core implementation.
+- [x] 103 focused Core cases, 148 controller checks, the 16-process storage proof
+  and independent concurrent-editor convergence pass in each repository.
+- [x] Final-source iPhone and iPad Simulator recovery/review/explicit-Save/cold-return
+  cases pass at dark Accessibility XXXL with no reported runtime warnings. Exact
+  original-primary and incomplete-file bytes are preserved; all six final captures
+  were visually inspected. Mac native UI acceptance remains open (build/sign only).
+- [ ] Broader damaged-file repair/cleanup, conflicting-stage resolution,
+  Save/publication-stage recovery, account/removal/backup lifecycle, ordinary app
+  exposure and private server delivery remain open. Genuine media testing stays
+  deferred by the user.
+
+[Evidence and exact native scope](audio-interrupted-files/README.md). This advances
+private recovery; it does not complete audio comments or the Px objective.
