@@ -1,0 +1,11 @@
+{
+  "sources": {
+    "Taskfold/AudioCommentCapture.swift": "a510154411f3c9dca16e7e752e94dc9c8df6078f756e9f90dd602918be08f3b2",
+    "Taskfold/AudioCommentNativeFixture.swift": "d0e6b004228db31521bd6bfa451c126c1bb6ecc849ce2703799291a1a4537cbd",
+    "Taskfold/Views/AudioCommentDraftView.swift": "f5b2c6489a63ffbc02ff138f0395ce976f8772f7171a470cab0bb9e5abf17ecf",
+    "TaskfoldUITests/AudioCommentUITests.swift": "8fbeda110784e97d9611f3b3bd3bf0af6623f0785dd45b3cad878c7923ade6ac"
+  },
+  "appBinarySHA256": "5aa47ff7f8a3a460822563689a32773428627f9098ee0219309376270d51b9f1",
+  "testBinarySHA256": "4b75683c7c1f73d8a3090c1fb43f926c92ce4c276e6c186f0bdf72bc4cf70c5f",
+  "scope": "Final selected native unwritten Save workspace journey, including warning-cleared assertions; synthetic/silent media."
+}

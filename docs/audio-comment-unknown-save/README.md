@@ -40,7 +40,7 @@ correction and subsequent test driver edits. It is not exact-final-binary or nor
 No real microphone, permissions, playback sound, production tasks or server were
 used. The isolated Mac process was closed afterward.
 
-## Known remaining failure — do not close the audio gate
+## Historical pre-journal failure — workspace-return follow-up
 
 `open-prejournal-diagnostic.json` is a failing Mac-controller diagnostic, copied
 here as an explicitly open contract-level finding, not another passing case.
@@ -90,6 +90,13 @@ binary bindings are retained with the final signatures. The source controller an
 Core tested by the independent 80/84 checks did not change during driver fixes.
 Representative final phone/iPad unknown-Save, restored-caption and largest-text
 discard screenshots were visually inspected. The native recorders and players are
-synthetic/silent throughout. Final raw result bundles remain in the owned temporary
-layout-run paths; obsolete failed/interrupted raw output was pruned after retaining
-summaries/logs/representative captures. Test sessions and used Simulators were closed.
+synthetic/silent throughout. The accepted layout-run raw results were subsequently pruned after the
+workspace-return follow-up; persistent summaries/logs/captures and exact source
+bindings remain here. Obsolete failed/interrupted output was also pruned. Test sessions and used Simulators were closed.
+
+
+2026-10-28 follow-up: the workspace-switch reproduction is resolved by retaining
+and explicitly finishing the exact pending Save, including separate-copy choice.
+See [workspace-return evidence](../audio-comment-workspace-return/README.md).
+Historical diagnostic files above remain unchanged. The full audio gate remains
+open for lifecycle, integration, private publication and real-audio acceptance.

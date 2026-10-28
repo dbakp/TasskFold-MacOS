@@ -324,12 +324,41 @@ full application/server lifecycle acceptance are not implied.
   largest-text discard/relaunch regression also passes. Earlier driver/DEBUG
   footer failures are retained separately. Current Mac acceptance is compile/sign
   plus the limited prior-binary native inspection above, not a new XCTest run.
-- [ ] A separately reproduced **pre-journal** case remains open: failed automatic
-  checkpoint plus failed Save before journal creation, unreadable lookup, then
-  workspace departure can leave the retained recovery writer frozen after storage
-  becomes readable. This is distinct from the prepared Save covered above.
+- [x] The pre-journal workspace-return failure found in this checkpoint is
+  resolved by the later exact-Save-retention follow-up below. Its original failing
+  diagnostic remains preserved as historical evidence.
 - [ ] Real microphone/dictation/playback and spoken acceptance remain deferred.
   Full lifecycle, ordinary task integration and private server custody remain open.
 
 Evidence: [unknown Save checkpoint](audio-comment-unknown-save/README.md).
 Ordinary audio entry points remain gated. This checkpoint does not complete Px.
+
+
+## 2026-10-28 — unwritten audio Save survives a workspace change
+
+- [x] Preserve the exact pending authorization in the existing bounded recovery
+  registry when the first journal write and state lookup both fail. The original
+  account/task gets one Finish saving action; discovery performs no automatic Save.
+- [x] Preserve separate-copy destination IDs/revisions and replacement authorization;
+  reject changed same-ID requests and foreign owners/task incarnations.
+- [x] Repeated failed returns reuse the same operation/retained slot; 23 consecutive
+  failures exercise the quota boundary. Explicit Finish settles the original writer.
+- [x] Make process-only retention clear: keep Taskfold open and Finish saving before
+  discarding. Clear the current recovery warning after a successful Finish.
+- [x] 107 executable controller checks pass independently in each repo, bound to the
+  final source. The before snapshot failed four of the 93 reproduction checks.
+  Core/storage format is unchanged; prior 80 Core tests are not claimed as a new run.
+- [x] Signed final Mac native walkthrough: failed automatic recovery, unknown Save,
+  empty foreign workspace, one original-owner Finish action, exact saved caption,
+  warning cleared, and the same decoded recording after controlled relaunch.
+- [x] Initial iPhone/iPad suites each pass four cases without failures/skips/reported
+  runtime warnings. These precede the warning polish. The final selected workspace
+  journey also passes each on iPhone/iPad, with explicit assertions for one focused
+  Finish action and cleared recovery warning; separate final bindings are retained.
+- [ ] Still open: durable handling before normal Quit/background/process loss,
+  orphan/corrupt-file recovery, full removal/backup lifecycle, ordinary integration
+  and private server custody. Real audio/permission/spoken testing remains deferred.
+
+Evidence: [workspace-return recovery](audio-comment-workspace-return/README.md).
+This resolves the earlier workspace-switch pre-journal failure; it does not close
+the broader audio gate or the Px objective. Ordinary audio entry points stay gated.

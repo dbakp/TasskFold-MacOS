@@ -76,7 +76,7 @@ import SwiftUI
                                 }
                             }
                         }
-                        if capture.retainedRecoveryFailed {
+                        if capture.retainedRecoveryFailed && !capture.hasUnwrittenSaves {
                             Section("Recovery needs attention") {
                                 Text("An interrupted review is waiting for a recovery copy. Keep Taskfold open and retry before quitting.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                                 Button("Retry interrupted reviews") { Task { await capture.refresh() } }.disabled(capture.busy).accessibilityIdentifier("audioRetryInterrupted")
@@ -166,7 +166,7 @@ import SwiftUI
     }
     private var pendingSaveSection: some View {
         Section("Saves to finish") {
-            Text("Your recording is kept privately. Finish saving or discarding it below.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(capture.hasUnwrittenSaves ? "Some recordings still need to be saved on this device. Keep Taskfold open and choose Finish saving." : "Your recording is kept privately. Finish saving or discarding it below.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             ForEach(capture.pendingSaves, id: \.id) { intent in
                 VStack(alignment: .leading, spacing: 12) {
                     Button { Task { await capture.resumeSave(intent) } } label: {
@@ -176,7 +176,9 @@ import SwiftUI
                                 .font(intent.phase == .discarding ? .body : .caption).foregroundStyle(intent.phase == .discarding ? .primary : .secondary)
                         }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     }.buttonStyle(.borderless).disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioPendingSave-" + intent.id.uuidString.lowercased())
-                    if intent.phase == .saving {
+                    if capture.isRetainedSave(intent) {
+                        Text("Finish saving before discarding this recording.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    } else if intent.phase == .saving {
                         Button("Discard pending recording", role: .destructive) { pendingDiscard = intent }
                             .buttonStyle(.borderless).disabled(!capture.editable || capture.needsSave).frame(minHeight: 44).accessibilityIdentifier("audioDiscardPending-" + intent.id.uuidString.lowercased())
                     }

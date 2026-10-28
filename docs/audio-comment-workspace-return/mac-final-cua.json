@@ -1,0 +1,25 @@
+{
+  "scope": "Final signed Mac binary, CUA native controls and synthetic drivers; no microphone, sound, real task data or normal-Quit acceptance.",
+  "sources": {
+    "Taskfold/AudioCommentCapture.swift": "a510154411f3c9dca16e7e752e94dc9c8df6078f756e9f90dd602918be08f3b2",
+    "Taskfold/AudioCommentNativeFixture.swift": "d0e6b004228db31521bd6bfa451c126c1bb6ecc849ce2703799291a1a4537cbd",
+    "Taskfold/Views/AudioCommentDraftView.swift": "f5b2c6489a63ffbc02ff138f0395ce976f8772f7171a470cab0bb9e5abf17ecf",
+    "TaskfoldUITests/AudioCommentUITests.swift": "ad3c281c2b72fc4a3cd922ad72691c7c779c8952947d95ab88bc0ffc3e420008"
+  },
+  "binarySHA256": "87b5af2279e97318818f67157ff0279a2e0876bc037d60576b4ca4a6b99d924c",
+  "signatureVerified": true,
+  "observations": {
+    "actualFailedCheckpoint": true,
+    "unknownSaveReadProbe": "Storage reads: 1 \u00b7 locked",
+    "foreignWorkspaceEmpty": true,
+    "returnedPendingOperation": "a3a0cff7-7db1-4eba-aced-abc0734f55a7",
+    "savedDraft": "e95db2a8-315d-467e-b2e3-c5e69dbe4b01",
+    "exactCaption": "Keep my original workspace recording",
+    "milliseconds": 1000,
+    "singleFinishAction": true,
+    "recoveryWarningClearedAfterFinish": true,
+    "sameSavedDraftAndDecodedCaptionAfterControlledRelaunch": true,
+    "noPendingOrRecoveryRowsAfterRelaunch": true,
+    "testProcessClosed": true
+  }
+}

@@ -30,13 +30,14 @@ extension TaskfoldMacUITests {
         }
         XCTAssertTrue(element.exists && element.isHittable, app.debugDescription)
     }
-    @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false, lostSave: Bool = false, beforeDraft: Bool = false, lostDiscard: Bool = false, lookupLock: Bool = false) {
+    @MainActor private func audioOpen(_ app: XCUIApplication, reset: Bool = true, denied: Bool = false, large: Bool = false, lostSave: Bool = false, beforeDraft: Bool = false, lostDiscard: Bool = false, lookupLock: Bool = false, prejournal: Bool = false) {
         app.launchArguments = ["--uitesting", "--team-editor-testing", "--audio-comment-testing", "-appearance", large || denied ? "dark" : "light"]
         if reset { app.launchArguments.append("--audio-comment-reset") }
         if lostSave { app.launchArguments.append("--audio-save-lost-ack") }
         if beforeDraft { app.launchArguments.append("--audio-save-before-draft") }
         if lostDiscard { app.launchArguments.append("--audio-discard-lost-ack") }
         if lookupLock { app.launchArguments.append("--audio-save-lookup-lock") }
+        if prejournal { app.launchArguments.append("--audio-save-before-journal") }
         if denied { app.launchArguments.append("--audio-comment-denied") }
         if large { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
         app.launch()
@@ -319,6 +320,57 @@ extension TaskfoldMacUITests {
         audioReveal(saved.firstMatch, app); XCTAssertEqual(saved.count, 1)
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch.exists)
         audioScreenshot(app, "Refused pending discard preserves one saved recording")
+    }
+
+
+    @MainActor func testAudioUnwrittenSaveSurvivesWorkspaceDepartureAndExplicitFinish() throws {
+        try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
+        audioOpen(app, lookupLock: true, prejournal: true); audioRecord(app)
+        let caption = app.textViews["audioCaption"], wording = "Keep my original workspace recording"
+        audioReveal(caption, app); audioPress(caption); caption.typeText(wording)
+        #if os(iOS)
+        if app.buttons["audioHideKeyboard"].exists { audioPress(app.buttons["audioHideKeyboard"]) }
+        #endif
+        let recovery = app.buttons["audioRetryRecovery"]
+        audioReveal(recovery, app); XCTAssertTrue(recovery.exists, "The real checkpoint lock must first refuse private recovery")
+        audioPress(app.buttons["audioFixtureReleaseCheckpoint"])
+        let save = app.buttons["audioSave"], probe = app.staticTexts["audioFixtureLookupProbe"]
+        audioReveal(save, app); audioPress(save)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Storage reads: 1 · locked"), object: probe)], timeout: 10), .completed)
+        XCTAssertEqual(save.label, "Retry save")
+        audioPress(app.buttons["audioFixtureResumeStorage"])
+        audioPress(app.buttons["audioFixtureLeave"])
+        XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        audioPress(app.buttons["audioFixtureOpen"])
+        XCTAssertTrue(app.buttons["audioRecord"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.textViews["audioCaption"].exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch.exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch.exists)
+        audioScreenshot(app, "The foreign workspace exposes no original recording")
+        audioPress(app.buttons["audioClose"])
+        XCTAssertTrue(app.buttons["audioFixtureReturn"].waitForExistence(timeout: 8)); audioPress(app.buttons["audioFixtureReturn"])
+        audioPress(app.buttons["audioFixtureOpen"])
+        let pending = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-"))
+        audioReveal(pending.firstMatch, app); XCTAssertEqual(pending.count, 1)
+        XCTAssertTrue(pending.firstMatch.label.contains(wording))
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioDiscardPending-")).firstMatch.exists)
+        XCTAssertFalse(app.buttons["audioRetryInterrupted"].exists, "Unwritten Save has one focused recovery action")
+        audioScreenshot(app, "The original workspace offers one exact unwritten Save")
+        audioPress(pending.firstMatch)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@ AND enabled == false", "Saved on this device"), object: save)], timeout: 12), .completed)
+        audioReveal(caption, app); XCTAssertEqual(caption.value as? String, wording)
+        XCTAssertFalse(app.buttons["audioRetryInterrupted"].exists, "Successful Finish clears the stale recovery warning")
+        audioScreenshot(app, "Explicit Finish saves the original workspace recording")
+        audioPress(app.buttons["audioSaveClose"])
+        XCTAssertTrue(app.buttons["audioFixtureOpen"].waitForExistence(timeout: 8))
+        app.terminate(); audioOpen(app, reset: false)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioPendingSave-")).firstMatch.exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioRecovery-")).firstMatch.exists)
+        let saved = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "audioSaved-"))
+        audioReveal(saved.firstMatch, app); XCTAssertEqual(saved.count, 1); audioPress(saved.firstMatch)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: app.buttons["audioSaveClose"])], timeout: 12), .completed)
+        audioReveal(caption, app); XCTAssertEqual(caption.value as? String, wording)
+        audioScreenshot(app, "Cold return retains the finished original workspace recording")
     }
 
     @MainActor func testAudioUnknownSaveRetryKeepsOriginalDraftAfterLockRelease() throws { try audioUnknownSaveJourney(beforeDraft: false) }

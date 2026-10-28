@@ -1,0 +1,10 @@
+{
+  "sources": {
+    "Taskfold/AudioCommentCapture.swift": "2218300814a9bf66c495bf14d9381a712cb40e7e7fdac2bb6d02abcd2dfb2822",
+    "Taskfold/AudioCommentNativeFixture.swift": "d0e6b004228db31521bd6bfa451c126c1bb6ecc849ce2703799291a1a4537cbd",
+    "Taskfold/Views/AudioCommentDraftView.swift": "bb6eca1bb049fa1423b77b5d8f1ebf6b0363464db1c682fdda0acc11b7cb84fe",
+    "TaskfoldUITests/AudioCommentUITests.swift": "33f71c8addb11a8a1a92f61524cb3c867d731a86da3ec95b7b885d8892bbad2f"
+  },
+  "appBinarySHA256": "668baf4337ff225686fe3a12393c34dd6ae88834020922bcdc31de7d14518e50",
+  "scope": "Initial native build before clearing current-view recovery warning after successful Finish."
+}

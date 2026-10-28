@@ -89,6 +89,37 @@ final class AudioProofLookupLock: @unchecked Sendable {
     }
     deinit { if fd >= 0 { _ = flock(fd, LOCK_UN); Darwin.close(fd) } }
 }
+
+/// Refuses only the Save journal rename, then holds a separate real lookup lock.
+final class AudioProofPrejournalGate: @unchecked Sendable {
+    private let lock = NSLock()
+    let directory: URL; let owner: AudioCommentOwner
+    private var interrupted = false, released = false
+    private var fd: Int32 = -1
+    private var proposal: AudioCommentSaveIntent?
+    init(_ directory: URL, _ owner: AudioCommentOwner) { self.directory = directory; self.owner = owner }
+    var submitted: AudioCommentSaveIntent? { lock.lock(); defer { lock.unlock() }; return proposal }
+    func check(_ point: AudioCommentVault.Checkpoint) throws {
+        lock.lock(); defer { lock.unlock() }
+        if point == .beforeRename, !interrupted {
+            for file in (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? [] where file.lastPathComponent.hasPrefix(".write-") {
+                if let data = try? Data(contentsOf: file), let intent = try? AudioCommentSaveIntent(encoded: data, owner: owner) {
+                    proposal = intent; interrupted = true; throw AudioCommentStorageFailure.unreadable
+                }
+            }
+        }
+        if point == .beforeSaveState, interrupted, !released, fd < 0 {
+            let next = Darwin.open(directory.appendingPathComponent(".lock").path, O_RDWR | O_NOFOLLOW)
+            guard next >= 0 else { throw AudioCommentStorageFailure.unreadable }
+            guard flock(next, LOCK_EX | LOCK_NB) == 0 else { Darwin.close(next); throw AudioCommentStorageFailure.unreadable }
+            fd = next
+        }
+    }
+    func arm() { lock.lock(); defer { lock.unlock() }; interrupted = false; released = false }
+    func release() { lock.lock(); defer { lock.unlock() }; released = true; if fd >= 0 { _ = flock(fd, LOCK_UN); Darwin.close(fd); fd = -1 } }
+    deinit { if fd >= 0 { _ = flock(fd, LOCK_UN); Darwin.close(fd) } }
+}
+
 @main struct AudioControllerProof {
     @MainActor static func wait(_ condition: () -> Bool) async -> Bool {
         let deadline = Date().addingTimeInterval(3)
@@ -581,6 +612,10 @@ final class AudioProofLookupLock: @unchecked Sendable {
         checks["alreadySavedRefusalCanFinishWithoutASecondDraft"] = finalSavedAfterRefusal == primaryBeforeCancel && savedCancelReturn.pendingSaves.isEmpty
         savedCancelReturn.close()
 
+
+        let workspaceChecks = try await workspaceReturnChecks(root: root, data: data, workspace: workspace, target: target, request: request, context: context)
+        for (name, passed) in workspaceChecks { checks[name] = passed }
+
         let realRecorder = DeviceAudioCommentRecording(), realPlayer = DeviceAudioCommentPlaying()
         var falseGate = false, falsePlay = false
         do { try await realRecorder.start(isCurrent: { false }, receive: { _ in }) } catch is CancellationError { falseGate = true }
@@ -596,4 +631,123 @@ final class AudioProofLookupLock: @unchecked Sendable {
         try JSONSerialization.data(withJSONObject: checks, options: [.sortedKeys]).write(to: URL(fileURLWithPath: CommandLine.arguments[3]))
         guard checks.values.allSatisfy({ $0 }) else { fputs("Failed audio checks: " + checks.filter { !$0.value }.keys.sorted().joined(separator: ", ") + "\n", stderr); exit(1) }
     }
+    @MainActor private static func workspaceReturnChecks(root: URL, data: Data, workspace: WorkspaceBinding, target: AudioCommentTarget, request: AudioCommentDraftRequest, context: AudioProofContext) async throws -> [String: Bool] {
+        let owner = try AudioCommentOwner(workspace.account)
+        var checks: [String: Bool] = [:]
+        func make(_ recorder: AudioProofRecorder, _ player: AudioProofPlayer, _ storage: AudioCommentDraftStorage) -> AudioCommentCapture {
+            let capture = AudioCommentCapture(request: request, recorder: recorder, player: player, storage: storage)
+            capture.currentScope = { context.scope }; return capture
+        }
+        // A failed automatic checkpoint plus a Save that never reached its
+        // journal still needs the exact explicit authorization after scope loss.
+        do {
+            let folder = root.appendingPathComponent("prejournal-workspace-return", isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+            let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+            _ = try vault.drafts()
+            let gate = AudioProofPrejournalGate(vault.directory, owner)
+            defer { gate.release() }
+            let disk = AudioCommentDraftStorage(vault: .init(applicationSupport: folder, owner: owner, fault: { try gate.check($0) }))
+            let locked = Darwin.open(vault.directory.appendingPathComponent(".lock").path, O_RDWR | O_NOFOLLOW)
+            guard locked >= 0, flock(locked, LOCK_EX | LOCK_NB) == 0 else { throw AudioCommentStorageFailure.unreadable }
+            let review = make(AudioProofRecorder(data), AudioProofPlayer(), disk)
+            review.start(); _ = await wait { review.session.phase == .recording }; review.stop()
+            _ = await wait { review.session.phase == .review && review.recovery.failure != nil }
+            let caption = "Keep the exact pre-journal Save cafe\u{301} 🪴"
+            review.editCaption(caption)
+            _ = flock(locked, LOCK_UN); Darwin.close(locked)
+            let saved = await review.save()
+            guard let original = gate.submitted else { throw AudioCommentStorageFailure.unreadable }
+            checks["prejournalSaveRefusalKeepsOriginalFrozenAuthorization"] = !saved && review.saveUnconfirmed && !review.editable && review.session.caption.utf8.elementsEqual(caption.utf8)
+            let journalFiles = try FileManager.default.contentsOfDirectory(at: vault.directory, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("save-") }
+            checks["prejournalReproductionHasNoDurableSaveJournal"] = journalFiles.isEmpty
+            context.scope = .init(workspace: .init(account: "foreign-prejournal-owner", generation: UUID()), target: target)
+            review.contextChanged(); gate.release()
+            checks["prejournalDepartureErasesVisiblePrivateContent"] = review.session.clip == nil && review.session.caption.isEmpty && review.session.phase == .closed
+            let foreign = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await foreign.refresh(); await foreign.resumeSave(original)
+            let foreignDrafts = try await disk.drafts()
+            checks["foreignOwnerCannotDiscoverOrFinishPrejournalSave"] = foreign.pendingSaves.isEmpty && foreign.session.clip == nil && foreignDrafts.isEmpty
+            foreign.close(); context.scope = request.scope
+            let returned = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await returned.refresh(); await returned.refresh()
+            checks["returningOwnerSeesOneExactPrejournalSave"] = returned.pendingSaves == [original] && returned.available.isEmpty
+            let discoveryDrafts = try await disk.drafts(), discoverySaves = try await disk.saves()
+            checks["prejournalDiscoveryDoesNotAutoSaveOrRewriteAuthorization"] = discoveryDrafts.isEmpty && discoverySaves.isEmpty
+            checks["unwrittenSaveWarnsBeforeQuitAndRefusesPrematureDiscard"] = returned.hasUnwrittenSaves && returned.isRetainedSave(original)
+            await returned.discardPendingSave(original)
+            let afterDiscard = try await disk.drafts(), afterDiscardIntents = try await disk.saves()
+            checks["volatileDiscardCannotForgetOrPretendToDeleteThePendingSave"] = returned.pendingSaves == [original] && afterDiscard.isEmpty && afterDiscardIntents.isEmpty
+            let changed = try original.next.replacing(caption: "Forged pending caption", clip: original.next.clip)
+            let forged = try AudioCommentSaveIntent(next: changed, base: original.base, reviews: original.reviews, id: original.id)
+            await returned.resumeSave(forged)
+            checks["sameOperationWithDifferentAuthorizationCannotReadOrReplaceRetainedSave"] = returned.session.clip == nil && returned.pendingSaves == [original]
+            let otherTarget = try AudioCommentTarget(task: target.task, generation: UUID(), project: target.project)
+            let otherContext = AudioProofContext(.init(workspace: workspace, target: otherTarget))
+            let other = AudioCommentCapture(request: .init(scope: otherContext.scope, title: "Different task incarnation"), recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: disk)
+            other.currentScope = { otherContext.scope }; await other.refresh(); await other.resumeSave(original)
+            checks["newTaskIncarnationCannotDiscoverOrFinishRetainedSave"] = other.pendingSaves.isEmpty && other.session.clip == nil
+            other.close(); returned.close()
+            var retriesPreserveOneAuthorization = true
+            for _ in 0..<(AudioCommentVault.maximumEntries + 3) {
+                let retry = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await retry.refresh()
+                retriesPreserveOneAuthorization = retriesPreserveOneAuthorization && retry.pendingSaves == [original]
+                gate.arm(); await retry.resumeSave(original)
+                retriesPreserveOneAuthorization = retriesPreserveOneAuthorization && retry.saveUnconfirmed && retry.session.caption.utf8.elementsEqual(caption.utf8) && gate.submitted == original
+                retry.close(); gate.release()
+            }
+            checks["repeatedFailedPresentationsDoNotConsumeAnotherRetainedSlotOrMintIDs"] = retriesPreserveOneAuthorization
+            checks["frozenRecoveryCannotCheckpointAroundUnresolvedSave"] = !(await review.preserveReview())
+            returned.close()
+            let reopened = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await reopened.refresh()
+            checks["repeatedPresentationRetainsSamePrejournalOperation"] = reopened.pendingSaves == [original]
+            await reopened.resumeSave(original)
+            let drafts = try await disk.drafts(), journals = try await disk.saves(), reviews = try await disk.reviews()
+            checks["finishingUnwrittenSaveClearsRecoveryWarningInCurrentPresentation"] = !reopened.retainedRecoveryFailed
+            checks["prejournalFinishSavesOriginalIDsAndCaptionExactlyOnce"] = reopened.saved == original.next && drafts == [original.next] && journals.isEmpty && reviews.isEmpty && reopened.pendingSaves.isEmpty
+            reopened.close()
+            let final = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await final.refresh()
+            checks["settledPrejournalAttemptDoesNotReturnAsRetainedFailure"] = final.pendingSaves.isEmpty && !final.retainedRecoveryFailed && final.available == [original.next] && final.recoverable.isEmpty
+            final.close()
+        }
+
+        do {
+            let folder = root.appendingPathComponent("copy-workspace-return", isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+            let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+            let observer = AudioProofLookupLock(directory: vault.directory, owner: owner, interrupt: .afterSaveJournal, enabled: false)
+            let disk = AudioCommentDraftStorage(vault: .init(applicationSupport: folder, owner: owner, fault: { try observer.check($0) }))
+            let review = make(AudioProofRecorder(data), AudioProofPlayer(), disk)
+            review.start(); _ = await wait { review.session.phase == .recording }; review.stop(); _ = await wait { review.session.phase == .review }
+            review.editCaption("Earlier local recording"); _ = await review.save()
+            guard let initial = review.saved else { throw AudioCommentStorageFailure.unreadable }
+            let concurrent = try initial.replacing(caption: "Preserve the other window’s version", clip: initial.clip)
+            try await disk.save(concurrent, replacing: initial.revision)
+            let caption = "My explicit separate copy after a workspace switch"
+            review.editCaption(caption); _ = await review.preserveReview(); _ = await review.save()
+            guard let old = try await disk.saves().first else { throw AudioCommentStorageFailure.unreadable }
+            let locked = Darwin.open(vault.directory.appendingPathComponent(".lock").path, O_RDWR | O_NOFOLLOW)
+            guard locked >= 0, flock(locked, LOCK_EX | LOCK_NB) == 0 else { throw AudioCommentStorageFailure.unreadable }
+            let copied = await review.saveSeparateDraft()
+            checks["workspaceCopyReproductionIsUnconfirmedBeforeJournalReplacement"] = !copied && review.saveUnconfirmed && !review.saveDurable
+            context.scope = .init(workspace: .init(account: "other-copy-owner", generation: UUID()), target: target)
+            review.contextChanged(); _ = flock(locked, LOCK_UN); Darwin.close(locked)
+            checks["workspaceCopyDepartureClearsVisiblePrivateContent"] = review.session.clip == nil && review.session.caption.isEmpty
+            context.scope = request.scope
+            let fresh = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await fresh.refresh()
+            let chosen = fresh.pendingSaves.first
+            checks["returningCopyKeepsOperationButRetainsChosenNewDraftIdentity"] = fresh.pendingSaves.count == 1 && chosen?.id == old.id && chosen?.next.id != old.next.id && chosen?.next.caption == caption
+            checks["discoveringChosenCopyDoesNotRewriteOriginalOnDiskJournal"] = try await disk.saves() == [old]
+            await fresh.resumeSave(old)
+            checks["staleOldAuthorizationCannotSupersedeChosenRetainedCopy"] = fresh.session.clip == nil && fresh.pendingSaves == (chosen.map { [$0] } ?? [])
+            if let chosen { await fresh.resumeSave(chosen) }
+            let drafts = try await disk.drafts(), pending = try await disk.saves()
+            checks["returnedSeparateCopyCompletesExactChosenDraftAndPreservesOtherWindow"] = chosen != nil && fresh.saved == chosen?.next && drafts.count == 2 && drafts.contains(concurrent) && drafts.contains(where: { $0 == chosen?.next }) && pending.isEmpty
+            fresh.close()
+            let final = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await final.refresh()
+            checks["settledCopyReleasesOriginalRetainedWriterWithoutStaleRecoveryRow"] = !final.retainedRecoveryFailed && final.pendingSaves.isEmpty && final.recoverable.isEmpty && final.available.count == 2
+            final.close()
+        }
+
+        return checks
+    }
+
 }
