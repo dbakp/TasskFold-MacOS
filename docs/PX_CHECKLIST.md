@@ -124,10 +124,12 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 - [ ] Audio comments remain gated. Implemented: private recording/recovery/library
   and portable backups; durable publication/retry; authenticated paged live metadata,
   native verified download/play and explicit removal in a personal-root preview.
-  Latest checks per repo: 180 Core, 271 controller, 20 gateway, 25 database/page and
-  24 native/gateway/PostgreSQL. Pending: shared/read-only integration,
+  Shared/archived project reads now have separate admission and denied-access clearing.
+  Latest checks: 184 Core, 273 controller, 30 shared native/database/gateway and
+  24 publication regression checks per repo. Pending: team audio writing/custody,
+  unified timeline,
   native UI/spoken acceptance, unknown-upload/legacy-history recovery, hosted
-  custody/provider and genuine audio acceptance. See [current evidence](audio-pagination/README.md)
+  custody/provider and genuine audio acceptance. See [current evidence](audio-shared-read/README.md)
   and [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
 - [ ] Inbound email provider/domain configuration and genuine delivery — prepare
   only until the user supplies configuration.
@@ -778,3 +780,21 @@ establish visual/spoken/runtime acceptance or complete the audio/Px feature.
 
 [Evidence and limits](audio-pagination/README.md). Pagination implementation closes
 the 20-comment preview gap; the full audio/Px objective remains open.
+
+
+## 2026-10-28 — shared read-only audio access
+
+- [x] Separate viewing from private draft/publishing permission. Require current
+  access boundaries for project readers, including team viewers and archives;
+  retain a separate Inbox owner check and deny creator-only shortcuts.
+- [x] Add read entry points in shared conversations and root editors, scoped author
+  presentation, independently checked removal authority and clearing on denied reads.
+- [x] Keep team audio writes closed. Independently pass 184 Core, 273 controller,
+  30 shared PostgreSQL/gateway/native and 24 publication regression checks per repo;
+  grant revocation during a download withholds audio, with no new advisor findings.
+- [ ] Native UI/runtime/visual/spoken acceptance, separately authorized team audio
+  publishing/removal/custody and unified timeline; hosted provider and remaining
+  recovery acceptance. Ordinary flags remain off; genuine audio stays deferred.
+
+[Evidence and limits](audio-shared-read/README.md). Shared read implementation does
+not complete all team audio operations or the overall Px feature.

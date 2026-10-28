@@ -1265,6 +1265,7 @@ extension Backend: AudioCommentReadingTransport {
             // them as a successful deletion or current membership evidence.
             guard response.statusCode == 200 else {
                 if response.statusCode == 401 { throw AccountSessionAuthorizationRequired() }
+                if response.statusCode == 403 || response.statusCode == 404 { throw AudioCommentReadAccessUnavailable() }
                 throw AudioCommentFailure(message: action == "remove" ? "Removal couldn’t be confirmed. Refresh the conversation before trying again." : "Recordings couldn’t be loaded. Refresh to try again.")
             }
             guard response.value(forHTTPHeaderField: "Content-Type")?.split(separator: ";").first?.trimmingCharacters(in: .whitespaces).lowercased() == (action == "download" ? "audio/mp4" : "application/json") else { throw AudioCommentFailure.invalid }

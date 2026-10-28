@@ -4,7 +4,7 @@ Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Private audio now supports authenticated keyset pages and native Load more across the retained conversation, with a 100-recording task count cap and existing byte/author quotas. Each repo passes 180 Core, 271 controller, 20 gateway, 25 actual database/page and 24 native/gateway/PostgreSQL checks; advisors show no added findings. Shared/read-only admission, native runtime/accessibility, hosted custody/provider and remaining recovery acceptance stay open. Ordinary flags remain off and genuine audio stays deferred. See [current checkpoint](audio-pagination/README.md). Earlier dated checkpoint counts below are historical.
+Private audio now separates shared read-only conversation access from draft/publishing ownership. Current team viewer/manager/editor and legacy project boundaries, archives, grant revocation and independently gated removal pass 184 Core, 273 controller, 30 shared native/database/gateway and 24 publication regression checks per repo. Shared conversations expose the gated reader; team audio writes remain closed. Native UI/runtime/spoken, team publishing/removal/custody, unified timeline, hosted provider and remaining recovery acceptance stay open. Ordinary flags remain off and genuine audio remains deferred. See [current checkpoint](audio-shared-read/README.md). Earlier dated counts below are historical.
 
 Private audio now connects to saved personal-root task editors/inspectors, including Inbox, behind an absent normal exposure flag. Live Store access, owner, task/project/generation and server origin bind each request; app/server/account storage stays private and outside task exports. Both repos pass 123 Core cases and 170 controller checks; two final native cases per iPhone/iPad pass without reported runtime warnings, preserving task bytes and verifying cold return plus fixture reset isolation. Shared/child/cloud runtime and full lifecycle remain open. See [task-editor integration](audio-task-editor/README.md).
 
@@ -6881,3 +6881,21 @@ establish visual/spoken/runtime acceptance or complete the audio/Px feature.
 
 [Evidence and limits](audio-pagination/README.md). Pagination implementation closes
 the 20-comment preview gap; the full audio/Px objective remains open.
+
+
+## 2026-10-28 — shared read-only audio access
+
+- [x] Separate viewing from private draft/publishing permission. Require current
+  access boundaries for project readers, including team viewers and archives;
+  retain a separate Inbox owner check and deny creator-only shortcuts.
+- [x] Add read entry points in shared conversations and root editors, scoped author
+  presentation, independently checked removal authority and clearing on denied reads.
+- [x] Keep team audio writes closed. Independently pass 184 Core, 273 controller,
+  30 shared PostgreSQL/gateway/native and 24 publication regression checks per repo;
+  grant revocation during a download withholds audio, with no new advisor findings.
+- [ ] Native UI/runtime/visual/spoken acceptance, separately authorized team audio
+  publishing/removal/custody and unified timeline; hosted provider and remaining
+  recovery acceptance. Ordinary flags remain off; genuine audio stays deferred.
+
+[Evidence and limits](audio-shared-read/README.md). Shared read implementation does
+not complete all team audio operations or the overall Px feature.

@@ -1088,6 +1088,7 @@ struct AudioCommentConversationRequest: Identifiable {
     private let transport: any AudioCommentReadingTransport
     private let player: any AudioCommentPlaying
     @ObservationIgnored var currentScope: () -> AudioCommentLiveScope? = { nil }
+    @ObservationIgnored var removalAuthority: (AudioCommentRemote) -> Bool = { _ in false }
     @ObservationIgnored var sessionIsCurrent: () -> Bool = { false }
     private(set) var entries: [AudioCommentRemote] = []
     private(set) var hasMore = false
@@ -1128,7 +1129,11 @@ struct AudioCommentConversationRequest: Identifiable {
                   combined.allSatisfy({ $0.publication.account==account && $0.publication.target==scope.target }),
                   page.next == nil || page.next?.account==account && page.next?.target==scope.target && page.next != after else { throw AudioCommentFailure.invalid }
             entries=combined;next=page.next;hasMore=next != nil
-        } catch { if accepts(generation) { notice="Recordings couldn’t be loaded. Try again or refresh the conversation." } }
+        } catch { if accepts(generation), !clearDeniedAccess(error) { notice="Recordings couldn’t be loaded. Try again or refresh the conversation." } }
+    }
+    private func clearDeniedAccess(_ error: Error) -> Bool {
+        guard error is AudioCommentReadAccessUnavailable || error is AccountSessionAuthorizationRequired else { return false }
+        stop(); entries=[]; next=nil; hasMore=false; notice="This conversation is no longer available. Refresh access before reopening it."; return true
     }
     private func contains(_ value: AudioCommentRemote) -> Bool { isCurrent && value.publication.account == account && value.publication.target == scope.target && entries.contains(value) }
     func play(_ value: AudioCommentRemote) async {
@@ -1139,16 +1144,17 @@ struct AudioCommentConversationRequest: Identifiable {
             guard accepts(generation), contains(value), clip.descriptor == value.publication.descriptor else { throw CancellationError() }
             playing = value.id
             try player.play(clip, isCurrent: { [weak self] in self?.accepts(generation) == true }, ended: { [weak self] in guard let self, self.accepts(generation) else { return }; self.playing = nil })
-        } catch { if accepts(generation) { stop(); notice = "This recording couldn’t be played. Refresh its current conversation before trying again." } }
+        } catch { if accepts(generation), !clearDeniedAccess(error) { stop(); notice = "This recording couldn’t be played. Refresh its current conversation before trying again." } }
     }
+    func mayRemove(_ value: AudioCommentRemote) -> Bool { contains(value) && removalAuthority(value) }
     func remove(_ value: AudioCommentRemote) async {
-        guard contains(value), !working else { return }; stop(); notice = nil; working = true; let generation = token
+        guard mayRemove(value), !working else { return }; stop(); notice = nil; working = true; let generation = token
         defer { if token == generation { working = false } }
         do {
             let removed = try await transport.removeAudio(value, origin: origin, incarnation: incarnation)
             guard accepts(generation), removed.comment == value.id, removed.operation == value.publication.operation else { throw CancellationError() }
             entries.removeAll { $0.id == value.id }; notice = "Audio comment removed. Private saved recordings are unchanged."
-        } catch { if accepts(generation) { notice = "Removal couldn’t be confirmed. Refresh before trying again; private saved recordings are unchanged." } }
+        } catch { if accepts(generation), !clearDeniedAccess(error) { notice = "Removal couldn’t be confirmed. Refresh before trying again; private saved recordings are unchanged." } }
     }
 }
 
@@ -1180,12 +1186,30 @@ struct AudioCommentConversationRequest: Identifiable {
                   let current = self.audioPublishingScope(scope.target) else { return false }; return scope.matches(current)
         })
     }
+    func audioReadScope(_ target: AudioCommentTarget) -> AudioCommentLiveScope? {
+        guard audioPublishingEnabled, teamOrganizationReadable, !workspaceNeedsRepair,
+              backend.audioPublicationSessionMatches(userID), let task=record("tasks",id:target.task.uuidString.lowercased()),
+              let origin=try? backend.accountRemovalOrigin,
+              let admitted=try? AudioCommentReadAdmission.target(account:userID,origin:origin,task:task,projects:rows("projects"),cache:nativeConversationTeamCache,teamsEnabled:Bundle.main.object(forInfoDictionaryKey:"TaskfoldTeamsEnabled") as? Bool == true), admitted==target else { return nil }
+        return .init(workspace:.init(account:userID,generation:workspaceGeneration),target:target,origin:origin)
+    }
+    func audioConversationRequest(taskID: String) -> AudioCommentConversationRequest? {
+        guard let task=record("tasks",id:taskID), let id=UUID(uuidString:task.id), let generation=UUID(uuidString:task.string("task_generation")),
+              task.string("project_id").isEmpty || UUID(uuidString:task.string("project_id")) != nil,
+              let target=try? AudioCommentTarget(task:id,generation:generation,project:UUID(uuidString:task.string("project_id"))),
+              let scope=audioReadScope(target) else { return nil }
+        return .init(scope:scope)
+    }
     func audioConversation(scope: AudioCommentLiveScope, player: any AudioCommentPlaying) throws -> AudioCommentConversationController {
-        guard let current = audioPublishingScope(scope.target), scope.matches(current) else { throw AudioCommentFailure.changed }
+        guard let current = audioReadScope(scope.target), scope.matches(current) else { throw AudioCommentFailure.changed }
         let incarnation = backend.reminderSessionIncarnation
         let controller = try AudioCommentConversationController(scope: scope, incarnation: incarnation, transport: backend, player: player)
-        controller.currentScope = { [weak self] in self?.audioPublishingScope(scope.target) }
+        controller.currentScope = { [weak self] in self?.audioReadScope(scope.target) }
         controller.sessionIsCurrent = { [weak self] in self?.backend.reminderSessionIncarnation == incarnation && self?.backend.audioPublicationSessionMatches(scope.workspace.account) == true }
+        controller.removalAuthority = { [weak self] comment in
+            guard let self, let current=self.audioReadScope(scope.target), scope.matches(current) else { return false }
+            return AudioCommentReadAdmission.mayRemove(author:comment.author,account:self.userID,target:scope.target,projects:self.rows("projects"),cache:self.nativeConversationTeamCache)
+        }
         return controller
     }
     func audioPendingScope() -> AudioCommentLibraryScope? {

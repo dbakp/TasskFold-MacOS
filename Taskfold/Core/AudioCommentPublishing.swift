@@ -355,3 +355,38 @@ struct AudioCommentPage: Sendable {
         }
     }
 }
+
+/// Presentation admission only. Gateway/SQL still reauthorize every request.
+/// Published media reads must not inherit the private draft writer's ownership.
+enum AudioCommentReadAdmission {
+    static func target(account: String, origin: String, task: Record, projects: [Record], cache: TeamWorkspaceCache?, teamsEnabled: Bool) throws -> AudioCommentTarget {
+        guard let actor=UUID(uuidString:account), actor != AudioCommentTarget.zero, actor.uuidString.lowercased()==account,
+              TaskKind(task) == .task, let id=UUID(uuidString:task.id), let generation=UUID(uuidString:task.string("task_generation")),
+              (try? AudioCommentPublicationJournal.canonicalOrigin(origin))==origin else { throw AudioCommentFailure.changed }
+        if let cache, !cache.boundary.belongs(account:account,origin:origin) { throw AudioCommentFailure.changed }
+        let project=task.string("project_id")
+        if project.isEmpty {
+            guard task["project_id"] == .null || task["project_id"] == .string(""), task.string("user_id")==account, cache?.knownTasks.contains(task.id) != true else { throw AudioCommentFailure.changed }
+            return try .init(task:id,generation:generation,project:nil)
+        }
+        guard let projectID=UUID(uuidString:project), projectID.uuidString.lowercased()==project,
+              projects.filter({$0.id==project}).count==1, let row=projects.first(where:{$0.id==project}) else { throw AudioCommentFailure.changed }
+        guard let cache, let permission=cache.boundary.projects[project] else { throw AudioCommentFailure.changed }
+        if let team=cache.knownTeams[project] {
+            guard teamsEnabled, cache.boundary.raw["native_team_reads_enabled"] == .bool(true), permission.team==team,
+                  ["manager","editor","viewer"].contains(permission.role), cache.knownTasks.contains(task.id) else { throw AudioCommentFailure.changed }
+        } else {
+            guard !cache.knownTasks.contains(task.id), row["team_id"] == .null || row["team_id"] == .string(""), permission.team == nil,
+                  permission.role=="collaborator" || permission.role=="owner" && row.string("user_id")==account else { throw AudioCommentFailure.changed }
+        }
+        return try .init(task:id,generation:generation,project:projectID)
+    }
+    static func mayRemove(author: UUID?, account: String, target: AudioCommentTarget, projects: [Record], cache: TeamWorkspaceCache?) -> Bool {
+        // Team audio is read-only until its independent publication/removal
+        // protocol is accepted. A creator UUID or manager label is no shortcut.
+        if let project=target.project?.uuidString.lowercased(), cache?.knownTeams[project] != nil { return false }
+        return author?.uuidString.lowercased()==account || target.project.map { id in projects.filter { $0.id==id.uuidString.lowercased() && $0.string("user_id")==account }.count==1 } == true
+    }
+}
+
+struct AudioCommentReadAccessUnavailable: LocalizedError { var errorDescription: String? { "This audio conversation is no longer available. Refresh access before reopening it." } }

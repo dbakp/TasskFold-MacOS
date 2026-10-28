@@ -41,6 +41,17 @@ private final class NativePublicationHTTP: URLProtocol {
         let session = try JSONDecoder().decode(Session.self, from: JSONEncoder().encode(sessionRecord))
         let http = URLSessionConfiguration.ephemeral; http.protocolClasses = [NativePublicationHTTP.self]
         let backend = Backend(configuration: ["URL": "https://native-publication.example.invalid", "Key": "synthetic-public"], http: URLSession(configuration: http), session: session, persistSession: { _ in })
+        if config["read_only"] == .bool(true) {
+            let account=UUID(uuidString:config.string("account"))!,target=try AudioCommentTarget(record:Record(config["target"].object)),incarnation=backend.reminderSessionIncarnation
+            let page=try await backend.pageAudio(account:account,target:target,after:nil,origin:backend.baseURL,incarnation:incarnation)
+            guard page.items.count==1,let row=page.items.first else { throw AppFailure(message:"Missing shared native recording") }
+            let clip=try await backend.downloadAudio(row,origin:backend.baseURL,incarnation:incarnation)
+            guard clip.data == (try Data(contentsOf:URL(fileURLWithPath:args[2]))) else { throw AppFailure(message:"Shared native bytes changed") }
+            var removalRefused=false
+            do { _ = try await backend.removeAudio(row,origin:backend.baseURL,incarnation:incarnation) } catch { removalRefused=true }
+            guard removalRefused else { throw AppFailure(message:"Shared read grant allowed removal") }
+            print("{\"read_only_verified\":true,\"removal_refused\":true}");return
+        }
         let clip = try await AudioCommentDecoding.validate(Data(contentsOf: URL(fileURLWithPath: args[2])))
         let target = try AudioCommentTarget(record: Record(config["target"].object))
         let source = try AudioCommentSavedDraft(owner: .init(config.string("account")), target: target, caption: config.string("caption"), clip: clip, id: UUID(uuidString: config.string("source"))!, revision: UUID(uuidString: config.string("revision"))!)

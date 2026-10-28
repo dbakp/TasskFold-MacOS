@@ -10,7 +10,7 @@ import SwiftUI
     @State private var operation: Task<Void, Never>?
     @State private var failure: String?
     @State private var reload = UUID()
-    private var allowed: Bool { phase == .active && store.audioPublishingScope(request.scope.target).map(request.scope.matches) == true }
+    private var allowed: Bool { phase == .active && store.audioReadScope(request.scope.target).map(request.scope.matches) == true }
     var body: some View {
         NavigationStack {
             Form {
@@ -19,7 +19,7 @@ import SwiftUI
                         ForEach(controller.entries) { comment in
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
-                                    Label(comment.author?.uuidString.lowercased() == request.scope.workspace.account ? "You" : comment.author == nil ? "Former member" : "Team member", systemImage: "waveform")
+                                    Label(store.conversationName(comment.author?.uuidString.lowercased(),project:request.scope.target.project?.uuidString.lowercased() ?? ""), systemImage: "waveform")
                                         .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                                     Spacer()
                                     Text("\(Double(comment.publication.descriptor.milliseconds) / 1000, specifier: "%.1f") sec").font(.caption).foregroundStyle(.secondary)
@@ -30,7 +30,9 @@ import SwiftUI
                                         if controller.playing == comment.id { controller.stop() } else { run { await controller.play(comment) } }
                                     }.buttonStyle(.bordered).disabled(controller.working).accessibilityIdentifier("audioConversationPlay-" + comment.id.uuidString.lowercased())
                                     Spacer()
+                                    if controller.mayRemove(comment) {
                                     Button("Remove…", systemImage: "trash", role: .destructive) { removing = comment }.buttonStyle(.borderless).disabled(controller.working)
+                                    }
                                 }
                             }.padding(.vertical, 6)
                         }

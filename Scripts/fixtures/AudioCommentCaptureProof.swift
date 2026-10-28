@@ -7,7 +7,7 @@ import Darwin
     var rows: [AudioCommentRemote] = []
     var clip: AudioCommentClip
     var lists = 0, downloads = 0, removals = 0
-    var failList = false, failRemoval = false, holdList = false, holdDownload = false
+    var deniedAccess = false, failList = false, failRemoval = false, holdList = false, holdDownload = false
     var continuation: CheckedContinuation<Void, Never>?
     init(_ clip: AudioCommentClip) { self.clip = clip }
     func release() { continuation?.resume(); continuation = nil }
@@ -20,7 +20,7 @@ import Darwin
         return try .init(data:JSONEncoder().encode(Record(["protocol":.number(1),"account":.string(account.uuidString.lowercased()),"items":.array(items.map { .object($0.record.fields) }),"next":next])),account:account,target:target,after:after)
     }
     func listAudio(account: UUID, target: AudioCommentTarget, origin: String, incarnation: UUID) async throws -> [AudioCommentRemote] {
-        lists += 1; if holdList { await withCheckedContinuation { continuation = $0 } }; if failList { throw URLError(.networkConnectionLost) }; return rows
+        lists += 1; if holdList { await withCheckedContinuation { continuation = $0 } }; if deniedAccess { throw AudioCommentReadAccessUnavailable() }; if failList { throw URLError(.networkConnectionLost) }; return rows
     }
     func downloadAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentClip {
         downloads += 1; if holdDownload { await withCheckedContinuation { continuation = $0 } }; return clip
@@ -1518,12 +1518,15 @@ extension AudioControllerProof {
         var sessionCurrent = true
         func make() throws -> AudioCommentConversationController {
             let value = try AudioCommentConversationController(scope: scope, incarnation: UUID(), transport: transport, player: player)
-            value.currentScope = { context.scope }; value.sessionIsCurrent = { sessionCurrent }; return value
+            value.currentScope = { context.scope }; value.sessionIsCurrent = { sessionCurrent }; value.removalAuthority = { _ in true }; return value
         }
         var checks: [String: Bool] = [:]
         let unbound = try AudioCommentConversationController(scope: scope, incarnation: UUID(), transport: transport, player: player)
         await unbound.refresh(); checks["remoteConversationRequiresExplicitLiveBinding"] = transport.lists == 0 && unbound.entries.isEmpty; unbound.close()
         let value = try make(); await value.refresh()
+        value.removalAuthority = { _ in false }; await value.remove(remote)
+        checks["remoteReadOnlyReviewCannotSendRemoval"] = transport.removals == 0 && !value.mayRemove(remote)
+        value.removalAuthority = { _ in true }
         checks["remoteConversationListsExactTargetAndLiteralCaption"] = value.entries == [remote] && value.entries.first?.publication.caption.utf8.elementsEqual(publication.caption.utf8) == true
         await value.play(remote); checks["remoteConversationPlaysVerifiedFreshDownload"] = transport.downloads == 1 && player.plays == 1 && value.playing == remote.id
         value.stop(); checks["remoteStopRevokesDelayedPlaybackAuthority"] = player.permits.last?() == false && value.playing == nil
@@ -1566,6 +1569,9 @@ extension AudioControllerProof {
         checks["remotePagingReachesAllFortyFiveInPublicationOrder"] = pages.entries.map(\.publication.caption)==(0..<45).map { "Recording \($0)" } && !pages.hasMore
         let listCalls=transport.lists;await pages.loadMore()
         checks["remotePagingStopsAtTerminalPage"] = transport.lists==listCalls
+        await pages.refresh();transport.deniedAccess=true;await pages.loadMore()
+        checks["remotePagingDeniedAccessClearsPriorRowsAndCursor"] = pages.entries.isEmpty && !pages.hasMore && pages.playing == nil && pages.notice?.contains("no longer available") == true
+        transport.deniedAccess=false
         pages.close();checks["remotePagingCloseClearsCursorAndRows"] = pages.entries.isEmpty && !pages.hasMore
         return checks
     }

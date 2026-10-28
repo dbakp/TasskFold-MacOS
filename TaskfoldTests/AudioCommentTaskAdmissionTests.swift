@@ -96,3 +96,51 @@ extension AudioCommentVaultTests {
         XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: outside.path).isEmpty)
     }
 }
+
+extension AudioCommentTaskAdmissionTests {
+    func readFixture() throws -> (Record, Record, TeamWorkspaceCache, String, String) {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"team-workspace-boundary-v1",withExtension:"json",subdirectory:"Fixtures")),f=try JSONDecoder().decode(Record.self,from:Data(contentsOf:url))
+        let actor=f.string("account"),project=f.string("project"),origin="https://read.example.invalid"
+        var raw=f["active"].object
+        raw["projects"] = .array(raw["projects"]!.list.map { value in var row=value.object;if row["id"] == .string(project) {row["role"] = .string("viewer");row["can_send_tasks"] = .bool(false);row["archived"] = .bool(true)};return .object(row) })
+        let boundary=try TeamWorkspaceBoundary(raw,account:actor,origin:origin)
+        var task=Record.task(user:UUID().uuidString.lowercased(),project:project);task["task_generation"] = .string(generation)
+        let row=Record(["id":.string(project),"user_id":.string(UUID().uuidString.lowercased()),"team_id":f["team"],"is_archived":.bool(true)])
+        return (task,row,try TeamWorkspaceCache(boundary:boundary,previous:nil,pending:[],tasks:[task]),actor,origin)
+    }
+    func testTeamViewerCanReadArchivedRecordingWithoutDraftOrRemovalRights() throws {
+        let (task,project,cache,actor,origin)=try readFixture()
+        let target=try AudioCommentReadAdmission.target(account:actor,origin:origin,task:task,projects:[project],cache:cache,teamsEnabled:true)
+        XCTAssertEqual(target.project,UUID(uuidString:project.id));XCTAssertThrowsError(try AudioCommentTaskAdmission.target(account:actor,task:task,projects:[project]))
+        XCTAssertFalse(AudioCommentReadAdmission.mayRemove(author:UUID(uuidString:actor),account:actor,target:target,projects:[project],cache:cache))
+    }
+    func testReadAdmissionRejectsDisabledMissingAndForeignTeamBoundaries() throws {
+        let (task,project,cache,actor,origin)=try readFixture()
+        XCTAssertThrowsError(try AudioCommentReadAdmission.target(account:actor,origin:origin,task:task,projects:[project],cache:cache,teamsEnabled:false))
+        XCTAssertThrowsError(try AudioCommentReadAdmission.target(account:actor,origin:origin,task:task,projects:[project],cache:nil,teamsEnabled:true))
+        XCTAssertThrowsError(try AudioCommentReadAdmission.target(account:actor,origin:"https://other.example.invalid",task:task,projects:[project],cache:cache,teamsEnabled:true))
+        var heading=task;heading["is_heading"] = .bool(true)
+        XCTAssertThrowsError(try AudioCommentReadAdmission.target(account:actor,origin:origin,task:heading,projects:[project],cache:cache,teamsEnabled:true))
+        var moved=task;moved["project_id"] = .null;moved["user_id"] = .string(actor)
+        XCTAssertThrowsError(try AudioCommentReadAdmission.target(account:actor,origin:origin,task:moved,projects:[],cache:cache,teamsEnabled:true))
+    }
+    func testLegacyCollaboratorReadsWithoutBecomingOwner() throws {
+        let (_,_,cache,actor,origin)=try readFixture(),id=try XCTUnwrap(cache.boundary.projects.values.first(where:{$0.team==nil && $0.role=="collaborator"})?.id)
+        var task=Record.task(user:UUID().uuidString.lowercased(),project:id);task["task_generation"] = .string(generation)
+        let project=Record(["id":.string(id),"user_id":task["user_id"],"is_archived":.bool(true)])
+        let target=try AudioCommentReadAdmission.target(account:actor,origin:origin,task:task,projects:[project],cache:cache,teamsEnabled:false)
+        XCTAssertFalse(AudioCommentReadAdmission.mayRemove(author:UUID(),account:actor,target:target,projects:[project],cache:cache))
+        XCTAssertTrue(AudioCommentReadAdmission.mayRemove(author:UUID(uuidString:actor),account:actor,target:target,projects:[project],cache:cache))
+        XCTAssertThrowsError(try AudioCommentReadAdmission.target(account:actor,origin:origin,task:task,projects:[project],cache:nil,teamsEnabled:false))
+    }
+    func testOwnedProjectAlsoRequiresCurrentBoundaryWhileOwnInboxDoesNot() throws {
+        let (_,_,cache,actor,origin)=try readFixture(),id=try XCTUnwrap(cache.boundary.projects.values.first(where:{$0.team==nil && $0.role=="owner"})?.id)
+        var task=Record.task(user:actor,project:id);task["task_generation"] = .string(generation)
+        let project=Record(["id":.string(id),"user_id":.string(actor),"is_archived":.bool(true)])
+        XCTAssertNoThrow(try AudioCommentReadAdmission.target(account:actor,origin:origin,task:task,projects:[project],cache:cache,teamsEnabled:false))
+        XCTAssertThrowsError(try AudioCommentReadAdmission.target(account:actor,origin:origin,task:task,projects:[project],cache:nil,teamsEnabled:false))
+        task["project_id"] = .null
+        XCTAssertNoThrow(try AudioCommentReadAdmission.target(account:actor,origin:origin,task:task,projects:[],cache:nil,teamsEnabled:false))
+    }
+
+}

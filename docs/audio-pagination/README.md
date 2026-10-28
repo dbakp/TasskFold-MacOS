@@ -40,3 +40,5 @@ The forward migration was created with `supabase migration new audio_comment_key
 Shared/read-only Store admission and shared text-conversation integration; native runtime/visual/largest-text/keyboard/spoken acceptance; legacy/unknown-upload/history recovery; hosted provider/custody/removal acceptance and user-deferred genuine audio checks. Ordinary audio and the overall Px objective remain open.
 
 The preceding [live preview checkpoint](../audio-live-preview/README.md) records its original 20-comment cap. This checkpoint implements paging and the higher retained task count; it does not supersede that checkpoint's other acceptance limits.
+
+Follow-up: [shared read-only audio](../audio-shared-read/README.md) adds separately authorized project viewing and shared-conversation entry points. Team writes and native/provider acceptance remain open.

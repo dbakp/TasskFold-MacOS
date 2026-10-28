@@ -31,6 +31,7 @@ struct SharedConversationView: View {
     @State private var composer: ConversationComposerRequest?
     @State private var removing: SharedComment?
     @State private var loading = false
+    @State private var audioConversation: AudioCommentConversationRequest?
     private var task: Record? {
         guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration),
               let task = store.record("tasks", id: request.taskID), task.string("task_generation") == request.generation,
@@ -48,6 +49,9 @@ struct SharedConversationView: View {
                             Text(task.title).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("conversationTaskTitle")
                             Text(store.record("projects", id: request.project)?.name ?? "Project").font(.subheadline).foregroundStyle(.secondary)
                             ConversationStatus()
+                            if let audio=store.audioConversationRequest(taskID:task.id) {
+                                Button("Audio comments",systemImage:"waveform.bubble") { audioConversation=audio }.frame(minHeight:44).accessibilityIdentifier("sharedConversationAudio")
+                            }
                             if !writable { Text("This conversation is read-only right now. You can keep unsent text as a private draft.").font(.footnote).foregroundStyle(.secondary) }
                             let comments = store.conversationComments(task)
                             if let selected = request.selectedComment, !comments.contains(where: { $0.id == selected }), !loading, store.conversationMeta(store.conversationScope(task)) != nil {
@@ -110,6 +114,7 @@ struct SharedConversationView: View {
                 }
             } message: { Text("Its text and mentions will be removed. A saved removal waits for a connection.") }
             .onChange(of: store.workspaceReadRevision) { _, _ in if task == nil || !writable { removing=nil } }
+            .sheet(item:$audioConversation) { AudioCommentConversationView(request:$0) }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
         }
         #if os(macOS)

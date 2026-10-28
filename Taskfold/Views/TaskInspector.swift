@@ -464,16 +464,8 @@ struct TaskInspectorForm: View {
                     Text("Saved on this device. Task exports do not include recordings.").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            if store.audioPublishingEnabled, Workspace.subtaskPath(taskID) == nil, !isTeamTask, !isCreating {
-                Section {
-                    Button("Audio comments", systemImage: "waveform.bubble") {
-                        guard editorAvailable, let scope = store.audioDraftScope(taskID: taskID),
-                              store.audioPublishingScope(scope.target) != nil,
-                              draft.string("project_id") == current?.string("project_id") else { return }
-                        audioConversation = .init(scope: scope)
-                    }.disabled(!editorAvailable || store.audioDraftScope(taskID: taskID).flatMap { store.audioPublishingScope($0.target) } == nil)
-                     .accessibilityIdentifier("openAudioConversation")
-                }
+            if Workspace.subtaskPath(taskID)==nil, !isCreating, let request=store.audioConversationRequest(taskID:taskID), draft.string("project_id")==current?.string("project_id") {
+                Section { Button("Audio comments",systemImage:"waveform.bubble") { audioConversation=request }.accessibilityIdentifier("openAudioConversation") }
             }
             Section("Comments") {
                 ForEach(Array(draft["comments"].list.enumerated()), id: \.offset) { index, value in
