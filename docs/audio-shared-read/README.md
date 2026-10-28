@@ -43,3 +43,5 @@ The forward migration was created with `supabase migration new audio_comment_sha
 - Unknown-upload terminal recovery, legacy unbound journals and compact-history policy; real hosted provider/custody/removal acceptance and user-deferred genuine audio/dictation checks.
 
 The [pagination checkpoint](../audio-pagination/README.md) remains recorded. Audio and the overall Px objective remain unfinished and gated.
+
+Follow-up: [native conversation component acceptance](../audio-conversation-native/README.md) records separate mobile UI/VoiceOver and Mac CUA scopes. Full Store/provider and remaining lifecycle acceptance stay open.

@@ -5,6 +5,7 @@ import Observation
 import Darwin
 
 @MainActor enum AudioCommentNativeFixture {
+    static var conversationTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-conversation-testing") }
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-comment-testing") }
     static var taskEditorTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-task-editor-testing") }
     static func taskEditorRecorder() -> any AudioCommentRecording { AudioCommentFixtureRecording() }
@@ -325,5 +326,146 @@ struct AudioCommentNativeFixtureView: View {
             failure = nil
         } catch { failure = error.localizedDescription }
     }
+}
+#endif
+
+#if DEBUG
+/// View-only dependency seam. Available solely in DEBUG; the reserved fixture
+/// gate is still required before constructing any synthetic context or driver.
+@MainActor struct AudioConversationPresentationFixture {
+    let session: UUID
+    let isCurrent: () -> Bool
+    let makeController: () throws -> AudioCommentConversationController
+    let authorName: (UUID?) -> String
+}
+@MainActor @Observable private final class AudioConversationNativeContext: AudioCommentReadingTransport {
+    let scope: AudioCommentLiveScope
+    let session=UUID()
+    let clip: AudioCommentClip
+    let owner: Bool
+    let deniedPages: Bool
+    let departOnPlay: Bool
+    var active=true
+    var rows: [AudioCommentRemote]=[]
+    var plays=0
+    var removals=0
+    var pageReads=0
+    init(clip:AudioCommentClip,ownerOverride:Bool?=nil,countOverride:Int?=nil,deniedOverride:Bool?=nil,departureOverride:Bool?=nil) throws {
+        guard AudioCommentNativeFixture.conversationTesting else { throw CancellationError() }
+        self.clip=clip;owner=ownerOverride ?? ProcessInfo.processInfo.arguments.contains("--audio-conversation-owner");deniedPages=deniedOverride ?? ProcessInfo.processInfo.arguments.contains("--audio-conversation-denied-page");departOnPlay=departureOverride ?? ProcessInfo.processInfo.arguments.contains("--audio-conversation-departure")
+        let account=UUID(uuidString:"ad310000-0000-4000-8000-000000000001")!,target=try AudioCommentTarget(task:UUID(uuidString:"ad310000-0000-4000-8000-000000000002")!,generation:UUID(uuidString:"ad310000-0000-4000-8000-000000000003")!,project:nil)
+        scope = .init(workspace:.init(account:account.uuidString.lowercased(),generation:UUID()),target:target,origin:"https://conversation-fixture.example.invalid")
+        let count=countOverride ?? (ProcessInfo.processInfo.arguments.contains("--audio-conversation-short") ? 2 : 21)
+        for index in 1...count {
+            let suffix=String(format:"%012d",index),id=UUID(uuidString:"ad311000-0000-4000-8000-"+suffix)!
+            let caption=String(format:"Design review %02d",index)+(index == 1 ? "\nKeep the cafe\u{301} notes literal.\nمراجعة التصميم 🪴" : "")
+            let intent=try AudioCommentPublication(account:account,target:target,caption:caption,descriptor:clip.descriptor,operation:UUID(uuidString:"ad312000-0000-4000-8000-"+suffix)!,comment:id,asset:UUID(uuidString:"ad313000-0000-4000-8000-"+suffix)!)
+            var fields=intent.record.fields;fields.removeValue(forKey:"version");fields["protocol"] = .number(1);fields["author_id"] = .string(account.uuidString.lowercased());fields["state"] = .string("published");fields["reserved_at"] = .string("2026-10-28T12:00:00Z");fields["expires_at"] = .string("2026-10-29T12:00:00Z");fields["published_at"] = .string("2026-10-28T12:01:00.123456Z")
+            rows.append(try .init(record:Record(fields),account:account,target:target))
+        }
+    }
+    var request: AudioCommentConversationRequest { .init(scope:scope) }
+    var driver: AudioConversationPresentationFixture {
+        .init(session:session,isCurrent:{self.active},makeController:{
+            let value=try AudioCommentConversationController(scope:self.scope,incarnation:self.session,transport:self,player:AudioConversationSilentPlayer(context:self))
+            value.currentScope = { [weak self] in self?.active == true ? self?.scope : nil }
+            value.sessionIsCurrent = { [weak self] in self?.active == true }
+            value.removalAuthority = { [weak self] _ in self?.active == true && self?.owner == true }
+            return value
+        },authorName:{ _ in "You" })
+    }
+    func pageAudio(account:UUID,target:AudioCommentTarget,after:AudioCommentPageCursor?,origin:String,incarnation:UUID) async throws -> AudioCommentPage {
+        guard active, account.uuidString.lowercased()==scope.workspace.account,target==scope.target,origin==scope.origin,incarnation==session else { throw CancellationError() }
+        pageReads += 1
+        if after != nil, deniedPages { throw AudioCommentReadAccessUnavailable() }
+        let start=after.flatMap { cursor in rows.firstIndex { $0.record["comment_id"]==cursor.position["comment_id"] }.map { $0+1 } } ?? 0
+        let values=Array(rows.dropFirst(start).prefix(20)),next:JSON
+        if start+20<rows.count,let last=values.last {next = .object(["published_at":last.record["published_at"],"comment_id":last.record["comment_id"]])}else{next = .null}
+        return try .init(data:JSONEncoder().encode(Record(["protocol":.number(1),"account":.string(account.uuidString.lowercased()),"items":.array(values.map { .object($0.record.fields) }),"next":next])),account:account,target:target,after:after)
+    }
+    func listAudio(account:UUID,target:AudioCommentTarget,origin:String,incarnation:UUID) async throws -> [AudioCommentRemote] { try await pageAudio(account:account,target:target,after:nil,origin:origin,incarnation:incarnation).items }
+    func downloadAudio(_ comment:AudioCommentRemote,origin:String,incarnation:UUID) async throws -> AudioCommentClip {
+        guard active,rows.contains(comment) else { throw AudioCommentReadAccessUnavailable() }
+        if departOnPlay {active=false;await Task.yield()}
+        return clip
+    }
+    func removeAudio(_ comment:AudioCommentRemote,origin:String,incarnation:UUID) async throws -> AudioCommentRemoteRemoval {
+        guard active,owner,rows.contains(comment) else { throw AudioCommentReadAccessUnavailable() }
+        removals += 1;rows.removeAll { $0.id==comment.id }
+        return try .init(data:JSONEncoder().encode(Record(["protocol":.number(1),"account":.string(scope.workspace.account),"comment_id":.string(comment.id.uuidString.lowercased()),"operation_id":.string(comment.publication.operation.uuidString.lowercased()),"state":.string("retired")])),expected:comment)
+    }
+}
+@MainActor private final class AudioConversationSilentPlayer: AudioCommentPlaying {
+    let context: AudioConversationNativeContext
+    init(context:AudioConversationNativeContext){self.context=context}
+    func play(_ clip:AudioCommentClip,isCurrent:@escaping @MainActor ()->Bool,ended:@escaping @MainActor ()->Void) throws {
+        guard AudioCommentNativeFixture.conversationTesting,isCurrent() else {throw CancellationError()};context.plays += 1
+    }
+    func stop() {}
+}
+@MainActor struct AudioConversationNativeFixtureView: View {
+    @State private var context:AudioConversationNativeContext?
+    @State private var opening:AudioCommentConversationRequest?
+    @State private var failure:String?
+    @State private var largeText=false
+    var body:some View {
+        NavigationStack {
+            #if os(macOS)
+            VStack(alignment:.leading,spacing:20) {
+                if let context {
+                    HStack {
+                        Button("Reader fixture") {preset(context.clip,owner:false,count:2)}.accessibilityIdentifier("audioConversationFixtureReader")
+                        Button("Owner and paging fixture") {preset(context.clip,owner:true,count:21)}.accessibilityIdentifier("audioConversationFixtureOwner")
+                        Toggle("Large text",isOn:$largeText).accessibilityIdentifier("audioConversationFixtureLarge")
+                    }
+                    HStack {
+                        Button("Denied page fixture") {preset(context.clip,owner:false,count:21,denied:true)}.accessibilityIdentifier("audioConversationFixtureDenied")
+                        Button("Departure fixture") {preset(context.clip,owner:false,count:2,departure:true)}.accessibilityIdentifier("audioConversationFixtureDeparture")
+                    }
+                }
+
+
+                if let context {
+                    Button("Open audio conversation") {opening=context.request}.accessibilityIdentifier("audioConversationFixtureOpen")
+                    Text("Records kept: \(context.rows.count)").accessibilityIdentifier("audioConversationFixtureCount")
+                    Text("Removals: \(context.removals)").accessibilityIdentifier("audioConversationFixtureRemovals")
+                    Text("Plays: \(context.plays)").accessibilityIdentifier("audioConversationFixturePlays")
+                    Text(context.active ? "Workspace active" : "Workspace closed").accessibilityIdentifier("audioConversationFixtureScope")
+                } else {ProgressView("Preparing synthetic conversation…")}
+                if let failure {Text(failure)}
+
+            }.padding(30).frame(maxWidth:.infinity,maxHeight:.infinity,alignment:.topLeading).navigationTitle("Audio conversation fixture")
+            #else
+            Form {
+
+                if let context {
+                    Button("Open audio conversation") {opening=context.request}.accessibilityIdentifier("audioConversationFixtureOpen")
+                    Text("Records kept: \(context.rows.count)").accessibilityIdentifier("audioConversationFixtureCount")
+                    Text("Removals: \(context.removals)").accessibilityIdentifier("audioConversationFixtureRemovals")
+                    Text("Plays: \(context.plays)").accessibilityIdentifier("audioConversationFixturePlays")
+                    Text(context.active ? "Workspace active" : "Workspace closed").accessibilityIdentifier("audioConversationFixtureScope")
+                } else {ProgressView("Preparing synthetic conversation…")}
+                if let failure {Text(failure)}
+
+            }.navigationTitle("Audio conversation fixture")
+            #endif
+        }.task {
+            guard AudioCommentNativeFixture.conversationTesting else {return}
+            do {let bytes=try await Task.detached {try AudioCommentNativeFixture.syntheticData()}.value;context=try AudioConversationNativeContext(clip:await AudioCommentDecoding.validate(bytes))}catch{failure=error.localizedDescription}
+        }.sheet(item:$opening) {request in
+            if let context {
+                AudioCommentConversationView(request:request,fixture:context.driver)
+                    .environment(\.dynamicTypeSize, largeText || ProcessInfo.processInfo.arguments.contains("UICTContentSizeCategoryAccessibilityXXXL") ? .accessibility5 : .large)
+            }
+        }
+        #if os(macOS)
+        .dynamicTypeSize(largeText || ProcessInfo.processInfo.arguments.contains("UICTContentSizeCategoryAccessibilityXXXL") ? .accessibility5 : .large)
+        .frame(minWidth:650,minHeight:650)
+        #endif
+    }
+    private func preset(_ clip:AudioCommentClip,owner:Bool,count:Int,denied:Bool=false,departure:Bool=false) {
+        do {context=try AudioConversationNativeContext(clip:clip,ownerOverride:owner,countOverride:count,deniedOverride:denied,departureOverride:departure);failure=nil} catch {failure=error.localizedDescription}
+    }
+
 }
 #endif

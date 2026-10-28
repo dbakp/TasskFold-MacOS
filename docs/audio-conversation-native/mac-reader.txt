@@ -1,0 +1,29 @@
+Window: "", App: Taskfold Team Editor Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Audio comments, Secondary Actions: Cancel
+		3 scroll area ID: audioConversationForm, Secondary Actions: Cancel
+			4 container
+				5 container audioConversationRow-ad311000-0000-4000-8000-000000000001
+					6 text You 1,0 sec Design review 01
+Keep the café notes literal.
+مراجعة التصميم 🪴
+					7 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000001
+				8 container audioConversationRow-ad311000-0000-4000-8000-000000000002
+					9 text You 1,0 sec Design review 02
+					10 button Description: Play recording, ID: audioConversationPlay-ad311000-0000-4000-8000-000000000002
+			11 text Play recordings here without adding copies to Saved recordings.
+			12 button Description: Refresh recordings, ID: audioConversationRefresh
+		13 button Description: Close, ID: audioConversationClose
+14 menu bar
+	15 Taskfold Workflow Test
+	16 File
+	17 Edit
+	18 View
+	19 Fixture
+	20 Account
+	21 Task
+	22 Window
+	23 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

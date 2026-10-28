@@ -1,0 +1,13 @@
+{
+  "captionSpoken" : true,
+  "playButtonSpoken" : true,
+  "source" : "XCUIVoiceOverService.Output.utterance",
+  "utterances" : [
+    "Taskfold Team Editor Test Close Button",
+    "Audio comments Heading",
+    "You",
+    "1,0 sec",
+    "Design review 01\nKeep the café notes literal.\nمراجعة التصميم 🪴",
+    "Play recording Button"
+  ]
+}

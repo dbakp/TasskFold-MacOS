@@ -437,7 +437,7 @@ extension TaskfoldMacUITests {
 }
 
 #if os(iOS)
-extension TaskfoldUITests {
+extension TaskfoldMacUITests {
     @MainActor func testInterruptedRecordingFilesRequireExplicitRecoveryAndSurviveColdReturn() throws {
         try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
         audioOpen(app, large: true, interrupted: true)
@@ -494,7 +494,7 @@ extension TaskfoldUITests {
 #endif
 
 #if os(iOS)
-extension TaskfoldUITests {
+extension TaskfoldMacUITests {
     @MainActor func testInterruptedKeepBothReviewCancelAndJournalColdFinish() throws {
         try audioGuard(); let app = XCUIApplication(); defer { app.terminate() }
         audioOpen(app, large: true, lostSave: true, beforeDraft: true, interruptedCopy: true)
@@ -551,3 +551,82 @@ extension TaskfoldUITests {
     }
 }
 #endif
+
+extension TaskfoldMacUITests {
+    @MainActor private func conversationOpen(_ app:XCUIApplication,owner:Bool=false,short:Bool=false,large:Bool=false,extra:String?=nil) throws {
+        try audioGuard()
+        app.launchArguments=["--uitesting","--team-editor-testing","--audio-conversation-testing","-appearance",large ? "dark":"light","-UIPreferredContentSizeCategoryName",large ? "UICTContentSizeCategoryAccessibilityXXXL":"UICTContentSizeCategoryL"]
+        if owner {app.launchArguments.append("--audio-conversation-owner")};if short {app.launchArguments.append("--audio-conversation-short")};if let extra {app.launchArguments.append(extra)}
+        app.launchArguments += ["-ApplePersistenceIgnoreState","YES"]
+        app.launch();app.activate()
+        let open=app.buttons["audioConversationFixtureOpen"];XCTAssertTrue(open.waitForExistence(timeout:20),app.debugDescription);audioPress(open)
+        XCTAssertTrue(app.buttons["audioConversationPlay-ad311000-0000-4000-8000-000000000001"].waitForExistence(timeout:12),app.debugDescription)
+    }
+    @MainActor private func conversationReveal(_ element:XCUIElement,_ app:XCUIApplication) {
+        #if os(iOS)
+        audioReveal(element,app,formIdentifier:"audioConversationForm",navigationTitle:"Audio comments")
+        #else
+        for _ in 0..<30 {if element.exists && element.isHittable {break};app.scrollViews.firstMatch.scroll(byDeltaX:0,deltaY:-300)}
+        XCTAssertTrue(element.exists && element.isHittable,app.debugDescription)
+        #endif
+    }
+    @MainActor func testAudioConversationReadOnlyNativePlaybackAndClose() throws {
+        let app=XCUIApplication();defer{app.terminate()};try conversationOpen(app,short:true)
+        let play=app.buttons["audioConversationPlay-ad311000-0000-4000-8000-000000000001"]
+        conversationReveal(play,app);audioPress(play)
+        XCTAssertTrue(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@","Stop recording playback"),object:play)],timeout:5) == .completed)
+        audioPress(play);XCTAssertEqual(play.label,"Play recording")
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@","audioConversationRemove-")).count,0)
+        audioScreenshot(app,"Read-only audio conversation - native controls")
+        audioPress(app.buttons["audioConversationClose"])
+        XCTAssertTrue(app.buttons["audioConversationFixtureOpen"].waitForExistence(timeout:5));XCTAssertTrue(app.staticTexts["audioConversationFixtureCount"].label.contains("Records kept: 2 Removals: 0 Plays: 1 Workspace active"))
+    }
+    @MainActor func testAudioConversationNativePaginationAndRemovalConfirmation() throws {
+        let app=XCUIApplication();defer{app.terminate()};try conversationOpen(app,owner:true)
+        let remove=app.buttons["audioConversationRemove-ad311000-0000-4000-8000-000000000001"]
+        conversationReveal(remove,app);audioPress(remove);XCTAssertTrue(app.buttons["Cancel"].waitForExistence(timeout:5));audioScreenshot(app,"Audio comment removal - explicit Cancel and Remove");audioPress(app.buttons["Cancel"])
+        XCTAssertTrue(remove.waitForExistence(timeout:5));conversationReveal(remove,app);audioPress(remove)
+        let confirm=app.buttons.matching(NSPredicate(format:"label == %@ AND NOT identifier BEGINSWITH %@","Remove audio comment","audioConversationRemove-")).firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout:5),app.debugDescription);audioPress(confirm)
+        XCTAssertTrue(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:remove)],timeout:5) == .completed)
+        let more=app.buttons["audioConversationMore"];conversationReveal(more,app);audioPress(more)
+        let last=app.staticTexts["Design review 21"];XCTAssertTrue(last.waitForExistence(timeout:5));conversationReveal(last,app)
+        XCTAssertFalse(more.exists);audioScreenshot(app,"Audio conversation - final loaded page")
+        audioPress(app.buttons["audioConversationClose"]);XCTAssertTrue(app.buttons["audioConversationFixtureOpen"].waitForExistence(timeout:5));XCTAssertTrue(app.staticTexts["audioConversationFixtureCount"].label.contains("Records kept: 20 Removals: 1 Plays: 0 Workspace active"))
+    }
+    @MainActor func testAudioConversationLargestTextControlsAndDeniedPage() throws {
+        let app=XCUIApplication();defer{app.terminate()};try conversationOpen(app,owner:true,short:true,large:true)
+        for name in ["audioConversationPlay-ad311000-0000-4000-8000-000000000001","audioConversationRemove-ad311000-0000-4000-8000-000000000001"] {
+            let button=app.buttons[name];conversationReveal(button,app);XCTAssertGreaterThanOrEqual(button.frame.height,44)
+        }
+        audioScreenshot(app,"Audio conversation - dark Accessibility XXXL")
+        app.terminate();try conversationOpen(app,extra:"--audio-conversation-denied-page")
+        let more=app.buttons["audioConversationMore"];conversationReveal(more,app);audioPress(more)
+        let notice=app.staticTexts["audioConversationNotice"];XCTAssertTrue(notice.waitForExistence(timeout:5));conversationReveal(notice,app)
+        XCTAssertTrue(notice.label.contains("no longer available"));XCTAssertFalse(app.staticTexts["No audio comments"].exists);XCTAssertFalse(app.buttons["audioConversationPlay-ad311000-0000-4000-8000-000000000001"].exists);XCTAssertFalse(more.exists)
+        audioScreenshot(app,"Audio conversation - denied access clears rows")
+    }
+    @MainActor func testAudioConversationDepartureRejectsLatePlayback() throws {
+        let app=XCUIApplication();defer{app.terminate()};try conversationOpen(app,short:true,extra:"--audio-conversation-departure")
+        let play=app.buttons["audioConversationPlay-ad311000-0000-4000-8000-000000000001"];conversationReveal(play,app);audioPress(play)
+        XCTAssertTrue(app.buttons["audioConversationFixtureOpen"].waitForExistence(timeout:8),app.debugDescription)
+        XCTAssertTrue(app.staticTexts["audioConversationFixtureCount"].label.contains("Records kept: 2 Removals: 0 Plays: 0 Workspace closed"))
+    }
+    #if os(iOS)
+    @MainActor func testAudioConversationVoiceOverNamesAndLiteralCaption() throws {
+        guard #available(iOS 27.0,*) else {throw XCTSkip("Actual VoiceOver output requires iOS 27")}
+        let voice=XCUIDevice.shared.voiceOverService,previous=voice.isEnabled,app=XCUIApplication()
+        defer {try? voice.disable();if previous {try? voice.enable()};app.terminate()}
+        if previous {try voice.disable()}
+        try conversationOpen(app,short:true)
+        try voice.enable();XCTAssertTrue(voice.isEnabled)
+        var utterances:[String]=[]
+        func caption()->Bool {utterances.contains{$0.localizedCaseInsensitiveContains("Design review 01")}}
+        func button()->Bool {utterances.contains{$0.localizedCaseInsensitiveContains("Play recording") && $0.localizedCaseInsensitiveContains("button")}}
+        if let current=try? voice.currentSpeech() {utterances.append(current.utterance)}
+        for _ in 0..<50 {if caption() && button() {break};utterances.append(try voice.moveForward().utterance)}
+        let attachment=XCTAttachment(data:try JSONSerialization.data(withJSONObject:["source":"XCUIVoiceOverService.Output.utterance","utterances":utterances,"captionSpoken":caption(),"playButtonSpoken":button()],options:[.prettyPrinted,.sortedKeys]),uniformTypeIdentifier:"public.json");attachment.lifetime = .keepAlways;add(attachment)
+        XCTAssertTrue(caption(),utterances.joined(separator:"\n"));XCTAssertTrue(button(),utterances.joined(separator:"\n"))
+    }
+    #endif
+}

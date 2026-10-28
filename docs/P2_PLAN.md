@@ -4,6 +4,8 @@ Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Native audio conversation controls now pass five component UI journeys each on iPhone/iPad, including genuine Simulator VoiceOver output; Mac CUA verifies playback, Cancel/Remove, pagination, denied clearing and departure refusal. Explicit removal confirmation, accessible action targets/layout and error copy are improved. Mac accessibility-size layout is visually verified; full Store/shared-account/publisher/recovery/hosted-media acceptance remains open; genuine audio remains deferred and normal gates stay off. See [native conversation checkpoint](audio-conversation-native/README.md).
+
 Private audio now separates shared read-only conversation access from draft/publishing ownership. Current team viewer/manager/editor and legacy project boundaries, archives, grant revocation and independently gated removal pass 184 Core, 273 controller, 30 shared native/database/gateway and 24 publication regression checks per repo. Shared conversations expose the gated reader; team audio writes remain closed. Native UI/runtime/spoken, team publishing/removal/custody, unified timeline, hosted provider and remaining recovery acceptance stay open. Ordinary flags remain off and genuine audio remains deferred. See [current checkpoint](audio-shared-read/README.md). Earlier dated counts below are historical.
 
 Private audio now connects to saved personal-root task editors/inspectors, including Inbox, behind an absent normal exposure flag. Live Store access, owner, task/project/generation and server origin bind each request; app/server/account storage stays private and outside task exports. Both repos pass 123 Core cases and 170 controller checks; two final native cases per iPhone/iPad pass without reported runtime warnings, preserving task bytes and verifying cold return plus fixture reset isolation. Shared/child/cloud runtime and full lifecycle remain open. See [task-editor integration](audio-task-editor/README.md).
@@ -6899,3 +6901,22 @@ the 20-comment preview gap; the full audio/Px objective remains open.
 
 [Evidence and limits](audio-shared-read/README.md). Shared read implementation does
 not complete all team audio operations or the overall Px feature.
+
+
+## 2026-10-28 — native audio conversation controls
+
+- [x] Make removal an explicit Cancel/Remove alert; preserve cancelled rows and
+  saved private recordings. Name Play/Stop controls and provide 44-point targets
+  with vertically stacked actions at accessibility sizes.
+- [x] Pass five synthetic native component journeys each on iPhone and iPad:
+  read-only playback/close, owner Cancel/Remove/paging, dark Accessibility XXXL and
+  denied clearing, departure refusal and genuine Simulator VoiceOver output.
+- [x] Verify Mac native component Play/Stop/Close, Cancel/Remove, final page,
+  denied clearing and departure refusal through CUA, with 16 recorded assertions.
+- [x] Visually verify Mac accessibility-size stacked actions and unchanged records.
+- [ ] Full Store/shared-account
+  UI integration, publisher/recovery controls, hosted media/custody and remaining
+  lifecycle acceptance. Genuine audio stays deferred and ordinary gates stay off.
+
+[Evidence and exact build phases](audio-conversation-native/README.md). This
+accepts the synthetic conversation component scopes above; audio/Px remain open.

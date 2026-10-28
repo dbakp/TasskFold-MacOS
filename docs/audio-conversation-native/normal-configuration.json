@@ -1,0 +1,12 @@
+{
+  "TaskFold-iOS": {
+    "NSMicrophoneUsageDescription": "Use the microphone only when you start dictation or record an audio draft. Review the result before applying text or sharing audio.",
+    "NSSpeechRecognitionUsageDescription": "Use on-device speech recognition to create an editable transcript. Taskfold does not send recordings to a cloud transcription service.",
+    "missingAudioFeatureFlags": "Absent keys retain existing disabled defaults; no ordinary Info.plist changed in this checkpoint."
+  },
+  "TasskFold-MacOS": {
+    "NSMicrophoneUsageDescription": "Use the microphone only when you start dictation or record an audio draft. Review the result before applying text or sharing audio.",
+    "NSSpeechRecognitionUsageDescription": "Use on-device speech recognition to create an editable transcript. Taskfold does not send recordings to a cloud transcription service.",
+    "missingAudioFeatureFlags": "Absent keys retain existing disabled defaults; no ordinary Info.plist changed in this checkpoint."
+  }
+}

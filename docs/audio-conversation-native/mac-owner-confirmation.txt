@@ -1,0 +1,17 @@
+Window: "Unknown", App: Taskfold Team Editor Test.
+0 sheet Description: alert, Secondary Actions: Raise
+	1 text Remove this audio comment? This removes the published comment for everyone with access to this task. Private recordings saved on your devices stay unchanged.
+	2 button Description: Remove audio comment, ID: audioConversationConfirmRemove
+	3 button Description: Cancel, ID: action-button-2
+4 menu bar
+	5 Taskfold Workflow Test
+	6 File
+	7 Edit
+	8 View
+	9 Fixture
+	10 Account
+	11 Task
+	12 Window
+	13 Help
+
+The focused UI element is 0 sheet Description: alert, Secondary Actions: Raise

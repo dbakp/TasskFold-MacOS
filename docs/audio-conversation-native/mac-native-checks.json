@@ -1,0 +1,23 @@
+{
+  "method": "CUA native AX interactions, actual view/controller, synthetic in-memory transport and silent player",
+  "checks": {
+    "readOnlyNoRemove": true,
+    "playOffersStop": true,
+    "stopOffersPlay": true,
+    "readerPreserved": true,
+    "explicitCancel": true,
+    "cancelRetainsFirst": true,
+    "removeRetainsSecond": true,
+    "removeDropsFirst": true,
+    "page21": true,
+    "pagingEnds": true,
+    "exactOneRemoved": true,
+    "deniedNotice": true,
+    "deniedRowsCleared": true,
+    "noMisleadingEmptyState": true,
+    "deniedPreserved": true,
+    "departureRefusesPlayback": true
+  },
+  "macXCTest": "Three attempts failed before initial fixture window observation; no Mac XCTest pass claimed. Raw global menu dumps excluded for privacy.",
+  "largeLayout": "Accepted by native screenshot: direct accessibility5 environment produces vertically stacked Play/Remove, complete multiline caption and reachable Close. Fixture checkbox restored to 0; records21/removals0/plays0. This is not a macOS text-setting or spoken check."
+}

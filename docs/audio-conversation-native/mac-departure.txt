@@ -1,0 +1,26 @@
+Window: "Audio conversation fixture", App: Taskfold Team Editor Test.
+0 standard window Audio conversation fixture, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.AudioConversationNativeFixtureView, Taskfold.AudioCommentNativeFixtureView>, SwiftUI._ConditionalContent<Taskfold.ProjectAdoptionNativeFixtureView, Taskfold.WorkflowUndoNativeFixtureView>>, SwiftUI._
+	1 container
+		2 button Description: Reader fixture, ID: audioConversationFixtureReader, Secondary Actions: Cancel
+		3 button Description: Owner and paging fixture, ID: audioConversationFixtureOwner, Secondary Actions: Cancel
+		4 checkbox Description: Large text, Value: 0, ID: audioConversationFixtureLarge, Secondary Actions: Cancel
+		5 button Description: Denied page fixture, ID: audioConversationFixtureDenied, Secondary Actions: Cancel
+		6 button Description: Departure fixture, ID: audioConversationFixtureDeparture, Secondary Actions: Cancel
+		7 button Description: Open audio conversation, ID: audioConversationFixtureOpen, Secondary Actions: Cancel
+		8 text Value: Records kept: 2 Removals: 0 Plays: 0 Workspace closed, ID: audioConversationFixtureCount, Secondary Actions: Cancel
+	9 close button
+	10 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	11 minimize button
+	12 text Audio conversation fixture
+13 menu bar
+	14 Taskfold Workflow Test
+	15 File
+	16 Edit
+	17 View
+	18 Fixture
+	19 Account
+	20 Task
+	21 Window
+	22 Help
+
+The focused UI element is 0 standard window Audio conversation fixture, Secondary Actions: Raise, ID: SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<SwiftUI._ConditionalContent<Taskfold.AudioConversationNativeFixtureView, Taskfold.AudioCommentNativeFixtureView>, SwiftUI._ConditionalContent<Taskfold.ProjectAdoptionNativeFixtureView, Taskfold.WorkflowUndoNativeFixtureView>>, SwiftUI._

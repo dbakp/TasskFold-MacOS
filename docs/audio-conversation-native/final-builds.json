@@ -1,0 +1,24 @@
+{
+  "ios": {
+    "bundleIdentifier": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "executableSHA256": "9659d5a12bb1fb8ced00aa9676f045ba954f925ef87f018a4af6a77a5357b2f6",
+    "loadedCodeSHA256": "772b1a47fb520583c30bb60b82840f038f1a1cb5fa819dd1ccc0281391373078",
+    "testBinaries": {
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests": "873e80c40d7d97e2c53940c8d899768a1eac696643c17a833a2e9e8d82e0cf31"
+    },
+    "signing": "Simulator ad-hoc signing",
+    "scope": "DEBUG synthetic presentation fixture. No microphone, speaker or real provider acceptance.",
+    "buildResult": "TEST BUILD SUCCEEDED, final test-only geometry assertion correction included"
+  },
+  "mac": {
+    "bundleIdentifier": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+    "executableSHA256": "08c1c6f9fcc51abd1e5a6a9085090b13f787648b2555331c4a5aefee877a8c81",
+    "loadedCodeSHA256": "d56fe80468c676c276c970bc65ec28803d3913e553b3532fde566715ee658c95",
+    "testBinaries": {
+      "TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "602c4b78014593c126600c4452e1fd0a9d4ec6c0ac7ea8750de3a098c48bab8e"
+    },
+    "signing": "Apple Development, isolated identity",
+    "scope": "DEBUG synthetic presentation fixture. No microphone, speaker or real provider acceptance.",
+    "buildResult": "TEST BUILD SUCCEEDED, final test-only combined AX count assertions included"
+  }
+}
