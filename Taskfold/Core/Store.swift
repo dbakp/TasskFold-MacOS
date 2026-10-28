@@ -1761,11 +1761,8 @@ final class Store {
         #if DEBUG
         workflowPreparedUndoUsed = preparedUndo != nil
         #endif
-        if workflowCreation {
-            let existing = old.tables.mapValues { Set($0.map(\.id)) }
-            if historyChanges.contains(where: { !(existing[$0.table] ?? []).contains($0.recordID) }), history?.undo.isEmpty != false {
-                snapshot = old; error = WorkflowUndo.tooLarge; return false
-            }
+        if WorkflowUndo.missingCreationHistory(historyChanges, snapshot: old, undo: history?.undo) {
+            snapshot = old; error = WorkflowUndo.tooLarge; return false
         }
         if deferringPresentation {
             workflowPresentationDeferred = false; deferringPresentation = false

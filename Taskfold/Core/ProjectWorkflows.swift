@@ -1265,6 +1265,21 @@ struct FreshWorkflowCreation {
 /// One durable, atomic Undo for the fresh personal records of a workflow run.
 /// The server checks the complete set before deleting any of it.
 enum WorkflowUndo {
+    /// Preserve the Store's refusal of a new workflow without retained Undo.
+    static func missingCreationHistory(_ changes: [Mutation], snapshot: @autoclosure () -> Snapshot, undo: [Mutation]?) -> Bool {
+        guard let run = changes.first?.workflowRun, undo?.isEmpty != false,
+              changes.allSatisfy({ $0.method == "POST" && $0.workflowRun == run }) else { return false }
+        let tables = snapshot().tables
+        var existing: [String: Set<String>] = [:]
+        for change in changes {
+            if existing[change.table] == nil {
+                existing[change.table] = Set((tables[change.table] ?? []).map(\.id))
+            }
+            if existing[change.table]?.contains(change.recordID) != true { return true }
+        }
+        return false
+    }
+
     static let table = "_private_workflow_undo"
     /// Only ordinary insert-only personal workflow runs can defer presentation.
     /// Validation and sequential snapshot mutation still happen for every row.

@@ -1,0 +1,8 @@
+    /// Preserve the Store's refusal of a new workflow without retained Undo.
+    static func missingCreationHistory(_ changes: [Mutation], snapshot: @autoclosure () -> Snapshot, undo: [Mutation]?) -> Bool {
+        let creation = changes.first?.workflowRun != nil && changes.allSatisfy { $0.method == "POST" && $0.workflowRun == changes.first?.workflowRun }
+        guard creation else { return false }
+        let existing = snapshot().tables.mapValues { Set($0.map(\.id)) }
+        return changes.contains { !(existing[$0.table] ?? []).contains($0.recordID) } && undo?.isEmpty != false
+    }
+

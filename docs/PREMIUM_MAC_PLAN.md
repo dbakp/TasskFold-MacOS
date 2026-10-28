@@ -9113,3 +9113,13 @@ Native output follow-up: iPad passes all three selected journeys; iPhone passes 
 - [ ] Mac native dialog runtime remains open while locked; broader lifecycle/concurrency/backup/orphan/corruption, ordinary integration, private server custody and genuine audio acceptance remain open. No feature/Px completion claim.
 
 [Evidence and exact scope](audio-comment-expired-discard/README.md).
+
+## 2026-10-28 — skip redundant workflow Undo identity scans
+
+- [x] Avoid reading/indexing the baseline when an Undo inverse is already available; otherwise index only checked destination tables.
+- [x] Preserve the original refusal decisions, including missing inverses, existing-row replays, Unicode/case identities and mixed/non-workflow commands: 3,240 legacy comparisons and 102 selected Core tests per repo.
+- [x] The unchanged test corpus fails its baseline-access assertion before optimization and passes afterward. A 90,000-row Debug guard diagnostic records the eliminated scan; no full-save speedup is inferred.
+- [x] Four native mobile passes: actual local Create/Undo on phone/tablet, plus phone 5,000-task publication and failed-save preservation; both app builds/signatures pass.
+- [ ] The native phone observation still has a ~0.47-second synchronous commit. Full save latency, production rendering, richer child/assignment workloads, hosted/paired delivery and Mac runtime/geometry remain open.
+
+[Evidence, timings and exact scope](workflow-history-guard/README.md). All user deferrals and the wider Px goal remain unchanged.

@@ -1,0 +1,6 @@
+{
+  "parentCommit": "9ba429197a5f0ae8e9b75ecccb0f21a44765a417",
+  "insertHelperAfter": "enum WorkflowUndo {",
+  "sourceHashesExactlyReconstructed": true,
+  "scope": "Extracted original Store predicate; current test source is byte-identical before/after. No complete before binary manifest."
+}
