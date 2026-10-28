@@ -39,7 +39,7 @@ def add_source(phase, path):
 
 app = next(row for row in objects.values() if row.get("isa") == "PBXNativeTarget" and row.get("name") == "Taskfold")
 phase = next(key for key in app["buildPhases"] if objects[key]["isa"] == "PBXSourcesBuildPhase")
-for path in ["Taskfold/Core/AudioComments.swift", "Taskfold/Core/AudioCommentDecoding.swift", "Taskfold/Core/AudioCommentPending.swift", "Taskfold/Core/AudioCommentPublishing.swift", "Taskfold/Core/AudioCommentVault.swift", "Taskfold/AudioSessionLease.swift", "Taskfold/AudioCommentMedia.swift", "Taskfold/AudioCommentCapture.swift", "Taskfold/Views/AudioCommentDraftView.swift", "Taskfold/Views/AudioCommentPublicationView.swift", "Taskfold/Views/AudioPendingPublicationView.swift", "Taskfold/AudioCommentNativeFixture.swift"]:
+for path in ["Taskfold/Core/AudioComments.swift", "Taskfold/Core/AudioCommentDecoding.swift", "Taskfold/Core/AudioCommentPending.swift", "Taskfold/Core/AudioCommentPublishing.swift", "Taskfold/Core/AudioCommentVault.swift", "Taskfold/AudioSessionLease.swift", "Taskfold/AudioCommentMedia.swift", "Taskfold/AudioCommentCapture.swift", "Taskfold/Views/AudioCommentDraftView.swift", "Taskfold/Views/AudioCommentPublicationView.swift", "Taskfold/Views/AudioPendingPublicationView.swift", "Taskfold/Views/AudioCommentConversationView.swift", "Taskfold/AudioCommentNativeFixture.swift"]:
     add_source(phase, path)
 tests = next(row for row in objects.values() if row.get("isa") == "PBXNativeTarget" and row.get("name") == "TaskfoldUITests")
 test_phase = next(key for key in tests["buildPhases"] if objects[key]["isa"] == "PBXSourcesBuildPhase")

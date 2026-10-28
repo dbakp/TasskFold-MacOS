@@ -4,7 +4,7 @@ Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Private audio server work now has an inactive service-only publication ledger: exact-authority reservation/attestation, stable retries, metadata reads, custody guards and bounded cleanup nomination. Each repo passes 102 actual PostgreSQL checks with no introduced advisor findings; two mutation probes demonstrate the quota/custody guards. There is no bucket, actual upload, conversation row, HTTP gateway or native publication integration yet, and no migration was deployed. **The next implementation is the authenticated Storage gateway and verified readback**, followed by native publishing and physical lifecycle acceptance. Genuine audio remains deferred. See [publication coordinator](audio-comment-ledger/README.md).
+Private audio now has independently owned gated publication/recovery and a live conversation preview in both apps. Authenticated list, verified native download/play and explicit removal pass 178 Core, 265 controller and 24 native/gateway/PostgreSQL checks per repo, including retry after a lost removal reply. The preview is capped by the current server's 20-comment list; pagination, shared/read-only integration, native runtime/accessibility, hosted custody/provider and remaining recovery acceptance stay open. Ordinary flags remain off and genuine audio stays deferred. See [current checkpoint](audio-live-preview/README.md). Earlier dated checkpoint counts below are historical.
 
 Private audio now connects to saved personal-root task editors/inspectors, including Inbox, behind an absent normal exposure flag. Live Store access, owner, task/project/generation and server origin bind each request; app/server/account storage stays private and outside task exports. Both repos pass 123 Core cases and 170 controller checks; two final native cases per iPhone/iPad pass without reported runtime warnings, preserving task bytes and verifying cold return plus fixture reset isolation. Shared/child/cloud runtime and full lifecycle remain open. See [task-editor integration](audio-task-editor/README.md).
 
@@ -6848,3 +6848,20 @@ remains gated and the overall audio/Px requirements remain open.
 
 [Evidence and limits](audio-pending-review/README.md). This closes the implemented
 orphan-review/retention gap, with native acceptance and the overall Px goal open.
+
+
+## 2026-10-28 — gated live audio conversation preview
+
+- [x] Add strict reader/author-aware live metadata, authenticated fixed-route
+  list/download/removal and full native decode/integrity checks before playback.
+- [x] Add workspace/session-bound ephemeral conversation controllers and gated
+  personal-root editor entry points with Play, explicit Remove and Refresh.
+- [x] Independently pass 178 Core, 265 actual controller and 24 native/gateway/real
+  PostgreSQL checks, including a lost removal reply, stable retry, empty list and
+  denied download after removal; local confirmation survives and no new upload occurs.
+- [ ] Complete pagination beyond the existing 20-comment preview, shared/read-only
+  role admission and text-conversation integration; native UI/runtime/accessibility
+  and hosted provider acceptance. Audio gates remain off; genuine audio stays deferred.
+
+[Evidence and limits](audio-live-preview/README.md). Native compilation does not
+establish visual/spoken/runtime acceptance or complete the audio/Px feature.

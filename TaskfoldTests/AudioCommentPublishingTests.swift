@@ -126,7 +126,7 @@ private final class PublicationHTTP: URLProtocol {
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func stopLoading() {}
     override func startLoading() { Self.handler?(request, self) }
-    func finish(_ data: Data, status: Int = 200) { client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self) }
+    func finish(_ data: Data, status: Int = 200, headers: [String: String] = ["Content-Type": "application/json"]) { client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: headers)!, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self) }
 }
 private final class PublicationHTTPGate: @unchecked Sendable {
     private let lock = NSLock(); private var value: PublicationHTTP?
@@ -258,5 +258,87 @@ extension AudioCommentPublishingTests {
         let file = try disk(), pending = try file.prepare(source()), kept = try file.confirm(pending, receipt: .init(record: record(pending.publication), publication: pending.publication), retainingAudio: true)
         var failing = file; failing.fault = { if case .beforeRename = $0 { throw AudioCommentStorageFailure.unreadable } }
         XCTAssertThrowsError(try failing.releaseConfirmedAudio(kept)); XCTAssertNotNil(try disk().journals().first?.clip); XCTAssertNotNil(try disk().journals().first?.receipt)
+    }
+}
+
+extension AudioCommentPublishingTests {
+    func remote(_ input: AudioCommentPublication? = nil) throws -> AudioCommentRemote {
+        let publication = try input ?? disk().prepare(source()).publication
+        return try .init(record: record(publication), account: account, target: publication.target)
+    }
+    func listData(_ rows: [AudioCommentRemote]) throws -> Data { try JSONEncoder().encode(Record(["protocol": .number(1), "account": .string(account.uuidString.lowercased()), "items": .array(rows.map { .object($0.record.fields) })])) }
+    func testRemoteMetadataPreservesLiteralCaptionAndAllowsDifferentOrRemovedAuthor() throws {
+        let original = try remote()
+        for author in [JSON.string(UUID().uuidString.lowercased()), .null] {
+            var fields = original.record.fields; fields["author_id"] = author
+            let read = try AudioCommentRemote(record: Record(fields), account: account, target: original.publication.target)
+            XCTAssertTrue(read.publication.caption.utf8.elementsEqual(original.publication.caption.utf8)); XCTAssertEqual(read.author == nil, author == .null)
+        }
+    }
+    func testRemoteListRejectsForeignTaskAccountDuplicateIdentityAndExtraFields() throws {
+        let value = try remote(), bytes = try listData([value]); XCTAssertEqual(try AudioCommentRemote.list(bytes, account: account, target: value.publication.target), [value])
+        XCTAssertThrowsError(try AudioCommentRemote.list(bytes, account: UUID(), target: value.publication.target))
+        XCTAssertThrowsError(try AudioCommentRemote.list(bytes, account: account, target: .init(task: UUID(), generation: UUID(), project: nil)))
+        XCTAssertThrowsError(try AudioCommentRemote.list(listData([value,value]), account: account, target: value.publication.target))
+        for (key, field) in [("state", JSON.string("pending")),("object_name", .string("private/path")),("published_at", .string("2031-01-01T00:00:00Z")),("author_id", .string("invalid"))] {
+            var fields = value.record.fields; fields[key] = field
+            XCTAssertThrowsError(try AudioCommentRemote(record: Record(fields), account: account, target: value.publication.target))
+        }
+        XCTAssertThrowsError(try AudioCommentRemote.list(Data(repeating: 32, count: 640_001), account: account, target: value.publication.target))
+    }
+    @MainActor func testRemoteListUsesOnlyFixedAuthenticatedNoCookieRoute() async throws {
+        let backend = try backend(), value = try remote(), response = try listData([value]); var calls = 0
+        PublicationHTTP.handler = { request, http in
+            calls += 1; XCTAssertEqual(request.url?.absoluteString, self.origin + "/functions/v1/audio-comments?action=list"); XCTAssertEqual(request.httpMethod,"POST"); XCTAssertEqual(request.value(forHTTPHeaderField:"Authorization"),"Bearer synthetic-auth"); XCTAssertEqual(request.value(forHTTPHeaderField:"Cache-Control"),"no-store"); XCTAssertFalse(request.httpShouldHandleCookies); http.finish(response)
+        }; defer { PublicationHTTP.handler = nil }
+        let rows = try await backend.listAudio(account: account, target: value.publication.target, origin: origin, incarnation: backend.reminderSessionIncarnation)
+        XCTAssertEqual(rows,[value]); XCTAssertEqual(calls,1)
+    }
+    @MainActor func testRemoteDownloadRequiresExactDigestBytesAndNativeAACDecode() async throws {
+        let backend = try backend(), draft = try source(), publication = try AudioCommentPublication(account: account, target: draft.target, caption: draft.caption, descriptor: draft.clip.descriptor), value = try remote(publication)
+        PublicationHTTP.handler = { _, http in http.finish(draft.clip.data, headers:["Content-Type":"audio/mp4", "X-Audio-SHA256":draft.clip.descriptor.sha256]) }; defer { PublicationHTTP.handler = nil }
+        let clip = try await backend.downloadAudio(value, origin: origin, incarnation: backend.reminderSessionIncarnation)
+        XCTAssertEqual(clip.data,draft.clip.data); XCTAssertEqual(clip.descriptor,draft.clip.descriptor)
+        for headers in [["Content-Type":"audio/mp4"],["Content-Type":"application/json","X-Audio-SHA256":draft.clip.descriptor.sha256],["Content-Type":"audio/mp4","X-Audio-SHA256":String(repeating:"a",count:64)]] {
+            PublicationHTTP.handler = { _, http in http.finish(draft.clip.data, headers:headers) }
+            do { _ = try await backend.downloadAudio(value, origin: origin, incarnation: backend.reminderSessionIncarnation); XCTFail() } catch {}
+        }
+        PublicationHTTP.handler = { _, http in http.finish(Data("damaged".utf8), headers:["Content-Type":"audio/mp4","X-Audio-SHA256":draft.clip.descriptor.sha256]) }
+        do { _ = try await backend.downloadAudio(value, origin: origin, incarnation: backend.reminderSessionIncarnation); XCTFail() } catch {}
+    }
+    @MainActor func testRemoteRemovalRequiresExactOperationCommentAndTerminalState() async throws {
+        let backend = try backend(), value = try remote()
+        let fields: [String:JSON] = ["protocol":.number(1),"account":.string(account.uuidString.lowercased()),"operation_id":.string(value.publication.operation.uuidString.lowercased()),"comment_id":.string(value.id.uuidString.lowercased()),"state":.string("retired")]
+        PublicationHTTP.handler = { _, http in http.finish(try! JSONEncoder().encode(Record(fields))) }; defer { PublicationHTTP.handler = nil }
+        let removed = try await backend.removeAudio(value, origin: origin, incarnation: backend.reminderSessionIncarnation); XCTAssertEqual(removed.comment,value.id)
+        for (key,field) in [("comment_id",JSON.string(UUID().uuidString.lowercased())),("operation_id",.string(UUID().uuidString.lowercased())),("state",.string("published")),("account",.string(UUID().uuidString.lowercased()))] {
+            var altered = fields; altered[key] = field
+            PublicationHTTP.handler = { _, http in http.finish(try! JSONEncoder().encode(Record(altered))) }
+            do { _ = try await backend.removeAudio(value, origin: origin, incarnation: backend.reminderSessionIncarnation); XCTFail() } catch {}
+        }
+    }
+    @MainActor func testRemoteRefusesWrongSessionOrOriginBeforeAnyRequest() async throws {
+        let backend = try backend(), value = try remote(); var calls = 0
+        PublicationHTTP.handler = { _, http in calls += 1; http.finish(Data()) }; defer { PublicationHTTP.handler = nil }
+        do { _ = try await backend.listAudio(account:account,target:value.publication.target,origin:origin,incarnation:UUID()); XCTFail() } catch {}
+        do { _ = try await backend.downloadAudio(value,origin:"https://other.example.invalid",incarnation:backend.reminderSessionIncarnation); XCTFail() } catch {}
+        do { _ = try await backend.removeAudio(value,origin:origin,incarnation:UUID()); XCTFail() } catch {}
+        XCTAssertEqual(calls,0)
+    }
+    @MainActor func testRemoteLateResponseCannotReturnAfterAccountDeparture() async throws {
+        let backend = try backend(), value = try remote(), gate = PublicationHTTPGate(), incarnation = backend.reminderSessionIncarnation
+        PublicationHTTP.handler = { _, http in gate.hold(http) }; defer { PublicationHTTP.handler = nil }
+        let operation = Task { try await backend.listAudio(account:account,target:value.publication.target,origin:origin,incarnation:incarnation) }
+        for _ in 0..<500 { if gate.ready { break }; try await Task.sleep(for:.milliseconds(10)) }; XCTAssertTrue(gate.ready)
+        try await backend.clearSession(); gate.release(try listData([value]))
+        do { _ = try await operation.value; XCTFail() } catch {}
+    }
+    @MainActor func testRemoteErrorsNeverExposeProviderTextOrAcceptRedirect() async throws {
+        let backend = try backend(), value = try remote()
+        for status in [302,401,403,404,429,503] {
+            PublicationHTTP.handler = { _,http in http.finish(Data("synthetic-private-provider-secret".utf8),status:status) }
+            do { _ = try await backend.listAudio(account:account,target:value.publication.target,origin:origin,incarnation:backend.reminderSessionIncarnation); XCTFail() }
+            catch { XCTAssertFalse(error.localizedDescription.contains("synthetic-private")) }
+        }; PublicationHTTP.handler = nil
     }
 }

@@ -29,7 +29,7 @@ import SwiftUI
                     switch flow.state {
                     case .published:
                         Label("Published previously", systemImage: "checkmark.circle.fill").foregroundStyle(.green).accessibilityIdentifier("audioPublicationConfirmed")
-                        Text("This device kept its confirmation. Open the task’s conversation to check its current contents.").font(.caption).foregroundStyle(.secondary)
+                        Text("This device kept its confirmation. Open Audio comments in the task to check its current contents.").font(.caption).foregroundStyle(.secondary)
                     case .saving, .sending:
                         ProgressView(flow.state == .sending ? "Publishing recording…" : "Preparing publication…").accessibilityIdentifier("audioPublicationProgress")
                     case .ready, .unconfirmed:

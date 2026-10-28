@@ -34,3 +34,5 @@ node Scripts/Database/test-audio-native-publication.mjs /tmp/taskfold-audio-revi
 - Hosted provider/custody/removal acceptance and user-deferred genuine dictation/audio checks. Release distribution and other recorded deferrals are unchanged.
 
 The previous [publication-controls checkpoint](../audio-publication-controls/README.md) records the earlier compiled controls. This extends recovery/retention; audio comments and the overall Px objective remain open.
+
+Follow-up: [gated live conversation preview](../audio-live-preview/README.md) implements bounded personal-root listing, verified download/play and explicit removal. Pagination, shared/read-only integration and native/provider acceptance remain open.

@@ -1240,3 +1240,61 @@ extension Backend {
         return session?.user.id == account
     }
 }
+
+extension Backend: AudioCommentReadingTransport {
+    private func checkAudioRead(account: UUID, origin: String, incarnation: UUID) throws {
+        guard account != AudioCommentTarget.zero, audioPublicationSessionMatches(account.uuidString.lowercased()), sessionGeneration == incarnation,
+              try AudioCommentPublicationJournal.canonicalOrigin(baseURL) == origin else { throw CancellationError() }
+        try Task.checkCancellation()
+    }
+    /// Fixed authenticated gateway only: no stored URLs, signed links, cookies or
+    /// redirect-following. Bound failed replies before interpreting any payload.
+    private func audioReadRequest(action: String, body: Record, account: UUID, origin: String, incarnation: UUID, maximum: Int) async throws -> (Data, HTTPURLResponse) {
+        try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
+        guard ["list", "download", "remove"].contains(action), let session, let url = URL(string: origin + "/functions/v1/audio-comments?action=" + action) else { throw AudioCommentFailure.changed }
+        var request = URLRequest(url: url); request.httpMethod = "POST"; request.timeoutInterval = 25
+        request.cachePolicy = .reloadIgnoringLocalCacheData; request.httpShouldHandleCookies = false
+        request.setValue(config["Key"], forHTTPHeaderField: "apikey"); request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.setValue("no-store", forHTTPHeaderField: "Cache-Control"); request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
+        request.httpBody = try JSONEncoder().encode(body)
+        let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
+        do {
+            guard let response = incoming as? HTTPURLResponse, response.url == url else { throw AudioCommentFailure.invalid }
+            // Do not collect provider diagnostics or redirects, and do not trust
+            // them as a successful deletion or current membership evidence.
+            guard response.statusCode == 200 else {
+                if response.statusCode == 401 { throw AccountSessionAuthorizationRequired() }
+                throw AudioCommentFailure(message: action == "remove" ? "Removal couldn’t be confirmed. Refresh the conversation before trying again." : "Recordings couldn’t be loaded. Refresh to try again.")
+            }
+            guard response.value(forHTTPHeaderField: "Content-Type")?.split(separator: ";").first?.trimmingCharacters(in: .whitespaces).lowercased() == (action == "download" ? "audio/mp4" : "application/json") else { throw AudioCommentFailure.invalid }
+            let length = response.expectedContentLength
+            guard length <= maximum else { throw AudioCommentFailure.invalid }
+            var data = Data()
+            for try await byte in bytes {
+                try Task.checkCancellation(); guard data.count < maximum else { throw AudioCommentFailure.invalid }
+                if data.count % 4096 == 0 { try checkAudioRead(account: account, origin: origin, incarnation: incarnation) }; data.append(byte)
+            }
+            try checkAudioRead(account: account, origin: origin, incarnation: incarnation)
+            return (data, response)
+        } catch { bytes.task.cancel(); throw error }
+    }
+    func listAudio(account: UUID, target: AudioCommentTarget, origin: String, incarnation: UUID) async throws -> [AudioCommentRemote] {
+        let (data, _) = try await audioReadRequest(action: "list", body: target.record, account: account, origin: origin, incarnation: incarnation, maximum: 640_000)
+        return try AudioCommentRemote.list(data, account: account, target: target)
+    }
+    func downloadAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentClip {
+        let (data, response) = try await audioReadRequest(action: "download", body: Record(["comment_id": .string(comment.id.uuidString.lowercased())]), account: comment.publication.account, origin: origin, incarnation: incarnation, maximum: AudioCommentDescriptor.maximumBytes)
+        let expected = comment.publication.descriptor
+        guard response.value(forHTTPHeaderField: "X-Audio-SHA256") == expected.sha256 else { throw AudioCommentFailure.invalid }
+        let clip = try AudioCommentClip(restoring: data, descriptor: expected)
+        let decoded = try await AudioCommentDecoding.validate(clip.data)
+        try checkAudioRead(account: comment.publication.account, origin: origin, incarnation: incarnation)
+        guard decoded.descriptor.sha256 == expected.sha256, decoded.descriptor.byteCount == expected.byteCount, abs(decoded.descriptor.milliseconds - expected.milliseconds) <= 1000 else { throw AudioCommentFailure.invalid }
+        return clip
+    }
+    func removeAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentRemoteRemoval {
+        let (data, _) = try await audioReadRequest(action: "remove", body: Record(["comment_id": .string(comment.id.uuidString.lowercased())]), account: comment.publication.account, origin: origin, incarnation: incarnation, maximum: 64_000)
+        return try AudioCommentRemoteRemoval(data: data, expected: comment)
+    }
+}

@@ -6,15 +6,17 @@ import Foundation
 private final class NativePublicationHTTP: URLProtocol {
     static var endpoint = ""
     static var loseReply = false
+    static var loseRemovalReply = false
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     private var operation: URLSessionDataTask?
     private var forwarding: URLSession?
     override func stopLoading() { operation?.cancel(); forwarding?.invalidateAndCancel() }
     override func startLoading() {
-        guard request.url?.absoluteString == "https://native-publication.example.invalid/functions/v1/audio-comments?action=publish",
+        guard let requestURL = request.url, let requested = URLComponents(url: requestURL, resolvingAgainstBaseURL: false),
+              requested.scheme == "https", requested.host == "native-publication.example.invalid", requested.path == "/functions/v1/audio-comments", let action = requested.queryItems?.first(where: { $0.name == "action" })?.value, ["publish", "list", "download", "remove"].contains(action),
               let components = URLComponents(string: Self.endpoint), components.scheme == "http", components.host == "127.0.0.1", components.port != nil,
-              let destination = URL(string: Self.endpoint + "/?action=publish") else { client?.urlProtocol(self, didFailWithError: URLError(.badURL)); return }
+              let destination = URL(string: Self.endpoint + "/?action=" + action) else { client?.urlProtocol(self, didFailWithError: URLError(.badURL)); return }
         var body = request.httpBody ?? Data()
         if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 65536); while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; body.append(buffer, count: n) } }
         guard body.count <= 10_730_668 else { client?.urlProtocol(self, didFailWithError: URLError(.dataLengthExceedsMaximum)); return }
@@ -25,8 +27,8 @@ private final class NativePublicationHTTP: URLProtocol {
             defer { session.finishTasksAndInvalidate() }
             if let error { self.client?.urlProtocol(self, didFailWithError: error); return }
             guard let data, let response = response as? HTTPURLResponse else { self.client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse)); return }
-            if Self.loseReply && response.statusCode == 200 { self.client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost)); return }
-            let incoming = HTTPURLResponse(url: self.request.url!, statusCode: response.statusCode, httpVersion: nil, headerFields: ["Content-Type": "application/json", "Cache-Control": "no-store"])!
+            if ((action == "publish" && Self.loseReply) || (action == "remove" && Self.loseRemovalReply)) && response.statusCode == 200 { self.client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost)); return }
+            let incoming = HTTPURLResponse(url: self.request.url!, statusCode: response.statusCode, httpVersion: nil, headerFields: ["Content-Type": response.value(forHTTPHeaderField: "Content-Type") ?? "", "Cache-Control": "no-store", "X-Audio-SHA256": response.value(forHTTPHeaderField: "X-Audio-SHA256") ?? ""])!
             self.client?.urlProtocol(self, didReceive: incoming, cacheStoragePolicy: .notAllowed); self.client?.urlProtocol(self, didLoad: data); self.client?.urlProtocolDidFinishLoading(self)
         }; operation?.resume()
     }
@@ -49,7 +51,26 @@ private final class NativePublicationHTTP: URLProtocol {
         catch { if !NativePublicationHTTP.loseReply { throw error } }
         if config["release_copy"] == .bool(true), let confirmed = try disk.journals().first { _ = try disk.releaseConfirmedAudio(confirmed) }
         guard let stored = try disk.journals().first else { throw AppFailure(message: "Missing native publication journal") }
-        let result = Record(["operation_id": .string(stored.publication.operation.uuidString.lowercased()), "comment_id": .string(stored.publication.comment.uuidString.lowercased()), "asset_id": .string(stored.publication.asset.uuidString.lowercased()), "published": .bool(stored.receipt != nil), "has_audio": .bool(stored.clip != nil), "caption": .string(stored.publication.caption), "sha256": .string(stored.publication.descriptor.sha256)])
+        if config["read_remote"] == .bool(true) {
+            let rows = try await backend.listAudio(account: stored.publication.account, target: target, origin: backend.baseURL, incarnation: incarnation)
+            guard rows.count == 1, let remote = rows.first, remote.id == stored.publication.comment, remote.publication.caption.utf8.elementsEqual(stored.publication.caption.utf8) else { throw AppFailure(message: "Remote list mismatch") }
+            let downloaded = try await backend.downloadAudio(remote, origin: backend.baseURL, incarnation: incarnation)
+            guard downloaded.data == clip.data else { throw AppFailure(message: "Remote bytes mismatch") }
+            NativePublicationHTTP.loseRemovalReply = true
+            var uncertainRemoval = false
+            do { _ = try await backend.removeAudio(remote, origin: backend.baseURL, incarnation: incarnation) } catch { uncertainRemoval = true }
+            NativePublicationHTTP.loseRemovalReply = false
+            guard uncertainRemoval else { throw AppFailure(message: "Lost removal reply must remain uncertain") }
+            let removed = try await backend.removeAudio(remote, origin: backend.baseURL, incarnation: incarnation)
+            guard removed.comment == remote.id else { throw AppFailure(message: "Removal mismatch") }
+            let empty = try await backend.listAudio(account: stored.publication.account, target: target, origin: backend.baseURL, incarnation: incarnation)
+            guard empty.isEmpty else { throw AppFailure(message: "Removed comment remains visible") }
+            var blocked = false
+            do { _ = try await backend.downloadAudio(remote, origin: backend.baseURL, incarnation: incarnation) } catch { blocked = true }
+            guard blocked else { throw AppFailure(message: "Removed recording remains readable") }
+            guard let persisted = try disk.journals().first, persisted.publication.sameIntent(as: stored.publication), persisted.receipt?.record == stored.receipt?.record, persisted.clip?.data == stored.clip?.data else { throw AppFailure(message: "Remote actions changed private publication storage") }
+        }
+        let result = Record(["remote_checked": .bool(config["read_remote"] == .bool(true)), "operation_id": .string(stored.publication.operation.uuidString.lowercased()), "comment_id": .string(stored.publication.comment.uuidString.lowercased()), "asset_id": .string(stored.publication.asset.uuidString.lowercased()), "published": .bool(stored.receipt != nil), "has_audio": .bool(stored.clip != nil), "caption": .string(stored.publication.caption), "sha256": .string(stored.publication.descriptor.sha256)])
         print(String(decoding: try JSONEncoder().encode(result), as: UTF8.self))
     }
 }

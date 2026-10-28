@@ -2,6 +2,28 @@ import Foundation
 import Darwin
 @testable import TaskfoldCore
 
+
+@MainActor final class AudioRemoteProofTransport: AudioCommentReadingTransport {
+    var rows: [AudioCommentRemote] = []
+    var clip: AudioCommentClip
+    var lists = 0, downloads = 0, removals = 0
+    var failRemoval = false, holdList = false, holdDownload = false
+    var continuation: CheckedContinuation<Void, Never>?
+    init(_ clip: AudioCommentClip) { self.clip = clip }
+    func release() { continuation?.resume(); continuation = nil }
+    func listAudio(account: UUID, target: AudioCommentTarget, origin: String, incarnation: UUID) async throws -> [AudioCommentRemote] {
+        lists += 1; if holdList { await withCheckedContinuation { continuation = $0 } }; return rows
+    }
+    func downloadAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentClip {
+        downloads += 1; if holdDownload { await withCheckedContinuation { continuation = $0 } }; return clip
+    }
+    func removeAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentRemoteRemoval {
+        removals += 1; if failRemoval { throw URLError(.networkConnectionLost) }
+        rows.removeAll { $0.id == comment.id }
+        return try .init(data: JSONEncoder().encode(Record(["protocol":.number(1),"account":.string(comment.publication.account.uuidString.lowercased()),"operation_id":.string(comment.publication.operation.uuidString.lowercased()),"comment_id":.string(comment.id.uuidString.lowercased()),"state":.string("retired")])), expected: comment)
+    }
+}
+
 @MainActor final class AudioProofContext { var scope: AudioCommentLiveScope; init(_ scope: AudioCommentLiveScope) { self.scope = scope } }
 @MainActor final class AudioProofRecorder: AudioCommentRecording {
     var callbacks: [@MainActor (AudioCommentRecordingEvent) -> Void] = []
@@ -639,6 +661,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         realRecorder.cancel(); realPlayer.stop(); TaskfoldAudioLease.release(lease)
         checks["allMediaLeasesReleased"] = TaskfoldAudioLease.owner == nil
         checks.merge(try await pendingPublicationChecks(root: root, data: data)) { _, new in new }
+        checks.merge(try await remoteConversationChecks(data: data)) { _, new in new }
         try JSONSerialization.data(withJSONObject: checks, options: [.sortedKeys]).write(to: URL(fileURLWithPath: CommandLine.arguments[3]))
         guard checks.values.allSatisfy({ $0 }) else { fputs("Failed audio checks: " + checks.filter { !$0.value }.keys.sorted().joined(separator: ", ") + "\n", stderr); exit(1) }
     }
@@ -1474,6 +1497,53 @@ extension AudioControllerProof {
         checks["pendingOtherWindowRemovalClearsStalePlayableSelection"] = returned.selected == nil && returned.entries.isEmpty && !returned.playing
         checks["pendingOtherWindowRemovalKeepsSavedDrafts"] = try draftVault.drafts().count == 2
         returned.close(); return checks
+    }
+
+    @MainActor private static func remoteConversationChecks(data: Data) async throws -> [String: Bool] {
+        let account = UUID(), clip = try AudioCommentClip(data: data), target = try AudioCommentTarget(task: UUID(), generation: UUID(), project: nil)
+        let scope = AudioCommentLiveScope(workspace: .init(account: account.uuidString.lowercased(), generation: UUID()), target: target, origin: "https://remote.example.invalid")
+        let context = AudioProofContext(scope), player = AudioLibraryProofPlayer(), transport = AudioRemoteProofTransport(clip)
+        let publication = try AudioCommentPublication(account: account, target: target, caption: "Literal cafe\u{301}\nRemote 🪴", descriptor: clip.descriptor)
+        var fields = publication.record.fields; fields.removeValue(forKey: "version")
+        fields["protocol"] = .number(1); fields["author_id"] = .string(account.uuidString.lowercased()); fields["state"] = .string("published"); fields["reserved_at"] = .string("2026-10-28T15:00:00Z"); fields["expires_at"] = .string("2026-10-29T15:00:00Z"); fields["published_at"] = .string("2026-10-28T15:00:01Z")
+        let remote = try AudioCommentRemote(record: Record(fields), account: account, target: target); transport.rows = [remote]
+        var sessionCurrent = true
+        func make() throws -> AudioCommentConversationController {
+            let value = try AudioCommentConversationController(scope: scope, incarnation: UUID(), transport: transport, player: player)
+            value.currentScope = { context.scope }; value.sessionIsCurrent = { sessionCurrent }; return value
+        }
+        var checks: [String: Bool] = [:]
+        let unbound = try AudioCommentConversationController(scope: scope, incarnation: UUID(), transport: transport, player: player)
+        await unbound.refresh(); checks["remoteConversationRequiresExplicitLiveBinding"] = transport.lists == 0 && unbound.entries.isEmpty; unbound.close()
+        let value = try make(); await value.refresh()
+        checks["remoteConversationListsExactTargetAndLiteralCaption"] = value.entries == [remote] && value.entries.first?.publication.caption.utf8.elementsEqual(publication.caption.utf8) == true
+        await value.play(remote); checks["remoteConversationPlaysVerifiedFreshDownload"] = transport.downloads == 1 && player.plays == 1 && value.playing == remote.id
+        value.stop(); checks["remoteStopRevokesDelayedPlaybackAuthority"] = player.permits.last?() == false && value.playing == nil
+        await value.play(remote); checks["remoteReplayAlwaysReauthorizesDownload"] = transport.downloads == 2
+        sessionCurrent = false; let before = transport.downloads; await value.play(remote); await value.remove(remote)
+        checks["remoteSessionDepartureRejectsPlaybackAndRemoval"] = transport.downloads == before && transport.removals == 0 && player.permits.last?() == false
+        sessionCurrent = true
+        AudioCommentLibraryController.stopForInactivity()
+        checks["remoteBackgroundHookClearsPrivateRowsAndStopsPlayback"] = value.entries.isEmpty && value.playing == nil && !value.isCurrent
+        value.setActive(true); await value.refresh(); transport.failRemoval = true; await value.remove(remote)
+        checks["remoteUncertainRemovalRetainsRowAndOffersRefresh"] = value.entries == [remote] && value.notice?.contains("couldn’t be confirmed") == true
+        transport.failRemoval = false; await value.remove(remote)
+        checks["remoteExactAcknowledgementRemovesVisibleComment"] = value.entries.isEmpty && value.notice?.contains("removed") == true
+        let removedCalls = transport.removals; await value.remove(remote)
+        checks["remoteRemovedOrForeignSelectionCannotSendAgain"] = transport.removals == removedCalls
+        transport.rows = [remote]; transport.holdList = true
+        let pending = Task { await value.refresh() }
+        for _ in 0..<500 { if transport.continuation != nil { break }; await Task.yield() }
+        context.scope = .init(workspace: .init(account: account.uuidString.lowercased(), generation: UUID()), target: target, origin: scope.origin)
+        transport.release(); await pending.value
+        checks["remoteLateListCannotEnterAnotherWorkspaceIncarnation"] = value.entries.isEmpty
+        value.close(); context.scope = scope; transport.holdList = false
+        let returned = try make(); await returned.refresh(); transport.holdDownload = true
+        let downloading = Task { await returned.play(remote) }
+        for _ in 0..<500 { if transport.continuation != nil { break }; await Task.yield() }
+        let previousPlays = player.plays; returned.close(); transport.release(); await downloading.value
+        checks["remoteClosedReviewCannotStartLatePlayback"] = player.plays == previousPlays && returned.entries.isEmpty && returned.playing == nil
+        return checks
     }
 
 }

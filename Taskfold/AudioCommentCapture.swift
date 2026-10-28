@@ -879,7 +879,7 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
     func close() { clearSelection(); library = nil; notice = nil; closed = true; Self.live.removeValue(forKey: lifecycleID) }
     func contextChanged() { if !isCurrent { close() } }
     func setActive(_ value: Bool) { active = value; if !value { clearSelection(revokeExports: false) } }
-    static func stopForInactivity() { for value in live.values.compactMap(\.value) { value.setActive(false) }; AudioCommentPendingLibrary.stopForInactivity() }
+    static func stopForInactivity() { for value in live.values.compactMap(\.value) { value.setActive(false) }; AudioCommentPendingLibrary.stopForInactivity(); AudioCommentConversationController.stopForInactivity() }
     func refresh(preservingExports: Bool = false) async {
         guard active, isCurrent else { contextChanged(); return }
         clearSelection(revokeExports: !preservingExports); library = nil; notice = nil; working = true
@@ -1070,6 +1070,75 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
     }
 }
 
+
+struct AudioCommentConversationRequest: Identifiable {
+    let id = UUID()
+    let scope: AudioCommentLiveScope
+}
+/// In-memory live conversation only. Every Play reauthorizes through the server;
+/// recordings are never persisted into drafts or task exports by this reader.
+@MainActor @Observable final class AudioCommentConversationController {
+    private final class Weak { weak var value: AudioCommentConversationController?; init(_ value: AudioCommentConversationController) { self.value = value } }
+    private static var live: [UUID: Weak] = [:]
+    private let id = UUID()
+    let scope: AudioCommentLiveScope
+    let account: UUID
+    let origin: String
+    private let incarnation: UUID
+    private let transport: any AudioCommentReadingTransport
+    private let player: any AudioCommentPlaying
+    @ObservationIgnored var currentScope: () -> AudioCommentLiveScope? = { nil }
+    @ObservationIgnored var sessionIsCurrent: () -> Bool = { false }
+    private(set) var entries: [AudioCommentRemote] = []
+    private(set) var playing: UUID?
+    private(set) var working = false
+    private(set) var notice: String?
+    @ObservationIgnored private var active = true
+    @ObservationIgnored private var closed = false
+    @ObservationIgnored private var token = UUID()
+    init(scope: AudioCommentLiveScope, incarnation: UUID, transport: any AudioCommentReadingTransport, player: any AudioCommentPlaying) throws {
+        guard let account = UUID(uuidString: scope.workspace.account), account != AudioCommentTarget.zero, account.uuidString.lowercased() == scope.workspace.account, let origin = scope.origin, try AudioCommentPublicationJournal.canonicalOrigin(origin) == origin else { throw AudioCommentFailure.changed }
+        self.scope = scope; self.account = account; self.origin = origin; self.incarnation = incarnation; self.transport = transport; self.player = player
+        Self.live = Self.live.filter { $0.value.value != nil }; Self.live[id] = Weak(self)
+    }
+    var isCurrent: Bool { !closed && active && sessionIsCurrent() && currentScope().map(scope.matches) == true }
+    private func accepts(_ value: UUID) -> Bool { token == value && isCurrent && !Task.isCancelled }
+    func stop() { token = UUID(); player.stop(); playing = nil; working = false }
+    func close() { stop(); entries = []; notice = nil; closed = true; Self.live.removeValue(forKey: id) }
+    func setActive(_ value: Bool) { active = value; if !value { stop(); entries = []; notice = nil } }
+    static func stopForInactivity() { for item in live.values.compactMap(\.value) { item.setActive(false) } }
+    func refresh() async {
+        guard isCurrent else { setActive(false); return }; stop(); entries = []; notice = nil; working = true; let generation = token
+        defer { if token == generation { working = false } }
+        do {
+            let rows = try await transport.listAudio(account: account, target: scope.target, origin: origin, incarnation: incarnation)
+            guard accepts(generation) else { return }
+            guard rows.count <= 20, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ $0.publication.account == account && $0.publication.target == scope.target }) else { throw AudioCommentFailure.invalid }
+            entries = rows
+        } catch { if accepts(generation) { notice = "Recordings couldn’t be loaded. Refresh to try again." } }
+    }
+    private func contains(_ value: AudioCommentRemote) -> Bool { isCurrent && value.publication.account == account && value.publication.target == scope.target && entries.contains(value) }
+    func play(_ value: AudioCommentRemote) async {
+        guard contains(value), !working else { return }; stop(); notice = nil; working = true; let generation = token
+        defer { if token == generation { working = false } }
+        do {
+            let clip = try await transport.downloadAudio(value, origin: origin, incarnation: incarnation)
+            guard accepts(generation), contains(value), clip.descriptor == value.publication.descriptor else { throw CancellationError() }
+            playing = value.id
+            try player.play(clip, isCurrent: { [weak self] in self?.accepts(generation) == true }, ended: { [weak self] in guard let self, self.accepts(generation) else { return }; self.playing = nil })
+        } catch { if accepts(generation) { stop(); notice = "This recording couldn’t be played. Refresh its current conversation before trying again." } }
+    }
+    func remove(_ value: AudioCommentRemote) async {
+        guard contains(value), !working else { return }; stop(); notice = nil; working = true; let generation = token
+        defer { if token == generation { working = false } }
+        do {
+            let removed = try await transport.removeAudio(value, origin: origin, incarnation: incarnation)
+            guard accepts(generation), removed.comment == value.id, removed.operation == value.publication.operation else { throw CancellationError() }
+            entries.removeAll { $0.id == value.id }; notice = "Audio comment removed. Private saved recordings are unchanged."
+        } catch { if accepts(generation) { notice = "Removal couldn’t be confirmed. Refresh before trying again; private saved recordings are unchanged." } }
+    }
+}
+
 #if !AUDIO_COMMENT_CONTROLLER_TESTING
 @MainActor extension Store {
     var audioDraftsEnabled: Bool {
@@ -1097,6 +1166,14 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
             guard let self, let library, library.publicationSourceIsCurrent(source), self.backend.reminderSessionIncarnation == incarnation,
                   let current = self.audioPublishingScope(scope.target) else { return false }; return scope.matches(current)
         })
+    }
+    func audioConversation(scope: AudioCommentLiveScope, player: any AudioCommentPlaying) throws -> AudioCommentConversationController {
+        guard let current = audioPublishingScope(scope.target), scope.matches(current) else { throw AudioCommentFailure.changed }
+        let incarnation = backend.reminderSessionIncarnation
+        let controller = try AudioCommentConversationController(scope: scope, incarnation: incarnation, transport: backend, player: player)
+        controller.currentScope = { [weak self] in self?.audioPublishingScope(scope.target) }
+        controller.sessionIsCurrent = { [weak self] in self?.backend.reminderSessionIncarnation == incarnation && self?.backend.audioPublicationSessionMatches(scope.workspace.account) == true }
+        return controller
     }
     func audioPendingScope() -> AudioCommentLibraryScope? {
         guard audioPublishingEnabled, !localMode, signedIn, let scope = audioLibraryScope(), UUID(uuidString: scope.workspace.account) != nil, backend.audioPublicationSessionMatches(scope.workspace.account) else { return nil }; return scope

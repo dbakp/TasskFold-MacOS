@@ -100,6 +100,7 @@ struct TaskInspectorForm: View {
     @State private var comment = ""
     @State private var conversation: ConversationRequest?
     @State private var audioDraft: AudioCommentDraftRequest?
+    @State private var audioConversation: AudioCommentConversationRequest?
     @State private var noteFormatting: NoteFormatRequest?
     @State private var headingConversion: TodoistHeadingConversion?
     @State private var pastedImageName: String?
@@ -153,7 +154,7 @@ struct TaskInspectorForm: View {
         }
         recoverySession?.capture(draft,extras:recoveryExtras)
     }
-    private func stopEditing() {checkpoint();accessStopped=true;audioDraft=nil;saveTask?.cancel();titleFocused=false}
+    private func stopEditing() {checkpoint();accessStopped=true;audioDraft=nil;audioConversation=nil;saveTask?.cancel();titleFocused=false}
     var body: some View {
         Group {
             if editorAvailable {editingBody}
@@ -463,6 +464,17 @@ struct TaskInspectorForm: View {
                     Text("Saved on this device. Task exports do not include recordings.").font(.caption).foregroundStyle(.secondary)
                 }
             }
+            if store.audioPublishingEnabled, Workspace.subtaskPath(taskID) == nil, !isTeamTask, !isCreating {
+                Section {
+                    Button("Audio comments", systemImage: "waveform.bubble") {
+                        guard editorAvailable, let scope = store.audioDraftScope(taskID: taskID),
+                              store.audioPublishingScope(scope.target) != nil,
+                              draft.string("project_id") == current?.string("project_id") else { return }
+                        audioConversation = .init(scope: scope)
+                    }.disabled(!editorAvailable || store.audioDraftScope(taskID: taskID).flatMap { store.audioPublishingScope($0.target) } == nil)
+                     .accessibilityIdentifier("openAudioConversation")
+                }
+            }
             Section("Comments") {
                 ForEach(Array(draft["comments"].list.enumerated()), id: \.offset) { index, value in
                     let row = Record(value.object)
@@ -543,6 +555,7 @@ struct TaskInspectorForm: View {
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
         .sheet(item: $conversation) { SharedConversationView(request: $0) }
         .sheet(item: $audioDraft) { TaskAudioDraftView(request: $0, taskID: taskID) }
+        .sheet(item: $audioConversation) { AudioCommentConversationView(request: $0) }
         .sheet(item: $noteFormatting) { request in
             NoteFormattingView(request: request) { value in
                 guard editorAvailable else {return "This task’s access changed. Your formatted edit is kept privately."}

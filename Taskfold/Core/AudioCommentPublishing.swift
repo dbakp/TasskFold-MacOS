@@ -265,3 +265,59 @@ actor AudioCommentPublicationStorage {
         journal = committed; state = .published
     }
 }
+
+/// Live server metadata is distinct from this device's historical publication
+/// confirmation. A reader may differ from the author, including a removed author.
+struct AudioCommentRemote: Sendable, Equatable, Identifiable {
+    let record: Record
+    let publication: AudioCommentPublication
+    let author: UUID?
+    var id: UUID { publication.comment }
+    init(record: Record, account: UUID, target: AudioCommentTarget) throws {
+        let keys: Set<String> = ["protocol", "account", "operation_id", "comment_id", "asset_id", "author_id", "target", "caption", "audio", "state", "reserved_at", "expires_at", "published_at"]
+        guard Set(record.fields.keys) == keys, record["protocol"] == .number(1), record["state"] == .string("published"), record["account"] == .string(account.uuidString.lowercased()) else { throw AudioCommentFailure.invalid }
+        switch record["author_id"] {
+        case .null: author = nil
+        case .string(let value):
+            guard let id = UUID(uuidString: value), id != AudioCommentTarget.zero, value == id.uuidString.lowercased() else { throw AudioCommentFailure.invalid }; author = id
+        default: throw AudioCommentFailure.invalid
+        }
+        var intent = record.fields
+        for field in ["protocol", "author_id", "state", "reserved_at", "expires_at", "published_at"] { intent.removeValue(forKey: field) }
+        intent["version"] = .number(1)
+        let publication = try AudioCommentPublication(record: Record(intent))
+        guard publication.target == target else { throw AudioCommentFailure.changed }
+        // Reuse the strict timestamp/intent checks without treating the reader
+        // as the actual author. Never persist this normalized validation record.
+        var validation = record.fields; validation["author_id"] = .string(account.uuidString.lowercased())
+        _ = try AudioCommentPublishedReceipt(record: Record(validation), publication: publication)
+        self.record = record; self.publication = publication
+    }
+    static func list(_ data: Data, account: UUID, target: AudioCommentTarget) throws -> [Self] {
+        guard !data.isEmpty, data.count <= 640_000 else { throw AudioCommentFailure.invalid }
+        let envelope = try JSONDecoder().decode(Record.self, from: data)
+        guard Set(envelope.fields.keys) == ["protocol", "account", "items"], envelope["protocol"] == .number(1), envelope["account"] == .string(account.uuidString.lowercased()), case .array(let items) = envelope["items"], items.count <= 20 else { throw AudioCommentFailure.invalid }
+        let rows = try items.map { value -> Self in
+            guard case .object(let fields) = value else { throw AudioCommentFailure.invalid }
+            return try .init(record: Record(fields), account: account, target: target)
+        }
+        guard Set(rows.map(\.id)).count == rows.count, Set(rows.map(\.publication.operation)).count == rows.count, Set(rows.map(\.publication.asset)).count == rows.count else { throw AudioCommentFailure.invalid }
+        return rows
+    }
+}
+
+struct AudioCommentRemoteRemoval: Sendable {
+    let comment: UUID
+    let operation: UUID
+    init(data: Data, expected: AudioCommentRemote) throws {
+        guard !data.isEmpty, data.count <= 64_000 else { throw AudioCommentFailure.invalid }
+        let row = try JSONDecoder().decode(Record.self, from: data)
+        guard Set(row.fields.keys) == ["protocol", "account", "operation_id", "comment_id", "state"], row["protocol"] == .number(1), row["account"] == .string(expected.publication.account.uuidString.lowercased()), row["operation_id"] == .string(expected.publication.operation.uuidString.lowercased()), row["comment_id"] == .string(expected.id.uuidString.lowercased()), ["retired", "purged"].contains(row.string("state")) else { throw AudioCommentFailure.invalid }
+        comment = expected.id; operation = expected.publication.operation
+    }
+}
+@MainActor protocol AudioCommentReadingTransport: AnyObject {
+    func listAudio(account: UUID, target: AudioCommentTarget, origin: String, incarnation: UUID) async throws -> [AudioCommentRemote]
+    func downloadAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentClip
+    func removeAudio(_ comment: AudioCommentRemote, origin: String, incarnation: UUID) async throws -> AudioCommentRemoteRemoval
+}

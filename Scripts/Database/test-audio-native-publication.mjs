@@ -182,9 +182,15 @@ try {
     third.sha256,
     createHash("sha256").update(media).digest("hex"),
   );
+  config.read_remote = true;
+  const remote = await run();
+  check("native lists downloads retries lost removal reply and rechecks actual gateway", remote.remote_checked);
+  check("remote removal leaves local confirmation proof", remote.published);
+  check("remote read never uploads another object", http.state.uploads, 1);
+  check("remote removal retires actual server operation", await pg.scalar(`select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${lit(first.operation_id)}`), "retired");
   check("adapter has no SQL or routing errors", http.state.errors, []);
   report.scope =
-    "Actual separately executed native Core flow/Backend/native AAC decode -> controlled HTTPS-to-loopback URLProtocol mapping -> production Deno gateway -> real PostgreSQL -> controlled Auth/Storage byte API. Lost native ACK, restart retry and compact receipt restart. No hosted provider or iPhone/iPad/Mac app UI acceptance.";
+    "Actual separately executed native Core flow/Backend/native AAC decode -> controlled HTTPS-to-loopback URLProtocol mapping -> production Deno gateway -> real PostgreSQL -> controlled Auth/Storage byte API. Lost native ACK, restart retry, retained/compact receipt restart, authenticated list/full native download/remove, empty list and refused download after removal. No hosted provider or iPhone/iPad/Mac app UI acceptance.";
 } finally {
   if (http) await http.close();
   if (pg) report.ownedPostgresContainerRemoved = await pg.close();

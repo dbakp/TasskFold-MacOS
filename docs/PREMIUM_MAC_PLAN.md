@@ -9469,3 +9469,20 @@ remains gated and the overall audio/Px requirements remain open.
 
 [Evidence and limits](audio-pending-review/README.md). This closes the implemented
 orphan-review/retention gap, with native acceptance and the overall Px goal open.
+
+
+## 2026-10-28 — gated live audio conversation preview
+
+- [x] Add strict reader/author-aware live metadata, authenticated fixed-route
+  list/download/removal and full native decode/integrity checks before playback.
+- [x] Add workspace/session-bound ephemeral conversation controllers and gated
+  personal-root editor entry points with Play, explicit Remove and Refresh.
+- [x] Independently pass 178 Core, 265 actual controller and 24 native/gateway/real
+  PostgreSQL checks, including a lost removal reply, stable retry, empty list and
+  denied download after removal; local confirmation survives and no new upload occurs.
+- [ ] Complete pagination beyond the existing 20-comment preview, shared/read-only
+  role admission and text-conversation integration; native UI/runtime/accessibility
+  and hosted provider acceptance. Audio gates remain off; genuine audio stays deferred.
+
+[Evidence and limits](audio-live-preview/README.md). Native compilation does not
+establish visual/spoken/runtime acceptance or complete the audio/Px feature.
