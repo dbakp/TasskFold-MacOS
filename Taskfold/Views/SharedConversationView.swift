@@ -31,7 +31,7 @@ struct SharedConversationView: View {
     @State private var composer: ConversationComposerRequest?
     @State private var removing: SharedComment?
     @State private var loading = false
-    @State private var audioConversation: AudioCommentConversationRequest?
+    @State private var audioRefresh = UUID()
     private var task: Record? {
         guard request.workspace.matches(account: store.userID, generation: store.workspaceGeneration),
               let task = store.record("tasks", id: request.taskID), task.string("task_generation") == request.generation,
@@ -49,37 +49,16 @@ struct SharedConversationView: View {
                             Text(task.title).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("conversationTaskTitle")
                             Text(store.record("projects", id: request.project)?.name ?? "Project").font(.subheadline).foregroundStyle(.secondary)
                             ConversationStatus()
-                            if let audio=store.audioConversationRequest(taskID:task.id) {
-                                Button("Audio comments",systemImage:"waveform.bubble") { audioConversation=audio }.frame(minHeight:44).accessibilityIdentifier("sharedConversationAudio")
-                            }
                             if !writable { Text("This conversation is read-only right now. You can keep unsent text as a private draft.").font(.footnote).foregroundStyle(.secondary) }
                             let comments = store.conversationComments(task)
                             if let selected = request.selectedComment, !comments.contains(where: { $0.id == selected }), !loading, store.conversationMeta(store.conversationScope(task)) != nil {
                                 Text("This comment is no longer available. Other accessible comments appear below.").font(.footnote).foregroundStyle(.secondary)
                             }
-                            if comments.isEmpty {
-                                ContentUnavailableView("Start the conversation", systemImage: "bubble.left.and.bubble.right", description: Text("Share a thought or mention someone from this project."))
-                            }
                             if store.conversationHasMore(store.conversationScope(task)) {
                                 Button("Load earlier comments") { Task { loading = true; await store.refreshConversation(task, earlier: true); loading = false } }.frame(minHeight: 44).disabled(loading).accessibilityIdentifier("conversationEarlier")
                             }
-                            LazyVStack(alignment: .leading, spacing: 18) {
-                                ForEach(comments) { comment in
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        Text(store.conversationName(comment.authorID, project: request.project)).font(.subheadline.weight(.semibold))
-                                        Text(comment.body).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-                                        if !comment.mentionIDs.isEmpty {
-                                            Label(comment.mentionIDs.map { store.conversationName($0, project: request.project) }.joined(separator: ", "), systemImage: "at").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                                        }
-                                        Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
-                                        HStack {
-                                            if comment.authorID == store.userID { Button("Edit") { composer = ConversationComposerRequest(target: request, baseline: comment) }.frame(minHeight: 44).accessibilityIdentifier("conversationEdit-" + comment.id) }
-                                            if comment.authorID == store.userID || store.record("projects", id: request.project)?.string("user_id") == store.userID {
-                                                Button("Remove", role: .destructive) { removing = comment }.frame(minHeight: 44)
-                                            }
-                                        }.disabled(!writable || store.conversationOutbox.contains { ConversationOutbox.comment($0)?.commentID == comment.id })
-                                    }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(comment.id == request.selectedComment ? Color.taskfold.opacity(0.08) : Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 18)).id(comment.id).accessibilityElement(children: .contain).accessibilityIdentifier("conversationComment-" + comment.id)
-                                }
+                            UnifiedConversationTimeline(request:request,comments:comments,audioRequest:store.audioConversationRequest(taskID:task.id),textHasMore:store.conversationHasMore(store.conversationScope(task)),refresh:audioRefresh) { comment in
+                                textComment(comment)
                             }
                             Button { composer = ConversationComposerRequest(target: request) } label: { Label("Write a comment", systemImage: "square.and.pencil").frame(maxWidth: .infinity, minHeight: 44) }.buttonStyle(.borderedProminent).disabled(!writable).accessibilityIdentifier("conversationCompose")
                             if !task["comments"].list.isEmpty { Text("Earlier and imported comments remain in the task’s details.").font(.caption).foregroundStyle(.secondary) }
@@ -95,7 +74,7 @@ struct SharedConversationView: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.accessibilityIdentifier("conversationClose") }
-                ToolbarItem { Button { Task { if let task { loading = true; await store.refreshConversation(task, selectedComment: request.selectedComment); loading = false } } } label: { Image(systemName: "arrow.clockwise") }.disabled(loading || !store.conversationsOnline).accessibilityLabel("Refresh conversation") }
+                ToolbarItem { Button { audioRefresh=UUID();Task { if let task { loading = true; await store.refreshConversation(task, selectedComment: request.selectedComment); loading = false } } } label: { Image(systemName: "arrow.clockwise") }.disabled(loading || !store.conversationsOnline).accessibilityLabel("Refresh conversation") }
                 #if DEBUG
                 if ConversationFixture.enabled, ProcessInfo.processInfo.arguments.contains("--conversation-access-testing") {
                     ToolbarItem {
@@ -114,13 +93,29 @@ struct SharedConversationView: View {
                 }
             } message: { Text("Its text and mentions will be removed. A saved removal waits for a connection.") }
             .onChange(of: store.workspaceReadRevision) { _, _ in if task == nil || !writable { removing=nil } }
-            .sheet(item:$audioConversation) { AudioCommentConversationView(request:$0) }
             .onChange(of: store.workspaceGeneration) { _, _ in dismiss() }
         }
         #if os(macOS)
         .frame(minWidth: 500, idealWidth: 650, minHeight: 580)
         #endif
     }
+    @ViewBuilder private func textComment(_ comment:SharedComment) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(store.conversationName(comment.authorID, project: request.project)).font(.subheadline.weight(.semibold))
+            Text(comment.body).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            if !comment.mentionIDs.isEmpty {
+                Label(comment.mentionIDs.map { store.conversationName($0, project: request.project) }.joined(separator: ", "), systemImage: "at").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            Text(comment.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+            HStack {
+                if comment.authorID == store.userID { Button("Edit") { composer = ConversationComposerRequest(target: request, baseline: comment) }.frame(minHeight: 44).accessibilityIdentifier("conversationEdit-" + comment.id) }
+                if comment.authorID == store.userID || store.record("projects", id: request.project)?.string("user_id") == store.userID {
+                    Button("Remove", role: .destructive) { removing = comment }.frame(minHeight: 44)
+                }
+            }.disabled(!writable || store.conversationOutbox.contains { ConversationOutbox.comment($0)?.commentID == comment.id })
+        }.padding(16).frame(maxWidth: .infinity, alignment: .leading).background(comment.id == request.selectedComment ? Color.taskfold.opacity(0.08) : Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 18)).id(comment.id).accessibilityElement(children: .contain).accessibilityIdentifier("conversationComment-" + comment.id)
+    }
+
 }
 
 private struct ConversationStatus: View {

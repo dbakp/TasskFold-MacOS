@@ -1,0 +1,24 @@
+{
+  "ios": {
+    "build": "TEST BUILD SUCCEEDED",
+    "bundleIdentifier": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "executableSHA256": "9d611efaf1e6147efa7d946e8aa04dd811e869a1c103c2ce4ca6511a05b3e38b",
+    "loadedCodeSHA256": "e78eabfac067650dc575dbed8048199d71f667e51e72217107339b5515eb10a8",
+    "testBinaries": {
+      "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests": "842c3a648972dd48ba51048042550f8589cb5b7212ce202e4976b2e0eb8bf9cf"
+    },
+    "signing": "Simulator ad-hoc",
+    "scope": "No release, private-Keychain, hosted provider or genuine media acceptance"
+  },
+  "mac": {
+    "build": "TEST BUILD SUCCEEDED",
+    "bundleIdentifier": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+    "executableSHA256": "7e47f23cc27ae09ae67cf0df51dca42772a4d37f1d65416effd3a5702136e546",
+    "loadedCodeSHA256": "6d54d7002697501c69bbca7376345ea0ca0175b947c972f7068c25c12261a822",
+    "testBinaries": {
+      "TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "1d7d73bac9e192165d8dd819e271bded5cd6257222f60f81037821f1da55eb8a"
+    },
+    "signing": "Apple Development isolated app",
+    "scope": "No release, private-Keychain, hosted provider or genuine media acceptance"
+  }
+}

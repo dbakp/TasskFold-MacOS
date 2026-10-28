@@ -4,6 +4,8 @@ Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Shared conversations now merge admitted text and published recordings in one time-ordered timeline, reusing accessible audio controls and retaining independent paging and text actions. Server microseconds, literal content and task/account isolation pass 37 selected Core tests per repo (including eight new timeline cases). Native acceptance and remaining Store/provider lifecycle limits are recorded in [mixed conversation timeline](conversation-timeline/README.md). Ordinary audio stays gated; genuine audio remains deferred.
+
 Native audio conversation controls now pass five component UI journeys each on iPhone/iPad, including genuine Simulator VoiceOver output; Mac CUA verifies playback, Cancel/Remove, pagination, denied clearing and departure refusal. Explicit removal confirmation, accessible action targets/layout and error copy are improved. Mac accessibility-size layout is visually verified; full Store/shared-account/publisher/recovery/hosted-media acceptance remains open; genuine audio remains deferred and normal gates stay off. See [native conversation checkpoint](audio-conversation-native/README.md).
 
 Private audio now separates shared read-only conversation access from draft/publishing ownership. Current team viewer/manager/editor and legacy project boundaries, archives, grant revocation and independently gated removal pass 184 Core, 273 controller, 30 shared native/database/gateway and 24 publication regression checks per repo. Shared conversations expose the gated reader; team audio writes remain closed. Native UI/runtime/spoken, team publishing/removal/custody, unified timeline, hosted provider and remaining recovery acceptance stay open. Ordinary flags remain off and genuine audio remains deferred. See [current checkpoint](audio-shared-read/README.md). Earlier dated counts below are historical.
@@ -6920,3 +6922,20 @@ not complete all team audio operations or the overall Px feature.
 
 [Evidence and exact build phases](audio-conversation-native/README.md). This
 accepts the synthetic conversation component scopes above; audio/Px remain open.
+
+## 2026-10-28 — mixed text/audio conversation timeline
+
+- [x] Present authorized shared text and live recordings in one chronological
+  timeline; retain literal bodies/captions and stable medium-qualified row IDs.
+- [x] Order text by original creation and audio by publication, preserving server
+  microseconds and equivalent offset/fraction representations. Editing text does
+  not move it. Keep selected-comment routes and existing text actions.
+- [x] Reuse accessible audio Play/Stop/Cancel/Remove controls, with publication time
+  visible. Retain each source’s independent cursor and clearly label partial loads.
+- [x] Bind audio reads/playback to the current workspace, session, task generation
+  and project. Clear recordings on lost access; keep separately admitted text.
+- [x] Five final native iPhone/iPad cases each, including real Simulator VoiceOver
+  output, preserve text after audio removal/access loss and retain mention routes.
+- [ ] Mac mixed-timeline runtime and full Store/provider lifecycle remain open;
+  see conversation-timeline/README.md. Ordinary audio flags stay off. Team audio
+  writes/custody, uncertain-upload/legacy recovery and genuine audio remain open.

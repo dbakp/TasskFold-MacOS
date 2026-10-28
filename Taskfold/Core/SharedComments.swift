@@ -512,3 +512,69 @@ enum ConversationRecoveryExport {
         }
     }
 }
+
+/// A presentation merge of independently authorized pages, not a new cache or
+/// cursor. Text uses creation time (edits do not move it); audio uses publication.
+/// IDs include their medium so equal UUIDs cannot replace the other row type.
+enum ConversationTimelineEntry: Identifiable, Equatable, Sendable {
+    case text(SharedComment)
+    case audio(AudioCommentRemote)
+    var id: String {
+        switch self {
+        case .text(let value): return "text:" + value.id
+        case .audio(let value): return "audio:" + value.id.uuidString.lowercased()
+        }
+    }
+    private var timestamp: String {
+        switch self {
+        case .text(let value): return value.row.string("created_at")
+        case .audio(let value): return value.record.string("published_at")
+        }
+    }
+    /// ISO8601DateFormatter may truncate fractions to milliseconds. Compare the
+    /// original fraction separately so PostgreSQL microseconds retain their order,
+    /// including equivalent timestamps expressed with different UTC offsets.
+    private struct Instant: Comparable {
+        let second: Date
+        let fraction: String
+        private static let pattern = try? NSRegularExpression(pattern: #"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:?\d{2})$"#)
+        init(_ raw: String, plain: ISO8601DateFormatter, fractional: ISO8601DateFormatter) {
+            if let regex = Self.pattern,
+               let match = regex.firstMatch(in: raw, range: NSRange(raw.startIndex..., in: raw)),
+               let base = Range(match.range(at: 1), in: raw), let zone = Range(match.range(at: 3), in: raw),
+               let whole = plain.date(from:String(raw[base]) + String(raw[zone])) {
+                second = whole
+                fraction = Range(match.range(at: 2), in: raw).map { String(raw[$0]) } ?? ""
+            } else {
+                // Both record decoders have already checked the timestamp.
+                second = fractional.date(from:raw) ?? plain.date(from:raw) ?? .distantPast; fraction = ""
+            }
+        }
+        static func == (lhs: Self, rhs: Self) -> Bool { !(lhs < rhs) && !(rhs < lhs) }
+        static func < (lhs: Self, rhs: Self) -> Bool {
+            if lhs.second != rhs.second { return lhs.second < rhs.second }
+            let width = max(lhs.fraction.count, rhs.fraction.count)
+            return lhs.fraction.padding(toLength: width, withPad: "0", startingAt: 0)
+                < rhs.fraction.padding(toLength: width, withPad: "0", startingAt: 0)
+        }
+    }
+    static func merge(text: [SharedComment], audio: [AudioCommentRemote], account: String,
+                      taskID: String, generation: String, project: String) -> [Self] {
+        // The caller still needs live read authorization. These checks prevent an
+        // accidental stale/mixed task batch from entering this presentation.
+        var entries = text.filter { !$0.isDeleted && $0.taskID == taskID.lowercased()
+            && $0.taskGeneration == generation.lowercased() && $0.projectID == project.lowercased() }.map(Self.text)
+        entries += audio.filter { $0.publication.account.uuidString.lowercased() == account.lowercased()
+            && $0.publication.target.task.uuidString.lowercased() == taskID.lowercased()
+            && $0.publication.target.generation.uuidString.lowercased() == generation.lowercased()
+            && ($0.publication.target.project?.uuidString.lowercased() ?? "") == project.lowercased() }.map(Self.audio)
+        let plain = ISO8601DateFormatter(), fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let keyed: [(entry: Self, instant: Instant)] = entries.map { (entry: $0, instant: Instant($0.timestamp, plain:plain, fractional:fractional)) }
+        let sorted = keyed.sorted { lhs, rhs in
+            if lhs.instant == rhs.instant { return lhs.entry.id < rhs.entry.id }
+            return lhs.instant < rhs.instant
+        }
+        return sorted.map { $0.entry }
+    }
+}

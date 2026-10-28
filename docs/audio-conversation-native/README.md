@@ -99,3 +99,5 @@ fixture checkbox changes the presented component environment, not macOS settings
 ![Phone accessible action layout](phone-large-final.png)
 
 ![Mac native reader](mac-reader.png)
+
+Follow-up: the [mixed text/audio timeline](../conversation-timeline/README.md) reuses these audio controls in shared conversations. Its evidence is separate from this earlier audio-only checkpoint.

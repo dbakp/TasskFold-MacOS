@@ -629,4 +629,49 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(caption(),utterances.joined(separator:"\n"));XCTAssertTrue(button(),utterances.joined(separator:"\n"))
     }
     #endif
+    @MainActor func testUnifiedConversationTimelinePlaybackRemovalAndTextPreservation() throws {
+        let app=XCUIApplication();defer{app.terminate()}
+        try conversationOpen(app,owner:true,short:true,extra:"--audio-timeline-testing")
+        let before=app.staticTexts["Shared text before the recording"],after=app.staticTexts["Shared text after the recording"]
+        XCTAssertTrue(before.waitForExistence(timeout:5))
+        let play=app.buttons["audioConversationPlay-ad311000-0000-4000-8000-000000000001"]
+        XCTAssertLessThan(before.frame.minY,play.frame.minY)
+        audioPress(play)
+        XCTAssertTrue(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@","Stop recording playback"),object:play)],timeout:5) == .completed)
+        audioPress(play);XCTAssertEqual(play.label,"Play recording")
+        let remove=app.buttons["audioConversationRemove-ad311000-0000-4000-8000-000000000001"]
+        #if os(iOS)
+        for _ in 0..<8 {if remove.isHittable {break};app.scrollViews["timelineFixtureScroll"].swipeUp()}
+        #endif
+        audioPress(remove);XCTAssertTrue(app.buttons["Cancel"].waitForExistence(timeout:5));audioPress(app.buttons["Cancel"])
+        XCTAssertTrue(remove.waitForExistence(timeout:5));audioPress(remove)
+        let confirm=app.buttons.matching(identifier:"audioConversationConfirmRemove").firstMatch;XCTAssertTrue(confirm.waitForExistence(timeout:5));audioPress(confirm)
+        XCTAssertTrue(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:remove)],timeout:5) == .completed)
+        XCTAssertTrue(before.exists);XCTAssertTrue(after.exists)
+        audioScreenshot(app,"Unified timeline - audio removal preserves shared text")
+        audioPress(app.buttons["timelineFixtureClose"])
+        let count=app.staticTexts["audioConversationFixtureCount"];XCTAssertTrue(count.waitForExistence(timeout:5))
+        #if os(iOS)
+        XCTAssertEqual(count.label,"Records kept: 1");XCTAssertEqual(app.staticTexts["audioConversationFixtureRemovals"].label,"Removals: 1")
+        #else
+        XCTAssertTrue(count.label.contains("Records kept: 1 Removals: 1 Plays: 1 Workspace active"))
+        #endif
+    }
+    @MainActor func testUnifiedConversationTimelineAccessLossPreservesTextAndRejectsPlayback() throws {
+        let app=XCUIApplication();defer{app.terminate()};try audioGuard()
+        app.launchArguments=["--uitesting","--team-editor-testing","--audio-conversation-testing","--audio-conversation-short","--audio-timeline-testing","--audio-conversation-departure"]
+        app.launch();let open=app.buttons["audioConversationFixtureOpen"];XCTAssertTrue(open.waitForExistence(timeout:20));audioPress(open)
+        let play=app.buttons["audioConversationPlay-ad311000-0000-4000-8000-000000000001"];XCTAssertTrue(play.waitForExistence(timeout:10));audioPress(play)
+        XCTAssertTrue(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"exists == false"),object:play)],timeout:5) == .completed)
+        XCTAssertTrue(app.staticTexts["Shared text before the recording"].exists);XCTAssertTrue(app.staticTexts["Shared text after the recording"].exists)
+        audioScreenshot(app,"Unified timeline - lost audio access clears recordings and retains text")
+        audioPress(app.buttons["timelineFixtureClose"])
+        let count=app.staticTexts["audioConversationFixtureCount"];XCTAssertTrue(count.waitForExistence(timeout:5))
+        #if os(iOS)
+        XCTAssertEqual(count.label,"Records kept: 2");XCTAssertEqual(app.staticTexts["audioConversationFixturePlays"].label,"Plays: 0")
+        #else
+        XCTAssertTrue(count.label.contains("Records kept: 2 Removals: 0 Plays: 0 Workspace closed"))
+        #endif
+    }
+
 }

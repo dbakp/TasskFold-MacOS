@@ -1,0 +1,9 @@
+{
+  "build": "passed",
+  "componentRuntime": "not run in this checkpoint",
+  "reason": "IOConsoleLocked=Yes; no new unlock request or test app launch. Prior audio-only CUA scope remains separately recorded.",
+  "remaining": [
+    "mixed-timeline Mac visual/control/spoken acceptance",
+    "full signed-in Store/provider lifecycle"
+  ]
+}

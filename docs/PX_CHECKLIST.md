@@ -126,10 +126,12 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   native verified download/play and explicit removal in a personal-root preview.
   Shared/archived project reads now have separate admission and denied-access clearing.
   Latest checks: 184 Core, 273 controller, 30 shared native/database/gateway and
-  24 publication regression checks per repo. Pending: team audio writing/custody,
-  unified timeline,
-  native UI/spoken acceptance, unknown-upload/legacy-history recovery, hosted
-  custody/provider and genuine audio acceptance. See [current evidence](audio-shared-read/README.md)
+  24 publication regression checks per repo. A mixed text/audio timeline is now
+  implemented with 37 selected shared-comment/timeline Core checks per repo.
+  Pending: team audio writing/custody, full native Store/shared-account lifecycle,
+  remaining UI/spoken acceptance, unknown-upload/legacy-history recovery, hosted
+  custody/provider and genuine audio acceptance. See [timeline evidence](conversation-timeline/README.md),
+  [shared-read evidence](audio-shared-read/README.md)
   and [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
 - [ ] Inbound email provider/domain configuration and genuine delivery — prepare
   only until the user supplies configuration.
@@ -817,3 +819,20 @@ not complete all team audio operations or the overall Px feature.
 
 [Evidence and exact build phases](audio-conversation-native/README.md). This
 accepts the synthetic conversation component scopes above; audio/Px remain open.
+
+## 2026-10-28 — mixed text/audio conversation timeline
+
+- [x] Present authorized shared text and live recordings in one chronological
+  timeline; retain literal bodies/captions and stable medium-qualified row IDs.
+- [x] Order text by original creation and audio by publication, preserving server
+  microseconds and equivalent offset/fraction representations. Editing text does
+  not move it. Keep selected-comment routes and existing text actions.
+- [x] Reuse accessible audio Play/Stop/Cancel/Remove controls, with publication time
+  visible. Retain each source’s independent cursor and clearly label partial loads.
+- [x] Bind audio reads/playback to the current workspace, session, task generation
+  and project. Clear recordings on lost access; keep separately admitted text.
+- [x] Five final native iPhone/iPad cases each, including real Simulator VoiceOver
+  output, preserve text after audio removal/access loss and retain mention routes.
+- [ ] Mac mixed-timeline runtime and full Store/provider lifecycle remain open;
+  see conversation-timeline/README.md. Ordinary audio flags stay off. Team audio
+  writes/custody, uncertain-upload/legacy recovery and genuine audio remain open.

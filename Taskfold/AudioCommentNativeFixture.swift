@@ -353,18 +353,28 @@ struct AudioCommentNativeFixtureView: View {
     init(clip:AudioCommentClip,ownerOverride:Bool?=nil,countOverride:Int?=nil,deniedOverride:Bool?=nil,departureOverride:Bool?=nil) throws {
         guard AudioCommentNativeFixture.conversationTesting else { throw CancellationError() }
         self.clip=clip;owner=ownerOverride ?? ProcessInfo.processInfo.arguments.contains("--audio-conversation-owner");deniedPages=deniedOverride ?? ProcessInfo.processInfo.arguments.contains("--audio-conversation-denied-page");departOnPlay=departureOverride ?? ProcessInfo.processInfo.arguments.contains("--audio-conversation-departure")
-        let account=UUID(uuidString:"ad310000-0000-4000-8000-000000000001")!,target=try AudioCommentTarget(task:UUID(uuidString:"ad310000-0000-4000-8000-000000000002")!,generation:UUID(uuidString:"ad310000-0000-4000-8000-000000000003")!,project:nil)
+        let account=UUID(uuidString:"ad310000-0000-4000-8000-000000000001")!,target=try AudioCommentTarget(task:UUID(uuidString:"ad310000-0000-4000-8000-000000000002")!,generation:UUID(uuidString:"ad310000-0000-4000-8000-000000000003")!,project:ProcessInfo.processInfo.arguments.contains("--audio-timeline-testing") ? UUID(uuidString:"ad310000-0000-4000-8000-000000000004"):nil)
         scope = .init(workspace:.init(account:account.uuidString.lowercased(),generation:UUID()),target:target,origin:"https://conversation-fixture.example.invalid")
         let count=countOverride ?? (ProcessInfo.processInfo.arguments.contains("--audio-conversation-short") ? 2 : 21)
         for index in 1...count {
             let suffix=String(format:"%012d",index),id=UUID(uuidString:"ad311000-0000-4000-8000-"+suffix)!
             let caption=String(format:"Design review %02d",index)+(index == 1 ? "\nKeep the cafe\u{301} notes literal.\nمراجعة التصميم 🪴" : "")
             let intent=try AudioCommentPublication(account:account,target:target,caption:caption,descriptor:clip.descriptor,operation:UUID(uuidString:"ad312000-0000-4000-8000-"+suffix)!,comment:id,asset:UUID(uuidString:"ad313000-0000-4000-8000-"+suffix)!)
-            var fields=intent.record.fields;fields.removeValue(forKey:"version");fields["protocol"] = .number(1);fields["author_id"] = .string(account.uuidString.lowercased());fields["state"] = .string("published");fields["reserved_at"] = .string("2026-10-28T12:00:00Z");fields["expires_at"] = .string("2026-10-29T12:00:00Z");fields["published_at"] = .string("2026-10-28T12:01:00.123456Z")
+            var fields=intent.record.fields;fields.removeValue(forKey:"version");fields["protocol"] = .number(1);fields["author_id"] = .string(account.uuidString.lowercased());fields["state"] = .string("published");fields["reserved_at"] = .string("2026-10-28T12:00:00Z");fields["expires_at"] = .string("2026-10-29T12:00:00Z");fields["published_at"] = .string(ProcessInfo.processInfo.arguments.contains("--audio-timeline-testing") && index > 1 ? "2026-10-28T12:03:00.123456Z":"2026-10-28T12:01:00.123456Z")
             rows.append(try .init(record:Record(fields),account:account,target:target))
         }
     }
     var request: AudioCommentConversationRequest { .init(scope:scope) }
+    var timelineRequest: ConversationRequest {
+        .init(task:Record(["id":.string(scope.target.task.uuidString.lowercased()),"task_generation":.string(scope.target.generation.uuidString.lowercased()),"project_id":.string(scope.target.project?.uuidString.lowercased() ?? "")]),workspace:scope.workspace)
+    }
+    var textComments: [SharedComment] {
+        [("ad314000-0000-4000-8000-000000000001","Shared text before the recording","2026-10-28T12:00:00Z"),
+         ("ad314000-0000-4000-8000-000000000002","Shared text after the recording","2026-10-28T12:02:00Z")].compactMap {id,body,date in
+            SharedComment(Record(["id":.string(id),"task_id":.string(scope.target.task.uuidString.lowercased()),"task_generation":.string(scope.target.generation.uuidString.lowercased()),"project_id":.string(scope.target.project?.uuidString.lowercased() ?? ""),"author_id":.string(scope.workspace.account),"body":.string(body),"mention_ids":.array([]),"revision":.number(1),"created_at":.string(date),"updated_at":.string(date),"deleted_at":.null]))
+        }
+    }
+
     var driver: AudioConversationPresentationFixture {
         .init(session:session,isCurrent:{self.active},makeController:{
             let value=try AudioCommentConversationController(scope:self.scope,incarnation:self.session,transport:self,player:AudioConversationSilentPlayer(context:self))
@@ -454,8 +464,10 @@ struct AudioCommentNativeFixtureView: View {
             do {let bytes=try await Task.detached {try AudioCommentNativeFixture.syntheticData()}.value;context=try AudioConversationNativeContext(clip:await AudioCommentDecoding.validate(bytes))}catch{failure=error.localizedDescription}
         }.sheet(item:$opening) {request in
             if let context {
-                AudioCommentConversationView(request:request,fixture:context.driver)
-                    .environment(\.dynamicTypeSize, largeText || ProcessInfo.processInfo.arguments.contains("UICTContentSizeCategoryAccessibilityXXXL") ? .accessibility5 : .large)
+                Group {
+                    if ProcessInfo.processInfo.arguments.contains("--audio-timeline-testing") {AudioConversationTimelineFixture(context:context)}
+                    else {AudioCommentConversationView(request:request,fixture:context.driver)}
+                }.environment(\.dynamicTypeSize, largeText || ProcessInfo.processInfo.arguments.contains("UICTContentSizeCategoryAccessibilityXXXL") ? .accessibility5 : .large)
             }
         }
         #if os(macOS)
@@ -467,5 +479,28 @@ struct AudioCommentNativeFixtureView: View {
         do {context=try AudioConversationNativeContext(clip:clip,ownerOverride:owner,countOverride:count,deniedOverride:denied,departureOverride:departure);failure=nil} catch {failure=error.localizedDescription}
     }
 
+}
+
+@MainActor private struct AudioConversationTimelineFixture: View {
+    let context:AudioConversationNativeContext
+    @Environment(\.dismiss) private var dismiss
+    @State private var refresh=UUID()
+    var body:some View {
+        NavigationStack {
+            ScrollView {
+                UnifiedConversationTimeline(request:context.timelineRequest,comments:context.textComments,audioRequest:context.request,textHasMore:false,refresh:refresh,textRow:{comment in
+                    VStack(alignment:.leading,spacing:10) {
+                        Text("You").font(.subheadline.weight(.semibold))
+                        Text(comment.body).fixedSize(horizontal:false,vertical:true)
+                        Text(comment.createdAt.formatted(date:.abbreviated,time:.shortened)).font(.caption).foregroundStyle(.secondary)
+                    }.padding(16).frame(maxWidth:.infinity,alignment:.leading).background(Color.secondary.opacity(0.06),in:RoundedRectangle(cornerRadius:18)).accessibilityIdentifier("timelineText-"+comment.id)
+                },fixture:context.driver).padding(20)
+            }.accessibilityIdentifier("timelineFixtureScroll").navigationTitle("Conversation")
+                .toolbar {ToolbarItem(placement:.cancellationAction) {Button("Close") {dismiss()}.accessibilityIdentifier("timelineFixtureClose")}}
+        }
+        #if os(macOS)
+        .frame(minWidth:560,minHeight:650)
+        #endif
+    }
 }
 #endif
