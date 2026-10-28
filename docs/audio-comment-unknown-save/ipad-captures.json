@@ -1,0 +1,50 @@
+[
+  {
+    "file": "ipad-1.png",
+    "name": "Durable discard leaves no recording after cold return_0_C8CE5A6D-5177-4928-9D3D-4EE6EB4DCF94.png"
+  },
+  {
+    "file": "ipad-2.png",
+    "name": "Finish durable discard after cold launch at largest text_0_275BFE10-549D-4311-A8CA-720C1E528A01.png"
+  },
+  {
+    "file": "ipad-3.png",
+    "name": "Discard kept after acknowledgement loss_0_19B0BDF4-5642-427C-92AA-B2BE6226EA56.png"
+  },
+  {
+    "file": "ipad-4.png",
+    "name": "Cold return retains one exact recording with no unfinished Save_0_EE60F2EE-A346-451A-985D-4044391D7558.png"
+  },
+  {
+    "file": "ipad-5.png",
+    "name": "The original recording is saved after releasing the private lock_0_1F63D47D-727E-4D44-AAEE-C181DEA1D7B8.png"
+  },
+  {
+    "file": "ipad-6.png",
+    "name": "Unknown Save remains frozen after the second real-lock refusal_0_EB2FC664-6A76-4EAD-98F8-D7B5A469E9DF.png"
+  },
+  {
+    "file": "ipad-7.png",
+    "name": "Cold return retains one exact recording with no unfinished Save_0_20D01228-092C-48C4-8D1A-4D2BC24A3CDC.png"
+  },
+  {
+    "file": "ipad-8.png",
+    "name": "The original recording is saved after releasing the private lock_0_A4D860CC-6512-409A-8A2C-50BC6D777B06.png"
+  },
+  {
+    "file": "ipad-9.png",
+    "name": "Unknown Save remains frozen after the second real-lock refusal_0_F2FD3D7D-33E0-419A-BC2D-2B4DC54DB4CE.png"
+  },
+  {
+    "file": "ipad-10.png",
+    "name": "Cold return retains one exact recording with no unfinished Save_0_F9012BCE-4C63-42DD-A332-ED78A6DF8ADF.png"
+  },
+  {
+    "file": "ipad-11.png",
+    "name": "The original recording is saved after releasing the private lock_0_877A79DD-803A-4431-A08C-586C1A89EE15.png"
+  },
+  {
+    "file": "ipad-12.png",
+    "name": "Unknown Save remains frozen after the second real-lock refusal_0_551D11C6-9F94-4E97-AF26-8CF4EB2C674E.png"
+  }
+]

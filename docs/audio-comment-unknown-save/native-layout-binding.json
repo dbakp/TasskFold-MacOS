@@ -1,0 +1,10 @@
+{
+  "sources": {
+    "Taskfold/AudioCommentCapture.swift": "f50d415774cfd9b1bc3097bcd5a5f42840b7643a25c365a7cdb68ec6307eed49",
+    "Taskfold/Core/AudioCommentVault.swift": "6e274ccf8c0222f2eb1c125c8cdfc60adcdbeca77e96b41e5fba5d8a38e25298",
+    "Taskfold/AudioCommentNativeFixture.swift": "327a29aed683f4aee93b52419e73f5661cc1bc45c50e9d098b24d007bbf6376e",
+    "Taskfold/Views/AudioCommentDraftView.swift": "b28bb5d11ba0977f5568842bdeeeda5e9a538747185fa75156fd837c3afc1bd5",
+    "TaskfoldUITests/AudioCommentUITests.swift": "4e86dfb776bf0fa21178b49ad5e1c9fb55dbea2afc9701f61d8e58ab3e21981c"
+  },
+  "appBinarySHA256": "7f6ecd01f181167aab9727c66312901953b089457d9910372fb3c071ae0ef2b6"
+}

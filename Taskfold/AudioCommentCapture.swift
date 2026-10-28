@@ -186,6 +186,8 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     @discardableResult func save() async -> Bool {
         guard isCurrent, !busy, let clip = session.clip, session.phase == .review else { return false }
         if !needsSave, saved != nil, saveIntent == nil { return true }
+        // An unreadable lookup is not evidence that a preceding Save never wrote.
+        let retryingSave = saveIntent != nil || replacingIntent != nil || saveUnconfirmed || saveDurable
         stopPlayback(); saving = true; defer { saving = false }
         var submittedIntent: AudioCommentSaveIntent?
         do {
@@ -260,13 +262,13 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             } else if (failure as? AudioCommentStorageFailure) == .conflict {
                 saveConflict = true; saveUnconfirmed = false
                 notice = "This draft changed in another window. Your review is still here. Save a separate draft to keep both versions."
-            } else if !saveDurable, let failure = failure as? AudioCommentStorageFailure, failure == .full || failure == .busy {
-                // These failures occur before any payload replacement. Keep the
-                // review editable and allow deliberate discard/storage cleanup.
+            } else if !saveDurable, (state == .unprepared || !retryingSave), let failure = failure as? AudioCommentStorageFailure, failure == .full || failure == .busy {
+                // A fresh pre-write refusal, or a positively unprepared lookup,
+                // permits editing. Unknown retries keep their exact authorization.
                 candidate = nil; candidateBase = nil; saveIntent = nil; replacingIntent = nil; recovery.resumeAfterSave(); saveUnconfirmed = false; saveConflict = false
                 notice = failure.localizedDescription + " Your review is still here."
             } else {
-                saveUnconfirmed = true; notice = saveDurable ? "Save is kept on this device. Retry now, or close and finish saving later." : "The save couldn’t be confirmed. Retry save before editing or closing; your recording is still here."
+                saveUnconfirmed = true; saveConflict = false; notice = saveDurable ? "Save is kept on this device. Retry now, or close and finish saving later." : "The save couldn’t be confirmed. Retry save before editing or closing; your recording is still here."
             }
             return false
         }
@@ -277,7 +279,9 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             if let intent = saveIntent {
                 replacingIntent = intent; let copy = try intent.separateCopy(); saveIntent = copy; candidate = copy.next
             } else { candidate = try .init(owner: .init(request.scope.workspace.account), target: request.scope.target, caption: session.caption, clip: clip) }
-            candidateBase = nil; saveConflict = false
+            // The original journal may be durable, but this newly chosen copy
+            // is not durable until its exact replacement is confirmed.
+            candidateBase = nil; saveConflict = false; saveDurable = false
             return await save()
         } catch { notice = error.localizedDescription; return false }
     }

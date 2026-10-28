@@ -1,0 +1,50 @@
+[
+  {
+    "file": "phone-1.png",
+    "name": "Durable discard leaves no recording after cold return_0_C5E8C6FE-316B-48A4-BC6F-0AAA990441EF.png"
+  },
+  {
+    "file": "phone-2.png",
+    "name": "Finish durable discard after cold launch at largest text_0_CAA436AE-727F-436A-BA58-ACE159171A32.png"
+  },
+  {
+    "file": "phone-3.png",
+    "name": "Discard kept after acknowledgement loss_0_46D8F452-2BF5-406E-9E48-A8A3B1D31C72.png"
+  },
+  {
+    "file": "phone-4.png",
+    "name": "Cold return retains one exact recording with no unfinished Save_0_E49B5849-2C63-46EE-817C-73CAC4B58520.png"
+  },
+  {
+    "file": "phone-5.png",
+    "name": "The original recording is saved after releasing the private lock_0_BB5043F7-7715-4ED8-A047-D3F1A841F059.png"
+  },
+  {
+    "file": "phone-6.png",
+    "name": "Unknown Save remains frozen after the second real-lock refusal_0_AF903646-8433-437E-B78C-D30A42599241.png"
+  },
+  {
+    "file": "phone-7.png",
+    "name": "Cold return retains one exact recording with no unfinished Save_0_EAC5EE4F-AE22-4A64-8E95-9EE940E53B23.png"
+  },
+  {
+    "file": "phone-8.png",
+    "name": "The original recording is saved after releasing the private lock_0_8B605678-B902-45D5-AA07-BA8C90C91BFC.png"
+  },
+  {
+    "file": "phone-9.png",
+    "name": "Unknown Save remains frozen after the second real-lock refusal_0_72A5C509-34A6-4EEF-99A2-A25188EC4315.png"
+  },
+  {
+    "file": "phone-10.png",
+    "name": "Cold return retains one exact recording with no unfinished Save_0_F9137BBB-2539-4C81-8BE6-7202C687CF0B.png"
+  },
+  {
+    "file": "phone-11.png",
+    "name": "The original recording is saved after releasing the private lock_0_BE936D8F-9018-49DB-8B07-D64BF1AD7619.png"
+  },
+  {
+    "file": "phone-12.png",
+    "name": "Unknown Save remains frozen after the second real-lock refusal_0_BDFA7205-8BAE-4AE6-A0FA-B1A5B43AF36A.png"
+  }
+]

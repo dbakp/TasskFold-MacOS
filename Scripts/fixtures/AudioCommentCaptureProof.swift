@@ -52,6 +52,43 @@ final class AudioProofSaveGate: @unchecked Sendable {
     }
     func release() { semaphore.signal() }
 }
+
+/// Holds a real second file-description lock between failed commit and state read.
+final class AudioProofLookupLock: @unchecked Sendable {
+    private let lock = NSLock()
+    private let directory: URL
+    private let interrupt: AudioCommentVault.Checkpoint
+    private let owner: AudioCommentOwner
+    private var enabled: Bool
+    private var saves: [AudioCommentSaveIntent] = []
+    private var interrupted = false, released = false
+    private var fd: Int32 = -1
+    init(directory: URL, owner: AudioCommentOwner, interrupt: AudioCommentVault.Checkpoint, enabled: Bool = true) { self.directory = directory; self.owner = owner; self.interrupt = interrupt; self.enabled = enabled }
+    var observedSaves: [AudioCommentSaveIntent] { lock.lock(); defer { lock.unlock() }; return saves }
+    func armLookupOnly() { lock.lock(); enabled = true; interrupted = true; lock.unlock() }
+    var isHolding: Bool { lock.lock(); defer { lock.unlock() }; return fd >= 0 }
+    func check(_ point: AudioCommentVault.Checkpoint) throws {
+        lock.lock(); defer { lock.unlock() }
+        if point == .beforeRename {
+            for file in (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? [] where file.lastPathComponent.hasPrefix(".write-") {
+                if let data = try? Data(contentsOf: file), let intent = try? AudioCommentSaveIntent(encoded: data, owner: owner) { saves.append(intent) }
+            }
+        }
+        guard enabled else { return }
+        if point == interrupt, !interrupted { interrupted = true; throw AudioCommentStorageFailure.unreadable }
+        if point == .beforeSaveState, interrupted, !released, fd < 0 {
+            let next = Darwin.open(directory.appendingPathComponent(".lock").path, O_RDWR | O_NOFOLLOW)
+            guard next >= 0 else { throw AudioCommentStorageFailure.unreadable }
+            guard flock(next, LOCK_EX | LOCK_NB) == 0 else { Darwin.close(next); throw AudioCommentStorageFailure.unreadable }
+            fd = next
+        }
+    }
+    func release() {
+        lock.lock(); defer { lock.unlock() }; released = true
+        if fd >= 0 { _ = flock(fd, LOCK_UN); Darwin.close(fd); fd = -1 }
+    }
+    deinit { if fd >= 0 { _ = flock(fd, LOCK_UN); Darwin.close(fd) } }
+}
 @main struct AudioControllerProof {
     @MainActor static func wait(_ condition: () -> Bool) async -> Bool {
         let deadline = Date().addingTimeInterval(3)
@@ -131,6 +168,123 @@ final class AudioProofSaveGate: @unchecked Sendable {
             checks["staleDeleteCannotRemoveAnotherWindowsEdit"] = !deleted && preserved == [concurrent]
         }
         retry.close()
+        // Commit acknowledgement and the subsequent state lookup can both fail.
+        // A later busy retry must not downgrade that unknown outcome to pre-write.
+        for (suffix, point) in [("before-draft", AudioCommentVault.Checkpoint.afterSaveJournal), ("after-draft", AudioCommentVault.Checkpoint.afterDraftCommit)] {
+            let folder = root.appendingPathComponent("unknown-save-" + suffix, isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+            let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+            let gate = AudioProofLookupLock(directory: vault.directory, owner: owner, interrupt: point)
+            defer { gate.release() }
+            let lockedDisk = AudioCommentDraftStorage(vault: .init(applicationSupport: folder, owner: owner, fault: { try gate.check($0) }))
+            let review = make(AudioProofRecorder(data), AudioProofPlayer(), lockedDisk)
+            review.start(); _ = await wait { review.session.phase == .recording }; review.stop(); _ = await wait { review.session.phase == .review }
+            let caption = "Frozen unknown Save cafe\u{301} 🪴"
+            review.editCaption(caption); _ = await review.preserveReview()
+            let first = await review.save()
+            let journals = try FileManager.default.contentsOfDirectory(at: vault.directory, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("save-") }
+            guard journals.count == 1 else { throw AudioCommentStorageFailure.unreadable }
+            let journalBytes = try Data(contentsOf: journals[0]), original = try AudioCommentSaveIntent(encoded: journalBytes, owner: owner)
+            checks["unknownLookupFreezesInitialSave-" + suffix] = !first && gate.isHolding && review.saveUnconfirmed && !review.editable && review.session.caption.utf8.elementsEqual(caption.utf8)
+            let second = await review.save()
+            review.editCaption("Must not become a second recording")
+            checks["unknownBusyRetryRemainsFrozen-" + suffix] = !second && review.saveUnconfirmed && !review.editable && !review.saveConflict && review.session.caption.utf8.elementsEqual(caption.utf8)
+            checks["unknownBusyRetryPreservesExactJournal-" + suffix] = try Data(contentsOf: journals[0]) == journalBytes
+            gate.release()
+            let final = await review.save(), finalDrafts = try await lockedDisk.drafts(), finalIntents = try await lockedDisk.saves()
+            checks["unknownLookupRetryFinishesOriginalIDsOnce-" + suffix] = final && finalDrafts == [original.next] && finalIntents.isEmpty && review.saved == original.next && !review.saveUnconfirmed && !review.needsSave
+            review.close()
+        }
+        // A conflict-copy replacement also owns the original operation while
+        // the state read is unavailable; busy must not abandon that replacement.
+        do {
+            let folder = root.appendingPathComponent("unknown-conflict-copy", isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+            let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+            let gate = AudioProofLookupLock(directory: vault.directory, owner: owner, interrupt: .afterSaveJournal, enabled: false)
+            defer { gate.release() }
+            let disk = AudioCommentDraftStorage(vault: .init(applicationSupport: folder, owner: owner, fault: { try gate.check($0) }))
+            let review = make(AudioProofRecorder(data), AudioProofPlayer(), disk)
+            review.start(); _ = await wait { review.session.phase == .recording }; review.stop(); _ = await wait { review.session.phase == .review }
+            review.editCaption("Earlier saved version"); _ = await review.save()
+            guard let earlier = review.saved else { throw AudioCommentStorageFailure.unreadable }
+            let concurrent = try earlier.replacing(caption: "Other window’s saved version", clip: earlier.clip)
+            try await disk.save(concurrent, replacing: earlier.revision)
+            let caption = "Keep my reviewed conflict copy cafe\u{301}"
+            review.editCaption(caption); _ = await review.preserveReview(); gate.armLookupOnly()
+            let conflicted = await review.save()
+            let journals = try FileManager.default.contentsOfDirectory(at: vault.directory, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("save-") }
+            guard journals.count == 1 else { throw AudioCommentStorageFailure.unreadable }
+            let journalBytes = try Data(contentsOf: journals[0]), original = try AudioCommentSaveIntent(encoded: journalBytes, owner: owner)
+            checks["unknownConflictLookupKeepsOriginalOperation"] = !conflicted && review.saveConflict && gate.isHolding && original.next.id == earlier.id
+            let copy = await review.saveSeparateDraft(); review.editCaption("Must not change the frozen copy")
+            checks["unknownBusyCopyRemainsFrozen"] = !copy && review.saveUnconfirmed && !review.saveConflict && !review.editable && review.session.caption.utf8.elementsEqual(caption.utf8)
+            checks["unknownBusyCopyKeepsOldJournalUntilReplacement"] = try Data(contentsOf: journals[0]) == journalBytes
+            gate.release()
+            let final = await review.save(), drafts = try await disk.drafts(), intents = try await disk.saves()
+            let rewritten = gate.observedSaves.last { $0.id == original.id }
+            checks["unknownCopyRetryKeepsBothVersionsAndOriginalOperation"] = final && intents.isEmpty && drafts.count == 2 && drafts.contains(concurrent) && review.saved?.id != earlier.id && review.saved?.caption.utf8.elementsEqual(caption.utf8) == true && rewritten?.next == review.saved && rewritten?.next.id != original.next.id
+            review.close()
+        }
+        // A prepared original Save does not make an unpersisted conflict copy
+        // durable. A blocked replacement must keep the window's exact choice.
+        do {
+            let folder = root.appendingPathComponent("blocked-known-copy", isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+            let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+            let observer = AudioProofLookupLock(directory: vault.directory, owner: owner, interrupt: .afterSaveJournal, enabled: false)
+            let disk = AudioCommentDraftStorage(vault: .init(applicationSupport: folder, owner: owner, fault: { try observer.check($0) }))
+            let review = make(AudioProofRecorder(data), AudioProofPlayer(), disk)
+            review.start(); _ = await wait { review.session.phase == .recording }; review.stop(); _ = await wait { review.session.phase == .review }
+            review.editCaption("Saved before a concurrent edit"); _ = await review.save()
+            guard let initial = review.saved else { throw AudioCommentStorageFailure.unreadable }
+            let concurrent = try initial.replacing(caption: "Keep the other window’s version", clip: initial.clip)
+            try await disk.save(concurrent, replacing: initial.revision)
+            let caption = "Retain my explicit separate copy"
+            review.editCaption(caption); _ = await review.preserveReview(); _ = await review.save()
+            let original = try await disk.saves()
+            guard original.count == 1 else { throw AudioCommentStorageFailure.unreadable }
+            checks["preparedConflictedOriginalRemainsDurable"] = review.saveConflict && review.saveDurable
+            let lock = Darwin.open(vault.directory.appendingPathComponent(".lock").path, O_RDWR | O_NOFOLLOW)
+            guard lock >= 0, flock(lock, LOCK_EX | LOCK_NB) == 0 else { throw AudioCommentStorageFailure.unreadable }
+            let copied = await review.saveSeparateDraft()
+            checks["blockedCopyDoesNotInheritOriginalDurability"] = !copied && !review.saveDurable && review.saveUnconfirmed && !review.editable
+            _ = flock(lock, LOCK_UN); Darwin.close(lock)
+            checks["blockedCopyPreservesOriginalOnDiskAuthorization"] = try await disk.saves() == original
+            let final = await review.save(), drafts = try await disk.drafts(), remaining = try await disk.saves()
+            let rewritten = observer.observedSaves.last { $0.id == original[0].id }
+            checks["blockedCopyFinishesChosenReplacementWithoutAnotherOperation"] = final && remaining.isEmpty && drafts.count == 2 && drafts.contains(concurrent) && review.saved?.caption == caption && review.saved?.id != concurrent.id && rewritten?.next == review.saved
+            review.close()
+        }
+        // A workspace departure with an unknown result clears the UI, while
+        // the original journal can be completed from a fresh owner-bound session.
+        for (suffix, point) in [("before-draft", AudioCommentVault.Checkpoint.afterSaveJournal), ("after-draft", AudioCommentVault.Checkpoint.afterDraftCommit)] {
+            let folder = root.appendingPathComponent("unknown-departure-" + suffix, isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+            let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+            let gate = AudioProofLookupLock(directory: vault.directory, owner: owner, interrupt: point)
+            defer { gate.release() }
+            let disk = AudioCommentDraftStorage(vault: .init(applicationSupport: folder, owner: owner, fault: { try gate.check($0) }))
+            let review = make(AudioProofRecorder(data), AudioProofPlayer(), disk)
+            review.start(); _ = await wait { review.session.phase == .recording }; review.stop(); _ = await wait { review.session.phase == .review }
+            let caption = "Keep the original owner’s unknown Save"
+            review.editCaption(caption); _ = await review.preserveReview(); _ = await review.save()
+            let files = try FileManager.default.contentsOfDirectory(at: vault.directory, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("save-") }
+            guard files.count == 1 else { throw AudioCommentStorageFailure.unreadable }
+            let original = try AudioCommentSaveIntent(encoded: Data(contentsOf: files[0]), owner: owner)
+            context.scope = .init(workspace: .init(account: "another-owner", generation: UUID()), target: target)
+            review.contextChanged()
+            checks["unknownDepartureClearsVisibleMedia-" + suffix] = review.session.phase == .closed && review.session.clip == nil && review.session.caption.isEmpty
+            let blocked = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await blocked.refresh()
+            checks["foreignWorkspaceCannotReadUnknownSave-" + suffix] = blocked.pendingSaves.isEmpty && blocked.available.isEmpty && blocked.recoverable.isEmpty
+            blocked.close(); gate.release(); context.scope = request.scope
+            let fresh = make(AudioProofRecorder(data), AudioProofPlayer(), disk); await fresh.refresh()
+            let pending = fresh.pendingSaves
+            await fresh.resumeSave(original)
+            let drafts = try await disk.drafts(), remaining = try await disk.saves()
+            checks["freshOwnerSessionFinishesUnknownSaveExactlyOnce-" + suffix] = pending == [original] && fresh.saved == original.next && drafts == [original.next] && remaining.isEmpty && fresh.pendingSaves.isEmpty
+            fresh.close()
+        }
         // Real private recovery files, without explicit Save: close/context loss
         // must not discard the last admitted recording or its exact caption.
         let recoveryDisk = try store("recovery-lifecycle")

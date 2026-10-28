@@ -162,7 +162,7 @@ struct AudioCommentVault: Sendable {
     static let maximumFileBytes = 8_100_000
     static let maximumEntries = 20
     static let maximumTotalBytes = 50_000_000
-    enum Checkpoint: Sendable { case beforeRename, afterRename, afterSaveJournal, afterDraftCommit, afterDiscardJournal }
+    enum Checkpoint: Sendable { case beforeRename, afterRename, afterSaveJournal, afterDraftCommit, afterDiscardJournal, beforeSaveState }
     let applicationSupport: URL
     let owner: AudioCommentOwner
     var fault: (@Sendable (Checkpoint) throws -> Void)? = nil
@@ -374,11 +374,13 @@ struct AudioCommentVault: Sendable {
     }
     func saveState(_ intent: AudioCommentSaveIntent) throws -> AudioCommentLocalSaveState {
         guard intent.next.owner == owner else { throw AudioCommentFailure.changed }
+        try fault?(.beforeSaveState)
         return try locked { folder in
             if let data = try read(name("save-", intent.id), folder: folder) {
                 let stored = try AudioCommentSaveIntent(encoded: data, owner: owner)
-                guard stored.id == intent.id, stored.next.target == intent.next.target,
-                      stored.next.caption.utf8.elementsEqual(intent.next.caption.utf8), stored.next.clip.data == intent.next.clip.data else { throw AudioCommentStorageFailure.conflict }
+                // Durability belongs to the exact authorization, including a
+                // chosen copy's IDs/base/reviews/provenance and discard phase.
+                guard stored == intent else { throw AudioCommentStorageFailure.conflict }
                 return .prepared
             }
             if let data = try read(name("draft-", intent.next.id), folder: folder), try AudioCommentSavedDraft(encoded: data, owner: owner) == intent.next {

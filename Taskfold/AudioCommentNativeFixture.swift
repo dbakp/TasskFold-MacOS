@@ -2,25 +2,71 @@
 import SwiftUI
 import AVFoundation
 import Observation
+import Darwin
 
 @MainActor enum AudioCommentNativeFixture {
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-comment-testing") }
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldAudioNative", isDirectory: true) }
+    private static var lookupLocks: [String: AudioCommentFixtureLookupLock] = [:]
+    static var lookupTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-lookup-lock") }
+    static func lookupProbe(_ scope: AudioCommentLiveScope) -> String {
+        let state = (try? AudioCommentOwner(scope.workspace.account)).flatMap { lookupLocks[$0.directoryName] }?.state ?? (0, false)
+        return "Storage reads: \(state.0) · \(state.1 ? "locked" : "ready")"
+    }
+    static func resumeStorage(_ scope: AudioCommentLiveScope) {
+        if let owner = try? AudioCommentOwner(scope.workspace.account) { lookupLocks[owner.directoryName]?.release() }
+    }
     static func storage(_ scope: AudioCommentLiveScope) -> AudioCommentDraftStorage {
         let fail = enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-lost-ack")
         let before = enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-before-draft")
         let discard = enabled && ProcessInfo.processInfo.arguments.contains("--audio-discard-lost-ack")
-        return .init(vault: .init(applicationSupport: root, owner: try! .init(scope.workspace.account), fault: { point in
+        let owner = try! AudioCommentOwner(scope.workspace.account)
+        let lookup: AudioCommentFixtureLookupLock?
+        if lookupTesting {
+            if lookupLocks[owner.directoryName] == nil { lookupLocks[owner.directoryName] = .init(directory: AudioCommentVault(applicationSupport: root, owner: owner).directory, interrupt: before ? .afterSaveJournal : .afterDraftCommit) }
+            lookup = lookupLocks[owner.directoryName]
+        } else { lookup = nil }
+        return .init(vault: .init(applicationSupport: root, owner: owner, fault: { point in
+            try lookup?.check(point)
             if discard && point == .afterDiscardJournal { throw AudioCommentStorageFailure.unreadable }
             if fail && point == (before ? .afterSaveJournal : .afterDraftCommit) { throw AudioCommentStorageFailure.unreadable }
         }))
     }
     static func prepare() throws {
         guard enabled else { throw CancellationError() }
+        for value in lookupLocks.values { value.release() }; lookupLocks.removeAll()
         if ProcessInfo.processInfo.arguments.contains("--audio-comment-reset") { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
     }
 }
+
+/// Exact isolated-host contention, independent of the vault's own lock descriptor.
+private final class AudioCommentFixtureLookupLock: @unchecked Sendable {
+    private let lock = NSLock()
+    private let directory: URL
+    private let interrupt: AudioCommentVault.Checkpoint
+    private var interrupted = false, released = false
+    private var fd: Int32 = -1
+    private var lookups = 0
+    init(directory: URL, interrupt: AudioCommentVault.Checkpoint) { self.directory = directory; self.interrupt = interrupt }
+    var state: (Int, Bool) { lock.lock(); defer { lock.unlock() }; return (lookups, fd >= 0) }
+    func check(_ point: AudioCommentVault.Checkpoint) throws {
+        lock.lock(); defer { lock.unlock() }
+        if point == interrupt, !interrupted { interrupted = true; throw AudioCommentStorageFailure.unreadable }
+        if point == .beforeSaveState {
+            lookups += 1
+            if interrupted, !released, fd < 0 {
+                let next = Darwin.open(directory.appendingPathComponent(".lock").path, O_RDWR | O_NOFOLLOW)
+                guard next >= 0 else { throw AudioCommentStorageFailure.unreadable }
+                guard flock(next, LOCK_EX | LOCK_NB) == 0 else { Darwin.close(next); throw AudioCommentStorageFailure.unreadable }
+                fd = next
+            }
+        }
+    }
+    func release() { lock.lock(); defer { lock.unlock() }; released = true; if fd >= 0 { _ = flock(fd, LOCK_UN); Darwin.close(fd); fd = -1 } }
+    deinit { if fd >= 0 { _ = flock(fd, LOCK_UN); Darwin.close(fd) } }
+}
+
 @MainActor @Observable private final class AudioCommentFixtureContext {
     var scope = AudioCommentLiveScope(workspace: .init(account: "local-audio-native", generation: UUID()), target: try! .init(task: UUID(uuidString: "ac270000-0000-4000-8000-000000000001")!, generation: UUID(uuidString: "ac270000-0000-4000-8000-000000000002")!, project: nil))
     var request: AudioCommentDraftRequest { .init(scope: scope, title: "Keep the design review in your own words") }
@@ -29,6 +75,7 @@ struct AudioCommentNativeFixtureView: View {
     @State private var context = AudioCommentFixtureContext()
     @State private var opening: AudioCommentDraftRequest?
     @State private var ready = false
+    @State private var storageResumed = false
     @State private var problem: String?
     var body: some View {
         VStack(spacing: 20) {
@@ -40,9 +87,18 @@ struct AudioCommentNativeFixtureView: View {
         }.padding(24)
         .task { do { try AudioCommentNativeFixture.prepare(); ready = true } catch { problem = error.localizedDescription } }
         .sheet(item: $opening) { request in
-            AudioCommentDraftView(request: request,
+            VStack(spacing: 0) {
+                AudioCommentDraftView(request: request,
                                   storage: AudioCommentNativeFixture.storage(request.scope),
                                   recorder: AudioCommentFixtureRecording(), player: AudioCommentFixturePlaying(), liveScope: { context.scope })
+                if AudioCommentNativeFixture.lookupTesting {
+                    VStack(spacing: 8) {
+                        TimelineView(.periodic(from: .now, by: 0.5)) { _ in Text(AudioCommentNativeFixture.lookupProbe(request.scope)).font(.caption).accessibilityIdentifier("audioFixtureLookupProbe") }
+                        Button("Resume storage") { AudioCommentNativeFixture.resumeStorage(request.scope); storageResumed = true }
+                            .buttonStyle(.bordered).disabled(storageResumed).accessibilityIdentifier("audioFixtureResumeStorage")
+                    }.padding().frame(maxWidth: .infinity).background(.bar)
+                }
+            }
         }
     }
 }

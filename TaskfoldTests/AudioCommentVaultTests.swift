@@ -592,4 +592,23 @@ final class AudioCommentVaultTests: XCTestCase {
         XCTAssertEqual(try AudioCommentSaveIntent(encoded: oldJournal, owner: root.owner).phase, .saving)
     }
 
+    func testSaveStateRequiresEntirePreparedAuthorization() throws {
+        var file = try vault(); let next = try draft(), intent = try saveIntent(next)
+        file.fault = { if $0 == .afterSaveJournal { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.commitSave(intent))
+        file.fault = nil
+        XCTAssertEqual(try file.saveState(intent), .prepared)
+        let revised = try AudioCommentSavedDraft(owner: next.owner, target: next.target, caption: next.caption, clip: next.clip, id: next.id)
+        let variants: [AudioCommentSaveIntent] = [
+            try intent.separateCopy(),
+            try .init(next: revised, base: intent.base, reviews: intent.reviews, id: intent.id),
+            try .init(next: next, base: UUID(), reviews: intent.reviews, id: intent.id),
+            try .init(next: next, base: intent.base, reviews: [.init(next)], id: intent.id),
+            try .init(next: next.carryingOrigin(.init(next)), base: intent.base, reviews: intent.reviews, id: intent.id),
+            try intent.markingDiscard()
+        ]
+        for variant in variants { XCTAssertThrowsError(try file.saveState(variant), "A different authorization is not a prepared copy of this Save") }
+        XCTAssertEqual(try file.saves(), [intent]); XCTAssertTrue(try file.drafts().isEmpty)
+    }
+
 }

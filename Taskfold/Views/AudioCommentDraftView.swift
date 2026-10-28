@@ -114,7 +114,7 @@ import SwiftUI
                         if capture.saved != nil {
                             Section { Button("Delete recording draft", role: .destructive) { deleting = true }.disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioDelete") }
                         }
-                    }.formStyle(.grouped)
+                    }.formStyle(.grouped).accessibilityIdentifier("audioDraftForm")
                 } else { ContentUnavailableView("Recording closed", systemImage: "lock", description: Text("Reopen the task in its current workspace to continue.")) }
             }
             .navigationTitle("Audio draft")

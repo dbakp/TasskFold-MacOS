@@ -1,0 +1,11 @@
+{
+  "expectedRecoverableReview" : true,
+  "initialOutcomeUnconfirmed" : true,
+  "journalCount" : 0,
+  "manualRecoveryRetry" : false,
+  "observedRecoverableReview" : false,
+  "returningRecoveryCount" : 0,
+  "returningRetryWarning" : true,
+  "saveReturned" : false,
+  "storageReadableAfterRelease" : true
+}

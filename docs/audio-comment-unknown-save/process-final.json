@@ -1,0 +1,33 @@
+{
+  "seed": {
+    "pid": 3868,
+    "status": "seeded"
+  },
+  "workers": [
+    {
+      "digest": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+      "pid": 3879,
+      "savedID": "b3280000-0000-4000-8000-000000000012",
+      "status": "saved"
+    },
+    {
+      "digest": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+      "pid": 3878,
+      "savedID": "b3280000-0000-4000-8000-000000000012",
+      "status": "saved"
+    }
+  ],
+  "verification": {
+    "drafts": 1,
+    "pid": 3880,
+    "savedID": "b3280000-0000-4000-8000-000000000012",
+    "status": "verified"
+  },
+  "busyRetries": 1,
+  "sourceSnapshotsEstablishedBeforeRelease": true,
+  "compilerWarnings": [],
+  "sources": {
+    "Scripts/fixtures/AudioClaimsProcessProbe.swift": "bc88004d36b64f8545782ed69b1ee24c5c571cfc375fbf121fff084f7ac56225"
+  },
+  "scope": "Mac executable processes linking the owning repo actual Core; synthetic data, no microphone or playback; native/mobile acceptance is separate."
+}

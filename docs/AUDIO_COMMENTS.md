@@ -303,3 +303,33 @@ largest mobile text. Final captures were inspected; the phone action is fully
 visible after normal scrolling. Native initial failures and the Form-action/test
 query corrections are recorded in audio-comment-claims/. Hardware, spoken and
 full application/server lifecycle acceptance are not implied.
+
+
+## 2026-10-28 — preserve an uncertain prepared audio Save
+
+- [x] Retry keeps the original Save/copy authorization and frozen caption when
+  another real file-lock holder prevents confirming the previous write.
+- [x] Durability checks compare the entire stored intent, including IDs, revision,
+  base, recovery references, provenance and discard phase.
+- [x] A newly chosen separate copy cannot inherit its predecessor's durability.
+- [x] Each independent repo passes 80 focused Core tests, 84 executable controller
+  checks and the two-process ownership probe. Before-fix regressions are retained.
+- [x] Isolated Mac process-loss recovery recovered one prepared Save, finished it
+  and decoded the same saved recording/caption after another relaunch. This used
+  synthetic media, controlled SIGTERM and native UI inspection; normal Quit was
+  not accepted. Later Form-identifier and DEBUG-footer layout builds are separate compile checks.
+- [x] Final native acceptance: four cases pass each on iPhone and iPad Simulators,
+  with zero failures/skips/reported runtime warnings. Three new standard-text
+  cases cover prepared/committed unknown retries and cold recovery; the existing
+  largest-text discard/relaunch regression also passes. Earlier driver/DEBUG
+  footer failures are retained separately. Current Mac acceptance is compile/sign
+  plus the limited prior-binary native inspection above, not a new XCTest run.
+- [ ] A separately reproduced **pre-journal** case remains open: failed automatic
+  checkpoint plus failed Save before journal creation, unreadable lookup, then
+  workspace departure can leave the retained recovery writer frozen after storage
+  becomes readable. This is distinct from the prepared Save covered above.
+- [ ] Real microphone/dictation/playback and spoken acceptance remain deferred.
+  Full lifecycle, ordinary task integration and private server custody remain open.
+
+Evidence: [unknown Save checkpoint](audio-comment-unknown-save/README.md).
+Ordinary audio entry points remain gated. This checkpoint does not complete Px.
