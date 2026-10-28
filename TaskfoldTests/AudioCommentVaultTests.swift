@@ -612,3 +612,115 @@ final class AudioCommentVaultTests: XCTestCase {
     }
 
 }
+
+extension AudioCommentVaultTests {
+    func testDepartureCheckpointKeepsOnlyTheExactJournalAndPreservesReview() throws {
+        let file = try vault(), review = try draft(); try file.save(review, recovery: true)
+        let next = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:review.caption,clip:review.clip)
+        let intent = try saveIntent(next, copies: [review])
+        try file.prepareSave(intent, fence: file.departureFence())
+        let fresh = try vault()
+        XCTAssertEqual(try fresh.saves(), [intent]); XCTAssertTrue(try fresh.drafts().isEmpty)
+        XCTAssertEqual(try fresh.drafts(recovery: true), [review])
+        XCTAssertEqual(try fresh.saveState(intent), .prepared)
+        try fresh.prepareSave(intent, fence: fresh.departureFence())
+        XCTAssertEqual(try fresh.saves(), [intent])
+        try fresh.commitSave(intent, existingOnly: true)
+        XCTAssertEqual(try vault().drafts(), [intent.next]); XCTAssertTrue(try vault().saves().isEmpty)
+        XCTAssertTrue(try vault().drafts(recovery:true).isEmpty)
+    }
+    func testDepartureCheckpointRefusesRawChangedIntentAndForeignOwner() throws {
+        let file = try vault(), next = try draft(), intent = try saveIntent(next)
+        try file.prepareSave(intent, fence: file.departureFence())
+        let changed = try next.replacing(caption: "Keep café 🪴\nReviewed wording", clip: next.clip)
+        let other = try AudioCommentSaveIntent(next: changed, base: nil, reviews: [], id: intent.id)
+        XCTAssertEqual(next.caption, changed.caption)
+        XCTAssertThrowsError(try file.prepareSave(other, fence: file.departureFence())); XCTAssertThrowsError(try vault("other").prepareSave(intent, fence: file.departureFence()))
+        XCTAssertEqual(try file.saves(), [intent]); XCTAssertTrue(try file.drafts().isEmpty)
+    }
+    func testDepartureCheckpointPreservesExplicitSeparateCopyWithoutCommittingIt() throws {
+        let file = try vault(), original = try draft(); try file.save(original)
+        let next = try original.replacing(caption: "My explicit review", clip: original.clip)
+        let intent = try saveIntent(next, base: original.revision)
+        let concurrent = try original.replacing(caption: "Other window", clip: original.clip)
+        try file.save(concurrent, replacing: original.revision); try file.prepareSave(intent, fence: file.departureFence())
+        let copy = try intent.separateCopy(); try file.prepareSave(copy, replacing: intent, fence: file.departureFence())
+        XCTAssertEqual(try vault().saves(), [copy]); XCTAssertEqual(try vault().drafts(), [concurrent])
+        try vault().commitSave(copy, existingOnly: true)
+        XCTAssertEqual(Set(try vault().drafts().map(\.id)), Set([concurrent.id,copy.next.id]))
+    }
+    func testDepartureCheckpointLostAcknowledgementLeavesRecoverableAuthorization() throws {
+        var file = try vault(); let intent = try saveIntent(draft())
+        file.fault = { if $0 == .afterSaveJournal { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.prepareSave(intent, fence: file.departureFence()))
+        XCTAssertEqual(try vault().saveState(intent), .prepared)
+        XCTAssertTrue(try vault().drafts().isEmpty)
+        try vault().prepareSave(intent)
+        XCTAssertEqual(try vault().saves(), [intent])
+    }
+    func testDepartureCheckpointDoesNotRemoveAReviewClaimedByAnExistingWinner() throws {
+        let file = try vault(), review = try draft(); try file.save(review,recovery:true)
+        let winner = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:review.caption,clip:review.clip,origin:.init(review))
+        try file.save(winner)
+        let next = try AudioCommentSavedDraft(owner:review.owner,target:review.target,caption:review.caption,clip:review.clip,origin:.init(review))
+        try file.prepareSave(saveIntent(next,copies:[review]), fence: file.departureFence())
+        XCTAssertEqual(try file.drafts(),[winner]); XCTAssertEqual(try file.drafts(recovery:true),[review]); XCTAssertTrue(try file.saves().isEmpty)
+    }
+}
+
+extension AudioCommentVaultTests {
+    func testDepartureStateFenceRecoversJournalAfterRenameAcknowledgementFailure() throws {
+        var file = try vault(); let intent = try saveIntent(draft())
+        file.fault = { if $0 == .afterRename { throw InjectedFailure() } }
+        XCTAssertThrowsError(try file.prepareSave(intent, fence: file.departureFence()))
+        let reopened = try vault()
+        XCTAssertEqual(try reopened.saveState(intent),.prepared)
+        XCTAssertTrue(try reopened.drafts().isEmpty)
+        try reopened.prepareSave(intent, fence: reopened.departureFence())
+        XCTAssertEqual(try reopened.saves(),[intent])
+        try reopened.commitSave(intent,existingOnly:true)
+        XCTAssertEqual(try reopened.drafts(),[intent.next])
+    }
+}
+
+extension AudioCommentVaultTests {
+    func testAutomaticDepartureCannotReviveCompletedDiscardAcrossVaultInstances() throws {
+        let file = try vault(), intent = try saveIntent(draft()), fence = try file.departureFence()
+        try file.prepareSave(intent,fence:fence)
+        try vault().discardSave(intent)
+        XCTAssertNotEqual(try vault().departureFence(),fence)
+        XCTAssertThrowsError(try file.prepareSave(intent,fence:fence))
+        XCTAssertTrue(try vault().saves().isEmpty); XCTAssertTrue(try vault().drafts().isEmpty)
+    }
+    func testCorruptDepartureFenceRefusesAutomaticWritesWithoutHidingSavedDrafts() throws {
+        let file = try vault(), original = try draft(); try file.save(original)
+        let fence = try file.departureFence(), intent = try saveIntent(draft())
+        let marker = file.directory.appendingPathComponent(".lock")
+        try Data(repeating:65,count:1_000_000).write(to:marker)
+        XCTAssertThrowsError(try file.departureFence())
+        XCTAssertThrowsError(try file.prepareSave(intent,fence:fence))
+        XCTAssertEqual(try file.drafts(),[original]); XCTAssertTrue(try file.saves().isEmpty)
+        XCTAssertEqual(try Data(contentsOf:marker).count,1_000_000,"A corrupt fence is not silently reset")
+    }
+}
+
+extension AudioCommentVaultTests {
+    func testKnownPreparedDepartureCannotRecreateDiscardedJournalWithAFreshFence() throws {
+        let file = try vault(), intent = try saveIntent(draft())
+        try file.prepareSave(intent,fence:file.departureFence())
+        try file.discardSave(intent)
+        XCTAssertThrowsError(try file.prepareSave(intent,fence:file.departureFence(),existingOnly:true))
+        XCTAssertTrue(try file.saves().isEmpty)
+    }
+}
+
+extension AudioCommentVaultTests {
+    func testMissingFenceCannotCreateAuthorizationButMayKeepAnExactExistingJournal() throws {
+        let file = try vault(), intent = try saveIntent(draft())
+        XCTAssertThrowsError(try file.prepareSave(intent))
+        XCTAssertTrue(try file.saves().isEmpty)
+        try file.prepareSave(intent,fence:file.departureFence())
+        try file.prepareSave(intent)
+        XCTAssertEqual(try file.saves(),[intent]); XCTAssertTrue(try file.drafts().isEmpty)
+    }
+}

@@ -96,11 +96,28 @@ struct TaskfoldMacApp: App {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    private var preservingAudioBeforeQuit = false
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let request = TerminationSaveRequest()
         NotificationCenter.default.post(name: TerminationSaveRequest.notification, object: request)
         if !Store.shared.flushEditorSessions() { request.hasUnsavedEdits = true }
-        return request.hasUnsavedEdits ? .terminateCancel : .terminateNow
+        guard !request.hasUnsavedEdits else { return .terminateCancel }
+        guard AudioCommentCapture.hasUnpreservedWork else { return .terminateNow }
+        guard !preservingAudioBeforeQuit else { return .terminateLater }
+        preservingAudioBeforeQuit = true
+        Task { @MainActor in
+            let kept = await AudioCommentCapture.preserveForDeparture()
+            preservingAudioBeforeQuit = false
+            sender.reply(toApplicationShouldTerminate: kept)
+            if !kept {
+                let alert = NSAlert()
+                alert.messageText = "Audio recovery needs attention"
+                alert.informativeText = "Taskfold could not confirm every recording’s recovery copy. Keep the app open and retry recovery or Finish saving before quitting."
+                alert.addButton(withTitle: "Keep Taskfold open")
+                alert.runModal()
+            }
+        }
+        return .terminateLater
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

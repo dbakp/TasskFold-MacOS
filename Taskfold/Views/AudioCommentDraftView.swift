@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 @MainActor struct AudioCommentDraftView: View {
     let request: AudioCommentDraftRequest
@@ -144,6 +145,7 @@ import SwiftUI
         }
         #if os(macOS)
         .frame(minWidth: 560, idealWidth: 620, minHeight: 580, idealHeight: 720)
+        .background(AudioCommentQuitBridge(readyForTermination: !capture.busy).frame(width: 0, height: 0))
         #else
         .presentationSizing(.page).presentationDetents([.large])
         #endif
@@ -158,9 +160,7 @@ import SwiftUI
         .onChange(of: valid) { _, active in if !active { capture.contextChanged(); dismiss() } }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active {
-                capture.stopPlayback()
-                if capture.session.phase == .recording { capture.stop() }
-                Task { _ = await capture.preserveReview() }
+                Task { _ = await capture.prepareForDeparture() }
             }
         }
     }
@@ -212,4 +212,36 @@ import SwiftUI
         if capture.saveDurable { capture.close(); dismiss() }
         else if capture.needsSave { leaving = true } else { capture.close(); dismiss() }
     }
+}
+
+/// Only this audio sheet delegates normal Quit to AppDelegate's durable recovery
+/// barrier. Other windows/sheets retain their own termination policy.
+private struct AudioCommentQuitBridge: NSViewRepresentable {
+    let readyForTermination: Bool
+    final class Bridge: NSView {
+        private weak var configuredWindow: NSWindow?
+        private var previous: Bool?
+        var readyForTermination = false
+        override func viewDidMoveToWindow() { super.viewDidMoveToWindow(); install() }
+        func install() {
+            guard let window, window.sheetParent != nil else { restore(); return }
+            if configuredWindow !== window {
+                restore(); configuredWindow = window; previous = window.preventsApplicationTerminationWhenModal
+            }
+            // Busy recording/decoding still uses the sheet's original protection.
+            // Reviewed clips and frozen Saves are retained before onDisappear.
+            window.preventsApplicationTerminationWhenModal = readyForTermination ? false : (previous ?? true)
+        }
+        func restore() {
+            if let window = configuredWindow, let previous { window.preventsApplicationTerminationWhenModal = previous }
+            configuredWindow = nil; previous = nil
+        }
+    }
+    func makeNSView(context: Context) -> Bridge { Bridge() }
+    func updateNSView(_ view: Bridge, context: Context) {
+        view.readyForTermination = readyForTermination; view.install()
+        // SwiftUI can attach the representable just before beginSheet sets its parent.
+        DispatchQueue.main.async { [weak view] in view?.install() }
+    }
+    static func dismantleNSView(_ view: Bridge, coordinator: ()) { view.restore() }
 }

@@ -1,0 +1,25 @@
+{
+  "scope": "Reviewed/frozen local audio departure recovery; acceptance limits in README.md. No ordinary exposure or real audio/TCC acceptance.",
+  "corePassingTests": 86,
+  "controllerChecks": 120,
+  "storageProofSeparateProcesses": 8,
+  "sources": {
+    "Taskfold/Core/AudioCommentVault.swift": "4641dc20b17fbd64fb4309b3d2d78fa9d4f326e3b6561f7144503b55756b1300",
+    "Taskfold/AudioCommentCapture.swift": "0e5750172e110c0c8fe49cfc02756b3dd67f397b852714634063e51c0fff80ac",
+    "Taskfold/AudioCommentMedia.swift": "6b1eb341287158aefe91faecb4f46d47dda8b741adc028b426bdc829024b6ad5",
+    "Taskfold/Views/AudioCommentDraftView.swift": "b5b80151039170aa6b16c57d664ac5868928abcbc81fcbd4d9c65b8ac0c02fad",
+    "Taskfold/TaskfoldMacApp.swift": "32646857a0cb7aae3705109678d9a1c85437a2531e89a88f655c0ce88695486f",
+    "TaskfoldTests/AudioCommentVaultTests.swift": "1936d735f97884d4c88210ab408d2c7f50ac8c4ea725dd1036b3079140b14b98",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "794e58783597db19c3adbd824809a204f072d58706228d7006338ff336f7567f",
+    "Scripts/AudioCommentVaultProbe.swift": "b79c3212068847c2152541337a7b5f24e23ba543955264384df4496bcf91e9a1",
+    "Scripts/test_audio_comment_vault_processes.py": "d4a12ef182a575af771eba29bc31ca53f4db72dde8581cb2b1fab89fe8a2e624",
+    "TaskfoldUITests/AudioCommentUITests.swift": "ad3c281c2b72fc4a3cd922ad72691c7c779c8952947d95ab88bc0ffc3e420008"
+  },
+  "hostApplicationSourcesMatch": true,
+  "strictSignatureVerified": true,
+  "binaries": {
+    "Contents/MacOS/Taskfold.debug.dylib": "a62b82ef84d4662a0c3349f549715d251fee005dd0b63695e347e705a3934e66",
+    "Contents/MacOS/__preview.dylib": "f9bdb74f0f3b47f1bdf6350247553d3912b45beee5e321f6c526019d6c6b6138",
+    "Contents/MacOS/Taskfold": "a07a627f5cc95187cb4095122511e0b2a80c7a69359bd6cf70ae68ed111e7d3a"
+  }
+}

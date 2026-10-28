@@ -44,4 +44,12 @@ with tempfile.TemporaryDirectory(prefix='taskfold-audio-vault-process-') as temp
     unlocked = invoke('verify')
     assert unlocked['status'] == 'verified'
     assert len({written['pid'], restored['pid'], busy['pid'], unlocked['pid']}) == 4
-    print(json.dumps({'status': 'passed', 'separateProcesses': 4, 'localAndCloudDraftsRestored': True, 'exactPendingIntentAndAudioRestored': True, 'crossProcessLockRefusedWithoutMutation': True, 'noMicrophonePlaybackOrNetwork': True, 'ownedTemporaryDirectoryRemovedOnExit': True}, indent=2))
+    departure = [invoke(mode) for mode in ['prepare-departure', 'verify-departure', 'finish-departure', 'verify-finished']]
+    assert len({item['pid'] for item in departure}) == 4
+    assert all({k:v for k,v in item.items() if k != 'pid'} == {k:v for k,v in departure[0].items() if k != 'pid'} for item in departure)
+    revoked = invoke('prepare-revoked')
+    discarded = invoke('discard-revoked')
+    refused = invoke('reject-revoked:' + revoked['fence'])
+    still_absent = invoke('verify-revoked')
+    assert len({item['pid'] for item in [revoked, discarded, refused, still_absent]}) == 4
+    print(json.dumps({'status': 'passed', 'separateProcesses': 12, 'completedDiscardCannotBeRevivedByAnOlderProcessFence': True, 'departureJournalSurvivesProcessExitWithoutCompletingDraft': True, 'explicitFinishUsesOriginalIDsAndAudioAcrossProcesses': True, 'localAndCloudDraftsRestored': True, 'exactPendingIntentAndAudioRestored': True, 'crossProcessLockRefusedWithoutMutation': True, 'noMicrophonePlaybackOrNetwork': True, 'ownedTemporaryDirectoryRemovedOnExit': True}, indent=2))

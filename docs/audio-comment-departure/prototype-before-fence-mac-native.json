@@ -1,0 +1,17 @@
+{
+  "scope": "Final Mac source via native CUA; synthetic recording, no microphone/speaker/permission access. Actual Cmd-Q, not SIGTERM or a fixture callback.",
+  "originalProcessPID": 28984,
+  "coldProcessPID": 29038,
+  "busyRecordingStayedRecordingThroughQuit": true,
+  "blockedJournalQuitShowedNativeRecoveryAlert": true,
+  "normalQuitAfterLockReleaseExitedOriginalProcess": true,
+  "coldLaunchOfferedOnePendingSaveAndNoSavedRecording": true,
+  "pendingOperation": "498906f2-1c60-4eac-b29c-a4cd80e7ea9a",
+  "explicitFinishShowedOneSavedRecording": true,
+  "savedDraft": "13c560c3-3a63-4c15-a693-c5145f3e1939",
+  "caption": "Keep the exact café recording before Quit",
+  "duration": "0:01",
+  "nativeAlertVisuallyInspected": true,
+  "screenshotRetention": "Native CUA image inspected inline; no persistent Mac screenshot file claimed.",
+  "normalQuitAfterExplicitFinishExitedColdProcess": true
+}

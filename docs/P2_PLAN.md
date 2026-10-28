@@ -1,8 +1,10 @@
 # Remaining product backlog
 
-Updated 27 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
+Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
 ## Current implementation focus
+
+Reviewed audio and frozen local Saves now checkpoint before ready-state Mac Quit and iOS departure. Both apps pass 90 Core and 124 synthetic controller checks plus a 12-process journal proof. Phone/tablet native Home/cold-Finish cases and the final Mac refused-Quit/retry/cold-Finish journey pass in their recorded scopes. Busy Mac recording retains modal protection; real audio, broader lifecycle, ordinary exposure and server custody remain open. See [audio-comment-departure](audio-comment-departure/README.md).
 
 Filtered-task output now checks exact root/child source bytes before capture, matching the existing pinned-note guard. Two cases reproduce 13 failing assertions on each old model; final selected Core suites pass 104 Mac / 105 iOS cases, including refreshed PDF/CSV readback. Both native builds/signatures pass. See [filtered-output-source](filtered-output-source/README.md) for native scope and remaining gates.
 

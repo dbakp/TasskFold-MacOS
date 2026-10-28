@@ -1,0 +1,17 @@
+{
+  "scope": "Final cancellation-fenced Mac source via native CUA; synthetic recording and silent playback; no microphone/speaker/permission access. Actual Cmd-Q, not SIGTERM or a fixture callback.",
+  "originalProcessPID": 43024,
+  "coldProcessPID": 43346,
+  "busyRecordingStayedRecordingThroughQuit": true,
+  "blockedJournalQuitShowedNativeRecoveryAlert": true,
+  "normalQuitAfterLockReleaseExitedOriginalProcess": true,
+  "coldLaunchOfferedOnePendingSaveAndNoSavedRecording": true,
+  "pendingOperation": "9952e03c-69e2-47e6-9c3d-08c02ed1e5d8",
+  "explicitFinishShowedOneSavedRecording": true,
+  "savedDraft": "a5c3a714-e7b0-4667-9701-4a8b7266ff75",
+  "caption": "Keep the exact cafe\u0301 recording before Quit",
+  "duration": "0:01",
+  "nativeAlertVisuallyInspected": false,
+  "screenshotRetention": "Final native accessibility tree inspected; no persistent Mac screenshot or pixel-inspection claim. Prototype alert image was inspected earlier.",
+  "normalQuitAfterExplicitFinishExitedColdProcess": true
+}

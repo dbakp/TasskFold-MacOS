@@ -9077,3 +9077,15 @@ the broader audio gate or the Px objective. Ordinary audio entry points stay gat
 [Evidence and native acceptance scope](filtered-output-source/README.md).
 
 Native output follow-up: iPad passes all three selected journeys; iPhone passes CSV/cold-return and source revocation, but repeat PDF Save reliability remains open. Same-name replacement and an unshipped filename-field driver attempt are retained as separate failures in filtered-output-source/. No experimental driver change ships.
+
+## 2026-10-28 — reviewed audio departure checkpoint
+
+- [x] Preserve an already-authorized Save as an exact durable journal without completing a draft or deleting reviews.
+- [x] Prevent stale automatic checkpoints from resurrecting completed Discard using a bounded persistent nonce; preserve existing-only retry constraints.
+- [x] Fence directory durability before reporting prepared/settled state, including rename-acknowledgement recovery.
+- [x] Preserve original-store work from closed views/workspace changes; retain busy Mac sheet protection and refuse ready-sheet Quit when recovery cannot be confirmed.
+- [x] iOS inactivity playback stop and bounded background checkpoint path; explicit Finish still required after cold return.
+- [x] 90 Core and 124 synthetic controller checks per repo; 12-process storage proof; one warning-free background/cold-Finish native case each on phone/tablet; final Mac native normal-Quit/refusal/cold-Finish journey.
+- [ ] Busy-recording automatic Mac Quit, expired prepared-authorization recovery UX, forced-loss/orphan/removal/backup lifecycle, ordinary integration and private server custody remain open. Genuine audio/TCC/spoken testing stays deferred.
+
+[Evidence and exact acceptance scope](audio-comment-departure/README.md).

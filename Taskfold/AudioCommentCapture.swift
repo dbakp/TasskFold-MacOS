@@ -16,6 +16,22 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
 }
 
 @MainActor @Observable final class AudioCommentCapture {
+    private final class LiveCapture { weak var value: AudioCommentCapture?; init(_ value: AudioCommentCapture) { self.value = value } }
+    @ObservationIgnored private let lifecycleID = UUID()
+    @ObservationIgnored private static var live: [UUID: LiveCapture] = [:]
+    static var hasUnpreservedWork: Bool {
+        live.values.compactMap(\.value).contains { $0.busy || !$0.recovery.preservedForDeparture } || AudioCommentReviewRecovery.hasUnpreservedWork
+    }
+    /// Every operation keeps its original private store. This never discovers or
+    /// completes a Save in a different account and never sends audio remotely.
+    static func stopPlaybackForInactivity() { for capture in live.values.compactMap(\.value) { capture.stopPlayback() } }
+    static func preserveForDeparture() async -> Bool {
+        var success = true
+        let captures = live.values.compactMap(\.value)
+        for capture in captures { if !(await capture.prepareForDeparture()) { success = false } }
+        if !(await AudioCommentReviewRecovery.preserveAllForDeparture()) { success = false }
+        return success && !hasUnpreservedWork
+    }
     let request: AudioCommentDraftRequest
     private(set) var session: AudioCommentDraft
     private(set) var saved: AudioCommentSavedDraft?
@@ -49,6 +65,8 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         self.request = request; self.recorder = recorder; self.player = player; self.storage = storage
         recovery = .init(account: request.scope.workspace.account, target: request.scope.target, storage: storage)
         session = .init(workspace: request.scope.workspace, target: request.scope.target)
+        Self.live = Self.live.filter { $0.value.value != nil }
+        Self.live[lifecycleID] = LiveCapture(self)
     }
     var isCurrent: Bool { storage.owner.account.utf8.elementsEqual(request.scope.workspace.account.utf8) && currentScope().map(request.scope.matches) == true && session.phase != .closed }
     var recordingBusy: Bool { [.authorizing, .recording, .finishing].contains(session.phase) }
@@ -209,6 +227,10 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         stopPlayback(); saving = true; defer { saving = false }
         var submittedIntent: AudioCommentSaveIntent?
         do {
+            // Capture before the explicit attempt. A later automatic checkpoint
+            // must not revive work discarded by another window/process.
+            let departureFence = try? await storage.departureFence()
+            guard isCurrent else { recovery.resumeAfterSave(); close(); return false }
             let next: AudioCommentSavedDraft
             if let candidate { next = candidate }
             else if let saved { next = try saved.replacing(caption: session.caption, clip: clip); candidate = next; candidateBase = saved.revision }
@@ -222,7 +244,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
                 saveIntent = try .init(next: next, base: candidateBase, reviews: refs)
             }
             guard let intent = saveIntent else { throw AudioCommentStorageFailure.unreadable }
-            try recovery.holdSave(intent, replacing: replacingIntent)
+            try recovery.holdSave(intent, replacing: replacingIntent, fence: departureFence, existingOnly: saveDurable)
             submittedIntent = intent
             let committed = try await storage.commitSave(intent, replacing: replacingIntent, existingOnly: saveDurable)
             recovery.finishSave()
@@ -329,6 +351,15 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         guard isCurrent else { close(); return false }
         close(); return true
     }
+    @discardableResult func prepareForDeparture() async -> Bool {
+        stopPlayback()
+        if session.phase == .authorizing || session.phase == .recording { stop() }
+        while recordingBusy || loading || saving {
+            do { try await Task.sleep(for: .milliseconds(10)) } catch { return false }
+        }
+        guard !Task.isCancelled, !recordingBusy else { return false }
+        return await recovery.preserveForDeparture()
+    }
     @discardableResult func preserveReview() async -> Bool { await recovery.flush(retry: true) }
     @discardableResult func deleteSaved() async -> Bool {
         guard isCurrent, !busy, !saveUnconfirmed, !needsSave, let saved else { return false }
@@ -353,6 +384,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     func stopPlayback() { player.stop(); playing = false }
     func contextChanged() { if !isCurrent { close() } }
     func close() {
+        Self.live.removeValue(forKey: lifecycleID)
         starting?.cancel(); ticker?.cancel(); decoding?.cancel(); recorder.cancel(); stopPlayback()
         if saveDurable { recovery.finishSave() } else { recovery.detachSave() }
         session.close(); saved = nil; candidate = nil; available = []; recoverable = []; pendingSaves = []; saveIntent = nil; replacingIntent = nil; saveDurable = false; restoredRecovery = nil; notice = nil; elapsed = 0; saveUnconfirmed = false; saveConflict = false; reviewClaimed = false; retainedRecoveryFailed = false
@@ -380,14 +412,44 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     struct HeldSave: Equatable {
         let intent: AudioCommentSaveIntent
         let replacing: AudioCommentSaveIntent?
+        let fence: UUID?
+        let existingOnly: Bool
+        // A preservation nonce/constraint is not a different authored request.
+        // Explicit retries may refresh the nonce and tighten existing-only scope.
+        static func == (lhs: Self, rhs: Self) -> Bool { lhs.intent == rhs.intent && lhs.replacing == rhs.replacing }
     }
     @ObservationIgnored private var heldSave: HeldSave?
+    @ObservationIgnored private var heldSaveDurable = false
     @ObservationIgnored private var detached = false
     private var retainedBytes: Int { (desired?.clip.data.count ?? heldSave?.intent.next.clip.data.count ?? 0) + (attempt?.clip.data.count ?? 0) }
     init(account: String, target: AudioCommentTarget, storage: AudioCommentDraftStorage) {
         self.account = account; self.target = target; self.storage = storage
     }
     var durable: Bool { desired != nil && desired == committed && !pending && failure == nil }
+    var preservedForDeparture: Bool {
+        if heldSave != nil { return heldSaveDurable }
+        return desired == nil || durable
+    }
+    static var hasUnpreservedWork: Bool { retained.values.contains { !$0.preservedForDeparture } }
+    static func preserveAllForDeparture() async -> Bool {
+        var success = true
+        for writer in Array(retained.values) { if !(await writer.preserveForDeparture()) { success = false } }
+        return success && !hasUnpreservedWork
+    }
+    @discardableResult func preserveForDeparture() async -> Bool {
+        guard !Task.isCancelled else { return false }
+        guard let held = heldSave else { return await flush(retry: true) }
+        // Preparing the existing authorization does not commit a draft or clear
+        // any review. Explicit Finish saving remains necessary after relaunch.
+        do { try await storage.prepareSave(held.intent, replacing: held.replacing, fence: held.fence, existingOnly: held.existingOnly) } catch { }
+        let state = try? await storage.saveState(held.intent)
+        guard heldSave == held else { return preservedForDeparture }
+        heldSaveDurable = state == .prepared || state == .settled
+        if heldSaveDurable { failure = nil }
+        else { failure = "The recording’s recovery copy couldn’t be confirmed. Keep Taskfold open and Finish saving before quitting." }
+        return heldSaveDurable
+    }
+
     func submit(clip: AudioCommentClip, caption: String, origin: AudioCommentReviewReference? = nil) throws {
         guard !clearing else { throw AudioCommentStorageFailure.busy }
         guard let owner else { throw AudioCommentFailure.changed }
@@ -439,11 +501,12 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     }
     /// Keep the exact explicit request if its state lookup cannot be read. This
     /// shares the bounded recovery registry, never a second unbounded payload cache.
-    func holdSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent?) throws {
+    func holdSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent?, fence: UUID? = nil, existingOnly: Bool = false) throws {
         guard intent.next.owner == owner, intent.next.target == target else { throw AudioCommentFailure.changed }
-        let entry = HeldSave(intent: intent, replacing: old)
         let peers = Self.retained.values.filter { $0 !== self }
         let sameOperation = peers.filter { $0.heldSave?.intent.id == intent.id }
+        let requiresExisting = existingOnly || sameOperation.contains { $0.heldSave?.existingOnly == true }
+        let entry = HeldSave(intent: intent, replacing: old, fence: fence, existingOnly: requiresExisting)
         guard sameOperation.allSatisfy({ $0.heldSave == entry || $0.heldSave?.intent == old }) else { throw AudioCommentStorageFailure.conflict }
         let shared = sameOperation.contains { $0.heldSave == entry || $0.heldSave?.intent == old }
         let needsSlot = desired != nil || !shared
@@ -451,23 +514,23 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             guard peers.count < AudioCommentVault.maximumEntries,
                   peers.reduce(0, { $0 + $1.retainedBytes }) + intent.next.clip.data.count <= AudioCommentVault.maximumTotalBytes else { throw AudioCommentStorageFailure.full }
         }
-        for peer in sameOperation where peer.heldSave?.intent == old { peer.heldSave = entry }
-        heldSave = entry; clearing = true; detached = false
+        for peer in sameOperation where peer.heldSave == entry || peer.heldSave?.intent == old { peer.heldSave = entry; peer.heldSaveDurable = false }
+        heldSave = entry; heldSaveDurable = false; clearing = true; detached = false
         if needsSlot { Self.retained[id] = self }
     }
     func detachSave() { if heldSave != nil { detached = true } }
     func resumeAfterSave() {
         let previous = heldSave
-        heldSave = nil; detached = false; clearing = false
+        heldSave = nil; heldSaveDurable = false; detached = false; clearing = false
         if let previous {
             let matches = Self.retained.values.filter { $0 !== self && $0.detached && $0.heldSave == previous }
-            for writer in matches { writer.heldSave = nil; writer.detached = false; writer.clearing = false; if writer.failure == nil { writer.run() } }
+            for writer in matches { writer.heldSave = nil; writer.heldSaveDurable = false; writer.detached = false; writer.clearing = false; if writer.failure == nil { writer.run() } }
         }
         if desired == nil && attempt == nil && committed == nil { Self.retained.removeValue(forKey: id) }
         else if failure == nil { run() }
     }
     func finishSave() {
-        desired = nil; committed = nil; attempt = nil; failure = nil; pending = false; clearing = false; heldSave = nil; detached = false
+        desired = nil; committed = nil; attempt = nil; failure = nil; pending = false; clearing = false; heldSave = nil; heldSaveDurable = false; detached = false
         Self.retained.removeValue(forKey: id)
     }
     static func settleRetained(_ intent: AudioCommentSaveIntent) {
@@ -481,7 +544,7 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     }
     static func redirectRetained(_ original: AudioCommentSaveIntent, to winner: AudioCommentSaveIntent) {
         let matches = retained.values.filter { $0.heldSave?.intent == original }
-        for writer in matches { writer.heldSave = .init(intent: winner, replacing: nil) }
+        for writer in matches { writer.heldSave = .init(intent: winner, replacing: nil, fence: nil, existingOnly: true); writer.heldSaveDurable = false }
     }
     static func retainedSaves(owner: AudioCommentOwner, target: AudioCommentTarget) -> [HeldSave] {
         var unique: [UUID: HeldSave] = [:]

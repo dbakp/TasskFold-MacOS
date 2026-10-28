@@ -7,7 +7,7 @@ import Darwin
     var callbacks: [@MainActor (AudioCommentRecordingEvent) -> Void] = []
     var permits: [@MainActor () -> Bool] = []
     var elapsed: TimeInterval = 0
-    var denied = false, suspended = false
+    var denied = false, suspended = false, finishDelay = false
     var continuation: CheckedContinuation<Void, Never>?
     var data: Data
     var cancellations = 0
@@ -19,7 +19,10 @@ import Darwin
         receive(.started)
     }
     func grant() { continuation?.resume(); continuation = nil }
-    func finish() { callbacks.last?(.finished(data)) }
+    func finish() {
+        if finishDelay { let callback = callbacks.last, bytes = data; Task { @MainActor in try? await Task.sleep(for:.milliseconds(40)); callback?(.finished(bytes)) } }
+        else { callbacks.last?(.finished(data)) }
+    }
     func cancel() { cancellations += 1 }
 }
 @MainActor final class AudioProofPlayer: AudioCommentPlaying {
@@ -144,6 +147,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
             let c = AudioCommentCapture(request: request, recorder: driver, player: player, storage: store)
             if bound { c.currentScope = { context.scope } }; return c
         }
+        checks.merge(try await departureChecks(root:root,data:data,request:request,context:context)) { _, new in new }
         let recording = AudioProofRecorder(data), player = AudioProofPlayer(), disk = try store("ordinary")
         let unbound = make(recording, player, disk, bound: false); unbound.start()
         checks["unboundCannotRequestMicrophone"] = recording.callbacks.isEmpty
@@ -630,6 +634,124 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         checks["allMediaLeasesReleased"] = TaskfoldAudioLease.owner == nil
         try JSONSerialization.data(withJSONObject: checks, options: [.sortedKeys]).write(to: URL(fileURLWithPath: CommandLine.arguments[3]))
         guard checks.values.allSatisfy({ $0 }) else { fputs("Failed audio checks: " + checks.filter { !$0.value }.keys.sorted().joined(separator: ", ") + "\n", stderr); exit(1) }
+    }
+    @MainActor private static func departureChecks(root: URL, data: Data, request: AudioCommentDraftRequest, context: AudioProofContext) async throws -> [String: Bool] {
+        var checks: [String: Bool] = [:]
+        let owner = try AudioCommentOwner(request.scope.workspace.account)
+        let folder = root.appendingPathComponent("departure", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let disk = AudioCommentDraftStorage(applicationSupport:folder,owner:owner)
+        func make(_ driver: AudioProofRecorder, _ store: AudioCommentDraftStorage) -> AudioCommentCapture {
+            let c = AudioCommentCapture(request:request,recorder:driver,player:AudioProofPlayer(),storage:store)
+            c.currentScope = { context.scope }; return c
+        }
+        let recorder = AudioProofRecorder(data); recorder.finishDelay = true
+        let c = make(recorder,disk), sameRequest = make(AudioProofRecorder(data),disk)
+        c.start(); _ = await wait { c.session.phase == .recording }
+        checks["departureTracksTwoControllersSharingOneRequestWithoutLosingActiveRecording"] = AudioCommentCapture.hasUnpreservedWork
+        let kept = await AudioCommentCapture.preserveForDeparture()
+        checks["departureAwaitsDelayedRecorderFinishAndDecode"] = kept && c.session.phase == .review && c.session.clip?.data == data
+        let initialDrafts = try await disk.drafts(), initialReviews = try await disk.reviews()
+        checks["departureCheckpointsReviewWithoutExplicitDraftSave"] = initialDrafts.isEmpty && initialReviews.count == 1
+        c.editCaption("Exact cafe\u{301} before background 🪴"); c.play()
+        AudioCommentCapture.stopPlaybackForInactivity()
+        checks["inactivityStopsPlaybackSynchronouslyBeforeBackgroundWork"] = !c.playing
+        c.play()
+        let captionKept = await AudioCommentCapture.preserveForDeparture()
+        let reviews = try await disk.reviews()
+        checks["departureStopsPlaybackAndKeepsExactCaption"] = captionKept && !c.playing && reviews.first?.caption.utf8.elementsEqual(c.session.caption.utf8) == true
+        checks["durableReviewNoLongerBlocksNormalQuit"] = !AudioCommentCapture.hasUnpreservedWork
+        sameRequest.close(); c.close()
+
+        let pendingFolder = root.appendingPathComponent("departure-pending",isDirectory:true)
+        try FileManager.default.createDirectory(at:pendingFolder,withIntermediateDirectories:false)
+        let vault = AudioCommentVault(applicationSupport:pendingFolder,owner:owner)
+        let gate = AudioProofPrejournalGate(vault.directory,owner)
+        let pendingStore = AudioCommentDraftStorage(vault:.init(applicationSupport:pendingFolder,owner:owner,fault:{ try gate.check($0) }))
+        let pending = make(AudioProofRecorder(data),pendingStore)
+        pending.start(); _ = await wait { pending.session.phase == .recording }; pending.stop(); _ = await wait { pending.session.phase == .review }
+        pending.editCaption("Unwritten Save before Quit")
+        _ = await pending.preserveReview(); gate.arm(); _ = await pending.save()
+        guard let intent = gate.submitted else { throw AudioCommentStorageFailure.unreadable }
+        let blocked = await AudioCommentCapture.preserveForDeparture()
+        checks["departureFailureBlocksQuitWhileExactSaveExistsOnlyInMemory"] = !blocked && AudioCommentCapture.hasUnpreservedWork && pending.saveUnconfirmed
+        context.scope = .init(workspace:.init(account:"foreign-departure-owner",generation:UUID()),target:request.scope.target)
+        pending.contextChanged(); gate.release()
+        let journalKept = await AudioCommentCapture.preserveForDeparture()
+        let journals = try await pendingStore.saves(), drafts = try await pendingStore.drafts()
+        checks["detachedOriginalOwnerSaveBecomesDurableWithoutFinishingOrRetargeting"] = journalKept && journals == [intent] && drafts.isEmpty && pending.session.clip == nil
+        checks["durableDetachedAuthorizationDoesNotBlockQuit"] = !AudioCommentCapture.hasUnpreservedWork
+        context.scope = request.scope
+        let returned = make(AudioProofRecorder(data),pendingStore); await returned.refresh()
+        checks["departureJournalReturnsAsOneExplicitFinishAction"] = returned.pendingSaves == [intent] && returned.session.clip == nil
+        await returned.resumeSave(intent)
+        let finalDrafts = try await pendingStore.drafts(), finalJournals = try await pendingStore.saves()
+        checks["departureJournalFinishesExactOriginalDraftOnce"] = returned.saved == intent.next && finalDrafts == [intent.next] && finalJournals.isEmpty
+        returned.close()
+
+        let revokedFolder = root.appendingPathComponent("departure-revoked",isDirectory:true)
+        try FileManager.default.createDirectory(at:revokedFolder,withIntermediateDirectories:false)
+        let revokedVault = AudioCommentVault(applicationSupport:revokedFolder,owner:owner)
+        let revokedGate = AudioProofLookupLock(directory:revokedVault.directory,owner:owner,interrupt:.afterSaveJournal,enabled:true)
+        let revokedStore = AudioCommentDraftStorage(vault:.init(applicationSupport:revokedFolder,owner:owner,fault:{ try revokedGate.check($0) }))
+        let revoked = make(AudioProofRecorder(data),revokedStore)
+        revoked.start(); _ = await wait { revoked.session.phase == .recording }; revoked.stop(); _ = await wait { revoked.session.phase == .review }
+        revoked.editCaption("This pending Save is discarded in another editor"); _ = await revoked.preserveReview(); _ = await revoked.save()
+        revokedGate.release()
+        guard let revokedIntent = try await revokedStore.saves().first else { throw AudioCommentStorageFailure.unreadable }
+        try revokedVault.discardSave(revokedIntent)
+        let revived = await revoked.prepareForDeparture(), revokedJournals = try await revokedStore.saves()
+        checks["departureNeverAutomaticallyRevivesAnotherEditorsCompletedDiscard"] = !revived && revokedJournals.isEmpty
+        revoked.recovery.finishSave(); revoked.close()
+        // Dispose only the synthetic reproduction if the old implementation revived it.
+        for journal in revokedJournals { try revokedVault.discardSave(journal) }
+
+        let unfencedFolder = root.appendingPathComponent("departure-unfenced",isDirectory:true)
+        try FileManager.default.createDirectory(at:unfencedFolder,withIntermediateDirectories:false)
+        let unfencedVault = AudioCommentVault(applicationSupport:unfencedFolder,owner:owner)
+        let unfencedStore = AudioCommentDraftStorage(vault:unfencedVault)
+        let unfenced = make(AudioProofRecorder(data),unfencedStore)
+        unfenced.start(); _ = await wait { unfenced.session.phase == .recording }; unfenced.stop(); _ = await wait { unfenced.session.phase == .review }
+        unfenced.editCaption("Explicit Finish required when the initial fence was unreadable"); _ = await unfenced.preserveReview()
+        let external = Darwin.open(unfencedVault.directory.appendingPathComponent(".lock").path,O_RDWR | O_NOFOLLOW)
+        guard external >= 0, flock(external,LOCK_EX | LOCK_NB) == 0 else { throw AudioCommentStorageFailure.unreadable }
+        _ = await unfenced.save()
+        _ = flock(external,LOCK_UN); Darwin.close(external)
+        let untrusted = await unfenced.prepareForDeparture(), untrustedJournals = try await unfencedStore.saves()
+        checks["freshPrewriteRefusalPreservesReviewWithoutInventingSaveAuthorization"] = untrusted && untrustedJournals.isEmpty && !unfenced.saveUnconfirmed
+        let explicitRetry = await unfenced.save(), explicitDrafts = try await unfencedStore.drafts()
+        checks["explicitRetryCanCaptureFreshFenceAndFinishPreviouslyUnwrittenSave"] = explicitRetry && explicitDrafts.count == 1 && explicitDrafts.first == unfenced.saved
+        unfenced.close()
+
+        let knownFolder = root.appendingPathComponent("departure-existing-only",isDirectory:true)
+        try FileManager.default.createDirectory(at:knownFolder,withIntermediateDirectories:false)
+        let knownVault = AudioCommentVault(applicationSupport:knownFolder,owner:owner)
+        let knownFault = AudioProofOneShotFault(point:.afterSaveJournal)
+        let knownStore = AudioCommentDraftStorage(vault:.init(applicationSupport:knownFolder,owner:owner,fault:{ try knownFault.check($0) }))
+        let known = make(AudioProofRecorder(data),knownStore)
+        known.start(); _ = await wait { known.session.phase == .recording }; known.stop(); _ = await wait { known.session.phase == .review }
+        _ = await known.preserveReview(); _ = await known.save()
+        guard known.saveDurable, let knownIntent = try await knownStore.saves().first else { throw AudioCommentStorageFailure.unreadable }
+        try knownVault.discardSave(knownIntent)
+        _ = await known.save() // A retry may read the new nonce, but remains existing-only.
+        let existingOnlyKept = await known.prepareForDeparture(), existingOnlyJournals = try await knownStore.saves()
+        checks["departureCannotWidenKnownPreparedRetryEvenWithFreshNonce"] = !existingOnlyKept && existingOnlyJournals.isEmpty
+        known.recovery.finishSave(); known.close()
+        for journal in existingOnlyJournals { try knownVault.discardSave(journal) }
+
+        let cancelFolder = root.appendingPathComponent("departure-cancel",isDirectory:true)
+        try FileManager.default.createDirectory(at:cancelFolder,withIntermediateDirectories:false)
+        let cancelStore = AudioCommentDraftStorage(applicationSupport:cancelFolder,owner:owner)
+        let delayed = AudioProofRecorder(data); delayed.finishDelay = true
+        let interrupted = make(delayed,cancelStore); interrupted.start(); _ = await wait { interrupted.session.phase == .recording }
+        let waiting = Task { @MainActor in await interrupted.prepareForDeparture() }
+        await Task.yield(); waiting.cancel()
+        checks["backgroundAllowanceCancellationDoesNotClaimDurability"] = !(await waiting.value)
+        let retry = await interrupted.prepareForDeparture()
+        let cancelReviews = try await cancelStore.reviews()
+        checks["interruptedBackgroundWaitCanRetryWithoutDroppingAudio"] = retry && interrupted.session.clip?.data == data && cancelReviews.count == 1
+        interrupted.close()
+        return checks
     }
     @MainActor private static func workspaceReturnChecks(root: URL, data: Data, workspace: WorkspaceBinding, target: AudioCommentTarget, request: AudioCommentDraftRequest, context: AudioProofContext) async throws -> [String: Bool] {
         let owner = try AudioCommentOwner(workspace.account)

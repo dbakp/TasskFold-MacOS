@@ -177,7 +177,8 @@ struct AudioCommentVault: Sendable {
         guard fstat(fd, &info) == 0, info.st_uid == getuid(), fchmod(fd, 0o700) == 0, !created || fsync(parent) == 0 else { Darwin.close(fd); throw AudioCommentStorageFailure.unreadable }
         return fd
     }
-    private func locked<T>(_ body: (Int32) throws -> T) throws -> T {
+    private func locked<T>(_ body: (Int32) throws -> T) throws -> T { try withLock { folder, _ in try body(folder) } }
+    private func withLock<T>(_ body: (Int32, Int32) throws -> T) throws -> T {
         let parent = Darwin.open(applicationSupport.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
         guard parent >= 0 else { throw AudioCommentStorageFailure.unreadable }; defer { Darwin.close(parent) }
         let root = try childDirectory("AudioCommentsPrivate", parent: parent); defer { Darwin.close(root) }
@@ -187,7 +188,34 @@ struct AudioCommentVault: Sendable {
         var info = stat()
         guard fstat(lock, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_nlink == 1, info.st_uid == getuid(), fchmod(lock, 0o600) == 0 else { throw AudioCommentStorageFailure.unreadable }
         guard flock(lock, LOCK_EX | LOCK_NB) == 0 else { throw AudioCommentStorageFailure.busy }; defer { _ = flock(lock, LOCK_UN) }
-        return try body(folder)
+        return try body(folder, lock)
+    }
+    /// One fixed-size nonce in the already-private lock file fences automatic
+    /// journal creation after any completed/pending discard. It adds no payload
+    /// file, growing receipt log or quota-consuming tombstone.
+    private func readDepartureFence(_ lock: Int32) throws -> UUID? {
+        var info = stat()
+        guard fstat(lock, &info) == 0 else { throw AudioCommentStorageFailure.unreadable }
+        if info.st_size == 0 { return nil }
+        guard info.st_size == 36 else { throw AudioCommentStorageFailure.unreadable }
+        var bytes = [UInt8](repeating: 0, count: 36)
+        guard bytes.withUnsafeMutableBytes({ pread(lock, $0.baseAddress, 36, 0) }) == 36,
+              let token = UUID(uuidString: String(decoding: bytes, as: UTF8.self)),
+              token.uuidString.lowercased().utf8.elementsEqual(bytes) else { throw AudioCommentStorageFailure.unreadable }
+        return token
+    }
+    private func writeDepartureFence(_ token: UUID, lock: Int32) throws {
+        let bytes = Array(token.uuidString.lowercased().utf8)
+        guard bytes.withUnsafeBytes({ pwrite(lock, $0.baseAddress, bytes.count, 0) }) == bytes.count,
+              ftruncate(lock, off_t(bytes.count)) == 0, fsync(lock) == 0 else { throw AudioCommentStorageFailure.unreadable }
+    }
+    func departureFence() throws -> UUID {
+        try withLock { folder, lock in
+            let existing = try readDepartureFence(lock), token = existing ?? UUID()
+            if existing == nil { try writeDepartureFence(token, lock: lock) }
+            guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
+            return token
+        }
     }
     private func read(_ name: String, folder: Int32) throws -> Data? {
         let fd = openat(folder, name, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
@@ -381,6 +409,7 @@ struct AudioCommentVault: Sendable {
                 // Durability belongs to the exact authorization, including a
                 // chosen copy's IDs/base/reviews/provenance and discard phase.
                 guard stored == intent else { throw AudioCommentStorageFailure.conflict }
+                guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
                 return .prepared
             }
             if let data = try read(name("draft-", intent.next.id), folder: folder), try AudioCommentSavedDraft(encoded: data, owner: owner) == intent.next {
@@ -390,6 +419,7 @@ struct AudioCommentVault: Sendable {
                         guard copy.target != intent.next.target || copy.revision != ref.revision else { throw AudioCommentStorageFailure.unreadable }
                     }
                 }
+                guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
                 return .settled
             }
             return .unprepared
@@ -467,7 +497,7 @@ struct AudioCommentVault: Sendable {
     /// can never switch a durable discard back to saving after relaunch.
     func discardSave(_ requested: AudioCommentSaveIntent) throws {
         guard requested.next.owner == owner else { throw AudioCommentFailure.changed }
-        try locked { folder in
+        try withLock { folder, lock in
             let journal = name("save-", requested.id)
             guard let bytes = try read(journal, folder: folder) else { return }
             var current = try AudioCommentSaveIntent(encoded: bytes, owner: owner)
@@ -481,6 +511,9 @@ struct AudioCommentVault: Sendable {
                     let data = try current.encoded(); try admit(data, replacing: journal, folder: folder); try write(data, name: journal, folder: folder)
                     try fault?(.afterDiscardJournal)
                 }
+                // Rotate before deleting anything. A stale in-memory departure
+                // may retain audio, but cannot recreate this discarded operation.
+                try writeDepartureFence(UUID(), lock: lock)
                 try cleanupReviews(current.reviews, target: current.next.target, folder: folder)
                 guard unlinkat(folder, journal, 0) == 0, fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
             } catch { throw AudioCommentStorageFailure.discardPending }
@@ -489,9 +522,17 @@ struct AudioCommentVault: Sendable {
 
     /// Journal first, then the exact optimistic draft, then recovery removals,
     /// then the journal removal. Every uncertain retry keeps the original IDs.
+    /// Keep an already-authorized Save across process loss without completing it,
+    /// creating a draft, clearing a review or publishing anything.
+    func prepareSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, fence: UUID? = nil, existingOnly: Bool = false) throws {
+        _ = try writeSave(intent, replacing: old, existingOnly: existingOnly, checkpointOnly: true, fence: fence)
+    }
     @discardableResult func commitSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, existingOnly: Bool = false) throws -> AudioCommentSavedDraft {
+        try writeSave(intent, replacing: old, existingOnly: existingOnly, checkpointOnly: false, fence: nil)
+    }
+    private func writeSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent?, existingOnly: Bool, checkpointOnly: Bool, fence: UUID?) throws -> AudioCommentSavedDraft {
         guard intent.next.owner == owner else { throw AudioCommentFailure.changed }
-        return try locked { folder in
+        return try withLock { folder, lock in
             let journal = name("save-", intent.id), destination = name("draft-", intent.next.id)
             let own = try read(journal, folder: folder).map { try AudioCommentSaveIntent(encoded: $0, owner: owner) }
             guard intent.phase == .saving, own?.phase != .discarding else { throw AudioCommentStorageFailure.discardPending }
@@ -504,7 +545,7 @@ struct AudioCommentVault: Sendable {
                 let claimed = all.drafts.filter { $0.target == intent.next.target && $0.origin == origin }
                 if let winner = claimed.first(where: { $0.id != intent.next.id }) {
                     guard winner.sameContent(as: intent.next) else { throw AudioCommentStorageFailure.reviewClaimed }
-                    try cleanupReviews(intent.reviews, target: intent.next.target, folder: folder)
+                    if !checkpointOnly { try cleanupReviews(intent.reviews, target: intent.next.target, folder: folder) }
                     return winner
                 }
                 if let other = all.saves.first(where: { $0.id != intent.id && $0.next.target == intent.next.target && ($0.next.origin == origin || $0.reviews.contains(origin)) }) {
@@ -533,6 +574,7 @@ struct AudioCommentVault: Sendable {
                     guard let old, prepared == old, old.id == intent.id, old.next.owner == intent.next.owner,
                           old.next.target == intent.next.target, old.next.caption.utf8.elementsEqual(intent.next.caption.utf8), old.next.clip.data == intent.next.clip.data,
                           old.reviews == intent.reviews, intent.base == nil, intent.next.id != old.next.id, try conflicted(old) else { throw AudioCommentStorageFailure.conflict }
+                    if checkpointOnly { guard let fence, try readDepartureFence(lock) == fence else { throw AudioCommentStorageFailure.conflict } }
                     try admit(bytes, replacing: journal, folder: folder); try write(bytes, name: journal, folder: folder); preparedNow = true
                 }
             } else {
@@ -546,7 +588,13 @@ struct AudioCommentVault: Sendable {
                     if !hasOldCopy { guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }; return intent.next }
                 }
                 guard !existingOnly, old == nil else { throw AudioCommentStorageFailure.conflict }
+                if checkpointOnly { guard let fence, try readDepartureFence(lock) == fence else { throw AudioCommentStorageFailure.conflict } }
                 try admit(bytes, replacing: journal, folder: folder); try write(bytes, name: journal, folder: folder); preparedNow = true
+            }
+            if checkpointOnly {
+                guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
+                if preparedNow { try fault?(.afterSaveJournal) }
+                return intent.next // Private helper only; prepareSave discards this value.
             }
             // From here quota/IO failure is an unconfirmed durable Save, not a
             // pre-write failure that authorizes minting a new draft identity.
@@ -634,6 +682,8 @@ actor AudioCommentDraftStorage {
     func reviews() throws -> [AudioCommentSavedDraft] { try vault.drafts(recovery: true) }
     func saves() throws -> [AudioCommentSaveIntent] { try vault.saves() }
     func saveState(_ intent: AudioCommentSaveIntent) throws -> AudioCommentLocalSaveState { try vault.saveState(intent) }
+    func departureFence() throws -> UUID { try vault.departureFence() }
+    func prepareSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, fence: UUID? = nil, existingOnly: Bool = false) throws { try vault.prepareSave(intent, replacing: old, fence: fence, existingOnly: existingOnly) }
     @discardableResult func commitSave(_ intent: AudioCommentSaveIntent, replacing old: AudioCommentSaveIntent? = nil, existingOnly: Bool = false) throws -> AudioCommentSavedDraft { try vault.commitSave(intent, replacing: old, existingOnly: existingOnly) }
     func catalog(target: AudioCommentTarget) throws -> AudioCommentDraftCatalog { try vault.catalog(target: target) }
     func discardSave(_ intent: AudioCommentSaveIntent) throws { try vault.discardSave(intent) }

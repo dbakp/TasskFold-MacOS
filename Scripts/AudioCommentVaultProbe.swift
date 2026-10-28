@@ -21,6 +21,35 @@ func run() throws -> [String: Any] {
     let draft = try AudioCommentSavedDraft(owner: owner, target: target, caption: caption, clip: clip, id: id, revision: revision)
     let localDraft = try AudioCommentSavedDraft(owner: local, target: target, caption: caption, clip: clip, id: id, revision: revision)
     let publication = try AudioCommentPublication(account: UUID(uuidString: account)!, target: target, caption: caption, descriptor: clip.descriptor, operation: UUID(uuidString: "66666666-6666-4666-8666-666666666666")!, comment: UUID(uuidString: "77777777-7777-4777-8777-777777777777")!, asset: UUID(uuidString: "88888888-8888-4888-8888-888888888888")!)
+    if mode == "prepare-revoked" || mode == "discard-revoked" || mode == "verify-revoked" || mode.hasPrefix("reject-revoked:") {
+        let next = try AudioCommentSavedDraft(owner:owner,target:target,caption:"Discarded operation must stay discarded",clip:clip,id:UUID(uuidString:"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")!,revision:revision)
+        let intent = try AudioCommentSaveIntent(next:next,base:nil,reviews:[],id:UUID(uuidString:"cccccccc-cccc-4ccc-8ccc-cccccccccccc")!)
+        var captured = ""
+        if mode == "prepare-revoked" { let token = try vault.departureFence(); captured = token.uuidString.lowercased(); try vault.prepareSave(intent,fence:token) }
+        if mode == "discard-revoked" { try vault.discardSave(intent) }
+        if mode.hasPrefix("reject-revoked:") {
+            guard let token = UUID(uuidString:String(mode.dropFirst("reject-revoked:".count))) else { throw AudioCommentStorageFailure.unreadable }
+            do { try vault.prepareSave(intent,fence:token); throw AudioCommentFailure.invalid }
+            catch let error as AudioCommentStorageFailure where error == .conflict { }
+        }
+        let journals = try vault.saves(), drafts = try vault.drafts()
+        guard mode == "prepare-revoked" ? journals == [intent] : journals.isEmpty,
+              drafts.count == 2, !drafts.contains(where:{$0.id == next.id}) else { throw AudioCommentStorageFailure.conflict }
+        return ["status":"verified", "pid":ProcessInfo.processInfo.processIdentifier,"fence":captured]
+    }
+    if ["prepare-departure", "verify-departure", "finish-departure", "verify-finished"].contains(mode) {
+        let next = try AudioCommentSavedDraft(owner:owner,target:target,caption:"Frozen cafe\u{301} before process exit",clip:clip,id:UUID(uuidString:"99999999-9999-4999-8999-999999999999")!,revision:revision)
+        let intent = try AudioCommentSaveIntent(next:next,base:nil,reviews:[],id:UUID(uuidString:"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa")!)
+        if mode == "prepare-departure" { try vault.prepareSave(intent, fence: vault.departureFence()) }
+        if mode == "finish-departure" { try vault.commitSave(intent,existingOnly:true) }
+        let saved = try vault.drafts(), journals = try vault.saves()
+        if mode == "prepare-departure" || mode == "verify-departure" {
+            guard journals == [intent], saved == [draft] else { throw AudioCommentStorageFailure.conflict }
+        } else {
+            guard journals.isEmpty, saved.count == 2, saved.contains(draft), saved.contains(next) else { throw AudioCommentStorageFailure.conflict }
+        }
+        return ["status":"verified", "pid":ProcessInfo.processInfo.processIdentifier, "operation":intent.id.uuidString.lowercased(), "draft":next.id.uuidString.lowercased(), "digest":clip.descriptor.sha256]
+    }
     if mode == "write" { try vault.save(draft); try vault.store(.init(publication: publication, clip: clip)); try localVault.save(localDraft) }
     else if mode != "verify" { throw AudioCommentStorageFailure.unreadable }
     let drafts = try vault.drafts(), pending = try vault.pending(), locals = try localVault.drafts()

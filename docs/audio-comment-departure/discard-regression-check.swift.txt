@@ -1,0 +1,17 @@
+        let revokedFolder = root.appendingPathComponent("departure-revoked",isDirectory:true)
+        try FileManager.default.createDirectory(at:revokedFolder,withIntermediateDirectories:false)
+        let revokedVault = AudioCommentVault(applicationSupport:revokedFolder,owner:owner)
+        let revokedGate = AudioProofLookupLock(directory:revokedVault.directory,owner:owner,interrupt:.afterSaveJournal,enabled:true)
+        let revokedStore = AudioCommentDraftStorage(vault:.init(applicationSupport:revokedFolder,owner:owner,fault:{ try revokedGate.check($0) }))
+        let revoked = make(AudioProofRecorder(data),revokedStore)
+        revoked.start(); _ = await wait { revoked.session.phase == .recording }; revoked.stop(); _ = await wait { revoked.session.phase == .review }
+        revoked.editCaption("This pending Save is discarded in another editor"); _ = await revoked.preserveReview(); _ = await revoked.save()
+        revokedGate.release()
+        guard let revokedIntent = try await revokedStore.saves().first else { throw AudioCommentStorageFailure.unreadable }
+        try revokedVault.discardSave(revokedIntent)
+        let revived = await revoked.prepareForDeparture(), revokedJournals = try await revokedStore.saves()
+        checks["departureNeverAutomaticallyRevivesAnotherEditorsCompletedDiscard"] = !revived && revokedJournals.isEmpty
+        revoked.recovery.finishSave(); revoked.close()
+        // Dispose only the synthetic reproduction if the old implementation revived it.
+        for journal in revokedJournals { try revokedVault.discardSave(journal) }
+
