@@ -15,6 +15,22 @@ struct AudioCommentLiveScope: Sendable {
         return sameOrigin && workspace.generation == other.workspace.generation && !workspace.account.isEmpty && workspace.account.utf8.elementsEqual(other.workspace.account.utf8) && target == other.target
     }
 }
+/// Account library scope deliberately has no synthetic task identity.
+struct AudioCommentLibraryScope: Sendable {
+    let workspace: WorkspaceBinding
+    let origin: String?
+    func matches(_ other: Self) -> Bool {
+        let sameOrigin: Bool
+        if let origin, let second = other.origin { sameOrigin = origin.utf8.elementsEqual(second.utf8) }
+        else { sameOrigin = origin == nil && other.origin == nil }
+        return sameOrigin && workspace.generation == other.workspace.generation && !workspace.account.isEmpty && workspace.account.utf8.elementsEqual(other.workspace.account.utf8)
+    }
+}
+struct AudioCommentLibraryRequest: Identifiable, Sendable {
+    let id = UUID()
+    let scope: AudioCommentLibraryScope
+}
+
 struct AudioCommentDraftRequest: Identifiable, Sendable {
     let id = UUID()
     let scope: AudioCommentLiveScope
@@ -30,8 +46,9 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
     }
     /// Every operation keeps its original private store. This never discovers or
     /// completes a Save in a different account and never sends audio remotely.
-    static func stopPlaybackForInactivity() { for capture in live.values.compactMap(\.value) { capture.stopPlayback() } }
+    static func stopPlaybackForInactivity() { AudioCommentLibraryController.stopForInactivity(); for capture in live.values.compactMap(\.value) { capture.stopPlayback() } }
     static func preserveForDeparture() async -> Bool {
+        AudioCommentLibraryController.stopForInactivity()
         var success = true
         let captures = live.values.compactMap(\.value)
         for capture in captures { if !(await capture.prepareForDeparture()) { success = false } }
@@ -724,6 +741,89 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
 }
 
 
+/// Read-only private library. A selection keeps its original task identity and
+/// cannot Save, retarget, discard, publish, repair or export a recording.
+@MainActor @Observable final class AudioCommentLibraryController {
+    private final class WeakLibrary { weak var value: AudioCommentLibraryController?; init(_ value: AudioCommentLibraryController) { self.value = value } }
+    @ObservationIgnored private static var live: [UUID: WeakLibrary] = [:]
+    @ObservationIgnored private let lifecycleID = UUID()
+    let scope: AudioCommentLibraryScope
+    private(set) var library: AudioCommentSavedLibrary?
+    private(set) var selected: AudioCommentSavedDraft?
+    private(set) var working = false
+    private(set) var playing = false
+    var notice: String?
+    @ObservationIgnored var currentScope: () -> AudioCommentLibraryScope? = { nil }
+    @ObservationIgnored private let storage: AudioCommentDraftStorage
+    @ObservationIgnored private let player: any AudioCommentPlaying
+    @ObservationIgnored private let decode: @Sendable (Data) async throws -> AudioCommentClip
+    @ObservationIgnored private var validated: AudioCommentClip?
+    @ObservationIgnored private var operation = UUID()
+    @ObservationIgnored private var closed = false
+    @ObservationIgnored private var active = true
+    init(scope: AudioCommentLibraryScope, storage: AudioCommentDraftStorage, player: any AudioCommentPlaying, decode: @escaping @Sendable (Data) async throws -> AudioCommentClip = { try await AudioCommentDecoding.validate($0) }) {
+        self.scope = scope; self.storage = storage; self.player = player; self.decode = decode
+        Self.live = Self.live.filter { $0.value.value != nil }
+        Self.live[lifecycleID] = WeakLibrary(self)
+    }
+    var isCurrent: Bool { !closed && storage.owner.account.utf8.elementsEqual(scope.workspace.account.utf8) && currentScope().map(scope.matches) == true }
+    private func accepts(_ token: UUID) -> Bool { token == operation && active && isCurrent && !Task.isCancelled }
+    private func invalidate() { operation = UUID(); working = false; player.stop(); playing = false }
+    func stopPlayback() { invalidate() }
+    func clearSelection() { invalidate(); selected = nil; validated = nil }
+    func close() { clearSelection(); library = nil; notice = nil; closed = true; Self.live.removeValue(forKey: lifecycleID) }
+    func contextChanged() { if !isCurrent { close() } }
+    func setActive(_ value: Bool) { active = value; if !value { clearSelection() } }
+    static func stopForInactivity() { for value in live.values.compactMap(\.value) { value.setActive(false) } }
+    func refresh() async {
+        guard active, isCurrent else { contextChanged(); return }
+        clearSelection(); library = nil; notice = nil; working = true
+        let token = operation
+        defer { if token == operation { working = false } }
+        do {
+            let value = try await storage.savedLibrary()
+            guard accepts(token) else { contextChanged(); return }
+            library = value
+        } catch { if accepts(token) { notice = error.localizedDescription } else { contextChanged() } }
+    }
+    func select(_ expected: AudioCommentSavedDraft) async {
+        guard active, isCurrent, !working else { contextChanged(); return }
+        clearSelection(); notice = nil; working = true
+        let token = operation
+        defer { if token == operation { working = false } }
+        do {
+            let source = try await storage.savedLibraryRecording(expected)
+            guard accepts(token) else { contextChanged(); return }
+            let clip = try await decode(source.clip.data)
+            guard accepts(token) else { contextChanged(); return }
+            // Native presentation duration can differ from an older container-
+            // measured descriptor because AAC includes priming/remainder frames.
+            // Full decode validates the codec; exact bytes bind the original file.
+            guard clip.data == source.clip.data else { throw AudioCommentFailure.invalid }
+            _ = try await storage.savedLibraryRecording(source)
+            guard accepts(token) else { contextChanged(); return }
+            validated = clip; selected = source
+        } catch { if accepts(token) { notice = error.localizedDescription } else { contextChanged() } }
+    }
+    func play() async {
+        guard active, isCurrent, !working, let selected, let clip = validated else { contextChanged(); return }
+        invalidate(); working = true; notice = nil
+        let token = operation
+        defer { if token == operation { working = false } }
+        do {
+            _ = try await storage.savedLibraryRecording(selected)
+            guard accepts(token), self.selected == selected else { contextChanged(); return }
+            playing = true
+            try player.play(clip, isCurrent: { [weak self] in self?.accepts(token) == true }, ended: { [weak self] in
+                guard let self, self.accepts(token) else { return }; self.playing = false
+            })
+        } catch {
+            if accepts(token) { clearSelection(); notice = error.localizedDescription }
+            else { contextChanged() }
+        }
+    }
+}
+
 #if !AUDIO_COMMENT_CONTROLLER_TESTING
 @MainActor extension Store {
     var audioDraftsEnabled: Bool {
@@ -731,6 +831,25 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         if AudioCommentNativeFixture.taskEditorTesting { return true }
         #endif
         return Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioDraftsEnabled") as? Bool == true
+    }
+    func audioLibraryScope() -> AudioCommentLibraryScope? {
+        guard audioDraftsEnabled, !workspaceNeedsRepair, (try? AudioCommentOwner(userID)) != nil else { return nil }
+        let origin: String?
+        if localMode { origin = nil } else { guard let value = try? backend.accountRemovalOrigin else { return nil }; origin = value }
+        guard (try? AudioCommentTaskAdmission.storageDirectory(origin: origin)) != nil else { return nil }
+        return .init(workspace: .init(account: userID, generation: workspaceGeneration), origin: origin)
+    }
+    func audioLibraryDirectory(for scope: AudioCommentLibraryScope) throws -> URL {
+        guard let current = audioLibraryScope(), scope.matches(current) else { throw AudioCommentFailure.changed }
+        return try audioDraftBaseDirectory().appendingPathComponent(AudioCommentTaskAdmission.storageDirectory(origin: scope.origin), isDirectory: true)
+    }
+    func audioLibraryTask(_ target: AudioCommentTarget) -> (title: String, location: AudioCommentSavedLibrary.TaskLocation)? {
+        let matches = (snapshot.tables["tasks"] ?? []).filter { UUID(uuidString: $0.id) == target.task }
+        guard matches.count == 1, let task = matches.first,
+              let admitted = audioDraftScope(taskID: task.id)?.target else { return nil }
+        let location = AudioCommentSavedLibrary.location(of: target, admitted: [admitted])
+        guard location != .unavailable else { return nil }
+        return (task.title, location)
     }
     func audioDraftScope(taskID: String) -> AudioCommentLiveScope? {
         guard audioDraftsEnabled, let current = record("tasks", id: taskID),

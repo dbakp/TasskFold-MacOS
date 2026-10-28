@@ -1,0 +1,99 @@
+{
+  "platform": "mac",
+  "baseCommit": "10d6985",
+  "sources": {
+    "Taskfold/AudioCommentCapture.swift": "306ef86cf112936cc38cfd862573e12b8a49542781c96c2bc0456335e526d981",
+    "Taskfold/AudioCommentNativeFixture.swift": "cbb7c32b643d56e27e113829811631cb137fc25517a92a078ac21a7bd9dd4465",
+    "Taskfold/Views/AudioCommentDraftView.swift": "eddeaba836e04693871bb1259e0450f1da093f35325b7c01b8e6d6963eadb01a",
+    "Taskfold/Views/BackupTools.swift": "9d2949c1e667d64ce848bb1603b3e4324e4f09da4284b7aec709f8c18f7f5133",
+    "Scripts/fixtures/AudioCommentCaptureProof.swift": "fbc1faeaacc7778345e467e7338874296c1ba2e340cd199a0e7be05c2d52f7de",
+    "Taskfold/Core/AudioCommentVault.swift": "bf3976f3e57b574c37376e94c4c20887f76913caeaa1d4874a23c8cf57ab1cd3",
+    "Taskfold/Core/AudioCommentDecoding.swift": "d21dbbfa6223b185b8683c4ccdfdaf685eeed894b6e83e6fc3284cf2f384213f"
+  },
+  "controller": {
+    "checks": 191,
+    "newChecks": 21,
+    "compilerWarnings": 0
+  },
+  "nativeBuild": "TEST BUILD SUCCEEDED",
+  "strictDeepSignature": "passed",
+  "normalAudioExposureFlag": "absent",
+  "binarySHA256": "98cae12d94cece33a3fe98f6f58c993fafd672e0324c9d481ed682dca432cd53",
+  "nativeRuntime": {
+    "iPhone": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "iPad": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "reportedRuntimeWarnings": 0
+    },
+    "appearance": "dark Accessibility XXXL",
+    "Mac": "not run; build/signature/controller evidence only",
+    "entry": "isolated fixture opens actual production library; Settings row activation not separately accepted",
+    "media": "silent synthetic drivers; full native AAC decode; no mic, Speech Recognition, speakers or TCC acceptance"
+  },
+  "warnings": [],
+  "developmentCorrections": [
+    "Initial proof fixture omitted the required departure fence; its setup was corrected.",
+    "Initial strict duration equality rejected valid older container-measured recordings; full native decode and exact audio bytes now admit those recordings without changing saved metadata.",
+    "One Mac proof compile was invalidated by a concurrent source edit and was rerun from final sources.",
+    "Review caught permanent library closure in the shared background-preservation hook; it now suspends and requires fresh selection on return, covered by the actual-hook proof.",
+    "Initial strict native viewport checks failed on both devices. iOS now uses page sizing, a large sheet and inline title; moved-status text wraps and rows use plain readable styling. The test scrolls in the gutter outside selectable text without weakening its existing whole-element viewport assertion.",
+    "Subsequent native diagnostics established retained fixture task state, not delayed production persistence. Explicit reset now restores only known guarded synthetic records, and the driver waits for exact task state. Adaptive scrolling targets a bounded 24-point margin to clear UIKit hysteresis while retaining the strict whole-element viewport assertion."
+  ],
+  "captures": [
+    {
+      "file": "phone-cold-return.png",
+      "label": "Cold return keeps orphan recording private without recreating the task_0_F1B5FF52-E0F9-4670-B214-6763802A1D9C.png",
+      "sha256": "914532f9ba42f58fc52714c1aa6914abae93ec287e509553d1041dcfb6e9f501",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-unavailable.png",
+      "label": "Private recording remains readable after its synthetic task is removed_0_29971B08-5276-425F-B521-4EC554F00A24.png",
+      "sha256": "31905f91a2f1a0f3f77188719c742913c92e950e63335b4bb9c21e9666158732",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-moved.png",
+      "label": "Moved task recording stays in the account library with its original association_0_FF3A940A-D5F4-42F9-B8C2-731ECE11C4DC.png",
+      "sha256": "4a7a15e4b8a112f62b183299f1358fe470bd6256edb486d43064990709b1c2ab",
+      "visuallyInspected": true
+    },
+    {
+      "file": "phone-saved.png",
+      "label": "Private library shows the full saved caption and playable original recording_0_3D8105D3-5F2E-42C9-8608-69DAFA2F890A.png",
+      "sha256": "f82b07b6834de8c82c83406fdba50854e00fa2bd6bfd7a0fae8c0aadd2cb2abe",
+      "visuallyInspected": true
+    },
+    {
+      "file": "ipad-cold-return.png",
+      "label": "Cold return keeps orphan recording private without recreating the task_0_B4AF9FEF-2E08-4686-B6EB-9C8AAFEA8B74.png",
+      "sha256": "eb0489d3bffa3282054051dbdf97c27ec75d0795ab6dfade3878b7bb97a885f1",
+      "visuallyInspected": true
+    },
+    {
+      "file": "ipad-unavailable.png",
+      "label": "Private recording remains readable after its synthetic task is removed_0_31EBD63A-A484-406F-AAEE-AE5C3CB3C47B.png",
+      "sha256": "eb0489d3bffa3282054051dbdf97c27ec75d0795ab6dfade3878b7bb97a885f1",
+      "visuallyInspected": true
+    },
+    {
+      "file": "ipad-moved.png",
+      "label": "Moved task recording stays in the account library with its original association_0_1F49C253-AA4A-49A3-A0BE-1F930EF78E59.png",
+      "sha256": "e1e30322d8fd2c5fd79497b071ab2d430b6ceb52413b33d9c124c5ef7c54c4db",
+      "visuallyInspected": true
+    },
+    {
+      "file": "ipad-saved.png",
+      "label": "Private library shows the full saved caption and playable original recording_0_E70C3394-5EFF-4B81-B353-C163C4A00DB9.png",
+      "sha256": "706bf4ebcc87650ff5ca405258f6fa04f3870af0499083c95aa6b1264e5e7445",
+      "visuallyInspected": true
+    }
+  ]
+}

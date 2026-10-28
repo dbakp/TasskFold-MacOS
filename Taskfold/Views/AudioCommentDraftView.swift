@@ -354,3 +354,143 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
         return DeviceAudioCommentPlaying()
     }
 }
+
+/// Account-bound presentation, separate from any task editor admission.
+@MainActor struct PrivateAudioLibraryView: View {
+    let request: AudioCommentLibraryRequest
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var controller: AudioCommentLibraryController?
+    @State private var failure: String?
+    @State private var retry = UUID()
+    private var current: Bool { store.audioLibraryScope().map(request.scope.matches) == true }
+    var body: some View {
+        NavigationStack {
+            Group {
+                if !current {
+                    ContentUnavailableView("Recordings closed", systemImage: "lock", description: Text("Reopen private recordings in your current workspace."))
+                } else if let controller {
+                    AudioSavedLibraryContent(controller: controller, taskLabel: { target in
+                        guard current else { return nil }; return store.audioLibraryTask(target)
+                    })
+                } else if let failure {
+                    VStack(spacing: 16) { Text(failure).fixedSize(horizontal: false, vertical: true); Button("Try again") { retry = UUID() } }.padding()
+                } else { ProgressView("Opening private recordings…") }
+            }
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .navigationTitle("Private recordings")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { controller?.close(); dismiss() }.accessibilityIdentifier("audioLibraryClose")
+                }
+                if current, let controller {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Refresh", systemImage: "arrow.clockwise") { Task { await controller.refresh() } }
+                            .disabled(controller.working).accessibilityIdentifier("audioLibraryRefresh")
+                    }
+                }
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 540, minHeight: 540)
+        #else
+        .presentationSizing(.page)
+        .presentationDetents([.large])
+        #endif
+        .task(id: retry) {
+            guard current else { return }
+            do {
+                let directory = try store.audioLibraryDirectory(for: request.scope)
+                let storage = try await AudioCommentDraftStorage.open(applicationSupport: directory, owner: .init(request.scope.workspace.account))
+                guard current, !Task.isCancelled else { return }
+                let value = AudioCommentLibraryController(scope: request.scope, storage: storage, player: player())
+                value.currentScope = { store.audioLibraryScope() }
+                value.setActive(scenePhase == .active); controller = value; failure = nil
+                await value.refresh()
+            } catch { if current, !Task.isCancelled { failure = "Private recordings could not be opened. Existing files are kept." } }
+        }
+        .onChange(of: current) { _, _ in controller?.contextChanged() }
+        .onChange(of: scenePhase) { _, phase in
+            controller?.setActive(phase == .active)
+            if phase == .active, current { Task { await controller?.refresh() } }
+        }
+        .onDisappear { controller?.close() }
+    }
+    private func player() -> any AudioCommentPlaying {
+        #if DEBUG
+        if AudioCommentNativeFixture.taskEditorTesting { return AudioCommentNativeFixture.taskEditorPlayer() }
+        #endif
+        return DeviceAudioCommentPlaying()
+    }
+}
+
+@MainActor private struct AudioSavedLibraryContent: View {
+    let controller: AudioCommentLibraryController
+    let taskLabel: (AudioCommentTarget) -> (title: String, location: AudioCommentSavedLibrary.TaskLocation)?
+    @AccessibilityFocusState(for: .voiceOver) private var captionFocused: Bool
+    var body: some View {
+        Form {
+            if let selected = controller.selected {
+                Section {
+                    taskDescription(selected.target)
+                    Text(selected.caption.isEmpty ? "No written caption" : selected.caption)
+                        .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                        .accessibilityIdentifier("audioLibraryCaption").accessibilityFocused($captionFocused)
+                    Text(duration(selected)).font(.caption).foregroundStyle(.secondary)
+                    Button(controller.playing ? "Stop playback" : "Play recording", systemImage: controller.playing ? "stop.fill" : "play.fill") {
+                        if controller.playing { controller.stopPlayback() } else { Task { await controller.play() } }
+                    }.disabled(controller.working).accessibilityIdentifier("audioLibraryPlay")
+                    Button("Back to recordings") { controller.clearSelection() }.accessibilityIdentifier("audioLibraryBack")
+                } header: { Text("Saved recording") } footer: {
+                    Text("Your recording is kept independently of changes to its original task.")
+                }
+            } else if let library = controller.library {
+                if library.drafts.isEmpty {
+                    Section { ContentUnavailableView("No saved recordings", systemImage: "waveform", description: Text("Audio drafts you save in this account will appear here.")) }
+                } else {
+                    Section {
+                        ForEach(library.drafts, id: \.id) { draft in
+                            Button { Task { await controller.select(draft) } } label: {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Label {
+                                        Text(draft.caption.isEmpty ? "Recording" : draft.caption).foregroundStyle(.primary).lineLimit(2)
+                                    } icon: { Image(systemName: "waveform").foregroundStyle(.tint) }
+                                    taskDescription(draft.target)
+                                    Text(duration(draft)).font(.caption).foregroundStyle(.secondary)
+                                }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).padding(.vertical, 4)
+                            }.buttonStyle(.plain).disabled(controller.working).accessibilityIdentifier("audioLibraryRow-" + draft.id.uuidString.lowercased())
+                        }
+                    } header: { Text("Saved recordings") } footer: {
+                        Text("Private to this account on this device. Recordings are not included in workspace backups.")
+                    }
+                }
+                if library.recoveryFileCount + library.pendingSaveCount + library.pendingPublicationCount + library.interruptedFileCount > 0 {
+                    Section {
+                        Label("Additional recording work is preserved", systemImage: "waveform.badge.exclamationmark")
+                        Text("This library shows finished drafts. Other recording work is kept for recovery.").font(.callout).foregroundStyle(.secondary)
+                    }.accessibilityIdentifier("audioLibraryRecoveryNotice")
+                }
+            }
+            if controller.working { Section { ProgressView("Opening recording…").accessibilityIdentifier("audioLibraryProgress") } }
+            if let notice = controller.notice { Section { Text(notice).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioLibraryNotice") } }
+        }.formStyle(.grouped).accessibilityIdentifier("audioLibraryForm")
+            .onChange(of: controller.selected?.id) { _, value in captionFocused = value != nil }
+    }
+    @ViewBuilder private func taskDescription(_ target: AudioCommentTarget) -> some View {
+        if let label = taskLabel(target) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(label.title).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if label.location == .moved { Text("Task moved · original recording kept").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioLibraryMoved") }
+            }
+        } else {
+            Text("Original task unavailable").font(.subheadline).foregroundStyle(.secondary).accessibilityIdentifier("audioLibraryUnavailable")
+        }
+    }
+    private func duration(_ draft: AudioCommentSavedDraft) -> String {
+        let seconds = max(1, (draft.clip.descriptor.milliseconds + 999) / 1000)
+        return String(format: "%d:%02d", seconds / 60, seconds % 60)
+    }
+}

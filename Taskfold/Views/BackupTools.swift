@@ -149,6 +149,7 @@ private struct BackupPickerSheet: View {
 
 /// Each platform owns this native form, its export document and restore preview.
 struct BackupTools: View {
+    @State private var audioLibrary: AudioCommentLibraryRequest?
     @State private var showingTeamDrafts=false
     @Environment(Store.self) private var store
     @Environment(BackupUI.self) private var ui
@@ -177,6 +178,12 @@ struct BackupTools: View {
                     }
                     ui.confirmingRepair=true
                 }.accessibilityIdentifier("preserveUnreadableWorkspace")
+            }
+            if store.audioDraftsEnabled {
+                Button("Private recordings", systemImage: "waveform") {
+                    if let scope = store.audioLibraryScope() { audioLibrary = .init(scope: scope) }
+                }.disabled(store.audioLibraryScope() == nil).accessibilityIdentifier("openPrivateAudioLibrary")
+                    .sheet(item: $audioLibrary) { PrivateAudioLibraryView(request: $0) }
             }
             Button("Saved team drafts",systemImage:"doc.text") {showingTeamDrafts=true}
                 .disabled(store.teamDraftVault == nil).accessibilityIdentifier("savedTeamDrafts")

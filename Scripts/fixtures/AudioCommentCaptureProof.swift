@@ -147,6 +147,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
             let c = AudioCommentCapture(request: request, recorder: driver, player: player, storage: store)
             if bound { c.currentScope = { context.scope } }; return c
         }
+        checks.merge(try await libraryChecks(root: root, data: data, request: request)) { _, new in new }
         checks.merge(try await departureChecks(root:root,data:data,request:request,context:context)) { _, new in new }
         checks.merge(try await interruptedChecks(root: root, data: data, request: request)) { _, new in new }
         checks.merge(try await interruptedCopyChecks(root: root, data: data, request: request)) { _, new in new }
@@ -1124,5 +1125,118 @@ extension AudioControllerProof {
         scope.scope = second; value.contextChanged()
         checks["serverChangeStopsAndErasesPreviewWithoutChangingOriginalDiskAudio"] = try !value.isCurrent && value.session.clip == nil && value.session.caption.isEmpty && !value.playing && (vault.drafts()) == [draft]
         value.close(); return checks
+    }
+}
+
+@MainActor private final class AudioLibraryProofContext {
+    var scope: AudioCommentLibraryScope?
+    init(_ scope: AudioCommentLibraryScope?) { self.scope = scope }
+}
+@MainActor private final class AudioLibraryProofDecodeGate {
+    var entered = false
+    private var continuation: CheckedContinuation<Void, Never>?
+    func decode(_ data: Data) async throws -> AudioCommentClip {
+        entered = true; await withCheckedContinuation { continuation = $0 }
+        return try await AudioCommentDecoding.validate(data)
+    }
+    func release() { continuation?.resume(); continuation = nil }
+}
+@MainActor private final class AudioLibraryProofPlayer: AudioCommentPlaying {
+    var plays = 0, stops = 0
+    var callbacks: [@MainActor () -> Void] = []
+    var permits: [@MainActor () -> Bool] = []
+    func play(_ clip: AudioCommentClip, isCurrent: @escaping @MainActor () -> Bool, ended: @escaping @MainActor () -> Void) throws {
+        guard isCurrent() else { throw CancellationError() }; plays += 1; callbacks.append(ended); permits.append(isCurrent)
+    }
+    func stop() { stops += 1 }
+}
+extension AudioControllerProof {
+    @MainActor private static func libraryChecks(root: URL, data: Data, request: AudioCommentDraftRequest) async throws -> [String: Bool] {
+        let scope = AudioCommentLibraryScope(workspace: request.scope.workspace, origin: "https://library.example.invalid")
+        let second = AudioCommentLibraryScope(workspace: scope.workspace, origin: "https://other.example.invalid")
+        let newIncarnation = AudioCommentLibraryScope(workspace: .init(account: scope.workspace.account, generation: UUID()), origin: scope.origin)
+        let folder = root.appendingPathComponent("saved-library-controller", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let owner = try AudioCommentOwner(scope.workspace.account), vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+        let original = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "Original cafe\u{301} caption\nKeep the complete instructions 🪴", clip: .init(data: data))
+        try vault.save(original)
+        let storage = AudioCommentDraftStorage(vault: vault), context = AudioLibraryProofContext(scope), player = AudioLibraryProofPlayer()
+        func make(gate: AudioLibraryProofDecodeGate? = nil) -> AudioCommentLibraryController {
+            let value: AudioCommentLibraryController
+            if let gate { value = .init(scope: scope, storage: storage, player: player, decode: { try await gate.decode($0) }) }
+            else { value = .init(scope: scope, storage: storage, player: player) }
+            value.currentScope = { context.scope }; return value
+        }
+        var checks: [String: Bool] = [:]
+        checks["libraryScopeNeedsExactServerAndWorkspaceIncarnation"] = scope.matches(scope) && !scope.matches(second) && !scope.matches(newIncarnation)
+        let rawA = AudioCommentLibraryScope(workspace: .init(account: "café", generation: scope.workspace.generation), origin: scope.origin)
+        let rawB = AudioCommentLibraryScope(workspace: .init(account: "cafe\u{301}", generation: scope.workspace.generation), origin: scope.origin)
+        checks["libraryScopeUsesRawAccountIdentity"] = !rawA.matches(rawB)
+        let unbound = AudioCommentLibraryController(scope: scope, storage: storage, player: player)
+        await unbound.refresh(); await unbound.select(original); await unbound.play()
+        checks["unboundLibraryCannotReadOrPlay"] = unbound.library == nil && unbound.selected == nil && player.plays == 0
+        unbound.close()
+        let value = make(); await value.refresh()
+        checks["libraryLoadsSavedRecordingsWithoutCurrentTaskAdmission"] = value.library?.drafts == [original]
+        await value.select(original)
+        checks["librarySelectionKeepsFullCaptionBytesAndOriginalTarget"] = value.selected == original && value.selected?.caption.utf8.elementsEqual(original.caption.utf8) == true
+        await value.play()
+        checks["libraryPlaysOnlyAnAdmittedDecodedSavedSelection"] = player.plays == 1 && value.playing && player.permits.last?() == true
+        value.stopPlayback(); player.callbacks.last?()
+        checks["libraryStopRevokesDelayedPlayerCallbacks"] = !value.playing && player.permits.last?() == false && value.selected == original
+        await value.play(); context.scope = second; value.contextChanged()
+        checks["libraryServerSwitchClearsPreviewAndStopsPlayback"] = value.library == nil && value.selected == nil && !value.playing && !value.isCurrent && player.permits.last?() == false
+        checks["libraryContextDeparturePreservesOriginalDiskRecording"] = try vault.drafts() == [original] && vault.saves().isEmpty
+        context.scope = scope
+        let changed = try original.replacing(caption: "Other editor changed the caption", clip: original.clip)
+        try vault.save(changed, replacing: original.revision)
+        let stale = make(); await stale.refresh(); await stale.select(original)
+        checks["libraryStaleSelectionRefusesReplacementCaptionAndBytes"] = stale.selected == nil && stale.notice != nil
+        await stale.select(changed)
+        checks["librarySelectionBeforePendingSaveIsValid"] = stale.selected == changed
+        let next = try changed.replacing(caption: "Pending save", clip: changed.clip)
+        let intent = try AudioCommentSaveIntent(next: next, base: changed.revision, reviews: [])
+        try vault.prepareSave(intent, fence: vault.departureFence())
+        let playsBefore = player.plays; await stale.play()
+        checks["libraryRechecksPendingSaveAtPlaybackHandoff"] = player.plays == playsBefore && stale.selected == nil && stale.notice != nil
+        _ = try vault.commitSave(intent); stale.close()
+        let switchGate = AudioLibraryProofDecodeGate(), switching = make(gate: switchGate)
+        await switching.refresh()
+        let selection = Task { await switching.select(next) }
+        guard await wait({ switchGate.entered }) else { throw AudioCommentStorageFailure.unreadable }
+        context.scope = newIncarnation; switching.contextChanged(); switchGate.release(); await selection.value
+        checks["libraryAccountAwayAndBackCannotReviveSuspendedDecode"] = switching.selected == nil && switching.library == nil && !switching.working
+        context.scope = scope
+        let editGate = AudioLibraryProofDecodeGate(), editing = make(gate: editGate)
+        await editing.refresh(); let editSelection = Task { await editing.select(next) }
+        guard await wait({ editGate.entered }) else { throw AudioCommentStorageFailure.unreadable }
+        let newer = try next.replacing(caption: "Changed during full codec decode", clip: next.clip)
+        try vault.save(newer, replacing: next.revision); editGate.release(); await editSelection.value
+        checks["libraryRevalidatesExactSourceAfterCodecDecode"] = editing.selected == nil && editing.notice != nil
+        editing.close()
+        let cancelGate = AudioLibraryProofDecodeGate(), cancelling = make(gate: cancelGate)
+        await cancelling.refresh(); let cancelled = Task { await cancelling.select(newer) }
+        guard await wait({ cancelGate.entered }) else { throw AudioCommentStorageFailure.unreadable }
+        cancelled.cancel(); cancelGate.release(); await cancelled.value
+        checks["cancelledLibraryDecodeCannotInstallPreview"] = cancelling.selected == nil && !cancelling.working
+        cancelling.close()
+        let backgroundGate = AudioLibraryProofDecodeGate(), background = make(gate: backgroundGate)
+        await background.refresh(); let backgroundSelection = Task { await background.select(newer) }
+        guard await wait({ backgroundGate.entered }) else { throw AudioCommentStorageFailure.unreadable }
+        background.setActive(false); backgroundGate.release(); await backgroundSelection.value
+        checks["backgroundingRevokesInFlightLibrarySelection"] = background.selected == nil && !background.working
+        background.close()
+        let active = make(); await active.refresh(); await active.select(newer); await active.play()
+        AudioCommentCapture.stopPlaybackForInactivity()
+        checks["appInactivityStopsLibraryPlaybackThroughSharedLifecycleHook"] = !active.playing && active.selected == nil && player.permits.last?() == false
+        active.setActive(true); await active.refresh(); await active.select(newer); await active.play()
+        checks["foregroundReturnNeedsFreshSelectionAndRevalidatedPlayback"] = active.playing && active.selected == newer
+        _ = await AudioCommentCapture.preserveForDeparture()
+        checks["backgroundPreservationSuspendsLibraryWithoutPermanentlyClosingItsScope"] = active.isCurrent && !active.playing && active.selected == nil
+        active.setActive(true); await active.refresh(); await active.select(newer); await active.play()
+        checks["libraryCanReopenAfterTheActualBackgroundPreservationHook"] = active.playing && active.selected == newer
+        context.scope = nil; active.contextChanged()
+        checks["libraryDepartureClosesPreviewWithoutDeletingSavedBytes"] = try !active.isCurrent && active.library == nil && active.selected == nil && !active.playing && vault.drafts() == [newer]
+        return checks
     }
 }

@@ -9256,3 +9256,27 @@ an unfinished candidate, not completion of audio comments or the Px goal.
 
 [Evidence and limits](audio-saved-library/README.md). This is storage groundwork,
 not a completed library feature or completion of audio comments/the Px objective.
+
+
+## 2026-10-28 — read-only private recording library candidate
+
+- [x] Add a gated Backups & restore entry and an account-scoped library with full
+  caption review and Play/Stop, including recordings whose task moved or vanished.
+  No task is recreated or retargeted; normal app exposure stays off.
+- [x] Recheck exact scope and saved revision before/after native codec decode and
+  again at Play. Clear stale previews and stop playback on scope loss/inactivity;
+  safely reload after foreground return and the actual preservation hook.
+- [x] Independently pass 191 actual controller/codec/vault checks (21 new), with
+  zero compiler warnings; both native app builds and strict signatures pass.
+- [x] Final iPhone/iPad Simulator: two cases each, zero failures/skips/reported
+  runtime warnings at dark Accessibility XXXL. Task move/removal/cold return,
+  read-only task/media byte preservation, playback/background return and reset
+  isolation pass. All eight final captures were inspected. Initial viewport and
+  fixture-driver failures are recorded explicitly, not counted as acceptance.
+- [ ] Actual Settings-row activation, Mac native/spoken, cloud and genuine-media
+  acceptance remain open. Export/import, account-removal custody, unfinished
+  orphan recovery and server delivery are still unfinished. The user's genuine
+  microphone/speaker/permission test remains deferred.
+
+[Evidence, captures and exact scope](audio-saved-library-ui/README.md). This is a
+verified gated candidate, not completion of audio comments or the full Px goal.
