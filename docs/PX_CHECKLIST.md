@@ -652,3 +652,22 @@ the coordinator foundation, not private delivery, audio comments or the Px goal.
 
 [Evidence, reproducible commands and limits](audio-comment-gateway/README.md).
 This is a verified disabled delivery candidate, not completion of audio or Px.
+
+
+## 2026-10-28 — durable upload fence and cleanup worker candidate
+
+- [x] Fence each upload with a durable single open ticket. Timeouts never release
+  quota; verified finalization reconciles lost ACKs. Retired recordings cannot
+  start new uploads, and unresolved uploads are excluded from cleanup.
+- [x] Add service-only rotating cleanup claims and a separately authenticated,
+  default-off maintenance worker. Remove through Storage HTTP, verify absence,
+  then confirm against the live claim and SQL metadata; failed removal retains quota.
+- [x] Independently pass 26 Deno tests and 82 real PostgreSQL/boundary/loopback HTTP
+  checks per repo with no new CLI advisor findings. All fixtures are synthetic.
+- [ ] Process-loss/retirement reconciliation of uncertain uploads, scheduled worker
+  acceptance and full custody/removal cases, real provider/backing-store acceptance,
+  native publication/comment UI and remaining genuine/native audio acceptance.
+  Open tickets currently retain quota indefinitely; this is not the final UX.
+
+[Evidence and exact limits](audio-comment-cleanup/README.md). No deployment or
+normal audio exposure; the broader audio/Px requirements remain open.

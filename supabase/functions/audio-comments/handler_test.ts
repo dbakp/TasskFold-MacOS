@@ -107,6 +107,15 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
       equal(body._actor, account);
       equal(body._session, session);
       switch (body._action) {
+        case "upload_begin":
+          return response({
+            protocol: 1,
+            operation_id: intent.operation_id,
+            ticket_id: id(),
+            state: "open",
+          });
+        case "upload_settle":
+          return response({ protocol: 1, settled: true });
         case "reserve":
           return response({
             ...row,

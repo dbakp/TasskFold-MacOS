@@ -18,6 +18,7 @@ const json = (x) => lit(JSON.stringify(x)) + "::jsonb";
 let pg;
 try {
   pg = await createPostgresFixture({ advisors: true });
+  report.postgresVersion = pg.serverVersion;
   await loadTeamProjectSchema(pg.raw);
   // Provider-owned columns/RLS absent from the deliberately minimal dependency fixture.
   await pg.raw(
@@ -34,6 +35,7 @@ try {
     const file of [
       "20261028134424_audio_comment_publication_ledger.sql",
       "20261028145414_audio_comment_gateway_boundary.sql",
+      "20261028151901_audio_comment_cleanup_fencing.sql",
     ]
   ) {
     const source = await readFile(
@@ -310,6 +312,167 @@ try {
     (await value(admit("remove"))).status,
     "unavailable",
   );
+  // Retire during a durable open upload: time passing cannot free its quota.
+  const late = {
+    ...intent,
+    operation_id: randomUUID(),
+    comment_id: randomUUID(),
+    asset_id: randomUUID(),
+  };
+  await pg.raw(
+    `insert into auth.sessions(id,user_id) values(${lit(session)},${
+      lit(actor)
+    });update taskfold_private.audio_comment_config set enabled=true`,
+  );
+  check(
+    "late-upload target reserved",
+    (await command("reserve", late)).state,
+    "pending",
+  );
+  const ticket = await command("upload_begin", {
+    operation_id: late.operation_id,
+  });
+  check("upload has durable open ticket", ticket.state, "open");
+  check(
+    "concurrent retry cannot start another write",
+    (await command("upload_begin", { operation_id: late.operation_id })).status,
+    "upload_unresolved",
+  );
+  await command("remove", { comment_id: late.comment_id });
+  await pg.raw(
+    `update taskfold_private.audio_comment_publications set cleanup_after=clock_timestamp()-interval '1 day' where operation_id in(${
+      lit(late.operation_id)
+    },${lit(intent.operation_id)})`,
+  );
+  const maintenance = (action, body) =>
+    value(
+      pg.value(
+        `public.taskfold_audio_comment_maintenance(${lit(action)},${
+          json(body)
+        })`,
+      ),
+    );
+  let claimed = await maintenance("claim", {});
+  check(
+    "elapsed time never releases an unknown upload",
+    claimed.items.some((r) => r.operation_id === late.operation_id),
+    false,
+  );
+  check("maintenance reports unresolved uploads", claimed.blocked_uploads, 1);
+  check(
+    "legacy unfenced purge is blocked",
+    (await pg.value(
+      `public.taskfold_audio_comment_command('purged',null,null,'{}')`,
+    )).code,
+    "22023",
+  );
+  check(
+    "retired ticket cannot start another write",
+    (await command("upload_begin", { operation_id: late.operation_id })).status,
+    "unavailable",
+  );
+  await pg.raw(`delete from auth.sessions where id=${lit(session)}`);
+  check(
+    "settlement remains possible after session revocation",
+    (await command("upload_settle", {
+      operation_id: late.operation_id,
+      ticket_id: ticket.ticket_id,
+    })).settled,
+    true,
+  );
+  await pg.raw(
+    `insert into auth.sessions(id,user_id) values(${lit(session)},${
+      lit(actor)
+    })`,
+  );
+  claimed = await maintenance("claim", {});
+  const c = claimed.items.find((r) => r.operation_id === late.operation_id);
+  check("settled retired upload becomes claimable", !!c, true);
+  check(
+    "active claim excludes another worker",
+    (await maintenance("claim", {})).items.some((r) =>
+      r.operation_id === late.operation_id
+    ),
+    false,
+  );
+  check(
+    "wrong claim token cannot purge",
+    (await maintenance("confirm", {
+      operation_id: c.operation_id,
+      asset_id: c.asset_id,
+      object_name: c.object_name,
+      token: randomUUID(),
+    })).purged,
+    false,
+  );
+  await pg.raw(
+    `insert into storage.objects(id,bucket_id,name,metadata) values(${
+      lit(randomUUID())
+    },'taskfold-audio-v1',${
+      lit(c.object_name)
+    },'{"size":12345,"mimetype":"audio/mp4"}')`,
+  );
+  check(
+    "remaining Storage metadata prevents quota release",
+    (await maintenance("confirm", {
+      operation_id: c.operation_id,
+      asset_id: c.asset_id,
+      object_name: c.object_name,
+      token: c.token,
+    })).purged,
+    false,
+  );
+  // Controlled provider fixture only: real worker deletes via Storage HTTP, never SQL.
+  await pg.raw(
+    `delete from storage.objects where bucket_id='taskfold-audio-v1' and name=${
+      lit(c.object_name)
+    };update taskfold_private.audio_cleanup_claims set expires_at=clock_timestamp()-interval '1 second' where operation_id=${
+      lit(c.operation_id)
+    }`,
+  );
+  check(
+    "expired cleanup token cannot confirm",
+    (await maintenance("confirm", {
+      operation_id: c.operation_id,
+      asset_id: c.asset_id,
+      object_name: c.object_name,
+      token: c.token,
+    })).purged,
+    false,
+  );
+  const renewed = (await maintenance("claim", {})).items.find((r) =>
+    r.operation_id === late.operation_id
+  );
+  check("retry rotates cleanup token", renewed.token !== c.token, true);
+  check(
+    "new claim confirms absent settled object",
+    (await maintenance("confirm", {
+      operation_id: renewed.operation_id,
+      asset_id: renewed.asset_id,
+      object_name: renewed.object_name,
+      token: renewed.token,
+    })).purged,
+    true,
+  );
+  check(
+    "purged upload never reopens",
+    (await command("upload_begin", { operation_id: late.operation_id })).status,
+    "unavailable",
+  );
+  check(
+    "maintenance unavailable to clients",
+    await pg.scalar(
+      `select to_jsonb(has_function_privilege('authenticated','public.taskfold_audio_comment_maintenance(text,jsonb)','execute'))`,
+    ),
+    false,
+  );
+  check(
+    "old gateway helper cannot bypass fence",
+    await pg.scalar(
+      `select to_jsonb(has_function_privilege('service_role','taskfold_private.audio_comment_gateway_v2(text,uuid,uuid,jsonb)','execute'))`,
+    ),
+    false,
+  );
   // Real loopback HTTP through the production handler; PostgreSQL is real,
   // Auth identity and Storage's bytes/metadata are a controlled local adapter.
   const httpActor = randomUUID(),
@@ -403,6 +566,28 @@ try {
     check("HTTP upload ACK without bytes cannot finalize", r.status, 503);
     await r.body.cancel();
     http.state.noWrite = false;
+    const uncertain = makeIntent();
+    http.state.noWrite = true;
+    http.state.lostAck = true;
+    r = await publish(uncertain);
+    check("HTTP unknown no-byte upload stays unresolved", r.status, 503);
+    await r.body.cancel();
+    http.state.noWrite = false;
+    http.state.lostAck = false;
+    const uploadsBeforeRetry = http.state.uploads;
+    r = await publish(uncertain);
+    check("HTTP uncertain retry cannot issue another upload", r.status, 503);
+    await r.body.cancel();
+    check(
+      "HTTP uncertain retry preserves single attempt",
+      http.state.uploads,
+      uploadsBeforeRetry,
+    );
+    await pg.raw(
+      `update taskfold_private.audio_comment_publications set expires_at=clock_timestamp()-interval '1 minute' where operation_id=${
+        lit(uncertain.operation_id)
+      }`,
+    );
     http.state.corrupt = true;
     const corrupt = makeIntent();
     r = await publish(corrupt);
@@ -451,6 +636,63 @@ try {
       404,
     );
     await r.body.cancel();
+    // Retire a known terminal upload; worker deletes through the local Storage
+    // API adapter, verifies GET absence, then confirms through actual SQL.
+    await pg.raw(
+      `update taskfold_private.audio_comment_publications set state='retired',caption=null,audio_descriptor=null,cleanup_after=clock_timestamp()-interval '1 minute' where operation_id=${
+        lit(lost.operation_id)
+      }`,
+    );
+    http.state.deleteFails = true;
+    r = await http.maintain();
+    let sweep = await r.json();
+    check("HTTP worker failed deletion does not purge", sweep.purged, 0);
+    check("worker exposes unresolved retired upload", sweep.blocked_uploads, 1);
+    check(
+      "failed Storage removal retains quota",
+      await pg.scalar(
+        `select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${
+          lit(lost.operation_id)
+        }`,
+      ),
+      "retired",
+    );
+    http.state.deleteFails = false;
+    await pg.raw(
+      `update taskfold_private.audio_cleanup_claims set expires_at=clock_timestamp()-interval '1 second'`,
+    );
+    r = await http.maintain();
+    sweep = await r.json();
+    check(
+      "HTTP worker removes and confirms settled media",
+      sweep.purged >= 1,
+      true,
+    );
+    check(
+      "HTTP Storage bytes actually removed",
+      http.state.objects.has(
+        `audio-comments/v1/${httpTask}/${httpGeneration}/${lost.asset_id}.m4a`,
+      ),
+      false,
+    );
+    check(
+      "verified removal releases quota state",
+      await pg.scalar(
+        `select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${
+          lit(lost.operation_id)
+        }`,
+      ),
+      "purged",
+    );
+    check(
+      "unknown retired upload still retains quota after worker",
+      await pg.scalar(
+        `select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${
+          lit(uncertain.operation_id)
+        }`,
+      ),
+      "retired",
+    );
     check("HTTP adapter has no SQL or route errors", http.state.errors, []);
     report.loopbackHTTP = {
       productionHandler: true,

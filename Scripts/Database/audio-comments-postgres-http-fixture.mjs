@@ -48,10 +48,16 @@ export async function createAudioHttpFixture(pg, actor, session) {
       if (req.url.startsWith("/rest/v1/rpc/")) {
         assert.equal(req.method, "POST");
         const b = JSON.parse(bytes.toString());
-        assert.equal(b._actor, actor);
-        assert.equal(b._session, session);
+        if (!req.url.endsWith("/taskfold_audio_comment_maintenance")) {
+          assert.equal(b._actor, actor);
+          assert.equal(b._session, session);
+        }
         let expression;
-        if (req.url.endsWith("/taskfold_audio_comment_admit")) {
+        if (req.url.endsWith("/taskfold_audio_comment_maintenance")) {
+          expression = `public.taskfold_audio_comment_maintenance(${
+            lit(b._action)
+          },${lit(JSON.stringify(b._body))}::jsonb)`;
+        } else if (req.url.endsWith("/taskfold_audio_comment_admit")) {
           expression = `public.taskfold_audio_comment_admit(${lit(b._actor)},${
             lit(b._session)
           },${lit(b._action)})`;
@@ -68,6 +74,24 @@ export async function createAudioHttpFixture(pg, actor, session) {
           return json({ private: "fixture SQL" }, 400);
         }
         return json(r.value);
+      }
+      if (
+        req.method === "DELETE" &&
+        req.url === "/storage/v1/object/taskfold-audio-v1"
+      ) {
+        const { prefixes } = JSON.parse(bytes.toString());
+        assert.equal(prefixes.length, 1);
+        const name = prefixes[0];
+        if (state.deleteFails) return json({ code: "storage_failed" }, 500);
+        if (!state.deleteNoEffect) {
+          state.objects.delete(name);
+          await pg.raw(
+            `delete from storage.objects where bucket_id='taskfold-audio-v1' and name=${
+              lit(name)
+            }`,
+          );
+        }
+        return json([]);
       }
       const prefix = "/storage/v1/object/taskfold-audio-v1/";
       assert(req.url.startsWith(prefix));
@@ -171,7 +195,16 @@ export async function createAudioHttpFixture(pg, actor, session) {
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(15000),
       });
-    return { call, close, state };
+    const maintain = () =>
+      fetch("http://127.0.0.1:" + port + "/maintenance", {
+        method: "POST",
+        headers: {
+          "X-Taskfold-Audio-Maintenance":
+            "synthetic-maintenance-key-for-owned-fixtures",
+        },
+        signal: AbortSignal.timeout(25000),
+      });
+    return { call, close, state, maintain };
   } catch (error) {
     await close();
     throw error;

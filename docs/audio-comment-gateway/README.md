@@ -106,3 +106,9 @@ source; it does not complete audio comments or the overall Px objective.
 
 The new migration was created with `supabase migration new` and exercised on the
 owned dependency fixture. No hosted migration history or deployment was performed.
+
+Follow-up: [upload fencing and cleanup](../audio-comment-cleanup/README.md)
+supersedes the current handler/source acceptance. This artifact and its source
+bindings describe the preceding iOS `2744a8f` / Mac `d46b4fa` checkpoint.
+Unknown-upload recovery, scheduled/real provider acceptance and native publication
+remain open; the cleanup candidate does not complete the feature.

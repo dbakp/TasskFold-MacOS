@@ -373,6 +373,16 @@ export function createAudioCommentsHandler(
           if (fresh.status) refused(fresh);
           current = receipt(fresh, actor.account, intent);
           if (current.state === "pending") {
+            const lease = await command("upload_begin", {
+              operation_id: intent.operation_id,
+            });
+            if (lease.status) refused(lease);
+            exact(lease, ["protocol", "operation_id", "ticket_id", "state"]);
+            if (
+              lease.protocol !== 1 ||
+              lease.operation_id !== intent.operation_id ||
+              !identity(lease.ticket_id) || lease.state !== "open"
+            ) throw new Failure(503, "retry");
             try {
               const upload = await fetchResponse(
                 "/storage/v1/object/" + bucket + "/" + path(current),
@@ -388,6 +398,17 @@ export function createAudioCommentsHandler(
                 },
               );
               void upload.body?.cancel().catch(() => {});
+              // Only a definite successful/conflict response settles the request.
+              // Timeout/5xx outcomes remain fenced until verified finalization.
+              if (upload.ok || upload.status === 409) {
+                const settled = await command("upload_settle", {
+                  operation_id: intent.operation_id,
+                  ticket_id: lease.ticket_id,
+                });
+                if (settled.protocol !== 1 || settled.settled !== true) {
+                  throw new Failure(503, "retry");
+                }
+              }
             } catch (error) {
               if (signal.aborted) {
                 throw error; /* A lost upload acknowledgement must be reconciled by readback. */

@@ -1,0 +1,23 @@
+{
+  "repository": "TasskFold-MacOS",
+  "deployed": false,
+  "realProviderAcceptance": false,
+  "sources": {
+    "Scripts/Database/audio-comments-http-fixture.ts": "b0cfcefe14fe7fc32a9ee3729766ac6e672a73540ae322b02ec79d1d947a7066",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "045ef3b449af5036c615cee73f71a4116f390e9a6cc8bb940cc8d93216e22fe0",
+    "Scripts/Database/postgres-fixture.mjs": "4c2dcbffabe95e77976aa4afd9db43922ded408a66be46eee739de0da084b039",
+    "Scripts/Database/team-project-schema.mjs": "c338738c01855a14b85663064c6e25ed1b0205feeb51e16794b58d2e4bf565b9",
+    "Scripts/Database/test-audio-comment-gateway.mjs": "a42b5dd89130a0cdb316220654d77e8f1007c88ae640119764bd508cb8ab1139",
+    "TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+    "supabase/functions/audio-comment-maintenance/handler.ts": "0b464bb7f8aa9002344b1d276f9137cb02e8215a5664727b709acc0833e32a67",
+    "supabase/functions/audio-comment-maintenance/handler_test.ts": "451ba18515534d63da09003538c8faa18a71aa9af79119f25b1dbaa1cfe14c51",
+    "supabase/functions/audio-comment-maintenance/index.ts": "3c217da5847705a8e78a2473d21e73ca419156131400fd4155f3efae1f0e52a9",
+    "supabase/functions/audio-comments/handler.ts": "e7b621d755f5fe39b75d99b5736d8f861088e0d51891f793f6dc624909e1d6c9",
+    "supabase/functions/audio-comments/handler_test.ts": "9151d61d1429cb8681e2cbe69c0c6c64b8242986f50d1d78cfb4df7d6a4aaa73",
+    "supabase/functions/audio-comments/index.ts": "eb92330c381c508f34007bb02a9cdd91c7b7af7e2318e78fecb98d5c74460cdf",
+    "supabase/functions/audio-comments/wire.ts": "16b8940b5cefb4d232bb4959ce01e20051d81bc99919c19e84338541e42438e2",
+    "supabase/migrations/20261028134424_audio_comment_publication_ledger.sql": "3e6522149e52bdf52918ae66b2e7b68205fd7f290bd3276c8c09d464517efaa3",
+    "supabase/migrations/20261028145414_audio_comment_gateway_boundary.sql": "ac9a9005a8198994e2b0cec8adf4113e9d7bb8b80303b8d078a6d39cc169cb24",
+    "supabase/migrations/20261028151901_audio_comment_cleanup_fencing.sql": "7260264fa5c4419695f3a37e90d5a2a86ca822f74c7728b8a2d5b1b33ab36718"
+  }
+}
