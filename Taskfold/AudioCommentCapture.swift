@@ -879,7 +879,7 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
     func close() { clearSelection(); library = nil; notice = nil; closed = true; Self.live.removeValue(forKey: lifecycleID) }
     func contextChanged() { if !isCurrent { close() } }
     func setActive(_ value: Bool) { active = value; if !value { clearSelection(revokeExports: false) } }
-    static func stopForInactivity() { for value in live.values.compactMap(\.value) { value.setActive(false) } }
+    static func stopForInactivity() { for value in live.values.compactMap(\.value) { value.setActive(false) }; AudioCommentPendingLibrary.stopForInactivity() }
     func refresh(preservingExports: Bool = false) async {
         guard active, isCurrent else { contextChanged(); return }
         clearSelection(revokeExports: !preservingExports); library = nil; notice = nil; working = true
@@ -969,6 +969,107 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
     }
 }
 
+/// Device-private review of frozen operations, independent of a surviving saved
+/// draft or current task permission. Network retry has a separate Store gate.
+@MainActor @Observable final class AudioCommentPendingLibrary {
+    private final class Weak { weak var value: AudioCommentPendingLibrary?; init(_ value: AudioCommentPendingLibrary) { self.value = value } }
+    @ObservationIgnored private static var live: [UUID: Weak] = [:]
+    @ObservationIgnored private let id = UUID()
+    let scope: AudioCommentLibraryScope
+    private(set) var entries: [AudioCommentPublicationJournal] = []
+    private(set) var selected: AudioCommentPublicationJournal?
+    private(set) var working = false
+    private(set) var playing = false
+    var notice: String?
+    @ObservationIgnored var currentScope: () -> AudioCommentLibraryScope? = { nil }
+    @ObservationIgnored let storage: AudioCommentPublicationStorage
+    @ObservationIgnored private let drafts: AudioCommentDraftStorage
+    @ObservationIgnored private let player: any AudioCommentPlaying
+    @ObservationIgnored private let decode: @Sendable (Data) async throws -> AudioCommentClip
+    @ObservationIgnored private var validated: AudioCommentClip?
+    @ObservationIgnored private var generation = UUID()
+    @ObservationIgnored private var active = true
+    @ObservationIgnored private var closed = false
+    init(scope: AudioCommentLibraryScope, storage: AudioCommentPublicationStorage, drafts: AudioCommentDraftStorage, player: any AudioCommentPlaying, decode: @escaping @Sendable (Data) async throws -> AudioCommentClip = { try await AudioCommentDecoding.validate($0) }) {
+        self.scope = scope; self.storage = storage; self.drafts = drafts; self.player = player; self.decode = decode
+        Self.live = Self.live.filter { $0.value.value != nil }; Self.live[id] = Weak(self)
+    }
+    var isCurrent: Bool {
+        !closed && active && scope.workspace.account == storage.account.uuidString.lowercased() && drafts.owner.account == scope.workspace.account &&
+        scope.origin.flatMap { try? AudioCommentPublicationJournal.canonicalOrigin($0) } == storage.origin && currentScope().map(scope.matches) == true
+    }
+    private func same(_ a: AudioCommentPublicationJournal, _ b: AudioCommentPublicationJournal) -> Bool { a.origin == b.origin && a.source == b.source && a.revision == b.revision && a.publication.sameIntent(as: b.publication) }
+    func selectedIsCurrent(_ value: AudioCommentPublicationJournal) -> Bool { isCurrent && selected.map { same($0, value) } == true }
+    private func accepts(_ token: UUID) -> Bool { generation == token && isCurrent && !Task.isCancelled }
+    func stopPlayback() { generation = UUID(); player.stop(); playing = false; working = false }
+    func clearSelection() { stopPlayback(); selected = nil; validated = nil; notice = nil }
+    func close() { clearSelection(); entries = []; closed = true; Self.live.removeValue(forKey: id) }
+    func setActive(_ value: Bool) { active = value; if !value { clearSelection(); entries = [] } }
+    static func stopForInactivity() { for item in live.values.compactMap(\.value) { item.setActive(false) } }
+    private func read(_ expected: AudioCommentPublicationJournal) async throws -> AudioCommentPublicationJournal {
+        let rows = try await storage.journals()
+        guard let value = rows.first(where: { same($0, expected) }) else { throw AudioCommentStorageFailure.conflict }; return value
+    }
+    func refresh() async {
+        guard isCurrent else { clearSelection(); entries = []; return }
+        clearSelection(); working = true; let token = generation
+        defer { if generation == token { working = false } }
+        do {
+            let rows = try await storage.journals(); guard accepts(token) else { return }
+            entries = rows.filter { $0.receipt == nil || $0.clip != nil }
+        } catch { if accepts(token) { notice = error.localizedDescription } }
+    }
+    func select(_ expected: AudioCommentPublicationJournal) async {
+        guard isCurrent, !working else { return }; clearSelection(); working = true; let token = generation
+        defer { if generation == token { working = false } }
+        do {
+            let value = try await read(expected); guard accepts(token), let clip = value.clip else { throw CancellationError() }
+            let decoded = try await decode(clip.data); guard accepts(token), decoded.data == clip.data else { throw CancellationError() }
+            let current = try await read(value); guard accepts(token), let currentClip = current.clip, currentClip.data == clip.data else { throw AudioCommentStorageFailure.conflict }
+            selected = current; validated = decoded
+        } catch { if accepts(token) { notice = "This publication changed. Reload its current local copy." } }
+    }
+    func play() async {
+        guard isCurrent, !working, let expected = selected, let decoded = validated else { return }
+        stopPlayback(); working = true; let token = generation
+        defer { if generation == token { working = false } }
+        do {
+            let value = try await read(expected); guard accepts(token), value.clip?.data == decoded.data else { throw AudioCommentStorageFailure.conflict }
+            selected = value; playing = true
+            try player.play(decoded, isCurrent: { [weak self] in self?.accepts(token) == true }, ended: { [weak self] in guard let self, self.accepts(token) else { return }; self.playing = false })
+        } catch { if accepts(token) { stopPlayback(); notice = "This publication changed. Reload before playing it." } }
+    }
+    func keepPrivateCopy() async throws {
+        guard isCurrent, !working, let expected = selected, let decoded = validated else { throw AudioCommentFailure.changed }
+        stopPlayback(); working = true; let token = generation
+        defer { if generation == token { working = false } }
+        let value = try await read(expected); guard accepts(token), let clip = value.clip, clip.data == decoded.data else { throw AudioCommentStorageFailure.conflict }
+        // Stable IDs make retries idempotent; a newer/foreign existing file must
+        // conflict rather than be overwritten. Original edited drafts are untouched.
+        let copy = try AudioCommentSavedDraft(owner: .init(scope.workspace.account), target: value.publication.target, caption: value.publication.caption, clip: clip, id: value.publication.asset, revision: value.publication.operation)
+        try await drafts.save(copy); guard accepts(token) else { throw CancellationError() }
+        _ = try await drafts.savedLibraryRecording(copy); guard accepts(token) else { throw CancellationError() }
+        notice = "Private copy saved. It is available in Saved recordings."
+    }
+    func removeConfirmedCopy() async throws {
+        guard isCurrent, !working, let value = selected, value.receipt != nil else { throw AudioCommentStorageFailure.conflict }
+        stopPlayback(); working = true; let token = generation
+        defer { if generation == token { working = false } }
+        _ = try await storage.releaseConfirmedAudio(value); guard accepts(token) else { throw CancellationError() }
+        selected = nil; validated = nil; entries.removeAll { same($0, value) }; notice = "Private publication copy removed."
+    }
+    func updateAfterConfirmation() async throws {
+        guard isCurrent, let expected = selected else { throw CancellationError() }
+        let token = generation, rows = try await storage.journals(); guard accepts(token) else { throw CancellationError() }
+        guard let value = rows.first(where: { same($0, expected) }) else { throw AudioCommentStorageFailure.conflict }
+        entries = rows.filter { $0.receipt == nil || $0.clip != nil }
+        if value.clip == nil {
+            player.stop(); playing = false; validated = nil; selected = nil
+            notice = "This private publication copy was removed in another window."
+        } else { selected = value }
+    }
+}
+
 #if !AUDIO_COMMENT_CONTROLLER_TESTING
 @MainActor extension Store {
     var audioDraftsEnabled: Bool {
@@ -983,7 +1084,7 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
     func audioPublishingScope(_ target: AudioCommentTarget) -> AudioCommentLiveScope? {
         guard audioPublishingEnabled, !localMode, signedIn, !workspaceNeedsRepair,
               let scope = audioDraftScope(taskID: target.task.uuidString.lowercased()), scope.target == target,
-              UUID(uuidString: scope.workspace.account) != nil, backend.session?.user.id == scope.workspace.account,
+              UUID(uuidString: scope.workspace.account) != nil, backend.audioPublicationSessionMatches(scope.workspace.account),
               scope.origin != nil else { return nil }; return scope
     }
     func audioPublisher(for scope: AudioCommentLiveScope, source: AudioCommentSavedDraft, library: AudioCommentLibraryController) throws -> AudioCommentPublicationFlow {
@@ -992,8 +1093,28 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
               library.scope.matches(.init(workspace: scope.workspace, origin: scope.origin)), library.publicationSourceIsCurrent(source) else { throw AudioCommentFailure.changed }
         let root = try audioDraftDirectory(for: scope, taskID: scope.target.task.uuidString.lowercased())
         let disk = try AudioCommentPublicationDisk(root: root, account: account, origin: origin), incarnation = backend.reminderSessionIncarnation
-        return AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: scope.target, isCurrent: { [weak self, weak library] in
+        return AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: scope.target, retainAudioOnConfirmation: true, isCurrent: { [weak self, weak library] in
             guard let self, let library, library.publicationSourceIsCurrent(source), self.backend.reminderSessionIncarnation == incarnation,
+                  let current = self.audioPublishingScope(scope.target) else { return false }; return scope.matches(current)
+        })
+    }
+    func audioPendingScope() -> AudioCommentLibraryScope? {
+        guard audioPublishingEnabled, !localMode, signedIn, let scope = audioLibraryScope(), UUID(uuidString: scope.workspace.account) != nil, backend.audioPublicationSessionMatches(scope.workspace.account) else { return nil }; return scope
+    }
+    func audioPendingLibrary(scope: AudioCommentLibraryScope, player: any AudioCommentPlaying) async throws -> AudioCommentPendingLibrary {
+        guard let current = audioPendingScope(), scope.matches(current), let account = UUID(uuidString: scope.workspace.account), let origin = scope.origin else { throw AudioCommentFailure.changed }
+        let root = try audioLibraryDirectory(for: scope)
+        let drafts = try await AudioCommentDraftStorage.open(applicationSupport: root, owner: .init(scope.workspace.account))
+        guard let current = audioPendingScope(), scope.matches(current) else { throw CancellationError() }
+        let pending = AudioCommentPendingLibrary(scope: scope, storage: .init(disk: try .init(root: root, account: account, origin: origin)), drafts: drafts, player: player)
+        pending.currentScope = { [weak self] in self?.audioPendingScope() }; return pending
+    }
+    func audioPendingPublisher(_ journal: AudioCommentPublicationJournal, library: AudioCommentPendingLibrary) throws -> AudioCommentPublicationFlow {
+        guard let scope = audioPublishingScope(journal.publication.target), library.selectedIsCurrent(journal),
+              library.scope.matches(.init(workspace: scope.workspace, origin: scope.origin)), journal.origin == library.storage.origin, journal.publication.account == library.storage.account else { throw AudioCommentFailure.changed }
+        let incarnation = backend.reminderSessionIncarnation
+        return AudioCommentPublicationFlow(storage: library.storage, transport: backend, incarnation: incarnation, target: scope.target, retainAudioOnConfirmation: true, isCurrent: { [weak self, weak library] in
+            guard let self, let library, library.selectedIsCurrent(journal), self.backend.reminderSessionIncarnation == incarnation,
                   let current = self.audioPublishingScope(scope.target) else { return false }; return scope.matches(current)
         })
     }

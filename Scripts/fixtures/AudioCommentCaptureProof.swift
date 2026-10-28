@@ -638,6 +638,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         checks["sharedAudioLeaseRefusesOverlapWithoutTakingOwnership"] = recordBusy && playBusy && TaskfoldAudioLease.owner == lease
         realRecorder.cancel(); realPlayer.stop(); TaskfoldAudioLease.release(lease)
         checks["allMediaLeasesReleased"] = TaskfoldAudioLease.owner == nil
+        checks.merge(try await pendingPublicationChecks(root: root, data: data)) { _, new in new }
         try JSONSerialization.data(withJSONObject: checks, options: [.sortedKeys]).write(to: URL(fileURLWithPath: CommandLine.arguments[3]))
         guard checks.values.allSatisfy({ $0 }) else { fputs("Failed audio checks: " + checks.filter { !$0.value }.keys.sorted().joined(separator: ", ") + "\n", stderr); exit(1) }
     }
@@ -1409,4 +1410,70 @@ extension AudioControllerProof {
         checks["allRecordingExportActionsPreserveTheCurrentPrivateSource"] = try vault.drafts() == [next] && vault.saves().isEmpty && vault.drafts(recovery: true).isEmpty
         return checks
     }
+    @MainActor private static func pendingPublicationChecks(root: URL, data: Data) async throws -> [String: Bool] {
+        let folder = root.appendingPathComponent("pending-publication-review", isDirectory: true); try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let owner = try AudioCommentOwner(UUID().uuidString.lowercased()), account = UUID(uuidString: owner.account)!, origin = "https://pending.example.invalid"
+        let scope = AudioCommentLibraryScope(workspace: .init(account: owner.account, generation: UUID()), origin: origin)
+        let target = try AudioCommentTarget(task: UUID(), generation: UUID(), project: nil)
+        let source = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Original cafe\u{301} recording\nKeep this version 🪴", clip: .init(data: data))
+        let publicationDisk = try AudioCommentPublicationDisk(root: folder, account: account, origin: origin), journal = try publicationDisk.prepare(source)
+        let draftVault = AudioCommentVault(applicationSupport: folder, owner: owner), drafts = AudioCommentDraftStorage(vault: draftVault), storage = AudioCommentPublicationStorage(disk: publicationDisk), player = AudioLibraryProofPlayer()
+        let context = AudioLibraryProofContext(scope)
+        func make() -> AudioCommentPendingLibrary {
+            let value = AudioCommentPendingLibrary(scope: scope, storage: storage, drafts: drafts, player: player)
+            value.currentScope = { context.scope }; return value
+        }
+        var checks: [String: Bool] = [:]
+        let unbound = AudioCommentPendingLibrary(scope: scope, storage: storage, drafts: drafts, player: player)
+        await unbound.refresh(); await unbound.select(journal)
+        checks["pendingReviewNeedsExplicitAccountServerBinding"] = unbound.entries.isEmpty && unbound.selected == nil
+        unbound.close()
+        let review = make(); await review.refresh()
+        let initialDrafts = try draftVault.drafts()
+        checks["pendingListFindsOrphanedOriginalWithoutSavedDraft"] = review.entries.count == 1 && initialDrafts.isEmpty
+        await review.select(journal)
+        checks["pendingReviewPreservesOriginalCaptionAndBytes"] = review.selected?.publication.caption.utf8.elementsEqual(source.caption.utf8) == true && review.selected?.clip?.data == data
+        await review.play(); checks["pendingReviewUsesDecodedOriginalForPlayback"] = player.plays == 1 && review.playing
+        review.stopPlayback(); checks["pendingStopRevokesDelayedPlayback"] = !review.playing && player.permits.last?() == false
+        try await review.keepPrivateCopy(); try await review.keepPrivateCopy()
+        let copies = try draftVault.drafts()
+        checks["pendingPrivateCopyIsDurableAndIdempotent"] = copies.count == 1 && copies[0].id == journal.publication.asset && copies[0].clip.data == data && copies[0].caption.utf8.elementsEqual(source.caption.utf8)
+        var denied = false; do { try await review.removeConfirmedCopy() } catch { denied = true }
+        let stillPending = try publicationDisk.journals()
+        checks["pendingCannotDiscardUnconfirmedAudio"] = denied && stillPending.first?.clip != nil
+        let edited = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Edited saved draft", clip: source.clip, id: source.id)
+        try draftVault.save(edited)
+        try await review.keepPrivateCopy()
+        checks["pendingKeepDoesNotOverwriteEditedSource"] = try draftVault.drafts().contains(edited)
+        var fields = journal.publication.record.fields; fields.removeValue(forKey: "version"); fields["protocol"] = .number(1); fields["author_id"] = .string(owner.account); fields["state"] = .string("published"); fields["reserved_at"] = .string("2026-10-28T15:00:00Z"); fields["expires_at"] = .string("2026-10-29T15:00:00Z"); fields["published_at"] = .string("2026-10-28T15:00:01Z")
+        _ = try publicationDisk.confirm(journal, receipt: .init(record: Record(fields), publication: journal.publication), retainingAudio: true)
+        try await review.updateAfterConfirmation()
+        checks["pendingConfirmationStillKeepsOriginalAudio"] = review.selected?.receipt != nil && review.selected?.clip?.data == data
+        await review.play(); checks["pendingConfirmedCopyStillPlaysWithoutServerRead"] = player.plays == 2
+        context.scope = .init(workspace: .init(account: owner.account, generation: UUID()), origin: origin)
+        checks["pendingContextDepartureImmediatelyRevokesActions"] = !review.isCurrent && player.permits.last?() == false
+        var copyBlocked = false; do { try await review.keepPrivateCopy() } catch { copyBlocked = true }
+        checks["pendingDepartedContextCannotKeepCopy"] = copyBlocked
+        review.close(); context.scope = scope
+        let returned = make(); await returned.refresh(); await returned.select(journal)
+        checks["pendingReturnReopensRetainedConfirmation"] = returned.selected?.receipt != nil && returned.selected?.clip?.data == data
+        AudioCommentLibraryController.stopForInactivity()
+        checks["pendingBackgroundHookClearsVisiblePrivateData"] = returned.entries.isEmpty && returned.selected == nil && !returned.isCurrent
+        returned.setActive(true); await returned.refresh(); await returned.select(journal)
+        try await returned.removeConfirmedCopy()
+        let removed = try publicationDisk.journals(), keptDrafts = try draftVault.drafts()
+        checks["pendingExplicitRemovalKeepsReceiptAndSavedCopies"] = removed.first?.receipt != nil && removed.first?.clip == nil && keptDrafts.count == 2
+        checks["pendingRemovedCopyLeavesVisibleQueue"] = returned.selected == nil && returned.entries.isEmpty
+        let secondSource = try AudioCommentSavedDraft(owner: owner, target: target, caption: "Another original", clip: source.clip)
+        let second = try publicationDisk.prepare(secondSource)
+        var nextFields = fields; for (key, value) in second.publication.record.fields where key != "version" { nextFields[key] = value }
+        let secondConfirmed = try publicationDisk.confirm(second, receipt: .init(record: Record(nextFields), publication: second.publication), retainingAudio: true)
+        await returned.refresh(); await returned.select(secondConfirmed)
+        _ = try publicationDisk.releaseConfirmedAudio(secondConfirmed)
+        try await returned.updateAfterConfirmation()
+        checks["pendingOtherWindowRemovalClearsStalePlayableSelection"] = returned.selected == nil && returned.entries.isEmpty && !returned.playing
+        checks["pendingOtherWindowRemovalKeepsSavedDrafts"] = try draftVault.drafts().count == 2
+        returned.close(); return checks
+    }
+
 }

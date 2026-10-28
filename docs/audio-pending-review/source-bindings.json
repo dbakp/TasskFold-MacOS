@@ -1,0 +1,21 @@
+{
+  "Package.swift": "90b2852e7e7d04d88d246d5e01816c05dcf5bd51bff0130eaae483e41b662c03",
+  "Scripts/Database/test-audio-native-publication.mjs": "80ca767435ff534bd1eb9b517b5d03c1e28144b7758d9f656ee7b5dd952b5e8f",
+  "Scripts/configure_audio_comments.py": "f5c10ea9fbaf7f53e214cf4a6628e7d81c4787022d89b5ae8d4b163296d7da60",
+  "Scripts/fixtures/AudioCommentCaptureProof.swift": "97b932a2895526092d8ba2d5aa8192db01e44caa8590f212b18a56ddab214535",
+  "Scripts/fixtures/AudioCommentNativePublicationProof.swift": "fee97b8e6b74d5a29b9c176b9ac1c6ade309f42f8d420ee91209879ff8a41d63",
+  "Taskfold.xcodeproj/project.pbxproj": "d20c84f5c421bcb058d9c59da36e6fdafc70dd0257f4cdcbacb7578eb61dedc4",
+  "Taskfold/AudioCommentCapture.swift": "18df52b23dc407bc8f6652cd5e51e6268f4dfaed87dc9e638daaf98de042a74c",
+  "Taskfold/Core/AudioCommentPublishing.swift": "986c4ac1bb941075e49ca61b905f8dacd77c843474d7d7bc4012fe51a51db287",
+  "Taskfold/Core/Backend.swift": "56f48f7c0fb1fae24880c4c4efaa3a93baf05a12beb03a0ad72385e074060232",
+  "Taskfold/Views/AudioCommentDraftView.swift": "4f6defae97c16fe820791c09a8b178d874ff51683e995170fc022316a3efd06a",
+  "Taskfold/Views/AudioPendingPublicationView.swift": "e9a6bfa8b6fc3020b32e24601401c149a4079bf1294b039b962353a572016ede",
+  "TaskfoldTests/AudioCommentPublishingTests.swift": "ce495d50018c03c4afcd5c865f2e5e9265c378c0ea7214998023a00639c20984",
+  "supabase/functions/audio-comment-maintenance/handler.ts": "2eec429dfa6776526719d6ff8a63cb8e54430d95e9b50a2d338f2f59fefdd08c",
+  "supabase/functions/audio-comment-maintenance/handler_test.ts": "0393618fe261fe5b2e377f34277f8c029a5a5240e9d2aedcd593bbc4633146fd",
+  "supabase/functions/audio-comment-maintenance/index.ts": "5048b079085226d7b022687d3ee9e4db01b9b6f705623608d895b699d72d0fff",
+  "supabase/functions/audio-comments/handler.ts": "e7b621d755f5fe39b75d99b5736d8f861088e0d51891f793f6dc624909e1d6c9",
+  "supabase/functions/audio-comments/handler_test.ts": "9151d61d1429cb8681e2cbe69c0c6c64b8242986f50d1d78cfb4df7d6a4aaa73",
+  "supabase/functions/audio-comments/index.ts": "eb92330c381c508f34007bb02a9cdd91c7b7af7e2318e78fecb98d5c74460cdf",
+  "supabase/functions/audio-comments/wire.ts": "16b8940b5cefb4d232bb4959ce01e20051d81bc99919c19e84338541e42438e2"
+}

@@ -40,28 +40,41 @@ struct AudioCommentPublicationJournal: Sendable {
         publication = try .init(account: account, target: source.target, caption: source.caption, descriptor: source.clip.descriptor)
         clip = source.clip; receipt = nil
     }
-    private init(_ original: Self, receipt: AudioCommentPublishedReceipt) throws {
+    private init(_ original: Self, receipt: AudioCommentPublishedReceipt, retainingAudio: Bool) throws {
         guard receipt.publication.sameIntent(as: original.publication) else { throw AudioCommentFailure.changed }
-        origin = original.origin; source = original.source; revision = original.revision; publication = original.publication; clip = nil; self.receipt = receipt
+        origin = original.origin; source = original.source; revision = original.revision; publication = original.publication; clip = retainingAudio ? original.clip : nil; self.receipt = receipt
     }
-    func confirmed(_ receipt: AudioCommentPublishedReceipt) throws -> Self { try .init(self, receipt: receipt) }
+    /// A private recovery copy uses the original asset/operation as its stable
+    /// local ID/revision. Reopening it must reconcile, not mint another comment.
+    func represents(_ draft: AudioCommentSavedDraft) -> Bool {
+        source == draft.id && revision == draft.revision || publication.asset == draft.id && publication.operation == draft.revision
+    }
+    func confirmed(_ receipt: AudioCommentPublishedReceipt, retainingAudio: Bool = false) throws -> Self { try .init(self, receipt: receipt, retainingAudio: retainingAudio) }
+    func releasingConfirmedAudio() throws -> Self { guard let receipt else { throw AudioCommentStorageFailure.conflict }; return try .init(self, receipt: receipt, retainingAudio: false) }
     func encoded() throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
-        return try PropertyListSerialization.data(fromPropertyList: ["format": "taskfold-audio-publication-v1", "origin": origin, "source": source.uuidString.lowercased(), "revision": revision.uuidString.lowercased(), "intent": encoder.encode(publication), "audio": clip?.data ?? Data(), "receipt": receipt.map { try encoder.encode($0.record) } ?? Data()], format: .binary, options: 0)
+        return try PropertyListSerialization.data(fromPropertyList: ["format": receipt != nil && clip != nil ? "taskfold-audio-publication-v2" : "taskfold-audio-publication-v1", "origin": origin, "source": source.uuidString.lowercased(), "revision": revision.uuidString.lowercased(), "intent": encoder.encode(publication), "audio": clip?.data ?? Data(), "receipt": receipt.map { try encoder.encode($0.record) } ?? Data()], format: .binary, options: 0)
     }
     init(encoded data: Data, account: UUID, origin: String) throws {
         guard data.count <= 8_100_000 else { throw AudioCommentFailure.invalid }
         var format = PropertyListSerialization.PropertyListFormat.binary
         guard let fields = try PropertyListSerialization.propertyList(from: data, options: [], format: &format) as? [String: Any], format == .binary,
-              Set(fields.keys) == ["format", "origin", "source", "revision", "intent", "audio", "receipt"], fields["format"] as? String == "taskfold-audio-publication-v1",
+              Set(fields.keys) == ["format", "origin", "source", "revision", "intent", "audio", "receipt"], ["taskfold-audio-publication-v1", "taskfold-audio-publication-v2"].contains(fields["format"] as? String ?? ""),
               fields["origin"] as? String == (try Self.canonicalOrigin(origin)), let source = (fields["source"] as? String).flatMap(UUID.init(uuidString:)), source != AudioCommentTarget.zero,
               let revision = (fields["revision"] as? String).flatMap(UUID.init(uuidString:)), revision != AudioCommentTarget.zero,
               let intent = fields["intent"] as? Data, intent.count <= 32_000, let audio = fields["audio"] as? Data, let receipt = fields["receipt"] as? Data, receipt.count <= 64_000 else { throw AudioCommentFailure.invalid }
         self.origin = try Self.canonicalOrigin(origin); self.source = source; self.revision = revision
         publication = try JSONDecoder().decode(AudioCommentPublication.self, from: intent)
         guard publication.account == account else { throw AudioCommentFailure.changed }
-        if receipt.isEmpty { clip = try AudioCommentClip(restoring: audio, descriptor: publication.descriptor); self.receipt = nil }
-        else { guard audio.isEmpty else { throw AudioCommentFailure.invalid }; clip = nil; self.receipt = try .init(record: JSONDecoder().decode(Record.self, from: receipt), publication: publication) }
+        if receipt.isEmpty {
+            guard fields["format"] as? String == "taskfold-audio-publication-v1" else { throw AudioCommentFailure.invalid }
+            clip = try AudioCommentClip(restoring: audio, descriptor: publication.descriptor); self.receipt = nil
+        } else {
+            let retained = fields["format"] as? String == "taskfold-audio-publication-v2"
+            guard retained != audio.isEmpty else { throw AudioCommentFailure.invalid }
+            clip = retained ? try AudioCommentClip(restoring: audio, descriptor: publication.descriptor) : nil
+            self.receipt = try .init(record: JSONDecoder().decode(Record.self, from: receipt), publication: publication)
+        }
     }
 }
 
@@ -126,7 +139,14 @@ struct AudioCommentPublicationDisk: Sendable {
     private func write(_ journal: AudioCommentPublicationJournal, _ folder: Int32) throws {
         let data = try journal.encoded(), destination = journal.publication.operation.uuidString.lowercased() + ".bin"
         let existing = try all(folder), bytes = try existing.reduce(0) { $0 + ($1.publication.operation == journal.publication.operation ? 0 : try $1.encoded().count) }
-        guard data.count <= 8_100_000, bytes + data.count <= 50_000_000, existing.count < 1000 || existing.contains(where: { $0.publication.operation == journal.publication.operation }), existing.filter({ $0.receipt == nil && $0.publication.operation != journal.publication.operation }).count < 20 else { throw AudioCommentStorageFailure.full }
+        let otherPending = existing.filter { $0.receipt == nil && $0.publication.operation != journal.publication.operation }.count
+        let previous = try existing.first(where: { $0.publication.operation == journal.publication.operation })?.encoded().count ?? 0
+        let reserved = (otherPending + (journal.receipt == nil ? 1 : 0)) * 64_000
+        // Reserve confirmation metadata before a send, and never let a full
+        // pending quota prevent shrinking an already-confirmed local copy.
+        guard data.count <= 8_100_000, bytes + data.count <= 50_000_000,
+              data.count <= previous || bytes + data.count + reserved <= 50_000_000,
+              existing.count < 1000 || previous > 0, journal.receipt != nil || otherPending < 20 else { throw AudioCommentStorageFailure.full }
         let stage = ".write-" + UUID().uuidString.lowercased(); let fd = openat(folder, stage, O_CREAT | O_EXCL | O_WRONLY | O_NOFOLLOW, 0o600); guard fd >= 0 else { throw AudioCommentStorageFailure.unreadable }
         let file = FileHandle(fileDescriptor: fd, closeOnDealloc: true); defer { try? file.close(); _ = unlinkat(folder, stage, 0) }
         #if os(iOS)
@@ -140,21 +160,32 @@ struct AudioCommentPublicationDisk: Sendable {
     func prepare(_ source: AudioCommentSavedDraft) throws -> AudioCommentPublicationJournal {
         guard source.owner.account == account.uuidString.lowercased() else { throw AudioCommentFailure.changed }
         return try locked { folder in
-            let existing = try all(folder).filter { $0.source == source.id }
-            if let same = existing.first(where: { $0.revision == source.revision }) {
+            let existing = try all(folder).filter { $0.source == source.id || $0.publication.asset == source.id }
+            if let same = existing.first(where: { $0.represents(source) }) {
                 guard same.publication.target == source.target, same.publication.caption.utf8.elementsEqual(source.caption.utf8), same.publication.descriptor == source.clip.descriptor else { throw AudioCommentStorageFailure.conflict }; return same
             }
             guard !existing.contains(where: { $0.receipt == nil }) else { throw AudioCommentFailure(message: "An earlier version is still awaiting confirmation. Check it before publishing another version.") }
             let journal = try AudioCommentPublicationJournal(source: source, origin: origin); try write(journal, folder); return journal
         }
     }
-    func confirm(_ expected: AudioCommentPublicationJournal, receipt: AudioCommentPublishedReceipt) throws -> AudioCommentPublicationJournal {
+    func confirm(_ expected: AudioCommentPublicationJournal, receipt: AudioCommentPublishedReceipt, retainingAudio: Bool = false) throws -> AudioCommentPublicationJournal {
         guard expected.origin == origin, expected.publication.account == account, receipt.publication.sameIntent(as: expected.publication) else { throw AudioCommentFailure.changed }
         return try locked { folder in
             let current = try read(expected.publication.operation.uuidString.lowercased() + ".bin", folder)
             guard current.source == expected.source, current.revision == expected.revision, current.publication.sameIntent(as: expected.publication) else { throw AudioCommentStorageFailure.conflict }
             if current.receipt != nil { return current }
-            let confirmed = try current.confirmed(receipt); try write(confirmed, folder); return confirmed
+            let confirmed = try current.confirmed(receipt, retainingAudio: retainingAudio); try write(confirmed, folder); return confirmed
+        }
+    }
+    /// Explicit local removal only after an exact persisted confirmation. Never
+    /// use this for Cancel, logout, timeout, pending work or server removal.
+    func releaseConfirmedAudio(_ expected: AudioCommentPublicationJournal) throws -> AudioCommentPublicationJournal {
+        guard expected.origin == origin, expected.publication.account == account, let receipt = expected.receipt else { throw AudioCommentStorageFailure.conflict }
+        return try locked { folder in
+            let current = try read(expected.publication.operation.uuidString.lowercased() + ".bin", folder)
+            guard current.source == expected.source, current.revision == expected.revision, current.publication.sameIntent(as: expected.publication), current.receipt?.record == receipt.record else { throw AudioCommentStorageFailure.conflict }
+            if current.clip == nil { return current }
+            let compact = try current.releasingConfirmedAudio(); try write(compact, folder); return compact
         }
     }
 }
@@ -166,7 +197,8 @@ actor AudioCommentPublicationStorage {
     init(disk: AudioCommentPublicationDisk) { self.disk = disk; account = disk.account; origin = disk.origin }
     func prepare(_ source: AudioCommentSavedDraft) throws -> AudioCommentPublicationJournal { try disk.prepare(source) }
     func journals() throws -> [AudioCommentPublicationJournal] { try disk.journals() }
-    func confirm(_ journal: AudioCommentPublicationJournal, receipt: AudioCommentPublishedReceipt) throws -> AudioCommentPublicationJournal { try disk.confirm(journal, receipt: receipt) }
+    func confirm(_ journal: AudioCommentPublicationJournal, receipt: AudioCommentPublishedReceipt, retainingAudio: Bool = false) throws -> AudioCommentPublicationJournal { try disk.confirm(journal, receipt: receipt, retainingAudio: retainingAudio) }
+    func releaseConfirmedAudio(_ journal: AudioCommentPublicationJournal) throws -> AudioCommentPublicationJournal { try disk.releaseConfirmedAudio(journal) }
 }
 
 @MainActor protocol AudioCommentPublishingTransport: AnyObject {
@@ -184,22 +216,23 @@ actor AudioCommentPublicationStorage {
     private let current: @MainActor () -> Bool
     private let incarnation: UUID
     private let target: AudioCommentTarget
+    private let retainAudioOnConfirmation: Bool
     private var attempt = UUID()
     var contextIsCurrent: Bool { current() }
     func invalidate() { attempt = UUID(); journal = nil; state = .ready }
     private func check(_ token: UUID) throws { guard token == attempt, current(), !Task.isCancelled else { throw CancellationError() } }
-    init(storage: AudioCommentPublicationStorage, transport: any AudioCommentPublishingTransport, incarnation: UUID, target: AudioCommentTarget, isCurrent: @escaping @MainActor () -> Bool) { self.storage = storage; self.transport = transport; self.incarnation = incarnation; self.target = target; current = isCurrent }
+    init(storage: AudioCommentPublicationStorage, transport: any AudioCommentPublishingTransport, incarnation: UUID, target: AudioCommentTarget, retainAudioOnConfirmation: Bool = false, isCurrent: @escaping @MainActor () -> Bool) { self.storage = storage; self.transport = transport; self.incarnation = incarnation; self.target = target; self.retainAudioOnConfirmation = retainAudioOnConfirmation; current = isCurrent }
     /// Local review only: reopening a recording never starts a network request.
     func restore(_ source: AudioCommentSavedDraft) async throws {
         guard source.target == target, source.owner.account == storage.account.uuidString.lowercased(), current(), !Task.isCancelled, state != .saving, state != .sending else { throw CancellationError() }
         let token = attempt; journal = nil; state = .saving
         do {
             let rows = try await storage.journals(); try check(token)
-            if let found = rows.first(where: { $0.source == source.id && $0.revision == source.revision }) {
+            if let found = rows.first(where: { $0.represents(source) }) {
                 guard found.publication.target == source.target, found.publication.caption.utf8.elementsEqual(source.caption.utf8), found.publication.descriptor == source.clip.descriptor else { throw AudioCommentStorageFailure.conflict }
                 journal = found; state = found.receipt == nil ? .unconfirmed : .published
             } else {
-                guard !rows.contains(where: { $0.source == source.id && $0.receipt == nil }) else { throw AudioCommentFailure(message: "An earlier version is still awaiting confirmation. Its recording is preserved; check that version before publishing another.") }
+                guard !rows.contains(where: { ($0.source == source.id || $0.publication.asset == source.id) && $0.receipt == nil }) else { throw AudioCommentFailure(message: "An earlier version is still awaiting confirmation. Its recording is preserved; check that version before publishing another.") }
                 state = .ready
             }
         } catch { if token == attempt { state = .unconfirmed }; throw error }
@@ -227,7 +260,7 @@ actor AudioCommentPublicationStorage {
         state = .sending
         let receipt = try await transport.publishAudio(.init(publication: prepared.publication, clip: clip), origin: prepared.origin, incarnation: incarnation)
         try check(token)
-        let committed = try await storage.confirm(prepared, receipt: receipt)
+        let committed = try await storage.confirm(prepared, receipt: receipt, retainingAudio: retainAudioOnConfirmation)
         try check(token)
         journal = committed; state = .published
     }

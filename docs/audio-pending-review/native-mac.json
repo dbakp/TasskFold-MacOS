@@ -1,0 +1,31 @@
+{
+  "checks": {
+    "lost native response keeps journal unconfirmed": true,
+    "lost native response retains exact local audio": true,
+    "server did publish before native response was lost": true,
+    "only one actual Storage upload": true,
+    "new native process reconciles actual gateway receipt": true,
+    "retry uses same operation": true,
+    "retry uses same comment": true,
+    "retry preserves exact caption": true,
+    "retry does not upload again": true,
+    "native confirmation obeys explicit local retention": true,
+    "confirmed native restart keeps original operation": true,
+    "confirmed native restart sends no HTTP": true,
+    "private recovery copy reuses confirmed native operation": true,
+    "private recovery copy sends no HTTP": true,
+    "explicit native release keeps confirmation": true,
+    "explicit native release removes only journal audio": true,
+    "released native restart preserves original operation": true,
+    "release and restart send no HTTP": true,
+    "native/server media digest matches original": true,
+    "adapter has no SQL or routing errors": true
+  },
+  "deployed": false,
+  "realProviderAcceptance": false,
+  "nativeUIClaimed": false,
+  "compilerWarnings": [],
+  "postgresVersion": 170006,
+  "scope": "Actual separately executed native Core flow/Backend/native AAC decode -> controlled HTTPS-to-loopback URLProtocol mapping -> production Deno gateway -> real PostgreSQL -> controlled Auth/Storage byte API. Lost native ACK, restart retry and compact receipt restart. No hosted provider or iPhone/iPad/Mac app UI acceptance.",
+  "ownedPostgresContainerRemoved": true
+}

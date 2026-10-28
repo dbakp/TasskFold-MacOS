@@ -44,11 +44,12 @@ private final class NativePublicationHTTP: URLProtocol {
         let source = try AudioCommentSavedDraft(owner: .init(config.string("account")), target: target, caption: config.string("caption"), clip: clip, id: UUID(uuidString: config.string("source"))!, revision: UUID(uuidString: config.string("revision"))!)
         let disk = try AudioCommentPublicationDisk(root: URL(fileURLWithPath: args[1]), account: UUID(uuidString: config.string("account"))!, origin: backend.baseURL)
         let incarnation = backend.reminderSessionIncarnation
-        let flow = AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: target, isCurrent: { backend.session?.user.id == config.string("account") && backend.reminderSessionIncarnation == incarnation })
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: target, retainAudioOnConfirmation: config["retain_audio"] == .bool(true), isCurrent: { backend.session?.user.id == config.string("account") && backend.reminderSessionIncarnation == incarnation })
         do { try await flow.publish(source); if NativePublicationHTTP.loseReply { throw AppFailure(message: "Expected a controlled lost reply") } }
         catch { if !NativePublicationHTTP.loseReply { throw error } }
+        if config["release_copy"] == .bool(true), let confirmed = try disk.journals().first { _ = try disk.releaseConfirmedAudio(confirmed) }
         guard let stored = try disk.journals().first else { throw AppFailure(message: "Missing native publication journal") }
-        let result = Record(["operation_id": .string(stored.publication.operation.uuidString.lowercased()), "comment_id": .string(stored.publication.comment.uuidString.lowercased()), "published": .bool(stored.receipt != nil), "has_audio": .bool(stored.clip != nil), "caption": .string(stored.publication.caption), "sha256": .string(stored.publication.descriptor.sha256)])
+        let result = Record(["operation_id": .string(stored.publication.operation.uuidString.lowercased()), "comment_id": .string(stored.publication.comment.uuidString.lowercased()), "asset_id": .string(stored.publication.asset.uuidString.lowercased()), "published": .bool(stored.receipt != nil), "has_audio": .bool(stored.clip != nil), "caption": .string(stored.publication.caption), "sha256": .string(stored.publication.descriptor.sha256)])
         print(String(decoding: try JSONEncoder().encode(result), as: UTF8.self))
     }
 }

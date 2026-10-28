@@ -1229,3 +1229,14 @@ extension Backend: AudioCommentPublishingTransport {
         } catch { throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.") }
     }
 }
+
+extension Backend {
+    /// Local presentation may survive expired tokens, but never an in-progress
+    /// account transition or a different cached account. Server calls still do
+    /// their independent live Auth/session checks.
+    func audioPublicationSessionMatches(_ account: String) -> Bool {
+        guard !sessionTransition, let id = UUID(uuidString: account), id != AudioCommentTarget.zero,
+              id.uuidString.lowercased() == account else { return false }
+        return session?.user.id == account
+    }
+}

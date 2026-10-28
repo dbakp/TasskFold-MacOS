@@ -6831,3 +6831,20 @@ verified client foundation; normal audio and the overall Px goal remain open.
 
 [Evidence and limits](audio-publication-controls/README.md). Normal publishing
 remains gated and the overall audio/Px requirements remain open.
+
+
+## 2026-10-28 — private publication-copy recovery
+
+- [x] Review pending/orphaned original recordings independently of edited drafts;
+  keep idempotent private copies without overwriting edits or duplicating sends.
+- [x] Retain confirmed audio until explicit local removal; preserve server comments,
+  saved drafts and compact proof. Reject pending deletion and revoke stale playback.
+- [x] Verify session-transition masking, pending metadata reservation and compaction
+  with a full pending quota. Independently pass 170 Core, 253 controller and 20
+  native/gateway/PostgreSQL checks per repo; unsigned full app builds pass.
+- [ ] Native runtime/visual/accessibility, live audio conversations/read/play/remove,
+  uncertain-upload terminal recovery, legacy journal/history policy and hosted
+  provider acceptance. Genuine audio checks remain user-deferred; gates stay off.
+
+[Evidence and limits](audio-pending-review/README.md). This closes the implemented
+orphan-review/retention gap, with native acceptance and the overall Px goal open.

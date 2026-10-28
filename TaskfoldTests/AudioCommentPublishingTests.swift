@@ -208,3 +208,55 @@ extension AudioCommentPublishingTests {
         do { _ = try await backend.publishAudio(pending, origin: origin, incarnation: backend.reminderSessionIncarnation); XCTFail() } catch { XCTAssertFalse(error.localizedDescription.contains("PRIVATE")); XCTAssertFalse(error.localizedDescription.contains("synthetic-secret")); XCTAssertTrue(error.localizedDescription.contains("couldn’t be confirmed")) }
     }
 }
+
+extension AudioCommentPublishingTests {
+    @MainActor func testPresentationMaskClosesBeforeSignOutPersistenceCompletes() async throws {
+        let original = try backend(); var release: CheckedContinuation<Void, Never>?
+        let peer = Backend(configuration: ["URL": origin, "Key": "synthetic-public"], session: original.session, persistSession: { _ in await withCheckedContinuation { release = $0 } })
+        XCTAssertTrue(peer.audioPublicationSessionMatches(account.uuidString.lowercased()))
+        let operation = Task { try await peer.clearSession() }
+        for _ in 0..<500 { if release != nil { break }; await Task.yield() }
+        XCTAssertNotNil(release); XCTAssertNotNil(peer.session); XCTAssertFalse(peer.audioPublicationSessionMatches(account.uuidString.lowercased()))
+        release?.resume(); try await operation.value
+        XCTAssertFalse(peer.audioPublicationSessionMatches(account.uuidString.lowercased()))
+    }
+    @MainActor func testPrivateRecoveryCopyReusesOriginalOperationAndBlocksEditedDuplicate() async throws {
+        let file = try disk(), original = try source(), pending = try file.prepare(original)
+        let copy = try AudioCommentSavedDraft(owner: original.owner, target: original.target, caption: original.caption, clip: original.clip, id: pending.publication.asset, revision: pending.publication.operation)
+        XCTAssertEqual(try file.prepare(copy).publication.operation, pending.publication.operation)
+        let edited = try copy.replacing(caption: "Edited recovery copy", clip: copy.clip)
+        XCTAssertThrowsError(try file.prepare(edited))
+        let transport = Transport(), flow = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: original.target, isCurrent: { true })
+        try await flow.restore(copy); XCTAssertEqual(flow.journal?.publication.operation, pending.publication.operation); XCTAssertTrue(transport.requests.isEmpty)
+        _ = try file.confirm(pending, receipt: .init(record: record(pending.publication), publication: pending.publication), retainingAudio: true)
+        XCTAssertNotEqual(try file.prepare(edited).publication.operation, pending.publication.operation)
+    }
+    func testConfirmedCopyCanShrinkEvenWithTwentyOtherPendingEntries() throws {
+        let file = try disk(), original = try file.prepare(source())
+        let kept = try file.confirm(original, receipt: .init(record: record(original.publication), publication: original.publication), retainingAudio: true)
+        for _ in 0..<20 { _ = try file.prepare(source()) }
+        XCTAssertThrowsError(try file.prepare(source()))
+        XCTAssertNil(try file.releaseConfirmedAudio(kept).clip)
+        XCTAssertEqual(try file.journals().filter { $0.receipt == nil }.count, 20)
+    }
+    func testRetainedConfirmationSurvivesReopenWithExactAudioAndReceipt() throws {
+        let file = try disk(), source = try source(), pending = try file.prepare(source)
+        let receipt = try AudioCommentPublishedReceipt(record: record(pending.publication), publication: pending.publication)
+        let kept = try file.confirm(pending, receipt: receipt, retainingAudio: true), reopened = try XCTUnwrap(disk().journals().first)
+        XCTAssertNotNil(kept.receipt); XCTAssertEqual(reopened.clip?.data, source.clip.data); XCTAssertEqual(reopened.receipt?.record, receipt.record)
+        XCTAssertTrue(try disk().prepare(source).publication.sameIntent(as: pending.publication))
+    }
+    func testOnlyExactConfirmedCopyCanBeExplicitlyReleased() throws {
+        let file = try disk(), pending = try file.prepare(source())
+        XCTAssertThrowsError(try file.releaseConfirmedAudio(pending))
+        let kept = try file.confirm(pending, receipt: .init(record: record(pending.publication), publication: pending.publication), retainingAudio: true)
+        let released = try file.releaseConfirmedAudio(kept); XCTAssertNil(released.clip); XCTAssertNotNil(released.receipt)
+        XCTAssertNil(try disk().releaseConfirmedAudio(kept).clip)
+        XCTAssertEqual(try disk().journals().count, 1)
+    }
+    func testInterruptedRetentionReleaseKeepsFullConfirmedRecording() throws {
+        let file = try disk(), pending = try file.prepare(source()), kept = try file.confirm(pending, receipt: .init(record: record(pending.publication), publication: pending.publication), retainingAudio: true)
+        var failing = file; failing.fault = { if case .beforeRename = $0 { throw AudioCommentStorageFailure.unreadable } }
+        XCTAssertThrowsError(try failing.releaseConfirmedAudio(kept)); XCTAssertNotNil(try disk().journals().first?.clip); XCTAssertNotNil(try disk().journals().first?.receipt)
+    }
+}

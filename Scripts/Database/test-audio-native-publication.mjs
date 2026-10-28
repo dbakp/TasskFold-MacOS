@@ -96,6 +96,7 @@ try {
     endpoint: http.nativeEndpoint,
     token: http.nativeToken,
     lose_reply: true,
+    retain_audio: process.argv[4] === "--retain-audio",
   };
   const input = join(folder, "input.json");
   const run = async () => {
@@ -135,9 +136,9 @@ try {
   check("retry preserves exact caption", second.caption, config.caption);
   check("retry does not upload again", http.state.uploads, 1);
   check(
-    "native confirmation compacts duplicate audio",
+    "native confirmation obeys explicit local retention",
     second.has_audio,
-    false,
+    config.retain_audio,
   );
   const before = http.state.authReads, third = await run();
   check(
@@ -146,6 +147,33 @@ try {
     first.operation_id,
   );
   check("confirmed native restart sends no HTTP", http.state.authReads, before);
+  if (config.retain_audio) {
+    config.source = first.asset_id;
+    config.revision = first.operation_id;
+    const recoveredCopy = await run();
+    check(
+      "private recovery copy reuses confirmed native operation",
+      recoveredCopy.operation_id,
+      first.operation_id,
+    );
+    check("private recovery copy sends no HTTP", http.state.authReads, before);
+    config.release_copy = true;
+    const released = await run();
+    check("explicit native release keeps confirmation", released.published);
+    check(
+      "explicit native release removes only journal audio",
+      released.has_audio,
+      false,
+    );
+    config.release_copy = false;
+    const returned = await run();
+    check(
+      "released native restart preserves original operation",
+      returned.operation_id,
+      first.operation_id,
+    );
+    check("release and restart send no HTTP", http.state.authReads, before);
+  }
   const media = await readFile(
     join(repo, "TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a"),
   );

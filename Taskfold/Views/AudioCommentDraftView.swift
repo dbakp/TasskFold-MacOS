@@ -501,6 +501,7 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
                     }.accessibilityIdentifier("audioLibraryRecoveryNotice")
                 }
             }
+            if controller.selected == nil { AudioPendingPublicationSection(library: controller) }
             if controller.working { Section { ProgressView("Preparing…").accessibilityIdentifier("audioLibraryProgress") } }
             if let exportStatus { Section { Text(exportStatus).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioLibraryExportStatus") } }
             if let notice = controller.notice { Section { Text(notice).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioLibraryNotice") } }

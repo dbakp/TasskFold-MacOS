@@ -91,3 +91,5 @@ build dependencies.
 
 This completes the compiled gated review/control wiring, not runtime acceptance,
 audio comments or the full Px objective.
+
+Follow-up: [private publication-copy recovery](../audio-pending-review/README.md) implements gated orphan review and explicit confirmed-audio retention/removal. Its evidence and remaining limits supersede that specific open item above.
