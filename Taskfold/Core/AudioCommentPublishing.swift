@@ -1,0 +1,218 @@
+import Foundation
+import CryptoKit
+import Observation
+import Darwin
+
+struct AudioCommentPublishedReceipt: Sendable {
+    let publication: AudioCommentPublication
+    let record: Record
+    init(record: Record, publication: AudioCommentPublication) throws {
+        guard Set(record.fields.keys) == ["protocol", "account", "operation_id", "comment_id", "asset_id", "author_id", "target", "caption", "audio", "state", "reserved_at", "expires_at", "published_at"], record["protocol"] == .number(1), record.string("state") == "published", record.string("author_id") == publication.account.uuidString.lowercased() else { throw AudioCommentFailure.invalid }
+        var intent = record.fields
+        for field in ["protocol", "author_id", "state", "reserved_at", "expires_at", "published_at"] { intent.removeValue(forKey: field) }
+        intent["version"] = .number(1)
+        guard try AudioCommentPublication(record: Record(intent)).sameIntent(as: publication) else { throw AudioCommentFailure.changed }
+        let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let plain = ISO8601DateFormatter()
+        let dates = try ["reserved_at", "expires_at", "published_at"].map { name -> Date in
+            guard case .string(let value) = record[name], value.utf8.count <= 40, let date = formatter.date(from: value) ?? plain.date(from: value) else { throw AudioCommentFailure.invalid }; return date
+        }
+        guard dates[1] >= dates[0], dates[2] >= dates[0], dates[2] <= dates[1] else { throw AudioCommentFailure.invalid }
+        self.publication = publication; self.record = record
+    }
+}
+
+struct AudioCommentPublicationJournal: Sendable {
+    let origin: String
+    let source: UUID
+    let revision: UUID
+    let publication: AudioCommentPublication
+    let clip: AudioCommentClip?
+    let receipt: AudioCommentPublishedReceipt?
+    static func canonicalOrigin(_ input: String) throws -> String {
+        guard input.utf8.count <= 2048, var url = URLComponents(string: input), url.scheme == "https", let host = url.host, !host.isEmpty, url.user == nil, url.password == nil, url.query == nil, url.fragment == nil, url.path.isEmpty || url.path == "/" else { throw AudioCommentFailure.changed }
+        url.host = host.lowercased(); url.path = ""; if url.port == 443 { url.port = nil }
+        guard let result = url.string else { throw AudioCommentFailure.changed }; return result
+    }
+    init(source: AudioCommentSavedDraft, origin: String) throws {
+        guard let account = UUID(uuidString: source.owner.account), account != AudioCommentTarget.zero else { throw AudioCommentFailure.changed }
+        self.origin = try Self.canonicalOrigin(origin); self.source = source.id; revision = source.revision
+        publication = try .init(account: account, target: source.target, caption: source.caption, descriptor: source.clip.descriptor)
+        clip = source.clip; receipt = nil
+    }
+    private init(_ original: Self, receipt: AudioCommentPublishedReceipt) throws {
+        guard receipt.publication.sameIntent(as: original.publication) else { throw AudioCommentFailure.changed }
+        origin = original.origin; source = original.source; revision = original.revision; publication = original.publication; clip = nil; self.receipt = receipt
+    }
+    func confirmed(_ receipt: AudioCommentPublishedReceipt) throws -> Self { try .init(self, receipt: receipt) }
+    func encoded() throws -> Data {
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        return try PropertyListSerialization.data(fromPropertyList: ["format": "taskfold-audio-publication-v1", "origin": origin, "source": source.uuidString.lowercased(), "revision": revision.uuidString.lowercased(), "intent": encoder.encode(publication), "audio": clip?.data ?? Data(), "receipt": receipt.map { try encoder.encode($0.record) } ?? Data()], format: .binary, options: 0)
+    }
+    init(encoded data: Data, account: UUID, origin: String) throws {
+        guard data.count <= 8_100_000 else { throw AudioCommentFailure.invalid }
+        var format = PropertyListSerialization.PropertyListFormat.binary
+        guard let fields = try PropertyListSerialization.propertyList(from: data, options: [], format: &format) as? [String: Any], format == .binary,
+              Set(fields.keys) == ["format", "origin", "source", "revision", "intent", "audio", "receipt"], fields["format"] as? String == "taskfold-audio-publication-v1",
+              fields["origin"] as? String == (try Self.canonicalOrigin(origin)), let source = (fields["source"] as? String).flatMap(UUID.init(uuidString:)), source != AudioCommentTarget.zero,
+              let revision = (fields["revision"] as? String).flatMap(UUID.init(uuidString:)), revision != AudioCommentTarget.zero,
+              let intent = fields["intent"] as? Data, intent.count <= 32_000, let audio = fields["audio"] as? Data, let receipt = fields["receipt"] as? Data, receipt.count <= 64_000 else { throw AudioCommentFailure.invalid }
+        self.origin = try Self.canonicalOrigin(origin); self.source = source; self.revision = revision
+        publication = try JSONDecoder().decode(AudioCommentPublication.self, from: intent)
+        guard publication.account == account else { throw AudioCommentFailure.changed }
+        if receipt.isEmpty { clip = try AudioCommentClip(restoring: audio, descriptor: publication.descriptor); self.receipt = nil }
+        else { guard audio.isEmpty else { throw AudioCommentFailure.invalid }; clip = nil; self.receipt = try .init(record: JSONDecoder().decode(Record.self, from: receipt), publication: publication) }
+    }
+}
+
+/// Separate device-private namespace. A successful server receipt replaces the
+/// journal atomically; its compact identity proof survives while local audio is
+/// released from this journal. The saved recording itself is never removed here.
+struct AudioCommentPublicationDisk: Sendable {
+    enum Checkpoint: Sendable { case beforeRename, afterRename }
+    let root: URL
+    let account: UUID
+    let origin: String
+    var fault: (@Sendable (Checkpoint) throws -> Void)?
+    init(root: URL, account: UUID, origin: String) throws {
+        guard account != AudioCommentTarget.zero else { throw AudioCommentFailure.changed }
+        self.root = root; self.account = account; self.origin = try AudioCommentPublicationJournal.canonicalOrigin(origin)
+    }
+    private var namespace: String { SHA256.hash(data: Data((origin + "\n" + account.uuidString.lowercased()).utf8)).map { String(format: "%02x", $0) }.joined() }
+    private func locked<T>(_ work: (Int32) throws -> T) throws -> T {
+        let base = Darwin.open(root.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW); guard base >= 0 else { throw AudioCommentStorageFailure.unreadable }; defer { Darwin.close(base) }
+        var baseInfo = stat(); guard fstat(base, &baseInfo) == 0, baseInfo.st_uid == getuid() else { throw AudioCommentStorageFailure.unreadable }
+        func child(_ name: String, _ parent: Int32) throws -> Int32 {
+            let made = mkdirat(parent, name, 0o700) == 0; guard made || errno == EEXIST else { throw AudioCommentStorageFailure.unreadable }
+            let fd = openat(parent, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW); guard fd >= 0 else { throw AudioCommentStorageFailure.unreadable }
+            var info = stat(); guard fstat(fd, &info) == 0, info.st_uid == getuid(), fchmod(fd, 0o700) == 0, fsync(parent) == 0 else { Darwin.close(fd); throw AudioCommentStorageFailure.unreadable }; return fd
+        }
+        let parent = try child("AudioPublicationJournal", base); defer { Darwin.close(parent) }
+        let folder = try child(namespace, parent); defer { Darwin.close(folder) }
+        var values = URLResourceValues(); values.isExcludedFromBackup = true
+        var url = root.appendingPathComponent("AudioPublicationJournal").appendingPathComponent(namespace); try url.setResourceValues(values)
+        let lock = openat(folder, ".lock", O_CREAT | O_RDWR | O_NOFOLLOW | O_NONBLOCK, 0o600); guard lock >= 0 else { throw AudioCommentStorageFailure.unreadable }; defer { Darwin.close(lock) }
+        var info = stat(); guard fstat(lock, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_uid == getuid(), info.st_nlink == 1, fchmod(lock, 0o600) == 0 else { throw AudioCommentStorageFailure.unreadable }
+        guard flock(lock, LOCK_EX | LOCK_NB) == 0 else { throw AudioCommentStorageFailure.busy }; defer { flock(lock, LOCK_UN) }
+        let result = try work(folder); guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }; return result
+    }
+    private func names(_ folder: Int32) throws -> [String] {
+        let fd = openat(folder, ".", O_RDONLY | O_DIRECTORY | O_NOFOLLOW); guard fd >= 0, let stream = fdopendir(fd) else { if fd >= 0 { Darwin.close(fd) }; throw AudioCommentStorageFailure.unreadable }; defer { closedir(stream) }
+        var result: [String] = []; var total: Int64 = 0
+        while true {
+            errno = 0; guard let entry = readdir(stream) else { guard errno == 0 else { throw AudioCommentStorageFailure.unreadable }; break }
+            let value = withUnsafePointer(to: &entry.pointee.d_name) { $0.withMemoryRebound(to: CChar.self, capacity: Int(entry.pointee.d_namlen) + 1) { String(cString: $0) } }
+            if [".", "..", ".lock"].contains(value) { continue }
+            let stage = value.hasPrefix(".write-") && UUID(uuidString: String(value.dropFirst(7))) != nil
+            guard stage || value.hasSuffix(".bin") && UUID(uuidString: String(value.dropLast(4))) != nil else { throw AudioCommentStorageFailure.unreadable }
+            var info = stat(); guard fstatat(folder, value, &info, AT_SYMLINK_NOFOLLOW) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_uid == getuid(), info.st_nlink == 1, info.st_size >= 0, info.st_size <= 8_100_000 else { throw AudioCommentStorageFailure.unreadable }
+            if stage { guard unlinkat(folder, value, 0) == 0 else { throw AudioCommentStorageFailure.unreadable }; continue }
+            total += info.st_size; guard total <= 50_000_000, result.count < 1000 else { throw AudioCommentStorageFailure.full }; result.append(value)
+        }
+        return result.sorted()
+    }
+    private func read(_ name: String, _ folder: Int32) throws -> AudioCommentPublicationJournal {
+        let fd = openat(folder, name, O_RDONLY | O_NOFOLLOW | O_NONBLOCK); guard fd >= 0 else { throw AudioCommentStorageFailure.unreadable }
+        let file = FileHandle(fileDescriptor: fd, closeOnDealloc: true); defer { try? file.close() }
+        var info = stat(); guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG, info.st_uid == getuid(), info.st_nlink == 1, info.st_size <= 8_100_000 else { throw AudioCommentStorageFailure.unreadable }
+        let data = try file.read(upToCount: 8_100_001) ?? Data(); guard data.count == info.st_size else { throw AudioCommentStorageFailure.unreadable }
+        let journal = try AudioCommentPublicationJournal(encoded: data, account: account, origin: origin)
+        guard name == journal.publication.operation.uuidString.lowercased() + ".bin" else { throw AudioCommentStorageFailure.unreadable }; return journal
+    }
+    private func all(_ folder: Int32) throws -> [AudioCommentPublicationJournal] {
+        let rows = try names(folder).map { try read($0, folder) }
+        guard Set(rows.map { $0.source.uuidString + ":" + $0.revision.uuidString }).count == rows.count else { throw AudioCommentStorageFailure.unreadable }; return rows
+    }
+    private func write(_ journal: AudioCommentPublicationJournal, _ folder: Int32) throws {
+        let data = try journal.encoded(), destination = journal.publication.operation.uuidString.lowercased() + ".bin"
+        let existing = try all(folder), bytes = try existing.reduce(0) { $0 + ($1.publication.operation == journal.publication.operation ? 0 : try $1.encoded().count) }
+        guard data.count <= 8_100_000, bytes + data.count <= 50_000_000, existing.count < 1000 || existing.contains(where: { $0.publication.operation == journal.publication.operation }), existing.filter({ $0.receipt == nil && $0.publication.operation != journal.publication.operation }).count < 20 else { throw AudioCommentStorageFailure.full }
+        let stage = ".write-" + UUID().uuidString.lowercased(); let fd = openat(folder, stage, O_CREAT | O_EXCL | O_WRONLY | O_NOFOLLOW, 0o600); guard fd >= 0 else { throw AudioCommentStorageFailure.unreadable }
+        let file = FileHandle(fileDescriptor: fd, closeOnDealloc: true); defer { try? file.close(); _ = unlinkat(folder, stage, 0) }
+        #if os(iOS)
+        try FileManager.default.setAttributes([.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: root.appendingPathComponent("AudioPublicationJournal").appendingPathComponent(namespace).appendingPathComponent(stage).path)
+        #endif
+        try file.write(contentsOf: data); try file.synchronize(); try file.close(); try fault?(.beforeRename)
+        guard renameat(folder, stage, folder, destination) == 0 else { throw AudioCommentStorageFailure.unreadable }
+        try fault?(.afterRename); guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
+    }
+    func journals() throws -> [AudioCommentPublicationJournal] { try locked { try all($0) } }
+    func prepare(_ source: AudioCommentSavedDraft) throws -> AudioCommentPublicationJournal {
+        guard source.owner.account == account.uuidString.lowercased() else { throw AudioCommentFailure.changed }
+        return try locked { folder in
+            let existing = try all(folder).filter { $0.source == source.id }
+            if let same = existing.first(where: { $0.revision == source.revision }) {
+                guard same.publication.target == source.target, same.publication.caption.utf8.elementsEqual(source.caption.utf8), same.publication.descriptor == source.clip.descriptor else { throw AudioCommentStorageFailure.conflict }; return same
+            }
+            guard !existing.contains(where: { $0.receipt == nil }) else { throw AudioCommentFailure(message: "An earlier version is still awaiting confirmation. Check it before publishing another version.") }
+            let journal = try AudioCommentPublicationJournal(source: source, origin: origin); try write(journal, folder); return journal
+        }
+    }
+    func confirm(_ expected: AudioCommentPublicationJournal, receipt: AudioCommentPublishedReceipt) throws -> AudioCommentPublicationJournal {
+        guard expected.origin == origin, expected.publication.account == account, receipt.publication.sameIntent(as: expected.publication) else { throw AudioCommentFailure.changed }
+        return try locked { folder in
+            let current = try read(expected.publication.operation.uuidString.lowercased() + ".bin", folder)
+            guard current.source == expected.source, current.revision == expected.revision, current.publication.sameIntent(as: expected.publication) else { throw AudioCommentStorageFailure.conflict }
+            if current.receipt != nil { return current }
+            let confirmed = try current.confirmed(receipt); try write(confirmed, folder); return confirmed
+        }
+    }
+}
+
+actor AudioCommentPublicationStorage {
+    nonisolated let account: UUID
+    nonisolated let origin: String
+    private let disk: AudioCommentPublicationDisk
+    init(disk: AudioCommentPublicationDisk) { self.disk = disk; account = disk.account; origin = disk.origin }
+    func prepare(_ source: AudioCommentSavedDraft) throws -> AudioCommentPublicationJournal { try disk.prepare(source) }
+    func journals() throws -> [AudioCommentPublicationJournal] { try disk.journals() }
+    func confirm(_ journal: AudioCommentPublicationJournal, receipt: AudioCommentPublishedReceipt) throws -> AudioCommentPublicationJournal { try disk.confirm(journal, receipt: receipt) }
+}
+
+@MainActor protocol AudioCommentPublishingTransport: AnyObject {
+    func publishAudio(_ pending: AudioCommentPending, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt
+}
+
+/// Every send is explicit. Departure/cancellation leaves the durable operation
+/// intact; a late response cannot update the active UI or another account.
+@MainActor @Observable final class AudioCommentPublicationFlow {
+    enum State { case ready, saving, sending, unconfirmed, published }
+    private(set) var state: State = .ready
+    private(set) var journal: AudioCommentPublicationJournal?
+    private let storage: AudioCommentPublicationStorage
+    private let transport: any AudioCommentPublishingTransport
+    private let current: @MainActor () -> Bool
+    private let incarnation: UUID
+    private let target: AudioCommentTarget
+    private var attempt = UUID()
+    func invalidate() { attempt = UUID(); journal = nil; state = .ready }
+    private func check(_ token: UUID) throws { guard token == attempt, current(), !Task.isCancelled else { throw CancellationError() } }
+    init(storage: AudioCommentPublicationStorage, transport: any AudioCommentPublishingTransport, incarnation: UUID, target: AudioCommentTarget, isCurrent: @escaping @MainActor () -> Bool) { self.storage = storage; self.transport = transport; self.incarnation = incarnation; self.target = target; current = isCurrent }
+    func publish(_ source: AudioCommentSavedDraft) async throws {
+        guard source.target == target, current(), !Task.isCancelled, state != .saving, state != .sending else { throw CancellationError() }
+        let token = attempt; journal = nil; state = .saving
+        do {
+            let prepared = try await storage.prepare(source); try check(token); journal = prepared
+            try await send(prepared, token: token)
+        } catch { if token == attempt { state = .unconfirmed }; throw error }
+    }
+    func retry(_ prepared: AudioCommentPublicationJournal) async throws {
+        guard prepared.publication.target == target, current(), !Task.isCancelled, state != .saving, state != .sending, prepared.origin == storage.origin, prepared.publication.account == storage.account else { throw CancellationError() }
+        let token = attempt; journal = nil; state = .saving
+        do {
+            let stored = try await storage.journals(); guard let live = stored.first(where: { $0.publication.sameIntent(as: prepared.publication) && $0.source == prepared.source && $0.revision == prepared.revision }) else { throw AudioCommentStorageFailure.conflict }
+            try check(token); journal = live; try await send(live, token: token)
+        } catch { if token == attempt { state = .unconfirmed }; throw error }
+    }
+    private func send(_ prepared: AudioCommentPublicationJournal, token: UUID) async throws {
+        try check(token)
+        if prepared.receipt != nil { state = .published; return }
+        guard let clip = prepared.clip, current(), !Task.isCancelled else { throw CancellationError() }
+        state = .sending
+        let receipt = try await transport.publishAudio(.init(publication: prepared.publication, clip: clip), origin: prepared.origin, incarnation: incarnation)
+        try check(token)
+        let committed = try await storage.confirm(prepared, receipt: receipt)
+        try check(token)
+        journal = committed; state = .published
+    }
+}

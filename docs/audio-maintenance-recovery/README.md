@@ -112,3 +112,9 @@ schedule candidate, not audio comments or the broader Px objective.
 The CLI generated both migration names. Changelog and current scheduling docs were
 reviewed; migrations were exercised only on owned dependency fixtures. No hosted
 migration history or new client/TLS dependency was introduced.
+
+Client follow-up: [native publication foundation](../audio-native-publication/README.md).
+This maintenance artifact and its source bindings describe the preceding iOS
+`6e74555` / Mac `1c35b58` checkpoint. The native foundation now uses the HTTP fixture
+with additional test-only counters/loopback inputs; no hosted maintenance behavior
+was changed or accepted by that follow-up.

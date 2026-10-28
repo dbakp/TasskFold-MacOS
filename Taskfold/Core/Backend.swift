@@ -1183,3 +1183,49 @@ extension Backend {
 #if canImport(UIKit)
 extension Backend: ASWebAuthenticationPresentationContextProviding {}
 #endif
+
+
+extension Backend: AudioCommentPublishingTransport {
+    func publishAudio(_ pending: AudioCommentPending, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
+        let owner = pending.publication.account.uuidString.lowercased()
+        func check() throws {
+            guard !sessionTransition, sessionGeneration == incarnation, session?.user.id == owner,
+                  try AudioCommentPublicationJournal.canonicalOrigin(baseURL) == origin else { throw CancellationError() }
+            try Task.checkCancellation()
+        }
+        try check(); try await refreshIfNeeded(); try check()
+        // Full native decode before sending, without recording or playing sound.
+        let decoded = try await AudioCommentDecoding.validate(pending.clip.data)
+        guard decoded.descriptor.sha256 == pending.publication.descriptor.sha256, decoded.descriptor.byteCount == pending.publication.descriptor.byteCount, abs(decoded.descriptor.milliseconds - pending.publication.descriptor.milliseconds) <= 1000 else { throw AudioCommentFailure.invalid }; try check()
+        let encoding = Task.detached(priority: .utility) { () throws -> Data in
+            try Task.checkCancellation()
+            let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+            let data = try encoder.encode(Record(["intent": .object(pending.publication.record.fields), "audio_base64": .string(pending.clip.data.base64EncodedString())]))
+            try Task.checkCancellation(); return data
+        }
+        let body = try await withTaskCancellationHandler(operation: { try await encoding.value }, onCancel: { encoding.cancel() }); try check()
+        guard let url = URL(string: origin + "/functions/v1/audio-comments?action=publish"), let session else { throw AudioCommentFailure.changed }
+        var request = URLRequest(url: url); request.httpMethod = "POST"; request.timeoutInterval = 25
+        request.cachePolicy = .reloadIgnoringLocalCacheData; request.httpShouldHandleCookies = false
+        request.setValue(config["Key"], forHTTPHeaderField: "apikey"); request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
+        request.httpBody = body
+        let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
+        var data = Data()
+        do {
+            for try await byte in bytes { try Task.checkCancellation(); guard data.count < 64000 else { throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.") }; if data.count % 4096 == 0 { try check() }; data.append(byte) }
+            try check()
+        } catch { bytes.task.cancel(); throw error }
+        guard let response = incoming as? HTTPURLResponse, response.url == url else { throw AudioCommentFailure.invalid }
+        guard (200..<300).contains(response.statusCode) else {
+            if response.statusCode == 401 { throw AccountSessionAuthorizationRequired() }
+            if response.statusCode == 429 { throw AudioCommentFailure(message: "Wait briefly, then check this recording again. Your local copy is safe.") }
+            throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.")
+        }
+        do {
+            let envelope = try JSONDecoder().decode(Record.self, from: data)
+            guard Set(envelope.fields.keys) == ["receipt"], case .object(let receipt) = envelope["receipt"] else { throw AudioCommentFailure.invalid }
+            return try AudioCommentPublishedReceipt(record: Record(receipt), publication: pending.publication)
+        } catch { throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.") }
+    }
+}

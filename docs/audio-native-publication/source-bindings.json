@@ -1,0 +1,31 @@
+{
+  "repository": "TasskFold-MacOS",
+  "ordinaryAudioExposed": false,
+  "nativeAppUIAcceptance": false,
+  "realProviderAcceptance": false,
+  "sources": {
+    "Package.swift": "90b2852e7e7d04d88d246d5e01816c05dcf5bd51bff0130eaae483e41b662c03",
+    "Taskfold.xcodeproj/project.pbxproj": "cde0f0dc48b08f3ced9d515af708a9aa719566211c46472a73bc608c39406d4e",
+    "Taskfold/Core/AudioCommentPublishing.swift": "a32797eb8242746dc28439d20f0e878b8d5e811f671a5890d42b7b2f2109f270",
+    "Taskfold/Core/AudioCommentPending.swift": "04f41819ccf9ab19c26aa6cf03eed5e4c7bfcdc5cf1f315f22ff5d2c78693b3d",
+    "Taskfold/Core/AudioCommentDecoding.swift": "d21dbbfa6223b185b8683c4ccdfdaf685eeed894b6e83e6fc3284cf2f384213f",
+    "Taskfold/Core/AudioCommentVault.swift": "bf3976f3e57b574c37376e94c4c20887f76913caeaa1d4874a23c8cf57ab1cd3",
+    "Taskfold/Core/Backend.swift": "329417e602877534a5cb5739c6a667368bf4af208f0e9622f7f7b1e5ad5d0346",
+    "TaskfoldTests/AudioCommentPublishingTests.swift": "92c87337af2456ed7f193650f74ff7660dec08df3fb3fbee8717dcb6e9ee3c4a",
+    "TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+    "Scripts/fixtures/AudioCommentPublicationProbe.swift": "f6982f32f65ceb5507c1c35e00536d4d41044fb34a83d7ab6649ec9edf1e1368",
+    "Scripts/fixtures/AudioCommentNativePublicationProof.swift": "e96911efc7eedebc7f70cb207fc8f0143ddf1db6c3fb586baffa0107f798ec03",
+    "Scripts/test_audio_publication_processes.py": "60e72589f8708342712932ce78434c65de937f16bb4d3a22f6d55ad067ad9793",
+    "Scripts/configure_audio_comments.py": "a531419f2909559706c3313c41e19960ad283b87aa12e3c4a49d8795110449ff",
+    "Scripts/Database/test-audio-native-publication.mjs": "c332beb76b59fcccdbeca510a0a8dad78198061f7763b80f22f9ce90bff7e89a",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "84227b63fccac97c86b93830ab0a25de2683443ede23996d6237a954a70d0432",
+    "Scripts/Database/audio-comments-http-fixture.ts": "132320d08b45d88169ea6a09e2acee2c8de796cd3c79a69a329e7be97dda065d",
+    "supabase/functions/audio-comments/index.ts": "eb92330c381c508f34007bb02a9cdd91c7b7af7e2318e78fecb98d5c74460cdf",
+    "supabase/functions/audio-comments/handler.ts": "e7b621d755f5fe39b75d99b5736d8f861088e0d51891f793f6dc624909e1d6c9",
+    "supabase/functions/audio-comments/wire.ts": "16b8940b5cefb4d232bb4959ce01e20051d81bc99919c19e84338541e42438e2",
+    "supabase/migrations/20261028134424_audio_comment_publication_ledger.sql": "3e6522149e52bdf52918ae66b2e7b68205fd7f290bd3276c8c09d464517efaa3",
+    "supabase/migrations/20261028145414_audio_comment_gateway_boundary.sql": "ac9a9005a8198994e2b0cec8adf4113e9d7bb8b80303b8d078a6d39cc169cb24",
+    "supabase/migrations/20261028151901_audio_comment_cleanup_fencing.sql": "7260264fa5c4419695f3a37e90d5a2a86ca822f74c7728b8a2d5b1b33ab36718",
+    "supabase/migrations/20261028153218_audio_comment_upload_recovery.sql": "fde3d58c4cd031b8e648e86660bcdf812645624791d700ce07d2792b1d70386f"
+  }
+}

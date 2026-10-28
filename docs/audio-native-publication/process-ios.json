@@ -1,0 +1,31 @@
+{
+  "checks": {
+    "crash-after expected exit 77 rename": true,
+    "show expected exit 0 rename": true,
+    "prepare expected exit 0 rename": true,
+    "restart after renamed write keeps operation": true,
+    "restart preserves literal caption": true,
+    "confirm-crash expected exit 77 rename": true,
+    "receipt survives process exit after rename": true,
+    "confirmed restart keeps original operation": true,
+    "confirmed journal releases duplicate audio": true,
+    "crash-before expected exit 76 before": true,
+    "show expected exit 0 before": true,
+    "precommit stage is never a publication": true,
+    "prepare expected exit 0 before": true,
+    "next process can prepare after precommit death": true,
+    "first process holds actual file lock": true,
+    "prepare expected exit 75 concurrent": true,
+    "owning writer completes": true,
+    "prepare expected exit 0 concurrent": true,
+    "competing process reuses single frozen operation": true,
+    "only one committed journal": true
+  },
+  "compilerWarnings": [],
+  "sources": {
+    "Taskfold/Core/AudioCommentPublishing.swift": "a32797eb8242746dc28439d20f0e878b8d5e811f671a5890d42b7b2f2109f270",
+    "Scripts/fixtures/AudioCommentPublicationProbe.swift": "f6982f32f65ceb5507c1c35e00536d4d41044fb34a83d7ab6649ec9edf1e1368",
+    "Scripts/test_audio_publication_processes.py": "60e72589f8708342712932ce78434c65de937f16bb4d3a22f6d55ad067ad9793"
+  },
+  "scope": "Separate Mac native processes with real Core/POSIX journal, injected process exits and synthetic receipt/media. No hard-power-loss, real server, native UI, microphone or playback acceptance."
+}

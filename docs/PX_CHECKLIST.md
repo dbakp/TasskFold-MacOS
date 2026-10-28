@@ -692,3 +692,22 @@ normal audio exposure; the broader audio/Px requirements remain open.
 [Evidence, limits and operator preparation](audio-maintenance-recovery/README.md).
 No hosted deployment/configuration; all normal audio flags and the cron job stay off.
 The audio feature and full Px objective remain open.
+
+
+## 2026-10-28 — native publication journal and authenticated transport
+
+- [x] Persist a server/account/recording-revision-bound frozen operation before
+  publication; reuse it across controllers/processes, prevent competing identities
+  and atomically retain a strict published receipt without duplicate audio.
+- [x] Add observable target/session-bound publication/retry flow and actual Backend
+  native-decode/fixed-route transport with bounded responses, stable JSON/base64,
+  account/departure checks and sanitized uncertain outcomes. Normal UI stays gated.
+- [x] Independently pass 161 audio Core tests, 20 real process recovery checks and
+  14 native-to-Deno/real-PostgreSQL checks per repo. Lost native reply, restart retry
+  and confirmed restart preserve one operation; the final restart sends no HTTP.
+- [ ] Store/native control wiring, live comment listing/download/removal/rendering,
+  native runtime/accessibility and local journal management, real provider acceptance
+  and remaining unknown-upload recovery. No full app/mobile UI acceptance is claimed.
+
+[Evidence and next required work](audio-native-publication/README.md). This is the
+verified client foundation; normal audio and the overall Px goal remain open.

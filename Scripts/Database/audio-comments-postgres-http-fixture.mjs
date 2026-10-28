@@ -16,6 +16,7 @@ export async function createAudioHttpFixture(pg, actor, session) {
   const state = {
     objects: new Map(),
     uploads: 0,
+    authReads: 0,
     lostAck: false,
     noWrite: false,
     corrupt: false,
@@ -30,6 +31,7 @@ export async function createAudioHttpFixture(pg, actor, session) {
     try {
       assert.equal(req.headers.apikey, "synthetic-loopback-service");
       if (req.url === "/auth/v1/user") {
+        state.authReads++;
         assert.equal(req.headers.authorization, "Bearer " + token);
         return json({ id: actor });
       }
@@ -203,7 +205,14 @@ export async function createAudioHttpFixture(pg, actor, session) {
         },
         signal: AbortSignal.timeout(25000),
       });
-    return { call, close, state, maintain };
+    return {
+      call,
+      close,
+      state,
+      maintain,
+      nativeEndpoint: "http://127.0.0.1:" + port,
+      nativeToken: token,
+    };
   } catch (error) {
     await close();
     throw error;
