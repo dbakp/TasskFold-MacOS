@@ -1,0 +1,16 @@
+{
+  "scope": "Destination-only identity indexes; Core equivalence and native build/sign verification. No new native UI or end-to-end timing acceptance.",
+  "coreTestsBefore": 97,
+  "coreTestsAfter": 97,
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "ab5cf59366a863bd5ea43b1a3298fc5f74f4f190c417efaf4fb6d7ba09893460",
+    "TaskfoldTests/WorkflowDestinationIndexTests.swift": "81288d1dfc28f29a6652edd80ff3b7724a0af69542e046f679b1e39065b55151"
+  },
+  "hostSourceMatchesOwnedRepo": true,
+  "strictNativeSignatureVerified": true,
+  "appBinaries": {
+    "Contents/MacOS/Taskfold.debug.dylib": "aa7a077cdff85ec419d200b6f6e9fa01195c563bb4c862f3e8606ac897128a6f",
+    "Contents/MacOS/__preview.dylib": "37f663a4f41692abba5703b50067fc100a48e6b377fd63e720a21e31a2a99db9",
+    "Contents/MacOS/Taskfold": "3dda4b29bdad05790b6f7bc3c79c80b17a7b544034fc374a56ef3b8397d51b7d"
+  }
+}

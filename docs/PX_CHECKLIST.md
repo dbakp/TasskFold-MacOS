@@ -365,3 +365,12 @@ the broader audio gate or the Px objective. Ordinary audio entry points stay gat
 - [ ] Close previously recorded Mac runtime and cloud-settle gates.
 
 [Evidence, measurements and exact limits](workflow-projection-adoption/README.md).
+
+## 2026-10-28 — destination-only workflow identity indexes
+
+- [x] Stop scanning unrelated saved history/recovery/future rows for workflow insertion collisions.
+- [x] Compare 123 admission decisions with the frozen legacy constructor and preserve admitted rows and consumed-command refusal.
+- [x] 97 selected Core cases pass before and after in each repo; both native builds and signatures pass.
+- [ ] End-to-end save/rendering and richer child/assignment workloads remain open; component timings do not close those gates.
+
+[Evidence and precise scope](workflow-destination-index/README.md).

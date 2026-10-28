@@ -1229,7 +1229,13 @@ struct FreshWorkflowCreation {
     private var remaining: Set<String>
     init?(_ changes: [Mutation], snapshot: Snapshot, account: String) {
         guard let run = WorkflowUndo.creationRun(changes), !account.isEmpty else { return nil }
-        let existing = snapshot.tables.mapValues { Set($0.map(\.id)) }
+        // Only destination tables can collide with this run. Activity, comments,
+        // private recovery and future tables may be large but cannot contribute
+        // an identity to an insertion into another table.
+        let destinations = Set(changes.map(\.table))
+        let existing = Dictionary(uniqueKeysWithValues: destinations.map { table in
+            (table, Set((snapshot.tables[table] ?? []).map(\.id)))
+        })
         var keys = Set<String>(), taskNamespaces = Set<String>()
         for change in changes {
             // Local assignment history uses case-folded root identities. Aliases
