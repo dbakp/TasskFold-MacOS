@@ -9135,3 +9135,18 @@ from 464 ms to 409 ms. These are diagnostic Debug observations, not release or
 statistical performance acceptance. Native final scopes and evidence are in
 `workflow-widget-preparation/README.md`. The broader save pause and existing
 Mac runtime/production-rendering/shared-delivery gates remain open.
+
+### 28 October — admit worker-validated workflow creation
+
+Fresh local workflow workers now retain their unconsumed collision-checked append
+plan and static task-validation result. Only unchanged command buffers with the
+current source/account/cache/calendar, complete projection and retained Undo can
+reuse it; the Store still checks current heading authoring. Other paths retain
+sequential validation, and late projection rejection replays every original row.
+Both independent Core suites pass 159 selected cases, including 648 comparisons
+against the existing task-kind/capability decisions. One same-Simulator Debug
+comparison observed the creation/row phase fall from 217 ms to 22 ms and the
+synchronous save from 424 ms to 222 ms for 5,000 tasks. These are observations,
+not release performance acceptance. Final native scopes and evidence are in
+`workflow-validation-admission/README.md`. Production rendering, richer work,
+Mac desktop runtime/warnings and hosted/paired delivery remain open.

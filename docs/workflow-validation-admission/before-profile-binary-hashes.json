@@ -1,0 +1,13 @@
+{
+  "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app/Taskfold": "db843d157054edbd3f63778c9b0363b2b5d99f8745066e57dddf69d63a146a30",
+  "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest/TaskfoldUITests": "560af24a2bb619d253868937a917191f9c8c558b4221dbb6576d29918694558f",
+  "installedBaselineApp": {
+    "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/4DF39795-866A-49B0-849A-4CB48B5BE287/Taskfold.app/Taskfold.debug.dylib": "eb1e1bb7dbdaf205053d217d53868a4ea6477858e3dcb19548843c6cfd08d5c4",
+    "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/4DF39795-866A-49B0-849A-4CB48B5BE287/Taskfold.app/Taskfold": "db843d157054edbd3f63778c9b0363b2b5d99f8745066e57dddf69d63a146a30",
+    "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/4DF39795-866A-49B0-849A-4CB48B5BE287/Taskfold.app/_CodeSignature/CodeResources": "bc06d18c052a3dcdbf78b102e775ef0cb8259800fb501006f9c5da91f32ba6fb",
+    "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/4DF39795-866A-49B0-849A-4CB48B5BE287/Taskfold.app/PlugIns/TaskfoldShare.appex/_CodeSignature/CodeResources": "c0dccdf5895530cd6058f3ff6622cfe905d51d17c4c70c4f81e259d5010ad785",
+    "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/4DF39795-866A-49B0-849A-4CB48B5BE287/Taskfold.app/PlugIns/TaskfoldWidgets.appex/_CodeSignature/CodeResources": "28c11a6d037090486fa6feb0c468dd3602d85f383a3956f0dac4b12da419c167",
+    "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Bundle/Application/4DF39795-866A-49B0-849A-4CB48B5BE287/Taskfold.app/AppAuth_AppAuthCore.bundle/_CodeSignature/CodeResources": "5ace8e143daa502cd1e2a755c719841539c3005f7bf74c414a0db8c311a065d5"
+  },
+  "baselineValidationSymbolAbsent": true
+}

@@ -507,6 +507,7 @@ import CryptoKit
                 "preparedUndoUsed": .bool(store.workflowPreparedUndoUsed),
                 "preparedEncodingUsed": .bool(store.workflowPreparedEncodingUsed),
                 "preparedProjectionUsed": .bool(store.workflowPreparedProjectionUsed),
+                "preparedValidationUsed": .bool(store.workflowPreparedValidationUsed),
                 "sourceEditPreserved": .bool(!changeSource || store.snapshot.tables["tasks"]?.first?.title == "Edited while history prepared"),
                 "taskRevisionDelta": .number(Double(store.taskRevision - revision)),
                 "tasks": .number(Double(store.tasks.count)), "pending": .number(Double(store.snapshot.pending.count)),

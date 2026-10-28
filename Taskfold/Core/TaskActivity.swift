@@ -1310,6 +1310,8 @@ enum LocalActivityCreation {
         private let tables: [String: [Record]]
         private let undoHistory: EditHistory?
         private let encodedCache: PreparedSnapshotEncoding?
+        private let freshCreation: FreshWorkflowCreation
+        private let requiresHeadingAuthoring: Bool
         private static let owned = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable, TaskAssignmentProvenance.table]
         init?(changes: [Mutation], snapshot: Snapshot, source: UUID, account: String, labels: [Record], cache: TeamWorkspaceCache?, at date: Date = Date(), checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
             try checkCancellation()
@@ -1328,15 +1330,22 @@ enum LocalActivityCreation {
                 return TaskCompletionRevision.capturing(change, existing: nil)
             }
             guard var fresh = FreshWorkflowCreation(normalized, snapshot: snapshot, account: account) else { return nil }
-            var working = snapshot, entries: [Entry] = []
+            let freshCreation = fresh
+            var working = snapshot, entries: [Entry] = [], requiresHeadingAuthoring = false
             for change in normalized {
                 try checkCancellation()
+                // append runs the same generation/kind checks as the Store with
+                // no existing row. Retain the capability requirement separately;
+                // the current Store capability is never captured in the worker.
+                requiresHeadingAuthoring = TaskKind.requiresAuthoring(change, existing: nil) || requiresHeadingAuthoring
+                try TaskKind.validateCapturedTypeEdit(change, existing: nil)
                 guard let after = fresh.append(change, to: &working) else { return nil }
                 if change.table == "tasks" { entries.append(Entry(change: change, after: after, recordedAt: date)) }
             }
             guard LocalActivityCreation.record(entries, snapshot: &working, account: account) else { return nil }
             try checkCancellation()
             self.source = source; self.account = account; self.entries = entries
+            self.freshCreation = freshCreation; self.requiresHeadingAuthoring = requiresHeadingAuthoring
             originals = changes; self.normalized = normalized; self.calendar = calendar; self.cache = cache
             tables = working.tables.filter { Self.owned.contains($0.key) }
             // Build the bounded workflow inverse in the worker too. The Store
@@ -1375,6 +1384,13 @@ enum LocalActivityCreation {
             var canAdoptProjectedCreation: Bool { canRetainCapturedChanges && preparation.encodedCache != nil }
 
             var encodedCache: PreparedSnapshotEncoding? { preparation.encodedCache }
+            /// Static row checks were run while appending these exact commands
+            /// in the worker. A complete unchanged projection and Undo are required
+            /// before the Store can reuse those checks instead of replaying them.
+            func validatedCreation(matching changes: [Mutation], source: UUID, account: String) -> ValidatedCreation? {
+                guard canAdoptProjectedCreation, editHistory(matching: changes, source: source, account: account) != nil else { return nil }
+                return ValidatedCreation(creation: preparation.freshCreation, requiresHeadingAuthoring: preparation.requiresHeadingAuthoring)
+            }
             func editHistory(matching changes: [Mutation], source: UUID, account: String) -> EditHistory? {
                 guard preparation.source == source, preparation.account.utf8.elementsEqual(account.utf8),
                       preparation.calendar == .current, !changes.isEmpty,
@@ -1389,8 +1405,8 @@ enum LocalActivityCreation {
             func apply(to snapshot: inout Snapshot, source: UUID, account: String, retainingValidatedCommands: Bool = false) -> Bool {
                 guard preparation.source == source, preparation.account.utf8.elementsEqual(account.utf8), preparation.calendar == .current else { return false }
                 if retainingValidatedCommands, canRetainCapturedChanges, let encodedCache {
-                    // Store has validated every retained command. These are the
-                    // same projected tables, with the worker's widget tokens.
+                    // Store has admitted every retained command and the current
+                    // authoring capability. Preserve the worker's exact tables/tokens.
                     snapshot.tables = encodedCache.snapshot.tables
                     snapshot.widgetCompletion = encodedCache.snapshot.widgetCompletion
                 } else {
@@ -1398,6 +1414,14 @@ enum LocalActivityCreation {
                 }
                 return true
             }
+        }
+        struct ValidatedCreation: Sendable {
+            let creation: FreshWorkflowCreation
+            private let requiresHeadingAuthoring: Bool
+            fileprivate init(creation: FreshWorkflowCreation, requiresHeadingAuthoring: Bool) {
+                self.creation = creation; self.requiresHeadingAuthoring = requiresHeadingAuthoring
+            }
+            func permitsAuthoring(enabled: Bool) -> Bool { enabled || !requiresHeadingAuthoring }
         }
         func apply(_ entries: [Entry], to snapshot: inout Snapshot, source: UUID, account: String) -> Bool {
             guard self.source == source, self.account.utf8.elementsEqual(account.utf8), calendar == .current, entries.count == self.entries.count,

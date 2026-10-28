@@ -103,6 +103,7 @@ final class Store {
     @ObservationIgnored private(set) var workflowPreparedUndoUsed = false
     @ObservationIgnored private(set) var workflowPreparedEncodingUsed = false
     @ObservationIgnored private(set) var workflowPreparedProjectionUsed = false
+    @ObservationIgnored private(set) var workflowPreparedValidationUsed = false
     #endif
     var snapshot = Snapshot() {
         didSet {
@@ -1534,6 +1535,7 @@ final class Store {
         workflowPreparedUndoUsed = false
         workflowPreparedEncodingUsed = false
         workflowPreparedProjectionUsed = false
+        workflowPreparedValidationUsed = false
         #endif
         guard !signingOut, !accountRemovalBlocked else { error = "Finish account removal before changing this workspace."; return false }
         guard workspaceCacheDecoded else {error="Your saved workspace needs recovery before more changes can be saved. Its original file is kept.";return false}
@@ -1653,15 +1655,25 @@ final class Store {
                 publishWidgetSnapshot(background: true)
             }
         }
-        var freshCreation = FreshWorkflowCreation(changes, snapshot: old, account: userID)
+        let validatedCreation = admittedHistory?.validatedCreation(matching: changes, source: historySourceRevision, account: userID)
+        var freshCreation = validatedCreation?.creation ?? FreshWorkflowCreation(changes, snapshot: old, account: userID)
         let projectsFreshCreation = freshCreation != nil
         var working = old
         var localCreations: [LocalActivityCreation.Entry] = []
         let retainCapturedChanges = projectsFreshCreation && admittedHistory?.canRetainCapturedChanges == true
         let canAdoptProjection = retainCapturedChanges && admittedHistory?.canAdoptProjectedCreation == true
 
+        let reuseValidation = canAdoptProjection && validatedCreation != nil
+        if reuseValidation, validatedCreation?.permitsAuthoring(enabled: taskHeadingsAuthoringEnabled) != true {
+            snapshot = old; error = "Heading creation is not available in this workspace yet. Your source and saved draft are unchanged."; return false
+        }
+        #if DEBUG
+        workflowPreparedValidationUsed = reuseValidation
+        #endif
         var committedChanges: [Mutation] = retainCapturedChanges ? changes : []
-        for var change in changes {
+        // Only an unchanged, wholly-fresh local projection can reuse its worker
+        // checks. All other edits retain the complete sequential validation path.
+        for var change in reuseValidation ? [] : changes {
             let current = projectsFreshCreation ? nil : record(change.table, id: change.recordID)
             if change.table == "tasks", change.method == "PATCH", change.baseline == nil, let existing = current {
                 change.baseline = TaskCompletionRevision.editBaseline(for: change.fields, from: existing)
@@ -1673,7 +1685,7 @@ final class Store {
                 change.baseline = existing.fields.merging(change.baseline ?? [:]) { _, original in original }
             }
             // Admitted fresh local commands were already captured in the worker.
-            // All validations below still run; only idempotent rewriting is skipped.
+            // Without admitted worker validation, all checks below still run.
             if !retainCapturedChanges { change = TaskCompletionRevision.capturing(change, existing: current) }
             guard TaskGeneration.permitsLocalAction(change, existing: current) else {
                 snapshot = old
@@ -1701,7 +1713,7 @@ final class Store {
                 committedChanges.append(change)
             }
             if projectsFreshCreation {
-                // All Store gates above still run. The initial wholly-fresh plan
+                // The Store gates above still run. The initial wholly-fresh plan
                 // and immutable command admission also cover append's identity
                 // checks; adopt its already-built rows after the final scope fence.
                 if canAdoptProjection { continue }

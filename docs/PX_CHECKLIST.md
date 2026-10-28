@@ -81,9 +81,10 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   stacks remain recorded; functional passes do not establish clean runtime.
 - [ ] Further reduce synchronous large-workflow save pauses; validate production
   rendering, richer child/assignment workloads and hosted/paired bulk delivery.
-  Latest scoped change reuses exactly admitted worker widget signatures; the
-  5,000-task diagnostic save remains about 0.41 seconds. See
-  workflow-widget-preparation/README.md; the broader item remains open.
+  Latest scoped change also reuses worker-validated fresh creation with exact
+  admission and a current heading-capability check. The 5,000-task diagnostic
+  save is now about 0.22 seconds. See workflow-validation-admission/README.md;
+  the broader item remains open.
 - [x] Background local-history preparation, changed-source fallback and recorded
   Core/native functional verification. Mac warnings and remaining pauses stay
   open. See local-history-worker/ for scoped results.

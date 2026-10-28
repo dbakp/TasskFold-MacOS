@@ -1,0 +1,20 @@
+{
+  "mac": {
+    "Taskfold/Core/Store.swift": "6813dc29c8439e81b83c1bd43683ff7fefb19472641e637cf2b8b7b0c8067678",
+    "Taskfold/Core/ProjectWorkflows.swift": "1b2910702f807c1390862d177e6851c366ea465a6e1fb2992099a4f0bce718d2",
+    "Taskfold/Core/TaskActivity.swift": "ede44f91af4b71f758dbe04368216040da171a5a75506f36a2b521cfdfae6880",
+    "Taskfold/Core/Models.swift": "de8ec421bec1ee31449cedc469f778d96a63310624b84df9de6a72ba2055404a",
+    "Taskfold/TeamTemplateNativeFixture.swift": "f383745c92edd6f01ddf99704f1953524def516a43aedebe5c5cc4ed7ea94012",
+    "TaskfoldUITests/TaskfoldMacUITests.swift": "009b35cfd6c29cf70a34cfb3d94b3cc819226fe46137495a88606ef693d1b253",
+    "newCoreTestHash": "d1e00770d8bbca9ac86eba69e795d48e4cc1a963b80641cf754eb28246871aa0"
+  },
+  "ios": {
+    "Taskfold/Core/Store.swift": "f362770cdf8fad1f4294057b072b528d07ad2d60ff82212fd86a04b8fa0de9d5",
+    "Taskfold/Core/ProjectWorkflows.swift": "9f2fce2f2799fc26ccd7c88f60d336ddb0f88e7ff50d7cc68b5c39940aa0b3ec",
+    "Taskfold/Core/TaskActivity.swift": "ede44f91af4b71f758dbe04368216040da171a5a75506f36a2b521cfdfae6880",
+    "Taskfold/Core/Models.swift": "de8ec421bec1ee31449cedc469f778d96a63310624b84df9de6a72ba2055404a",
+    "Taskfold/TeamTemplateNativeFixture.swift": "45f08f75ef35d882bb40e1065b6c6c60d5ee65d7ea9650a6dc7dfea9d8eb7f75",
+    "TaskfoldUITests/TaskfoldUITests.swift": "d22b2ae7e45b292bc6a287070b41929ec4f6797daf2969410a9d4c45a6a23424",
+    "newCoreTestHash": "d1e00770d8bbca9ac86eba69e795d48e4cc1a963b80641cf754eb28246871aa0"
+  }
+}

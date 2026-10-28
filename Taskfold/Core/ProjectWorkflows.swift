@@ -1223,7 +1223,7 @@ enum TaskRowCSVFormat {
 /// A one-use append plan for wholly fresh personal workflow identities. Keeping
 /// the working snapshot local avoids a linear lookup and array copy per insert.
 /// Collisions, retries and mixed commands keep the ordinary projection path.
-struct FreshWorkflowCreation {
+struct FreshWorkflowCreation: Sendable {
     private let run: UUID
     private let account: String
     private var remaining: Set<String>

@@ -5229,6 +5229,7 @@ extension SharedHeadingNativeTests {
         if localHistory {
             XCTAssertEqual(value["preparedLocalHistoryUsed"] as? Bool, !staleHistory && !rejectProjection)
             XCTAssertEqual(value["preparedProjectionUsed"] as? Bool, !staleHistory && !rejectProjection)
+            XCTAssertEqual(value["preparedValidationUsed"] as? Bool, !staleHistory)
             XCTAssertEqual(value["preparedNormalizationUsed"] as? Bool, !staleHistory)
             XCTAssertEqual(value["preparedUndoUsed"] as? Bool, !staleHistory)
             XCTAssertEqual(value["preparedEncodingUsed"] as? Bool, !staleHistory && !failSave && !rejectProjection)

@@ -1,0 +1,34 @@
+{
+  "before-profile": {
+    "actualPassingTests": 1,
+    "strictVerifier": "Verified 1 actual passing UI tests; no runtime warnings.",
+    "resultBundle": "/tmp/taskfold-workflow-validation-before-profile-phone.xcresult"
+  },
+  "after-profile": {
+    "actualPassingTests": 1,
+    "strictVerifier": "Verified 1 actual passing UI tests; no runtime warnings.",
+    "resultBundle": "/tmp/taskfold-workflow-validation-after-profile-phone.xcresult"
+  },
+  "final-phone": {
+    "actualPassingTests": 6,
+    "strictVerifier": "Verified 6 actual passing UI tests; no runtime warnings.",
+    "resultBundle": "/tmp/taskfold-workflow-validation-final-phone.xcresult"
+  },
+  "final-ipad": {
+    "actualPassingTests": 1,
+    "strictVerifier": "Verified 1 actual passing UI tests; no runtime warnings.",
+    "resultBundle": "/tmp/taskfold-workflow-validation-final-ipad.xcresult"
+  },
+  "core": {
+    "mac": 159,
+    "ios": 159,
+    "failures": 0,
+    "newTests": 6,
+    "kindCapabilityComparisons": 648
+  },
+  "builds": {
+    "mac": "Build-for-testing and deep strict signature passed; no desktop runtime claim",
+    "ios": "Build-for-testing, real-team Simulator signing and deep strict signature passed"
+  },
+  "scope": "Two instrumented diagnostic runs plus seven final native cases. Final sources have no profiling timers. Mac runtime, physical devices, production rendering and hosted/paired delivery remain open."
+}
