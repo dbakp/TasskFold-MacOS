@@ -9066,3 +9066,14 @@ the broader audio gate or the Px objective. Ordinary audio entry points stay gat
 - [ ] End-to-end save/rendering and richer child/assignment workloads remain open; component timings do not close those gates.
 
 [Evidence and precise scope](workflow-destination-index/README.md).
+
+## 2026-10-28 — exact filtered-task output admission
+
+- [x] Reproduce stale root/child source acceptance hidden by Swift canonical equality, then refuse it using the existing exact authored-source comparison.
+- [x] Preserve refreshed PDF/CSV output and object insertion-order tolerance; selected Core suites pass 104 Mac / 105 iOS cases.
+- [x] Build and verify signatures for both current native apps.
+- [ ] Wider spoken, cross-device and external file-provider acceptance remains open.
+
+[Evidence and native acceptance scope](filtered-output-source/README.md).
+
+Native output follow-up: iPad passes all three selected journeys; iPhone passes CSV/cold-return and source revocation, but repeat PDF Save reliability remains open. Same-name replacement and an unshipped filename-field driver attempt are retained as separate failures in filtered-output-source/. No experimental driver change ships.

@@ -60,11 +60,11 @@ struct PrintDocument: Equatable, Sendable {
             let index = try TaskHierarchyIndex(roots: hierarchyRoots.filter { childRoots.contains($0.id) }, projects: projects, workspace: WorkspaceBinding(account: "print-review", generation: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
             for task in displayed {
                 if task.id.hasPrefix("subtask:") {
-                    guard let item = index.item(task.id), item.record == task else { throw AppFailure(message: "A filtered subtask changed. Refresh the list before printing.") }
+                    guard let item = index.item(task.id), matchesSource(item.record, task) else { throw AppFailure(message: "A filtered subtask changed. Refresh the list before printing.") }
                     parentContext[task.id] = item.parentTitles.joined(separator: " › "); parentTitlePaths[task.id] = item.parentTitles
                 } else {
                     let roots = hierarchyRoots.filter { $0.id == task.id }
-                    guard roots.count == 1, roots[0] == task else { throw AppFailure(message: "A filtered task changed. Refresh the list before printing.") }
+                    guard roots.count == 1, matchesSource(roots[0], task) else { throw AppFailure(message: "A filtered task changed. Refresh the list before printing.") }
                 }
             }
         }
