@@ -1,0 +1,19 @@
+{
+  "core": {
+    "cases": 118,
+    "failures": 0,
+    "scope": "Selected existing worker admission/encoding/history/workflow cases; Core target excludes Store."
+  },
+  "nativeFunctional": {
+    "phone": 6,
+    "ipad": 2,
+    "failures": 0,
+    "scope": "Actual Store plus TemplateRunView Create/Undo and scale fixtures; synthetic data/peer only."
+  },
+  "diagnosticMeasurements": {
+    "before": 3,
+    "after": 3,
+    "distinctTestMethods": 1
+  },
+  "wholePxComplete": false
+}

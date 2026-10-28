@@ -1,8 +1,10 @@
 # Remaining product backlog
 
-Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
+Updated 29 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
 ## Current implementation focus
+
+Fresh local workflow saves now skip discarded normalization setup and a repeated fresh-run scan, while current admission, validation and durable save paths remain intact. Three native Debug observations per version on iPhone Simulator reduce the 5,000-task median synchronous commit from 220 to 171 ms. Both repos pass 118 focused Core cases; six iPhone and two iPad native functional cases pass, and both isolated app/test builds/signatures verify. The remaining pause, production rendering, richer workloads and hosted/Mac acceptance stay open. See [normalization setup evidence](workflow-normalization-setup/README.md).
 
 Publication-copy review now scrolls concise results into view before requesting VoiceOver focus. Five distinct component journeys pass on each iPhone/iPad Simulator across recorded phases, including cold closed-proof/media recovery, separate cancellation/resume/removal confirmation and real system speech for the unconfirmed result. Four largest-text images are visually verified; both isolated app/test builds pass. Mac runtime, full Store/main publisher lifecycle, other spoken actions and provider/legacy/custody acceptance remain open. Ordinary gates stay off. See [native review evidence](audio-owner-review-native/README.md).
 

@@ -1,4 +1,4 @@
-# Px checklist — 28 October 2026
+# Px checklist — 29 October 2026
 
 This is a feature-level progress snapshot, not a release-readiness certificate.
 Checked items are complete within their recorded acceptance scope. Open items
@@ -84,9 +84,10 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   stacks remain recorded; functional passes do not establish clean runtime.
 - [ ] Further reduce synchronous large-workflow save pauses; validate production
   rendering, richer child/assignment workloads and hosted/paired bulk delivery.
-  Latest scoped change also reuses worker-validated fresh creation with exact
-  admission and a current heading-capability check. The 5,000-task diagnostic
-  save is now about 0.22 seconds. See workflow-validation-admission/README.md;
+  Latest scoped change skips discarded normalization setup for exactly admitted
+  fresh local commands. Three Debug observations per version put the 5,000-task
+  median commit at about 0.17 seconds (previously 0.22). See
+  workflow-normalization-setup/README.md;
   the broader item remains open.
 - [x] Background local-history preparation, changed-source fallback and recorded
   Core/native functional verification. Mac warnings and remaining pauses stay
@@ -888,3 +889,18 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
   acceptance. Existing user deferrals remain; normal audio gates are off.
 
 [Exact phases, failures, fixes and limits](audio-owner-review-native/README.md).
+
+## 2026-10-29 — skip discarded local workflow setup
+
+- [x] Use the existing exact worker admission before allocating normalization
+  command copies/catalog indexes; ordinary and stale inputs retain the old path.
+- [x] Reuse the prepared fresh-run shape without caching current permissions or
+  changing row validation, receipt staging, durable save, rollback or Undo.
+- [x] Three native Debug observations each before/after: 5,000-task median commit
+  220 → 171 ms. Branch use and existing saved/history/widget invariants pass.
+- [x] 118 focused Core cases in each repo; six native iPhone and two iPad
+  functional cases, both isolated app/test builds and signatures.
+- [ ] Remaining synchronous pause, richer workloads/production rendering, Mac
+  runtime/warnings and genuine cloud/paired delivery. Px stays unfinished.
+
+[Measurements, exact acceptance and limits](workflow-normalization-setup/README.md).

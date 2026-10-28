@@ -1,0 +1,6 @@
+{
+  "measurementProduced": false,
+  "failedBeforeMeasurement": 3,
+  "cause": "Fixture inherited Accessibility XXXL; openNativeWorkflow was not in realized Form rows. Standard L is now explicit for this diagnostic.",
+  "runnerCleanup": "After all three setup failures, owned Xcode result finalization did not exit; requested INT, then TERM after confirming exact command and outcomes. Exit 143; no passed test/measurement claimed."
+}

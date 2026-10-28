@@ -504,6 +504,7 @@ import CryptoKit
                 "mainActorPreparationPulses": .number(Double(mainActorPulses)),
                 "preparedLocalHistoryUsed": .bool(store.workflowPreparedLocalHistoryUsed),
                 "preparedNormalizationUsed": .bool(store.workflowPreparedNormalizationUsed),
+                "normalizationSetupUsed": .bool(store.workflowNormalizationSetupUsed),
                 "preparedUndoUsed": .bool(store.workflowPreparedUndoUsed),
                 "preparedEncodingUsed": .bool(store.workflowPreparedEncodingUsed),
                 "preparedProjectionUsed": .bool(store.workflowPreparedProjectionUsed),

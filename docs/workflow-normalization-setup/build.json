@@ -1,0 +1,19 @@
+{
+  "bundleIdentifier": "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+  "result": "TEST BUILD SUCCEEDED",
+  "strictSignatureVerified": true,
+  "binaries": {
+    "Taskfold": {
+      "sha256": "09a92fe816b56e31cb0d8a5a6bc3d3af0dada1e85db5f1b200646fdc1ab39c6f",
+      "architectures": "arm64"
+    },
+    "Taskfold.debug.dylib": {
+      "sha256": "1709a7e9c680f56896606770401cc16382d49f1535d155e4bd1c0a9ff67067bc",
+      "architectures": "arm64"
+    }
+  },
+  "nativeMacClaim": false,
+  "tests": {
+    "TaskfoldUITests-Runner.app/Contents/PlugIns/TaskfoldUITests.xctest/Contents/MacOS/TaskfoldUITests": "138671b92e55e3af538125fcbdc70fb0eb2730ad62125f95026d39845ae94039"
+  }
+}

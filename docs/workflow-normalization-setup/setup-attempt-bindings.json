@@ -1,0 +1,22 @@
+{
+  "repoCommit": "90cdb471b1c2972c53180b967fe04472b96a3eee",
+  "scope": "Uninstrumented Store; existing native 5000-task benchmark, 3 repetitions. Only test touch/VoiceOver cleanup differs from HEAD.",
+  "sources": {
+    "Taskfold/Core/Store.swift": {
+      "repo": "f362770cdf8fad1f4294057b072b528d07ad2d60ff82212fd86a04b8fa0de9d5",
+      "host": "aaa14d496729499785a91f0312a96ddf56fa2dced328a4d671444f0608ca2d96"
+    },
+    "Taskfold/TeamTemplateNativeFixture.swift": {
+      "repo": "45f08f75ef35d882bb40e1065b6c6c60d5ee65d7ea9650a6dc7dfea9d8eb7f75",
+      "host": "45f08f75ef35d882bb40e1065b6c6c60d5ee65d7ea9650a6dc7dfea9d8eb7f75"
+    },
+    "TaskfoldUITests/TaskfoldUITests.swift": {
+      "repo": "bc08464e3102e389d73c5c0af3cf7f1da58c919c912e74f982a7694119022e93",
+      "host": "bc08464e3102e389d73c5c0af3cf7f1da58c919c912e74f982a7694119022e93"
+    }
+  },
+  "binaries": {
+    "Taskfold": "d25459701b28a9d6c926c7927698862087edef8c8ac568cc49926372d544c484",
+    "Taskfold.debug.dylib": "c50630fd0b0d075faa6e2ad78800428ebc619d208e69c384aea0482ff2f3e453"
+  }
+}

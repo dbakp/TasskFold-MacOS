@@ -100,6 +100,7 @@ final class Store {
     #if DEBUG
     @ObservationIgnored private(set) var workflowPreparedLocalHistoryUsed = false
     @ObservationIgnored private(set) var workflowPreparedNormalizationUsed = false
+    @ObservationIgnored private(set) var workflowNormalizationSetupUsed = false
     @ObservationIgnored private(set) var workflowPreparedUndoUsed = false
     @ObservationIgnored private(set) var workflowPreparedEncodingUsed = false
     @ObservationIgnored private(set) var workflowPreparedProjectionUsed = false
@@ -1532,6 +1533,7 @@ final class Store {
         #if DEBUG
         workflowPreparedLocalHistoryUsed = false
         workflowPreparedNormalizationUsed = false
+        workflowNormalizationSetupUsed = false
         workflowPreparedUndoUsed = false
         workflowPreparedEncodingUsed = false
         workflowPreparedProjectionUsed = false
@@ -1597,42 +1599,52 @@ final class Store {
         guard preparedChanges.filter({ $0.organizationOrder != nil || $0.method == "ORDER" }).allSatisfy(OrganizationOrder.valid) else {
             error = "This ordering command is invalid."; return false
         }
-        // Undo and redo are new commands; a persisted retry keeps its existing identity.
-        let orderingCommands = preparedChanges.map { change in
-            var change = change
-            if change.organizationOrder != nil { change.id = UUID() }
-            return change
-        }
         let old = snapshot
-        // Normalization precedes all mutation; reuse its immutable lookup/catalog.
-        let normalizationTables = Set(orderingCommands.map(\.table))
-        let normalizationRows = presentedTables.filter { normalizationTables.contains($0.key) }.mapValues { rows in
-            Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        }
-        func normalizationRecord(_ table: String, id: String) -> Record? { normalizationRows[table]?[id] }
-        let normalizationLabels = orderingCommands.contains { $0.table == "tasks" && $0.method != "DELETE" } ? labels : []
-        let normalizationCache = nativeConversationTeamCache
-        let changes = admittedHistory?.changes ?? orderingCommands.flatMap { TaskAssignment.mutations($0, existing: normalizationRecord($0.table, id: $0.recordID)) }.map { change in
-            var change = change
-            if change.table == "tasks", change.method != "DELETE" {
-                change.fields = TaskPlanning.fields(change.fields, existing: normalizationRecord("tasks", id: change.recordID))
-                if change.method == "PATCH", change.fields["reminder_specs"] == nil,
-                   !Set(change.fields.keys).isDisjoint(with: ["due_date", "due_time", "scheduled_at", "time_zone"]),
-                   let existing = normalizationRecord("tasks", id: change.recordID) {
-                    let proposed = Record(existing.fields.merging(change.fields) { _, new in new })
-                    let resolved = applyingReminderDefault(proposed, previous: existing)
-                    if resolved["reminder_specs"] != proposed["reminder_specs"] {
-                        change.fields["reminder_specs"] = resolved["reminder_specs"]
-                        if change.baseline != nil { change.baseline?["reminder_specs"] = existing["reminder_specs"] }
+        let changes: [Mutation]
+        if let admittedHistory {
+            // Exact worker admission already supplies these normalized commands.
+            // Do not build command copies/catalog lookups that this path discards.
+            changes = admittedHistory.changes
+        } else {
+            #if DEBUG
+            workflowNormalizationSetupUsed = true
+            #endif
+            // Undo and redo are new commands; a persisted retry keeps its existing identity.
+            let orderingCommands = preparedChanges.map { change in
+                var change = change
+                if change.organizationOrder != nil { change.id = UUID() }
+                return change
+            }
+            // Normalization precedes all mutation; reuse its immutable lookup/catalog.
+            let normalizationTables = Set(orderingCommands.map(\.table))
+            let normalizationRows = presentedTables.filter { normalizationTables.contains($0.key) }.mapValues { rows in
+                Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            }
+            func normalizationRecord(_ table: String, id: String) -> Record? { normalizationRows[table]?[id] }
+            let normalizationLabels = orderingCommands.contains { $0.table == "tasks" && $0.method != "DELETE" } ? labels : []
+            let normalizationCache = nativeConversationTeamCache
+            changes = orderingCommands.flatMap { TaskAssignment.mutations($0, existing: normalizationRecord($0.table, id: $0.recordID)) }.map { change in
+                var change = change
+                if change.table == "tasks", change.method != "DELETE" {
+                    change.fields = TaskPlanning.fields(change.fields, existing: normalizationRecord("tasks", id: change.recordID))
+                    if change.method == "PATCH", change.fields["reminder_specs"] == nil,
+                       !Set(change.fields.keys).isDisjoint(with: ["due_date", "due_time", "scheduled_at", "time_zone"]),
+                       let existing = normalizationRecord("tasks", id: change.recordID) {
+                        let proposed = Record(existing.fields.merging(change.fields) { _, new in new })
+                        let resolved = applyingReminderDefault(proposed, previous: existing)
+                        if resolved["reminder_specs"] != proposed["reminder_specs"] {
+                            change.fields["reminder_specs"] = resolved["reminder_specs"]
+                            if change.baseline != nil { change.baseline?["reminder_specs"] = existing["reminder_specs"] }
+                        }
                     }
+                    change = TeamTaskLabelsDraft.normalizing(change, existing: normalizationRecord("tasks", id: change.recordID), catalog: normalizationLabels, cache: normalizationCache)
                 }
-                change = TeamTaskLabelsDraft.normalizing(change, existing: normalizationRecord("tasks", id: change.recordID), catalog: normalizationLabels, cache: normalizationCache)
+                if change.table == DayPlacement.table, change.method != "DELETE" {
+                    change.method = "POST" // Stable composite upsert also handles pre-sync legacy rows.
+                    change.fields["id"] = .string(change.recordID); change.fields["user_id"] = .string(userID)
+                }
+                return change
             }
-            if change.table == DayPlacement.table, change.method != "DELETE" {
-                change.method = "POST" // Stable composite upsert also handles pre-sync legacy rows.
-                change.fields["id"] = .string(change.recordID); change.fields["user_id"] = .string(userID)
-            }
-            return change
         }
         #if DEBUG
         workflowPreparedNormalizationUsed = admittedHistory != nil
@@ -1769,7 +1781,9 @@ final class Store {
         // Fresh workflow capture excludes Focus commands by construction. Keep
         // its original immutable array so prepared Undo can prove exact identity.
         let historyChanges = retainCapturedChanges ? changes : committedChanges.filter { $0.table != FocusSessionChange.table }
-        let workflowCreation = historyChanges.first?.workflowRun != nil && historyChanges.allSatisfy { $0.method == "POST" && $0.workflowRun == historyChanges.first?.workflowRun }
+        // Retained commands are the unchanged fresh-creation buffer admitted above.
+        // Its prepared Undo already proved this shape; ordinary edits still scan.
+        let workflowCreation = retainCapturedChanges || (historyChanges.first?.workflowRun != nil && historyChanges.allSatisfy { $0.method == "POST" && $0.workflowRun == historyChanges.first?.workflowRun })
         let preparedUndo = admittedHistory?.editHistory(matching: historyChanges, source: historySourceRevision, account: userID)
         let history = (remember || workflowCreation) && !historyChanges.isEmpty ? (preparedUndo ?? EditHistory(changes: historyChanges, snapshot: old)) : nil
         #if DEBUG

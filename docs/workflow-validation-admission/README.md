@@ -30,3 +30,8 @@ Six final iPhone cases and one iPad case pass the strict verifier with no report
 Real audio, provider setup, remote delivery, older-client rollout and distribution remain explicitly deferred. Full Px completion is not claimed.
 
 The retained diagnostic scripts resolve `HEAD` as the parent recorded in the input receipts. Pin that parent revision when reproducing them from a later checkout, and use new result/receipt paths rather than overwriting the original evidence.
+
+Follow-up: [skip discarded normalization setup](../workflow-normalization-setup/README.md)
+removes further duplicate main-actor work, with three Debug observations per
+version and current native fallback/failed-save/Undo checks. Earlier timings above
+remain historical; the wider pause/rendering/provider gates stay open.

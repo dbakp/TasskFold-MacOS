@@ -1,0 +1,14 @@
+{
+  "Taskfold/Core/Store.swift": {
+    "repo": "f81d1d7cf3be3e65cad244e9106574b6c2b8e33a4fb50b714ec88d60038446ec",
+    "host": "e8ff38fbfb05d4ffefd5a4d3c4f8c9c9994b8829976051c0728ecedb3b8fc833"
+  },
+  "Taskfold/TeamTemplateNativeFixture.swift": {
+    "repo": "6817c94685ab6353606d84658690e44e19087506819c23b894bba2b6e569d3b8",
+    "host": "6817c94685ab6353606d84658690e44e19087506819c23b894bba2b6e569d3b8"
+  },
+  "TaskfoldUITests/TaskfoldMacUITests.swift": {
+    "repo": "98cdf9dec9801af39bcb1be2c4402c1f44d02223b89001bf3537bedb6b232d48",
+    "host": "98cdf9dec9801af39bcb1be2c4402c1f44d02223b89001bf3537bedb6b232d48"
+  }
+}

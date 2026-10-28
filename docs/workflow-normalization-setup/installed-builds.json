@@ -1,0 +1,20 @@
+{
+  "phone": {
+    "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "binaries": {
+      "Taskfold": "a91eb890e14d95656303d90a9e0232c3a1d1f73cc4b890728af9ff6f88861812",
+      "Taskfold.debug.dylib": "fed3abfe08d877cd6c0f3ec0799a1e6476f805bf940964252081fe54905f62e5"
+    },
+    "matchesChangedBuild": true
+  },
+  "ipad": {
+    "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+    "binaries": {
+      "Taskfold": "a91eb890e14d95656303d90a9e0232c3a1d1f73cc4b890728af9ff6f88861812",
+      "Taskfold.debug.dylib": "fed3abfe08d877cd6c0f3ec0799a1e6476f805bf940964252081fe54905f62e5"
+    },
+    "matchesChangedBuild": true
+  }
+}
