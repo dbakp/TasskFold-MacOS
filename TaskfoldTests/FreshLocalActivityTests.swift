@@ -446,6 +446,7 @@ extension FreshLocalActivityTests {
         expected.widgetCompletion.states = actual.widgetCompletion.states
         let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
         XCTAssertEqual(try encoder.encode(withoutProvenanceNonces(actual)), try encoder.encode(withoutProvenanceNonces(expected)))
+        XCTAssertTrue(try encoded.hasPreparedWidgetCompletion(matching: actual), "The actual admitted worker projection may reuse its prepared tokens")
         let widgetStates = actual.widgetCompletion
         WidgetCompletion.prepare(&actual)
         XCTAssertEqual(actual.widgetCompletion, widgetStates, "Final preparation must preserve the worker's exact completion tokens")
@@ -456,6 +457,7 @@ extension FreshLocalActivityTests {
         XCTAssertEqual(actual.tables["tasks"]?.count, original.tables["tasks", default: []].count + changes.count)
         actual.sharedCaptureReceipts = ["new": "receipt"]
         XCTAssertNil(try encoded.matching(actual), "Late receipt staging must force ordinary encoding")
+        XCTAssertFalse(try encoded.hasPreparedWidgetCompletion(matching: actual))
         var unchanged = original
         XCTAssertFalse(admission.apply(to: &unchanged, source: UUID(), account: account, retainingValidatedCommands: true))
         XCTAssertEqual(unchanged, original)

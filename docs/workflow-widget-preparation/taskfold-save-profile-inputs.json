@@ -1,0 +1,12 @@
+{
+  "scope": "Temporary disposable iOS host timers/extra synthetic receipt fields only; repository sources untouched.",
+  "repoCommit": "15c22e6cbef23cf86a6d36932d1364d6aad4085d",
+  "original": {
+    "Taskfold/Core/Store.swift": "008ab3de7c8791bc0b778c05d379c0ce8b9163de09d0c1c699cf57a97eaf483b",
+    "Taskfold/TeamTemplateNativeFixture.swift": "6435f8ac9570b4bb837728f1cbc2dc751dba87cb27ca2c595394a9eef5b6b587"
+  },
+  "instrumented": {
+    "Taskfold/Core/Store.swift": "8037124d140e7b2c15eac1abfd12a52ce1795a182f51cebb4f157ab674d04855",
+    "Taskfold/TeamTemplateNativeFixture.swift": "29b31f9b7a7212b463ce4932f82c880e7842f17c06c1141fce8f655c3c8e8b91"
+  }
+}

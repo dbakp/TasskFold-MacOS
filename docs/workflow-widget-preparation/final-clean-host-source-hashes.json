@@ -1,0 +1,14 @@
+{
+  "mac": {
+    "Taskfold/Core/Store.swift": "e9f9a1de7e173c2c83e6fe794f4f205025caed2bb77781ca58bfe36cb10a98cd",
+    "Taskfold/Core/Models.swift": "de8ec421bec1ee31449cedc469f778d96a63310624b84df9de6a72ba2055404a",
+    "Taskfold/Core/TaskActivity.swift": "e14706a10c75429a4d542a602b828fba870eae9fe58cae11456245516ec08b66",
+    "Taskfold/TeamTemplateNativeFixture.swift": "deeca137aa192c2303b74e6dc1141c5eb7f074014e529e0c382c6138c2170560"
+  },
+  "ios": {
+    "Taskfold/Core/Store.swift": "ae01fe5fc88f3be94c02fe6ce0dbae6a09778e3e1b59ad5af48a9fa4fe2f1c21",
+    "Taskfold/Core/Models.swift": "de8ec421bec1ee31449cedc469f778d96a63310624b84df9de6a72ba2055404a",
+    "Taskfold/Core/TaskActivity.swift": "e14706a10c75429a4d542a602b828fba870eae9fe58cae11456245516ec08b66",
+    "Taskfold/TeamTemplateNativeFixture.swift": "6435f8ac9570b4bb837728f1cbc2dc751dba87cb27ca2c595394a9eef5b6b587"
+  }
+}

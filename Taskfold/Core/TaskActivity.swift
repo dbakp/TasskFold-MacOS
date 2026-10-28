@@ -1347,10 +1347,9 @@ enum LocalActivityCreation {
             undoHistory = unmodifiedCapture ? EditHistory(changes: normalized, snapshot: snapshot) : nil
             if unmodifiedCapture {
                 try checkCancellation()
-                WidgetCompletion.prepare(&working)
-                try checkCancellation()
                 // Encoding failure keeps the existing final-save error path.
-                encodedCache = try? PreparedSnapshotEncoding(working)
+                // Cancellation after token preparation still precedes encoding.
+                encodedCache = try? PreparedSnapshotEncoding(preparingWidgetCompletion: working, checkCancellation: checkCancellation)
             } else { encodedCache = nil }
             try checkCancellation()
         }

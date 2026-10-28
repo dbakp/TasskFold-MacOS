@@ -799,10 +799,27 @@ struct PreparedSnapshotEncoding: Sendable {
     let snapshot: Snapshot
     private let data: Data
     private let metadata: Data
+    private let widgetCompletionPrepared: Bool
     init(_ snapshot: Snapshot) throws {
+        try self.init(snapshot, widgetCompletionPrepared: false)
+    }
+    /// Only this initializer attests that widget signatures were prepared. The
+    /// final Store still proves the entire immutable capture before reusing it.
+    init(preparingWidgetCompletion snapshot: Snapshot, checkCancellation: () throws -> Void = {}) throws {
+        var prepared = snapshot
+        WidgetCompletion.prepare(&prepared)
+        try checkCancellation()
+        try self.init(prepared, widgetCompletionPrepared: true)
+    }
+    private init(_ snapshot: Snapshot, widgetCompletionPrepared: Bool) throws {
+        self.widgetCompletionPrepared = widgetCompletionPrepared
         self.snapshot = snapshot
         data = try JSONEncoder().encode(snapshot)
         metadata = try Self.encodeMetadata(snapshot)
+    }
+    func hasPreparedWidgetCompletion(matching current: Snapshot) throws -> Bool {
+        guard widgetCompletionPrepared else { return false }
+        return try matching(current) != nil
     }
     func matching(_ current: Snapshot) throws -> Data? {
         guard snapshot.tables.count == current.tables.count else { return nil }

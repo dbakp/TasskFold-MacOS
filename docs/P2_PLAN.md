@@ -6566,3 +6566,15 @@ Ordinary audio entry points remain gated. This checkpoint does not complete Px.
 Evidence: [workspace-return recovery](audio-comment-workspace-return/README.md).
 This resolves the earlier workspace-switch pre-journal failure; it does not close
 the broader audio gate or the Px objective. Ordinary audio entry points stay gated.
+
+### 28 October — reuse prepared workflow widget signatures
+
+Fresh local workflow saves now reuse worker-prepared widget signatures only after
+provenance and exact full-snapshot admission. Changed rows/metadata retain the
+ordinary pass; final validation, receipt staging, persistence and rollback remain.
+Both repos pass 114 selected Core cases. A single before/after iPhone Simulator
+profile observed final token work fall from 52 ms to 11 ms and synchronous commit
+from 464 ms to 409 ms. These are diagnostic Debug observations, not release or
+statistical performance acceptance. Native final scopes and evidence are in
+`workflow-widget-preparation/README.md`. The broader save pause and existing
+Mac runtime/production-rendering/shared-delivery gates remain open.

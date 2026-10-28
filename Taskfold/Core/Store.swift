@@ -1031,7 +1031,9 @@ final class Store {
         if focusFixtureFailSave { throw WidgetActionFailure("Isolated Focus save-failure fixture") }
         if widgetFixtureFailSave, !snapshot.widgetCompletion.receipts.isEmpty { throw WidgetActionFailure("Isolated widget save-failure fixture") }
         #endif
-        WidgetCompletion.prepare(&snapshot)
+        if try preparedEncoding?.hasPreparedWidgetCompletion(matching: snapshot) != true {
+            WidgetCompletion.prepare(&snapshot)
+        }
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) : Snapshot()
         var durable = snapshot

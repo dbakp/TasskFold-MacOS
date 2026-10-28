@@ -9123,3 +9123,15 @@ Native output follow-up: iPad passes all three selected journeys; iPhone passes 
 - [ ] The native phone observation still has a ~0.47-second synchronous commit. Full save latency, production rendering, richer child/assignment workloads, hosted/paired delivery and Mac runtime/geometry remain open.
 
 [Evidence, timings and exact scope](workflow-history-guard/README.md). All user deferrals and the wider Px goal remain unchanged.
+
+### 28 October — reuse prepared workflow widget signatures
+
+Fresh local workflow saves now reuse worker-prepared widget signatures only after
+provenance and exact full-snapshot admission. Changed rows/metadata retain the
+ordinary pass; final validation, receipt staging, persistence and rollback remain.
+Both repos pass 114 selected Core cases. A single before/after iPhone Simulator
+profile observed final token work fall from 52 ms to 11 ms and synchronous commit
+from 464 ms to 409 ms. These are diagnostic Debug observations, not release or
+statistical performance acceptance. Native final scopes and evidence are in
+`workflow-widget-preparation/README.md`. The broader save pause and existing
+Mac runtime/production-rendering/shared-delivery gates remain open.

@@ -96,4 +96,50 @@ final class PreparedSnapshotEncodingTests: XCTestCase {
         print("SNAPSHOT_ENCODING_ADMIT_5000_SECONDS \(reuse)")
         print("SNAPSHOT_ENCODING_ORDINARY_5000_SECONDS \(ordinary)")
     }
+    func testOnlyTokenPreparingInitializerCanAttestPreparation() throws {
+        let source = seed()
+        let ordinary = try PreparedSnapshotEncoding(source)
+        XCTAssertFalse(try ordinary.hasPreparedWidgetCompletion(matching: source))
+        let prepared = try PreparedSnapshotEncoding(preparingWidgetCompletion: source)
+        XCTAssertTrue(try prepared.hasPreparedWidgetCompletion(matching: prepared.snapshot))
+        XCTAssertFalse(try prepared.hasPreparedWidgetCompletion(matching: source))
+        XCTAssertEqual(prepared.snapshot.widgetCompletion.states.count, 2)
+        var repeated = prepared.snapshot
+        WidgetCompletion.prepare(&repeated)
+        XCTAssertEqual(try sorted(repeated), try sorted(prepared.snapshot))
+        XCTAssertTrue(try prepared.hasPreparedWidgetCompletion(matching: repeated))
+    }
+    func testPreparedTokensRejectChangedRowsMetadataAndEquivalentUnicode() throws {
+        let prepared = try PreparedSnapshotEncoding(preparingWidgetCompletion: seed())
+        let original = prepared.snapshot
+        let edits: [(inout Snapshot) -> Void] = [
+            { $0.tables["tasks"]?[0]["title"] = .string("e\u{301}") },
+            { $0.tables["tasks"]?[0]["is_completed"] = .bool(true) },
+            { $0.tables["tasks"] = original.tables["tasks"]!.map { $0 } },
+            { $0.tables["future_table"]?[0]["value"] = .null },
+            { $0.widgetCompletion.states["a"]?.token = "changed" },
+            { $0.widgetCompletion.states.removeValue(forKey: "a") },
+            { $0.widgetCompletion.receiptOrder = ["receipt"] },
+            { $0.sharedCaptureReceipts = ["other": "account"] }
+        ]
+        for edit in edits {
+            var changed = original; edit(&changed)
+            XCTAssertFalse(try prepared.hasPreparedWidgetCompletion(matching: changed))
+        }
+        XCTAssertTrue(try prepared.hasPreparedWidgetCompletion(matching: original))
+    }
+    func testTokenPreparationPreservesExistingTokensAndStopsBeforeEncodingOnCancellation() throws {
+        let first = try PreparedSnapshotEncoding(preparingWidgetCompletion: seed())
+        let second = try PreparedSnapshotEncoding(preparingWidgetCompletion: first.snapshot)
+        XCTAssertEqual(first.snapshot.widgetCompletion, second.snapshot.widgetCompletion)
+        var nonEncodable = seed()
+        nonEncodable.tables["future_table"]?[0]["invalid"] = .number(.nan)
+        var checks = 0
+        XCTAssertThrowsError(try PreparedSnapshotEncoding(preparingWidgetCompletion: nonEncodable, checkCancellation: {
+            checks += 1; throw CancellationError()
+        })) { XCTAssertTrue($0 is CancellationError) }
+        XCTAssertEqual(checks, 1)
+        XCTAssertThrowsError(try PreparedSnapshotEncoding(preparingWidgetCompletion: nonEncodable))
+    }
+
 }
