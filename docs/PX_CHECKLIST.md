@@ -122,7 +122,7 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
 - [ ] Audio comments: bounded clip/decode, scoped private storage and a native review
-  candidate now have 103 Core and 148 synthetic audio-controller checks per repo,
+  candidate now have 115 Core and 166 synthetic audio-controller checks per repo,
   including concurrent recovered-review ownership, durable pending cancellation,
   private interrupted-review recovery and explicit conflict copies.
   The unchanged shared dictation lease passed 17 controller checks at the prior checkpoint. Ordinary app entry points, private server lifecycle and genuine
@@ -465,3 +465,28 @@ Native output follow-up: iPad passes all three selected journeys; iPhone passes 
 
 [Evidence and exact native scope](audio-interrupted-files/README.md). This advances
 private recovery; it does not complete audio comments or the Px objective.
+
+
+## 2026-10-28 — keep both interrupted recording versions
+
+- [x] Full-caption Keep both review with Cancel and explicit Save separate draft;
+  the newer saved recording is retained unchanged.
+- [x] Durable exact-stage cleanup authorization, independent copy identity,
+  original-ID retry/cold Finish, concurrent claim joining and changed-file refusal.
+- [x] Preserve the source when cancelling; return to a usable list after a known
+  pre-write quota refusal only while its exact source remains durable.
+- [x] Block competing copies behind unpromoted Save/discard journals without
+  automatically promoting or finishing those journals.
+- [x] 115 Core cases, 166 controller checks and seven separate-process copy checks
+  pass in each repo; both app builds and strict signatures pass.
+- [x] Final-source iPhone/iPad Simulator: two native cases each, zero failures,
+  skips or reported runtime warnings, at dark Accessibility XXXL. Review/Cancel,
+  original-journal cold Finish and ordinary draft/review recovery pass; original
+  bytes and both independent saved versions are verified. All 12 final captures
+  were inspected. Mac native interaction remains open (build/sign only).
+- [ ] Save/publication-stage recovery UI, damaged-file cleanup/export, broader
+  lifecycle, ordinary entry points and private server media delivery remain open.
+  Genuine microphone/speaker checks remain deferred by the user.
+
+[Evidence and native scope](audio-interrupted-copy/README.md). This advances local
+recording recovery; it does not complete audio comments or the Px objective.

@@ -149,6 +149,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         }
         checks.merge(try await departureChecks(root:root,data:data,request:request,context:context)) { _, new in new }
         checks.merge(try await interruptedChecks(root: root, data: data, request: request)) { _, new in new }
+        checks.merge(try await interruptedCopyChecks(root: root, data: data, request: request)) { _, new in new }
         let recording = AudioProofRecorder(data), player = AudioProofPlayer(), disk = try store("ordinary")
         let unbound = make(recording, player, disk, bound: false); unbound.start()
         checks["unboundCannotRequestMicrophone"] = recording.callbacks.isEmpty
@@ -992,6 +993,115 @@ extension AudioControllerProof {
             checks["workspaceDepartureClearsStageContentAndRefusesOldAction"] = try !result && offScope.interrupted.isEmpty && offScope.interruptionFailure == nil && offScope.session.clip == nil && (Data(contentsOf: stalePath)) == replacementBytes
         }
         offScope.close()
+        return checks
+    }
+}
+
+extension AudioControllerProof {
+    @MainActor private static func interruptedCopyChecks(root: URL, data: Data, request: AudioCommentDraftRequest) async throws -> [String: Bool] {
+        var checks: [String: Bool] = [:]
+        let owner = try AudioCommentOwner(request.scope.workspace.account), clip = try AudioCommentClip(data: data)
+        for (index, checkpoint) in [nil, AudioCommentVault.Checkpoint.afterSaveJournal, .afterDraftCommit].enumerated() {
+            let folder = root.appendingPathComponent("interrupted-copy-\(index)", isDirectory: true)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+            let vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+            let original = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "Newer saved recording", clip: clip)
+            try vault.save(original)
+            let source = try original.replacing(caption: "Interrupted cafe\u{301} 🪴\nEarlier recording", clip: clip)
+            let path = vault.directory.appendingPathComponent(".write-" + UUID().uuidString.lowercased())
+            try source.encoded().write(to: path)
+            let scope = AudioProofContext(request.scope)
+            func capture(_ fault: AudioCommentVault.Checkpoint? = nil) -> AudioCommentCapture {
+                let disk = AudioCommentDraftStorage(vault: .init(applicationSupport: folder, owner: owner, fault: { if let fault, $0 == fault { throw AudioCommentStorageFailure.unreadable } }))
+                let value = AudioCommentCapture(request: request, recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: disk)
+                value.currentScope = { scope.scope }; return value
+            }
+            let value = capture(checkpoint); await value.refresh()
+            let write = value.interrupted[0]
+            if checkpoint == nil {
+                checks["conflictedStageStaysAvailableBeforeExplicitKeepBoth"] = try !(await value.recoverInterrupted(write)) && (vault.drafts()) == [original] && value.interrupted.count == 1
+            }
+            let result = await value.saveInterruptedCopy(write)
+            if checkpoint == nil {
+                checks["explicitKeepBothSavesAnIndependentExactRecording"] = result && value.saved?.id != original.id && value.saved?.sameContent(as: source) == true && value.saved?.origin == nil
+                checks["keepBothPreservesOriginalAndClearsOnlyExactStage"] = try (vault.drafts()).contains(original) && (vault.drafts()).count == 2 && !FileManager.default.fileExists(atPath: path.path) && value.interrupted.isEmpty && (vault.saves()).isEmpty
+                value.close()
+            } else {
+                let journal = try vault.saves(), ids = journal.map { $0.next.id }
+                checks["interruptedCopyIsFrozenUnderOneJournal-\(index)"] = !result && value.saveDurable && value.saveUnconfirmed && journal.count == 1 && journal[0].stage != nil && journal[0].next.sameContent(as: source)
+                value.close()
+                let returned = capture(); await returned.refresh()
+                checks["coldCopyHidesProtectedStageAndDoesNotAutoFinish-\(index)"] = try returned.pendingSaves.count == 1 && returned.interrupted.isEmpty && (vault.saves()).count == 1 && FileManager.default.fileExists(atPath: path.path)
+                if let pending = returned.pendingSaves.first { await returned.resumeSave(pending) }
+                checks["coldExplicitCopyFinishUsesSameIDWithoutReplacingOriginal-\(index)"] = try returned.saved?.id == ids.first && (vault.drafts()).count == 2 && (vault.drafts()).contains(original) && (vault.saves()).isEmpty && !FileManager.default.fileExists(atPath: path.path)
+                returned.close()
+            }
+        }
+        let folder = root.appendingPathComponent("interrupted-copy-stale", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let vault = AudioCommentVault(applicationSupport: folder, owner: owner); _ = try vault.drafts()
+        let source = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "Original discovered stage", clip: clip)
+        let path = vault.directory.appendingPathComponent(".write-" + UUID().uuidString.lowercased()); try source.encoded().write(to: path)
+        let scope = AudioProofContext(request.scope), value = AudioCommentCapture(request: request, recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: .init(vault: vault))
+        value.currentScope = { scope.scope }; await value.refresh(); let write = value.interrupted[0]
+        let changed = try source.replacing(caption: "New staged version", clip: clip).encoded(); try changed.write(to: path)
+        let result = await value.saveInterruptedCopy(write)
+        checks["changedStageCannotGrantCleanupOrOverwriteThroughKeepBoth"] = try !result && value.saveConflict && value.session.clip?.data == data && (vault.saves()).isEmpty && (vault.drafts()).isEmpty && (Data(contentsOf: path)) == changed
+        let copied = await value.saveSeparateDraft()
+        checks["explicitCopyAfterStageChangeKeepsNewStageAndReviewedVersion"] = try copied && value.saved?.caption == source.caption && (Data(contentsOf: path)) == changed && (vault.drafts()).count == 1
+        value.close()
+        let offScope = AudioCommentCapture(request: request, recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: .init(vault: vault))
+        offScope.currentScope = { scope.scope }; await offScope.refresh()
+        if let item = offScope.interrupted.first {
+            scope.scope = .init(workspace: .init(account: "other-copy-workspace", generation: UUID()), target: request.scope.target)
+            offScope.contextChanged(); let refused = await offScope.saveInterruptedCopy(item)
+            checks["oldWorkspaceCannotStartAnInterruptedCopy"] = try !refused && offScope.session.clip == nil && offScope.interrupted.isEmpty && (Data(contentsOf: path)) == changed
+        }
+        offScope.close()
+        let claimFolder = root.appendingPathComponent("interrupted-copy-staged-claim", isDirectory: true)
+        try FileManager.default.createDirectory(at: claimFolder, withIntermediateDirectories: false)
+        let claimedVault = AudioCommentVault(applicationSupport: claimFolder, owner: owner); _ = try claimedVault.drafts()
+        let claimedSource = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "One interrupted source", clip: clip)
+        let claimedPath = claimedVault.directory.appendingPathComponent(".write-" + UUID().uuidString.lowercased()), claimedBytes = try claimedSource.encoded()
+        try claimedBytes.write(to: claimedPath)
+        let claimScope = AudioProofContext(request.scope)
+        func claimCapture() -> AudioCommentCapture {
+            let value = AudioCommentCapture(request: request, recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: .init(vault: claimedVault))
+            value.currentScope = { claimScope.scope }; return value
+        }
+        let staleCopy = claimCapture(); await staleCopy.refresh(); let claimedWrite = staleCopy.interrupted[0]
+        let originalCopy = try AudioCommentSaveIntent(next: .init(owner: owner, target: request.scope.target, caption: claimedSource.caption, clip: clip), base: nil, reviews: [], stage: .init(claimedWrite))
+        let stagedJournal = claimedVault.directory.appendingPathComponent(".write-" + UUID().uuidString.lowercased()), stagedJournalBytes = try originalCopy.encoded()
+        try stagedJournalBytes.write(to: stagedJournal)
+        let refused = await staleCopy.saveInterruptedCopy(claimedWrite)
+        checks["preRenameCopyAuthorizationRefusesASecondCopyWithoutTrappingTheEditor"] = !refused && staleCopy.editable && !staleCopy.needsSave && staleCopy.interrupted.isEmpty && staleCopy.interruptedActionsNeedAttention
+        checks["refusedSecondCopyDoesNotPromoteOrRemoveEitherSource"] = try (claimedVault.drafts()).isEmpty && (claimedVault.saves()).isEmpty && (Data(contentsOf: claimedPath)) == claimedBytes && (Data(contentsOf: stagedJournal)) == stagedJournalBytes
+        staleCopy.close()
+        let discovering = claimCapture(); await discovering.refresh()
+        checks["freshDiscoveryProtectsAStageClaimedByAnUnpromotedJournal"] = discovering.interrupted.isEmpty && discovering.pendingSaves.isEmpty && discovering.interruptedActionsNeedAttention && discovering.session.clip == nil
+        _ = try claimedVault.commitSave(originalCopy)
+        await discovering.refresh()
+        checks["onlyTheOriginalExplicitAuthorizationCanFinishThePreRenameCopy"] = try discovering.available == [originalCopy.next] && discovering.interruptedActionsNeedAttention && (Data(contentsOf: stagedJournal)) == stagedJournalBytes && !(FileManager.default.fileExists(atPath: claimedPath.path))
+        discovering.close()
+        let quotaFolder = root.appendingPathComponent("interrupted-copy-full", isDirectory: true)
+        try FileManager.default.createDirectory(at: quotaFolder, withIntermediateDirectories: false)
+        let full = AudioCommentVault(applicationSupport: quotaFolder, owner: owner)
+        var drafts: [AudioCommentSavedDraft] = []
+        for number in 0..<20 {
+            let draft = try AudioCommentSavedDraft(owner: owner, target: request.scope.target, caption: "Kept recording \(number)", clip: clip)
+            try full.save(draft); drafts.append(draft)
+        }
+        let fullSource = try drafts[0].replacing(caption: "Interrupted at quota", clip: clip)
+        let fullPath = full.directory.appendingPathComponent(".write-" + UUID().uuidString.lowercased()), fullBytes = try fullSource.encoded()
+        try fullBytes.write(to: fullPath)
+        let quotaScope = AudioProofContext(request.scope)
+        let quota = AudioCommentCapture(request: request, recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: .init(vault: full))
+        quota.currentScope = { quotaScope.scope }; await quota.refresh()
+        let quotaResult = await quota.saveInterruptedCopy(quota.interrupted[0])
+        checks["refusedStageCopyAtQuotaReturnsToAnEditableSafeList"] = !quotaResult && quota.editable && !quota.needsSave && quota.session.clip == nil && quota.interrupted.count == 1
+        let departure = await quota.prepareForDeparture()
+        checks["quotaCopyRefusalKeepsOriginalFilesWithoutBlockingDeparture"] = try departure && (Data(contentsOf: fullPath)) == fullBytes && (full.saves()).isEmpty && (full.drafts()) == drafts.sorted { $0.id.uuidString < $1.id.uuidString }
+        quota.close()
         return checks
     }
 }

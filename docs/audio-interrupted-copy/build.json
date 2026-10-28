@@ -1,0 +1,14 @@
+{
+  "platform": "mac",
+  "build": "Passed",
+  "strictDeepSignature": "Passed",
+  "appBinarySHA256": "6f42b9eeec043fe653b6b5314744ed19d1aabea04ca1c57245db42c2678fe4a8",
+  "changedNativeInputsMatchRepository": [
+    "Taskfold/Core/AudioCommentVault.swift",
+    "Taskfold/AudioCommentCapture.swift",
+    "Taskfold/AudioCommentNativeFixture.swift",
+    "Taskfold/Views/AudioCommentDraftView.swift",
+    "TaskfoldUITests/AudioCommentUITests.swift"
+  ],
+  "scope": "Owned isolated Debug source build/signature; not release signing/distribution or Mac native UI acceptance."
+}

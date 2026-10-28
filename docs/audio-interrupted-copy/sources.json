@@ -1,0 +1,11 @@
+{
+  "Taskfold/Core/AudioCommentVault.swift": "f1e60edfd8e42dfa74bac801e797fdd219ece10bc9539e9bf29b24db5cd8a7d2",
+  "Taskfold/AudioCommentCapture.swift": "cf6c30f1d074590bc902346cb6785729916f20bb694d0ed5799ad93fbe776fbd",
+  "Taskfold/AudioCommentNativeFixture.swift": "342d210599a94f6080e437d48363fa98339947a7869115778bdbfa8f777f40e3",
+  "Taskfold/Views/AudioCommentDraftView.swift": "39fdb3d44006a5a2a9ea2f62f7c5d300c1e2082d3416a6a5584526b5cbd96d9f",
+  "TaskfoldTests/AudioInterruptedCopyTests.swift": "9683fa137628c2f8fe9829e19c6429a16a34df1e2192e7a176619af82f0ce718",
+  "Scripts/fixtures/AudioCommentCaptureProof.swift": "f8218522034716676c30bce4dd968975b63c6932ddeb7faedbe2b8206cdbaa00",
+  "Scripts/fixtures/AudioInterruptedCopyProof.swift": "a48e3c5dd90f2d515ffc86e2bd59229fe879f9c27f1b88bac20eac20586c1811",
+  "Scripts/test_audio_interrupted_copy_processes.py": "af69561fec9a92d3ed7e064b8481dbe7facdc30a42f1bb1570cfb9d6d9ed467c",
+  "TaskfoldUITests/AudioCommentUITests.swift": "075e6a1e53df000cda9a340b8a1dfb96b40ab9f1099fb8ca9574e48fb357cfd2"
+}

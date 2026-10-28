@@ -1,0 +1,96 @@
+{
+  "status": "passed",
+  "separateProcesses": 7,
+  "runs": [
+    [
+      {
+        "copyID": "3fbfcc6f-b324-497a-ae18-6d844e6fb768",
+        "drafts": 1,
+        "mode": "prepare",
+        "operationID": "1f8e0567-4fad-4fa7-a69d-905dfd9a270e",
+        "originalSHA256": "7de2ade1f712ae0674ad52ea43c35fce0a759b0de49a2a61ce0de939278a561a",
+        "pending": 1,
+        "pid": 81100,
+        "stagePresent": true,
+        "status": "verified"
+      },
+      {
+        "copyID": "3fbfcc6f-b324-497a-ae18-6d844e6fb768",
+        "drafts": 2,
+        "mode": "finish",
+        "operationID": "1f8e0567-4fad-4fa7-a69d-905dfd9a270e",
+        "originalSHA256": "7de2ade1f712ae0674ad52ea43c35fce0a759b0de49a2a61ce0de939278a561a",
+        "pending": 0,
+        "pid": 81108,
+        "stagePresent": false,
+        "status": "verified"
+      },
+      {
+        "copyID": "3fbfcc6f-b324-497a-ae18-6d844e6fb768",
+        "drafts": 2,
+        "mode": "verify",
+        "operationID": "1f8e0567-4fad-4fa7-a69d-905dfd9a270e",
+        "originalSHA256": "7de2ade1f712ae0674ad52ea43c35fce0a759b0de49a2a61ce0de939278a561a",
+        "pending": 0,
+        "pid": 81109,
+        "stagePresent": false,
+        "status": "verified"
+      }
+    ],
+    [
+      {
+        "copyID": "d5c27103-3c8a-4c93-b4cb-55b7dd99e98d",
+        "drafts": 1,
+        "mode": "prepare",
+        "operationID": "d0f86be6-bbed-41ed-80a5-2c7cd2c973cf",
+        "originalSHA256": "b054c0ef819b80cef8f5c2c64d6ec7e67c28d54d55aa67ca9c5774b9dc45fe9c",
+        "pending": 1,
+        "pid": 81110,
+        "stagePresent": true,
+        "status": "verified"
+      },
+      {
+        "copyID": "d5c27103-3c8a-4c93-b4cb-55b7dd99e98d",
+        "drafts": 2,
+        "mode": "lost-commit",
+        "operationID": "d0f86be6-bbed-41ed-80a5-2c7cd2c973cf",
+        "originalSHA256": "b054c0ef819b80cef8f5c2c64d6ec7e67c28d54d55aa67ca9c5774b9dc45fe9c",
+        "pending": 1,
+        "pid": 81111,
+        "stagePresent": true,
+        "status": "verified"
+      },
+      {
+        "copyID": "d5c27103-3c8a-4c93-b4cb-55b7dd99e98d",
+        "drafts": 2,
+        "mode": "finish",
+        "operationID": "d0f86be6-bbed-41ed-80a5-2c7cd2c973cf",
+        "originalSHA256": "b054c0ef819b80cef8f5c2c64d6ec7e67c28d54d55aa67ca9c5774b9dc45fe9c",
+        "pending": 0,
+        "pid": 81112,
+        "stagePresent": false,
+        "status": "verified"
+      },
+      {
+        "copyID": "d5c27103-3c8a-4c93-b4cb-55b7dd99e98d",
+        "drafts": 2,
+        "mode": "verify",
+        "operationID": "d0f86be6-bbed-41ed-80a5-2c7cd2c973cf",
+        "originalSHA256": "b054c0ef819b80cef8f5c2c64d6ec7e67c28d54d55aa67ca9c5774b9dc45fe9c",
+        "pending": 0,
+        "pid": 81113,
+        "stagePresent": false,
+        "status": "verified"
+      }
+    ]
+  ],
+  "compilerWarnings": [],
+  "sources": {
+    "Taskfold/Core/AudioCommentVault.swift": "f1e60edfd8e42dfa74bac801e797fdd219ece10bc9539e9bf29b24db5cd8a7d2",
+    "Scripts/fixtures/AudioInterruptedCopyProof.swift": "a48e3c5dd90f2d515ffc86e2bd59229fe879f9c27f1b88bac20eac20586c1811",
+    "Scripts/test_audio_interrupted_copy_processes.py": "af69561fec9a92d3ed7e064b8481dbe7facdc30a42f1bb1570cfb9d6d9ed467c"
+  },
+  "linkedCoreArchiveSHA256": "1d548e8390a06feeb93f682c71f1adc335e32fa98e4403ff8d6edbff3a59d0d5",
+  "scope": "Real vault writes/journal recovery across process exit with synthetic audio and injected lost acknowledgement; no microphone, playback, network or real tasks.",
+  "ownedTemporaryDirectoryRemovedOnExit": true
+}

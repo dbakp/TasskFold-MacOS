@@ -12,6 +12,7 @@ struct AudioCommentStorageFailure: LocalizedError, Equatable {
     static let reviewClaimed = Self(message: "This recovered review was saved or changed in another editor. Save a separate draft to keep your version.")
     static let discardPending = Self(message: "Discard is kept on this device. Finish discarding this recording.")
     static let alreadySaved = Self(message: "This recording is already saved. Finish saving before deleting the saved draft.")
+    static let stageNeedsRecovery = Self(message: "An earlier recording action needs recovery before another copy can be saved.")
     static let full = Self(message: "Audio draft storage is full. Review your saved drafts before recording more.")
 }
 
@@ -109,34 +110,65 @@ struct AudioCommentDraftCatalog: Sendable {
     let saves: [AudioCommentSaveIntent]
 }
 
+/// Exact cleanup permission for one interrupted local draft/review. No path or
+/// publication intent can be supplied through this reference.
+struct AudioCommentStageReference: Equatable, Codable, Sendable {
+    enum Kind: String, Codable, Sendable { case draft, review }
+    let id: UUID
+    let kind: Kind
+    let sha256: String
+    init(_ write: AudioCommentInterruptedWrite) throws {
+        guard write.id != AudioCommentTarget.zero else { throw AudioCommentFailure.changed }
+        switch write.payload { case .draft: kind = .draft; case .review: kind = .review; default: throw AudioCommentFailure.changed }
+        id = write.id; sha256 = SHA256.hash(data: write.bytes).map { String(format: "%02x", $0) }.joined()
+    }
+    init(from decoder: Decoder) throws {
+        let value = try Record(from: decoder)
+        guard Set(value.fields.keys) == ["id", "kind", "sha256"], let id = UUID(uuidString: value.string("id")), id != AudioCommentTarget.zero,
+              let kind = Kind(rawValue: value.string("kind")), value.string("sha256").utf8.count == 64,
+              value.string("sha256").utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }) else { throw AudioCommentStorageFailure.unreadable }
+        self.id = id; self.kind = kind; sha256 = value.string("sha256")
+    }
+    func encode(to encoder: Encoder) throws {
+        try Record(["id": .string(id.uuidString.lowercased()), "kind": .string(kind.rawValue), "sha256": .string(sha256)]).encode(to: encoder)
+    }
+    fileprivate var filename: String { ".write-" + id.uuidString.lowercased() }
+    fileprivate func matches(_ data: Data) -> Bool { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() == sha256 }
+}
+
 struct AudioCommentSaveIntent: Equatable, Sendable {
     let id: UUID
     let next: AudioCommentSavedDraft
     let base: UUID?
     let reviews: [AudioCommentReviewReference]
     let phase: AudioCommentSavePhase
-    init(next: AudioCommentSavedDraft, base: UUID?, reviews: [AudioCommentReviewReference], id: UUID = UUID(), phase: AudioCommentSavePhase = .saving) throws {
+    let stage: AudioCommentStageReference?
+    init(next: AudioCommentSavedDraft, base: UUID?, reviews: [AudioCommentReviewReference], id: UUID = UUID(), phase: AudioCommentSavePhase = .saving, stage: AudioCommentStageReference? = nil) throws {
         guard id != AudioCommentTarget.zero, base != AudioCommentTarget.zero,
               reviews.count <= 3, Set(reviews).count == reviews.count,
               reviews.allSatisfy({ $0.id != AudioCommentTarget.zero && $0.revision != AudioCommentTarget.zero }) else { throw AudioCommentStorageFailure.conflict }
-        self.id = id; self.next = next; self.base = base; self.reviews = reviews; self.phase = phase
+        guard stage == nil || (base == nil && reviews.isEmpty && next.origin == nil) else { throw AudioCommentStorageFailure.conflict }
+        self.id = id; self.next = next; self.base = base; self.reviews = reviews; self.phase = phase; self.stage = stage
     }
     func separateCopy() throws -> Self {
         guard phase == .saving else { throw AudioCommentStorageFailure.discardPending }
-        return try .init(next: .init(owner: next.owner, target: next.target, caption: next.caption, clip: next.clip), base: nil, reviews: reviews, id: id)
+        return try .init(next: .init(owner: next.owner, target: next.target, caption: next.caption, clip: next.clip), base: nil, reviews: reviews, id: id, stage: stage)
     }
-    func markingDiscard() throws -> Self { try .init(next: next, base: base, reviews: reviews, id: id, phase: .discarding) }
-    func sameAuthorization(as other: Self) -> Bool { id == other.id && next == other.next && base == other.base && reviews == other.reviews }
+    func markingDiscard() throws -> Self { try .init(next: next, base: base, reviews: reviews, id: id, phase: .discarding, stage: stage) }
+    func sameAuthorization(as other: Self) -> Bool { id == other.id && next == other.next && base == other.base && reviews == other.reviews && stage == other.stage }
     func encoded() throws -> Data {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
-        return try PropertyListSerialization.data(fromPropertyList: ["format": "taskfold-audio-save-v2", "phase": phase.rawValue, "account": next.owner.account, "id": id.uuidString.lowercased(), "next": try next.encoded(), "base": base?.uuidString.lowercased() ?? "", "reviews": try encoder.encode(reviews)], format: .binary, options: 0)
+        var fields: [String: Any] = ["format": stage == nil ? "taskfold-audio-save-v2" : "taskfold-audio-save-v3", "phase": phase.rawValue, "account": next.owner.account, "id": id.uuidString.lowercased(), "next": try next.encoded(), "base": base?.uuidString.lowercased() ?? "", "reviews": try encoder.encode(reviews)]
+        if let stage { fields["stage"] = try encoder.encode(stage) }
+        return try PropertyListSerialization.data(fromPropertyList: fields, format: .binary, options: 0)
     }
     init(encoded data: Data, owner: AudioCommentOwner) throws {
         guard !data.isEmpty, data.count <= AudioCommentVault.maximumFileBytes else { throw AudioCommentStorageFailure.unreadable }
         var format = PropertyListSerialization.PropertyListFormat.binary
         guard let fields = try PropertyListSerialization.propertyList(from: data, format: &format) as? [String: Any], format == .binary,
               ((Set(fields.keys) == ["format", "account", "id", "next", "base", "reviews"] && fields["format"] as? String == "taskfold-audio-save-v1") ||
-               (Set(fields.keys) == ["format", "account", "id", "next", "base", "reviews", "phase"] && fields["format"] as? String == "taskfold-audio-save-v2")),
+               (Set(fields.keys) == ["format", "account", "id", "next", "base", "reviews", "phase"] && fields["format"] as? String == "taskfold-audio-save-v2") ||
+               (Set(fields.keys) == ["format", "account", "id", "next", "base", "reviews", "phase", "stage"] && fields["format"] as? String == "taskfold-audio-save-v3")),
               let account = fields["account"] as? String, account.utf8.elementsEqual(owner.account.utf8),
               let idText = fields["id"] as? String, let id = UUID(uuidString: idText),
               let payload = fields["next"] as? Data, let baseText = fields["base"] as? String,
@@ -145,11 +177,16 @@ struct AudioCommentSaveIntent: Equatable, Sendable {
         let phase: AudioCommentSavePhase
         if let text = fields["phase"] as? String, let value = AudioCommentSavePhase(rawValue: text) { phase = value }
         else { guard fields["phase"] == nil else { throw AudioCommentStorageFailure.unreadable }; phase = .saving }
-        try self.init(next: AudioCommentSavedDraft(encoded: payload, owner: owner), base: UUID(uuidString: baseText), reviews: JSONDecoder().decode([AudioCommentReviewReference].self, from: refs), id: id, phase: phase)
+        let stage: AudioCommentStageReference?
+        if fields["format"] as? String == "taskfold-audio-save-v3" {
+            guard let bytes = fields["stage"] as? Data, bytes.count <= 512 else { throw AudioCommentStorageFailure.unreadable }
+            stage = try JSONDecoder().decode(AudioCommentStageReference.self, from: bytes)
+        } else { stage = nil }
+        try self.init(next: AudioCommentSavedDraft(encoded: payload, owner: owner), base: UUID(uuidString: baseText), reviews: JSONDecoder().decode([AudioCommentReviewReference].self, from: refs), id: id, phase: phase, stage: stage)
     }
 }
 
-struct AudioCommentInterruptedWrite: Sendable {
+struct AudioCommentInterruptedWrite: Identifiable, Sendable {
     enum Payload: Sendable { case draft(AudioCommentSavedDraft), review(AudioCommentSavedDraft), save(AudioCommentSaveIntent), pending(AudioCommentPending) }
     let id: UUID
     let payload: Payload
@@ -167,7 +204,7 @@ struct AudioCommentVault: Sendable {
     static let maximumFileBytes = 8_100_000
     static let maximumEntries = 20
     static let maximumTotalBytes = 50_000_000
-    enum Checkpoint: Sendable { case beforeRename, afterRename, afterSaveJournal, afterDraftCommit, afterDiscardJournal, afterExpiredReviewDiscard, beforeSaveState }
+    enum Checkpoint: Sendable { case beforeRename, afterRename, afterSaveJournal, afterDraftCommit, afterStageCleanup, afterDiscardJournal, afterExpiredReviewDiscard, beforeSaveState }
     let applicationSupport: URL
     let owner: AudioCommentOwner
     var fault: (@Sendable (Checkpoint) throws -> Void)? = nil
@@ -440,6 +477,7 @@ struct AudioCommentVault: Sendable {
                         guard copy.target != intent.next.target || copy.revision != ref.revision else { throw AudioCommentStorageFailure.unreadable }
                     }
                 }
+                if let ref = intent.stage, let bytes = try read(ref.filename, folder: folder), ref.matches(bytes) { throw AudioCommentStorageFailure.unconfirmedSave }
                 guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }
                 return .settled
             }
@@ -579,6 +617,18 @@ struct AudioCommentVault: Sendable {
             let own = try read(journal, folder: folder).map { try AudioCommentSaveIntent(encoded: $0, owner: owner) }
             guard intent.phase == .saving, own?.phase != .discarding else { throw AudioCommentStorageFailure.discardPending }
             let all = try records(folder: folder)
+            if let stage = intent.stage {
+                for filename in try names(folder: folder).filter({ $0.hasPrefix(".write-") }) {
+                    guard let data = try read(filename, folder: folder) else { throw AudioCommentStorageFailure.unreadable }
+                    if let staged = try? AudioCommentSaveIntent(encoded: data, owner: owner), staged.stage == stage {
+                        guard staged == intent else { throw AudioCommentStorageFailure.stageNeedsRecovery }
+                    }
+                }
+            }
+            if let stage = intent.stage, let other = all.saves.first(where: { $0.id != intent.id && $0.stage == stage }) {
+                guard other.phase == .saving && other.next.sameContent(as: intent.next) else { throw AudioCommentStorageFailure.reviewClaimed }
+                throw AudioCommentSaveRedirect(intent: other)
+            }
             if let other = all.saves.first(where: { $0.id != intent.id && $0.next.id == intent.next.id }) {
                 if other.phase == .saving && other.next.sameContent(as: intent.next) { throw AudioCommentSaveRedirect(intent: other) }
                 throw AudioCommentStorageFailure.reviewClaimed
@@ -615,7 +665,7 @@ struct AudioCommentVault: Sendable {
                 if prepared != intent {
                     guard let old, prepared == old, old.id == intent.id, old.next.owner == intent.next.owner,
                           old.next.target == intent.next.target, old.next.caption.utf8.elementsEqual(intent.next.caption.utf8), old.next.clip.data == intent.next.clip.data,
-                          old.reviews == intent.reviews, intent.base == nil, intent.next.id != old.next.id, try conflicted(old) else { throw AudioCommentStorageFailure.conflict }
+                          old.reviews == intent.reviews, old.stage == intent.stage, intent.base == nil, intent.next.id != old.next.id, try conflicted(old) else { throw AudioCommentStorageFailure.conflict }
                     if checkpointOnly { guard let fence, try readDepartureFence(lock) == fence else { throw AudioCommentStorageFailure.conflict } }
                     try admit(bytes, replacing: journal, folder: folder); try write(bytes, name: journal, folder: folder); preparedNow = true
                 }
@@ -627,9 +677,16 @@ struct AudioCommentVault: Sendable {
                         let copy = try AudioCommentSavedDraft(encoded: data, owner: owner, recovery: true)
                         return copy.target == intent.next.target && copy.revision == ref.revision
                     }
-                    if !hasOldCopy { guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }; return intent.next }
+                    let hasOldStage: Bool
+                    if let ref = intent.stage, let data = try read(ref.filename, folder: folder) { hasOldStage = ref.matches(data) } else { hasOldStage = false }
+                    if !hasOldCopy && !hasOldStage { guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }; return intent.next }
                 }
                 guard !existingOnly, old == nil else { throw AudioCommentStorageFailure.conflict }
+                if let ref = intent.stage {
+                    guard let data = try read(ref.filename, folder: folder), ref.matches(data),
+                          let source = try? AudioCommentSavedDraft(encoded: data, owner: owner, recovery: ref.kind == .review),
+                          source.sameContent(as: intent.next), source.id != intent.next.id, source.revision != intent.next.revision else { throw AudioCommentStorageFailure.reviewClaimed }
+                }
                 if checkpointOnly { guard let fence, try readDepartureFence(lock) == fence else { throw AudioCommentStorageFailure.conflict } }
                 try admit(bytes, replacing: journal, folder: folder); try write(bytes, name: journal, folder: folder); preparedNow = true
             }
@@ -660,6 +717,10 @@ struct AudioCommentVault: Sendable {
                         }
                     }
                 }
+                if let ref = intent.stage, let data = try read(ref.filename, folder: folder), ref.matches(data) {
+                    guard unlinkat(folder, ref.filename, 0) == 0 else { throw AudioCommentStorageFailure.unreadable }
+                }
+                if intent.stage != nil { try fault?(.afterStageCleanup) }
                 // Recovery removals must survive a crash before the journal can
                 // disappear; otherwise the same review could be saved twice.
                 guard fsync(folder) == 0 else { throw AudioCommentStorageFailure.unreadable }

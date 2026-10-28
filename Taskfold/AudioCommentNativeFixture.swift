@@ -54,20 +54,27 @@ import Darwin
         for value in lookupLocks.values { value.release() }; lookupLocks.removeAll()
         if ProcessInfo.processInfo.arguments.contains("--audio-comment-reset") { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        if ProcessInfo.processInfo.arguments.contains("--audio-interrupted-stage-testing"), ProcessInfo.processInfo.arguments.contains("--audio-comment-reset") {
+        let copyTesting = ProcessInfo.processInfo.arguments.contains("--audio-interrupted-copy-testing")
+        if (copyTesting || ProcessInfo.processInfo.arguments.contains("--audio-interrupted-stage-testing")), ProcessInfo.processInfo.arguments.contains("--audio-comment-reset") {
             let bytes = try await Task.detached { try syntheticData() }.value
             let scope = AudioCommentFixtureContext().scope
             let owner = try AudioCommentOwner(scope.workspace.account), vault = AudioCommentVault(applicationSupport: root, owner: owner)
             _ = try vault.drafts()
-            for (suffix, caption, recovery) in [("1", "Recovered workshop draft", false), ("2", "Recovered workshop review", true)] {
+            let entries = copyTesting ? [("1", "Earlier workshop recording", false)] : [("1", "Recovered workshop draft", false), ("2", "Recovered workshop review", true)]
+            for (suffix, caption, recovery) in entries {
                 let draft = try AudioCommentSavedDraft(owner: owner, target: scope.target, caption: caption, clip: .init(data: bytes), id: UUID(uuidString: "ac281000-0000-4000-8000-00000000000" + suffix)!, revision: UUID(uuidString: "ac283000-0000-4000-8000-00000000000" + suffix)!)
+                if copyTesting {
+                    try vault.save(.init(owner: owner, target: scope.target, caption: "Latest workshop recording", clip: draft.clip, id: draft.id, revision: UUID(uuidString: "ac284000-0000-4000-8000-000000000001")!))
+                }
                 let path = vault.directory.appendingPathComponent(".write-ac282000-0000-4000-8000-00000000000" + suffix)
                 try draft.encoded(recovery: recovery).write(to: path)
                 try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path.path)
             }
-            let incomplete = vault.directory.appendingPathComponent(".write-ac282000-0000-4000-8000-000000000003")
-            try Data("Synthetic incomplete recording payload".utf8).write(to: incomplete)
-            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: incomplete.path)
+            if !copyTesting {
+                let incomplete = vault.directory.appendingPathComponent(".write-ac282000-0000-4000-8000-000000000003")
+                try Data("Synthetic incomplete recording payload".utf8).write(to: incomplete)
+                try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: incomplete.path)
+            }
         }
     }
     nonisolated static func syntheticData() throws -> Data {

@@ -170,7 +170,14 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             do {
                 let catalog = try await storage.interruptedCatalog()
                 guard isCurrent else { close(); return }
-                interrupted = catalog.writes.filter { interruptedDraft($0) != nil }
+                let stagedClaims = catalog.writes.compactMap { write -> AudioCommentStageReference? in
+                    if case .save(let intent) = write.payload { return intent.stage }; return nil
+                }
+                interrupted = catalog.writes.filter { write in
+                    let ref = try? AudioCommentStageReference(write)
+                    return interruptedDraft(write) != nil && !stagedClaims.contains(where: { $0 == ref }) &&
+                        !pendingSaves.contains { $0.stage != nil && $0.stage == ref }
+                }
                 interruptedActionsNeedAttention = catalog.writes.contains { write in
                     switch write.payload {
                     case .save(let intent): return intent.next.target == request.scope.target
@@ -207,6 +214,25 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             loading = false; await refresh()
             return isCurrent
         } catch { if isCurrent { notice = error.localizedDescription } else { close() }; return false }
+    }
+    /// The explicit Keep both action authorizes one independent local Save.
+    /// Its journal binds cleanup to the exact original staged bytes.
+    @discardableResult func saveInterruptedCopy(_ write: AudioCommentInterruptedWrite) async -> Bool {
+        guard editable, !needsSave, interrupted.contains(where: { $0.id == write.id }), let draft = interruptedDraft(write) else { return false }
+        stopPlayback(); loading = true
+        do {
+            let clip = try await AudioCommentDecoding.validate(draft.clip.data)
+            guard isCurrent else { close(); loading = false; return false }
+            let next = try AudioCommentSavedDraft(owner: storage.owner, target: request.scope.target, caption: draft.caption, clip: draft.clip)
+            let intent = try AudioCommentSaveIntent(next: next, base: nil, reviews: [], stage: .init(write))
+            try session.restore(clip, caption: draft.caption, workspace: request.scope.workspace, target: request.scope.target)
+            saved = nil; restoredRecovery = nil; candidate = next; candidateBase = nil; saveIntent = intent; replacingIntent = nil
+            elapsed = Double(clip.descriptor.milliseconds) / 1000
+            loading = false
+            let success = await save()
+            if success || !needsSave { await refresh() }
+            return success
+        } catch { loading = false; if isCurrent { notice = error.localizedDescription } else { close() }; return false }
     }
     func restore(_ draft: AudioCommentSavedDraft, recovering: Bool = false) async {
         guard editable, !needsSave, draft.target == request.scope.target, draft.owner.account.utf8.elementsEqual(request.scope.workspace.account.utf8) else { return }
@@ -354,7 +380,20 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
             } else if (failure as? AudioCommentStorageFailure) == .conflict {
                 saveConflict = true; saveUnconfirmed = false
                 notice = "This draft changed in another window. Your review is still here. Save a separate draft to keep both versions."
-            } else if !saveDurable, (state == .unprepared || !retryingSave), let failure = failure as? AudioCommentStorageFailure, failure == .full || failure == .busy {
+            } else if !saveDurable, state == .unprepared, let stage = original?.stage,
+                      let failure = failure as? AudioCommentStorageFailure, failure == .full || failure == .busy || failure == .stageNeedsRecovery {
+                // A refused new copy can close safely only while its exact source
+                // is still durable. Otherwise retain the frozen authorization.
+                let kept = try? await storage.interruptedCatalog().writes.contains { (try? AudioCommentStageReference($0)) == stage }
+                if kept == true {
+                    recovery.finishSave()
+                    saveIntent = nil; candidate = nil; candidateBase = nil; replacingIntent = nil; saved = nil; restoredRecovery = nil
+                    saveUnconfirmed = false; saveConflict = false; saveRequiresExisting = false; saveExpired = false; saveDurable = false
+                    session = .init(workspace: request.scope.workspace, target: request.scope.target); elapsed = 0
+                } else { saveUnconfirmed = true; saveConflict = false }
+                guard isCurrent else { close(); return false }
+                notice = kept == true ? failure.localizedDescription + " The interrupted file is kept. Try Keep both again later." : "The copy couldn’t be confirmed. Retry save before closing."
+            } else if !saveDurable, original?.stage == nil, (state == .unprepared || !retryingSave), let failure = failure as? AudioCommentStorageFailure, failure == .full || failure == .busy {
                 // A fresh pre-write refusal, or a positively unprepared lookup,
                 // permits editing. Unknown retries keep their exact authorization.
                 candidate = nil; candidateBase = nil; saveIntent = nil; replacingIntent = nil; recovery.resumeAfterSave(); saveUnconfirmed = false; saveConflict = false

@@ -7,6 +7,7 @@ import AppKit
     @State private var capture: AudioCommentCapture
     @State private var leaving = false
     @State private var deleting = false
+    @State private var copyReview: AudioCommentInterruptedWrite?
     @State private var pendingDiscard: AudioCommentSaveIntent?
     @FocusState private var captionFocused: Bool
     @Environment(\.dismiss) private var dismiss
@@ -159,6 +160,32 @@ import AppKit
         #if os(iOS)
         .safeAreaInset(edge: .bottom) { if captionFocused { HStack { Spacer(); Button("Hide keyboard") { captionFocused = false }.accessibilityIdentifier("audioHideKeyboard") }.padding(.horizontal, 16).padding(.vertical, 8).background(.bar) } }
         #endif
+        .sheet(item: $copyReview) { write in
+            NavigationStack {
+                Group {
+                    if valid, capture.isCurrent, let draft = capture.interruptedDraft(write) {
+                        Form {
+                            Section { Text("Save this as a new private draft. The saved version stays.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                            Section("Recording caption") { Text(draft.caption.isEmpty ? "No caption" : draft.caption).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioCopyCaption") }
+                            Section {
+                                Text(clock(Double(draft.clip.descriptor.milliseconds) / 1000) + " · AAC audio").foregroundStyle(.secondary)
+                                Button("Save separate draft", systemImage: "doc.badge.plus") {
+                                    copyReview = nil
+                                    Task { _ = await capture.saveInterruptedCopy(write) }
+                                }.disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioCopyConfirm")
+                            }
+                        }.accessibilityIdentifier("audioCopyForm")
+                    } else { ContentUnavailableView("Recording unavailable", systemImage: "waveform") }
+                }
+                .navigationTitle("Keep both")
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { copyReview = nil }.accessibilityIdentifier("audioCopyCancel") } }
+            }
+            #if os(macOS)
+            .frame(minWidth: 520, idealWidth: 580, minHeight: 460, idealHeight: 620)
+            #else
+            .presentationSizing(.page).presentationDetents([.large])
+            #endif
+        }
         .onChange(of: capture.recordingBusy) { _, busy in if busy { captionFocused = false } }
         .onChange(of: request.id) { _, _ in capture.close(); dismiss() }
         .interactiveDismissDisabled(capture.busy || capture.needsSave)
@@ -180,7 +207,9 @@ import AppKit
                         Text(draft.caption.isEmpty ? "Interrupted recording" : draft.caption).lineLimit(3).fixedSize(horizontal: false, vertical: true)
                         Text(clock(Double(draft.clip.descriptor.milliseconds) / 1000)).font(.caption).foregroundStyle(.secondary)
                         Button("Recover recording", systemImage: "arrow.clockwise") { Task { _ = await capture.recoverInterrupted(write) } }
-                            .disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioInterrupted-" + write.id.uuidString.lowercased())
+                            .buttonStyle(.borderless).frame(minHeight: 44).disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioInterrupted-" + write.id.uuidString.lowercased())
+                        Button("Keep both…", systemImage: "doc.badge.plus") { copyReview = write }
+                            .buttonStyle(.borderless).frame(minHeight: 44).disabled(!capture.editable || capture.needsSave).accessibilityIdentifier("audioInterruptedCopy-" + write.id.uuidString.lowercased())
                     }
                 }
             }
