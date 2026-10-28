@@ -80,3 +80,16 @@ remain open. Already-released bytes cannot be recalled. See
 Largest-text entry failures were test navigation mistakes: the lazy note row was
 below the library viewport. The driver now uses normal scrolling. No speculative
 tap-target/layout fix or temporary callback instrumentation remains in app code.
+
+## 2026-10-28 — CSV Share to local Files at largest text
+
+- [x] Complete the real Share CSV → local Files Save/readback/cold-return journey
+  on iPhone and iPad Simulator at dark Accessibility XXXL.
+- [x] Independently parse the byte-identical 19-column/four-row files and verify
+  file-local references, literal notes/titles and absence of fixture UUIDs.
+- [x] Check 23 displayed fields per device inside the actual sheet viewport;
+  inspect all 20 final screenshots. Two strict native cases pass.
+- [ ] Mac Share, cloud/provider, physical-device, spoken, larger-output and
+  account/window acceptance remain open. Production output behavior is unchanged.
+
+Exact scope, driver failures and readback: [CSV Share to Files](task-csv-share-files/README.md).

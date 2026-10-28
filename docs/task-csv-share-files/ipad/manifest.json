@@ -1,0 +1,116 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "97F71D86-C342-4976-8ADC-872D9A0B76A7.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "CSV field visibility within the actual sheet_0_ADA082E8-06BE-4813-9278-7D937793D098.json",
+        "timestamp" : 1793176330.925
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "7E3B1624-F30C-4AA8-96BF-4A9C747A0C01.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 4 field 4_0_D5319A7F-F175-43F2-9FAB-5A3A29E3F164.png",
+        "timestamp" : 1793176330.923
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "9719BCC1-F23E-46C8-AB88-EBAC2917AEC2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 4 field 0_0_A4AA6EDF-28F4-489B-8B1B-2EF5DABBA5B0.png",
+        "timestamp" : 1793176295.159
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "115CB6E1-A5BC-49F2-B301-DC5465AD445E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 3 field 5_0_D8FFDE86-251A-493E-AB35-1086847626B8.png",
+        "timestamp" : 1793176288.915
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "7E902A86-6187-4E0C-9069-7E8E71801513.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 3 field 0_0_5D64F0F3-8A27-4289-9131-4C27361F7BDA.png",
+        "timestamp" : 1793176261.549
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "5925D3D5-432C-4E84-BCE3-18F6B748A643.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 2 field 5_0_0E2AF32E-6A6F-4889-AA0C-F68DFC562062.png",
+        "timestamp" : 1793176250.561
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "4898970D-9313-47BD-AC0D-D46F981D5B4C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 2 field 0_0_4F91A6A9-967F-48ED-8D1F-D4DB87786347.png",
+        "timestamp" : 1793176222.682
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "5E06F6F6-B7B0-439D-969D-04E5FACF8194.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 1 field 5_0_E3D1117C-DA52-4658-91DF-69106E029D91.png",
+        "timestamp" : 1793176216.537
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "FE9F18B0-51EC-4534-B723-8827F4FB8040.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Largest text CSV row 1 field 0_0_43825AD7-B38B-466D-A52E-88E30DC43FC2.png",
+        "timestamp" : 1793176181.815
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "C2D6C838-D7AA-49BD-84AF-FD761E587572.csv",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "CSV delivered by Share to local Files_0_DBB45466-1D39-4A5E-B7A3-CBA7D18FC6D9.csv",
+        "timestamp" : 1793176175.48
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "4DEA7D24-78AB-48CA-B573-43CC51B4029B.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "CSV Share local Files destination_0_99ADEF17-BF7B-4077-8E20-ADBEA3DDDC1B.png",
+        "timestamp" : 1793176166.934
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+        "deviceName" : "iPad Air 13-inch (M4)",
+        "exportedFileName" : "BB4CC974-B0BC-4008-A724-3A6F76A9BEDB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Task CSV controls at largest dark text_0_B18B9638-0C00-4FA8-B102-DFCFB96E3738.png",
+        "timestamp" : 1793176133.449
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testTaskCSVLargestTextShareToLocalFilesReadbackAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testTaskCSVLargestTextShareToLocalFilesReadbackAndColdReturn"
+  }
+]

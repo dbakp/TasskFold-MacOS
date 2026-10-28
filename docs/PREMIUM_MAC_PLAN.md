@@ -9150,3 +9150,16 @@ synchronous save from 424 ms to 222 ms for 5,000 tasks. These are observations,
 not release performance acceptance. Final native scopes and evidence are in
 `workflow-validation-admission/README.md`. Production rendering, richer work,
 Mac desktop runtime/warnings and hosted/paired delivery remain open.
+
+## 2026-10-28 — CSV Share to local Files at largest text
+
+- [x] Complete the real Share CSV → local Files Save/readback/cold-return journey
+  on iPhone and iPad Simulator at dark Accessibility XXXL.
+- [x] Independently parse the byte-identical 19-column/four-row files and verify
+  file-local references, literal notes/titles and absence of fixture UUIDs.
+- [x] Check 23 displayed fields per device inside the actual sheet viewport;
+  inspect all 20 final screenshots. Two strict native cases pass.
+- [ ] Mac Share, cloud/provider, physical-device, spoken, larger-output and
+  account/window acceptance remain open. Production output behavior is unchanged.
+
+Exact scope, driver failures and readback: [CSV Share to Files](task-csv-share-files/README.md).

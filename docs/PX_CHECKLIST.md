@@ -67,6 +67,9 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 - [x] Native print/PDF implementation and representative output verification.
 - [x] Pinned-note mobile largest-text Save/readback, Cancel/cold return and changed-
   source refusal; Mac CUA Save/Cancel/readback. Exact limits: pinned-note-output/.
+- [x] Native mobile CSV Share-to-local-Files, actual readback/cold preservation
+  and four-row dark largest-text review; see task-csv-share-files/. Mac/provider/
+  spoken and wider output scopes remain open.
 - [x] Expanded saved filters, grouping and gesture controls in recorded scopes.
 - [x] Heading contracts and guarded native editors; ordinary authoring remains gated.
 - [x] Child-work integration with lists, planning, calendars, widgets and progress

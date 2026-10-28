@@ -4,7 +4,9 @@ Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
-Workflow commits no longer index every saved table after a usable Undo inverse is already prepared. Missing-inverse checks retain the original decisions and lazily index only destination tables. Both repos pass 102 selected Core cases, including 3,240 legacy comparisons; four mobile native Create/Undo/5,000-task/failed-save checks pass. The new diagnostic measures the guard only: the current phone full synchronous commit is still ~0.47 seconds, so the broader save-latency gate remains open. See [workflow history guard](workflow-history-guard/README.md).
+Native CSV Share → local Files now passes completed Save/readback/cold-return acceptance on both iPhone and iPad Simulator at dark Accessibility XXXL. The regression checks 23 fields per device inside the actual sheet viewport; all 20 final images were inspected, and independent parsing confirms byte-identical 19-column/four-row files. No production output change was needed. Mac Share, cloud/provider, spoken, real-device and wider output/account-window acceptance remain open. See [local CSV sharing](task-csv-share-files/README.md).
+
+Fresh local workflow commits now reuse the worker's validated creation plan and prepared widget signatures only after exact admission, with current heading-capability checks and ordinary fallback. The latest recorded iPhone Simulator comparison measured 424 → 222 ms synchronous save for 5,000 tasks; 159 selected Core cases per repo and seven final mobile functional cases pass. Production rendering, richer workloads, Mac runtime and hosted/paired acceptance remain open. See [worker validation admission](workflow-validation-admission/README.md), [widget preparation](workflow-widget-preparation/README.md) and [history guard](workflow-history-guard/README.md).
 
 Expired audio reviews now offer direct scoped Discard, including at the payload-entry quota, with protected other Save claims and changed revisions. Both independent repos pass 96 selected Core tests, 136 controller checks and a 16-process proof. Current native iPhone Discard/cold-return and copy regression, plus iPad Discard/cold-return, pass without reported runtime warnings. Mac native dialog runtime is still open while locked; ordinary audio remains gated. See [expired review discard](audio-comment-expired-discard/README.md).
 
@@ -6593,3 +6595,16 @@ synchronous save from 424 ms to 222 ms for 5,000 tasks. These are observations,
 not release performance acceptance. Final native scopes and evidence are in
 `workflow-validation-admission/README.md`. Production rendering, richer work,
 Mac desktop runtime/warnings and hosted/paired delivery remain open.
+
+## 2026-10-28 — CSV Share to local Files at largest text
+
+- [x] Complete the real Share CSV → local Files Save/readback/cold-return journey
+  on iPhone and iPad Simulator at dark Accessibility XXXL.
+- [x] Independently parse the byte-identical 19-column/four-row files and verify
+  file-local references, literal notes/titles and absence of fixture UUIDs.
+- [x] Check 23 displayed fields per device inside the actual sheet viewport;
+  inspect all 20 final screenshots. Two strict native cases pass.
+- [ ] Mac Share, cloud/provider, physical-device, spoken, larger-output and
+  account/window acceptance remain open. Production output behavior is unchanged.
+
+Exact scope, driver failures and readback: [CSV Share to Files](task-csv-share-files/README.md).

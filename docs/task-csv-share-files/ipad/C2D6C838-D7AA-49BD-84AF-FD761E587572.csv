@@ -1,0 +1,5 @@
+"Taskfold format","Row reference","Parent reference","Group","Parent path","Type","Title","Notes","Completed","Project","Priority","Planned date","Time","Time zone","Scheduled instant","Deadline","Estimate minutes","Labels","Assigned to"
+"taskfold-task-rows-v1","row-1","row-4","Wednesday, 28 October 2026","Launch context","task","Draft the launch note","Keep the work’s own notes.","false","Launch lab","","2026-10-28","","","","2026-01-01","45","[]",""
+"taskfold-task-rows-v1","row-2","row-1","Wednesday, 28 October 2026","Launch context › Draft the launch note","task","Checklist detail","Keep the work’s own notes.","false","Launch lab","","","","","","","","[]",""
+"taskfold-task-rows-v1","row-3","","Wednesday, 28 October 2026","Launch context › Second phase","task","Check the layout","Keep the work’s own notes.","false","Launch lab","","2026-10-28","09:00","","","","30","[]",""
+"taskfold-task-rows-v1","row-4","","Wednesday, 28 October 2026","","heading","Launch context","Keep the original notes.","false","Launch lab","4","2026-10-28","","","","","999","[]",""

@@ -1,0 +1,32 @@
+[
+  {
+    "key": "native-phone",
+    "testcaseOutcome": "failed",
+    "collector": "terminal",
+    "summaryReadExitCode": 0
+  },
+  {
+    "key": "native-v3-phone",
+    "testcaseOutcome": "failed",
+    "collector": "SIGINT then SIGTERM after recorded testcase failure",
+    "summaryReadExitCode": 64
+  },
+  {
+    "key": "native-v3-ipad",
+    "testcaseOutcome": "failed",
+    "collector": "SIGINT then SIGTERM after recorded testcase failure",
+    "summaryReadExitCode": 64
+  },
+  {
+    "key": "native-v5-phone",
+    "testcaseOutcome": "failed",
+    "collector": "terminal",
+    "summaryReadExitCode": 0
+  },
+  {
+    "key": "native-v5-ipad",
+    "testcaseOutcome": "passed, superseded visual-driver scope",
+    "collector": "terminal",
+    "summaryReadExitCode": 0
+  }
+]
