@@ -1,0 +1,234 @@
+{
+  "checks": {
+    "publishing is disabled by default": true,
+    "authenticated cannot call service RPC": true,
+    "anonymous cannot call service RPC": true,
+    "service cannot directly rewrite publication ledger": true,
+    "client cannot read private caption rows": true,
+    "actual authenticated RPC invocation is denied": true,
+    "public service wrapper is security invoker": true,
+    "private state and gate use RLS": true,
+    "a user command cannot request a cleanup manifest": true,
+    "a user command cannot attest physical deletion": true,
+    "reserve freezes exact literal caption": true,
+    "server reservation records its actual expiry": true,
+    "reserve keeps immutable current task incarnation": true,
+    "object path is generated from bound UUIDs": true,
+    "reservation carries no downloadable URL": true,
+    "same reserve is stable across retries": true,
+    "pending reservation is not visible as a published comment": true,
+    "pending comment read is unavailable": true,
+    "finalize requires prior reservation": true,
+    "wrong service-observed digest cannot finalize": true,
+    "wrong service-observed byte count cannot finalize": true,
+    "matching service attestation transitions to published": true,
+    "published acknowledgement records a server timestamp": true,
+    "lost-reply reserve returns the original acknowledgement": true,
+    "lost-reply finalize returns the original acknowledgement": true,
+    "retries do not duplicate metadata rows": true,
+    "current owner can read bound published metadata": true,
+    "another account cannot read personal metadata": true,
+    "same operation with changed caption is refused": true,
+    "same operation with normalized caption is refused": true,
+    "claimed account cannot impersonate another session": true,
+    "wrong target generation cannot reserve": true,
+    "wrong target project cannot reserve": true,
+    "same asset cannot be borrowed for another operation": true,
+    "malformed intent 0 is refused without mutation": true,
+    "malformed intent 1 is refused without mutation": true,
+    "malformed intent 2 is refused without mutation": true,
+    "malformed intent 3 is refused without mutation": true,
+    "malformed intent 4 is refused without mutation": true,
+    "malformed intent 5 is refused without mutation": true,
+    "malformed intent 6 is refused without mutation": true,
+    "malformed intent 7 is refused without mutation": true,
+    "malformed intent 8 is refused without mutation": true,
+    "malformed intent 9 is refused without mutation": true,
+    "malformed intent 10 is refused without mutation": true,
+    "malformed intent 11 is refused without mutation": true,
+    "all invalid requests preserve the original row count": true,
+    "maximum escaped four-KB caption is preserved": true,
+    "session belonging to another user is rejected": true,
+    "banned account cannot read old acknowledgement": true,
+    "removed session cannot reuse an earlier publication": true,
+    "pending account removal blocks publication metadata reads": true,
+    "accepted legacy collaborator can reserve and attest": true,
+    "another accepted collaborator can read published metadata": true,
+    "unrelated account cannot read shared metadata": true,
+    "removed membership defeats even the original author receipt": true,
+    "removed author cannot delete through stale authority": true,
+    "other collaborator cannot moderate another author": true,
+    "archiving retains readable published metadata": true,
+    "archived project refuses a new reservation": true,
+    "personal task ownership cannot retarget a live recording": true,
+    "task identity cannot orphan a live recording": true,
+    "move with live recording is blocked": true,
+    "generation replacement with live recording is blocked": true,
+    "heading conversion with live recording is blocked": true,
+    "failed custody changes preserve original task location": true,
+    "heading is never admitted as an audio target": true,
+    "published shared recording outlives uploader removal": true,
+    "uploader removal clears authorship identity": true,
+    "uploader removal retains shared authored caption": true,
+    "project owner can explicitly retire another authors recording": true,
+    "retired recording is no longer readable": true,
+    "retirement clears authored metadata": true,
+    "cleanup does not prematurely nominate a fresh retirement": true,
+    "retirement enters a bounded service-only cleanup manifest": true,
+    "published recording cannot be marked purged": true,
+    "cleanup acknowledgement rejects another asset": true,
+    "exact cleanup acknowledgement preserves a tombstone": true,
+    "author can retire their personal recording": true,
+    "retired operation cannot be replayed into a new comment": true,
+    "explicit task deletion retires rather than forgets media": true,
+    "explicit project deletion retires media without moving it into Inbox": true,
+    "expired reservation cannot publish": true,
+    "expired reservation does not silently create fresh identities": true
+  },
+  "deployed": false,
+  "storageBytesTransferred": false,
+  "httpOrNativeAcceptanceClaimed": false,
+  "realDataChanged": false,
+  "migrationOnDiskSHA256": "3e6522149e52bdf52918ae66b2e7b68205fd7f290bd3276c8c09d464517efaa3",
+  "fixtureProbe": "missing-task-quota-lock",
+  "postgresVersion": 170006,
+  "baselineAdvisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      }
+    ]
+  },
+  "migrationSHA256": "a7dbb4c7529b941b77c7be504c0d336f4d9c1f0225abf6fb8c2293d110283c08",
+  "failure": {
+    "code": "ERR_ASSERTION",
+    "message": "other actor waits for the actual task quota transaction\n\nfalse !== true\n",
+    "stack": "AssertionError [ERR_ASSERTION]: other actor waits for the actual task quota transaction\n\nfalse !== true\n\n    at check (file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-audio-comment-ledger.mjs:14:10)\n    at file:///Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/Scripts/Database/test-audio-comment-ledger.mjs:754:3\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)"
+  },
+  "ownedPostgresContainerRemoved": true
+}

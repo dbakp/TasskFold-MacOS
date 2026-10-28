@@ -143,3 +143,14 @@ with local cron/net/Vault stubs. It checks disabled installation, operator-only
 control, bounded signed requests, one-use admission, rotation, expiry and
 disable/re-enable invalidation. This is not hosted scheduled-invocation proof;
 use the guarded hosted diagnostic with `--scheduler` for that.
+
+
+# Inactive audio publication ledger
+
+`npm run --prefix Scripts/Database test:audio-comment-ledger -- /tmp/taskfold-ledger.json`
+executes the candidate ledger against an owned real PostgreSQL fixture, using
+unchanged task/team/account-removal dependency routines. It uses no credentials
+or real app data and removes its container. This is metadata-only service-role
+coordination, not an audio upload or native/server delivery acceptance. The
+migration and ordinary audio remain off. See
+[the exact scope and mutation probes](../../docs/audio-comment-ledger/README.md).

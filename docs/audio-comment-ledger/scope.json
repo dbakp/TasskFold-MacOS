@@ -1,0 +1,13 @@
+{
+  "deployed": false,
+  "storageBytesTransferred": false,
+  "nativeOrHTTPPublicationAccepted": false,
+  "appSourceChanged": false,
+  "checks": 102,
+  "introducedAdvisors": 0,
+  "migrationCreatedWithCLI": "supabase migration new audio_comment_publication_ledger",
+  "supabaseCLI": "2.109.0",
+  "node": "v20.19.0",
+  "postgresServerVersion": 170006,
+  "nextRequiredWork": "Authenticated private Storage gateway, readback, native journal/publishing and physical cleanup; no real microphone test."
+}

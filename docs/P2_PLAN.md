@@ -4,6 +4,8 @@ Updated 28 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Private audio server work now has an inactive service-only publication ledger: exact-authority reservation/attestation, stable retries, metadata reads, custody guards and bounded cleanup nomination. Each repo passes 102 actual PostgreSQL checks with no introduced advisor findings; two mutation probes demonstrate the quota/custody guards. There is no bucket, actual upload, conversation row, HTTP gateway or native publication integration yet, and no migration was deployed. **The next implementation is the authenticated Storage gateway and verified readback**, followed by native publishing and physical lifecycle acceptance. Genuine audio remains deferred. See [publication coordinator](audio-comment-ledger/README.md).
+
 Private audio now connects to saved personal-root task editors/inspectors, including Inbox, behind an absent normal exposure flag. Live Store access, owner, task/project/generation and server origin bind each request; app/server/account storage stays private and outside task exports. Both repos pass 123 Core cases and 170 controller checks; two final native cases per iPhone/iPad pass without reported runtime warnings, preserving task bytes and verifying cold return plus fixture reset isolation. Shared/child/cloud runtime and full lifecycle remain open. See [task-editor integration](audio-task-editor/README.md).
 
 Private recording recovery now offers a reviewed **Keep both** action backed by the existing durable Save workflow. Exact staged bytes are cleaned only after the independent copy is durable; newer saved versions stay intact. Both repos pass 115 focused Core cases, 166 synthetic controller checks and a seven-process copy proof. Two final native cases per iPhone/iPad pass at dark Accessibility XXXL without reported runtime warnings, including Cancel, cold Finish and the ordinary recovery regression. Unpromoted Save/discard journals prevent competing copies; their separate recovery UI stays open. See [Keep both recovery](audio-interrupted-copy/README.md).
@@ -6710,3 +6712,27 @@ custody; it does not complete audio comments or the overall Px objective.
 
 [Evidence and exact scope](audio-recording-import/README.md). This completes the
 scoped local mobile import return path, not audio comments or the overall Px goal.
+
+
+## 2026-10-28 — inactive audio publication ledger
+
+- [x] Implement a service-only, default-off metadata coordinator for immutable
+  reservations, matching service attestations, current-access metadata reads,
+  explicit retirement and bounded cleanup manifests. It does not upload media,
+  provision Storage, write ordinary conversation rows or expose a client RPC.
+- [x] Enforce live session/removal and exact task/generation/project authority;
+  preserve retry IDs and literal captions. Serialize task/account quotas, block
+  unreviewed identity/move/Inbox-owner/heading changes and preserve shared
+  metadata with cleared authorship when its uploader leaves.
+- [x] Independently pass 102 real PostgreSQL checks per repo, with baseline/final
+  official advisor comparison introducing no findings. Two controlled mutation
+  probes fail at their intended quota/custody assertions; fixtures are removed.
+  A null-owner fixture is excluded because the existing schema forbids that row.
+- [ ] Actual authenticated Edge/Storage transfer and readback, media reads,
+  late-upload-safe physical cleanup, rate/aggregate budgets, native publishing /
+  conversation presentation and hosted acceptance remain open. A metadata
+  attestation alone is not upload proof. Ordinary audio and server config stay
+  off; the migration is not deployed. All user deferrals remain in force.
+
+[Evidence and next required work](audio-comment-ledger/README.md). This completes
+the coordinator foundation, not private delivery, audio comments or the Px goal.

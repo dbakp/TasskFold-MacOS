@@ -9333,3 +9333,27 @@ custody; it does not complete audio comments or the overall Px objective.
 
 [Evidence and exact scope](audio-recording-import/README.md). This completes the
 scoped local mobile import return path, not audio comments or the overall Px goal.
+
+
+## 2026-10-28 — inactive audio publication ledger
+
+- [x] Implement a service-only, default-off metadata coordinator for immutable
+  reservations, matching service attestations, current-access metadata reads,
+  explicit retirement and bounded cleanup manifests. It does not upload media,
+  provision Storage, write ordinary conversation rows or expose a client RPC.
+- [x] Enforce live session/removal and exact task/generation/project authority;
+  preserve retry IDs and literal captions. Serialize task/account quotas, block
+  unreviewed identity/move/Inbox-owner/heading changes and preserve shared
+  metadata with cleared authorship when its uploader leaves.
+- [x] Independently pass 102 real PostgreSQL checks per repo, with baseline/final
+  official advisor comparison introducing no findings. Two controlled mutation
+  probes fail at their intended quota/custody assertions; fixtures are removed.
+  A null-owner fixture is excluded because the existing schema forbids that row.
+- [ ] Actual authenticated Edge/Storage transfer and readback, media reads,
+  late-upload-safe physical cleanup, rate/aggregate budgets, native publishing /
+  conversation presentation and hosted acceptance remain open. A metadata
+  attestation alone is not upload proof. Ordinary audio and server config stay
+  off; the migration is not deployed. All user deferrals remain in force.
+
+[Evidence and next required work](audio-comment-ledger/README.md). This completes
+the coordinator foundation, not private delivery, audio comments or the Px goal.
