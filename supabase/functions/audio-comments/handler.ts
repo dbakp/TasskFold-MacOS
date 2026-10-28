@@ -184,13 +184,17 @@ export function createAudioCommentsHandler(
       if (request.method !== "POST") throw new Failure(405, "method");
       if (
         !action ||
-        !["publish", "list", "page", "download", "remove"].includes(action) ||
+        !["publish", "list", "page", "download", "remove", "resolve"].includes(
+          action,
+        ) ||
         [...url.searchParams.keys()].some((k) => k !== "action") ||
         url.searchParams.getAll("action").length !== 1
       ) throw new Failure(400, "invalid");
-      // Removal remains available after publication is disabled; the database still
-      // requires current user authority. Maintenance has no public handler route.
-      if (config.enabled !== true && action !== "remove") {
+      // Removal and sender history/cancellation remain available after publishing
+      // is disabled; SQL still checks live authority. Maintenance has no route.
+      if (
+        config.enabled !== true && action !== "remove" && action !== "resolve"
+      ) {
         throw new Failure(503, "disabled");
       }
       const origin = new URL(config.url);
@@ -290,7 +294,11 @@ export function createAudioCommentsHandler(
       const admitted = await rpc("taskfold_audio_comment_admit", {
         _actor: actor.account,
         _session: actor.session,
-        _action: action === "page" ? "list" : action,
+        // Owner history/cancellation shares the authenticated metadata budget;
+        // it stays available while publishing/Storage is disabled.
+        _action: action === "resolve"
+          ? "remove"
+          : (action === "page" ? "list" : action),
       });
       if (admitted.allowed !== true) {
         if (
@@ -330,6 +338,37 @@ export function createAudioCommentsHandler(
           _session: actor.session,
           _body: body,
         });
+      if (action === "resolve") {
+        let intent: Row;
+        try {
+          exact(body, ["intent", "close"]);
+          intent = publication(body.intent);
+          if (
+            intent.account !== actor.account || typeof body.close !== "boolean"
+          ) throw Error("owner");
+        } catch {
+          throw new Failure(400, "invalid");
+        }
+        const result = await rpc("taskfold_audio_owner_publication", {
+          _actor: actor.account,
+          _session: actor.session,
+          _body: { intent, close: body.close },
+        });
+        if (result.status) refused(result);
+        if (result.state === "published") {
+          const confirmed = receipt(result, actor.account, intent);
+          return json({ receipt: publicReceipt(confirmed) });
+        }
+        exact(result, ["protocol", "intent", "state"]);
+        if (
+          result.protocol !== 1 ||
+          !["closed", "unconfirmed"].includes(String(result.state)) ||
+          key(publication(result.intent)) !== key(intent)
+        ) throw new Failure(503, "retry");
+        return json(
+          result.state === "closed" ? { closed: result } : { pending: result },
+        );
+      }
       const getStored = async (row: Row, missing: boolean) => {
         const result = await fetchResponse(
           "/storage/v1/object/" + bucket + "/" + path(row),

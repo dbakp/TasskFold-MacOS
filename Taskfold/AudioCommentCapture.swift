@@ -1227,6 +1227,16 @@ struct AudioCommentConversationRequest: Identifiable {
         let pending = AudioCommentPendingLibrary(scope: scope, storage: .init(disk: try .init(root: root, account: account, origin: origin)), drafts: drafts, player: player)
         pending.currentScope = { [weak self] in self?.audioPendingScope() }; return pending
     }
+    /// Sender-only status has no current task read/write authority and cannot publish.
+    func audioPendingChecker(_ journal:AudioCommentPublicationJournal,library:AudioCommentPendingLibrary) throws -> AudioCommentPublicationFlow {
+        guard let scope=audioPendingScope(),library.selectedIsCurrent(journal),scope.matches(library.scope),
+              journal.origin==library.storage.origin,journal.publication.account==library.storage.account else {throw AudioCommentFailure.changed}
+        let incarnation=backend.reminderSessionIncarnation
+        return AudioCommentPublicationFlow(storage:library.storage,transport:backend,incarnation:incarnation,target:journal.publication.target,retainAudioOnConfirmation:true,allowsPublishing:false,isCurrent:{[weak self,weak library] in
+            guard let self,let library,library.selectedIsCurrent(journal),self.backend.reminderSessionIncarnation==incarnation,let current=self.audioPendingScope() else {return false}
+            return scope.matches(current)
+        })
+    }
     func audioPendingPublisher(_ journal: AudioCommentPublicationJournal, library: AudioCommentPendingLibrary) throws -> AudioCommentPublicationFlow {
         guard let scope = audioPublishingScope(journal.publication.target), library.selectedIsCurrent(journal),
               library.scope.matches(.init(workspace: scope.workspace, origin: scope.origin)), journal.origin == library.storage.origin, journal.publication.account == library.storage.account else { throw AudioCommentFailure.changed }

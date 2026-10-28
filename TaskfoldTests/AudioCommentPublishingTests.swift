@@ -486,3 +486,94 @@ extension AudioCommentPublishingTests {
         XCTAssertTrue(try XCTUnwrap(file.journals().first).isPending);XCTAssertNil(flow.journal?.closedReceipt)
     }
 }
+
+extension AudioCommentPublishingTests {
+    @MainActor final class StatusTransport:AudioCommentPublishingTransport {
+        var publishes=0
+        var calls:[(AudioCommentPublication,Bool)]=[]
+        var answer:((AudioCommentPublication,Bool) async throws -> AudioCommentPublicationStatus)!
+        func publishAudio(_ pending:AudioCommentPending,origin:String,incarnation:UUID) async throws -> AudioCommentPublishedReceipt {publishes+=1;throw AudioCommentFailure.changed}
+        func checkAudioPublication(_ publication:AudioCommentPublication,closing:Bool,origin:String,incarnation:UUID) async throws -> AudioCommentPublicationStatus {calls.append((publication,closing));return try await answer(publication,closing)}
+    }
+    func pendingStatus(_ publication:AudioCommentPublication)->Record {Record(["pending":.object(["protocol":.number(1),"intent":.object(publication.record.fields),"state":.string("unconfirmed")])])}
+    func testOwnerStatusWireCannotEchoUnknownProofOrChangedIntent() throws {
+        let publication=try disk().prepare(source()).publication
+        let data=try JSONEncoder().encode(pendingStatus(publication))
+        if case .unconfirmed=try AudioCommentPublicationStatus(data:data,publication:publication,allowPending:true) {} else {XCTFail()}
+        XCTAssertThrowsError(try AudioCommentPublicationStatus(data:data,publication:publication,allowPending:false))
+        var altered=publication.record.fields;altered["caption"] = .string("Changed caption")
+        let wrong=Record(["pending":.object(["protocol":.number(1),"intent":.object(altered),"state":.string("unconfirmed")])])
+        XCTAssertThrowsError(try AudioCommentPublicationStatus(data:JSONEncoder().encode(wrong),publication:publication,allowPending:true))
+        var extra=pendingStatus(publication).fields;extra["closed"] = .object(try closedProof(publication).record.fields)
+        XCTAssertThrowsError(try AudioCommentPublicationStatus(data:JSONEncoder().encode(Record(extra)),publication:publication,allowPending:true))
+    }
+    @MainActor func testStatusOnlyFlowCannotPublishAndUnconfirmedPreservesJournalBytes() async throws {
+        let file=try disk(),input=try source(),journal=try file.prepare(input),before=try journal.encoded(),transport=StatusTransport()
+        transport.answer={_,_ in .unconfirmed}
+        let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,allowsPublishing:false,isCurrent:{true})
+        try await flow.checkPublication(journal)
+        XCTAssertEqual(flow.state,.unconfirmed);XCTAssertEqual(transport.calls.count,1);XCTAssertFalse(transport.calls[0].1)
+        do {try await flow.publish(input);XCTFail()}catch{}
+        do {try await flow.retry(journal);XCTFail()}catch{}
+        XCTAssertEqual(transport.publishes,0);XCTAssertEqual(try file.journals().first?.encoded(),before)
+    }
+    @MainActor func testExplicitOwnerClosePersistsAndColdCheckIsLocalOnly() async throws {
+        let file=try disk(),input=try source(),journal=try file.prepare(input),transport=StatusTransport()
+        transport.answer={publication,closing in XCTAssertTrue(closing);return .closed(try self.closedProof(publication))}
+        let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,allowsPublishing:false,isCurrent:{true})
+        try await flow.checkPublication(journal,closing:true);XCTAssertEqual(flow.state,.closed);XCTAssertEqual(flow.journal?.clip?.data,input.clip.data)
+        let returned=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,allowsPublishing:false,isCurrent:{true})
+        try await returned.checkPublication(journal);XCTAssertEqual(returned.state,.closed);XCTAssertEqual(transport.calls.count,1);XCTAssertEqual(transport.publishes,0)
+    }
+    @MainActor func testOwnerHistoryRetainsMediaAndCloseCannotRemovePublishedComment() async throws {
+        let file=try disk(),input=try source(),journal=try file.prepare(input),transport=StatusTransport()
+        transport.answer={publication,closing in XCTAssertTrue(closing);return .published(try .init(record:self.record(publication),publication:publication))}
+        let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,allowsPublishing:false,isCurrent:{true})
+        try await flow.checkPublication(journal,closing:true)
+        XCTAssertEqual(flow.state,.published);XCTAssertNotNil(flow.journal?.receipt);XCTAssertNil(flow.journal?.closedReceipt);XCTAssertEqual(flow.journal?.clip?.data,input.clip.data)
+        XCTAssertEqual(transport.publishes,0);XCTAssertEqual(transport.calls.count,1)
+    }
+    @MainActor func testForeignOwnerStatusCannotSettleOriginalAndDepartureCannotPersistReply() async throws {
+        let file=try disk(),input=try source(),journal=try file.prepare(input),other=try file.prepare(source()),transport=StatusTransport();var current=true
+        transport.answer={_,_ in .closed(try self.closedProof(other.publication))}
+        let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,allowsPublishing:false,isCurrent:{current})
+        do {try await flow.checkPublication(journal,closing:true);XCTFail()}catch{}
+        XCTAssertTrue(try XCTUnwrap(file.journals().first{$0.publication.operation==journal.publication.operation}).isPending)
+        transport.answer={publication,_ in current=false;return .closed(try self.closedProof(publication))}
+        do {try await flow.checkPublication(journal,closing:true);XCTFail()}catch{}
+        XCTAssertTrue(try XCTUnwrap(file.journals().first{$0.publication.operation==journal.publication.operation}).isPending)
+    }
+    @MainActor func testStatusNeverFallsBackToOldPublishOnlyTransport() async throws {
+        let file=try disk(),input=try source(),journal=try file.prepare(input),transport=Transport()
+        let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,allowsPublishing:false,isCurrent:{true})
+        do {try await flow.checkPublication(journal);XCTFail()}catch{}
+        XCTAssertTrue(transport.requests.isEmpty);XCTAssertTrue(try XCTUnwrap(file.journals().first).isPending)
+    }
+    @MainActor func testBackendOwnerStatusUsesMetadataOnlyFixedRoute() async throws {
+        let backend=try backend(),publication=try disk().prepare(source()).publication;var closes:[Bool]=[]
+        PublicationHTTP.handler={request,http in
+            XCTAssertEqual(request.url?.absoluteString,self.origin+"/functions/v1/audio-comments?action=resolve")
+            XCTAssertEqual(request.value(forHTTPHeaderField:"Cache-Control"),"no-store");XCTAssertFalse(request.httpShouldHandleCookies)
+            var body=request.httpBody ?? Data()
+            if let stream=request.httpBodyStream {stream.open();defer {stream.close()};var buffer=[UInt8](repeating:0,count:4096);while stream.hasBytesAvailable {let n=stream.read(&buffer,maxLength:buffer.count);if n<=0 {break};body.append(buffer,count:n)}}
+            let fields=try! JSONDecoder().decode(Record.self,from:body);XCTAssertEqual(Set(fields.fields.keys),["intent","close"]);XCTAssertLessThan(body.count,32000)
+            XCTAssertTrue(try! AudioCommentPublication(record:Record(fields["intent"].object)).sameIntent(as:publication));closes.append(fields["close"] == .bool(true))
+            http.finish(try! JSONEncoder().encode(self.pendingStatus(publication)))
+        };defer {PublicationHTTP.handler=nil}
+        _=try await backend.checkAudioPublication(publication,closing:false,origin:origin,incarnation:backend.reminderSessionIncarnation)
+        _=try await backend.checkAudioPublication(publication,closing:true,origin:origin,incarnation:backend.reminderSessionIncarnation)
+        XCTAssertEqual(closes,[false,true])
+    }
+    @MainActor func testBackendOwnerStatusRejectsLateSessionAndSanitizesErrors() async throws {
+        let backend=try backend(),publication=try disk().prepare(source()).publication
+        for status in [302,401,403,404,429,503] {
+            PublicationHTTP.handler={_,http in http.finish(Data("PRIVATE synthetic-status-secret".utf8),status:status)}
+            do {_=try await backend.checkAudioPublication(publication,closing:false,origin:origin,incarnation:backend.reminderSessionIncarnation);XCTFail()}catch{XCTAssertFalse(error.localizedDescription.contains("PRIVATE"));XCTAssertFalse(error.localizedDescription.contains("synthetic-status-secret"))}
+        }
+        let gate=PublicationHTTPGate();PublicationHTTP.handler={_,http in gate.hold(http)};defer {PublicationHTTP.handler=nil}
+        let incarnation=backend.reminderSessionIncarnation,operation=Task {try await backend.checkAudioPublication(publication,closing:false,origin:origin,incarnation:incarnation)}
+        for _ in 0..<500 {if gate.ready {break};try await Task.sleep(for:.milliseconds(10))};XCTAssertTrue(gate.ready)
+        try await backend.clearSession();gate.release(try JSONEncoder().encode(pendingStatus(publication)))
+        do {_=try await operation.value;XCTFail()}catch{}
+    }
+}

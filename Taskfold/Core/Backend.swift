@@ -1186,51 +1186,72 @@ extension Backend: ASWebAuthenticationPresentationContextProviding {}
 
 
 extension Backend: AudioCommentPublishingTransport {
-    func publishAudio(_ pending: AudioCommentPending, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
-        let owner = pending.publication.account.uuidString.lowercased()
-        func check() throws {
-            guard !sessionTransition, sessionGeneration == incarnation, session?.user.id == owner,
-                  try AudioCommentPublicationJournal.canonicalOrigin(baseURL) == origin else { throw CancellationError() }
-            try Task.checkCancellation()
+    private func checkAudioPublicationOwner(_ owner:String,origin:String,incarnation:UUID) throws {
+        guard !sessionTransition,sessionGeneration==incarnation,session?.user.id==owner,
+              try AudioCommentPublicationJournal.canonicalOrigin(baseURL)==origin else {throw CancellationError()}
+        try Task.checkCancellation()
+    }
+    func publishAudio(_ pending:AudioCommentPending,origin:String,incarnation:UUID) async throws -> AudioCommentPublishedReceipt {
+        let owner=pending.publication.account.uuidString.lowercased()
+        try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        try await refreshIfNeeded();try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        let decoded=try await AudioCommentDecoding.validate(pending.clip.data)
+        guard decoded.descriptor.sha256==pending.publication.descriptor.sha256,decoded.descriptor.byteCount==pending.publication.descriptor.byteCount,
+              abs(decoded.descriptor.milliseconds-pending.publication.descriptor.milliseconds)<=1000 else {throw AudioCommentFailure.invalid}
+        let encoding=Task.detached(priority:.utility) {() throws -> Data in
+            try Task.checkCancellation();let encoder=JSONEncoder();encoder.outputFormatting=[.sortedKeys,.withoutEscapingSlashes]
+            let data=try encoder.encode(Record(["intent":.object(pending.publication.record.fields),"audio_base64":.string(pending.clip.data.base64EncodedString())]))
+            try Task.checkCancellation();return data
         }
-        try check(); try await refreshIfNeeded(); try check()
-        // Full native decode before sending, without recording or playing sound.
-        let decoded = try await AudioCommentDecoding.validate(pending.clip.data)
-        guard decoded.descriptor.sha256 == pending.publication.descriptor.sha256, decoded.descriptor.byteCount == pending.publication.descriptor.byteCount, abs(decoded.descriptor.milliseconds - pending.publication.descriptor.milliseconds) <= 1000 else { throw AudioCommentFailure.invalid }; try check()
-        let encoding = Task.detached(priority: .utility) { () throws -> Data in
-            try Task.checkCancellation()
-            let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
-            let data = try encoder.encode(Record(["intent": .object(pending.publication.record.fields), "audio_base64": .string(pending.clip.data.base64EncodedString())]))
-            try Task.checkCancellation(); return data
+        let body=try await withTaskCancellationHandler(operation:{try await encoding.value},onCancel:{encoding.cancel()})
+        let data=try await audioPublicationReply(body,action:"publish",owner:owner,origin:origin,incarnation:incarnation)
+        let result=try decodeAudioPublicationStatus(data,publication:pending.publication,allowPending:false)
+        switch result {
+        case .published(let receipt):return receipt
+        case .closed(let proof):throw proof
+        case .unconfirmed:throw AudioCommentFailure.invalid
         }
-        let body = try await withTaskCancellationHandler(operation: { try await encoding.value }, onCancel: { encoding.cancel() }); try check()
-        guard let url = URL(string: origin + "/functions/v1/audio-comments?action=publish"), let session else { throw AudioCommentFailure.changed }
-        var request = URLRequest(url: url); request.httpMethod = "POST"; request.timeoutInterval = 25
-        request.cachePolicy = .reloadIgnoringLocalCacheData; request.httpShouldHandleCookies = false
-        request.setValue(config["Key"], forHTTPHeaderField: "apikey"); request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
-        request.httpBody = body
-        let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
-        var data = Data()
+    }
+    /// Sender history/cancellation only. No clip, audio encoding or media request.
+    func checkAudioPublication(_ publication:AudioCommentPublication,closing:Bool,origin:String,incarnation:UUID) async throws -> AudioCommentPublicationStatus {
+        let owner=publication.account.uuidString.lowercased()
+        try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        try await refreshIfNeeded();try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        let encoder=JSONEncoder();encoder.outputFormatting=[.sortedKeys,.withoutEscapingSlashes]
+        let body=try encoder.encode(Record(["intent":.object(publication.record.fields),"close":.bool(closing)]))
+        guard body.count<=32000 else {throw AudioCommentFailure.invalid}
+        let data=try await audioPublicationReply(body,action:"resolve",owner:owner,origin:origin,incarnation:incarnation)
+        return try decodeAudioPublicationStatus(data,publication:publication,allowPending:true)
+    }
+    private var audioPublicationUnconfirmed:AudioCommentFailure {.init(message:"Publication couldn’t be confirmed. Your private recording is preserved.")}
+    private func decodeAudioPublicationStatus(_ data:Data,publication:AudioCommentPublication,allowPending:Bool) throws -> AudioCommentPublicationStatus {
+        do {return try .init(data:data,publication:publication,allowPending:allowPending)}
+        catch {throw audioPublicationUnconfirmed}
+    }
+    private func audioPublicationReply(_ body:Data,action:String,owner:String,origin:String,incarnation:UUID) async throws -> Data {
+        try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        guard ["publish","resolve"].contains(action),let url=URL(string:origin+"/functions/v1/audio-comments?action="+action),let session else {throw AudioCommentFailure.changed}
+        var request=URLRequest(url:url);request.httpMethod="POST";request.timeoutInterval=25
+        request.cachePolicy = .reloadIgnoringLocalCacheData;request.httpShouldHandleCookies=false
+        request.setValue(config["Key"],forHTTPHeaderField:"apikey");request.setValue("Bearer "+session.access_token,forHTTPHeaderField:"Authorization")
+        request.setValue("application/json",forHTTPHeaderField:"Content-Type");request.setValue("no-store",forHTTPHeaderField:"Cache-Control");request.httpBody=body
+        let (bytes,incoming)=try await http.bytes(for:request,delegate:LocationHandoffRedirectRefusal.shared)
+        var data=Data()
         do {
-            for try await byte in bytes { try Task.checkCancellation(); guard data.count < 64000 else { throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.") }; if data.count % 4096 == 0 { try check() }; data.append(byte) }
-            try check()
-        } catch { bytes.task.cancel(); throw error }
-        guard let response = incoming as? HTTPURLResponse, response.url == url else { throw AudioCommentFailure.invalid }
-        guard (200..<300).contains(response.statusCode) else {
-            if response.statusCode == 401 { throw AccountSessionAuthorizationRequired() }
-            if response.statusCode == 429 { throw AudioCommentFailure(message: "Wait briefly, then check this recording again. Your local copy is safe.") }
-            throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.")
-        }
-        do {
-            let envelope = try JSONDecoder().decode(Record.self, from: data)
-            if Set(envelope.fields.keys) == ["closed"],case .object(let proof)=envelope["closed"] {
-                throw try AudioCommentPublicationClosed(record:Record(proof),publication:pending.publication)
+            for try await byte in bytes {
+                try Task.checkCancellation();guard data.count<64000 else {throw audioPublicationUnconfirmed}
+                if data.count % 4096 == 0 {try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)}
+                data.append(byte)
             }
-            guard Set(envelope.fields.keys) == ["receipt"], case .object(let receipt) = envelope["receipt"] else { throw AudioCommentFailure.invalid }
-            return try AudioCommentPublishedReceipt(record: Record(receipt), publication: pending.publication)
-        } catch let closed as AudioCommentPublicationClosed {throw closed}
-        catch { throw AudioCommentFailure(message: "Publication couldn’t be confirmed. Check again to retry the same recording safely.") }
+            try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
+        } catch {bytes.task.cancel();throw error}
+        guard let response=incoming as? HTTPURLResponse,response.url==url else {throw AudioCommentFailure.invalid}
+        guard (200..<300).contains(response.statusCode) else {
+            if response.statusCode==401 {throw AccountSessionAuthorizationRequired()}
+            if response.statusCode==429 {throw AudioCommentFailure(message:"Wait briefly, then check this recording again. Your local copy is safe.")}
+            throw audioPublicationUnconfirmed
+        }
+        return data
     }
 }
 

@@ -12,6 +12,7 @@ import SwiftUI
     @State private var notice: String?
     @State private var ready = false
     @State private var confirming = false
+    @State private var checkingStatus = false
     @State private var operation: Task<Void, Never>?
     @State private var generation = UUID()
     @AccessibilityFocusState(for: .voiceOver) private var statusFocused: Bool
@@ -34,13 +35,15 @@ import SwiftUI
                         Label("Original publication closed",systemImage:"checkmark.shield").accessibilityIdentifier("audioPublicationClosed")
                         Text("That send can’t resume. It may have been visible earlier. Your private recording is preserved; edit and save a new version if you want to publish again.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
                     case .saving, .sending:
-                        ProgressView(flow.state == .sending ? "Publishing recording…" : "Preparing publication…").accessibilityIdentifier("audioPublicationProgress")
+                        ProgressView(flow.state == .sending ? (checkingStatus ? "Checking original send…" : "Publishing recording…") : "Preparing publication…").accessibilityIdentifier("audioPublicationProgress")
                     case .ready, .unconfirmed:
                         if flow.journal != nil {
                             Label("Awaiting confirmation", systemImage: "clock.arrow.circlepath").foregroundStyle(.secondary)
-                            Text("Check the earlier send safely. Your local recording stays here.").font(.caption).foregroundStyle(.secondary)
+                            Text("Check its status without uploading audio. Your local recording stays here.").font(.caption).foregroundStyle(.secondary)
                             Button("Check publication", systemImage: "arrow.clockwise") { start(checking: true) }
                                 .disabled(busy).accessibilityIdentifier("audioPublicationRetry")
+                            Button("Resume original send…",systemImage:"paperplane") {confirming=true}.frame(minHeight:44)
+                                .disabled(busy).accessibilityIdentifier("audioPublicationResume")
                         } else {
                             Text("Publish the reviewed recording and caption to its original task. Anyone with access to that task may be able to listen.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                             Button("Publish recording…", systemImage: "paperplane") { confirming = true }
@@ -60,10 +63,10 @@ import SwiftUI
                 }
             }
             .task(id: identity) { await restore() }
-            .confirmationDialog("Publish this recording?", isPresented: $confirming, titleVisibility: .visible) {
-                Button("Publish recording") { start(checking: false) }.disabled(!admitted || busy)
-                Button("Cancel", role: .cancel) {}
-            } message: { Text("The recording and caption will be shared on the original task. Your saved copy stays on this device.") }
+            .alert(flow?.journal == nil ? "Publish this recording?" : "Resume the original send?",isPresented:$confirming) {
+                Button(flow?.journal == nil ? "Publish recording" : "Resume original send") {start(checking:false)}.disabled(!admitted || busy).accessibilityIdentifier("audioPublicationConfirm")
+                Button("Cancel",role:.cancel) {}
+            } message: {Text("The recording and caption will be shared on the original task using the reviewed send. Your saved copy stays on this device.")}
             .onChange(of: current != nil) { _, value in if !value { close() } }
             .onChange(of: library.isCurrent) { _, value in if !value { close() } }
             .onChange(of: scenePhase) { _, value in if value != .active { close() } }
@@ -72,7 +75,7 @@ import SwiftUI
     }
     private var identity: String { source.id.uuidString + source.revision.uuidString + String(describing: current) + String(describing: scenePhase) + store.backend.reminderSessionIncarnation.uuidString }
     private func close() {
-        generation = UUID(); operation?.cancel(); operation = nil; flow?.invalidate(); flow = nil; scope = nil; ready = false; notice = nil; confirming = false
+        generation = UUID(); operation?.cancel(); operation = nil; flow?.invalidate(); flow = nil; scope = nil; ready = false; notice = nil; confirming = false; checkingStatus=false
     }
     private func restore() async {
         close(); guard let current, scenePhase == .active, library.isCurrent else { return }
@@ -90,18 +93,21 @@ import SwiftUI
     }
     private func start(checking: Bool) {
         guard admitted, ready, !busy, let flow else { return }
-        let token = generation; notice = nil; library.stopPlayback()
+        let token = generation; notice = nil; checkingStatus=checking; library.stopPlayback()
         operation = Task {
             defer { if generation == token { operation = nil } }
             do {
-                if checking, let journal = flow.journal { try await flow.retry(journal) }
+                if checking, let journal = flow.journal { try await flow.checkPublication(journal) }
                 else {
                     let fresh = try await library.preparePublicationSource(source)
                     guard admitted, generation == token, !Task.isCancelled else { return }
                     try await flow.publish(fresh)
                 }
                 guard admitted, generation == token, !Task.isCancelled else { return }
-                notice = flow.state == .closed ? "Original publication closed. Your private recording is preserved." : "Publication confirmed. Your saved recording is still here."; statusFocused = true
+                if flow.state == .closed {notice="Original publication closed. Your private recording is preserved."}
+                else if flow.state == .published {notice="The original send was confirmed. Your saved recording is still here."}
+                else {notice="The original send is still unconfirmed. Checking did not upload audio; your recording is preserved."}
+                statusFocused = true
             } catch {
                 guard admitted, generation == token, !Task.isCancelled else { return }
                 if error is AccountSessionAuthorizationRequired { notice = "Sign in again before checking this publication. Your local recording is preserved." }

@@ -62,6 +62,7 @@ try {
       "20261028153218_audio_comment_upload_recovery.sql",
       "20261028185429_audio_comment_keyset_pages.sql",
       "20261028191118_audio_comment_shared_reads.sql",
+      "20261028212632_audio_owner_publication_status.sql",
     ]
   ) {
     await pg.raw(

@@ -82,6 +82,9 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
     pageResult: undefined as Row | undefined,
     reserveResult: undefined as Row | undefined,
     reserves: 0,
+    ownerResult: undefined as Row | undefined,
+    ownerCalls: 0,
+    admitActions: [] as string[],
     closeOnFresh: false,
     finalizeResult: undefined as Row | undefined,
   };
@@ -101,10 +104,22 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
     }
     equal(request.headers.get("Authorization"), "Bearer synthetic-service-key");
     if (u.pathname.endsWith("/taskfold_audio_comment_admit")) {
+      state.admitActions.push((await request.json())._action);
       return response(
         state.admission
           ? { protocol: 1, account, allowed: true, retry_after: 0 }
           : { allowed: false, status: "rate_limited", retry_after: 37 },
+      );
+    }
+    if (u.pathname.endsWith("/taskfold_audio_owner_publication")) {
+      const body = await request.json();
+      equal(body._actor, account);
+      equal(body._session, session);
+      equal(Object.keys(body._body).sort(), ["close", "intent"]);
+      equal(body._body.intent, intent);
+      state.ownerCalls++;
+      return response(
+        state.ownerResult ?? { protocol: 1, intent, state: "unconfirmed" },
       );
     }
     if (u.pathname.endsWith("/taskfold_audio_comment_page")) {
@@ -577,4 +592,97 @@ Deno.test("expiry between readback and fresh reservation closes without a new up
   equal(f.state.reserves, 2);
   equal(f.state.uploads, 0);
   equal(f.state.finalizes, 0);
+});
+
+Deno.test("owner status remains metadata-only while publishing is disabled", async () => {
+  const f = fixture({ enabled: false }),
+    r = await f.handler(
+      f.request("resolve", { intent: f.intent, close: false }),
+    );
+  equal(r.status, 200);
+  equal(await r.json(), {
+    pending: { protocol: 1, intent: f.intent, state: "unconfirmed" },
+  });
+  equal(f.state.ownerCalls, 1);
+  equal(f.state.admitActions, ["remove"]);
+  equal(f.state.uploads, 0);
+  equal(f.state.calls.some((x) => x.includes("/storage/")), false);
+});
+Deno.test("owner cancellation returns only exact original terminal proof", async () => {
+  const f = fixture();
+  f.state.ownerResult = { protocol: 1, intent: f.intent, state: "closed" };
+  const r = await f.handler(
+    f.request("resolve", { intent: f.intent, close: true }),
+  );
+  equal(r.status, 200);
+  equal(await r.json(), { closed: f.state.ownerResult });
+  equal(f.state.uploads, 0);
+  equal(f.state.finalizes, 0);
+});
+Deno.test("owner published history does not download or remove current media", async () => {
+  const f = fixture({ enabled: false });
+  f.row.state = "published";
+  f.row.published_at = "2026-10-28T12:00:01Z";
+  f.state.ownerResult = f.row;
+  const r = await f.handler(
+    f.request("resolve", { intent: f.intent, close: true }),
+  );
+  equal(r.status, 200);
+  const output = await r.json();
+  equal(output.receipt.state, "published");
+  equal(output.receipt.object_name, undefined);
+  equal(output.receipt.bucket, undefined);
+  equal(f.state.calls.some((x) => x.includes("/storage/")), false);
+});
+Deno.test("owner route rejects malformed cancellation and audio-bearing status inputs", async () => {
+  for (
+    const bad of [
+      { intent: "bad", close: false },
+      { intent: undefined, close: false },
+      { close: "true" },
+      { close: null },
+      { close: false, audio_base64: "unexpected" },
+    ]
+  ) {
+    const f = fixture(),
+      r = await f.handler(f.request("resolve", { intent: f.intent, ...bad }));
+    equal(r.status, 400);
+    equal(f.state.ownerCalls, 0);
+    equal(f.state.uploads, 0);
+  }
+});
+Deno.test("owner status cannot echo a foreign or changed intent or unexpected fields", async () => {
+  for (
+    const value of [
+      { protocol: 1, intent: { changed: true }, state: "closed" },
+      { protocol: 2, state: "closed" },
+      { protocol: 1, state: "unconfirmed", extra: true },
+    ]
+  ) {
+    const f = fixture();
+    f.state.ownerResult = { intent: f.intent, ...value };
+    const r = await f.handler(
+      f.request("resolve", { intent: f.intent, close: false }),
+    );
+    equal(r.status, 503);
+    equal((await r.json()).closed, undefined);
+  }
+});
+Deno.test("owner status retains live authentication and metadata rate limits", async () => {
+  const wrong = fixture();
+  wrong.state.authID = id();
+  equal(
+    (await wrong.handler(
+      wrong.request("resolve", { intent: wrong.intent, close: true }),
+    )).status,
+    401,
+  );
+  equal(wrong.state.ownerCalls, 0);
+  const limited = fixture();
+  limited.state.admission = false;
+  const r = await limited.handler(
+    limited.request("resolve", { intent: limited.intent, close: false }),
+  );
+  equal(r.status, 429);
+  equal(limited.state.ownerCalls, 0);
 });

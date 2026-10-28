@@ -125,12 +125,12 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   and portable backups; durable publication/retry; authenticated paged live metadata,
   native verified download/play and explicit removal in a personal-root preview.
   Shared/archived project reads now have separate admission and denied-access clearing.
-  Latest closure checks: 195 Core, 282 controller, 25 gateway, 54 terminal native/
-  database/gateway and 24 publication regression checks per repo. Prior shared-read
+  Latest sender recovery checks: 203 Core, 282 controller, 31 gateway, 51 database/
+  gateway, 37 native owner, 54 terminal and 24 publication regression checks per repo. Prior shared-read
   and mixed timeline evidence remain separately recorded. Exact expired/retired
   operations now retain a closed proof and private media without resending.
   Pending: team audio writing/custody, full native Store/shared-account lifecycle,
-  remaining UI/spoken acceptance, status after task/access loss, legacy-history, hosted
+  remaining UI/spoken acceptance, legacy-history, hosted
   custody/provider and genuine audio acceptance. See [timeline evidence](conversation-timeline/README.md),
   [shared-read evidence](audio-shared-read/README.md)
   and [AUDIO_COMMENTS.md](AUDIO_COMMENTS.md).
@@ -849,9 +849,26 @@ accepts the synthetic conversation component scopes above; audio/Px remain open.
 - [x] Independently pass 195 Core, 282 actual controller, 25 gateway, 54 terminal
   native/gateway/PostgreSQL and 24 existing publication regression checks per repo;
   both full unsigned apps build. No new schema/exposure or hosted data changes.
-- [ ] Owner status after task/access loss, absent server reservations, native closed-
-  state/full Store UI, legacy/history policy and hosted provider/custody acceptance.
+- [x] Sender status after task/access loss and explicit absent-operation closure now
+  pass the follow-up API/database/native-process scope below.
+- [ ] Native closed-state/full Store UI, legacy/history policy and hosted provider/
+  custody acceptance.
   Genuine audio and existing user deferrals stay pending; ordinary flags stay off.
 
 [Evidence, exact limits and reproduction](audio-publication-closed/README.md).
 This closes the exact-reservation terminal gap; the full audio/Px feature stays open.
+
+## 2026-10-28 — sender status and explicit original-send closure
+
+- [x] Metadata-only original-send check after task deletion/access loss; no upload
+  or current content/media read grant. Resume requires separate confirmation and
+  existing current publishing admission.
+- [x] Explicit original-send closure preserves private audio and blocks delayed
+  reserve/finalize, including an absent server reservation. Published history wins
+  over cancellation; unresolved upload leases remain fenced.
+- [x] Each repo: 203 Core, 282 controller, 31 gateway, 51 database/gateway, 37 native
+  owner-recovery, 54 terminal and 24 publication regression checks; unsigned builds.
+- [ ] New native controls/layout/spoken/full Store lifecycle, legacy/history/cap
+  policy, team custody and hosted provider acceptance. Ordinary flags stay off.
+
+[Evidence and exact limits](audio-owner-status/README.md).

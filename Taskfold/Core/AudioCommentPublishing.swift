@@ -38,6 +38,29 @@ struct AudioCommentPublicationClosed: Error, LocalizedError, Sendable {
     }
 }
 
+/// Sender history is not live task/media read authority. Unconfirmed responses
+/// never create a local terminal proof; closing needs an explicit server fence.
+enum AudioCommentPublicationStatus: Sendable {
+    case unconfirmed
+    case published(AudioCommentPublishedReceipt)
+    case closed(AudioCommentPublicationClosed)
+    init(data:Data,publication:AudioCommentPublication,allowPending:Bool) throws {
+        guard !data.isEmpty,data.count<=64000 else {throw AudioCommentFailure.invalid}
+        let envelope=try JSONDecoder().decode(Record.self,from:data)
+        if Set(envelope.fields.keys)==["receipt"],case .object(let fields)=envelope["receipt"] {
+            self = .published(try .init(record:Record(fields),publication:publication));return
+        }
+        if Set(envelope.fields.keys)==["closed"],case .object(let fields)=envelope["closed"] {
+            self = .closed(try .init(record:Record(fields),publication:publication));return
+        }
+        guard allowPending,Set(envelope.fields.keys)==["pending"],case .object(let fields)=envelope["pending"] else {throw AudioCommentFailure.invalid}
+        let pending=Record(fields)
+        guard Set(fields.keys)==["protocol","intent","state"],pending["protocol"] == .number(1),pending["state"] == .string("unconfirmed"),
+              case .object(let intent)=pending["intent"],try AudioCommentPublication(record:Record(intent)).sameIntent(as:publication) else {throw AudioCommentFailure.changed}
+        self = .unconfirmed
+    }
+}
+
 struct AudioCommentPublicationJournal: Sendable {
     let origin: String
     let source: UUID
@@ -264,6 +287,11 @@ actor AudioCommentPublicationStorage {
 
 @MainActor protocol AudioCommentPublishingTransport: AnyObject {
     func publishAudio(_ pending: AudioCommentPending, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt
+    func checkAudioPublication(_ publication:AudioCommentPublication,closing:Bool,origin:String,incarnation:UUID) async throws -> AudioCommentPublicationStatus
+}
+extension AudioCommentPublishingTransport {
+    // Older/custom transports must refuse; status must never fall back to upload.
+    func checkAudioPublication(_ publication:AudioCommentPublication,closing:Bool,origin:String,incarnation:UUID) async throws -> AudioCommentPublicationStatus {throw AudioCommentFailure.changed}
 }
 
 /// Every send is explicit. Departure/cancellation leaves the durable operation
@@ -278,11 +306,12 @@ actor AudioCommentPublicationStorage {
     private let incarnation: UUID
     private let target: AudioCommentTarget
     private let retainAudioOnConfirmation: Bool
+    private let allowsPublishing: Bool
     private var attempt = UUID()
     var contextIsCurrent: Bool { current() }
     func invalidate() { attempt = UUID(); journal = nil; state = .ready }
     private func check(_ token: UUID) throws { guard token == attempt, current(), !Task.isCancelled else { throw CancellationError() } }
-    init(storage: AudioCommentPublicationStorage, transport: any AudioCommentPublishingTransport, incarnation: UUID, target: AudioCommentTarget, retainAudioOnConfirmation: Bool = false, isCurrent: @escaping @MainActor () -> Bool) { self.storage = storage; self.transport = transport; self.incarnation = incarnation; self.target = target; self.retainAudioOnConfirmation = retainAudioOnConfirmation; current = isCurrent }
+    init(storage: AudioCommentPublicationStorage, transport: any AudioCommentPublishingTransport, incarnation: UUID, target: AudioCommentTarget, retainAudioOnConfirmation: Bool = false, allowsPublishing: Bool = true, isCurrent: @escaping @MainActor () -> Bool) { self.storage = storage; self.transport = transport; self.incarnation = incarnation; self.target = target; self.retainAudioOnConfirmation = retainAudioOnConfirmation; self.allowsPublishing=allowsPublishing; current = isCurrent }
     /// Local review only: reopening a recording never starts a network request.
     func restore(_ source: AudioCommentSavedDraft) async throws {
         guard source.target == target, source.owner.account == storage.account.uuidString.lowercased(), current(), !Task.isCancelled, state != .saving, state != .sending else { throw CancellationError() }
@@ -299,7 +328,7 @@ actor AudioCommentPublicationStorage {
         } catch { if token == attempt { state = .unconfirmed }; throw error }
     }
     func publish(_ source: AudioCommentSavedDraft) async throws {
-        guard source.target == target, current(), !Task.isCancelled, state != .saving, state != .sending else { throw CancellationError() }
+        guard allowsPublishing,source.target == target, current(), !Task.isCancelled, state != .saving, state != .sending else { throw CancellationError() }
         let token = attempt; journal = nil; state = .saving
         do {
             let prepared = try await storage.prepare(source); try check(token); journal = prepared
@@ -307,15 +336,42 @@ actor AudioCommentPublicationStorage {
         } catch { if token == attempt { state = .unconfirmed }; throw error }
     }
     func retry(_ prepared: AudioCommentPublicationJournal) async throws {
-        guard prepared.publication.target == target, current(), !Task.isCancelled, state != .saving, state != .sending, prepared.origin == storage.origin, prepared.publication.account == storage.account else { throw CancellationError() }
+        guard allowsPublishing,prepared.publication.target == target, current(), !Task.isCancelled, state != .saving, state != .sending, prepared.origin == storage.origin, prepared.publication.account == storage.account else { throw CancellationError() }
         let token = attempt; journal = nil; state = .saving
         do {
             let stored = try await storage.journals(); guard let live = stored.first(where: { $0.publication.sameIntent(as: prepared.publication) && $0.source == prepared.source && $0.revision == prepared.revision }) else { throw AudioCommentStorageFailure.conflict }
             try check(token); journal = live; try await send(live, token: token)
         } catch { if token == attempt { state = .unconfirmed }; throw error }
     }
+    /// Explicit metadata check/cancellation for this sender's exact saved intent.
+    /// No media is transmitted and an unconfirmed reply leaves the journal intact.
+    func checkPublication(_ expected:AudioCommentPublicationJournal,closing:Bool=false) async throws {
+        guard expected.publication.target==target,expected.publication.account==storage.account,expected.origin==storage.origin,
+              current(),!Task.isCancelled,state != .saving,state != .sending else {throw CancellationError()}
+        let token=attempt;journal=nil;state = .saving
+        do {
+            let rows=try await storage.journals()
+            guard let live=rows.first(where:{$0.source==expected.source && $0.revision==expected.revision && $0.publication.sameIntent(as:expected.publication)}) else {throw AudioCommentStorageFailure.conflict}
+            try check(token);journal=live
+            if live.closedReceipt != nil {state = .closed;return}
+            if live.receipt != nil {state = .published;return}
+            state = .sending
+            let result=try await transport.checkAudioPublication(live.publication,closing:closing,origin:live.origin,incarnation:incarnation)
+            try check(token)
+            switch result {
+            case .unconfirmed:state = .unconfirmed
+            case .published(let receipt):
+                let saved=try await storage.confirm(live,receipt:receipt,retainingAudio:true)
+                try check(token);journal=saved;state = .published
+            case .closed(let proof):
+                let saved=try await storage.settleClosed(live,proof:proof)
+                try check(token);journal=saved;state = .closed
+            }
+        } catch {if token==attempt {state = .unconfirmed};throw error}
+    }
     private func send(_ prepared: AudioCommentPublicationJournal, token: UUID) async throws {
         try check(token)
+        guard allowsPublishing else {throw AudioCommentFailure.changed}
         if prepared.receipt != nil { state = .published; return }
         if prepared.closedReceipt != nil {state = .closed;return}
         guard let clip = prepared.clip, current(), !Task.isCancelled else { throw CancellationError() }

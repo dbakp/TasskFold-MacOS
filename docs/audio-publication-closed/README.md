@@ -94,3 +94,7 @@ References reviewed for this service work: [Supabase changelog](https://supabase
 [PostgreSQL minor-release notice](https://supabase.com/changelog/postgres-15-19-17-11-breaking-changes)
 and [TLS notice](https://supabase.com/changelog/cbc-tls-ciphers-deprecated).
 The implementation reuses the existing fenced SQL commands without a schema change.
+
+Follow-up: [sender-only status and explicit closure](../audio-owner-status/README.md)
+adds metadata recovery after task/access loss and absent-operation cancellation.
+The counts and no-new-schema statement above describe this earlier checkpoint.

@@ -16,6 +16,7 @@ export async function createAudioHttpFixture(pg, actor, session) {
   const state = {
     objects: new Map(),
     uploads: 0,
+    storageRequests: 0,
     authReads: 0,
     lostAck: false,
     noWrite: false,
@@ -39,6 +40,7 @@ export async function createAudioHttpFixture(pg, actor, session) {
         req.headers.authorization,
         "Bearer synthetic-loopback-service",
       );
+      if (req.url.startsWith("/storage/")) state.storageRequests++;
       const chunks = [];
       let length = 0;
       for await (const c of req) {
@@ -67,6 +69,10 @@ export async function createAudioHttpFixture(pg, actor, session) {
           expression = `public.taskfold_audio_comment_page(${lit(b._actor)},${
             lit(b._session)
           },${lit(JSON.stringify(b._body))}::jsonb)`;
+        } else if (req.url.endsWith("/taskfold_audio_owner_publication")) {
+          expression = `public.taskfold_audio_owner_publication(${
+            lit(b._actor)
+          },${lit(b._session)},${lit(JSON.stringify(b._body))}::jsonb)`;
         } else if (req.url.endsWith("/taskfold_audio_comment_command")) {
           expression = `public.taskfold_audio_comment_command(${
             lit(b._action)
