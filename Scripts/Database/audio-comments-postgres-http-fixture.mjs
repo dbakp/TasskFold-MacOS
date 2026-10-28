@@ -195,12 +195,11 @@ export async function createAudioHttpFixture(pg, actor, session) {
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(15000),
       });
-    const maintain = () =>
+    const maintain = (proof = null) =>
       fetch("http://127.0.0.1:" + port + "/maintenance", {
         method: "POST",
-        headers: {
-          "X-Taskfold-Audio-Maintenance":
-            "synthetic-maintenance-key-for-owned-fixtures",
+        headers: proof ? { "X-Taskfold-Audio-Schedule": proof } : {
+          "X-Taskfold-Audio-Maintenance": "b".repeat(64),
         },
         signal: AbortSignal.timeout(25000),
       });

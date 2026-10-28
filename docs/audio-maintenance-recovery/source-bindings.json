@@ -1,0 +1,27 @@
+{
+  "repository": "TasskFold-MacOS",
+  "deployed": false,
+  "realProviderAcceptance": false,
+  "sources": {
+    "Scripts/Database/audio-comments-http-fixture.ts": "132320d08b45d88169ea6a09e2acee2c8de796cd3c79a69a329e7be97dda065d",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "d05ee0241079e5b4b6ea17dd2becec943c618bde9568f24f1c15acd91f1768f9",
+    "Scripts/Database/postgres-cron-fixture.mjs": "9547ceea5c06f421abda023b29123214d5eb1a8d4cdd53c5b60f3fab9660ee01",
+    "Scripts/Database/postgres-fixture.mjs": "4c2dcbffabe95e77976aa4afd9db43922ded408a66be46eee739de0da084b039",
+    "Scripts/Database/team-project-schema.mjs": "c338738c01855a14b85663064c6e25ed1b0205feeb51e16794b58d2e4bf565b9",
+    "Scripts/Database/test-audio-comment-gateway.mjs": "612e2b66ae5a417694dd7be025dbb5eeda9fafb10774953d86fae9d674cb9ce9",
+    "Scripts/Database/test-audio-maintenance-scheduler.mjs": "02bc930d54da8852fda63260de58ac80fe1dcb33ade768b80251ca751028a903",
+    "TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+    "supabase/functions/audio-comment-maintenance/handler.ts": "2eec429dfa6776526719d6ff8a63cb8e54430d95e9b50a2d338f2f59fefdd08c",
+    "supabase/functions/audio-comment-maintenance/handler_test.ts": "0393618fe261fe5b2e377f34277f8c029a5a5240e9d2aedcd593bbc4633146fd",
+    "supabase/functions/audio-comment-maintenance/index.ts": "5048b079085226d7b022687d3ee9e4db01b9b6f705623608d895b699d72d0fff",
+    "supabase/functions/audio-comments/handler.ts": "e7b621d755f5fe39b75d99b5736d8f861088e0d51891f793f6dc624909e1d6c9",
+    "supabase/functions/audio-comments/handler_test.ts": "9151d61d1429cb8681e2cbe69c0c6c64b8242986f50d1d78cfb4df7d6a4aaa73",
+    "supabase/functions/audio-comments/index.ts": "eb92330c381c508f34007bb02a9cdd91c7b7af7e2318e78fecb98d5c74460cdf",
+    "supabase/functions/audio-comments/wire.ts": "16b8940b5cefb4d232bb4959ce01e20051d81bc99919c19e84338541e42438e2",
+    "supabase/migrations/20261028134424_audio_comment_publication_ledger.sql": "3e6522149e52bdf52918ae66b2e7b68205fd7f290bd3276c8c09d464517efaa3",
+    "supabase/migrations/20261028145414_audio_comment_gateway_boundary.sql": "ac9a9005a8198994e2b0cec8adf4113e9d7bb8b80303b8d078a6d39cc169cb24",
+    "supabase/migrations/20261028151901_audio_comment_cleanup_fencing.sql": "7260264fa5c4419695f3a37e90d5a2a86ca822f74c7728b8a2d5b1b33ab36718",
+    "supabase/migrations/20261028153218_audio_comment_upload_recovery.sql": "fde3d58c4cd031b8e648e86660bcdf812645624791d700ce07d2792b1d70386f",
+    "supabase/migrations/20261028153219_audio_comment_maintenance_scheduler.sql": "f37a22b92bc353ebaab0e1101689be3fa18511287047f427e831cc34dcd1fc80"
+  }
+}

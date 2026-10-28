@@ -31,7 +31,8 @@
     "test:team-custody": "node test-team-content-custody.mjs",
     "test:team-projects": "node test-team-project-access.mjs",
     "test:audio-comment-ledger": "node test-audio-comment-ledger.mjs",
-    "test:audio-comment-gateway": "node test-audio-comment-gateway.mjs"
+    "test:audio-comment-gateway": "node test-audio-comment-gateway.mjs",
+    "test:audio-maintenance-scheduler": "node test-audio-maintenance-scheduler.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

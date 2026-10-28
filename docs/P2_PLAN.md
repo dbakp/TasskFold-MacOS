@@ -6772,3 +6772,24 @@ This is a verified disabled delivery candidate, not completion of audio or Px.
 
 [Evidence and exact limits](audio-comment-cleanup/README.md). No deployment or
 normal audio exposure; the broader audio/Px requirements remain open.
+
+
+## 2026-10-28 — retired-file recovery and signed maintenance schedule
+
+- [x] Recover a retired unknown upload only after complete stored-byte size/hash
+  verification and current SQL ticket/object checks. Concurrent probes use bounded
+  claims/backoff; absent/corrupt files retain their fence and quota.
+- [x] Add an inactive minute cron candidate with private Vault lookup, project-bound
+  short-lived HMAC and one-use SQL admission. No reusable key enters the HTTP queue.
+  The maintenance function uses its own authenticated schedule path; its deployment
+  flag and the separate user gateway JWT requirement are explicit in the runbook.
+- [x] Independently pass 33 handler tests, 93 real PostgreSQL/boundary/HTTP checks and
+  33 real pg_cron/signed HTTP checks per repo; no new official advisor findings.
+  The real cron proof drives recovery, fixture-byte deletion and quota release.
+- [ ] Terminal evidence/recovery for unknown absent/corrupt uploads, genuine hosted
+  Vault/pg_net/Edge/Storage/deletion acceptance and full custody/removal cases,
+  native publication/comment UI and remaining genuine/native audio acceptance.
+
+[Evidence, limits and operator preparation](audio-maintenance-recovery/README.md).
+No hosted deployment/configuration; all normal audio flags and the cron job stay off.
+The audio feature and full Px objective remain open.

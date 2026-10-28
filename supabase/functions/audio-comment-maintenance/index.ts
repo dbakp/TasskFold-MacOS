@@ -1,6 +1,7 @@
 import { createAudioMaintenanceHandler } from "./handler.ts";
-// Keep platform JWT verification enabled; the scheduler additionally needs this
-// dedicated secret. Never expose either service credential to a native client.
+// Signed schedules authenticate inside this handler with HMAC plus one-use SQL
+// admission. Deploy with --no-verify-jwt only after accepting this complete path;
+// the scheduler proof is not a JWT. Never expose service credentials to a client.
 Deno.serve(createAudioMaintenanceHandler({
   url: Deno.env.get("SUPABASE_URL") ?? "",
   serviceKey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",

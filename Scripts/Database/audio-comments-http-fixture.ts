@@ -36,7 +36,8 @@ const audio = createAudioCommentsHandler({
 const maintenance = createAudioMaintenanceHandler({
   url: "https://audio-http-fixture.invalid",
   serviceKey: "synthetic-loopback-service",
-  maintenanceKey: "synthetic-maintenance-key-for-owned-fixtures",
+  maintenanceKey: "b".repeat(64),
+  schedulerProject: "a".repeat(20),
   enabled: true,
 }, {
   send: (request) => {

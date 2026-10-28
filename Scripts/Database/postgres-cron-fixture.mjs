@@ -16,7 +16,7 @@ export const cronSource = {
     "https://codeload.github.com/citusdata/pg_cron/tar.gz/5cedfa472ccc83567aa23ec645925ed8489a7797",
 };
 export async function createCronPostgresFixture(
-  { backgroundWorkers = false } = {},
+  { backgroundWorkers = false, advisors = false } = {},
 ) {
   const directory = await mkdtemp(join(tmpdir(), "taskfold-email-cron-"));
   const name = "taskfold-email-cron-build-" + randomUUID().slice(0, 8),
@@ -95,6 +95,7 @@ export async function createCronPostgresFixture(
     await rm(archive);
     pg = await createPostgresFixture({
       cronDirectory: directory,
+      advisors,
       cronBackgroundWorkers: backgroundWorkers,
     });
     return {

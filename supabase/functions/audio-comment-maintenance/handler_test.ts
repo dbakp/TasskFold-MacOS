@@ -43,6 +43,7 @@ function fixture() {
       return new Response(null, { status: state.missing ? 404 : 200 });
     }
     const b = await r.json();
+    if (b._action === "probe") return Response.json({ protocol: 1, items: [] });
     if (b._action === "claim") {
       state.claimed++;
       return Response.json({
@@ -79,6 +80,8 @@ Deno.test("worker removes only claimed exact path, checks absence, then confirms
   equal(await (await f.handler(f.request())).json(), {
     protocol: 1,
     claimed: 1,
+    recovered: 0,
+    probe_unresolved: 0,
     blocked_uploads: 0,
     purged: 1,
     unresolved: 0,
@@ -154,4 +157,188 @@ Deno.test("worker deadline bounds ignored cancellation and cancels late body", a
   equal((await h(f.request())).status, 503);
   await new Promise((r) => setTimeout(r, 70));
   equal(cancelled, true);
+});
+
+const syntheticAudio = await Deno.readFile(
+  new URL(
+    "../../../TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a",
+    import.meta.url,
+  ),
+);
+const sha = async (bytes: Uint8Array) =>
+  Array.from(
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", bytes as BufferSource),
+    ),
+    (b) => b.toString(16).padStart(2, "0"),
+  ).join("");
+async function recoveryFixture() {
+  const asset = crypto.randomUUID(),
+    probe = {
+      operation_id: crypto.randomUUID(),
+      asset_id: asset,
+      bucket: "taskfold-audio-v1",
+      object_name:
+        `audio-comments/v1/${crypto.randomUUID()}/${crypto.randomUUID()}/${asset}.m4a`,
+      ticket_id: crypto.randomUUID(),
+      sha256: await sha(syntheticAudio),
+      byte_count: syntheticAudio.length,
+    };
+  const state = {
+    bytes: syntheticAudio as Uint8Array | null,
+    reconciles: 0,
+    reads: 0,
+  };
+  const config = {
+    url: "https://recovery.example.invalid",
+    serviceKey: "key",
+    maintenanceKey: "a".repeat(40),
+    enabled: true,
+  };
+  const h = createAudioMaintenanceHandler(config, {
+    send: async (r) => {
+      if (r.method === "GET") {
+        state.reads++;
+        return state.bytes
+          ? new Response(state.bytes.slice(), {
+            headers: { "Content-Type": "audio/mp4" },
+          })
+          : new Response(null, { status: 404 });
+      }
+      const b = await r.json();
+      if (b._action === "probe") {
+        return Response.json({ protocol: 1, items: [probe] });
+      }
+      if (b._action === "reconcile") {
+        state.reconciles++;
+        equal(b._body.stored_sha256, probe.sha256);
+        equal(b._body.stored_bytes, syntheticAudio.length);
+        return Response.json({ protocol: 1, settled: true });
+      }
+      equal(b._action, "claim");
+      return Response.json({
+        protocol: 1,
+        items: [],
+        blocked_uploads: state.reconciles ? 0 : 1,
+      });
+    },
+  });
+  return {
+    state,
+    probe,
+    run: () =>
+      h(
+        new Request("https://worker.example.invalid/", {
+          method: "POST",
+          headers: { "X-Taskfold-Audio-Maintenance": config.maintenanceKey },
+        }),
+      ),
+  };
+}
+Deno.test("complete stored-byte readback reconciles retired upload", async () => {
+  const f = await recoveryFixture();
+  const r = await (await f.run()).json();
+  equal(r.recovered, 1);
+  equal(f.state.reconciles, 1);
+});
+Deno.test("missing bytes never reconcile unknown upload", async () => {
+  const f = await recoveryFixture();
+  f.state.bytes = null;
+  const r = await (await f.run()).json();
+  equal(r.recovered, 0);
+  equal(r.probe_unresolved, 1);
+  equal(r.blocked_uploads, 1);
+  equal(f.state.reconciles, 0);
+});
+Deno.test("wrong stored hash never reconciles unknown upload", async () => {
+  const f = await recoveryFixture();
+  f.state.bytes = new Uint8Array(syntheticAudio.length);
+  equal((await (await f.run()).json()).recovered, 0);
+  equal(f.state.reconciles, 0);
+});
+Deno.test("malformed recovery path rejected before reading", async () => {
+  const f = await recoveryFixture();
+  f.probe.object_name = "other/path.m4a";
+  equal((await f.run()).status, 503);
+  equal(f.state.reads, 0);
+});
+async function scheduledFixture() {
+  const ref = "a".repeat(20),
+    secret = "b".repeat(64),
+    nonce = crypto.randomUUID(),
+    issued = Math.floor(Date.now() / 1000);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const mac = Array.from(
+    new Uint8Array(
+      await crypto.subtle.sign(
+        "HMAC",
+        key,
+        new TextEncoder().encode(
+          `taskfold.audio.maintenance.v1.${issued}.${nonce}.${ref}`,
+        ),
+      ),
+    ),
+    (b) => b.toString(16).padStart(2, "0"),
+  ).join("");
+  const state = { admitted: false, calls: 0 };
+  const handler = createAudioMaintenanceHandler({
+    url: `https://${ref}.supabase.co`,
+    serviceKey: "key",
+    maintenanceKey: secret,
+    enabled: true,
+  }, {
+    send: async (r) => {
+      state.calls++;
+      const b = await r.json();
+      if (b._action === "admit_schedule") {
+        equal(b._body, { nonce, issued });
+        const admitted = !state.admitted;
+        state.admitted = true;
+        return Response.json({ protocol: 1, admitted });
+      }
+      if (b._action === "probe") {
+        return Response.json({ protocol: 1, items: [] });
+      }
+      equal(b._action, "claim");
+      return Response.json({ protocol: 1, items: [], blocked_uploads: 0 });
+    },
+  });
+  const proof = `${issued}.${nonce}.${mac}`;
+  return {
+    state,
+    proof,
+    run: (value = proof) =>
+      handler(
+        new Request("https://worker.example.invalid/", {
+          method: "POST",
+          headers: { "X-Taskfold-Audio-Schedule": value },
+        }),
+      ),
+  };
+}
+Deno.test("signed scheduled invocation requires one-use SQL admission", async () => {
+  const f = await scheduledFixture();
+  equal((await f.run()).status, 200);
+  equal((await f.run()).status, 401);
+  equal(f.state.calls, 4);
+});
+Deno.test("tampered signature is rejected before SQL admission", async () => {
+  const f = await scheduledFixture();
+  equal(
+    (await f.run(f.proof.slice(0, -1) + (f.proof.endsWith("0") ? "1" : "0")))
+      .status,
+    401,
+  );
+  equal(f.state.calls, 0);
+});
+Deno.test("expired scheduled proof is rejected before SQL admission", async () => {
+  const f = await scheduledFixture();
+  equal((await f.run(f.proof.replace(/^[0-9]+/, "1"))).status, 401);
+  equal(f.state.calls, 0);
 });

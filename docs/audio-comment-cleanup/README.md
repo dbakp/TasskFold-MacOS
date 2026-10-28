@@ -1,5 +1,12 @@
 # Audio upload fencing and cleanup worker — 28 October 2026
 
+Historical checkpoint: iOS `9650d90` / Mac `b3d5cf6`. Current recovery, schedule
+and maintenance authentication are documented in the
+[follow-up candidate](../audio-maintenance-recovery/README.md). Its deployment
+requirements supersede this checkpoint; these source bindings describe that
+preceding commit, not the current handler.
+
+
 Default-off source candidate; not deployed. This extends the authenticated gateway
 candidate at iOS `2744a8f` / Mac `d46b4fa`. Both repositories own their sources and
 passed their tests independently. No real user data, provider configuration,

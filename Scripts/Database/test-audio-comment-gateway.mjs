@@ -36,6 +36,7 @@ try {
       "20261028134424_audio_comment_publication_ledger.sql",
       "20261028145414_audio_comment_gateway_boundary.sql",
       "20261028151901_audio_comment_cleanup_fencing.sql",
+      "20261028153218_audio_comment_upload_recovery.sql",
     ]
   ) {
     const source = await readFile(
@@ -473,6 +474,88 @@ try {
     ),
     false,
   );
+  const recoverable = {
+    ...intent,
+    operation_id: randomUUID(),
+    comment_id: randomUUID(),
+    asset_id: randomUUID(),
+  };
+  await command("reserve", recoverable);
+  const recoveryTicket = await command("upload_begin", {
+    operation_id: recoverable.operation_id,
+  });
+  await command("remove", { comment_id: recoverable.comment_id });
+  const recoveryPath =
+    `audio-comments/v1/${task}/${generation}/${recoverable.asset_id}.m4a`;
+  const probes = await Promise.all([
+    maintenance("probe", {}),
+    maintenance("probe", {}),
+  ]);
+  check(
+    "cold recovery workers claim open attempt once",
+    probes.flatMap((x) => x.items).filter((x) =>
+      x.operation_id === recoverable.operation_id
+    ).length,
+    1,
+  );
+  check(
+    "probe backoff prevents immediate repetition",
+    (await maintenance("probe", {})).items.some((x) =>
+      x.operation_id === recoverable.operation_id
+    ),
+    false,
+  );
+  const evidence = {
+    operation_id: recoverable.operation_id,
+    asset_id: recoverable.asset_id,
+    object_name: recoveryPath,
+    ticket_id: recoveryTicket.ticket_id,
+    stored_sha256: recoverable.audio.sha256,
+    stored_bytes: recoverable.audio.byte_count,
+  };
+  check(
+    "absence never settles a retired upload",
+    (await maintenance("reconcile", evidence)).settled,
+    false,
+  );
+  await pg.raw(
+    `insert into storage.objects(id,bucket_id,name,metadata) values(${
+      lit(randomUUID())
+    },'taskfold-audio-v1',${
+      lit(recoveryPath)
+    },'{"size":12345,"mimetype":"audio/mp4"}')`,
+  );
+  check(
+    "wrong readback digest cannot settle",
+    (await maintenance("reconcile", {
+      ...evidence,
+      stored_sha256: "f".repeat(64),
+    })).settled,
+    false,
+  );
+  check(
+    "wrong ticket cannot settle",
+    (await maintenance("reconcile", { ...evidence, ticket_id: randomUUID() }))
+      .settled,
+    false,
+  );
+  check(
+    "matching attestation and metadata settle sole retired upload",
+    (await maintenance("reconcile", evidence)).settled,
+    true,
+  );
+  check(
+    "reconciliation cannot run twice",
+    (await maintenance("reconcile", evidence)).settled,
+    false,
+  );
+  check(
+    "old fenced helper not service callable",
+    await pg.scalar(
+      `select to_jsonb(has_function_privilege('service_role','taskfold_private.audio_maintenance_fenced_v3(text,jsonb)','execute'))`,
+    ),
+    false,
+  );
   // Real loopback HTTP through the production handler; PostgreSQL is real,
   // Auth identity and Storage's bytes/metadata are a controlled local adapter.
   const httpActor = randomUUID(),
@@ -692,6 +775,42 @@ try {
         }`,
       ),
       "retired",
+    );
+    // A provider write arrives after the response was lost and the task retired.
+    const latePath =
+      `audio-comments/v1/${httpTask}/${httpGeneration}/${uncertain.asset_id}.m4a`;
+    http.state.objects.set(latePath, audio);
+    await pg.raw(
+      `insert into storage.objects(id,bucket_id,name,metadata) values(${
+        lit(randomUUID())
+      },'taskfold-audio-v1',${lit(latePath)},${
+        json({ size: audio.length, mimetype: "audio/mp4" })
+      });update taskfold_private.audio_upload_attempts set next_probe_at=clock_timestamp()-interval '1 second' where operation_id=${
+        lit(uncertain.operation_id)
+      };update taskfold_private.audio_comment_publications set cleanup_after=clock_timestamp()-interval '1 second' where operation_id=${
+        lit(uncertain.operation_id)
+      }`,
+    );
+    r = await http.maintain();
+    sweep = await r.json();
+    check(
+      "HTTP full-byte recovery settles late retired upload",
+      sweep.recovered,
+      1,
+    );
+    check(
+      "HTTP recovered retired upload releases quota after deletion",
+      await pg.scalar(
+        `select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${
+          lit(uncertain.operation_id)
+        }`,
+      ),
+      "purged",
+    );
+    check(
+      "HTTP late-arriving bytes actually removed",
+      http.state.objects.has(latePath),
+      false,
     );
     check("HTTP adapter has no SQL or route errors", http.state.errors, []);
     report.loopbackHTTP = {
