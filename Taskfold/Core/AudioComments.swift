@@ -207,3 +207,41 @@ struct AudioCommentDraft: Sendable {
     mutating func close() { token = nil; phase = .closed; clip = nil; caption = ""; publication = nil }
 
 }
+
+
+/// Personal root admission for device-private recordings. Editing permission and
+/// live workspace availability remain the app Store's independent responsibility.
+enum AudioCommentTaskAdmission {
+    static func target(account: String, task: Record, projects: [Record]) throws -> AudioCommentTarget {
+        _ = try AudioCommentOwner(account)
+        guard !account.isEmpty, task.string("user_id").utf8.elementsEqual(account.utf8), TaskKind(task) != .unsupported,
+              let id = UUID(uuidString: task.id), let generation = UUID(uuidString: task.string("task_generation")) else { throw AudioCommentFailure.changed }
+        let projectID: UUID?
+        switch task["project_id"] {
+        case .null: projectID = nil
+        case .string(let value) where value.isEmpty: projectID = nil
+        case .string(let value):
+            guard let parsed = UUID(uuidString: value), parsed != AudioCommentTarget.zero,
+                  projects.filter({ $0.id.utf8.elementsEqual(value.utf8) }).count == 1,
+                  let project = projects.first(where: { $0.id.utf8.elementsEqual(value.utf8) }),
+                  project.string("user_id").utf8.elementsEqual(account.utf8),
+                  project["team_id"] == .null || project["team_id"] == .string(""),
+                  project["is_archived"] == .null || project["is_archived"] == .bool(false),
+                  !ProjectOrganization.archived(value, in: projects) else { throw AudioCommentFailure.changed }
+            projectID = parsed
+        default: throw AudioCommentFailure.changed
+        }
+        return try .init(task: id, generation: generation, project: projectID)
+    }
+    static func applicationDirectory(bundleIdentifier: String) throws -> String {
+        guard !bundleIdentifier.isEmpty, bundleIdentifier.utf8.count <= 256, !bundleIdentifier.contains("\0") else { throw AudioCommentFailure.changed }
+        return "app-v1-" + SHA256.hash(data: Data(bundleIdentifier.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+    static func storageDirectory(origin: String?) throws -> String {
+        guard let origin else { return "local-v1" }
+        guard let url = URLComponents(string: origin), url.scheme == "https", url.host?.isEmpty == false,
+              url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
+              url.path.isEmpty else { throw AudioCommentFailure.changed }
+        return "origin-v1-" + SHA256.hash(data: Data(origin.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}

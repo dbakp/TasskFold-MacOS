@@ -1,0 +1,56 @@
+{
+  "ownedSimulatorSessions": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "finalState": "Shutdown"
+    },
+    {
+      "device": "ECE507C1-5704-4243-A7F7-232BF745FDB8",
+      "finalState": "Shutdown"
+    }
+  ],
+  "removed": [
+    {
+      "path": "/tmp/taskfold-audio-app-phone-v1.xcresult",
+      "logicalBytes": 3725456
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-phone-v1-attachments",
+      "state": "Not exported"
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-phone-final.xcresult",
+      "logicalBytes": 3717496
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-phone-final-attachments",
+      "state": "Not exported"
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-ipad-final.xcresult",
+      "logicalBytes": 3795876
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-ipad-final-attachments",
+      "state": "Not exported"
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-phone-final2.xcresult",
+      "logicalBytes": 3760612
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-phone-final2-attachments",
+      "logicalBytes": 836816
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-ipad-final2.xcresult",
+      "logicalBytes": 3584476
+    },
+    {
+      "path": "/tmp/taskfold-audio-app-ipad-final2-attachments",
+      "logicalBytes": 720052
+    }
+  ],
+  "allocatedBytesEstimate": 20791296,
+  "retained": "Compact result summaries, compressed logs, six inspected final images and source/build/signature bindings. Active reusable build/Core caches and synthetic app data retained."
+}

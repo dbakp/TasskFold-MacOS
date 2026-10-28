@@ -301,3 +301,56 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
     }
     static func dismantleNSView(_ view: Bridge, coordinator: ()) { view.restore() }
 }
+
+
+/// The task editor resolves its real Store context again before opening storage
+/// and throughout the nested recording screen. No permission is requested here.
+@MainActor struct TaskAudioDraftView: View {
+    @Environment(Store.self) private var store
+    let request: AudioCommentDraftRequest
+    let taskID: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var storage: AudioCommentDraftStorage?
+    @State private var failure: String?
+    @State private var retry = UUID()
+    private var current: Bool { store.audioDraftScope(taskID: taskID).map(request.scope.matches) == true }
+    var body: some View {
+        Group {
+            if current, let storage {
+                AudioCommentDraftView(request: request, storage: storage, recorder: recorder(), player: player(), liveScope: {
+                    store.audioDraftScope(taskID: taskID)
+                })
+            } else {
+                NavigationStack {
+                    VStack(spacing: 16) {
+                        if !current { ContentUnavailableView("Recording unavailable", systemImage: "waveform", description: Text("Reopen the current task to review its recordings.")) }
+                        else if let failure { Text(failure).fixedSize(horizontal: false, vertical: true); Button("Try again") { retry = UUID() } }
+                        else { ProgressView("Opening private recordings…") }
+                    }.padding().navigationTitle("Audio drafts")
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+                }
+            }
+        }
+        .task(id: retry) {
+            guard current else { return }
+            do {
+                let directory = try store.audioDraftDirectory(for: request.scope, taskID: taskID)
+                let opened = try await AudioCommentDraftStorage.open(applicationSupport: directory, owner: .init(request.scope.workspace.account))
+                guard !Task.isCancelled, current else { return }
+                storage = opened; failure = nil
+            } catch { if current { failure = "Private recordings could not be opened. Existing files are kept." } }
+        }
+    }
+    private func recorder() -> any AudioCommentRecording {
+        #if DEBUG
+        if AudioCommentNativeFixture.taskEditorTesting { return AudioCommentNativeFixture.taskEditorRecorder() }
+        #endif
+        return DeviceAudioCommentRecording()
+    }
+    private func player() -> any AudioCommentPlaying {
+        #if DEBUG
+        if AudioCommentNativeFixture.taskEditorTesting { return AudioCommentNativeFixture.taskEditorPlayer() }
+        #endif
+        return DeviceAudioCommentPlaying()
+    }
+}

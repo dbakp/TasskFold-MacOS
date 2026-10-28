@@ -7,7 +7,13 @@ import Observation
 struct AudioCommentLiveScope: Sendable {
     let workspace: WorkspaceBinding
     let target: AudioCommentTarget
-    func matches(_ other: Self) -> Bool { workspace.generation == other.workspace.generation && !workspace.account.isEmpty && workspace.account.utf8.elementsEqual(other.workspace.account.utf8) && target == other.target }
+    let origin: String?
+    init(workspace: WorkspaceBinding, target: AudioCommentTarget, origin: String? = nil) { self.workspace = workspace; self.target = target; self.origin = origin }
+    func matches(_ other: Self) -> Bool {
+        let sameOrigin: Bool
+        if let origin, let second = other.origin { sameOrigin = origin.utf8.elementsEqual(second.utf8) } else { sameOrigin = origin == nil && other.origin == nil }
+        return sameOrigin && workspace.generation == other.workspace.generation && !workspace.account.isEmpty && workspace.account.utf8.elementsEqual(other.workspace.account.utf8) && target == other.target
+    }
 }
 struct AudioCommentDraftRequest: Identifiable, Sendable {
     let id = UUID()
@@ -716,3 +722,37 @@ struct AudioCommentDraftRequest: Identifiable, Sendable {
         return success
     }
 }
+
+
+#if !AUDIO_COMMENT_CONTROLLER_TESTING
+@MainActor extension Store {
+    var audioDraftsEnabled: Bool {
+        #if DEBUG
+        if AudioCommentNativeFixture.taskEditorTesting { return true }
+        #endif
+        return Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioDraftsEnabled") as? Bool == true
+    }
+    func audioDraftScope(taskID: String) -> AudioCommentLiveScope? {
+        guard audioDraftsEnabled, let current = record("tasks", id: taskID),
+              editorMayWrite(source: current, proposed: current),
+              let target = try? AudioCommentTaskAdmission.target(account: userID, task: current, projects: snapshot.tables["projects"] ?? []) else { return nil }
+        let origin: String?
+        if localMode { origin = nil } else { guard let value = try? backend.accountRemovalOrigin else { return nil }; origin = value }
+        guard (try? AudioCommentTaskAdmission.storageDirectory(origin: origin)) != nil else { return nil }
+        return .init(workspace: .init(account: userID, generation: workspaceGeneration), target: target, origin: origin)
+    }
+    func audioDraftRequest(taskID: String) -> AudioCommentDraftRequest? {
+        guard let scope = audioDraftScope(taskID: taskID), let current = record("tasks", id: taskID) else { return nil }
+        return .init(scope: scope, title: current.title)
+    }
+    func audioDraftBaseDirectory() throws -> URL {
+        guard let identifier = Bundle.main.bundleIdentifier else { throw AudioCommentFailure.changed }
+        return cacheURL.deletingLastPathComponent().appendingPathComponent("PrivateAudioDrafts", isDirectory: true)
+            .appendingPathComponent(try AudioCommentTaskAdmission.applicationDirectory(bundleIdentifier: identifier), isDirectory: true)
+    }
+    func audioDraftDirectory(for scope: AudioCommentLiveScope, taskID: String) throws -> URL {
+        guard let current = audioDraftScope(taskID: taskID), scope.matches(current) else { throw AudioCommentFailure.changed }
+        return try audioDraftBaseDirectory().appendingPathComponent(AudioCommentTaskAdmission.storageDirectory(origin: scope.origin), isDirectory: true)
+    }
+}
+#endif

@@ -99,6 +99,7 @@ struct TaskInspectorForm: View {
     @State private var subtask = ""
     @State private var comment = ""
     @State private var conversation: ConversationRequest?
+    @State private var audioDraft: AudioCommentDraftRequest?
     @State private var noteFormatting: NoteFormatRequest?
     @State private var headingConversion: TodoistHeadingConversion?
     @State private var pastedImageName: String?
@@ -152,7 +153,7 @@ struct TaskInspectorForm: View {
         }
         recoverySession?.capture(draft,extras:recoveryExtras)
     }
-    private func stopEditing() {checkpoint();accessStopped=true;saveTask?.cancel();titleFocused=false}
+    private func stopEditing() {checkpoint();accessStopped=true;audioDraft=nil;saveTask?.cancel();titleFocused=false}
     var body: some View {
         Group {
             if editorAvailable {editingBody}
@@ -453,6 +454,15 @@ struct TaskInspectorForm: View {
                     Text("Share comments and mention teammates here. Earlier task comments stay below.").font(.caption).foregroundStyle(.secondary)
                 }
             }
+            if store.audioDraftsEnabled, Workspace.subtaskPath(taskID) == nil, !isTeamTask {
+                Section("Audio drafts") {
+                    Button("Open private recordings", systemImage: "waveform") {
+                        guard editorAvailable, draft.string("project_id") == current?.string("project_id") else { return }
+                        audioDraft = store.audioDraftRequest(taskID: taskID)
+                    }.disabled(!editorAvailable || store.audioDraftScope(taskID: taskID) == nil).accessibilityIdentifier("openTaskAudioDrafts")
+                    Text("Saved on this device. Task exports do not include recordings.").font(.caption).foregroundStyle(.secondary)
+                }
+            }
             Section("Comments") {
                 ForEach(Array(draft["comments"].list.enumerated()), id: \.offset) { index, value in
                     let row = Record(value.object)
@@ -532,6 +542,7 @@ struct TaskInspectorForm: View {
         .onChange(of: workspace.titleFocusRequest) { _, _ in titleFocused = true }
         .onChange(of: titleChipFocused) { _, focused in if !focused { finishTitleWhenUnfocused() } }
         .sheet(item: $conversation) { SharedConversationView(request: $0) }
+        .sheet(item: $audioDraft) { TaskAudioDraftView(request: $0, taskID: taskID) }
         .sheet(item: $noteFormatting) { request in
             NoteFormattingView(request: request) { value in
                 guard editorAvailable else {return "This task’s access changed. Your formatted edit is kept privately."}
@@ -1119,6 +1130,8 @@ struct TeamEditorNativeFixtureView: View {
     @State private var draftsPresented = false
     @State private var storageStatus = ""
     var body: some View {
+        if AudioCommentNativeFixture.taskEditorTesting { AudioTaskEditorFixtureScreen() } else {
+
         if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing") {
             NavigationStack {
                 Form {
@@ -1191,6 +1204,7 @@ struct TeamEditorNativeFixtureView: View {
             }
             .safeAreaInset(edge: .bottom) { Button("Revoke test editing") { store.revokeTeamEditorNativeFixture() }.accessibilityIdentifier("revokeTeamEditorFixture") }
         }
-    }
+            }
+}
 }
 #endif

@@ -122,7 +122,7 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
 - [ ] Audio comments: bounded clip/decode, scoped private storage and a native review
-  candidate now have 115 Core and 166 synthetic audio-controller checks per repo,
+  candidate now have 123 Core and 170 synthetic audio-controller checks per repo,
   including concurrent recovered-review ownership, durable pending cancellation,
   private interrupted-review recovery and explicit conflict copies.
   The unchanged shared dictation lease passed 17 controller checks at the prior checkpoint. Ordinary app entry points, private server lifecycle and genuine
@@ -490,3 +490,25 @@ private recovery; it does not complete audio comments or the Px objective.
 
 [Evidence and native scope](audio-interrupted-copy/README.md). This advances local
 recording recovery; it does not complete audio comments or the Px objective.
+
+
+## 2026-10-28 — bind private audio to the real task editor
+
+- [x] Connect saved personal-root editor/inspector entry candidates to the private
+  media screen and actual vault, including Inbox; normal exposure remains off.
+- [x] Check current Store access, exact owner, root generation/project and server
+  origin; reject unsupported/legacy/shared targets rather than inventing identity.
+- [x] Separate app/server/account namespaces; prepare private, backup-excluded
+  storage off the UI actor. Keep audio and captions out of task data and exports.
+- [x] 123 Core cases and 170 controller checks pass per repo; both independent app
+  builds/signatures pass and their normal exposure flags remain absent.
+- [x] Final iPhone/iPad Simulator: task-editor Inbox/project Save/relaunch and
+  synthetic other-account reset isolation pass as two cases each, no failures,
+  skips or reported runtime warnings. Task-table bytes remain unchanged; all six
+  final captures were inspected. Mac native runtime remains open (build/sign only).
+- [ ] Personal cloud/shared/child and broader runtime, legacy admission, media
+  backup/removal/move custody and server publication remain open. Genuine audio
+  and permission testing stays deferred; ordinary exposure remains gated.
+
+[Evidence and native scope](audio-task-editor/README.md). This is integration of
+an unfinished candidate, not completion of audio comments or the Px goal.

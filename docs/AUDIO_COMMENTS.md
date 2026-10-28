@@ -53,10 +53,11 @@ remain gated, and no server migration or production flag was changed.
 - [ ] Genuine microphone/speaker acceptance remains deferred at the user's request
   (“Later—continue other work”). Do not open permission dialogs or play sound
   to satisfy this gate until the user authorizes a new real test.
-- [ ] Connect local/personal media persistence to the app, including Inbox; do not
-  make this a feature available only to shared projects or silently drop local clips.
-  Add reviewed recovery/export for incomplete staged files and account-removal
-  cleanup before exposure; the vault alone does not establish the app lifecycle.
+- [x] Connect the default-off personal-root task editor candidate to private media
+  persistence, including Inbox; see the task-editor integration checkpoint below.
+- [ ] Finish wider personal-cloud/shared/child and legacy admission, reviewed
+  incomplete-file export, media backup and account-removal/move cleanup before
+  exposure. The vault and local native scope alone do not establish that lifecycle.
 - [ ] Private Storage reservation/finalization and authenticated reads, exact live
   task generation and membership checks, quotas and atomic idempotent receipts.
   An echoed publication intent alone is not an authenticated success receipt.
@@ -450,3 +451,25 @@ private recovery; it does not complete audio comments or the Px objective.
 
 [Evidence and native scope](audio-interrupted-copy/README.md). This advances local
 recording recovery; it does not complete audio comments or the Px objective.
+
+
+## 2026-10-28 — bind private audio to the real task editor
+
+- [x] Connect saved personal-root editor/inspector entry candidates to the private
+  media screen and actual vault, including Inbox; normal exposure remains off.
+- [x] Check current Store access, exact owner, root generation/project and server
+  origin; reject unsupported/legacy/shared targets rather than inventing identity.
+- [x] Separate app/server/account namespaces; prepare private, backup-excluded
+  storage off the UI actor. Keep audio and captions out of task data and exports.
+- [x] 123 Core cases and 170 controller checks pass per repo; both independent app
+  builds/signatures pass and their normal exposure flags remain absent.
+- [x] Final iPhone/iPad Simulator: task-editor Inbox/project Save/relaunch and
+  synthetic other-account reset isolation pass as two cases each, no failures,
+  skips or reported runtime warnings. Task-table bytes remain unchanged; all six
+  final captures were inspected. Mac native runtime remains open (build/sign only).
+- [ ] Personal cloud/shared/child and broader runtime, legacy admission, media
+  backup/removal/move custody and server publication remain open. Genuine audio
+  and permission testing stays deferred; ordinary exposure remains gated.
+
+[Evidence and native scope](audio-task-editor/README.md). This is integration of
+an unfinished candidate, not completion of audio comments or the Px goal.

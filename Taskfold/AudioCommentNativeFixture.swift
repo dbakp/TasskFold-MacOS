@@ -6,6 +6,9 @@ import Darwin
 
 @MainActor enum AudioCommentNativeFixture {
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-comment-testing") }
+    static var taskEditorTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-task-editor-testing") }
+    static func taskEditorRecorder() -> any AudioCommentRecording { AudioCommentFixtureRecording() }
+    static func taskEditorPlayer() -> any AudioCommentPlaying { AudioCommentFixturePlaying() }
     static var root: URL { URL.applicationSupportDirectory.appendingPathComponent("TaskfoldAudioNative", isDirectory: true) }
     private static var lookupLocks: [String: AudioCommentFixtureLookupLock] = [:]
     static var removedSaveTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--audio-save-external-discard") }
@@ -198,7 +201,8 @@ struct AudioCommentNativeFixtureView: View {
     private var finishing: Task<Void, Never>?
     var elapsed: TimeInterval { started.map { min(120, max(0, Date().timeIntervalSince($0))) } ?? 0 }
     func start(isCurrent: @escaping @MainActor () -> Bool, receive: @escaping @MainActor (AudioCommentRecordingEvent) -> Void) async throws {
-        guard AudioCommentNativeFixture.enabled, isCurrent() else { throw CancellationError() }
+        guard AudioCommentNativeFixture.enabled || AudioCommentNativeFixture.taskEditorTesting else { throw CancellationError() }
+        guard isCurrent() else { throw CancellationError() }
         if ProcessInfo.processInfo.arguments.contains("--audio-comment-denied") { throw AudioCommentFailure(message: "Microphone access is off. This is a synthetic refusal; your saved draft is unchanged.") }
         let token = UUID(); self.token = token; current = isCurrent; self.receive = receive
         try await Task.sleep(for: .milliseconds(150))
@@ -222,9 +226,71 @@ struct AudioCommentNativeFixtureView: View {
 @MainActor private final class AudioCommentFixturePlaying: AudioCommentPlaying {
     private var task: Task<Void, Never>?
     func play(_ clip: AudioCommentClip, isCurrent: @escaping @MainActor () -> Bool, ended: @escaping @MainActor () -> Void) throws {
-        guard AudioCommentNativeFixture.enabled, isCurrent() else { throw CancellationError() }
+        guard AudioCommentNativeFixture.enabled || AudioCommentNativeFixture.taskEditorTesting else { throw CancellationError() }
+        guard isCurrent() else { throw CancellationError() }
         stop(); task = Task { do { try await Task.sleep(for: .seconds(2)) } catch { return }; if isCurrent() { ended() } }
     }
     func stop() { task?.cancel(); task = nil }
+}
+#endif
+
+#if DEBUG
+/// Actual Store/task editors and production storage; only media drivers are synthetic.
+@MainActor struct AudioTaskEditorFixtureScreen: View {
+    @Environment(Store.self) private var store
+    @State private var opening: Record?
+    @State private var failure: String?
+    static let inbox = "ac290000-0000-4000-8000-000000000001"
+    static let project = "ac290000-0000-4000-8000-000000000002"
+    static let projectTask = "ac290000-0000-4000-8000-000000000003"
+    var body: some View {
+        NavigationStack {
+            Form {
+                Button("Open local audio workspace") { prepare() }.accessibilityIdentifier("audioEditorPrepareLocal")
+                if store.localMode {
+                    Text("On-device test workspace").accessibilityIdentifier("audioEditorWorkspace")
+                    if let task = store.record("tasks", id: Self.inbox) { Button("Edit Inbox audio task") { opening = task }.accessibilityIdentifier("audioEditorOpenInbox") }
+                    if let task = store.record("tasks", id: Self.projectTask) { Button("Edit project audio task") { opening = task }.accessibilityIdentifier("audioEditorOpenProject") }
+                }
+                if let failure { Text(failure).accessibilityIdentifier("audioEditorFixtureFailure") }
+            }.navigationTitle("Task recordings")
+        }
+        .sheet(item: $opening) { task in
+            #if os(macOS)
+            TaskInspectorForm(taskID: task.id, admission: store.editorAdmission(task, kind: .existing))
+                .frame(minWidth: 620, minHeight: 720)
+            #else
+            TaskEditorPresentation(request: .init(store: store, task: task))
+            #endif
+        }
+    }
+    private func prepare() {
+        guard AudioCommentNativeFixture.taskEditorTesting else { return }
+        store.dailyBackupsEnabled = false; store.online = false; store.startLocal()
+        guard store.localMode else { failure = "Local workspace did not open"; return }
+        do {
+            if ProcessInfo.processInfo.arguments.contains("--audio-task-editor-reset") {
+                guard store.userID == "ui-testing" else { throw AudioCommentFailure.changed }
+                let folder = try store.audioDraftBaseDirectory()
+                    .appendingPathComponent(AudioCommentTaskAdmission.storageDirectory(origin: nil), isDirectory: true)
+                    .appendingPathComponent("AudioCommentsPrivate", isDirectory: true)
+                    .appendingPathComponent(AudioCommentOwner(store.userID).directoryName, isDirectory: true)
+                if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
+            }
+            var changes: [Mutation] = []
+            if store.record("projects", id: Self.project) == nil {
+                let project = Record(["id": .string(Self.project), "user_id": .string(store.userID), "name": .string("Audio workshop"), "is_archived": .bool(false)])
+                changes.append(Mutation(table: "projects", recordID: project.id, method: "POST", fields: project.fields))
+            }
+            for (id, title, project) in [(Self.inbox, "Keep the Inbox workshop notes", Optional<String>.none), (Self.projectTask, "Prepare the project workshop", Self.project)] where store.record("tasks", id: id) == nil {
+                var task = Record.task(user: store.userID, project: project ?? "")
+                task["id"] = .string(id); task["task_generation"] = .string("ac290000-0000-4000-8000-000000000004")
+                task["title"] = .string(title); task["description"] = .string("Keep these original task notes unchanged.")
+                changes.append(Mutation(table: "tasks", recordID: id, method: "POST", fields: task.fields))
+            }
+            guard changes.isEmpty || store.commit(changes) else { failure = store.error ?? "Fixture tasks did not save"; return }
+            failure = nil
+        } catch { failure = error.localizedDescription }
+    }
 }
 #endif

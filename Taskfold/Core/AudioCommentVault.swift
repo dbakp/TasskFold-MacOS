@@ -778,6 +778,19 @@ struct AudioCommentVault: Sendable {
 /// live workspace/task binding after every await before displaying or publishing.
 actor AudioCommentDraftStorage {
     nonisolated let owner: AudioCommentOwner
+    /// A dedicated device-private namespace, prepared away from the UI actor.
+    static func open(applicationSupport: URL, owner: AudioCommentOwner) async throws -> AudioCommentDraftStorage {
+        try await Task.detached(priority: .utility) {
+            try FileManager.default.createDirectory(at: applicationSupport, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            let fd = Darwin.open(applicationSupport.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
+            guard fd >= 0 else { throw AudioCommentStorageFailure.unreadable }; defer { Darwin.close(fd) }
+            var info = stat()
+            guard fstat(fd, &info) == 0, info.st_uid == getuid(), fchmod(fd, 0o700) == 0 else { throw AudioCommentStorageFailure.unreadable }
+            var values = URLResourceValues(); values.isExcludedFromBackup = true
+            var folder = applicationSupport; try folder.setResourceValues(values)
+        }.value
+        return AudioCommentDraftStorage(applicationSupport: applicationSupport, owner: owner)
+    }
     private let vault: AudioCommentVault
     init(applicationSupport: URL, owner: AudioCommentOwner) { self.owner = owner; vault = .init(applicationSupport: applicationSupport, owner: owner) }
     init(vault: AudioCommentVault) { self.vault = vault; owner = vault.owner }

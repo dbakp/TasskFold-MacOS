@@ -150,6 +150,7 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         checks.merge(try await departureChecks(root:root,data:data,request:request,context:context)) { _, new in new }
         checks.merge(try await interruptedChecks(root: root, data: data, request: request)) { _, new in new }
         checks.merge(try await interruptedCopyChecks(root: root, data: data, request: request)) { _, new in new }
+        checks.merge(try await appOriginChecks(root: root, data: data, request: request)) { _, new in new }
         let recording = AudioProofRecorder(data), player = AudioProofPlayer(), disk = try store("ordinary")
         let unbound = make(recording, player, disk, bound: false); unbound.start()
         checks["unboundCannotRequestMicrophone"] = recording.callbacks.isEmpty
@@ -1103,5 +1104,25 @@ extension AudioControllerProof {
         checks["quotaCopyRefusalKeepsOriginalFilesWithoutBlockingDeparture"] = try departure && (Data(contentsOf: fullPath)) == fullBytes && (full.saves()).isEmpty && (full.drafts()) == drafts.sorted { $0.id.uuidString < $1.id.uuidString }
         quota.close()
         return checks
+    }
+}
+
+extension AudioControllerProof {
+    @MainActor private static func appOriginChecks(root: URL, data: Data, request: AudioCommentDraftRequest) async throws -> [String: Bool] {
+        let first = AudioCommentLiveScope(workspace: request.scope.workspace, target: request.scope.target, origin: "https://first.example.invalid")
+        let second = AudioCommentLiveScope(workspace: request.scope.workspace, target: request.scope.target, origin: "https://second.example.invalid")
+        let unicodeA = AudioCommentLiveScope(workspace: request.scope.workspace, target: request.scope.target, origin: "https://café.example.invalid")
+        let unicodeB = AudioCommentLiveScope(workspace: request.scope.workspace, target: request.scope.target, origin: "https://cafe\u{301}.example.invalid")
+        var checks = ["sameAudioOriginKeepsTheExactWorkspaceTarget": first.matches(first), "anotherServerCannotReuseTheSameAccountAndTaskAudioScope": !first.matches(second) && !first.matches(request.scope), "audioOriginBindingUsesExactUTF8": !unicodeA.matches(unicodeB)]
+        let folder = root.appendingPathComponent("app-origin-context", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
+        let owner = try AudioCommentOwner(first.workspace.account), vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+        let draft = try AudioCommentSavedDraft(owner: owner, target: first.target, caption: "Private original server recording", clip: .init(data: data)); try vault.save(draft)
+        let scope = AudioProofContext(first)
+        let value = AudioCommentCapture(request: .init(scope: first, title: "Original task"), recorder: AudioProofRecorder(data), player: AudioProofPlayer(), storage: .init(vault: vault))
+        value.currentScope = { scope.scope }; await value.refresh(); await value.restore(draft); value.play()
+        scope.scope = second; value.contextChanged()
+        checks["serverChangeStopsAndErasesPreviewWithoutChangingOriginalDiskAudio"] = try !value.isCurrent && value.session.clip == nil && value.session.caption.isEmpty && !value.playing && (vault.drafts()) == [draft]
+        value.close(); return checks
     }
 }
