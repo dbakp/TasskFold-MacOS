@@ -77,9 +77,12 @@ canonical file was independently tested. Supabase CLI 2.109.0 created each file.
 stack is not running. No local migration-history or hosted-history parity is
 claimed, and no hosted `apply_migration` call was made.
 
+The next [server read-contract stage](../child-task-record-reads/README.md) now
+passes its local SQL scope. Client adoption and the full migration remain open.
+
 ## Remaining implementation order
 
-1. [ ] **Authorized reads.** Return a bounded record envelope only after current
+1. [x] **Server read contract (local candidate).** Return a bounded record envelope only after current
    session, account, root generation, task/project access and team read role checks.
    Bind it to the current projection revision, verify reconstruction, and refuse
    `review`/stale state. Keep direct table access closed.

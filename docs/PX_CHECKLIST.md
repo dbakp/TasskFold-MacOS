@@ -125,8 +125,11 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 - [x] Private opt-in child records: exact adoption, lossless fields/order/shapes,
   stable current identity and fresh incarnations after removal/recreation, atomic
   legacy-write synchronization and review instead of guessed identities.
-- [ ] Authorized child-record read contract; per-child conflict-safe commands;
-  offline/Undo/UI adoption and rollout. See [child record stage](child-task-records/README.md).
+- [x] Disabled authenticated child-record server read contract, live sessions and
+  current personal/team read admission, source/record integrity and bounded data.
+  Both repos pass 43 database checks; see [read evidence](child-task-record-reads/README.md).
+- [ ] Per-child conflict-safe commands; client read adoption, offline/Undo/UI
+  adoption and rollout. See [child record stage](child-task-records/README.md).
 - [ ] Audio comments remain gated. Implemented: private recording/recovery/library
   and portable backups; durable publication/retry; authenticated paged live metadata,
   native verified download/play and explicit removal in a personal-root preview.
