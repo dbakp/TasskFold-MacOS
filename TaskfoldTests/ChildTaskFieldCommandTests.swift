@@ -1,0 +1,290 @@
+import XCTest
+import CryptoKit
+@testable import TaskfoldCore
+
+private final class ChildFieldIO: CalendarSecureItemIO, @unchecked Sendable {
+    private let lock = NSLock()
+    private var rows: [String: Data] = [:]
+    var failWrite = false
+    func read(key: String) throws -> Data? { lock.lock(); defer { lock.unlock() }; return rows[key] }
+    func write(_ data: Data, key: String) throws { lock.lock(); defer { lock.unlock() }; if failWrite { throw URLError(.cannotWriteToFile) }; rows[key] = data }
+    func remove(key: String) throws { lock.lock(); defer { lock.unlock() }; rows.removeValue(forKey: key) }
+}
+@MainActor private final class ChildFieldPeer: ChildTaskFieldCommandService {
+    var calls: [ChildTaskFieldCommand] = [], applied: [String: ChildTaskFieldReceipt] = [:]
+    var lose = false, onReply: (() -> Void)?
+    func childTaskFieldCommand(_ command: ChildTaskFieldCommand, session: UUID) async throws -> ChildTaskFieldReceipt {
+        calls.append(command)
+        var raw = command.body.filter { $0.key != "changes" }
+        raw["revision"] = .number(Double(command.body["revision"]!.integer) + 1)
+        raw["replayed"] = .bool(applied[command.id] != nil)
+        let receipt = try command.confirmed(raw)
+        if applied[command.id] == nil { applied[command.id] = receipt }
+        onReply?()
+        if lose { lose = false; throw URLError(.networkConnectionLost) }
+        return receipt
+    }
+}
+private final class ChildFieldHTTP: URLProtocol {
+    private static let handlerLock = NSLock()
+    private static var storedHandler: ((URLRequest, ChildFieldHTTP) -> Void)?
+    static var handler: ((URLRequest, ChildFieldHTTP) -> Void)? {
+        get { handlerLock.lock(); defer { handlerLock.unlock() }; return storedHandler }
+        set { handlerLock.lock(); storedHandler = newValue; handlerLock.unlock() }
+    }
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() { Self.handler?(request, self) }
+    override func stopLoading() {}
+    func finish(_ status: Int, _ data: Data, headers: [String: String] = [:]) {
+        client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: headers)!, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
+    }
+}
+final class ChildTaskFieldCommandTests: XCTestCase {
+    func read() throws -> ChildTaskRecordRead {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-task-record-read", withExtension: "json", subdirectory: "Fixtures"))
+        let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let context = try ChildTaskRecordContext(account: raw["account"]!.text, origin: "https://child-record.test", workspace: UUID(), session: UUID(), access: UUID(), snapshot: UUID(), root: Record(raw["root"]!.object))
+        return try ChildTaskRecordRead(data: JSONEncoder().encode(raw["response"]!.object), context: context)
+    }
+    func command(_ changes: [String: JSON] = ["title": .string("Private child edit")], key: String = "child") throws -> ChildTaskFieldCommand { try .init(read: read(), key: key, changes: changes) }
+    func root() throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-child-journal-tests-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: url) }; return url
+    }
+    func journal(_ command: ChildTaskFieldCommand, io: any CalendarSecureItemIO, root: URL) throws -> ChildTaskFieldJournal {
+        try .init(account: command.account, origin: command.origin, io: io, coordinationDirectory: root.appendingPathComponent("locks"), removalDirectory: root.appendingPathComponent("removal"))
+    }
+    func receipt(_ c: ChildTaskFieldCommand, revision: Double? = nil) throws -> ChildTaskFieldReceipt {
+        var raw = c.body.filter { $0.key != "changes" }; raw["revision"] = .number(revision ?? Double(c.body["revision"]!.integer) + 1); raw["replayed"] = .bool(false)
+        return try c.confirmed(raw)
+    }
+    func testActualPostgresCommandAndOriginalReplayReceiptsAgree() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-task-field-command", withExtension: "json", subdirectory: "Fixtures"))
+        let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let c = try ChildTaskFieldCommand(account: raw["account"]!.text, origin: raw["origin"]!.text, body: raw["body"]!.object)
+        let original = try c.confirmed(raw["receipt"]!.object), replay = try c.confirmed(raw["replay"]!.object)
+        XCTAssertEqual(original.raw["revision"], .number(3)); XCTAssertEqual(replay.raw["revision"], original.raw["revision"])
+        XCTAssertEqual(original.raw["replayed"], .bool(false)); XCTAssertEqual(replay.raw["replayed"], .bool(true))
+    }
+    func testCommandsCaptureActualReadAndRetainLiteralAuthoredText() throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Cafe\u{301}")])
+        XCTAssertEqual(c.body["task_id"], .string(r.context.root.id)); XCTAssertEqual(c.body["incarnation"], .string(r.nodes["child"]!.incarnation))
+        XCTAssertEqual(try JSONDecoder().decode(ChildTaskFieldCommand.self, from: JSONEncoder().encode(c)), c)
+        var body = c.body; body["changes"] = .object(["title": .string("Café")])
+        XCTAssertNotEqual(try ChildTaskFieldCommand(account: c.account, origin: c.origin, body: body), c)
+        XCTAssertFalse(String(reflecting: c).contains("Cafe")); XCTAssertFalse(c.description.contains(c.account))
+    }
+    func testUnknownCompletionStructureAndMalformedFieldsRefuse() throws {
+        for change: [String: JSON] in [["completed": .bool(true)], ["subtasks": .array([])], ["title": .string(" \n")], ["duration_minutes": .number(0)], ["priority": .number(5)], ["due_time": .string("24:00")], ["assigned_to": .string("bad")], ["due_date": .string("2026-02-30")], ["time_zone": .string("Not/AZone")], [:]] {
+            XCTAssertThrowsError(try command(change), "\(change.keys)")
+        }
+        let c = try command(); for key in c.body.keys { var b = c.body; b.removeValue(forKey: key); XCTAssertThrowsError(try ChildTaskFieldCommand(account: c.account, origin: c.origin, body: b), key) }
+        XCTAssertThrowsError(try command(["description": .string(String(repeating: "x", count: 100001))]))
+    }
+    func testReceiptBindsEveryIdentityAndAllowsNoOpOrLaterRevision() throws {
+        let c = try command(), good = try receipt(c)
+        for key in ["account", "request_id", "task_id", "task_generation", "project_id", "node_key", "incarnation"] {
+            var raw = good.raw; raw[key] = .string(UUID().uuidString.lowercased()); XCTAssertThrowsError(try c.confirmed(raw), key)
+        }
+        var raw = good.raw; raw["changes"] = c.body["changes"]; XCTAssertThrowsError(try c.confirmed(raw))
+        raw = good.raw; raw["replayed"] = .string("true"); XCTAssertThrowsError(try c.confirmed(raw))
+        XCTAssertNoThrow(try receipt(c, revision: Double(c.body["revision"]!.integer)))
+        XCTAssertNoThrow(try receipt(c, revision: Double(c.body["revision"]!.integer) + 20))
+        XCTAssertThrowsError(try receipt(c, revision: 0))
+    }
+    func testEncryptedRoundTripAndOriginScopedCleanup() async throws {
+        let c = try command(), directory = try root(), key = SymmetricKey(size: .bits256)
+        let io = try ChildTaskFieldJournalFileIO(directory: directory, account: c.account, origin: c.origin, encryptionKey: { key })
+        let j = try journal(c, io: io, root: directory)
+        _ = try await j.enqueue(c, lease: CalendarReadLease())
+        let ciphertext = try Data(contentsOf: io.file)
+        XCTAssertFalse(String(decoding: ciphertext, as: UTF8.self).contains("Private child edit"))
+        let attrs = try FileManager.default.attributesOfItem(atPath: io.file.path)
+        XCTAssertEqual((attrs[.posixPermissions] as? NSNumber)?.intValue, 0o600)
+        XCTAssertEqual(try io.file.deletingLastPathComponent().resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup, true)
+        let recovered = try await journal(c, io: io, root: directory).load(); XCTAssertEqual(recovered.entries.first?.command, c)
+        let other = try ChildTaskFieldJournalFileIO(directory: directory, account: c.account, origin: "https://other.test", encryptionKey: { throw URLError(.userAuthenticationRequired) })
+        let otherCommand = try ChildTaskFieldCommand(account: c.account, origin: "https://other.test", body: c.body)
+        try await journal(otherCommand, io: other, root: directory).removeAccount()
+        XCTAssertTrue(FileManager.default.fileExists(atPath: io.file.path))
+        try await j.removeAccount(); XCTAssertFalse(FileManager.default.fileExists(atPath: io.file.path))
+    }
+    func testCorruptionNeverBecomesEmptyQueue() async throws {
+        let c = try command(), directory = try root(), key = SymmetricKey(size: .bits256)
+        let io = try ChildTaskFieldJournalFileIO(directory: directory, account: c.account, origin: c.origin, encryptionKey: { key })
+        let j = try journal(c, io: io, root: directory); _ = try await j.enqueue(c, lease: CalendarReadLease())
+        try Data("corrupt ciphertext".utf8).write(to: io.file)
+        do { _ = try await j.load(); XCTFail("Corruption must remain visible") } catch {}
+        do { _ = try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("Cannot overwrite corrupt recovery") } catch {}
+        XCTAssertEqual(try Data(contentsOf: io.file), Data("corrupt ciphertext".utf8))
+    }
+    func testUnsentCoalescingKeepsIdentityAndStaleReviewCannotSendOrDiscard() async throws {
+        let c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory)
+        _ = try await j.enqueue(c, lease: CalendarReadLease())
+        let later = try command(["description": .string("Added offline")])
+        let merged = try await j.enqueue(later, lease: CalendarReadLease())
+        XCTAssertEqual(merged.id, c.id); XCTAssertEqual(merged.body["changes"]!.object.count, 2)
+        do { _ = try await j.attempt(c, lease: CalendarReadLease()); XCTFail("Old review cannot send merged text") } catch {}
+        do { try await j.discard(c, lease: CalendarReadLease()); XCTFail("Old review cannot delete merged text") } catch {}
+        let state = try await j.load(); XCTAssertEqual(state.entries.count, 1); XCTAssertEqual(state.entries[0].command, merged)
+    }
+    func testAttemptFreezesBodyAndSerializesSameTargetWhileOtherChildrenProceed() async throws {
+        let c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory)
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); _ = try await j.attempt(c, lease: CalendarReadLease())
+        let later = try command(["title": .string("Later edit")]), sibling = try command(key: "parent")
+        _ = try await j.enqueue(later, lease: CalendarReadLease()); _ = try await j.enqueue(sibling, lease: CalendarReadLease())
+        do { _ = try await j.attempt(later, lease: CalendarReadLease()); XCTFail("Same target waits for original proof") } catch {}
+        _ = try await j.attempt(sibling, lease: CalendarReadLease())
+        do { try await j.discard(c, lease: CalendarReadLease()); XCTFail("Uncertain deletion needs explicit review") } catch {}
+        try await j.confirm(c, receipt: receipt(c), lease: CalendarReadLease())
+        _ = try await j.attempt(later, lease: CalendarReadLease())
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].command, c); XCTAssertEqual(state.entries.count, 3)
+    }
+    func testQueueBoundDoesNotEvictOldRecovery() async throws {
+        let c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory)
+        for i in 0..<64 { var b = c.body; b["request_id"] = .string(UUID().uuidString.lowercased()); b["node_key"] = .string("node-\(i)"); _ = try await j.enqueue(ChildTaskFieldCommand(account: c.account, origin: c.origin, body: b), lease: CalendarReadLease()) }
+        do { _ = try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("Full queue needs explicit handling") } catch {}
+        let state = try await j.load(); XCTAssertEqual(state.entries.count, 64)
+    }
+    func testTwoJournalActorsCannotLoseDifferentChildEdits() async throws {
+        let c = try command(), other = try command(key: "parent"), io = ChildFieldIO(), directory = try root()
+        let one = try journal(c, io: io, root: directory), two = try journal(c, io: io, root: directory)
+        async let a = one.enqueue(c, lease: CalendarReadLease()); async let b = two.enqueue(other, lease: CalendarReadLease())
+        _ = try await (a, b); let state = try await one.load(); XCTAssertEqual(Set(state.entries.map { $0.command.id }), [c.id, other.id])
+    }
+    func testRemovalFenceAndCancelledLeasePreventEnqueue() async throws {
+        let c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory)
+        let lease = CalendarReadLease(); lease.cancel()
+        do { _ = try await j.enqueue(c, lease: lease); XCTFail("Cancelled lease") } catch {}
+        try AccountRemovalDisk(directory: directory.appendingPathComponent("removal"), account: c.account).removeCache()
+        do { _ = try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("Removed account") } catch {}
+    }
+    func testSameRequestCannotChangeIntentAndDifferentRevisionsDoNotCoalesce() async throws {
+        let c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory)
+        _ = try await j.enqueue(c, lease: CalendarReadLease())
+        var body = c.body; body["changes"] = .object(["title": .string("Different")])
+        let changed = try ChildTaskFieldCommand(account: c.account, origin: c.origin, body: body)
+        do { _ = try await j.enqueue(changed, lease: CalendarReadLease()); XCTFail("Same UUID cannot identify new intent") } catch {}
+        body["request_id"] = .string(UUID().uuidString.lowercased()); body["revision"] = .number(Double(c.body["revision"]!.integer + 1))
+        _ = try await j.enqueue(ChildTaskFieldCommand(account: c.account, origin: c.origin, body: body), lease: CalendarReadLease())
+        let state = try await j.load(); XCTAssertEqual(state.entries.count, 2); XCTAssertEqual(state.entries[0].command, c)
+    }
+    func testReceiptCannotConfirmQueuedOrReplaceAnExistingProof() async throws {
+        let c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), proof = try receipt(c)
+        _ = try await j.enqueue(c, lease: CalendarReadLease())
+        do { try await j.confirm(c, receipt: proof, lease: CalendarReadLease()); XCTFail("Queued intent was never sent") } catch {}
+        _ = try await j.attempt(c, lease: CalendarReadLease()); try await j.confirm(c, receipt: proof, lease: CalendarReadLease())
+        var replay = proof.raw; replay["replayed"] = .bool(true)
+        try await j.confirm(c, receipt: c.confirmed(replay), lease: CalendarReadLease())
+        do { try await j.confirm(c, receipt: receipt(c, revision: Double(c.body["revision"]!.integer + 20)), lease: CalendarReadLease()); XCTFail("Conflicting proof") } catch {}
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].receipt, proof)
+    }
+    func testWrongKeyAndSymlinkCannotOverwriteRecovery() async throws {
+        let c = try command(), directory = try root(), key = SymmetricKey(size: .bits256), wrong = SymmetricKey(size: .bits256)
+        let io = try ChildTaskFieldJournalFileIO(directory: directory, account: c.account, origin: c.origin, encryptionKey: { key })
+        let j = try journal(c, io: io, root: directory); _ = try await j.enqueue(c, lease: CalendarReadLease())
+        let ciphertext = try Data(contentsOf: io.file)
+        let bad = try ChildTaskFieldJournalFileIO(directory: directory, account: c.account, origin: c.origin, encryptionKey: { wrong })
+        do { _ = try await journal(c, io: bad, root: directory).enqueue(c, lease: CalendarReadLease()); XCTFail("Wrong key") } catch {}
+        XCTAssertEqual(try Data(contentsOf: io.file), ciphertext)
+        let target = directory.appendingPathComponent("unrelated"); try Data("kept".utf8).write(to: target)
+        try FileManager.default.removeItem(at: io.file); try FileManager.default.createSymbolicLink(at: io.file, withDestinationURL: target)
+        do { _ = try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("Symlink") } catch {}
+        XCTAssertEqual(try Data(contentsOf: target), Data("kept".utf8))
+    }
+    @MainActor func testAccessRefusalAndClosedSenderKeepUnsentDraft() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Proof")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        _ = try await j.enqueue(c, lease: CalendarReadLease())
+        let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in false })
+        do { _ = try await sender.send(c); XCTFail("Lost admission") } catch {}
+        sender.close()
+        do { _ = try await sender.send(c); XCTFail("Closed sender") } catch is CancellationError {} catch { XCTFail("Wrong closed result") }
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .queued); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testLostReplyRetriesExactFrozenCommandAfterRelaunch() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Proof")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); peer.lose = true
+        let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in true })
+        do { _ = try await sender.send(c); XCTFail("Reply was lost") } catch {}
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .attempted)
+        let cold = try journal(c, io: io, root: directory), retry = ChildTaskFieldSender(scope: scope, journal: cold, service: peer, current: { scope }, canSend: { _ in true })
+        let result = try await retry.send(c); XCTAssertEqual(result.raw["replayed"], .bool(true)); XCTAssertEqual(peer.calls, [c, c]); XCTAssertEqual(peer.applied.count, 1)
+        let proof = try await cold.load(); XCTAssertEqual(proof.entries[0].phase, .confirmed)
+        _ = try await retry.send(c); XCTAssertEqual(peer.calls.count, 2)
+    }
+    @MainActor func testDiskFailureBeforeAttemptPreventsNetwork() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Proof")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); io.failWrite = true
+        let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in true })
+        do { _ = try await sender.send(c); XCTFail("No durable attempted state") } catch {}
+        XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testFailedReceiptSaveKeepsAttemptAndCanRecoverOriginalProof() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Proof")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); peer.onReply = { io.failWrite = true }
+        let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in true })
+        do { _ = try await sender.send(c); XCTFail("Success requires durable proof") } catch {}
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .attempted)
+        io.failWrite = false; peer.onReply = nil; _ = try await sender.send(c); XCTAssertEqual(peer.applied.count, 1)
+    }
+    @MainActor func testChangedWorkspaceSuppressesBothSuccessAndError() async throws {
+        for lost in [false, true] {
+            let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Proof")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+            var current: ChildTaskFieldClientScope? = scope
+            _ = try await j.enqueue(c, lease: CalendarReadLease()); peer.lose = lost; peer.onReply = { current = nil }
+            let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { current }, canSend: { _ in true })
+            do { _ = try await sender.send(c); XCTFail("Stale reply") } catch is CancellationError {} catch { XCTFail("Stale error must also be cancelled: \(error)") }
+            let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .attempted)
+        }
+    }
+    @MainActor func testBackendPostsExactScopedBodyWithoutCookiesOrCache() async throws {
+        let c = try command(), response = try receipt(c), backend = try backend(c.account)
+        defer { ChildFieldHTTP.handler = nil }
+        ChildFieldHTTP.handler = { request, pipe in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_edit_child_task"); XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertFalse(request.httpShouldHandleCookies); XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalCacheData)
+            var data = request.httpBody ?? Data()
+            if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable { let count = stream.read(&buffer, maxLength: buffer.count); if count <= 0 { break }; data.append(contentsOf: buffer.prefix(count)) } }
+            let body = try! JSONDecoder().decode([String: JSON].self, from: data)
+            XCTAssertEqual(body, ["_body": .object(c.body)])
+            pipe.finish(200, try! JSONEncoder().encode(response.raw))
+        }
+        let proof = try await backend.childTaskFieldCommand(c, session: backend.reminderSessionIncarnation); XCTAssertEqual(proof, response)
+    }
+    @MainActor func testBackendSanitizesServiceRefusalsAndBoundsReplies() async throws {
+        let c = try command(), backend = try backend(c.account)
+        defer { ChildFieldHTTP.handler = nil }
+        for code in ["PT409", "42501", "PT503", "54000", "55P03", "unknown"] {
+            ChildFieldHTTP.handler = { _, pipe in pipe.finish(409, Data("{\"code\":\"\(code)\",\"message\":\"PRIVATE SERVER DETAILS\"}".utf8)) }
+            do { _ = try await backend.childTaskFieldCommand(c, session: backend.reminderSessionIncarnation); XCTFail("Refusal") } catch { XCTAssertFalse(error.localizedDescription.contains("PRIVATE SERVER")) }
+        }
+        for declared in [false, true] {
+            ChildFieldHTTP.handler = { _, pipe in pipe.finish(200, Data(repeating: 32, count: declared ? 1 : 16385), headers: declared ? ["Content-Length": "16385"] : [:]) }
+            do { _ = try await backend.childTaskFieldCommand(c, session: backend.reminderSessionIncarnation); XCTFail("Oversized reply") } catch { XCTAssertFalse(error.localizedDescription.contains("place draft")) }
+        }
+    }
+    @MainActor func testMalformedSuccessRemainsUnconfirmed() async throws {
+        let c = try command(), backend = try backend(c.account)
+        defer { ChildFieldHTTP.handler = nil }
+        var raw = try receipt(c).raw; raw["request_id"] = .string(UUID().uuidString.lowercased())
+        let data = try JSONEncoder().encode(raw)
+        ChildFieldHTTP.handler = { _, pipe in pipe.finish(200, data) }
+        do { _ = try await backend.childTaskFieldCommand(c, session: backend.reminderSessionIncarnation); XCTFail("Foreign proof") }
+        catch let error as ChildTaskFieldWriteFailure { XCTAssertEqual(error.reason, .unconfirmed) }
+        catch { XCTFail("A malformed success must not imply that no write happened") }
+    }
+    @MainActor func testBackendRefusesOtherSessionBeforeNetwork() async throws {
+        let c = try command(), backend = try backend(c.account)
+        defer { ChildFieldHTTP.handler = nil }
+        ChildFieldHTTP.handler = { _, _ in XCTFail("Stale session must never send") }
+        do { _ = try await backend.childTaskFieldCommand(c, session: UUID()); XCTFail("Old session") } catch is CancellationError {} catch { XCTFail("\(error)") }
+    }
+    @MainActor private func backend(_ account: String) throws -> Backend {
+        let session = try JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic\",\"refresh_token\":\"synthetic\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ChildFieldHTTP.self]
+        return Backend(configuration: ["URL": "https://child-record.test", "Key": "synthetic-public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
+    }
+}

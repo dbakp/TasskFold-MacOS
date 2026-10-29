@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-29",
+  "platform": "mac",
+  "coreCases": 117,
+  "newCommandCases": 23,
+  "databaseCases": 95,
+  "databaseContainerRemoved": true,
+  "fullAppTestBuild": true,
+  "nativeEditorRuntimeAccepted": false,
+  "ordinaryWritesEnabled": false,
+  "hostedSchemaChanged": false,
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "ab6e5c08b5daa3d924eb9558373e38bbb8d59920c6a0ddbbc215291979f01baf",
+    "Taskfold/Core/Backend.swift": "a5d2caa89d21c3bd6541ac311895eafb0f70eb5a45bda22b40cc441e02c01729",
+    "TaskfoldTests/ChildTaskFieldCommandTests.swift": "bb2ac2cbf1908160931be9327c57ee1f6c215d125297c2b6278bcc45dd3d77d1",
+    "TaskfoldTests/Fixtures/child-task-field-command.json": "3b5ad372edd7ce3d9bec80a56772a526c6b04a5aa60b55a66bcab49f09e6f2fc",
+    "Scripts/Database/test-child-task-field-edits.mjs": "0863be16fa7d25d7dc7d5f2eba027af76f9f21b5901be6eb80eaaadff8ee1acd",
+    "Taskfold.xcodeproj/project.pbxproj": "2248f5b178a92367ffdeb1b5f43436f5febbdcbb99c2b15d479e0e6f0511013a",
+    "Package.swift": "3b8daf546da1637bd5432c1a94edc0b14f26387bb636ecaf131786f1288487a2"
+  },
+  "strictDeepSignatures": [
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+      "strictDeepVerified": true
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app",
+      "strictDeepVerified": true
+    }
+  ],
+  "logsSHA256": {
+    "core": "f154d104acb2ae4d6ebe18682cd9e030fe43104c1a2a916ea6f3b16c66d4326b",
+    "appBuild": "1854922e6b1bdf3bae721b139ac4c32930496589d27d3d61d1d1604f7fafe7db"
+  }
+}

@@ -203,6 +203,7 @@ try {
   const replay = await run(first);
   check("lost reply returns recorded receipt", replay.value.replayed, true);
   check("receipt retains original result revision", replay.value.revision, 3);
+  report.writeFixture = { account: people.owner.id, origin: "https://child-record.test", body: { account: people.owner.id, ...first }, receipt: one.value, replay: replay.value };
   const afterReplay = await row();
   check(
     "retry cannot overwrite later field",

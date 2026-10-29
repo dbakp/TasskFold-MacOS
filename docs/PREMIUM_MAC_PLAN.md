@@ -9593,3 +9593,20 @@ accepts the synthetic conversation component scopes above; audio/Px remain open.
 
 [Evidence, exact limits and reproduction](audio-publication-closed/README.md).
 This closes the exact-reservation terminal gap; the full audio/Px feature stays open.
+
+## 2026-10-29 — native child field retry foundation
+
+- [x] Capture typed field intent from verified child records, with exact target
+  identity/revision and validated account-bound receipts.
+- [x] Encrypted 64-entry account/origin queue, unsent coalescing, frozen attempted
+  bodies, durable confirmation and original-request retry after uncertain replies.
+- [x] Scope/cancellation/account-removal fences, no stale cache writes, bounded
+  uncached Backend transport and sanitized unconfirmed/refusal outcomes.
+- [x] Each repo: 117 focused Core cases, 95 PostgreSQL regressions, actual database
+  request/receipt fixture and isolated full app/test compilation/signatures.
+- [ ] Store/Keychain/account-removal wiring, native review/retry controls, editor
+  integration and complete lifecycle/runtime acceptance. Ordinary writes stay off.
+- [ ] Child structure/completion/legacy adapters, authoritative migration and
+  hosted/paired acceptance. Rank 6 and the overall Px backlog remain unfinished.
+
+[Evidence and exact limits](child-task-field-client/README.md).
