@@ -54,6 +54,70 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         let bytes = try Data(contentsOf: file); guard bytes.count < 1_000_000 else { throw CancellationError() }
         return try JSONDecoder().decode([String: JSON].self, from: bytes)
     }
+    static func completionResponse(_ body: [String: JSON], closing: Bool, state: inout [String: JSON]) throws -> (Data, Bool) {
+        guard Set(body.keys) == ["_body"], Store.shared.userID == ChildFieldNativeIdentity.account else { throw CancellationError() }
+        let raw = body["_body"]!.object
+        var receipts = state["completionReceipts"]?.object ?? [:]
+        let original: ChildTaskCompletionCommand.Original?
+        if raw["action"] == .string("undo") {
+            guard let saved = receipts[raw["undo_of"]?.text ?? ""]?.object else { throw ChildFieldNativeRefusal(code: "PT409") }
+            original = .init(body: saved["body"]!.object, receipt: saved["receipt"]!.object)
+        } else { original = nil }
+        let command = try ChildTaskCompletionCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: raw, original: original)
+        if closing {
+            var result = raw.filter { !["baseline", "revision"].contains($0.key) }; result["undo_of"] = raw["undo_of"] ?? .null
+            state["completionCloses"] = .number(Double((state["completionCloses"]?.integer ?? 0) + 1))
+            if let old = receipts[command.id]?.object {
+                guard AuthoredValueComparison.exactJSON(old["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+                var proof = old["receipt"]!.object; proof["replayed"] = .bool(true)
+                result["outcome"] = .string("applied"); result["receipt"] = .object(proof)
+            } else {
+                var closed = state["completionClosures"]?.object ?? [:]
+                if let old = closed[command.id], !AuthoredValueComparison.exactJSON(old, .object(raw)) { throw ChildFieldNativeRefusal(code: "PT409") }
+                closed[command.id] = .object(raw); state["completionClosures"] = .object(closed)
+                result["outcome"] = .string("closed"); result["receipt"] = .null
+            }
+            _ = try ChildTaskCompletionResolution(command: command, raw: result); try save(state)
+            return (try JSONEncoder().encode(result), false)
+        }
+        state["completionRequests"] = .number(Double((state["completionRequests"]?.integer ?? 0) + 1))
+        if state["completionClosures"]?.object[command.id] != nil { try save(state); throw ChildFieldNativeRefusal(code: "PT410") }
+        if let saved = receipts[command.id]?.object {
+            guard AuthoredValueComparison.exactJSON(saved["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+            var proof = saved["receipt"]!.object; proof["replayed"] = .bool(true); try save(state)
+            return (try JSONEncoder().encode(proof), false)
+        }
+        var root = Record(state["root"]!.object), rows = root["subtasks"].list
+        let key = raw["node_key"]!.text
+        guard raw["task_id"] == .string(root.id), raw["task_generation"] == root["task_generation"], raw["project_id"] == root["project_id"],
+              let index = rows.firstIndex(where: { $0.object["id"] == .string(key) }),
+              raw["incarnation"] == .string(index == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006") else { throw ChildFieldNativeRefusal(code: "PT409") }
+        var fields = rows[index].object, versions = state["versions"]!.object
+        let before = fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) }
+        let expected = original?.receipt["after"] ?? raw["baseline"]!
+        guard AuthoredValueComparison.exactJSON(.object(before), expected), raw["revision"]!.integer <= versions[key]!.integer,
+              before[TeamChecklist.key] != nil || raw["revision"] == versions[key] else { try save(state); throw ChildFieldNativeRefusal(code: "PT409") }
+        var after = original?.receipt["before"]?.object ?? before
+        let token = TeamChecklist.token(before[TeamChecklist.key])
+        after[TeamChecklist.key] = .object(["epoch": .string(token?.epoch ?? "ec990000-0000-4000-8000-000000000010"), "version": .number((token?.version ?? 0) + 1)])
+        if original == nil {
+            let complete = raw["action"] == .string("complete")
+            after["completed"] = .bool(complete); after["completed_at"] = complete ? .string(ISO8601DateFormatter().string(from: Date())) : .null
+        }
+        for field in ChildTaskCompletionDraft.cohort { fields.removeValue(forKey: field) }
+        fields.merge(after) { _, new in new }; rows[index] = .object(fields); root["subtasks"] = .array(rows)
+        versions[key] = .number(Double(versions[key]!.integer + 1))
+        var proof = raw.filter { !["baseline", "undo_of"].contains($0.key) }
+        proof["undo_of"] = raw["undo_of"] ?? .null; proof["revision"] = versions[key]
+        proof["before"] = .object(before); proof["after"] = .object(after); proof["replayed"] = .bool(false)
+        _ = try command.confirmed(proof)
+        receipts[command.id] = .object(["body": .object(raw), "receipt": .object(proof)])
+        state["root"] = .object(root.fields); state["versions"] = .object(versions); state["completionReceipts"] = .object(receipts)
+        state["completionWrites"] = .number(Double((state["completionWrites"]?.integer ?? 0) + 1)); state["writes"] = .number(Double(state["writes"]!.integer + 1))
+        let lose = ProcessInfo.processInfo.arguments.contains("--child-completion-lose-reply") && state["completionLost"]?.flag != true
+        if lose { state["completionLost"] = .bool(true) }; try save(state)
+        return (try JSONEncoder().encode(proof), lose)
+    }
     static func response(_ request: URLRequest) async throws -> (Data, Bool) {
         guard ChildFieldNativeIdentity.enabled, request.url?.host == "synthetic.example", request.httpMethod == "POST" else { throw URLError(.unsupportedURL) }
         var data = request.httpBody ?? Data()
@@ -73,6 +137,9 @@ struct ChildFieldNativeRefusal: Error { let code: String }
                 return .object(["node_key": .string(key), "incarnation": .string(i == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006"), "revision": state["versions"]!.object[key]!, "parent_key": .null, "sibling_order": .number(Double(i)), "identity_path": .array([.string(key)]), "fields": value, "children_kind": .string("absent")])
             }
             return (try JSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": .null, "projection_revision": .number(Double(state["writes"]!.integer + 1)), "root_kind": .string("array"), "records": .array(records)]), false)
+        }
+        if ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_close_child_completion"].contains(request.url?.path ?? "") {
+            return try completionResponse(body, closing: request.url?.path == "/rest/v1/rpc/taskfold_close_child_completion", state: &state)
         }
         let closing = request.url?.path == "/rest/v1/rpc/taskfold_close_child_task_edit"
         guard closing || request.url?.path == "/rest/v1/rpc/taskfold_edit_child_task", Set(body.keys) == ["_body"] else { throw URLError(.unsupportedURL) }
@@ -135,6 +202,7 @@ struct ChildFieldNativeFixtureView: View {
                 if let problem { Text(problem).accessibilityIdentifier("childNativeProblem") }
                 if ready {
                     Button("Open subtask editor") { opening = "editor" }.accessibilityIdentifier("childNativeEditor")
+                    Button("Open saved actions") { opening = "completion" }.accessibilityIdentifier("childNativeCompletionRecovery")
                     Button("Open saved changes") { opening = "recovery" }.accessibilityIdentifier("childNativeRecovery")
                     Button("Change test title on server") {
                         do {
@@ -160,6 +228,7 @@ struct ChildFieldNativeFixtureView: View {
         .sheet(isPresented: Binding(get: { opening != nil }, set: { if !$0 { opening = nil } })) {
             WorkflowShell(title: opening == "editor" ? "Subtask changes" : "Saved subtask changes") {
                 if opening == "editor" { ChildTaskFieldEditorView(rootID: ChildFieldNativeIdentity.rootID) }
+                else if opening == "completion" { ChildTaskCompletionRecoveryView() }
                 else { ChildTaskFieldRecoveryView() }
             }
         }
@@ -185,6 +254,10 @@ struct ChildFieldNativeFixtureView: View {
             let enabledSchedules = localSpecs.filter(\.enabled).count
             let beforeTen = localSpecs.filter { $0.enabled && $0.kind == "relative" && $0.offset == -10 }.count
             probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) reminderDraft=\(reminderDrafts) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") closed=\(entries.filter { $0.phase == .closed }.count) closes=\(state["closeRequests"]?.integer ?? 0) labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
+            if store.userID == ChildFieldNativeIdentity.account {
+                let completionEntries = try await store.childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
+                probe += " completionQueued=\(completionEntries.filter { $0.phase == .queued }.count) completionAttempted=\(completionEntries.filter { $0.phase == .attempted }.count) completionConfirmed=\(completionEntries.filter { $0.phase == .confirmed }.count) completionClosed=\(completionEntries.filter { $0.phase == .closed }.count) completionWrites=\(state["completionWrites"]?.integer ?? 0) completionRequests=\(state["completionRequests"]?.integer ?? 0) done=\(child["completed"]?.flag == true) notes=\(child["description"]?.text ?? "")"
+            }
         } catch { problem = error.localizedDescription }
     }
 }

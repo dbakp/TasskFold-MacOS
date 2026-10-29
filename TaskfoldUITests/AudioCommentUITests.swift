@@ -942,6 +942,44 @@ extension TaskfoldMacUITests {
         #endif
         let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = name; shot.lifetime = .keepAlways; add(shot)
     }
+    @MainActor private func completionReadyPress(_ value: XCUIElement, _ app: XCUIApplication) {
+        childReveal(value, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: value)], timeout: 15), .completed, app.debugDescription)
+        childPress(value)
+    }
+    @MainActor func testChildCompletionNativeUndoPreservesUnsentFields() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childHomePress("childNativeEditor", app)
+        let title = childField("independentChildTitle", app); childReveal(title, app); childType("Unsent premium review draft", title)
+        let action = app.buttons["childCompletionAction"]; completionReadyPress(action, app)
+        let status = app.staticTexts["childCompletionStatus"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Completion confirmed", "Completion confirmed"), object: status)], timeout: 15), .completed, app.debugDescription)
+        #if os(iOS)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 8), "Completion should dismiss the keyboard without saving the title draft")
+        #endif
+        let undo = app.buttons["childCompletionUndo"]; completionReadyPress(undo, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Undo confirmed", "Undo confirmed"), object: status)], timeout: 15), .completed, app.debugDescription)
+        childReveal(title, app, towardTop: true); XCTAssertEqual(title.value as? String, "Unsent premium review draft")
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "Subtask completion and preserved draft"; shot.lifetime = .keepAlways; add(shot)
+        childDone(app); childProbe(app, "completionConfirmed=2 completionClosed=0 completionWrites=2 completionRequests=2 done=false notes=Original saved notes")
+        childProbe(app, "current=Prepare the review")
+        app.terminate(); try childOpen(app, reset: false)
+        childProbe(app, "completionConfirmed=2 completionClosed=0 completionWrites=2 completionRequests=2 done=false")
+    }
+    @MainActor func testChildCompletionNativeLostReplyColdRetryOnce() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-completion-lose-reply")
+        childHomePress("childNativeEditor", app)
+        let action = app.buttons["childCompletionAction"]; completionReadyPress(action, app)
+        let status = app.staticTexts["childCompletionStatus"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "couldn’t be confirmed", "couldn’t be confirmed"), object: status)], timeout: 15), .completed, app.debugDescription)
+        childDone(app); childProbe(app, "completionAttempted=1 completionConfirmed=0 completionClosed=0 completionWrites=1 completionRequests=1")
+        app.terminate(); try childOpen(app, reset: false)
+        childHomePress("childNativeCompletionRecovery", app)
+        let retry = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildCompletion-")).firstMatch
+        childReveal(retry, app); childPress(retry)
+        XCTAssertTrue(childSavedText("Confirmed · task may have changed since", app).waitForExistence(timeout: 15), app.debugDescription)
+        childDone(app); childProbe(app, "completionAttempted=0 completionConfirmed=1 completionClosed=0 completionWrites=1 completionRequests=2 done=true")
+    }
     @MainActor func testChildFieldsNativeSaveSendColdReceipt() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
         childSave(app, title: "Review the polished child screen")

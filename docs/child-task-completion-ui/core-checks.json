@@ -1,0 +1,44 @@
+{
+  "platformSource": "TasskFold-MacOS",
+  "selectedTests": 190,
+  "failures": 0,
+  "suites": [
+    {
+      "name": "ChildTaskCompletionCommandTests",
+      "tests": 57,
+      "failures": 0
+    },
+    {
+      "name": "ChildTaskCompletionDraftTests",
+      "tests": 13,
+      "failures": 0
+    },
+    {
+      "name": "ChildTaskFieldCommandTests",
+      "tests": 83,
+      "failures": 0
+    },
+    {
+      "name": "ChildTaskRecordReadTests",
+      "tests": 21,
+      "failures": 0
+    },
+    {
+      "name": "ProjectWorkflowsTests",
+      "tests": 1,
+      "failures": 0
+    },
+    {
+      "name": "TaskNodeActivityTests",
+      "tests": 1,
+      "failures": 0
+    },
+    {
+      "name": "TeamChecklistTests",
+      "tests": 14,
+      "failures": 0
+    }
+  ],
+  "command": "swift test --jobs 2 --filter 'ChildTaskCompletion|ChildTaskFieldCommand|ChildTaskRecord|TeamChecklist|AccountSession'",
+  "ordinaryFeatureFlags": "absent/off"
+}

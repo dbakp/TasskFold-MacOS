@@ -1088,3 +1088,17 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Structural/legacy/adoption/authoritative migration and wider Px work remain open; ordinary flags/hosted schema and prior deferrals remain unchanged.
 
 [Recovery behavior, lock rationale, exact evidence and remaining work](child-task-completion-resolution/README.md).
+
+
+## 2026-10-29 — native subtask completion integration (in progress)
+
+- [x] Add separate Complete/Reopen/Undo controls alongside the independent child field editor, preserving unsent field drafts and refreshing current task state after proof.
+- [x] Add scoped Store admission, encrypted journal ownership, account-removal/synthetic-reset cleanup and a presentation recovery model.
+- [x] Add saved-action discovery, explicit uncertain-action stop confirmation, current-value review and save-only fresh replacement.
+- [x] Independently pass 190 focused Core checks per repository, including seven new presentation/recovery model cases.
+- [x] Build final app/test products independently on Mac/iOS and verify isolated signatures. Pass initial Complete/Undo/cold-retry journeys on iPhone/iPad, then focused final-source keyboard/draft/cold-state checks on each device; inspect window-only screenshots.
+- [ ] Finish native Reopen, stop/review/replacement, Mac/runtime/lifecycle and spoken acceptance; exact phase distinctions and the Mac unlock blocker are in the implementation note.
+- [ ] Add dependency-safe confirmed-receipt retention for sustained completion use beyond the bounded 64-record journal.
+- [ ] Complete structural/legacy/adoption/authoritative migration and wider genuine acceptance. Ordinary flags stay off; user deferrals and the existing iPhone combined-run finding remain.
+
+[Implementation and exact verification scope](child-task-completion-ui/README.md).

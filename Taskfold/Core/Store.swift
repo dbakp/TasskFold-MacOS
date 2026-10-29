@@ -319,12 +319,15 @@ final class Store {
         return try ChildTaskFieldJournal(account:account,origin:origin,io:io,
             coordinationDirectory:URL.applicationSupportDirectory.appendingPathComponent("ChildFieldCommandLocks",isDirectory:true),removalDirectory:root)
     }
-    func permitsChildTaskFieldRequest(_ command:ChildTaskFieldCommand, sending:Bool) -> Bool {
-        guard childTaskFieldEditingEnabled,let scope=childTaskFieldRecoveryScope,
-              scope.account==command.account,scope.origin==command.origin,workspaceCacheReadable,
+    func permitsChildTaskFieldRequest(_ command: ChildTaskFieldCommand, sending: Bool) -> Bool {
+        permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskFieldEditingEnabled, sending: sending)
+    }
+    private func permitsChildTaskRequest(account: String, origin: String, identity: [String: JSON], enabled: Bool, sending: Bool) -> Bool {
+        guard enabled,let scope=childTaskFieldRecoveryScope,
+              scope.account==account,scope.origin==origin,workspaceCacheReadable,
               !sending || online && !syncing,
-              let root=record("tasks",id:command.body["task_id"]!.text),
-              root["task_generation"]==command.body["task_generation"],root["project_id"]==command.body["project_id"],
+              let root=record("tasks",id:identity["task_id"]!.text),
+              root["task_generation"]==identity["task_generation"],root["project_id"]==identity["project_id"],
               !snapshot.pending.contains(where:{$0.table=="tasks" && $0.recordID==root.id}) else {return false}
         let project=root.string("project_id")
         guard project.isEmpty || record("projects",id:project)?["is_archived"].flag==false else {return false}
@@ -344,6 +347,36 @@ final class Store {
                 guard let self,self.childTaskFieldRecoveryScope==scope else {return}
                 await self.sync()
             })
+    }
+    var childTaskCompletionEnabled: Bool {
+        childTaskFieldEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRecordCompletionsEnabled") as? Bool == true
+    }
+    func childTaskCompletionJournal(account: String, origin: String) throws -> ChildTaskCompletionJournal {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child completion requests", isDirectory: true)
+        let io = try ChildTaskCompletionJournalFileIO(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildCompletionCommandLocks", isDirectory: true), removalDirectory: root)
+    }
+    func permitsChildTaskCompletionRequest(_ command: ChildTaskCompletionCommand, sending: Bool) -> Bool {
+        guard childTaskCompletionEnabled else { return false }
+        return permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskCompletionEnabled, sending: sending)
+    }
+    func childTaskCompletionRecoveryModel() throws -> ChildTaskCompletionRecoveryModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskCompletionJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canQueue: { [weak self] in self?.permitsChildTaskCompletionRequest($0, sending: false) == true },
+                     canSend: { [weak self] in self?.permitsChildTaskCompletionRequest($0, sending: true) == true },
+                     refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() })
     }
     var syncing = false
     var online = true
@@ -1571,6 +1604,7 @@ final class Store {
         try await teamTemplateCommandVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
         try await teamWorkflowRunVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
         try await childTaskFieldJournal(account:account,origin:command.origin).removeAccount()
+        try await childTaskCompletionJournal(account: account, origin: command.origin).removeAccount()
         try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
         try await projectAdoptionVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
@@ -5099,6 +5133,7 @@ extension Store {
         if ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") {
             try ChildFieldNativePeer.save(ChildFieldNativePeer.initial())
             try await childTaskFieldJournal(account:ChildFieldNativeIdentity.account,origin:ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             for entry in try backupVault.editorEntries() {
                 if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) {try backupVault.closeEditorDraft(entry.id)}
             }

@@ -279,6 +279,9 @@ struct ChildTaskFieldEditorView: View {
                         Picker("Priority", selection: Binding(get: { priority }, set: { guard priority != $0 else { return }; priority = $0; checkpoint(reopen: true) })) { ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
                         Text("Unsent edits are preserved privately in Backups & restore → Unsent task edits. Only fields you edit are included; checklist structure stays as saved.").font(.footnote).foregroundStyle(.secondary)
                     }
+                    if store.childTaskCompletionEnabled, TaskKind.mayComplete(Record(read.nodes[key]?.fields ?? [:])) {
+                        ChildTaskCompletionControls(rootID: rootID, key: key, prepareAction: { editingField = nil; checkpoint(); _ = draftSession?.flush() }).id(key)
+                    }
                     if TaskKind(Record(read.nodes[key]?.fields ?? [:])) == .task {
                         Section { ChildTaskPlanningFields(draft: $planning, changed: { checkpoint(reopen: true) }, failed: { failure = $0.localizedDescription }) }
                     }

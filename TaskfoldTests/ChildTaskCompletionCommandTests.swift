@@ -598,3 +598,90 @@ final class ChildTaskCompletionCommandTests: XCTestCase {
     }
 
 }
+
+extension ChildTaskCompletionCommandTests {
+    @MainActor func testPresentationQueuesOfflineAndColdRetryRefreshesOnce() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context)
+        let io = CompletionIO(), directory = try root(), j = try journal(c, io, directory), peer = CompletionPeer()
+        var online = false, refreshes = 0
+        let model = ChildTaskCompletionRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in online }, refresh: { refreshes += 1 })
+        let pending = await model.perform(read: r, key: c.body["node_key"]!.text, action: .complete)
+        let saved = try XCTUnwrap(pending)
+        XCTAssertEqual(model.entries.first?.phase, .queued); XCTAssertEqual(peer.calls.count, 0); XCTAssertEqual(refreshes, 0)
+        model.close(); XCTAssertTrue(model.entries.isEmpty)
+        online = true
+        let cold = ChildTaskCompletionRecoveryModel(scope: scope, journal: try journal(c, io, directory), service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in online }, refresh: { refreshes += 1 })
+        await cold.load(); await cold.send(saved)
+        XCTAssertEqual(cold.entries.first?.phase, .confirmed); XCTAssertEqual(peer.calls.count, 1); XCTAssertEqual(refreshes, 1)
+        XCTAssertEqual(cold.message, "Completion confirmed.")
+    }
+    @MainActor func testPresentationLostReplyRemainsAttemptedThenChecksApplied() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context)
+        let j = try journal(c, CompletionIO(), root()), peer = CompletionPeer(); peer.lose = true
+        var refreshes = 0
+        let model = ChildTaskCompletionRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { refreshes += 1 })
+        _ = await model.perform(read: r, key: c.body["node_key"]!.text, action: .complete)
+        let saved = try XCTUnwrap(model.entries.first)
+        XCTAssertEqual(saved.phase, .attempted); XCTAssertEqual(refreshes, 0)
+        await model.resolve(saved.command)
+        XCTAssertEqual(model.entries.first?.phase, .confirmed); XCTAssertEqual(peer.calls.count, 1); XCTAssertEqual(peer.closeCalls.count, 1); XCTAssertEqual(refreshes, 1)
+    }
+    @MainActor func testPresentationStopAndReplacementOnlySavesFreshAction() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context)
+        let j = try journal(c, CompletionIO(), root()), peer = CompletionPeer()
+        var online = false
+        let model = ChildTaskCompletionRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in online }, refresh: {})
+        let pending = await model.perform(read: r, key: c.body["node_key"]!.text, action: .complete)
+        let saved = try XCTUnwrap(pending); await model.resolve(saved)
+        let stopped = try XCTUnwrap(model.entries.first); XCTAssertEqual(stopped.phase, .closed)
+        online = true
+        let replacement = await model.replace(stopped, read: r)
+        XCTAssertNotNil(replacement); XCTAssertNotEqual(replacement?.id, saved.id)
+        XCTAssertEqual(model.entries.last?.phase, .queued); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testPresentationDepartureHidesLateReplyAndKeepsAttemptPrivate() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context)
+        let j = try journal(c, CompletionIO(), root()), peer = CompletionPeer()
+        var current: ChildTaskFieldClientScope? = scope, refreshes = 0
+        peer.onReply = { current = nil }
+        let model = ChildTaskCompletionRecoveryModel(scope: scope, journal: j, service: peer, current: { current }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { refreshes += 1 })
+        _ = await model.perform(read: r, key: c.body["node_key"]!.text, action: .complete)
+        XCTAssertTrue(model.entries.isEmpty); XCTAssertNil(model.message); XCTAssertEqual(refreshes, 0)
+        let state = try await j.load(); XCTAssertEqual(state.entries.first?.phase, .attempted)
+    }
+    @MainActor func testPresentationRefusesQueueAfterEditingAccessLoss() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context)
+        let j = try journal(c, CompletionIO(), root()), peer = CompletionPeer()
+        let model = ChildTaskCompletionRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in false }, canSend: { _ in true }, refresh: {})
+        let saved = await model.perform(read: r, key: c.body["node_key"]!.text, action: .complete)
+        XCTAssertNil(saved); let state = try await j.load(); XCTAssertTrue(state.entries.isEmpty); XCTAssertTrue(peer.calls.isEmpty)
+    }
+}
+
+extension ChildTaskCompletionCommandTests {
+    @MainActor func testPresentationUndoUsesFreshReadAndPreservesOriginalProof() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context)
+        let j = try journal(c, CompletionIO(), root()), peer = CompletionPeer()
+        let model = ChildTaskCompletionRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {})
+        _ = await model.perform(read: r, key: c.body["node_key"]!.text, action: .complete)
+        let entry = try XCTUnwrap(model.entries.first), receipt = try XCTUnwrap(entry.receipt)
+        let current = try read(entry.command, fields: receipt.raw["after"]!.object, revision: Double(receipt.raw["revision"]!.integer), session: scope.session)
+        let context = try ChildTaskRecordContext(account: scope.account, origin: scope.origin, workspace: scope.workspace, session: scope.session, access: scope.access, snapshot: UUID(), root: current.context.root)
+        let node = try XCTUnwrap(current.orderedNodes.first)
+        let data: [String: JSON] = ["protocol": .number(1), "account": .string(scope.account), "task_id": c.body["task_id"]!, "task_generation": c.body["task_generation"]!, "project_id": c.body["project_id"]!, "projection_revision": .number(node.revision), "root_kind": .string("array"), "records": .array([.object(["node_key": .string(node.key), "incarnation": .string(node.incarnation), "revision": .number(node.revision), "parent_key": .null, "sibling_order": .number(0), "identity_path": .array([.string(node.key)]), "fields": .object(node.fields), "children_kind": .string("absent")])])]
+        let fresh = try ChildTaskRecordRead(data: JSONEncoder().encode(data), context: context)
+        await model.undo(entry, read: fresh)
+        XCTAssertEqual(model.entries.count, 2); XCTAssertEqual(model.entries.last?.phase, .confirmed)
+        XCTAssertEqual(model.entries.last?.command.original?.body, entry.command.body)
+        XCTAssertEqual(model.entries.last?.receipt?.raw["after"]?.object["completed_at"], entry.receipt?.raw["before"]?.object["completed_at"])
+        XCTAssertEqual(peer.calls.count, 2); XCTAssertEqual(model.message, "Undo confirmed.")
+    }
+    @MainActor func testPresentationDoesNotSendWhenDurableSaveFails() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context)
+        let io = CompletionIO(); io.failWrite = true
+        let j = try journal(c, io, root()), peer = CompletionPeer()
+        let model = ChildTaskCompletionRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {})
+        let pending = await model.perform(read: r, key: c.body["node_key"]!.text, action: .complete)
+        XCTAssertNil(pending); XCTAssertTrue(peer.calls.isEmpty); XCTAssertTrue(model.entries.isEmpty); XCTAssertNotNil(model.message)
+    }
+}

@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Observation
 
 private struct ChildCompletionKey: CodingKey {
     let stringValue: String
@@ -431,5 +432,110 @@ extension Backend: ChildTaskCompletionCommandService {}
             guard (try? command.confirmed(receipt.raw)) == receipt else { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
             try await journal.confirm(command, receipt: receipt, lease: lease); try check(); return receipt
         } catch { try check(); throw error }
+    }
+}
+
+/// Owns one live presentation, while immutable intents/proofs survive it on disk.
+/// Task data is refreshed from the service after confirmation, never patched
+/// from a historical receipt or from the desired completion state.
+@MainActor @Observable final class ChildTaskCompletionRecoveryModel {
+    private(set) var entries: [ChildTaskCompletionJournalState.Entry] = []
+    private(set) var loaded = false
+    private(set) var busy = false
+    private(set) var message: String?
+    private let scope: ChildTaskFieldClientScope
+    private let journal: ChildTaskCompletionJournal
+    private let sender: ChildTaskCompletionSender
+    private let current: () -> ChildTaskFieldClientScope?
+    private let canQueue: (ChildTaskCompletionCommand) -> Bool
+    private let canSend: (ChildTaskCompletionCommand) -> Bool
+    private let refresh: () async -> Void
+    private let lease = CalendarReadLease()
+    private var closed = false
+    init(scope: ChildTaskFieldClientScope, journal: ChildTaskCompletionJournal, service: any ChildTaskCompletionCommandService,
+         current: @escaping () -> ChildTaskFieldClientScope?, canQueue: @escaping (ChildTaskCompletionCommand) -> Bool,
+         canSend: @escaping (ChildTaskCompletionCommand) -> Bool, refresh: @escaping () async -> Void) {
+        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.canSend = canSend; self.refresh = refresh
+        sender = .init(scope: scope, journal: journal, service: service, current: current, canSend: canSend)
+    }
+    func close() { closed = true; lease.cancel(); sender.close(); entries = []; message = nil; loaded = false; busy = false }
+    private func check() throws { try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
+    private func update() async throws { let state = try await journal.load(); try check(); entries = state.entries; loaded = true }
+    private func failure(_ error: Error) {
+        guard (try? check()) != nil else { close(); return }
+        if error is CancellationError { return }
+        if let value = error as? ChildTaskCompletionFailure { message = value.localizedDescription }
+        else if error is AccountSessionAuthorizationRequired { message = "Sign in again to check this saved action. Your work is kept." }
+        else { message = "This action couldn’t be confirmed. Your saved work is kept; review it before trying again." }
+    }
+    private func recover(_ error: Error) async {
+        do { try check(); try await update() } catch { entries = []; loaded = false }
+        failure(error)
+    }
+    func load() async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await update() } catch { failure(error) }
+    }
+    @discardableResult func perform(read: ChildTaskRecordRead, key: String, action: ChildTaskCompletionDraft.Action) async -> ChildTaskCompletionCommand? {
+        guard !busy else { return nil }; busy = true; defer { busy = false }
+        do {
+            try check(); guard ChildTaskFieldClientScope(read.context) == scope else { throw CancellationError() }
+            let command = try ChildTaskCompletionCommand(ChildTaskCompletionDraft(read: read, key: key, action: action))
+            guard canQueue(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            try await journal.enqueue(command, lease: lease); try check(); try await update()
+            if canSend(command) { try await sendSaved(command) }
+            else { message = "Saved for later. Open Saved subtask actions when you’re ready to send it." }
+            return command
+        } catch { await recover(error); return nil }
+    }
+    private func sendSaved(_ command: ChildTaskCompletionCommand) async throws {
+        _ = try await sender.send(command); try check(); try await update()
+        await refresh(); try check()
+        message = command.isUndo ? "Undo confirmed." : command.body["action"] == .string("complete") ? "Completion confirmed." : "Reopened."
+    }
+    func send(_ command: ChildTaskCompletionCommand) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await sendSaved(command) } catch { await recover(error) }
+    }
+    func undo(_ entry: ChildTaskCompletionJournalState.Entry, read: ChildTaskRecordRead) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do {
+            try check(); guard ChildTaskFieldClientScope(read.context) == scope, entry.phase == .confirmed,
+                  entries.contains(entry), let receipt = entry.receipt else { throw ChildTaskCompletionDraft.invalid }
+            let command = try ChildTaskCompletionCommand(undo: entry.command, receipt: receipt, read: read)
+            guard canQueue(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            try await journal.enqueue(command, lease: lease); try check(); try await update()
+            if canSend(command) { try await sendSaved(command) } else { message = "Undo saved for later. The task has not changed yet." }
+        } catch { await recover(error) }
+    }
+    func resolve(_ command: ChildTaskCompletionCommand) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do {
+            try check(); let result = try await sender.resolve(command); try check(); try await update()
+            if result.closed { message = "The earlier action was stopped before applying. Review the current task before trying again." }
+            else { await refresh(); try check(); message = "The earlier action had already applied. Its confirmation is saved." }
+        } catch { await recover(error) }
+    }
+    @discardableResult func replace(_ entry: ChildTaskCompletionJournalState.Entry, read: ChildTaskRecordRead) async -> ChildTaskCompletionCommand? {
+        guard !busy else { return nil }; busy = true; defer { busy = false }
+        do {
+            try check(); guard ChildTaskFieldClientScope(read.context) == scope, entry.phase == .closed, entries.contains(entry) else { throw ChildTaskCompletionDraft.invalid }
+            let command: ChildTaskCompletionCommand
+            if let source = entry.command.original {
+                let original = try ChildTaskCompletionCommand(account: entry.command.account, origin: entry.command.origin, body: source.body)
+                command = try .init(undo: original, receipt: original.confirmed(source.receipt), read: read)
+            } else {
+                guard let action = ChildTaskCompletionDraft.Action(rawValue: entry.command.body["action"]!.text) else { throw ChildTaskCompletionDraft.invalid }
+                command = try .init(ChildTaskCompletionDraft(read: read, key: entry.command.body["node_key"]!.text, action: action))
+            }
+            guard canQueue(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            try await journal.replaceClosed(entry.command, with: command, lease: lease); try check(); try await update()
+            message = "Fresh action saved. Review it before sending."; return command
+        } catch { await recover(error); return nil }
+    }
+    func discard(_ command: ChildTaskCompletionCommand) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await journal.discard(command, lease: lease); try check(); try await update(); message = "Saved action removed from this device. This does not undo a task change." }
+        catch { await recover(error) }
     }
 }
