@@ -10,9 +10,11 @@ This stage adds `ChildTaskCompletionDraft` to each app’s own Core and app targ
 - For legacy children without completion metadata, require the exact captured node revision. This is a temporary refusal rule, not the legacy adoption implementation. Null/malformed/exhausted tokens, headings, future task types, malformed completion states and no-op actions are refused.
 - Decode saved values through the same validation, reject extra envelope/body keys, and bound the completion body to 4 KiB. Generic child-field commands remain unable to carry completion changes.
 
+A later stage now supplies the [disabled dedicated server candidate](../child-task-completion-server/README.md). This document records the client draft foundation’s own verification scope; the full app-facing feature remains unfinished.
+
 ## Remaining in the completion/Undo stage
 
-- Dedicated server admission, exact request idempotency, completion history/projection and permission/role/concurrency checks. The draft body is provisional and is not an available RPC contract.
+- Server deployment and complete client integration remain open. The later disabled server candidate implements admission, exact request idempotency, completion history/projection and permission/role/concurrency checks in isolated fixtures; the client draft is still not connected to its RPC.
 - Receipt-certified Undo must restore the original completion time while advancing the completion revision, preserve all unrelated fields, and refuse intervening completion cycles. A client draft alone must never authorize Undo.
 - Durable attempted/confirmed retry handling, transport, Store and premium native review/feedback integration.
 - Independent database/advisor coverage, app builds and genuine lifecycle/native accessibility acceptance for the completed path.

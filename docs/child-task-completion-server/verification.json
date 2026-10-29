@@ -1,0 +1,39 @@
+{
+  "recordedAtUTC": "2026-10-29T21:17:49.358198+00:00",
+  "status": "disabled server candidate; client completion and Undo feature remains unfinished",
+  "sourceSHA256": {
+    "supabase/migrations/20261029211038_child_task_completion_commands.sql": "2f52b22df713261440a2e2b401334a91058847b7b8d479093d415a6a054ac2e3",
+    "Scripts/Database/test-child-task-completion.mjs": "f1fff882eb8613cb0ce38985dde2a66496cab502f10e3da3037165695ae570fa",
+    "Scripts/Database/test-child-task-field-edits.mjs": "b1bcd18bff6c39334897f3d0401ef940f1cc9f9fb16cdccaf73cf293c463b1de",
+    "Scripts/Database/child-task-records-schema.mjs": "070a0dcb346b1a25f08767bb5c82fcb6249b5736a6912cf0ae4b14d7a9a86568",
+    "Scripts/Database/project-adoption-schema.mjs": "ee30b3ae2854cb814ed3ec8aa16cb89cca9db9ced9650618e0ccc939b176aa40"
+  },
+  "verification": {
+    "actualCompletionHistoryAndPermissionsChecks": 98,
+    "existingFieldRegressionChecksWithOverlay": 95,
+    "allPassed": true,
+    "ownedFixturesRemoved": true,
+    "baselineAdvisorFindings": 7,
+    "finalAdvisorFindings": 7,
+    "addedAdvisorFindings": 0,
+    "canonicalCreatedUsing": "supabase migration new child_task_completion_commands",
+    "ordinaryFlagsChanged": false,
+    "hostedDeployment": false,
+    "localMigrationList": {
+      "command": "supabase migration list --local",
+      "exitCode": 1,
+      "result": "Local full Supabase stack unavailable; database connection failed. Migration-history parity not established."
+    }
+  },
+  "limits": [
+    "Client receipt validation, transport and durable retries/ambiguous outcome recovery remain open",
+    "Store/native completion/review/Undo integration and actual current app acceptance remain open",
+    "Structure/legacy/adoption/authoritative migration and previous user deferrals remain open",
+    "No ordinary rollout or distribution acceptance"
+  ],
+  "storage": {
+    "heavyRunsSequential": true,
+    "floorGiB": 20,
+    "freeBytesAfter": 60021637120
+  }
+}

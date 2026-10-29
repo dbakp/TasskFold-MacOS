@@ -108,6 +108,12 @@ try {
     await pg.raw(resolution);
     report.resolutionSHA256 = createHash("sha256").update(resolution).digest("hex");
   }
+  if (process.argv.includes("--with-completion")) {
+    if (!process.argv.includes("--with-resolution")) throw new Error("Completion regression requires the closure migration");
+    const completion = await readFile(new URL("../../supabase/migrations/20261029211038_child_task_completion_commands.sql", import.meta.url), "utf8");
+    await pg.raw(completion);
+    report.completionSHA256 = createHash("sha256").update(completion).digest("hex");
+  }
   const run = (
     body,
     {
