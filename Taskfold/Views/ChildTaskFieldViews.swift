@@ -29,13 +29,19 @@ struct SavedChildTaskFieldChangesLink: View {
     }
 }
 
+private struct ChildFieldRemovalReview {
+    let entry: ChildTaskFieldJournalState.Entry
+    let model: ChildTaskFieldRecoveryModel
+    let scope: ChildTaskFieldClientScope
+}
+
 struct ChildTaskFieldRecoveryView: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
     @State private var model: ChildTaskFieldRecoveryModel?
     @State private var modelScope: ChildTaskFieldClientScope?
     @State private var failure: String?
-    @State private var removing: ChildTaskFieldJournalState.Entry?
+    @State private var removing: ChildFieldRemovalReview?
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         List {
@@ -61,7 +67,7 @@ struct ChildTaskFieldRecoveryView: View {
                                 Text("Sending requires a connection, current editing access and no pending parent-task save.").font(.footnote).foregroundStyle(.secondary)
                             }
                         }
-                        Button(entry.phase == .confirmed ? "Remove saved receipt" : "Discard saved request", role: .destructive) { removing = entry }
+                        Button(entry.phase == .confirmed ? "Remove saved receipt" : "Discard saved request", role: .destructive) { if let scope { removing = ChildFieldRemovalReview(entry: entry, model: model, scope: scope) } }
                             .disabled(model.busy).accessibilityIdentifier("discardChildField-" + entry.command.id)
                     }
                 }
@@ -77,17 +83,19 @@ struct ChildTaskFieldRecoveryView: View {
             do { let value = try store.childTaskFieldRecoveryModel(); modelScope = scope; model = value; await value.load() }
             catch { failure = error.localizedDescription }
         }
-        .onDisappear { model?.close() }
+        .onChange(of: scope) { _, _ in removing = nil }
+        .onDisappear { removing = nil; model?.close() }
         .alert("Remove this saved request?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
             if let removing {
-                Button(removing.phase == .attempted ? "Discard unconfirmed request" : "Remove from this device", role: .destructive) {
-                    let entry = removing; self.removing = nil
-                    Task { await model?.discard(entry.command, uncertainConfirmed: entry.phase == .attempted) }
+                Button(removing.entry.phase == .attempted ? "Discard unconfirmed request" : "Remove from this device", role: .destructive) {
+                    let review = removing; self.removing = nil
+                    guard scope == review.scope, modelScope == review.scope, model === review.model else { return }
+                    Task { await review.model.discard(review.entry.command, uncertainConfirmed: review.entry.phase == .attempted) }
                 }
             }
             Button("Cancel", role: .cancel) { removing = nil }
         } message: {
-            Text(removing?.phase == .attempted ? "The server may already have applied this change. Removing its recovery request cannot cancel or undo it. Refresh current tasks before editing again." : "This removes only the saved request or receipt on this device. It does not undo a server change.")
+            Text(removing?.entry.phase == .attempted ? "The server may already have applied this change. Removing its recovery request cannot cancel or undo it. Refresh current tasks before editing again." : "This removes only the saved request or receipt on this device. It does not undo a server change.")
         }
     }
     private func status(_ phase: ChildTaskFieldJournalState.Phase) -> String {
@@ -163,7 +171,12 @@ struct ChildTaskFieldEditorView: View {
                 else {
                     Section {
                         Picker("Subtask", selection: $key) {
-                            ForEach(read.nodes.keys.sorted(), id: \.self) { value in Text(read.nodes[value]!.fields["title"]?.text ?? "Subtask").tag(value) }
+                            ForEach(read.orderedNodes, id: \.key) { node in
+                                let title = node.fields["title"]?.text ?? "Subtask"
+                                Text(String(repeating: "  ", count: node.path.count - 1) + title)
+                                    .accessibilityLabel(node.path.count > 1 ? "\(title), nested level \(node.path.count)" : title)
+                                    .tag(node.key)
+                            }
                         }.accessibilityIdentifier("independentChildSelection")
                         TextField("Title", text: Binding(get: { title }, set: { guard !title.utf8.elementsEqual($0.utf8) else { return }; title = $0; checkpoint(reopen: true) }), axis: .vertical).focused($editingField, equals: .title).accessibilityIdentifier("independentChildTitle")
                         TextField("Notes", text: Binding(get: { notes }, set: { guard !notes.utf8.elementsEqual($0.utf8) else { return }; notes = $0; checkpoint(reopen: true) }), axis: .vertical).lineLimit(3...12).focused($editingField, equals: .notes).accessibilityIdentifier("independentChildNotes")
@@ -224,7 +237,7 @@ struct ChildTaskFieldEditorView: View {
                 guard store.childTaskFieldEditingEnabled else { throw ChildTaskFieldWriteFailure(reason: .unavailable) }
                 let value = try await store.readChildTaskRecords(rootID)
                 guard captured == scope, !Task.isCancelled else { return }
-                read = value; model = try store.childTaskFieldRecoveryModel(); key = value.nodes.keys.sorted().first ?? ""; select()
+                read = value; model = try store.childTaskFieldRecoveryModel(); key = value.orderedNodes.first?.key ?? ""; select()
             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = error.localizedDescription }
         }
         .onDisappear { appeared = false; checkpoint(); _ = draftSession?.flush() }

@@ -297,9 +297,32 @@ final class ChildTaskFieldCommandTests: XCTestCase {
         let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Recovered")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
         let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { XCTFail("Lost reply cannot refresh as success") })
         _ = await model.save(c); peer.lose = true; await model.send(c)
-        XCTAssertEqual(model.entries.first?.phase, .attempted); XCTAssertNotNil(model.message)
+        XCTAssertEqual(model.entries.first?.phase, .attempted); XCTAssertEqual(model.message, ChildTaskFieldWriteFailure(reason: .unconfirmed).localizedDescription)
         await model.discard(c); XCTAssertEqual(model.entries.count, 1)
         await model.discard(c, uncertainConfirmed: true); XCTAssertTrue(model.entries.isEmpty); XCTAssertEqual(peer.applied.count, 1)
+    }
+    @MainActor func testDiscardRereadsAttemptMadeByAnotherWindowBeforeOfferingActions() async throws {
+        let r = try read(), c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {})
+        _ = await model.save(c)
+        _ = try await j.attempt(c, lease: CalendarReadLease())
+        await model.discard(c)
+        XCTAssertEqual(model.entries.first?.phase, .attempted)
+        XCTAssertTrue(model.loaded); XCTAssertNotNil(model.message); XCTAssertTrue(peer.calls.isEmpty)
+        let retained = try await j.load(); XCTAssertEqual(retained.entries.first?.phase, .attempted)
+        await model.discard(c, uncertainConfirmed: true)
+        XCTAssertTrue(model.entries.isEmpty)
+    }
+    @MainActor func testDiscardRereadsNewerCoalescedRequestWithoutRemovingIt() async throws {
+        let r = try read(), c = try command(), newer = try command(["title": .string("Newer work in the other window")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {})
+        _ = await model.save(c)
+        let current = try await j.enqueue(newer, lease: CalendarReadLease())
+        await model.discard(c)
+        XCTAssertEqual(model.entries.first?.command, current)
+        XCTAssertNotEqual(current, c); XCTAssertEqual(current.id, c.id)
+        let retained = try await j.load(); XCTAssertEqual(retained.entries.first?.command, current)
+        XCTAssertTrue(peer.calls.isEmpty)
     }
     @MainActor func testRecoveryModelSuppressesStaleAccountSessionSuccessAndError() async throws {
         for lost in [false, true] {

@@ -849,6 +849,8 @@ struct ChildTaskRecordRead: Sendable {
     static let maximumBytes = 2_000_000
     let context: ChildTaskRecordContext
     let projectionRevision: Double
+    /// Verified parent-first traversal in authored sibling order.
+    let orderedNodes: [Node]
     let nodes: [String: Node]
     let tree: JSON
     init(data: Data, context: ChildTaskRecordContext) throws {
@@ -901,7 +903,7 @@ struct ChildTaskRecordRead: Sendable {
             buckets[key]!.sort { $0.position<$1.position }
             guard buckets[key]!.enumerated().allSatisfy({$0.offset==$0.element.position}) else { throw ChildTaskRecordFailure.review }
         }
-        var visited:Set<String>=[]
+        var visited:Set<String>=[], orderedNodes:[Node]=[]
         func branch(_ parent:String?, path:[String]) throws -> JSON {
             guard path.count<24 || buckets[parent ?? "",default:[]].isEmpty else { throw ChildTaskRecordFailure.review }
             var result:[JSON]=[]
@@ -909,6 +911,7 @@ struct ChildTaskRecordRead: Sendable {
                 guard visited.insert(node.key).inserted, let id=node.fields["id"]?.text else { throw ChildTaskRecordFailure.review }
                 let actual=path+[id]
                 guard actual.count==node.path.count, zip(actual,node.path).allSatisfy({$0.utf8.elementsEqual($1.utf8)}) else { throw ChildTaskRecordFailure.review }
+                orderedNodes.append(node)
                 var fields=node.fields
                 if node.childrenKind=="array" { fields["subtasks"]=try branch(node.key,path:actual) }
                 else if node.childrenKind=="null" { fields["subtasks"] = .null }
@@ -920,7 +923,7 @@ struct ChildTaskRecordRead: Sendable {
         if kind=="null" { guard nodes.isEmpty else { throw ChildTaskRecordFailure.review }; tree = .null }
         else { tree=try branch(nil,path:[]); guard visited.count==nodes.count else { throw ChildTaskRecordFailure.review } }
         guard AuthoredValueComparison.exactJSON(tree,context.root["subtasks"]) else { throw ChildTaskRecordFailure.review }
-        self.context=context; self.projectionRevision=revision; self.nodes=nodes; self.tree=tree
+        self.context=context; self.projectionRevision=revision; self.nodes=nodes; self.orderedNodes=orderedNodes; self.tree=tree
     }
     /// JSONDecoder's String dictionaries otherwise collapse canonically equal
     /// object keys, including keys inside opaque future metadata.

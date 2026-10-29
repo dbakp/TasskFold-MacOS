@@ -239,7 +239,12 @@ extension Backend:ChildTaskFieldCommandService {}
             guard canSend(reviewed) else {throw ChildTaskFieldWriteFailure(reason:.unavailable)}
             _=try await journal.attempt(reviewed,lease:lease);try check()
             guard canSend(reviewed) else {throw ChildTaskFieldWriteFailure(reason:.unavailable)}
-            let result=try await service.childTaskFieldCommand(reviewed,session:scope.session);try check()
+            let result: ChildTaskFieldReceipt
+            do { result = try await service.childTaskFieldCommand(reviewed, session: scope.session) }
+            catch is CancellationError { throw CancellationError() }
+            catch let refusal as ChildTaskFieldWriteFailure { throw refusal }
+            catch { throw ChildTaskFieldWriteFailure(reason: .unconfirmed) }
+            try check()
             guard try reviewed.confirmed(result.raw)==result else {throw ChildTaskFieldCommand.invalid}
             try await journal.confirm(reviewed,receipt:result,lease:lease);try check();return result
         } catch {try check();throw error}
@@ -313,6 +318,11 @@ extension Backend:ChildTaskFieldCommandService {}
         do {
             try check(); try await journal.discard(reviewed, allowUnconfirmed: uncertainConfirmed, lease: lease)
             try check(); try await update(); message = "Saved request removed. This does not undo a server change."
-        } catch { failure(error) }
+        } catch {
+            // Another window may have sent or replaced the reviewed request.
+            // Show its durable phase/body before offering a new confirmation.
+            do { try check(); try await update() } catch { loaded = false; entries = [] }
+            failure(error)
+        }
     }
 }

@@ -9639,3 +9639,15 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Completion/structure/legacy adapters and authoritative child migration. Rank 6 and overall Px stay unfinished; ordinary child flags remain off.
 
 [Native evidence, screenshots and acceptance limits](child-task-field-native/README.md).
+
+
+## 2026-10-29 — ordered subtask editing and current request review
+
+- [x] Keep the subtask picker in verified saved sibling/hierarchy order, select the first saved node, and expose nesting levels to accessibility.
+- [x] Bind removal confirmation to its original model, exact request and workspace; clear it on scope/departure changes.
+- [x] After a refused discard, reread current durable phase/body, or hide stale entries if rereading fails. Two new controller cases fail before the fix.
+- [x] Show a plain-language unconfirmed result for unknown service errors, preserving cancellation and typed refusals. The strengthened message regression fails before the fix.
+- [x] Each independent repo passes 200 focused Core checks and full native app/test compilation. Native evidence and phases are kept separately.
+- [ ] Actual simultaneous account/window/alert lifecycle, shared/team/hosted delivery, speech, remaining field/conflict controls and full child migration. Ordinary child flags stay off.
+
+[Evidence and exact acceptance limits](child-task-field-review/README.md).

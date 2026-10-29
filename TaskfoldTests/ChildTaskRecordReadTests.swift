@@ -46,6 +46,21 @@ final class ChildTaskRecordReadTests: XCTestCase {
         raw["records"] = .array(original["records"]!.list.reversed())
         XCTAssertEqual(try decode(raw,root,account:account).tree,root["subtasks"])
     }
+    func testPickerTraversalUsesSavedSiblingOrderAndParentsBeforeChildren() throws {
+        let (account, originalRoot, original) = try fixture()
+        var root = originalRoot, raw = original
+        let first: JSON = .object(["id": .string("z-first"), "title": .string("First by saved position")])
+        root["subtasks"] = .array([first] + originalRoot["subtasks"].list)
+        var rows = original["records"]!.list
+        let parentIndex = try XCTUnwrap(rows.firstIndex { $0.object["node_key"] == .string("parent") })
+        var parent = rows[parentIndex].object; parent["sibling_order"] = .number(1); rows[parentIndex] = .object(parent)
+        rows.append(.object(["node_key": .string("z-first"), "incarnation": .string("ec990000-0000-4000-8000-000000000077"), "revision": .number(1), "parent_key": .null, "sibling_order": .number(0), "identity_path": .array([.string("z-first")]), "fields": first, "children_kind": .string("absent")]))
+        raw["records"] = .array(rows.reversed())
+        let read = try decode(raw, root, account: account)
+        XCTAssertEqual(read.orderedNodes.map(\.key), ["z-first", "parent", "child"])
+        XCTAssertEqual(read.orderedNodes.map { $0.path.count }, [1, 1, 2])
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(read.tree, root["subtasks"]))
+    }
     func testEnvelopeBindingAndFutureProtocolFailClosed() throws {
         let (account,root,original)=try fixture()
         for (key,value): (String,JSON) in [("account",.string(UUID().uuidString.lowercased())),("task_id",.string(UUID().uuidString.lowercased())),("project_id",.null),("task_generation",.null),("protocol",.number(2)),("projection_revision",.number(0)),("projection_revision",.number(9_007_199_254_740_992)),("root_kind",.string("future")),("unexpected",.bool(true))] {
