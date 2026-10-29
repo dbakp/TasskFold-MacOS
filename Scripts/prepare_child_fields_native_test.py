@@ -9,6 +9,7 @@ import sys
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--output", type=Path, required=True)
 args = parser.parse_args()
+subprocess.run([sys.executable, str(Path(__file__).with_name("check_test_storage.py")), "--path", str(args.output.expanduser().parent)], check=True)
 root = args.output.expanduser().resolve()
 if root.exists():
     parser.error("Use a new output directory. Reuse existing hosts with explicit incremental source updates.")

@@ -9700,3 +9700,12 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Final portable-mode/device delivery, interrupted/role/account/window/genuine-Keychain lifecycle, Mac runtime/speech, conflict review and authoritative child migration. Ordinary flags stay off; previous user deferrals remain.
 
 [Reminder implementation and verification](child-task-field-reminders/README.md).
+
+
+## 2026-10-29 — host storage recovery
+
+- Stopped the native test run after the host ran out of space. Measured 110 GiB across Simulator devices; the main phone/tablet wallpaper stores alone occupied roughly 34 GiB.
+- Cleared 219 generated wallpaper scratch caches while preserving current app data/configurations, plus obsolete compiler/test/symbolication caches and approved old synthetic Simulator data. Four old Simulator records are removed; one retains zero-size protected file-provider remnants.
+- Free space recovered from below 1 GiB to over 50 GiB. Docker volumes/images, real devices/tasks and unrelated work were preserved.
+- Added a read-only 20 GiB preflight to native host preparation and PostgreSQL fixtures, with instructions to check before every heavy local run. Verified both passing and refusal paths.
+- See `storage-recovery-20261029.json` for measurements, cleanup scope and limits. Remaining Px acceptance continues separately.

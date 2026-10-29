@@ -3,6 +3,7 @@ import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
+import { fileURLToPath } from "node:url";
 const exec = promisify(execFile);
 export const postgresImage =
   "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94";
@@ -12,6 +13,7 @@ export async function createPostgresFixture(
   { advisors = false, cronDirectory = null, cronBackgroundWorkers = false } =
     {},
 ) {
+  await exec("python3", [fileURLToPath(new URL("../check_test_storage.py", import.meta.url)), "--path", "/tmp"]);
   const name = "taskfold-task-pg-" + randomUUID().slice(0, 8),
     label = randomUUID(),
     holders = new Set();
