@@ -1020,6 +1020,12 @@ extension BackupVault {
         do {try vault.saveEditorDraft(latest);savedRevision=latest.revision;failure=nil;return true}
         catch {failure="Your edit could not be preserved. Keep this window open and retry.";return false}
     }
+    /// An asynchronous save may only retire the exact draft revision it captured.
+    @discardableResult func finish(ifRevision revision: UInt64?) -> Bool {
+        guard !closed else {return true}
+        guard latest?.revision == revision else {return false}
+        return finish()
+    }
     @discardableResult func finish() -> Bool {
         guard !closed else {return true}
         do {try vault.closeEditorDraft(id);closed=true;latest=nil;failure=nil;return true}

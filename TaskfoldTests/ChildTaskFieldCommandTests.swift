@@ -282,6 +282,85 @@ final class ChildTaskFieldCommandTests: XCTestCase {
         ChildFieldHTTP.handler = { _, _ in XCTFail("Stale session must never send") }
         do { _ = try await backend.childTaskFieldCommand(c, session: UUID()); XCTFail("Old session") } catch is CancellationError {} catch { XCTFail("\(error)") }
     }
+    @MainActor func testRecoveryModelSavesBeforeSendingAndRetainsConfirmedProof() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Recovered")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        var refreshes = 0
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { refreshes += 1 })
+        await model.load(); XCTAssertTrue(model.loaded); XCTAssertTrue(model.entries.isEmpty)
+        let saved = await model.save(c); XCTAssertEqual(saved, c); XCTAssertTrue(peer.calls.isEmpty); XCTAssertEqual(model.entries.first?.phase, .queued)
+        await model.send(c); XCTAssertEqual(refreshes, 1); XCTAssertEqual(model.entries.first?.phase, .confirmed)
+        XCTAssertTrue(model.message?.contains("confirmed") == true)
+        model.close(); XCTAssertTrue(model.entries.isEmpty); XCTAssertNil(model.message); XCTAssertFalse(model.loaded)
+        let state = try await j.load(); XCTAssertEqual(state.entries.first?.phase, .confirmed)
+    }
+    @MainActor func testRecoveryModelShowsAttemptedAfterLostReplyAndRequiresExplicitDiscard() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Recovered")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { XCTFail("Lost reply cannot refresh as success") })
+        _ = await model.save(c); peer.lose = true; await model.send(c)
+        XCTAssertEqual(model.entries.first?.phase, .attempted); XCTAssertNotNil(model.message)
+        await model.discard(c); XCTAssertEqual(model.entries.count, 1)
+        await model.discard(c, uncertainConfirmed: true); XCTAssertTrue(model.entries.isEmpty); XCTAssertEqual(peer.applied.count, 1)
+    }
+    @MainActor func testRecoveryModelSuppressesStaleAccountSessionSuccessAndError() async throws {
+        for lost in [false, true] {
+            let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Recovered")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+            var current = scope
+            let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { current }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { XCTFail("Stale result must not refresh another workspace") })
+            _ = await model.save(c); peer.lose = lost
+            peer.onReply = { current = .init(account: scope.account, origin: scope.origin, workspace: scope.workspace, session: UUID(), access: scope.access) }
+            await model.send(c); XCTAssertTrue(model.entries.isEmpty); XCTAssertNil(model.message); XCTAssertFalse(model.loaded)
+            let state = try await j.load(); XCTAssertEqual(state.entries.first?.phase, .attempted)
+        }
+    }
+    @MainActor func testRecoveryModelRejectsStaleCoalescedReviewWithoutNetwork() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Recovered")]), later = try ChildTaskFieldCommand(read: r, key: "child", changes: ["description": .string("Later notes")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {})
+        _ = await model.save(c); let merged = await model.save(later); XCTAssertEqual(merged?.id, c.id)
+        await model.send(c); XCTAssertTrue(peer.calls.isEmpty); XCTAssertEqual(model.entries.first?.command, merged)
+        await model.discard(c); XCTAssertEqual(model.entries.count, 1)
+    }
+    @MainActor func testRecoveryModelDoesNotClaimSuccessWhenConfirmationCannotSave() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Recovered")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        var refreshes = 0
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { refreshes += 1 })
+        _ = await model.save(c); peer.onReply = { io.failWrite = true }; await model.send(c)
+        XCTAssertEqual(model.entries.first?.phase, .attempted); XCTAssertEqual(refreshes, 0)
+        io.failWrite = false; peer.onReply = nil; await model.send(c)
+        XCTAssertEqual(model.entries.first?.phase, .confirmed); XCTAssertEqual(peer.applied.count, 1); XCTAssertEqual(refreshes, 1)
+    }
+    @MainActor func testRecoveryModelRefusesUnavailableQueueAndClosedPresentation() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Recovered")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in false }, canSend: { _ in true }, refresh: {})
+        let saved = await model.save(c); XCTAssertNil(saved); let state = try await j.load(); XCTAssertTrue(state.entries.isEmpty)
+        model.close(); await model.load(); XCTAssertFalse(model.loaded); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testRecoveryModelClearsPresentationWhenRefreshChangesAccess() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Recovered")]), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        var current: ChildTaskFieldClientScope? = scope
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { current }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { current = nil })
+        _ = await model.save(c); await model.send(c)
+        XCTAssertTrue(model.entries.isEmpty); XCTAssertNil(model.message)
+        let state = try await j.load(); XCTAssertEqual(state.entries.first?.phase, .confirmed)
+    }
+    @MainActor func testAsyncCheckpointCannotRetireNewerUnsentTyping() throws {
+        let r = try read(), original = Record(r.nodes["child"]!.fields), directory = try root(), key = SymmetricKey(size: .bits256)
+        let vault = BackupVault(directory: directory, account: r.context.account, key: { key })
+        let session = TaskEditorSession(vault: vault, origin: r.context.origin, original: original, labels: [])
+        var draft = original; draft["title"] = .string("First typed title"); session.capture(draft, extras: [:]); XCTAssertTrue(session.flush())
+        let submittedRevision = session.latest!.revision
+        draft["description"] = .string("Typed while request checkpoint was saving"); session.capture(draft, extras: [:]); XCTAssertTrue(session.flush())
+        XCTAssertFalse(session.finish(ifRevision: submittedRevision)); XCTAssertFalse(session.closed)
+        XCTAssertEqual(session.latest?.draft["description"], draft["description"])
+        XCTAssertTrue(session.finish(ifRevision: session.latest!.revision)); XCTAssertTrue(session.closed)
+    }
+    @MainActor func testEmptyAndClosedDraftConditionalFinishRemainSafe() throws {
+        let r = try read(), original = Record(r.nodes["child"]!.fields), directory = try root(), key = SymmetricKey(size: .bits256)
+        let vault = BackupVault(directory: directory, account: r.context.account, key: { key })
+        let session = TaskEditorSession(vault: vault, origin: r.context.origin, original: original, labels: [])
+        XCTAssertTrue(session.finish(ifRevision: nil)); XCTAssertTrue(session.closed)
+        XCTAssertTrue(session.finish(ifRevision: 99))
+        session.capture(original, extras: [:]); XCTAssertNil(session.latest)
+    }
     @MainActor private func backend(_ account: String) throws -> Backend {
         let session = try JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic\",\"refresh_token\":\"synthetic\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ChildFieldHTTP.self]

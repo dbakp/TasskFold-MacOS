@@ -36,6 +36,7 @@ struct SubtaskOrganizerButton: View {
     var present: ((SubtaskOrganizerRequest) -> Void)? = nil
     var saveAndOpen: ((JSON, [String]) -> Bool)? = nil
     var body: some View {
+        Group {
         Button("Organize subtasks", systemImage: "list.bullet.indent") {
             let workspace=admittedWorkspace ?? WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration)
             let root=custodyRoot ?? store.record("tasks",id:sourceRootID ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
@@ -47,6 +48,8 @@ struct SubtaskOrganizerButton: View {
         }
             .accessibilityIdentifier("organizeSubtasks")
             .sheet(item: $opening) { SubtaskOrganizerPresentation(request: $0) }
+        ChildTaskFieldEditorLink(rootID: sourceRootID ?? custodyRoot?.id ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
+        }
     }
 }
 

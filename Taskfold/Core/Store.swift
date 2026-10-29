@@ -288,6 +288,54 @@ final class Store {
             throw error
         }
     }
+    /// Recovery remains reachable if rollout gates are later turned off.
+    var childTaskFieldRecoveryScope: ChildTaskFieldClientScope? {
+        guard signedIn,!localMode,!signingOut,!accountRemovalBlocked,
+              let origin=try? backend.accountRemovalOrigin,TeamProjectValue.id(userID) else {return nil}
+        return .init(account:userID,origin:origin,workspace:workspaceGeneration,
+                     session:backend.reminderSessionIncarnation,access:workspaceReadRevision)
+    }
+    var childTaskFieldEditingEnabled: Bool {
+        Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordWritesEnabled") as? Bool == true &&
+        Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordReadsEnabled") as? Bool == true
+    }
+    func childTaskFieldJournal(account:String,origin:String) throws -> ChildTaskFieldJournal {
+        try TeamOrganizationValue.scope(account:account,origin:origin)
+        let root=cacheURL.deletingLastPathComponent()
+        let directory=root.appendingPathComponent("Backups",isDirectory:true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault",account),isDirectory:true)
+            .appendingPathComponent("Child field requests",isDirectory:true)
+        let io=try ChildTaskFieldJournalFileIO(directory:directory,account:account,origin:origin,
+            encryptionKey:{try BackupVault.deviceKey(account:account)})
+        return try ChildTaskFieldJournal(account:account,origin:origin,io:io,
+            coordinationDirectory:URL.applicationSupportDirectory.appendingPathComponent("ChildFieldCommandLocks",isDirectory:true),removalDirectory:root)
+    }
+    func permitsChildTaskFieldRequest(_ command:ChildTaskFieldCommand, sending:Bool) -> Bool {
+        guard childTaskFieldEditingEnabled,let scope=childTaskFieldRecoveryScope,
+              scope.account==command.account,scope.origin==command.origin,workspaceCacheReadable,
+              !sending || online && !syncing,
+              let root=record("tasks",id:command.body["task_id"]!.text),
+              root["task_generation"]==command.body["task_generation"],root["project_id"]==command.body["project_id"],
+              !snapshot.pending.contains(where:{$0.table=="tasks" && $0.recordID==root.id}) else {return false}
+        let project=root.string("project_id")
+        guard project.isEmpty || record("projects",id:project)?["is_archived"].flag==false else {return false}
+        let cache=nativeConversationTeamCache
+        if cache?.knownTasks.contains(root.id)==true || cache?.knownTeams[project] != nil {
+            return (try? captureTeamTaskEditor(root)) != nil
+        }
+        return root.string("user_id")==scope.account && editorMayWrite(source:root,proposed:root)
+    }
+    func childTaskFieldRecoveryModel() throws -> ChildTaskFieldRecoveryModel {
+        guard let scope=childTaskFieldRecoveryScope else {throw CancellationError()}
+        return ChildTaskFieldRecoveryModel(scope:scope,journal:try childTaskFieldJournal(account:scope.account,origin:scope.origin),service:backend,
+            current:{[weak self] in self?.childTaskFieldRecoveryScope},
+            canQueue:{[weak self] in self?.permitsChildTaskFieldRequest($0,sending:false)==true},
+            canSend:{[weak self] in self?.permitsChildTaskFieldRequest($0,sending:true)==true},
+            refresh:{[weak self] in
+                guard let self,self.childTaskFieldRecoveryScope==scope else {return}
+                await self.sync()
+            })
+    }
     var syncing = false
     var online = true
     @ObservationIgnored private var teamCompletionErrorRevision = UUID()
@@ -1508,6 +1556,7 @@ final class Store {
         try await teamProjectCommandVault.removeAccount(account, origin: command.origin)
         try await teamTemplateCommandVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
         try await teamWorkflowRunVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
+        try await childTaskFieldJournal(account:account,origin:command.origin).removeAccount()
         try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
         try await projectAdoptionVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)

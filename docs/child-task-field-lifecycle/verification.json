@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-29",
+  "platform": "mac",
+  "coreCases": 195,
+  "childCommandCases": 32,
+  "newRecoveryControllerCases": 7,
+  "newConditionalDraftFinishCases": 2,
+  "backupRegressionCases": 69,
+  "fullAppTestBuild": true,
+  "strictDeepSignatures": [
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+      "strictDeepVerified": true
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app",
+      "strictDeepVerified": true
+    }
+  ],
+  "builtChildReadFlag": null,
+  "builtChildWriteFlag": null,
+  "sourceSHA256": {
+    "Taskfold/Core/Backups.swift": "08066db74f0489126f2f8dc029f6616eb518d148550f5f20f0f90199b31001a7",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "caa2cbdd8f23bbcab4f6523739d96119d0b28cc46234ee0e9a5a588e285f9457",
+    "Taskfold/Core/Store.swift": "e82b2f0946477bb013f5ed8a7bed021b824966854512c9fa094723cab9543ab3",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "ed87cce673b9d65c744b238c69faeca8b00009a043aabadc4bcddf2e0e04d782",
+    "Taskfold/Views/SubtaskOrganizer.swift": "8abeb3ea58b9b5d9221ee7fe96cfa9d02ec8f309c30d824f6c11e5d6398f84a9",
+    "Taskfold/Views/SettingsView.swift": "69c6c597cf4e40ad7f16aa7eda87d3aa8729a6e63933701c6505eecfdd3f78c5",
+    "TaskfoldTests/ChildTaskFieldCommandTests.swift": "f5ed8efea593bcd99681a41eba2ab9f14c3169742f466d3d61c60bf00db05bf0",
+    "Taskfold.xcodeproj/project.pbxproj": "2c2d5232bbacffbb6a442ecebcc9466da5384689859c7340d749ae2617b08029"
+  },
+  "coreLogSHA256": "c58f4c37ca5d267b0c7398de71701d240fb6fc0215017ea320eda2fc04a8d13a",
+  "appBuildLogSHA256": "3cae5399ffb39bd7f4872536911257cc83f2c643081c1c9e69043fe995b3f996",
+  "hostedSchemaChanged": false,
+  "nativeEditorRuntimeAccepted": false,
+  "actualStoreCleanupRuntimeAccepted": false,
+  "genuineKeychainAccepted": false,
+  "layoutOrSpeechAccepted": false
+}

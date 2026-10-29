@@ -74,3 +74,7 @@ compressed logs retain the build/test evidence.
 The prior server candidate's legacy null/missing-container and team-envelope
 limits still apply. User-deferred rollout, remote delivery, distribution,
 provider registrations and genuine audio/location checks remain deferred.
+
+The next [lifecycle and native-screen stage](../child-task-field-lifecycle/README.md)
+now supplies source integration and controller checks. Its actual Store/native/
+Keychain acceptance remains open, and ordinary write flags remain off.

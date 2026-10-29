@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Observation
 
 /// A saved field intent is not a task snapshot and carries no mutation authority.
 struct ChildTaskFieldCommand: ReviewedTeamCommand, CustomStringConvertible, CustomDebugStringConvertible {
@@ -193,10 +194,11 @@ actor ChildTaskFieldJournal {
     }
     func removeAccount() throws {try lock.withExclusive(account:account){try io.remove(key:key)}}
 }
-struct ChildTaskFieldClientScope:Equatable,Sendable {
+struct ChildTaskFieldClientScope:Hashable,Sendable {
     let account:String,origin:String
     let workspace:UUID,session:UUID,access:UUID
-    init(_ context:ChildTaskRecordContext) {account=context.account;origin=context.origin;workspace=context.workspace;session=context.session;access=context.access}
+    init(_ context:ChildTaskRecordContext) {self.init(account:context.account,origin:context.origin,workspace:context.workspace,session:context.session,access:context.access)}
+    init(account:String,origin:String,workspace:UUID,session:UUID,access:UUID) {self.account=account;self.origin=origin;self.workspace=workspace;self.session=session;self.access=access}
 }
 struct ChildTaskFieldWriteFailure:LocalizedError {
     enum Reason {case unavailable,review,busy,limit,unconfirmed}
@@ -241,5 +243,76 @@ extension Backend:ChildTaskFieldCommandService {}
             guard try reviewed.confirmed(result.raw)==result else {throw ChildTaskFieldCommand.invalid}
             try await journal.confirm(reviewed,receipt:result,lease:lease);try check();return result
         } catch {try check();throw error}
+    }
+}
+
+/// One presentation owns one account lease. Closing hides private draft text;
+/// disk recovery survives until an exact, explicitly reviewed discard.
+@MainActor @Observable final class ChildTaskFieldRecoveryModel {
+    private(set) var entries: [ChildTaskFieldJournalState.Entry] = []
+    private(set) var loaded = false
+    private(set) var busy = false
+    private(set) var message: String?
+    private let scope: ChildTaskFieldClientScope
+    private let journal: ChildTaskFieldJournal
+    private let sender: ChildTaskFieldSender
+    private let current: () -> ChildTaskFieldClientScope?
+    private let canQueue: (ChildTaskFieldCommand) -> Bool
+    private let refresh: () async -> Void
+    private let lease = CalendarReadLease()
+    private var closed = false
+    init(scope: ChildTaskFieldClientScope, journal: ChildTaskFieldJournal, service: any ChildTaskFieldCommandService,
+         current: @escaping () -> ChildTaskFieldClientScope?, canQueue: @escaping (ChildTaskFieldCommand) -> Bool,
+         canSend: @escaping (ChildTaskFieldCommand) -> Bool, refresh: @escaping () async -> Void) {
+        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.refresh = refresh
+        sender = ChildTaskFieldSender(scope: scope, journal: journal, service: service, current: current, canSend: canSend)
+    }
+    func close() {
+        closed = true; lease.cancel(); sender.close(); entries = []; loaded = false; message = nil
+    }
+    private func check() throws {
+        try lease.check(); guard !closed, current() == scope else { close(); throw CancellationError() }
+    }
+    private func update() async throws {
+        let value = try await journal.load(); try check(); entries = value.entries; loaded = true
+    }
+    private func failure(_ error: Error) {
+        guard (try? check()) != nil else { return }
+        message = error is CancellationError ? nil : error.localizedDescription
+    }
+    func load() async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await update(); message = nil } catch { failure(error) }
+    }
+    /// Save first, send only through a separate explicit action. Offline edits
+    /// therefore do not become transient optimistic task-cache writes.
+    @discardableResult func save(_ command: ChildTaskFieldCommand) async -> ChildTaskFieldCommand? {
+        guard !busy else { return nil }; busy = true; defer { busy = false }
+        do {
+            try check(); guard command.account == scope.account, command.origin == scope.origin, canQueue(command) else { throw ChildTaskFieldWriteFailure(reason: .unavailable) }
+            let saved = try await journal.enqueue(command, lease: lease); try check(); try await update()
+            message = "Saved on this device. Review the request when you’re ready to send."; return saved
+        } catch { failure(error); return nil }
+    }
+    func send(_ reviewed: ChildTaskFieldCommand) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do {
+            try check(); _ = try await sender.send(reviewed); try check(); try await update()
+            message = "Change confirmed. Refreshing current tasks…"
+            await refresh(); try check()
+            message = "Change confirmed. The saved request is kept until you remove it."
+        } catch {
+            // A failed response/save may have left durable attempted state.
+            // Re-read before offering controls; never show the old queued phase.
+            do { try check(); try await update() } catch { loaded = false; entries = [] }
+            failure(error)
+        }
+    }
+    func discard(_ reviewed: ChildTaskFieldCommand, uncertainConfirmed: Bool = false) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do {
+            try check(); try await journal.discard(reviewed, allowUnconfirmed: uncertainConfirmed, lease: lease)
+            try check(); try await update(); message = "Saved request removed. This does not undo a server change."
+        } catch { failure(error) }
     }
 }

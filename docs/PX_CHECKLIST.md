@@ -935,3 +935,19 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
   hosted/paired acceptance. Rank 6 and the overall Px backlog remain unfinished.
 
 [Evidence and exact limits](child-task-field-client/README.md).
+
+## 2026-10-29 — child field lifecycle and recovery screens
+
+- [x] Compile Store journal construction using the account's device key and removal
+  fence, explicit cleanup, current write admission and post-confirmation sync.
+- [x] Presentation controller and gated title/notes/priority form; separate saved-
+  request review, original retry and explicit uncertain-discard warning.
+- [x] Preserve private typing and prevent an earlier async checkpoint from retiring
+  a newer draft revision. Old account/session/access content is hidden immediately.
+- [x] Each repo: 195 focused Core/controller/backup checks and full isolated app/test
+  compilation. This is source/controller acceptance, not actual Store/UI runtime.
+- [ ] Native end-to-end and actual Store/Keychain/account/window/cleanup acceptance,
+  layout/speech, remaining field controls and conflict review. Both ordinary flags
+  stay off; authoritative migration and remaining rank 6/Px work remain open.
+
+[Evidence and exact limits](child-task-field-lifecycle/README.md).
