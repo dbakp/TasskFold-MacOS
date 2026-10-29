@@ -28,6 +28,11 @@ try {
   report.stage = "direct candidate SQL";
   const schemaResult = await pg.scalar(`create temp table schema_result(code text,reason text,context text);do $load$declare context text;begin begin execute ${lit(candidate)};insert into schema_result values(null,null,null);exception when others then get stacked diagnostics context=PG_EXCEPTION_CONTEXT;insert into schema_result values(sqlstate,sqlerrm,context);end;end$load$;select to_jsonb(r) from schema_result r;drop table schema_result;`);
   if (schemaResult.code) { report.schemaDiagnostic = schemaResult; throw new Error(schemaResult.reason); }
+  if (process.argv.includes("--with-completion-resolution")) {
+    const resolution = await readFile(new URL("../../supabase/migrations/20261029215232_child_task_completion_resolution.sql", import.meta.url), "utf8");
+    await pg.raw(resolution);
+    report.completionResolutionSHA256 = createHash("sha256").update(resolution).digest("hex");
+  }
   const people = Object.fromEntries(["owner", "writer", "viewer", "outside"].map(k => [k, { id: randomUUID(), session: randomUUID() }]));
   for (const u of Object.values(people)) await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id + "@example.invalid")},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
   const owner = people.owner, task = randomUUID(), project = randomUUID();

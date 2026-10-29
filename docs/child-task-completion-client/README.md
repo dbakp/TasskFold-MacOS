@@ -18,6 +18,8 @@ Each repository passes **237 selected host Core tests**, including **35 new comp
 
 `verification.json` records exact source and fixture hashes, suite counts, project membership and cleanup. The server report was refreshed only to retain Undo proof metadata; its SQL hash and archived 95-case field regression remain unchanged. Existing unrelated package concurrency warnings remain; the new URL protocol test does not add an unavailable Sendable conformance.
 
+The later [terminal recovery stage](../child-task-completion-resolution/README.md) now supplies permanent closure/applied decisions and durable fresh replacement guards. Earlier verification below describes this stage’s own scope; Store/native exposure and genuine acceptance remain open.
+
 ## Remaining before the complete feature
 
 - Completion-specific terminal outcome lookup/closure and explicit replacement of uncertain or obsolete attempted requests. Keeping an attempted request is not cancellation of possible server work.

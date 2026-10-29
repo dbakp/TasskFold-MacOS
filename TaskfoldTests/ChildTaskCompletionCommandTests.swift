@@ -21,10 +21,19 @@ private func completionReply(_ c: ChildTaskCompletionCommand, replayed: Bool = f
     raw["before"] = .object(before); raw["after"] = .object(after); raw["replayed"] = .bool(replayed)
     return try c.confirmed(raw)
 }
+private func completionDecision(_ c: ChildTaskCompletionCommand, receipt: ChildTaskCompletionReceipt? = nil) throws -> ChildTaskCompletionResolution {
+    var raw = c.body.filter { !["baseline", "revision"].contains($0.key) }
+    raw["undo_of"] = c.body["undo_of"] ?? .null
+    raw["outcome"] = .string(receipt == nil ? "closed" : "applied"); raw["receipt"] = receipt.map { .object($0.raw) } ?? .null
+    return try .init(command: c, raw: raw)
+}
 @MainActor private final class CompletionPeer: ChildTaskCompletionCommandService {
     var calls: [ChildTaskCompletionCommand] = [], applied: [String: ChildTaskCompletionReceipt] = [:]
     var lose = false, onReply: (() -> Void)?
+    var closeCalls: [ChildTaskCompletionCommand] = [], closed: [String: ChildTaskCompletionCommand] = [:]
+    var loseClose = false, onClose: (() -> Void)?
     func childTaskCompletionCommand(_ command: ChildTaskCompletionCommand, session: UUID) async throws -> ChildTaskCompletionReceipt {
+        guard closed[command.id] == nil else { throw ChildTaskCompletionFailure(reason: .closed) }
         calls.append(command)
         let replay = applied[command.id] != nil
         let proof = try applied[command.id] ?? completionReply(command)
@@ -34,6 +43,19 @@ private func completionReply(_ c: ChildTaskCompletionCommand, replayed: Bool = f
         if lose { lose = false; throw URLError(.networkConnectionLost) }
         return try command.confirmed(raw)
     }
+    func closeChildTaskCompletionCommand(_ command: ChildTaskCompletionCommand, session: UUID) async throws -> ChildTaskCompletionResolution {
+        closeCalls.append(command)
+        let result: ChildTaskCompletionResolution
+        if let proof = applied[command.id] {
+            var raw = proof.raw; raw["replayed"] = .bool(true)
+            result = try completionDecision(command, receipt: command.confirmed(raw))
+        } else {
+            if let old = closed[command.id], old.body != command.body { throw ChildTaskCompletionFailure(reason: .review) }
+            closed[command.id] = command; result = try completionDecision(command)
+        }
+        onClose?(); if loseClose { loseClose = false; throw URLError(.networkConnectionLost) }; return result
+    }
+
 }
 private final class CompletionHTTP: URLProtocol {
     private static let lock = NSLock()
@@ -412,6 +434,167 @@ final class ChildTaskCompletionCommandTests: XCTestCase {
         let result = try u.confirmed(fixture["undo_receipt"]!.object)
         XCTAssertEqual(result.raw["after"]!.object["completed"], .bool(false))
         XCTAssertEqual(result.raw["after"]!.object[TeamChecklist.key]!.object["version"], .number(2))
+    }
+
+    func testActualDatabaseTerminalDecisionsAgree() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-task-completion-resolution", withExtension: "json", subdirectory: "Fixtures"))
+        let fixture = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        for prefix in ["closed", "applied"] {
+            let body = fixture[prefix + "_body"]!.object
+            let c = try ChildTaskCompletionCommand(account: body["account"]!.text, origin: "https://child-record.test", body: body)
+            let result = try ChildTaskCompletionResolution(command: c, raw: fixture[prefix + "_decision"]!.object)
+            XCTAssertEqual(result.closed, prefix == "closed"); XCTAssertEqual(result.receipt != nil, prefix == "applied")
+            XCTAssertEqual(String(reflecting: result), "Private child completion decision")
+        }
+    }
+    func testTerminalDecisionRequiresEveryLiteralIdentityAndValidReceipt() throws {
+        let c = try command(), good = try completionDecision(c)
+        for key in good.raw.keys {
+            var raw = good.raw; raw.removeValue(forKey: key); XCTAssertThrowsError(try ChildTaskCompletionResolution(command: c, raw: raw), key)
+            raw = good.raw; raw[key] = .string("foreign"); XCTAssertThrowsError(try ChildTaskCompletionResolution(command: c, raw: raw), key)
+        }
+        var raw = good.raw; raw["receipt"] = .object(try completionReply(c).raw)
+        XCTAssertThrowsError(try ChildTaskCompletionResolution(command: c, raw: raw))
+        raw["outcome"] = .string("applied"); _ = try ChildTaskCompletionResolution(command: c, raw: raw)
+        raw["extra"] = .bool(true); XCTAssertThrowsError(try ChildTaskCompletionResolution(command: c, raw: raw))
+    }
+    func testPreviousJournalFormatStillLoadsAndClosedRequiresProof() throws {
+        let c = try command(), entry = ChildTaskCompletionJournalState.Entry(command: c, phase: .queued, receipt: nil)
+        let state = try ChildTaskCompletionJournalState(account: c.account, origin: c.origin, entries: [entry])
+        var raw = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(state))
+        var saved = raw["entries"]!.list[0].object; saved.removeValue(forKey: "resolution"); raw["entries"] = .array([.object(saved)])
+        XCTAssertEqual(try JSONDecoder().decode(ChildTaskCompletionJournalState.self, from: JSONEncoder().encode(raw)), state)
+        XCTAssertThrowsError(try ChildTaskCompletionJournalState(account: c.account, origin: c.origin, entries: [.init(command: c, phase: .closed, receipt: nil)]))
+        XCTAssertThrowsError(try ChildTaskCompletionJournalState(account: c.account, origin: c.origin, entries: [.init(command: c, phase: .closed, receipt: completionReply(c), resolution: completionDecision(c))]))
+    }
+    @MainActor func testLostCloseReplyColdRetryPersistsClosureWithoutEditAdmission() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context), io = CompletionIO(), d = try root(), j = try journal(c, io, d), peer = CompletionPeer()
+        try await j.enqueue(c, lease: CalendarReadLease()); peer.loseClose = true
+        let sender = ChildTaskCompletionSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in false })
+        do { _ = try await sender.resolve(c); XCTFail("Lost close reply") } catch {}
+        let initial = try await j.load(); XCTAssertEqual(initial.entries[0].phase, .attempted)
+        sender.close()
+        let fresh = ChildTaskFieldClientScope(account: scope.account, origin: scope.origin, workspace: UUID(), session: UUID(), access: UUID())
+        let cold = try journal(c, io, d), retry = ChildTaskCompletionSender(scope: fresh, journal: cold, service: peer, current: { fresh }, canSend: { _ in false })
+        let result = try await retry.resolve(c); XCTAssertTrue(result.closed)
+        let terminal = try await cold.load(); XCTAssertEqual(terminal.entries[0].phase, .closed); XCTAssertEqual(terminal.entries[0].resolution, result)
+        _ = try await retry.resolve(c); XCTAssertEqual(peer.closeCalls, [c, c]); XCTAssertTrue(peer.calls.isEmpty)
+        do { _ = try await retry.send(c); XCTFail("Closed request") } catch let error as ChildTaskCompletionFailure { XCTAssertEqual(error.reason, .closed) }
+        do { try await cold.enqueue(c, lease: CalendarReadLease()); XCTFail("Cannot revive closed request") } catch {}
+    }
+    @MainActor func testClosureWriteFailurePreventsReplacementUntilProofRecovered() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context), io = CompletionIO(), j = try journal(c, io, root()), peer = CompletionPeer()
+        try await j.enqueue(c, lease: CalendarReadLease()); peer.onClose = { io.failWrite = true }
+        let sender = ChildTaskCompletionSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in true })
+        do { _ = try await sender.resolve(c); XCTFail("Closure not durable") } catch {}
+        io.failWrite = false; peer.onClose = nil
+        var body = c.body; body["request_id"] = .string(UUID().uuidString.lowercased())
+        let next = try ChildTaskCompletionCommand(account: c.account, origin: c.origin, body: body)
+        do { try await j.replaceClosed(c, with: next, lease: CalendarReadLease()); XCTFail("Missing durable proof") } catch {}
+        let attempted = try await j.load(); XCTAssertEqual(attempted.entries[0].phase, .attempted)
+        _ = try await sender.resolve(c); try await j.replaceClosed(c, with: next, lease: CalendarReadLease())
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.map(\.phase), [.closed, .queued]); XCTAssertEqual(saved.entries[0].command, c); XCTAssertEqual(saved.entries[1].command, next)
+        _ = try await sender.send(next); XCTAssertEqual(peer.calls, [next])
+    }
+    @MainActor func testResolutionRecoversAppliedWriteWithoutMakingReplacement() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context), io = CompletionIO(), j = try journal(c, io, root()), peer = CompletionPeer()
+        try await j.enqueue(c, lease: CalendarReadLease()); peer.lose = true
+        let sender = ChildTaskCompletionSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in true })
+        do { _ = try await sender.send(c); XCTFail("Lost write reply") } catch {}
+        let recovery = ChildTaskCompletionSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in false })
+        let result = try await recovery.resolve(c); XCTAssertFalse(result.closed); XCTAssertEqual(result.receipt?.raw["replayed"], .bool(true))
+        let saved = try await j.load(); XCTAssertEqual(saved.entries[0].phase, .confirmed)
+        var body = c.body; body["request_id"] = .string(UUID().uuidString.lowercased())
+        do { try await j.replaceClosed(c, with: ChildTaskCompletionCommand(account: c.account, origin: c.origin, body: body), lease: CalendarReadLease()); XCTFail("Applied original") } catch {}
+        _ = try await recovery.resolve(c); XCTAssertEqual(peer.closeCalls, [c]); XCTAssertEqual(peer.calls, [c])
+    }
+    @MainActor func testLateCloseSuccessAndErrorDoNotCrossScope() async throws {
+        for lose in [false, true] {
+            let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context), io = CompletionIO(), j = try journal(c, io, root()), peer = CompletionPeer()
+            var current: ChildTaskFieldClientScope? = scope
+            try await j.enqueue(c, lease: CalendarReadLease()); peer.loseClose = lose; peer.onClose = { current = nil }
+            let sender = ChildTaskCompletionSender(scope: scope, journal: j, service: peer, current: { current }, canSend: { _ in false })
+            do { _ = try await sender.resolve(c); XCTFail("Late close decision") } catch is CancellationError {} catch { XCTFail("Wrong stale error") }
+            let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .attempted)
+        }
+    }
+    @MainActor func testClosedSenderNeverStartsResolution() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context), io = CompletionIO(), j = try journal(c, io, root()), peer = CompletionPeer()
+        try await j.enqueue(c, lease: CalendarReadLease())
+        let sender = ChildTaskCompletionSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in false }); sender.close()
+        do { _ = try await sender.resolve(c); XCTFail("Closed owner") } catch is CancellationError {} catch { XCTFail("Wrong cancellation") }
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .queued); XCTAssertTrue(peer.closeCalls.isEmpty)
+    }
+    @MainActor func testLaterRequestCanResolveButCannotReplaceAcrossOtherPendingIntent() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context), io = CompletionIO(), j = try journal(c, io, root()), peer = CompletionPeer()
+        var body = c.body; body["request_id"] = .string(UUID().uuidString.lowercased())
+        let later = try ChildTaskCompletionCommand(account: c.account, origin: c.origin, body: body)
+        try await j.enqueue(c, lease: CalendarReadLease()); try await j.enqueue(later, lease: CalendarReadLease())
+        let sender = ChildTaskCompletionSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in false })
+        _ = try await sender.resolve(later)
+        let state = try await j.load(); XCTAssertEqual(state.entries.map(\.phase), [.queued, .closed])
+        body["request_id"] = .string(UUID().uuidString.lowercased())
+        do { try await j.replaceClosed(later, with: ChildTaskCompletionCommand(account: c.account, origin: c.origin, body: body), lease: CalendarReadLease()); XCTFail("Another saved intent") } catch {}
+    }
+    @MainActor func testClosedUndoCanBeReplacedWithFreshUndoKeepingParentProof() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context), io = CompletionIO(), j = try journal(c, io, root()), peer = CompletionPeer()
+        try await j.enqueue(c, lease: CalendarReadLease())
+        let sender = ChildTaskCompletionSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in true })
+        let proof = try await sender.send(c), old = try undo(c, proof: proof)
+        try await j.enqueue(old, lease: CalendarReadLease()); _ = try await sender.resolve(old)
+        let next = try undo(c, proof: proof); try await j.replaceClosed(old, with: next, lease: CalendarReadLease())
+        let result = try await sender.send(next); XCTAssertEqual(result.raw["action"], .string("undo"))
+        let state = try await j.load(); XCTAssertEqual(state.entries.map(\.phase), [.confirmed, .closed, .confirmed]); XCTAssertEqual(peer.calls, [c, next])
+    }
+    func testClosedProofCannotOverwriteConfirmedProof() async throws {
+        let c = try command(), io = CompletionIO(), j = try journal(c, io, root()), proof = try completionReply(c)
+        try await j.enqueue(c, lease: CalendarReadLease()); _ = try await j.attempt(c, lease: CalendarReadLease()); try await j.confirm(c, receipt: proof, lease: CalendarReadLease())
+        do { try await j.resolve(c, decision: completionDecision(c), lease: CalendarReadLease()); XCTFail("Cannot close applied result") } catch {}
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].receipt, proof)
+    }
+    func testCorruptStoredTerminalProofCannotBeUsedOrOverwritten() async throws {
+        let c = try command(), io = CompletionIO(), j = try journal(c, io, root()); try await j.enqueue(c, lease: CalendarReadLease())
+        let key = try XCTUnwrap(io.rows.keys.first)
+        var raw = try JSONDecoder().decode([String: JSON].self, from: XCTUnwrap(io.rows[key])), entry = raw["entries"]!.list[0].object
+        var decision = try completionDecision(c).raw; decision["request_id"] = .string(UUID().uuidString.lowercased())
+        entry["phase"] = .string("closed"); entry["resolution"] = .object(["raw": .object(decision)]); raw["entries"] = .array([.object(entry)])
+        let corrupt = try JSONEncoder().encode(raw); io.rows[key] = corrupt
+        do { _ = try await j.load(); XCTFail("Foreign terminal proof") } catch {}
+        do { try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("No overwrite") } catch {}
+        XCTAssertEqual(io.rows[key], corrupt)
+    }
+    @MainActor func testBackendResolutionUsesExactBodyAndBoundedPrivateTransport() async throws {
+        let c = try command(), backend = try backend(c.account), proof = try completionDecision(c)
+        defer { CompletionHTTP.handler = nil }
+        CompletionHTTP.handler = { request, pipe in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_close_child_completion"); XCTAssertFalse(request.httpShouldHandleCookies); XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalCacheData)
+            var bytes = request.httpBody ?? Data()
+            if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; bytes.append(contentsOf: buffer.prefix(n)) } }
+            XCTAssertEqual(try! JSONDecoder().decode([String: JSON].self, from: bytes), ["_body": .object(c.body)])
+            pipe.finish(200, try! JSONEncoder().encode(proof.raw))
+        }
+        let result = try await backend.closeChildTaskCompletionCommand(c, session: backend.reminderSessionIncarnation); XCTAssertEqual(result, proof)
+    }
+    @MainActor func testBackendRejectsMalformedOrOversizedCloseAndSanitizesErrors() async throws {
+        let c = try command(), backend = try backend(c.account), proof = try completionDecision(c)
+        defer { CompletionHTTP.handler = nil }
+        let normal = String(decoding: try JSONEncoder().encode(proof.raw), as: UTF8.self)
+        let duplicate = normal.replacingOccurrences(of: "\"outcome\":\"closed\"", with: "\"outcome\":\"closed\",\"outcome\":\"closed\"")
+        XCTAssertNotEqual(normal, duplicate)
+        var bad = proof.raw; bad["outcome"] = .string("applied")
+        for bytes in [Data(duplicate.utf8), try JSONEncoder().encode(bad), Data(repeating: 32, count: 16385)] {
+            CompletionHTTP.handler = { _, pipe in pipe.finish(200, bytes) }
+            do { _ = try await backend.closeChildTaskCompletionCommand(c, session: backend.reminderSessionIncarnation); XCTFail("Unconfirmed close") }
+            catch let error as ChildTaskCompletionFailure { XCTAssertEqual(error.reason, .unconfirmed) }
+        }
+        CompletionHTTP.handler = { _, pipe in pipe.finish(409, Data("{\"code\":\"PT409\",\"message\":\"PRIVATE DETAILS\"}".utf8)) }
+        do { _ = try await backend.closeChildTaskCompletionCommand(c, session: backend.reminderSessionIncarnation); XCTFail("Refusal") }
+        catch { XCTAssertFalse(error.localizedDescription.contains("PRIVATE DETAILS")) }
+    }
+    @MainActor func testBackendResolutionRejectsWrongSessionBeforeNetwork() async throws {
+        let c = try command(), backend = try backend(c.account)
+        defer { CompletionHTTP.handler = nil }; CompletionHTTP.handler = { _, _ in XCTFail("Must not send") }
+        do { _ = try await backend.closeChildTaskCompletionCommand(c, session: UUID()); XCTFail("Stale session") } catch is CancellationError {} catch { XCTFail("Wrong cancellation") }
     }
 
 }

@@ -138,23 +138,63 @@ struct ChildTaskCompletionReceipt: Codable, Equatable, Sendable, CustomStringCon
     func agrees(_ other: Self) -> Bool { AuthoredValueComparison.exactJSON(.object(raw.filter { $0.key != "replayed" }), .object(other.raw.filter { $0.key != "replayed" })) }
 }
 
+/// A terminal service decision for the exact saved request. This metadata
+/// never changes tasks; durable closure is required before a fresh replacement.
+struct ChildTaskCompletionResolution: Codable, Equatable, Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    let raw: [String: JSON]
+    var receipt: ChildTaskCompletionReceipt? { if case .object(let proof)? = raw["receipt"] { return .init(raw: proof) }; return nil }
+    var closed: Bool { raw["outcome"] == .string("closed") && raw["receipt"] == .null }
+    var description: String { "Private child completion decision" }
+    var debugDescription: String { description }
+    init(command: ChildTaskCompletionCommand, raw: [String: JSON]) throws {
+        let keys = ChildTaskCompletionCommand.identity + ["request_id", "action"]
+        guard Set(raw.keys) == Set(keys + ["undo_of", "outcome", "receipt"]),
+              keys.allSatisfy({ AuthoredValueComparison.exactJSON(raw[$0] ?? .null, command.body[$0] ?? .null) }),
+              AuthoredValueComparison.exactJSON(raw["undo_of"] ?? .null, command.body["undo_of"] ?? .null) else { throw ChildTaskCompletionDraft.invalid }
+        switch raw["outcome"] {
+        case .string("closed"): guard raw["receipt"] == .null else { throw ChildTaskCompletionDraft.invalid }
+        case .string("applied"):
+            guard case .object(let proof)? = raw["receipt"] else { throw ChildTaskCompletionDraft.invalid }
+            _ = try command.confirmed(proof)
+        default: throw ChildTaskCompletionDraft.invalid
+        }
+        self.raw = raw
+    }
+    init(command: ChildTaskCompletionCommand, receipt: ChildTaskCompletionReceipt) throws {
+        var raw = command.body.filter { !["baseline", "revision"].contains($0.key) }
+        raw["undo_of"] = command.body["undo_of"] ?? .null; raw["outcome"] = .string("applied"); raw["receipt"] = .object(receipt.raw)
+        try self.init(command: command, raw: raw)
+    }
+    private enum CodingKeys: String, CodingKey { case raw }
+    init(from decoder: Decoder) throws {
+        // The owning journal always revalidates this decoded proof against its
+        // command; decoding alone is not authority for a replacement.
+        try completionKeys(decoder, ["raw"])
+        let c = try decoder.container(keyedBy: CodingKeys.self); raw = try c.decode([String: JSON].self, forKey: .raw)
+    }
+}
+
 struct ChildTaskCompletionJournalState: ReviewedTeamFileCommand, CustomStringConvertible, CustomDebugStringConvertible {
-    enum Phase: String, Codable, Sendable { case queued, attempted, confirmed }
+    enum Phase: String, Codable, Sendable { case queued, attempted, confirmed, closed }
     struct Entry: Codable, Equatable, Sendable {
         let command: ChildTaskCompletionCommand
         var phase: Phase
         var receipt: ChildTaskCompletionReceipt?
-        init(command: ChildTaskCompletionCommand, phase: Phase, receipt: ChildTaskCompletionReceipt?) { self.command = command; self.phase = phase; self.receipt = receipt }
-        private enum CodingKeys: String, CodingKey { case command, phase, receipt }
+        var resolution: ChildTaskCompletionResolution?
+        init(command: ChildTaskCompletionCommand, phase: Phase, receipt: ChildTaskCompletionReceipt?, resolution: ChildTaskCompletionResolution? = nil) { self.command = command; self.phase = phase; self.receipt = receipt; self.resolution = resolution }
+        private enum CodingKeys: String, CodingKey { case command, phase, receipt, resolution }
         init(from decoder: Decoder) throws {
-            try completionKeys(decoder, ["command", "phase", "receipt"])
+            let keys = try decoder.container(keyedBy: ChildCompletionKey.self)
+            let names = Set(keys.allKeys.map(\.stringValue))
+            guard names == ["command", "phase", "receipt"] || names == ["command", "phase", "receipt", "resolution"] else { throw ChildTaskCompletionDraft.invalid }
             let c = try decoder.container(keyedBy: CodingKeys.self)
             command = try c.decode(ChildTaskCompletionCommand.self, forKey: .command); phase = try c.decode(Phase.self, forKey: .phase)
             receipt = try c.decodeIfPresent(ChildTaskCompletionReceipt.self, forKey: .receipt)
+            resolution = try c.decodeIfPresent(ChildTaskCompletionResolution.self, forKey: .resolution)
         }
         func encode(to encoder: Encoder) throws {
             var c = encoder.container(keyedBy: CodingKeys.self)
-            try c.encode(command, forKey: .command); try c.encode(phase, forKey: .phase); try c.encode(receipt, forKey: .receipt)
+            try c.encode(command, forKey: .command); try c.encode(phase, forKey: .phase); try c.encode(receipt, forKey: .receipt); try c.encode(resolution, forKey: .resolution)
         }
     }
     static let storagePrefix = "child-completion-journal-v1."
@@ -173,16 +213,17 @@ struct ChildTaskCompletionJournalState: ReviewedTeamFileCommand, CustomStringCon
         for entry in entries {
             let command = entry.command
             guard command.account == account, command.origin == origin, ids.insert(command.id).inserted else { throw Self.invalid }
-            if entry.phase == .confirmed { guard let proof = entry.receipt, try command.confirmed(proof.raw) == proof else { throw Self.invalid } }
-            else { guard entry.receipt == nil else { throw Self.invalid } }
+            if entry.phase == .confirmed { guard let proof = entry.receipt, try command.confirmed(proof.raw) == proof, entry.resolution == nil else { throw Self.invalid } }
+            else if entry.phase == .closed { guard entry.receipt == nil, let decision = entry.resolution, try ChildTaskCompletionResolution(command: command, raw: decision.raw) == decision, decision.closed else { throw Self.invalid } }
+            else { guard entry.receipt == nil, entry.resolution == nil else { throw Self.invalid } }
         }
         var undoSources: Set<String> = []
         for entry in entries {
             if let source = entry.command.original {
                 guard let parent = entries.first(where: { $0.command.id == source.body["request_id"]?.text }), parent.phase == .confirmed,
                       parent.command.original == nil, parent.command.body == source.body,
-                      let receipt = parent.receipt, receipt.agrees(ChildTaskCompletionReceipt(raw: source.receipt)),
-                      undoSources.insert(parent.command.id).inserted else { throw Self.invalid }
+                      let receipt = parent.receipt, receipt.agrees(ChildTaskCompletionReceipt(raw: source.receipt)) else { throw Self.invalid }
+                if entry.phase != .closed { guard undoSources.insert(parent.command.id).inserted else { throw Self.invalid } }
             }
         }
         self.account = account; self.origin = origin; self.entries = entries
@@ -243,7 +284,10 @@ actor ChildTaskCompletionJournal {
         try guarded(lease: lease) {
             guard command.account == account, command.origin == origin else { throw ChildTaskCompletionDraft.invalid }
             var state = try read()
-            if let old = state.entries.first(where: { $0.command.id == command.id }) { guard old.command == command else { throw ChildTaskCompletionDraft.invalid }; return }
+            if let old = state.entries.first(where: { $0.command.id == command.id }) {
+                guard old.command == command else { throw ChildTaskCompletionDraft.invalid }
+                guard old.phase != .closed else { throw ChildTaskCompletionFailure(reason: .closed) }; return
+            }
             state.entries.append(.init(command: command, phase: .queued, receipt: nil)); try write(state, lease: lease)
         }
     }
@@ -251,7 +295,8 @@ actor ChildTaskCompletionJournal {
         try guarded(lease: lease) {
             var state = try read()
             guard let i = state.entries.firstIndex(where: { $0.command == command }),
-                  !state.entries[..<i].contains(where: { $0.phase != .confirmed && $0.command.sameTarget(command) }) else { throw ChildTaskCompletionDraft.invalid }
+                  !state.entries[..<i].contains(where: { $0.phase != .confirmed && $0.phase != .closed && $0.command.sameTarget(command) }) else { throw ChildTaskCompletionDraft.invalid }
+            guard state.entries[i].phase != .closed else { throw ChildTaskCompletionFailure(reason: .closed) }
             if state.entries[i].phase == .queued { state.entries[i].phase = .attempted; try write(state, lease: lease) }
             return state.entries[i]
         }
@@ -260,9 +305,48 @@ actor ChildTaskCompletionJournal {
         try guarded(lease: lease) {
             _ = try command.confirmed(receipt.raw)
             var state = try read()
-            guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .queued else { throw ChildTaskCompletionDraft.invalid }
+            guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .queued, state.entries[i].phase != .closed else { throw ChildTaskCompletionDraft.invalid }
             if let old = state.entries[i].receipt { guard old.agrees(receipt) else { throw ChildTaskCompletionDraft.invalid }; return }
             state.entries[i].phase = .confirmed; state.entries[i].receipt = receipt; try write(state, lease: lease)
+        }
+    }
+    /// Resolution never sends task changes, so it may settle a later queued
+    /// identity independently of an earlier unsettled request for that child.
+    func beginResolution(_ command: ChildTaskCompletionCommand, lease: CalendarReadLease) throws -> ChildTaskCompletionJournalState.Entry {
+        try guarded(lease: lease) {
+            var state = try read()
+            guard let i = state.entries.firstIndex(where: { $0.command == command }) else { throw ChildTaskCompletionDraft.invalid }
+            if state.entries[i].phase == .queued { state.entries[i].phase = .attempted; try write(state, lease: lease) }
+            return state.entries[i]
+        }
+    }
+    func resolve(_ command: ChildTaskCompletionCommand, decision: ChildTaskCompletionResolution, lease: CalendarReadLease) throws {
+        try guarded(lease: lease) {
+            _ = try ChildTaskCompletionResolution(command: command, raw: decision.raw)
+            var state = try read()
+            guard let i = state.entries.firstIndex(where: { $0.command == command }) else { throw ChildTaskCompletionDraft.invalid }
+            if state.entries[i].phase == .closed { guard state.entries[i].resolution == decision else { throw ChildTaskCompletionDraft.invalid }; return }
+            if let old = state.entries[i].receipt { guard let proof = decision.receipt, old.agrees(proof) else { throw ChildTaskCompletionDraft.invalid }; return }
+            if let proof = decision.receipt {
+                state.entries[i].phase = .confirmed; state.entries[i].receipt = proof
+            } else {
+                state.entries[i].phase = .closed; state.entries[i].resolution = decision
+            }
+            try write(state, lease: lease)
+        }
+    }
+    func replaceClosed(_ original: ChildTaskCompletionCommand, with replacement: ChildTaskCompletionCommand, lease: CalendarReadLease) throws {
+        try guarded(lease: lease) {
+            var state = try read()
+            guard let entry = state.entries.first(where: { $0.command == original }), entry.phase == .closed, entry.resolution?.closed == true,
+                  original.sameTarget(replacement), replacement.id != original.id, replacement.body["action"] == original.body["action"],
+                  replacement.body["revision"]!.integer >= original.body["revision"]!.integer,
+                  !state.entries.contains(where: { $0.command.id == replacement.id || ($0.phase != .closed && $0.phase != .confirmed && $0.command.sameTarget(replacement)) }) else { throw ChildTaskCompletionDraft.invalid }
+            if let source = original.original {
+                guard let target = replacement.original, source.body == target.body,
+                      ChildTaskCompletionReceipt(raw: source.receipt).agrees(ChildTaskCompletionReceipt(raw: target.receipt)) else { throw ChildTaskCompletionDraft.invalid }
+            } else { guard replacement.original == nil else { throw ChildTaskCompletionDraft.invalid } }
+            state.entries.append(.init(command: replacement, phase: .queued, receipt: nil)); try write(state, lease: lease)
         }
     }
     /// Forgetting attempted work needs a server terminal decision, not deletion.
@@ -281,7 +365,8 @@ struct ChildTaskCompletionFailure: LocalizedError {
     var errorDescription: String? {
         switch reason {
         case .unavailable: return "Completion is unavailable or access changed. Your saved request is kept."
-        case .review, .closed: return "This completion needs review. Your original saved request is kept."
+        case .review: return "This completion needs review. Your original saved request is kept."
+        case .closed: return "This original completion request is closed. Review current values before saving another action."
         case .busy: return "Another action is finishing. Retry the same saved completion shortly."
         case .limit: return "Completion has reached a service limit. Your saved request is kept."
         case .unconfirmed: return "The completion result couldn’t be confirmed. Your original saved request is kept."
@@ -290,6 +375,10 @@ struct ChildTaskCompletionFailure: LocalizedError {
 }
 @MainActor protocol ChildTaskCompletionCommandService: AnyObject {
     func childTaskCompletionCommand(_ command: ChildTaskCompletionCommand, session: UUID) async throws -> ChildTaskCompletionReceipt
+    func closeChildTaskCompletionCommand(_ command: ChildTaskCompletionCommand, session: UUID) async throws -> ChildTaskCompletionResolution
+}
+extension ChildTaskCompletionCommandService {
+    func closeChildTaskCompletionCommand(_ command: ChildTaskCompletionCommand, session: UUID) async throws -> ChildTaskCompletionResolution { throw ChildTaskCompletionFailure(reason: .unavailable) }
 }
 extension Backend: ChildTaskCompletionCommandService {}
 @MainActor final class ChildTaskCompletionSender {
@@ -306,11 +395,28 @@ extension Backend: ChildTaskCompletionCommandService {}
     }
     func close() { closed = true; lease.cancel() }
     private func check() throws { try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
+    func resolve(_ command: ChildTaskCompletionCommand) async throws -> ChildTaskCompletionResolution {
+        do {
+            try check(); guard command.account == scope.account, command.origin == scope.origin else { throw CancellationError() }
+            let entry = try await journal.beginResolution(command, lease: lease); try check()
+            if let proof = entry.resolution { return try .init(command: command, raw: proof.raw) }
+            if let receipt = entry.receipt { return try .init(command: command, receipt: receipt) }
+            let decision: ChildTaskCompletionResolution
+            do { decision = try await service.closeChildTaskCompletionCommand(command, session: scope.session) }
+            catch is CancellationError { throw CancellationError() }
+            catch let failure as ChildTaskCompletionFailure { throw failure }
+            catch let required as AccountSessionAuthorizationRequired { throw required }
+            catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+            try check(); guard (try? ChildTaskCompletionResolution(command: command, raw: decision.raw)) == decision else { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+            try await journal.resolve(command, decision: decision, lease: lease); try check(); return decision
+        } catch { try check(); throw error }
+    }
     func send(_ command: ChildTaskCompletionCommand) async throws -> ChildTaskCompletionReceipt {
         do {
             try check(); guard command.account == scope.account, command.origin == scope.origin else { throw CancellationError() }
             let state = try await journal.load(); try check()
             guard let entry = state.entries.first(where: { $0.command == command }) else { throw ChildTaskCompletionDraft.invalid }
+            guard entry.phase != .closed else { throw ChildTaskCompletionFailure(reason: .closed) }
             if let receipt = entry.receipt { return try command.confirmed(receipt.raw) }
             guard canSend(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
             _ = try await journal.attempt(command, lease: lease); try check()

@@ -1,0 +1,85 @@
+{
+  "recordedAtUTC": "2026-10-29T22:15:24.588050+00:00",
+  "status": "terminal recovery protocol complete as disabled candidate; ordinary Store/UI/native acceptance remains open",
+  "sourceSHA256": {
+    "supabase/migrations/20261029215232_child_task_completion_resolution.sql": "2d27894ff2fa45a610b7357734fef5531f508de8b72cde4e4a6a40f89afec748",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "173fe0e41dfe04949631f04ce94422a5260d7b62849f73c3aced38a57bf4ea17",
+    "Taskfold/Core/Backend.swift": "413f1bb59423c5bce4e3762988138a71d8af8d438a002ea166b112fde1811212",
+    "TaskfoldTests/ChildTaskCompletionCommandTests.swift": "9bf315ecad23ca8738e99caa89963c2d7506e19f4c5d07f48e9f07b37fb797f0",
+    "TaskfoldTests/Fixtures/child-task-completion-resolution.json": "f5345fdc74815adb078c281ed21f53e41f68fff0942492f2f432e47ef9f86429",
+    "Scripts/Database/test-child-completion-resolution.mjs": "bc1d5f2876470bc585db19177d8ca8e3fb173e24fd88a354466fb1131a4922be",
+    "Scripts/Database/test-child-task-completion.mjs": "58826c1cfb98b80be814bf7d5cce7803de08a39e92caaccb83af4d79f71fba6c",
+    "Scripts/Database/test-child-task-field-edits.mjs": "3f0118eae9db57f27734326867a4db0ea26d160f17a0eeac409b2993872912e7"
+  },
+  "verification": {
+    "coreHost": "macOS Swift Package tests of this owned repository source",
+    "selectedCoreChecks": 252,
+    "newRecoveryCoreCases": 15,
+    "coreSuites": {
+      "AccountTransportTests": {
+        "tests": 55,
+        "failures": 0
+      },
+      "ChildTaskCompletionCommandTests": {
+        "tests": 50,
+        "failures": 0
+      },
+      "ChildTaskCompletionDraftTests": {
+        "tests": 13,
+        "failures": 0
+      },
+      "ChildTaskFieldCommandTests": {
+        "tests": 83,
+        "failures": 0
+      },
+      "ChildTaskRecordReadTests": {
+        "tests": 21,
+        "failures": 0
+      },
+      "CompletionRevisionTests": {
+        "tests": 16,
+        "failures": 0
+      },
+      "TeamChecklistTests": {
+        "tests": 14,
+        "failures": 0
+      },
+      "TaskfoldCoreTests.xctest": {
+        "tests": 252,
+        "failures": 0
+      },
+      "Selected tests": {
+        "tests": 252,
+        "failures": 0
+      }
+    },
+    "resolutionDatabaseChecks": 63,
+    "completionRegressionChecks": 98,
+    "fieldRegressionChecks": 95,
+    "allPassed": true,
+    "allOwnedDatabaseFixturesRemoved": true,
+    "baselineAdvisorFindings": 7,
+    "finalAdvisorFindings": 7,
+    "addedAdvisorFindings": 0,
+    "actualDecisionFixturesAgree": true,
+    "canonicalGeneratedBy": "supabase migration new child_task_completion_resolution",
+    "localMigrationList": {
+      "command": "supabase migration list --local",
+      "exitCode": 1,
+      "result": "Full local stack unavailable; migration-history parity unverified"
+    },
+    "ordinaryFlagsChanged": false,
+    "hostedDeployment": false
+  },
+  "limits": [
+    "Store/lifecycle/cleanup/current-task refresh and premium native UI integration remain open",
+    "Current app/native/genuine/spoken acceptance remains open",
+    "Structural/legacy/adoption/authoritative migration and previous user deferrals remain open",
+    "Nonce fences do not solve all older generic-client writers"
+  ],
+  "storage": {
+    "minimumBeforeHeavyRunsGiB": 20,
+    "heavyRunsSequential": true,
+    "freeBytesAfter": 60241604608
+  }
+}

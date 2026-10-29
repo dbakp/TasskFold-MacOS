@@ -314,8 +314,8 @@ final class Backend: NSObject {
             throw AppFailure(message: "The Supabase configuration is missing.")
         }
         if let workflowReadLimit { guard (1...4_200_000).contains(workflowReadLimit) else { throw TeamWorkflowRunCommand.invalid } }
-        let childCompletionWrite = path == "/rest/v1/rpc/taskfold_complete_child_task"
-        let childRecordWrite = ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path)
+        let childCompletionWrite = ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_close_child_completion"].contains(path)
+        let childRecordWrite = ["/rest/v1/rpc/taskfold_close_child_completion", "/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path)
         let childRecordRead = path == "/rest/v1/rpc/taskfold_read_child_tasks"
         let workflowRead = workflowReadLimit != nil
         let workflowRun = path == "/rest/v1/rpc/taskfold_team_workflow_run"
@@ -604,6 +604,21 @@ final class Backend: NSObject {
         do {
             try ChildTaskRecordRead.validateUniqueJSON(data, maximum: 16_384)
             return try command.confirmed(JSONDecoder().decode([String: JSON].self, from: data))
+        } catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+    }
+    func closeChildTaskCompletionCommand(_ command: ChildTaskCompletionCommand, session expectedSession: UUID) async throws -> ChildTaskCompletionResolution {
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data: Data
+        do { data = try await request("/rest/v1/rpc/taskfold_close_child_completion", method: "POST", body: ["_body": .object(command.body)], expectedAccount: command.account) }
+        catch is CancellationError { throw CancellationError() }
+        catch let failure as ChildTaskCompletionFailure { throw failure }
+        catch let required as AccountSessionAuthorizationRequired { throw required }
+        catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        do {
+            try ChildTaskRecordRead.validateUniqueJSON(data, maximum: 16_384)
+            return try ChildTaskCompletionResolution(command: command, raw: JSONDecoder().decode([String: JSON].self, from: data))
         } catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
     }
     func childTaskRecords(_ context: ChildTaskRecordContext) async throws -> ChildTaskRecordRead {

@@ -12,6 +12,8 @@ This stage adds `ChildTaskCompletionDraft` to each app’s own Core and app targ
 
 A later stage now supplies the [disabled dedicated server candidate](../child-task-completion-server/README.md). This document records the client draft foundation’s own verification scope; the full app-facing feature remains unfinished.
 
+The later [terminal recovery stage](../child-task-completion-resolution/README.md) now supplies permanent closure/applied decisions and durable fresh replacement guards. Earlier verification below describes this stage’s own scope; Store/native exposure and genuine acceptance remain open.
+
 ## Remaining in the completion/Undo stage
 
 - Server deployment and complete client integration remain open. The later disabled server candidate implements admission, exact request idempotency, completion history/projection and permission/role/concurrency checks in isolated fixtures; a later client stage now supplies typed proof validation, journaling and Backend transport, with Store/native integration still open.

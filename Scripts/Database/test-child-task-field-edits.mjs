@@ -114,6 +114,12 @@ try {
     await pg.raw(completion);
     report.completionSHA256 = createHash("sha256").update(completion).digest("hex");
   }
+  if (process.argv.includes("--with-completion-resolution")) {
+    if (!process.argv.includes("--with-completion")) throw new Error("Completion resolution requires the completion migration overlay");
+    const resolution = await readFile(new URL("../../supabase/migrations/20261029215232_child_task_completion_resolution.sql", import.meta.url), "utf8");
+    await pg.raw(resolution);
+    report.completionResolutionSHA256 = createHash("sha256").update(resolution).digest("hex");
+  }
   const run = (
     body,
     {

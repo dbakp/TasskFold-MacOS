@@ -1072,7 +1072,19 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [x] Add a non-coalescing encrypted 64-entry journal with durable attempted/confirmed states, original proof dependencies, shared process/removal fences and late-scope suppression. Preserve uncertain requests through lost replies, proof-write failures and fresh-session cold retry.
 - [x] Connect bounded, session/origin-bound Backend transport with no cache/cookies, redirect refusal and sanitized failures; send only the exact server body. No task-cache writes or normal feature exposure.
 - [x] Independently pass 237 selected Core checks (35 new completion cases) and 98 real isolated database checks per repository; use actual server Complete/Undo fixtures and verify single app-target source membership. Retain concise evidence and remove all owned database fixtures.
-- [ ] Implement completion-specific terminal outcome/closure and explicit replacement of uncertain or obsolete attempts. No attempted work can currently be discarded as though it were cancelled.
+- [x] Implement the later terminal outcome/closure and explicit replacement candidate, with permanent server fences and durable client proof; see the recovery stage below. Native integration remains open.
 - [ ] Connect Store lifecycle/cleanup and premium native completion/review/Undo controls; build and verify the actual current apps and native/spoken/genuine lifecycle. Structural/legacy/adoption/authoritative migration and previous deferrals remain open.
 
 [Client behavior, actual proof fixtures and exact acceptance limits](child-task-completion-client/README.md).
+
+
+## 2026-10-29 — terminal child completion recovery and safe replacement
+
+- [x] Add metadata-only applied-or-closed decisions for the exact actor/request, including after task deletion, role loss or disabled edit gates. Preserve permanent fingerprints, strict admission and bounded new-closure budgets.
+- [x] Fence field/completion/team-task nonce reuse and late ordinary team writes with nonblocking final receipt checks, avoiding reversed root/actor lock order. Verify both race winners and a real paused post-update legacy writer rollback.
+- [x] Add validated encrypted closed states, lost-close/proof-write recovery and fresh replacement guards. Preserve Undo parent lineage, prevent closed-request revival and suppress late metadata success/failure across scope changes.
+- [x] Independently pass 252 selected Core checks and 256 database checks (63 new resolution, 98 completion, 95 field regressions) per repository, with no added advisor findings and all owned fixtures removed. Verify actual service decision fixtures in the client.
+- [ ] Connect Store/lifecycle/cleanup/current-task refresh and premium native Complete/Reopen/retry/review/replacement/Undo controls. Finish current app builds and native/spoken/genuine acceptance.
+- [ ] Structural/legacy/adoption/authoritative migration and wider Px work remain open; ordinary flags/hosted schema and prior deferrals remain unchanged.
+
+[Recovery behavior, lock rationale, exact evidence and remaining work](child-task-completion-resolution/README.md).

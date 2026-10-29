@@ -39,3 +39,5 @@ The local full Supabase stack is not running; `supabase migration list --local` 
 - Store integration and premium native completion feedback/review/Undo controls.
 - Current app builds, real native/lifecycle/concurrency/accessibility acceptance, legacy/adoption/structural adapters and authoritative independent-child migration before ordinary exposure.
 - Previously agreed deferrals and the recorded combined-run iPhone interaction finding remain unchanged.
+
+The later [terminal recovery stage](../child-task-completion-resolution/README.md) now supplies permanent closure/applied decisions and durable fresh replacement guards. Earlier verification below describes this stage’s own scope; Store/native exposure and genuine acceptance remain open.
