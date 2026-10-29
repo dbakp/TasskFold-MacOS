@@ -267,6 +267,27 @@ final class Store {
     var requestingNotifications = false
     var signedIn = false
     var localMode = false
+    /// Read-only migration candidate. Neither a response nor this flag enables
+    /// independent edits or replaces the current saved task hierarchy.
+    private func childTaskRecordContext(_ id:String) throws -> ChildTaskRecordContext {
+        guard Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordReadsEnabled") as? Bool == true,
+              signedIn,!localMode,!signingOut,!accountRemovalBlocked,online,
+              let root=record("tasks",id:id) else {throw ChildTaskRecordFailure.unavailable}
+        return try ChildTaskRecordContext(account:userID,origin:backend.accountRemovalOrigin,workspace:workspaceGeneration,
+            session:backend.reminderSessionIncarnation,access:workspaceReadRevision,snapshot:snapshotRevision,root:root)
+    }
+    func readChildTaskRecords(_ id:String) async throws -> ChildTaskRecordRead {
+        let captured=try childTaskRecordContext(id)
+        do {
+            let value=try await backend.childTaskRecords(captured)
+            try Task.checkCancellation()
+            guard captured.matches(try childTaskRecordContext(id)) else {throw CancellationError()}
+            return value
+        } catch {
+            guard let current=try? childTaskRecordContext(id),captured.matches(current) else {throw CancellationError()}
+            throw error
+        }
+    }
     var syncing = false
     var online = true
     @ObservationIgnored private var teamCompletionErrorRevision = UUID()

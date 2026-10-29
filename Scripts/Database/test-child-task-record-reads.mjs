@@ -98,6 +98,7 @@ try {
   );
   const accepted = await call();
   check("owner reads enabled adopted root", accepted.code, null);
+  report.wireFixture = { account: owner, root: await root(), response: accepted.value };
   check("account bound", accepted.value.account, owner);
   check("root generation bound", accepted.value.task_generation, generation);
   check("project binding returned", accepted.value.project_id, project);

@@ -800,3 +800,173 @@ enum ChecklistRecovery {
         return Review(source: source, proposed: proposed, changes: changes, itemCount: count)
     }
 }
+
+/// Independently addressed child reads remain separate from legacy mutations.
+/// A verified response is never authority to overwrite the captured task.
+enum ChildTaskRecordFailure: LocalizedError {
+    case unavailable, review, oversized
+    var errorDescription: String? {
+        switch self {
+        case .unavailable: return "Separate child records aren’t available right now. Your saved task is unchanged."
+        case .review: return "The child hierarchy changed or needs review. Reopen the task; your saved work is unchanged."
+        case .oversized: return "This hierarchy is too large to open as separate records. Your saved task is unchanged."
+        }
+    }
+}
+struct ChildTaskRecordContext: Sendable {
+    let account: String
+    let origin: String
+    let workspace: UUID
+    let session: UUID
+    let access: UUID
+    let snapshot: UUID
+    let root: Record
+    init(account: String, origin: String, workspace: UUID, session: UUID, access: UUID, snapshot: UUID, root: Record) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard TeamProjectValue.id(root.id) else { throw ChildTaskRecordFailure.review }
+        _ = try TeamProjectValue.optionalID(root.fields["task_generation"] ?? .null)
+        _ = try TeamProjectValue.optionalID(root.fields["project_id"] ?? .null)
+        self.account=account; self.origin=origin; self.workspace=workspace; self.session=session
+        self.access=access; self.snapshot=snapshot; self.root=root
+    }
+    func matches(_ other: Self) -> Bool {
+        account==other.account && origin==other.origin && workspace==other.workspace && session==other.session
+        && access==other.access && snapshot==other.snapshot
+        && AuthoredValueComparison.exactJSON(.object(root.fields), .object(other.root.fields))
+    }
+}
+struct ChildTaskRecordRead: Sendable {
+    struct Node: Sendable {
+        let key: String
+        let incarnation: String
+        let revision: Double
+        let parent: String?
+        let position: Int
+        let path: [String]
+        let fields: [String: JSON]
+        let childrenKind: String
+    }
+    static let maximumBytes = 2_000_000
+    let context: ChildTaskRecordContext
+    let projectionRevision: Double
+    let nodes: [String: Node]
+    let tree: JSON
+    init(data: Data, context: ChildTaskRecordContext) throws {
+        guard data.count <= Self.maximumBytes else { throw ChildTaskRecordFailure.oversized }
+        var syntax=UniqueJSONKeys(bytes:Array(data))
+        try syntax.value(depth:0); syntax.space()
+        guard syntax.index==syntax.bytes.count else {throw ChildTaskRecordFailure.review}
+        guard let raw=try? JSONDecoder().decode([String:JSON].self,from:data),
+              Set(raw.keys)==Set(["protocol","account","project_id","task_id","task_generation","projection_revision","root_kind","records"]),
+              raw["protocol"] == .number(1), raw["account"] == .string(context.account), raw["task_id"] == .string(context.root.id),
+              raw["project_id"] == context.root["project_id"], raw["task_generation"] == context.root["task_generation"],
+              case .string(let kind)?=raw["root_kind"], ["null","array"].contains(kind),
+              case .array(let rows)?=raw["records"], rows.count<=1000 else { throw ChildTaskRecordFailure.review }
+        let revision=try Self.counter(raw["projection_revision"])
+        var nodes: [String:Node]=[:], incarnations:Set<String>=[], buckets:[String:[Node]]=[:]
+        for value in rows {
+            guard case .object(let row)=value,
+                  Set(row.keys)==Set(["node_key","incarnation","revision","parent_key","sibling_order","identity_path","fields","children_kind"]),
+                  case .string(let key)?=row["node_key"], Self.key(key),
+                  case .string(let incarnation)?=row["incarnation"], TeamProjectValue.id(incarnation), incarnations.insert(incarnation).inserted,
+                  case .number(let position)?=row["sibling_order"], position.isFinite, position.rounded()==position, (0..<1000).contains(position),
+                  case .array(let rawPath)?=row["identity_path"], (1...24).contains(rawPath.count),
+                  case .object(let fields)?=row["fields"], fields["subtasks"]==nil,
+                  case .string(let id)?=fields["id"], !id.isEmpty, id.utf8.count<=128,
+                  key.utf8.elementsEqual(id.precomposedStringWithCanonicalMapping.utf8),
+                  case .string(let childKind)?=row["children_kind"], ["absent","null","array"].contains(childKind), nodes[key]==nil else { throw ChildTaskRecordFailure.review }
+            let parent: String?
+            if row["parent_key"] == .null { parent=nil }
+            else if case .string(let p)?=row["parent_key"], Self.key(p), p != key { parent=p }
+            else { throw ChildTaskRecordFailure.review }
+            var path:[String]=[]
+            for item in rawPath { guard case .string(let text)=item, !text.isEmpty, text.utf8.count<=128 else { throw ChildTaskRecordFailure.review }; path.append(text) }
+            // Refuse numbers the app's JSON representation cannot safely address.
+            var pending=Array(fields.values)
+            while let field=pending.popLast() {
+                switch field {
+                case .number(let n): guard n.isFinite, abs(n)<=9_007_199_254_740_991 else { throw ChildTaskRecordFailure.review }
+                case .array(let values): pending.append(contentsOf: values)
+                case .object(let values): pending.append(contentsOf: values.values)
+                default: break
+                }
+            }
+            let node=Node(key:key,incarnation:incarnation,revision:try Self.counter(row["revision"]),parent:parent,position:Int(position),path:path,fields:fields,childrenKind:childKind)
+            nodes[key]=node; buckets[parent ?? "",default:[]].append(node)
+        }
+        for node in nodes.values {
+            if let parent=node.parent { guard nodes[parent]?.childrenKind=="array" else { throw ChildTaskRecordFailure.review } }
+        }
+        for key in Array(buckets.keys) {
+            buckets[key]!.sort { $0.position<$1.position }
+            guard buckets[key]!.enumerated().allSatisfy({$0.offset==$0.element.position}) else { throw ChildTaskRecordFailure.review }
+        }
+        var visited:Set<String>=[]
+        func branch(_ parent:String?, path:[String]) throws -> JSON {
+            guard path.count<24 || buckets[parent ?? "",default:[]].isEmpty else { throw ChildTaskRecordFailure.review }
+            var result:[JSON]=[]
+            for node in buckets[parent ?? "",default:[]] {
+                guard visited.insert(node.key).inserted, let id=node.fields["id"]?.text else { throw ChildTaskRecordFailure.review }
+                let actual=path+[id]
+                guard actual.count==node.path.count, zip(actual,node.path).allSatisfy({$0.utf8.elementsEqual($1.utf8)}) else { throw ChildTaskRecordFailure.review }
+                var fields=node.fields
+                if node.childrenKind=="array" { fields["subtasks"]=try branch(node.key,path:actual) }
+                else if node.childrenKind=="null" { fields["subtasks"] = .null }
+                result.append(.object(fields))
+            }
+            return .array(result)
+        }
+        let tree:JSON
+        if kind=="null" { guard nodes.isEmpty else { throw ChildTaskRecordFailure.review }; tree = .null }
+        else { tree=try branch(nil,path:[]); guard visited.count==nodes.count else { throw ChildTaskRecordFailure.review } }
+        guard AuthoredValueComparison.exactJSON(tree,context.root["subtasks"]) else { throw ChildTaskRecordFailure.review }
+        self.context=context; self.projectionRevision=revision; self.nodes=nodes; self.tree=tree
+    }
+    /// JSONDecoder's String dictionaries otherwise collapse canonically equal
+    /// object keys, including keys inside opaque future metadata.
+    private struct UniqueJSONKeys {
+        let bytes:[UInt8]
+        var index=0
+        mutating func space() {while index<bytes.count && [9,10,13,32].contains(bytes[index]) {index+=1}}
+        mutating func take(_ byte:UInt8)->Bool {space();if index<bytes.count,bytes[index]==byte {index+=1;return true};return false}
+        mutating func string() throws -> String {
+            space();let start=index
+            guard take(34) else {throw ChildTaskRecordFailure.review}
+            while index<bytes.count {
+                let byte=bytes[index];index+=1
+                if byte==92 {guard index<bytes.count else {throw ChildTaskRecordFailure.review};index+=1}
+                else if byte==34 {
+                    guard let text=try? JSONDecoder().decode(String.self,from:Data(bytes[start..<index])) else {throw ChildTaskRecordFailure.review};return text
+                }
+            }
+            throw ChildTaskRecordFailure.review
+        }
+        mutating func value(depth:Int) throws {
+            try Task.checkCancellation()
+            guard depth<=128 else {throw ChildTaskRecordFailure.review};space()
+            guard index<bytes.count else {throw ChildTaskRecordFailure.review}
+            if bytes[index]==34 {_=try string();return}
+            if take(123) {
+                if take(125) {return};var keys:Set<String>=[]
+                while true {
+                    guard keys.insert(try string()).inserted,take(58) else {throw ChildTaskRecordFailure.review}
+                    try value(depth:depth+1)
+                    if take(125) {return};guard take(44) else {throw ChildTaskRecordFailure.review}
+                }
+            }
+            if take(91) {
+                if take(93) {return}
+                while true {try value(depth:depth+1);if take(93) {return};guard take(44) else {throw ChildTaskRecordFailure.review}}
+            }
+            let start=index
+            while index<bytes.count && ![9,10,13,32,44,93,125].contains(bytes[index]) {index+=1}
+            guard index>start else {throw ChildTaskRecordFailure.review}
+        }
+    }
+    private static func key(_ key:String)->Bool {
+        !key.isEmpty && key.utf8.count<=128 && key.utf8.elementsEqual(key.precomposedStringWithCanonicalMapping.utf8)
+    }
+    private static func counter(_ value:JSON?) throws -> Double {
+        guard case .number(let n)?=value,n.isFinite,n>=1,n<=9_007_199_254_740_991,n.rounded()==n else {throw ChildTaskRecordFailure.review};return n
+    }
+}

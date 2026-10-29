@@ -68,9 +68,10 @@ avoids an observed CLI telemetry shutdown failure without changing global settin
 
 ## Next work
 
-1. [ ] Both apps: strict bounded envelope decoding and lossless reconstruction,
-   exact account/server/session/root/project binding, stale-response refusal and
-   current gate availability. Keep existing child UI behavior polished during adoption.
+1. [ ] Finish client adoption. The [data-layer candidate](../child-task-record-client/README.md)
+   implements strict decoding/reconstruction, context-bound Backend and a gated
+   Store method. Actual Store/editor/native lifecycle acceptance remains open;
+   preserve existing child UI behavior during adoption.
 2. [ ] Per-child idempotent conflict-safe commands with root generation,
    incarnation/revision, structural baselines, certified completion/Undo and atomic
    legacy bridging; preserve current team scopes and unknown-field custody.

@@ -1,0 +1,18 @@
+{
+  "preparedHost": "/tmp/taskfold-owner-review-mac-host",
+  "verifiedNamespaceOnlyTransforms": true,
+  "files": {
+    "Taskfold/Core/Backend.swift": {
+      "repoSHA256": "6fd278fed0005c706d7359c5d92ac72d307d2613749405e1080ff19644466d0f",
+      "isolatedHostSHA256": "74978198020b2f70f4e1a9597fa4fe3430c8f5e372124d7ff8db560e17b7c5cf"
+    },
+    "Taskfold/Core/Store.swift": {
+      "repoSHA256": "8b93d4d9eb51e217fad6db80f72ff73d7ee98a1459de5c38a7862cd39317ce51",
+      "isolatedHostSHA256": "1be37ecc560962f55eccf41f89417bb268e5744233202cf35bf741b885cf25b4"
+    },
+    "Taskfold/Core/SubtaskTree.swift": {
+      "repoSHA256": "506e7e7ff67edd6be45f618b89dcbdcc1bfeebf0b7fa81d248ac8d948049a415",
+      "isolatedHostSHA256": "506e7e7ff67edd6be45f618b89dcbdcc1bfeebf0b7fa81d248ac8d948049a415"
+    }
+  }
+}

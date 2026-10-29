@@ -1,0 +1,101 @@
+{
+  "account": "3c76874e-5d96-4cbd-9912-e8d30c149dbf",
+  "root": {
+    "id": "5030ab52-1766-4f47-b5fe-cc55482b6dac",
+    "title": "Synthetic read root",
+    "labels": [],
+    "user_id": "3c76874e-5d96-4cbd-9912-e8d30c149dbf",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "parent",
+        "title": "Keep all fields",
+        "future": {
+          "keep": [
+            null,
+            false
+          ]
+        },
+        "subtasks": [
+          {
+            "id": "child",
+            "title": "Nested"
+          }
+        ]
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-29T00:18:52.301232+00:00",
+    "project_id": "ee779ca8-5f2e-4c6e-bd94-008ae45f8961",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "9520f3bf-828d-46ed-bf4a-fc41b3fb0b80",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "response": {
+    "account": "3c76874e-5d96-4cbd-9912-e8d30c149dbf",
+    "records": [
+      {
+        "fields": {
+          "id": "parent",
+          "title": "Keep all fields",
+          "future": {
+            "keep": [
+              null,
+              false
+            ]
+          }
+        },
+        "node_key": "parent",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "38ecdc5c-6db0-42a2-8134-842bb798de94",
+        "children_kind": "array",
+        "identity_path": [
+          "parent"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "child",
+          "title": "Nested"
+        },
+        "node_key": "child",
+        "revision": 1,
+        "parent_key": "parent",
+        "incarnation": "801a2391-a528-4442-bab2-2d16245b26db",
+        "children_kind": "absent",
+        "identity_path": [
+          "parent",
+          "child"
+        ],
+        "sibling_order": 0
+      }
+    ],
+    "task_id": "5030ab52-1766-4f47-b5fe-cc55482b6dac",
+    "protocol": 1,
+    "root_kind": "array",
+    "project_id": "ee779ca8-5f2e-4c6e-bd94-008ae45f8961",
+    "task_generation": "9520f3bf-828d-46ed-bf4a-fc41b3fb0b80",
+    "projection_revision": 1
+  }
+}
