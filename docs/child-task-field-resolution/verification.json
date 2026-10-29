@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "ordinaryChildFlagsEnabled": false,
+  "hostedDeploymentPerformed": false,
+  "releaseAcceptance": false,
+  "migrationSHA256": "dddfd037d9411d21fb8a5910b89cf4558432c5551c6860189a0d38d7c6ab2539",
+  "client": {
+    "selectedCases": 228,
+    "result": "passed",
+    "log": "core-preservation-final.log.gz"
+  },
+  "database": {
+    "closureCases": 35,
+    "existingEditCasesWithMigration": 95,
+    "result": "passed",
+    "noAddedAdvisorFindings": true,
+    "allOwnedFixturesRemoved": true
+  },
+  "nativeMac": {
+    "distinctCases": 4,
+    "result": "passed",
+    "phases": [
+      "mac-v9-summary.json",
+      "mac-v10-summary.json"
+    ],
+    "reportedRuntimeWarnings": 0,
+    "screenshots": "Two inspected isolated-window captures; no desktop backdrop stored."
+  },
+  "nativeMobile": {
+    "phoneAlreadyAppliedAndNormalReplacement": "passed in interrupted v2 suite",
+    "phoneDistinctAndLostClose": "Distinct values pass in v3; lost-close interaction failed to select the switch and is under standalone investigation in v4.",
+    "tablet": "pending"
+  },
+  "remaining": [
+    "Complete mobile acceptance.",
+    "Genuine account/team/window/Keychain/hosted and spoken lifecycle.",
+    "Completion/structure/legacy child adapters and authoritative migration.",
+    "Existing explicit user deferrals remain unchanged."
+  ]
+}

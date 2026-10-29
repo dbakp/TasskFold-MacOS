@@ -1,0 +1,11 @@
+{
+  "checks": {},
+  "candidateSHA256": "dddfd037d9411d21fb8a5910b89cf4558432c5551c6860189a0d38d7c6ab2539",
+  "deployed": false,
+  "passed": false,
+  "error": {
+    "name": "Error",
+    "code": null,
+    "message": "Command failed: docker info --format {{.ServerVersion}}\n"
+  }
+}

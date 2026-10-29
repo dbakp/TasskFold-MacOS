@@ -1,0 +1,10 @@
+{
+  "Taskfold/Core/ChildTaskFieldCommands.swift": "1117867feca2ed3a9cc08560ce5f9605e1253fa9f935e49395115ceccd9fb0cd",
+  "Taskfold/Core/Backend.swift": "0b51bd07438df0f6efa3973d9cd522202199fa3294b06be1ec498826730f6b26",
+  "Taskfold/Core/Store.swift": "5701232788aa30a6441dcc7321b567151d9e70b0c42ff2b1be7ffd2f3464c687",
+  "Taskfold/Views/ChildTaskFieldViews.swift": "ea2bb70564c13f540c691d9d0868fb95356954aff2efe6d1e1d90c47159df19d",
+  "Taskfold/ChildFieldNativeFixture.swift": "a8cf2987af124d800b154acefa944feea4887d963a2ac75055a7b14b10cfb7c9",
+  "TaskfoldUITests/AudioCommentUITests.swift": "27c8df86af40aaf2342c6b19fba90e63f212e07b7eb9e30f905e55746ca78e5d",
+  "TaskfoldTests/ChildTaskFieldCommandTests.swift": "3d13e39fe65e072d3abace82e3f9ccfeb6ee8e580675f347727f0ae98a2ad9c7",
+  "supabase/migrations/20261029194600_child_task_field_resolution.sql": "dddfd037d9411d21fb8a5910b89cf4558432c5551c6860189a0d38d7c6ab2539"
+}

@@ -288,6 +288,10 @@ final class Store {
             throw error
         }
     }
+    func childTaskFieldComparisonIsCurrent(_ read: ChildTaskRecordRead) -> Bool {
+        guard let current = try? childTaskRecordContext(read.context.root.id) else { return false }
+        return read.context.matches(current)
+    }
     /// Recovery remains reachable if rollout gates are later turned off.
     var childTaskFieldRecoveryScope: ChildTaskFieldClientScope? {
         guard signedIn,!localMode,!signingOut,!accountRemovalBlocked,
@@ -4092,6 +4096,10 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
                     if lose { client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost)); return }
                     let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
                     client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
+                } catch let error as ChildFieldNativeRefusal {
+                    let response = HTTPURLResponse(url: request.url!, statusCode: 409, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+                    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+                    client?.urlProtocol(self, didLoad: try! JSONEncoder().encode(["code": error.code])); client?.urlProtocolDidFinishLoading(self)
                 } catch { client?.urlProtocol(self, didFailWithError: error) }
                 return
             }

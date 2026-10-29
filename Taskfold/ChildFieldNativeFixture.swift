@@ -26,6 +26,8 @@ enum ChildFieldNativeIdentity {
     }
 }
 
+struct ChildFieldNativeRefusal: Error { let code: String }
+
 /// A synthetic file-backed HTTP peer, not a substitute for the PostgreSQL suite.
 @MainActor enum ChildFieldNativePeer {
     static var folder: URL { URL.applicationSupportDirectory.appendingPathComponent("Child field native peer", isDirectory: true) }
@@ -72,11 +74,30 @@ enum ChildFieldNativeIdentity {
             }
             return (try JSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": .null, "projection_revision": .number(Double(state["writes"]!.integer + 1)), "root_kind": .string("array"), "records": .array(records)]), false)
         }
-        guard request.url?.path == "/rest/v1/rpc/taskfold_edit_child_task", Set(body.keys) == ["_body"] else { throw URLError(.unsupportedURL) }
+        let closing = request.url?.path == "/rest/v1/rpc/taskfold_close_child_task_edit"
+        guard closing || request.url?.path == "/rest/v1/rpc/taskfold_edit_child_task", Set(body.keys) == ["_body"] else { throw URLError(.unsupportedURL) }
         let command = try ChildTaskFieldCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: body["_body"]!.object)
         guard command.body["task_id"] == .string(root.id), command.body["task_generation"] == root["task_generation"], command.body["project_id"] == .null, Store.shared.userID == command.account else { throw CancellationError() }
         var receipts = state["receipts"]!.object
+        if closing {
+            var result = command.body.filter { !["changes", "revision"].contains($0.key) }
+            state["closeRequests"] = .number(Double((state["closeRequests"]?.integer ?? 0) + 1))
+            if let prior = receipts[command.id]?.object {
+                guard AuthoredValueComparison.exactJSON(prior["body"]!, .object(command.body)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+                var proof = prior["receipt"]!.object; proof["replayed"] = .bool(true)
+                result["outcome"] = .string("applied"); result["receipt"] = .object(proof)
+            } else {
+                var closed = state["closures"]?.object ?? [:]
+                if let prior = closed[command.id], !AuthoredValueComparison.exactJSON(prior, .object(command.body)) { throw ChildFieldNativeRefusal(code: "PT409") }
+                closed[command.id] = .object(command.body); state["closures"] = .object(closed)
+                result["outcome"] = .string("closed"); result["receipt"] = .null
+            }
+            let lose = ProcessInfo.processInfo.arguments.contains("--child-fields-lose-close-reply") && state["lostClose"]?.flag != true
+            if lose { state["lostClose"] = .bool(true) }; try save(state)
+            return (try JSONEncoder().encode(result), lose)
+        }
         state["requests"] = .number(Double(state["requests"]!.integer + 1))
+        if state["closures"]?.object[command.id] != nil { try save(state); throw ChildFieldNativeRefusal(code: "PT410") }
         if let old = receipts[command.id]?.object {
             guard AuthoredValueComparison.exactJSON(old["body"]!, .object(command.body)) else { throw CancellationError() }
             var proof = old["receipt"]!.object; proof["replayed"] = .bool(true); try save(state)
@@ -85,6 +106,7 @@ enum ChildFieldNativeIdentity {
         let key = command.body["node_key"]!.text
         guard let index = root["subtasks"].list.firstIndex(where: { $0.object["id"] == .string(key) }),
               command.body["incarnation"] == .string(index == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006") else { throw CancellationError() }
+        if command.body["revision"]!.integer < state["versions"]!.object[key]!.integer { try save(state); throw ChildFieldNativeRefusal(code: "PT409") }
         var changed = root, rows = root["subtasks"].list, fields = rows[index].object
         fields.merge(command.body["changes"]!.object) { _, new in new }; rows[index] = .object(fields); changed["subtasks"] = .array(rows)
         var versions = state["versions"]!.object; versions[key] = .number(Double(versions[key]!.integer + 1))
@@ -114,6 +136,14 @@ struct ChildFieldNativeFixtureView: View {
                 if ready {
                     Button("Open subtask editor") { opening = "editor" }.accessibilityIdentifier("childNativeEditor")
                     Button("Open saved changes") { opening = "recovery" }.accessibilityIdentifier("childNativeRecovery")
+                    Button("Change test title on server") {
+                        do {
+                            var state = try ChildFieldNativePeer.state(), root = Record(state["root"]!.object), rows = root["subtasks"].list, first = rows[0].object
+                            first["title"] = .string("Updated on another device"); rows[0] = .object(first); root["subtasks"] = .array(rows)
+                            var versions = state["versions"]!.object; versions["concept"] = .number(Double(versions["concept"]!.integer + 1))
+                            state["root"] = .object(root.fields); state["versions"] = .object(versions); try ChildFieldNativePeer.save(state)
+                        } catch { problem = error.localizedDescription }
+                    }.accessibilityIdentifier("childNativeForeignEdit")
                     Button(store.online ? "Go offline" : "Go online") { store.online.toggle() }.accessibilityIdentifier("childNativeConnection")
                     Text(probe).accessibilityIdentifier("childNativeProbe")
                     if !privateTitle.isEmpty { Text(privateTitle).accessibilityIdentifier("childNativePrivateTitle") }
@@ -154,7 +184,7 @@ struct ChildFieldNativeFixtureView: View {
             let localSpecs = schedules.compactMap { ReminderSpec(row: $0) }
             let enabledSchedules = localSpecs.filter(\.enabled).count
             let beforeTen = localSpecs.filter { $0.enabled && $0.kind == "relative" && $0.offset == -10 }.count
-            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) reminderDraft=\(reminderDrafts) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
+            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) reminderDraft=\(reminderDrafts) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") closed=\(entries.filter { $0.phase == .closed }.count) closes=\(state["closeRequests"]?.integer ?? 0) labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
         } catch { problem = error.localizedDescription }
     }
 }

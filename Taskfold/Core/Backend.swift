@@ -314,7 +314,7 @@ final class Backend: NSObject {
             throw AppFailure(message: "The Supabase configuration is missing.")
         }
         if let workflowReadLimit { guard (1...4_200_000).contains(workflowReadLimit) else { throw TeamWorkflowRunCommand.invalid } }
-        let childRecordWrite = path == "/rest/v1/rpc/taskfold_edit_child_task"
+        let childRecordWrite = ["/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path)
         let childRecordRead = path == "/rest/v1/rpc/taskfold_read_child_tasks"
         let workflowRead = workflowReadLimit != nil
         let workflowRun = path == "/rest/v1/rpc/taskfold_team_workflow_run"
@@ -368,6 +368,7 @@ final class Backend: NSObject {
                 switch error.string("code") {
                 case "PT503","PGRST202","PT404","42501":reason = .unavailable
                 case "PT409","22023":reason = .review
+                case "PT410":reason = .closed
                 case "55P03","40P01","40001":reason = .busy
                 case "54000","PT429":reason = .limit
                 default:reason = .unconfirmed
@@ -579,6 +580,14 @@ final class Backend: NSObject {
         guard let raw=try? JSONDecoder().decode([String:JSON].self,from:data),
               let receipt=try? command.confirmed(raw) else {throw ChildTaskFieldWriteFailure(reason:.unconfirmed)}
         return receipt
+    }
+    func closeChildTaskFieldCommand(_ command: ChildTaskFieldCommand, session expectedSession: UUID) async throws -> ChildTaskFieldResolution {
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data = try await request("/rest/v1/rpc/taskfold_close_child_task_edit", method: "POST", body: ["_body": .object(command.body)], expectedAccount: command.account)
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id == command.account, sessionGeneration == expectedSession, command.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        guard let raw = try? JSONDecoder().decode([String: JSON].self, from: data), let proof = try? ChildTaskFieldResolution(command: command, raw: raw) else { throw ChildTaskFieldWriteFailure(reason: .unconfirmed) }
+        return proof
     }
     func childTaskRecords(_ context: ChildTaskRecordContext) async throws -> ChildTaskRecordRead {
         guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,

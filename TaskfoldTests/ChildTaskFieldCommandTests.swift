@@ -12,8 +12,11 @@ private final class ChildFieldIO: CalendarSecureItemIO, @unchecked Sendable {
 }
 @MainActor private final class ChildFieldPeer: ChildTaskFieldCommandService {
     var calls: [ChildTaskFieldCommand] = [], applied: [String: ChildTaskFieldReceipt] = [:]
+    var closeCalls: [ChildTaskFieldCommand] = [], closed: [String: ChildTaskFieldCommand] = [:]
+    var loseClose = false, onClose: (() -> Void)?
     var lose = false, onReply: (() -> Void)?
     func childTaskFieldCommand(_ command: ChildTaskFieldCommand, session: UUID) async throws -> ChildTaskFieldReceipt {
+        guard closed[command.id] == nil else { throw ChildTaskFieldWriteFailure(reason: .closed) }
         calls.append(command)
         var raw = command.body.filter { $0.key != "changes" }
         raw["revision"] = .number(Double(command.body["revision"]!.integer) + 1)
@@ -23,6 +26,15 @@ private final class ChildFieldIO: CalendarSecureItemIO, @unchecked Sendable {
         onReply?()
         if lose { lose = false; throw URLError(.networkConnectionLost) }
         return receipt
+    }
+    func closeChildTaskFieldCommand(_ command: ChildTaskFieldCommand, session: UUID) async throws -> ChildTaskFieldResolution {
+        closeCalls.append(command)
+        var raw = command.body.filter { !["changes", "revision"].contains($0.key) }
+        if let receipt = applied[command.id] { raw["outcome"] = .string("applied"); raw["receipt"] = .object(receipt.raw) }
+        else { closed[command.id] = command; raw["outcome"] = .string("closed"); raw["receipt"] = .null }
+        onClose?()
+        if loseClose { loseClose = false; throw URLError(.networkConnectionLost) }
+        return try ChildTaskFieldResolution(command: command, raw: raw)
     }
 }
 private final class ChildFieldHTTP: URLProtocol {
@@ -738,5 +750,188 @@ extension ChildTaskFieldCommandTests {
         let summary = ChildTaskRemindersDraft.summary(value)
         XCTAssertTrue(summary.contains("At planned time · Off")); XCTAssertTrue(summary.contains("Enabled")); XCTAssertTrue(summary.contains("kept unchanged"))
         XCTAssertFalse(summary.contains("Secret studio")); XCTAssertFalse(summary.contains("123456")); XCTAssertFalse(summary.contains("latitude"))
+    }
+}
+
+extension ChildTaskFieldCommandTests {
+    private func resolution(_ c: ChildTaskFieldCommand, applied: ChildTaskFieldReceipt? = nil) throws -> ChildTaskFieldResolution {
+        var raw = c.body.filter { !["changes", "revision"].contains($0.key) }
+        raw["outcome"] = .string(applied == nil ? "closed" : "applied"); raw["receipt"] = applied.map { .object($0.raw) } ?? .null
+        return try ChildTaskFieldResolution(command: c, raw: raw)
+    }
+    private func comparisonRead(_ changes: [String: JSON] = [:], revision: Double = 10, incarnation: String? = nil) throws -> ChildTaskRecordRead {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-task-record-read", withExtension: "json", subdirectory: "Fixtures"))
+        let fixture = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)); var response = fixture["response"]!.object, root = Record(fixture["root"]!.object)
+        var rows = response["records"]!.list
+        for i in rows.indices where rows[i].object["node_key"] == .string("child") {
+            var row = rows[i].object; row["revision"] = .number(revision)
+            row["fields"] = .object(row["fields"]!.object.merging(changes) { _, new in new })
+            if let incarnation { row["incarnation"] = .string(incarnation) }; rows[i] = .object(row)
+        }
+        response["records"] = .array(rows); response["projection_revision"] = .number(20)
+        var parents = root["subtasks"].list, parent = parents[0].object, children = parent["subtasks"]!.list
+        children[0] = .object(children[0].object.merging(changes) { _, new in new }); parent["subtasks"] = .array(children); parents[0] = .object(parent); root["subtasks"] = .array(parents)
+        let context = try ChildTaskRecordContext(account: fixture["account"]!.text, origin: "https://child-record.test", workspace: UUID(), session: UUID(), access: UUID(), snapshot: UUID(), root: root)
+        return try ChildTaskRecordRead(data: JSONEncoder().encode(response), context: context)
+    }
+    func testResolutionStrictlyBindsOriginalAndSeparatesAppliedFromClosed() throws {
+        let c = try command(), closed = try resolution(c), applied = try resolution(c, applied: receipt(c))
+        XCTAssertTrue(closed.closed); XCTAssertFalse(applied.closed)
+        for key in ["protocol", "account", "request_id", "task_id", "task_generation", "project_id", "node_key", "incarnation", "outcome"] {
+            var raw = closed.raw; raw[key] = .string(UUID().uuidString.lowercased()); XCTAssertThrowsError(try ChildTaskFieldResolution(command: c, raw: raw), key)
+        }
+        var extra = closed.raw; extra["unknown"] = .bool(true); XCTAssertThrowsError(try ChildTaskFieldResolution(command: c, raw: extra))
+        var forged = closed.raw; forged["receipt"] = .object(try receipt(c).raw); XCTAssertThrowsError(try ChildTaskFieldResolution(command: c, raw: forged))
+        var missing = applied.raw; missing["receipt"] = .null; XCTAssertThrowsError(try ChildTaskFieldResolution(command: c, raw: missing))
+    }
+    func testClosedProofSurvivesActualEncryptedColdReadAndCannotBecomeASend() async throws {
+        let c = try command(), directory = try root(), key = SymmetricKey(size: .bits256)
+        let io = try ChildTaskFieldJournalFileIO(directory: directory, account: c.account, origin: c.origin, encryptionKey: { key }), j = try journal(c, io: io, root: directory)
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); _ = try await j.attempt(c, lease: CalendarReadLease()); try await j.resolve(c, result: resolution(c), lease: CalendarReadLease())
+        let cold = try journal(c, io: io, root: directory), state = try await cold.load()
+        XCTAssertEqual(state.entries[0].phase, .closed); XCTAssertEqual(state.entries[0].command, c); XCTAssertEqual(state.entries[0].resolution, try resolution(c))
+        XCTAssertFalse(String(decoding: try Data(contentsOf: io.file), as: UTF8.self).contains("Private child edit"))
+        do { _ = try await cold.attempt(c, lease: CalendarReadLease()); XCTFail("Closed request cannot send") } catch {}
+        do { try await cold.confirm(c, receipt: receipt(c), lease: CalendarReadLease()); XCTFail("Closed cannot later become applied") } catch {}
+    }
+    @MainActor func testLostCloseReplyKeepsOriginalAttemptThenColdRetryClosesWithoutEdit() async throws {
+        let r = try read(), c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); peer.loseClose = true
+        let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in false })
+        do { _ = try await sender.resolve(c); XCTFail("Lost close reply") } catch {}
+        var state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .attempted); XCTAssertNil(state.entries[0].resolution)
+        let cold = try journal(c, io: io, root: directory), retry = ChildTaskFieldSender(scope: scope, journal: cold, service: peer, current: { scope }, canSend: { _ in false })
+        let result = try await retry.resolve(c); XCTAssertTrue(result.closed)
+        state = try await cold.load(); XCTAssertEqual(state.entries[0].phase, .closed); XCTAssertEqual(peer.closeCalls, [c, c]); XCTAssertTrue(peer.calls.isEmpty)
+        _ = try await retry.resolve(c); XCTAssertEqual(peer.closeCalls.count, 2)
+    }
+    @MainActor func testClosingAlreadyAppliedOriginalRecoversItsReceiptWithoutAnotherEdit() async throws {
+        let r = try read(), c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); peer.lose = true
+        let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in true })
+        do { _ = try await sender.send(c); XCTFail("Lost send reply") } catch {}
+        let proof = try await sender.resolve(c); XCTAssertFalse(proof.closed)
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .confirmed); XCTAssertEqual(peer.calls.count, 1); XCTAssertTrue(peer.closed.isEmpty)
+    }
+    @MainActor func testCloseMustCheckpointBeforeNetworkAndRetainsAttemptOnProofWriteFailure() async throws {
+        let r = try read(), c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); io.failWrite = true
+        let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { scope }, canSend: { _ in false })
+        do { _ = try await sender.resolve(c); XCTFail("No durable attempt") } catch {}; XCTAssertTrue(peer.closeCalls.isEmpty)
+        io.failWrite = false; peer.onClose = { io.failWrite = true }
+        do { _ = try await sender.resolve(c); XCTFail("No durable proof") } catch {}
+        io.failWrite = false; let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .attempted); XCTAssertNil(state.entries[0].resolution)
+        peer.onClose = nil; _ = try await sender.resolve(c); let final = try await j.load(); XCTAssertEqual(final.entries[0].phase, .closed)
+    }
+    @MainActor func testLateCloseReplyAfterAccountDepartureCannotPublishProofInOldPresentation() async throws {
+        let r = try read(), c = try command(), io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        var current: ChildTaskFieldClientScope? = scope
+        _ = try await j.enqueue(c, lease: CalendarReadLease()); peer.onClose = { current = nil }
+        let sender = ChildTaskFieldSender(scope: scope, journal: j, service: peer, current: { current }, canSend: { _ in false })
+        do { _ = try await sender.resolve(c); XCTFail("Departed presentation") } catch is CancellationError {} catch { XCTFail("Wrong refusal") }
+        let state = try await j.load(); XCTAssertEqual(state.entries[0].phase, .attempted); XCTAssertNil(state.entries[0].resolution)
+    }
+
+    func testComparisonRefusesReplacingNewerOpaqueReminderData() throws {
+        let id = UUID().uuidString.lowercased()
+        let saved = ReminderSpec.relative(-10, id: id)
+        var current = ReminderSpec.relative(-20, id: id).raw
+        current["future_policy"] = .object(["private": .string("newer")])
+        let original = try ChildTaskFieldCommand(read: comparisonRead(), key: "child", changes: ["title": .string("Reviewed"), "reminder_specs": .array([.object(saved.raw)])])
+        let review = try ChildTaskFieldComparison(original: original, read: comparisonRead(["reminder_specs": .array([.object(current)])]))
+        XCTAssertThrowsError(try review.replacement(choosing: ["reminder_specs"]))
+        XCTAssertNotNil(try review.replacement(choosing: ["title"]))
+        let opaque: JSON = .object(["id": .string(UUID().uuidString.lowercased()), "version": .number(99), "private": .string("unchanged")])
+        let withOpaque = try ChildTaskFieldCommand(read: comparisonRead(), key: "child", changes: ["reminder_specs": .array([.object(saved.raw), opaque])])
+        let allowed = try ChildTaskFieldComparison(original: withOpaque, read: comparisonRead(["reminder_specs": .array([.object(ReminderSpec.relative(-20, id: id).raw), opaque])]))
+        XCTAssertNotNil(try allowed.replacement(choosing: ["reminder_specs"]))
+        let removed = try ChildTaskFieldComparison(original: original, read: comparisonRead(["reminder_specs": .array([.object(saved.raw), opaque])]))
+        XCTAssertThrowsError(try removed.replacement(choosing: ["reminder_specs"]))
+    }
+    func testComparisonProtectsNestedReminderExtensionsAndNonLocalRows() throws {
+        let schedule = try XCTUnwrap(ReminderIntervalSchedule(raw: ["start_ms": .number(1_800_000_000_000), "every_minutes": .number(30), "count": .number(4)]))
+        let saved = ReminderSpec.interval(schedule)
+        var changed = saved.raw, payload = changed["interval_schedule"]!.object
+        payload["future_window"] = .string("newer"); changed["interval_schedule"] = .object(payload)
+        let original = try ChildTaskFieldCommand(read: comparisonRead(), key: "child", changes: ["reminder_specs": .array([.object(saved.raw)])])
+        let nested = try ChildTaskFieldComparison(original: original, read: comparisonRead(["reminder_specs": .array([.object(changed)])]))
+        XCTAssertThrowsError(try nested.replacement(choosing: ["reminder_specs"]))
+        var nonLocal = ReminderSpec.relative(-20).raw; nonLocal["channels"] = .array([.string("email")])
+        let privateChange = try ChildTaskFieldComparison(original: original, read: comparisonRead(["reminder_specs": .array([.object(nonLocal)])]))
+        XCTAssertThrowsError(try privateChange.replacement(choosing: ["reminder_specs"]))
+        let malformed = try ChildTaskFieldComparison(original: original, read: comparisonRead(["reminder_specs": .object(["future": .bool(true)])]))
+        XCTAssertThrowsError(try malformed.replacement(choosing: ["reminder_specs"]))
+        let calendar = try XCTUnwrap(ReminderCalendarSchedule(raw: ["start_day": .string("2030-01-01"), "time": .string("09:00"), "time_zone": .string("UTC"), "recurrence": .object(["type": .string("daily"), "interval": .number(1)])]))
+        let recurring = ReminderSpec.recurring(calendar)
+        let savedCalendar = try ChildTaskFieldCommand(read: comparisonRead(), key: "child", changes: ["reminder_specs": .array([.object(recurring.raw)])])
+        for key in ["recurrence", "holiday_policy"] {
+            var raw = recurring.raw
+            if key == "recurrence" {
+                var rule = raw[key]!.object; rule["future_rule"] = .string("newer"); raw[key] = .object(rule)
+            } else { raw[key] = .object(["origin": .object(["future_origin": .string("newer")])]) }
+            let review = try ChildTaskFieldComparison(original: savedCalendar, read: comparisonRead(["reminder_specs": .array([.object(raw)])]))
+            XCTAssertThrowsError(try review.replacement(choosing: ["reminder_specs"]), key)
+        }
+    }
+    func testComparisonRefusesReplacingUnsupportedCurrentLabels() throws {
+        let original = try ChildTaskFieldCommand(read: comparisonRead(), key: "child", changes: ["labels": .array([.string("Reviewed")])])
+        let review = try ChildTaskFieldComparison(original: original, read: comparisonRead(["labels": .object(["future": .bool(true)])]))
+        XCTAssertThrowsError(try review.replacement(choosing: ["labels"]))
+    }
+
+    func testComparisonRequiresExplicitChoicesAndKeepsPlanningIntentTogether() throws {
+        let c = try command(["title": .string("Cafe\u{301}"), "description": .string("Private notes"), "due_date": .string("2026-11-01"), "due_time": .string("10:00"), "scheduled_at": .string("2026-11-01T09:00:00Z"), "deadline_date": .string("2026-11-05"), "duration_minutes": .number(45)])
+        let comparison = try ChildTaskFieldComparison(original: c, read: comparisonRead(["title": .string("Current title"), "description": .string("Current notes")]))
+        XCTAssertNil(try comparison.replacement(choosing: []))
+        let selected = try XCTUnwrap(comparison.replacement(choosing: ["title", "plan"]))
+        XCTAssertNotEqual(selected.id, c.id); XCTAssertEqual(selected.body["revision"], .number(10))
+        XCTAssertTrue(comparison.groups.contains(where: { $0.id == "deadline_date" && $0.fields == ["deadline_date"] }))
+        XCTAssertTrue(comparison.groups.contains(where: { $0.id == "duration_minutes" && $0.fields == ["duration_minutes"] }))
+        XCTAssertEqual(Set(selected.body["changes"]!.object.keys), ["title", "due_date", "due_time", "scheduled_at"])
+        XCTAssertTrue(selected.body["changes"]!.object["title"]!.text.utf8.elementsEqual("Cafe\u{301}".utf8))
+        XCTAssertThrowsError(try comparison.replacement(choosing: ["completed"]))
+        XCTAssertThrowsError(try comparison.replacement(choosing: ["title"], requestID: UUID(uuidString: c.id)!))
+    }
+    func testComparisonKeepsAlreadyMatchingValuesAndRefusesRecreatedOrOlderNodes() throws {
+        let c = try ChildTaskFieldCommand(read: comparisonRead(revision: 10), key: "child", changes: ["title": .string("Café")])
+        let equal = try ChildTaskFieldComparison(original: c, read: comparisonRead(["title": .string("Café")]))
+        XCTAssertFalse(equal.groups[0].differs); XCTAssertNil(try equal.replacement(choosing: [])); XCTAssertThrowsError(try equal.replacement(choosing: ["title"]))
+        let literal = try ChildTaskFieldComparison(original: c, read: comparisonRead(["title": .string("Cafe\u{301}")]))
+        XCTAssertTrue(literal.groups[0].differs)
+        XCTAssertThrowsError(try ChildTaskFieldComparison(original: c, read: comparisonRead(incarnation: UUID().uuidString.lowercased())))
+        XCTAssertThrowsError(try ChildTaskFieldComparison(original: c, read: comparisonRead(revision: 1)))
+    }
+    func testReplacementRequiresDurableClosureAndCannotMergeOtherSavedIntent() async throws {
+        let c = try command(), comparison = try ChildTaskFieldComparison(original: c, read: comparisonRead()), replacement = try XCTUnwrap(comparison.replacement(choosing: ["title"])), directory = try root(), io = ChildFieldIO(), j = try journal(c, io: io, root: directory)
+        _ = try await j.enqueue(c, lease: CalendarReadLease())
+        do { try await j.replaceClosed(c, with: replacement, lease: CalendarReadLease()); XCTFail("Unsent is not closed at service") } catch {}
+        _ = try await j.attempt(c, lease: CalendarReadLease())
+        do { try await j.replaceClosed(c, with: replacement, lease: CalendarReadLease()); XCTFail("Uncertain original") } catch {}
+        try await j.resolve(c, result: resolution(c), lease: CalendarReadLease()); try await j.replaceClosed(c, with: replacement, lease: CalendarReadLease())
+        var state = try await j.load(); XCTAssertEqual(state.entries.map(\.phase), [.closed, .queued]); XCTAssertEqual(state.entries[0].command, c); XCTAssertEqual(state.entries[1].command, replacement)
+        let second = try XCTUnwrap(comparison.replacement(choosing: ["title"]))
+        do { try await j.replaceClosed(c, with: second, lease: CalendarReadLease()); XCTFail("Must not coalesce competing review") } catch {}
+        state = try await j.load(); XCTAssertEqual(state.entries.count, 2); XCTAssertEqual(state.entries[1].command, replacement)
+    }
+    @MainActor func testBackendCloseUsesExactOriginalAndRejectsMalformedOrOversizedProof() async throws {
+        let c = try command(), b = try backend(c.account), proof = try resolution(c)
+        defer { ChildFieldHTTP.handler = nil }
+        ChildFieldHTTP.handler = { request, pipe in
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_close_child_task_edit"); XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalCacheData); XCTAssertFalse(request.httpShouldHandleCookies)
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
+            var data = request.httpBody ?? Data()
+            if let stream = request.httpBodyStream {
+                stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 4096)
+                while stream.hasBytesAvailable { let count = stream.read(&buffer, maxLength: buffer.count); if count <= 0 { break }; data.append(contentsOf: buffer.prefix(count)) }
+            }
+            XCTAssertEqual(try? JSONDecoder().decode([String: JSON].self, from: data), ["_body": .object(c.body)])
+            pipe.finish(200, try! JSONEncoder().encode(proof.raw))
+        }
+        let result = try await b.closeChildTaskFieldCommand(c, session: b.reminderSessionIncarnation); XCTAssertEqual(result, proof)
+        for bad in [Data("{}".utf8), Data(repeating: 32, count: 16385)] {
+            ChildFieldHTTP.handler = { _, pipe in pipe.finish(200, bad) }
+            do { _ = try await b.closeChildTaskFieldCommand(c, session: b.reminderSessionIncarnation); XCTFail("Unconfirmed close") } catch {}
+        }
     }
 }

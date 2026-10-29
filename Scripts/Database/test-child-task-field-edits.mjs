@@ -103,6 +103,11 @@ try {
   );
   report.baselineAdvisors = await pg.advisors();
   await pg.raw(sql);
+  if (process.argv.includes("--with-resolution")) {
+    const resolution = await readFile(new URL("../../supabase/migrations/20261029194600_child_task_field_resolution.sql", import.meta.url), "utf8");
+    await pg.raw(resolution);
+    report.resolutionSHA256 = createHash("sha256").update(resolution).digest("hex");
+  }
   const run = (
     body,
     {

@@ -825,7 +825,20 @@ extension TaskfoldMacUITests {
         addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
         app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", large ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
         if reset { app.launchArguments.append("--child-fields-native-reset") }; if let extra { app.launchArguments.append(extra) }
-        app.launch(); app.activate(); XCTAssertTrue(app.buttons["childNativeEditor"].waitForExistence(timeout: 25), app.debugDescription)
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        app.launch()
+        // Like launchHeadingWorkspace, normal Launch Services reopening creates
+        // the SwiftUI workspace window that XCTest activation alone can omit.
+        let instances = NSRunningApplication.runningApplications(withBundleIdentifier: "com.dbakp.taskfold.mac.workflowteststeameditbridge")
+        XCTAssertEqual(instances.count, 1)
+        let url = try XCTUnwrap(instances.first?.bundleURL)
+        let expected = Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("Taskfold.app")
+        XCTAssertEqual(url.resolvingSymlinksInPath(), expected.resolvingSymlinksInPath(), "Only the current isolated product may be tested")
+        let opened = expectation(description: "Open isolated child workspace")
+        let configuration = NSWorkspace.OpenConfiguration(); configuration.activates = true; configuration.createsNewApplicationInstance = false
+        NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, error in XCTAssertNil(error); opened.fulfill() }
+        wait(for: [opened], timeout: 10)
+        app.activate(); XCTAssertTrue(app.buttons["childNativeEditor"].waitForExistence(timeout: 25), app.debugDescription)
     }
     @MainActor private func childField(_ id: String, _ app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: id).firstMatch
@@ -893,12 +906,19 @@ extension TaskfoldMacUITests {
         let button = app.buttons[identifier]; childReveal(button, app, towardTop: true); childPress(button)
     }
     @MainActor private func childDone(_ app: XCUIApplication) {
+        #if os(macOS)
+        // Native nested sheets can report the covered sheet's button hittable.
+        // Dismiss the frontmost sheet, rather than a Done button behind it.
+        let done = app.sheets.allElementsBoundByIndex.last?.buttons.matching(identifier: "Done").firstMatch
+            ?? app.buttons.matching(identifier: "Done").allElementsBoundByIndex.first { $0.isHittable }
+        #else
         let done = app.buttons.matching(identifier: "Done").allElementsBoundByIndex.first { $0.isHittable }
+        #endif
         XCTAssertNotNil(done, app.debugDescription); if let done { childPress(done) }
     }
     @MainActor private func childProbe(_ app: XCUIApplication, _ text: String) {
         let probe = app.staticTexts["childNativeProbe"]; childReveal(probe, app, diagnosticText: true)
-        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", text), object: probe)], timeout: 12) == .completed, app.debugDescription)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text), object: probe)], timeout: 12) == .completed, app.debugDescription)
     }
     @MainActor private func childSave(_ app: XCUIApplication, title: String) {
         childHomePress("childNativeEditor", app)
@@ -909,7 +929,7 @@ extension TaskfoldMacUITests {
     }
     @MainActor private func childSavedNoticeVisible(_ app: XCUIApplication, name: String = "child-field-saved-editor") {
         let status = app.staticTexts["independentChildSaveStatus"]
-        XCTAssertTrue(status.waitForExistence(timeout: 10), app.debugDescription); XCTAssertTrue(status.label.contains("Saved on this device"), status.label)
+        XCTAssertTrue(status.waitForExistence(timeout: 10), app.debugDescription); XCTAssertTrue((status.label + (status.value as? String ?? "")).contains("Saved on this device"), app.debugDescription)
         #if os(iOS)
         XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 8) == .completed, app.debugDescription)
         let form = childField("childFieldEditorForm", app)
@@ -920,7 +940,7 @@ extension TaskfoldMacUITests {
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 12), .completed, app.debugDescription)
         #endif
-        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = name; shot.lifetime = .keepAlways; add(shot)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = name; shot.lifetime = .keepAlways; add(shot)
     }
     @MainActor func testChildFieldsNativeSaveSendColdReceipt() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
@@ -929,7 +949,7 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app)
         let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
         childReveal(send, app); childPress(send)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
         childDone(app); childProbe(app, "confirmed=1 writes=1 requests=1 current=Review the polished child screen")
         app.terminate(); try childOpen(app, reset: false); childProbe(app, "confirmed=1 writes=1 requests=1")
         childHomePress("childNativeRecovery", app)
@@ -941,11 +961,11 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app)
         let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
         childReveal(send, app); childPress(send)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Unconfirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Unconfirmed", "Unconfirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
         childDone(app); childProbe(app, "attempted=1 confirmed=0 writes=1 requests=1")
         app.terminate(); try childOpen(app, reset: false)
         childHomePress("childNativeRecovery", app); childReveal(send, app); childPress(send)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed")).firstMatch.waitForExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed")).firstMatch.waitForExistence(timeout: 12))
         childDone(app); childProbe(app, "confirmed=1 writes=1 requests=2 current=Retry the exact saved child request")
     }
     @MainActor func testChildFieldsNativeLargestTextPreservesUnsentTypingCold() throws {
@@ -958,7 +978,7 @@ extension TaskfoldMacUITests {
         let field = childField("independentChildTitle", app); childReveal(field, app); childType("Private unsent large-text draft", field)
         childDone(app); childProbe(app, "private=1")
         let privateTitle = app.staticTexts["childNativePrivateTitle"]; childReveal(privateTitle, app); XCTAssertEqual(privateTitle.label, "Private unsent large-text draft")
-        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "child-private-cold-proof"; shot.lifetime = .keepAlways; add(shot)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "child-private-cold-proof"; shot.lifetime = .keepAlways; add(shot)
         app.terminate(); try childOpen(app, reset: false); childProbe(app, "private=1"); XCTAssertEqual(privateTitle.label, "Private unsent large-text draft")
         childProbe(app, "queued=1 attempted=0 confirmed=0 writes=0 requests=0")
         #endif
@@ -968,7 +988,7 @@ extension TaskfoldMacUITests {
         childSave(app, title: "A discarded receipt cannot undo this change"); childDone(app); childHomePress("childNativeRecovery", app)
         let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
         childReveal(send, app); childPress(send)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Unconfirmed")).firstMatch.waitForExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Unconfirmed", "Unconfirmed")).firstMatch.waitForExistence(timeout: 12))
         let discard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "discardChildField-")).firstMatch
         childReveal(discard, app); childPress(discard)
         let confirm = app.buttons["Discard unconfirmed request"]; XCTAssertTrue(confirm.waitForExistence(timeout: 8), app.debugDescription)
@@ -1013,10 +1033,10 @@ extension TaskfoldMacUITests {
         childDone(app); childProbe(app, "queued=1 attempted=0 confirmed=0 writes=0")
         childHomePress("childNativeRecovery", app)
         XCTAssertTrue(childSavedText("30 min", app).waitForExistence(timeout: 10), app.debugDescription)
-        let reviewShot = XCTAttachment(screenshot: app.screenshot()); reviewShot.name = "child-planning-review"; reviewShot.lifetime = .keepAlways; add(reviewShot)
+        let reviewShot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); reviewShot.name = "child-planning-review"; reviewShot.lifetime = .keepAlways; add(reviewShot)
         let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
         childReveal(send, app); childPress(send)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
         childDone(app); childProbe(app, "writes=1 requests=1 current=Prepare the review")
         childProbe(app, "minutes=30")
         app.terminate(); try childOpen(app, reset: false); childProbe(app, "confirmed=1 writes=1 requests=1"); childProbe(app, "minutes=30")
@@ -1036,10 +1056,10 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app)
         XCTAssertTrue(childSavedText("Review", app).waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertFalse(childSavedText("Later", app).exists)
-        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "child-labels-review"; shot.lifetime = .keepAlways; add(shot)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "child-labels-review"; shot.lifetime = .keepAlways; add(shot)
         let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
         childReveal(send, app); childPress(send)
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
         childDone(app); childProbe(app, "writes=1 requests=1 current=Prepare the review"); childProbe(app, "labels=Review pendingLabel=Later")
         app.terminate(); try childOpen(app, reset: false)
         childProbe(app, "confirmed=1 writes=1 requests=1"); childProbe(app, "labels=Review pendingLabel=Later"); childProbe(app, "private=1")
@@ -1060,7 +1080,7 @@ extension TaskfoldMacUITests {
             XCTAssertTrue(childSavedText(caption, app).waitForExistence(timeout: 10), app.debugDescription)
             let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
             childReveal(send, app); childPress(send)
-            let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed"))
+            let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed"))
             XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in confirmed.count == count }, object: nil)], timeout: 12) == .completed, app.debugDescription)
             childDone(app); childProbe(app, "confirmed=\(count) writes=\(count) requests=\(count)")
             let suffix = choice == "self" ? "assigned=ec990000-0000-4000-8000-000000000001" : "assigned="
@@ -1113,7 +1133,7 @@ extension TaskfoldMacUITests {
                 let remove = app.buttons["teamReminderRemove-1"]; childReveal(remove, app); childPress(remove)
             }
             childReveal(childField("teamReminderPlanned", app), app, towardTop: true)
-            let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "child-reminders-compose-\(count)"; shot.lifetime = .keepAlways; add(shot)
+            let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "child-reminders-compose-\(count)"; shot.lifetime = .keepAlways; add(shot)
             childPress(app.buttons["saveTeamReminders"])
             childReveal(save, app); XCTAssertTrue(save.isEnabled); childPress(save)
             childSavedNoticeVisible(app, name: "child-reminders-saved-\(count)")
@@ -1121,7 +1141,7 @@ extension TaskfoldMacUITests {
             XCTAssertTrue(childSavedText("Reminders", app).waitForExistence(timeout: 10), app.debugDescription)
             let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
             childReveal(send, app); childPress(send)
-            let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed"))
+            let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed"))
             XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in confirmed.count == count }, object: nil)], timeout: 12) == .completed, app.debugDescription)
             childDone(app); childProbe(app, "confirmed=\(count) writes=\(count) requests=\(count)")
             let expected = count == 1 ? "schedules=2 enabled=1 before10=1" : "schedules=1 enabled=0 before10=0"
@@ -1129,6 +1149,99 @@ extension TaskfoldMacUITests {
             app.terminate(); try childOpen(app, reset: false)
             childProbe(app, "confirmed=\(count) writes=\(count) requests=\(count)"); childProbe(app, expected); childProbe(app, "current=Prepare the review"); childProbe(app, "private=0")
         }
+    }
+
+    @MainActor private func childCloseConfirmation(_ app: XCUIApplication) {
+        let close = app.buttons["closeOriginalChildField"]; childReveal(close, app); childPress(close)
+        #if os(macOS)
+        let confirm = app.sheets.buttons.matching(identifier: "Close original request").firstMatch
+        #else
+        let confirm = app.alerts.buttons["Close original request"]
+        #endif
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10), app.debugDescription); childPress(confirm)
+    }
+    @MainActor private func childConflictReplacement(_ app: XCUIApplication, loseClose: Bool) throws {
+        try childOpen(app, extra: loseClose ? "--child-fields-lose-close-reply" : nil)
+        childSave(app, title: "My reviewed child title"); childDone(app)
+        childHomePress("childNativeForeignEdit", app); childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        let unconfirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Unconfirmed", "Unconfirmed")).firstMatch
+        XCTAssertTrue(unconfirmed.waitForExistence(timeout: 12), app.debugDescription)
+        let compare = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "compareChildField-")).firstMatch
+        childReveal(compare, app); childPress(compare)
+        let savedTitle = childSavedText("My reviewed child title", app), currentTitle = childSavedText("Updated on another device", app)
+        XCTAssertTrue(currentTitle.waitForExistence(timeout: 15), app.debugDescription); XCTAssertTrue(savedTitle.exists, app.debugDescription)
+        let choose = childField("chooseChildField-title", app); childReveal(choose, app); XCTAssertFalse(choose.isEnabled)
+        let before = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); before.name = "child-conflict-current-and-saved"; before.lifetime = .keepAlways; add(before)
+        childCloseConfirmation(app)
+        if loseClose {
+            let message = app.staticTexts["childComparisonStatus"]
+            XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "couldn’t be confirmed", "couldn’t be confirmed"), object: message)], timeout: 12) == .completed, app.debugDescription)
+            XCTAssertFalse(app.staticTexts["childOriginalClosed"].exists)
+            childCloseConfirmation(app)
+        }
+        XCTAssertTrue(app.staticTexts["childOriginalClosed"].waitForExistence(timeout: 15), app.debugDescription)
+        childReveal(choose, app)
+        XCTAssertEqual(choose.value.map { String(describing: $0) }, "0", app.debugDescription)
+        #if os(iOS)
+        childPress(choose.descendants(matching: .switch).firstMatch)
+        #else
+        childPress(choose)
+        #endif
+        XCTAssertEqual(choose.value.map { String(describing: $0) }, "1", app.debugDescription)
+        let save = app.buttons["saveReviewedChildFields"]; childReveal(save, app); XCTAssertTrue(save.isEnabled); childPress(save)
+        let status = app.staticTexts["childComparisonStatus"]; childReveal(status, app)
+        XCTAssertTrue((status.label + (status.value as? String ?? "")).contains("Reviewed changes saved"), app.debugDescription)
+        let after = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); after.name = "child-conflict-reviewed-replacement"; after.lifetime = .keepAlways; add(after)
+        childDone(app); childReveal(send, app); childPress(send)
+        let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed")).firstMatch
+        XCTAssertTrue(confirmed.waitForExistence(timeout: 12), app.debugDescription)
+        childDone(app); childProbe(app, "confirmed=1 writes=1 requests=2 current=My reviewed child title")
+        childProbe(app, loseClose ? "closed=1 closes=2" : "closed=1 closes=1"); childProbe(app, "private=0")
+        app.terminate(); try childOpen(app, reset: false)
+        childProbe(app, "queued=0 attempted=0 confirmed=1 writes=1 requests=2 current=My reviewed child title")
+        childProbe(app, "closed=1")
+    }
+    @MainActor func testChildFieldsNativeDistinctSavedValues() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childSave(app, title: "First saved child version"); childDone(app); childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed")).firstMatch
+        XCTAssertTrue(confirmed.waitForExistence(timeout: 12), app.debugDescription); childDone(app)
+        childSave(app, title: "Second saved child version"); childDone(app); childHomePress("childNativeRecovery", app)
+        let values = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier ENDSWITH %@", "childFieldValue-", "-title"))
+        let second = values.element(boundBy: 1); childReveal(second, app)
+        let names = values.allElementsBoundByIndex.map { $0.label + " " + (($0.value as? String) ?? "") }
+        XCTAssertTrue(names.contains(where: { $0.contains("First saved child version") }), app.debugDescription)
+        XCTAssertTrue(names.contains(where: { $0.contains("Second saved child version") }), app.debugDescription)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "child-distinct-saved-values"; shot.lifetime = .keepAlways; add(shot)
+        childDone(app); childProbe(app, "queued=1 attempted=0 confirmed=1 writes=1 requests=1 current=First saved child version")
+    }
+
+    @MainActor func testChildFieldsNativeConflictReplacementAndColdProof() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childConflictReplacement(app, loseClose: false)
+    }
+    @MainActor func testChildFieldsNativeLostCloseReplyAndColdProof() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childConflictReplacement(app, loseClose: true)
+    }
+    @MainActor func testChildFieldsNativeCloseRecoversAlreadyAppliedOriginal() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-fields-lose-reply")
+        childSave(app, title: "Already applied child change"); childDone(app); childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        let compare = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "compareChildField-")).firstMatch
+        childReveal(compare, app); childPress(compare); childCloseConfirmation(app)
+        let status = app.staticTexts["childComparisonStatus"]; childReveal(status, app)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "already applied", "already applied"), object: status)], timeout: 12) == .completed, app.debugDescription)
+        XCTAssertFalse(app.buttons["saveReviewedChildFields"].exists); XCTAssertFalse(app.staticTexts["childOriginalClosed"].exists)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "child-conflict-already-applied"; shot.lifetime = .keepAlways; add(shot)
+        childDone(app); childDone(app); childProbe(app, "confirmed=1 writes=1 requests=1 current=Already applied child change"); childProbe(app, "closed=0 closes=1")
+        app.terminate(); try childOpen(app, reset: false); childProbe(app, "confirmed=1 writes=1 requests=1"); childProbe(app, "closed=0 closes=1")
     }
 
     @MainActor func testChildFieldsHeadingDoesNotOfferReminderOrPlan() throws {

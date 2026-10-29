@@ -33,6 +33,14 @@ struct SavedChildTaskFieldChangesLink: View {
     }
 }
 
+/// SwiftUI List flattens section rows; a field name alone is not a unique
+/// identity when several saved requests change the same field.
+private struct ChildFieldReviewItem: Identifiable {
+    let request: String
+    let field: String
+    var id: String { request + "-" + field }
+}
+
 private struct ChildFieldRemovalReview {
     let entry: ChildTaskFieldJournalState.Entry
     let model: ChildTaskFieldRecoveryModel
@@ -46,6 +54,8 @@ struct ChildTaskFieldRecoveryView: View {
     @State private var modelScope: ChildTaskFieldClientScope?
     @State private var failure: String?
     @State private var removing: ChildFieldRemovalReview?
+    @State private var comparing: ChildTaskFieldCommand?
+    @State private var reload = UUID()
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         List {
@@ -57,17 +67,19 @@ struct ChildTaskFieldRecoveryView: View {
                     Section {
                         Label(status(entry.phase), systemImage: entry.phase == .confirmed ? "checkmark.circle" : entry.phase == .attempted ? "clock.badge.questionmark" : "tray")
                             .font(.headline).accessibilityIdentifier("childFieldPhase-" + entry.command.id)
-                        ForEach(entry.command.body["changes"]!.object.keys.sorted(), id: \.self) { field in
+                        ForEach(entry.command.body["changes"]!.object.keys.sorted().map { ChildFieldReviewItem(request: entry.command.id, field: $0) }) { item in
+                            let field = item.field
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(fieldTitle(field)).font(.caption).foregroundStyle(.secondary)
                                 if field == "assigned_to" {
                                     ChildFieldAssigneeReview(command: entry.command)
                                 } else {
                                     Text(render(field, entry.command.body["changes"]!.object[field]!, command: entry.command)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                                        .accessibilityIdentifier("childFieldValue-" + item.id)
                                 }
-                            }
+                            }.id(item.id)
                         }
-                        if entry.phase != .confirmed {
+                        if entry.phase != .confirmed && entry.phase != .closed {
                             Button(entry.phase == .attempted ? "Retry original request" : "Send saved change", systemImage: "arrow.up.circle") { Task { await model.send(entry.command) } }
                                 .disabled(model.busy || !store.permitsChildTaskFieldRequest(entry.command, sending: true))
                                 .accessibilityIdentifier("sendChildField-" + entry.command.id)
@@ -75,7 +87,11 @@ struct ChildTaskFieldRecoveryView: View {
                                 Text("Sending requires a connection, current editing access and no pending parent-task save.").font(.footnote).foregroundStyle(.secondary)
                             }
                         }
-                        Button(entry.phase == .confirmed ? "Remove saved receipt" : "Discard saved request", role: .destructive) { if let scope { removing = ChildFieldRemovalReview(entry: entry, model: model, scope: scope) } }
+                        if entry.phase != .confirmed {
+                            Button("Compare with current values", systemImage: "arrow.left.arrow.right") { comparing = entry.command }
+                                .disabled(model.busy).accessibilityIdentifier("compareChildField-" + entry.command.id)
+                        }
+                        Button(entry.phase == .confirmed ? "Remove saved receipt" : entry.phase == .closed ? "Remove closed request" : "Discard saved request", role: .destructive) { if let scope { removing = ChildFieldRemovalReview(entry: entry, model: model, scope: scope) } }
                             .disabled(model.busy).accessibilityIdentifier("discardChildField-" + entry.command.id)
                     }
                 }
@@ -85,14 +101,17 @@ struct ChildTaskFieldRecoveryView: View {
             else if scope == nil { ContentUnavailableView("Open your workspace", systemImage: "lock.shield", description: Text("Saved requests belong to their original account.")) }
             else { ProgressView("Reading saved changes…") }
         }
-        .task(id: scope) {
-            model?.close(); model = nil; modelScope = nil; failure = nil; removing = nil
+        .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
+            model?.close(); model = nil; modelScope = nil; failure = nil; removing = nil; comparing = nil
             guard scope != nil else { return }
             do { let value = try store.childTaskFieldRecoveryModel(); modelScope = scope; model = value; await value.load() }
             catch { failure = error.localizedDescription }
         }
-        .onChange(of: scope) { _, _ in removing = nil }
+        .onChange(of: scope) { _, _ in removing = nil; comparing = nil }
         .onDisappear { removing = nil; model?.close() }
+        .sheet(isPresented: Binding(get: { comparing != nil }, set: { if !$0 { comparing = nil } }), onDismiss: { reload = UUID() }) {
+            if let comparing, let scope { ChildFieldConflictReview(command: comparing, captured: scope) }
+        }
         .alert("Remove this saved request?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
             if let removing {
                 Button(removing.entry.phase == .attempted ? "Discard unconfirmed request" : "Remove from this device", role: .destructive) {
@@ -107,7 +126,7 @@ struct ChildTaskFieldRecoveryView: View {
         }
     }
     private func status(_ phase: ChildTaskFieldJournalState.Phase) -> String {
-        switch phase { case .queued: return "Saved · not sent"; case .attempted: return "Unconfirmed · original request kept"; case .confirmed: return "Confirmed · receipt saved" }
+        switch phase { case .queued: return "Saved · not sent"; case .attempted: return "Unconfirmed · original request kept"; case .confirmed: return "Confirmed · receipt saved"; case .closed: return "Closed · original request cannot send" }
     }
     private func fieldTitle(_ key: String) -> String {
         ["title": "Title", "description": "Notes", "priority": "Priority", "due_date": "Planned date", "due_time": "Planned time", "deadline_date": "Deadline", "duration_minutes": "Time estimate", "time_zone": "Time zone", "scheduled_at": "Exact time", "assigned_to": "Assigned to", "labels": "Labels", "reminder_specs": "Reminders"][key] ?? "Saved value"
@@ -723,6 +742,7 @@ private struct ChildPersonalAssigneeView: View {
 private struct ChildFieldAssigneeLookup: Hashable {
     let scope: ChildTaskFieldClientScope?
     let request: String
+    let user: String
     let available: Bool
 }
 /// Resolve names only in the request's current account/project. The identity in
@@ -731,8 +751,9 @@ private struct ChildFieldAssigneeReview: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
     let command: ChildTaskFieldCommand
+    var selection: JSON? = nil
     @State private var name: String?
-    private var user: String { command.body["changes"]!.object["assigned_to"]?.text ?? "" }
+    private var user: String { (selection ?? command.body["changes"]!.object["assigned_to"])?.text ?? "" }
     private var root: Record? {
         guard let scope = store.childTaskFieldRecoveryScope, scope.account == command.account, scope.origin == command.origin,
               let root = store.record("tasks", id: command.body["task_id"]!.text), root["task_generation"] == command.body["task_generation"], root["project_id"] == command.body["project_id"] else { return nil }
@@ -740,7 +761,7 @@ private struct ChildFieldAssigneeReview: View {
         return root
     }
     private var available: Bool { phase == .active && store.childTaskFieldEditingEnabled && root != nil }
-    private var lookup: ChildFieldAssigneeLookup { .init(scope: store.childTaskFieldRecoveryScope, request: command.id, available: available) }
+    private var lookup: ChildFieldAssigneeLookup { .init(scope: store.childTaskFieldRecoveryScope, request: command.id, user: user, available: available) }
     var body: some View {
         Text(user.isEmpty ? "Unassigned" : user == command.account ? "You" : available ? name ?? "Saved person · name unavailable" : "Saved person · name unavailable")
             .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
@@ -762,5 +783,159 @@ private struct ChildFieldAssigneeReview: View {
                     guard lookup == captured, !Task.isCancelled else { return }; name = resolved
                 } catch { guard lookup == captured else { return }; name = nil }
             }
+    }
+}
+
+/// Each comparison owns a fresh recovery model. The underlying saved-request
+/// screen may disappear under this sheet without cancelling this review.
+private struct ChildFieldConflictReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @Environment(\.dismiss) private var dismiss
+    let command: ChildTaskFieldCommand
+    let captured: ChildTaskFieldClientScope
+    @State private var model: ChildTaskFieldRecoveryModel?
+    @State private var comparison: ChildTaskFieldComparison?
+    @State private var chosen: Set<String> = []
+    @State private var failure: String?
+    @State private var loading = false
+    @State private var confirmingClose = false
+    @State private var saved = false
+    @State private var visible = false
+    private var available: Bool { visible && phase == .active && store.childTaskFieldRecoveryScope == captured }
+    private var entry: ChildTaskFieldJournalState.Entry? { available ? model?.entries.first(where: { $0.command == command }) : nil }
+    private var current: Bool { comparison.map { available && store.childTaskFieldComparisonIsCurrent($0.read) } == true }
+    var body: some View {
+        NavigationStack {
+            Form {
+                if let entry {
+                    Section {
+                        Text("Choose which saved changes you still want. Current values are kept unless you choose a saved change.")
+                        if entry.phase == .closed {
+                            Label("Original request closed", systemImage: "checkmark.shield")
+                                .accessibilityIdentifier("childOriginalClosed")
+                        } else if entry.phase == .confirmed {
+                            Label("Original change confirmed", systemImage: "checkmark.circle")
+                            Text("Closing recovered its confirmation. Open the current task to make another edit.")
+                        } else {
+                            Text("Before saving a replacement, close the original request. A lost reply may mean it already applied.")
+                            Button("Close original request…", systemImage: "stop.circle") { confirmingClose = true }
+                                .disabled(loading || model?.busy == true).accessibilityIdentifier("closeOriginalChildField")
+                        }
+                    }
+                    if let comparison, current {
+                        ForEach(comparison.groups, id: \.id) { group in
+                            Section(groupTitle(group.id)) {
+                                ForEach(group.fields, id: \.self) { field in
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        if group.fields.count > 1 { Text(fieldTitle(field)).font(.headline) }
+                                        Text("Current").font(.caption).foregroundStyle(.secondary)
+                                        reviewValue(field, comparison.current[field])
+                                        Text("Your saved change").font(.caption).foregroundStyle(.secondary)
+                                        reviewValue(field, command.body["changes"]!.object[field]!)
+                                    }.fixedSize(horizontal: false, vertical: true)
+                                }
+                                if let warning = group.warning { Text(warning).font(.footnote).foregroundStyle(.secondary) }
+                                if group.differs {
+                                    Toggle("Use my saved change", isOn: Binding(get: { chosen.contains(group.id) }, set: { value in
+                                        saved = false; if value { chosen.insert(group.id) } else { chosen.remove(group.id) }
+                                    })).disabled(group.warning != nil || entry.phase != .closed || model?.busy == true || saved)
+                                        .accessibilityIdentifier("chooseChildField-" + group.id)
+                                } else { Label("Already matches", systemImage: "checkmark").foregroundStyle(.secondary) }
+                            }
+                        }
+                        if entry.phase == .closed {
+                            Section {
+                                Button("Save reviewed changes", systemImage: "tray.and.arrow.down") {
+                                    guard current, let model else { return }
+                                    Task {
+                                        let result = await model.saveReplacement(comparison, choosing: chosen)
+                                        guard available else { return }; if result != nil { saved = true; chosen = [] }
+                                    }
+                                }.disabled(chosen.isEmpty || model?.busy == true || saved).accessibilityIdentifier("saveReviewedChildFields")
+                                Text("This saves a new request on this device. Review it in Saved subtask changes before sending.").font(.footnote).foregroundStyle(.secondary)
+                            }
+                        }
+                    } else if !loading {
+                        Section { Text("Refresh current values before choosing changes. Your original request stays saved.").foregroundStyle(.secondary) }
+                    }
+                    if let failure { Section { Text(failure).foregroundStyle(.secondary) } }
+                    if let message = model?.message { Section { Text(message).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childComparisonStatus") } }
+                    Section {
+                        Button("Refresh current values", systemImage: "arrow.clockwise") { Task { await refresh() } }
+                            .disabled(loading || model?.busy == true).accessibilityIdentifier("refreshChildComparison")
+                    }
+                } else if model?.loaded == true || !available {
+                    ContentUnavailableView("Reopen saved changes", systemImage: "lock.shield", description: Text("This request or workspace changed. Your saved work is kept."))
+                }
+                if loading || model?.busy == true || model == nil && available { ProgressView("Checking saved changes…") }
+            }
+            #if os(macOS)
+            .formStyle(.grouped)
+            #endif
+            .navigationTitle("Review saved change")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
+        }
+        .onAppear { visible = true }
+        .task(id: available) {
+            model?.close(); model = nil; comparison = nil; chosen = []; failure = nil
+            guard available else { return }
+            do {
+                let value = try store.childTaskFieldRecoveryModel(); model = value; await value.load()
+                guard available else { value.close(); return }; await refresh()
+            } catch { if available { failure = error.localizedDescription } }
+        }
+        .onChange(of: current) { _, value in if !value { chosen = []; confirmingClose = false } }
+        .onDisappear { visible = false; model?.close(); comparison = nil; chosen = []; confirmingClose = false }
+        .alert("Close the original request?", isPresented: $confirmingClose) {
+            Button("Close original request") {
+                guard available, entry != nil, let model else { return }
+                Task { await model.closeOriginal(command); guard available else { return }; await refresh() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("The service will prevent this request from applying later. If it already applied, closing recovers its confirmation and does not undo the change.") }
+    }
+    private func refresh() async {
+        guard available, !loading, model?.busy != true else { return }
+        loading = true; comparison = nil; chosen = []; saved = false; failure = nil
+        defer { loading = false }
+        do {
+            await store.sync(); guard available, !Task.isCancelled else { return }
+            let read = try await store.readChildTaskRecords(command.body["task_id"]!.text)
+            guard available, !Task.isCancelled else { return }
+            comparison = try ChildTaskFieldComparison(original: command, read: read)
+        } catch is CancellationError {} catch {
+            if available { failure = "Couldn’t compare this task. It may have moved, been recreated, or become unavailable. The original request stays saved." }
+        }
+    }
+    private func groupTitle(_ id: String) -> String { id == "plan" ? "Plan" : fieldTitle(id) }
+    private func fieldTitle(_ id: String) -> String {
+        ["title":"Title", "description":"Notes", "priority":"Priority", "due_date":"Planned date", "due_time":"Planned time", "deadline_date":"Deadline", "duration_minutes":"Time estimate", "time_zone":"Time zone", "scheduled_at":"Exact time", "assigned_to":"Assigned to", "labels":"Labels", "reminder_specs":"Reminders"][id] ?? "Saved value"
+    }
+    @ViewBuilder private func reviewValue(_ field: String, _ value: JSON) -> some View {
+        if field == "assigned_to" { ChildFieldAssigneeReview(command: command, selection: value) }
+        else { Text(self.value(field, value)).textSelection(.enabled) }
+    }
+    private func value(_ field: String, _ value: JSON) -> String {
+        if field == "reminder_specs" { return ChildTaskRemindersDraft.summary(value) }
+        if field == "assigned_to" { return value == .null || value.text.isEmpty ? "Unassigned" : value.text == store.userID ? "You" : "Another project member" }
+        if field == "labels" {
+            let labels = TeamTaskLabelsDraft(value)
+            guard labels.supported else { return "Labels unavailable in this version" }
+            guard !labels.entries.isEmpty else { return "No labels" }
+            let personal = comparison.map { TeamTaskLabelsDraft.usesPersonalCatalog($0.read.context.root, cache: store.nativeConversationTeamCache) } ?? false
+            return labels.entries.map { item in
+                let name = personal ? store.labels.first(where: { $0.id == item.value })?.name : nil
+                return name ?? TeamTaskLabelsDraft.displayName(item.value) ?? "Saved label · name unavailable"
+            }.joined(separator: ", ")
+        }
+        if value == .null { return "None" }
+        if field == "duration_minutes" { return "\(value.integer) min" }
+        if field == "priority" { return value.integer == 4 ? "None" : "Priority \(value.integer)" }
+        if case .string(let text) = value { return text.isEmpty ? "Empty" : text }
+        return "Saved value · kept unchanged"
     }
 }

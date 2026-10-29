@@ -1025,3 +1025,16 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Final portable-mode/device delivery, interrupted/role/account/window/genuine-Keychain lifecycle, Mac runtime/speech, conflict review and authoritative child migration. Ordinary flags stay off; previous user deferrals remain.
 
 [Reminder implementation and verification](child-task-field-reminders/README.md).
+
+
+## 2026-10-29 — saved subtask conflict review candidate
+
+- [x] Compare current own-node fields with the saved intent; require explicit choices, grouped planning values, fresh scope/identity checks and a fresh replacement UUID.
+- [x] Persist closed-original proofs separately from applied receipts; uncertain close replies retain the original attempted command. A replacement requires the durable closed proof and stays separate from Send and other queued work.
+- [x] Add account/session-bound bounded metadata transport, disk-failure/departure/lost-reply recovery and readable comparison/closure controls in each owned app.
+- [x] Independently pass 228 focused client checks per repo, including thirteen new cases; full app/test products build. Native phases are recorded separately.
+- [x] Generate the identical canonical migration after direct execution; independently pass 35 closure/race/permission/quota checks and no added advisor findings in each repository. The existing child-edit regression and native phases are recorded separately. No hosted deployment or flag changes.
+- [x] Pass four targeted current-runtime Mac journeys: distinct values, reviewed replacement, lost-close retry and already-applied recovery, with exact cold proofs and no reported runtime warnings. Window-only screenshots inspected.
+- [ ] Complete native current-source/runtime/speech and genuine Keychain/team/account/window acceptance. Ordinary child flags stay off; completion/structure/legacy adapters, authoritative migration and all existing deferrals remain open.
+
+[Implementation, database blocker and exact evidence](child-task-field-resolution/README.md).

@@ -1,0 +1,14 @@
+{
+  "mac/Taskfold.app": {
+    "strict_deep_verified": true
+  },
+  "mac/TaskfoldUITests-Runner.app": {
+    "strict_deep_verified": true
+  },
+  "ios/Taskfold.app": {
+    "strict_deep_verified": true
+  },
+  "ios/TaskfoldUITests-Runner.app": {
+    "strict_deep_verified": true
+  }
+}
