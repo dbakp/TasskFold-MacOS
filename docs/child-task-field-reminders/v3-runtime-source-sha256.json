@@ -1,0 +1,12 @@
+{
+  "platform": "iOS native test host",
+  "sha256": {
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "7bda2061022d27c148eb9812a8f8680169bf95c9c95845cad29e26590c0fccc7",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "a88f8357d3b023f8b07f26bc12bfc3d2e2cb4808536dc8c2137f2f851ae70a09",
+    "Taskfold/Views/TeamTaskRemindersEditor.swift": "2b49d606c77fb323a80c3e30c438f164ca8cc84c67020e745e57c8c4c64587ae",
+    "Taskfold/Views/ReminderEditor.swift": "3bd630958841ae2b88978c8397abb6784681dd99f7af3712bc3456df0aef08a5",
+    "Taskfold/ChildFieldNativeFixture.swift": "cfaeaa531de6613c21c60716d01a47772370732becea99e552040e9be918084b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "6b47f2e9ee322fee9099fe579bd252c5708af64e70ba2037c12ae305dedb025a",
+    "Taskfold/Views/TaskEditor.swift": "1602f60411752b5f0c314a16af7a6cbb214abb20efa63b108093d33b148b3831"
+  }
+}

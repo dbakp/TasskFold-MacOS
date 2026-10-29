@@ -1,0 +1,154 @@
+--- a/Taskfold/Views/ChildTaskFieldViews.swift
++++ b/Taskfold/Views/ChildTaskFieldViews.swift
+@@ -369,7 +369,13 @@
+                 read = value; model = try store.childTaskFieldRecoveryModel(); key = value.orderedNodes.first?.key ?? ""; select()
+             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = error.localizedDescription }
+         }
+-        .onDisappear { appeared = false; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() }
++        .onDisappear {
++            appeared = false; noticeRequest = nil
++            // An owned composer can cover this view while continuing the same
++            // edit. Its presentation token, not parent visibility, owns Apply.
++            if reminderEditor == nil { editingRevision = UUID() }
++            checkpoint(); _ = draftSession?.flush()
++        }
+         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
+         .sheet(item: $sharedAssignee) { TeamTaskAssigneePicker(request: $0) }
+         .sheet(item: $personalAssignee) { ChildPersonalAssigneeView(request: $0) }
+@@ -379,19 +385,19 @@
+     private func openReminders() {
+         guard sourceAvailable, let read, let captured = scope, let original = read.nodes[selectedKey], TaskKind(Record(original.fields)) == .task else { return }
+         noticeRequest = nil
+-        let selected = selectedKey, revision = editingRevision
++        let selected = selectedKey, revision = editingRevision, presentation = UUID()
+         let parent = read.context.root
+         let shared = !TeamTaskLabelsDraft.usesPersonalCatalog(parent, cache: store.nativeConversationTeamCache)
+         let team = shared ? (try? store.captureTeamTaskEditor(parent)) : nil
+         guard !shared || team != nil else { failure = "Project access changed. Reopen the task before changing reminders."; return }
+-        let current = { sourceAvailable && scope == captured && selectedKey == selected && editingRevision == revision && appeared && phase == .active && store.editorMayWrite(source: parent, proposed: parent, teamDraft: team) }
++        let current = { sourceAvailable && scope == captured && selectedKey == selected && editingRevision == revision && reminderEditor?.id == presentation && phase == .active && store.editorMayWrite(source: parent, proposed: parent, teamDraft: team) }
+         var record = reminders.applying(to: assignment.applying(to: labels.applying(to: planning.applying(to: Record(original.fields)))))
+         record["title"] = .string(title); record["description"] = .string(notes); record["priority"] = .number(Double(priority))
+         reminderEditor = TeamTaskRemindersRequest(childWorkspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), record: record, sourceIdentity: draftIdentity, current: current, apply: { settings in
+             guard current() else { return "This task changed. Your reminder settings stay in their private draft." }
+             do { try reminders.apply(settings); checkpoint(reopen: true); return nil }
+             catch { return error.localizedDescription }
+-        })
++        }, presentationID: presentation)
+     }
+     private var assigneeCaption: String {
+         let id = assignment.selected
+--- a/Taskfold/Views/TeamTaskRemindersEditor.swift
++++ b/Taskfold/Views/TeamTaskRemindersEditor.swift
+@@ -2,17 +2,17 @@
+ 
+ struct TeamTaskRemindersRequest: Identifiable {
+     enum Source { case team(TeamTaskEditorDraft), child(WorkspaceBinding) }
+-    let id = UUID()
++    let id: UUID
+     let source: Source
+     let record: Record
+     let sourceIdentity: JSON
+     let current: () -> Bool
+     let apply: (JSON) -> String?
+     init(teamDraft: TeamTaskEditorDraft, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?) {
+-        source = .team(teamDraft); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
++        id = UUID(); source = .team(teamDraft); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
+     }
+-    init(childWorkspace: WorkspaceBinding, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?) {
+-        source = .child(childWorkspace); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
++    init(childWorkspace: WorkspaceBinding, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?, presentationID: UUID = UUID()) {
++        id = presentationID; source = .child(childWorkspace); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
+     }
+     var workspace: WorkspaceBinding { switch source { case .team(let draft): draft.workspace; case .child(let workspace): workspace } }
+     var isChild: Bool { if case .child = source { return true }; return false }
+@@ -175,7 +175,8 @@
+         .onChange(of: available) { _, value in if !value { checkpoint(); stopped = true; _ = session?.flush() } }
+         .interactiveDismissDisabled(draft.changed || childState != .null || session?.failure != nil)
+         .onDisappear {
+-            if !finished, !draft.changed && childState == .null, session?.failure == nil { _ = session?.finish(); finished = true }
++            if editing != nil { checkpoint(); _ = session?.flush() }
++            else if !finished, !draft.changed && childState == .null, session?.failure == nil { _ = session?.finish(); finished = true }
+             else { checkpoint() }
+         }
+     }
+--- a/Taskfold/Views/ReminderEditor.swift
++++ b/Taskfold/Views/ReminderEditor.swift
+@@ -248,7 +248,8 @@
+     let taskGeneration: JSON
+     let wasPersisted: Bool
+     let originalRows: [JSON]
+-    var id: String { spec.id }
++    let presentationID = UUID()
++    var id: String { presentationID.uuidString }
+ }
+ struct ReminderSpecEditingContext {
+     let current: () -> Bool
+@@ -447,8 +448,13 @@
+         .onChange(of: available) { _, value in
+             if !value { context?.capture(checkpointState); context?.preserve(); choosingHolidays = false; choosingTimeZone = false; repeatFocused = false; intervalFocused = nil }
+         }
+-        .onDisappear { if available { context?.closed() } else { context?.preserve() } }
++        .onDisappear {
++            if choosingTimeZone || choosingHolidays { context?.capture(checkpointState); context?.preserve() }
++            else if available { context?.closed() }
++            else { context?.preserve() }
++        }
+         .task {
++            if available { context?.capture(checkpointState); context?.preserve() }
+             while !Task.isCancelled {
+                 previewNow = Date()
+                 do { try await Task.sleep(for: .seconds(30)) } catch { break }
+--- a/Taskfold/ChildFieldNativeFixture.swift
++++ b/Taskfold/ChildFieldNativeFixture.swift
+@@ -142,11 +142,12 @@
+             let child = store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object ?? [:]
+             let labelValues = child["labels"]?.list.map(\.text).joined(separator: ",") ?? ""
+             let pendingLabel = drafts.first?.extras["unsubmitted_child_label"]?.text ?? ""
++            let reminderDrafts = drafts.filter { $0.extras["unsubmitted_reminder_settings"].map { $0 != .null } == true }.count
+             let schedules = child["reminder_specs"]?.list ?? []
+             let localSpecs = schedules.compactMap { ReminderSpec(row: $0) }
+             let enabledSchedules = localSpecs.filter(\.enabled).count
+             let beforeTen = localSpecs.filter { $0.enabled && $0.kind == "relative" && $0.offset == -10 }.count
+-            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
++            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) reminderDraft=\(reminderDrafts) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
+         } catch { problem = error.localizedDescription }
+     }
+ }
+--- a/TaskfoldUITests/AudioCommentUITests.swift
++++ b/TaskfoldUITests/AudioCommentUITests.swift
+@@ -1641,7 +1641,9 @@
+     }
+ 
+     @MainActor private func childReminderToggleOff(_ app: XCUIApplication) {
+-        let planned = childField("teamReminderPlanned", app); childReveal(planned, app)
++        let planned = childField("teamReminderPlanned", app)
++        XCTAssertTrue(planned.waitForExistence(timeout: 10), app.debugDescription)
++        childReveal(planned, app)
+         #if os(iOS)
+         let thumb = planned.descendants(matching: .switch).firstMatch
+         childPress(thumb)
+@@ -1654,6 +1656,11 @@
+         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+         childHomePress("childNativeEditor", app)
+         let open = app.buttons["childReminders"]; childReveal(open, app); childPress(open)
++        let initialAdd = app.buttons["addTeamReminder"]; childReveal(initialAdd, app); childPress(initialAdd)
++        XCTAssertTrue(app.buttons["reminderCancel"].waitForExistence(timeout: 10), app.debugDescription)
++        let probe = app.staticTexts["childNativeProbe"]
++        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", "reminderDraft=1"), object: probe)], timeout: 12) == .completed, app.debugDescription)
++        childPress(app.buttons["reminderCancel"])
+         childReminderToggleOff(app)
+         childPress(app.buttons["cancelTeamReminders"])
+         let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); XCTAssertFalse(save.isEnabled)
+@@ -1664,7 +1671,10 @@
+                 childReminderToggleOff(app)
+                 let addReminder = app.buttons["addTeamReminder"]; childReveal(addReminder, app); childPress(addReminder)
+                 let done = app.buttons["reminderSave"]; XCTAssertTrue(done.waitForExistence(timeout: 10), app.debugDescription); childPress(done)
+-                XCTAssertTrue(app.buttons["teamReminderEdit-1"].waitForExistence(timeout: 10), app.debugDescription)
++                let edit = app.buttons["teamReminderEdit-1"]
++                XCTAssertTrue(edit.waitForExistence(timeout: 10), app.debugDescription)
++                childReveal(edit, app); childPress(edit)
++                XCTAssertTrue(app.buttons["reminderSave"].waitForExistence(timeout: 10)); childPress(app.buttons["reminderSave"])
+             } else {
+                 let remove = app.buttons["teamReminderRemove-1"]; childReveal(remove, app); childPress(remove)
+             }

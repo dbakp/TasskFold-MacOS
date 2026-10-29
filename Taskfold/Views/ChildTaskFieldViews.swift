@@ -1,4 +1,5 @@
 import SwiftUI
+import Observation
 #if os(iOS)
 import UIKit
 #endif
@@ -121,6 +122,7 @@ struct ChildTaskFieldRecoveryView: View {
                 return TeamTaskLabelsDraft.displayName(item.text) ?? "Unavailable saved label"
             }.joined(separator: "\n")
         }
+        if field == "reminder_specs" { return ChildTaskRemindersDraft.summary(value) }
         if value == .null { return "Cleared" }
         if field == "duration_minutes", case .number(let minutes) = value { return "\(Int(minutes)) min" }
         if field == "priority", case .number(let priority) = value { return priority == 4 ? "None" : "Priority \(Int(priority))" }
@@ -149,6 +151,25 @@ struct ChildTaskFieldEditorLink: View {
                 .sheet(isPresented: $showing) { WorkflowShell(title: "Subtask changes") { ChildTaskFieldEditorView(rootID: rootID) } }
         }
     }
+}
+
+@MainActor @Observable private final class ChildReminderPresentation {
+    let id = UUID()
+    private(set) var active = true
+    func close(_ reason: String) {
+        guard active else { return }; active = false
+        #if DEBUG
+        ChildFieldNativeIdentity.recordPresentationClose(id, reason: reason)
+        #endif
+    }
+}
+@MainActor @Observable private final class ChildReminderOwnership {
+    private(set) var current: ChildReminderPresentation?
+    var active: Bool { current?.active == true }
+    func begin() -> ChildReminderPresentation {
+        close("replacement"); let value = ChildReminderPresentation(); current = value; return value
+    }
+    func close(_ reason: String) { current?.close(reason); current = nil }
 }
 
 private struct ChildFieldReadRequest: Hashable { let scope: ChildTaskFieldClientScope?; let retry: UUID }
@@ -194,6 +215,9 @@ struct ChildTaskFieldEditorView: View {
     @State private var chosenAssigneeName: String?
     @State private var sharedAssignee: TeamTaskAssigneeRequest?
     @State private var personalAssignee: ChildPersonalAssigneeRequest?
+    @State private var reminders = ChildTaskRemindersDraft(original: Record())
+    @State private var reminderEditor: TeamTaskRemindersRequest?
+    @State private var reminderOwnership = ChildReminderOwnership()
     @State private var recovery = false
     @State private var reload = UUID()
     @State private var draftSession: TaskEditorSession?
@@ -212,7 +236,7 @@ struct ChildTaskFieldEditorView: View {
         if !title.utf8.elementsEqual(node.fields["title"]?.text.utf8 ?? "".utf8) { fields["title"] = .string(title) }
         if !notes.utf8.elementsEqual(node.fields["description"]?.text.utf8 ?? "".utf8) { fields["description"] = .string(notes) }
         if priority != Record(node.fields).priority { fields["priority"] = .number(Double(priority)) }
-        fields.merge(planning.changes) { _, new in new }; fields.merge(labels.changes) { _, new in new }; fields.merge(assignment.changes) { _, new in new }; return fields
+        fields.merge(planning.changes) { _, new in new }; fields.merge(labels.changes) { _, new in new }; fields.merge(assignment.changes) { _, new in new }; fields.merge(reminders.changes) { _, new in new }; return fields
     }
     var body: some View {
         ScrollViewReader { proxy in
@@ -254,7 +278,7 @@ struct ChildTaskFieldEditorView: View {
                                     HStack {
                                         Label(labels.name(entry, catalog: store.labels), systemImage: "tag").fixedSize(horizontal: false, vertical: true)
                                         Spacer()
-                                        Button(role: .destructive) { labels.remove(entry.id); checkpoint(reopen: true) } label: { Image(systemName: "minus.circle").frame(minWidth: 44, minHeight: 44) }
+                                        Button(role: .destructive) { labels.remove(entry.id); labelMessage = nil; checkpoint(reopen: true) } label: { Image(systemName: "minus.circle").frame(minWidth: 44, minHeight: 44) }
                                             .buttonStyle(.borderless).accessibilityLabel("Remove " + labels.name(entry, catalog: store.labels))
                                             .accessibilityIdentifier("removeChildLabel-\(entry.id)")
                                     }
@@ -277,6 +301,9 @@ struct ChildTaskFieldEditorView: View {
                                 if !addingLabel.isEmpty { Text("Add this label to include it in the saved change. Unfinished input is kept privately.").font(.footnote).foregroundStyle(.secondary) }
                             }
                         }
+                    }
+                    if TaskKind(Record(read.nodes[key]?.fields ?? [:])) == .task {
+                        Section { Button("Reminders", systemImage: "bell") { openReminders() }.accessibilityIdentifier("childReminders") }
                     }
                     Section {
                         Button("Save on this device", systemImage: "tray.and.arrow.down") {
@@ -349,10 +376,10 @@ struct ChildTaskFieldEditorView: View {
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: key) { _, _ in select() }
         .onChange(of: sourceAvailable) { _, value in if !value { checkpoint(); _ = draftSession?.flush() } }
-        .onChange(of: phase) { _, value in if value != .active { sharedAssignee = nil; personalAssignee = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
+        .onChange(of: phase) { _, value in if value != .active { reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
         .onChange(of: recovery) { _, value in if value { noticeRequest = nil; editingRevision = UUID() } }
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
-            sharedAssignee = nil; personalAssignee = nil; noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
+            reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
             checkpoint(); for session in draftSessions.values { _ = session.flush() }; draftSession = nil; draftSessions = [:]; draftValues = [:]; labelInputs = [:]; addingLabel = ""; selectedKey = ""
             model?.close(); model = nil; read = nil; title = ""; notes = ""; key = ""; failure = nil
             guard let captured = scope else { return }
@@ -363,11 +390,36 @@ struct ChildTaskFieldEditorView: View {
                 read = value; model = try store.childTaskFieldRecoveryModel(); key = value.orderedNodes.first?.key ?? ""; select()
             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = error.localizedDescription }
         }
-        .onDisappear { appeared = false; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() }
+        .onDisappear {
+            appeared = false; noticeRequest = nil
+            // An owned composer can cover this view while continuing the same
+            // edit. Its presentation token, not parent visibility, owns Apply.
+            if !reminderOwnership.active { editingRevision = UUID() }
+            checkpoint(); _ = draftSession?.flush()
+        }
         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
         .sheet(item: $sharedAssignee) { TeamTaskAssigneePicker(request: $0) }
         .sheet(item: $personalAssignee) { ChildPersonalAssigneeView(request: $0) }
+        .sheet(item: $reminderEditor) { TeamTaskRemindersEditor(request: $0).id($0.id) }
         }
+    }
+    private func openReminders() {
+        guard sourceAvailable, let read, let captured = scope, let original = read.nodes[selectedKey], TaskKind(Record(original.fields)) == .task else { return }
+        noticeRequest = nil
+        let selected = selectedKey, revision = editingRevision
+        let parent = read.context.root
+        let shared = !TeamTaskLabelsDraft.usesPersonalCatalog(parent, cache: store.nativeConversationTeamCache)
+        let team = shared ? (try? store.captureTeamTaskEditor(parent)) : nil
+        guard !shared || team != nil else { failure = "Project access changed. Reopen the task before changing reminders."; return }
+        let presentation = reminderOwnership.begin()
+        let current = { sourceAvailable && scope == captured && selectedKey == selected && editingRevision == revision && presentation.active && phase == .active && store.editorMayWrite(source: parent, proposed: parent, teamDraft: team) }
+        var record = reminders.applying(to: assignment.applying(to: labels.applying(to: planning.applying(to: Record(original.fields)))))
+        record["title"] = .string(title); record["description"] = .string(notes); record["priority"] = .number(Double(priority))
+        reminderEditor = TeamTaskRemindersRequest(childWorkspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), record: record, sourceIdentity: draftIdentity, current: current, apply: { settings in
+            guard current() else { return "This task changed. Your reminder settings stay in their private draft." }
+            do { try reminders.apply(settings); checkpoint(reopen: true); return nil }
+            catch { return error.localizedDescription }
+        }, presentationID: presentation.id, closed: { presentation.close("composer") })
     }
     private var assigneeCaption: String {
         let id = assignment.selected
@@ -431,14 +483,15 @@ struct ChildTaskFieldEditorView: View {
     }
     #endif
     private func select() {
-        sharedAssignee = nil; personalAssignee = nil; chosenAssigneeID = ""; chosenAssigneeName = nil
+        guard key != selectedKey else { return }
+        reminderOwnership.close("selection"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; chosenAssigneeID = ""; chosenAssigneeName = nil
         noticeRequest = nil; editingRevision = UUID(); noticeBounds = .zero
         checkpoint()
         if draftSession?.flush() == false { key = selectedKey; failure = draftSession?.failure; return }
         guard let node = read?.nodes[key], let read else { return }
         selectedKey = key
         let draft = draftValues[key] ?? Record(node.fields)
-        title = draft.title; notes = draft["description"].text; priority = draft.priority; planning = ChildTaskPlanningDraft(original: Record(node.fields), restored: draft); assignment = ChildTaskAssignmentDraft(original: Record(node.fields), restored: draft)
+        title = draft.title; notes = draft["description"].text; priority = draft.priority; planning = ChildTaskPlanningDraft(original: Record(node.fields), restored: draft); assignment = ChildTaskAssignmentDraft(original: Record(node.fields), restored: draft); reminders = ChildTaskRemindersDraft(original: Record(node.fields), restored: draft)
         labels = ChildTaskLabelsDraft(original: Record(node.fields), restored: draft, kind: TeamTaskLabelsDraft.usesPersonalCatalog(read.context.root, cache: store.nativeConversationTeamCache) ? .personal : .shared)
         addingLabel = labelInputs[key] ?? ""; labelMessage = nil; failure = nil
         draftIdentity = .object(["root": .string(read.context.root.id), "generation": read.context.root["task_generation"], "project": read.context.root["project_id"], "node": .string(node.key), "incarnation": .string(node.incarnation), "revision": .number(node.revision)])
@@ -448,7 +501,7 @@ struct ChildTaskFieldEditorView: View {
         } catch { failure = error.localizedDescription }
     }
     private func checkpoint(reopen: Bool = false) {
-        if reopen { editingRevision = UUID(); noticeRequest = nil; messageKey = nil }
+        if reopen { reminderOwnership.close("edit"); editingRevision = UUID(); noticeRequest = nil; messageKey = nil }
         guard let read, let node = read.nodes[selectedKey] else { return }
         if draftSession?.closed == true {
             guard reopen, ChildTaskFieldClientScope(read.context) == scope else { return }
@@ -456,9 +509,9 @@ struct ChildTaskFieldEditorView: View {
             catch { failure = error.localizedDescription; return }
         }
         guard let session = draftSession else { return }
-        var draft = assignment.applying(to: labels.applying(to: planning.applying(to: session.original))); draft["title"] = .string(title); draft["description"] = .string(notes); draft["priority"] = .number(Double(priority))
+        var draft = reminders.applying(to: assignment.applying(to: labels.applying(to: planning.applying(to: session.original)))); draft["title"] = .string(title); draft["description"] = .string(notes); draft["priority"] = .number(Double(priority))
         draftValues[selectedKey] = draft; labelInputs[selectedKey] = addingLabel
-        guard session.latest != nil || !title.utf8.elementsEqual(session.original.title.utf8) || !notes.utf8.elementsEqual(session.original["description"].text.utf8) || priority != session.original.priority || !planning.changes.isEmpty || !labels.changes.isEmpty || !assignment.changes.isEmpty || !addingLabel.isEmpty else { return }
+        guard session.latest != nil || !title.utf8.elementsEqual(session.original.title.utf8) || !notes.utf8.elementsEqual(session.original["description"].text.utf8) || priority != session.original.priority || !planning.changes.isEmpty || !labels.changes.isEmpty || !assignment.changes.isEmpty || !reminders.changes.isEmpty || !addingLabel.isEmpty else { return }
         session.capture(draft, extras: ["independent_child_fields": draftIdentity, "unsubmitted_child_label": .string(addingLabel)])
     }
 }

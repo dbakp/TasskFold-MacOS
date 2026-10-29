@@ -1,0 +1,30 @@
+{
+  "removed_generated_paths": [
+    "/tmp/taskfold-workflow-mac-native-build",
+    "/tmp/taskfold-workflow-native-mac-build/Index.noindex",
+    "/tmp/taskfold-prepared-undo-signed-ios-build/Index.noindex",
+    "/tmp/taskfold-encoding-mac-v3.xcresult",
+    "/tmp/taskfold-template-provider-mac-v1.xcresult",
+    "/tmp/taskfold-child-reminders-phone.xcresult",
+    "/tmp/taskfold-child-reminders-tablet.xcresult",
+    "/tmp/taskfold-child-reminders-phone-v1-images",
+    "/tmp/taskfold-child-reminders-tablet-v1-images",
+    "/tmp/taskfold-child-reminders-phone-v3.xcresult",
+    "/tmp/taskfold-child-reminders-tablet-v3.xcresult",
+    "/tmp/taskfold-child-reminders-phone-v4.xcresult",
+    "/tmp/taskfold-child-reminders-tablet-v4.xcresult",
+    "/tmp/taskfold-child-reminders-phone-v6.xcresult",
+    "/tmp/taskfold-child-reminders-tablet-v6.xcresult",
+    "/tmp/taskfold-child-reminders-diagnostic.xcresult",
+    "/tmp/taskfold-child-reminders-phone-v7.xcresult",
+    "/tmp/taskfold-child-reminders-phone-v7-exports",
+    "/tmp/taskfold-child-reminders-phone-final-regression.xcresult",
+    "/tmp/taskfold-child-reminders-phone-final-regression-exports",
+    "/tmp/taskfold-child-reminders-tablet-v7.xcresult",
+    "/tmp/taskfold-child-reminders-tablet-v7-exports",
+    "/tmp/taskfold-child-reminders-tablet-final-regression.xcresult",
+    "/tmp/taskfold-child-reminders-tablet-final-regression-exports"
+  ],
+  "preserved": "current builds/products/modules/hosts/Core caches; source and archived evidence",
+  "live_processes_using_removed_outputs": "none in ps inventory before cleanup"
+}

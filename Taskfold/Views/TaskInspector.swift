@@ -195,7 +195,7 @@ struct TaskInspectorForm: View {
         .sheet(item: $teamMove) { TeamTaskMoveView(request: $0) }
         .sheet(item: $teamDeletion) { TeamTaskDeletionReview(request: $0) }
         .sheet(item: $teamRepeat) { TeamTaskRecurrenceEditor(request: $0) }
-        .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0) }
+        .sheet(item: $teamReminders) { TeamTaskRemindersEditor(request: $0).id($0.id) }
         .sheet(item: $teamLabels) { TeamTaskLabelsEditor(request: $0) }
         .sheet(item: $teamAssignee) { TeamTaskAssigneePicker(request: $0) }
         .sheet(item: $headingConversion) { request in

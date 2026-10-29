@@ -147,7 +147,8 @@ struct ReminderDraft: Identifiable {
     let taskGeneration: JSON
     let wasPersisted: Bool
     let originalRows: [JSON]
-    var id: String { spec.id }
+    let presentationID = UUID()
+    var id: String { presentationID.uuidString }
 }
 struct ReminderSpecEditingContext {
     let current: () -> Bool
@@ -346,8 +347,13 @@ struct ReminderSpecEditor: View {
         .onChange(of: available) { _, value in
             if !value { context?.capture(checkpointState); context?.preserve(); choosingHolidays = false; choosingTimeZone = false; repeatFocused = false; intervalFocused = nil }
         }
-        .onDisappear { if available { context?.closed() } else { context?.preserve() } }
+        .onDisappear {
+            if choosingTimeZone || choosingHolidays { context?.capture(checkpointState); context?.preserve() }
+            else if available { context?.closed() }
+            else { context?.preserve() }
+        }
         .task {
+            if available { context?.capture(checkpointState); context?.preserve() }
             while !Task.isCancelled {
                 previewNow = Date()
                 do { try await Task.sleep(for: .seconds(30)) } catch { break }

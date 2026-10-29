@@ -4,6 +4,8 @@ Updated 29 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Subtask reminders now reuse the full portable composer, private nested checkpoints, field-only Apply and separate Save/review/Send. Each repo passes 223 selected Core cases, including six new child reminder cases. Scoped ownership retains the source editor while its own modal covers it; initial settings remain recoverable. The final relative-reminder journey passes on iPhone and iPad, including two exact cold readbacks. Native phases are separate in [reminder evidence](child-task-field-reminders/README.md). Delivery, wider lifecycle, conflict review and authoritative migration stay open. Ordinary flags remain off.
+
 Subtask assignment now joins per-node private drafts and field requests. Shared choices reuse the existing recipient picker; personal choices use the project directory with scoped late-reply fences and offline self/clear. Each repo passes 226 selected Core checks, including ten new assignment/race cases. Native phases are recorded separately in [assignment evidence](child-task-field-assignment/README.md). Reminder/conflict controls and wider lifecycle/migration remain open; ordinary flags stay off.
 
 Subtask labels now preserve authored values while adding exact personal-catalog choices and portable shared names. Added labels join private field requests; unfinished input stays in private recovery. Each independent repo passes 247 selected Core checks plus seven existing label regressions. Native results are recorded separately in [label evidence](child-task-field-labels/README.md); remaining assignment/reminder/conflict controls and full migration stay open. Ordinary flags remain off.

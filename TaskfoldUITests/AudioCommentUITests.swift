@@ -854,8 +854,8 @@ extension TaskfoldMacUITests {
     @MainActor private func childReveal(_ value: XCUIElement, _ app: XCUIApplication, towardTop initialDirection: Bool = false, diagnosticText: Bool = false) {
         _ = value.waitForExistence(timeout: 2)
         func area() -> CGRect {
-            let form = childField("childFieldEditorForm", app)
-            let bounds = form.exists && form.isHittable ? form.frame : app.frame
+            let form = app.collectionViews.allElementsBoundByIndex.last(where: { $0.exists && $0.isHittable }) ?? ["reminderSpecForm", "teamRemindersForm", "childFieldEditorForm"].map { childField($0, app) }.first { $0.exists && $0.isHittable }
+            let bounds = form?.frame ?? app.frame
             let top = max(bounds.minY, app.navigationBars.allElementsBoundByIndex.last(where: { !$0.frame.isEmpty })?.frame.maxY ?? bounds.minY)
             let keyboard = app.keyboards.firstMatch
             let bottom = min(bounds.maxY, keyboard.exists && !keyboard.frame.isEmpty ? keyboard.frame.minY : bounds.maxY)
@@ -1070,6 +1070,78 @@ extension TaskfoldMacUITests {
             childProbe(app, "current=Prepare the review"); childProbe(app, "private=0")
             XCTAssertTrue(app.staticTexts["childNativeProbe"].label.hasSuffix(suffix), app.debugDescription)
         }
+    }
+
+    @MainActor private func childReminderToggleOff(_ app: XCUIApplication) {
+        let planned = childField("teamReminderPlanned", app)
+        XCTAssertTrue(planned.waitForExistence(timeout: 10), app.debugDescription)
+        childReveal(planned, app)
+        #if os(iOS)
+        let thumb = planned.descendants(matching: .switch).firstMatch
+        childPress(thumb)
+        #else
+        childPress(planned)
+        #endif
+        XCTAssertEqual(planned.value as? String, "0", app.debugDescription)
+    }
+    @MainActor func testChildFieldsNativeReminderComposeCancelAndCold() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childHomePress("childNativeEditor", app)
+        let open = app.buttons["childReminders"]; childReveal(open, app); childPress(open)
+        XCTAssertTrue(childField("teamReminderPlanned", app).waitForExistence(timeout: 10), app.debugDescription)
+        let initialAdd = app.buttons["addTeamReminder"]; childReveal(initialAdd, app); childPress(initialAdd)
+        XCTAssertTrue(app.buttons["reminderCancel"].waitForExistence(timeout: 10), app.debugDescription)
+        let probe = app.staticTexts["childNativeProbe"]
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", "reminderDraft=1"), object: probe)], timeout: 12) == .completed, app.debugDescription)
+        childPress(app.buttons["reminderCancel"])
+        childReminderToggleOff(app)
+        childPress(app.buttons["cancelTeamReminders"])
+        let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); XCTAssertFalse(save.isEnabled)
+        childDone(app); childProbe(app, "queued=0 attempted=0 confirmed=0 writes=0"); childProbe(app, "private=0")
+        for count in 1...2 {
+            childHomePress("childNativeEditor", app); childReveal(open, app); childPress(open)
+            XCTAssertTrue(childField("teamReminderPlanned", app).waitForExistence(timeout: 10), app.debugDescription)
+            if count == 1 {
+                childReminderToggleOff(app)
+                let addReminder = app.buttons["addTeamReminder"]; childReveal(addReminder, app); childPress(addReminder)
+                let done = app.buttons["reminderSave"]; XCTAssertTrue(done.waitForExistence(timeout: 10), app.debugDescription); childPress(done)
+                let edit = app.buttons["teamReminderEdit-1"]
+                XCTAssertTrue(edit.waitForExistence(timeout: 10), app.debugDescription)
+                childReveal(edit, app); childPress(edit)
+                XCTAssertTrue(app.buttons["reminderSave"].waitForExistence(timeout: 10)); childPress(app.buttons["reminderSave"])
+            } else {
+                let remove = app.buttons["teamReminderRemove-1"]; childReveal(remove, app); childPress(remove)
+            }
+            childReveal(childField("teamReminderPlanned", app), app, towardTop: true)
+            let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "child-reminders-compose-\(count)"; shot.lifetime = .keepAlways; add(shot)
+            childPress(app.buttons["saveTeamReminders"])
+            childReveal(save, app); XCTAssertTrue(save.isEnabled); childPress(save)
+            childSavedNoticeVisible(app, name: "child-reminders-saved-\(count)")
+            childDone(app); childHomePress("childNativeRecovery", app)
+            XCTAssertTrue(childSavedText("Reminders", app).waitForExistence(timeout: 10), app.debugDescription)
+            let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+            childReveal(send, app); childPress(send)
+            let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed"))
+            XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in confirmed.count == count }, object: nil)], timeout: 12) == .completed, app.debugDescription)
+            childDone(app); childProbe(app, "confirmed=\(count) writes=\(count) requests=\(count)")
+            let expected = count == 1 ? "schedules=2 enabled=1 before10=1" : "schedules=1 enabled=0 before10=0"
+            childProbe(app, expected); childProbe(app, "private=0")
+            app.terminate(); try childOpen(app, reset: false)
+            childProbe(app, "confirmed=\(count) writes=\(count) requests=\(count)"); childProbe(app, expected); childProbe(app, "current=Prepare the review"); childProbe(app, "private=0")
+        }
+    }
+
+    @MainActor func testChildFieldsHeadingDoesNotOfferReminderOrPlan() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-fields-native-heading")
+        childHomePress("childNativeEditor", app)
+        let title = childField("independentChildTitle", app)
+        XCTAssertTrue(title.waitForExistence(timeout: 10))
+        childReveal(app.buttons["saveIndependentChildFields"], app)
+        XCTAssertFalse(app.buttons["childReminders"].exists)
+        childReveal(title, app, towardTop: true)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label == %@", "Plan")).firstMatch.exists)
+        childDone(app); childProbe(app, "queued=0 attempted=0 confirmed=0 writes=0"); childProbe(app, "private=0"); childProbe(app, "kind=heading")
     }
 
 }

@@ -682,3 +682,61 @@ extension ChildTaskFieldCommandTests {
         XCTAssertFalse(chosen); XCTAssertFalse(applied); XCTAssertTrue(picker.people.isEmpty); XCTAssertNil(picker.message)
     }
 }
+
+extension ChildTaskFieldCommandTests {
+    func testChildReminderOpeningPreservesAbsentNullAndUnknownStorage() throws {
+        for raw: JSON? in [nil, .null, .array([]), .object(["future": .bool(true)])] {
+            var row = Record(["title": .string("Keep")]); row.fields["reminder_specs"] = raw
+            let draft = ChildTaskRemindersDraft(original: row)
+            XCTAssertTrue(draft.changes.isEmpty)
+            XCTAssertTrue(AuthoredValueComparison.exactJSON(.object(draft.applying(to: row).fields), .object(row.fields)))
+        }
+    }
+    func testChildReminderApplyFormsOnlyTheReminderFieldCommand() throws {
+        let r = try read(), source = Record(r.nodes["child"]!.fields)
+        var composer = TeamTaskRemindersDraft(source["reminder_specs"]); try composer.setPlanned(false)
+        var draft = ChildTaskRemindersDraft(original: source); try draft.apply(composer.value)
+        let command = try ChildTaskFieldCommand(read: r, key: "child", changes: draft.changes)
+        XCTAssertEqual(command.body["changes"], .object(["reminder_specs": composer.value]))
+        XCTAssertEqual(draft.applying(to: source)["title"], source["title"])
+        let restored = ChildTaskRemindersDraft(original: source, restored: draft.applying(to: source))
+        XCTAssertEqual(restored.changes, draft.changes); XCTAssertFalse(TeamTaskRemindersDraft(restored.value["reminder_specs"]).plannedEnabled)
+    }
+    func testChildReminderApplyPreservesOpaqueRowsAndExactExtensions() throws {
+        var local = ReminderSpec.relative(-10).raw; local["future"] = .string("cafe\u{301}")
+        let privateRow: JSON = .object(["id": .string(UUID().uuidString.lowercased()), "version": .number(99), "kind": .string("location"), "place": .string("Private place"), "latitude_e6": .number(123)])
+        let source = Record(["title": .string("Keep"), "reminder_specs": .array([.object(local), privateRow]), "opaque": .string("cafe\u{301}")])
+        var composer = TeamTaskRemindersDraft(source["reminder_specs"]); try composer.setPlanned(false)
+        var draft = ChildTaskRemindersDraft(original: source); try draft.apply(composer.value)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(draft.value["reminder_specs"].list[0], .object(local)))
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(draft.value["reminder_specs"].list[1], privateRow))
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(draft.applying(to: source)["opaque"], source["opaque"]))
+    }
+    func testChildReminderInvalidApplyIsAtomicAndRetainsSavedDraft() throws {
+        var draft = ChildTaskRemindersDraft(original: Record()); try draft.apply(.array([.object(ReminderSpec.relative(-10).raw)]))
+        let before = draft.value
+        for invalid: JSON in [.object(["v": .number(2)]), .array([.object(["id": .string("bad")])]), .array([.string("bad")])] {
+            XCTAssertThrowsError(try draft.apply(invalid))
+            XCTAssertTrue(AuthoredValueComparison.exactJSON(.object(before.fields), .object(draft.value.fields)))
+        }
+    }
+    @MainActor func testChildReminderPrivateCheckpointRetainsAppliedAndUnsubmittedSettings() throws {
+        let r = try read(), source = Record(r.nodes["child"]!.fields), directory = try root()
+        var draft = ChildTaskRemindersDraft(original: source); try draft.apply(.array([.object(ReminderSpec.relative(-30).raw)]))
+        let vault = BackupVault(directory: directory, account: r.context.account, key: { SymmetricKey(data: Data(repeating: 27, count: 32)) })
+        let session = TaskEditorSession(vault: vault, origin: r.context.origin, original: source, labels: [])
+        let unfinished: JSON = .object(["kind": .string("recurring"), "rule": .string("every Monday")])
+        session.capture(draft.applying(to: source), extras: ["unsubmitted_reminder_settings": unfinished]); XCTAssertTrue(session.flush())
+        let saved = try vault.editorDraft(session.id, origin: r.context.origin)
+        XCTAssertEqual(ChildTaskRemindersDraft(original: source, restored: saved.draft).changes, draft.changes)
+        XCTAssertEqual(saved.extras["unsubmitted_reminder_settings"], unfinished)
+        XCTAssertTrue(session.finish())
+    }
+    func testChildReminderSummaryDescribesLocalChoicesWithoutExposingPrivateRows() throws {
+        let privateRow: JSON = .object(["id": .string(UUID().uuidString.lowercased()), "version": .number(99), "kind": .string("location"), "place": .string("Secret studio"), "latitude_e6": .number(123456)])
+        let value: JSON = .array([.object(ReminderSpec.relative(0, id: ReminderSpec.plannedID, enabled: false).raw), .object(ReminderSpec.relative(-10).raw), privateRow])
+        let summary = ChildTaskRemindersDraft.summary(value)
+        XCTAssertTrue(summary.contains("At planned time · Off")); XCTAssertTrue(summary.contains("Enabled")); XCTAssertTrue(summary.contains("kept unchanged"))
+        XCTAssertFalse(summary.contains("Secret studio")); XCTAssertFalse(summary.contains("123456")); XCTAssertFalse(summary.contains("latitude"))
+    }
+}

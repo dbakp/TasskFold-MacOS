@@ -1012,3 +1012,16 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Actual member/shared/name-lookup/native permission journeys, Mac layout/speech, genuine Keychain/multiwindow/hosted lifecycle, reminder controls and field-conflict review. Completion/structure/legacy adapters and authoritative migration stay open. Ordinary flags stay off.
 
 [Assignment evidence and exact limits](child-task-field-assignment/README.md).
+
+
+## 2026-10-29 — independent subtask reminder composer
+
+- [x] Connect the complete portable reminder composer to per-node private field drafts, retaining separate Apply, Save/review and Send. Preserve private/future/other-channel settings and unrelated fields.
+- [x] Describe reminder choices in review without raw JSON/private coordinates, explain missing planned dates and hide alert controls for headings.
+- [x] Give each request/settings presentation its own UI identity; bind child Apply to its owned token. Preserve the original editor revision when its owned sheet covers it, and protect initial nested settings without treating a covered composer as discarded.
+- [x] Independently pass 223 focused Core checks per repo, including six new child reminder cases and eight existing portable-reminder cases. Native phases and exact source differences are recorded separately.
+- [x] Final reminder journey passes on phone and tablet with no reported runtime warnings: nested Cancel/private protection, reopen, add/edit/remove, Save/review/Send and two exact cold readbacks. Screenshots show readable compose and saved states.
+- [x] Two further current-source native regressions pass per phone/tablet: headings offer neither reminders nor Plan; largest-text Save confirmation stays fully visible and unsent text survives cold launch. No runtime warnings reported. Largest-text screenshots inspected.
+- [ ] Final portable-mode/device delivery, interrupted/role/account/window/genuine-Keychain lifecycle, Mac runtime/speech, conflict review and authoritative child migration. Ordinary flags stay off; previous user deferrals remain.
+
+[Reminder implementation and verification](child-task-field-reminders/README.md).

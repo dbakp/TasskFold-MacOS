@@ -13,6 +13,13 @@ enum ChildFieldNativeIdentity {
         ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") &&
         ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && ProcessInfo.processInfo.arguments.contains("--child-fields-native")
     }
+    static func recordPresentationClose(_ id: UUID, reason: String) {
+        guard enabled else { return }
+        let url = URL.cachesDirectory.appendingPathComponent("child-reminder-presentations.json")
+        var rows = ((try? Data(contentsOf: url)).flatMap { try? JSONDecoder().decode([[String: String]].self, from: $0) }) ?? []
+        rows.append(["presentation": id.uuidString, "reason": reason])
+        if let data = try? JSONEncoder().encode(Array(rows.suffix(64))) { try? data.write(to: url, options: .atomic) }
+    }
     static func key(_ account: String) throws -> SymmetricKey {
         guard enabled, [Self.account, other].contains(account) else { throw CancellationError() }
         return SymmetricKey(data: Data(repeating: account == Self.account ? 88 : 89, count: 32))
@@ -27,7 +34,11 @@ enum ChildFieldNativeIdentity {
         get throws { Record(try state()["root"]!.object) }
     }
     static func initial() -> [String: JSON] {
-        let child: (String, String) -> JSON = { id, title in .object(["id": .string(id), "title": .string(title), "description": .string("Original saved notes"), "priority": .number(4), "completed": .bool(false), "future": .object(["keep": .bool(true)])]) }
+        let child: (String, String) -> JSON = { id, title in
+            var fields: [String: JSON] = ["id": .string(id), "title": .string(title), "description": .string("Original saved notes"), "priority": .number(4), "completed": .bool(false), "future": .object(["keep": .bool(true)])]
+            if id == "concept", ProcessInfo.processInfo.arguments.contains("--child-fields-native-heading") { fields["is_heading"] = .bool(true) }
+            return .object(fields)
+        }
         return ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array([child("concept", "Prepare the review"), child("review", "Publish the summary")])]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
     }
     static func save(_ state: [String: JSON]) throws {
@@ -138,7 +149,12 @@ struct ChildFieldNativeFixtureView: View {
             let child = store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object ?? [:]
             let labelValues = child["labels"]?.list.map(\.text).joined(separator: ",") ?? ""
             let pendingLabel = drafts.first?.extras["unsubmitted_child_label"]?.text ?? ""
-            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
+            let reminderDrafts = drafts.filter { $0.extras["unsubmitted_reminder_settings"].map { $0 != .null } == true }.count
+            let schedules = child["reminder_specs"]?.list ?? []
+            let localSpecs = schedules.compactMap { ReminderSpec(row: $0) }
+            let enabledSchedules = localSpecs.filter(\.enabled).count
+            let beforeTen = localSpecs.filter { $0.enabled && $0.kind == "relative" && $0.offset == -10 }.count
+            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) reminderDraft=\(reminderDrafts) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
         } catch { problem = error.localizedDescription }
     }
 }

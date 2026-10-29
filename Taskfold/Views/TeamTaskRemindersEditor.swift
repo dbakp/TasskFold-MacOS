@@ -1,12 +1,22 @@
 import SwiftUI
 
 struct TeamTaskRemindersRequest: Identifiable {
-    let id = UUID()
-    let teamDraft: TeamTaskEditorDraft
+    enum Source { case team(TeamTaskEditorDraft), child(WorkspaceBinding) }
+    let id: UUID
+    let source: Source
     let record: Record
     let sourceIdentity: JSON
     let current: () -> Bool
     let apply: (JSON) -> String?
+    let closed: () -> Void
+    init(teamDraft: TeamTaskEditorDraft, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?) {
+        id = UUID(); closed = {}; source = .team(teamDraft); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
+    }
+    init(childWorkspace: WorkspaceBinding, record: Record, sourceIdentity: JSON, current: @escaping () -> Bool, apply: @escaping (JSON) -> String?, presentationID: UUID = UUID(), closed: @escaping () -> Void = {}) {
+        id = presentationID; self.closed = closed; source = .child(childWorkspace); self.record = record; self.sourceIdentity = sourceIdentity; self.current = current; self.apply = apply
+    }
+    var workspace: WorkspaceBinding { switch source { case .team(let draft): draft.workspace; case .child(let workspace): workspace } }
+    var isChild: Bool { if case .child = source { return true }; return false }
 }
 
 struct TeamTaskRemindersEditor: View {
@@ -24,11 +34,15 @@ struct TeamTaskRemindersEditor: View {
         self.request = request; _draft = State(initialValue: TeamTaskRemindersDraft(request.record["reminder_specs"]))
     }
     private var available: Bool {
-        !stopped && request.current() && store.editorMayWrite(source: request.teamDraft.source, proposed: request.teamDraft.source, teamDraft: request.teamDraft)
+        guard !stopped, request.current() else { return false }
+        switch request.source {
+        case .team(let draft): return store.editorMayWrite(source: draft.source, proposed: draft.source, teamDraft: draft)
+        case .child(let workspace): return store.childTaskFieldEditingEnabled && workspace.matches(account: store.userID, generation: store.workspaceGeneration)
+        }
     }
     private var fixtureRevoke: (() -> Void)? {
         #if DEBUG
-        return TeamEditorNativeFixture.enabled ? { store.revokeTeamEditorNativeFixture() } : nil
+        return !request.isChild && TeamEditorNativeFixture.enabled ? { store.revokeTeamEditorNativeFixture() } : nil
         #else
         return nil
         #endif
@@ -46,7 +60,9 @@ struct TeamTaskRemindersEditor: View {
             return
         }
         var task = request.record; if draft.changed { task["reminder_specs"] = draft.value }
-        session.capture(task, extras: ["source_identity": request.sourceIdentity, "team_reminder_source": draft.original, "unsubmitted_reminder_settings": childState])
+        var extras: [String: JSON] = ["source_identity": request.sourceIdentity, "team_reminder_source": draft.original, "unsubmitted_reminder_settings": childState]
+        if request.isChild { extras["independent_child_fields"] = request.sourceIdentity }
+        session.capture(task, extras: extras)
     }
     var body: some View {
         NavigationStack {
@@ -62,6 +78,9 @@ struct TeamTaskRemindersEditor: View {
                                 })).disabled(!draft.plannedEditable || session == nil).accessibilityIdentifier("teamReminderPlanned")
                             } footer: {
                                 Text("Before and after reminders move with the task’s plan. A date without a time uses 8:00 AM in each device’s time zone.")
+                                if request.isChild, request.record.due == nil {
+                                    Text("Planned-time, before and after reminders need a planned date. Add one in Plan before expecting an alert.")
+                                }
                             }
                             Section("Reminder choices") {
                                 ForEach(Array(draft.rows.enumerated()), id: \.offset) { index, row in
@@ -90,42 +109,48 @@ struct TeamTaskRemindersEditor: View {
                                 if draft.rows.count >= ReminderSpec.maximum { Text("This task has 20 reminder choices. Remove an editable one before adding another.").font(.footnote).foregroundStyle(.secondary) }
                             }
                             Section {
-                                Text("These choices are shared with people who can read this task. Each device controls its own delivery. Device settings and private places stay separate.").font(.footnote).foregroundStyle(.secondary)
+                                Text(request.isChild ? "Apply keeps these choices in your private task draft until you save, review and send them. Each device controls local delivery. Private places and other channels stay unchanged." : "These choices are shared with people who can read this task. Each device controls its own delivery. Device settings and private places stay separate.").font(.footnote).foregroundStyle(.secondary)
                             }
                             if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("teamReminderMessage") } }
                             if let failure = session?.failure { Section { Text(failure).foregroundStyle(.red); Button("Retry preserving edit") { checkpoint(); _ = session?.flush() } } }
                             #if DEBUG
-                            if TeamEditorNativeFixture.enabled {
+                            if !request.isChild && TeamEditorNativeFixture.enabled {
                                 Section { Button("Change test role to viewer") { store.revokeTeamEditorNativeFixture() }.accessibilityIdentifier("revokeTeamRemindersFixture") }
                             }
                             #endif
                         }
-                    }.accessibilityIdentifier("teamRemindersForm")
+                    }
+                    #if os(iOS)
+                    .accessibilityIdentifier("teamRemindersForm")
+                    #endif
+                    #if os(macOS)
+                    .formStyle(.grouped)
+                    #endif
                 } else {
                     ScrollView { VStack(alignment: .leading, spacing: 16) {
                         Label("Reminder editing paused", systemImage: "lock.shield").font(.title2)
-                        Text("Project access changed. Reopen this task’s current details before editing again.")
+                        Text(request.isChild ? "This task or workspace changed. Close these settings and reopen the task before editing again." : "Project access changed. Reopen this task’s current details before editing again.")
                         if session?.latest != nil { Text(recoveryStatus).accessibilityIdentifier("teamReminderRecoveryStatus") }
                         if let failure = session?.failure { Text(failure).foregroundStyle(.red); Button("Retry preserving edit") { checkpoint(); _ = session?.flush() } }
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(24) }.accessibilityIdentifier("teamRemindersPaused")
                 }
             }
-            .navigationTitle("Shared reminders")
+            .navigationTitle(request.isChild ? "Subtask reminders" : "Shared reminders")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(available ? "Cancel" : "Close") {
-                        if available { if session?.finish() != false { finished = true; dismiss() } }
-                        else { checkpoint(); if session == nil || session?.flush() == true { finished = true; dismiss() } }
+                        if available { if session?.finish() != false { finished = true; request.closed(); dismiss() } }
+                        else { checkpoint(); if session == nil || session?.flush() == true { finished = true; request.closed(); dismiss() } }
                     }.disabled(editing != nil).accessibilityIdentifier("cancelTeamReminders")
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Apply") {
                         guard available, session != nil, editing == nil else { return }
                         if let failure = request.apply(draft.changed ? draft.value : draft.original) { message = failure; return }
-                        finished = true; _ = session?.finish(); dismiss()
+                        finished = true; _ = session?.finish(); request.closed(); dismiss()
                     }.disabled(!available || !draft.supported || session == nil || editing != nil).accessibilityIdentifier("saveTeamReminders")
                 }
             }
@@ -137,7 +162,7 @@ struct TeamTaskRemindersEditor: View {
             ReminderSpecEditor(draft: opening, context: ReminderSpecEditingContext(current: { available }, capture: { state in
                 childState = state; checkpoint()
             }, closed: { childState = .null; checkpoint() }, preserve: { checkpoint(); _ = session?.flush() }, status: { recoveryStatus }, revokeFixture: fixtureRevoke)) { spec in
-                guard available, request.teamDraft.workspace == opening.workspace else { return "Project access changed. Your reminder settings are kept privately." }
+                guard available, request.workspace == opening.workspace else { return "Project access changed. Your reminder settings are kept privately." }
                 do { try draft.save(spec, replacing: opening.index, opening: opening.originalRows); message = nil; return nil }
                 catch { return error.localizedDescription }
             }
@@ -151,13 +176,15 @@ struct TeamTaskRemindersEditor: View {
         .onChange(of: available) { _, value in if !value { checkpoint(); stopped = true; _ = session?.flush() } }
         .interactiveDismissDisabled(draft.changed || childState != .null || session?.failure != nil)
         .onDisappear {
-            if !finished, !draft.changed && childState == .null, session?.failure == nil { _ = session?.finish(); finished = true }
+            if editing != nil { checkpoint(); _ = session?.flush() }
+            else if !finished, !draft.changed && childState == .null, session?.failure == nil { _ = session?.finish(); finished = true }
             else { checkpoint() }
+            if editing == nil { request.closed() }
         }
     }
     private func begin(_ spec: ReminderSpec, index: Int?) {
         guard available, session != nil else { return }
         childState = .null
-        editing = ReminderDraft(spec: spec, index: index, workspace: request.teamDraft.workspace, taskID: request.record.id, taskGeneration: request.record["task_generation"], wasPersisted: true, originalRows: draft.rows)
+        editing = ReminderDraft(spec: spec, index: index, workspace: request.workspace, taskID: request.record.id, taskGeneration: request.record["task_generation"], wasPersisted: true, originalRows: draft.rows)
     }
 }

@@ -520,3 +520,34 @@ struct ChildTaskAssignmentDraft {
         }
     }
 }
+
+/// A reminder field intent preserves complete source data and opaque rows. The
+/// existing portable composer handles mutations; only its explicit Apply enters
+/// this parent draft, never a partially edited nested schedule.
+struct ChildTaskRemindersDraft {
+    let original: Record
+    private(set) var value: Record
+    init(original: Record, restored: Record? = nil) { self.original = original; value = restored ?? original }
+    var changes: [String: JSON] {
+        AuthoredValueComparison.exactJSON(original["reminder_specs"], value["reminder_specs"]) ? [:] : ["reminder_specs": value["reminder_specs"]]
+    }
+    mutating func apply(_ settings: JSON) throws {
+        try ChildTaskFieldCommand.validate("reminder_specs", settings)
+        value["reminder_specs"] = settings
+    }
+    func applying(to record: Record) -> Record {
+        var result = record
+        if !changes.isEmpty || original.fields["reminder_specs"] != nil { result["reminder_specs"] = value["reminder_specs"] }
+        return result
+    }
+    static func summary(_ value: JSON) -> String {
+        let draft = TeamTaskRemindersDraft(value)
+        guard draft.supported else { return "Saved reminder settings · kept unchanged" }
+        if draft.rows.isEmpty { return "At planned time" }
+        return draft.rows.map { row in
+            guard let spec = ReminderSpec(row: row), spec.locallyEditable else { return "Saved reminder · kept unchanged" }
+            let name = spec.id == ReminderSpec.plannedID ? "At planned time" : spec.label
+            return name + (spec.enabled ? (spec.timeSensitive ? " · Time Sensitive" : " · Enabled") : " · Off")
+        }.joined(separator: "\n")
+    }
+}

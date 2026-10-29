@@ -1,0 +1,26 @@
+{
+  "composer" : {
+    "finished" : false,
+    "permitted" : true,
+    "requested" : false,
+    "stopped" : false
+  },
+  "history" : [
+    "parent: appeared=true node=true owned=false phase=true revision=true scope=true source=true write=true",
+    "composer: finished=false permitted=true requested=false stopped=false",
+    "parent: appeared=true node=true owned=true phase=true revision=true scope=true source=true write=true",
+    "composer: finished=false permitted=true requested=true stopped=false",
+    "parent: appeared=true node=true owned=false phase=true revision=true scope=true source=true write=true",
+    "composer: finished=false permitted=true requested=false stopped=false"
+  ],
+  "parent" : {
+    "appeared" : true,
+    "node" : true,
+    "owned" : false,
+    "phase" : true,
+    "revision" : true,
+    "scope" : true,
+    "source" : true,
+    "write" : true
+  }
+}
