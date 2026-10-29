@@ -1045,4 +1045,31 @@ extension TaskfoldMacUITests {
         childProbe(app, "confirmed=1 writes=1 requests=1"); childProbe(app, "labels=Review pendingLabel=Later"); childProbe(app, "private=1")
     }
 
+    @MainActor func testChildFieldsNativeAssignmentAndClearCold() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        for (choice, caption, count) in [("self", "You", 1), ("unassigned", "Unassigned", 2)] {
+            childHomePress("childNativeEditor", app)
+            let assign = app.buttons["childAssignee"]; childReveal(assign, app); childPress(assign)
+            let button = app.buttons["childAssignee-" + choice]
+            XCTAssertTrue(button.waitForExistence(timeout: 10), app.debugDescription)
+            XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: button)], timeout: 10) == .completed)
+            childPress(button)
+            let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); XCTAssertTrue(save.isEnabled); childPress(save)
+            childSavedNoticeVisible(app, name: "child-assignment-\(choice)-saved")
+            childDone(app); childHomePress("childNativeRecovery", app)
+            XCTAssertTrue(childSavedText(caption, app).waitForExistence(timeout: 10), app.debugDescription)
+            let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+            childReveal(send, app); childPress(send)
+            let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed"))
+            XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in confirmed.count == count }, object: nil)], timeout: 12) == .completed, app.debugDescription)
+            childDone(app); childProbe(app, "confirmed=\(count) writes=\(count) requests=\(count)")
+            let suffix = choice == "self" ? "assigned=ec990000-0000-4000-8000-000000000001" : "assigned="
+            XCTAssertTrue(app.staticTexts["childNativeProbe"].label.hasSuffix(suffix), app.debugDescription)
+            app.terminate(); try childOpen(app, reset: false)
+            childProbe(app, "confirmed=\(count) writes=\(count) requests=\(count)")
+            childProbe(app, "current=Prepare the review"); childProbe(app, "private=0")
+            XCTAssertTrue(app.staticTexts["childNativeProbe"].label.hasSuffix(suffix), app.debugDescription)
+        }
+    }
+
 }

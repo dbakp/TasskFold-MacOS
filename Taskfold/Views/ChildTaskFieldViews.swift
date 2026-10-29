@@ -59,7 +59,11 @@ struct ChildTaskFieldRecoveryView: View {
                         ForEach(entry.command.body["changes"]!.object.keys.sorted(), id: \.self) { field in
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(fieldTitle(field)).font(.caption).foregroundStyle(.secondary)
-                                Text(render(field, entry.command.body["changes"]!.object[field]!, command: entry.command)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                                if field == "assigned_to" {
+                                    ChildFieldAssigneeReview(command: entry.command)
+                                } else {
+                                    Text(render(field, entry.command.body["changes"]!.object[field]!, command: entry.command)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                                }
                             }
                         }
                         if entry.phase != .confirmed {
@@ -185,6 +189,11 @@ struct ChildTaskFieldEditorView: View {
     @State private var addingLabel = ""
     @State private var labelMessage: String?
     @State private var labelInputs: [String: String] = [:]
+    @State private var assignment = ChildTaskAssignmentDraft(original: Record())
+    @State private var chosenAssigneeID = ""
+    @State private var chosenAssigneeName: String?
+    @State private var sharedAssignee: TeamTaskAssigneeRequest?
+    @State private var personalAssignee: ChildPersonalAssigneeRequest?
     @State private var recovery = false
     @State private var reload = UUID()
     @State private var draftSession: TaskEditorSession?
@@ -203,7 +212,7 @@ struct ChildTaskFieldEditorView: View {
         if !title.utf8.elementsEqual(node.fields["title"]?.text.utf8 ?? "".utf8) { fields["title"] = .string(title) }
         if !notes.utf8.elementsEqual(node.fields["description"]?.text.utf8 ?? "".utf8) { fields["description"] = .string(notes) }
         if priority != Record(node.fields).priority { fields["priority"] = .number(Double(priority)) }
-        fields.merge(planning.changes) { _, new in new }; fields.merge(labels.changes) { _, new in new }; return fields
+        fields.merge(planning.changes) { _, new in new }; fields.merge(labels.changes) { _, new in new }; fields.merge(assignment.changes) { _, new in new }; return fields
     }
     var body: some View {
         ScrollViewReader { proxy in
@@ -229,6 +238,11 @@ struct ChildTaskFieldEditorView: View {
                     }
                     if TaskKind(Record(read.nodes[key]?.fields ?? [:])) == .task {
                         Section { ChildTaskPlanningFields(draft: $planning, changed: { checkpoint(reopen: true) }, failed: { failure = $0.localizedDescription }) }
+                    }
+                    Section {
+                        Button { openAssignee() } label: {
+                            LabeledContent("Assigned to", value: assigneeCaption)
+                        }.accessibilityIdentifier("childAssignee")
                     }
                     Section {
                         DisclosureGroup("Labels") {
@@ -335,10 +349,10 @@ struct ChildTaskFieldEditorView: View {
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: key) { _, _ in select() }
         .onChange(of: sourceAvailable) { _, value in if !value { checkpoint(); _ = draftSession?.flush() } }
-        .onChange(of: phase) { _, value in if value != .active { noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
+        .onChange(of: phase) { _, value in if value != .active { sharedAssignee = nil; personalAssignee = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
         .onChange(of: recovery) { _, value in if value { noticeRequest = nil; editingRevision = UUID() } }
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
-            noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
+            sharedAssignee = nil; personalAssignee = nil; noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
             checkpoint(); for session in draftSessions.values { _ = session.flush() }; draftSession = nil; draftSessions = [:]; draftValues = [:]; labelInputs = [:]; addingLabel = ""; selectedKey = ""
             model?.close(); model = nil; read = nil; title = ""; notes = ""; key = ""; failure = nil
             guard let captured = scope else { return }
@@ -351,6 +365,40 @@ struct ChildTaskFieldEditorView: View {
         }
         .onDisappear { appeared = false; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() }
         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
+        .sheet(item: $sharedAssignee) { TeamTaskAssigneePicker(request: $0) }
+        .sheet(item: $personalAssignee) { ChildPersonalAssigneeView(request: $0) }
+        }
+    }
+    private var assigneeCaption: String {
+        let id = assignment.selected
+        if id.isEmpty { return assignment.value["assigned_to"] == .null ? "Unassigned" : "Saved assignment · unavailable" }; if id == store.userID { return "You" }
+        if chosenAssigneeID == id, let chosenAssigneeName { return chosenAssigneeName }
+        if let read, TeamTaskLabelsDraft.usesPersonalCatalog(read.context.root, cache: store.nativeConversationTeamCache),
+           let person = store.projectMembers(read.context.root.string("project_id")).first(where: { $0.id == id }),
+           let name = TeamOrganizationDetail.Member.identity(person["display_name"]) { return name }
+        return "Project member"
+    }
+    private func openAssignee() {
+        guard sourceAvailable, let read, let captured = scope else { return }
+        noticeRequest = nil
+        let selected = selectedKey, revision = editingRevision
+        let current = { sourceAvailable && scope == captured && selectedKey == selected && editingRevision == revision && appeared && phase == .active }
+        let apply: (String?) -> String? = { user in
+            guard current() else { return "This task changed. Reopen assignment before choosing a person." }
+            do { try assignment.choose(user); checkpoint(reopen: true); return nil }
+            catch { return error.localizedDescription }
+        }
+        if !TeamTaskLabelsDraft.usesPersonalCatalog(read.context.root, cache: store.nativeConversationTeamCache) {
+            do {
+                let parent = try store.captureTeamTaskEditor(read.context.root)
+                sharedAssignee = TeamTaskAssigneeRequest(draft: parent, selected: Binding(get: { assignment.selected }, set: { _ in }), current: current, choose: { person in
+                    let result = apply(person?.id)
+                    if result == nil { chosenAssigneeID = person?.id ?? ""; chosenAssigneeName = person?.displayName }
+                    return result
+                }, intentFooter: "Your choice stays private until you save, review and send it.")
+            } catch { failure = error.localizedDescription }
+        } else {
+            personalAssignee = ChildPersonalAssigneeRequest(account: captured.account, selected: assignment.selected, current: current, read: { try await store.refreshProjectMembers(read.context.root.string("project_id")) }, choose: apply)
         }
     }
     private func addLabel() {
@@ -383,13 +431,14 @@ struct ChildTaskFieldEditorView: View {
     }
     #endif
     private func select() {
+        sharedAssignee = nil; personalAssignee = nil; chosenAssigneeID = ""; chosenAssigneeName = nil
         noticeRequest = nil; editingRevision = UUID(); noticeBounds = .zero
         checkpoint()
         if draftSession?.flush() == false { key = selectedKey; failure = draftSession?.failure; return }
         guard let node = read?.nodes[key], let read else { return }
         selectedKey = key
         let draft = draftValues[key] ?? Record(node.fields)
-        title = draft.title; notes = draft["description"].text; priority = draft.priority; planning = ChildTaskPlanningDraft(original: Record(node.fields), restored: draft)
+        title = draft.title; notes = draft["description"].text; priority = draft.priority; planning = ChildTaskPlanningDraft(original: Record(node.fields), restored: draft); assignment = ChildTaskAssignmentDraft(original: Record(node.fields), restored: draft)
         labels = ChildTaskLabelsDraft(original: Record(node.fields), restored: draft, kind: TeamTaskLabelsDraft.usesPersonalCatalog(read.context.root, cache: store.nativeConversationTeamCache) ? .personal : .shared)
         addingLabel = labelInputs[key] ?? ""; labelMessage = nil; failure = nil
         draftIdentity = .object(["root": .string(read.context.root.id), "generation": read.context.root["task_generation"], "project": read.context.root["project_id"], "node": .string(node.key), "incarnation": .string(node.incarnation), "revision": .number(node.revision)])
@@ -407,9 +456,9 @@ struct ChildTaskFieldEditorView: View {
             catch { failure = error.localizedDescription; return }
         }
         guard let session = draftSession else { return }
-        var draft = labels.applying(to: planning.applying(to: session.original)); draft["title"] = .string(title); draft["description"] = .string(notes); draft["priority"] = .number(Double(priority))
+        var draft = assignment.applying(to: labels.applying(to: planning.applying(to: session.original))); draft["title"] = .string(title); draft["description"] = .string(notes); draft["priority"] = .number(Double(priority))
         draftValues[selectedKey] = draft; labelInputs[selectedKey] = addingLabel
-        guard session.latest != nil || !title.utf8.elementsEqual(session.original.title.utf8) || !notes.utf8.elementsEqual(session.original["description"].text.utf8) || priority != session.original.priority || !planning.changes.isEmpty || !labels.changes.isEmpty || !addingLabel.isEmpty else { return }
+        guard session.latest != nil || !title.utf8.elementsEqual(session.original.title.utf8) || !notes.utf8.elementsEqual(session.original["description"].text.utf8) || priority != session.original.priority || !planning.changes.isEmpty || !labels.changes.isEmpty || !assignment.changes.isEmpty || !addingLabel.isEmpty else { return }
         session.capture(draft, extras: ["independent_child_fields": draftIdentity, "unsubmitted_child_label": .string(addingLabel)])
     }
 }
@@ -571,3 +620,94 @@ private struct ChildFieldNoticeAnchor: UIViewRepresentable {
     }
 }
 #endif
+
+private struct ChildPersonalAssigneeRequest: Identifiable {
+    let id = UUID()
+    let account: String
+    let selected: String
+    let current: () -> Bool
+    let read: () async throws -> [Record]
+    let choose: (String?) -> String?
+}
+private struct ChildPersonalAssigneeView: View {
+    @Environment(\.dismiss) private var dismiss
+    let request: ChildPersonalAssigneeRequest
+    @State private var model: ChildTaskPersonalRecipientPicker?
+    @State private var search = ""
+    var body: some View {
+        NavigationStack {
+            List {
+                if request.current() {
+                    choice(nil, "Unassigned"); choice(request.account, "You")
+                    ForEach(model?.people.filter { $0.id != request.account && (search.isEmpty || $0.name.localizedStandardContains(search)) } ?? []) { person in choice(person.id, person.name) }
+                    if model?.busy == true { ProgressView("Checking assignment…") }
+                    if let message = model?.message { Text(message).foregroundStyle(.secondary) }
+                    Button("Refresh choices") { Task { await model?.refresh() } }.disabled(model?.busy == true)
+                    Text("Your choice stays private until you save, review and send it.").font(.footnote).foregroundStyle(.secondary)
+                } else { ContentUnavailableView("Assignment paused", systemImage: "lock.shield", description: Text("This task or workspace changed. Close the picker and reopen the task.")) }
+            }
+            .searchable(text: $search, prompt: "Find a project member")
+            .navigationTitle("Assign subtask")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+        }
+        #if os(macOS)
+        .frame(minWidth: 420, minHeight: 360)
+        #endif
+        .task { let value = ChildTaskPersonalRecipientPicker(account: request.account, current: request.current, read: request.read, apply: request.choose); model = value; await value.refresh() }
+        .onChange(of: request.current()) { _, available in if !available { model?.invalidate() } }
+        .onDisappear { model?.invalidate() }
+    }
+    private func choice(_ id: String?, _ name: String) -> some View {
+        Button { Task { if await model?.choose(id) == true { dismiss() } } } label: {
+            HStack { Text(name).fixedSize(horizontal: false, vertical: true); Spacer(); if (id ?? "") == request.selected { Image(systemName: "checkmark") } }.frame(minHeight: 44)
+        }.disabled(model == nil || model?.busy == true && id != nil && id != request.account).accessibilityIdentifier("childAssignee-" + (id == nil ? "unassigned" : id == request.account ? "self" : id!))
+    }
+}
+
+private struct ChildFieldAssigneeLookup: Hashable {
+    let scope: ChildTaskFieldClientScope?
+    let request: String
+    let available: Bool
+}
+/// Resolve names only in the request's current account/project. The identity in
+/// the durable command is unchanged, and unavailable names are stated explicitly.
+private struct ChildFieldAssigneeReview: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    let command: ChildTaskFieldCommand
+    @State private var name: String?
+    private var user: String { command.body["changes"]!.object["assigned_to"]?.text ?? "" }
+    private var root: Record? {
+        guard let scope = store.childTaskFieldRecoveryScope, scope.account == command.account, scope.origin == command.origin,
+              let root = store.record("tasks", id: command.body["task_id"]!.text), root["task_generation"] == command.body["task_generation"], root["project_id"] == command.body["project_id"] else { return nil }
+        if !TeamTaskLabelsDraft.usesPersonalCatalog(root, cache: store.nativeConversationTeamCache), (try? store.captureTeamTaskEditor(root)) == nil { return nil }
+        return root
+    }
+    private var available: Bool { phase == .active && store.childTaskFieldEditingEnabled && root != nil }
+    private var lookup: ChildFieldAssigneeLookup { .init(scope: store.childTaskFieldRecoveryScope, request: command.id, available: available) }
+    var body: some View {
+        Text(user.isEmpty ? "Unassigned" : user == command.account ? "You" : available ? name ?? "Saved person · name unavailable" : "Saved person · name unavailable")
+            .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            .task(id: lookup) {
+                name = nil
+                guard available, !user.isEmpty, user != command.account, let root else { return }
+                let captured = lookup
+                do {
+                    let resolved: String?
+                    if TeamTaskLabelsDraft.usesPersonalCatalog(root, cache: store.nativeConversationTeamCache) {
+                        let people = try await store.refreshProjectMembers(root.string("project_id"))
+                        resolved = people.first(where: { $0.id == user }).flatMap { TeamOrganizationDetail.Member.identity($0["display_name"]) }
+                    } else {
+                        let draft = try store.captureTeamTaskEditor(root)
+                        let people = try await store.backend.teamTaskRecipients(draft)
+                        guard store.editorMayWrite(source: draft.source, proposed: draft.source, teamDraft: draft) else { return }
+                        resolved = people.people.first(where: { $0.id == user })?.displayName
+                    }
+                    guard lookup == captured, !Task.isCancelled else { return }; name = resolved
+                } catch { guard lookup == captured else { return }; name = nil }
+            }
+    }
+}

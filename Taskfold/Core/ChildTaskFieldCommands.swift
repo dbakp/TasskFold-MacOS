@@ -448,3 +448,75 @@ struct ChildTaskLabelsDraft {
     }
     mutating func remove(_ id: Int) { draft.remove(id) }
 }
+
+struct ChildTaskAssignmentDraft {
+    let original: Record
+    private(set) var value: Record
+    init(original: Record, restored: Record? = nil) { self.original = original; value = restored ?? original }
+    var selected: String { value.string("assigned_to") }
+    var changes: [String: JSON] {
+        AuthoredValueComparison.exactJSON(original["assigned_to"], value["assigned_to"]) ? [:] : ["assigned_to": value["assigned_to"]]
+    }
+    mutating func choose(_ id: String?) throws {
+        let value = id.map(JSON.string) ?? .null
+        try ChildTaskFieldCommand.validate("assigned_to", value)
+        self.value["assigned_to"] = value
+    }
+    func applying(to record: Record) -> Record {
+        var result = record
+        if !changes.isEmpty || original.fields["assigned_to"] != nil { result["assigned_to"] = value["assigned_to"] }
+        return result
+    }
+}
+
+/// Personal-project directories are transient presentation. Every other-person
+/// selection rechecks the same captured project; no names enter a field command.
+@MainActor @Observable final class ChildTaskPersonalRecipientPicker {
+    struct Person: Identifiable { let id: String; let name: String }
+    private(set) var people: [Person] = []
+    private(set) var busy = false
+    private(set) var message: String?
+    private var attempt = UUID()
+    private let account: String
+    @ObservationIgnored private let current: () -> Bool
+    @ObservationIgnored private let read: () async throws -> [Record]
+    @ObservationIgnored private let apply: (String?) -> String?
+    init(account: String, current: @escaping () -> Bool, read: @escaping () async throws -> [Record], apply: @escaping (String?) -> String?) {
+        self.account = account; self.current = current; self.read = read; self.apply = apply
+    }
+    func invalidate() { attempt = UUID(); people = []; busy = false; message = nil }
+    private func directory(_ rows: [Record]) throws -> [Person] {
+        guard rows.count <= 500, rows.allSatisfy({ TeamProjectValue.id($0.id) }), Set(rows.map(\.id)).count == rows.count else { throw ChildTaskFieldCommand.invalid }
+        return rows.map { Person(id: $0.id, name: TeamOrganizationDetail.Member.identity($0["display_name"]) ?? "Project member") }
+            .sorted { $0.name == $1.name ? $0.id < $1.id : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+    func refresh() async {
+        invalidate(); guard current(), !Task.isCancelled else { return }; let id = attempt; busy = true
+        defer { if id == attempt { busy = false } }
+        do {
+            let rows = try directory(await read())
+            guard id == attempt else { return }; guard current(), !Task.isCancelled else { invalidate(); return }; people = rows
+        } catch {
+            guard id == attempt else { return }; people = []; message = current() ? "Couldn’t refresh assignment choices. Try again." : nil
+        }
+    }
+    private func accept(_ user: String?) -> Bool { if let error = apply(user) { message = error; return false }; return true }
+    func choose(_ user: String?) async -> Bool {
+        guard current(), !Task.isCancelled else { invalidate(); return false }
+        if user == nil || user == account { invalidate(); return accept(user) }
+        guard !busy else { return false }
+        guard let known = people.first(where: { $0.id == user }) else { return false }
+        let id = attempt; busy = true; message = nil
+        defer { if id == attempt { busy = false } }
+        do {
+            let fresh = try directory(await read())
+            guard id == attempt else { return false }; guard current(), !Task.isCancelled else { invalidate(); return false }; people = fresh
+            guard fresh.contains(where: { $0.id == known.id }) else { message = "That person is no longer in this project. Choose someone from the updated list."; return false }
+            return accept(known.id)
+        } catch {
+            guard id == attempt else { return false }; guard current(), !Task.isCancelled else { invalidate(); return false }
+            if let error = error as? URLError, [.notConnectedToInternet, .networkConnectionLost, .timedOut].contains(error.code) { return accept(known.id) }
+            people = []; message = "Couldn’t check this assignment. Refresh the choices and try again."; return false
+        }
+    }
+}

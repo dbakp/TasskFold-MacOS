@@ -1000,3 +1000,15 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Assignment/reminder controls, conflict review, full Mac layout/speech, genuine Keychain/team/multiwindow/hosted lifecycle and authoritative child migration. Ordinary flags stay off; overall Px stays active.
 
 [Label implementation and verification](child-task-field-labels/README.md).
+
+
+## 2026-10-29 — independent subtask assignment
+
+- [x] Add per-node assignment/clear intent to private drafts, field-only commands and Save/review/Send. Preserve untouched legacy values and unrelated fields.
+- [x] Reuse the shared-project recipient picker; add searchable personal-project choices using the existing member directory. Recheck other-person eligibility, bind callbacks to the original editor and keep self/clear available offline.
+- [x] Resolve current names for review without adding display names to command authority; state explicitly when a saved name is unavailable.
+- [x] Independently pass 226 focused Core cases per repo, including ten new assignment/race cases and 17 existing recipient cases. Full app/test products compile; native phases are recorded separately.
+- [x] Final native suites pass 2/2 per phone/tablet: self assignment and clear with exact cold checks, plus largest-text private recovery. Six saved-feedback screenshots are inspected.
+- [ ] Actual member/shared/name-lookup/native permission journeys, Mac layout/speech, genuine Keychain/multiwindow/hosted lifecycle, reminder controls and field-conflict review. Completion/structure/legacy adapters and authoritative migration stay open. Ordinary flags stay off.
+
+[Assignment evidence and exact limits](child-task-field-assignment/README.md).

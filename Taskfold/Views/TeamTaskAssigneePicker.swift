@@ -6,6 +6,7 @@ struct TeamTaskAssigneeRequest: Identifiable {
     let selected: Binding<String>
     let current: () -> Bool
     let choose: (TeamTaskRecipientCatalog.Person?) -> String?
+    var intentFooter: String? = nil
 }
 
 struct TeamTaskAssigneePicker: View {
@@ -40,11 +41,14 @@ struct TeamTaskAssigneePicker: View {
                             }
                         } footer: {
                             Text("Only teammates with editing access to this project appear here.")
-                            #if os(iOS)
-                            Text("Your choice stays in the task draft until you save.")
-                            #else
-                            Text("Your choice saves with the task.")
-                            #endif
+                            if let footer = request.intentFooter { Text(footer) }
+                            else {
+                                #if os(iOS)
+                                Text("Your choice stays in the task draft until you save.")
+                                #else
+                                Text("Your choice saves with the task.")
+                                #endif
+                            }
                         }
                         if picker?.loading == true { ProgressView("Finding teammates…").accessibilityIdentifier("teamAssigneeLoading") }
                         if picker?.applying == true { ProgressView("Checking assignment…") }

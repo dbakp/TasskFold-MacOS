@@ -4,6 +4,8 @@ Updated 29 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Subtask assignment now joins per-node private drafts and field requests. Shared choices reuse the existing recipient picker; personal choices use the project directory with scoped late-reply fences and offline self/clear. Each repo passes 226 selected Core checks, including ten new assignment/race cases. Native phases are recorded separately in [assignment evidence](child-task-field-assignment/README.md). Reminder/conflict controls and wider lifecycle/migration remain open; ordinary flags stay off.
+
 Subtask labels now preserve authored values while adding exact personal-catalog choices and portable shared names. Added labels join private field requests; unfinished input stays in private recovery. Each independent repo passes 247 selected Core checks plus seven existing label regressions. Native results are recorded separately in [label evidence](child-task-field-labels/README.md); remaining assignment/reminder/conflict controls and full migration stay open. Ordinary flags remain off.
 
 Subtask planning now includes planned date/time/zone, independent deadline and estimates, private checkpoints and readable review. Both repos pass 240 selected Core cases. Final iPhone/iPad estimate and largest-text private journeys pass in separately recorded phases; native saved feedback is fully visible. Final Mac layout/cold/speech, remaining field/conflict controls and wider lifecycle/migration remain open. Ordinary flags stay off. See [planning evidence](child-task-field-planning/README.md).

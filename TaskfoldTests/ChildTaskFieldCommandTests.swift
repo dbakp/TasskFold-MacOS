@@ -589,3 +589,96 @@ extension ChildTaskFieldCommandTests {
         XCTAssertFalse(AuthoredValueComparison.exactJSON(draft.value, source["labels"]))
     }
 }
+
+extension ChildTaskFieldCommandTests {
+    func testChildAssignmentKeepsMissingNullAndLegacyWithoutAnEdit() throws {
+        for raw: JSON? in [nil, .null, .string("legacy-person"), .object(["future": .bool(true)])] {
+            var row = Record(["title": .string("Keep")]); row.fields["assigned_to"] = raw
+            let draft = ChildTaskAssignmentDraft(original: row)
+            XCTAssertTrue(draft.changes.isEmpty)
+            XCTAssertTrue(AuthoredValueComparison.exactJSON(.object(draft.applying(to: row).fields), .object(row.fields)))
+        }
+    }
+    func testChildAssignmentOnlyChangesChosenIdentityAndRestoresPrivateDraft() throws {
+        let source = Record(["title": .string("Keep"), "future": .array([.string("opaque")])]), actor = UUID().uuidString.lowercased()
+        var draft = ChildTaskAssignmentDraft(original: source); try draft.choose(actor)
+        XCTAssertEqual(draft.changes, ["assigned_to": .string(actor)])
+        let restored = ChildTaskAssignmentDraft(original: source, restored: draft.applying(to: source))
+        XCTAssertEqual(restored.changes, draft.changes); XCTAssertEqual(restored.value["future"], source["future"])
+        XCTAssertThrowsError(try draft.choose("not-an-id")); XCTAssertEqual(draft.selected, actor)
+        try draft.choose(nil); XCTAssertTrue(draft.changes.isEmpty)
+    }
+    func testChildAssignmentClearIsAnExplicitCommandAndKeepsOtherFields() throws {
+        let read = try read(); var source = Record(read.nodes["child"]!.fields); source["assigned_to"] = .string(UUID().uuidString.lowercased())
+        var draft = ChildTaskAssignmentDraft(original: source); try draft.choose(nil)
+        XCTAssertEqual(draft.changes, ["assigned_to": .null]); XCTAssertEqual(draft.applying(to: source)["title"], source["title"])
+        let command = try ChildTaskFieldCommand(read: read, key: "child", changes: draft.changes)
+        XCTAssertEqual(command.body["changes"], .object(["assigned_to": .null]))
+    }
+    @MainActor func testPersonalChildRecipientSelfAndClearNeverReadDirectory() async throws {
+        let actor = UUID().uuidString.lowercased(); var calls = 0, selected: [String?] = []
+        let picker = ChildTaskPersonalRecipientPicker(account: actor, current: { true }, read: { calls += 1; throw URLError(.notConnectedToInternet) }, apply: { selected.append($0); return nil })
+        let selfChosen = await picker.choose(actor), cleared = await picker.choose(nil)
+        XCTAssertTrue(selfChosen); XCTAssertTrue(cleared); XCTAssertEqual(calls, 0); XCTAssertEqual(selected.count, 2); XCTAssertEqual(selected[0], actor); XCTAssertNil(selected[1])
+    }
+    @MainActor func testPersonalChildRecipientRechecksAndRejectsRemovedPerson() async throws {
+        let actor = UUID().uuidString.lowercased(), person = UUID().uuidString.lowercased(); var calls = 0, applied = false
+        let picker = ChildTaskPersonalRecipientPicker(account: actor, current: { true }, read: {
+            calls += 1; return calls == 1 ? [Record(["id": .string(person), "display_name": .string("Editor")])] : []
+        }, apply: { _ in applied = true; return nil })
+        await picker.refresh(); let chosen = await picker.choose(person)
+        XCTAssertFalse(chosen); XCTAssertFalse(applied); XCTAssertEqual(calls, 2); XCTAssertTrue(picker.people.isEmpty); XCTAssertNotNil(picker.message)
+    }
+    @MainActor func testPersonalChildRecipientLateDirectoryCannotApplyOrExposeNames() async throws {
+        let actor = UUID().uuidString.lowercased(), person = UUID().uuidString.lowercased(); var current = true, applied = false
+        let picker = ChildTaskPersonalRecipientPicker(account: actor, current: { current }, read: { current = false; return [Record(["id": .string(person), "display_name": .string("Private name")])] }, apply: { _ in applied = true; return nil })
+        await picker.refresh(); let chosen = await picker.choose(person)
+        XCTAssertTrue(picker.people.isEmpty); XCTAssertFalse(chosen); XCTAssertFalse(applied)
+    }
+    @MainActor func testPersonalChildRecipientOfflineRetainsOnlyReviewedChoice() async throws {
+        let actor = UUID().uuidString.lowercased(), person = UUID().uuidString.lowercased(); var calls = 0, selected: String?
+        let picker = ChildTaskPersonalRecipientPicker(account: actor, current: { true }, read: {
+            calls += 1; if calls > 1 { throw URLError(.networkConnectionLost) }; return [Record(["id": .string(person), "display_name": .string("Reviewed")])]
+        }, apply: { selected = $0; return nil })
+        await picker.refresh(); let chosen = await picker.choose(person)
+        XCTAssertTrue(chosen); XCTAssertEqual(selected, person)
+        let invented = await picker.choose(UUID().uuidString.lowercased()); XCTAssertFalse(invented); XCTAssertEqual(calls, 2)
+    }
+    @MainActor func testPersonalChildRecipientInvalidOrFailedDirectoryClearsNames() async throws {
+        let actor = UUID().uuidString.lowercased(), person = UUID().uuidString.lowercased(); var bad = false
+        let picker = ChildTaskPersonalRecipientPicker(account: actor, current: { true }, read: {
+            let row = Record(["id": .string(person), "display_name": .string("Name")]); return bad ? [row, row] : [row]
+        }, apply: { _ in XCTFail("Invalid directory must not apply"); return nil })
+        await picker.refresh(); XCTAssertEqual(picker.people.count, 1); bad = true; await picker.refresh()
+        XCTAssertTrue(picker.people.isEmpty); XCTAssertNotNil(picker.message)
+    }
+}
+
+extension ChildTaskFieldCommandTests {
+    @MainActor func testPersonalChildSelfChoiceInvalidatesAnInFlightDirectory() async throws {
+        let actor = UUID().uuidString.lowercased(), other = UUID().uuidString.lowercased()
+        var reply: CheckedContinuation<[Record], Error>?, applied: [String?] = []
+        let picker = ChildTaskPersonalRecipientPicker(account: actor, current: { true }, read: {
+            try await withCheckedThrowingContinuation { reply = $0 }
+        }, apply: { applied.append($0); return nil })
+        let refresh = Task { await picker.refresh() }
+        for _ in 0..<100 where reply == nil { await Task.yield() }
+        let pending = try XCTUnwrap(reply)
+        XCTAssertTrue(picker.busy)
+        let chosen = await picker.choose(actor); XCTAssertTrue(chosen)
+        pending.resume(returning: [Record(["id": .string(other), "display_name": .string("Old directory")])])
+        await refresh.value
+        XCTAssertEqual(applied.count, 1); XCTAssertEqual(applied[0], actor)
+        XCTAssertTrue(picker.people.isEmpty); XCTAssertFalse(picker.busy)
+    }
+    @MainActor func testPersonalChildLateSelectionCannotApplyToNewEditorScope() async throws {
+        let actor = UUID().uuidString.lowercased(), other = UUID().uuidString.lowercased()
+        var calls = 0, current = true, applied = false
+        let picker = ChildTaskPersonalRecipientPicker(account: actor, current: { current }, read: {
+            calls += 1; if calls == 2 { current = false }
+            return [Record(["id": .string(other), "display_name": .string("Old scope")])]
+        }, apply: { _ in applied = true; return nil })
+        await picker.refresh(); let chosen = await picker.choose(other)
+        XCTAssertFalse(chosen); XCTAssertFalse(applied); XCTAssertTrue(picker.people.isEmpty); XCTAssertNil(picker.message)
+    }
+}

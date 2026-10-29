@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-29",
+  "source_sha256": {
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "024842b1bd97cb665171744b129589b19bbfbf00d8e2d830d3788af8aa755a35",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "e450ab751a21632f0ceeb991a23ebe4386c778dd8ef974889b16465cc79fb739",
+    "Taskfold/Views/TeamTaskAssigneePicker.swift": "b4e27787581c96f7702ef24062694ce989445401603973cdcd63d7fa5b4fb88e",
+    "Taskfold/ChildFieldNativeFixture.swift": "c49515a28830a531f905c77793d51b82b17ef4c2147fc37e4f932e1796157b0a",
+    "TaskfoldTests/ChildTaskFieldCommandTests.swift": "102bf70de4c7068c6700765704b2ac3fb40fb863ced123922eda2d59b9796af1",
+    "TaskfoldUITests/AudioCommentUITests.swift": "df44827563d006b8204b515fb2ad7a106c0d826bc57bcff1f912cc5f0056e73f"
+  },
+  "canonical_flags": {
+    "TaskfoldChildRecordReadsEnabled": "absent",
+    "TaskfoldChildRecordWritesEnabled": "absent"
+  },
+  "core": {
+    "selected_per_repo": 226,
+    "breakdown": {
+      "child_commands": 64,
+      "child_reads": 21,
+      "account_transport": 55,
+      "backup": 69,
+      "team_recipients": 17
+    },
+    "new_assignment_cases": 10
+  },
+  "native": {
+    "phone": {
+      "passed": 2,
+      "failed": 0
+    },
+    "tablet": {
+      "passed": 2,
+      "failed": 0
+    },
+    "scope": "synthetic personal Inbox owner; actual Store/encrypted files/Backend against synthetic HTTP peer",
+    "assignment": "assign self, Save/review/Send, exact identity after cold launch; clear, Save/review/Send, exact empty assignment after cold launch; two confirmed requests/writes, unchanged task title and no private remainder",
+    "largest": "largest-text editing/private preservation and full saved-message bounds; cold readback at normal text size"
+  },
+  "builds": "final independent Mac/iOS full app/test builds pass; all four development signatures pass",
+  "visual_inspection": "six self/clear/largest saved-feedback screenshots inspected; private-cold screenshots retained as additional test artifacts",
+  "limits": [
+    "ordinary child flags absent/off; root JSON still authoritative",
+    "no actual project-member/shared selection or name-resolution runtime proof",
+    "no Mac runtime/spoken/genuine Keychain/team/multiwindow/hosted acceptance",
+    "no new provenance/notification acceptance",
+    "reminders/conflict controls and authoritative child migration remain open",
+    "existing user deferrals unchanged"
+  ],
+  "images_sha256": {
+    "phone-self-saved.png": "0924e1082ccd0d0288d0672137dcd538a54dacb9021dfabc8da47a6945be9800",
+    "phone-clear-saved.png": "59495bd0b8a3ae8d10decd4b217e24668db3194357580b22c1ac99174e57ebb8",
+    "phone-largest-saved.png": "22de51590f1342f5b0c0acdd97919d87d8dd9a26c3fc8f96815eca92b85d5bc4",
+    "phone-private-cold.png": "b336d73799d1b1eb4eec72d4cb4b7e0b826c311d3bf957153afba62be210d72a",
+    "tablet-self-saved.png": "acd5d52781e23c87c7f3027565c4cd1d5d088e51b745c1bb8531a4ed8f96a6b8",
+    "tablet-clear-saved.png": "1427913d72219f57420eba40576e4525c3f9968d93a37d3861deb441d1b1485b",
+    "tablet-largest-saved.png": "a114717c34814f09958cc69ad61a4369d7df7c7ef528e2d63fb626f54713a9d2",
+    "tablet-private-cold.png": "29f0e4603a6f587028355d74fe43856eb2ba55e2a2c621bb6977218faf708829"
+  },
+  "cleanup": {
+    "owned_simulators": "shutdown",
+    "restored_voiceover": {
+      "phone": 1,
+      "tablet": 0
+    },
+    "terminal_results_exports": "pruned after archive",
+    "reusable_builds_hosts_core_caches": "preserved"
+  }
+}
