@@ -48,7 +48,7 @@ struct ChildTaskFieldCommand: ReviewedTeamCommand, CustomStringConvertible, Cust
               try TeamProjectValue.revision(raw["revision"])>=TeamProjectValue.revision(body["revision"]) else {throw Self.invalid}
         return ChildTaskFieldReceipt(raw:raw)
     }
-    private static func validate(_ key:String,_ value:JSON) throws {
+    fileprivate static func validate(_ key:String,_ value:JSON) throws {
         switch key {
         case "title":guard case .string(let text)=value,!text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty,text.count<=10000 else {throw invalid}
         case "description":if value != .null {guard case .string(let text)=value,text.count<=100000 else {throw invalid}}
@@ -324,5 +324,73 @@ extension Backend:ChildTaskFieldCommandService {}
             do { try check(); try await update() } catch { loaded = false; entries = [] }
             failure(error)
         }
+    }
+}
+
+/// Planning intent for the independently addressed child editor. Keep the complete
+/// authored source; only explicit planning actions may normalize its schedule.
+struct ChildTaskPlanningDraft: Sendable {
+    static let keys: Set<String> = ["due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes"]
+    let original: Record
+    private(set) var value: Record
+    init(original: Record, restored: Record? = nil) { self.original = original; value = restored ?? original }
+    var changes: [String: JSON] {
+        var result: [String: JSON] = [:]
+        for key in Self.keys {
+            let before = original.fields[key].map { JSON.object([key: $0]) } ?? .object([:])
+            let after = value.fields[key].map { JSON.object([key: $0]) } ?? .object([:])
+            if !AuthoredValueComparison.exactJSON(before, after) { result[key] = value.fields[key] ?? .null }
+        }
+        return result
+    }
+    func applying(to record: Record) -> Record {
+        var result = record
+        for key in Self.keys { result.fields[key] = value.fields[key] }
+        return result
+    }
+    mutating func plannedDay(_ day: String?, calendar: Calendar = .current) throws {
+        if let day {
+            try ChildTaskFieldCommand.validate("due_date", .string(day))
+            try update(["due_date": .string(day)], calendar: calendar)
+        } else {
+            try update(["due_date": .null, "due_time": .null, "time_zone": .null, "scheduled_at": .null], calendar: calendar)
+        }
+    }
+    mutating func clock(_ time: String?, calendar: Calendar = .current) throws {
+        guard time == nil || value.due != nil else { throw PlannerFailure(message: "Choose a planned date before adding a time.") }
+        var fields: [String: JSON] = ["due_time": time.map(JSON.string) ?? .null]
+        if time == nil { fields["time_zone"] = .null; fields["scheduled_at"] = .null }
+        try update(fields, calendar: calendar)
+    }
+    mutating func zone(_ identifier: String?, calendar: Calendar = .current) throws {
+        guard value.due != nil, !value.string("due_time").isEmpty else { throw PlannerFailure(message: "Choose a planned date and time first.") }
+        try update(["time_zone": identifier.map(JSON.string) ?? .null], calendar: calendar)
+    }
+    mutating func deadline(_ day: String?) throws { try update(TaskDeadlines.fields(day: day)) }
+    mutating func estimate(_ minutes: Int?) throws { try update(["duration_minutes": minutes.map { .number(Double($0)) } ?? .null]) }
+    private mutating func update(_ proposed: [String: JSON], calendar: Calendar = .current) throws {
+        guard proposed.contains(where: { key, field in
+            !AuthoredValueComparison.exactJSON(value.fields[key].map { .object([key: $0]) } ?? .object([:]), .object([key: field]))
+        }) else { return }
+        for (key, field) in proposed { try ChildTaskFieldCommand.validate(key, field) }
+        var fields = TaskPlanning.fields(proposed, existing: value, calendar: calendar)
+        var next = value; next.fields.merge(fields) { _, new in new }
+        let zone = next.string("time_zone")
+        if !TaskPlanning.keys.isDisjoint(with: proposed.keys), next.due != nil,
+           !next.string("due_time").isEmpty, zone.isEmpty || TimeZone(identifier: zone) != nil {
+            guard let start = TaskPlanning.start(next, calendar: calendar) else {
+                throw PlannerFailure(message: "This date and time aren’t available in the selected time zone. Choose another time.")
+            }
+            var source = Calendar(identifier: .gregorian); source.timeZone = TimeZone(identifier: zone) ?? calendar.timeZone
+            let parts = source.dateComponents([.hour, .minute], from: start)
+            let resolved = String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+            // A nonexistent DST wall minute resolves forward. Show the actual
+            // minute instead of retaining a clock that disagrees with the plan.
+            if String(next.string("due_time").prefix(5)) != resolved {
+                fields["due_time"] = .string(resolved); next["due_time"] = .string(resolved)
+            }
+        }
+        for (key, field) in fields { try ChildTaskFieldCommand.validate(key, field) }
+        value = next
     }
 }

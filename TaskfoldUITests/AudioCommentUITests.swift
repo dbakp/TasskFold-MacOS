@@ -851,23 +851,43 @@ extension TaskfoldMacUITests {
     @MainActor private func childSavedText(_ value: String, _ app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR value == %@", value, value)).firstMatch
     }
-    @MainActor private func childReveal(_ value: XCUIElement, _ app: XCUIApplication, towardTop initialDirection: Bool = false) {
+    @MainActor private func childReveal(_ value: XCUIElement, _ app: XCUIApplication, towardTop initialDirection: Bool = false, diagnosticText: Bool = false) {
         _ = value.waitForExistence(timeout: 2)
-        var towardTop = initialDirection
-        for _ in 0..<20 {
-            if value.exists && value.isHittable { return }
-            if value.exists, !value.frame.isEmpty {
-                let top = app.navigationBars.allElementsBoundByIndex.last(where: { $0.isHittable })?.frame.maxY ?? app.frame.minY + 100
-                let bottom = app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame.minY : app.frame.maxY - 40
-                towardTop = value.frame.midY < (top + bottom) / 2
-            }
-            #if os(macOS)
-            app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: towardTop ? 200 : -200)
+        func area() -> CGRect {
+            let form = childField("childFieldEditorForm", app)
+            let bounds = form.exists && form.isHittable ? form.frame : app.frame
+            let top = max(bounds.minY, app.navigationBars.allElementsBoundByIndex.last(where: { !$0.frame.isEmpty })?.frame.maxY ?? bounds.minY)
+            let keyboard = app.keyboards.firstMatch
+            let bottom = min(bounds.maxY, keyboard.exists && !keyboard.frame.isEmpty ? keyboard.frame.minY : bounds.maxY)
+            return CGRect(x: bounds.minX + 4, y: top + 4, width: bounds.width - 8, height: max(0, bottom - top - 8))
+        }
+        func visible() -> Bool {
+            guard value.exists, !value.frame.isEmpty else { return false }
+            #if os(iOS)
+            let viewport = area()
+            if diagnosticText && value.frame.height > viewport.height { return value.frame.intersection(viewport).height >= 24 }
+            return value.isHittable && viewport.contains(value.frame)
             #else
-            if towardTop { app.swipeDown(velocity: .slow) } else { app.swipeUp(velocity: .slow) }
+            return value.isHittable
             #endif
         }
-        XCTAssertTrue(value.exists && value.isHittable, app.debugDescription)
+        for attempt in 0..<24 {
+            if visible() { return }
+            let viewport = area()
+            let towardTop = value.exists && !value.frame.isEmpty ? value.frame.midY < viewport.midY : (attempt < 12 ? initialDirection : !initialDirection)
+            #if os(macOS)
+            let scroll = app.sheets.scrollViews.firstMatch.exists ? app.sheets.scrollViews.firstMatch : app.scrollViews.firstMatch
+            scroll.scroll(byDeltaX: 0, deltaY: towardTop ? 200 : -200)
+            #else
+            XCTAssertGreaterThan(viewport.height, 40, app.debugDescription)
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let x = viewport.minX + 20 - app.frame.minX
+            let from = viewport.minY + viewport.height * (towardTop ? 0.25 : 0.8) - app.frame.minY
+            let to = viewport.minY + viewport.height * (towardTop ? 0.8 : 0.25) - app.frame.minY
+            origin.withOffset(CGVector(dx: x, dy: from)).press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: x, dy: to)), withVelocity: .slow, thenHoldForDuration: 0.1)
+            #endif
+        }
+        XCTAssertTrue(visible(), app.debugDescription)
     }
     @MainActor private func childHomePress(_ identifier: String, _ app: XCUIApplication) {
         let button = app.buttons[identifier]; childReveal(button, app, towardTop: true); childPress(button)
@@ -877,7 +897,7 @@ extension TaskfoldMacUITests {
         XCTAssertNotNil(done, app.debugDescription); if let done { childPress(done) }
     }
     @MainActor private func childProbe(_ app: XCUIApplication, _ text: String) {
-        let probe = app.staticTexts["childNativeProbe"]; childReveal(probe, app)
+        let probe = app.staticTexts["childNativeProbe"]; childReveal(probe, app, diagnosticText: true)
         XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", text), object: probe)], timeout: 12) == .completed, app.debugDescription)
     }
     @MainActor private func childSave(_ app: XCUIApplication, title: String) {
@@ -885,6 +905,9 @@ extension TaskfoldMacUITests {
         let field = childField("independentChildTitle", app); childReveal(field, app)
         childType(title, field)
         let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); childPress(save)
+        childSavedNoticeVisible(app)
+    }
+    @MainActor private func childSavedNoticeVisible(_ app: XCUIApplication, name: String = "child-field-saved-editor") {
         let status = app.staticTexts["independentChildSaveStatus"]
         XCTAssertTrue(status.waitForExistence(timeout: 10)); XCTAssertTrue(status.label.contains("Saved on this device"), status.label)
         #if os(iOS)
@@ -892,12 +915,12 @@ extension TaskfoldMacUITests {
         let form = childField("childFieldEditorForm", app)
         let visible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             guard status.exists, status.isHittable, form.exists else { return false }
-            let top = app.navigationBars.allElementsBoundByIndex.last(where: { $0.isHittable })?.frame.maxY ?? form.frame.minY
+            let top = app.navigationBars.allElementsBoundByIndex.last(where: { !$0.frame.isEmpty })?.frame.maxY ?? form.frame.minY
             return status.frame.minY >= top - 2 && status.frame.maxY <= form.frame.maxY + 2
         }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 12), .completed, app.debugDescription)
         #endif
-        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "child-field-saved-editor"; shot.lifetime = .keepAlways; add(shot)
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = name; shot.lifetime = .keepAlways; add(shot)
     }
     @MainActor func testChildFieldsNativeSaveSendColdReceipt() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
@@ -970,4 +993,33 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app); XCTAssertTrue(childSavedText("Keep this request with account A", app).waitForExistence(timeout: 12), app.debugDescription)
         childReveal(send, app); childPress(send); childDone(app); childProbe(app, "confirmed=1 writes=1 requests=2")
     }
+    @MainActor func testChildFieldsNativeEstimateSendAndColdState() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childHomePress("childNativeEditor", app)
+        let plan = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Plan")).firstMatch
+        childReveal(plan, app); childPress(plan)
+        let estimate = childField("childEstimateEnabled", app); childReveal(estimate, app)
+        #if os(iOS)
+        // SwiftUI exposes both the labeled row and the actual switch. Tapping
+        // the row's center leaves the thumb unchanged; use the real control.
+        let thumb = estimate.descendants(matching: .switch).firstMatch
+        childPress(thumb)
+        XCTAssertEqual(estimate.value as? String, "1", app.debugDescription)
+        #else
+        childPress(estimate)
+        #endif
+        let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); XCTAssertTrue(save.isEnabled); childPress(save)
+        childSavedNoticeVisible(app, name: "child-planning-saved")
+        childDone(app); childProbe(app, "queued=1 attempted=0 confirmed=0 writes=0")
+        childHomePress("childNativeRecovery", app)
+        XCTAssertTrue(childSavedText("30 min", app).waitForExistence(timeout: 10), app.debugDescription)
+        let reviewShot = XCTAttachment(screenshot: app.screenshot()); reviewShot.name = "child-planning-review"; reviewShot.lifetime = .keepAlways; add(reviewShot)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        childDone(app); childProbe(app, "writes=1 requests=1 current=Prepare the review")
+        childProbe(app, "minutes=30")
+        app.terminate(); try childOpen(app, reset: false); childProbe(app, "confirmed=1 writes=1 requests=1"); childProbe(app, "minutes=30")
+    }
+
 }

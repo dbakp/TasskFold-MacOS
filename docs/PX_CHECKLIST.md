@@ -976,3 +976,15 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Actual simultaneous account/window/alert lifecycle, shared/team/hosted delivery, speech, remaining field/conflict controls and full child migration. Ordinary child flags stay off.
 
 [Evidence and exact acceptance limits](child-task-field-review/README.md).
+
+
+## 2026-10-29 — independent subtask planning
+
+- [x] Add planned date/time, local/fixed zone, independent deadline and 1–10,080 minute estimates with presets in the gated child editor.
+- [x] Preserve unedited/opaque fields and exact existing instants; resolve changed DST-gap minutes consistently. Save planning drafts privately and review readable field names/units before Send.
+- [x] Fix Mac expanded Form clipping and mobile saved-notice clipping/lazy-row realization. Delayed reveal/focus is cancelled by a newer edit, node, account, scene or review.
+- [x] Independently pass 240 selected Core tests per repo and compile full app/test products. iPad final two journeys pass; iPhone estimate/send/cold and largest-text private preservation pass in separate final phases. Screenshots confirm the complete saved notice inside each mobile viewport.
+- [ ] Final current-source Mac layout/cold/speech acceptance: computer use still reports locked following the latest unlock reply. Earlier grouped-form six-field Save/send is narrower evidence.
+- [ ] Labels/assignees/reminders, conflict review, genuine Keychain/team/multiwindow/hosted lifecycle, completion/structure/legacy adapters and authoritative child migration. Ordinary child flags stay off; overall Px remains active.
+
+[Evidence, screenshots and exact acceptance limits](child-task-field-planning/README.md).

@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct SavedChildTaskFieldChangesLink: View {
     @Environment(Store.self) private var store
@@ -55,8 +58,8 @@ struct ChildTaskFieldRecoveryView: View {
                             .font(.headline).accessibilityIdentifier("childFieldPhase-" + entry.command.id)
                         ForEach(entry.command.body["changes"]!.object.keys.sorted(), id: \.self) { field in
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(field.replacingOccurrences(of: "_", with: " ").capitalized).font(.caption).foregroundStyle(.secondary)
-                                Text(render(entry.command.body["changes"]!.object[field]!)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                                Text(fieldTitle(field)).font(.caption).foregroundStyle(.secondary)
+                                Text(render(field, entry.command.body["changes"]!.object[field]!)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                             }
                         }
                         if entry.phase != .confirmed {
@@ -101,9 +104,22 @@ struct ChildTaskFieldRecoveryView: View {
     private func status(_ phase: ChildTaskFieldJournalState.Phase) -> String {
         switch phase { case .queued: return "Saved · not sent"; case .attempted: return "Unconfirmed · original request kept"; case .confirmed: return "Confirmed · receipt saved" }
     }
-    private func render(_ value: JSON) -> String {
-        if case .string(let text) = value { return text.isEmpty ? "Empty" : text }
+    private func fieldTitle(_ key: String) -> String {
+        ["title": "Title", "description": "Notes", "priority": "Priority", "due_date": "Planned date", "due_time": "Planned time", "deadline_date": "Deadline", "duration_minutes": "Time estimate", "time_zone": "Time zone", "scheduled_at": "Exact time", "assigned_to": "Assigned to", "labels": "Labels", "reminder_specs": "Reminders"][key] ?? "Saved value"
+    }
+    private func render(_ field: String, _ value: JSON) -> String {
         if value == .null { return "Cleared" }
+        if field == "duration_minutes", case .number(let minutes) = value { return "\(Int(minutes)) min" }
+        if field == "priority", case .number(let priority) = value { return priority == 4 ? "None" : "Priority \(Int(priority))" }
+        if ["due_date", "deadline_date"].contains(field), case .string(let day) = value, let date = Dates.parse(day) {
+            return date.formatted(date: .abbreviated, time: .omitted)
+        }
+        if field == "scheduled_at", case .string(let timestamp) = value, let date = TaskPlanning.instant(timestamp) {
+            let formatter = DateFormatter(); formatter.calendar = Calendar(identifier: .gregorian)
+            formatter.timeZone = TimeZone(secondsFromGMT: 0); formatter.dateStyle = .medium; formatter.timeStyle = .short
+            return formatter.string(from: date) + " UTC"
+        }
+        if case .string(let text) = value { return text.isEmpty ? "Empty" : text }
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return (try? encoder.encode(value)).map { String(decoding: $0, as: UTF8.self) } ?? "Saved value"
     }
@@ -124,6 +140,14 @@ struct ChildTaskFieldEditorLink: View {
 
 private struct ChildFieldReadRequest: Hashable { let scope: ChildTaskFieldClientScope?; let retry: UUID }
 
+private struct ChildFieldNoticeRequest: Equatable {
+    let ticket = UUID()
+    let scope: ChildTaskFieldClientScope
+    let key: String
+    let session: UUID?
+    let revision: UUID
+}
+
 /// Starts from verified saved server data, independent of the parent's draft.
 /// Saving here checkpoints intent; sending is a separate reviewed action.
 struct ChildTaskFieldEditorView: View {
@@ -135,6 +159,11 @@ struct ChildTaskFieldEditorView: View {
     @Environment(\.scenePhase) private var phase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var appeared = false
+    @State private var editingRevision = UUID()
+    @State private var noticeRequest: ChildFieldNoticeRequest?
+    @State private var messageKey: String?
+    @State private var noticeBounds = CGRect.zero
+    @State private var viewportBounds = CGRect.zero
     @State private var read: ChildTaskRecordRead?
     @State private var model: ChildTaskFieldRecoveryModel?
     @State private var failure: String?
@@ -142,6 +171,7 @@ struct ChildTaskFieldEditorView: View {
     @State private var title = ""
     @State private var notes = ""
     @State private var priority = 4
+    @State private var planning = ChildTaskPlanningDraft(original: Record())
     @State private var recovery = false
     @State private var reload = UUID()
     @State private var draftSession: TaskEditorSession?
@@ -159,7 +189,8 @@ struct ChildTaskFieldEditorView: View {
         guard let node = read?.nodes[key] else { return [:] }; var fields: [String: JSON] = [:]
         if !title.utf8.elementsEqual(node.fields["title"]?.text.utf8 ?? "".utf8) { fields["title"] = .string(title) }
         if !notes.utf8.elementsEqual(node.fields["description"]?.text.utf8 ?? "".utf8) { fields["description"] = .string(notes) }
-        if priority != Record(node.fields).priority { fields["priority"] = .number(Double(priority)) }; return fields
+        if priority != Record(node.fields).priority { fields["priority"] = .number(Double(priority)) }
+        fields.merge(planning.changes) { _, new in new }; return fields
     }
     var body: some View {
         ScrollViewReader { proxy in
@@ -181,19 +212,27 @@ struct ChildTaskFieldEditorView: View {
                         TextField("Title", text: Binding(get: { title }, set: { guard !title.utf8.elementsEqual($0.utf8) else { return }; title = $0; checkpoint(reopen: true) }), axis: .vertical).focused($editingField, equals: .title).accessibilityIdentifier("independentChildTitle")
                         TextField("Notes", text: Binding(get: { notes }, set: { guard !notes.utf8.elementsEqual($0.utf8) else { return }; notes = $0; checkpoint(reopen: true) }), axis: .vertical).lineLimit(3...12).focused($editingField, equals: .notes).accessibilityIdentifier("independentChildNotes")
                         Picker("Priority", selection: Binding(get: { priority }, set: { guard priority != $0 else { return }; priority = $0; checkpoint(reopen: true) })) { ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
-                        Text("Unsent text is preserved privately in Backups & restore → Unsent task edits. Other fields and checklist structure stay as saved.").font(.footnote).foregroundStyle(.secondary)
+                        Text("Unsent edits are preserved privately in Backups & restore → Unsent task edits. Only fields you edit are included; checklist structure stays as saved.").font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if TaskKind(Record(read.nodes[key]?.fields ?? [:])) == .task {
+                        Section { ChildTaskPlanningFields(draft: $planning, changed: { checkpoint(reopen: true) }, failed: { failure = $0.localizedDescription }) }
                     }
                     Section {
                         Button("Save on this device", systemImage: "tray.and.arrow.down") {
                             do {
                                 let command = try ChildTaskFieldCommand(read: read, key: key, changes: changes)
-                                let session = draftSession, revision = session?.latest?.revision, captured = scope
-                                savedNoticeFocused = false
+                                let session = draftSession, revision = session?.latest?.revision, captured = scope, capturedEditing = editingRevision
+                                savedNoticeFocused = false; messageKey = nil
                                 Task {
-                                    guard let saved = await model.save(command) else { return }
+                                    let saved = await model.save(command)
                                     let unchanged = session?.latest?.revision == revision
-                                    _ = session?.finish(ifRevision: revision)
-                                    guard unchanged, selectedKey == saved.body["node_key"]?.text, scope == captured, appeared, phase == .active, !recovery else { return }
+                                    if saved != nil { _ = session?.finish(ifRevision: revision) }
+                                    guard unchanged, selectedKey == command.body["node_key"]?.text, scope == captured,
+                                          session != nil || editingRevision == capturedEditing else { return }
+                                    // A scoped durable result remains true through layout/scene
+                                    // changes; only an active, unchanged editor may move focus.
+                                    messageKey = selectedKey
+                                    guard saved != nil, editingRevision == capturedEditing, appeared, phase == .active, !recovery else { return }
                                     let keyboardWasFocused = editingField != nil
                                     editingField = nil
                                     #if os(iOS)
@@ -202,17 +241,28 @@ struct ChildTaskFieldEditorView: View {
                                     if keyboardWasFocused { try? await Task.sleep(nanoseconds: 400_000_000) }
                                     #endif
                                     await Task.yield()
-                                    guard draftSession === session, scope == captured, appeared, phase == .active, !recovery else { return }
+                                    guard draftSession === session, editingRevision == capturedEditing, scope == captured, appeared, phase == .active, !recovery, let captured else { return }
+                                    noticeRequest = ChildFieldNoticeRequest(scope: captured, key: selectedKey, session: session?.id, revision: capturedEditing)
+                                    #if os(macOS)
                                     if reduceMotion { proxy.scrollTo("childFieldSavedNotice", anchor: .bottom) }
                                     else { withAnimation(.easeOut(duration: 0.18)) { proxy.scrollTo("childFieldSavedNotice", anchor: .bottom) } }
-                                    await Task.yield()
-                                    guard draftSession === session, scope == captured, selectedKey == saved.body["node_key"]?.text, appeared, phase == .active, !recovery else { return }; savedNoticeFocused = true
+                                    #endif
                                 }
                             }
                             catch { failure = error.localizedDescription }
                         }.disabled(changes.isEmpty || model.busy).accessibilityIdentifier("saveIndependentChildFields")
                         Button("Review saved changes", systemImage: "tray.and.arrow.up") { recovery = true }
-                        if let message = model.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).id("childFieldSavedNotice").accessibilityIdentifier("independentChildSaveStatus").accessibilityFocused($savedNoticeFocused) }
+                        if let message = model.message, messageKey == selectedKey {
+                            Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                .id("childFieldSavedNotice").accessibilityIdentifier("independentChildSaveStatus").accessibilityFocused($savedNoticeFocused)
+                                #if os(iOS)
+                                .background(ChildFieldNoticeAnchor(ticket: currentNoticeRequest?.ticket, finished: finishNotice))
+                                #else
+                                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                                    noticeBounds = frame; revealSavedNotice(proxy)
+                                }
+                                #endif
+                        }
                     }
                 }
             } else if read != nil {
@@ -222,14 +272,26 @@ struct ChildTaskFieldEditorView: View {
         }
         #if os(iOS)
         .accessibilityIdentifier("childFieldEditorForm")
+        #else
+        .formStyle(.grouped)
+        #endif
+        #if os(macOS)
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+            viewportBounds = frame; revealSavedNotice(proxy)
+        }
+        .onChange(of: noticeRequest) { _, _ in revealSavedNotice(proxy) }
+        #else
+        .background(ChildFieldNoticeAnchor(ticket: currentNoticeRequest?.ticket, viewport: true, finished: finishNotice))
         #endif
         .onAppear { appeared = true }
         .privacySensitive()
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: key) { _, _ in select() }
         .onChange(of: sourceAvailable) { _, value in if !value { checkpoint(); _ = draftSession?.flush() } }
-        .onChange(of: phase) { _, value in if value != .active { checkpoint(); _ = draftSession?.flush() } }
+        .onChange(of: phase) { _, value in if value != .active { noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
+        .onChange(of: recovery) { _, value in if value { noticeRequest = nil; editingRevision = UUID() } }
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
+            noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
             checkpoint(); for session in draftSessions.values { _ = session.flush() }; draftSession = nil; draftSessions = [:]; draftValues = [:]; selectedKey = ""
             model?.close(); model = nil; read = nil; title = ""; notes = ""; key = ""; failure = nil
             guard let captured = scope else { return }
@@ -240,17 +302,43 @@ struct ChildTaskFieldEditorView: View {
                 read = value; model = try store.childTaskFieldRecoveryModel(); key = value.orderedNodes.first?.key ?? ""; select()
             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = error.localizedDescription }
         }
-        .onDisappear { appeared = false; checkpoint(); _ = draftSession?.flush() }
+        .onDisappear { appeared = false; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() }
         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
         }
     }
+    private var currentNoticeRequest: ChildFieldNoticeRequest? {
+        guard let request = noticeRequest, request.scope == scope, request.key == selectedKey,
+              request.session == draftSession?.id, request.revision == editingRevision,
+              sourceAvailable, appeared, phase == .active, !recovery else { return nil }
+        return request
+    }
+    private func finishNotice(_ ticket: UUID, _ visible: Bool) {
+        guard currentNoticeRequest?.ticket == ticket else { return }
+        noticeRequest = nil
+        if visible { savedNoticeFocused = true }
+    }
+    #if os(macOS)
+    private func revealSavedNotice(_ proxy: ScrollViewProxy) {
+        guard let request = currentNoticeRequest, !viewportBounds.isEmpty, !noticeBounds.isEmpty else { return }
+        if noticeBounds.minY >= viewportBounds.minY - 1, noticeBounds.maxY <= viewportBounds.maxY + 1 {
+            finishNotice(request.ticket, true)
+        } else {
+            Task { @MainActor in
+                await Task.yield()
+                guard currentNoticeRequest?.ticket == request.ticket else { return }
+                proxy.scrollTo("childFieldSavedNotice", anchor: .bottom)
+            }
+        }
+    }
+    #endif
     private func select() {
+        noticeRequest = nil; editingRevision = UUID(); noticeBounds = .zero
         checkpoint()
         if draftSession?.flush() == false { key = selectedKey; failure = draftSession?.failure; return }
         guard let node = read?.nodes[key], let read else { return }
         selectedKey = key
         let draft = draftValues[key] ?? Record(node.fields)
-        title = draft.title; notes = draft["description"].text; priority = draft.priority; failure = nil
+        title = draft.title; notes = draft["description"].text; priority = draft.priority; planning = ChildTaskPlanningDraft(original: Record(node.fields), restored: draft); failure = nil
         draftIdentity = .object(["root": .string(read.context.root.id), "generation": read.context.root["task_generation"], "project": read.context.root["project_id"], "node": .string(node.key), "incarnation": .string(node.incarnation), "revision": .number(node.revision)])
         do {
             draftSession = try draftSessions[key] ?? store.beginEditorSession(Record(node.fields))
@@ -258,6 +346,7 @@ struct ChildTaskFieldEditorView: View {
         } catch { failure = error.localizedDescription }
     }
     private func checkpoint(reopen: Bool = false) {
+        if reopen { editingRevision = UUID(); noticeRequest = nil; messageKey = nil }
         guard let read, let node = read.nodes[selectedKey] else { return }
         if draftSession?.closed == true {
             guard reopen, ChildTaskFieldClientScope(read.context) == scope else { return }
@@ -265,9 +354,167 @@ struct ChildTaskFieldEditorView: View {
             catch { failure = error.localizedDescription; return }
         }
         guard let session = draftSession else { return }
-        var draft = session.original; draft["title"] = .string(title); draft["description"] = .string(notes); draft["priority"] = .number(Double(priority))
+        var draft = planning.applying(to: session.original); draft["title"] = .string(title); draft["description"] = .string(notes); draft["priority"] = .number(Double(priority))
         draftValues[selectedKey] = draft
-        guard session.latest != nil || !title.utf8.elementsEqual(session.original.title.utf8) || !notes.utf8.elementsEqual(session.original["description"].text.utf8) || priority != session.original.priority else { return }
+        guard session.latest != nil || !title.utf8.elementsEqual(session.original.title.utf8) || !notes.utf8.elementsEqual(session.original["description"].text.utf8) || priority != session.original.priority || !planning.changes.isEmpty else { return }
         session.capture(draft, extras: ["independent_child_fields": draftIdentity])
     }
 }
+
+private struct ChildTaskPlanningFields: View {
+    @Binding var draft: ChildTaskPlanningDraft
+    let changed: () -> Void
+    let failed: (Error) -> Void
+    private var value: Record { draft.value }
+    private func update(_ action: (inout ChildTaskPlanningDraft) throws -> Void) {
+        var next = draft
+        do {
+            try action(&next)
+            guard !AuthoredValueComparison.exactJSON(.object(next.value.fields), .object(draft.value.fields)) else { return }
+            draft = next; changed()
+        } catch { failed(error) }
+    }
+    var body: some View {
+        DisclosureGroup("Plan") {
+            Toggle("Planned date", isOn: Binding(get: { value.due != nil }, set: { enabled in update { try $0.plannedDay(enabled ? Dates.day(Date()) : nil) } }))
+                .accessibilityIdentifier("childPlannedEnabled")
+            if value.due != nil {
+                DatePicker("Date", selection: Binding(get: { value.due ?? Date() }, set: { date in update { try $0.plannedDay(Dates.day(date)) } }), displayedComponents: .date)
+                    .accessibilityIdentifier("childPlannedDate")
+                Toggle("Time", isOn: Binding(get: { !value.string("due_time").isEmpty }, set: { enabled in update { try $0.clock(enabled ? "09:00" : nil) } }))
+                    .accessibilityIdentifier("childTimeEnabled")
+                if !value.string("due_time").isEmpty {
+                    DatePicker("Time", selection: Binding(get: {
+                        let parts = value.string("due_time").split(separator: ":").compactMap { Int($0) }
+                        return Calendar.current.date(bySettingHour: parts.first ?? 9, minute: parts.count > 1 ? parts[1] : 0, second: 0, of: Date()) ?? Date()
+                    }, set: { date in
+                        let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+                        update { try $0.clock(String(format: "%02d:%02d", parts.hour ?? 9, parts.minute ?? 0)) }
+                    }), displayedComponents: .hourAndMinute).accessibilityIdentifier("childPlannedTime")
+                    Picker("Time zone", selection: Binding(get: { value.string("time_zone") }, set: { zone in update { try $0.zone(zone.isEmpty ? nil : zone) } })) {
+                        Text("Local time · wherever I am").tag("")
+                        Text("Fixed · " + TimeZone.current.identifier).tag(TimeZone.current.identifier)
+                        if !value.string("time_zone").isEmpty && value.string("time_zone") != TimeZone.current.identifier {
+                            Text("Fixed · " + value.string("time_zone")).tag(value.string("time_zone"))
+                        }
+                    }.accessibilityIdentifier("childPlannedZone")
+                    if !value.string("time_zone").isEmpty { Text("Date and time use " + value.string("time_zone") + ".").font(.footnote).foregroundStyle(.secondary) }
+                }
+            }
+            Toggle("Deadline", isOn: Binding(get: { value.deadline != nil }, set: { enabled in update { try $0.deadline(enabled ? Dates.day(Date()) : nil) } }))
+                .accessibilityIdentifier("childDeadlineEnabled")
+            if value.deadline != nil {
+                DatePicker("Must be done by", selection: Binding(get: { value.deadline ?? Date() }, set: { date in update { try $0.deadline(Dates.day(date)) } }), displayedComponents: .date)
+                    .accessibilityIdentifier("childDeadlineDate")
+                Text("Rescheduling the plan leaves this deadline in place.").font(.footnote).foregroundStyle(.secondary)
+            }
+            Toggle("Time estimate", isOn: Binding(get: { value.durationMinutes != nil }, set: { enabled in update { try $0.estimate(enabled ? 30 : nil) } }))
+                .accessibilityIdentifier("childEstimateEnabled")
+            if let minutes = value.durationMinutes {
+                Picker("Quick estimate", selection: Binding(get: { minutes }, set: { amount in update { try $0.estimate(amount) } })) {
+                    ForEach(Array(Set([15, 30, 45, 60, 90, 120, minutes])).sorted(), id: \.self) { amount in Text("\(amount) min").tag(amount) }
+                }.accessibilityIdentifier("childEstimatePresets")
+                Stepper("Estimate · \(minutes) min", value: Binding(get: { minutes }, set: { amount in update { try $0.estimate(amount) } }), in: 1...10080)
+                    .accessibilityLabel("Time estimate in minutes").accessibilityValue("\(minutes)").accessibilityIdentifier("childEstimateMinutes")
+            }
+        }
+    }
+}
+
+#if os(iOS)
+/// Form rows are hosted by native collection cells. Measure and reveal in that
+/// scroll view's coordinates rather than crossing SwiftUI hosting boundaries.
+private struct ChildFieldNoticeAnchor: UIViewRepresentable {
+    let ticket: UUID?
+    var viewport = false
+    let finished: (UUID, Bool) -> Void
+    func makeUIView(context: Context) -> AnchorView {
+        let view = AnchorView(); view.isUserInteractionEnabled = false; view.isAccessibilityElement = false
+        return view
+    }
+    func updateUIView(_ view: AnchorView, context: Context) { view.configure(ticket, viewport: viewport, finished: finished) }
+    static func dismantleUIView(_ view: AnchorView, coordinator: ()) { view.configure(nil, viewport: false, finished: { _, _ in }) }
+    final class AnchorView: UIView {
+        private var ticket: UUID?
+        private var viewport = false
+        private weak var viewportOwner: UIScrollView?
+        private var finished: ((UUID, Bool) -> Void)?
+        private var timer: Timer?
+        private var started: TimeInterval = 0
+        func configure(_ next: UUID?, viewport: Bool, finished: @escaping (UUID, Bool) -> Void) {
+            self.finished = finished
+            guard ticket != next || self.viewport != viewport else { return }
+            timer?.invalidate(); timer = nil; ticket = next; self.viewport = viewport; viewportOwner = nil
+            guard next != nil else { return }
+            started = ProcessInfo.processInfo.systemUptime
+            let timer = Timer(timeInterval: 1 / 30, repeats: true) { [weak self] timer in
+                guard let self else { timer.invalidate(); return }
+                MainActor.assumeIsolated { self.reveal() }
+            }
+            self.timer = timer; RunLoop.main.add(timer, forMode: .common)
+        }
+        private func finish(_ visible: Bool) {
+            guard let ticket else { return }
+            timer?.invalidate(); timer = nil; self.ticket = nil
+            finished?(ticket, visible)
+        }
+        private func viewportScroll() -> UIScrollView? {
+            let frame = convert(bounds, to: nil)
+            func candidates(_ view: UIView) -> [UIScrollView] {
+                guard !view.isHidden, view.alpha > 0.001, view.window === window else { return [] }
+                var result = view.subviews.flatMap(candidates)
+                if let scroll = view as? UIScrollView, scroll.isScrollEnabled {
+                    let rect = scroll.convert(scroll.bounds, to: nil)
+                    // Exclude the background workspace and nested text editors.
+                    if abs(rect.width - frame.width) < 2, rect.intersects(frame) { result.append(scroll) }
+                }
+                return result
+            }
+            var ancestor = superview
+            while let view = ancestor {
+                if let match = candidates(view).min(by: {
+                    let a = $0.convert($0.bounds, to: nil), b = $1.convert($1.bounds, to: nil)
+                    return abs(a.minY - frame.minY) + abs(a.height - frame.height) < abs(b.minY - frame.minY) + abs(b.height - frame.height)
+                }) { return match }
+                if view is UIWindow { break }; ancestor = view.superview
+            }
+            return nil
+        }
+        private func reveal() {
+            guard ticket != nil else { return }
+            // A disappeared/unavailable host must never retain a polling loop.
+            guard ProcessInfo.processInfo.systemUptime - started < 2 else { finish(false); return }
+            guard window != nil, !bounds.isEmpty else { return }
+            if viewport {
+                guard let scroll = viewportOwner ?? viewportScroll() else { return }
+                viewportOwner = scroll
+                // The success row is last. Bring an uninstantiated lazy cell
+                // into view; its own anchor then proves complete visibility.
+                let minimum = -scroll.adjustedContentInset.top
+                let maximum = max(minimum, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+                scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: maximum), animated: false)
+                return
+            }
+            var row: UIView = self
+            var ancestor = superview
+            var owner: UIScrollView?
+            while let view = ancestor {
+                if view is UICollectionViewCell || view is UITableViewCell { row = view }
+                if let scroll = view as? UIScrollView { owner = scroll; break }
+                ancestor = view.superview
+            }
+            guard let scroll = owner, scroll.isScrollEnabled else { return }
+            let rect = row.convert(row.bounds, to: scroll)
+            let visible = scroll.bounds.inset(by: scroll.adjustedContentInset)
+            guard !rect.isEmpty, !visible.isEmpty else { return }
+            if rect.minY >= visible.minY - 1, rect.maxY <= visible.maxY + 1 { finish(true); return }
+            let delta = rect.height > visible.height || rect.minY < visible.minY ? rect.minY - visible.minY : rect.maxY - visible.maxY
+            let minimum = -scroll.adjustedContentInset.top
+            let maximum = max(minimum, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+            let next = min(maximum, max(minimum, scroll.contentOffset.y + delta))
+            scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: next), animated: false)
+            if rect.height > visible.height { finish(false) }
+        }
+    }
+}
+#endif

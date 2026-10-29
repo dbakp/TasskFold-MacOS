@@ -411,4 +411,102 @@ final class ChildTaskFieldCommandTests: XCTestCase {
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ChildFieldHTTP.self]
         return Backend(configuration: ["URL": "https://child-record.test", "Key": "synthetic-public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
     }
+    private func planningSource() -> Record {
+        Record(["id": .string("child"), "title": .string("A planned child"), "due_date": .string("2026-01-08"), "due_time": .string("10:30"), "time_zone": .string("America/New_York"), "scheduled_at": .string("2026-01-08T15:30:00.000Z"), "deadline_date": .string("2026-01-15"), "duration_minutes": .number(45), "future": .object(["literal": .string("Cafe\u{301}")]), "reminder_specs": .array([.object(["future": .bool(true)])])])
+    }
+    func testPlanningDraftUntouchedAndNoOpKeepExactSourceAndInstant() throws {
+        let source = planningSource(); var draft = ChildTaskPlanningDraft(original: source)
+        XCTAssertTrue(draft.changes.isEmpty)
+        try draft.plannedDay("2026-01-08"); try draft.clock("10:30"); try draft.zone("America/New_York")
+        try draft.deadline("2026-01-15"); try draft.estimate(45)
+        XCTAssertTrue(draft.changes.isEmpty)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(.object(draft.value.fields), .object(source.fields)))
+    }
+    func testPlanningDateAndClockChangesRecomputeFixedInstantWithoutMovingDeadline() throws {
+        var draft = ChildTaskPlanningDraft(original: planningSource())
+        try draft.plannedDay("2026-01-09"); try draft.clock("11:45")
+        XCTAssertEqual(draft.value["scheduled_at"], .string("2026-01-09T16:45:00Z"))
+        XCTAssertEqual(draft.value["deadline_date"], .string("2026-01-15"))
+        XCTAssertEqual(Set(draft.changes.keys), ["due_date", "due_time", "scheduled_at"])
+    }
+    func testPlanningLocalZoneAndAllDayClearOnlyTheirScheduleFields() throws {
+        let source = planningSource(); var draft = ChildTaskPlanningDraft(original: source)
+        try draft.zone(nil)
+        XCTAssertEqual(draft.value["time_zone"], .null); XCTAssertEqual(draft.value["scheduled_at"], .null)
+        XCTAssertEqual(draft.value["due_time"], source["due_time"])
+        try draft.clock(nil)
+        XCTAssertEqual(draft.value["due_time"], .null); XCTAssertEqual(draft.value["due_date"], source["due_date"])
+        XCTAssertEqual(draft.value["deadline_date"], source["deadline_date"]); XCTAssertEqual(draft.value["duration_minutes"], source["duration_minutes"])
+    }
+    func testPlanningClearDateKeepsDeadlineEstimateRemindersAndOpaqueMetadata() throws {
+        let source = planningSource(); var draft = ChildTaskPlanningDraft(original: source)
+        try draft.plannedDay(nil)
+        for key in ["due_date", "due_time", "time_zone", "scheduled_at"] { XCTAssertEqual(draft.value[key], .null) }
+        for key in ["deadline_date", "duration_minutes", "reminder_specs", "future"] { XCTAssertTrue(AuthoredValueComparison.exactJSON(draft.value[key], source[key])) }
+    }
+    func testPlanningDeadlineAndEstimateDoNotNormalizeLegacySchedule() throws {
+        var source = planningSource(); source["due_date"] = .string("future date encoding"); source["scheduled_at"] = .object(["future": .bool(true)])
+        var draft = ChildTaskPlanningDraft(original: source)
+        try draft.deadline("2026-02-20"); try draft.estimate(90)
+        XCTAssertEqual(Set(draft.changes.keys), ["deadline_date", "duration_minutes"])
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(draft.value["scheduled_at"], source["scheduled_at"]))
+        XCTAssertEqual(draft.value["due_date"], source["due_date"])
+    }
+    func testPlanningInvalidValuesRefuseAtomicallyAndBoundEstimate() throws {
+        let source = planningSource(); var draft = ChildTaskPlanningDraft(original: source)
+        XCTAssertThrowsError(try draft.plannedDay("2026-02-30")); XCTAssertThrowsError(try draft.clock("24:00"))
+        XCTAssertThrowsError(try draft.zone("Not/AZone")); XCTAssertThrowsError(try draft.deadline("2026-02-30"))
+        XCTAssertThrowsError(try draft.estimate(0)); XCTAssertThrowsError(try draft.estimate(10081))
+        XCTAssertTrue(draft.changes.isEmpty)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(.object(draft.value.fields), .object(source.fields)))
+        try draft.estimate(1); XCTAssertEqual(draft.value.durationMinutes, 1)
+        try draft.estimate(10080); XCTAssertEqual(draft.value.durationMinutes, 10080)
+    }
+    func testPlanningRequiresDateBeforeClockAndZone() throws {
+        var draft = ChildTaskPlanningDraft(original: Record(["title": .string("Undated")]))
+        XCTAssertThrowsError(try draft.clock("09:00")); XCTAssertThrowsError(try draft.zone("UTC"))
+        XCTAssertTrue(draft.changes.isEmpty)
+        try draft.plannedDay("2026-01-08"); try draft.clock("09:00"); try draft.zone("UTC")
+        XCTAssertEqual(draft.value["scheduled_at"], .string("2026-01-08T09:00:00Z"))
+    }
+    func testPlanningKeepsChosenDSTFoldForUnrelatedEditsAndSameClock() throws {
+        var source = planningSource(); source["due_date"] = .string("2026-11-01"); source["due_time"] = .string("01:30"); source["scheduled_at"] = .string("2026-11-01T06:30:00.000Z")
+        var draft = ChildTaskPlanningDraft(original: source)
+        try draft.clock("01:30"); try draft.estimate(60)
+        XCTAssertEqual(draft.value["scheduled_at"], source["scheduled_at"])
+        XCTAssertEqual(Set(draft.changes.keys), ["duration_minutes"])
+    }
+    @MainActor func testPlanningPrivateCheckpointAndRestoredIntentKeepOtherFields() throws {
+        let source = planningSource(); var draft = ChildTaskPlanningDraft(original: source)
+        try draft.estimate(120); try draft.deadline(nil)
+        var titleDraft = source; titleDraft["title"] = .string("Private revised title")
+        let value = draft.applying(to: titleDraft)
+        let r = try read(), directory = try root()
+        let vault = BackupVault(directory: directory, account: r.context.account, key: { SymmetricKey(data: Data(repeating: 17, count: 32)) })
+        let session = TaskEditorSession(vault: vault, origin: r.context.origin, original: source, labels: [])
+        session.capture(value, extras: [:]); XCTAssertTrue(session.flush())
+        let restored = try vault.editorDraft(session.id, origin: r.context.origin)
+        let reopened = ChildTaskPlanningDraft(original: source, restored: restored.draft)
+        XCTAssertEqual(reopened.changes, draft.changes)
+        XCTAssertEqual(restored.draft.title, "Private revised title")
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(restored.draft["future"], source["future"]))
+        _ = session.finish()
+    }
+    func testPlanningIntentFormsIndependentCommandWithoutUneditedFields() throws {
+        let r = try read(), source = Record(r.nodes["child"]!.fields)
+        var draft = ChildTaskPlanningDraft(original: source)
+        try draft.estimate(30); try draft.deadline("2026-12-12")
+        let command = try ChildTaskFieldCommand(read: r, key: "child", changes: draft.changes)
+        XCTAssertEqual(Set(command.body["changes"]!.object.keys), ["duration_minutes", "deadline_date"])
+        XCTAssertEqual(command.body["node_key"], .string("child")); XCTAssertEqual(command.body["revision"], .number(r.nodes["child"]!.revision))
+    }
+
+    func testPlanningGapShowsResolvedWallMinuteAndPreservesDeadline() throws {
+        var draft = ChildTaskPlanningDraft(original: planningSource())
+        try draft.plannedDay("2026-03-08"); try draft.clock("02:30")
+        XCTAssertEqual(draft.value["due_time"], .string("03:00"))
+        XCTAssertEqual(draft.value["scheduled_at"], .string("2026-03-08T07:00:00Z"))
+        XCTAssertEqual(draft.value["deadline_date"], .string("2026-01-15"))
+    }
+
 }

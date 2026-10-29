@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-29",
+  "scope": "isolated synthetic owner; actual Store/encrypted files/Backend against synthetic service; ordinary flags off",
+  "source_sha256": {
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "5a3d6a78227bee9b87af2714dcc9490d1b5a0f871bfafc92b4bb90a1292eb990",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "8417751b40dfe45d30874bb3211df12ca0193a29eb08f3d07852c33c8790ebb3",
+    "Taskfold/ChildFieldNativeFixture.swift": "e36258326eb6a844bf1578bf0c01639a6f1f137aeecaa09a01556f97469c1043",
+    "TaskfoldTests/ChildTaskFieldCommandTests.swift": "616f619ffde411ee49445294a289255ca78a3ed3ac980e860f16b07a4401dc34",
+    "TaskfoldUITests/AudioCommentUITests.swift": "84d5ad2c23174e8fb7432a70926929577d0168e0092bd7756c59aec0110ab7dd"
+  },
+  "core": {
+    "selected_each_repo": 240,
+    "new_planning_cases": 11,
+    "gap_failing_before": 1
+  },
+  "accepted_mobile": {
+    "tablet-v15": {
+      "passed": 2
+    },
+    "phone-v15": {
+      "estimate_passed": 1,
+      "largest_failed_before_save": "gesture began inside keyboard"
+    },
+    "phone-v16": {
+      "largest_passed": 1,
+      "change_from_v15": "UITest helper only; product source identical"
+    }
+  },
+  "builds": "full app and test products compile independently v16; development signatures only",
+  "mac": "all six planning fields Save/review/send observed in prefinal grouped form; one synthetic write/request, 30 minutes. Final current-source layout/cold/speech not accepted: computer use still reports locked after unlock reply.",
+  "limits": [
+    "largest editing and private preservation; cold readback uses normal font",
+    "no spoken planning acceptance",
+    "no genuine Keychain/team/multiwindow/hosted acceptance",
+    "remaining controls/conflicts and authoritative child migration open",
+    "existing user deferrals unchanged"
+  ],
+  "images_sha256": {
+    "phone-estimate-saved.png": "efe35aaf31312e5c3c75ddcd52246d04610d55b9cbd94fc6f4fc0edf08252a54",
+    "phone-estimate-review.png": "f6ee15972cd91e783144f67085483a46a3f1c2ed2599b4f215b4b63570872422",
+    "phone-largest-saved.png": "8edf66fd62bfba8315b69862f05d36ae684655d7cb4bb0d8810a49c40e506755",
+    "phone-private-cold.png": "4fa95b0c45a1f5f940dd79555499c82a23e56ac1508d39bc530d05e299869801",
+    "tablet-estimate-saved.png": "a3a5e592481fba051d4c442e567aeb971ac6fd0e236c27521a07870f19215da0",
+    "tablet-estimate-review.png": "64ef3dac64f8b5c58c597608a30804f40cec7ebf1bed2057ea3f877081351707",
+    "tablet-largest-saved.png": "1504b5ea49acf7d8bff9746d4345a514eb0a149316f40f4a8cb7f45020752fa0",
+    "mac-expanded-prefinal.png": "aa19c5223252e7d7dbeb6a89d024d4a098622acc14814e305caa65120d7a3f36",
+    "mac-saved-prefinal.png": "773b0dbc5b93d75920d01b37a99cdbecbd6f2adb65191e15305cc9f47ecc9ea0"
+  },
+  "canonical_flags": {
+    "TaskfoldChildRecordReadsEnabled": "absent",
+    "TaskfoldChildRecordWritesEnabled": "absent"
+  },
+  "cleanup": {
+    "owned_simulators": "shutdown",
+    "restored_voiceover": {
+      "phone": 1,
+      "tablet": 0
+    },
+    "archived_result_bundles_pruned": 11,
+    "data_free_gib": 3.5,
+    "reusable_builds_hosts_core_caches": "preserved"
+  }
+}
