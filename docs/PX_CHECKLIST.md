@@ -131,8 +131,11 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 - [x] Client read data layer: bounded strict decoding, exact reconstruction,
   context-bound Backend and gated Store method. 93 Core/transport checks per repo,
   43 database checks and both app builds. [Evidence](child-task-record-client/README.md).
-- [ ] Actual Store/editor read adoption and native lifecycle acceptance;
-  per-child conflict-safe commands, offline/Undo/UI adoption and rollout. See [child record stage](child-task-records/README.md).
+- [x] Disabled server non-completion child field commands: field-change fences,
+  current permissions, guarded legacy bridging, atomic receipts and retry proof.
+  95 database and 94 selected Core/transport checks per repo. [Evidence](child-task-field-edits/README.md).
+- [ ] Native command journals/receipts, Store/editor adoption and lifecycle;
+  completion/structural child commands, certified Undo, offline/UI and rollout. See [child record stage](child-task-records/README.md).
 - [ ] Audio comments remain gated. Implemented: private recording/recovery/library
   and portable backups; durable publication/retry; authenticated paged live metadata,
   native verified download/play and explicit removal in a personal-root preview.

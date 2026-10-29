@@ -1,0 +1,27 @@
+{
+  "platform": "mac",
+  "databaseChecks": 95,
+  "coreChecks": 94,
+  "childReadCoreCases": 20,
+  "sourceSHA256": {
+    "supabase/migrations/20261029005723_child_task_field_edits.sql": "41716915a49b14020bc9399cffc34b5eee7898a90d3f43e46977f00715855032",
+    "Scripts/Database/test-child-task-field-edits.mjs": "ebb4f6bae1770bc02402c90a73b48cd8c1529c3d47075d99e6931173c04c1729",
+    "Scripts/Database/team-workflow-run-schema.mjs": "aee16350dd2a07321dc54f0f9a04f5aff0ef400a0d7e0bf6676301997146c4ce",
+    "Scripts/Database/child-task-records-schema.mjs": "070a0dcb346b1a25f08767bb5c82fcb6249b5736a6912cf0ae4b14d7a9a86568",
+    "TaskfoldTests/ChildTaskRecordReadTests.swift": "54fc33902a1f3e7aa4357a4f3b907d7ee83890e2f8a6578c791eed9b67b52eef",
+    "TaskfoldTests/Fixtures/child-task-field-edit-read.json": "6280c408f378085ec5684eabdd100233698f47bf64eb21976064bc24e3314405",
+    "Taskfold/Core/SubtaskTree.swift": "506e7e7ff67edd6be45f618b89dcbdcc1bfeebf0b7fa81d248ac8d948049a415",
+    "Taskfold/Core/Backend.swift": "6fd278fed0005c706d7359c5d92ac72d307d2613749405e1080ff19644466d0f",
+    "Taskfold/Core/Store.swift": "8b93d4d9eb51e217fad6db80f72ff73d7ee98a1459de5c38a7862cd39317ce51"
+  },
+  "baselineAdvisorFindings": 7,
+  "addedAdvisorFindings": [],
+  "containerRemoved": true,
+  "coreWarnings": 0,
+  "newTestWarnings": [],
+  "nativeAppSourceChanged": false,
+  "nativeWriteAdoptionClaimed": false,
+  "hostedSchemaChanged": false,
+  "fullLocalHistoryVerified": false,
+  "fullMigrationComplete": false
+}

@@ -1,0 +1,273 @@
+{
+  "account": "f0d7db57-2253-478b-b27d-7529d5148522",
+  "root": {
+    "id": "73d5550a-51de-4d9a-925b-c92f0cf7dffe",
+    "title": "Synthetic root",
+    "labels": [],
+    "user_id": "f0d7db57-2253-478b-b27d-7529d5148522",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "a",
+        "title": "Edited title",
+        "future": {
+          "retain": [
+            null,
+            false,
+            "original"
+          ]
+        },
+        "comments": [
+          {
+            "id": "discussion-a",
+            "text": "Preserved discussion"
+          }
+        ],
+        "priority": 4,
+        "subtasks": [
+          {
+            "id": "nested",
+            "title": "Original nested",
+            "future": {
+              "retain": [
+                null,
+                false,
+                "original"
+              ]
+            },
+            "comments": [
+              {
+                "id": "discussion-nested",
+                "text": "Preserved discussion"
+              }
+            ],
+            "priority": 4,
+            "subtasks": [],
+            "completed": false,
+            "attachments": [
+              {
+                "id": "file-nested",
+                "url": "https://example.invalid/synthetic"
+              }
+            ],
+            "description": "Nested independent edit",
+            "completed_at": null,
+            "taskfold_completion_v1": {
+              "epoch": "5a1290dc-cf5c-444a-ba7f-3f4a91cfb861",
+              "version": 0
+            }
+          }
+        ],
+        "completed": false,
+        "attachments": [
+          {
+            "id": "file-a",
+            "url": "https://example.invalid/synthetic"
+          }
+        ],
+        "description": "Must roll back",
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "fdc9889f-5cf1-4efc-a3ae-3f327f605a52",
+          "version": 0
+        }
+      },
+      {
+        "id": "b",
+        "title": "First competing title",
+        "future": {
+          "retain": [
+            null,
+            false,
+            "original"
+          ]
+        },
+        "comments": [
+          {
+            "id": "discussion-b",
+            "text": "Preserved discussion"
+          }
+        ],
+        "priority": 4,
+        "subtasks": [],
+        "completed": false,
+        "attachments": [
+          {
+            "id": "file-b",
+            "url": "https://example.invalid/synthetic"
+          }
+        ],
+        "description": "One exact request",
+        "completed_at": null,
+        "taskfold_completion_v1": {
+          "epoch": "4f886315-d189-41bf-8c47-5326454b07a7",
+          "version": 0
+        }
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-29T01:23:01.006491+00:00",
+    "is_heading": null,
+    "project_id": "44316fe6-80e5-45f0-9de7-5ca81bc137f1",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "c66124cf-ac11-42c4-9ee5-57f3e0271f58",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "response": {
+    "account": "f0d7db57-2253-478b-b27d-7529d5148522",
+    "records": [
+      {
+        "fields": {
+          "id": "a",
+          "title": "Edited title",
+          "future": {
+            "retain": [
+              null,
+              false,
+              "original"
+            ]
+          },
+          "comments": [
+            {
+              "id": "discussion-a",
+              "text": "Preserved discussion"
+            }
+          ],
+          "priority": 4,
+          "completed": false,
+          "attachments": [
+            {
+              "id": "file-a",
+              "url": "https://example.invalid/synthetic"
+            }
+          ],
+          "description": "Must roll back",
+          "completed_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "fdc9889f-5cf1-4efc-a3ae-3f327f605a52",
+            "version": 0
+          }
+        },
+        "node_key": "a",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "6bcbf2fc-02fa-43af-bb3e-6e73304c7fdd",
+        "children_kind": "array",
+        "identity_path": [
+          "a"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "nested",
+          "title": "Original nested",
+          "future": {
+            "retain": [
+              null,
+              false,
+              "original"
+            ]
+          },
+          "comments": [
+            {
+              "id": "discussion-nested",
+              "text": "Preserved discussion"
+            }
+          ],
+          "priority": 4,
+          "completed": false,
+          "attachments": [
+            {
+              "id": "file-nested",
+              "url": "https://example.invalid/synthetic"
+            }
+          ],
+          "description": "Nested independent edit",
+          "completed_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "5a1290dc-cf5c-444a-ba7f-3f4a91cfb861",
+            "version": 0
+          }
+        },
+        "node_key": "nested",
+        "revision": 1,
+        "parent_key": "a",
+        "incarnation": "a4e5bd3f-2f78-4b13-8e16-d3d14b7f197a",
+        "children_kind": "array",
+        "identity_path": [
+          "a",
+          "nested"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "b",
+          "title": "First competing title",
+          "future": {
+            "retain": [
+              null,
+              false,
+              "original"
+            ]
+          },
+          "comments": [
+            {
+              "id": "discussion-b",
+              "text": "Preserved discussion"
+            }
+          ],
+          "priority": 4,
+          "completed": false,
+          "attachments": [
+            {
+              "id": "file-b",
+              "url": "https://example.invalid/synthetic"
+            }
+          ],
+          "description": "One exact request",
+          "completed_at": null,
+          "taskfold_completion_v1": {
+            "epoch": "4f886315-d189-41bf-8c47-5326454b07a7",
+            "version": 0
+          }
+        },
+        "node_key": "b",
+        "revision": 10,
+        "parent_key": null,
+        "incarnation": "2d57cbca-b4b7-49a4-85ba-c0a83fb398d0",
+        "children_kind": "array",
+        "identity_path": [
+          "b"
+        ],
+        "sibling_order": 1
+      }
+    ],
+    "task_id": "73d5550a-51de-4d9a-925b-c92f0cf7dffe",
+    "protocol": 1,
+    "root_kind": "array",
+    "project_id": "44316fe6-80e5-45f0-9de7-5ca81bc137f1",
+    "task_generation": "c66124cf-ac11-42c4-9ee5-57f3e0271f58",
+    "projection_revision": 19
+  }
+}

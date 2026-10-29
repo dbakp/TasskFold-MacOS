@@ -196,4 +196,14 @@ final class ChildTaskRecordReadTests: XCTestCase {
         do{_=try await pending.value;XCTFail("Old sign-in accepted") }catch{XCTAssertTrue(error is CancellationError)}
     }
 
+    func testFieldEditedPostgresEnvelopeRemainsCompatible() throws {
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"child-task-field-edit-read",withExtension:"json",subdirectory:"Fixtures"))
+        let raw=try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:url))
+        let account=try XCTUnwrap(raw["account"]?.text),root=Record(try XCTUnwrap(raw["root"]?.object)),response=try XCTUnwrap(raw["response"]?.object)
+        let value=try decode(response,root,account:account)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(value.tree,root["subtasks"]))
+        XCTAssertEqual(value.nodes.count,3)
+        XCTAssertFalse(response["records"]!.list.contains{$0.object["field_versions"] != nil})
+    }
+
 }

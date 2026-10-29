@@ -1,0 +1,11 @@
+{
+  "provenance": "Observed failure transcription; early raw draft logs were overwritten during iteration.",
+  "attempts": [
+    {
+      "result": "fixture wait failed; owned container removed",
+      "cause": "Both concurrent writers were required to be blocked directly by the root holder, ignoring a peer already queued ahead. Held requests reached the three-second lock timeout while the incorrect wait ran.",
+      "correction": "Observe both real waits without assuming the direct blocker; assert the resulting graph contains only the root holder and peers and reaches the root holder. Keep production lock timeouts unchanged."
+    }
+  ],
+  "acceptedPhases": "Draft schema/advisors; 70, 82, 92 draft cases as coverage expanded; independent canonical 92; bounded-source 93; final intended-account-bound canonical 95 in each repo. Final Core runs use each final 95-case response."
+}

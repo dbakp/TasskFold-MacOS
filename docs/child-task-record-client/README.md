@@ -59,6 +59,10 @@ Swift files in the final logs. An initial new test fixture Sendable warning was
 fixed by removing an SDK-unavailable conformance and protecting its handler with
 an NSLock; the final 93-case runs were repeated afterward.
 
+The next [server field-command stage](../child-task-field-edits/README.md) now
+passes its local SQL scope and preserves this strict read protocol. It does not
+enable native writes or close the remaining client lifecycle work below.
+
 ## Still open
 
 - [ ] Actual Store lifecycle and editor/inspector adoption, session/access changes
