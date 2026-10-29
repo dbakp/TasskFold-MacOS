@@ -132,3 +132,20 @@ reported runtime warnings; its reviewed-replacement image was inspected and is
 readable. v3’s combined-run switch tap did not select the value, so that unexplained
 automated interaction remains recorded and open. A later standalone pass does not
 erase it. The four-case iPad suite is running next on the same signed app products.
+
+## iPad acceptance and next scope
+
+The current signed iPad products pass all four targeted cases in one v1 run:
+already-applied recovery, reviewed replacement, distinct saved values and lost-
+close retry, including the saved cold-return assertions. No runtime warnings are
+reported. Two inspected screenshots show readable values and saved feedback in
+the native scrollable sheets. No app or test source changed for this run.
+
+Targeted Mac and iPad suites are accepted within this synthetic scope. All four
+iPhone journeys have passing phase evidence, with the unexplained v3 combined-run
+automated tap explicitly retained. This does not accept genuine credentials,
+team/account/window/hosted or spoken lifecycle, ordinary exposure or the remaining
+child migration. Next implementation is independent child completion with its
+existing completion epochs/history and receipt-certified Undo, then structural
+commands and legacy bridge/adoption work. General field edits continue to refuse
+completion changes.

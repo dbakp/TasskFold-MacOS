@@ -36,10 +36,16 @@
     ],
     "phoneStandaloneLostClose": "passed in v4 with no code change and no reported runtime warnings",
     "remainingPhoneFinding": "One combined-run switch tap stayed off in v3; not reproduced in standalone v4, still unexplained.",
-    "tablet": "Four-case suite currently running on the existing signed products."
+    "tablet": {
+      "result": "passed",
+      "distinctCases": 4,
+      "phase": "ipad-v1-summary.json",
+      "reportedRuntimeWarnings": 0,
+      "visualReview": "Compared values, saved feedback and distinct request titles readable in the native scrollable sheets."
+    }
   },
   "remaining": [
-    "Finish iPad acceptance and investigate the recorded intermittent automated phone tap.",
+    "Investigate the recorded intermittent automated phone tap; its standalone case passes without a code change.",
     "Genuine account/team/window/Keychain/hosted and spoken lifecycle.",
     "Completion/structure/legacy child adapters and authoritative migration.",
     "Existing explicit user deferrals remain unchanged."

@@ -1035,6 +1035,8 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [x] Independently pass 228 focused client checks per repo, including thirteen new cases; full app/test products build. Native phases are recorded separately.
 - [x] Generate the identical canonical migration after direct execution; independently pass 35 closure/race/permission/quota checks and no added advisor findings in each repository. The existing child-edit regression and native phases are recorded separately. No hosted deployment or flag changes.
 - [x] Pass four targeted current-runtime Mac journeys: distinct values, reviewed replacement, lost-close retry and already-applied recovery, with exact cold proofs and no reported runtime warnings. Window-only screenshots inspected.
+- [x] Pass all four targeted current-product iPad journeys in one run, with no reported runtime warnings; inspect compared values, saved feedback and distinct-request screenshots.
+- [ ] Investigate the recorded combined-run iPhone automated tap; all four journeys have passing phase evidence, but a standalone pass does not erase that finding.
 - [ ] Complete native current-source/runtime/speech and genuine Keychain/team/account/window acceptance. Ordinary child flags stay off; completion/structure/legacy adapters, authoritative migration and all existing deferrals remain open.
 
 [Implementation, database blocker and exact evidence](child-task-field-resolution/README.md).

@@ -9727,3 +9727,8 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 ### Resumed mobile conflict checks
 
 The four targeted current-product iPhone journeys have passing evidence across recorded phases, including standalone lost-close retry and cold readback. One combined-run automated switch tap remains unexplained; it is retained as an open finding. The iPad suite is running sequentially on the existing products. Ordinary flags remain off and wider lifecycle/migration gates remain open.
+
+
+### iPad conflict acceptance completed
+
+All four targeted iPad cases pass on current signed products in one run, with exact cold-return assertions and no reported runtime warnings. The compared values, saved notice and distinct request titles were inspected in native scrollable sheets. The four Mac cases also pass; the iPhone has passing evidence for all four across phases, retaining one unexplained combined-run tap. No ordinary flags or hosted schema changed. Independent child completion/Undo, structural/legacy/adoption adapters and wider genuine/spoken lifecycle remain open.
