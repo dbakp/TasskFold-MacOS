@@ -9722,3 +9722,8 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - Free space recovered from below 1 GiB to over 50 GiB. Docker volumes/images, real devices/tasks and unrelated work were preserved.
 - Added a read-only 20 GiB preflight to native host preparation and PostgreSQL fixtures, with instructions to check before every heavy local run. Verified both passing and refusal paths.
 - See `storage-recovery-20261029.json` for measurements, cleanup scope and limits. Remaining Px acceptance continues separately.
+
+
+### Resumed mobile conflict checks
+
+The four targeted current-product iPhone journeys have passing evidence across recorded phases, including standalone lost-close retry and cold readback. One combined-run automated switch tap remains unexplained; it is retained as an open finding. The iPad suite is running sequentially on the existing products. Ordinary flags remain off and wider lifecycle/migration gates remain open.

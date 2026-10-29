@@ -27,12 +27,19 @@
     "screenshots": "Two inspected isolated-window captures; no desktop backdrop stored."
   },
   "nativeMobile": {
-    "phoneAlreadyAppliedAndNormalReplacement": "passed in interrupted v2 suite",
-    "phoneDistinctAndLostClose": "Distinct values pass in v3; lost-close interaction failed to select the switch and is under standalone investigation in v4.",
-    "tablet": "pending"
+    "phoneDistinctCases": 4,
+    "phoneResult": "All four targeted journeys pass across v2/v3/v4; v2/v3 also contain the recorded host/intermittent-tap failures.",
+    "phonePhases": [
+      "phone-v2-interrupted-summary.json",
+      "phone-v3-summary.json",
+      "phone-v4-summary.json"
+    ],
+    "phoneStandaloneLostClose": "passed in v4 with no code change and no reported runtime warnings",
+    "remainingPhoneFinding": "One combined-run switch tap stayed off in v3; not reproduced in standalone v4, still unexplained.",
+    "tablet": "Four-case suite currently running on the existing signed products."
   },
   "remaining": [
-    "Complete mobile acceptance.",
+    "Finish iPad acceptance and investigate the recorded intermittent automated phone tap.",
     "Genuine account/team/window/Keychain/hosted and spoken lifecycle.",
     "Completion/structure/legacy child adapters and authoritative migration.",
     "Existing explicit user deferrals remain unchanged."

@@ -122,3 +122,13 @@ is still running. This mobile interaction and the iPad suite are not accepted ye
 The implementation is committed as gated work in progress, not rollout approval.
 
 `pre-row-to-final.patch.gz` preserves the exact source corrections from the pre-row phase. Historical summary files omit unrelated macOS menu subtrees. The unrelated archived OS system log is excluded from this repository.
+
+## Resumed iPhone acceptance
+
+All four targeted iPhone journeys now have passing current-product evidence across
+v2 (already-applied and normal replacement), v3 (distinct values) and v4 (standalone
+lost-close retry and exact cold proof). v4 passes with no code change and no
+reported runtime warnings; its reviewed-replacement image was inspected and is
+readable. v3’s combined-run switch tap did not select the value, so that unexplained
+automated interaction remains recorded and open. A later standalone pass does not
+erase it. The four-case iPad suite is running next on the same signed app products.
