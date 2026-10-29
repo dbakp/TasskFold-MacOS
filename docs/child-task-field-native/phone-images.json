@@ -1,0 +1,16 @@
+[
+  {
+    "phase": "phone-v12",
+    "test": "TaskfoldUITests/testChildFieldsNativeLargestTextPreservesUnsentTypingCold()",
+    "file": "iphone-accessibility.png",
+    "attachment": "8C3CB3EC-44F7-4E9A-A951-81062AE9F556.png",
+    "sha256": "dc86bea29b02937a9f5cd0409af27afd4e2adfb5774e94f66d41cc1db3e23c6e"
+  },
+  {
+    "phase": "phone-v12",
+    "test": "TaskfoldUITests/testChildFieldsNativeSaveSendColdReceipt()",
+    "file": "iphone-default.png",
+    "attachment": "F5325961-3763-4F15-AADC-50C877C75B69.png",
+    "sha256": "f46db868c267174767ecd3968ed00253efe71fb53330d5a23c3f11d5460e1140"
+  }
+]

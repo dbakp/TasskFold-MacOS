@@ -75,3 +75,9 @@ previous stage's local 95-case database scope is not expanded/reclaimed here.
 
 Read/write gates remain off while these acceptance gaps remain. All user-deferred
 rollout/distribution/provider/genuine-audio/location work stays deferred.
+
+
+Subsequent native owner Store/file/UI acceptance and the Unicode draft correction
+are recorded in [native child-field workflows](../child-task-field-native/README.md).
+That stage uses a synthetic key/peer and does not close genuine Keychain, Mac
+runtime, shared-team/window or hosted lifecycle acceptance.

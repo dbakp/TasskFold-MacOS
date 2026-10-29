@@ -951,3 +951,16 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
   stay off; authoritative migration and remaining rank 6/Px work remain open.
 
 [Evidence and exact limits](child-task-field-lifecycle/README.md).
+
+
+## 2026-10-29 — native child-field recovery acceptance
+
+- [x] Add independent isolated owner hosts exercising Store, actual encrypted files, Backend and editor/recovery controls with synthetic accounts, key and HTTP peer.
+- [x] Verify device Save/send/cold receipt, original retry after a lost reply, account-switch response isolation, private unsent cold recovery, and uncertain-discard Cancel/confirmation on phone/tablet. Exact final phases are recorded separately.
+- [x] Fix canonical-equivalent Unicode changes failing to advance private draft revisions: two failing-before cases; 197 selected Core checks pass in each repo.
+- [x] Give request removal an explicit Cancel alert; dismiss the keyboard after a checkpoint and reveal the whole saved notice inside the sheet, respecting active scope and newer editing.
+- [x] Direct final Mac title Save/review/send/cold receipt, with one synthetic write/request and readable saved feedback.
+- [ ] Broader Mac native/layout/speech and clean runtime (automated 0/4, two geometry warnings); genuine Keychain and account-removal lifecycle; team/multiwindow/hosted acceptance; remaining controls and field-conflict review.
+- [ ] Completion/structure/legacy adapters and authoritative child migration. Rank 6 and overall Px stay unfinished; ordinary child flags remain off.
+
+[Native evidence, screenshots and acceptance limits](child-task-field-native/README.md).

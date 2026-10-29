@@ -799,3 +799,175 @@ extension TaskfoldMacUITests {
     }
 }
 #endif
+
+import XCTest
+#if os(macOS)
+import AppKit
+#endif
+
+extension TaskfoldMacUITests {
+    @MainActor private func childGuard() throws {
+        let allowed = ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner", "com.dbakp.taskfold.workflowteststeameditbridge.uitests.xctrunner"]
+        guard allowed.contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved child field host required") }
+        continueAfterFailure = false
+    }
+    @MainActor private func childPress(_ value: XCUIElement) {
+        XCTAssertTrue(value.waitForExistence(timeout: 12))
+        #if os(macOS)
+        value.click()
+        #else
+        value.tap()
+        #endif
+    }
+    @MainActor private func childOpen(_ app: XCUIApplication, reset: Bool = true, extra: String? = nil, large: Bool = false) throws {
+        try childGuard()
+        let voiceWasOn = try ownerVoiceDisabled()
+        addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", large ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
+        if reset { app.launchArguments.append("--child-fields-native-reset") }; if let extra { app.launchArguments.append(extra) }
+        app.launch(); app.activate(); XCTAssertTrue(app.buttons["childNativeEditor"].waitForExistence(timeout: 25), app.debugDescription)
+    }
+    @MainActor private func childField(_ id: String, _ app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: id).firstMatch
+    }
+    @MainActor private func childType(_ text: String, _ field: XCUIElement) {
+        childPress(field)
+        #if os(macOS)
+        field.typeKey("a", modifierFlags: .command)
+        #else
+        let app = XCUIApplication(); field.press(forDuration: 1)
+        var select = app.menuItems["Select All"].firstMatch
+        for _ in 0..<8 {
+            if select.waitForExistence(timeout: 1), select.isHittable { break }
+            let button = app.buttons["Select All"].firstMatch
+            if button.exists, button.isHittable { select = button; break }
+            let next = app.buttons["Next Page"].firstMatch
+            guard next.exists, next.isEnabled else { break }; next.tap()
+        }
+        XCTAssertTrue(select.exists && select.isHittable, app.debugDescription); select.tap()
+        #endif
+        field.typeText(text); XCTAssertEqual(field.value as? String, text)
+    }
+    @MainActor private func childSavedText(_ value: String, _ app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR value == %@", value, value)).firstMatch
+    }
+    @MainActor private func childReveal(_ value: XCUIElement, _ app: XCUIApplication, towardTop initialDirection: Bool = false) {
+        _ = value.waitForExistence(timeout: 2)
+        var towardTop = initialDirection
+        for _ in 0..<20 {
+            if value.exists && value.isHittable { return }
+            if value.exists, !value.frame.isEmpty {
+                let top = app.navigationBars.allElementsBoundByIndex.last(where: { $0.isHittable })?.frame.maxY ?? app.frame.minY + 100
+                let bottom = app.keyboards.firstMatch.exists ? app.keyboards.firstMatch.frame.minY : app.frame.maxY - 40
+                towardTop = value.frame.midY < (top + bottom) / 2
+            }
+            #if os(macOS)
+            app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: towardTop ? 200 : -200)
+            #else
+            if towardTop { app.swipeDown(velocity: .slow) } else { app.swipeUp(velocity: .slow) }
+            #endif
+        }
+        XCTAssertTrue(value.exists && value.isHittable, app.debugDescription)
+    }
+    @MainActor private func childHomePress(_ identifier: String, _ app: XCUIApplication) {
+        let button = app.buttons[identifier]; childReveal(button, app, towardTop: true); childPress(button)
+    }
+    @MainActor private func childDone(_ app: XCUIApplication) {
+        let done = app.buttons.matching(identifier: "Done").allElementsBoundByIndex.first { $0.isHittable }
+        XCTAssertNotNil(done, app.debugDescription); if let done { childPress(done) }
+    }
+    @MainActor private func childProbe(_ app: XCUIApplication, _ text: String) {
+        let probe = app.staticTexts["childNativeProbe"]; childReveal(probe, app)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", text), object: probe)], timeout: 12) == .completed, app.debugDescription)
+    }
+    @MainActor private func childSave(_ app: XCUIApplication, title: String) {
+        childHomePress("childNativeEditor", app)
+        let field = childField("independentChildTitle", app); childReveal(field, app)
+        childType(title, field)
+        let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); childPress(save)
+        let status = app.staticTexts["independentChildSaveStatus"]
+        XCTAssertTrue(status.waitForExistence(timeout: 10)); XCTAssertTrue(status.label.contains("Saved on this device"), status.label)
+        #if os(iOS)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 8) == .completed, app.debugDescription)
+        let form = childField("childFieldEditorForm", app)
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard status.exists, status.isHittable, form.exists else { return false }
+            let top = app.navigationBars.allElementsBoundByIndex.last(where: { $0.isHittable })?.frame.maxY ?? form.frame.minY
+            return status.frame.minY >= top - 2 && status.frame.maxY <= form.frame.maxY + 2
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 12), .completed, app.debugDescription)
+        #endif
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "child-field-saved-editor"; shot.lifetime = .keepAlways; add(shot)
+    }
+    @MainActor func testChildFieldsNativeSaveSendColdReceipt() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childSave(app, title: "Review the polished child screen")
+        childDone(app); childProbe(app, "queued=1 attempted=0 confirmed=0 writes=0")
+        childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        childDone(app); childProbe(app, "confirmed=1 writes=1 requests=1 current=Review the polished child screen")
+        app.terminate(); try childOpen(app, reset: false); childProbe(app, "confirmed=1 writes=1 requests=1")
+        childHomePress("childNativeRecovery", app)
+        XCTAssertTrue(childSavedText("Review the polished child screen", app).waitForExistence(timeout: 10), app.debugDescription); XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch.exists)
+    }
+    @MainActor func testChildFieldsNativeLostReplyColdRetryOnce() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-fields-lose-reply")
+        childSave(app, title: "Retry the exact saved child request"); childDone(app)
+        childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Unconfirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        childDone(app); childProbe(app, "attempted=1 confirmed=0 writes=1 requests=1")
+        app.terminate(); try childOpen(app, reset: false)
+        childHomePress("childNativeRecovery", app); childReveal(send, app); childPress(send)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed")).firstMatch.waitForExistence(timeout: 12))
+        childDone(app); childProbe(app, "confirmed=1 writes=1 requests=2 current=Retry the exact saved child request")
+    }
+    @MainActor func testChildFieldsNativeLargestTextPreservesUnsentTypingCold() throws {
+        #if os(macOS)
+        throw XCTSkip("iOS Dynamic Type case; Mac layout acceptance is separate")
+        #else
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, large: true)
+        childSave(app, title: "Checkpoint a large-text child"); childDone(app); childProbe(app, "queued=1 attempted=0 confirmed=0 writes=0")
+        childHomePress("childNativeEditor", app)
+        let field = childField("independentChildTitle", app); childReveal(field, app); childType("Private unsent large-text draft", field)
+        childDone(app); childProbe(app, "private=1")
+        let privateTitle = app.staticTexts["childNativePrivateTitle"]; childReveal(privateTitle, app); XCTAssertEqual(privateTitle.label, "Private unsent large-text draft")
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "child-private-cold-proof"; shot.lifetime = .keepAlways; add(shot)
+        app.terminate(); try childOpen(app, reset: false); childProbe(app, "private=1"); XCTAssertEqual(privateTitle.label, "Private unsent large-text draft")
+        childProbe(app, "queued=1 attempted=0 confirmed=0 writes=0 requests=0")
+        #endif
+    }
+    @MainActor func testChildFieldsNativeUncertainDiscardCancelAndColdState() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-fields-lose-reply")
+        childSave(app, title: "A discarded receipt cannot undo this change"); childDone(app); childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Unconfirmed")).firstMatch.waitForExistence(timeout: 12))
+        let discard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "discardChildField-")).firstMatch
+        childReveal(discard, app); childPress(discard)
+        let confirm = app.buttons["Discard unconfirmed request"]; XCTAssertTrue(confirm.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "cannot cancel or undo")).firstMatch.exists)
+        childPress(app.buttons["Cancel"]); XCTAssertTrue(send.exists)
+        childPress(discard); childPress(confirm)
+        XCTAssertTrue(app.staticTexts["No saved changes"].waitForExistence(timeout: 10)); childDone(app)
+        childProbe(app, "queued=0 attempted=0 confirmed=0 writes=1 requests=1")
+        app.terminate(); try childOpen(app, reset: false)
+        childProbe(app, "writes=1 requests=1 current=A discarded receipt cannot undo this change")
+    }
+    @MainActor func testChildFieldsNativeAccountSwitchKeepsOriginalPrivateAttempt() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-fields-switch-on-send")
+        childSave(app, title: "Keep this request with account A"); childDone(app)
+        childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        XCTAssertTrue(app.staticTexts["No saved changes"].waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertFalse(childSavedText("Keep this request with account A", app).exists)
+        childDone(app); childProbe(app, "attempted=1 confirmed=0 writes=1 requests=1 current=hidden account=B")
+        app.terminate(); try childOpen(app, reset: false)
+        childHomePress("childNativeRecovery", app); XCTAssertTrue(childSavedText("Keep this request with account A", app).waitForExistence(timeout: 12), app.debugDescription)
+        childReveal(send, app); childPress(send); childDone(app); childProbe(app, "confirmed=1 writes=1 requests=2")
+    }
+}

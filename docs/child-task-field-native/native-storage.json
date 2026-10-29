@@ -1,0 +1,17 @@
+{
+  "phase": "phone-v10a",
+  "nativeConfirmedQueuedEntries": 1,
+  "privateDraftColdReadback": true,
+  "journalFiles": [
+    {
+      "path": "/Users/davidbakposada/Library/Developer/CoreSimulator/Devices/F2ACCCB5-E5B3-426F-B962-955A113D4EF4/data/Containers/Data/Application/54D70AE7-6771-4EBD-BD80-455D18C73313/Library/Application Support/Taskfold/Backups/48f020e2-3b6a-8dd7-8df7-8051e91f40c0/Child field requests/ec990000-0000-4000-8000-000000000001/a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/requests.taskfoldchildfields",
+      "bytes": 646,
+      "mode": "0o600",
+      "sha256": "14083d130abce8e844e2bbefaded710a0cd1b3c81078bdc8d83cae5ad3317f86",
+      "typedTitleAbsentFromCiphertext": true,
+      "parentXattrs": [
+        "com.apple.metadata:com_apple_backup_excludeItem"
+      ]
+    }
+  ]
+}

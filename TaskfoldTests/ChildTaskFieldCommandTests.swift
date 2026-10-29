@@ -361,6 +361,28 @@ final class ChildTaskFieldCommandTests: XCTestCase {
         XCTAssertTrue(session.finish(ifRevision: 99))
         session.capture(original, extras: [:]); XCTAssertNil(session.latest)
     }
+    @MainActor func testPrivateDraftLiteralUnicodeChangePreventsEarlierFinish() throws {
+        let r = try read(), original = Record(r.nodes["child"]!.fields), directory = try root(), key = SymmetricKey(size: .bits256)
+        let vault = BackupVault(directory: directory, account: r.context.account, key: { key })
+        let session = TaskEditorSession(vault: vault, origin: r.context.origin, original: original, labels: [])
+        var first = original; first["title"] = .string("Cafe\u{301}"); session.capture(first, extras: [:]); XCTAssertTrue(session.flush())
+        let submitted = session.latest!.revision
+        var later = first; later["title"] = .string("Café"); XCTAssertEqual(first, later, "Ordinary String equality hides the authored-byte change")
+        session.capture(later, extras: [:]); XCTAssertTrue(session.flush())
+        XCTAssertGreaterThan(session.latest!.revision, submitted)
+        XCTAssertTrue(session.latest!.draft.title.utf8.elementsEqual("Café".utf8))
+        XCTAssertFalse(session.finish(ifRevision: submitted))
+        if !session.closed { let saved = try vault.editorDraft(session.id, origin: r.context.origin); XCTAssertTrue(saved.draft.title.utf8.elementsEqual("Café".utf8)); _ = session.finish() }
+    }
+    @MainActor func testPrivateRecoveryMetadataKeepsLiteralUnicodeRevision() throws {
+        let r = try read(), original = Record(r.nodes["child"]!.fields), directory = try root(), key = SymmetricKey(size: .bits256)
+        let vault = BackupVault(directory: directory, account: r.context.account, key: { key })
+        let session = TaskEditorSession(vault: vault, origin: r.context.origin, original: original, labels: [])
+        session.capture(original, extras: ["raw_path": .string("Cafe\u{301}")]); XCTAssertTrue(session.flush()); let before = session.latest!.revision
+        session.capture(original, extras: ["raw_path": .string("Café")]); XCTAssertTrue(session.flush())
+        XCTAssertGreaterThan(session.latest!.revision, before)
+        XCTAssertTrue(session.latest!.extras["raw_path"]!.text.utf8.elementsEqual("Café".utf8)); _ = session.finish()
+    }
     @MainActor private func backend(_ account: String) throws -> Backend {
         let session = try JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic\",\"refresh_token\":\"synthetic\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ChildFieldHTTP.self]

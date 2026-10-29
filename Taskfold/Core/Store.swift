@@ -306,7 +306,12 @@ final class Store {
             .appendingPathComponent(WorkspaceBackup.stableID("vault",account),isDirectory:true)
             .appendingPathComponent("Child field requests",isDirectory:true)
         let io=try ChildTaskFieldJournalFileIO(directory:directory,account:account,origin:origin,
-            encryptionKey:{try BackupVault.deviceKey(account:account)})
+            encryptionKey:{
+                #if DEBUG
+                if ChildFieldNativeIdentity.enabled {return try ChildFieldNativeIdentity.key(account)}
+                #endif
+                return try BackupVault.deviceKey(account:account)
+            })
         return try ChildTaskFieldJournal(account:account,origin:origin,io:io,
             coordinationDirectory:URL.applicationSupportDirectory.appendingPathComponent("ChildFieldCommandLocks",isDirectory:true),removalDirectory:root)
     }
@@ -458,7 +463,12 @@ final class Store {
         let account = userID
         let folder = cacheURL.deletingLastPathComponent().appending(path: "Backups", directoryHint: .isDirectory)
             .appending(path: WorkspaceBackup.stableID("vault", account), directoryHint: .isDirectory)
-        return BackupVault(directory: folder, account: account, key: { try BackupVault.deviceKey(account: account) }, removalGate: UUID(uuidString: account) == nil ? nil : AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account))
+        return BackupVault(directory: folder, account: account, key: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled {return try ChildFieldNativeIdentity.key(account)}
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        }, removalGate: UUID(uuidString: account) == nil ? nil : AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account))
     }
     var teamDraftVault: TeamCompletionDraftVault? {
         guard signedIn,!localMode,!signingOut,!accountRemovalBlocked,TeamProjectValue.id(userID),let origin=try? backend.accountRemovalOrigin else {return nil}
@@ -2107,6 +2117,7 @@ final class Store {
     }
     func sync() async {
         #if DEBUG
+        if ChildFieldNativeIdentity.enabled { try? childFieldNativeRefresh(); return }
         if PersonalHeadingNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") { return }
         if (TeamEditorNativeFixture.enabled && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
         #endif
@@ -4040,6 +4051,7 @@ extension Store {
     static let teamID = "ec240000-0000-4000-8000-000000000004"
     static let personalPlanningProject = "ec240000-0000-4000-8000-000000000041"
     static func backend() -> Backend {
+        let account = ChildFieldNativeIdentity.enabled ? ChildFieldNativeIdentity.account : Self.account
         if ProjectAdoptionNativeFixture.enabled { return ProjectAdoptionNativeFixture.backend() }
         if TeamTemplateNativeFixture.enabled { return TeamTemplateNativeFixture.backend() }
         let configuration = URLSessionConfiguration.ephemeral
@@ -4074,6 +4086,15 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
     override func startLoading() {
         let request = self.request
         Task { @MainActor in
+            if ChildFieldNativeIdentity.enabled {
+                do {
+                    let (data, lose) = try await ChildFieldNativePeer.response(request)
+                    if lose { client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost)); return }
+                    let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
+                    client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
+                } catch { client?.urlProtocol(self, didFailWithError: error) }
+                return
+            }
             if PersonalHeadingNativePeer.enabled {
                 do {
                     let (data, lose) = try PersonalHeadingNativePeer.response(request)
@@ -4121,6 +4142,7 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
 }
 extension Store {
     private func prepareTeamEditorNativeFixture() {
+        if ChildFieldNativeIdentity.enabled { return }
         guard TeamEditorNativeFixture.enabled else { return }
         if ProjectAdoptionNativeFixture.enabled { prepareProjectAdoptionNativeFixture(); return }
         dailyBackupsEnabled = false
@@ -5057,6 +5079,34 @@ extension Store {
         let protected = !accepted && before == snapshot && bytes != nil && (try? Data(contentsOf: file)) == bytes && error == "Current workspace message"
         if error == "Current workspace message" { error = oldError }
         recordedDraftAdmissionStatus = protected ? "Saved draft context protected" : "Saved draft context failed"
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func childFieldNativeStart() async throws {
+        guard ChildFieldNativeIdentity.enabled,userID==ChildFieldNativeIdentity.account else {throw CancellationError()}
+        dailyBackupsEnabled=false; disableNotifications()
+        if ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") {
+            try ChildFieldNativePeer.save(ChildFieldNativePeer.initial())
+            try await childTaskFieldJournal(account:ChildFieldNativeIdentity.account,origin:ChildFieldNativeIdentity.origin).removeAccount()
+            for entry in try backupVault.editorEntries() {
+                if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) {try backupVault.closeEditorDraft(entry.id)}
+            }
+        }
+        accountGeneration=UUID();signedIn=true;localMode=false;workspaceCacheDecoded=true;workspaceCacheReadable=true;teamAccessMask=nil
+        snapshot=Snapshot();undoStack=[];redoStack=[];try childFieldNativeRefresh()
+    }
+    func childFieldNativeRefresh() throws {
+        guard ChildFieldNativeIdentity.enabled,signedIn,!localMode,!signingOut,!accountRemovalBlocked,online else {return}
+        snapshot.tables["tasks"] = userID==ChildFieldNativeIdentity.account ? [try ChildFieldNativePeer.root] : []
+        try persist()
+    }
+    func childFieldNativeSwitchAccount() async throws {
+        guard ChildFieldNativeIdentity.enabled,userID==ChildFieldNativeIdentity.account else {throw CancellationError()}
+        let session=try JSONDecoder().decode(Session.self,from:Data("{\"access_token\":\"synthetic-b\",\"refresh_token\":\"synthetic-b\",\"expires_in\":3600,\"user\":{\"id\":\"\(ChildFieldNativeIdentity.other)\"}}".utf8))
+        try await backend.accept(session);accountGeneration=UUID();teamAccessMask=nil;snapshot=Snapshot();undoStack=[];redoStack=[]
     }
 }
 #endif

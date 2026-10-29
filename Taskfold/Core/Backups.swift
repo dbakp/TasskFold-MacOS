@@ -988,7 +988,12 @@ extension BackupVault {
     var preserved: Bool {!captureFailed && latest != nil && savedRevision == latest?.revision}
     func capture(_ draft: Record, extras: [String:JSON]) {
         guard !closed else {return}
-        guard latest?.draft != draft || latest?.extras != extras else {return}
+        // Semantic equality is only a fast negative check: Swift Strings compare
+        // canonically equivalent Unicode as equal. A different authored spelling
+        // must still advance the revision and fence an earlier async checkpoint.
+        if let latest, latest.draft == draft, latest.extras == extras,
+           AuthoredValueComparison.exactJSON(.object(latest.draft.fields), .object(draft.fields)),
+           AuthoredValueComparison.exactJSON(.object(latest.extras), .object(extras)) {return}
         revision += 1
         do {
             let value=try TaskEditorRecovery(id:id,revision:revision,account:account,origin:origin,original:original,draft:draft,extras:extras,labels:labels,now:createdAt)

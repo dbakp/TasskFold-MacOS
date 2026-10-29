@@ -1,0 +1,18 @@
+{
+  "result": "Failed",
+  "passedTests": 0,
+  "failedTests": 4,
+  "skippedTests": 0,
+  "runtimeWarnings": [
+    {
+      "issueType": "Runtime Warning",
+      "message": "Invalid view geometry: height is negative."
+    },
+    {
+      "issueType": "Runtime Warning",
+      "message": "Invalid view geometry: width is negative."
+    }
+  ],
+  "phase": "mac-v12",
+  "failureScope": "Desktop runner could not reliably discover/open the fixture/editor controls; functional acceptance remains open."
+}

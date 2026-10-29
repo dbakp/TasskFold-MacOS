@@ -39,7 +39,7 @@ struct ChildTaskFieldRecoveryView: View {
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         List {
-            Section { Text("These private requests stay on this device until you remove them. Retrying sends the original request; it never overwrites it with a fresh draft.").foregroundStyle(.secondary) }
+            Section { Text("Review saved changes. Retrying keeps the original request.").foregroundStyle(.secondary) }
             if let model, scope != nil, modelScope == scope {
                 if let message = model.message { Section { Text(message).accessibilityIdentifier("childFieldRecoveryStatus") } }
                 if model.loaded, model.entries.isEmpty { ContentUnavailableView("No saved changes", systemImage: "checkmark.circle", description: Text("Subtask requests you save will appear here.")) }
@@ -78,7 +78,7 @@ struct ChildTaskFieldRecoveryView: View {
             catch { failure = error.localizedDescription }
         }
         .onDisappear { model?.close() }
-        .confirmationDialog("Remove this saved request?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
+        .alert("Remove this saved request?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
             if let removing {
                 Button(removing.phase == .attempted ? "Discard unconfirmed request" : "Remove from this device", role: .destructive) {
                     let entry = removing; self.removing = nil
@@ -119,9 +119,14 @@ private struct ChildFieldReadRequest: Hashable { let scope: ChildTaskFieldClient
 /// Starts from verified saved server data, independent of the parent's draft.
 /// Saving here checkpoints intent; sending is a separate reviewed action.
 struct ChildTaskFieldEditorView: View {
+    private enum Field: Hashable { case title, notes }
+    @FocusState private var editingField: Field?
+    @AccessibilityFocusState private var savedNoticeFocused: Bool
     let rootID: String
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var appeared = false
     @State private var read: ChildTaskRecordRead?
     @State private var model: ChildTaskFieldRecoveryModel?
     @State private var failure: String?
@@ -149,8 +154,9 @@ struct ChildTaskFieldEditorView: View {
         if priority != Record(node.fields).priority { fields["priority"] = .number(Double(priority)) }; return fields
     }
     var body: some View {
+        ScrollViewReader { proxy in
         Form {
-            Section { Text("Edit a saved subtask without replacing its parent checklist. Save on this device first, then review and send from Saved subtask changes.").foregroundStyle(.secondary) }
+            Section { Text("Save a subtask change, then review and send it.").foregroundStyle(.secondary) }
             if let failure { Section { Text(failure).foregroundStyle(.secondary); Button("Read current subtasks again") { reload = UUID() } } }
             if let read, let model, sourceAvailable {
                 if read.nodes.isEmpty { ContentUnavailableView("No saved subtasks", systemImage: "list.bullet") }
@@ -159,22 +165,41 @@ struct ChildTaskFieldEditorView: View {
                         Picker("Subtask", selection: $key) {
                             ForEach(read.nodes.keys.sorted(), id: \.self) { value in Text(read.nodes[value]!.fields["title"]?.text ?? "Subtask").tag(value) }
                         }.accessibilityIdentifier("independentChildSelection")
-                        TextField("Title", text: Binding(get: { title }, set: { title = $0; checkpoint(reopen: true) }), axis: .vertical).accessibilityIdentifier("independentChildTitle")
-                        TextField("Notes", text: Binding(get: { notes }, set: { notes = $0; checkpoint(reopen: true) }), axis: .vertical).lineLimit(3...12).accessibilityIdentifier("independentChildNotes")
-                        Picker("Priority", selection: Binding(get: { priority }, set: { priority = $0; checkpoint(reopen: true) })) { ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
+                        TextField("Title", text: Binding(get: { title }, set: { guard !title.utf8.elementsEqual($0.utf8) else { return }; title = $0; checkpoint(reopen: true) }), axis: .vertical).focused($editingField, equals: .title).accessibilityIdentifier("independentChildTitle")
+                        TextField("Notes", text: Binding(get: { notes }, set: { guard !notes.utf8.elementsEqual($0.utf8) else { return }; notes = $0; checkpoint(reopen: true) }), axis: .vertical).lineLimit(3...12).focused($editingField, equals: .notes).accessibilityIdentifier("independentChildNotes")
+                        Picker("Priority", selection: Binding(get: { priority }, set: { guard priority != $0 else { return }; priority = $0; checkpoint(reopen: true) })) { ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
                         Text("Unsent text is preserved privately in Backups & restore → Unsent task edits. Other fields and checklist structure stay as saved.").font(.footnote).foregroundStyle(.secondary)
                     }
                     Section {
                         Button("Save on this device", systemImage: "tray.and.arrow.down") {
                             do {
                                 let command = try ChildTaskFieldCommand(read: read, key: key, changes: changes)
-                                let session = draftSession, revision = session?.latest?.revision
-                                Task { if await model.save(command) != nil { _ = session?.finish(ifRevision: revision) } }
+                                let session = draftSession, revision = session?.latest?.revision, captured = scope
+                                savedNoticeFocused = false
+                                Task {
+                                    guard let saved = await model.save(command) else { return }
+                                    let unchanged = session?.latest?.revision == revision
+                                    _ = session?.finish(ifRevision: revision)
+                                    guard unchanged, selectedKey == saved.body["node_key"]?.text, scope == captured, appeared, phase == .active, !recovery else { return }
+                                    let keyboardWasFocused = editingField != nil
+                                    editingField = nil
+                                    #if os(iOS)
+                                    // A centered iPad sheet changes its viewport during
+                                    // keyboard dismissal. Reveal against its settled size.
+                                    if keyboardWasFocused { try? await Task.sleep(nanoseconds: 400_000_000) }
+                                    #endif
+                                    await Task.yield()
+                                    guard draftSession === session, scope == captured, appeared, phase == .active, !recovery else { return }
+                                    if reduceMotion { proxy.scrollTo("childFieldSavedNotice", anchor: .bottom) }
+                                    else { withAnimation(.easeOut(duration: 0.18)) { proxy.scrollTo("childFieldSavedNotice", anchor: .bottom) } }
+                                    await Task.yield()
+                                    guard draftSession === session, scope == captured, selectedKey == saved.body["node_key"]?.text, appeared, phase == .active, !recovery else { return }; savedNoticeFocused = true
+                                }
                             }
                             catch { failure = error.localizedDescription }
                         }.disabled(changes.isEmpty || model.busy).accessibilityIdentifier("saveIndependentChildFields")
                         Button("Review saved changes", systemImage: "tray.and.arrow.up") { recovery = true }
-                        if let message = model.message { Text(message).foregroundStyle(.secondary).accessibilityIdentifier("independentChildSaveStatus") }
+                        if let message = model.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).id("childFieldSavedNotice").accessibilityIdentifier("independentChildSaveStatus").accessibilityFocused($savedNoticeFocused) }
                     }
                 }
             } else if read != nil {
@@ -182,7 +207,12 @@ struct ChildTaskFieldEditorView: View {
                 if scope != nil { Button("Review saved changes") { recovery = true } }
             } else if failure == nil { ProgressView("Reading saved subtasks…") }
         }
+        #if os(iOS)
+        .accessibilityIdentifier("childFieldEditorForm")
+        #endif
+        .onAppear { appeared = true }
         .privacySensitive()
+        .scrollDismissesKeyboard(.interactively)
         .onChange(of: key) { _, _ in select() }
         .onChange(of: sourceAvailable) { _, value in if !value { checkpoint(); _ = draftSession?.flush() } }
         .onChange(of: phase) { _, value in if value != .active { checkpoint(); _ = draftSession?.flush() } }
@@ -197,8 +227,9 @@ struct ChildTaskFieldEditorView: View {
                 read = value; model = try store.childTaskFieldRecoveryModel(); key = value.nodes.keys.sorted().first ?? ""; select()
             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = error.localizedDescription }
         }
-        .onDisappear { checkpoint(); _ = draftSession?.flush() }
+        .onDisappear { appeared = false; checkpoint(); _ = draftSession?.flush() }
         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
+        }
     }
     private func select() {
         checkpoint()
