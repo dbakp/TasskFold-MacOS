@@ -394,3 +394,57 @@ struct ChildTaskPlanningDraft: Sendable {
         value = next
     }
 }
+
+/// Labels retain authored order and unknown legacy values. Catalog resolution is
+/// explicit for personal tasks; shared labels never consult a personal catalog.
+struct ChildTaskLabelsDraft {
+    enum Kind { case personal, shared }
+    let original: Record
+    let kind: Kind
+    private var draft: TeamTaskLabelsDraft
+    init(original: Record, restored: Record? = nil, kind: Kind) {
+        self.original = original; self.kind = kind
+        draft = TeamTaskLabelsDraft((restored ?? original)["labels"])
+    }
+    var supported: Bool { draft.supported }
+    var entries: [TeamTaskLabelsDraft.Entry] { draft.entries }
+    var value: JSON {
+        // An untouched null stays null, but authored strings must be compared
+        // by exact bytes: replacing a canonically equivalent label is an edit.
+        draft.original == .null && draft.entries.isEmpty ? .null : draft.value
+    }
+    var changes: [String: JSON] {
+        guard supported, !AuthoredValueComparison.exactJSON(original["labels"], value) else { return [:] }
+        return ["labels": value]
+    }
+    func applying(to record: Record) -> Record {
+        var result = record
+        // Do not materialize a missing field merely by opening the editor.
+        if !changes.isEmpty || original.fields["labels"] != nil { result["labels"] = value }
+        return result
+    }
+    func name(_ entry: TeamTaskLabelsDraft.Entry, catalog: [Record]) -> String {
+        if kind == .personal, let label = catalog.first(where: { $0.id == entry.value }), !label.name.isEmpty { return label.name }
+        return entry.name ?? "Saved label"
+    }
+    mutating func addName(_ input: String, catalog: [Record]) throws {
+        let name = try TeamTaskLabelsDraft.name(input)
+        if kind == .personal {
+            let matches = catalog.filter { $0.name == name }
+            guard matches.count <= 1 else { throw AppFailure(message: "Several labels have this name. Choose one from Your labels.") }
+            if let label = matches.first { try addCatalog(label.id, catalog: catalog); return }
+        }
+        try draft.add(name)
+    }
+    mutating func addCatalog(_ id: String, catalog: [Record]) throws {
+        guard kind == .personal, supported, let label = catalog.first(where: { $0.id == id }),
+              !label.id.isEmpty, label.id.utf8.count <= 1024 else { throw ChildTaskFieldCommand.invalid }
+        let uniqueName = catalog.filter { $0.name == label.name }.count == 1
+        guard !entries.contains(where: { $0.value == id || uniqueName && $0.value == label.name }) else { throw AppFailure(message: "That label is already on this task.") }
+        guard entries.count < 256 else { throw AppFailure(message: "A task can have up to 256 labels. Remove one before adding another.") }
+        // Use the same portable storage validation, without passing IDs through
+        // the shared-label name validator or normalizing other saved entries.
+        draft = TeamTaskLabelsDraft(.array(entries.map { .string($0.value) } + [.string(id)]))
+    }
+    mutating func remove(_ id: Int) { draft.remove(id) }
+}

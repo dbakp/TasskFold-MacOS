@@ -510,3 +510,82 @@ final class ChildTaskFieldCommandTests: XCTestCase {
     }
 
 }
+
+extension ChildTaskFieldCommandTests {
+    func testChildLabelsOpeningDoesNotMaterializeAbsentOrNormalizeAuthoredValues() throws {
+        for raw: JSON? in [nil, .null, .array([]), .array([.string("cafe\u{301}"), .string("future-label")])] {
+            var source = Record(["future": .object(["keep": .bool(true)])]); source.fields["labels"] = raw
+            let draft = ChildTaskLabelsDraft(original: source, kind: .personal)
+            XCTAssertTrue(draft.changes.isEmpty)
+            XCTAssertTrue(AuthoredValueComparison.exactJSON(.object(draft.applying(to: source).fields), .object(source.fields)))
+        }
+    }
+    func testChildPersonalLabelsResolveOnlyAnExplicitUnambiguousName() throws {
+        let id = UUID().uuidString.lowercased(), other = UUID().uuidString.lowercased()
+        let catalog = [Record(["id": .string(id), "name": .string("Work")])]
+        var draft = ChildTaskLabelsDraft(original: Record(["labels": .array([.string("legacy")])]), kind: .personal)
+        try draft.addName(" Work ", catalog: catalog)
+        XCTAssertEqual(draft.value, .array([.string("legacy"), .string(id)]))
+        XCTAssertEqual(draft.name(draft.entries[1], catalog: catalog), "Work")
+        XCTAssertThrowsError(try draft.addName("Work", catalog: catalog))
+        let before = draft.value
+        XCTAssertThrowsError(try draft.addName("Work", catalog: catalog + [Record(["id": .string(other), "name": .string("Work")])]))
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(before, draft.value))
+    }
+    func testChildPersonalCatalogChoiceDoesNotRenormalizeOtherEntries() throws {
+        let id = UUID().uuidString.lowercased()
+        let source = Record(["labels": .array([.string("Legacy name"), .string("cafe\u{301}"), .string("future")])])
+        let catalog = [Record(["id": .string(id), "name": .string("Work")])]
+        var draft = ChildTaskLabelsDraft(original: source, kind: .personal)
+        try draft.addCatalog(id, catalog: catalog)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(draft.value, .array(source["labels"].list + [.string(id)])))
+        XCTAssertThrowsError(try draft.addCatalog(UUID().uuidString, catalog: catalog))
+        draft.remove(draft.entries.last!.id)
+        XCTAssertTrue(draft.changes.isEmpty)
+        var named = ChildTaskLabelsDraft(original: Record(["labels": .array([.string("Work")])]), kind: .personal)
+        XCTAssertThrowsError(try named.addCatalog(id, catalog: catalog))
+        XCTAssertTrue(named.changes.isEmpty)
+    }
+    func testChildSharedLabelsNeverResolveAgainstPersonalCatalog() throws {
+        let id = UUID().uuidString.lowercased(), catalog = [Record(["id": .string(UUID().uuidString), "name": .string("Work")])]
+        var draft = ChildTaskLabelsDraft(original: Record(), kind: .shared)
+        try draft.addName("Work", catalog: catalog)
+        XCTAssertEqual(draft.value, .array([.string("Work")]))
+        XCTAssertThrowsError(try draft.addCatalog(id, catalog: [Record(["id": .string(id), "name": .string("Private")])]))
+        XCTAssertThrowsError(try draft.addName(id, catalog: []))
+    }
+    func testChildLabelsUnsupportedAndCapacityFailuresKeepOriginal() throws {
+        var future = ChildTaskLabelsDraft(original: Record(["labels": .object(["v": .number(2)])]), kind: .personal)
+        XCTAssertFalse(future.supported); XCTAssertTrue(future.changes.isEmpty)
+        XCTAssertThrowsError(try future.addName("New", catalog: [])); future.remove(0)
+        XCTAssertEqual(future.value, .object(["v": .number(2)]))
+        let rows = (0..<256).map { JSON.string("Saved \($0)") }
+        var full = ChildTaskLabelsDraft(original: Record(["labels": .array(rows)]), kind: .personal)
+        XCTAssertThrowsError(try full.addName("New", catalog: []))
+        XCTAssertThrowsError(try full.addCatalog("catalog-id", catalog: [Record(["id": .string("catalog-id"), "name": .string("New")])]))
+        XCTAssertEqual(full.value, .array(rows))
+    }
+    func testChildLabelChangesJoinPlanningWithoutLosingFieldsAndRestore() throws {
+        let read = try read(), node = try XCTUnwrap(read.nodes["child"]), source = Record(node.fields)
+        var labels = ChildTaskLabelsDraft(original: source, kind: .shared)
+        try labels.addName("Review", catalog: [])
+        var planning = ChildTaskPlanningDraft(original: source); try planning.estimate(45)
+        let draft = labels.applying(to: planning.applying(to: source))
+        let restored = ChildTaskLabelsDraft(original: source, restored: draft, kind: .shared)
+        XCTAssertEqual(restored.changes, labels.changes)
+        let command = try ChildTaskFieldCommand(read: read, key: "child", changes: labels.changes.merging(planning.changes) { _, b in b })
+        XCTAssertEqual(Set(command.body["changes"]!.object.keys), ["labels", "duration_minutes"])
+        XCTAssertEqual(draft["duration_minutes"], .number(45)); XCTAssertEqual(draft["title"], source["title"])
+    }
+}
+
+extension ChildTaskFieldCommandTests {
+    func testChildLabelsCanonicalReplacementIsAnExactAuthoredChange() throws {
+        let source = Record(["labels": .array([.string("cafe\u{301}")])])
+        var draft = ChildTaskLabelsDraft(original: source, kind: .shared)
+        draft.remove(0); try draft.addName("café", catalog: [])
+        XCTAssertFalse(draft.changes.isEmpty)
+        XCTAssertTrue(AuthoredValueComparison.exactJSON(draft.value, .array([.string("café")])))
+        XCTAssertFalse(AuthoredValueComparison.exactJSON(draft.value, source["labels"]))
+    }
+}

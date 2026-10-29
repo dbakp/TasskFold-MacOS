@@ -59,7 +59,7 @@ struct ChildTaskFieldRecoveryView: View {
                         ForEach(entry.command.body["changes"]!.object.keys.sorted(), id: \.self) { field in
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(fieldTitle(field)).font(.caption).foregroundStyle(.secondary)
-                                Text(render(field, entry.command.body["changes"]!.object[field]!)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                                Text(render(field, entry.command.body["changes"]!.object[field]!, command: entry.command)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                             }
                         }
                         if entry.phase != .confirmed {
@@ -107,7 +107,16 @@ struct ChildTaskFieldRecoveryView: View {
     private func fieldTitle(_ key: String) -> String {
         ["title": "Title", "description": "Notes", "priority": "Priority", "due_date": "Planned date", "due_time": "Planned time", "deadline_date": "Deadline", "duration_minutes": "Time estimate", "time_zone": "Time zone", "scheduled_at": "Exact time", "assigned_to": "Assigned to", "labels": "Labels", "reminder_specs": "Reminders"][key] ?? "Saved value"
     }
-    private func render(_ field: String, _ value: JSON) -> String {
+    private func render(_ field: String, _ value: JSON, command: ChildTaskFieldCommand) -> String {
+        if field == "labels", case .array(let rows) = value {
+            guard !rows.isEmpty else { return "No labels" }
+            let root = store.record("tasks", id: command.body["task_id"]!.text)
+            let personal = root.map { TeamTaskLabelsDraft.usesPersonalCatalog($0, cache: store.nativeConversationTeamCache) } ?? false
+            return rows.map { item in
+                if personal, let label = store.labels.first(where: { $0.id == item.text }), !label.name.isEmpty { return label.name }
+                return TeamTaskLabelsDraft.displayName(item.text) ?? "Unavailable saved label"
+            }.joined(separator: "\n")
+        }
         if value == .null { return "Cleared" }
         if field == "duration_minutes", case .number(let minutes) = value { return "\(Int(minutes)) min" }
         if field == "priority", case .number(let priority) = value { return priority == 4 ? "None" : "Priority \(Int(priority))" }
@@ -151,7 +160,7 @@ private struct ChildFieldNoticeRequest: Equatable {
 /// Starts from verified saved server data, independent of the parent's draft.
 /// Saving here checkpoints intent; sending is a separate reviewed action.
 struct ChildTaskFieldEditorView: View {
-    private enum Field: Hashable { case title, notes }
+    private enum Field: Hashable { case title, notes, label }
     @FocusState private var editingField: Field?
     @AccessibilityFocusState private var savedNoticeFocused: Bool
     let rootID: String
@@ -172,6 +181,10 @@ struct ChildTaskFieldEditorView: View {
     @State private var notes = ""
     @State private var priority = 4
     @State private var planning = ChildTaskPlanningDraft(original: Record())
+    @State private var labels = ChildTaskLabelsDraft(original: Record(), kind: .personal)
+    @State private var addingLabel = ""
+    @State private var labelMessage: String?
+    @State private var labelInputs: [String: String] = [:]
     @State private var recovery = false
     @State private var reload = UUID()
     @State private var draftSession: TaskEditorSession?
@@ -190,7 +203,7 @@ struct ChildTaskFieldEditorView: View {
         if !title.utf8.elementsEqual(node.fields["title"]?.text.utf8 ?? "".utf8) { fields["title"] = .string(title) }
         if !notes.utf8.elementsEqual(node.fields["description"]?.text.utf8 ?? "".utf8) { fields["description"] = .string(notes) }
         if priority != Record(node.fields).priority { fields["priority"] = .number(Double(priority)) }
-        fields.merge(planning.changes) { _, new in new }; return fields
+        fields.merge(planning.changes) { _, new in new }; fields.merge(labels.changes) { _, new in new }; return fields
     }
     var body: some View {
         ScrollViewReader { proxy in
@@ -218,15 +231,49 @@ struct ChildTaskFieldEditorView: View {
                         Section { ChildTaskPlanningFields(draft: $planning, changed: { checkpoint(reopen: true) }, failed: { failure = $0.localizedDescription }) }
                     }
                     Section {
+                        DisclosureGroup("Labels") {
+                            if !labels.supported {
+                                Text("These saved labels need a newer app version before editing. Your labels are preserved.").foregroundStyle(.secondary)
+                            } else {
+                                if labels.entries.isEmpty { Text("No labels yet").foregroundStyle(.secondary) }
+                                ForEach(labels.entries) { entry in
+                                    HStack {
+                                        Label(labels.name(entry, catalog: store.labels), systemImage: "tag").fixedSize(horizontal: false, vertical: true)
+                                        Spacer()
+                                        Button(role: .destructive) { labels.remove(entry.id); checkpoint(reopen: true) } label: { Image(systemName: "minus.circle").frame(minWidth: 44, minHeight: 44) }
+                                            .buttonStyle(.borderless).accessibilityLabel("Remove " + labels.name(entry, catalog: store.labels))
+                                            .accessibilityIdentifier("removeChildLabel-\(entry.id)")
+                                    }
+                                }
+                                TextField("Label name", text: Binding(get: { addingLabel }, set: { guard !addingLabel.utf8.elementsEqual($0.utf8) else { return }; addingLabel = $0; labelMessage = nil; checkpoint(reopen: true) }))
+                                    .focused($editingField, equals: .label).onSubmit(addLabel).accessibilityIdentifier("childLabelName")
+                                Button("Add label", systemImage: "plus", action: addLabel).disabled(addingLabel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty).accessibilityIdentifier("addChildLabel")
+                                if labels.kind == .personal, !store.labels.isEmpty {
+                                    Menu("Your labels") {
+                                        ForEach(store.labels.filter { label in !labels.entries.contains(where: { $0.value == label.id }) }) { label in
+                                            Button(label.name) {
+                                                do { try labels.addCatalog(label.id, catalog: store.labels); labelMessage = nil; checkpoint(reopen: true) }
+                                                catch { labelMessage = error.localizedDescription }
+                                            }
+                                        }
+                                    }
+                                }
+                                Text(labels.kind == .shared ? "Shared labels stay with this task; your personal catalog is kept separate." : "Choose an existing label or add a name. Other saved labels keep their original values.").font(.footnote).foregroundStyle(.secondary)
+                                if let labelMessage { Text(labelMessage).font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("childLabelMessage") }
+                                if !addingLabel.isEmpty { Text("Add this label to include it in the saved change. Unfinished input is kept privately.").font(.footnote).foregroundStyle(.secondary) }
+                            }
+                        }
+                    }
+                    Section {
                         Button("Save on this device", systemImage: "tray.and.arrow.down") {
                             do {
                                 let command = try ChildTaskFieldCommand(read: read, key: key, changes: changes)
-                                let session = draftSession, revision = session?.latest?.revision, captured = scope, capturedEditing = editingRevision
+                                let session = draftSession, revision = session?.latest?.revision, captured = scope, capturedEditing = editingRevision, unsubmittedLabel = addingLabel
                                 savedNoticeFocused = false; messageKey = nil
                                 Task {
                                     let saved = await model.save(command)
                                     let unchanged = session?.latest?.revision == revision
-                                    if saved != nil { _ = session?.finish(ifRevision: revision) }
+                                    if saved != nil, unsubmittedLabel.isEmpty { _ = session?.finish(ifRevision: revision) }
                                     guard unchanged, selectedKey == command.body["node_key"]?.text, scope == captured,
                                           session != nil || editingRevision == capturedEditing else { return }
                                     // A scoped durable result remains true through layout/scene
@@ -292,7 +339,7 @@ struct ChildTaskFieldEditorView: View {
         .onChange(of: recovery) { _, value in if value { noticeRequest = nil; editingRevision = UUID() } }
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
             noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
-            checkpoint(); for session in draftSessions.values { _ = session.flush() }; draftSession = nil; draftSessions = [:]; draftValues = [:]; selectedKey = ""
+            checkpoint(); for session in draftSessions.values { _ = session.flush() }; draftSession = nil; draftSessions = [:]; draftValues = [:]; labelInputs = [:]; addingLabel = ""; selectedKey = ""
             model?.close(); model = nil; read = nil; title = ""; notes = ""; key = ""; failure = nil
             guard let captured = scope else { return }
             do {
@@ -305,6 +352,10 @@ struct ChildTaskFieldEditorView: View {
         .onDisappear { appeared = false; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() }
         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
         }
+    }
+    private func addLabel() {
+        do { try labels.addName(addingLabel, catalog: store.labels); addingLabel = ""; labelMessage = nil; checkpoint(reopen: true) }
+        catch { labelMessage = error.localizedDescription }
     }
     private var currentNoticeRequest: ChildFieldNoticeRequest? {
         guard let request = noticeRequest, request.scope == scope, request.key == selectedKey,
@@ -338,7 +389,9 @@ struct ChildTaskFieldEditorView: View {
         guard let node = read?.nodes[key], let read else { return }
         selectedKey = key
         let draft = draftValues[key] ?? Record(node.fields)
-        title = draft.title; notes = draft["description"].text; priority = draft.priority; planning = ChildTaskPlanningDraft(original: Record(node.fields), restored: draft); failure = nil
+        title = draft.title; notes = draft["description"].text; priority = draft.priority; planning = ChildTaskPlanningDraft(original: Record(node.fields), restored: draft)
+        labels = ChildTaskLabelsDraft(original: Record(node.fields), restored: draft, kind: TeamTaskLabelsDraft.usesPersonalCatalog(read.context.root, cache: store.nativeConversationTeamCache) ? .personal : .shared)
+        addingLabel = labelInputs[key] ?? ""; labelMessage = nil; failure = nil
         draftIdentity = .object(["root": .string(read.context.root.id), "generation": read.context.root["task_generation"], "project": read.context.root["project_id"], "node": .string(node.key), "incarnation": .string(node.incarnation), "revision": .number(node.revision)])
         do {
             draftSession = try draftSessions[key] ?? store.beginEditorSession(Record(node.fields))
@@ -354,10 +407,10 @@ struct ChildTaskFieldEditorView: View {
             catch { failure = error.localizedDescription; return }
         }
         guard let session = draftSession else { return }
-        var draft = planning.applying(to: session.original); draft["title"] = .string(title); draft["description"] = .string(notes); draft["priority"] = .number(Double(priority))
-        draftValues[selectedKey] = draft
-        guard session.latest != nil || !title.utf8.elementsEqual(session.original.title.utf8) || !notes.utf8.elementsEqual(session.original["description"].text.utf8) || priority != session.original.priority || !planning.changes.isEmpty else { return }
-        session.capture(draft, extras: ["independent_child_fields": draftIdentity])
+        var draft = labels.applying(to: planning.applying(to: session.original)); draft["title"] = .string(title); draft["description"] = .string(notes); draft["priority"] = .number(Double(priority))
+        draftValues[selectedKey] = draft; labelInputs[selectedKey] = addingLabel
+        guard session.latest != nil || !title.utf8.elementsEqual(session.original.title.utf8) || !notes.utf8.elementsEqual(session.original["description"].text.utf8) || priority != session.original.priority || !planning.changes.isEmpty || !labels.changes.isEmpty || !addingLabel.isEmpty else { return }
+        session.capture(draft, extras: ["independent_child_fields": draftIdentity, "unsubmitted_child_label": .string(addingLabel)])
     }
 }
 

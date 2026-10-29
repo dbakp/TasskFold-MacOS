@@ -909,7 +909,7 @@ extension TaskfoldMacUITests {
     }
     @MainActor private func childSavedNoticeVisible(_ app: XCUIApplication, name: String = "child-field-saved-editor") {
         let status = app.staticTexts["independentChildSaveStatus"]
-        XCTAssertTrue(status.waitForExistence(timeout: 10)); XCTAssertTrue(status.label.contains("Saved on this device"), status.label)
+        XCTAssertTrue(status.waitForExistence(timeout: 10), app.debugDescription); XCTAssertTrue(status.label.contains("Saved on this device"), status.label)
         #if os(iOS)
         XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: app.keyboards.firstMatch)], timeout: 8) == .completed, app.debugDescription)
         let form = childField("childFieldEditorForm", app)
@@ -1020,6 +1020,29 @@ extension TaskfoldMacUITests {
         childDone(app); childProbe(app, "writes=1 requests=1 current=Prepare the review")
         childProbe(app, "minutes=30")
         app.terminate(); try childOpen(app, reset: false); childProbe(app, "confirmed=1 writes=1 requests=1"); childProbe(app, "minutes=30")
+    }
+
+    @MainActor func testChildFieldsNativeLabelsAndUnsubmittedInputCold() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childHomePress("childNativeEditor", app)
+        let section = app.buttons.matching(NSPredicate(format: "label == %@", "Labels")).firstMatch; childReveal(section, app); childPress(section)
+        let input = childField("childLabelName", app); childReveal(input, app); childPress(input); input.typeText("Review")
+        let addLabel = app.buttons["addChildLabel"]; childReveal(addLabel, app); childPress(addLabel)
+        childReveal(input, app); childPress(input); input.typeText("Later")
+        let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); XCTAssertTrue(save.isEnabled); childPress(save)
+        childSavedNoticeVisible(app, name: "child-labels-saved")
+        childDone(app); childProbe(app, "queued=1 attempted=0 confirmed=0 writes=0")
+        childProbe(app, "private=1"); childProbe(app, "pendingLabel=Later")
+        childHomePress("childNativeRecovery", app)
+        XCTAssertTrue(childSavedText("Review", app).waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertFalse(childSavedText("Later", app).exists)
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "child-labels-review"; shot.lifetime = .keepAlways; add(shot)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label CONTAINS %@", "childFieldPhase-", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        childDone(app); childProbe(app, "writes=1 requests=1 current=Prepare the review"); childProbe(app, "labels=Review pendingLabel=Later")
+        app.terminate(); try childOpen(app, reset: false)
+        childProbe(app, "confirmed=1 writes=1 requests=1"); childProbe(app, "labels=Review pendingLabel=Later"); childProbe(app, "private=1")
     }
 
 }

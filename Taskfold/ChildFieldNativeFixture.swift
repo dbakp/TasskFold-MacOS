@@ -135,7 +135,10 @@ struct ChildFieldNativeFixtureView: View {
                 guard let value = try? store.backupVault.editorDraft(entry.id, origin: ChildFieldNativeIdentity.origin), value.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) else { return nil }; return value
             }
             privateTitle = drafts.first?.draft.title ?? ""
-            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0)"
+            let child = store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object ?? [:]
+            let labelValues = child["labels"]?.list.map(\.text).joined(separator: ",") ?? ""
+            let pendingLabel = drafts.first?.extras["unsubmitted_child_label"]?.text ?? ""
+            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) labels=\(labelValues) pendingLabel=\(pendingLabel)"
         } catch { problem = error.localizedDescription }
     }
 }

@@ -9663,3 +9663,15 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Labels/assignees/reminders, conflict review, genuine Keychain/team/multiwindow/hosted lifecycle, completion/structure/legacy adapters and authoritative child migration. Ordinary child flags stay off; overall Px remains active.
 
 [Evidence, screenshots and exact acceptance limits](child-task-field-planning/README.md).
+
+
+## 2026-10-29 — independent subtask labels
+
+- [x] Add label names/removal and exact personal-catalog choices; shared labels stay portable and separate from personal labels.
+- [x] Preserve authored values/order, malformed legacy containers and unrelated fields. Reject duplicate/ambiguous/invalid/capacity edits atomically; retain exact Unicode replacement intent.
+- [x] Include label edits and unfinished input in private checkpoints. Unsubmitted text does not enter commands or get retired when another field is saved. Review uses readable names.
+- [x] Independently pass 247 selected Core cases and seven existing label regressions in each repo; full Mac/iOS app/test builds pass. Native phases and exact limits are recorded separately.
+- [x] Final phone/iPad label Save/review/send/cold journeys pass separately; unfinished input remains private. Largest-text/private-cold regression passes in the preceding recorded phase; six kept screenshots are inspected.
+- [ ] Assignment/reminder controls, conflict review, full Mac layout/speech, genuine Keychain/team/multiwindow/hosted lifecycle and authoritative child migration. Ordinary flags stay off; overall Px stays active.
+
+[Label implementation and verification](child-task-field-labels/README.md).

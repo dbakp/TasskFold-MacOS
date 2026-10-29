@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-29",
+  "source_sha256": {
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "b7be8c4bdb54464487640ec27ae9cbea1b97698d6303151f494d6934bfe4fac9",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "b8b40d9acbb2ee54113bf3feeb26b1b12aafaca62e1d9b741e27991e933ade9a",
+    "Taskfold/ChildFieldNativeFixture.swift": "384a7621ae55d2a2601ee53aca0997510d4b9629098671c4ef6d989493fee81e",
+    "TaskfoldTests/ChildTaskFieldCommandTests.swift": "831646986f9b1227d9747c615dfbf63419a800caff792217c738cc12b9782409",
+    "TaskfoldUITests/AudioCommentUITests.swift": "b0a4671837248d71a004036e42acd2988ff33033fc47b159084ee351402e4ae5"
+  },
+  "canonical_flags": {
+    "TaskfoldChildRecordReadsEnabled": "absent",
+    "TaskfoldChildRecordWritesEnabled": "absent"
+  },
+  "core": {
+    "selected": 247,
+    "existing_label_regressions": 7,
+    "new_label_cases": 7,
+    "scope": "independent runs per repository"
+  },
+  "native": {
+    "phone-first": "failure before typing: inherited parent accessibility identifier",
+    "phone-v2": "labels saved privately/queued but no feedback; largest-text private/cold journey passes",
+    "tablet-v2": "same feedback failure; largest-text private/cold journey passes",
+    "phone-v3": "label Save/review/send/cold: 1/1 passes",
+    "tablet-v3": "label Save/review/send/cold: 1/1 passes",
+    "v2_to_v3": "unchanged label text binding guard; inline local validation message; diagnostic assertion only; largest-text case does not touch label input"
+  },
+  "builds": "v3 full independent native app/test products pass; all four development signatures verify",
+  "visual": "four final label saved/review plus two v2 largest saved images inspected; complete saved message inside actual mobile viewport",
+  "limits": [
+    "synthetic owner/local HTTP peer only; actual Store/encrypted files/Backend",
+    "cold private readback is normal text size",
+    "catalog/shared/remove/role/multiwindow native journeys not proved by this case",
+    "Mac runtime/speech and genuine Keychain lifecycle open",
+    "assignment/reminders/conflicts and authoritative child migration remain open",
+    "no hosted gate/SQL or real account changes; prior user deferrals unchanged"
+  ],
+  "images_sha256": {
+    "phone-labels-saved.png": "6c24dcee2a3f1b6339c111f8c5f3972ca455b2b7ceec3b4b48a2c64cee60a8b3",
+    "tablet-labels-saved.png": "77aed40dad4cd3a67a9400212f5eaca3d1a16253b4ca0d84ab352c7d7d1330b8",
+    "tablet-labels-review.png": "a695443151b060f513f91b3895ec1aa71be67bc64eccf3268c68db9673aa1d81",
+    "tablet-largest-saved.png": "21e49e11e091a47648dd7f44b40348341e35ab0f37858962fde5859043a1fc5f",
+    "phone-largest-saved.png": "63a0aa4b33b7585e08e6045f1674d7a40083d23841e3d9e4029d4fde078ed0a2",
+    "phone-labels-review.png": "53510f896711cefd71d4422f19309b75e9cf290119bce8f25ff8e317c309148d"
+  },
+  "cleanup": {
+    "owned_simulators": "shutdown",
+    "restored_voiceover": {
+      "phone": 1,
+      "tablet": 0
+    },
+    "isolated_mac_test_app": "closed",
+    "completed_owned_results_exports": "pruned after evidence archive",
+    "reusable_hosts_builds_core_caches": "preserved"
+  }
+}

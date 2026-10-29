@@ -4,6 +4,8 @@ Updated 29 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Subtask labels now preserve authored values while adding exact personal-catalog choices and portable shared names. Added labels join private field requests; unfinished input stays in private recovery. Each independent repo passes 247 selected Core checks plus seven existing label regressions. Native results are recorded separately in [label evidence](child-task-field-labels/README.md); remaining assignment/reminder/conflict controls and full migration stay open. Ordinary flags remain off.
+
 Subtask planning now includes planned date/time/zone, independent deadline and estimates, private checkpoints and readable review. Both repos pass 240 selected Core cases. Final iPhone/iPad estimate and largest-text private journeys pass in separately recorded phases; native saved feedback is fully visible. Final Mac layout/cold/speech, remaining field/conflict controls and wider lifecycle/migration remain open. Ordinary flags stay off. See [planning evidence](child-task-field-planning/README.md).
 
 The child editor now follows verified saved hierarchy/sibling order and labels nested choices. Saved-request removal stays bound to its original workspace/model, refused discards refresh the current durable phase/body, and unknown service errors use plain-language unconfirmed feedback. Each repo passes 200 focused Core checks; see [ordered editing and recovery review](child-task-field-review/README.md) for exact native phases and remaining lifecycle gates.
