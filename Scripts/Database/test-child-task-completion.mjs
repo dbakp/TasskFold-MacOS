@@ -72,6 +72,7 @@ try {
   report.stage = "disjoint edit and certified Undo";
   await saveTree(tree => { tree[0].title = "Keep unrelated edit after completion"; });
   const undo = await command("undo", { undo: first.request_id }), undone = await run(undo);
+  report.fixtureUndoCommand = undo; report.firstUndo = undone;
   check("certified Undo applies after disjoint edit", undone.code, null);
   const restored = await row();
   check("Undo keeps unrelated title", restored.subtasks[0].title, "Keep unrelated edit after completion");

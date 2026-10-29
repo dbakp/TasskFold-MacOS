@@ -14,9 +14,9 @@ A later stage now supplies the [disabled dedicated server candidate](../child-ta
 
 ## Remaining in the completion/Undo stage
 
-- Server deployment and complete client integration remain open. The later disabled server candidate implements admission, exact request idempotency, completion history/projection and permission/role/concurrency checks in isolated fixtures; the client draft is still not connected to its RPC.
+- Server deployment and complete client integration remain open. The later disabled server candidate implements admission, exact request idempotency, completion history/projection and permission/role/concurrency checks in isolated fixtures; a later client stage now supplies typed proof validation, journaling and Backend transport, with Store/native integration still open.
 - Receipt-certified Undo must restore the original completion time while advancing the completion revision, preserve all unrelated fields, and refuse intervening completion cycles. A client draft alone must never authorize Undo.
-- Durable attempted/confirmed retry handling, transport, Store and premium native review/feedback integration.
+- Durable attempted/confirmed retry handling and transport are implemented in the [client stage](../child-task-completion-client/README.md). Terminal closure/replacement, Store and premium native review/feedback integration remain open.
 - Independent database/advisor coverage, app builds and genuine lifecycle/native accessibility acceptance for the completed path.
 - Existing structure, legacy/adoption and authoritative child migration work, and all previously agreed deferrals.
 

@@ -35,6 +35,12 @@ struct ChildTaskCompletionDraft: Codable, Equatable, Sendable, CustomStringConve
     }
 
     private init(account: String, origin: String, workspace: UUID, session: UUID, access: UUID, body: [String: JSON]) throws {
+        try Self.validate(account: account, origin: origin, body: body)
+        self.account = account; self.origin = origin; self.workspace = workspace
+        self.session = session; self.access = access; self.body = body
+    }
+
+    static func validate(account: String, origin: String, body: [String: JSON]) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard origin.utf8.count <= 2048,
               Set(body.keys) == Set(["protocol", "account", "request_id", "task_id", "task_generation", "project_id", "node_key", "incarnation", "revision", "action", "baseline"]),
@@ -47,10 +53,8 @@ struct ChildTaskCompletionDraft: Codable, Equatable, Sendable, CustomStringConve
         for key in ["request_id", "task_id", "incarnation"] { _ = try TeamOrganizationValue.id(body[key]) }
         _ = try TeamProjectValue.optionalID(body["task_generation"])
         _ = try TeamProjectValue.optionalID(body["project_id"])
-        guard try TeamProjectValue.revision(body["revision"]) < 9_007_199_254_740_991 else { throw Self.invalid }
+        guard try (1...9_007_199_254_740_990).contains(TeamProjectValue.revision(body["revision"])) else { throw Self.invalid }
         guard try JSONEncoder().encode(body).count <= 4096 else { throw Self.invalid }
-        self.account = account; self.origin = origin; self.workspace = workspace
-        self.session = session; self.access = access; self.body = body
     }
 
     /// A changed general revision can be a disjoint edit. A valid completion
@@ -70,7 +74,7 @@ struct ChildTaskCompletionDraft: Codable, Equatable, Sendable, CustomStringConve
               current[TeamChecklist.key] != nil || node.revision == revision else { throw Self.invalid }
     }
 
-    private static func completed(_ fields: [String: JSON]) throws -> Bool {
+    static func completed(_ fields: [String: JSON], allowExhausted: Bool = false) throws -> Bool {
         guard TaskKind.mayComplete(Record(fields)) else { throw invalid }
         let completed: Bool
         switch fields["completed"] {
@@ -79,12 +83,14 @@ struct ChildTaskCompletionDraft: Codable, Equatable, Sendable, CustomStringConve
         default: throw invalid
         }
         if completed {
-            guard case .string(let timestamp)? = fields["completed_at"], TaskPlanning.instant(timestamp) != nil else { throw invalid }
+            guard case .string(let timestamp)? = fields["completed_at"], timestamp.utf8.count <= 64,
+                  timestamp.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})\z"#, options: .regularExpression) != nil,
+                  TaskPlanning.instant(timestamp) != nil else { throw invalid }
         } else {
             guard fields["completed_at"] == nil || fields["completed_at"] == .null else { throw invalid }
         }
         if let value = fields[TeamChecklist.key] {
-            guard let token = TeamChecklist.token(value), token.version < TeamChecklist.maximumVersion else { throw invalid }
+            guard let token = TeamChecklist.token(value), (allowExhausted || token.version < TeamChecklist.maximumVersion) else { throw invalid }
         }
         return completed
     }

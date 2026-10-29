@@ -853,6 +853,14 @@ struct ChildTaskRecordRead: Sendable {
     let orderedNodes: [Node]
     let nodes: [String: Node]
     let tree: JSON
+    /// Bounded syntax validation also protects strict command receipts and
+    /// encrypted command journals from duplicate JSON keys at any depth.
+    static func validateUniqueJSON(_ data: Data, maximum: Int) throws {
+        guard data.count <= maximum else { throw ChildTaskRecordFailure.oversized }
+        var syntax = UniqueJSONKeys(bytes: Array(data))
+        try syntax.value(depth: 0); syntax.space()
+        guard syntax.index == syntax.bytes.count else { throw ChildTaskRecordFailure.review }
+    }
     init(data: Data, context: ChildTaskRecordContext) throws {
         guard data.count <= Self.maximumBytes else { throw ChildTaskRecordFailure.oversized }
         var syntax=UniqueJSONKeys(bytes:Array(data))

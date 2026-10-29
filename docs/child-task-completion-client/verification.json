@@ -1,0 +1,78 @@
+{
+  "recordedAtUTC": "2026-10-29T21:40:36.401070+00:00",
+  "status": "client protocol/journal/transport candidate; not Store or native feature acceptance",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionDraft.swift": "5cb2685f0867a2be441363c94d0259fb036fccb94c207fb1ba6780b953587ea3",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "6c17570f28b3911053a4831cf8978a6e66673509c5fb01d899d9b36777b097d5",
+    "Taskfold/Core/SubtaskTree.swift": "3af142f6192419e5074fd704d15aba86e15dfba83de79b5c2e136c938faa4509",
+    "Taskfold/Core/Backend.swift": "1cbad60d6930ce9e48db1201264cf41c4f8018970f6dea9a873cd3ddabf6c44c",
+    "TaskfoldTests/ChildTaskCompletionCommandTests.swift": "05eb9d6fd1791b2d604373ea968740e42052d3fb15e29c001dc930eed5b8df05",
+    "TaskfoldTests/Fixtures/child-task-completion-command.json": "2ff49b41244c10c9d650cdd652832f6982977a60b9cf5eaf2d336d185d30abaf",
+    "Package.swift": "53f1fe83eab14a512ad68cc387ca8dfa5200b8a38234aa418fe8c51bb5848d09",
+    "Taskfold.xcodeproj/project.pbxproj": "7d4ac211b1811bf2b1f3521113fc685077a1bab30b6b2e8e90011c62c02917f1",
+    "Scripts/Database/test-child-task-completion.mjs": "a0f64cceed2a1c7f1279cdce3f933cc5ff6a4020fb4f002fa01f262b94a7832f",
+    "docs/child-task-completion-server/completion-database.json": "5d25cb6fea1bc45eee9d263703614a154483a0a86a85feebbd627af78f374af8",
+    "supabase/migrations/20261029211038_child_task_completion_commands.sql": "2f52b22df713261440a2e2b401334a91058847b7b8d479093d415a6a054ac2e3"
+  },
+  "verification": {
+    "coreHost": "macOS Swift Package tests of this repository source",
+    "selectedCoreTests": 237,
+    "newCompletionCommandTests": 35,
+    "coreSuites": {
+      "AccountTransportTests": {
+        "tests": 55,
+        "failures": 0
+      },
+      "ChildTaskCompletionCommandTests": {
+        "tests": 35,
+        "failures": 0
+      },
+      "ChildTaskCompletionDraftTests": {
+        "tests": 13,
+        "failures": 0
+      },
+      "ChildTaskFieldCommandTests": {
+        "tests": 83,
+        "failures": 0
+      },
+      "ChildTaskRecordReadTests": {
+        "tests": 21,
+        "failures": 0
+      },
+      "CompletionRevisionTests": {
+        "tests": 16,
+        "failures": 0
+      },
+      "TeamChecklistTests": {
+        "tests": 14,
+        "failures": 0
+      },
+      "TaskfoldCoreTests.xctest": {
+        "tests": 237,
+        "failures": 0
+      },
+      "Selected tests": {
+        "tests": 237,
+        "failures": 0
+      }
+    },
+    "databaseChecks": 98,
+    "databaseFixtureRemoved": true,
+    "actualDatabaseCompleteAndUndoFixturesMatch": true,
+    "addedAdvisorFindings": 0,
+    "projectValidAndSingleAppSourceMembership": [
+      "Taskfold"
+    ]
+  },
+  "limits": [
+    "No ordinary Store/UI exposure, hosted deployment or feature flag changes",
+    "Terminal completion resolution/closure and replacement remain open",
+    "Store lifecycle/cleanup, native/genuine/spoken acceptance and independent-child migration remain open",
+    "Existing unrelated package concurrency warnings remain"
+  ],
+  "storage": {
+    "minimumBeforeHeavyRunsGiB": 20,
+    "heavyRunsSequential": true,
+    "freeBytesAfter": 60593979392
+  }
+}

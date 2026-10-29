@@ -3,7 +3,7 @@
   "status": "disabled server candidate; client completion and Undo feature remains unfinished",
   "sourceSHA256": {
     "supabase/migrations/20261029211038_child_task_completion_commands.sql": "2f52b22df713261440a2e2b401334a91058847b7b8d479093d415a6a054ac2e3",
-    "Scripts/Database/test-child-task-completion.mjs": "f1fff882eb8613cb0ce38985dde2a66496cab502f10e3da3037165695ae570fa",
+    "Scripts/Database/test-child-task-completion.mjs": "a0f64cceed2a1c7f1279cdce3f933cc5ff6a4020fb4f002fa01f262b94a7832f",
     "Scripts/Database/test-child-task-field-edits.mjs": "b1bcd18bff6c39334897f3d0401ef940f1cc9f9fb16cdccaf73cf293c463b1de",
     "Scripts/Database/child-task-records-schema.mjs": "070a0dcb346b1a25f08767bb5c82fcb6249b5736a6912cf0ae4b14d7a9a86568",
     "Scripts/Database/project-adoption-schema.mjs": "ee30b3ae2854cb814ed3ec8aa16cb89cca9db9ced9650618e0ccc939b176aa40"
@@ -35,5 +35,11 @@
     "heavyRunsSequential": true,
     "floorGiB": 20,
     "freeBytesAfter": 60021637120
+  },
+  "completionArtifactRefresh": {
+    "recordedAtUTC": "2026-10-29T21:40:36.384303+00:00",
+    "reason": "Retain actual Undo command/receipt for client contract fixtures; canonical SQL and archived field regression unchanged",
+    "checks": 98,
+    "ownedFixtureRemoved": true
   }
 }

@@ -15,7 +15,7 @@ Exact retries return the stored original revision and completion metadata and pr
 ## Admission and atomicity
 
 - The public wrapper is a security invoker. Private mutation authority is confined to a helper with an empty search path, bounded lock timeout, live confirmed account/session checks and explicit personal ownership/project or current team editor admission. It also requires unarchived projects and the existing native team gates.
-- The new `completions_enabled` flag defaults to false and additionally requires existing child reads and edits. No client is connected to this path in this stage.
+- The new `completions_enabled` flag defaults to false and additionally requires existing child reads and edits. A later [client stage](../child-task-completion-client/README.md) provides proofs, journaling and Backend transport; no ordinary Store/UI route is connected.
 - Existing Auth recipient, team/config/project and root lock order is retained. Live admission is checked again after waits and before proof is committed. The tests expire a real session while the command waits on the root lock.
 - Team changes use a private transaction-scoped write authorization after admission; existing root guard, assignment, heading, child projection and actual node-history triggers still execute. The update is restricted to the server-built subtree. It does not route through the checklist adapter that normalizes legacy containers and restamps historical times.
 - Post-write own-fields/incarnation/tree verification, history and receipt persistence are atomic. A mismatch, caller-RLS refusal or later error rolls back all changes. Private scope rows are removed on success and disappear on rollback.
@@ -34,8 +34,8 @@ The local full Supabase stack is not running; `supabase migration list --local` 
 
 ## Still required for the complete feature
 
-- Strict typed completion/Undo receipt validation against the client’s saved intent and dedicated transport.
-- Durable attempted/confirmed retry state, account departure/removal handling and recovery of ambiguous responses.
+- Strict typed proof validation, durable journal and dedicated transport are implemented in the later [client stage](../child-task-completion-client/README.md); Store/native integration remains open.
+- Terminal completion outcome/closure and explicit replacement of ambiguous attempts, plus Store account departure/removal wiring and genuine lifecycle acceptance.
 - Store integration and premium native completion feedback/review/Undo controls.
 - Current app builds, real native/lifecycle/concurrency/accessibility acceptance, legacy/adoption/structural adapters and authoritative independent-child migration before ordinary exposure.
 - Previously agreed deferrals and the recorded combined-run iPhone interaction finding remain unchanged.

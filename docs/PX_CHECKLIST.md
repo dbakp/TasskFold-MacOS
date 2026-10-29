@@ -1059,7 +1059,20 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [x] Keep live account/session/role/project and config admission, root guards and actual history/projection updates; record actual child completion-token versions in history with legacy fallback. Require the new completion gate, disabled by default.
 - [x] Fence completion cycles and replaced identities; persist exact retries and reserve field/closure/shared-team nonces. Bound new receipts, refuse stale Undo and roll back row/history/receipt/scope on post-write or caller-RLS failure.
 - [x] Generate the identical canonical backend migration after direct execution/advisors; independently pass 98 completion and 95 existing child-field regression database checks per repository with no added advisor findings. Remove every owned fixture and run heavy checks sequentially above the 20 GiB floor.
-- [ ] Finish strict typed client receipts and transport, durable retries/ambiguous completion outcome resolution, account/removal lifecycle, Store and premium native review/feedback/Undo, and actual native/accessibility acceptance.
+- [x] Add the later typed client proofs, encrypted attempted/confirmed journal, bounded Backend transport and sender; see the client stage below.
+- [ ] Finish terminal completion resolution/closure and explicit replacement, Store/account/removal lifecycle, premium native review/feedback/Undo and actual native/accessibility acceptance.
 - [ ] Complete structural/legacy/adoption/authoritative migration and broader genuine lifecycle acceptance before ordinary exposure. Local full-stack migration history is unverified, hosted schema unchanged, and prior user deferrals remain.
 
 [Server behavior, admission, exact evidence and remaining feature work](child-task-completion-server/README.md).
+
+
+## 2026-10-29 — child completion client proofs and durable retries
+
+- [x] Validate exact Complete/Reopen/Undo request identities, before/after cohorts, historical time and advancing tokens; reject unknown/duplicate keys, literal-key mismatches, malformed/exhausted states and forged Undo lineage.
+- [x] Add a non-coalescing encrypted 64-entry journal with durable attempted/confirmed states, original proof dependencies, shared process/removal fences and late-scope suppression. Preserve uncertain requests through lost replies, proof-write failures and fresh-session cold retry.
+- [x] Connect bounded, session/origin-bound Backend transport with no cache/cookies, redirect refusal and sanitized failures; send only the exact server body. No task-cache writes or normal feature exposure.
+- [x] Independently pass 237 selected Core checks (35 new completion cases) and 98 real isolated database checks per repository; use actual server Complete/Undo fixtures and verify single app-target source membership. Retain concise evidence and remove all owned database fixtures.
+- [ ] Implement completion-specific terminal outcome/closure and explicit replacement of uncertain or obsolete attempts. No attempted work can currently be discarded as though it were cancelled.
+- [ ] Connect Store lifecycle/cleanup and premium native completion/review/Undo controls; build and verify the actual current apps and native/spoken/genuine lifecycle. Structural/legacy/adoption/authoritative migration and previous deferrals remain open.
+
+[Client behavior, actual proof fixtures and exact acceptance limits](child-task-completion-client/README.md).
