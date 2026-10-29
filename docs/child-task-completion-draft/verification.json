@@ -1,0 +1,59 @@
+{
+  "recordedAtUTC": "2026-10-29T20:58:57.674162+00:00",
+  "status": "saved-intent foundation; not integrated completion or Undo",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionDraft.swift": "eea12b75492f70fdfc8770aaa91e524f6bbe882ed958b6802bb5b4e4dde38825",
+    "TaskfoldTests/ChildTaskCompletionDraftTests.swift": "28739a9dcbb013ded8bf45d66b099cc70dbead59ae431a324b25197d06bdb3c8",
+    "Package.swift": "4630bae1dec56ada8722fb08dd0cf744e13169960e0e83c6f0685cb24efa3c48",
+    "Taskfold.xcodeproj/project.pbxproj": "7ec8dac158cf499392fbb0fbdd4e8f73560a38b5290b16cf478bc4d3738e7f67"
+  },
+  "verification": {
+    "host": "macOS Swift Package tests of this repository source",
+    "selectedSuites": {
+      "ChildTaskCompletionDraftTests": {
+        "tests": 13,
+        "failures": 0
+      },
+      "ChildTaskFieldCommandTests": {
+        "tests": 83,
+        "failures": 0
+      },
+      "ChildTaskRecordReadTests": {
+        "tests": 21,
+        "failures": 0
+      },
+      "CompletionRevisionTests": {
+        "tests": 16,
+        "failures": 0
+      },
+      "TeamChecklistTests": {
+        "tests": 14,
+        "failures": 0
+      },
+      "TaskfoldCoreTests.xctest": {
+        "tests": 147,
+        "failures": 0
+      },
+      "Selected tests": {
+        "tests": 147,
+        "failures": 0
+      }
+    },
+    "filter": "ChildTaskCompletionDraftTests|ChildTaskFieldCommandTests|ChildTaskRecordReadTests|TeamChecklistTests|CompletionRevisionTests",
+    "projectPlistValid": true,
+    "appSourceMembershipExactlyOnce": true,
+    "appGroupMembershipExactlyOnce": true
+  },
+  "limits": [
+    "No completion RPC, server receipt or durable completion journal yet",
+    "No native completion/Undo runtime acceptance in this stage",
+    "Generic child-field completion refusal retained",
+    "Ordinary feature flags unchanged; no hosted schema deployment",
+    "Existing package Swift concurrency warnings remain"
+  ],
+  "storage": {
+    "minimumBeforeHeavyRunsGiB": 20,
+    "runsSequential": true,
+    "freeBytesAfter": 60115255296
+  }
+}

@@ -1040,3 +1040,13 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Complete native current-source/runtime/speech and genuine Keychain/team/account/window acceptance. Ordinary child flags stay off; completion/structure/legacy adapters, authoritative migration and all existing deferrals remain open.
 
 [Implementation, database blocker and exact evidence](child-task-field-resolution/README.md).
+
+
+## 2026-10-29 — independent child completion intent foundation
+
+- [x] Add a bounded immutable completion/reopen draft to each owned app: strict saved-value decoding, live scope/root/node binding, completion-cohort and epoch/version checks, no parent snapshot or private task text.
+- [x] Allow disjoint edits on versioned children; refuse completion cycles, replaced identities, headings/future types, malformed/exhausted metadata and no-op actions. Legacy metadata absence requires the exact captured revision pending adoption.
+- [x] Independently pass 147 focused Core tests in each repo, including thirteen new intent cases; validate exact app source membership and project syntax.
+- [ ] Implement dedicated server command/history/idempotency and receipt-certified Undo, durable retries, transport/Store/UI integration and actual native/lifecycle acceptance. This foundation does not complete independent child completion or Undo. Ordinary flags remain off; prior open work and user deferrals remain.
+
+[Implementation and exact verification scope](child-task-completion-draft/README.md).

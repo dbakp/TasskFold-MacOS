@@ -9732,3 +9732,10 @@ The four targeted current-product iPhone journeys have passing evidence across r
 ### iPad conflict acceptance completed
 
 All four targeted iPad cases pass on current signed products in one run, with exact cold-return assertions and no reported runtime warnings. The compared values, saved notice and distinct request titles were inspected in native scrollable sheets. The four Mac cases also pass; the iPhone has passing evidence for all four across phases, retaining one unexplained combined-run tap. No ordinary flags or hosted schema changed. Independent child completion/Undo, structural/legacy/adoption adapters and wider genuine/spoken lifecycle remain open.
+
+
+## 29 October — independently addressed child completion intent
+
+Added a strict immutable completion/reopen review value to Core and the app target, with live account/origin/workspace/session/access, root generation/project and child incarnation fences. Versioned completion cohorts allow unrelated field edits while detecting completion cycles; absent legacy tokens require the exact captured node revision. Saved values contain no task title, note or parent tree.
+
+Both independent repositories pass 147 selected Core checks, including thirteen new intent cases; exact source hashes and logs are in `docs/child-task-completion-draft`. Project syntax and single source membership pass. This is a disabled foundation, not completion/Undo runtime acceptance. Dedicated server stamping/history/idempotency and certified historical-time Undo, durable retries, transport/Store and native premium review/feedback remain open, alongside structure/legacy/adoption/migration and existing deferrals. The existing team checklist adapter stamps a changed completion time from the command event, so Undo cannot simply use its ordinary field path. No ordinary flags or hosted schema changed.
