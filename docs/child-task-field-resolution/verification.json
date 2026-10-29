@@ -49,5 +49,6 @@
     "Genuine account/team/window/Keychain/hosted and spoken lifecycle.",
     "Completion/structure/legacy child adapters and authoritative migration.",
     "Existing explicit user deferrals remain unchanged."
-  ]
+  ],
+  "cleanup": "cleanup.json"
 }
