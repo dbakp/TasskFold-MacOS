@@ -21,6 +21,11 @@ try {
   report.stage = "direct resolution SQL";
   const schema = await pg.scalar(`create temp table schema_result(code text,reason text);do $load$begin begin execute ${lit(candidate)};insert into schema_result values(null,null);exception when others then insert into schema_result values(sqlstate,sqlerrm);end;end$load$;select to_jsonb(r) from schema_result r;drop table schema_result`);
   if (schema.code) throw new Error(schema.code + ": " + schema.reason);
+  if (process.env.TASKFOLD_STRUCTURE_SQL) {
+    const structure = await readFile(process.env.TASKFOLD_STRUCTURE_SQL, "utf8");
+    await pg.raw(structure);
+    report.structureMigrationSHA256 = createHash("sha256").update(structure).digest("hex");
+  }
   const people = Object.fromEntries(["owner", "editor", "other"].map(key => [key, { id: randomUUID(), session: randomUUID() }]));
   for (const u of Object.values(people)) await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id + "@example.invalid")},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
   const task = randomUUID(), owner = people.owner;

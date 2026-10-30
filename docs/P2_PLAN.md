@@ -1,12 +1,14 @@
 # Remaining product backlog
 
-Updated 29 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
+Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
 ## Current implementation focus
 
+The private structural-revision candidate and legacy assignment guard now pass 317 database checks per repository, including 61 new topology/atomicity/assignment cases and the existing edit/completion/recovery suites. Current completion review feedback is scoped to its own presentation, with muted disabled actions verified on iPhone/iPad and final builds/signatures passing. Mac runtime and spoken/largest-text review remain open. See [structure groundwork](child-task-structure-revision/README.md) and [review polish](child-task-completion-review/README.md).
+
 Saved subtask conflicts now have a current-versus-saved review, explicit choices and a terminal-original protocol before replacement. Both clients pass 228 focused checks and full app/test builds. Each repository independently passes 35 direct PostgreSQL closure/permission/race checks and the existing 95 child-edit checks with the generated migration applied; advisors add no findings. The migration is not deployed and ordinary flags remain off. Four targeted current-runtime Mac and iPad journeys pass per platform. The iPhone has four passing journeys across phases, with one unexplained combined-run automated tap retained. Native phases, exact source bindings and wider lifecycle/migration gates are in [resolution evidence](child-task-field-resolution/README.md).
 
-Next: independent child completion and receipt-certified Undo must preserve the existing completion epoch/version and history rules; generic field requests must keep refusing completion. Structural commands and legacy bridge/adoption follow.
+Next: implement versioned structural reads and independent insert/move/reorder/delete/restore commands, then offline recovery, premium controls and legacy bridge/adoption. Preserve completion epochs, receipt-certified Undo and generic-field completion refusal. Current native completion lifecycle/accessibility gates and authoritative migration remain open.
 
 Subtask reminders now reuse the full portable composer, private nested checkpoints, field-only Apply and separate Save/review/Send. Each repo passes 223 selected Core cases, including six new child reminder cases. Scoped ownership retains the source editor while its own modal covers it; initial settings remain recoverable. The final relative-reminder journey passes on iPhone and iPad, including two exact cold readbacks. Native phases are separate in [reminder evidence](child-task-field-reminders/README.md). Delivery, wider lifecycle, conflict review and authoritative migration stay open. Ordinary flags remain off.
 

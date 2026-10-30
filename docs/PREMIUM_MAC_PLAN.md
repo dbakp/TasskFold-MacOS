@@ -9781,3 +9781,13 @@ The completion journal now removes old entirely confirmed families atomically as
 ## 30 October — current-action review feedback
 
 Current-value review no longer echoes a previous parent confirmation. Feedback belongs to the initiating presentation and scope; the covered parent pauses its explicit announcement. Disabled action labels are muted. One focused recovery/replacement/no-op journey passes on each iPhone and iPad and their window-only renders were inspected. Current Mac/iOS app and test products build with strict signatures verified. Mac lock was reconfirmed, so native Mac runtime and spoken/largest-text acceptance remain open. See `docs/child-task-completion-review`. Normal flags and prior deferred work remain unchanged.
+
+
+## 2026-10-30 — structural child revisions and legacy assignment guard
+
+- [x] Add an independent private topology counter; preserve disjoint fields, exact sparse/null shapes, raw paths, identities on moves and monotonic evidence across reorder/restore cycles.
+- [x] Reproduce and repair the legacy null-container assignment failure. Check actual arrays at every child depth using the existing recipient predicate; retain creator and project-move checks.
+- [x] Independently pass 61 new database checks and 256 existing edit/completion/recovery regressions per repository with the new migration applied (317 each), no added advisor findings and every owned fixture removed. Keep exact v1 reads and closed helper/table grants.
+- [ ] Add versioned structural reads, independent insert/move/reorder/delete/restore commands, durable offline recovery and premium native controls. Complete legacy/adoption/authoritative migration and genuine lifecycle/accessibility acceptance.
+
+[Exact scope, reproduction and evidence](child-task-structure-revision/README.md). Source only; normal flags and hosted schema unchanged. Local full-stack migration listing could not connect; prior user deferrals remain.
