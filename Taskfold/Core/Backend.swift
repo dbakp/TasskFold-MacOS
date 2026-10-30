@@ -314,12 +314,14 @@ final class Backend: NSObject {
             throw AppFailure(message: "The Supabase configuration is missing.")
         }
         if let workflowReadLimit { guard (1...4_200_000).contains(workflowReadLimit) else { throw TeamWorkflowRunCommand.invalid } }
+        let childAdoptionWrite = path == "/rest/v1/rpc/taskfold_adopt_child_records"
+        let childAdoptionReview = path == "/rest/v1/rpc/taskfold_review_child_adoption"
         let childTransfer = path == "/rest/v1/rpc/taskfold_transfer_child"
         let childStructureArchive = path == "/rest/v1/rpc/taskfold_child_structure_undo_archives"
         let childStructureOperation = childStructureArchive || ["/rest/v1/rpc/taskfold_edit_child_structure", "/rest/v1/rpc/taskfold_close_child_structure", "/rest/v1/rpc/taskfold_forget_child_structure_undo"].contains(path)
         let childCompletionWrite = ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_close_child_completion"].contains(path)
-        let childRecordWrite = ["/rest/v1/rpc/taskfold_close_child_completion", "/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path) || childStructureOperation || childTransfer
-        let childRecordRead = ["/rest/v1/rpc/taskfold_read_child_tasks", "/rest/v1/rpc/taskfold_read_child_structure"].contains(path)
+        let childRecordWrite = ["/rest/v1/rpc/taskfold_close_child_completion", "/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path) || childStructureOperation || childTransfer || childAdoptionWrite
+        let childRecordRead = ["/rest/v1/rpc/taskfold_read_child_tasks", "/rest/v1/rpc/taskfold_read_child_structure"].contains(path) || childAdoptionReview
         let workflowRead = workflowReadLimit != nil
         let workflowRun = path == "/rest/v1/rpc/taskfold_team_workflow_run"
         let templateLibrary = path == "/rest/v1/rpc/taskfold_team_templates"
@@ -342,14 +344,17 @@ final class Backend: NSObject {
         let data: Data, response: URLResponse
         if childRecordWrite || childRecordRead || workflowRead || workflowRun || projectAdoption || templateLibrary || path.hasPrefix("/rest/v1/rpc/taskfold_location_handoff_") || ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) {
             let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
-            let limit = childStructureArchive ? 65_536 : childRecordWrite ? 16_384 : childRecordRead ? ChildTaskRecordRead.maximumBytes : ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch"].contains(path) ? 8_500_000 : path == "/rest/v1/rpc/taskfold_complete_team_tasks" ? 4_300_000 : workflowReadLimit ?? (workflowRun ? 1_000_000 : projectAdoption || templateLibrary ? 3_000_000 : path == "/rest/v1/rpc/taskfold_team_task_recipients" ? 350_000 : path == "/rest/v1/rpc/taskfold_team_projects" ? 1_000_000 : ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 4_000_000 : ["/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? 2_000_000 : ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 1_000_000 : ["/functions/v1/email-routes", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 512000 : (["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes))
+            let limit = childAdoptionReview ? ChildTaskAdoptionReview.maximumBytes : childStructureArchive ? 65_536 : childRecordWrite ? 16_384 : childRecordRead ? ChildTaskRecordRead.maximumBytes : ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch"].contains(path) ? 8_500_000 : path == "/rest/v1/rpc/taskfold_complete_team_tasks" ? 4_300_000 : workflowReadLimit ?? (workflowRun ? 1_000_000 : projectAdoption || templateLibrary ? 3_000_000 : path == "/rest/v1/rpc/taskfold_team_task_recipients" ? 350_000 : path == "/rest/v1/rpc/taskfold_team_projects" ? 1_000_000 : ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 4_000_000 : ["/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft"].contains(path) ? 2_000_000 : ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 1_000_000 : ["/functions/v1/email-routes", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 512000 : (["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? 256000 : LocationHandoffResponse.maximumBytes))
             var body = Data()
             do {
-                guard incoming.expectedContentLength <= Int64(limit) else { throw AppFailure(message: childRecordWrite ? ChildTaskFieldWriteFailure(reason:.unconfirmed).localizedDescription : childRecordRead ? ChildTaskRecordFailure.oversized.localizedDescription : templateLibrary ? "The team template response is too large. Refresh to try again." : projectAdoption ? "The project review is too large. Your saved request is unchanged." : ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                guard incoming.expectedContentLength <= Int64(limit) else { if childAdoptionReview { throw ChildTaskAdoptionFailure(reason: .limit) }; throw AppFailure(message: childRecordWrite ? ChildTaskFieldWriteFailure(reason:.unconfirmed).localizedDescription : childRecordRead ? ChildTaskRecordFailure.oversized.localizedDescription : templateLibrary ? "The team template response is too large. Refresh to try again." : projectAdoption ? "The project review is too large. Your saved request is unchanged." : ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                if childAdoptionReview { body = try await Self.readAdoptionResponse(bytes, maximum: limit) }
+                else {
                 for try await byte in bytes {
                     try Task.checkCancellation()
-                    guard body.count < limit else { throw AppFailure(message: childRecordWrite ? ChildTaskFieldWriteFailure(reason:.unconfirmed).localizedDescription : childRecordRead ? ChildTaskRecordFailure.oversized.localizedDescription : templateLibrary ? "The team template response is too large. Refresh to try again." : projectAdoption ? "The project review is too large. Your saved request is unchanged." : ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
+                    guard body.count < limit else { if childAdoptionReview { throw ChildTaskAdoptionFailure(reason: .limit) }; throw AppFailure(message: childRecordWrite ? ChildTaskFieldWriteFailure(reason:.unconfirmed).localizedDescription : childRecordRead ? ChildTaskRecordFailure.oversized.localizedDescription : templateLibrary ? "The team template response is too large. Refresh to try again." : projectAdoption ? "The project review is too large. Your saved request is unchanged." : ["/functions/v1/automation-keys", "/functions/v1/automation-webhooks", "/functions/v1/email-routes", "/rest/v1/rpc/taskfold_team_task_recipients", "/rest/v1/rpc/taskfold_team_projects", "/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks", "/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional", "/rest/v1/rpc/taskfold_copy_team_draft", "/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_teams"].contains(path) ? "The connection response is too large. Reload and try again." : "The private place draft response is too large. Your tasks are unchanged.") }
                     body.append(byte)
+                }
                 }
             } catch { bytes.task.cancel(); throw error }
             data = body; response = incoming
@@ -377,6 +382,7 @@ final class Backend: NSObject {
                 case "54000","PT429":reason = .limit
                 default:reason = .unconfirmed
                 }
+                if childAdoptionWrite { throw ChildTaskAdoptionFailure(reason: reason) }
                 if childTransfer { throw ChildTaskTransferFailure(reason: reason) }
                 if childStructureOperation { throw ChildTaskStructureFailure(reason: reason) }
                 if childCompletionWrite { throw ChildTaskCompletionFailure(reason: reason) }
@@ -670,6 +676,52 @@ final class Backend: NSObject {
             try childStructureScope(account: account, origin: origin, session: expected)
             if error is CancellationError { throw error }
             throw ChildTaskStructureFailure(reason: .unconfirmed)
+        }
+    }
+    // AsyncBytes iteration stays on the generic executor rather than hopping
+    // back to the UI actor for every byte of an older-work review.
+    nonisolated private static func readAdoptionResponse(_ bytes: URLSession.AsyncBytes, maximum: Int) async throws -> Data {
+        var data = Data(); data.reserveCapacity(min(maximum, 65_536))
+        for try await byte in bytes {
+            try Task.checkCancellation()
+            guard data.count < maximum else { throw ChildTaskAdoptionFailure(reason: .limit) }
+            data.append(byte)
+        }
+        return data
+    }
+    nonisolated private static func decodeAdoptionReview(_ data: Data, context: ChildTaskRecordContext, workspaceID: String?) async throws -> ChildTaskAdoptionReview {
+        try Task.checkCancellation()
+        return try .init(data: data, context: context, workspaceID: workspaceID)
+    }
+    func childTaskAdoptionReview(_ context: ChildTaskRecordContext, workspaceID: String?) async throws -> ChildTaskAdoptionReview {
+        try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+        do {
+            let data = try await request("/rest/v1/rpc/taskfold_review_child_adoption", method: "POST", body: ["_id": .string(context.root.id), "_generation": context.root["task_generation"]], expectedAccount: context.account)
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+            let review = try await Self.decodeAdoptionReview(data, context: context, workspaceID: workspaceID)
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+            return review
+        } catch {
+            try childStructureScope(account: context.account, origin: context.origin, session: context.session)
+            if error is CancellationError || error is AccountSessionAuthorizationRequired || error is ChildTaskAdoptionFailure { throw error }
+            if let failure = error as? ChildTaskRecordFailure {
+                switch failure { case .unavailable: throw ChildTaskAdoptionFailure(reason: .unavailable); case .oversized: throw ChildTaskAdoptionFailure(reason: .limit); case .review: throw ChildTaskAdoptionFailure(reason: .review) }
+            }
+            throw ChildTaskAdoptionFailure(reason: .review)
+        }
+    }
+    func childTaskAdoption(_ command: ChildTaskAdoptionCommand, operation: ChildTaskAdoptionOperation, session expected: UUID) async throws -> ChildTaskAdoptionResult {
+        try childStructureScope(account: command.account, origin: command.origin, session: expected)
+        do {
+            let data = try await request("/rest/v1/rpc/taskfold_adopt_child_records", method: "POST", body: ["_operation": .string(operation.rawValue), "_body": .object(command.body)], expectedAccount: command.account)
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            let result = try ChildTaskAdoptionResult(command: command, data: data)
+            guard operation == .check || !result.unknown else { throw ChildTaskAdoptionFailure(reason: .unconfirmed) }
+            return result
+        } catch {
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            if error is CancellationError || error is ChildTaskAdoptionFailure || error is AccountSessionAuthorizationRequired { throw error }
+            throw ChildTaskAdoptionFailure(reason: .unconfirmed)
         }
     }
     func childTaskTransfer(_ command: ChildTaskTransferCommand, operation: ChildTaskTransferOperation, session expected: UUID) async throws -> ChildTaskTransferResult {

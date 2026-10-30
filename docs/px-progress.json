@@ -5,10 +5,10 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
   "focus": "P2 · Older-work review and migration",
-  "latest": "The older-work adoption service now reviews original subtask content without changing it and adopts only the exact version reviewed. Each repo passes 138 isolated database checks, including permissions, retry, preservation and prior Undo. App review/recovery screens, malformed-content repair/export and broader acceptance are still unfinished. Normal use remains disabled; nothing was deployed.",
+  "latest": "The migration client now validates the review, preserves original JSON bytes, and saves compact requests with encrypted retry/status/Stop recovery. Each repo passes 558 client checks and builds successfully. Store safeguards and account-removal wiring, native review/recovery screens, malformed-content repair/export and broader acceptance remain unfinished. Normal use stays disabled.",
   "next": [
-    "Connect strict typed adoption commands, encrypted pending-request recovery and Store admission that preserves private drafts and other pending actions.",
-    "Build the native original-content review, diagnostic/recovery screens and explicit malformed-content repair/export; verify real account, secure-storage, lifecycle and VoiceOver behavior.",
+    "Wire the migration client into Store with private-draft/pending-action admission, current-context checks and account-removal cleanup.",
+    "Build premium native review/diagnostic/recovery controls and original export/malformed-content repair, then verify account, secure-storage, lifecycle and VoiceOver behavior.",
     "Finish full attachment/discussion custody, larger workflows and remaining team/audio/provider checks. Keep agreed rollout and configuration deferrals paused."
   ],
   "stages": [
@@ -584,7 +584,8 @@
             "cross-root-child-transfers/verification.json",
             "cross-root-transfer-client/verification.json",
             "cross-root-transfer-layout/verification.json",
-            "reviewed-child-adoption/verification.json"
+            "reviewed-child-adoption/verification.json",
+            "reviewed-child-adoption-client/verification.json"
           ],
           "focus": true
         },
@@ -638,14 +639,15 @@
     "cross-root-child-transfers/verification.json",
     "cross-root-transfer-client/verification.json",
     "cross-root-transfer-layout/verification.json",
-    "reviewed-child-adoption/verification.json"
+    "reviewed-child-adoption/verification.json",
+    "reviewed-child-adoption-client/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "6d55f6ee030259825925afc9b6c64cd614fc7713c8394d9b3cfe8d3a8cb45d6f",
-    "PX_CHECKLIST.md": "acdd3353b4b0a2b58d363d1415e0bfbf42dd9779dc88daeb762a528b31faa53a",
+    "P2_PLAN.md": "b35cca0ab33463ab1511d59d62891593d33e533cb6c655d745e76d256a15e9c1",
+    "PX_CHECKLIST.md": "56e0bdfc4fb8c3765768fdd4231bebc7fb13d221e609f64d89d4dc0efb9a95ae",
     "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
     "child-task-discard-intent/verification.json": "d7316dcf9e69c8c969cd13e44b311d0865fa76b1aef7b50641e4a7c1a6f50f06",
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
@@ -662,6 +664,7 @@
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
     "p1-completion-audit.json": "247195c4d7743f3eca09f8c8461e0a971aa9dbe89dd5c839a81c5454082ae41a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38",
+    "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",
     "reviewed-child-adoption/verification.json": "488443346a14f4df5aa1cc16cdb53aadbf5f3334d4a1940b99088ad3ccef462c"
   }
 }

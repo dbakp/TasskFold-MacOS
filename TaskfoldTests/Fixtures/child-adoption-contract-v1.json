@@ -1,0 +1,201 @@
+{
+  "review": {
+    "issue": null,
+    "state": "ready",
+    "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+    "task_id": "3b75ba52-8e73-4c22-9dc0-fdcf1aeea417",
+    "protocol": 1,
+    "can_adopt": true,
+    "max_depth": 2,
+    "root_kind": "array",
+    "node_count": 3,
+    "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+    "source_tree": [
+      {
+        "id": "é",
+        "title": "Keep my original title",
+        "opaque": {
+          "raw": [
+            "unchanged",
+            false
+          ]
+        },
+        "subtasks": [
+          {
+            "id": "child",
+            "future": {
+              "nullish": null,
+              "numeric": 4.25
+            },
+            "subtasks": null,
+            "completed": false
+          }
+        ],
+        "description": "Original older notes"
+      },
+      {
+        "id": "tail",
+        "title": "Last sibling"
+      }
+    ],
+    "source_bytes": 286,
+    "workspace_id": null,
+    "review_digest": "53316036ee9625c55957c0b2cb24415088df5753c40c2385c6559e63763ff625",
+    "source_included": true,
+    "task_generation": "5a007aeb-cf39-4741-bcf7-712c1300ccab",
+    "structure_revision": null,
+    "projection_revision": null
+  },
+  "command": {
+    "protocol": 1,
+    "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+    "task_id": "3b75ba52-8e73-4c22-9dc0-fdcf1aeea417",
+    "task_generation": "5a007aeb-cf39-4741-bcf7-712c1300ccab",
+    "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+    "workspace_id": null,
+    "review_digest": "53316036ee9625c55957c0b2cb24415088df5753c40c2385c6559e63763ff625",
+    "request_id": "5c31b0b9-5b90-4a62-95f8-c795401b809c"
+  },
+  "receipt": {
+    "state": "applied",
+    "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+    "task_id": "3b75ba52-8e73-4c22-9dc0-fdcf1aeea417",
+    "protocol": 1,
+    "replayed": false,
+    "node_count": 3,
+    "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+    "request_id": "5c31b0b9-5b90-4a62-95f8-c795401b809c",
+    "workspace_id": null,
+    "review_digest": "53316036ee9625c55957c0b2cb24415088df5753c40c2385c6559e63763ff625",
+    "task_generation": "5a007aeb-cf39-4741-bcf7-712c1300ccab"
+  },
+  "unknown": {
+    "state": "unknown",
+    "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+    "protocol": 1,
+    "request_id": "5c31b0b9-5b90-4a62-95f8-c795401b809c"
+  },
+  "closedCommand": {
+    "protocol": 1,
+    "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+    "task_id": "e2740389-5bbc-4eef-b2b7-90619bce841d",
+    "task_generation": "4b83d053-86b2-437a-9033-4412173d06d2",
+    "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+    "workspace_id": null,
+    "review_digest": "46c0bfca303e680f517d3c6837facb4a609ec7c607e29f9fc086f1b1eb8fc48a",
+    "request_id": "6bc89149-90d3-4417-8990-afb14aeac3bb"
+  },
+  "closed": {
+    "state": "closed",
+    "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+    "task_id": "e2740389-5bbc-4eef-b2b7-90619bce841d",
+    "protocol": 1,
+    "replayed": false,
+    "node_count": null,
+    "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+    "request_id": "6bc89149-90d3-4417-8990-afb14aeac3bb",
+    "workspace_id": null,
+    "review_digest": "46c0bfca303e680f517d3c6837facb4a609ec7c607e29f9fc086f1b1eb8fc48a",
+    "task_generation": "4b83d053-86b2-437a-9033-4412173d06d2"
+  },
+  "malformed": [
+    {
+      "issue": "root_shape",
+      "state": "review",
+      "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+      "task_id": "fd670d6a-48d9-4331-a0f8-5a519a8bf6a7",
+      "protocol": 1,
+      "can_adopt": false,
+      "max_depth": null,
+      "root_kind": "object",
+      "node_count": null,
+      "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+      "source_tree": {
+        "text": "Preserve opaque root"
+      },
+      "source_bytes": 32,
+      "workspace_id": null,
+      "review_digest": "f6d653a0b9151404ee7c282fc1784387c4fbb4b002768cb7e56a2a473d86759a",
+      "source_included": true,
+      "task_generation": "538a5896-8a37-4979-a792-327127e8e1d0",
+      "structure_revision": null,
+      "projection_revision": null
+    },
+    {
+      "issue": "identity",
+      "state": "review",
+      "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+      "task_id": "c7a2f346-59a3-4930-987a-6b088a3aa099",
+      "protocol": 1,
+      "can_adopt": false,
+      "max_depth": null,
+      "root_kind": "array",
+      "node_count": null,
+      "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+      "source_tree": [
+        "Unidentified older text"
+      ],
+      "source_bytes": 27,
+      "workspace_id": null,
+      "review_digest": "0156e04cce0b449e55d8704b4e8d1cea3a00adc925fd1fe48e64ed080d55bb98",
+      "source_included": true,
+      "task_generation": "2d684423-d93e-4f91-a634-d73da39ec44f",
+      "structure_revision": null,
+      "projection_revision": null
+    },
+    {
+      "issue": "duplicate_identity",
+      "state": "review",
+      "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+      "task_id": "7417584a-2362-4b55-9f63-883f579751de",
+      "protocol": 1,
+      "can_adopt": false,
+      "max_depth": null,
+      "root_kind": "array",
+      "node_count": null,
+      "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+      "source_tree": [
+        {
+          "id": "é"
+        },
+        {
+          "id": "é"
+        }
+      ],
+      "source_bytes": 29,
+      "workspace_id": null,
+      "review_digest": "fff5b4de8023d6414d34a045b05139c2db1e5f757bd5a776009aa87d220c0ae6",
+      "source_included": true,
+      "task_generation": "31356e41-611b-42d8-a7a7-9bebe81e32c2",
+      "structure_revision": null,
+      "projection_revision": null
+    },
+    {
+      "issue": "children_shape",
+      "state": "review",
+      "account": "dd628ae4-74fd-4fac-9da1-de3abbde6c9c",
+      "task_id": "ca67f34d-57a5-404c-8e17-8323e45e778a",
+      "protocol": 1,
+      "can_adopt": false,
+      "max_depth": null,
+      "root_kind": "array",
+      "node_count": null,
+      "project_id": "077685c9-cd55-461c-a80f-45cdcdf4ed4e",
+      "source_tree": [
+        {
+          "id": "bad",
+          "subtasks": {
+            "original": "keep"
+          }
+        }
+      ],
+      "source_bytes": 49,
+      "workspace_id": null,
+      "review_digest": "8d707f3696d0ef2e1f2192bd3a0313c196072e96e827171e9a35cbf225040d7b",
+      "source_included": true,
+      "task_generation": "c9202adf-6571-423f-826b-4b3e71b15d4d",
+      "structure_revision": null,
+      "projection_revision": null
+    }
+  ]
+}

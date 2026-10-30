@@ -1328,3 +1328,14 @@ Evidence: `cross-root-transfer-layout/verification.json`. Core/SQL counts belong
 - [ ] Native/spoken/secure-storage/lifecycle, full custody, larger workloads and rollout remain unfinished. Normal-use gates stay off; nothing hosted was changed.
 
 Evidence: `reviewed-child-adoption/verification.json`. No earlier Core/native counts are presented as reruns. The full local Supabase stack was unavailable for migration-history listing; isolated SQL acceptance does not clear deployment or older-client rollout gates.
+
+
+## 30 October 2026 — typed adoption and encrypted recovery foundation
+
+- [x] Typed review/request/result binding and strict counters; preserve original JSON bytes separately from compact saved requests.
+- [x] Encrypted cold recovery, attempt-before-send, unchanged-identity retry, status/Stop, scope fencing and durable-proof recovery after a write error.
+- [x] Bounded private Backend routes, sanitized errors and adoption read/decode work outside the app actor.
+- [x] Each repository: 558 selected Core checks including 18 new cases, actual own SQL-derived compiled fixture, isolated app/test build and strict development signatures.
+- [ ] Store/private-draft admission/current-context/removal wiring, native review/recovery/diagnostic/repair/export controls and genuine native/secure-storage/lifecycle/custody/workload acceptance remain.
+
+Evidence: `reviewed-child-adoption-client/verification.json`. SQL was not changed or rerun. No new native acceptance or hosted/normal-use enablement is claimed; broad migration remains unfinished.
