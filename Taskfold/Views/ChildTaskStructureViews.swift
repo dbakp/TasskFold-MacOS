@@ -14,6 +14,8 @@ private struct HierarchyTargetRequest: Hashable {
     let requests: [String]
     let revision: UUID
     let online: Bool
+    let tasks: Int
+    let snapshot: UUID
 }
 private struct HierarchyConfirmation {
     enum Action { case stop(ChildTaskStructureCommand), dispose(ChildTaskStructureReceipt), forget(ChildTaskStructureCommand), cancel(ChildTaskStructureJournalState.Disposal) }
@@ -103,8 +105,8 @@ struct ChildTaskStructureView: View {
                         Text(failure).foregroundStyle(.secondary)
                         Button("Read drafts again") { Task { await model.load() } }.disabled(model.busy)
                     } else if model.drafts.filter({ $0.body["task_id"] == .string(rootID) }).isEmpty { Text("No unfinished drafts").font(.footnote).foregroundStyle(.secondary) }
-                    ForEach(model.drafts.filter { $0.body["task_id"] == .string(rootID) }, id: \.id) { draft in
-                        ChildHierarchyDraftRow(draft: draft, model: model) {
+                    ForEach(model.drafts.filter { $0.body["task_id"] == .string(rootID) }, id: \.hierarchyRecoveryRowID) { draft in
+                        ChildHierarchyDraftRow(draft: draft, model: model, targetTitle: currentDraftTitle(draft)) {
                             review = .init(root: rootID, source: .draft(draft))
                         }
                     }
@@ -118,7 +120,7 @@ struct ChildTaskStructureView: View {
                         .disabled(pending || model?.busy == true).accessibilityIdentifier("childStructureAdd")
                 }
                 if read.records.orderedNodes.isEmpty { ContentUnavailableView("Room for your next step", systemImage: "list.bullet", description: Text("Add a subtask to start shaping this task.")) }
-                ForEach(read.records.orderedNodes, id: \.key) { node in
+                ForEach(read.records.orderedNodes, id: \.hierarchyRecoveryRowID) { node in
                     VStack(alignment: .leading, spacing: 8) {
                         Label(node.fields["title"]?.text ?? "Subtask", systemImage: TaskKind(Record(node.fields)) == .heading ? "textformat" : "circle")
                             .font(.body).fixedSize(horizontal: false, vertical: true)
@@ -175,6 +177,10 @@ struct ChildTaskStructureView: View {
             Button { notice = nil } label: { Image(systemName: "xmark.circle.fill").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle()) }.accessibilityLabel("Dismiss status")
         }
     }
+    private func currentDraftTitle(_ draft: ChildTaskStructureDraft) -> String? {
+        guard store.online, let read else { return nil }
+        return ChildTaskStructureDraftTargetTitle(draft: draft, read: read)?.value(for: draft, scope: scope, snapshot: store.snapshotRevision)
+    }
     private func clear() { ticket = UUID(); model?.close(); model = nil; read = nil; modelScope = nil; reading = false; review = nil; recovery = false }
     private func sameSession(_ a: ChildTaskFieldClientScope?, _ b: ChildTaskFieldClientScope?) -> Bool {
         guard let a, let b else { return false }; return a.account == b.account && a.origin == b.origin && a.workspace == b.workspace && a.session == b.session
@@ -223,11 +229,15 @@ struct ChildTaskStructureRecoveryView: View {
     @State private var review: HierarchyReviewRequest?
     @State private var appeared = false
     @State private var targetNames: [String: String] = [:]
+    @State private var draftTargetNames: [String: ChildTaskStructureDraftTargetTitle] = [:]
     @State private var targetRevision = UUID()
+    @State private var synchronizedTargetRevision: UUID?
     @State private var failure: String?
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     private var targetRequest: HierarchyTargetRequest {
-        .init(scope: scope, requests: modelScope == scope ? model?.entries.map(\.command.id) ?? [] : [], revision: targetRevision, online: store.online)
+        // snapshotRevision is intentionally not observable itself.
+        _ = store.snapshot
+        return .init(scope: scope, requests: modelScope == scope ? (model?.entries.map(\.command.id) ?? []) + (model?.drafts.map { $0.id + $0.token.uuidString } ?? []) : [], revision: targetRevision, online: store.online, tasks: store.taskRevision, snapshot: store.snapshotRevision)
     }
     private var ordered: [ChildTaskStructureJournalState.Entry] {
         (model?.entries ?? []).enumerated().sorted {
@@ -245,8 +255,8 @@ struct ChildTaskStructureRecoveryView: View {
                         Text(failure).foregroundStyle(.secondary)
                         Button("Read drafts again") { Task { await model.load() } }.disabled(model.busy)
                     } else if model.drafts.isEmpty { Text("No unfinished drafts").font(.footnote).foregroundStyle(.secondary) }
-                    ForEach(model.drafts, id: \.id) { draft in
-                        ChildHierarchyDraftRow(draft: draft, model: model) {
+                    ForEach(model.drafts, id: \.hierarchyRecoveryRowID) { draft in
+                        ChildHierarchyDraftRow(draft: draft, model: model, targetTitle: store.online ? draftTargetNames[draft.id]?.value(for: draft, scope: scope, snapshot: store.snapshotRevision) : nil) {
                             review = .init(root: draft.body["task_id"]!.text, source: .draft(draft))
                         }
                     }
@@ -255,7 +265,7 @@ struct ChildTaskStructureRecoveryView: View {
             if let model, modelScope == scope, scope != nil {
                 if let message = model.message { Section { HierarchyNotice(message: message, announces: review == nil).accessibilityIdentifier("childStructureRecoveryStatus") } }
                 if model.loaded, model.entries.isEmpty, model.disposals.isEmpty { ContentUnavailableView("No saved actions", systemImage: "checkmark.circle", description: Text("Unfinished drafts appear separately.")) }
-                ForEach(ordered, id: \.command.id) { entry in
+                ForEach(ordered, id: \.hierarchyRecoveryRowID) { entry in
                     Section {
                         Label(ChildTaskStructureReview.title(entry.command), systemImage: entry.command.action == .undo ? "arrow.uturn.backward" : entry.phase == .attempted ? "clock.badge.questionmark" : "square.stack.3d.up")
                             .font(.headline)
@@ -282,7 +292,7 @@ struct ChildTaskStructureRecoveryView: View {
                         if canForget(entry, model) { Button("Remove saved history…", role: .destructive) { confirm(.forget(entry.command), model) }.disabled(model.busy) }
                     }
                 }
-                ForEach(model.disposals, id: \.id) { item in
+                ForEach(model.disposals, id: \.hierarchyRecoveryRowID) { item in
                     Section("Saved Undo content") {
                         Text(item.phase == .confirmed ? "Undo content removed" : item.phase == .attempted ? "Removal needs confirmation" : "Removal saved · not sent")
                         if item.phase != .confirmed {
@@ -295,7 +305,7 @@ struct ChildTaskStructureRecoveryView: View {
                     Text("Find saved Undo content for this account, including actions from another device. Current editing access is needed to restore it.").font(.footnote).foregroundStyle(.secondary)
                     Button(model.archivesLoaded ? "Refresh saved Undo" : "Find saved Undo", systemImage: "arrow.clockwise") { Task { await model.discoverArchives() } }
                         .disabled(model.busy || !store.online).accessibilityIdentifier("discoverChildStructureUndo")
-                    ForEach(model.availableArchives, id: \.raw["request_id"]!.text) { receipt in
+                    ForEach(model.availableArchives, id: \.hierarchyRecoveryRowID) { receipt in
                         VStack(alignment: .leading, spacing: 8) {
                             Text(taskName(receipt.raw)).font(.headline)
                             Button { review = .init(root: receipt.raw["task_id"]!.text, source: .archive(receipt)) } label: {
@@ -327,23 +337,30 @@ struct ChildTaskStructureRecoveryView: View {
             Button(confirmation?.buttonTitle ?? "Continue", role: confirmation?.destructive == true ? .destructive : nil) { executeConfirmation() }
             Button("Cancel", role: .cancel) { confirmation = nil }
         } message: { Text(confirmation?.explanation ?? "") }
-        .sheet(item: $review, onDismiss: { Task { await Task.yield(); if !appeared { clear() } else { await model?.load() } } }) { request in
+        .sheet(item: $review, onDismiss: { targetRevision = UUID(); Task { await Task.yield(); if !appeared { clear() } else { await model?.load() } } }) { request in
             if let model, scope == modelScope { ChildHierarchyReviewView(request: request, model: model) }
         }
     }
-    private func clear() { model?.close(); model = nil; modelScope = nil; confirmation = nil; review = nil; failure = nil; targetNames = [:] }
+    private func clear() { model?.close(); model = nil; modelScope = nil; confirmation = nil; review = nil; failure = nil; targetNames = [:]; draftTargetNames = [:]; synchronizedTargetRevision = nil }
     private func readTargetNames(_ request: HierarchyTargetRequest) async {
-        targetNames = [:]
-        guard let captured = request.scope, captured == modelScope, request.online else { return }
-        do { try await store.synchronizeChildTaskStructureReads() } catch { return }
+        targetNames = [:]; draftTargetNames = [:]
+        guard let captured = request.scope, captured == modelScope, request.online else { synchronizedTargetRevision = nil; return }
+        // Sync once for a user/action revision. A sync changes the snapshot;
+        // the replacement read task must not start an endless sync/read loop.
+        if synchronizedTargetRevision != request.revision {
+            synchronizedTargetRevision = request.revision
+            do { try await store.synchronizeChildTaskStructureReads() } catch { return }
+        }
         guard request == targetRequest, scope == captured, !Task.isCancelled else { return }
-        let entries = ordered; var roots = Set<String>()
-        for entry in entries {
-            let root = entry.command.body["task_id"]!.text
-            guard roots.insert(root).inserted else { continue }
+        let entries = ordered, drafts = model?.drafts ?? []
+        let roots = Set(entries.map { $0.command.body["task_id"]!.text } + drafts.map { $0.body["task_id"]!.text })
+        for root in roots.sorted() {
             do {
                 let read = try await store.readChildTaskStructure(root)
                 guard request == targetRequest, scope == captured, !Task.isCancelled else { return }
+                for draft in drafts where draft.body["task_id"] == .string(root) {
+                    draftTargetNames[draft.id] = ChildTaskStructureDraftTargetTitle(draft: draft, read: read)
+                }
                 for candidate in entries where candidate.command.body["task_id"] == .string(root) {
                     let command = candidate.command
                     guard read.context.root["task_generation"] == command.body["task_generation"], read.context.root["project_id"] == command.body["project_id"] else { continue }
@@ -377,13 +394,15 @@ struct ChildTaskStructureRecoveryView: View {
 private struct ChildHierarchyDraftRow: View {
     let draft: ChildTaskStructureDraft
     let model: ChildTaskStructurePresentation
+    var targetTitle: String? = nil
     var resume: () -> Void
     @Environment(\.dynamicTypeSize) private var textSize
     @State private var removing = false
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(draft.body["action"] == .string("move") ? "Move subtask" : draft.body["title"]!.text.isEmpty ? "Untitled subtask" : draft.body["title"]!.text)
+            Text(draft.body["action"] == .string("move") ? targetTitle ?? "Move subtask" : draft.body["title"]!.text.isEmpty ? "Untitled subtask" : draft.body["title"]!.text)
                 .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childStructureDraftTitle-" + draft.id)
+            if draft.body["action"] == .string("move"), targetTitle != nil { Text("Move subtask").font(.caption).foregroundStyle(.secondary) }
             Text(draft.pendingCommand == nil ? "Kept on this device; no action sent." : "Original action kept for recovery; check saved actions before retrying.")
                 .font(.footnote).foregroundStyle(.secondary)
             Group {
@@ -633,3 +652,11 @@ private struct HierarchyNotice: View {
             .task(id: message + (announces ? "-visible" : "-covered")) { guard announces else { return }; focused = false; await Task.yield(); guard !Task.isCancelled else { return }; focused = true }
     }
 }
+
+// Presentation IDs are separate from transport request IDs. The same request
+// can legitimately have a draft, action, archive and disposal row at once.
+private extension ChildTaskStructureDraft { var hierarchyRecoveryRowID: String { "draft:" + id } }
+private extension ChildTaskStructureJournalState.Entry { var hierarchyRecoveryRowID: String { "action:" + command.id } }
+private extension ChildTaskStructureJournalState.Disposal { var hierarchyRecoveryRowID: String { "disposal:" + id } }
+private extension ChildTaskStructureReceipt { var hierarchyRecoveryRowID: String { "archive:" + raw["request_id"]!.text } }
+private extension ChildTaskRecordRead.Node { var hierarchyRecoveryRowID: String { "node:" + key } }

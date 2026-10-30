@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "b7522be814893d7928598d1b4287547c37852fe0ac55943e7cfef9e11df2ca91",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "58ddd3abaf570b073600bda0f7efe3abb82d1f72f87fb591bef36e90bbb7120d",
+    "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "f24c8789a58b28feac41df4be017530a3d58554cd2bbcf751d525fee87c2a28e",
+    "TaskfoldUITests/AudioCommentUITests.swift": "cb9d6ddfbbecc015dea0d0e56670b8bb5fa4ce10870c6e8197fb9449ee086f32"
+  },
+  "namespaceAdjustedBuiltHostSHA256": {
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "b7522be814893d7928598d1b4287547c37852fe0ac55943e7cfef9e11df2ca91",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "58ddd3abaf570b073600bda0f7efe3abb82d1f72f87fb591bef36e90bbb7120d",
+    "TaskfoldUITests/AudioCommentUITests.swift": "cb9d6ddfbbecc015dea0d0e56670b8bb5fa4ce10870c6e8197fb9449ee086f32"
+  },
+  "coreSelectedTests": 129,
+  "corePassedTests": 129,
+  "coreFailedTests": 0,
+  "coreSuites": {
+    "command": 29,
+    "read": 13,
+    "recovery": 87
+  },
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "mobilePhases": [
+    {
+      "device": "phone",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "caseSeconds": 159.387,
+      "defaultAllowanceSeconds": 180,
+      "maximumAllowanceSeconds": 240
+    },
+    {
+      "device": "ipad",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "caseSeconds": 158.674,
+      "defaultAllowanceSeconds": 180,
+      "maximumAllowanceSeconds": 240
+    }
+  ],
+  "normalFeatureFlags": {
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "newSQL": false,
+  "newSimulators": 0,
+  "macRuntimeAccepted": false,
+  "spokenAccepted": false,
+  "developmentSigningReceipt": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "acceptanceScope": [
+    "Authenticated current move-target display without persisting a copied shared title",
+    "Move draft destination preserved through cold resume, explicit saved unsent action, second cold return and zero automatic writes/requests"
+  ],
+  "failedPhasesRetained": [
+    "phone-initial: destination picker below fold",
+    "phone-revealed: original three-minute limit exceeded; corrected known upward scroll direction, not time limit"
+  ],
+  "remaining": [
+    "Immutable Discard confirmation intent across a concurrent draft refresh",
+    "Native frozen draft/action/receipt coexistence and broader lifecycle failure matrix",
+    "Wider destination/index/unavailable-target, Mac and spoken acceptance",
+    "Largest-text picker selected title visually ellipsizes; full selected destination is verified through accessibility value",
+    "Full independent-record migration, older-data adoption and remaining Px"
+  ]
+}

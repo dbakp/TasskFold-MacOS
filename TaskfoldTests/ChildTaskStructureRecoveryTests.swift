@@ -311,6 +311,51 @@ extension ChildTaskStructureRecoveryTests {
     }
 }
 
+// Current move draft labels
+extension ChildTaskStructureRecoveryTests {
+    @MainActor func testMoveDraftLabelUsesLiveTitleWithoutChangingPrivateDraft() throws {
+        let captured = scope(try command()), read = try presentationRead(captured)
+        let draft = try ChildTaskStructureDraft(read: read, moving: "a")
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let before = try encoder.encode(draft)
+        let label = try XCTUnwrap(ChildTaskStructureDraftTargetTitle(draft: draft, read: read))
+        XCTAssertEqual(label.value(for: draft, scope: captured, snapshot: read.context.snapshot), read.records.nodes["a"]?.fields["title"]?.text)
+        XCTAssertEqual(try encoder.encode(draft), before); XCTAssertEqual(draft.body["title"], .string(""))
+        let moved = try draft.editing(title: "", parent: "b", index: 0, placementRead: read)
+        XCTAssertEqual(label.value(for: moved, scope: captured, snapshot: read.context.snapshot), read.records.nodes["a"]?.fields["title"]?.text)
+        XCTAssertEqual(String(describing: label), "Private current subtask label")
+        XCTAssertEqual(String(reflecting: label), "Private current subtask label")
+    }
+    @MainActor func testMoveDraftLabelRefusesRecreatedAndForeignTargets() throws {
+        let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read, moving: "a")
+        for field in ["task_id", "task_generation", "project_id", "incarnation"] {
+            var body = draft.body; body[field] = .string(UUID().uuidString.lowercased())
+            let changed = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: body)
+            XCTAssertNil(ChildTaskStructureDraftTargetTitle(draft: changed, read: read), field)
+        }
+        var missing = draft.body; missing["node_key"] = .string("missing")
+        XCTAssertNil(ChildTaskStructureDraftTargetTitle(draft: try .init(account: draft.account, origin: draft.origin, body: missing), read: read))
+        XCTAssertNil(ChildTaskStructureDraftTargetTitle(draft: try .init(account: draft.account, origin: "https://other.test", body: draft.body), read: read))
+        XCTAssertNil(ChildTaskStructureDraftTargetTitle(draft: try .init(read: read), read: read))
+    }
+    @MainActor func testMoveDraftLabelInvalidatesOnSnapshotAndEveryScopeDeparture() throws {
+        let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read, moving: "a")
+        let label = try XCTUnwrap(ChildTaskStructureDraftTargetTitle(draft: draft, read: read))
+        let variants: [ChildTaskFieldClientScope?] = [nil,
+            .init(account: UUID().uuidString.lowercased(), origin: captured.origin, workspace: captured.workspace, session: captured.session, access: captured.access),
+            .init(account: captured.account, origin: "https://other.test", workspace: captured.workspace, session: captured.session, access: captured.access),
+            .init(account: captured.account, origin: captured.origin, workspace: UUID(), session: captured.session, access: captured.access),
+            .init(account: captured.account, origin: captured.origin, workspace: captured.workspace, session: UUID(), access: captured.access),
+            .init(account: captured.account, origin: captured.origin, workspace: captured.workspace, session: captured.session, access: UUID())]
+        for scope in variants { XCTAssertNil(label.value(for: draft, scope: scope, snapshot: read.context.snapshot)) }
+        XCTAssertNil(label.value(for: draft, scope: captured, snapshot: UUID()))
+        var body = draft.body; body["request_id"] = .string(UUID().uuidString.lowercased())
+        XCTAssertNil(label.value(for: try .init(account: draft.account, origin: draft.origin, body: body), scope: captured, snapshot: read.context.snapshot))
+        body = draft.body; body["title"] = .string("Spoofed source title")
+        XCTAssertEqual(label.value(for: try .init(account: draft.account, origin: draft.origin, body: body), scope: captured, snapshot: read.context.snapshot), read.records.nodes["a"]?.fields["title"]?.text)
+    }
+}
+
 private func structureReply(_ c: ChildTaskStructureCommand, replayed: Bool = false) throws -> ChildTaskStructureReceipt {
     var raw = c.body.filter { ChildTaskStructureCommand.scopeKeys.contains($0.key) || ["request_id", "action"].contains($0.key) }
     raw["before_revision"] = c.body["structure_revision"]; raw["after_revision"] = .number(Double(c.body["structure_revision"]!.integer + 1))

@@ -7011,3 +7011,13 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 ## Native hierarchy organization — current acceptance stage
 
 Both apps now own scoped native hierarchy organization and recovery: reviewed add/move/recursive remove, explicit saved Send, exact retry, stop/fresh review, Undo/archive discovery and permanent Undo disposal. The presentation/opening foundation passes 282 selected Core checks independently in each repository. Refined Mac products build and verify; final current-source runtime checks are still in progress. See [native phase evidence](child-task-structure-native/README.md). The original independent-child migration, genuine lifecycle, cross-root/project and wider Px scope remain open; ordinary flags stay off.
+
+
+## Move-draft recovery — 2026-10-30
+
+- [x] Current authenticated target names, snapshot/scope invalidation and display-only row namespaces.
+- [x] 129 focused Core checks per owned repo; both app/test products build. Phone/iPad Move drafts retain target and destination through cold resume, explicit unsent save and second cold return, without automatic writes.
+- [ ] Immutable Discard confirmation intent during a concurrent refresh; frozen draft/action coexistence failure paths.
+- [ ] Wider placement/unavailable-target, Mac/spoken and account/window/background acceptance; independent-record migration and older-data adoption. Normal-use gates stay off.
+
+[Evidence and limits](child-task-move-draft-native/README.md). The native picker ellipsizes its selected destination at the largest text size; full value/preservation is verified through accessibility, not a blanket layout acceptance.

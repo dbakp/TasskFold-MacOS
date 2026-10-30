@@ -9853,3 +9853,13 @@ Readable subtask selection: the Mac editor now owns the same wrapping selected t
 2026-10-30: Organizer draft storage now preserves exact unfinished content privately, serializes competing windows and fences removed accounts; 115 selected hierarchy Core checks pass (13 new draft cases). The Mac screen is not yet connected, so closing an unsaved composer can still lose text. Native Resume/Discard/action promotion and broader lifecycle/spoken/migration acceptance remain open. See [storage evidence](child-task-structure-drafts/README.md).
 
 2026-10-30, native draft follow-up: Organizer checkpoints, awaited Done, Resume/Discard and frozen action handoff are connected. Each repo passes 126 hierarchy Core cases; phone/iPad cold readbacks and the final large-text action flow pass in recorded phases. The Mac app/test products build and sign, but this is not new Mac runtime or spoken acceptance. Broader lifecycle/genuine Keychain and full migration remain open. See [native evidence](child-task-structure-draft-native/README.md).
+
+
+## Move-draft recovery — 2026-10-30
+
+- [x] Current authenticated target names, snapshot/scope invalidation and display-only row namespaces.
+- [x] 129 focused Core checks per owned repo; both app/test products build. Phone/iPad Move drafts retain target and destination through cold resume, explicit unsent save and second cold return, without automatic writes.
+- [ ] Immutable Discard confirmation intent during a concurrent refresh; frozen draft/action coexistence failure paths.
+- [ ] Wider placement/unavailable-target, Mac/spoken and account/window/background acceptance; independent-record migration and older-data adoption. Normal-use gates stay off.
+
+[Evidence and limits](child-task-move-draft-native/README.md). The native picker ellipsizes its selected destination at the largest text size; full value/preservation is verified through accessibility, not a blanket layout acceptance.

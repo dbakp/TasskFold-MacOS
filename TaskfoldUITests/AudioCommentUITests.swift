@@ -1535,6 +1535,42 @@ extension TaskfoldMacUITests {
         structureSnapshot(app, "Confirmed private Undo disposal")
         childDone(app); childDone(app); childProbe(app, "structureArchives=0 structureOrder=review structureDisposals=1")
     }
+    @MainActor func testChildStructureMoveDraftColdResumePreservesTargetAndDestination() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-structure-native", large: true)
+        childHomePress("childNativeStructure", app); completionReadyPress(app.buttons["moveChildStructure-concept"], app)
+        let parent = childField("childStructureParent", app); childReveal(parent, app); childPress(parent)
+        #if os(macOS)
+        childPress(app.menuItems["Publish the summary"].firstMatch)
+        #else
+        childPress(app.buttons["Publish the summary"].firstMatch)
+        #endif
+        childDone(app)
+        let draftName = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "childStructureDraftTitle-")).firstMatch
+        childReveal(draftName, app, towardTop: true)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Prepare the review"), object: draftName)], timeout: 12) == .completed, app.debugDescription)
+        structureSnapshot(app, "Current move draft target in organizer")
+        childDone(app); childProbe(app, "structureDrafts=1 structureDraftPending=0 structureQueued=0 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native", large: true)
+        childHomePress("childNativeStructureRecovery", app)
+        childReveal(draftName, app)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Prepare the review"), object: draftName)], timeout: 12) == .completed, app.debugDescription)
+        structureSnapshot(app, "Current move target after cold recovery")
+        let resume = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "resumeChildStructureDraft-")).firstMatch
+        completionReadyPress(resume, app)
+        let restoredParent = childField("childStructureParent", app); childReveal(restoredParent, app)
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", "Publish the summary", "Publish the summary"), object: restoredParent)], timeout: 12) == .completed, app.debugDescription)
+        structureSnapshot(app, "Saved move destination survives cold resume")
+        completionReadyPress(app.buttons["childStructureReviewApply"], app)
+        let saved = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "childStructurePhase-")).firstMatch
+        childReveal(saved, app)
+        XCTAssertEqual(saved.label, "Saved · not sent")
+        childDone(app)
+        childProbe(app, "structureDrafts=0 structureDraftPending=0 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+        childProbe(app, "structureOrder=concept>review")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native", large: true)
+        childProbe(app, "structureDrafts=0 structureDraftPending=0 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+    }
     @MainActor func testChildStructureNativeDestinationPickerAndMove() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-structure-native")
         childHomePress("childNativeStructure", app); completionReadyPress(app.buttons["moveChildStructure-concept"], app)

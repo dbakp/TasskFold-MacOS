@@ -1211,3 +1211,13 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 - [x] Each repo: 126 hierarchy Core cases. Phone/iPad cold draft/edit/unsent-action readbacks and final stacked-action Resume/Cancel/discard pass in [recorded phases](child-task-structure-draft-native/README.md); earlier failures and the unchanged 180/240-second limits remain visible.
 - [x] Largest-text actions are stacked, readable, at least 44 points high and non-overlapping; current app/test builds and development signatures verify. Obsolete result files were pruned after evidence retention.
 - [ ] Mac runtime/spoken, wider lifecycle and genuine secure-storage acceptance, full migration/older-data adoption and the remaining Px scope. Normal flags and user deferrals are unchanged.
+
+
+## Move-draft recovery — 2026-10-30
+
+- [x] Current authenticated target names, snapshot/scope invalidation and display-only row namespaces.
+- [x] 129 focused Core checks per owned repo; both app/test products build. Phone/iPad Move drafts retain target and destination through cold resume, explicit unsent save and second cold return, without automatic writes.
+- [ ] Immutable Discard confirmation intent during a concurrent refresh; frozen draft/action coexistence failure paths.
+- [ ] Wider placement/unavailable-target, Mac/spoken and account/window/background acceptance; independent-record migration and older-data adoption. Normal-use gates stay off.
+
+[Evidence and limits](child-task-move-draft-native/README.md). The native picker ellipsizes its selected destination at the largest text size; full value/preservation is verified through accessibility, not a blanket layout acceptance.

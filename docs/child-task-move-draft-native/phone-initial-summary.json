@@ -1,0 +1,16 @@
+{
+  "totalTestCount": 1,
+  "passedTests": 0,
+  "failedTests": 1,
+  "skippedTests": 0,
+  "testFailures": [
+    {
+      "failureText": "XCTAssertTrue failed",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "TaskfoldUITests/testChildStructureMoveDraftColdResumePreservesTargetAndDestination()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testChildStructureMoveDraftColdResumePreservesTargetAndDestination",
+      "testName": "testChildStructureMoveDraftColdResumePreservesTargetAndDestination()"
+    }
+  ]
+}

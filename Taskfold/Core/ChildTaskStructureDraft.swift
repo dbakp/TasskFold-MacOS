@@ -103,6 +103,29 @@ struct ChildTaskStructureDraft: Codable, Equatable, Sendable, CustomStringConver
     }
 }
 
+/// A display-only name from one authenticated read. Never serialized into the
+/// draft, never authority to move a node, and invalid outside that live snapshot.
+struct ChildTaskStructureDraftTargetTitle: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    private let identity: ChildTaskStructureDraft
+    private let scope: ChildTaskFieldClientScope
+    private let snapshot: UUID
+    private let title: String
+    var description: String { "Private current subtask label" }
+    var debugDescription: String { description }
+    init?(draft: ChildTaskStructureDraft, read: ChildTaskStructureRead) {
+        guard draft.body["action"] == .string("move"), draft.account == read.context.account, draft.origin == read.context.origin,
+              draft.body["task_id"] == .string(read.context.root.id), draft.body["task_generation"] == read.context.root["task_generation"],
+              draft.body["project_id"] == read.context.root["project_id"],
+              let node = read.records.nodes[draft.body["node_key"]!.text], draft.body["incarnation"] == .string(node.incarnation),
+              case .string(let title)? = node.fields["title"], !title.isEmpty else { return nil }
+        identity = draft; scope = .init(read.context); snapshot = read.context.snapshot; self.title = title
+    }
+    func value(for draft: ChildTaskStructureDraft, scope: ChildTaskFieldClientScope?, snapshot: UUID) -> String? {
+        guard scope == self.scope, snapshot == self.snapshot, identity.sameTarget(as: draft) else { return nil }
+        return title
+    }
+}
+
 struct ChildTaskStructureDraftState: ReviewedTeamFileCommand, CustomStringConvertible, CustomDebugStringConvertible {
     static let storagePrefix = "child-structure-drafts-v1."
     static let fileName = "drafts.taskfoldchildstructure"
