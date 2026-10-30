@@ -1465,6 +1465,32 @@ extension TaskfoldMacUITests {
         app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native", large: true)
         childProbe(app, "structureDrafts=0 structureDraftPending=0 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
     }
+    @MainActor func testChildStructureDiscardConfirmationKeepsConcurrentDraftUpdate() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-structure-discard-refresh", large: true)
+        childHomePress("childNativeStructure", app); completionReadyPress(app.buttons["childStructureAdd"], app)
+        let field = childField("childStructureNewTitle", app); childPress(field); field.typeText("Original reviewed draft")
+        childDone(app)
+        let discard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "discardChildStructureDraft-")).firstMatch
+        completionReadyPress(discard, app)
+        let alert = app.alerts.firstMatch; XCTAssertTrue(alert.waitForExistence(timeout: 10), app.debugDescription)
+        let title = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "childStructureDraftTitle-")).firstMatch
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Updated while confirmation is open"), object: title)], timeout: 12), .completed, app.debugDescription)
+        XCTAssertTrue(alert.exists)
+        childPress(alert.buttons["Discard draft"])
+        XCTAssertTrue(title.waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertEqual(title.label, "Updated while confirmation is open")
+        let resume = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "resumeChildStructureDraft-")).firstMatch
+        completionReadyPress(resume, app)
+        XCTAssertEqual(childField("childStructureNewTitle", app).value as? String, "Updated while confirmation is open")
+        childDone(app); childDone(app)
+        childProbe(app, "structureDrafts=1 structureDraftPending=0 structureQueued=0 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native", large: true)
+        childHomePress("childNativeStructureRecovery", app)
+        childReveal(title, app)
+        XCTAssertEqual(title.label, "Updated while confirmation is open")
+        structureSnapshot(app, "Concurrent draft survives reviewed Discard and cold return")
+    }
     @MainActor func testChildStructureDraftDiscardCancelAndConfirmation() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
         try childOpen(app, extra: "--child-structure-native", large: true)

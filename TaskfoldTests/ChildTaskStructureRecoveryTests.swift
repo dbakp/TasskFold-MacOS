@@ -289,6 +289,48 @@ extension ChildTaskStructureRecoveryTests {
         await model.discardDraft(draft); XCTAssertTrue(model.drafts.isEmpty); XCTAssertTrue(model.entries.isEmpty)
         let saved = try await drafts.load(); XCTAssertTrue(saved.entries.isEmpty); XCTAssertTrue(peer.calls.isEmpty)
     }
+    @MainActor func testDiscardReviewedDraftRefusesRefreshedRowAndKeepsSavedAction() async throws {
+        let c = try command(), captured = scope(c), read = try presentationRead(captured)
+        let reviewed = try ChildTaskStructureDraft(read: read).editing(title: "Reviewed original", parent: nil, index: 0)
+        let root = try directory(), io = StructureJournalIO(), drafts = try draftJournal(reviewed, io, root)
+        let secondWriter = try draftJournal(reviewed, io, root), commands = try journal(c, StructureJournalIO(), root), peer = StructurePeer()
+        try await drafts.save(reviewed, replacing: nil, lease: CalendarReadLease()); try await commands.enqueue(c, lease: CalendarReadLease())
+        let model = ChildTaskStructurePresentation(scope: captured, journal: commands, service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true }, draftJournal: drafts)
+        await model.load()
+        let confirmation = try XCTUnwrap(model.drafts.first)
+        let updated = try reviewed.editing(title: "Newer work in another window", parent: nil, index: 0)
+        try await secondWriter.save(updated, replacing: reviewed.token, lease: CalendarReadLease())
+        await model.load(); XCTAssertEqual(model.drafts, [updated])
+        await model.discardDraft(confirmation)
+        let kept = try await drafts.load(); XCTAssertEqual(kept.entries, [updated]); XCTAssertEqual(model.drafts, [updated])
+        XCTAssertNotEqual(model.message, "Unfinished draft removed. Tasks and saved actions are unchanged.")
+        let actions = try await commands.load(); XCTAssertEqual(actions.entries.map(\.command), [c]); XCTAssertTrue(peer.calls.isEmpty)
+        // Only a fresh review of the updated row authorizes its removal.
+        await model.discardDraft(updated)
+        let removed = try await drafts.load(); XCTAssertTrue(removed.entries.isEmpty)
+        let unchanged = try await commands.load(); XCTAssertEqual(unchanged.entries.map(\.command), [c]); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testDiscardReviewedDraftRefusesSecondWriterBeforeRowRefresh() async throws {
+        let c = try command(), captured = scope(c), draft = try ChildTaskStructureDraft(read: presentationRead(captured)).editing(title: "Original", parent: nil, index: 0)
+        let root = try directory(), io = StructureJournalIO(), drafts = try draftJournal(draft, io, root), secondWriter = try draftJournal(draft, io, root), peer = StructurePeer()
+        let model = ChildTaskStructurePresentation(scope: captured, journal: try journal(c, StructureJournalIO(), root), service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true }, draftJournal: drafts)
+        try await drafts.save(draft, replacing: nil, lease: CalendarReadLease()); await model.load()
+        let updated = try draft.editing(title: "Saved before refresh", parent: nil, index: 0)
+        try await secondWriter.save(updated, replacing: draft.token, lease: CalendarReadLease())
+        XCTAssertEqual(model.drafts, [draft])
+        await model.discardDraft(draft)
+        let kept = try await drafts.load(); XCTAssertEqual(kept.entries, [updated]); XCTAssertEqual(model.drafts, [updated]); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testDiscardReviewedDraftCannotActAfterSessionDeparture() async throws {
+        let c = try command(), captured = scope(c), draft = try ChildTaskStructureDraft(read: presentationRead(captured)).editing(title: "Keep across departure", parent: nil, index: 0)
+        var live: ChildTaskFieldClientScope? = captured
+        let root = try directory(), io = StructureJournalIO(), drafts = try draftJournal(draft, io, root), peer = StructurePeer()
+        let model = ChildTaskStructurePresentation(scope: captured, journal: try journal(c, StructureJournalIO(), root), service: peer, current: { live }, canQueue: { _ in true }, canSend: { _ in true }, draftJournal: drafts)
+        try await drafts.save(draft, replacing: nil, lease: CalendarReadLease()); await model.load()
+        live = nil
+        await model.discardDraft(draft)
+        let kept = try await drafts.load(); XCTAssertEqual(kept.entries, [draft]); XCTAssertTrue(model.drafts.isEmpty); XCTAssertNil(model.message); XCTAssertTrue(peer.calls.isEmpty)
+    }
     @MainActor func testNativeDraftFailureKeepsActionRecoveryAndScopeLossClearsAll() async throws {
         let c = try command(), captured = scope(c), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read)
         var live: ChildTaskFieldClientScope? = captured

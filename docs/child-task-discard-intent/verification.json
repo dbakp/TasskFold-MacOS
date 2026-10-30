@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Taskfold/Views/ChildTaskStructureViews.swift": "f017f2358ba6df0e5175b8c75266225ef395a3439693998c335a737bcb094baf",
+    "Taskfold/ChildStructureNativeFixture.swift": "755e9836eac89c5d8f5670390fb0d618720a340557da9e0ae1bdb45ba13eb2a5",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "2fbb6925e4ac5fbe02af0a70cbf7428aa0770db343c76b7eecbf1c2babe7b805",
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "b7522be814893d7928598d1b4287547c37852fe0ac55943e7cfef9e11df2ca91",
+    "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "5de81fb8e0669219777cf860b5014f48b7da37e526a603c5ff3cfa530bc735ea",
+    "TaskfoldUITests/AudioCommentUITests.swift": "d6b2ac42f12934ce3a30c8f39503ce3675968c438da598dfd38da9b1dfc24ea9"
+  },
+  "namespaceAdjustedBuiltHostSHA256": {
+    "Taskfold/Views/ChildTaskStructureViews.swift": "f017f2358ba6df0e5175b8c75266225ef395a3439693998c335a737bcb094baf",
+    "Taskfold/ChildStructureNativeFixture.swift": "755e9836eac89c5d8f5670390fb0d618720a340557da9e0ae1bdb45ba13eb2a5",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "2fbb6925e4ac5fbe02af0a70cbf7428aa0770db343c76b7eecbf1c2babe7b805",
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "b7522be814893d7928598d1b4287547c37852fe0ac55943e7cfef9e11df2ca91",
+    "TaskfoldUITests/AudioCommentUITests.swift": "d6b2ac42f12934ce3a30c8f39503ce3675968c438da598dfd38da9b1dfc24ea9"
+  },
+  "coreSelectedTests": 132,
+  "corePassedTests": 132,
+  "coreFailedTests": 0,
+  "coreSuites": {
+    "command": 29,
+    "read": 13,
+    "recovery": 90
+  },
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "mobilePhases": [
+    {
+      "device": "phone",
+      "selected": 2,
+      "passed": 2,
+      "failed": 0,
+      "caseSeconds": {
+        "testChildStructureDiscardConfirmationKeepsConcurrentDraftUpdate": 77.862,
+        "testChildStructureDraftDiscardCancelAndConfirmation": 68.804
+      },
+      "defaultAllowanceSeconds": 180,
+      "maximumAllowanceSeconds": 240
+    },
+    {
+      "device": "ipad",
+      "selected": 2,
+      "passed": 2,
+      "failed": 0,
+      "caseSeconds": {
+        "testChildStructureDiscardConfirmationKeepsConcurrentDraftUpdate": 80.414,
+        "testChildStructureDraftDiscardCancelAndConfirmation": 66.435
+      },
+      "defaultAllowanceSeconds": 180,
+      "maximumAllowanceSeconds": 240
+    }
+  ],
+  "normalFeatureFlags": {
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "newSQL": false,
+  "newSimulators": 0,
+  "macRuntimeAccepted": false,
+  "spokenAccepted": false,
+  "developmentSigningReceipt": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "acceptanceScope": [
+    "Native held-alert update through a second journal writer and actual presentation refresh",
+    "Confirming the old snapshot preserves newer text, Resume and cold return; no queued/sent action or task write",
+    "Existing native Cancel, Resume, explicit Discard and largest-text stacked action regression"
+  ],
+  "remaining": [
+    "Native frozen draft/action/receipt coexistence and broader lifecycle failure matrix",
+    "Wider destination/index/unavailable-target, Mac and spoken acceptance",
+    "Full independent-record migration, older-data adoption and remaining Px"
+  ]
+}

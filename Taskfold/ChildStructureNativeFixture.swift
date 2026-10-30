@@ -7,6 +7,22 @@ import CryptoKit
 /// Store, transport, encrypted journals and cold application presentation.
 @MainActor enum ChildStructureNativePeer {
     static var enabled: Bool { ChildFieldNativeIdentity.enabled && ProcessInfo.processInfo.arguments.contains("--child-structure-native") }
+    /// Opt-in fault injection for the isolated native test only. A second journal
+    /// owner changes the same draft while the real SwiftUI alert stays open.
+    static func refreshDraftDuringDiscardForNativeTest(_ reviewed: ChildTaskStructureDraft, model: ChildTaskStructurePresentation) {
+        guard enabled, ProcessInfo.processInfo.arguments.contains("--child-structure-discard-refresh"), reviewed.pendingCommand == nil else { return }
+        Task {
+            do {
+                try await Task.sleep(nanoseconds: 700_000_000)
+                let store = Store.shared
+                guard store.childTaskFieldRecoveryScope == model.scope else { throw CancellationError() }
+                let writer = try store.childTaskStructureDraftJournal(account: reviewed.account, origin: reviewed.origin)
+                let updated = try reviewed.editing(title: "Updated while confirmation is open", parent: reviewed.body["parent_key"] == .null ? nil : reviewed.body["parent_key"]!.text, index: reviewed.body["index"]!.integer)
+                try await writer.save(updated, replacing: reviewed.token, lease: CalendarReadLease())
+                await model.load()
+            } catch { /* The test requires the updated row; a failed injection cannot pass. */ }
+        }
+    }
     static let paths = ["/rest/v1/rpc/taskfold_read_child_tasks", "/rest/v1/rpc/taskfold_read_child_structure", "/rest/v1/rpc/taskfold_edit_child_structure", "/rest/v1/rpc/taskfold_close_child_structure", "/rest/v1/rpc/taskfold_child_structure_undo_archives", "/rest/v1/rpc/taskfold_forget_child_structure_undo"]
     static func records(_ root: Record, state: inout [String: JSON]) -> [JSON] {
         var result: [JSON] = [], incarnations = state["structureIncarnations"]?.object ?? ["concept": .string("ec990000-0000-4000-8000-000000000005"), "review": .string("ec990000-0000-4000-8000-000000000006")], versions = state["versions"]!.object

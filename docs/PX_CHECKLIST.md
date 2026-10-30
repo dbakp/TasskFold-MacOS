@@ -1221,3 +1221,13 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 - [ ] Wider placement/unavailable-target, Mac/spoken and account/window/background acceptance; independent-record migration and older-data adoption. Normal-use gates stay off.
 
 [Evidence and limits](child-task-move-draft-native/README.md). The native picker ellipsizes its selected destination at the largest text size; full value/preservation is verified through accessibility, not a blanket layout acceptance.
+
+
+## Reviewed Discard intent — 2026-10-30
+
+- [x] Capture the original draft/version and session owner before presenting Discard. A refreshed row cannot authorize deleting newer work.
+- [x] Three new two-writer/session regressions; 132 focused Core checks per repo. Both app/test products build and verify.
+- [x] Phone/iPad held-alert second-writer update, preserved Resume and cold return, zero automatic writes; existing Cancel/Resume/Discard regression passes in the same phase.
+- [ ] Frozen draft/action/receipt coexistence, wider lifecycle/Mac/spoken and the full independent-record migration remain. Normal-use gates stay off.
+
+[Evidence and exact acceptance limits](child-task-discard-intent/README.md).

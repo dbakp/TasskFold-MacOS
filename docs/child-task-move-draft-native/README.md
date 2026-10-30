@@ -14,7 +14,7 @@ Remaining scope includes other placement/index combinations, unavailable/changed
 
 ## Next recovery checks
 
-- [ ] Capture the immutable draft and token when Discard is first tapped. A live row refresh must not change what the existing confirmation authorizes. Exercise a second writer updating the draft while that confirmation is held.
+- [x] Capture the immutable draft and token when Discard is first tapped. A live row refresh must not change what the existing confirmation authorizes. The isolated native held-alert second-writer check now passes on phone/iPad; see ../child-task-discard-intent/README.md.
 - [ ] Exercise a frozen draft, saved action and related receipt/cleanup rows together in the native list; their display namespaces are now distinct, but that failure-path UI matrix is not yet accepted.
 - [ ] Complete wider destination/index, unavailable-target, Mac/spoken and lifecycle coverage before normal-use enablement and the full storage migration.
 

@@ -391,6 +391,13 @@ struct ChildTaskStructureRecoveryView: View {
     }
 }
 
+/// A confirmation owns the reviewed value and its session-bound model. A row
+/// refresh must not retarget an already presented destructive action.
+private struct HierarchyDraftDiscardConfirmation {
+    let draft: ChildTaskStructureDraft
+    let model: ChildTaskStructurePresentation
+}
+
 private struct ChildHierarchyDraftRow: View {
     let draft: ChildTaskStructureDraft
     let model: ChildTaskStructurePresentation
@@ -398,6 +405,7 @@ private struct ChildHierarchyDraftRow: View {
     var resume: () -> Void
     @Environment(\.dynamicTypeSize) private var textSize
     @State private var removing = false
+    @State private var discardConfirmation: HierarchyDraftDiscardConfirmation?
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(draft.body["action"] == .string("move") ? targetTitle ?? "Move subtask" : draft.body["title"]!.text.isEmpty ? "Untitled subtask" : draft.body["title"]!.text)
@@ -410,15 +418,23 @@ private struct ChildHierarchyDraftRow: View {
                 else { HStack(spacing: 16) { actions } }
             }.buttonStyle(.borderless).disabled(model.busy)
         }.padding(.vertical, 4)
-            .alert("Discard this unfinished draft?", isPresented: $removing) {
-                Button("Discard draft", role: .destructive) { Task { await model.discardDraft(draft) } }
-                Button("Cancel", role: .cancel) { removing = false }
-            } message: { Text("This removes only the unfinished draft on this device. It does not change tasks or remove an action already saved in Saved hierarchy actions.") }
+            .alert("Discard this unfinished draft?", isPresented: $removing, presenting: discardConfirmation) { reviewed in
+                Button("Discard draft", role: .destructive) {
+                    discardConfirmation = nil
+                    Task { await reviewed.model.discardDraft(reviewed.draft) }
+                }
+                Button("Cancel", role: .cancel) { removing = false; discardConfirmation = nil }
+            } message: { _ in Text("This removes only the unfinished draft on this device. It does not change tasks or remove an action already saved in Saved hierarchy actions.") }
+#if DEBUG
+            .onChange(of: removing) { _, presented in
+                if presented { ChildStructureNativePeer.refreshDraftDuringDiscardForNativeTest(draft, model: model) }
+            }
+#endif
     }
     @ViewBuilder private var actions: some View {
         Button(action: resume) { Text("Resume").frame(minHeight: 44).contentShape(Rectangle()) }
             .accessibilityIdentifier("resumeChildStructureDraft-" + draft.id)
-        Button(role: .destructive) { removing = true } label: { Text("Discard").frame(minHeight: 44).contentShape(Rectangle()) }
+        Button(role: .destructive) { discardConfirmation = .init(draft: draft, model: model); removing = true } label: { Text("Discard").frame(minHeight: 44).contentShape(Rectangle()) }
             .accessibilityIdentifier("discardChildStructureDraft-" + draft.id)
     }
 }
