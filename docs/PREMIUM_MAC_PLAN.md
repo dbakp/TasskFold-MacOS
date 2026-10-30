@@ -9812,3 +9812,13 @@ Current-value review no longer echoes a previous parent confirmation. Feedback b
 - [ ] Add structural command/receipt/Undo/disposal proofs, encrypted offline recovery and premium native controls. Finish cross-root/legacy/adoption/authoritative migration and genuine lifecycle/accessibility/Storage acceptance.
 
 [Exact behavior, source hashes, checks and remaining scope](child-task-structure-client-read/README.md). Source only; prior deferrals remain.
+
+## 2026-10-30 — structural command and recovery proofs
+
+- [x] Add typed insert/move/reorder/delete/Undo requests with complete descendant-version deletion review, exact scope/counters and certified original lineage.
+- [x] Validate receipts, terminal outcomes, bounded account-owned archive discovery and disposal acknowledgements; support deletion Undo after local journal loss without copying archived content.
+- [x] Reject ambiguous/rounded wire counters and malformed saved commands; preserve new-node raw identities/container shapes and reject forged metadata.
+- [x] Independently pass 146 selected Core checks (29 new) and rerun 220 structural database checks per repository. Both app/test builds and signatures pass; no native runtime acceptance is inferred.
+- [ ] Implement scoped transport, encrypted journal/sender/recovery/lifecycle integration and premium native controls; finish broader migration/custody/genuine acceptance and remaining Px work.
+
+[Exact implementation, independent server fixtures and limits](child-task-structure-client-proofs/README.md). No normal flag or hosted schema changes; prior deferrals remain.

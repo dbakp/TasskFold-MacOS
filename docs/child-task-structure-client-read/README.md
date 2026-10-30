@@ -38,3 +38,7 @@ swift test -j 2 -Xswiftc -driver-batch-count -Xswiftc 2 --filter '(ChildTaskStru
 ```
 
 Run the storage preflight before heavy checks. Supabase function/RLS and PostgreSQL lock-order/least-privilege guidance informed the implementation; historical reports remain point-in-time evidence.
+
+## Subsequent command-proof stage
+
+[Structural command proofs](../child-task-structure-client-proofs/README.md) now implement the request/receipt/Undo/discovery/disposal layer, including metadata-only restoration after local journal loss. Its verification is separate from this stage; scoped transport, encrypted journals and native controls remain open.

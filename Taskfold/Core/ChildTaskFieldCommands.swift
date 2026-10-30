@@ -48,7 +48,7 @@ struct ChildTaskFieldCommand: ReviewedTeamCommand, CustomStringConvertible, Cust
               try TeamProjectValue.revision(raw["revision"])>=TeamProjectValue.revision(body["revision"]) else {throw Self.invalid}
         return ChildTaskFieldReceipt(raw:raw)
     }
-    fileprivate static func validate(_ key:String,_ value:JSON) throws {
+    static func validate(_ key:String,_ value:JSON) throws {
         switch key {
         case "title":guard case .string(let text)=value,!text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty,text.count<=10000 else {throw invalid}
         case "description":if value != .null {guard case .string(let text)=value,text.count<=100000 else {throw invalid}}
