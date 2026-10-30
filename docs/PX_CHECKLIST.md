@@ -1112,7 +1112,8 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [x] Implement pending-first recovery, batched current-parent name reads and return from successful reviewed Send/Undo.
 - [x] Pass iPhone follow-up and a final four-case combined iPad run for recovery/replacement/no-op, Reopen/timestamp Undo and sustained history; 70 transitions retain 64 records, one parent read serves the history list, and recent Undo survives a cold launch. Verify final builds/signatures and inspect window-only screenshots.
 - [x] Preserve the initial offscreen-row failure and the later partial-diagnostic-label failure; repair pending-first presentation, offscreen test reveal and atomic scoped fixture publication. The unchanged-budget combined iPad rerun passes.
-- [ ] Scope review feedback to the current operation and verify disabled/spoken/largest-text behavior; broader lifecycle remains open.
+- [x] Scope review feedback to its current presentation, suppress the covered parent announcement, and verify muted disabled labels with one focused iPhone and iPad recovery/replacement/no-op test each; final builds/signatures pass. See [review evidence](child-task-completion-review/README.md).
+- [ ] Finish spoken/largest-text review and broader lifecycle acceptance.
 - [ ] Complete genuine Mac/private-Keychain/lifecycle/spoken acceptance and remaining structural/legacy/adoption/authoritative migration work. Ordinary flags and user deferrals remain unchanged.
 
 [Implementation and exact evidence](child-task-completion-retention/README.md).

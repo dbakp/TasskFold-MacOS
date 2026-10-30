@@ -1,10 +1,5 @@
 import SwiftUI
 
-private struct ChildCompletionReadRequest: Hashable {
-    let scope: ChildTaskFieldClientScope?
-    let retry: UUID
-}
-
 private struct ChildCompletionTargetsRequest: Hashable {
     let scope: ChildTaskFieldClientScope?
     let requests: [String]
@@ -147,7 +142,7 @@ struct ChildTaskCompletionRecoveryView: View {
                 Text("Older confirmations are cleared automatically. Pending and stopped actions stay here until reviewed.").font(.footnote).foregroundStyle(.secondary)
             }
             if let model, scope != nil, scope == modelScope {
-                if let message = model.message { Section { ChildCompletionNotice(message: message).accessibilityIdentifier("childCompletionRecoveryStatus") } }
+                if let message = model.message { Section { ChildCompletionNotice(message: message, announces: reviewing == nil).accessibilityIdentifier("childCompletionRecoveryStatus") } }
                 if model.loaded, model.entries.isEmpty { ContentUnavailableView("All clear", systemImage: "checkmark.circle", description: Text("Saved subtask actions will appear here.")) }
                 ForEach(orderedEntries, id: \.command.id) { entry in
                     Section {
@@ -233,7 +228,18 @@ private struct ChildCompletionCurrentReview: View {
     @State private var read: ChildTaskRecordRead?
     @State private var captured: ChildTaskFieldClientScope?
     @State private var failure: String?
+    @State private var feedback: String?
+    @State private var presentation = UUID()
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    /// Only an action started in this sheet may create its feedback. A prior
+    /// parent-list confirmation must not be repeated as a new review outcome.
+    private func act(_ work: () async -> Bool) async {
+        guard let current = scope, captured == current else { return }
+        let ticket = presentation; feedback = nil
+        let finished = await work()
+        guard ticket == presentation, scope == current, !Task.isCancelled else { return }
+        if finished { dismiss() } else { feedback = model.message }
+    }
     private var reviewProblem: String? {
         guard entry.phase == .closed || entry.phase == .confirmed, let read else { return nil }
         if entry.phase == .confirmed, model.entries.contains(where: { $0.command.body["undo_of"] == .string(entry.command.id) && $0.phase != .closed }) {
@@ -255,6 +261,8 @@ private struct ChildCompletionCurrentReview: View {
             return nil
         } catch { return "The subtask has changed since this action. Review it in the editor before making another completion change." }
     }
+    private var saveUnavailable: Bool { model.busy || reviewProblem != nil || !store.childTaskCompletionEnabled }
+    private var sendUnavailable: Bool { model.busy || !store.permitsChildTaskCompletionRequest(entry.command, sending: true) }
     var body: some View {
         Form {
             if captured == scope, scope != nil, let read, let node = read.nodes[entry.command.body["node_key"]!.text] {
@@ -266,39 +274,41 @@ private struct ChildCompletionCurrentReview: View {
                 if entry.phase == .closed {
                     Section {
                         Text("Save a fresh version of the stopped action using these current values. It will wait in Saved subtask actions for you to send.")
-                        Button("Save fresh action", systemImage: "tray.and.arrow.down") {
-                            Task { if await model.replace(entry, read: read) != nil { dismiss() } }
-                        }.disabled(model.busy || reviewProblem != nil || !store.childTaskCompletionEnabled)
+                        Button {
+                            Task { await act { await model.replace(entry, read: read) != nil } }
+                        } label: { ChildCompletionReviewActionLabel("Save fresh action", image: "tray.and.arrow.down", unavailable: saveUnavailable) }
+                            .disabled(saveUnavailable)
                     }
                 } else if entry.phase == .queued || entry.phase == .attempted {
                     Section {
                         Text("Sending keeps the original saved action. Current values do not replace it; the service will check whether it can still apply.")
-                        Button(entry.phase == .attempted ? "Retry original action" : "Send saved action", systemImage: "arrow.up.circle") {
-                            Task {
+                        Button {
+                            Task { await act {
                                 await model.send(entry.command)
-                                if model.entries.contains(where: { $0.command == entry.command && $0.phase == .confirmed }) { dismiss() }
-                            }
-                        }.disabled(model.busy || !store.permitsChildTaskCompletionRequest(entry.command, sending: true))
-                            .accessibilityIdentifier("reviewSendChildCompletion")
+                                return model.entries.contains { $0.command == entry.command && $0.phase == .confirmed }
+                            } }
+                        } label: { ChildCompletionReviewActionLabel(entry.phase == .attempted ? "Retry original action" : "Send saved action", image: "arrow.up.circle", unavailable: sendUnavailable) }
+                            .disabled(sendUnavailable).accessibilityIdentifier("reviewSendChildCompletion")
                     }
                 } else {
                     Section {
                         Text("Undo restores the completion state from before this saved action. It does not change other subtask fields.")
-                        Button("Undo this action", systemImage: "arrow.uturn.backward") {
-                            Task {
+                        Button {
+                            let previous = Set(model.entries.map(\.command.id))
+                            Task { await act {
                                 await model.undo(entry, read: read)
-                                if model.entries.contains(where: { $0.command.body["undo_of"] == .string(entry.command.id) && $0.phase == .confirmed }) { dismiss() }
-                            }
-                        }.disabled(model.busy || reviewProblem != nil || !store.childTaskCompletionEnabled)
-                            .accessibilityIdentifier("reviewUndoChildCompletion")
+                                return model.entries.contains { !previous.contains($0.command.id) && $0.command.body["undo_of"] == .string(entry.command.id) && $0.phase == .confirmed }
+                            } }
+                        } label: { ChildCompletionReviewActionLabel("Undo this action", image: "arrow.uturn.backward", unavailable: saveUnavailable) }
+                            .disabled(saveUnavailable).accessibilityIdentifier("reviewUndoChildCompletion")
                     }
                 }
-                if let message = model.message { ChildCompletionNotice(message: message) }
+                if let feedback { ChildCompletionNotice(message: feedback).accessibilityIdentifier("childCompletionReviewStatus") }
             } else if let failure { Text(failure) }
             else { ProgressView("Reading current subtask…") }
         }
         .task(id: scope) {
-            read = nil; captured = nil; failure = nil; guard let current = scope else { return }; captured = current
+            presentation = UUID(); feedback = nil; read = nil; captured = nil; failure = nil; guard let current = scope else { return }; captured = current
             do {
                 await store.sync(); guard scope == current, !Task.isCancelled else { return }
                 let value = try await store.readChildTaskRecords(entry.command.body["task_id"]!.text)
@@ -310,21 +320,32 @@ private struct ChildCompletionCurrentReview: View {
                 read = value
             } catch { guard scope == current, !Task.isCancelled else { return }; failure = "Current values aren’t available. Your saved action is kept." }
         }
-        .onDisappear { read = nil; captured = nil }
+        .onDisappear { presentation = UUID(); feedback = nil; read = nil; captured = nil }
         .privacySensitive()
     }
 }
 
 private struct ChildCompletionNotice: View {
     let message: String
+    var announces = true
     @Environment(\.scenePhase) private var phase
     var body: some View {
         Text(message).fixedSize(horizontal: false, vertical: true)
-            .task(id: message) {
-                guard phase == .active else { return }
+            .task(id: announces ? message : nil) {
+                guard phase == .active, announces else { return }
                 var announcement = AttributedString(message)
                 announcement.accessibilitySpeechAnnouncementPriority = .high
                 AccessibilityNotification.Announcement(announcement).post()
             }
+    }
+}
+
+private struct ChildCompletionReviewActionLabel: View {
+    let title: String
+    let image: String
+    let unavailable: Bool
+    init(_ title: String, image: String, unavailable: Bool) { self.title = title; self.image = image; self.unavailable = unavailable }
+    var body: some View {
+        Label(title, systemImage: image).foregroundStyle(unavailable ? Color.secondary : Color.accentColor)
     }
 }

@@ -1000,6 +1000,7 @@ extension TaskfoldMacUITests {
         childReveal(review, app, towardTop: true); childPress(review)
         XCTAssertTrue(childSavedText("This subtask is already completed. No new action is needed.", app).waitForExistence(timeout: 12), app.debugDescription)
         XCTAssertFalse(save.isEnabled, app.debugDescription)
+        XCTAssertFalse(app.staticTexts["childCompletionReviewStatus"].exists, "A new review must not repeat the parent’s prior confirmation")
         let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "Closed action reviews current completed subtask without another write"; shot.lifetime = .keepAlways; add(shot)
         childDone(app); childDone(app)
         childProbe(app, "completionQueued=0 completionAttempted=0 completionConfirmed=1 completionClosed=1 completionWrites=1 completionRequests=1 done=true")
