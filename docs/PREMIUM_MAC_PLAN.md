@@ -9791,3 +9791,14 @@ Current-value review no longer echoes a previous parent confirmation. Feedback b
 - [ ] Add versioned structural reads, independent insert/move/reorder/delete/restore commands, durable offline recovery and premium native controls. Complete legacy/adoption/authoritative migration and genuine lifecycle/accessibility acceptance.
 
 [Exact scope, reproduction and evidence](child-task-structure-revision/README.md). Source only; normal flags and hosted schema unchanged. Local full-stack migration listing could not connect; prior user deferrals remain.
+
+## 2026-10-30 — independent child structure server candidate
+
+- [x] Add separately gated bounded protocol-2 structural reads without changing protocol-1 reads.
+- [x] Implement subtree insertion, moves/reordering and deletion reviewed against every affected incarnation/revision, preserving unrelated current fields.
+- [x] Implement one-use receipt-certified Undo, exact sparse-container restoration, fresh restoration incarnations/completion epochs and refusal to delete newly edited inserted work.
+- [x] Add private bounded deleted-content archives, root/actor cascade and generation/project-transfer purge, account-scoped Undo discovery and explicit disposal, permanent metadata-only applied/closed decisions and reciprocal nonce fences against old field/completion/team writers.
+- [x] Independently pass 220 new command/read/custody/race/boundary/capacity-recovery checks plus 317 existing structure/edit/completion/recovery regressions per repository (537 each), with matching canonical hashes, no added advisor findings and every owned fixture removed.
+- [ ] Implement strict client reads/proofs, encrypted offline structural journals, recovery/review and premium native controls. Fix the older team field adapter's null-container limitation before exposure, then finish cross-root/legacy/adoption/authoritative migration and genuine lifecycle/Storage/accessibility acceptance.
+
+[Behavior, exact verification, limits and reproduction](child-task-structure-commands/README.md). Server source only; no normal application flag or hosted schema changed. All explicit user deferrals remain.

@@ -38,6 +38,12 @@ try {
     await pg.raw(structure);
     report.structureMigrationSHA256 = createHash("sha256").update(structure).digest("hex");
   }
+  if (process.env.TASKFOLD_STRUCTURE_COMMAND_SQL) {
+    if (!process.env.TASKFOLD_STRUCTURE_SQL) throw new Error("Structure-command regression requires the structure revision migration");
+    const structureCommands = await readFile(process.env.TASKFOLD_STRUCTURE_COMMAND_SQL, "utf8");
+    await pg.raw(structureCommands);
+    report.structureCommandsMigrationSHA256 = createHash("sha256").update(structureCommands).digest("hex");
+  }
   const people = Object.fromEntries(["owner", "writer", "viewer", "outside"].map(k => [k, { id: randomUUID(), session: randomUUID() }]));
   for (const u of Object.values(people)) await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id + "@example.invalid")},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
   const owner = people.owner, task = randomUUID(), project = randomUUID();
