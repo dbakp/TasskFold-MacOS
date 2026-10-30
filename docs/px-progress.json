@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Guided repair and native recovery checked",
-  "latest": "Guided repair screens and Store recovery are implemented in both apps. Mac review, exact original export and cold recovery pass; iPhone and iPad each pass two native journeys, including refusal when private edits are waiting. Each repo passes 30 repair component checks. Broader older-work migration remains unfinished and disabled for everyday use.",
+  "focus": "P2 · Bounded repair originals checked",
+  "latest": "Repair originals now use a streaming size check before retaining history. Both repos pass 313 database checks: exact size limits, complete history preservation, a repair with 3,000 entries and safe oversized refusal. No new advisor findings. Guided repair controls remain checked in their recorded scope; broader migration stays unfinished and disabled for everyday use.",
   "next": [
-    "Finish normal opaque editing, indexed/history mapping, attachment/discussion custody and bounded larger-history preflight before enabling older-work migration.",
+    "Finish normal opaque editing, indexed/history mapping and attachment/discussion custody before enabling older-work migration. Extend the checked archive limits to broader library and production workloads.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Guided repair, Store recovery and representative native checks now pass. Mac original export is exact; mobile private edits block saving. Normal opaque editing, indexed/history mapping, custody, larger-history preflight and wider lifecycle/spoken acceptance remain. Ordinary use stays disabled."
+              "detail": "Guided repair, Store recovery, native checks and bounded original archives pass in recorded scope. Normal opaque editing, indexed/history mapping, custody, broader library workloads and wider lifecycle/spoken acceptance remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -649,7 +649,8 @@
     "reviewed-child-adoption-client/verification.json",
     "reviewed-child-adoption-native/verification.json",
     "child-adoption-original-export/verification.json",
-    "child-task-repair-ui/verification.json"
+    "child-task-repair-ui/verification.json",
+    "child-task-repair-preflight/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
@@ -668,6 +669,7 @@
     "child-task-record-transfers/verification.json": "c3340c7ad2e1d31353195db69d138510d09ec7632f41b4cc8fb9fd2ac0e8fb19",
     "child-task-repair-client/verification.json": "3ca3894b91aaaf54d50f8da36b874080301f7ee041634e6372fedb9bfed75c9f",
     "child-task-repair-commits/verification.json": "0f460ffc101a675f2efa0c537735a4f8df45b2e91670b24f31c3f89dbee918af",
+    "child-task-repair-preflight/verification.json": "c296350cb7b15ad5277d1c3f5b4454308d44cb7b3e39ae58d2f23b09e85b8747",
     "child-task-repair-preview/verification.json": "48521f8636dfccbed5de1b9aa1dadce64b17910767249b784527197efc968df4",
     "child-task-repair-ui/verification.json": "0eb7a81813f282fc8ffa2b1ffe39730967512b0e39fce9408c4f437ab8e010d2",
     "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
