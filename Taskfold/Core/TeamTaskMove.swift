@@ -21,11 +21,32 @@ struct TeamTaskMoveScope: Equatable, Sendable {
     var operation: String { undoes == nil ? "move" : "undo" }
 }
 
+/// Read-only move envelopes support the record engine's null/sparse shapes.
+/// This does not relax ordinary checklist mutation or completion admission.
+enum TeamTaskMoveTree {
+    static func validate(_ value: JSON) throws {
+        var identities = Set<String>()
+        func walk(_ value: JSON, depth: Int) throws {
+            if value == .null { return }
+            guard case .array(let rows) = value, rows.isEmpty || depth <= 24 else { throw TeamTaskMoveCommand.invalid }
+            for row in rows {
+                guard case .object(let fields) = row, case .string(let id)? = fields["id"], !id.isEmpty, id.utf8.count <= 128,
+                      id.precomposedStringWithCanonicalMapping.utf8.count <= 128, identities.count < 1000,
+                      identities.insert(id.precomposedStringWithCanonicalMapping).inserted else { throw TeamTaskMoveCommand.invalid }
+                if let token = fields[TeamChecklist.key], TeamChecklist.token(token) == nil { throw TeamTaskMoveCommand.invalid }
+                if let children = fields["subtasks"] { try walk(children, depth: depth + 1) }
+            }
+        }
+        try walk(value, depth: 1)
+    }
+}
+
 struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomDebugStringConvertible {
     let scope: TeamTaskMoveScope
     let token: String, expiresText: String, sourceName: String, destinationName: String
     let expires: Date, task: Record, visibility: TeamProjectVisibility
     let clearedAssignments: Int, restoredAssignments: Int, discussionCount: Int
+    let keepsSubtaskUndoPrivate: Bool, privateSubtaskUndoCount: Int
     var description: String { "Private task move review" }; var debugDescription: String { description }
     init(_ raw: [String: JSON], scope: TeamTaskMoveScope) throws {
         guard raw["move_review_protocol"] == .number(1), raw["account"] == .string(scope.account),
@@ -38,13 +59,20 @@ struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomD
               try JSONEncoder().encode(fields).count <= 128_000 else { throw TeamTaskMoveCommand.invalid }
         _ = try TeamOrganizationValue.id(fields["user_id"])
         guard case .string(let title)? = fields["title"], title.utf8.count <= 120_000 else { throw TeamTaskMoveCommand.invalid }
-        try TeamChecklist.validate(fields["subtasks"] ?? .array([]))
+        try TeamTaskMoveTree.validate(fields["subtasks"] ?? .array([]))
         self.scope = scope; self.token = token; self.expiresText = expiresText; expires = try TeamOrganizationValue.date(.string(expiresText))
         sourceName = try TeamOrganizationValue.name(raw["source_name"]); destinationName = try TeamOrganizationValue.name(raw["destination_name"])
         task = Record(fields); self.visibility = visibility
         clearedAssignments = try Self.count(raw["cleared_assignments"], limit: 1001)
         restoredAssignments = try Self.count(raw["restored_assignments"], limit: 1001)
         discussionCount = try Self.count(raw["discussion_count"], limit: 500)
+        if raw["subtask_undo_policy"] == nil, raw["subtask_undo_count"] == nil {
+            keepsSubtaskUndoPrivate = false; privateSubtaskUndoCount = 0
+        } else {
+            guard raw["subtask_undo_policy"] == .string("kept_private") else { throw TeamTaskMoveCommand.invalid }
+            privateSubtaskUndoCount = try Self.count(raw["subtask_undo_count"], limit: 64)
+            keepsSubtaskUndoPrivate = true
+        }
     }
     private static func count(_ value: JSON?, limit: Double) throws -> Int {
         guard case .number(let n)? = value, n.isFinite, n >= 0, n <= limit, n.rounded(.down) == n else { throw TeamTaskMoveCommand.invalid }; return Int(n)
@@ -94,7 +122,7 @@ struct TeamTaskMoveCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
                   try JSONEncoder().encode(fields).count <= 128_000 else { throw Self.invalid }
             _ = try TeamOrganizationValue.id(fields["user_id"])
             guard case .string? = fields["title"] else { throw Self.invalid }
-            try TeamChecklist.validate(fields["subtasks"] ?? .array([])); task = Record(fields)
+            try TeamTaskMoveTree.validate(fields["subtasks"] ?? .array([])); task = Record(fields)
         }
         return TeamTaskMoveReceipt(command: self, task: task, replayed: replayed, raw: raw)
     }

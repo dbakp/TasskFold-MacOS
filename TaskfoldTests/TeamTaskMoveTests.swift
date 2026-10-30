@@ -34,6 +34,81 @@ final class TeamTaskMoveTests: XCTestCase {
         let command = try TeamTaskMoveCommand(account: root["account"]!.text, origin: root["origin"]!.text, body: sample["body"]!.object)
         return (command, try TeamTaskMoveReview(sample["review"]!.object, scope: command.scope), sample["reply"]!.object)
     }
+    private func privateUndoReview(_ policy: JSON?, _ count: JSON?) throws -> TeamTaskMoveReview {
+        let (command, _, _) = try fixture()
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-task-moves-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let root = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        var raw = root["samples"]!.list[0].object["review"]!.object
+        raw["subtask_undo_policy"] = policy; raw["subtask_undo_count"] = count
+        return try TeamTaskMoveReview(raw, scope: command.scope)
+    }
+    func testActualSQLRecordTransferMoveAndUndoPrivateReviewContract() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-child-record-transfer-review-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let fixture = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        for (index, value) in fixture["reviews"]!.list.enumerated() {
+            let raw = value.object
+            let reply = fixture["replies"]!.list[index].object
+            let related: String? = if case .string(let id)? = raw["related_request"] { id } else { nil }
+            let scope = try TeamTaskMoveScope(account: raw["account"]!.text, origin: fixture["origin"]!.text,
+                team: raw["team_id"]!.text, task: raw["task_id"]!.text, generation: raw["task_generation"]!.text,
+                source: raw["source_project_id"]!.text, destination: raw["destination_project_id"]!.text, undoes: related)
+            let review = try TeamTaskMoveReview(raw, scope: scope)
+            XCTAssertTrue(review.keepsSubtaskUndoPrivate); XCTAssertEqual(review.privateSubtaskUndoCount, 1)
+            let command = try TeamTaskMoveCommand(review: review, requestID: XCTUnwrap(UUID(uuidString: reply["request_id"]!.text)), now: review.expires.addingTimeInterval(-1))
+            let receipt = try command.confirmed(reply)
+            XCTAssertEqual(receipt.task?["subtasks"], reply["task"]!.object["subtasks"])
+            XCTAssertNil(command.body["task"]); XCTAssertNil(command.body["subtask_undo_count"])
+            XCTAssertFalse(String(describing: review).contains("Private removed instructions"))
+        }
+    }
+    func testMoveTreeAcceptsNullSparseAndEmptyContainersWithoutRelaxingChecklistWrites() throws {
+        for tree in [JSON.null, .array([]), .array([.object(["id": .string("sparse")]), .object(["id": .string("null"), "subtasks": .null]), .object(["id": .string("empty"), "subtasks": .array([])])])] {
+            XCTAssertNoThrow(try TeamTaskMoveTree.validate(tree))
+        }
+        XCTAssertThrowsError(try TeamChecklist.validate(.null))
+        XCTAssertThrowsError(try TeamChecklist.validate(.array([.object(["id": .string("null"), "subtasks": .null])])))
+    }
+    func testMoveTreeRejectsAmbiguousIdentityAndMalformedContainers() throws {
+        let trees: [JSON] = [.object([:]), .string("text"), .array([.object([:])]), .array([.object(["id": .string("")])]),
+            .array([.object(["id": .string("cafe\u{0301}")]), .object(["id": .string("café")])]),
+            .array([.object(["id": .string("child"), "subtasks": .object([:])])]),
+            .array([.object(["id": .string("child"), TeamChecklist.key: .object(["epoch": .string("invalid"), "version": .number(0)])])])]
+        for tree in trees { XCTAssertThrowsError(try TeamTaskMoveTree.validate(tree)) }
+    }
+    func testMoveTreeEnforcesDepthNodeAndIdentityBounds() throws {
+        var tree: JSON = .array([])
+        for depth in (1...24).reversed() { tree = .array([.object(["id": .string("depth-\(depth)"), "subtasks": tree])]) }
+        XCTAssertNoThrow(try TeamTaskMoveTree.validate(tree))
+        XCTAssertThrowsError(try TeamTaskMoveTree.validate(.array([.object(["id": .string("overflow"), "subtasks": tree])])))
+        let rows = (0..<1000).map { JSON.object(["id": .string("node-\($0)")]) }
+        XCTAssertNoThrow(try TeamTaskMoveTree.validate(.array(rows)))
+        XCTAssertThrowsError(try TeamTaskMoveTree.validate(.array(rows + [.object(["id": .string("too-many")])])) )
+        XCTAssertThrowsError(try TeamTaskMoveTree.validate(.array([.object(["id": .string(String(repeating: "x", count: 129))])])) )
+    }
+    func testOlderMoveReviewDoesNotClaimPrivateUndoRetention() throws {
+        let review = try privateUndoReview(nil, nil)
+        XCTAssertFalse(review.keepsSubtaskUndoPrivate); XCTAssertEqual(review.privateSubtaskUndoCount, 0)
+    }
+    func testPrivateUndoReviewAcceptsBoundedCountsWithoutChangingCommand() throws {
+        for count in [0, 1, 64] {
+            let review = try privateUndoReview(.string("kept_private"), .number(Double(count)))
+            XCTAssertTrue(review.keepsSubtaskUndoPrivate); XCTAssertEqual(review.privateSubtaskUndoCount, count)
+            let command = try TeamTaskMoveCommand(review: review, now: review.expires.addingTimeInterval(-1))
+            XCTAssertNil(command.body["subtask_undo_policy"]); XCTAssertNil(command.body["subtask_undo_count"])
+            XCTAssertFalse(String(describing: review).contains(review.task.title))
+        }
+    }
+    func testPrivateUndoReviewRefusesUnknownOrUnpairedPolicy() throws {
+        let pairs: [(JSON?, JSON?)] = [(nil, .number(1)), (.string("kept_private"), nil), (.string("share"), .number(1)), (.null, .number(0))]
+        for pair in pairs {
+            XCTAssertThrowsError(try privateUndoReview(pair.0, pair.1))
+        }
+    }
+    func testPrivateUndoReviewRefusesUnboundedOrNonNumericCounts() throws {
+        for count in [JSON.number(-1), .number(65), .number(1.5), .string("1"), .null] {
+            XCTAssertThrowsError(try privateUndoReview(.string("kept_private"), count))
+        }
+    }
     func testActualSQLMoveUndoRedoReviewsAndReceipts() throws {
         for index in 0..<3 {
             let (command, review, raw) = try fixture(index)

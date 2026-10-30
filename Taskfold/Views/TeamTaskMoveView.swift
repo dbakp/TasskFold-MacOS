@@ -69,6 +69,10 @@ struct TeamTaskMoveView: View {
                             Section("What moves with it") {
                                 Text("Notes, checklist, dates, reminders and the saved discussion stay with the task.")
                                 LabeledContent("Discussion comments", value: String(review.discussionCount))
+                                if review.keepsSubtaskUndoPrivate, review.privateSubtaskUndoCount > 0 {
+                                    Text("Your saved copies of deleted subtasks stay private in their original projects.")
+                                        .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("teamMovePrivateSubtaskUndo")
+                                }
                                 if review.clearedAssignments > 0 { Text("\(review.clearedAssignments) assignments will be cleared. The task will have no section in the destination.").foregroundStyle(.secondary) }
                                 if review.restoredAssignments > 0 { Text("\(review.restoredAssignments) original assignments will be restored.").foregroundStyle(.secondary) }
                                 if review.scope.undoes != nil { Text("The previously reviewed placement is restored if the task and discussion have stayed unchanged.").font(.footnote).foregroundStyle(.secondary) }

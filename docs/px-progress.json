@@ -5,11 +5,11 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
   "focus": "Independent subtask migration",
-  "latest": "An opt-in database candidate now writes separate subtask records first and preserves the compatibility tree. Both repos pass migration, team, Undo and rollback checks. Nothing is deployed; project transfers and older-data adoption tools remain unfinished.",
+  "latest": "Reviewed moves within one team now preserve separate subtask records and private Undo copies. Both clients handle nullable move data and explain private retention. Local checks/builds pass; other transfer/adoption paths remain open and nothing is deployed.",
   "next": [
-    "Finish reviewed project transfers and older-data adoption tools.",
-    "Verify full-schema custody, large workloads and remaining Mac/spoken/lifecycle recovery.",
-    "Finish team/audio recovery and custody checks; keep agreed deferrals paused."
+    "Implement reviewed personal/whole-project adoption transfers and older-data tools.",
+    "Finish cross-root moves, full-schema custody, large workloads and native/lifecycle checks.",
+    "Finish remaining team/audio recovery; keep agreed deferrals paused."
   ],
   "stages": [
     {
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "A locally verified opt-in candidate now writes separate records first, with exact reviewed promotion, compatibility reconstruction and rollback. Reviewed project/cross-root transfers, older-data tools, performance and full-schema/native acceptance remain. Nothing is deployed or enabled for normal use."
+              "detail": "The opt-in record-first candidate now supports reviewed same-team moves/Undo and private-copy retention. Personal/cross-team/whole-project/cross-root transfers, older-data tools and full native/custody/workload acceptance remain. Unreviewed realm changes are fenced. Nothing is deployed."
             },
             {
               "state": "build",
@@ -577,7 +577,8 @@
             "child-task-move-draft-native/verification.json",
             "child-task-discard-intent/verification.json",
             "child-task-frozen-recovery/verification.json",
-            "child-task-record-authority/verification.json"
+            "child-task-record-authority/verification.json",
+            "child-task-record-transfers/verification.json"
           ],
           "focus": true
         },
@@ -624,19 +625,21 @@
     "child-task-move-draft-native/verification.json",
     "child-task-discard-intent/verification.json",
     "child-task-frozen-recovery/verification.json",
-    "child-task-record-authority/verification.json"
+    "child-task-record-authority/verification.json",
+    "child-task-record-transfers/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "596fff64cc5d7320d7914712232bba55a8141cf6fb8465fee851f5ac7dbe9e1b",
-    "PX_CHECKLIST.md": "2f9d55bd770e27ff423ae0a866bae77b64c819ca1069f9f771c6b9e3b1e7e03f",
+    "P2_PLAN.md": "b7cd863e414a62377f575abc18bb625a7375a4bc15c2c91ad52383fa3500f44b",
+    "PX_CHECKLIST.md": "68158d2a29ea2c602558b2cec288ed4272d0529a2334578ff169a9d0ec0b6ac9",
     "child-task-discard-intent/verification.json": "d7316dcf9e69c8c969cd13e44b311d0865fa76b1aef7b50641e4a7c1a6f50f06",
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
     "child-task-frozen-recovery/verification.json": "645e03d6a0afbdd459ae3aef65d6b90f03d76d8741a7dcf44bcd88ce5548b807",
     "child-task-move-draft-native/verification.json": "a1199efdb71eb0ba5f6f4fe5e90f808ecc625f1e1006f108d7853fef1791ecab",
     "child-task-record-authority/verification.json": "ebd1a0383975759212c624c5b90e33e586236f2cd3d0960d24e5f5c001fefe09",
+    "child-task-record-transfers/verification.json": "c3340c7ad2e1d31353195db69d138510d09ec7632f41b4cc8fb9fd2ac0e8fb19",
     "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
     "child-task-structure-drafts/verification.json": "6f91cbc365f58a184bcf7f39a2dbdbeaa87fcb5b801fda8fa955d192c7ab9f71",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",

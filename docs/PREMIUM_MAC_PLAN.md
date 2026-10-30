@@ -9893,3 +9893,13 @@ Readable subtask selection: the Mac editor now owns the same wrapping selected t
 - [ ] Hosted rollout, older-client transition and distribution remain deferred. No real roots are promoted and ordinary gates stay off.
 
 [Evidence and exact limits](child-task-record-authority/README.md). This moves beyond a root-derived projection but does not finish migration or remove the compatibility tree.
+
+
+## Reviewed record-aware team transfers — 2026-10-30
+
+- [x] Signed same-team task move/Undo now transfers promoted record bindings, preserving sparse/null child data, original identities, reviewed assignments and discussion.
+- [x] Private subtask Undo copies stay actor-only and bound to their original project; destination restore is refused and reviewed return permits original restore. Both clients explain retention and decode nullable move/confirmation data.
+- [x] Each repo passes 475 combined database and 168 client checks; both app/test builds and development signatures verify. No new native/spoken acceptance is inferred.
+- [ ] Whole-project adoption has an explicit custody fence for promoted roots/private archives; its adapter, personal/cross-team/cross-root moves, older-data tooling and full-schema/workload/native acceptance remain. No hosted schema or ordinary gates changed.
+
+[Exact evidence and remaining scope](child-task-record-transfers/README.md). All existing user deferrals remain.

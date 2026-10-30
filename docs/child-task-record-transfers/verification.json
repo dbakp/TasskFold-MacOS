@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/TeamTaskMove.swift": "40f12ba0cc36ceda16ae54c5a548bffc424df656734b65ddf60ee1da82020ff7",
+    "Taskfold/Views/TeamTaskMoveView.swift": "f21795b94bf3b4ac7c61ecd4aa3d3ef64c4441a88dbb975b69c11231b0cc87ea",
+    "TaskfoldTests/TeamTaskMoveTests.swift": "b2ca0d44fbdb1a40a12bc3b1e4c625cd9c00f03a5f80d50e9c5cea8e618701f4",
+    "TaskfoldTests/Fixtures/team-child-record-transfer-review-v1.json": "d9499869721aa52a798cd82790b369e3de4df824009663316e395fb994b0cbe7",
+    "Scripts/Database/test-child-record-transfers.mjs": "3d8916e743c3955533b24909a9177fd1ca67c9e847b0b3ad93373c3b1375f017",
+    "Scripts/Database/test-team-task-moves.mjs": "74153c60c308abcdfb3502090f5b6ddc0267b4c4c94bb6d79c0ac34dcc650266",
+    "Scripts/Database/test-child-task-record-authority.mjs": "0ced174c58d0b2a2a554623541efe37bef5ac4033f764e78dbe95a42a2c02505",
+    "Scripts/Database/test-child-task-structure-commands.mjs": "6c2c6cccd40195cb448322ae56acf9b1eb1d93103ac3d98402bcd8380c32205b",
+    "supabase/migrations/20261030093035_child_record_reviewed_team_transfers.sql": "6715c30856cec9634676c2337ac81c1ad67a7eefcc1be57948be7d865b621f1b"
+  },
+  "namespaceAdjustedBuiltHostSHA256": {
+    "Taskfold/Core/TeamTaskMove.swift": "40f12ba0cc36ceda16ae54c5a548bffc424df656734b65ddf60ee1da82020ff7",
+    "Taskfold/Views/TeamTaskMoveView.swift": "f21795b94bf3b4ac7c61ecd4aa3d3ef64c4441a88dbb975b69c11231b0cc87ea"
+  },
+  "compiledWireFixtureSHA256": "d9499869721aa52a798cd82790b369e3de4df824009663316e395fb994b0cbe7",
+  "coreSuites": {
+    "teamMove": 29,
+    "hierarchyCommandReadRecovery": 139,
+    "totalPassed": 168,
+    "failed": 0
+  },
+  "databaseChecks": {
+    "recordTransfersAndCustody": 68,
+    "existingTeamMoves": 90,
+    "recordAuthority": 96,
+    "structure": 221,
+    "totalPassed": 475
+  },
+  "allDatabaseFixturesRemoved": true,
+  "officialAdvisorsAddedFindings": 0,
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "developmentSignaturesVerified": true,
+  "developmentSigningReceipt": {
+    "Taskfold.app": {
+      "strictDeepSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "strictDeepSignatureVerified": true
+    }
+  },
+  "normalFeatureFlags": {
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "hostedMigrationApplied": false,
+  "realRootsPromoted": 0,
+  "newSimulators": 0,
+  "newNativeRuntimeAccepted": false,
+  "newSpokenOrLargestTextAccepted": false,
+  "localSupabaseMigrationHistoryVerified": false,
+  "wireSourcePhase": "Actual Mac-owned 63-check SQL phase before adding archive-only realm-fence cases; canonical SQL unchanged. Both owned client suites decode the captured move and Undo replies, and compiled resources match the owned fixture.",
+  "remaining": [
+    "Personal/cross-team transfers, whole-project adoption custody adapter and cross-root moves",
+    "Older-data review/adoption tools and large-workload performance",
+    "Full-schema, provider/Storage, account/window/background and native/spoken review-note acceptance",
+    "Hosted rollout, older-client transition and distribution remain deferred with other user deferrals"
+  ]
+}

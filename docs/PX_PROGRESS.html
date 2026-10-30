@@ -56,7 +56,7 @@ if (!window.openai) {
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--muted)" aria-hidden="true"></span>To build</span>
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-3)" aria-hidden="true"></span>Deferred</span>
 </div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope.</div>
-<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · Independent subtask migration</summary><div>An opt-in database candidate now writes separate subtask records first and preserves the compatibility tree. Both repos pass migration, team, Undo and rollback checks. Nothing is deployed; project transfers and older-data adoption tools remain unfinished.</div></details>
+<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · Independent subtask migration</summary><div>Reviewed moves within one team now preserve separate subtask records and private Undo copies. Both clients handle nullable move data and explain private retention. Local checks/builds pass; other transfer/adoption paths remain open and nothing is deployed.</div></details>
 <details class="px-stage" id="px-p0" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P0 · Foundations</span></span><span class="text-small text-muted" aria-hidden="true">11 verified · 1 built / checks left · 1 to build · 3 deferred</span><svg class="px-meter" viewBox="0 0 16 1" preserveAspectRatio="none" role="img" aria-label="11 verified · 1 built / checks left · 1 to build · 3 deferred"><rect x="0" y="0" width="11" height="1" fill="var(--viz-series-1)"/><rect x="11" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="12" y="0" width="1" height="1" fill="var(--muted)"/><rect x="13" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">Core workflows accepted in recorded scope. Deletion recovery and three paused rollout gates remain.</div>
 <details class="px-group" id="p0-core" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Everyday task foundations</span></span><span class="text-small text-muted" aria-hidden="true">6 verified</span><svg class="px-meter" viewBox="0 0 6 1" preserveAspectRatio="none" role="img" aria-label="6 verified"><rect x="0" y="0" width="6" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p0-core-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Todoist import and safe retry</span><span class="text-small text-muted">Verified</span></div>
@@ -324,7 +324,7 @@ if (!window.openai) {
 <li class="px-item" data-state="verify" id="p2-teams-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real cloud-media and provider checks</span><span class="text-small text-muted">Built · checks left</span></div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-7"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Move subtask storage and preserve older work</span><span class="text-small text-muted">To build</span></div>
-<div class="px-item-detail text-small text-muted">A locally verified opt-in candidate now writes separate records first, with exact reviewed promotion, compatibility reconstruction and rollback. Reviewed project/cross-root transfers, older-data tools, performance and full-schema/native acceptance remain. Nothing is deployed or enabled for normal use.</div>
+<div class="px-item-detail text-small text-muted">The opt-in record-first candidate now supports reviewed same-team moves/Undo and private-copy retention. Personal/cross-team/whole-project/cross-root transfers, older-data tools and full native/custody/workload acceptance remain. Unreviewed realm changes are fenced. Nothing is deployed.</div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Shared audio publishing and storage permissions</span><span class="text-small text-muted">To build</span></div>
 <div class="px-item-detail text-small text-muted">Shared publishing/removal, older history handling and storage/access rules are unfinished.</div>
@@ -343,6 +343,7 @@ if (!window.openai) {
 <li><a href="child-task-discard-intent/verification.json" target="_blank" rel="noopener">child-task-discard-intent/verification.json</a></li>
 <li><a href="child-task-frozen-recovery/verification.json" target="_blank" rel="noopener">child-task-frozen-recovery/verification.json</a></li>
 <li><a href="child-task-record-authority/verification.json" target="_blank" rel="noopener">child-task-record-authority/verification.json</a></li>
+<li><a href="child-task-record-transfers/verification.json" target="_blank" rel="noopener">child-task-record-transfers/verification.json</a></li>
 </ul></details></details>
 <details class="px-group" id="p2-watch" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Apple Watch</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p2-watch-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Today, reviewed capture and offline completion implementation</span><span class="text-small text-muted">Verified</span></div>
@@ -358,9 +359,9 @@ if (!window.openai) {
 </ul></details></details>
 </details>
 <footer class="px-footer"><details id="px-next" data-remember><summary class="cursor-interaction">Next in the active work</summary><ol>
-<li>Finish reviewed project transfers and older-data adoption tools.</li>
-<li>Verify full-schema custody, large workloads and remaining Mac/spoken/lifecycle recovery.</li>
-<li>Finish team/audio recovery and custody checks; keep agreed deferrals paused.</li>
+<li>Implement reviewed personal/whole-project adoption transfers and older-data tools.</li>
+<li>Finish cross-root moves, full-schema custody, large workloads and native/lifecycle checks.</li>
+<li>Finish remaining team/audio recovery; keep agreed deferrals paused.</li>
 </ol></details><div class="text-small text-muted">Both apps own their dashboard and sources. Reviewed snapshot; no live telemetry or completion-date estimate.</div></footer>
 </div>
 <script>

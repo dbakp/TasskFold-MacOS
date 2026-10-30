@@ -6,6 +6,8 @@ Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Reviewed same-team transfers now preserve promoted child records and private Undo copies, with nullable review/receipt decoding in both apps. Each repo passes 475 SQL and 168 client checks; app/test builds and signatures pass. [Current transfer evidence](child-task-record-transfers/README.md). Personal/cross-team/whole-project/cross-root adapters, adoption tooling, complete custody/workload/native acceptance and rollout remain open.
+
 Record-authoritative migration is now an opt-in local candidate: exact reviewed promotion, row-first typed writes, record-only reconstruction and transactional mirror checks. Each repo passes 96 promoted-record checks and 221 default-behavior/regression checks, with no added advisor findings. [Current migration evidence](child-task-record-authority/README.md). No hosted roots or normal flags changed. Reviewed scope transfers, older-data tools, full-schema/native/custody and workload acceptance remain. The paragraphs below retain earlier staged acceptance scopes.
 
 Organizer drafts are now connected in both apps: encrypted checkpoints, awaited Done, explicit Resume/Discard and stable handoff into separately sent actions. Each repo passes 126 hierarchy Core cases (11 integration/session cases beyond the prior 13 storage cases), and both builds/signatures verify. Phone/iPad Add-draft cold/edit/action readbacks and the final largest-text stacked-action/Resume/Cancel/discard flow pass in recorded phases. Failed loading/query/timeout phases remain visible; this is not a single-binary sweep or a Mac/spoken acceptance claim. [Native draft evidence](child-task-structure-draft-native/README.md). Ordinary gates stay off; full migration and broader lifecycle remain open.
@@ -7053,3 +7055,13 @@ Both apps now own scoped native hierarchy organization and recovery: reviewed ad
 - [ ] Hosted rollout, older-client transition and distribution remain deferred. No real roots are promoted and ordinary gates stay off.
 
 [Evidence and exact limits](child-task-record-authority/README.md). This moves beyond a root-derived projection but does not finish migration or remove the compatibility tree.
+
+
+## Reviewed record-aware team transfers — 2026-10-30
+
+- [x] Signed same-team task move/Undo now transfers promoted record bindings, preserving sparse/null child data, original identities, reviewed assignments and discussion.
+- [x] Private subtask Undo copies stay actor-only and bound to their original project; destination restore is refused and reviewed return permits original restore. Both clients explain retention and decode nullable move/confirmation data.
+- [x] Each repo passes 475 combined database and 168 client checks; both app/test builds and development signatures verify. No new native/spoken acceptance is inferred.
+- [ ] Whole-project adoption has an explicit custody fence for promoted roots/private archives; its adapter, personal/cross-team/cross-root moves, older-data tooling and full-schema/workload/native acceptance remain. No hosted schema or ordinary gates changed.
+
+[Exact evidence and remaining scope](child-task-record-transfers/README.md). All existing user deferrals remain.
