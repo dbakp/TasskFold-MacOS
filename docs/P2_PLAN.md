@@ -4,6 +4,8 @@ Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+The team child-field adapter now preserves null/sparse children and edits large roots without the older full-root envelope. Both clients have strict bounded protocol-2 structural reads with canonical wire counters and scope fences. Each repository independently passes 630 database and 142 selected Core checks; app/test builds and signatures pass. See [current evidence](child-task-structure-client-read/README.md). Structural command proofs, offline recovery and native controls are next; current native acceptance remains open.
+
 The independent structural server candidate now has protocol-2 reads, insertion, subtree moves/reordering, reviewed deletion and one-use certified Undo, with private archived content and permanent terminal decisions. Both repositories independently pass 537 actual database checks with it applied. Normal flags/hosted schema remain unchanged. The native/offline/client feature is still unfinished; see [structural command evidence](child-task-structure-commands/README.md).
 
 
@@ -11,7 +13,7 @@ The earlier private structural-revision candidate and legacy assignment guard pa
 
 Saved subtask conflicts now have a current-versus-saved review, explicit choices and a terminal-original protocol before replacement. Both clients pass 228 focused checks and full app/test builds. Each repository independently passes 35 direct PostgreSQL closure/permission/race checks and the existing 95 child-edit checks with the generated migration applied; advisors add no findings. The migration is not deployed and ordinary flags remain off. Four targeted current-runtime Mac and iPad journeys pass per platform. The iPhone has four passing journeys across phases, with one unexplained combined-run automated tap retained. Native phases, exact source bindings and wider lifecycle/migration gates are in [resolution evidence](child-task-field-resolution/README.md).
 
-Next: strict protocol-2 client reads and structural proofs, encrypted offline journals and conflict/terminal recovery, then premium native controls. Fix the older team field adapter’s null-container limitation before exposure. Preserve completion epochs, certified Undo and generic-field completion refusal; cross-root/legacy/adoption, current native lifecycle/accessibility and authoritative migration remain open.
+Next: structural command/receipt/Undo/disposal proofs, encrypted offline journals and conflict/terminal recovery, then premium native controls. Strict protocol-2 reads and the native team field adapter are implemented in the follow-up above. Preserve completion epochs, certified Undo and generic-field completion refusal; cross-root/legacy/adoption, current native lifecycle/accessibility and authoritative migration remain open.
 
 Subtask reminders now reuse the full portable composer, private nested checkpoints, field-only Apply and separate Save/review/Send. Each repo passes 223 selected Core cases, including six new child reminder cases. Scoped ownership retains the source editor while its own modal covers it; initial settings remain recoverable. The final relative-reminder journey passes on iPhone and iPad, including two exact cold readbacks. Native phases are separate in [reminder evidence](child-task-field-reminders/README.md). Delivery, wider lifecycle, conflict review and authoritative migration stay open. Ordinary flags remain off.
 

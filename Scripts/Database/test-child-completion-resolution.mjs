@@ -32,6 +32,11 @@ try {
     await pg.raw(structureCommands);
     report.structureCommandsMigrationSHA256 = createHash("sha256").update(structureCommands).digest("hex");
   }
+  if (process.env.TASKFOLD_FIELD_NATIVE_SQL) {
+    const nativeField = await readFile(process.env.TASKFOLD_FIELD_NATIVE_SQL, "utf8");
+    await pg.raw(nativeField);
+    report.nativeFieldMigrationSHA256 = createHash("sha256").update(nativeField).digest("hex");
+  }
   const people = Object.fromEntries(["owner", "editor", "other"].map(key => [key, { id: randomUUID(), session: randomUUID() }]));
   for (const u of Object.values(people)) await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id + "@example.invalid")},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
   const task = randomUUID(), owner = people.owner;

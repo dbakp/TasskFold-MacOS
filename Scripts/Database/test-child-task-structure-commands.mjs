@@ -20,6 +20,11 @@ try {
  report.baselineAdvisors=await pg.advisors();report.stage='direct candidate SQL';
  const schema=await pg.scalar(`create temp table load_result(code text,reason text,context text);do $load$declare c text;begin begin execute ${lit(candidate)};insert into load_result values(null,null,null);exception when others then get stacked diagnostics c=PG_EXCEPTION_CONTEXT;insert into load_result values(sqlstate,sqlerrm,c);end;end$load$;select to_jsonb(r) from load_result r;`);
  if(schema.code){report.schemaDiagnostic=schema;throw new Error(schema.reason);}
+  if (process.env.TASKFOLD_FIELD_NATIVE_SQL) {
+    const nativeField = await readFile(process.env.TASKFOLD_FIELD_NATIVE_SQL, "utf8");
+    await pg.raw(nativeField);
+    report.nativeFieldMigrationSHA256 = createHash("sha256").update(nativeField).digest("hex");
+  }
  const people=Object.fromEntries(['owner','writer','viewer','outside'].map(who=>[who,{id:randomUUID(),session:randomUUID()}]));
  for(const u of Object.values(people))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
  const task=randomUUID(),project=randomUUID(),owner=people.owner;

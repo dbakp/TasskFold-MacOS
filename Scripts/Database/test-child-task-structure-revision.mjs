@@ -42,6 +42,11 @@ try {
     await pg.raw(structureCommands);
     report.structureCommandsMigrationSHA256 = createHash("sha256").update(structureCommands).digest("hex");
   }
+  if (process.env.TASKFOLD_FIELD_NATIVE_SQL) {
+    const nativeField = await readFile(process.env.TASKFOLD_FIELD_NATIVE_SQL, "utf8");
+    await pg.raw(nativeField);
+    report.nativeFieldMigrationSHA256 = createHash("sha256").update(nativeField).digest("hex");
+  }
   check("existing projection starts structural fence at one", (await projection()).structure_revision, 1);
   check("preexisting general revision is retained", (await projection()).revision, 2);
   const before = await records();

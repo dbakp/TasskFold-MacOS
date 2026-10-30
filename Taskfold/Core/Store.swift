@@ -288,6 +288,19 @@ final class Store {
             throw error
         }
     }
+    func readChildTaskStructure(_ id:String) async throws -> ChildTaskStructureRead {
+        guard Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true else { throw ChildTaskRecordFailure.unavailable }
+        let captured=try childTaskRecordContext(id)
+        do {
+            let value=try await backend.childTaskStructure(captured)
+            try Task.checkCancellation()
+            guard captured.matches(try childTaskRecordContext(id)) else {throw CancellationError()}
+            return value
+        } catch {
+            guard let current=try? childTaskRecordContext(id),captured.matches(current) else {throw CancellationError()}
+            throw error
+        }
+    }
     func childTaskFieldComparisonIsCurrent(_ read: ChildTaskRecordRead) -> Bool {
         guard let current = try? childTaskRecordContext(read.context.root.id) else { return false }
         return read.context.matches(current)

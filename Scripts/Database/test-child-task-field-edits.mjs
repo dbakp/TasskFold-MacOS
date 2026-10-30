@@ -131,6 +131,11 @@ try {
     await pg.raw(structureCommands);
     report.structureCommandsMigrationSHA256 = createHash("sha256").update(structureCommands).digest("hex");
   }
+  if (process.env.TASKFOLD_FIELD_NATIVE_SQL) {
+    const nativeField = await readFile(process.env.TASKFOLD_FIELD_NATIVE_SQL, "utf8");
+    await pg.raw(nativeField);
+    report.nativeFieldMigrationSHA256 = createHash("sha256").update(nativeField).digest("hex");
+  }
   const run = (
     body,
     {

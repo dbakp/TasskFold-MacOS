@@ -1135,6 +1135,17 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [x] Implement one-use receipt-certified Undo, exact sparse-container restoration, fresh restoration incarnations/completion epochs and refusal to delete newly edited inserted work.
 - [x] Add private bounded deleted-content archives, root/actor cascade and generation/project-transfer purge, account-scoped Undo discovery and explicit disposal, permanent metadata-only applied/closed decisions and reciprocal nonce fences against old field/completion/team writers.
 - [x] Independently pass 220 new command/read/custody/race/boundary/capacity-recovery checks plus 317 existing structure/edit/completion/recovery regressions per repository (537 each), with matching canonical hashes, no added advisor findings and every owned fixture removed.
-- [ ] Implement strict client reads/proofs, encrypted offline structural journals, recovery/review and premium native controls. Fix the older team field adapter's null-container limitation before exposure, then finish cross-root/legacy/adoption/authoritative migration and genuine lifecycle/Storage/accessibility acceptance.
+- [x] Implement strict client structural reads and fix the older team field adapter’s null-container/large-envelope limitation; see the follow-up below.
+- [ ] Implement structural command proofs, encrypted offline journals, recovery/review and premium native controls; finish cross-root/legacy/adoption/authoritative migration and genuine lifecycle/Storage/accessibility acceptance.
 
 [Behavior, exact verification, limits and reproduction](child-task-structure-commands/README.md). Server source only; no normal application flag or hosted schema changed. All explicit user deferrals remain.
+
+## 2026-10-30 — structural client reads and native team fields
+
+- [x] Replace the older team child-field envelope with validated same-transaction native application, preserving null/sparse containers and small edits in large roots, existing v1 receipts, permissions and atomicity.
+- [x] Fence field/team/closure nonce reuse, including real competing legacy-writer rollback.
+- [x] Add bounded strict protocol-2 client reads, canonical wire counters, duplicate-key refusal, exact reconstruction and account/session/workspace/root fences; keep ordinary flags absent/off.
+- [x] Independently pass 630 database and 142 selected Core checks per repository; both app/test builds and strict signatures pass. All owned database fixtures removed.
+- [ ] Add structural command/receipt/Undo/disposal proofs, encrypted offline recovery and premium native controls. Finish cross-root/legacy/adoption/authoritative migration and genuine lifecycle/accessibility/Storage acceptance.
+
+[Exact behavior, source hashes, checks and remaining scope](child-task-structure-client-read/README.md). Source only; prior deferrals remain.

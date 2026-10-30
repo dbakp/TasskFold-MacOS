@@ -855,9 +855,9 @@ struct ChildTaskRecordRead: Sendable {
     let tree: JSON
     /// Bounded syntax validation also protects strict command receipts and
     /// encrypted command journals from duplicate JSON keys at any depth.
-    static func validateUniqueJSON(_ data: Data, maximum: Int) throws {
+    static func validateUniqueJSON(_ data: Data, maximum: Int, integerPaths: Set<[String]> = []) throws {
         guard data.count <= maximum else { throw ChildTaskRecordFailure.oversized }
-        var syntax = UniqueJSONKeys(bytes: Array(data))
+        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths)
         try syntax.value(depth: 0); syntax.space()
         guard syntax.index == syntax.bytes.count else { throw ChildTaskRecordFailure.review }
     }
@@ -866,8 +866,13 @@ struct ChildTaskRecordRead: Sendable {
         var syntax=UniqueJSONKeys(bytes:Array(data))
         try syntax.value(depth:0); syntax.space()
         guard syntax.index==syntax.bytes.count else {throw ChildTaskRecordFailure.review}
-        guard let raw=try? JSONDecoder().decode([String:JSON].self,from:data),
-              Set(raw.keys)==Set(["protocol","account","project_id","task_id","task_generation","projection_revision","root_kind","records"]),
+        guard let raw=try? JSONDecoder().decode([String:JSON].self,from:data) else { throw ChildTaskRecordFailure.review }
+        try self.init(envelope: raw, context: context)
+    }
+    /// The caller must already validate bounded wire syntax and unique keys.
+    /// V2 uses this initializer without re-encoding a potentially near-limit tree.
+    fileprivate init(envelope raw: [String: JSON], context: ChildTaskRecordContext) throws {
+        guard Set(raw.keys)==Set(["protocol","account","project_id","task_id","task_generation","projection_revision","root_kind","records"]),
               raw["protocol"] == .number(1), raw["account"] == .string(context.account), raw["task_id"] == .string(context.root.id),
               raw["project_id"] == context.root["project_id"], raw["task_generation"] == context.root["task_generation"],
               case .string(let kind)?=raw["root_kind"], ["null","array"].contains(kind),
@@ -937,7 +942,9 @@ struct ChildTaskRecordRead: Sendable {
     /// object keys, including keys inside opaque future metadata.
     private struct UniqueJSONKeys {
         let bytes:[UInt8]
+        let integerPaths: Set<[String]>
         var index=0
+        init(bytes: [UInt8], integerPaths: Set<[String]> = []) { self.bytes = bytes; self.integerPaths = integerPaths }
         mutating func space() {while index<bytes.count && [9,10,13,32].contains(bytes[index]) {index+=1}}
         mutating func take(_ byte:UInt8)->Bool {space();if index<bytes.count,bytes[index]==byte {index+=1;return true};return false}
         mutating func string() throws -> String {
@@ -952,7 +959,7 @@ struct ChildTaskRecordRead: Sendable {
             }
             throw ChildTaskRecordFailure.review
         }
-        mutating func value(depth:Int) throws {
+        mutating func value(depth:Int, path: [String] = []) throws {
             try Task.checkCancellation()
             guard depth<=128 else {throw ChildTaskRecordFailure.review};space()
             guard index<bytes.count else {throw ChildTaskRecordFailure.review}
@@ -960,14 +967,22 @@ struct ChildTaskRecordRead: Sendable {
             if take(123) {
                 if take(125) {return};var keys:Set<String>=[]
                 while true {
-                    guard keys.insert(try string()).inserted,take(58) else {throw ChildTaskRecordFailure.review}
-                    try value(depth:depth+1)
+                    let key = try string()
+                    guard keys.insert(key).inserted,take(58) else {throw ChildTaskRecordFailure.review}
+                    let childPath = integerPaths.isEmpty ? [] : path + [key]
+                    space(); let start = index
+                    try value(depth:depth+1, path: childPath)
+                    if integerPaths.contains(childPath) {
+                        let token = bytes[start..<index]
+                        guard !token.isEmpty, token.count <= 16, token.allSatisfy({ (48...57).contains($0) }),
+                              token.count == 1 || token.first != 48 else { throw ChildTaskRecordFailure.review }
+                    }
                     if take(125) {return};guard take(44) else {throw ChildTaskRecordFailure.review}
                 }
             }
             if take(91) {
                 if take(93) {return}
-                while true {try value(depth:depth+1);if take(93) {return};guard take(44) else {throw ChildTaskRecordFailure.review}}
+                while true {try value(depth:depth+1, path: integerPaths.isEmpty ? [] : path + ["[]"]);if take(93) {return};guard take(44) else {throw ChildTaskRecordFailure.review}}
             }
             let start=index
             while index<bytes.count && ![9,10,13,32,44,93,125].contains(bytes[index]) {index+=1}
@@ -979,5 +994,29 @@ struct ChildTaskRecordRead: Sendable {
     }
     private static func counter(_ value:JSON?) throws -> Double {
         guard case .number(let n)?=value,n.isFinite,n>=1,n<=9_007_199_254_740_991,n.rounded()==n else {throw ChildTaskRecordFailure.review};return n
+    }
+}
+
+
+/// A separate wire version prevents structural counters from silently changing
+/// the established v1 contract. Neither read grants permission to mutate a task.
+struct ChildTaskStructureRead: Sendable {
+    static let maximumBytes = ChildTaskRecordRead.maximumBytes
+    let records: ChildTaskRecordRead
+    let structureRevision: Double
+    var context: ChildTaskRecordContext { records.context }
+    init(data: Data, context: ChildTaskRecordContext) throws {
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes,
+            integerPaths: [["protocol"], ["structure_revision"], ["projection_revision"],
+                           ["records", "[]", "revision"], ["records", "[]", "sibling_order"]])
+        guard var raw = try? JSONDecoder().decode([String: JSON].self, from: data),
+              Set(raw.keys) == Set(["protocol", "account", "project_id", "task_id", "task_generation",
+                                    "projection_revision", "structure_revision", "root_kind", "records"]),
+              raw["protocol"] == .number(2),
+              case .number(let revision)? = raw["structure_revision"], revision.isFinite,
+              revision >= 1, revision <= 9_007_199_254_740_991, revision.rounded() == revision else { throw ChildTaskRecordFailure.review }
+        raw.removeValue(forKey: "structure_revision"); raw["protocol"] = .number(1)
+        self.records = try ChildTaskRecordRead(envelope: raw, context: context)
+        self.structureRevision = revision
     }
 }

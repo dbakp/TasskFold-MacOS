@@ -316,7 +316,7 @@ final class Backend: NSObject {
         if let workflowReadLimit { guard (1...4_200_000).contains(workflowReadLimit) else { throw TeamWorkflowRunCommand.invalid } }
         let childCompletionWrite = ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_close_child_completion"].contains(path)
         let childRecordWrite = ["/rest/v1/rpc/taskfold_close_child_completion", "/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path)
-        let childRecordRead = path == "/rest/v1/rpc/taskfold_read_child_tasks"
+        let childRecordRead = ["/rest/v1/rpc/taskfold_read_child_tasks", "/rest/v1/rpc/taskfold_read_child_structure"].contains(path)
         let workflowRead = workflowReadLimit != nil
         let workflowRun = path == "/rest/v1/rpc/taskfold_team_workflow_run"
         let templateLibrary = path == "/rest/v1/rpc/taskfold_team_templates"
@@ -630,6 +630,21 @@ final class Backend: NSObject {
         guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
               context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
         let decoding=Task.detached(priority:.userInitiated) {try ChildTaskRecordRead(data:data,context:context)}
+        let outcome=await withTaskCancellationHandler(operation:{await decoding.result},onCancel:{decoding.cancel()})
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else {throw CancellationError()}
+        return try outcome.get()
+    }
+    func childTaskStructure(_ context: ChildTaskRecordContext) async throws -> ChildTaskStructureRead {
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let data=try await request("/rest/v1/rpc/taskfold_read_child_structure",method:"POST",
+            body:["_id":.string(context.root.id),"_generation":context.root["task_generation"]],expectedAccount:context.account)
+        try Task.checkCancellation()
+        guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,
+              context.origin == (try accountRemovalOrigin) else { throw CancellationError() }
+        let decoding=Task.detached(priority:.userInitiated) {try ChildTaskStructureRead(data:data,context:context)}
         let outcome=await withTaskCancellationHandler(operation:{await decoding.result},onCancel:{decoding.cancel()})
         try Task.checkCancellation()
         guard !sessionTransition, session?.user.id==context.account, sessionGeneration==context.session,

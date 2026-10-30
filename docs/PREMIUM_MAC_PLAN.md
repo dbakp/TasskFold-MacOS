@@ -9802,3 +9802,13 @@ Current-value review no longer echoes a previous parent confirmation. Feedback b
 - [ ] Implement strict client reads/proofs, encrypted offline structural journals, recovery/review and premium native controls. Fix the older team field adapter's null-container limitation before exposure, then finish cross-root/legacy/adoption/authoritative migration and genuine lifecycle/Storage/accessibility acceptance.
 
 [Behavior, exact verification, limits and reproduction](child-task-structure-commands/README.md). Server source only; no normal application flag or hosted schema changed. All explicit user deferrals remain.
+
+## 2026-10-30 — structural client reads and native team fields
+
+- [x] Replace the older team child-field envelope with validated same-transaction native application, preserving null/sparse containers and small edits in large roots, existing v1 receipts, permissions and atomicity.
+- [x] Fence field/team/closure nonce reuse, including real competing legacy-writer rollback.
+- [x] Add bounded strict protocol-2 client reads, canonical wire counters, duplicate-key refusal, exact reconstruction and account/session/workspace/root fences; keep ordinary flags absent/off.
+- [x] Independently pass 630 database and 142 selected Core checks per repository; both app/test builds and strict signatures pass. All owned database fixtures removed.
+- [ ] Add structural command/receipt/Undo/disposal proofs, encrypted offline recovery and premium native controls. Finish cross-root/legacy/adoption/authoritative migration and genuine lifecycle/accessibility/Storage acceptance.
+
+[Exact behavior, source hashes, checks and remaining scope](child-task-structure-client-read/README.md). Source only; prior deferrals remain.

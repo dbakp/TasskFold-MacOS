@@ -53,3 +53,7 @@ node Scripts/Database/test-child-completion-resolution.mjs /tmp/structure-resolu
 ```
 
 References: [Supabase database functions](https://supabase.com/docs/guides/database/functions), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security) and [PostgreSQL lock ordering](https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-DEADLOCKS). Reviewed the Supabase/Postgres skills' least-privilege, lock-order and FK-index guidance. Recent changelog extension/operator notices introduce no dependency used by this candidate.
+
+## Subsequent client and compatibility stage
+
+The [30 October follow-up](../child-task-structure-client-read/README.md) implements strict protocol-2 client reads and fixes the older team field adapter’s null-container and large-root-envelope limitations. Its 630 database and 142 selected Core checks per repository include this stage’s 220 structural checks. The reports in this directory remain historical; structural command proofs, offline recovery and native controls remain open.

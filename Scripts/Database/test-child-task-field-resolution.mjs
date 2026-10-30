@@ -27,6 +27,11 @@ try {
   }
   report.baselineAdvisors = await pg.advisors();
   await pg.raw(candidate);
+  if (process.env.TASKFOLD_FIELD_NATIVE_SQL) {
+    const nativeField = await readFile(process.env.TASKFOLD_FIELD_NATIVE_SQL, "utf8");
+    await pg.raw(nativeField);
+    report.nativeFieldMigrationSHA256 = createHash("sha256").update(nativeField).digest("hex");
+  }
   const people = [0, 1].map(() => ({ id: randomUUID(), session: randomUUID() }));
   for (const p of people) await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(p.id)},${lit(p.id + "@example.invalid")},now());insert into public.profiles(user_id) values(${lit(p.id)});insert into auth.sessions(id,user_id) values(${lit(p.session)},${lit(p.id)});`);
   const owner = people[0], other = people[1], task = randomUUID();

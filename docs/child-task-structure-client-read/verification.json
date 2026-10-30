@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-30",
+  "databaseChecks": {
+    "native-team-fields": 58,
+    "foundation": 61,
+    "fields": 95,
+    "completion": 98,
+    "completion-resolution": 63,
+    "structure": 220,
+    "field-resolution": 35
+  },
+  "databaseTotal": 630,
+  "coreTests": 142,
+  "coreFailures": 0,
+  "newStructureReaderTests": 13,
+  "nativeAdapterSHA256": "9cb9e5badc970b5bd9a5b031a17a776becd6e924cf178d7cc31ac3ac5603f9f2",
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "78fb65409a233dfcadd76c2276c2cf1340d1ee373b6dbefc96f69768bb02d98f",
+    "Taskfold/Core/Backend.swift": "7ebb1168cecad95a68c13eb0ace6b616021f25cd6de34bdd6e0e609b73572f20",
+    "Taskfold/Core/Store.swift": "482a9cec3995ab0d8aeb7241da5d2c093f135ea6d92952964305d1279bb8dc88",
+    "TaskfoldTests/ChildTaskStructureReadTests.swift": "5b10643c241029784ff5317ba21256deec06c2975fabd13c35c157fa88d9c0cf",
+    "TaskfoldTests/Fixtures/child-task-structure-read.json": "6cb24fc1b77d0c8c2183971ae703ec611839daab07d7d62bba87463d112b3958",
+    "TaskfoldTests/Fixtures/native-team-child-field-write.json": "46fe4cf57c7899b4c985643187d935b540af90cea5f230be28914db95a23c782",
+    "Scripts/Database/test-child-field-team-native.mjs": "335304d1b562da804b4e26ffaed710873571ea0e8f6fe649e0320314361f1b2d",
+    "supabase/migrations/20261030012858_native_team_child_field_adapter.sql": "9cb9e5badc970b5bd9a5b031a17a776becd6e924cf178d7cc31ac3ac5603f9f2"
+  },
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "strictAppAndRunnerSignatures": true,
+  "nativeRuntimeTestedThisStage": false,
+  "ordinaryStructureReadFlag": "absent/off",
+  "hostedMigrationApplied": false,
+  "fullLocalMigrationHistoryVerified": false,
+  "allDatabaseFixturesRemoved": true
+}
