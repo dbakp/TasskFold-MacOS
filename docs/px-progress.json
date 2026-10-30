@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Older task review access checked",
-  "latest": "Older saved tasks can now be found for review without decoding them into the editable task list. Scoped Mac, phone and tablet checks cover upgrade/cold recovery, exact exports and protection of unreadable saved work: review stays available while upgrading is blocked. Explicit repairs, normal editing of opaque older content and broader shared work, account and accessibility checks remain; everyday use stays disabled.",
+  "focus": "P2 · Lossless repair preview foundation checked",
+  "latest": "Older-subtask repairs now have a read-only service preview in both repositories. Five explicit operations preserve the original and proposed work; 133 database checks per repo cover correctness, access and no-write guarantees. Saving repairs, recovery and native before-and-after controls still need implementation. The wider migration checkpoint remains To build; everyday use stays disabled.",
   "next": [
-    "Implement explicit reviewed repairs while preserving the complete original; then address older payloads the normal editable cache cannot represent.",
+    "Implement original archival, guarded repair saving and durable recovery, then native before-and-after review. Preserve opaque values and resolve indexed-copy/history custody explicitly.",
     "Finish shared attachment/discussion custody and client shared-workspace gate combinations.",
     "Finish genuine account, secure storage, window, background, concurrent work, VoiceOver and larger-library checks, plus actual Mac file-export delivery. Keep the agreed rollout, provider and device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Metadata discovery/review, exact original-file export, known-empty upgrade/cold recovery and unreadable-workspace refusal now pass recorded scopes. Still needed: explicit reviewed repairs, normal editable-cache support for opaque content, full shared custody and client gate combinations, Mac file delivery and wider account, concurrent work, larger-library and spoken checks. Ordinary use remains disabled."
+              "detail": "Metadata review, scoped exports and upgrade recovery pass recorded checks. Lossless repair previews now pass service checks; repair saving, archival/recovery and native controls are still to build. Normal opaque-cache support, full shared custody and client gate combinations, Mac file delivery and wider lifecycle, workload and spoken checks remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -588,7 +588,8 @@
             "reviewed-child-adoption-client/verification.json",
             "reviewed-child-adoption-native/verification.json",
             "child-adoption-original-export/verification.json",
-            "child-adoption-discovery/verification.json"
+            "child-adoption-discovery/verification.json",
+            "child-task-repair-preview/verification.json"
           ],
           "focus": true
         },
@@ -651,8 +652,8 @@
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "4865133deb2fa3fc7d398081b0f6f512331db60a05ada951f59ad7a123fa2baf",
-    "PX_CHECKLIST.md": "d99344d55d61d026a7746426a24c176bd797fe305a3e6e265ed33f989034cee8",
+    "P2_PLAN.md": "74b59a48ce64f97f533bcd349f8ebc66d92e3b7a7aaca80d15801ad1380f9072",
+    "PX_CHECKLIST.md": "a547de160cfca35dee12a57ac050ec0864a7b41f317aa03b3512b41d45724caf",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",
     "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
@@ -662,6 +663,7 @@
     "child-task-move-draft-native/verification.json": "a1199efdb71eb0ba5f6f4fe5e90f808ecc625f1e1006f108d7853fef1791ecab",
     "child-task-record-authority/verification.json": "ebd1a0383975759212c624c5b90e33e586236f2cd3d0960d24e5f5c001fefe09",
     "child-task-record-transfers/verification.json": "c3340c7ad2e1d31353195db69d138510d09ec7632f41b4cc8fb9fd2ac0e8fb19",
+    "child-task-repair-preview/verification.json": "48521f8636dfccbed5de1b9aa1dadce64b17910767249b784527197efc968df4",
     "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
     "child-task-structure-drafts/verification.json": "6f91cbc365f58a184bcf7f39a2dbdbeaa87fcb5b801fda8fa955d192c7ab9f71",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",

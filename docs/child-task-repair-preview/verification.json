@@ -1,0 +1,35 @@
+{
+  "reviewed": "2026-10-30",
+  "platform": "mac",
+  "status": "Read-only repair preview service foundation; mutation and native integration not implemented",
+  "goalCheckpointComplete": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "SQLChecks": 133,
+  "SQLFixtureRemoved": true,
+  "addedAdvisorFindings": 0,
+  "nativeBuildOrRuntimeRetested": false,
+  "appSourceChanged": false,
+  "localFullStackMigrationHistoryVerified": false,
+  "remaining": [
+    "Atomic full-original and indexed-copy archival with quota bounds",
+    "Apply/check/close recovery and reciprocal nonce fences",
+    "Explicit history, attachment and discussion identity custody",
+    "Strict native raw original/proposal transport and premium before/after review",
+    "Private draft, unknown workspace, account/window and secure-storage lifecycle acceptance",
+    "Larger-work repair and normal opaque editable-cache support",
+    "Broader shared client gates, concurrent work, workload and spoken checks; existing deferrals paused"
+  ],
+  "sourceSHA256": {
+    "supabase/migrations/20261030183133_child_task_repair_previews.sql": "6243775ed7bc1bbcfb038762a903c9064d536f82f323f1819af576d5895c2ab6",
+    "Scripts/Database/test-child-task-repair-preview.mjs": "9c4f7cf7a4c6c301beb47a267b808aaa91239b385d5dd9bd973731144411ddd9",
+    "Scripts/Database/postgres-fixture.mjs": "75cfc46185da64e1be100680c9af3d15c5bc7fbbb9cf4cb9b9f4227f9ee14759",
+    "Scripts/Database/child-task-authority-schema.mjs": "ab0e1e07b584f66f7c2bdeb1ca4d334753c7ed70a424ef3470c01226149dda4e"
+  },
+  "evidenceSHA256": {
+    "opaque-reply.json": "6bf03824015695510e67a3442c632fdc6f913c011ddb256a179791918eb7e01a",
+    "local-migration-list.log": "51f80f996356bcc8d437c350c03cbdf512f5b48a4146394e6c7fe0de8c018a21",
+    "README.md": "783f0014d07e0fe53328928627968c7b07fd343460f37731edb422402766ab81",
+    "sql.json": "a32f28301d04015866f6e7730b9181b42c2d676d43fe4df359582f6d02281fdd"
+  }
+}

@@ -1371,3 +1371,12 @@ Each repository independently passes **185 PostgreSQL/RLS checks**, with no adde
 The initial phone cold-return assertion did not scroll to a lazy off-screen receipt; its failure, source/log and hierarchy are retained. A preliminary Mac heading error and the subsequent local unreadable/access-fence guard audit are also retained as superseded findings. Final scope, original-byte export/readback, source fingerprints, build/signature checks and captures are in [discovery evidence](child-adoption-discovery/README.md).
 
 **Still open:** explicit reviewed repairs; normal editable-cache support for opaque payloads; full shared attachment/discussion custody and client shared-workspace gate combinations; genuine account/reauth/secure-storage, window/background/concurrency/VoiceOver and larger-library acceptance; actual Mac original-file Save/readback. The broader migration checkpoint remains To build and everyday use remains disabled. Hosted schema, normal feature flags and all user deferrals are unchanged.
+
+## 30 October — lossless older-subtask repair preview foundation
+
+- [x] Implement five explicit metadata-only repair operations and a disabled read-only preview RPC in each repository, preserving complete original and proposed JSONB values.
+- [x] Verify 133 actual PostgreSQL checks independently per repo: path/order/depth fixes, raw precision and Unicode, unresolved issues, no source/index/history/receipt writes, live session/RLS/gates, stale source and concurrent writer refusal. Advisor findings are unchanged and owned fixtures are removed.
+- [x] Bind the repair digest to the full current root and proposal; flag existing indexed copies for a separate custody workflow. A valid proposal always keeps mutation unavailable.
+- [ ] Implement original/copy archival, guarded apply and durable check/close/recovery with reciprocal nonce fences; finish identity/history custody, strict native raw-payload transport and before/after controls, private-draft admission, larger-work repair, normal opaque-cache support and broader acceptance.
+
+Evidence: `child-task-repair-preview/verification.json` and its README. This is a service preview foundation, not usable repair or complete migration acceptance. No app source or UI changed, no native runtime was retested, normal gates stay off and no hosted schema changed. Full local migration-history verification still cannot connect; the candidate and dependencies pass in the owned fixture. All user deferrals remain unchanged.

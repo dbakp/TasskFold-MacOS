@@ -1,5 +1,7 @@
 # Remaining product backlog
 
+Lossless older-subtask repair previews now support five explicit operations, exact original/proposed values and full-root fingerprints. Each repo independently passes 133 database checks with no writes or new advisor findings. This is a disabled read-only service foundation: archival, guarded application/recovery, history custody, native transport/review and larger-work repair remain to build. No hosted or app entry-point changes. See [repair preview scope](child-task-repair-preview/README.md).
+
 [Progress dashboard](PX_PROGRESS.html) · [Snapshot and maintenance](PX_PROGRESS.md)
 
 Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
