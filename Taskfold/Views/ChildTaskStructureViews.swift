@@ -61,6 +61,7 @@ struct SavedChildTaskStructureLink: View {
     var body: some View {
         Group {
             SavedChildTaskTransfersLink()
+            SavedChildTaskAdoptionsLink()
             if scope != nil, visible || Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true {
                 Section { Button("Saved hierarchy actions", systemImage: "square.stack.3d.up") { showing = true }.accessibilityIdentifier("savedChildStructure") }
             }

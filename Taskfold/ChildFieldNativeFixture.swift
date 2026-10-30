@@ -42,11 +42,12 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             return .object(fields)
         }
         var initialChildren = [child("concept", "Prepare the review"), child("review", "Publish the summary")]
-        if ProcessInfo.processInfo.arguments.contains("--child-structure-nested") || ChildTransferNativePeer.enabled {
+        if ProcessInfo.processInfo.arguments.contains("--child-structure-nested") || ChildTransferNativePeer.enabled || ChildAdoptionNativePeer.enabled {
             var first = initialChildren[0].object
             first["subtasks"] = .array([.object(["id": .string("nested"), "title": .string("Collect supporting notes"), "description": .string("Keep these nested instructions"), "future": .object(["keep": .bool(true)])])])
             initialChildren[0] = .object(first)
         }
+        if ChildAdoptionNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--child-adoption-malformed") { initialChildren[0] = .string("Keep this older text unchanged") }
         return ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array(initialChildren)]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
     }
     static func save(_ state: [String: JSON]) throws {
@@ -136,6 +137,9 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         }
         let body = try JSONDecoder().decode([String: JSON].self, from: data)
         var state = try state(); let root = Record(state["root"]!.object)
+        if ChildAdoptionNativePeer.enabled, ChildAdoptionNativePeer.paths.contains(request.url?.path ?? "") {
+            return try ChildAdoptionNativePeer.response(path: request.url!.path, body: body, state: &state)
+        }
         if ChildTransferNativePeer.enabled, ChildTransferNativePeer.paths.contains(request.url?.path ?? "") {
             return try ChildTransferNativePeer.response(path: request.url!.path, body: body, state: &state)
         }
@@ -229,6 +233,18 @@ struct ChildFieldNativeFixtureView: View {
                             Task { do { try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount(); await inspect() } catch { problem = error.localizedDescription } }
                         }.accessibilityIdentifier("childNativeLoseStructureJournal")
                     }
+                    if ChildAdoptionNativePeer.enabled {
+                        Button("Review subtask storage") { opening = "adoption" }.accessibilityIdentifier("childNativeAdoption")
+                        Button("Open saved upgrades") { opening = "adoptionRecovery" }.accessibilityIdentifier("childNativeAdoptionRecovery")
+                        Button("Preserve a synthetic private edit") {
+                            do {
+                                let root = try ChildFieldNativePeer.root; var draft = root; draft["title"] = .string("Private migration draft")
+                                let edit = try TaskEditorRecovery(id: ChildAdoptionNativePeer.privateID, account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, original: root, draft: draft, extras: ["source_identity": TaskEditorSourceContext(record: root, root: root).identity])
+                                try store.backupVault.saveEditorDraft(edit)
+                            } catch { problem = "Synthetic private edit failed" }
+                        }.accessibilityIdentifier("childNativeAdoptionPrivate")
+                        Button("Remove only the synthetic private edit") { do { try store.backupVault.closeEditorDraft(ChildAdoptionNativePeer.privateID) } catch { problem = "Synthetic edit cleanup failed" } }.accessibilityIdentifier("childNativeAdoptionRemovePrivate")
+                    }
                     Button("Open subtask editor") { opening = "editor" }.accessibilityIdentifier("childNativeEditor")
                     Button("Open saved actions") { opening = "completion" }.accessibilityIdentifier("childNativeCompletionRecovery")
                     Button("Save an offline test completion") { Task { await queueCompletion() } }
@@ -259,8 +275,10 @@ struct ChildFieldNativeFixtureView: View {
             } catch is CancellationError { } catch { problem = error.localizedDescription }
         }
         .sheet(isPresented: Binding(get: { opening != nil }, set: { if !$0 { opening = nil } })) {
-            WorkflowShell(title: opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : opening == "transfers" ? "Saved subtask moves" : "Saved subtask changes") {
-                if opening == "editor" { ChildTaskFieldEditorView(rootID: ChildFieldNativeIdentity.rootID) }
+            WorkflowShell(title: opening == "adoption" || opening == "adoptionRecovery" ? "Subtask storage" : opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : opening == "transfers" ? "Saved subtask moves" : "Saved subtask changes") {
+                if opening == "adoption" { ChildTaskAdoptionView(rootID: ChildFieldNativeIdentity.rootID) }
+                else if opening == "adoptionRecovery" { ChildTaskAdoptionView() }
+                else if opening == "editor" { ChildTaskFieldEditorView(rootID: ChildFieldNativeIdentity.rootID) }
                 else if opening == "structure" { ChildTaskStructureView(rootID: ChildFieldNativeIdentity.rootID) }
                 else if opening == "structureRecovery" { ChildTaskStructureRecoveryView() }
                 else if opening == "transfers" { ChildTaskTransferRecoveryView() }
@@ -324,6 +342,13 @@ struct ChildFieldNativeFixtureView: View {
                 let completionEntries = try await store.childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
                 nextProbe += " completionQueued=\(completionEntries.filter { $0.phase == .queued }.count) completionAttempted=\(completionEntries.filter { $0.phase == .attempted }.count) completionConfirmed=\(completionEntries.filter { $0.phase == .confirmed }.count) completionClosed=\(completionEntries.filter { $0.phase == .closed }.count) completionWrites=\(state["completionWrites"]?.integer ?? 0) completionRequests=\(state["completionRequests"]?.integer ?? 0) done=\(child["completed"]?.flag == true) notes=\(child["description"]?.text ?? "")"
                 nextProbe += " completionCloses=\(state["completionCloses"]?.integer ?? 0) childReads=\(state["childReads"]?.integer ?? 0) history=\(historyProgress) stamp=\(child["completed_at"]?.text.isEmpty == false ? child["completed_at"]!.text : "none")"
+            }
+            if ChildAdoptionNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
+                let saved = try await store.childTaskAdoptionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                let file = store.backupVault.editorFile(ChildAdoptionNativePeer.privateID)
+                let privateBytes = try? Data(contentsOf: file)
+                let privateHash = privateBytes.map { SHA256.hash(data: $0).map { String(format: "%02x", $0) }.joined() } ?? "none"
+                nextProbe += " adoptionQueued=\(saved.entries.filter { $0.phase == .queued }.count) adoptionAttempted=\(saved.entries.filter { $0.phase == .attempted }.count) adoptionApplied=\(saved.entries.filter { $0.phase == .applied }.count) adoptionClosed=\(saved.entries.filter { $0.phase == .closed }.count) adoptionWrites=\(state["adoptionWrites"]?.integer ?? 0) adoptionRequests=\(state["adoptionRequests"]?.integer ?? 0) adoptionRootHash=\(try ChildAdoptionNativePeer.hash(state["root"]!)) adoptionPrivateHash=\(privateHash)"
             }
             if ChildTransferNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
                 let transfers = try await store.childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()

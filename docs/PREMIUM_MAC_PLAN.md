@@ -9981,3 +9981,12 @@ Evidence: `reviewed-child-adoption/verification.json`. No earlier Core/native co
 - [ ] Store/private-draft admission/current-context/removal wiring, native review/recovery/diagnostic/repair/export controls and genuine native/secure-storage/lifecycle/custody/workload acceptance remain.
 
 Evidence: `reviewed-child-adoption-client/verification.json`. SQL was not changed or rerun. No new native acceptance or hosted/normal-use enablement is claimed; broad migration remains unfinished.
+
+
+## 2026-10-30 · Older-subtask Store/native candidate
+
+Connected reviewed adoption to Store, encrypted account/origin request history and account-removal cleanup. Admission inspects affected pending actions, hierarchy drafts, open editors and preserved encrypted edits without discarding originals. Added native review/ordered preview, explicit Upgrade, retained status, original retry, Check and stop, history removal and original-byte export with read-only malformed-content diagnosis. Normal flags remain absent; nothing hosted was deployed.
+
+Own selected Core suite: **562 passed**, including 22 adoption cases (four new admission cases). Own SQL-wire fixture matches the compiled test bundle; no SQL contract change or rerun. Both isolated apps/test products build and pass strict development signatures. Mac native execution remains unverified because the screen is locked. Phone/tablet evidence belongs to the iOS repo and does not establish Mac acceptance.
+
+Evidence: `reviewed-child-adoption-native/verification.json` and its README. These are candidate/scoped checks, not everyday-use acceptance. Remaining: reviewed malformed repair, actual saved-export readback/external providers, broader older payloads and workloads, full shared attachment/discussion custody, cross-journal admission races, real account/secure-storage/window/background and VoiceOver checks. Existing rollout/provider/device deferrals are unchanged.

@@ -458,6 +458,97 @@ final class Store {
         try await synchronizeChildTaskStructureReads()
         return try await readChildTaskStructure(root)
     }
+    var childTaskAdoptionEnabled: Bool {
+        childTaskStructureEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildAdoptionEnabled") as? Bool == true
+    }
+    func childTaskAdoptionJournal(account: String, origin: String) throws -> ChildTaskAdoptionJournal {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child adoption requests", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskAdoptionState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildAdoptionCommandLocks", isDirectory: true), removalDirectory: root)
+    }
+    func permitsChildTaskAdoption(_ command: ChildTaskAdoptionCommand, sending: Bool) -> Bool {
+        guard let root = record("tasks", id: command.rootID) else { return false }
+        let project = root.string("project_id"), cache = nativeConversationTeamCache
+        guard cache?.knownTasks.contains(root.id) != true || cache?.knownTeams[project] != nil,
+              command.body["workspace_id"] == (cache?.knownTeams[project].map(JSON.string) ?? .null) else { return false }
+        return permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskAdoptionEnabled, sending: sending)
+    }
+    func childTaskAdoptionReviewIsCurrent(_ read: ChildTaskAdoptionReview) -> Bool {
+        guard childTaskAdoptionEnabled, let current = try? childTaskRecordContext(read.context.root.id) else { return false }
+        return read.context.matches(current) && read.workspaceID == nativeConversationTeamCache?.knownTeams[current.root.string("project_id")]
+    }
+    func childTaskAdoptionTitle(_ command: ChildTaskAdoptionCommand) -> String {
+        guard command.account == userID, command.origin == (try? backend.accountRemovalOrigin),
+              let root = record("tasks", id: command.rootID), root["task_generation"] == command.body["task_generation"], root["project_id"] == command.body["project_id"] else { return "Task unavailable" }
+        let cache = nativeConversationTeamCache, realm = cache?.knownTeams[root.string("project_id")]
+        guard cache?.knownTasks.contains(root.id) != true || realm != nil,
+              command.body["workspace_id"] == (realm.map(JSON.string) ?? .null) else { return "Task unavailable" }
+        return root.title
+    }
+    func childTaskAdoptionTargets() -> [Record] {
+        guard childTaskAdoptionEnabled, childTaskFieldRecoveryScope != nil else { return [] }
+        return rows("tasks").sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+    func readChildTaskAdoption(_ id: String) async throws -> ChildTaskAdoptionReview {
+        guard childTaskAdoptionEnabled, !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == id }) else { throw ChildTaskAdoptionAdmission.unfinished }
+        try await synchronizeChildTaskStructureReads()
+        let captured = try childTaskRecordContext(id), realm = nativeConversationTeamCache?.knownTeams[captured.root.string("project_id")]
+        guard nativeConversationTeamCache?.knownTasks.contains(id) != true || realm != nil else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        let read = try await backend.childTaskAdoptionReview(captured, workspaceID: realm)
+        try Task.checkCancellation()
+        guard childTaskAdoptionReviewIsCurrent(read) else { throw CancellationError() }
+        return read
+    }
+    private func childAdoptionOpenEditorRoots() -> Set<String> {
+        var roots = Set<String>()
+        for editor in editorSessions.values where !editor.closed && editor.account == userID {
+            if let latest = editor.latest { roots.formUnion(ChildTaskAdoptionAdmission.roots(latest)) }
+            else if let id = SubtaskTree.referencePath(editor.original.id)?.first { roots.insert(id) }
+            else if record("tasks", id: editor.original.id) != nil { roots.insert(editor.original.id) }
+            else { roots.insert("*") }
+        }
+        return roots
+    }
+    private func admitChildTaskAdoption(_ command: ChildTaskAdoptionCommand) async throws {
+        let captured = childTaskFieldRecoveryScope
+        guard permitsChildTaskAdoption(command, sending: false) else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        let fields = try await childTaskFieldJournal(account: command.account, origin: command.origin).load()
+        let completions = try await childTaskCompletionJournal(account: command.account, origin: command.origin).load()
+        let structures = try await childTaskStructureJournal(account: command.account, origin: command.origin).load()
+        let drafts = try await childTaskStructureDraftJournal(account: command.account, origin: command.origin).load()
+        let transfers = try await childTaskTransferJournal(account: command.account, origin: command.origin).load()
+        var pending = Set(fields.entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        pending.formUnion(completions.entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        pending.formUnion(structures.entries.filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        pending.formUnion(drafts.entries.map { $0.body["task_id"]!.text })
+        for entry in transfers.entries where entry.phase == .queued || entry.phase == .attempted { pending.formUnion(entry.command.roots) }
+        try ChildTaskAdoptionAdmission.requireClear(root: command.rootID, pending: pending, openEditors: childAdoptionOpenEditorRoots())
+        do { try await ChildTaskAdoptionAdmission.checkPreservedEdits(root: command.rootID, vault: backupVault, origin: command.origin) }
+        catch let failure as AppFailure { throw failure }
+        catch { throw AppFailure(message: "Saved edits couldn’t be checked. Their originals are kept; review them in Account before upgrading.") }
+        try Task.checkCancellation()
+        guard captured == childTaskFieldRecoveryScope, permitsChildTaskAdoption(command, sending: false) else { throw CancellationError() }
+        try ChildTaskAdoptionAdmission.requireClear(root: command.rootID, pending: [], openEditors: childAdoptionOpenEditorRoots())
+    }
+    func childTaskAdoptionModel() throws -> ChildTaskAdoptionModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskAdoptionJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in self?.permitsChildTaskAdoption($0, sending: true) == true },
+                     admit: { [weak self] command in guard let self else { throw CancellationError() }; try await self.admitChildTaskAdoption(command) },
+                     reviewCurrent: { [weak self] in self?.childTaskAdoptionReviewIsCurrent($0) == true })
+    }
     var childTaskTransfersEnabled: Bool {
         childTaskStructureEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildTransfersEnabled") as? Bool == true
     }
@@ -1762,6 +1853,7 @@ final class Store {
         try await childTaskStructureJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskStructureDraftJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskTransferJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskAdoptionJournal(account: account, origin: command.origin).removeAccount()
         try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
         try await projectAdoptionVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
@@ -5310,8 +5402,9 @@ extension Store {
             try await childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskAdoptionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             for entry in try backupVault.editorEntries() {
-                if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) {try backupVault.closeEditorDraft(entry.id)}
+                if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),(draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) || ChildAdoptionNativePeer.enabled && ChildTaskAdoptionAdmission.roots(draft).contains(ChildFieldNativeIdentity.rootID)) {try backupVault.closeEditorDraft(entry.id)}
             }
         }
         accountGeneration=UUID();signedIn=true;localMode=false;workspaceCacheDecoded=true;workspaceCacheReadable=true;teamAccessMask=nil

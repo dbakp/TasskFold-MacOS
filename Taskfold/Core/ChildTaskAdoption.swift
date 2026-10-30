@@ -349,3 +349,32 @@ extension Backend: ChildTaskAdoptionService {}
         _ = await work { try await journal.discard(command, lease: lease); try check(); try await update(); message = "Saved migration history removed. Your tasks are unchanged." }
     }
 }
+
+/// Admission inspects recovery data without modifying or retiring any draft.
+enum ChildTaskAdoptionAdmission {
+    static var unfinished: AppFailure { AppFailure(message: "Close this task’s editors and finish or review its saved edits in Account before upgrading. Your drafts are kept.") }
+    static func roots(_ edit: TaskEditorRecovery) -> Set<String> {
+        var explicit = Set<String>()
+        for name in ["source_identity", "independent_child_fields"] {
+            if let identity = edit.extras[name], let root = identity.object["root"] {
+                guard case .string(let id) = root, TeamProjectValue.id(id) else { return ["*"] }
+                explicit.insert(id)
+            }
+        }
+        if !explicit.isEmpty { return explicit }
+        if let root = SubtaskTree.referencePath(edit.original.id)?.first { return [root] }
+        return TeamProjectValue.id(edit.original.id) ? [edit.original.id] : ["*"]
+    }
+    static func requireClear(root: String, pending: Set<String>, openEditors: Set<String>, preserved: [TaskEditorRecovery] = []) throws {
+        guard !pending.contains(root), !openEditors.contains(root), !openEditors.contains("*"),
+              !preserved.contains(where: { roots($0).contains(root) || roots($0).contains("*") }) else { throw unfinished }
+    }
+    nonisolated static func checkPreservedEdits(root: String, vault: BackupVault, origin: String) async throws {
+        try Task.checkCancellation()
+        for entry in try vault.editorEntries() {
+            try Task.checkCancellation()
+            let edit = try vault.editorDraft(entry.id, origin: origin)
+            try requireClear(root: root, pending: [], openEditors: [], preserved: [edit])
+        }
+    }
+}

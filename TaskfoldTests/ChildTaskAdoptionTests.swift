@@ -211,4 +211,41 @@ final class ChildTaskAdoptionTests: XCTestCase {
         AdoptionHTTP.handler={_,peer in peer.finish(200,Data(repeating:32,count:ChildTaskAdoptionReview.maximumBytes+1))}
         do{_ = try await api.childTaskAdoptionReview(context,workspaceID:nil);XCTFail("Bounded read must refuse oversized response")}catch{guard let e=error as? ChildTaskAdoptionFailure else{return XCTFail("Expected sanitized failure")};if case .limit=e.reason {}else{XCTFail("Expected size limit")}}
     }
+    func testAdmissionBlocksPendingAndOpenAffectedEditorsWithoutBlockingOtherRoots() throws {
+        let root = UUID().uuidString.lowercased(), other = UUID().uuidString.lowercased()
+        XCTAssertNoThrow(try ChildTaskAdoptionAdmission.requireClear(root: root, pending: [other], openEditors: [other]))
+        XCTAssertThrowsError(try ChildTaskAdoptionAdmission.requireClear(root: root, pending: [root], openEditors: []))
+        XCTAssertThrowsError(try ChildTaskAdoptionAdmission.requireClear(root: root, pending: [], openEditors: [root]))
+        XCTAssertThrowsError(try ChildTaskAdoptionAdmission.requireClear(root: root, pending: [], openEditors: ["*"]))
+    }
+    func testAdmissionResolvesNestedAndIndependentRecoveryIdentities() throws {
+        let f = try fixture(), c = try command(f), original = Record(["id": .string(SubtaskTree.reference(parent: c.rootID, key: "leaf")), "title": .string("Private nested work")])
+        let nested = try TaskEditorRecovery(account: c.account, origin: c.origin, original: original, draft: original)
+        verifyEqual(ChildTaskAdoptionAdmission.roots(nested), [c.rootID])
+        let child = Record(["id": .string("leaf"), "title": .string("Private independent work")])
+        let independent = try TaskEditorRecovery(account: c.account, origin: c.origin, original: child, draft: child, extras: ["independent_child_fields": .object(["root": .string(c.rootID)])])
+        verifyEqual(ChildTaskAdoptionAdmission.roots(independent), [c.rootID])
+        XCTAssertThrowsError(try ChildTaskAdoptionAdmission.requireClear(root: c.rootID, pending: [], openEditors: [], preserved: [independent]))
+        let unknown = try TaskEditorRecovery(account: c.account, origin: c.origin, original: child, draft: child)
+        verifyEqual(ChildTaskAdoptionAdmission.roots(unknown), ["*"])
+    }
+    func testPreservedEditAdmissionKeepsEncryptedOriginalExact() async throws {
+        let f = try fixture(), c = try command(f), d = try directory(), key = SymmetricKey(size: .bits256)
+        let vault = BackupVault(directory: d, account: c.account, key: { key })
+        let root = Record(["id": .string(c.rootID), "title": .string("Original")]); var draft = root; draft["title"] = .string("Private unsent title")
+        let edit = try TaskEditorRecovery(account: c.account, origin: c.origin, original: root, draft: draft)
+        try vault.saveEditorDraft(edit); let before = try Data(contentsOf: vault.editorFile(edit.id))
+        do { try await ChildTaskAdoptionAdmission.checkPreservedEdits(root: c.rootID, vault: vault, origin: c.origin); XCTFail("Private edit must block adoption") } catch { verifyTrue(error is AppFailure) }
+        try await ChildTaskAdoptionAdmission.checkPreservedEdits(root: UUID().uuidString.lowercased(), vault: vault, origin: c.origin)
+        verifyEqual(try Data(contentsOf: vault.editorFile(edit.id)), before); verifyEqual(try vault.editorDraft(edit.id, origin: c.origin).draft.title, "Private unsent title")
+    }
+    func testUnreadableOrForeignOriginSavedEditIsNotDiscardedByAdmission() async throws {
+        let f = try fixture(), c = try command(f), d = try directory(), key = SymmetricKey(size: .bits256)
+        let vault = BackupVault(directory: d, account: c.account, key: { key }), root = Record(["id": .string(c.rootID)])
+        let edit = try TaskEditorRecovery(account: c.account, origin: "https://other-origin.test", original: root, draft: root)
+        try vault.saveEditorDraft(edit); let file = vault.editorFile(edit.id), before = try Data(contentsOf: file)
+        do { try await ChildTaskAdoptionAdmission.checkPreservedEdits(root: c.rootID, vault: vault, origin: c.origin); XCTFail("Foreign edit must be reviewed explicitly") } catch {}
+        verifyEqual(try Data(contentsOf: file), before)
+    }
+
 }

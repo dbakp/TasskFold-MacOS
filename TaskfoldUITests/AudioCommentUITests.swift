@@ -839,7 +839,7 @@ extension TaskfoldMacUITests {
         let configuration = NSWorkspace.OpenConfiguration(); configuration.activates = true; configuration.createsNewApplicationInstance = false
         NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, error in XCTAssertNil(error); opened.fulfill() }
         wait(for: [opened], timeout: 10)
-        app.activate(); XCTAssertTrue(app.buttons[(extra?.hasPrefix("--child-structure") == true || extra?.hasPrefix("--child-transfer") == true) ? "childNativeStructure" : "childNativeEditor"].waitForExistence(timeout: 25), app.debugDescription)
+        app.activate(); XCTAssertTrue(app.buttons[extra?.hasPrefix("--child-adoption") == true ? "childNativeAdoption" : (extra?.hasPrefix("--child-structure") == true || extra?.hasPrefix("--child-transfer") == true) ? "childNativeStructure" : "childNativeEditor"].waitForExistence(timeout: 25), app.debugDescription)
     }
     @MainActor private func childField(_ id: String, _ app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: id).firstMatch
@@ -873,7 +873,11 @@ extension TaskfoldMacUITests {
             let top = max(bounds.minY, app.navigationBars.allElementsBoundByIndex.last(where: { !$0.frame.isEmpty })?.frame.maxY ?? bounds.minY)
             let keyboard = app.keyboards.firstMatch
             let bottom = min(bounds.maxY, keyboard.exists && !keyboard.frame.isEmpty ? keyboard.frame.minY : bounds.maxY)
-            return CGRect(x: bounds.minX + 4, y: top + 4, width: bounds.width - 8, height: max(0, bottom - top - 8))
+            // A first List row can begin exactly below the native navigation bar.
+            // The adoption warning must fit below that bar; it cannot acquire
+            // extra top padding by scrolling beyond the beginning of the list.
+            let topInset: CGFloat = app.navigationBars["Subtask storage"].exists ? 0.0 : 4.0
+            return CGRect(x: bounds.minX + 4, y: top + topInset, width: bounds.width - 8, height: max(0, bottom - top - topInset - 4))
         }
         func visible() -> Bool {
             guard value.exists, !value.frame.isEmpty else { return false }
@@ -1780,6 +1784,114 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(confirmed.waitForExistence(timeout: 15), app.debugDescription)
         structureSnapshot(app, "Original transfer retry confirms without a second write")
         childDone(app); childProbe(app, "transferQueued=0 transferAttempted=0 transferApplied=1 transferClosed=0 transferWrites=1 transferRequests=2")
+    }
+
+    @MainActor private func adoptionProbeValue(_ key: String, _ app: XCUIApplication) -> String {
+        let probe = app.staticTexts["childNativeProbe"]; childReveal(probe, app, diagnosticText: true)
+        let prefix = key + "="
+        return probe.label.split(separator: " ").first(where: { $0.hasPrefix(prefix) }).map { String($0.dropFirst(prefix.count)) } ?? "missing"
+    }
+    @MainActor private func adoptionReview(_ app: XCUIApplication) {
+        childHomePress("childNativeAdoption", app)
+        let count = app.staticTexts["childAdoptionCount"]; childReveal(count, app)
+        XCTAssertEqual(count.label, "3 saved subtasks", app.debugDescription)
+        let send = app.buttons["childAdoptionSend"]; childReveal(send, app)
+        XCTAssertTrue(send.isEnabled, app.debugDescription)
+        structureSnapshot(app, "Review original older subtasks before upgrade")
+        completionReadyPress(send, app)
+    }
+    @MainActor func testChildAdoptionNativeLargestReviewUpgradeAndColdStatus() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-adoption-native", large: true)
+        let original = adoptionProbeValue("adoptionRootHash", app); XCTAssertEqual(original.count, 64)
+        childProbe(app, "adoptionWrites=0 adoptionRequests=0")
+        adoptionReview(app)
+        let status = childSavedText("Subtasks upgraded", app); childReveal(status, app)
+        XCTAssertTrue(status.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Largest text subtask upgrade confirmation")
+        childDone(app); childProbe(app, "adoptionWrites=1 adoptionRequests=1")
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-adoption-native", large: true)
+        childHomePress("childNativeAdoption", app)
+        let current = app.staticTexts["childAdoptionCurrent"]; childReveal(current, app)
+        XCTAssertTrue(current.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Cold launch reports previously upgraded subtasks")
+        childDone(app); childProbe(app, "adoptionWrites=1 adoptionRequests=1")
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
+    }
+    @MainActor func testChildAdoptionNativeLostReplyColdRetryUsesOriginalRequest() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-adoption-lose-reply")
+        let original = adoptionProbeValue("adoptionRootHash", app); XCTAssertEqual(original.count, 64)
+        adoptionReview(app)
+        XCTAssertTrue(childSavedText("Awaiting confirmation", app).waitForExistence(timeout: 15), app.debugDescription)
+        childDone(app); childProbe(app, "adoptionQueued=0 adoptionAttempted=1 adoptionApplied=0 adoptionClosed=0 adoptionWrites=1 adoptionRequests=1")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-adoption-native")
+        childHomePress("childNativeAdoptionRecovery", app)
+        let retry = app.buttons["Retry original upgrade"]; childReveal(retry, app); completionReadyPress(retry, app)
+        let status = childSavedText("Subtasks upgraded", app); childReveal(status, app)
+        XCTAssertTrue(status.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Cold original upgrade retry confirms without duplicate writes")
+        childDone(app); childProbe(app, "adoptionQueued=0 adoptionAttempted=0 adoptionApplied=1 adoptionClosed=0 adoptionWrites=1 adoptionRequests=2")
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
+    }
+    @MainActor func testChildAdoptionNativePrivateDraftProtectionAndUnappliedStop() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-adoption-unapplied")
+        let original = adoptionProbeValue("adoptionRootHash", app); XCTAssertEqual(original.count, 64)
+        childHomePress("childNativeAdoptionPrivate", app)
+        let hash = adoptionProbeValue("adoptionPrivateHash", app); XCTAssertEqual(hash.count, 64)
+        adoptionReview(app)
+        let feedback = app.staticTexts["childAdoptionFeedback"]; childReveal(feedback, app)
+        XCTAssertTrue(feedback.label.contains("saved edits"), app.debugDescription)
+        structureSnapshot(app, "Private saved edits prevent older-subtask upgrade")
+        childDone(app); childProbe(app, "adoptionWrites=0 adoptionRequests=0")
+        XCTAssertEqual(adoptionProbeValue("adoptionPrivateHash", app), hash)
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-adoption-unapplied")
+        XCTAssertEqual(adoptionProbeValue("adoptionPrivateHash", app), hash)
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
+        childHomePress("childNativeAdoptionRemovePrivate", app)
+        adoptionReview(app)
+        XCTAssertTrue(childSavedText("Awaiting confirmation", app).waitForExistence(timeout: 15), app.debugDescription)
+        let stop = app.buttons["Check and stop upgrade"]; childReveal(stop, app); completionReadyPress(stop, app)
+        childPress(app.buttons["Check and stop"].firstMatch)
+        let closed = childSavedText("Upgrade stopped", app); childReveal(closed, app)
+        XCTAssertTrue(closed.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Unapplied upgrade safely stopped")
+        childDone(app); childProbe(app, "adoptionQueued=0 adoptionAttempted=0 adoptionApplied=0 adoptionClosed=1 adoptionWrites=0 adoptionRequests=2")
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
+    }
+    @MainActor func testChildAdoptionNativeMalformedReviewAndOriginalExportCancel() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-adoption-malformed")
+        let original = adoptionProbeValue("adoptionRootHash", app); XCTAssertEqual(original.count, 64)
+        childHomePress("childNativeAdoption", app)
+        let warning = app.staticTexts["childAdoptionNeedsReview"]; childReveal(warning, app)
+        XCTAssertTrue(warning.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertFalse(app.buttons["childAdoptionSend"].exists)
+        let export = app.buttons["childAdoptionExport"]; childReveal(export, app); XCTAssertTrue(export.isEnabled)
+        structureSnapshot(app, "Malformed older content retained with original export")
+        completionReadyPress(export, app)
+        let cancel = app.buttons.matching(NSPredicate(format: "label == 'Cancel' OR label == 'Close'")).firstMatch
+        #if os(iOS)
+        let save = app.buttons["DOCPicker.actionButton"]
+        XCTAssertTrue(save.waitForExistence(timeout: 20), app.debugDescription)
+        if cancel.waitForExistence(timeout: 3) { childPress(cancel) }
+        else {
+            // The native iOS picker can omit Cancel. Dismiss that verified
+            // picker using its ordinary interactive dismissal, without Save.
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let x = save.frame.minX - 12 - app.frame.minX, y = save.frame.midY - app.frame.minY
+            origin.withOffset(CGVector(dx: x, dy: y)).press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: x, dy: app.frame.height - 30)), withVelocity: .slow, thenHoldForDuration: 0.1)
+        }
+        XCTAssertTrue(save.waitForNonExistence(timeout: 15), app.debugDescription)
+        #else
+        XCTAssertTrue(cancel.waitForExistence(timeout: 15), app.debugDescription); childPress(cancel)
+        #endif
+        XCTAssertTrue(warning.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Original export cancelled without changing older content")
+        childDone(app); childProbe(app, "adoptionWrites=0 adoptionRequests=0")
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
     }
 
 }

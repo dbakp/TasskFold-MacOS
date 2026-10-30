@@ -1,0 +1,50 @@
+{
+  "reviewed": "2026-10-30",
+  "platform": "mac",
+  "status": "Store/native integration candidate built; Mac native and broader acceptance remain",
+  "coreChecks": 562,
+  "adoptionCases": 22,
+  "newAdmissionCases": 4,
+  "failuresInFinalCoreSuite": 0,
+  "buildAndStrictDevelopmentSignaturesPassed": true,
+  "StoreAdmissionIntegrated": true,
+  "accountRemovalCleanupWired": true,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "SQLRerun": false,
+  "priorSQLReference": "../reviewed-child-adoption/verification.json",
+  "realKeychainAccepted": false,
+  "nativeAccepted": false,
+  "nativeAcceptanceRemaining": true,
+  "sourceSHA256": {
+    "Taskfold.xcodeproj/project.pbxproj": "7ce9d3e1ab609f3329429a5de8cc2f1cca6fbc657c6adedb4abd93c6e6046f3b",
+    "Taskfold/Info.plist": "e8a7f8daa65ed3d5def3e7193ae104aa87790edc0563ddde231325555ea75087",
+    "Taskfold/Core/ChildTaskAdoption.swift": "78ff4cd457df61b5cf18edb1c464e5be28b52c5e4900267fa9df4defdecd6c27",
+    "Taskfold/Core/Store.swift": "7a8c4ddd32931e42d75ae42ac0bb4af77304ee312dddbc91c4c5057035f6e58b",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "f72da81a2a07cd3c6e5cb5ec2ffd8f862eee7c5e4b9f65200bad6bb0e259186c",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "f2ba71c19a3d44f42da55f11b7b7cd9e6f548250755a84f2823300ab06ce00a4",
+    "Taskfold/ChildAdoptionNativeFixture.swift": "8ef2c648c9c23f9b649ddbdbf71d2bc8ebc715a5d8c9390f8a297006ce6f1ef9",
+    "Taskfold/ChildFieldNativeFixture.swift": "fba651a1edaf9082b6b5bbdac5c6b0d194acea1f95729dcec0d6b1cae31c21af",
+    "TaskfoldTests/ChildTaskAdoptionTests.swift": "f8051825aa2ef217178144a2ed4f830b0ca6e8dee6bf419862d9fc4fcaf7af79",
+    "TaskfoldTests/Fixtures/child-adoption-contract-v1.json": "e2b9d9852712266f260a54a9bac876dc2ccdc25dfc7278d1eab58ee5e3fae20b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "c6b77a3cc2b09c79a854b224452fcc156ed612e7f6f877cb59dad7de78e4be04"
+  },
+  "appSHA256": "8fdba7038786e56a1dadb901d8de692fffe97f06cc2eb44a1b812c973a1e61d8",
+  "remaining": [
+    "Mac native journey and VoiceOver",
+    "Genuine secure storage, account/shared-access loss, multiple-window and background/lifecycle checks",
+    "Broader pending-action races and cross-journal admission coordination",
+    "Reviewed malformed-content repair and saved original-export readback/external-provider transfer",
+    "Full attachment/discussion custody and larger workloads",
+    "Normal rollout and older-client transition remain deferred"
+  ],
+  "nativeNotRunReason": "Mac screen locked; no native pass claimed",
+  "fullyAcceptedForEverydayUse": false,
+  "nativeFixtureJourneysAccepted": false,
+  "evidenceSHA256": {
+    "README.md": "5d20e0f3ac0f0b1a1c400a9d645582db8351e8416c6ad3f0cc4e82f0ef3a572d",
+    "app-build.log.gz": "f5bfae7c1b036e139c87b58763cb063ff5757379c91b61fa6f745f8f29d03c14",
+    "core.log.gz": "53a3fca511a5ffd2f6482315d86f4df5b773c686065881115bdeb2f2330751c4",
+    "mac-screen-state.json": "bca48f08324864b1f07c54f6f0e5c64622736ed2d123724c79bb7dda323d42b3"
+  }
+}
