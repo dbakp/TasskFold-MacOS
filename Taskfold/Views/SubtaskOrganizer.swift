@@ -48,7 +48,7 @@ struct SubtaskOrganizerButton: View {
         }
             .accessibilityIdentifier("organizeSubtasks")
             .sheet(item: $opening) { SubtaskOrganizerPresentation(request: $0) }
-        ChildTaskFieldEditorLink(rootID: sourceRootID ?? custodyRoot?.id ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
+        ChildTaskFieldEditorLink(rootID: sourceRootID ?? custodyRoot?.id ?? SubtaskTree.referencePath(taskID)?.first ?? taskID, reference: SubtaskTree.referencePath(taskID) == nil ? nil : taskID)
         ChildTaskStructureLink(rootID: sourceRootID ?? custodyRoot?.id ?? SubtaskTree.referencePath(taskID)?.first ?? taskID)
         }
     }

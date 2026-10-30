@@ -1112,6 +1112,41 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app)
         XCTAssertTrue(childSavedText("Review the polished child screen", app).waitForExistence(timeout: 10), app.debugDescription); XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch.exists)
     }
+    @MainActor func testChildFieldsMainListOpensSelectedChildAndColdReturn() throws {
+        try childGuard()
+        let voiceWasOn = try ownerVoiceDisabled()
+        addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let reference = "subtask:" + (try JSONSerialization.data(withJSONObject: ["ec990000-0000-4000-8000-000000000002", "review"])).base64EncodedString()
+        func row() -> XCUIElement {
+            #if os(macOS)
+            return app.descendants(matching: .any).matching(identifier: "task-" + reference).firstMatch
+            #else
+            return app.buttons["taskDetails-" + reference]
+            #endif
+        }
+        func launch(_ reset: Bool) {
+            app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-opaque", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+            if reset { app.launchArguments.append("--child-fields-native-reset") }
+            app.launch(); app.activate()
+            XCTAssertTrue(row().waitForExistence(timeout: 30), app.debugDescription)
+        }
+        launch(true); childPress(row())
+        let title = childField("independentChildTitle", app)
+        XCTAssertTrue(title.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertEqual(title.value as? String, "Publish the summary")
+        XCTAssertFalse(app.buttons["independentChildSelection"].exists, "A list opening must stay on the selected child")
+        childType("Selected list child saved", title)
+        let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); childPress(save)
+        XCTAssertTrue(childField("independentChildDetailSaved", app).waitForExistence(timeout: 20), app.debugDescription)
+        #if os(iOS)
+        childDone(app)
+        #endif
+        app.terminate(); launch(false); childPress(row())
+        XCTAssertTrue(title.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertEqual(title.value as? String, "Selected list child saved")
+        structureSnapshot(app, "Task list opens the selected child after a cold return")
+    }
     @MainActor func testChildFieldsNativeOpaqueValuesSurviveSaveSendAndColdReturn() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-fields-opaque")
         childProbe(app,"opaqueRoot=true opaqueChild=true"); childProbe(app,"opaqueChildMetadata=true")

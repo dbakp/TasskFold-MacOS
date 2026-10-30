@@ -1,13 +1,13 @@
 {
   "schema": 1,
-  "updated": "2026-10-30",
+  "updated": "2026-10-31",
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Fresh subtask metadata reads checked",
-  "latest": "Fresh subtask reads now retain unfamiliar nested values, including exact numbers and distinct Unicode keys. Formatting differences no longer block matching content; changed content still requires review. Each repo passes 496 relevant checks with one explicit skip. Mac, iPhone and iPad save/send/cold-return checks pass in synthetic scope. Broader migration remains unfinished and disabled for everyday use.",
+  "focus": "P2 · Selected-child editing from normal lists",
+  "latest": "Normal lists now open the selected child in its own detail editor, with one Save changes action and visible confirmation. Each repo passes 101 related Core checks; Mac save/cold return, two iPhone journeys (including lost-response retry) and one iPad journey pass with exact metadata preserved. iOS expands children in authored order. Direct list completion/Undo and broader migration remain unfinished and disabled for everyday use.",
   "next": [
-    "Finish main-list workflows, indexed/history mapping and attachment/discussion custody before enabling older-work migration. Extend checks to broader libraries and production workloads.",
+    "Connect list checkboxes, keyboard/bulk completion and Undo to child-command recovery. Then finish indexed/history mapping, attachment/discussion custody and broader workload/lifecycle acceptance before enabling older-work migration.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Guided repair, bounded original archives and normal/fresh-read metadata preservation pass in recorded scope. Main-list acceptance, indexed/history mapping, custody, broader libraries and lifecycle/spoken checks remain. Ordinary use stays disabled."
+              "detail": "Guided repair, original archives, exact metadata preservation and selected-child field editing pass in recorded scope. Direct list completion/Undo, indexed/history mapping, custody and broader library/lifecycle/spoken checks remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -593,7 +593,8 @@
             "child-task-repair-commits/verification.json",
             "child-task-repair-client/verification.json",
             "preserving-json/verification.json",
-            "child-task-opaque-read/verification.json"
+            "child-task-opaque-read/verification.json",
+            "child-task-list-fields/verification.json"
           ],
           "focus": true
         },
@@ -668,6 +669,7 @@
     "child-task-discard-intent/verification.json": "d7316dcf9e69c8c969cd13e44b311d0865fa76b1aef7b50641e4a7c1a6f50f06",
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
     "child-task-frozen-recovery/verification.json": "645e03d6a0afbdd459ae3aef65d6b90f03d76d8741a7dcf44bcd88ce5548b807",
+    "child-task-list-fields/verification.json": "29425a074c7094ced3ef704bbca1c258cb4e9e269fbe03298685fffd8eac8cc7",
     "child-task-move-draft-native/verification.json": "a1199efdb71eb0ba5f6f4fe5e90f808ecc625f1e1006f108d7853fef1791ecab",
     "child-task-opaque-read/verification.json": "dfc35763ac6bb599d8378c36ed9164c666aa91e25cf1e15f5002639f2e455609",
     "child-task-record-authority/verification.json": "ebd1a0383975759212c624c5b90e33e586236f2cd3d0960d24e5f5c001fefe09",

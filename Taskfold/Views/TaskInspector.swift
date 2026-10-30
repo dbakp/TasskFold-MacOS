@@ -11,7 +11,11 @@ struct TaskInspector: View {
     var body: some View {
         Group {
             if let task = workspace.primaryTask {
-                TaskInspectorForm(taskID: task.id).id(task.id).transition(.panelReveal(distance: 24))
+                Group {
+                    if store.childTaskFieldEditingEnabled, let path = SubtaskTree.referencePath(task.id) {
+                        ChildTaskFieldDetailView(reference: task.id, root: store.record("tasks", id: path[0]), workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration))
+                    } else { TaskInspectorForm(taskID: task.id) }
+                }.id(task.id).transition(.panelReveal(distance: 24))
             } else if workspace.selection.count > 1 {
                 MultiSelectionInspector(count: workspace.selection.count)
             } else {

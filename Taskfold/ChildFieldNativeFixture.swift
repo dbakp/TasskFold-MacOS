@@ -13,6 +13,7 @@ enum ChildFieldNativeIdentity {
         ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") &&
         ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && ProcessInfo.processInfo.arguments.contains("--child-fields-native")
     }
+    static var mainListTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--child-fields-main-list") }
     static func recordPresentationClose(_ id: UUID, reason: String) {
         guard enabled else { return }
         let url = URL.cachesDirectory.appendingPathComponent("child-reminder-presentations.json")
@@ -57,6 +58,11 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             root["source_metadata"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
             first["future_exact"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
             first["future_number"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: Data("1e1000".utf8)); rows[0] = .object(first); root["subtasks"] = .array(rows); state["root"] = .object(root)
+        }
+        if ChildFieldNativeIdentity.mainListTesting, opaqueTesting {
+            var root = state["root"]!.object, rows = root["subtasks"]!.list, second = rows[1].object
+            second["future_exact"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
+            rows[1] = .object(second); root["subtasks"] = .array(rows); state["root"] = .object(root)
         }
         return state
     }
@@ -213,6 +219,34 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         if lose { state["lost"] = .bool(true) }; try save(state)
         if ProcessInfo.processInfo.arguments.contains("--child-fields-switch-on-send") { try await Store.shared.childFieldNativeSwitchAccount() }
         return (try TaskfoldJSONEncoder().encode(proof), lose)
+    }
+}
+
+struct ChildFieldMainListNativeFixtureView: View {
+    @Environment(Store.self) private var store
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
+    @State private var ready = false
+    @State private var failure: String?
+    var body: some View {
+        Group {
+            if ready { RootView() }
+            else if let failure { Text(failure) }
+            else { ProgressView("Preparing synthetic workspace…") }
+        }.task {
+            guard ChildFieldNativeIdentity.mainListTesting else { return }
+            do {
+                try await store.childFieldNativeStart()
+                #if os(macOS)
+                workspace.section = .inbox
+                workspace.expandedTasks.insert(ChildFieldNativeIdentity.rootID)
+                #else
+                UserDefaults.standard.set("inbox", forKey: "defaultView")
+                #endif
+                ready = true
+            } catch { failure = error.localizedDescription }
+        }
     }
 }
 

@@ -42,6 +42,7 @@ struct SavedChildTaskCompletionsLink: View {
 struct ChildTaskCompletionControls: View {
     let rootID: String
     let key: String
+    var simple = false
     let prepareAction: () -> Void
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
@@ -82,9 +83,13 @@ struct ChildTaskCompletionControls: View {
                 if let message = model.message { ChildCompletionNotice(message: message).font(.callout).accessibilityIdentifier("childCompletionStatus") }
                 if let failure { Text(failure).font(.footnote).foregroundStyle(.secondary) }
                 if pending { Text("A saved action is waiting. Review it before making another completion change.").font(.footnote).foregroundStyle(.secondary) }
-                Button("Saved subtask actions", systemImage: "tray") { prepareAction(); showing = true }.accessibilityIdentifier("childCompletionRecovery")
-                Button("Refresh completion", systemImage: "arrow.clockwise") { Task { await refresh() } }.disabled(model.busy || reading || !store.online)
-                Text("Completion applies only to this subtask. Your unsent title and notes stay in the editor.").font(.footnote).foregroundStyle(.secondary)
+                if !simple || pending {
+                    Button("Saved subtask actions", systemImage: "tray") { prepareAction(); showing = true }.accessibilityIdentifier("childCompletionRecovery")
+                }
+                if !simple || failure != nil {
+                    Button("Refresh completion", systemImage: "arrow.clockwise") { Task { await refresh() } }.disabled(model.busy || reading || !store.online)
+                }
+                if !simple { Text("Completion applies only to this subtask. Your unsent title and notes stay in the editor.").font(.footnote).foregroundStyle(.secondary) }
             }
         }
         .task(id: scope) {

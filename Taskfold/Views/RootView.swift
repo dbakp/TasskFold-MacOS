@@ -97,6 +97,9 @@ struct RootView: View {
         }
         .task(id: "realtime-\(store.signedIn)-\(store.localMode)") {
             guard store.signedIn, !store.localMode else { return }
+            #if DEBUG
+            if ChildFieldNativeIdentity.mainListTesting { return }
+            #endif
             while !Task.isCancelled {
                 do { try await store.backend.watchChanges { await store.sync() } }
                 catch { if Task.isCancelled { return } }
@@ -195,6 +198,7 @@ struct RootView: View {
     /// Debug-only fixtures shared with the UI tests. Release builds ignore these arguments.
     private func seed() {
         #if DEBUG
+        if ChildFieldNativeIdentity.mainListTesting { return }
         // Every window shares this workspace; a new window must not reset active routes or data.
         guard !workspace.fixturePrepared else { return }; workspace.fixturePrepared = true
         let arguments = ProcessInfo.processInfo.arguments

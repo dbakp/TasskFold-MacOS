@@ -2,6 +2,64 @@ import Foundation
 import CryptoKit
 import Observation
 
+/// Expanded list rows are contextual projections, never new backend records.
+/// Keep existing flat hierarchy-filter results intact and preserve sibling order.
+enum ChildTaskListOutline {
+    static func rows(_ roots: [Record], expanded: Set<String>, projects: [Record], workspace: WorkspaceBinding, includeCompleted: Bool) throws -> [Record] {
+        guard !roots.contains(where: { SubtaskTree.referencePath($0.id) != nil }) else { return roots }
+        var result: [Record] = []
+        for root in roots {
+            result.append(root)
+            guard expanded.contains(root.id), !root["subtasks"].list.isEmpty else { continue }
+            let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: workspace)
+            for item in index.items where item.isSubtask {
+                guard includeCompleted || !item.source.completed else { continue }
+                var parent = root.id, visible = expanded.contains(parent)
+                for key in item.path.dropLast() {
+                    parent = SubtaskTree.reference(parent: parent, key: key)
+                    if !expanded.contains(parent) || (!includeCompleted && index.item(parent)?.source.completed == true) { visible = false; break }
+                }
+                if visible { result.append(item.record) }
+            }
+        }
+        return result
+    }
+}
+
+/// A task-list opening is bound to the workspace and original parent identity.
+/// The full authored path selects one fresh child; a missing/moved child never
+/// falls through to the first row in the parent’s checklist.
+struct ChildTaskFieldOpening: Equatable, Sendable {
+    let workspace: WorkspaceBinding
+    let root: Record
+    let path: [String]
+    var rootID: String { root.id }
+    static var unavailable: AppFailure { AppFailure(message: "This subtask is no longer available here. Reopen it from the task list.") }
+    init(reference: String, root: Record, workspace: WorkspaceBinding) throws {
+        guard reference.utf8.count <= 32_768,
+              let path = SubtaskTree.referencePath(reference), path.count <= 25,
+              path.dropFirst().allSatisfy({ $0.utf8.count <= 128 }),
+              path[0].utf8.elementsEqual(root.id.utf8), TeamProjectValue.id(root.id),
+              TeamProjectValue.id(workspace.account) else { throw Self.unavailable }
+        _ = try TeamProjectValue.optionalID(root.fields["task_generation"] ?? .null)
+        _ = try TeamProjectValue.optionalID(root.fields["project_id"] ?? .null)
+        self.workspace = workspace; self.root = root; self.path = Array(path.dropFirst())
+    }
+    func permits(account: String, generation: UUID, root current: Record?) -> Bool {
+        guard workspace.matches(account: account, generation: generation), let current else { return false }
+        return ["id", "user_id", "project_id", "task_generation"].allSatisfy {
+            AuthoredValueComparison.exactJSON(root[$0], current[$0])
+        }
+    }
+    func key(in read: ChildTaskRecordRead) throws -> String {
+        guard permits(account: read.context.account, generation: read.context.workspace, root: read.context.root),
+              let node = read.orderedNodes.first(where: { node in
+                  node.path.count == path.count && zip(node.path, path).allSatisfy { $0.utf8.elementsEqual($1.utf8) }
+              }) else { throw Self.unavailable }
+        return node.key
+    }
+}
+
 /// A saved field intent is not a task snapshot and carries no mutation authority.
 struct ChildTaskFieldCommand: ReviewedTeamCommand, CustomStringConvertible, CustomDebugStringConvertible {
     static let storagePrefix="child-field-command-v1."
@@ -385,8 +443,9 @@ extension Backend:ChildTaskFieldCommandService {}
         guard !busy else { return }; busy = true; defer { busy = false }
         do { try check(); try await update(); message = nil } catch { failure(error) }
     }
-    /// Save first, send only through a separate explicit action. Offline edits
-    /// therefore do not become transient optimistic task-cache writes.
+    /// Durable staging only: saving never performs network I/O or an optimistic
+    /// cache write. Sending requires a separate call from an explicit Save/Send
+    /// intent; opening or restoring a draft never sends it.
     @discardableResult func save(_ command: ChildTaskFieldCommand) async -> ChildTaskFieldCommand? {
         guard !busy else { return nil }; busy = true; defer { busy = false }
         do {

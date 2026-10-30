@@ -29,7 +29,10 @@ struct TaskfoldMacApp: App {
 
     @ViewBuilder private var mainContent: some View {
         #if DEBUG
-        if ChildFieldNativeIdentity.enabled { ChildFieldNativeFixtureView() }
+        if ChildFieldNativeIdentity.enabled {
+            if ChildFieldNativeIdentity.mainListTesting { ChildFieldMainListNativeFixtureView() }
+            else { ChildFieldNativeFixtureView() }
+        }
         else if AudioCommentNativeFixture.ownerReviewTesting { AudioOwnerReviewNativeFixtureView() }
         else if AudioCommentNativeFixture.conversationTesting { AudioConversationNativeFixtureView() }
         else if AudioCommentNativeFixture.enabled { AudioCommentNativeFixtureView() }
