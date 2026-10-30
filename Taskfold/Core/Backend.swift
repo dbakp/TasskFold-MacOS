@@ -314,10 +314,11 @@ final class Backend: NSObject {
             throw AppFailure(message: "The Supabase configuration is missing.")
         }
         if let workflowReadLimit { guard (1...4_200_000).contains(workflowReadLimit) else { throw TeamWorkflowRunCommand.invalid } }
+        let childTransfer = path == "/rest/v1/rpc/taskfold_transfer_child"
         let childStructureArchive = path == "/rest/v1/rpc/taskfold_child_structure_undo_archives"
         let childStructureOperation = childStructureArchive || ["/rest/v1/rpc/taskfold_edit_child_structure", "/rest/v1/rpc/taskfold_close_child_structure", "/rest/v1/rpc/taskfold_forget_child_structure_undo"].contains(path)
         let childCompletionWrite = ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_close_child_completion"].contains(path)
-        let childRecordWrite = ["/rest/v1/rpc/taskfold_close_child_completion", "/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path) || childStructureOperation
+        let childRecordWrite = ["/rest/v1/rpc/taskfold_close_child_completion", "/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_edit_child_task", "/rest/v1/rpc/taskfold_close_child_task_edit"].contains(path) || childStructureOperation || childTransfer
         let childRecordRead = ["/rest/v1/rpc/taskfold_read_child_tasks", "/rest/v1/rpc/taskfold_read_child_structure"].contains(path)
         let workflowRead = workflowReadLimit != nil
         let workflowRun = path == "/rest/v1/rpc/taskfold_team_workflow_run"
@@ -376,6 +377,7 @@ final class Backend: NSObject {
                 case "54000","PT429":reason = .limit
                 default:reason = .unconfirmed
                 }
+                if childTransfer { throw ChildTaskTransferFailure(reason: reason) }
                 if childStructureOperation { throw ChildTaskStructureFailure(reason: reason) }
                 if childCompletionWrite { throw ChildTaskCompletionFailure(reason: reason) }
                 throw ChildTaskFieldWriteFailure(reason:reason)
@@ -668,6 +670,18 @@ final class Backend: NSObject {
             try childStructureScope(account: account, origin: origin, session: expected)
             if error is CancellationError { throw error }
             throw ChildTaskStructureFailure(reason: .unconfirmed)
+        }
+    }
+    func childTaskTransfer(_ command: ChildTaskTransferCommand, operation: ChildTaskTransferOperation, session expected: UUID) async throws -> ChildTaskTransferResult {
+        try childStructureScope(account: command.account, origin: command.origin, session: expected)
+        do {
+            let data = try await request("/rest/v1/rpc/taskfold_transfer_child", method: "POST", body: ["_operation": .string(operation.rawValue), "_body": .object(command.body)], expectedAccount: command.account)
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            return try .init(command: command, data: data)
+        } catch {
+            try childStructureScope(account: command.account, origin: command.origin, session: expected)
+            if error is CancellationError || error is ChildTaskTransferFailure || error is AccountSessionAuthorizationRequired { throw error }
+            throw ChildTaskTransferFailure(reason: .unconfirmed)
         }
     }
     func childTaskStructureCommand(_ command: ChildTaskStructureCommand, session expected: UUID) async throws -> ChildTaskStructureReceipt {

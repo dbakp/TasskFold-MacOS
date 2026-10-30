@@ -458,6 +458,72 @@ final class Store {
         try await synchronizeChildTaskStructureReads()
         return try await readChildTaskStructure(root)
     }
+    var childTaskTransfersEnabled: Bool {
+        childTaskStructureEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildTransfersEnabled") as? Bool == true
+    }
+    func childTaskTransferJournal(account: String, origin: String) throws -> ChildTaskTransferJournal {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child transfer requests", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskTransferState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTransferCommandLocks", isDirectory: true), removalDirectory: root)
+    }
+    private func permitsChildTransferRoot(_ root: Record, sending: Bool) -> Bool {
+        permitsChildTaskRequest(account: userID, origin: (try? backend.accountRemovalOrigin) ?? "", identity: ["task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": root["project_id"]], enabled: childTaskTransfersEnabled, sending: sending)
+    }
+    func childTaskTransferTargets(source: String) -> [Record] {
+        guard childTaskTransfersEnabled, let root = record("tasks", id: source), permitsChildTransferRoot(root, sending: false) else { return [] }
+        let team = nativeConversationTeamCache?.knownTeams[root.string("project_id")]
+        return (snapshot.tables["tasks"] ?? []).filter {
+            $0.id != source && nativeConversationTeamCache?.knownTeams[$0.string("project_id")] == team && permitsChildTransferRoot($0, sending: false)
+        }.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+    func permitsChildTaskTransferRequest(_ command: ChildTaskTransferCommand, sending: Bool) -> Bool {
+        guard childTaskTransfersEnabled, command.account == userID, command.origin == (try? backend.accountRemovalOrigin),
+              let from = record("tasks", id: command.body["source"]!.object["task_id"]!.text), let to = record("tasks", id: command.body["destination"]!.object["task_id"]!.text),
+              nativeConversationTeamCache?.knownTeams[from.string("project_id")] == nativeConversationTeamCache?.knownTeams[to.string("project_id")] else { return false }
+        return ["source", "destination"].allSatisfy {
+            permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body[$0]!.object, enabled: childTaskTransfersEnabled, sending: sending)
+        }
+    }
+    func readChildTaskTransferPair(source: String, destination: String) async throws -> (ChildTaskStructureRead, ChildTaskStructureRead) {
+        guard childTaskTransfersEnabled else { throw ChildTaskTransferFailure(reason: .unavailable) }
+        try await synchronizeChildTaskStructureReads()
+        let a = try await readChildTaskStructure(source), b = try await readChildTaskStructure(destination)
+        guard childTaskFieldComparisonIsCurrent(a.records), childTaskFieldComparisonIsCurrent(b.records), a.context.snapshot == b.context.snapshot else { throw CancellationError() }
+        return (a, b)
+    }
+    private func admitChildTaskTransfer(_ command: ChildTaskTransferCommand, source: ChildTaskStructureRead, destination: ChildTaskStructureRead) async throws {
+        let scope = childTaskFieldRecoveryScope
+        guard scope == ChildTaskFieldClientScope(source.context), permitsChildTaskTransferRequest(command, sending: false), childTaskFieldComparisonIsCurrent(source.records), childTaskFieldComparisonIsCurrent(destination.records) else { throw ChildTaskTransferFailure(reason: .review) }
+        let fields = try await childTaskFieldJournal(account: command.account, origin: command.origin).load()
+        let completions = try await childTaskCompletionJournal(account: command.account, origin: command.origin).load()
+        let structures = try await childTaskStructureJournal(account: command.account, origin: command.origin).load()
+        let drafts = try await childTaskStructureDraftJournal(account: command.account, origin: command.origin).load()
+        if fields.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && command.roots.contains($0.command.body["task_id"]!.text) }) ||
+            completions.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && command.roots.contains($0.command.body["task_id"]!.text) }) ||
+            structures.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && command.roots.contains($0.command.body["task_id"]!.text) }) ||
+            drafts.entries.contains(where: { command.roots.contains($0.body["task_id"]!.text) }) {
+            throw AppFailure(message: "Finish the saved edits and hierarchy actions for these tasks before moving a subtask.")
+        }
+        guard childTaskFieldRecoveryScope == scope, childTaskFieldComparisonIsCurrent(source.records), childTaskFieldComparisonIsCurrent(destination.records) else { throw CancellationError() }
+    }
+    func childTaskTransferModel() throws -> ChildTaskTransferModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskTransferJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in self?.permitsChildTaskTransferRequest($0, sending: true) == true },
+                     admit: { [weak self] command, a, b in guard let self else { throw CancellationError() }; try await self.admitChildTaskTransfer(command, source: a, destination: b) })
+    }
     func childTaskStructurePresentation() throws -> ChildTaskStructurePresentation {
         guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
         return .init(scope: scope, journal: try childTaskStructureJournal(account: scope.account, origin: scope.origin), service: backend,
@@ -1695,6 +1761,7 @@ final class Store {
         try await childTaskCompletionJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskStructureJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskStructureDraftJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskTransferJournal(account: account, origin: command.origin).removeAccount()
         try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
         try await projectAdoptionVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
@@ -5242,6 +5309,7 @@ extension Store {
             try await childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             for entry in try backupVault.editorEntries() {
                 if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) {try backupVault.closeEditorDraft(entry.id)}
             }
@@ -5251,7 +5319,12 @@ extension Store {
     }
     func childFieldNativeRefresh() throws {
         guard ChildFieldNativeIdentity.enabled,signedIn,!localMode,!signingOut,!accountRemovalBlocked,online else {return}
+        if ChildTransferNativePeer.enabled, userID == ChildFieldNativeIdentity.account {
+            var peer = try ChildFieldNativePeer.state(); let destination = ChildTransferNativePeer.destination(&peer); try ChildFieldNativePeer.save(peer)
+            snapshot.tables["tasks"] = [Record(peer["root"]!.object), destination]
+        } else {
         snapshot.tables["tasks"] = userID==ChildFieldNativeIdentity.account ? [try ChildFieldNativePeer.root] : []
+        }
         try persist()
     }
     func childFieldNativeSwitchAccount() async throws {

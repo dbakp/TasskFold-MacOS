@@ -6,7 +6,7 @@ import CryptoKit
 /// the real transaction/permission/custody contract; this exercises actual UI,
 /// Store, transport, encrypted journals and cold application presentation.
 @MainActor enum ChildStructureNativePeer {
-    static var enabled: Bool { ChildFieldNativeIdentity.enabled && ProcessInfo.processInfo.arguments.contains("--child-structure-native") }
+    static var enabled: Bool { ChildFieldNativeIdentity.enabled && (ProcessInfo.processInfo.arguments.contains("--child-structure-native") || ProcessInfo.processInfo.arguments.contains("--child-transfer-native") || ProcessInfo.processInfo.arguments.contains("--child-transfer-lose-reply")) }
     /// Opt-in fault injection for the isolated native test only. A second journal
     /// owner changes the same draft while the real SwiftUI alert stays open.
     static func refreshDraftDuringDiscardForNativeTest(_ reviewed: ChildTaskStructureDraft, model: ChildTaskStructurePresentation) {
@@ -49,16 +49,16 @@ import CryptoKit
         }
         visit(root["subtasks"].list, parent: nil, path: []); state["structureIncarnations"] = .object(incarnations); state["versions"] = .object(versions); return result
     }
-    private static func node(_ rows: JSON, _ key: String) -> JSON? {
+    static func node(_ rows: JSON, _ key: String) -> JSON? {
         for row in rows.list { if row.object["id"]!.text.precomposedStringWithCanonicalMapping == key { return row }; if let value = node(row.object["subtasks"] ?? .null, key) { return value } }; return nil
     }
-    private static func removing(_ rows: JSON, key: String) -> JSON {
+    static func removing(_ rows: JSON, key: String) -> JSON {
         .array(rows.list.compactMap { row in
             var fields = row.object; if fields["id"]!.text.precomposedStringWithCanonicalMapping == key { return nil }
             if case .array? = fields["subtasks"] { fields["subtasks"] = removing(fields["subtasks"]!, key: key) }; return .object(fields)
         })
     }
-    private static func inserting(_ rows: JSON, node value: JSON, parent: String?, index: Int) throws -> JSON {
+    static func inserting(_ rows: JSON, node value: JSON, parent: String?, index: Int) throws -> JSON {
         if parent == nil { var list = rows.list; guard (0...list.count).contains(index) else { throw ChildFieldNativeRefusal(code: "PT409") }; list.insert(value, at: index); return .array(list) }
         return .array(try rows.list.map { row in
             var fields = row.object
@@ -67,7 +67,7 @@ import CryptoKit
             return .object(fields)
         })
     }
-    private static func restoreContainer(_ rows: JSON, parent: String?, kind: String) -> JSON {
+    static func restoreContainer(_ rows: JSON, parent: String?, kind: String) -> JSON {
         guard kind != "array" else { return rows }
         if parent == nil { return rows.list.isEmpty ? .null : rows }
         return .array(rows.list.map { row in

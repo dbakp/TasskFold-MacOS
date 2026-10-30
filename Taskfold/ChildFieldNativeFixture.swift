@@ -42,7 +42,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             return .object(fields)
         }
         var initialChildren = [child("concept", "Prepare the review"), child("review", "Publish the summary")]
-        if ProcessInfo.processInfo.arguments.contains("--child-structure-nested") {
+        if ProcessInfo.processInfo.arguments.contains("--child-structure-nested") || ChildTransferNativePeer.enabled {
             var first = initialChildren[0].object
             first["subtasks"] = .array([.object(["id": .string("nested"), "title": .string("Collect supporting notes"), "description": .string("Keep these nested instructions"), "future": .object(["keep": .bool(true)])])])
             initialChildren[0] = .object(first)
@@ -136,6 +136,9 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         }
         let body = try JSONDecoder().decode([String: JSON].self, from: data)
         var state = try state(); let root = Record(state["root"]!.object)
+        if ChildTransferNativePeer.enabled, ChildTransferNativePeer.paths.contains(request.url?.path ?? "") {
+            return try ChildTransferNativePeer.response(path: request.url!.path, body: body, state: &state)
+        }
         if ChildStructureNativePeer.enabled, ChildStructureNativePeer.paths.contains(request.url?.path ?? "") {
             return try ChildStructureNativePeer.response(path: request.url!.path, body: body, state: &state)
         }
@@ -220,6 +223,7 @@ struct ChildFieldNativeFixtureView: View {
                     if ChildStructureNativePeer.enabled {
                         Button("Open saved hierarchy") { opening = "structure" }.accessibilityIdentifier("childNativeStructure")
                         Button("Open hierarchy actions") { opening = "structureRecovery" }.accessibilityIdentifier("childNativeStructureRecovery")
+                        if ChildTransferNativePeer.enabled { Button("Open saved subtask moves") { opening = "transfers" }.accessibilityIdentifier("childNativeTransfers") }
                         Text(structureProbe).accessibilityIdentifier("childNativeStructureProbe")
                         Button("Forget only the local hierarchy test journal") {
                             Task { do { try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount(); await inspect() } catch { problem = error.localizedDescription } }
@@ -255,10 +259,11 @@ struct ChildFieldNativeFixtureView: View {
             } catch is CancellationError { } catch { problem = error.localizedDescription }
         }
         .sheet(isPresented: Binding(get: { opening != nil }, set: { if !$0 { opening = nil } })) {
-            WorkflowShell(title: opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : "Saved subtask changes") {
+            WorkflowShell(title: opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : opening == "transfers" ? "Saved subtask moves" : "Saved subtask changes") {
                 if opening == "editor" { ChildTaskFieldEditorView(rootID: ChildFieldNativeIdentity.rootID) }
                 else if opening == "structure" { ChildTaskStructureView(rootID: ChildFieldNativeIdentity.rootID) }
                 else if opening == "structureRecovery" { ChildTaskStructureRecoveryView() }
+                else if opening == "transfers" { ChildTaskTransferRecoveryView() }
                 else if opening == "completion" { ChildTaskCompletionRecoveryView() }
                 else { ChildTaskFieldRecoveryView() }
             }
@@ -319,6 +324,10 @@ struct ChildFieldNativeFixtureView: View {
                 let completionEntries = try await store.childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
                 nextProbe += " completionQueued=\(completionEntries.filter { $0.phase == .queued }.count) completionAttempted=\(completionEntries.filter { $0.phase == .attempted }.count) completionConfirmed=\(completionEntries.filter { $0.phase == .confirmed }.count) completionClosed=\(completionEntries.filter { $0.phase == .closed }.count) completionWrites=\(state["completionWrites"]?.integer ?? 0) completionRequests=\(state["completionRequests"]?.integer ?? 0) done=\(child["completed"]?.flag == true) notes=\(child["description"]?.text ?? "")"
                 nextProbe += " completionCloses=\(state["completionCloses"]?.integer ?? 0) childReads=\(state["childReads"]?.integer ?? 0) history=\(historyProgress) stamp=\(child["completed_at"]?.text.isEmpty == false ? child["completed_at"]!.text : "none")"
+            }
+            if ChildTransferNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
+                let transfers = try await store.childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                nextProbe += " transferQueued=\(transfers.entries.filter { $0.phase == .queued }.count) transferAttempted=\(transfers.entries.filter { $0.phase == .attempted }.count) transferApplied=\(transfers.entries.filter { $0.phase == .applied }.count) transferClosed=\(transfers.entries.filter { $0.phase == .closed }.count) transferWrites=\(state["transferWrites"]?.integer ?? 0) transferRequests=\(state["transferRequests"]?.integer ?? 0) transferSource=\(ChildStructureNativePeer.flatKeys(Record(state["root"]!.object)["subtasks"]).joined(separator: ">")) transferDestination=\(ChildStructureNativePeer.flatKeys(Record(state["transferDestination"]?.object ?? [:])["subtasks"]).joined(separator: ">"))"
             }
             if ChildStructureNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
                 let structural = try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()

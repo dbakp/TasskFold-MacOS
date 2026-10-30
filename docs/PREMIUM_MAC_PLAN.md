@@ -9936,3 +9936,16 @@ Readable subtask selection: the Mac editor now owns the same wrapping selected t
 - [ ] Implement typed transfer commands, two-root durable recovery and premium destination/review/Undo/retry controls, then verify genuine native flows. Cross-workspace/full discussion/provider/Storage custody, older-data tools and large workloads remain. Existing user deferrals stay paused. The broad migration checkpoint remains To build.
 
 [Evidence, source bindings, failed phases and acceptance limits](cross-root-child-transfers/README.md).
+
+
+## 30 October 2026 — cross-task client and recovery candidate
+
+- [x] Destination and nested placement review in each app; stable confirmation when the source row disappears.
+- [x] Encrypted two-root saved requests, safe status/retry/Stop, and certified Undo.
+- [x] Each repository: own 77-check SQL wire fixture, 540 passing Core checks and isolated app build.
+- [x] iOS: two genuine native iPhone Simulator journeys and two iPad journeys, including largest text, cold Undo and lost-reply retry. Synthetic same-Inbox transport only.
+- [ ] Mac native/spoken acceptance, shared-account and window/background/access-change lifecycle.
+- [ ] Genuine secure-storage/hosted integration, older-work adoption, shared attachment/discussion custody and broader workload checks.
+- [ ] Normal-use enablement remains withheld. No hosted transfer migration deployed.
+
+Evidence: `cross-root-transfer-client/verification.json`. The original broad checkpoint remains open; test counts are not product-completion percentages. Earlier phone selection/helper failures are excluded from acceptance. The prior server milestone's 615 checks were not rerun in this client milestone.

@@ -839,7 +839,7 @@ extension TaskfoldMacUITests {
         let configuration = NSWorkspace.OpenConfiguration(); configuration.activates = true; configuration.createsNewApplicationInstance = false
         NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, error in XCTAssertNil(error); opened.fulfill() }
         wait(for: [opened], timeout: 10)
-        app.activate(); XCTAssertTrue(app.buttons[extra?.hasPrefix("--child-structure") == true ? "childNativeStructure" : "childNativeEditor"].waitForExistence(timeout: 25), app.debugDescription)
+        app.activate(); XCTAssertTrue(app.buttons[(extra?.hasPrefix("--child-structure") == true || extra?.hasPrefix("--child-transfer") == true) ? "childNativeStructure" : "childNativeEditor"].waitForExistence(timeout: 25), app.debugDescription)
     }
     @MainActor private func childField(_ id: String, _ app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: id).firstMatch
@@ -1732,6 +1732,50 @@ extension TaskfoldMacUITests {
         structureSnapshot(app, "Subtask selection returns private title")
         childDone(app); childProbe(app, "queued=0 attempted=0 confirmed=0 writes=0 requests=0")
         childProbe(app, "structureQueued=0 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+    }
+
+    @MainActor private func transferReview(_ app: XCUIApplication) {
+        childHomePress("childNativeStructure", app)
+        let move = app.buttons["transferChild-concept"]; childReveal(move, app); completionReadyPress(move, app)
+        let target = app.buttons["childTransferTarget-ec990000-0000-4000-8000-000000000020"]
+        childReveal(target, app)
+        XCTAssertTrue(target.waitForExistence(timeout: 12), app.debugDescription); childPress(target)
+        let send = app.buttons["childTransferSend"]; childReveal(send, app)
+        XCTAssertTrue(send.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Subtask transfer review preserves nested work")
+        completionReadyPress(send, app)
+    }
+    @MainActor func testChildTransferNativeMoveColdUndoAndReturn() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-transfer-native", large: true)
+        transferReview(app)
+        let confirmed = childSavedText("Move confirmed", app); childReveal(confirmed, app)
+        XCTAssertTrue(confirmed.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["childTransferStatus"].label.contains("Subtask moved"))
+        structureSnapshot(app, "Transfer confirmation remains open after source row disappears")
+        childDone(app); childDone(app)
+        childProbe(app, "transferWrites=1 transferRequests=1 transferSource=review transferDestination=concept>nested")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-transfer-native", large: true)
+        childHomePress("childNativeTransfers", app)
+        let undo = app.buttons["Undo move"]; childReveal(undo, app); completionReadyPress(undo, app)
+        let restored = childSavedText("Move undone", app); childReveal(restored, app)
+        XCTAssertTrue(restored.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Certified Undo restores original branch after relaunch")
+        childDone(app); childProbe(app, "transferWrites=2 transferRequests=2 transferSource=concept>nested>review transferDestination=")
+    }
+    @MainActor func testChildTransferNativeLostReplyColdRetryUsesOriginalRequest() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-transfer-lose-reply")
+        transferReview(app)
+        XCTAssertTrue(childSavedText("Awaiting confirmation", app).waitForExistence(timeout: 15), app.debugDescription)
+        childDone(app); childDone(app); childProbe(app, "transferQueued=0 transferAttempted=1 transferApplied=0 transferClosed=0 transferWrites=1 transferRequests=1")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-transfer-native")
+        childHomePress("childNativeTransfers", app)
+        let retry = app.buttons["Retry original move"]; childReveal(retry, app); completionReadyPress(retry, app)
+        let confirmed = childSavedText("Move confirmed", app); childReveal(confirmed, app)
+        XCTAssertTrue(confirmed.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Original transfer retry confirms without a second write")
+        childDone(app); childProbe(app, "transferQueued=0 transferAttempted=0 transferApplied=1 transferClosed=0 transferWrites=1 transferRequests=2")
     }
 
 }

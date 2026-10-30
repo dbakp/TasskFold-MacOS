@@ -1,0 +1,594 @@
+{
+  "command": {
+    "protocol": 1,
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "request_id": "8011c74b-2156-4441-8590-732b47fe490b",
+    "source": {
+      "task_id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+      "task_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+      "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+      "structure_revision": 1
+    },
+    "destination": {
+      "task_id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+      "task_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552",
+      "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+      "structure_revision": 1,
+      "parent_key": "heading",
+      "parent_incarnation": "813bf7ab-6aba-4894-ac3a-a65efcaac1a1",
+      "index": 0
+    },
+    "action": "transfer",
+    "node_key": "branch",
+    "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+    "subtree_versions": {
+      "branch": {
+        "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+        "revision": 1
+      },
+      "é": {
+        "incarnation": "0debf56c-7122-4910-bd50-23c5061e05e7",
+        "revision": 1
+      }
+    }
+  },
+  "receipt": {
+    "state": "applied",
+    "action": "transfer",
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "undo_of": null,
+    "node_key": "branch",
+    "protocol": 1,
+    "replayed": false,
+    "source_id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+    "request_id": "8011c74b-2156-4441-8590-732b47fe490b",
+    "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+    "moved_count": 2,
+    "return_index": 0,
+    "return_parent": null,
+    "destination_id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+    "source_project": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "source_revision": 1,
+    "source_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+    "destination_project": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "destination_revision": 1,
+    "destination_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552"
+  },
+  "unknown": {
+    "state": "unknown",
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "protocol": 1,
+    "request_id": "8011c74b-2156-4441-8590-732b47fe490b"
+  },
+  "sourceRoot": {
+    "id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+    "title": "Transfer proof",
+    "labels": [],
+    "user_id": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "branch",
+        "title": "Private design branch",
+        "subtasks": [
+          {
+            "id": "é",
+            "title": "Private nested work",
+            "future": {
+              "preserved": [
+                null,
+                false
+              ]
+            },
+            "subtasks": null,
+            "assigned_to": null,
+            "description": "Keep exact notes"
+          }
+        ],
+        "completed": false,
+        "assigned_to": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+        "taskfold_completion_v1": {
+          "epoch": "ea81fee2-2ac0-4ffd-b394-d60d1d2f4db7",
+          "version": 0
+        }
+      },
+      {
+        "id": "stay",
+        "title": "Unmoved sibling"
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-30T12:27:48.442385+00:00",
+    "is_heading": true,
+    "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "sourceRead": {
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "records": [
+      {
+        "fields": {
+          "id": "branch",
+          "title": "Private design branch",
+          "completed": false,
+          "assigned_to": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+          "taskfold_completion_v1": {
+            "epoch": "ea81fee2-2ac0-4ffd-b394-d60d1d2f4db7",
+            "version": 0
+          }
+        },
+        "node_key": "branch",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+        "children_kind": "array",
+        "identity_path": [
+          "branch"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "é",
+          "title": "Private nested work",
+          "future": {
+            "preserved": [
+              null,
+              false
+            ]
+          },
+          "assigned_to": null,
+          "description": "Keep exact notes"
+        },
+        "node_key": "é",
+        "revision": 1,
+        "parent_key": "branch",
+        "incarnation": "0debf56c-7122-4910-bd50-23c5061e05e7",
+        "children_kind": "null",
+        "identity_path": [
+          "branch",
+          "é"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "stay",
+          "title": "Unmoved sibling"
+        },
+        "node_key": "stay",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "22212939-4f0b-486c-961e-0b7ce12e84e4",
+        "children_kind": "absent",
+        "identity_path": [
+          "stay"
+        ],
+        "sibling_order": 1
+      }
+    ],
+    "task_id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "task_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+    "structure_revision": 1,
+    "projection_revision": 1
+  },
+  "destinationRoot": {
+    "id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+    "title": "Transfer proof",
+    "labels": [],
+    "user_id": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "heading",
+        "title": "Destination heading",
+        "completed": false,
+        "is_heading": true,
+        "completed_at": null
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-30T12:27:48.572383+00:00",
+    "is_heading": true,
+    "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "destinationRead": {
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "records": [
+      {
+        "fields": {
+          "id": "heading",
+          "title": "Destination heading",
+          "completed": false,
+          "is_heading": true,
+          "completed_at": null
+        },
+        "node_key": "heading",
+        "revision": 1,
+        "parent_key": null,
+        "incarnation": "813bf7ab-6aba-4894-ac3a-a65efcaac1a1",
+        "children_kind": "absent",
+        "identity_path": [
+          "heading"
+        ],
+        "sibling_order": 0
+      }
+    ],
+    "task_id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "task_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552",
+    "structure_revision": 1,
+    "projection_revision": 1
+  },
+  "afterSourceRoot": {
+    "id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+    "title": "Transfer proof",
+    "labels": [],
+    "user_id": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "stay",
+        "title": "Unmoved sibling"
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-30T12:27:48.442385+00:00",
+    "is_heading": true,
+    "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "afterSourceRead": {
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "records": [
+      {
+        "fields": {
+          "id": "stay",
+          "title": "Unmoved sibling"
+        },
+        "node_key": "stay",
+        "revision": 2,
+        "parent_key": null,
+        "incarnation": "22212939-4f0b-486c-961e-0b7ce12e84e4",
+        "children_kind": "absent",
+        "identity_path": [
+          "stay"
+        ],
+        "sibling_order": 0
+      }
+    ],
+    "task_id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "task_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+    "structure_revision": 2,
+    "projection_revision": 2
+  },
+  "afterDestinationRoot": {
+    "id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+    "title": "Transfer proof",
+    "labels": [],
+    "user_id": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "comments": [],
+    "due_date": null,
+    "due_time": null,
+    "priority": 4,
+    "subtasks": [
+      {
+        "id": "heading",
+        "title": "Destination heading",
+        "subtasks": [
+          {
+            "id": "branch",
+            "title": "Private design branch",
+            "subtasks": [
+              {
+                "id": "é",
+                "title": "Private nested work",
+                "future": {
+                  "preserved": [
+                    null,
+                    false
+                  ]
+                },
+                "subtasks": null,
+                "assigned_to": null,
+                "description": "Keep exact notes"
+              }
+            ],
+            "completed": false,
+            "assigned_to": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+            "taskfold_completion_v1": {
+              "epoch": "ea81fee2-2ac0-4ffd-b394-d60d1d2f4db7",
+              "version": 0
+            }
+          }
+        ],
+        "completed": false,
+        "is_heading": true,
+        "completed_at": null
+      }
+    ],
+    "completed": false,
+    "reminders": [],
+    "time_zone": null,
+    "created_at": "2026-10-30T12:27:48.572383+00:00",
+    "is_heading": true,
+    "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "section_id": null,
+    "assigned_to": null,
+    "attachments": [],
+    "description": null,
+    "completed_at": null,
+    "is_recurring": false,
+    "scheduled_at": null,
+    "deadline_date": null,
+    "reminder_specs": [],
+    "source_metadata": {},
+    "task_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552",
+    "duration_minutes": null,
+    "completion_version": 0,
+    "recurrence_pattern": null,
+    "recurrence_end_date": null,
+    "notification_sent_at": null,
+    "recurrence_parent_id": null
+  },
+  "afterDestinationRead": {
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "records": [
+      {
+        "fields": {
+          "id": "heading",
+          "title": "Destination heading",
+          "completed": false,
+          "is_heading": true,
+          "completed_at": null
+        },
+        "node_key": "heading",
+        "revision": 2,
+        "parent_key": null,
+        "incarnation": "813bf7ab-6aba-4894-ac3a-a65efcaac1a1",
+        "children_kind": "array",
+        "identity_path": [
+          "heading"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "branch",
+          "title": "Private design branch",
+          "completed": false,
+          "assigned_to": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+          "taskfold_completion_v1": {
+            "epoch": "ea81fee2-2ac0-4ffd-b394-d60d1d2f4db7",
+            "version": 0
+          }
+        },
+        "node_key": "branch",
+        "revision": 2,
+        "parent_key": "heading",
+        "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+        "children_kind": "array",
+        "identity_path": [
+          "heading",
+          "branch"
+        ],
+        "sibling_order": 0
+      },
+      {
+        "fields": {
+          "id": "é",
+          "title": "Private nested work",
+          "future": {
+            "preserved": [
+              null,
+              false
+            ]
+          },
+          "assigned_to": null,
+          "description": "Keep exact notes"
+        },
+        "node_key": "é",
+        "revision": 2,
+        "parent_key": "branch",
+        "incarnation": "0debf56c-7122-4910-bd50-23c5061e05e7",
+        "children_kind": "null",
+        "identity_path": [
+          "heading",
+          "branch",
+          "é"
+        ],
+        "sibling_order": 0
+      }
+    ],
+    "task_id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+    "protocol": 2,
+    "root_kind": "array",
+    "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "task_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552",
+    "structure_revision": 2,
+    "projection_revision": 2
+  },
+  "undoCommand": {
+    "protocol": 1,
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "request_id": "5b1aaa82-ec9f-4e45-9bc3-4796093b138b",
+    "source": {
+      "task_id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+      "task_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552",
+      "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+      "structure_revision": 2
+    },
+    "destination": {
+      "task_id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+      "task_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+      "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+      "structure_revision": 2,
+      "parent_key": null,
+      "parent_incarnation": null,
+      "index": 0
+    },
+    "action": "undo",
+    "node_key": "branch",
+    "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+    "subtree_versions": {
+      "branch": {
+        "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+        "revision": 2
+      },
+      "é": {
+        "incarnation": "0debf56c-7122-4910-bd50-23c5061e05e7",
+        "revision": 2
+      }
+    },
+    "undo_of": "8011c74b-2156-4441-8590-732b47fe490b"
+  },
+  "undo": {
+    "state": "applied",
+    "action": "undo",
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "undo_of": "8011c74b-2156-4441-8590-732b47fe490b",
+    "node_key": "branch",
+    "protocol": 1,
+    "replayed": false,
+    "source_id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+    "request_id": "5b1aaa82-ec9f-4e45-9bc3-4796093b138b",
+    "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+    "moved_count": 2,
+    "return_index": 0,
+    "return_parent": "heading",
+    "destination_id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+    "source_project": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "source_revision": 2,
+    "source_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552",
+    "destination_project": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "destination_revision": 2,
+    "destination_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd"
+  },
+  "closedCommand": {
+    "protocol": 1,
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "request_id": "8922d4b4-a0ea-4cee-bd0b-dda664855749",
+    "source": {
+      "task_id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+      "task_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+      "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+      "structure_revision": 3
+    },
+    "destination": {
+      "task_id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+      "task_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552",
+      "project_id": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+      "structure_revision": 3,
+      "parent_key": null,
+      "parent_incarnation": null,
+      "index": 0
+    },
+    "action": "transfer",
+    "node_key": "branch",
+    "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+    "subtree_versions": {
+      "branch": {
+        "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+        "revision": 3
+      },
+      "é": {
+        "incarnation": "0debf56c-7122-4910-bd50-23c5061e05e7",
+        "revision": 3
+      }
+    }
+  },
+  "closed": {
+    "state": "closed",
+    "action": "transfer",
+    "account": "6a5f16ea-dd02-49f9-8936-978e1c0cbf3a",
+    "undo_of": null,
+    "node_key": "branch",
+    "protocol": 1,
+    "replayed": false,
+    "source_id": "4f15d1cf-d316-4b32-a617-be91132c05e9",
+    "request_id": "8922d4b4-a0ea-4cee-bd0b-dda664855749",
+    "incarnation": "e1429dad-42ba-47ca-ae8b-33f0609f1d05",
+    "moved_count": 0,
+    "return_index": null,
+    "return_parent": null,
+    "destination_id": "76ab089c-953b-47a3-99fb-562e7ff4ee30",
+    "source_project": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "source_revision": 3,
+    "source_generation": "900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd",
+    "destination_project": "ea9f44c2-cee0-4942-8bac-5097a6bfec17",
+    "destination_revision": 3,
+    "destination_generation": "8580c483-c9f7-47dc-8b26-d52e944a7552"
+  }
+}

@@ -855,9 +855,9 @@ struct ChildTaskRecordRead: Sendable {
     let tree: JSON
     /// Bounded syntax validation also protects strict command receipts and
     /// encrypted command journals from duplicate JSON keys at any depth.
-    static func validateUniqueJSON(_ data: Data, maximum: Int, integerPaths: Set<[String]> = []) throws {
+    static func validateUniqueJSON(_ data: Data, maximum: Int, integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = []) throws {
         guard data.count <= maximum else { throw ChildTaskRecordFailure.oversized }
-        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths)
+        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths.union(nullableIntegerPaths), nullableIntegerPaths: nullableIntegerPaths)
         try syntax.value(depth: 0); syntax.space()
         guard syntax.index == syntax.bytes.count else { throw ChildTaskRecordFailure.review }
     }
@@ -943,8 +943,9 @@ struct ChildTaskRecordRead: Sendable {
     private struct UniqueJSONKeys {
         let bytes:[UInt8]
         let integerPaths: Set<[String]>
+        let nullableIntegerPaths: Set<[String]>
         var index=0
-        init(bytes: [UInt8], integerPaths: Set<[String]> = []) { self.bytes = bytes; self.integerPaths = integerPaths }
+        init(bytes: [UInt8], integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = []) { self.bytes = bytes; self.integerPaths = integerPaths; self.nullableIntegerPaths = nullableIntegerPaths }
         mutating func space() {while index<bytes.count && [9,10,13,32].contains(bytes[index]) {index+=1}}
         mutating func take(_ byte:UInt8)->Bool {space();if index<bytes.count,bytes[index]==byte {index+=1;return true};return false}
         mutating func string() throws -> String {
@@ -974,8 +975,9 @@ struct ChildTaskRecordRead: Sendable {
                     try value(depth:depth+1, path: childPath)
                     if integerPaths.contains(childPath) {
                         let token = bytes[start..<index]
-                        guard !token.isEmpty, token.count <= 16, token.allSatisfy({ (48...57).contains($0) }),
-                              token.count == 1 || token.first != 48 else { throw ChildTaskRecordFailure.review }
+                        let nullable = nullableIntegerPaths.contains(childPath) && token.elementsEqual([110, 117, 108, 108])
+                        guard nullable || (!token.isEmpty && token.count <= 16 && token.allSatisfy({ (48...57).contains($0) }) &&
+                              (token.count == 1 || token.first != 48)) else { throw ChildTaskRecordFailure.review }
                     }
                     if take(125) {return};guard take(44) else {throw ChildTaskRecordFailure.review}
                 }

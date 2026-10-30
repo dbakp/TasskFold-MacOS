@@ -60,6 +60,7 @@ struct SavedChildTaskStructureLink: View {
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         Group {
+            SavedChildTaskTransfersLink()
             if scope != nil, visible || Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true {
                 Section { Button("Saved hierarchy actions", systemImage: "square.stack.3d.up") { showing = true }.accessibilityIdentifier("savedChildStructure") }
             }
@@ -89,6 +90,7 @@ struct ChildTaskStructureView: View {
     @State private var read: ChildTaskStructureRead?
     @State private var review: HierarchyReviewRequest?
     @State private var recovery = false
+    @State private var transfer: ChildTaskTransferOpening?
     @State private var appeared = false
     @State private var reading = false
     @State private var ticket = UUID()
@@ -134,6 +136,8 @@ struct ChildTaskStructureView: View {
                                 .accessibilityIdentifier("removeChildStructure-" + node.key)
                         }.font(.callout).buttonStyle(.borderless)
                             .disabled(pending || model?.busy == true)
+                        ChildTaskTransferLink(rootID: rootID, nodeKey: node.key, show: { transfer = .init(nodeKey: node.key) })
+                            .font(.callout).buttonStyle(.borderless).disabled(pending || model?.busy == true)
                     }.padding(.leading, CGFloat(min(node.path.count - 1, 5)) * 12).padding(.vertical, 5)
                 }
                 if pending { Section { Label("A saved action needs attention", systemImage: "tray"); Text("Review it before arranging more subtasks.").font(.footnote).foregroundStyle(.secondary) } }
@@ -165,11 +169,14 @@ struct ChildTaskStructureView: View {
         .privacySensitive()
         .onAppear { appeared = true }
         .task(id: scope) { if model == nil || modelScope != scope { await open() } }
-        .onDisappear { appeared = false; if review == nil && !recovery { clear() } }
+        .onDisappear { appeared = false; if review == nil && !recovery && transfer == nil { clear() } }
         .sheet(item: $review, onDismiss: { Task { await returned() } }) { request in
             if let model, modelScope == scope { ChildHierarchyReviewView(request: request, model: model, feedback: { notice = $0 }) }
         }
         .sheet(isPresented: $recovery, onDismiss: { Task { await returned() } }) { WorkflowShell(title: "Saved hierarchy actions") { ChildTaskStructureRecoveryView() } }
+        .sheet(item: $transfer, onDismiss: { Task { await returned() } }) { opening in
+            WorkflowShell(title: "Move subtask") { ChildTaskTransferView(rootID: rootID, nodeKey: opening.nodeKey) }
+        }
     }
     private var noticeButtons: some View {
         HStack(spacing: 12) {
@@ -181,7 +188,7 @@ struct ChildTaskStructureView: View {
         guard store.online, let read else { return nil }
         return ChildTaskStructureDraftTargetTitle(draft: draft, read: read)?.value(for: draft, scope: scope, snapshot: store.snapshotRevision)
     }
-    private func clear() { ticket = UUID(); model?.close(); model = nil; read = nil; modelScope = nil; reading = false; review = nil; recovery = false }
+    private func clear() { ticket = UUID(); model?.close(); model = nil; read = nil; modelScope = nil; reading = false; review = nil; recovery = false; transfer = nil }
     private func sameSession(_ a: ChildTaskFieldClientScope?, _ b: ChildTaskFieldClientScope?) -> Bool {
         guard let a, let b else { return false }; return a.account == b.account && a.origin == b.origin && a.workspace == b.workspace && a.session == b.session
     }
