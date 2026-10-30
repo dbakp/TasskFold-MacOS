@@ -250,7 +250,7 @@ struct ChildFieldNativeFixtureView: View {
         .task {
             guard ChildFieldNativeIdentity.enabled else { return }
             do {
-                try await store.childFieldNativeStart(); await inspect(); ready = true
+                try await store.childFieldNativeStart(); try await ChildStructureNativePeer.seedDuplicateDraftForNativeTest(); await inspect(); ready = true
                 while !Task.isCancelled { try await Task.sleep(nanoseconds: 400_000_000); await inspect() }
             } catch is CancellationError { } catch { problem = error.localizedDescription }
         }
@@ -325,6 +325,7 @@ struct ChildFieldNativeFixtureView: View {
                 let organizerDrafts = try await store.childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
                 nextProbe += " structureDrafts=\(organizerDrafts.count) structureDraftPending=\(organizerDrafts.filter { $0.pendingCommand != nil }.count)"
                 nextProbe += " structureQueued=\(structural.entries.filter { $0.phase == .queued }.count) structureAttempted=\(structural.entries.filter { $0.phase == .attempted }.count) structureConfirmed=\(structural.entries.filter { $0.phase == .confirmed }.count) structureClosed=\(structural.entries.filter { $0.phase == .closed }.count) structureWrites=\(state["structureWrites"]?.integer ?? 0) structureRequests=\(state["structureRequests"]?.integer ?? 0) structureArchives=\(state["structureArchives"]?.object.count ?? 0) structureOrder=\(ChildStructureNativePeer.flatKeys(Record(state["root"]!.object)["subtasks"]).joined(separator: ">")) structureDisposals=\(structural.disposals.filter { $0.phase == .confirmed }.count)"
+                nextProbe += " structureReadUnavailable=\(state["structureReadUnavailable"]?.flag == true)"
             }
             // Publish one complete snapshot. A partial label across the journal
             // await can make accessibility reads observe missing count fields.

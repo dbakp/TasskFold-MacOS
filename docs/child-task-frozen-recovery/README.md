@@ -1,0 +1,11 @@
+# Finish a duplicate frozen draft without a task read
+
+A local write may already have saved the original action before its unfinished draft copy is removed. Native recovery previously required a current hierarchy read to expose Finish saving, trapping this duplicate when the task/read became unavailable.
+
+The new explicit Finish recovery action uses the current session-bound presentation owner, verifies the exact frozen command in the saved journal, then removes only the exact duplicate draft revision. It never enqueues, sends, stops or replaces an action. Native review can show this local path without reading the current task. The original queue/receipt/phase stays intact. Missing or colliding commands, changed private revisions and scope loss preserve work. No journal format, normal feature gate or server schema changes.
+
+Seven new Core tests cover all four action phases, absent/colliding commands, unfrozen drafts, newer private revision, cleanup write failure/retry, lost cleanup acknowledgement and session departure. Both owned repositories pass 139 focused cases: 29 command, 13 read, 97 recovery. The initial Mac test setup incorrectly attempted to create a closed phase directly from queued; it was corrected to use the actual attempt → resolution transition. The failed log is retained and is not counted as acceptance.
+
+The isolated DEBUG native fixture saves a frozen draft and exact queued action, then refuses current hierarchy/task reads. The native test checks that both rows coexist, the frozen title is read-only, the explicit local cleanup succeeds, and exactly one unsent action remains through a cold return with zero server writes/requests. Both owned app/test builds and signatures pass. Final phone/iPad native acceptance passes within the original 180/240-second limits; verification.json binds those exact products and source phases. The initial native phase also passed on both devices; its logs/summaries are retained separately before the explanatory message was shortened to clarify that the action is already saved.
+
+Remaining scope includes native receipt/disposal coexistence, wider concurrent/account/window/background recovery, Mac/spoken acceptance and full independent-record migration/older-data adoption. This closes a specific recovery gap, not the overall Px goal.

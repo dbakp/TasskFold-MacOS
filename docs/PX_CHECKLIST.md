@@ -1231,3 +1231,13 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 - [ ] Frozen draft/action/receipt coexistence, wider lifecycle/Mac/spoken and the full independent-record migration remain. Normal-use gates stay off.
 
 [Evidence and exact acceptance limits](child-task-discard-intent/README.md).
+
+
+## Frozen draft and saved-action recovery — 2026-10-30
+
+- [x] Finish recovery verifies the exact saved command and removes only the private duplicate draft, without requiring a current task read or sending/queuing an action.
+- [x] Seven new regressions cover all action phases, absent/colliding commands, newer drafts, cleanup failure/retry/lost reply and scope departure; 139 focused Core checks pass per owned repo.
+- [x] Both app/test products build and sign. Final phone/iPad native flows show both rows with current reads unavailable, explicit local cleanup and one unsent original action after cold return.
+- [ ] Full independent-record migration/older-data adoption, receipt/disposal coexistence and wider Mac/spoken/lifecycle acceptance remain. Normal-use gates stay off.
+
+[Exact evidence and phase limits](child-task-frozen-recovery/README.md).

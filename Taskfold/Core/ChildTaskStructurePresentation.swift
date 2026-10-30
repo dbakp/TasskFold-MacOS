@@ -60,6 +60,18 @@ import Observation
             message = "Unfinished draft removed. Tasks and saved actions are unchanged."
         }
     }
+    /// Finishing a private duplicate is a local operation, not admission or send.
+    /// Require the exact frozen command on disk before removing its draft copy.
+    @discardableResult func finishSavedDraft(_ draft: ChildTaskStructureDraft) async -> Bool {
+        await work {
+            guard let draftJournal, draft.account == scope.account, draft.origin == scope.origin,
+                  let command = draft.pendingCommand, drafts.contains(draft) else { throw ChildTaskStructureDraft.invalid }
+            let saved = try await journal.load(); try check()
+            guard saved.entries.contains(where: { $0.command == command }) else { throw ChildTaskStructureDraft.invalid }
+            try await draftJournal.discard(draft, lease: lease); try check(); try await update()
+            message = "Draft recovery finished. The original saved action is unchanged."
+        }
+    }
     func discoverArchives() async {
         _ = await work {
             let values = try await sender.archives(); try check(); archives = values.entries; archivesLoaded = true

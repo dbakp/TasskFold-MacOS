@@ -1465,6 +1465,35 @@ extension TaskfoldMacUITests {
         app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native", large: true)
         childProbe(app, "structureDrafts=0 structureDraftPending=0 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
     }
+    @MainActor func testChildStructureFrozenDraftFinishesWithoutAvailableTaskRead() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-structure-duplicate-draft", large: true)
+        childProbe(app, "structureReadUnavailable=true")
+        childProbe(app, "structureDrafts=1 structureDraftPending=1 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+        childHomePress("childNativeStructureRecovery", app)
+        let title = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "childStructureDraftTitle-")).firstMatch
+        childReveal(title, app)
+        XCTAssertEqual(title.label, "Keep the original saved action")
+        let phase = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "childStructurePhase-")).firstMatch
+        childReveal(phase, app); XCTAssertEqual(phase.label, "Saved · not sent")
+        let resume = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "resumeChildStructureDraft-")).firstMatch
+        childReveal(resume, app, towardTop: true); completionReadyPress(resume, app)
+        let finish = app.buttons["finishChildStructureDraftRecovery"]; childReveal(finish, app)
+        XCTAssertGreaterThanOrEqual(finish.frame.height, 44)
+        XCTAssertEqual(childField("childStructureNewTitle", app).value as? String, "Keep the original saved action")
+        XCTAssertFalse(childField("childStructureNewTitle", app).isEnabled)
+        structureSnapshot(app, "Finish recovery without current task access")
+        completionReadyPress(finish, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: title)], timeout: 12), .completed, app.debugDescription)
+        childDone(app)
+        childProbe(app, "structureDrafts=0 structureDraftPending=0 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native", large: true)
+        childProbe(app, "structureDrafts=0 structureDraftPending=0 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+        childHomePress("childNativeStructureRecovery", app); childReveal(phase, app)
+        XCTAssertEqual(phase.label, "Saved · not sent")
+        XCTAssertFalse(title.exists)
+        structureSnapshot(app, "Only the original unsent action remains after cold return")
+    }
     @MainActor func testChildStructureDiscardConfirmationKeepsConcurrentDraftUpdate() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
         try childOpen(app, extra: "--child-structure-discard-refresh", large: true)

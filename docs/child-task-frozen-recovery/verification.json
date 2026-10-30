@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "98e4bfdf67d4d0d88824dcb78e287578aeb2b65821fdf2a256c5719ed7da2084",
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "b7522be814893d7928598d1b4287547c37852fe0ac55943e7cfef9e11df2ca91",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "bd19f91ff603052e114e412e50ccafa92806d9731f5e73ef0062cec1fb3e00f2",
+    "Taskfold/ChildStructureNativeFixture.swift": "44dfb19dcd009e2fee0c8ade46897fe4d3e94f08e98567c05e4c306298713d63",
+    "Taskfold/ChildFieldNativeFixture.swift": "fc6cc2a1d9a03d80b12359245536feb065172fe821dd17a8788c8858798a9517",
+    "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "31bb9e59575362b84feda00cfd1e6e8b00020d8e3edf33d0ef2a91e5fa90c3cc",
+    "TaskfoldUITests/AudioCommentUITests.swift": "fd30c0db7dc51e41bcb03b996e15dce3506fcd9e2849197e82e6baf19cbc46aa"
+  },
+  "namespaceAdjustedBuiltHostSHA256": {
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "98e4bfdf67d4d0d88824dcb78e287578aeb2b65821fdf2a256c5719ed7da2084",
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "b7522be814893d7928598d1b4287547c37852fe0ac55943e7cfef9e11df2ca91",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "bd19f91ff603052e114e412e50ccafa92806d9731f5e73ef0062cec1fb3e00f2",
+    "Taskfold/ChildStructureNativeFixture.swift": "44dfb19dcd009e2fee0c8ade46897fe4d3e94f08e98567c05e4c306298713d63",
+    "Taskfold/ChildFieldNativeFixture.swift": "fc6cc2a1d9a03d80b12359245536feb065172fe821dd17a8788c8858798a9517",
+    "TaskfoldUITests/AudioCommentUITests.swift": "fd30c0db7dc51e41bcb03b996e15dce3506fcd9e2849197e82e6baf19cbc46aa"
+  },
+  "coreSelectedTests": 139,
+  "corePassedTests": 139,
+  "coreFailedTests": 0,
+  "coreSuites": {
+    "command": 29,
+    "read": 13,
+    "recovery": 97
+  },
+  "newCoreTestMethods": 7,
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "mobilePhases": [
+    {
+      "device": "phone",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "caseSeconds": 95.574,
+      "defaultAllowanceSeconds": 180,
+      "maximumAllowanceSeconds": 240
+    },
+    {
+      "device": "ipad",
+      "selected": 1,
+      "passed": 1,
+      "failed": 0,
+      "caseSeconds": 90.937,
+      "defaultAllowanceSeconds": 180,
+      "maximumAllowanceSeconds": 240
+    }
+  ],
+  "normalFeatureFlags": {
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "newSQL": false,
+  "newSimulators": 0,
+  "macRuntimeAccepted": false,
+  "spokenAccepted": false,
+  "developmentSigningReceipt": {
+    "Taskfold.app/PlugIns/TaskfoldWidgets.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app/PlugIns/TaskfoldShare.appex": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "Taskfold.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true,
+      "simulatorIdentityAndAppGroupVerified": true
+    },
+    "TaskfoldUITests-Runner.app/PlugIns/TaskfoldUITests.xctest": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "team": "3UZ4C73FM2",
+      "strictSignatureVerified": true
+    }
+  },
+  "acceptanceScope": [
+    "Native frozen draft and exact queued action coexistence",
+    "Current reads deliberately unavailable; frozen text is read-only and explicit Finish recovery remains accessible",
+    "Only duplicate draft removed; one original unsent action survives cold return; zero task writes/requests"
+  ],
+  "phaseBoundary": "Earlier phone/iPad passes are retained before shortening the saved-action explanatory message. Final native passes bind to the concise-copy source phase. This is not an all-hierarchy same-binary sweep.",
+  "remaining": [
+    "Native receipt/disposal coexistence and broader concurrency/account/window/background recovery",
+    "Mac/spoken and wider placement/unavailable-target acceptance",
+    "Full independent-record migration, older-data adoption and remaining Px"
+  ]
+}

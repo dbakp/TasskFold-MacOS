@@ -280,6 +280,82 @@ extension ChildTaskStructureRecoveryTests {
         let queued = await model.queueDraftAction(draft.pendingCommand!, read: read); XCTAssertFalse(queued)
         let state = try await j.load(); XCTAssertEqual(state.entries.map(\.command), [other]); XCTAssertTrue(peer.calls.isEmpty)
     }
+    @MainActor private func frozenRecoveryFixture() async throws -> (ChildTaskStructureDraft, ChildTaskStructureDraftJournal, ChildTaskStructureJournal, ChildTaskStructurePresentation, StructureJournalIO, StructurePeer) {
+        let captured = scope(try command()), read = try presentationRead(captured)
+        let draft = try ChildTaskStructureDraft(read: read).editing(title: "Original frozen action", parent: nil, index: 0).preparing(read)
+        let root = try directory(), io = StructureJournalIO(), drafts = try draftJournal(draft, io, root), commands = try journal(draft.pendingCommand!, StructureJournalIO(), root), peer = StructurePeer()
+        try await drafts.save(draft, replacing: nil, lease: CalendarReadLease())
+        let model = ChildTaskStructurePresentation(scope: captured, journal: commands, service: peer, current: { captured }, canQueue: { _ in false }, canSend: { _ in false }, draftJournal: drafts)
+        return (draft, drafts, commands, model, io, peer)
+    }
+    @MainActor func testFinishFrozenDraftPreservesEverySavedActionPhaseWithoutReadOrSend() async throws {
+        for phase in [ChildTaskStructureJournalState.Phase.queued, .attempted, .confirmed, .closed] {
+            let (draft, drafts, commands, model, _, peer) = try await frozenRecoveryFixture(), command = draft.pendingCommand!
+            let lease = CalendarReadLease(); try await commands.enqueue(command, lease: lease)
+            if phase == .attempted { _ = try await commands.attempt(command, lease: lease) }
+            if phase == .confirmed { _ = try await commands.attempt(command, lease: lease); try await commands.confirm(command, receipt: structureReply(command), lease: lease) }
+            if phase == .closed { _ = try await commands.attempt(command, lease: lease); try await commands.resolve(command, decision: structureDecision(command), lease: lease) }
+            let before = try await commands.load()
+            await model.load(); let finished = await model.finishSavedDraft(draft); XCTAssertTrue(finished)
+            let after = try await commands.load(), remaining = try await drafts.load()
+            XCTAssertEqual(after.entries, before.entries); XCTAssertEqual(after.disposals, before.disposals); XCTAssertTrue(remaining.entries.isEmpty)
+            XCTAssertTrue(peer.calls.isEmpty); XCTAssertTrue(peer.closes.isEmpty); XCTAssertTrue(peer.disposalCalls.isEmpty)
+        }
+    }
+    @MainActor func testFinishFrozenDraftRefusesAbsentOrCollidingSavedAction() async throws {
+        for collision in [false, true] {
+            let (draft, drafts, commands, model, _, peer) = try await frozenRecoveryFixture()
+            if collision {
+                var body = draft.pendingCommand!.body; var node = body["node"]!.object; node["title"] = .string("Different saved body"); body["node"] = .object(node)
+                try await commands.enqueue(ChildTaskStructureCommand(account: draft.account, origin: draft.origin, body: body), lease: CalendarReadLease())
+            }
+            let before = try await commands.load(); await model.load()
+            let finished = await model.finishSavedDraft(draft); XCTAssertFalse(finished)
+            let kept = try await drafts.load(), after = try await commands.load()
+            XCTAssertEqual(kept.entries, [draft]); XCTAssertEqual(after.entries, before.entries); XCTAssertTrue(peer.calls.isEmpty)
+        }
+    }
+    @MainActor func testFinishDraftRefusesUnfrozenDraftEvenWithMatchingSavedCommand() async throws {
+        let (frozen, drafts, commands, model, _, peer) = try await frozenRecoveryFixture()
+        try await drafts.discard(frozen, lease: CalendarReadLease())
+        let unfrozen = try ChildTaskStructureDraft(account: frozen.account, origin: frozen.origin, body: frozen.body)
+        try await drafts.save(unfrozen, replacing: nil, lease: CalendarReadLease()); try await commands.enqueue(frozen.pendingCommand!, lease: CalendarReadLease())
+        await model.load(); let finished = await model.finishSavedDraft(unfrozen); XCTAssertFalse(finished)
+        let kept = try await drafts.load(); XCTAssertEqual(kept.entries, [unfrozen]); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testFinishFrozenDraftRefusesNewerPrivateRevision() async throws {
+        let (draft, drafts, commands, model, _, peer) = try await frozenRecoveryFixture()
+        try await commands.enqueue(draft.pendingCommand!, lease: CalendarReadLease()); await model.load()
+        let newer = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: draft.body, pendingCommand: draft.pendingCommand)
+        try await drafts.save(newer, replacing: draft.token, lease: CalendarReadLease())
+        let finished = await model.finishSavedDraft(draft); XCTAssertFalse(finished)
+        let kept = try await drafts.load(); XCTAssertEqual(kept.entries, [newer]); XCTAssertEqual(model.drafts, [newer]); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testFinishFrozenDraftWriteFailureCanRetryOriginalAction() async throws {
+        let (draft, drafts, commands, model, io, peer) = try await frozenRecoveryFixture()
+        try await commands.enqueue(draft.pendingCommand!, lease: CalendarReadLease()); await model.load(); io.failWrite = true
+        let failed = await model.finishSavedDraft(draft); XCTAssertFalse(failed)
+        let kept = try await drafts.load(); XCTAssertEqual(kept.entries, [draft])
+        io.failWrite = false; let retried = await model.finishSavedDraft(draft); XCTAssertTrue(retried)
+        let after = try await commands.load(); XCTAssertEqual(after.entries.map(\.command), [draft.pendingCommand!]); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testFinishFrozenDraftLostCleanupReplyKeepsSavedAction() async throws {
+        let (draft, drafts, commands, model, io, peer) = try await frozenRecoveryFixture()
+        try await commands.enqueue(draft.pendingCommand!, lease: CalendarReadLease()); await model.load(); io.failAfterWrite = true
+        let failed = await model.finishSavedDraft(draft); XCTAssertFalse(failed)
+        io.failAfterWrite = false
+        let after = try await commands.load(), kept = try await drafts.load()
+        XCTAssertTrue(kept.entries.isEmpty); XCTAssertTrue(model.drafts.isEmpty); XCTAssertEqual(after.entries.map(\.command), [draft.pendingCommand!]); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testFinishFrozenDraftAfterScopeDepartureKeepsBothCopies() async throws {
+        let (draft, drafts, commands, _, _, peer) = try await frozenRecoveryFixture()
+        let captured = scope(draft.pendingCommand!); var live: ChildTaskFieldClientScope? = captured
+        let model = ChildTaskStructurePresentation(scope: captured, journal: commands, service: peer, current: { live }, canQueue: { _ in false }, canSend: { _ in false }, draftJournal: drafts)
+        try await commands.enqueue(draft.pendingCommand!, lease: CalendarReadLease()); await model.load(); live = nil
+        let finished = await model.finishSavedDraft(draft); XCTAssertFalse(finished)
+        let kept = try await drafts.load(), after = try await commands.load()
+        XCTAssertEqual(kept.entries, [draft]); XCTAssertEqual(after.entries.map(\.command), [draft.pendingCommand!]); XCTAssertTrue(peer.calls.isEmpty); XCTAssertNil(model.message)
+    }
     @MainActor func testNativeRecoveryLoadsAndDiscardsDraftWithoutChangingActions() async throws {
         let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read).editing(title: "Unfinished", parent: nil, index: 0)
         let root = try directory(), io = StructureJournalIO(), drafts = try draftJournal(draft, io, root), commands = try journal(command(), StructureJournalIO(), root), peer = StructurePeer()

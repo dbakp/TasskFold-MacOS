@@ -23,6 +23,17 @@ import CryptoKit
             } catch { /* The test requires the updated row; a failed injection cannot pass. */ }
         }
     }
+    static func seedDuplicateDraftForNativeTest() async throws {
+        guard enabled, ProcessInfo.processInfo.arguments.contains("--child-structure-duplicate-draft"),
+              ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") else { return }
+        let store = Store.shared, read = try await store.readCurrentChildTaskStructure(ChildFieldNativeIdentity.rootID)
+        let draft = try ChildTaskStructureDraft(read: read).editing(title: "Keep the original saved action", parent: nil, index: 0).preparing(read)
+        let journal = try store.childTaskStructureDraftJournal(account: draft.account, origin: draft.origin)
+        try await journal.save(draft, replacing: nil, lease: CalendarReadLease())
+        let model = try store.childTaskStructurePresentation(); defer { model.close() }
+        guard await model.queueDraftAction(draft.pendingCommand!, read: read) else { throw ChildTaskStructureDraft.invalid }
+        var state = try ChildFieldNativePeer.state(); state["structureReadUnavailable"] = .bool(true); try ChildFieldNativePeer.save(state)
+    }
     static let paths = ["/rest/v1/rpc/taskfold_read_child_tasks", "/rest/v1/rpc/taskfold_read_child_structure", "/rest/v1/rpc/taskfold_edit_child_structure", "/rest/v1/rpc/taskfold_close_child_structure", "/rest/v1/rpc/taskfold_child_structure_undo_archives", "/rest/v1/rpc/taskfold_forget_child_structure_undo"]
     static func records(_ root: Record, state: inout [String: JSON]) -> [JSON] {
         var result: [JSON] = [], incarnations = state["structureIncarnations"]?.object ?? ["concept": .string("ec990000-0000-4000-8000-000000000005"), "review": .string("ec990000-0000-4000-8000-000000000006")], versions = state["versions"]!.object
@@ -92,6 +103,7 @@ import CryptoKit
             return try encoded(["protocol": .number(1), "account": .string(account), "request_id": .string(id), "outcome": .string("forgotten")])
         }
         if path.hasSuffix("taskfold_read_child_structure") || path.hasSuffix("taskfold_read_child_tasks") {
+            if state["structureReadUnavailable"]?.flag == true { throw ChildFieldNativeRefusal(code: "PT409") }
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"] else { throw ChildFieldNativeRefusal(code: "PT409") }
             try ChildFieldNativePeer.save(state)
             var reply: [String: JSON] = ["protocol": .number(1), "account": .string(account), "task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": root["project_id"], "projection_revision": .number(Double(state["writes"]!.integer + (state["structureWrites"]?.integer ?? 0) + 1)), "root_kind": .string(root["subtasks"] == .null ? "null" : "array"), "records": .array(rows)]

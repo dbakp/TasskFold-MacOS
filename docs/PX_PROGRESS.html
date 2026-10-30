@@ -56,7 +56,7 @@ if (!window.openai) {
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--muted)" aria-hidden="true"></span>To build</span>
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-3)" aria-hidden="true"></span>Deferred</span>
 </div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope.</div>
-<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · Independent subtask storage and recovery</summary><div>Discard now stays tied to the draft you reviewed. A native second-writer check passes on phone/iPad: newer work survives confirmation, Resume and cold return. Full subtask migration and wider lifecycle/Mac checks remain.</div></details>
+<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · Independent subtask storage and recovery</summary><div>Recovery now handles a draft whose exact action is already saved, even when its task cannot be read. Phone/iPad checks preserve the original unsent action through cleanup and cold return. Full migration and wider recovery/Mac checks remain.</div></details>
 <details class="px-stage" id="px-p0" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P0 · Foundations</span></span><span class="text-small text-muted" aria-hidden="true">11 verified · 1 built / checks left · 1 to build · 3 deferred</span><svg class="px-meter" viewBox="0 0 16 1" preserveAspectRatio="none" role="img" aria-label="11 verified · 1 built / checks left · 1 to build · 3 deferred"><rect x="0" y="0" width="11" height="1" fill="var(--viz-series-1)"/><rect x="11" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="12" y="0" width="1" height="1" fill="var(--muted)"/><rect x="13" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">Core workflows accepted in recorded scope. Deletion recovery and three paused rollout gates remain.</div>
 <details class="px-group" id="p0-core" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Everyday task foundations</span></span><span class="text-small text-muted" aria-hidden="true">6 verified</span><svg class="px-meter" viewBox="0 0 6 1" preserveAspectRatio="none" role="img" aria-label="6 verified"><rect x="0" y="0" width="6" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p0-core-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Todoist import and safe retry</span><span class="text-small text-muted">Verified</span></div>
@@ -313,7 +313,7 @@ if (!window.openai) {
 <div class="px-item-detail text-small text-muted">Tests cover separate subtasks, edits, completion, reordering, retry and Undo. Storage migration and everyday use remain unfinished.</div>
 </div></li>
 <li class="px-item" data-state="verify" id="p2-teams-item-3"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">New subtask organizer and recovery</span><span class="text-small text-muted">Built · checks left</span></div>
-<div class="px-item-detail text-small text-muted">Add/Move cold recovery, unsent handoff and held-Discard concurrent updates pass recorded phone/iPad checks. Mac/spoken, frozen draft/action coexistence and wider lifecycle remain; normal use stays gated.</div>
+<div class="px-item-detail text-small text-muted">Phone/iPad checks cover Add/Move cold drafts, concurrent Discard protection, and duplicate draft/action cleanup when current task reads fail. Mac/spoken, receipt/disposal coexistence and wider lifecycle remain; normal use stays gated.</div>
 </div></li>
 <li class="px-item" data-state="verify" id="p2-teams-item-4"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Team permissions, account switching and secure storage</span><span class="text-small text-muted">Built · checks left</span></div>
 <div class="px-item-detail text-small text-muted">Real shared-account, multiple-window, Mac and VoiceOver checks remain.</div>
@@ -324,7 +324,7 @@ if (!window.openai) {
 <li class="px-item" data-state="verify" id="p2-teams-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real cloud-media and provider checks</span><span class="text-small text-muted">Built · checks left</span></div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-7"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Move subtask storage and preserve older work</span><span class="text-small text-muted">To build</span></div>
-<div class="px-item-detail text-small text-muted">Full storage migration and older-data adoption remain. Phone/iPad draft handoff and concurrent Discard protection pass; frozen draft/action coexistence, wider placement/account/window/background recovery and Mac/spoken acceptance remain open.</div>
+<div class="px-item-detail text-small text-muted">Full storage migration and older-data adoption remain. Native phone/iPad draft handoff and local duplicate cleanup pass. Receipt/disposal coexistence, wider placement/account/window/background recovery and Mac/spoken acceptance are still open.</div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Shared audio publishing and storage permissions</span><span class="text-small text-muted">To build</span></div>
 <div class="px-item-detail text-small text-muted">Shared publishing/removal, older history handling and storage/access rules are unfinished.</div>
@@ -341,6 +341,7 @@ if (!window.openai) {
 <li><a href="child-task-structure-draft-native/verification.json" target="_blank" rel="noopener">child-task-structure-draft-native/verification.json</a></li>
 <li><a href="child-task-move-draft-native/verification.json" target="_blank" rel="noopener">child-task-move-draft-native/verification.json</a></li>
 <li><a href="child-task-discard-intent/verification.json" target="_blank" rel="noopener">child-task-discard-intent/verification.json</a></li>
+<li><a href="child-task-frozen-recovery/verification.json" target="_blank" rel="noopener">child-task-frozen-recovery/verification.json</a></li>
 </ul></details></details>
 <details class="px-group" id="p2-watch" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Apple Watch</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p2-watch-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Today, reviewed capture and offline completion implementation</span><span class="text-small text-muted">Verified</span></div>
@@ -356,9 +357,9 @@ if (!window.openai) {
 </ul></details></details>
 </details>
 <footer class="px-footer"><details id="px-next" data-remember><summary class="cursor-interaction">Next in the active work</summary><ol>
-<li>Verify frozen drafts, saved actions and receipts together during recovery failures.</li>
 <li>Finish independent subtask migration and preserve older work.</li>
-<li>Finish wider Mac/account/window checks and team/audio recovery; keep agreed deferrals paused.</li>
+<li>Finish receipt/disposal recovery and wider Mac/account/window/background checks.</li>
+<li>Finish team/audio recovery and custody checks; keep agreed deferrals paused.</li>
 </ol></details><div class="text-small text-muted">Both apps own their dashboard and sources. Reviewed snapshot; no live telemetry or completion-date estimate.</div></footer>
 </div>
 <script>
