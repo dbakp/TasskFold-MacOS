@@ -1,0 +1,625 @@
+{
+  "schema": 1,
+  "updated": "2026-10-30",
+  "title": "Taskfold · progress",
+  "scope": "Both independently owned Apple apps",
+  "headline": "The agreed P1 batch is complete. Current work is P2.",
+  "focus": "Moving subtasks to independent storage",
+  "latest": "Organizer, Undo/retry and private-draft return: eight phone journeys verified across phases. These new controls remain disabled pending migration and remaining checks.",
+  "next": [
+    "Polish the subtask selector and verify iPad/Mac flows.",
+    "Preserve unfinished organizer drafts and move older subtasks to independent storage.",
+    "Finish team/audio recovery and storage checks; keep deferred work paused."
+  ],
+  "stages": [
+    {
+      "id": "p0",
+      "title": "P0 · Foundations",
+      "summary": "Core workflows accepted in recorded scope. Deletion recovery and three paused rollout gates remain.",
+      "groups": [
+        {
+          "id": "p0-core",
+          "title": "Everyday task foundations",
+          "items": [
+            {
+              "state": "done",
+              "title": "Todoist import and safe retry",
+              "detail": "Real read-only provider import, replay/retry and imported-workspace handoff; source tasks preserved."
+            },
+            {
+              "state": "done",
+              "title": "Quick capture and planning grammar",
+              "detail": "Supported dates, priorities, estimates, repeat/reminder tokens and durable edits."
+            },
+            {
+              "state": "done",
+              "title": "Saved filters, favorites and ordering",
+              "detail": "Supported query contract, account boundaries, offline changes and representative handoffs."
+            },
+            {
+              "state": "done",
+              "title": "Deadlines, estimates and day planning",
+              "detail": "Independent deadline/date behavior, recurrence boundaries and calendar capacity in recorded flows."
+            },
+            {
+              "state": "done",
+              "title": "Local reminders and actions",
+              "detail": "Closed-app Open, Complete, Tomorrow and Snooze in recorded Mac/Simulator flows. Remote delivery is separate."
+            },
+            {
+              "state": "done",
+              "title": "Work continuity",
+              "detail": "Representative task, note, Focus, label/comment and access-loss recovery journeys."
+            }
+          ],
+          "sources": [
+            "P0_PROGRESS.md",
+            "p0-requirements-audit.json"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p0-surface",
+          "title": "Widgets, recovery and accessibility",
+          "items": [
+            {
+              "state": "done",
+              "title": "Twelve productive widget kinds",
+              "detail": "Representative installed routes, configuration, completion feedback, account isolation and physical Lock Screen privacy."
+            },
+            {
+              "state": "done",
+              "title": "Backup and restore",
+              "detail": "Portable/encrypted restore, relationships, Cancel/retry and recorded external-provider transfer."
+            },
+            {
+              "state": "done",
+              "title": "Named VoiceOver workflows",
+              "detail": "Representative capture, edit, completion, Undo, validation and restore-picker speech; not a universal accessibility audit."
+            },
+            {
+              "state": "done",
+              "title": "Independent Mac and iOS repositories",
+              "detail": "Each app owns its source, widgets, tests and release inputs."
+            }
+          ],
+          "sources": [
+            "P0_PROGRESS.md",
+            "p0-requirements-audit.json"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p0-removal",
+          "title": "Account deletion follow-up",
+          "items": [
+            {
+              "state": "done",
+              "title": "Deployed deletion service and iPhone recovery proof",
+              "detail": "Normal deletion, lost response/retry and proof-based recovery after synthetic receipt expiry."
+            },
+            {
+              "state": "verify",
+              "title": "Mac deletion and secure-storage walkthrough",
+              "detail": "The Mac Keychain and real deletion/recovery journey still need verification."
+            },
+            {
+              "state": "build",
+              "title": "Finish recovery of older attempts and leftover files",
+              "detail": "Recovery for expired older attempts, leftover-file repair and broader failure/concurrency cases remain open."
+            }
+          ],
+          "sources": [
+            "ACCOUNT_REMOVAL.md",
+            "P0_PROGRESS.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p0-paused",
+          "title": "Rollout work you paused",
+          "items": [
+            {
+              "state": "deferred",
+              "title": "Remote reminders",
+              "detail": "Real server-delivered notifications, registration/reinstall recovery and actual delivery checks."
+            },
+            {
+              "state": "deferred",
+              "title": "Safe upgrades for older app versions",
+              "detail": "Older active writers can bypass newer safeguards; coordinated upgrade/retirement is still required."
+            },
+            {
+              "state": "deferred",
+              "title": "Distribution verification",
+              "detail": "Release signing, install/update checks, Mac distribution/notarization and App Store submission."
+            }
+          ],
+          "sources": [
+            "PX_CHECKLIST.md",
+            "P0_PROGRESS.md"
+          ],
+          "focus": false
+        }
+      ]
+    },
+    {
+      "id": "p1",
+      "title": "P1 · Agreed expansion",
+      "summary": "7 of 7 agreed feature packages accepted within the recorded scope. Live calendar-provider setup is deferred.",
+      "groups": [
+        {
+          "id": "p1-subtasks",
+          "title": "1 · Nested subtask editing",
+          "items": [
+            {
+              "state": "done",
+              "title": "Edit nested children, notes and planning",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Add, reorder and indent whole branches",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Save/relaunch and concurrent move/edit preservation",
+              "detail": "The original nested-task editor is accepted. Moving subtasks into their own storage records is additional P2 work below."
+            }
+          ],
+          "sources": [
+            "p1-completion-audit.json",
+            "P1_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p1-templates",
+          "title": "2 · Saved template management",
+          "items": [
+            {
+              "state": "done",
+              "title": "Rename and edit saved definitions",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Review source refresh; preserve existing runs",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Unsupported-version and cross-device review",
+              "detail": ""
+            }
+          ],
+          "sources": [
+            "p1-completion-audit.json",
+            "P1_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p1-widgets",
+          "title": "3 · Widget ordering",
+          "items": [
+            {
+              "state": "done",
+              "title": "Saved manual order and grouping",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Honest completion, retry and empty states",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Representative installed-host and relaunch proof",
+              "detail": ""
+            }
+          ],
+          "sources": [
+            "p1-completion-audit.json",
+            "P1_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p1-insights",
+          "title": "4 · Insights and goals",
+          "items": [
+            {
+              "state": "done",
+              "title": "Daily/weekly progress with explicit history coverage",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Rest days, deduplication and reopen corrections",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Matching settings and results in recorded native scopes",
+              "detail": ""
+            }
+          ],
+          "sources": [
+            "p1-completion-audit.json",
+            "P1_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p1-recurrence",
+          "title": "5 · Multiple monthly dates",
+          "items": [
+            {
+              "state": "done",
+              "title": "Date sets and occurrence previews",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Month-end, time-zone and count/end boundaries",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Persistence, completion, Undo and compatibility checks",
+              "detail": ""
+            }
+          ],
+          "sources": [
+            "p1-completion-audit.json",
+            "P1_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p1-calendar",
+          "title": "6 · Google / Outlook calendars",
+          "items": [
+            {
+              "state": "done",
+              "title": "Read-only authorization bridge and configuration guards",
+              "detail": "Implementation and synthetic/native acceptance; no provider write-back."
+            },
+            {
+              "state": "done",
+              "title": "Account selection and planner integration",
+              "detail": "Private-event handling, selection, reconnect/disconnect and timeline controls in recorded scopes."
+            },
+            {
+              "state": "deferred",
+              "title": "Real provider registrations and consent",
+              "detail": "You will configure native client IDs later. Genuine refresh/revocation and provider credentials remain unverified."
+            }
+          ],
+          "sources": [
+            "p1-completion-audit.json",
+            "P1_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p1-mentions",
+          "title": "7 · Project activity and mentions",
+          "items": [
+            {
+              "state": "done",
+              "title": "Current-project activity and authenticated authorship",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Permission-checked mentions and durable outbox/inbox",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Departed-member and honest-delivery checks",
+              "detail": "Accepted in recorded native-fixture and genuine HTTP/server scopes; remote push remains deferred."
+            }
+          ],
+          "sources": [
+            "p1-completion-audit.json",
+            "P1_PLAN.md"
+          ],
+          "focus": false
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "title": "P2 · Advanced work",
+      "summary": "In progress. Much of the implementation exists; integration, real-account recovery checks and checks before everyday use remain.",
+      "groups": [
+        {
+          "id": "p2-portable",
+          "title": "1 · Portable templates",
+          "items": [
+            {
+              "state": "done",
+              "title": "Versioned workflow import/export and private copies",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Bounded reads and incompatible-file refusal",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "App wait, Cancel, retry and relaunch",
+              "detail": "Recorded Mac/phone/tablet scopes; Mac platform warning remains documented."
+            },
+            {
+              "state": "verify",
+              "title": "External file-provider transfer and recovery",
+              "detail": "Controlled provider tests are not universal cloud-provider acceptance."
+            }
+          ],
+          "sources": [
+            "PX_CHECKLIST.md",
+            "P2_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p2-share",
+          "title": "2 · Share and browser capture",
+          "items": [
+            {
+              "state": "done",
+              "title": "Reviewed share-extension text/link capture",
+              "detail": "Account-bound drafts, offline/relaunch and isolation checks."
+            },
+            {
+              "state": "done",
+              "title": "Mac Safari/TextEdit capture and Undo/Redo",
+              "detail": "Recorded local review, Cancel/Add and cold return; temporary extension setting restored."
+            },
+            {
+              "state": "verify",
+              "title": "Broader Mac cloud/account/speech and source apps",
+              "detail": ""
+            }
+          ],
+          "sources": [
+            "PX_CHECKLIST.md",
+            "P2_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p2-views",
+          "title": "3 · Notes, output and view control",
+          "items": [
+            {
+              "state": "verify",
+              "title": "Rich-note formatting and heading authoring",
+              "detail": "Implementation and guarded candidates exist; broader native/shared/cloud/exposure checks remain."
+            },
+            {
+              "state": "done",
+              "title": "Print/PDF and pinned-note output",
+              "detail": "Representative output and native Save/Cancel/readback scopes."
+            },
+            {
+              "state": "done",
+              "title": "Phone/iPad CSV Share → local Files",
+              "detail": "Actual readback and cold preservation at largest text."
+            },
+            {
+              "state": "done",
+              "title": "Expanded filters, grouping and gesture foundations",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Background workflow and local-history foundations",
+              "detail": "Preservation, cancellation and changed-source checks; remaining pauses are tracked separately."
+            },
+            {
+              "state": "verify",
+              "title": "Heading support and compatibility on both devices",
+              "detail": "Independent child-record migration is tracked in section 6."
+            },
+            {
+              "state": "verify",
+              "title": "Remaining native/speech/large-text acceptance",
+              "detail": "Recorded Mac system warnings still need assessment; clean behavior is not established for every screen."
+            },
+            {
+              "state": "verify",
+              "title": "External-provider output and wider device cases",
+              "detail": ""
+            },
+            {
+              "state": "build",
+              "title": "Reduce remaining large-workflow save pauses",
+              "detail": "Production rendering and richer assignment/child workloads still need implementation and validation."
+            }
+          ],
+          "sources": [
+            "PX_CHECKLIST.md",
+            "P2_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p2-voice",
+          "title": "4 · Reviewed voice drafts",
+          "items": [
+            {
+              "state": "done",
+              "title": "Correction, review and explicit Apply",
+              "detail": "Recorded app flows with simulated recording preserve the parent draft."
+            },
+            {
+              "state": "verify",
+              "title": "Remaining speech, recording and recovery checks",
+              "detail": ""
+            },
+            {
+              "state": "deferred",
+              "title": "Real microphone, dictation and permissions",
+              "detail": "You asked to do genuine audio testing later."
+            },
+            {
+              "state": "build",
+              "title": "Cloud AI assistance decisions",
+              "detail": "Provider, cost and data handling are undecided; assistance stays disabled."
+            }
+          ],
+          "sources": [
+            "PX_CHECKLIST.md",
+            "P2_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p2-reminders",
+          "title": "5 · Advanced reminders",
+          "items": [
+            {
+              "state": "done",
+              "title": "Interval, time-zone and holiday-policy foundations",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Private places and native reminder setup",
+              "detail": "Recorded Simulator/Core setup, snooze/cancellation and recovery scopes."
+            },
+            {
+              "state": "verify",
+              "title": "Travel and Time Sensitive delivery",
+              "detail": "Ordinary notifications do not establish urgent or critical delivery guarantees."
+            },
+            {
+              "state": "deferred",
+              "title": "Physical geofence delivery",
+              "detail": "Awaiting a suitable real-device session. Server/assigned-recipient delivery is paused under P0."
+            }
+          ],
+          "sources": [
+            "PX_CHECKLIST.md",
+            "P2_PLAN.md"
+          ],
+          "focus": false
+        },
+        {
+          "id": "p2-teams",
+          "title": "6 · Automation, teams and subtask storage",
+          "items": [
+            {
+              "state": "done",
+              "title": "Scoped credentials and webhooks",
+              "detail": "Recorded local, hosted and native permission/recovery scopes."
+            },
+            {
+              "state": "done",
+              "title": "Team-management candidate foundations",
+              "detail": "Roles, folders and guarded operation/selection/template recovery foundations."
+            },
+            {
+              "state": "done",
+              "title": "Subtask data and safe-retry foundations",
+              "detail": "Tests cover separate subtasks, edits, completion, reordering, retry and Undo. Storage migration and everyday use remain unfinished."
+            },
+            {
+              "state": "verify",
+              "title": "New subtask organizer and recovery",
+              "detail": "Latest: eight representative phone journeys pass across recorded versions; 60 focused checks pass per repo. Mac/iPad checks and everyday use remain unfinished."
+            },
+            {
+              "state": "verify",
+              "title": "Team permissions, account switching and secure storage",
+              "detail": "Real shared-account, multiple-window, Mac and VoiceOver checks remain."
+            },
+            {
+              "state": "verify",
+              "title": "Audio comments: full app and recovery integration",
+              "detail": "Many screen and data checks pass. Normal entry points remain disabled until recovery and access/storage checks are complete."
+            },
+            {
+              "state": "verify",
+              "title": "Real cloud-media and provider checks",
+              "detail": ""
+            },
+            {
+              "state": "build",
+              "title": "Move subtask storage and preserve older work",
+              "detail": "Moving older data and preserving unfinished organizer drafts remain. The subtask picker also needs largest-text polish."
+            },
+            {
+              "state": "build",
+              "title": "Shared audio publishing and storage permissions",
+              "detail": "Shared publishing/removal, older history handling and storage/access rules are unfinished."
+            },
+            {
+              "state": "deferred",
+              "title": "Inbound email domain/provider and real delivery",
+              "detail": "Prepared for later configuration, as requested."
+            }
+          ],
+          "sources": [
+            "PX_CHECKLIST.md",
+            "P2_PLAN.md",
+            "child-task-structure-native/verification.json"
+          ],
+          "focus": true
+        },
+        {
+          "id": "p2-watch",
+          "title": "7 · Apple Watch",
+          "items": [
+            {
+              "state": "done",
+              "title": "Today, reviewed capture and offline completion implementation",
+              "detail": ""
+            },
+            {
+              "state": "done",
+              "title": "Recorded paired Watch/iPhone Simulator journeys",
+              "detail": ""
+            },
+            {
+              "state": "verify",
+              "title": "Real-device, background, account/reinstall and speech checks",
+              "detail": "Android/Wear OS are future separately owned clients, outside this Apple-app batch."
+            }
+          ],
+          "sources": [
+            "PX_CHECKLIST.md",
+            "P2_PLAN.md"
+          ],
+          "focus": false
+        }
+      ]
+    }
+  ],
+  "sources": [
+    "PX_CHECKLIST.md",
+    "P0_PROGRESS.md",
+    "p0-requirements-audit.json",
+    "p1-completion-audit.json",
+    "P2_PLAN.md",
+    "ACCOUNT_REMOVAL.md",
+    "child-task-structure-native/verification.json"
+  ],
+  "source_hashes": {
+    "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
+    "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
+    "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
+    "P2_PLAN.md": "feefc8da2e8a3902c7e1e29e3362b77149efe1fdba6571d38da06147805f9b1a",
+    "PX_CHECKLIST.md": "33be2f37fe24a89599c7d7470afb9446e5441cba3a7487f6cefd992624651180",
+    "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",
+    "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
+    "p1-completion-audit.json": "247195c4d7743f3eca09f8c8461e0a971aa9dbe89dd5c839a81c5454082ae41a"
+  }
+}

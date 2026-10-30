@@ -1,5 +1,7 @@
 # Remaining product backlog
 
+[Progress dashboard](PX_PROGRESS.html) · [Snapshot and maintenance](PX_PROGRESS.md)
+
 Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
 ## Current implementation focus

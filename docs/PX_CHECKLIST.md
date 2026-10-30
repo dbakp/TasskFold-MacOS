@@ -1,5 +1,7 @@
 # Px checklist — 30 October 2026
 
+[Open the maintained progress dashboard](PX_PROGRESS.html). It separates verified checkpoints, built work awaiting checks, remaining implementation and deferrals.
+
 This is a feature-level progress snapshot, not a release-readiness certificate.
 Checked items are complete within their recorded acceptance scope. Open items
 include implementation, exposure or verification; source-only work is not marked

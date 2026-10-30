@@ -9843,3 +9843,6 @@ Both apps now own scoped native hierarchy organization and recovery: reviewed ad
 Current native organization follow-up: compact accessibility status, independent archive controls and guarded field-draft continuation are implemented. Both apps build/sign; each repository independently passes 60 current recovery/presentation/continuation Core checks. Eight representative phone journeys now have passing phase evidence; the final largest-text draft return passes with unchanged saved original and zero field writes. Current Mac completion acceptance stopped before the app because UI Automation initialization timed out; direct app controls also timed out. The isolated app is closed. No Mac runtime or speech acceptance is inferred. [Exact phases](child-task-structure-native/README.md).
 
 Remaining visual finding: the largest-text field-editor selection caption truncates. Preserve its full accessible label and authored order while polishing its visible selection layout. This is not accepted Mac/iPad/spoken work.
+
+
+The maintained [Px progress dashboard](PX_PROGRESS.html) now summarizes current acceptance, implementation and explicit deferrals. Update its reviewed snapshot alongside meaningful milestones; see [maintenance](PX_PROGRESS.md).

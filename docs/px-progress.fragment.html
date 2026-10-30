@@ -1,0 +1,361 @@
+<style>
+#taskfold-px-progress { color: var(--foreground); min-width: 0; }
+#taskfold-px-progress .px-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
+#taskfold-px-progress .px-head h1 { margin: 0; }
+#taskfold-px-progress .px-intro { margin: 12px 0; }
+#taskfold-px-progress .px-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 12px 0 8px; }
+#taskfold-px-progress .px-key { display: inline-flex; align-items: center; gap: 6px; }
+#taskfold-px-progress .px-swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+#taskfold-px-progress summary { padding: 12px 0; min-height: 44px; }
+#taskfold-px-progress .px-summary { display: inline-grid; vertical-align: top; width: calc(100% - 1.4em); gap: 6px; }
+#taskfold-px-progress .px-heading { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+#taskfold-px-progress .px-title { font-weight: 500; }
+#taskfold-px-progress .px-meter { display: block; width: 100%; height: 8px; border-radius: 4px; }
+#taskfold-px-progress .px-stage { border-top: 1px solid var(--border); margin-top: 12px; }
+#taskfold-px-progress .px-group { margin-left: 16px; }
+#taskfold-px-progress .px-items { list-style: none; padding: 0; margin: 0 0 12px 16px; }
+#taskfold-px-progress .px-item { display: grid; grid-template-columns: 1.2em minmax(0, 1fr); column-gap: 8px; margin: 14px 0; }
+#taskfold-px-progress .px-item-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+#taskfold-px-progress .px-item-title { flex: 1 1 220px; }
+#taskfold-px-progress .px-item-detail { margin-top: 4px; }
+#taskfold-px-progress .px-sources { margin: 0 0 12px 16px; }
+#taskfold-px-progress .px-source-list { padding-left: 20px; overflow-wrap: anywhere; }
+#taskfold-px-progress .px-footer { border-top: 1px solid var(--border); margin-top: 16px; }
+#taskfold-px-progress .px-footer ol { padding-left: 24px; }
+#taskfold-px-progress .px-footer li { margin-bottom: 8px; }
+@media (max-width: 480px) { #taskfold-px-progress .px-group { margin-left: 8px; } }
+</style>
+<div id="taskfold-px-progress">
+<header class="px-head"><h1>Taskfold · progress</h1><span class="text-small text-muted">Reviewed <time datetime="2026-10-30">30 Oct 2026</time></span></header>
+<div class="px-intro">The agreed P1 batch is complete. Current work is P2.</div>
+<div class="px-legend" aria-label="Milestone states">
+<span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-1)" aria-hidden="true"></span>Verified</span>
+<span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-2)" aria-hidden="true"></span>Built · checks left</span>
+<span class="px-key text-small"><span class="px-swatch" style="background:var(--muted)" aria-hidden="true"></span>To build</span>
+<span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-3)" aria-hidden="true"></span>Deferred</span>
+</div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope.</div>
+<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · Moving subtasks to independent storage</summary><div>Organizer, Undo/retry and private-draft return: eight phone journeys verified across phases. These new controls remain disabled pending migration and remaining checks.</div></details>
+<details class="px-stage" id="px-p0" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P0 · Foundations</span></span><span class="text-small text-muted" aria-hidden="true">11 verified · 1 built / checks left · 1 to build · 3 deferred</span><svg class="px-meter" viewBox="0 0 16 1" preserveAspectRatio="none" role="img" aria-label="11 verified · 1 built / checks left · 1 to build · 3 deferred"><rect x="0" y="0" width="11" height="1" fill="var(--viz-series-1)"/><rect x="11" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="12" y="0" width="1" height="1" fill="var(--muted)"/><rect x="13" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">Core workflows accepted in recorded scope. Deletion recovery and three paused rollout gates remain.</div>
+<details class="px-group" id="p0-core" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Everyday task foundations</span></span><span class="text-small text-muted" aria-hidden="true">6 verified</span><svg class="px-meter" viewBox="0 0 6 1" preserveAspectRatio="none" role="img" aria-label="6 verified"><rect x="0" y="0" width="6" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p0-core-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Todoist import and safe retry</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Real read-only provider import, replay/retry and imported-workspace handoff; source tasks preserved.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Quick capture and planning grammar</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Supported dates, priorities, estimates, repeat/reminder tokens and durable edits.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Saved filters, favorites and ordering</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Supported query contract, account boundaries, offline changes and representative handoffs.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-3"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Deadlines, estimates and day planning</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Independent deadline/date behavior, recurrence boundaries and calendar capacity in recorded flows.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-4"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Local reminders and actions</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Closed-app Open, Complete, Tomorrow and Snooze in recorded Mac/Simulator flows. Remote delivery is separate.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-core-item-5"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Work continuity</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Representative task, note, Focus, label/comment and access-loss recovery journeys.</div>
+</div></li>
+</ul><details class="px-sources" id="p0-core-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>P0_PROGRESS.md</li>
+<li>p0-requirements-audit.json</li>
+</ul></details></details>
+<details class="px-group" id="p0-surface" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Widgets, recovery and accessibility</span></span><span class="text-small text-muted" aria-hidden="true">4 verified</span><svg class="px-meter" viewBox="0 0 4 1" preserveAspectRatio="none" role="img" aria-label="4 verified"><rect x="0" y="0" width="4" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p0-surface-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Twelve productive widget kinds</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Representative installed routes, configuration, completion feedback, account isolation and physical Lock Screen privacy.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-surface-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Backup and restore</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Portable/encrypted restore, relationships, Cancel/retry and recorded external-provider transfer.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-surface-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Named VoiceOver workflows</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Representative capture, edit, completion, Undo, validation and restore-picker speech; not a universal accessibility audit.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p0-surface-item-3"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Independent Mac and iOS repositories</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Each app owns its source, widgets, tests and release inputs.</div>
+</div></li>
+</ul><details class="px-sources" id="p0-surface-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>P0_PROGRESS.md</li>
+<li>p0-requirements-audit.json</li>
+</ul></details></details>
+<details class="px-group" id="p0-removal" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Account deletion follow-up</span></span><span class="text-small text-muted" aria-hidden="true">1 verified · 1 built / checks left · 1 to build</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="1 verified · 1 built / checks left · 1 to build"><rect x="0" y="0" width="1" height="1" fill="var(--viz-series-1)"/><rect x="1" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="2" y="0" width="1" height="1" fill="var(--muted)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p0-removal-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Deployed deletion service and iPhone recovery proof</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Normal deletion, lost response/retry and proof-based recovery after synthetic receipt expiry.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p0-removal-item-1"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Mac deletion and secure-storage walkthrough</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">The Mac Keychain and real deletion/recovery journey still need verification.</div>
+</div></li>
+<li class="px-item" data-state="build" id="p0-removal-item-2"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Finish recovery of older attempts and leftover files</span><span class="text-small text-muted">To build</span></div>
+<div class="px-item-detail text-small text-muted">Recovery for expired older attempts, leftover-file repair and broader failure/concurrency cases remain open.</div>
+</div></li>
+</ul><details class="px-sources" id="p0-removal-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>ACCOUNT_REMOVAL.md</li>
+<li>P0_PROGRESS.md</li>
+</ul></details></details>
+<details class="px-group" id="p0-paused" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Rollout work you paused</span></span><span class="text-small text-muted" aria-hidden="true">3 deferred</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 deferred"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="deferred" id="p0-paused-item-0"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Remote reminders</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Real server-delivered notifications, registration/reinstall recovery and actual delivery checks.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p0-paused-item-1"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Safe upgrades for older app versions</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Older active writers can bypass newer safeguards; coordinated upgrade/retirement is still required.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p0-paused-item-2"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Distribution verification</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Release signing, install/update checks, Mac distribution/notarization and App Store submission.</div>
+</div></li>
+</ul><details class="px-sources" id="p0-paused-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>PX_CHECKLIST.md</li>
+<li>P0_PROGRESS.md</li>
+</ul></details></details>
+</details>
+<details class="px-stage" id="px-p1" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P1 · Agreed expansion</span></span><span class="text-small text-muted" aria-hidden="true">20 verified · 1 deferred</span><svg class="px-meter" viewBox="0 0 21 1" preserveAspectRatio="none" role="img" aria-label="20 verified · 1 deferred"><rect x="0" y="0" width="20" height="1" fill="var(--viz-series-1)"/><rect x="20" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">7 of 7 agreed feature packages accepted within the recorded scope. Live calendar-provider setup is deferred.</div>
+<details class="px-group" id="p1-subtasks" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">1 · Nested subtask editing</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-subtasks-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Edit nested children, notes and planning</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-subtasks-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Add, reorder and indent whole branches</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-subtasks-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Save/relaunch and concurrent move/edit preservation</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">The original nested-task editor is accepted. Moving subtasks into their own storage records is additional P2 work below.</div>
+</div></li>
+</ul><details class="px-sources" id="p1-subtasks-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>p1-completion-audit.json</li>
+<li>P1_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p1-templates" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">2 · Saved template management</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-templates-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Rename and edit saved definitions</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-templates-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Review source refresh; preserve existing runs</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-templates-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Unsupported-version and cross-device review</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+</ul><details class="px-sources" id="p1-templates-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>p1-completion-audit.json</li>
+<li>P1_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p1-widgets" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">3 · Widget ordering</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-widgets-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Saved manual order and grouping</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-widgets-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Honest completion, retry and empty states</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-widgets-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Representative installed-host and relaunch proof</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+</ul><details class="px-sources" id="p1-widgets-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>p1-completion-audit.json</li>
+<li>P1_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p1-insights" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">4 · Insights and goals</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-insights-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Daily/weekly progress with explicit history coverage</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-insights-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Rest days, deduplication and reopen corrections</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-insights-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Matching settings and results in recorded native scopes</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+</ul><details class="px-sources" id="p1-insights-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>p1-completion-audit.json</li>
+<li>P1_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p1-recurrence" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">5 · Multiple monthly dates</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-recurrence-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Date sets and occurrence previews</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-recurrence-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Month-end, time-zone and count/end boundaries</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-recurrence-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Persistence, completion, Undo and compatibility checks</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+</ul><details class="px-sources" id="p1-recurrence-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>p1-completion-audit.json</li>
+<li>P1_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p1-calendar" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">6 · Google / Outlook calendars</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 deferred</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 deferred"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-calendar-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Read-only authorization bridge and configuration guards</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Implementation and synthetic/native acceptance; no provider write-back.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-calendar-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Account selection and planner integration</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Private-event handling, selection, reconnect/disconnect and timeline controls in recorded scopes.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p1-calendar-item-2"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Real provider registrations and consent</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">You will configure native client IDs later. Genuine refresh/revocation and provider credentials remain unverified.</div>
+</div></li>
+</ul><details class="px-sources" id="p1-calendar-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>p1-completion-audit.json</li>
+<li>P1_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p1-mentions" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Project activity and mentions</span></span><span class="text-small text-muted" aria-hidden="true">3 verified</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="3 verified"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p1-mentions-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Current-project activity and authenticated authorship</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-mentions-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Permission-checked mentions and durable outbox/inbox</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p1-mentions-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Departed-member and honest-delivery checks</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Accepted in recorded native-fixture and genuine HTTP/server scopes; remote push remains deferred.</div>
+</div></li>
+</ul><details class="px-sources" id="p1-mentions-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>p1-completion-audit.json</li>
+<li>P1_PLAN.md</li>
+</ul></details></details>
+</details>
+<details class="px-stage" id="px-p2" data-remember open><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P2 · Advanced work</span></span><span class="text-small text-muted" aria-hidden="true">17 verified · 13 built / checks left · 4 to build · 3 deferred</span><svg class="px-meter" viewBox="0 0 37 1" preserveAspectRatio="none" role="img" aria-label="17 verified · 13 built / checks left · 4 to build · 3 deferred"><rect x="0" y="0" width="17" height="1" fill="var(--viz-series-1)"/><rect x="17" y="0" width="13" height="1" fill="var(--viz-series-2)"/><rect x="30" y="0" width="4" height="1" fill="var(--muted)"/><rect x="34" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">In progress. Much of the implementation exists; integration, real-account recovery checks and checks before everyday use remain.</div>
+<details class="px-group" id="p2-portable" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">1 · Portable templates</span></span><span class="text-small text-muted" aria-hidden="true">3 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 4 1" preserveAspectRatio="none" role="img" aria-label="3 verified · 1 built / checks left"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/><rect x="3" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-portable-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Versioned workflow import/export and private copies</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-portable-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Bounded reads and incompatible-file refusal</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-portable-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">App wait, Cancel, retry and relaunch</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded Mac/phone/tablet scopes; Mac platform warning remains documented.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-portable-item-3"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">External file-provider transfer and recovery</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Controlled provider tests are not universal cloud-provider acceptance.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-portable-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>PX_CHECKLIST.md</li>
+<li>P2_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p2-share" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">2 · Share and browser capture</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-share-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Reviewed share-extension text/link capture</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Account-bound drafts, offline/relaunch and isolation checks.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-share-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Mac Safari/TextEdit capture and Undo/Redo</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded local review, Cancel/Add and cold return; temporary extension setting restored.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-share-item-2"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Broader Mac cloud/account/speech and source apps</span><span class="text-small text-muted">Built · checks left</span></div>
+</div></li>
+</ul><details class="px-sources" id="p2-share-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>PX_CHECKLIST.md</li>
+<li>P2_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p2-views" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">3 · Notes, output and view control</span></span><span class="text-small text-muted" aria-hidden="true">4 verified · 4 built / checks left · 1 to build</span><svg class="px-meter" viewBox="0 0 9 1" preserveAspectRatio="none" role="img" aria-label="4 verified · 4 built / checks left · 1 to build"><rect x="0" y="0" width="4" height="1" fill="var(--viz-series-1)"/><rect x="4" y="0" width="4" height="1" fill="var(--viz-series-2)"/><rect x="8" y="0" width="1" height="1" fill="var(--muted)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="verify" id="p2-views-item-0"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Rich-note formatting and heading authoring</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Implementation and guarded candidates exist; broader native/shared/cloud/exposure checks remain.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-views-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Print/PDF and pinned-note output</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Representative output and native Save/Cancel/readback scopes.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-views-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Phone/iPad CSV Share → local Files</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Actual readback and cold preservation at largest text.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-views-item-3"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Expanded filters, grouping and gesture foundations</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-views-item-4"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Background workflow and local-history foundations</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Preservation, cancellation and changed-source checks; remaining pauses are tracked separately.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-views-item-5"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Heading support and compatibility on both devices</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Independent child-record migration is tracked in section 6.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-views-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Remaining native/speech/large-text acceptance</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Recorded Mac system warnings still need assessment; clean behavior is not established for every screen.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-views-item-7"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">External-provider output and wider device cases</span><span class="text-small text-muted">Built · checks left</span></div>
+</div></li>
+<li class="px-item" data-state="build" id="p2-views-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Reduce remaining large-workflow save pauses</span><span class="text-small text-muted">To build</span></div>
+<div class="px-item-detail text-small text-muted">Production rendering and richer assignment/child workloads still need implementation and validation.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-views-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>PX_CHECKLIST.md</li>
+<li>P2_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p2-voice" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">4 · Reviewed voice drafts</span></span><span class="text-small text-muted" aria-hidden="true">1 verified · 1 built / checks left · 1 to build · 1 deferred</span><svg class="px-meter" viewBox="0 0 4 1" preserveAspectRatio="none" role="img" aria-label="1 verified · 1 built / checks left · 1 to build · 1 deferred"><rect x="0" y="0" width="1" height="1" fill="var(--viz-series-1)"/><rect x="1" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="2" y="0" width="1" height="1" fill="var(--muted)"/><rect x="3" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-voice-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Correction, review and explicit Apply</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded app flows with simulated recording preserve the parent draft.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-voice-item-1"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Remaining speech, recording and recovery checks</span><span class="text-small text-muted">Built · checks left</span></div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p2-voice-item-2"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Real microphone, dictation and permissions</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">You asked to do genuine audio testing later.</div>
+</div></li>
+<li class="px-item" data-state="build" id="p2-voice-item-3"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Cloud AI assistance decisions</span><span class="text-small text-muted">To build</span></div>
+<div class="px-item-detail text-small text-muted">Provider, cost and data handling are undecided; assistance stays disabled.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-voice-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>PX_CHECKLIST.md</li>
+<li>P2_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p2-reminders" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">5 · Advanced reminders</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left · 1 deferred</span><svg class="px-meter" viewBox="0 0 4 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left · 1 deferred"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="3" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-reminders-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Interval, time-zone and holiday-policy foundations</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-reminders-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Private places and native reminder setup</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded Simulator/Core setup, snooze/cancellation and recovery scopes.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-reminders-item-2"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Travel and Time Sensitive delivery</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Ordinary notifications do not establish urgent or critical delivery guarantees.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p2-reminders-item-3"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Physical geofence delivery</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Awaiting a suitable real-device session. Server/assigned-recipient delivery is paused under P0.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-reminders-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>PX_CHECKLIST.md</li>
+<li>P2_PLAN.md</li>
+</ul></details></details>
+<details class="px-group" id="p2-teams" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">6 · Automation, teams and subtask storage</span><span class="viz-badge">Working here</span></span><span class="text-small text-muted" aria-hidden="true">3 verified · 4 built / checks left · 2 to build · 1 deferred</span><svg class="px-meter" viewBox="0 0 10 1" preserveAspectRatio="none" role="img" aria-label="3 verified · 4 built / checks left · 2 to build · 1 deferred"><rect x="0" y="0" width="3" height="1" fill="var(--viz-series-1)"/><rect x="3" y="0" width="4" height="1" fill="var(--viz-series-2)"/><rect x="7" y="0" width="2" height="1" fill="var(--muted)"/><rect x="9" y="0" width="1" height="1" fill="var(--viz-series-3)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-teams-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Scoped credentials and webhooks</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Recorded local, hosted and native permission/recovery scopes.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-teams-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Team-management candidate foundations</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Roles, folders and guarded operation/selection/template recovery foundations.</div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-teams-item-2"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Subtask data and safe-retry foundations</span><span class="text-small text-muted">Verified</span></div>
+<div class="px-item-detail text-small text-muted">Tests cover separate subtasks, edits, completion, reordering, retry and Undo. Storage migration and everyday use remain unfinished.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-teams-item-3"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">New subtask organizer and recovery</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Latest: eight representative phone journeys pass across recorded versions; 60 focused checks pass per repo. Mac/iPad checks and everyday use remain unfinished.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-teams-item-4"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Team permissions, account switching and secure storage</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Real shared-account, multiple-window, Mac and VoiceOver checks remain.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-teams-item-5"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Audio comments: full app and recovery integration</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Many screen and data checks pass. Normal entry points remain disabled until recovery and access/storage checks are complete.</div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-teams-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real cloud-media and provider checks</span><span class="text-small text-muted">Built · checks left</span></div>
+</div></li>
+<li class="px-item" data-state="build" id="p2-teams-item-7"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Move subtask storage and preserve older work</span><span class="text-small text-muted">To build</span></div>
+<div class="px-item-detail text-small text-muted">Moving older data and preserving unfinished organizer drafts remain. The subtask picker also needs largest-text polish.</div>
+</div></li>
+<li class="px-item" data-state="build" id="p2-teams-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Shared audio publishing and storage permissions</span><span class="text-small text-muted">To build</span></div>
+<div class="px-item-detail text-small text-muted">Shared publishing/removal, older history handling and storage/access rules are unfinished.</div>
+</div></li>
+<li class="px-item" data-state="deferred" id="p2-teams-item-9"><span style="color:var(--viz-series-3)" aria-hidden="true">Ⅱ</span><div><div class="px-item-head"><span class="px-item-title">Inbound email domain/provider and real delivery</span><span class="text-small text-muted">Deferred</span></div>
+<div class="px-item-detail text-small text-muted">Prepared for later configuration, as requested.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-teams-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>PX_CHECKLIST.md</li>
+<li>P2_PLAN.md</li>
+<li>child-task-structure-native/verification.json</li>
+</ul></details></details>
+<details class="px-group" id="p2-watch" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Apple Watch</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
+<li class="px-item" data-state="done" id="p2-watch-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Today, reviewed capture and offline completion implementation</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="done" id="p2-watch-item-1"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Recorded paired Watch/iPhone Simulator journeys</span><span class="text-small text-muted">Verified</span></div>
+</div></li>
+<li class="px-item" data-state="verify" id="p2-watch-item-2"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real-device, background, account/reinstall and speech checks</span><span class="text-small text-muted">Built · checks left</span></div>
+<div class="px-item-detail text-small text-muted">Android/Wear OS are future separately owned clients, outside this Apple-app batch.</div>
+</div></li>
+</ul><details class="px-sources" id="p2-watch-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">
+<li>PX_CHECKLIST.md</li>
+<li>P2_PLAN.md</li>
+</ul></details></details>
+</details>
+<footer class="px-footer"><details id="px-next" data-remember><summary class="cursor-interaction">Next in the active work</summary><ol>
+<li>Polish the subtask selector and verify iPad/Mac flows.</li>
+<li>Preserve unfinished organizer drafts and move older subtasks to independent storage.</li>
+<li>Finish team/audio recovery and storage checks; keep deferred work paused.</li>
+</ol></details><div class="text-small text-muted">Both apps own their dashboard and sources. Reviewed snapshot; no live telemetry or completion-date estimate.</div></footer>
+</div>
+<script>
+(() => {
+  const root = document.getElementById('taskfold-px-progress');
+  const details = [...root.querySelectorAll('details[data-remember]')];
+  function restore(state) {
+    const saved = state?.privateContent;
+    if (saved?.kind !== 'taskfold-px-progress' || !Array.isArray(saved.expanded)) return;
+    for (const detail of details) detail.open = saved.expanded.includes(detail.id);
+  }
+  restore(window.openai?.widgetState);
+  window.addEventListener('openai:set_globals', event => restore(event.detail?.globals?.widgetState));
+  root.addEventListener('click', event => {
+    const summary = event.target instanceof Element ? event.target.closest('summary') : null;
+    if (!summary || !root.contains(summary)) return;
+    requestAnimationFrame(() => {
+      const expanded = details.filter(detail => detail.open).map(detail => detail.id);
+      const saved = window.openai?.setWidgetState?.({
+        modelContent: { openPriorities: expanded.filter(id => /^px-p[012]$/.test(id)) },
+        privateContent: { kind: 'taskfold-px-progress', expanded }
+      });
+      saved?.catch?.(() => {});
+    });
+  });
+})();
+</script>

@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-30",
+  "viewportChecks": [
+    {
+      "width": 320,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 736,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 736,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    }
+  ],
+  "inlineStateRestore": true,
+  "noSaveOnLoadOrRestore": true,
+  "consoleErrors": [],
+  "networkDependencies": false,
+  "staleEvidenceRejected": true,
+  "staleGeneratedOutputRejected": true,
+  "realEvidenceModifiedByFreshnessTest": false,
+  "independentOwnedOutputsMatch": true,
+  "artifactSHA256": "de96136cfe06afc5d6a29359e562d2a61297d91c9a388a9e88f96d3f5097dc51",
+  "fragmentSHA256": "7474b8c768e9056003d4bf6d54fdfe43f3e31ec94b25f2a6baeafd9f4f975a9a",
+  "keyboardEnterAndSpace": true,
+  "segmentWidthsMatchCheckpointCounts": true,
+  "readOnlyProgress": true
+}
