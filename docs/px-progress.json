@@ -5,10 +5,10 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
   "focus": "Independent subtask migration",
-  "latest": "Reviewed moves within one team now preserve separate subtask records and private Undo copies. Both clients handle nullable move data and explain private retention. Local checks/builds pass; other transfer/adoption paths remain open and nothing is deployed.",
+  "latest": "Reviewed personal project branches now transfer into teams with separate subtasks. Deleted-subtask copies stay private, old pending actions must refresh, and lost replies can be retried safely. Both apps pass local checks/builds; wider migration and transfer paths remain open. Nothing is deployed.",
   "next": [
-    "Implement reviewed personal/whole-project adoption transfers and older-data tools.",
-    "Finish cross-root moves, full-schema custody, large workloads and native/lifecycle checks.",
+    "Finish individual personal-task and cross-root transfers, then older-data review tools.",
+    "Finish cross-team/return-to-personal custody, full-schema checks, large workloads and native/lifecycle acceptance.",
     "Finish remaining team/audio recovery; keep agreed deferrals paused."
   ],
   "stages": [
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "The opt-in record-first candidate now supports reviewed same-team moves/Undo and private-copy retention. Personal/cross-team/whole-project/cross-root transfers, older-data tools and full native/custody/workload acceptance remain. Unreviewed realm changes are fenced. Nothing is deployed."
+              "detail": "The opt-in record-first candidate supports reviewed same-team move/Undo and personal-branch adoption into a team, preserving private deletion copies. Individual personal-task/cross-team/return-to-personal/cross-root transfers, older-data tools and full native/custody/workload acceptance remain. Unreviewed realm changes are fenced. Nothing is deployed."
             },
             {
               "state": "build",
@@ -578,7 +578,8 @@
             "child-task-discard-intent/verification.json",
             "child-task-frozen-recovery/verification.json",
             "child-task-record-authority/verification.json",
-            "child-task-record-transfers/verification.json"
+            "child-task-record-transfers/verification.json",
+            "child-project-adoption-custody/verification.json"
           ],
           "focus": true
         },
@@ -626,14 +627,16 @@
     "child-task-discard-intent/verification.json",
     "child-task-frozen-recovery/verification.json",
     "child-task-record-authority/verification.json",
-    "child-task-record-transfers/verification.json"
+    "child-task-record-transfers/verification.json",
+    "child-project-adoption-custody/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "b7cd863e414a62377f575abc18bb625a7375a4bc15c2c91ad52383fa3500f44b",
-    "PX_CHECKLIST.md": "68158d2a29ea2c602558b2cec288ed4272d0529a2334578ff169a9d0ec0b6ac9",
+    "P2_PLAN.md": "3f72b47434c48d87e629421ac855e0ff3baf769d9fbfb2147d00ab1f34d61c55",
+    "PX_CHECKLIST.md": "943f01a9aca7afc0a043fe11702cb5ff29b63f6fa357aecfb4c4d7cc83439c34",
+    "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
     "child-task-discard-intent/verification.json": "d7316dcf9e69c8c969cd13e44b311d0865fa76b1aef7b50641e4a7c1a6f50f06",
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
     "child-task-frozen-recovery/verification.json": "645e03d6a0afbdd459ae3aef65d6b90f03d76d8741a7dcf44bcd88ce5548b807",

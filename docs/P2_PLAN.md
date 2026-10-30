@@ -6,6 +6,8 @@ Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Reviewed personal project branches can now transfer into teams with separate subtask records. Signed reviews cover child custody; private deletion copies stay actor-only and cannot restore into the new realm. Pending child edits/Undo are fenced, and exact receipt retries remain safe. Each repo passes 576 database and 201 selected client checks; app/test builds and signatures verify. [Current project-transfer evidence](child-project-adoption-custody/README.md). Individual personal-task, cross-team/return-to-personal and cross-root transfers, older-data tools, full custody/workload/native acceptance and rollout remain open. Earlier paragraphs retain their staged scopes.
+
 Reviewed same-team transfers now preserve promoted child records and private Undo copies, with nullable review/receipt decoding in both apps. Each repo passes 475 SQL and 168 client checks; app/test builds and signatures pass. [Current transfer evidence](child-task-record-transfers/README.md). Personal/cross-team/whole-project/cross-root adapters, adoption tooling, complete custody/workload/native acceptance and rollout remain open.
 
 Record-authoritative migration is now an opt-in local candidate: exact reviewed promotion, row-first typed writes, record-only reconstruction and transactional mirror checks. Each repo passes 96 promoted-record checks and 221 default-behavior/regression checks, with no added advisor findings. [Current migration evidence](child-task-record-authority/README.md). No hosted roots or normal flags changed. Reviewed scope transfers, older-data tools, full-schema/native/custody and workload acceptance remain. The paragraphs below retain earlier staged acceptance scopes.
@@ -7065,3 +7067,14 @@ Both apps now own scoped native hierarchy organization and recovery: reviewed ad
 - [ ] Whole-project adoption has an explicit custody fence for promoted roots/private archives; its adapter, personal/cross-team/cross-root moves, older-data tooling and full-schema/workload/native acceptance remain. No hosted schema or ordinary gates changed.
 
 [Exact evidence and remaining scope](child-task-record-transfers/README.md). All existing user deferrals remain.
+
+
+## Whole-project adoption with separate subtasks — 2026-10-30
+
+- [x] Actual child records, projections, authority and private copies join the existing bounded signed personal-branch-to-team review. Source root locks precede nonblocking private-custody locks.
+- [x] Assignment changes update promoted records first. Child incarnations and topology revision renew at ownership change; queued personal actions refuse while confirmed deletion receipts remain metadata-recoverable.
+- [x] Private deleted-subtask copies stay actor-only/disposable and cannot restore into team work. Both clients validate and explain the explicit policy; saved command/retry bodies remain unchanged.
+- [x] Each owned repo passes 576 actual database and 201 selected client checks. Both app/test builds and development signatures verify; no new native/spoken acceptance is inferred.
+- [ ] Individual personal-task transfers, cross-team/return-to-personal and cross-root transfers, older-data tools, full-schema/provider/Storage custody, workloads and wider native/lifecycle acceptance remain. Nothing is hosted/enabled for ordinary use; existing user deferrals remain.
+
+[Exact evidence and remaining scope](child-project-adoption-custody/README.md). This supersedes the temporary whole-project fence for **reviewed personal-branch adoption only**; unreviewed realm changes remain fenced, including unpromoted child projections.

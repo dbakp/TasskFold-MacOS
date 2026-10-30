@@ -1,3 +1,4 @@
+import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
 import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
 import {readFile,writeFile} from 'node:fs/promises';
@@ -9,7 +10,7 @@ const json=x=>lit(JSON.stringify(x))+'::jsonb';
 const [owner,member,guest,outside]=Array.from({length:4},()=>randomUUID()),team=randomUUID(),sessions=Object.fromEntries([owner,member,guest,outside].map(x=>[x,randomUUID()]));
 let pg,step='load';
 try {
- pg=await createPostgresFixture({advisors:true});await loadProjectAdoptionSchema(pg.raw);
+ pg=await createPostgresFixture({advisors:true});if(process.env.TASKFOLD_CHILD_ADOPTION_SQL){await loadChildAuthorityDependencies(pg);for(const f of [childAuthorityMigration,'20261030093035_child_record_reviewed_team_transfers.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+f,import.meta.url),'utf8'));const custody=await readFile(process.env.TASKFOLD_CHILD_ADOPTION_SQL,'utf8');await pg.raw(custody);report.adoptionMigrationSHA256=createHash('sha256').update(custody).digest('hex');}else await loadProjectAdoptionSchema(pg.raw);
  report.migrationSHA256=createHash('sha256').update(await readFile(new URL('../../supabase/migrations/'+projectAdoptionMigration,import.meta.url))).digest('hex');
  for(const id of [owner,member,guest,outside]) await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(id)},${lit(id+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(id)});insert into auth.sessions(id,user_id) values(${lit(sessions[id])},${lit(id)});`);
  await pg.raw(`insert into taskfold_private.teams(id,owner_id,name) values(${lit(team)},${lit(owner)},'Adoption workshop');insert into taskfold_private.team_members(team_id,user_id,role) values(${lit(team)},${lit(owner)},'admin'),(${lit(team)},${lit(member)},'member'),(${lit(team)},${lit(guest)},'guest');update taskfold_private.team_config set enabled=true;update taskfold_private.team_project_config set native_reads_enabled=true,native_task_edits_enabled=true;`);

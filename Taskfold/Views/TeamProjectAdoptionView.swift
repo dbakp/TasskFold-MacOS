@@ -156,6 +156,14 @@ struct TeamProjectAdoptionView: View {
             }
             LabeledContent("Discussion comments", value: String(i.contents["counts"]?.object["task_comments"]?.integer ?? 0))
             LabeledContent("Attachments, including subtasks", value: String(i.contents["attachments"]?.integer ?? 0))
+            if i.supportsChildRecordCustody {
+                Text("Saved copies of deleted subtasks stay private. Previous subtask Undo actions cannot restore work into the team; refresh any pending subtask edits after the transfer.")
+                    .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("projectTransferPrivateSubtaskUndo")
+                if i.privateSubtaskUndoCount > 0 {
+                    LabeledContent("Your private deleted-subtask copies", value: String(i.privateSubtaskUndoCount))
+                }
+            }
             DisclosureGroup("All affected projects") {
                 ForEach(i.projects) { p in
                     VStack(alignment: .leading, spacing: 3) { Text(p.name ?? "Project \(p.id.suffix(8))").font(.headline); Text(p.depth == 1 ? "Selected branch" : "Subproject · Level \(p.depth)").font(.caption).foregroundStyle(.secondary); if p.archived { Label("Stays archived", systemImage: "archivebox").font(.caption).foregroundStyle(.secondary) } else if i.inheritsArchiveAfter(p) { Label("Archived with parent", systemImage: "archivebox").font(.caption).foregroundStyle(.secondary) } else if p.inherited { Text("Inherited archive will clear at this destination").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) } }.padding(.vertical, 4)

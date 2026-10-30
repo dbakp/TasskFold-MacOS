@@ -1261,3 +1261,14 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 - [ ] Whole-project adoption has an explicit custody fence for promoted roots/private archives; its adapter, personal/cross-team/cross-root moves, older-data tooling and full-schema/workload/native acceptance remain. No hosted schema or ordinary gates changed.
 
 [Exact evidence and remaining scope](child-task-record-transfers/README.md). All existing user deferrals remain.
+
+
+## Whole-project adoption with separate subtasks — 2026-10-30
+
+- [x] Actual child records, projections, authority and private copies join the existing bounded signed personal-branch-to-team review. Source root locks precede nonblocking private-custody locks.
+- [x] Assignment changes update promoted records first. Child incarnations and topology revision renew at ownership change; queued personal actions refuse while confirmed deletion receipts remain metadata-recoverable.
+- [x] Private deleted-subtask copies stay actor-only/disposable and cannot restore into team work. Both clients validate and explain the explicit policy; saved command/retry bodies remain unchanged.
+- [x] Each owned repo passes 576 actual database and 201 selected client checks. Both app/test builds and development signatures verify; no new native/spoken acceptance is inferred.
+- [ ] Individual personal-task transfers, cross-team/return-to-personal and cross-root transfers, older-data tools, full-schema/provider/Storage custody, workloads and wider native/lifecycle acceptance remain. Nothing is hosted/enabled for ordinary use; existing user deferrals remain.
+
+[Exact evidence and remaining scope](child-project-adoption-custody/README.md). This supersedes the temporary whole-project fence for **reviewed personal-branch adoption only**; unreviewed realm changes remain fenced, including unpromoted child projections.

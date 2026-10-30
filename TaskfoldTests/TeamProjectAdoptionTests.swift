@@ -42,6 +42,66 @@ private final class AdoptionHTTP: URLProtocol, @unchecked Sendable {
 }
 
 final class TeamProjectAdoptionTests: XCTestCase {
+    func testActualChildRecordAdoptionSQLReviewAndReceipt() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-child-project-adoption-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)), b = raw["body"]!.object
+        XCTAssertEqual(raw["syntheticOnly"], .bool(true)); XCTAssertEqual(raw["containerRemoved"], .bool(true))
+        let scope = try TeamProjectAdoptionScope(account: raw["account"]!.text, origin: raw["origin"]!.text, team: b["team_id"]!.text, roots: b["roots"]!.list.map(\.text), visibility: .private)
+        let i = try TeamProjectAdoptionInspection(raw["inspect"]!.object, scope: scope)
+        let decisions = try raw["decisions"]!.list.map { try TeamProjectAdoptionDecision($0.object) }
+        let review = try TeamProjectAdoptionReview(raw["review"]!.object, inspection: i, decisions: decisions)
+        XCTAssertTrue(i.supportsChildRecordCustody); XCTAssertEqual(i.privateSubtaskUndoCount, 1)
+        XCTAssertEqual(i.projects.count, 2); XCTAssertEqual(review.assignmentsCleared, 1)
+        let command = try TeamProjectAdoptionCommand(review: review, requestID: UUID(uuidString: raw["command"]!.object["request_id"]!.text)!, now: review.expires.addingTimeInterval(-60))
+        XCTAssertEqual(command.body, raw["command"]!.object)
+        XCTAssertNil(command.body["subtask_undo_policy"]); XCTAssertNil(command.body["private_subtask_undo_count"])
+        XCTAssertFalse(try command.confirmed(raw["receipt"]!.object).replayed)
+        XCTAssertEqual(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(command)), command)
+        XCTAssertFalse(String(describing: command).contains(i.scope.team))
+    }
+    func testLegacyInspectionDoesNotClaimPrivateSubtaskRetention() throws {
+        let (_, inspection, _, _) = try fixture()
+        XCTAssertFalse(inspection.supportsChildRecordCustody)
+        XCTAssertEqual(inspection.privateSubtaskUndoCount, 0)
+    }
+    func testChildCustodyNeedsPairedVersionPolicyAndBoundedCount() throws {
+        let (raw, old, _, _) = try fixture()
+        func value(_ count: JSON) -> [String: JSON] {
+            var v = raw["inspect"]!.object, c = v["contents"]!.object
+            v["child_record_custody_protocol"] = .number(1)
+            c["child_record_custody_protocol"] = .number(1)
+            c["subtask_undo_policy"] = .string("kept_private_no_restore")
+            c["private_subtask_undo_count"] = count; v["contents"] = .object(c)
+            return v
+        }
+        for n in [0, 1, 64] {
+            let i = try TeamProjectAdoptionInspection(value(.number(Double(n))), scope: old.scope)
+            XCTAssertTrue(i.supportsChildRecordCustody); XCTAssertEqual(i.privateSubtaskUndoCount, n)
+        }
+        for n in [JSON.number(-1), .number(65), .number(0.5), .string("1"), .null, .bool(true)] {
+            XCTAssertThrowsError(try TeamProjectAdoptionInspection(value(n), scope: old.scope))
+        }
+        for key in ["child_record_custody_protocol", "subtask_undo_policy", "private_subtask_undo_count"] {
+            var v = value(.number(1)), c = v["contents"]!.object; c.removeValue(forKey: key); v["contents"] = .object(c)
+            XCTAssertThrowsError(try TeamProjectAdoptionInspection(v, scope: old.scope))
+        }
+        for version in [JSON.number(2), .string("1"), .null, .bool(true)] {
+            var v = value(.number(1)); v["child_record_custody_protocol"] = version
+            XCTAssertThrowsError(try TeamProjectAdoptionInspection(v, scope: old.scope))
+        }
+        var unknown = value(.number(1)), c = unknown["contents"]!.object; c["subtask_undo_policy"] = .string("publish"); unknown["contents"] = .object(c)
+        XCTAssertThrowsError(try TeamProjectAdoptionInspection(unknown, scope: old.scope))
+        var unversioned = value(.number(1)); unversioned.removeValue(forKey: "child_record_custody_protocol")
+        XCTAssertThrowsError(try TeamProjectAdoptionInspection(unversioned, scope: old.scope))
+    }
+    func testCustodyPolicyCannotChangeBetweenInspectionAndReview() throws {
+        let (raw, i, _, _) = try fixture()
+        let decisions = try raw["decisions"]!.list.map { try TeamProjectAdoptionDecision($0.object) }
+        var review = raw["review"]!.object, c = review["contents"]!.object
+        review["child_record_custody_protocol"] = .number(1); c["child_record_custody_protocol"] = .number(1)
+        c["subtask_undo_policy"] = .string("kept_private_no_restore"); c["private_subtask_undo_count"] = .number(0); review["contents"] = .object(c)
+        XCTAssertThrowsError(try TeamProjectAdoptionReview(review, inspection: i, decisions: decisions))
+    }
     private func fixture(connections: Bool = false) throws -> ([String: JSON], TeamProjectAdoptionInspection, TeamProjectAdoptionReview, TeamProjectAdoptionCommand) {
         let url = try XCTUnwrap(Bundle.module.url(forResource: connections ? "team-project-adoption-connections-v1" : "team-project-adoption-v1", withExtension: "json", subdirectory: "Fixtures"))
         let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)), b = raw["body"]!.object
