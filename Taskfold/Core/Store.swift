@@ -463,7 +463,8 @@ final class Store {
         return .init(scope: scope, journal: try childTaskStructureJournal(account: scope.account, origin: scope.origin), service: backend,
                      current: { [weak self] in self?.childTaskFieldRecoveryScope },
                      canQueue: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: false) == true },
-                     canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true })
+                     canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true },
+                     draftJournal: try childTaskStructureDraftJournal(account: scope.account, origin: scope.origin))
     }
     var syncing = false
     var online = true

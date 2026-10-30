@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "Subtask drafts and independent storage",
-  "latest": "Encrypted organizer-draft storage passes 115 hierarchy checks per app, including 13 new draft cases. The organizer screen still needs checkpoints and Resume/Discard; closing it can still lose unsaved text. Mobile subtask selection passes; Mac/spoken and full migration remain.",
+  "focus": "Independent subtask storage and recovery",
+  "latest": "Unfinished organizer edits now save locally and can be resumed or discarded. Phone/iPad cold return and saved-action handoff pass; large-text actions are readable and verified. Full migration and broader Mac/account/window checks remain.",
   "next": [
-    "Connect organizer checkpoints, Resume/Discard and safe conversion into saved actions.",
-    "Verify phone/iPad/Mac lifecycle and spoken flows; finish older-subtask migration.",
-    "Finish team/audio recovery and storage checks; keep deferred work paused."
+    "Finish independent subtask migration and preserve older work.",
+    "Finish Mac/spoken and wider account/window/background/failure checks.",
+    "Finish team/audio recovery and custody checks; keep deferred work paused."
   ],
   "stages": [
     {
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Independent-record migration and older-data adoption remain. Encrypted composer-draft storage passes checks, but native checkpoints/Resume/Discard are not connected; unsaved text can still be lost. Phone/iPad selection is accepted; Mac/spoken and broader lifecycle remain."
+              "detail": "Independent-record migration and older-data adoption remain. Native organizer checkpoints, Resume/Discard and stable saved-action handoff pass recorded phone/iPad checks. Mac/spoken and broader account/window/background/concurrent recovery remain open; ordinary controls stay gated."
             },
             {
               "state": "build",
@@ -572,7 +572,8 @@
             "P2_PLAN.md",
             "child-task-structure-native/verification.json",
             "child-task-field-selection/verification.json",
-            "child-task-structure-drafts/verification.json"
+            "child-task-structure-drafts/verification.json",
+            "child-task-structure-draft-native/verification.json"
           ],
           "focus": true
         },
@@ -614,15 +615,17 @@
     "ACCOUNT_REMOVAL.md",
     "child-task-structure-native/verification.json",
     "child-task-field-selection/verification.json",
-    "child-task-structure-drafts/verification.json"
+    "child-task-structure-drafts/verification.json",
+    "child-task-structure-draft-native/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "4199a1caf7bb450f8a49c728427bad608ea1c34264fd4778fd348e5da5db96d1",
-    "PX_CHECKLIST.md": "ab524933c432ad687a8339f4402a45c3e3c2a1951b5662a48167328bdb2178d0",
+    "P2_PLAN.md": "147d486720dac67a7b773838cfc18fec1027718ad332739940ca1804662fccc8",
+    "PX_CHECKLIST.md": "8ffd8e4744492738aee4ae04d63fce71b88044ece3bc5808c899af846c17ff47",
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
+    "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
     "child-task-structure-drafts/verification.json": "6f91cbc365f58a184bcf7f39a2dbdbeaa87fcb5b801fda8fa955d192c7ab9f71",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",

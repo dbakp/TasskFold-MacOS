@@ -1183,7 +1183,7 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [x] Verify scoped field-draft retention and selected-node restoration in the largest-text phone journey: exact private title preserved, saved original unchanged, zero field writes and one structural write.
 - [x] Independently pass the 282-check organizer foundation, followed by 60 current recovery/presentation/continuation checks including five new retention guards in each repository. Suites overlap. Refined Mac and iOS app/test builds and strict signatures pass.
 - [ ] Finish refined phone/tablet/Mac native journeys and largest-text/spoken acceptance. Eight journeys have passing iPhone phase evidence: add/cold receipt, move, lost-reply retry, explicit Undo disposal, archive discovery/restore, stop/fresh review and largest-text nested removal/Undo/cold restoration. The final private-draft return passes in 162.488 seconds with all postconditions and original limits retained. These are phase-covered journeys, not a same-binary full-suite pass. Earlier failures remain recorded.
-- [ ] Genuine Keychain/Store/account/window lifecycle; structural composer drafts; cross-root/project, legacy/adoption and authoritative migration; full schema/Storage/team custody and wider Px. Normal flags stay off; prior user deferrals remain unchanged.
+- [ ] Genuine Keychain/Store/account/window lifecycle; broader composer lifecycle; cross-root/project, legacy/adoption and authoritative migration; full schema/Storage/team custody and wider Px. Normal flags stay off; prior user deferrals remain unchanged.
 
 [Implementation boundaries and phase evidence](child-task-structure-native/README.md).
 
@@ -1194,7 +1194,7 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 
 - [x] Replace the truncated selected caption with a wrapping control and ordered native choices; retain nesting, selected state and 44-point targets.
 - [x] Verify switching, Cancel, exact private-title return and zero task writes in current largest-text phone/iPad flows (one case per platform, 90.393/96.388 seconds). Both app/test builds and signatures pass.
-- [ ] Mac native/spoken and broader account/window/failure/concurrent acceptance, structural-composer drafts and independent-record migration remain open. Ordinary flags and user deferrals are unchanged.
+- [ ] Mac native/spoken and broader account/window/failure/concurrent acceptance, broader composer lifecycle and independent-record migration remain open. Ordinary flags and user deferrals are unchanged.
 
 [Source bindings, captures and retained failed phase](child-task-field-selection/README.md).
 
@@ -1202,4 +1202,12 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 
 - [x] Independently owned encrypted storage for unfinished Add/Move composer content, exact text, current identity/revision review, stale-window protection, keyless account cleanup and no automatic task-action queueing.
 - [x] Each repo: 115 hierarchy Core checks pass, including 13 composer-draft cases. Earlier failed setup and intermediate/final phases are retained in [draft evidence](child-task-structure-drafts/README.md).
-- [ ] Connect native checkpoints, Resume/Discard and safe promotion to saved actions; closing the current composer can still lose unsaved text. Phone/iPad/Mac lifecycle, spoken and broader migration acceptance remain open.
+- [x] Connect native checkpoints, awaited Done, Resume/Discard and stable saved-action handoff in both apps; recorded mobile draft/cold-return and final action flows pass. See the native follow-up below.
+- [ ] Broader phone/iPad/Mac account/window/background/failure/concurrent and spoken acceptance; independent-record migration remains open.
+
+## 2026-10-30 — native organizer draft recovery
+
+- [x] Scoped screen-owned draft loading, explicit Resume/Discard, private checkpoint failure/retry and stable handoff; corrupt draft storage leaves saved actions reachable.
+- [x] Each repo: 126 hierarchy Core cases. Phone/iPad cold draft/edit/unsent-action readbacks and final stacked-action Resume/Cancel/discard pass in [recorded phases](child-task-structure-draft-native/README.md); earlier failures and the unchanged 180/240-second limits remain visible.
+- [x] Largest-text actions are stacked, readable, at least 44 points high and non-overlapping; current app/test builds and development signatures verify. Obsolete result files were pruned after evidence retention.
+- [ ] Mac runtime/spoken, wider lifecycle and genuine secure-storage acceptance, full migration/older-data adoption and the remaining Px scope. Normal flags and user deferrals are unchanged.

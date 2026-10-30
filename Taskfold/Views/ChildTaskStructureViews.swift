@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum HierarchyReviewSource {
-    case add, move(String), remove(String), saved(ChildTaskStructureJournalState.Entry), archive(ChildTaskStructureReceipt)
+    case add, move(String), remove(String), draft(ChildTaskStructureDraft), saved(ChildTaskStructureJournalState.Entry), archive(ChildTaskStructureReceipt)
 }
 private struct HierarchyReviewRequest: Identifiable {
     let id = UUID()
@@ -70,7 +70,9 @@ struct SavedChildTaskStructureLink: View {
         visible = false; guard let captured = scope else { return }
         do {
             let state = try await store.childTaskStructureJournal(account: captured.account, origin: captured.origin).load()
-            guard captured == scope, !Task.isCancelled else { return }; visible = !state.entries.isEmpty || !state.disposals.isEmpty
+            guard captured == scope, !Task.isCancelled else { return }; let drafts = try await store.childTaskStructureDraftJournal(account: captured.account, origin: captured.origin).load()
+            guard captured == scope, !Task.isCancelled else { return }
+            visible = !state.entries.isEmpty || !state.disposals.isEmpty || !drafts.entries.isEmpty
         } catch { guard captured == scope, !Task.isCancelled else { return }; visible = true }
     }
 }
@@ -95,6 +97,19 @@ struct ChildTaskStructureView: View {
     var body: some View {
         List {
             if let failure { Section { Text(failure).foregroundStyle(.secondary) } }
+            if let model, modelScope == scope, scope != nil {
+                Section("Unfinished drafts") {
+                    if let failure = model.draftsFailure {
+                        Text(failure).foregroundStyle(.secondary)
+                        Button("Read drafts again") { Task { await model.load() } }.disabled(model.busy)
+                    } else if model.drafts.filter({ $0.body["task_id"] == .string(rootID) }).isEmpty { Text("No unfinished drafts").font(.footnote).foregroundStyle(.secondary) }
+                    ForEach(model.drafts.filter { $0.body["task_id"] == .string(rootID) }, id: \.id) { draft in
+                        ChildHierarchyDraftRow(draft: draft, model: model) {
+                            review = .init(root: rootID, source: .draft(draft))
+                        }
+                    }
+                }
+            }
             if let read, modelScope == scope, scope != nil {
                 Section {
                     Text(read.context.root.title).font(.headline).fixedSize(horizontal: false, vertical: true)
@@ -123,7 +138,7 @@ struct ChildTaskStructureView: View {
             } else if reading { ProgressView("Reading saved subtasks…") }
             Section {
                 Button("Saved hierarchy actions", systemImage: "tray") { recovery = true }.accessibilityIdentifier("childStructureRecovery")
-                Button("Refresh subtasks", systemImage: "arrow.clockwise") { Task { await refresh(sync: true) } }.disabled(reading || model?.busy == true || !store.online)
+                Button("Refresh subtasks", systemImage: "arrow.clockwise") { Task { await model?.load(); await refresh(sync: true) } }.disabled(reading || model?.busy == true || !store.online)
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -150,7 +165,7 @@ struct ChildTaskStructureView: View {
         .task(id: scope) { if model == nil || modelScope != scope { await open() } }
         .onDisappear { appeared = false; if review == nil && !recovery { clear() } }
         .sheet(item: $review, onDismiss: { Task { await returned() } }) { request in
-            if let model, modelScope == scope { WorkflowShell(title: "Review hierarchy change") { ChildHierarchyReviewView(request: request, model: model, feedback: { notice = $0 }) } }
+            if let model, modelScope == scope { ChildHierarchyReviewView(request: request, model: model, feedback: { notice = $0 }) }
         }
         .sheet(isPresented: $recovery, onDismiss: { Task { await returned() } }) { WorkflowShell(title: "Saved hierarchy actions") { ChildTaskStructureRecoveryView() } }
     }
@@ -225,8 +240,21 @@ struct ChildTaskStructureRecoveryView: View {
         List {
             Section { Text("Review saved actions and their current tasks. Retrying keeps the original action.").foregroundStyle(.secondary) }
             if let model, modelScope == scope, scope != nil {
+                Section("Unfinished drafts") {
+                    if let failure = model.draftsFailure {
+                        Text(failure).foregroundStyle(.secondary)
+                        Button("Read drafts again") { Task { await model.load() } }.disabled(model.busy)
+                    } else if model.drafts.isEmpty { Text("No unfinished drafts").font(.footnote).foregroundStyle(.secondary) }
+                    ForEach(model.drafts, id: \.id) { draft in
+                        ChildHierarchyDraftRow(draft: draft, model: model) {
+                            review = .init(root: draft.body["task_id"]!.text, source: .draft(draft))
+                        }
+                    }
+                }
+            }
+            if let model, modelScope == scope, scope != nil {
                 if let message = model.message { Section { HierarchyNotice(message: message, announces: review == nil).accessibilityIdentifier("childStructureRecoveryStatus") } }
-                if model.loaded, model.entries.isEmpty, model.disposals.isEmpty { ContentUnavailableView("All clear", systemImage: "checkmark.circle", description: Text("Actions needing attention will appear here.")) }
+                if model.loaded, model.entries.isEmpty, model.disposals.isEmpty { ContentUnavailableView("No saved actions", systemImage: "checkmark.circle", description: Text("Unfinished drafts appear separately.")) }
                 ForEach(ordered, id: \.command.id) { entry in
                     Section {
                         Label(ChildTaskStructureReview.title(entry.command), systemImage: entry.command.action == .undo ? "arrow.uturn.backward" : entry.phase == .attempted ? "clock.badge.questionmark" : "square.stack.3d.up")
@@ -300,7 +328,7 @@ struct ChildTaskStructureRecoveryView: View {
             Button("Cancel", role: .cancel) { confirmation = nil }
         } message: { Text(confirmation?.explanation ?? "") }
         .sheet(item: $review, onDismiss: { Task { await Task.yield(); if !appeared { clear() } else { await model?.load() } } }) { request in
-            if let model, scope == modelScope { WorkflowShell(title: "Review hierarchy change") { ChildHierarchyReviewView(request: request, model: model) } }
+            if let model, scope == modelScope { ChildHierarchyReviewView(request: request, model: model) }
         }
     }
     private func clear() { model?.close(); model = nil; modelScope = nil; confirmation = nil; review = nil; failure = nil; targetNames = [:] }
@@ -346,6 +374,36 @@ struct ChildTaskStructureRecoveryView: View {
     }
 }
 
+private struct ChildHierarchyDraftRow: View {
+    let draft: ChildTaskStructureDraft
+    let model: ChildTaskStructurePresentation
+    var resume: () -> Void
+    @Environment(\.dynamicTypeSize) private var textSize
+    @State private var removing = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(draft.body["action"] == .string("move") ? "Move subtask" : draft.body["title"]!.text.isEmpty ? "Untitled subtask" : draft.body["title"]!.text)
+                .fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childStructureDraftTitle-" + draft.id)
+            Text(draft.pendingCommand == nil ? "Kept on this device; no action sent." : "Original action kept for recovery; check saved actions before retrying.")
+                .font(.footnote).foregroundStyle(.secondary)
+            Group {
+                if textSize.isAccessibilitySize { VStack(alignment: .leading, spacing: 8) { actions } }
+                else { HStack(spacing: 16) { actions } }
+            }.buttonStyle(.borderless).disabled(model.busy)
+        }.padding(.vertical, 4)
+            .alert("Discard this unfinished draft?", isPresented: $removing) {
+                Button("Discard draft", role: .destructive) { Task { await model.discardDraft(draft) } }
+                Button("Cancel", role: .cancel) { removing = false }
+            } message: { Text("This removes only the unfinished draft on this device. It does not change tasks or remove an action already saved in Saved hierarchy actions.") }
+    }
+    @ViewBuilder private var actions: some View {
+        Button(action: resume) { Text("Resume").frame(minHeight: 44).contentShape(Rectangle()) }
+            .accessibilityIdentifier("resumeChildStructureDraft-" + draft.id)
+        Button(role: .destructive) { removing = true } label: { Text("Discard").frame(minHeight: 44).contentShape(Rectangle()) }
+            .accessibilityIdentifier("discardChildStructureDraft-" + draft.id)
+    }
+}
+
 private struct ChildHierarchyReviewView: View {
     let request: HierarchyReviewRequest
     let model: ChildTaskStructurePresentation
@@ -354,6 +412,9 @@ private struct ChildHierarchyReviewView: View {
     @Environment(\.scenePhase) private var phase
     @Environment(\.dismiss) private var dismiss
     @State private var read: ChildTaskStructureRead?
+    @State private var composer: ChildTaskStructureDraftSession?
+    @State private var acting = false
+    @State private var checkpointFailure = false
     @State private var title = ""
     @State private var newID = UUID()
     @State private var parent = ""
@@ -364,9 +425,9 @@ private struct ChildHierarchyReviewView: View {
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     private var saved: ChildTaskStructureJournalState.Entry? { if case .saved(let value) = request.source { return value }; return nil }
     private var moving: String? {
-        switch request.source { case .move(let key): return key; case .saved(let value) where value.command.action == .move: return value.command.body["node_key"]!.text; default: return nil }
+        switch request.source { case .draft(let value) where value.body["action"] == .string("move"): return value.body["node_key"]!.text; case .move(let key): return key; case .saved(let value) where value.command.action == .move: return value.command.body["node_key"]!.text; default: return nil }
     }
-    private var placement: Bool { if case .add = request.source { return true }; return moving != nil || saved?.command.action == .insert }
+    private var placement: Bool { if case .add = request.source { return true }; if case .draft(let value) = request.source, value.body["action"] == .string("insert") { return true }; return moving != nil || saved?.command.action == .insert }
     private var proposal: ChildTaskStructureCommand? {
         guard let read, captured == scope, scope == model.scope else { return nil }
         return try? make(read)
@@ -377,7 +438,9 @@ private struct ChildHierarchyReviewView: View {
             guard let opening = request.opening else { throw ChildTaskStructureCommand.invalid }; try opening.validate(read)
         default: break
         }
+        if let draft = composer?.draft { return try draft.pendingCommand ?? draft.reviewedCommand(read) }
         switch request.source {
+        case .draft: throw ChildTaskStructureDraft.invalid
         case .add: return try .init(insert: .object(["id": .string(newID.uuidString.lowercased()), "title": .string(title)]), parent: parent.isEmpty ? nil : parent, index: index, read: read, requestID: newID)
         case .move(let key): return try .init(move: key, parent: parent.isEmpty ? nil : parent, index: index, read: read, requestID: newID)
         case .remove(let key): return try .init(delete: key, read: read, requestID: newID)
@@ -393,6 +456,7 @@ private struct ChildHierarchyReviewView: View {
     private var reviewProblem: String {
         switch request.source {
         case .add: return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Add a title to continue." : "Choose a supported title and destination. Your current work is kept."
+        case .draft: return title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && moving == nil ? "Add a title to continue." : "Review a current destination and position. Your saved draft stays unchanged until you choose them."
         case .move: return "Choose a different parent or position. A subtask cannot move inside itself."
         case .remove: return "This subtask changed. Reopen its current details before removing it."
         case .archive: return "This saved Undo is no longer available for the current hierarchy. Keep its content, or explicitly remove it from Saved hierarchy actions."
@@ -403,24 +467,52 @@ private struct ChildHierarchyReviewView: View {
         }
     }
     var body: some View {
+        NavigationStack {
+            form.navigationTitle("Review hierarchy change")
+                .toolbar { ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { Task { await closeReview() } }
+                        .disabled(acting || model.busy)
+                } }
+        }
+        #if os(macOS)
+        .frame(minWidth: 580, idealWidth: 640, minHeight: 500, idealHeight: 620)
+        #endif
+    }
+    private var form: some View {
         Form {
+            if let composer, let draft = composer.draft, captured == scope, scope != nil {
+                if draft.body["action"] == .string("insert") {
+                    Section {
+                        TextField("Subtask title", text: Binding(get: { title }, set: { title = $0; checkpoint() }), axis: .vertical)
+                            .focused($titleFocused).disabled(draft.pendingCommand != nil || acting).accessibilityIdentifier("childStructureNewTitle")
+                    }
+                }
+                Section {
+                    if composer.saving { ProgressView("Saving draft…") }
+                    else if let message = composer.message { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childStructureDraftStatus") }
+                    else if draft.pendingCommand != nil { Text("This action keeps its original contents. Finish saving it, or review Saved hierarchy actions.").foregroundStyle(.secondary) }
+                    else { Text("Unfinished changes stay on this device. Saving an action is separate.").foregroundStyle(.secondary) }
+                }
+            }
             if let read, scope != nil, captured == scope, scope == model.scope {
                 Section { Text(read.context.root.title).font(.headline); Text("Review the current saved hierarchy before applying this change.").font(.footnote).foregroundStyle(.secondary) }
-                if case .add = request.source {
-                    Section { TextField("Subtask title", text: $title, axis: .vertical).focused($titleFocused).accessibilityIdentifier("childStructureNewTitle") }
-                }
-                if placement, saved == nil || saved?.phase == .closed {
+                if placement, composer?.draft?.pendingCommand == nil, saved == nil || saved?.phase == .closed {
                     Section("Destination") {
-                        Picker("Parent", selection: Binding(get: { parent }, set: { parent = $0; index = 0 })) {
+                        Picker("Parent", selection: Binding(get: { parent }, set: { parent = $0; index = 0; checkpoint(placement: true) })) {
                             Text("Top level").tag("")
                             ForEach(ChildTaskStructureReview.destinations(read, moving: moving), id: \.key) { node in Text(String(repeating: "  ", count: node.path.count - 1) + (node.fields["title"]?.text ?? "Subtask")).tag(node.key) }
+                            if !parent.isEmpty, !ChildTaskStructureReview.destinations(read, moving: moving).contains(where: { $0.key == parent }) { Text("Saved destination unavailable").tag(parent) }
                         }.accessibilityIdentifier("childStructureParent")
-                        Picker("Position", selection: $index) {
+                        Picker("Position", selection: Binding(get: { index }, set: { index = $0; checkpoint(placement: true) })) {
                             let siblings = ChildTaskStructureReview.siblings(read, parent: parent.isEmpty ? nil : parent, moving: moving)
                             ForEach(Array(siblings.enumerated()), id: \.element.key) { position, node in Text("Before \(node.fields["title"]?.text ?? "subtask")").tag(position) }
                             Text("At end").tag(siblings.count)
+                            if index > siblings.count { Text("Saved position unavailable").tag(index) }
                         }.accessibilityIdentifier("childStructurePosition")
-                    }
+                        if let draft = composer?.draft, draft.body["structure_revision"] != .number(read.structureRevision) {
+                            Button("Review this placement") { checkpoint(placement: true) }.accessibilityIdentifier("reviewDraftPlacement")
+                        }
+                    }.disabled(acting)
                 }
                 if let command = proposal {
                     Section("Change") {
@@ -442,9 +534,9 @@ private struct ChildHierarchyReviewView: View {
                         if command.action == .move { Text("Current notes and other fields move with this subtask.").font(.footnote).foregroundStyle(.secondary) }
                     }
                     Section {
-                        Button(saved?.phase == .closed ? "Save fresh action" : saved == nil || saved?.phase == .confirmed ? "Save action" : "Send original action", systemImage: "checkmark.circle") { act(command) }
+                        Button(composer?.draft?.pendingCommand != nil ? "Finish saving action" : saved?.phase == .closed ? "Save fresh action" : saved == nil || saved?.phase == .confirmed ? "Save action" : "Send original action", systemImage: "checkmark.circle") { act(command) }
                             .buttonStyle(.borderedProminent).frame(minHeight: 44)
-                            .disabled(model.busy || !store.permitsChildTaskStructureRequest(command, sending: saved?.phase == .queued || saved?.phase == .attempted))
+                            .disabled(checkpointFailure || acting || model.busy || !store.permitsChildTaskStructureRequest(command, sending: saved?.phase == .queued || saved?.phase == .attempted))
                             .accessibilityIdentifier("childStructureReviewApply")
                         if saved == nil || saved?.phase == .confirmed || saved?.phase == .closed {
                             Text("This saves the reviewed action first. Send it from Saved hierarchy actions when ready.").font(.footnote).foregroundStyle(.secondary)
@@ -457,8 +549,13 @@ private struct ChildHierarchyReviewView: View {
             if let failure { Section { HierarchyNotice(message: failure) } }
         }
         .privacySensitive().scrollDismissesKeyboard(.interactively)
-        .task(id: scope) {
-            read = nil; failure = nil; guard let current = scope, current == model.scope else { return }; captured = current
+        .task(id: store.childTaskFieldRecoveryScope) {
+            composer?.close(); composer = nil; read = nil; failure = nil
+            guard let current = store.childTaskFieldRecoveryScope, current == model.scope else { return }; captured = current
+            if case .draft(let value) = request.source {
+                do { try beginComposer(value, scope: current, saved: true) }
+                catch { failure = "This saved draft could not be opened. Keep it in Saved hierarchy actions."; return }
+            }
             do {
                 let value = try await store.readCurrentChildTaskStructure(request.root)
                 guard captured == scope, scope == model.scope, !Task.isCancelled else { return }
@@ -467,16 +564,57 @@ private struct ChildHierarchyReviewView: View {
                 if let saved {
                     guard saved.command.body["task_generation"] == value.context.root["task_generation"], saved.command.body["project_id"] == value.context.root["project_id"] else { throw ChildTaskStructureCommand.invalid }
                     parent = saved.command.body["parent_key"]?.text ?? ""; index = saved.command.body["index"]?.integer ?? 0
-                } else if let moving, let node = value.records.nodes[moving] { parent = node.parent ?? ""; index = node.position }
+                } else if composer == nil, let moving, let node = value.records.nodes[moving] { parent = node.parent ?? ""; index = node.position }
+                if composer == nil {
+                    switch request.source {
+                    case .add: try beginComposer(.init(read: value, id: newID), scope: current, saved: false)
+                    case .move(let key): try beginComposer(.init(read: value, moving: key, id: newID), scope: current, saved: false)
+                    default: break
+                    }
+                }
                 read = value
             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = "Current values aren’t available. Refresh the task when connected; your saved work is kept." }
         }
-        .onDisappear { read = nil; captured = nil }
-        .interactiveDismissDisabled(model.busy)
+        .onChange(of: phase) { _, phase in if phase != .active, let composer { Task { _ = await composer.flush() } } }
+        .onDisappear { if let composer { Task { _ = await composer.flush() } } }
+        .interactiveDismissDisabled(acting || model.busy || composer?.dirty == true || composer?.saving == true)
+    }
+    private func beginComposer(_ value: ChildTaskStructureDraft, scope: ChildTaskFieldClientScope, saved: Bool) throws {
+        composer = try .init(scope: scope, draft: value, saved: saved,
+                            journal: store.childTaskStructureDraftJournal(account: scope.account, origin: scope.origin),
+                            current: { [weak store] in store?.childTaskFieldRecoveryScope })
+        title = value.body["title"]!.text; parent = value.body["parent_key"] == .null ? "" : value.body["parent_key"]!.text
+        index = value.body["index"]!.integer; newID = UUID(uuidString: value.id)!
+    }
+    private func closeReview() async {
+        if composer?.draft?.pendingCommand == nil { checkpoint() }
+        guard !checkpointFailure else { return }
+        if let composer, !(await composer.flush()) { return }
+        dismiss()
+    }
+    private func checkpoint(placement: Bool = false) {
+        guard let composer, let draft = composer.draft, captured == store.childTaskFieldRecoveryScope else { return }
+        do {
+            let next = try draft.editing(title: title, parent: parent.isEmpty ? nil : parent, index: index, placementRead: placement ? read : nil)
+            if !AuthoredValueComparison.exactJSON(.object(next.body), .object(draft.body)) { try composer.stage(next) }
+            if checkpointFailure { failure = nil }; checkpointFailure = false
+        } catch { checkpointFailure = true; failure = "This draft could not be updated. Keep this window open and review its current title and destination." }
     }
     private func act(_ command: ChildTaskStructureCommand) {
         guard let read, captured == scope, scope == model.scope else { return }; titleFocused = false
+        acting = true
         Task {
+            defer { acting = false }
+            if let composer {
+                guard let frozen = await composer.prepare(read), captured == scope else { failure = composer.message; return }
+                let saved = await model.queueDraftAction(frozen, read: read)
+                guard captured == scope else { return }
+                if saved {
+                    if await composer.finish() { feedback("Action saved."); dismiss() }
+                    else { failure = composer.message }
+                } else { failure = model.message }
+                return
+            }
             let success: Bool
             if let saved, saved.phase == .queued || saved.phase == .attempted { success = await model.send(command) }
             else if let saved, saved.phase == .closed { success = await model.replace(saved, with: command, read: read) }

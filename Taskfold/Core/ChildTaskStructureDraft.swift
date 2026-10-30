@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Observation
 
 /// Private composer content is not a queued command. Invalid/unfinished titles
 /// and destinations can be kept without granting permission to mutate a task.
@@ -7,6 +8,7 @@ struct ChildTaskStructureDraft: Codable, Equatable, Sendable, CustomStringConver
     let account: String, origin: String
     let body: [String: JSON]
     let token: UUID
+    let pendingCommand: ChildTaskStructureCommand?
     var id: String { body["request_id"]!.text }
     var description: String { "Private subtask organizer draft" }
     var debugDescription: String { description }
@@ -27,7 +29,7 @@ struct ChildTaskStructureDraft: Codable, Equatable, Sendable, CustomStringConver
             "index": .number(Double(node?.position ?? 0)), "title": .string("")
         ])
     }
-    init(account: String, origin: String, body: [String: JSON], token: UUID = UUID()) throws {
+    init(account: String, origin: String, body: [String: JSON], token: UUID = UUID(), pendingCommand: ChildTaskStructureCommand? = nil) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard origin.utf8.count <= 2048, body["account"] == .string(account),
               Set(body.keys) == Set(Self.identityKeys + ["structure_revision", "parent_key", "parent_incarnation", "index", "title"]),
@@ -45,7 +47,8 @@ struct ChildTaskStructureDraft: Codable, Equatable, Sendable, CustomStringConver
         }
         if body["parent_key"] == .null { guard body["parent_incarnation"] == .null else { throw Self.invalid } }
         else { _ = try ChildTaskStructureCommand.key(body["parent_key"]); _ = try TeamOrganizationValue.id(body["parent_incarnation"]) }
-        self.account = account; self.origin = origin; self.body = body; self.token = token
+        self.account = account; self.origin = origin; self.body = body; self.token = token; self.pendingCommand = pendingCommand
+        if let pendingCommand { guard try pendingCommand == command() else { throw Self.invalid } }
     }
     func sameTarget(as other: Self) -> Bool {
         account == other.account && origin == other.origin && Self.identityKeys.allSatisfy { ChildTaskStructureCommand.exact(body[$0], other.body[$0]) }
@@ -58,21 +61,45 @@ struct ChildTaskStructureDraft: Codable, Equatable, Sendable, CustomStringConver
               body["project_id"] == read.context.root["project_id"], body["structure_revision"] == .number(read.structureRevision) else { throw Self.invalid }
         let parent = body["parent_key"] == .null ? nil : body["parent_key"]!.text
         if let parent { guard read.records.nodes[parent]?.incarnation == body["parent_incarnation"]?.text else { throw Self.invalid } }
-        let request = UUID(uuidString: id)!
-        if body["action"] == .string("insert") {
-            return try .init(insert: .object(["id": .string(id), "title": body["title"]!]), parent: parent, index: body["index"]!.integer, read: read, requestID: request)
-        }
-        guard read.records.nodes[body["node_key"]!.text]?.incarnation == body["incarnation"]?.text else { throw Self.invalid }
-        return try .init(move: body["node_key"]!.text, parent: parent, index: body["index"]!.integer, read: read, requestID: request)
+        let result = try command(); try result.review(read); return result
     }
-    private enum CodingKeys: String, CodingKey { case account, origin, body, token }
+    private func command() throws -> ChildTaskStructureCommand {
+        var raw = body.filter { ["account", "request_id", "task_id", "task_generation", "project_id", "action", "structure_revision", "parent_key", "index"].contains($0.key) }
+        raw["protocol"] = .number(1)
+        if body["action"] == .string("insert") {
+            raw["node"] = .object(["id": .string(id), "title": body["title"]!])
+        } else {
+            raw["node_key"] = body["node_key"]; raw["incarnation"] = body["incarnation"]
+        }
+        return try .init(account: account, origin: origin, body: raw)
+    }
+    func editing(title: String, parent: String?, index: Int, placementRead: ChildTaskStructureRead? = nil) throws -> Self {
+        guard pendingCommand == nil else { throw Self.invalid }
+        var next = body; next["title"] = .string(title)
+        if let read = placementRead {
+            guard account == read.context.account, origin == read.context.origin, body["task_id"] == .string(read.context.root.id),
+                  body["task_generation"] == read.context.root["task_generation"], body["project_id"] == read.context.root["project_id"] else { throw Self.invalid }
+            if body["action"] == .string("move") { guard read.records.nodes[body["node_key"]!.text]?.incarnation == body["incarnation"]?.text else { throw Self.invalid } }
+            guard parent == nil || read.records.nodes[parent!] != nil else { throw Self.invalid }
+            next["parent_key"] = parent.map(JSON.string) ?? .null
+            next["parent_incarnation"] = parent.flatMap { read.records.nodes[$0] }.map { .string($0.incarnation) } ?? .null
+            next["index"] = .number(Double(index)); next["structure_revision"] = .number(read.structureRevision)
+        } else {
+            guard next["parent_key"] == (parent.map(JSON.string) ?? .null), next["index"] == .number(Double(index)) else { throw Self.invalid }
+        }
+        return try .init(account: account, origin: origin, body: next)
+    }
+    func preparing(_ read: ChildTaskStructureRead) throws -> Self {
+        try .init(account: account, origin: origin, body: body, pendingCommand: reviewedCommand(read))
+    }
+    private enum CodingKeys: String, CodingKey { case account, origin, body, token, pendingCommand }
     init(from decoder: Decoder) throws {
-        try structureKeys(decoder, ["account", "origin", "body", "token"])
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), body: c.decode([String: JSON].self, forKey: .body), token: c.decode(UUID.self, forKey: .token))
+        try structureKeys(decoder, c.contains(.pendingCommand) ? ["account", "origin", "body", "token", "pendingCommand"] : ["account", "origin", "body", "token"])
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), body: c.decode([String: JSON].self, forKey: .body), token: c.decode(UUID.self, forKey: .token), pendingCommand: c.decodeIfPresent(ChildTaskStructureCommand.self, forKey: .pendingCommand))
     }
     static func == (a: Self, b: Self) -> Bool {
-        a.account == b.account && a.origin == b.origin && a.token == b.token && AuthoredValueComparison.exactJSON(.object(a.body), .object(b.body))
+        a.account == b.account && a.origin == b.origin && a.token == b.token && a.pendingCommand == b.pendingCommand && AuthoredValueComparison.exactJSON(.object(a.body), .object(b.body))
     }
 }
 
@@ -95,7 +122,9 @@ struct ChildTaskStructureDraftState: ReviewedTeamFileCommand, CustomStringConver
         self.account = account; self.origin = origin; self.entries = entries
     }
     init(data: Data) throws {
-        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: [["version"], ["entries", "[]", "body", "structure_revision"], ["entries", "[]", "body", "index"]])
+        let counters = ChildTaskStructureCommand.counterPaths([:], prefix: ["entries", "[]", "pendingCommand", "body"])
+            .union([["version"], ["entries", "[]", "body", "structure_revision"], ["entries", "[]", "body", "index"]])
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: counters)
         self = try JSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
@@ -149,6 +178,7 @@ actor ChildTaskStructureDraftJournal {
                 // Exact retry of an acknowledged-or-lost local write is safe.
                 if old == draft { return }
                 guard old.token == expected, draft.token != expected, old.sameTarget(as: draft) else { throw ChildTaskStructureDraft.invalid }
+                if old.pendingCommand != nil { guard old.pendingCommand == draft.pendingCommand, AuthoredValueComparison.exactJSON(.object(old.body), .object(draft.body)) else { throw ChildTaskStructureDraft.invalid } }
                 state.entries[index] = draft
             } else {
                 guard expected == nil else { throw ChildTaskStructureDraft.invalid }
@@ -166,4 +196,66 @@ actor ChildTaskStructureDraftJournal {
         }
     }
     func removeAccount() throws { try lock.withExclusive(account: account) { try io.remove(key: key) } }
+}
+
+/// One live editor serializes checkpoints; an awaited flush never discards a
+/// newer edit staged while an earlier disk write was suspended.
+@MainActor @Observable final class ChildTaskStructureDraftSession {
+    private(set) var draft: ChildTaskStructureDraft?
+    private(set) var saving = false
+    private(set) var message: String?
+    private(set) var dirty = false
+    let scope: ChildTaskFieldClientScope
+    private let journal: ChildTaskStructureDraftJournal
+    private let current: () -> ChildTaskFieldClientScope?
+    private let lease = CalendarReadLease()
+    private var acknowledged: ChildTaskStructureDraft?
+    private var worker: Task<Void, Never>?
+    init(scope: ChildTaskFieldClientScope, draft: ChildTaskStructureDraft, saved: Bool, journal: ChildTaskStructureDraftJournal, current: @escaping () -> ChildTaskFieldClientScope?) throws {
+        guard draft.account == scope.account, draft.origin == scope.origin else { throw ChildTaskStructureDraft.invalid }
+        self.scope = scope; self.draft = draft; acknowledged = saved ? draft : nil; self.journal = journal; self.current = current
+    }
+    private func check() throws { try lease.check(); guard current() == scope, draft != nil else { throw CancellationError() } }
+    func stage(_ value: ChildTaskStructureDraft) throws {
+        try check(); guard let previous = draft, previous.sameTarget(as: value), previous.pendingCommand == nil else { throw ChildTaskStructureDraft.invalid }
+        draft = value; dirty = true; message = nil; start()
+    }
+    private func start() {
+        guard worker == nil, dirty else { return }
+        saving = true
+        worker = Task { [self] in
+            defer { worker = nil; saving = false }
+            do {
+                while dirty {
+                    try check(); guard let value = draft else { throw CancellationError() }
+                    try await journal.save(value, replacing: acknowledged?.token, lease: lease)
+                    try check(); acknowledged = value
+                    dirty = draft != value
+                }
+                message = "Draft saved on this device."
+            } catch {
+                guard current() == scope, draft != nil else { close(); return }
+                message = "Draft couldn’t be saved. Keep this window open and try again; another window may have changed it."
+            }
+        }
+    }
+    @discardableResult func flush() async -> Bool {
+        guard (try? check()) != nil else { close(); return false }
+        start(); if let worker { await worker.value }
+        return (try? check()) != nil && !dirty
+    }
+    func prepare(_ read: ChildTaskStructureRead) async -> ChildTaskStructureCommand? {
+        guard await flush(), let draft else { return nil }
+        if let pending = draft.pendingCommand { return pending }
+        do {
+            try stage(draft.preparing(read))
+            guard await flush() else { return nil }; return self.draft?.pendingCommand
+        } catch { message = "Review the current destination before saving this action. Your draft is kept."; return nil }
+    }
+    @discardableResult func finish() async -> Bool {
+        guard (try? check()) != nil, let acknowledged, acknowledged.pendingCommand != nil, !dirty else { return false }
+        do { try await journal.discard(acknowledged, lease: lease); try check(); close(); return true }
+        catch { message = "The action is saved. Its draft copy still needs cleanup; reopening it keeps the original action."; return false }
+    }
+    func close() { lease.cancel(); worker?.cancel(); draft = nil; acknowledged = nil; dirty = false; message = nil }
 }

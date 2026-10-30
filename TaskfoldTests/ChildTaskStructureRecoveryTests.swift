@@ -6,9 +6,10 @@ private final class StructureJournalIO: CalendarSecureItemIO, @unchecked Sendabl
     private let lock = NSLock()
     private var rows: [String: Data] = [:]
     var failWrite = false
+    var failAfterWrite = false
     var onWrite: (() -> Void)?
     func read(key: String) throws -> Data? { lock.lock(); defer { lock.unlock() }; return rows[key] }
-    func write(_ data: Data, key: String) throws { lock.lock(); defer { lock.unlock() }; if failWrite { throw URLError(.cannotWriteToFile) }; rows[key] = data; onWrite?() }
+    func write(_ data: Data, key: String) throws { lock.lock(); defer { lock.unlock() }; if failWrite { throw URLError(.cannotWriteToFile) }; rows[key] = data; onWrite?(); if failAfterWrite { throw URLError(.cannotWriteToFile) } }
     func remove(key: String) throws { lock.lock(); defer { lock.unlock() }; rows.removeValue(forKey: key) }
     var contents: [String: Data] { lock.lock(); defer { lock.unlock() }; return rows }
     func replace(_ data: Data) { lock.lock(); defer { lock.unlock() }; for key in rows.keys { rows[key] = data } }
@@ -175,6 +176,141 @@ extension ChildTaskStructureRecoveryTests {
         XCTAssertEqual(Array(io.contents.values), [corrupt])
     }
 }
+private final class ComposerWriteGate: @unchecked Sendable {
+    let entered = DispatchSemaphore(value: 0), release = DispatchSemaphore(value: 0)
+    private let lock = NSLock()
+    private var held = false
+    func once() {
+        lock.lock(); let wait = !held; held = true; lock.unlock()
+        if wait { entered.signal(); _ = release.wait(timeout: .now() + 5) }
+    }
+}
+extension ChildTaskStructureRecoveryTests {
+    @MainActor func testComposerSessionNewestEditSurvivesSuspendedEarlierWrite() async throws {
+        let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read)
+        let io = StructureJournalIO(), gate = ComposerWriteGate(), j = try draftJournal(draft, io, directory())
+        io.onWrite = { gate.once() }; defer { gate.release.signal() }
+        let session = try ChildTaskStructureDraftSession(scope: captured, draft: draft, saved: false, journal: j, current: { captured })
+        try session.stage(draft.editing(title: "First", parent: nil, index: 0))
+        let entered = await Task.detached { gate.entered.wait(timeout: .now() + 3) == .success }.value; XCTAssertTrue(entered)
+        let latest = try XCTUnwrap(session.draft).editing(title: "Newest cafe\u{0301}", parent: nil, index: 0)
+        try session.stage(latest); gate.release.signal()
+        let flushed = await session.flush(); XCTAssertTrue(flushed); XCTAssertFalse(session.dirty)
+        let reopened = try await j.load(); XCTAssertEqual(reopened.entries, [latest])
+    }
+    @MainActor func testComposerSessionFailureRetainsTextAndExplicitRetry() async throws {
+        let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read)
+        let io = StructureJournalIO(), j = try draftJournal(draft, io, directory())
+        let session = try ChildTaskStructureDraftSession(scope: captured, draft: draft, saved: false, journal: j, current: { captured })
+        io.failWrite = true
+        try session.stage(draft.editing(title: "Keep my unfinished title", parent: nil, index: 0))
+        let failed = await session.flush(); XCTAssertFalse(failed); XCTAssertTrue(session.dirty); XCTAssertNotNil(session.message)
+        XCTAssertEqual(session.draft?.body["title"], .string("Keep my unfinished title"))
+        io.failWrite = false; let retried = await session.flush(); XCTAssertTrue(retried)
+        let reopened = try await j.load(); XCTAssertEqual(reopened.entries.first?.body["title"], .string("Keep my unfinished title"))
+    }
+    @MainActor func testComposerSessionScopeDepartureHidesLateReplyAndRefusesFurtherEdits() async throws {
+        let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read)
+        var live: ChildTaskFieldClientScope? = captured
+        let io = StructureJournalIO(), gate = ComposerWriteGate(), j = try draftJournal(draft, io, directory())
+        io.onWrite = { gate.once() }; defer { gate.release.signal() }
+        let session = try ChildTaskStructureDraftSession(scope: captured, draft: draft, saved: false, journal: j, current: { live })
+        try session.stage(draft.editing(title: "Original account", parent: nil, index: 0))
+        let entered = await Task.detached { gate.entered.wait(timeout: .now() + 3) == .success }.value; XCTAssertTrue(entered)
+        live = nil; gate.release.signal()
+        let flushed = await session.flush(); XCTAssertFalse(flushed); XCTAssertNil(session.draft)
+        XCTAssertThrowsError(try session.stage(draft)); XCTAssertNil(session.message)
+    }
+    @MainActor func testComposerSessionEmptyOpenDoesNotReserveDraftCapacity() async throws {
+        let captured = scope(try command()), draft = try ChildTaskStructureDraft(read: presentationRead(captured)), io = StructureJournalIO()
+        let j = try draftJournal(draft, io, directory())
+        let session = try ChildTaskStructureDraftSession(scope: captured, draft: draft, saved: false, journal: j, current: { captured })
+        let flushed = await session.flush(); XCTAssertTrue(flushed)
+        let state = try await j.load(); XCTAssertTrue(state.entries.isEmpty); XCTAssertTrue(io.contents.isEmpty)
+    }
+    @MainActor func testComposerFrozenPromotionColdResumeKeepsOneOriginalAction() async throws {
+        let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read)
+        let draftIO = StructureJournalIO(), root = try directory(), drafts = try draftJournal(draft, draftIO, root)
+        let session = try ChildTaskStructureDraftSession(scope: captured, draft: draft, saved: false, journal: drafts, current: { captured })
+        try session.stage(draft.editing(title: "Frozen title", parent: nil, index: 0))
+        let prepared = await session.prepare(read); let frozen = try XCTUnwrap(prepared)
+        let savedState = try await drafts.load(); let saved = try XCTUnwrap(savedState.entries.first); XCTAssertEqual(saved.pendingCommand, frozen)
+        XCTAssertThrowsError(try saved.editing(title: "Changed after freeze", parent: nil, index: 0))
+        let cold = try ChildTaskStructureDraftSession(scope: captured, draft: saved, saved: true, journal: drafts, current: { captured })
+        let resumed = try await cold.prepare(presentationRead(captured, revision: 9)); XCTAssertEqual(resumed, frozen)
+        let commandsIO = StructureJournalIO(), commands = try journal(command(), commandsIO, root), peer = StructurePeer()
+        let model = ChildTaskStructurePresentation(scope: captured, journal: commands, service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true })
+        commandsIO.failAfterWrite = true
+        let lost = await model.queueDraftAction(frozen, read: read); XCTAssertFalse(lost)
+        commandsIO.failAfterWrite = false
+        let recovered = try await model.queueDraftAction(frozen, read: presentationRead(captured, revision: 9)); XCTAssertTrue(recovered)
+        let cleaned = await cold.finish(); XCTAssertTrue(cleaned)
+        let queued = try await commands.load(); XCTAssertEqual(queued.entries.map(\.command), [frozen]); XCTAssertTrue(peer.calls.isEmpty)
+        let remaining = try await drafts.load(); XCTAssertTrue(remaining.entries.isEmpty)
+    }
+    @MainActor func testComposerFrozenDraftCannotBeUnfrozenOrChangedByOtherWindow() async throws {
+        let captured = scope(try command()), read = try presentationRead(captured), original = try ChildTaskStructureDraft(read: read).editing(title: "Keep", parent: nil, index: 0)
+        let frozen = try original.preparing(read), io = StructureJournalIO(), j = try draftJournal(original, io, directory())
+        try await j.save(original, replacing: nil, lease: CalendarReadLease()); try await j.save(frozen, replacing: original.token, lease: CalendarReadLease())
+        let cleared = try ChildTaskStructureDraft(account: frozen.account, origin: frozen.origin, body: frozen.body)
+        do { try await j.save(cleared, replacing: frozen.token, lease: CalendarReadLease()); XCTFail("Unfroze original request") } catch { }
+        var wrong = frozen.pendingCommand!.body; wrong["index"] = .number(1)
+        let changed = try ChildTaskStructureCommand(account: frozen.account, origin: frozen.origin, body: wrong)
+        XCTAssertThrowsError(try ChildTaskStructureDraft(account: frozen.account, origin: frozen.origin, body: frozen.body, pendingCommand: changed))
+        let state = try await j.load(); XCTAssertEqual(state.entries, [frozen])
+    }
+    @MainActor func testComposerExplicitPlacementReviewRebasesOnlySameTarget() throws {
+        let captured = scope(try command()), oldRead = try presentationRead(captured), fresh = try presentationRead(captured, revision: 6)
+        let draft = try ChildTaskStructureDraft(read: oldRead).editing(title: "Keep", parent: nil, index: 0)
+        let titleOnly = try draft.editing(title: "Keep typing", parent: nil, index: 0)
+        XCTAssertThrowsError(try titleOnly.reviewedCommand(fresh))
+        let reviewed = try titleOnly.editing(title: "Keep typing", parent: "b", index: 0, placementRead: fresh)
+        XCTAssertNoThrow(try reviewed.reviewedCommand(fresh)); XCTAssertEqual(reviewed.id, draft.id)
+        var changed = draft.body; changed["task_generation"] = .string(UUID().uuidString.lowercased())
+        let other = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: changed)
+        XCTAssertThrowsError(try other.editing(title: "Keep", parent: nil, index: 0, placementRead: fresh))
+    }
+    @MainActor func testComposerPromotionRefusesCollidingSavedBodyWithoutDeletingDraft() async throws {
+        let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read).editing(title: "Original", parent: nil, index: 0).preparing(read)
+        let io = StructureJournalIO(), root = try directory(), j = try journal(command(), io, root), peer = StructurePeer()
+        var body = draft.pendingCommand!.body; body["node"] = .object(["id": .string(draft.id), "title": .string("Other body")])
+        let other = try ChildTaskStructureCommand(account: draft.account, origin: draft.origin, body: body)
+        try await j.enqueue(other, lease: CalendarReadLease())
+        let model = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true })
+        let queued = await model.queueDraftAction(draft.pendingCommand!, read: read); XCTAssertFalse(queued)
+        let state = try await j.load(); XCTAssertEqual(state.entries.map(\.command), [other]); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testNativeRecoveryLoadsAndDiscardsDraftWithoutChangingActions() async throws {
+        let captured = scope(try command()), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read).editing(title: "Unfinished", parent: nil, index: 0)
+        let root = try directory(), io = StructureJournalIO(), drafts = try draftJournal(draft, io, root), commands = try journal(command(), StructureJournalIO(), root), peer = StructurePeer()
+        try await drafts.save(draft, replacing: nil, lease: CalendarReadLease())
+        let model = ChildTaskStructurePresentation(scope: captured, journal: commands, service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true }, draftJournal: drafts)
+        await model.load(); XCTAssertEqual(model.drafts, [draft]); XCTAssertNil(model.draftsFailure)
+        await model.discardDraft(draft); XCTAssertTrue(model.drafts.isEmpty); XCTAssertTrue(model.entries.isEmpty)
+        let saved = try await drafts.load(); XCTAssertTrue(saved.entries.isEmpty); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testNativeDraftFailureKeepsActionRecoveryAndScopeLossClearsAll() async throws {
+        let c = try command(), captured = scope(c), read = try presentationRead(captured), draft = try ChildTaskStructureDraft(read: read)
+        var live: ChildTaskFieldClientScope? = captured
+        let root = try directory(), io = StructureJournalIO(), drafts = try draftJournal(draft, io, root), commands = try journal(c, StructureJournalIO(), root), peer = StructurePeer()
+        try await drafts.save(draft, replacing: nil, lease: CalendarReadLease()); io.replace(Data("Unreadable drafts".utf8))
+        try await commands.enqueue(c, lease: CalendarReadLease())
+        let model = ChildTaskStructurePresentation(scope: captured, journal: commands, service: peer, current: { live }, canQueue: { _ in true }, canSend: { _ in true }, draftJournal: drafts)
+        await model.load(); XCTAssertEqual(model.entries.map(\.command), [c]); XCTAssertTrue(model.drafts.isEmpty); XCTAssertNotNil(model.draftsFailure)
+        live = nil; await model.load(); XCTAssertTrue(model.entries.isEmpty); XCTAssertTrue(model.drafts.isEmpty); XCTAssertNil(model.draftsFailure)
+    }
+    @MainActor func testComposerFrozenWireRoundTripAndLegacyDraftRemainReadable() throws {
+        let captured = scope(try command()), read = try presentationRead(captured), original = try ChildTaskStructureDraft(read: read).editing(title: "Keep", parent: nil, index: 0)
+        let frozen = try original.preparing(read), state = try ChildTaskStructureDraftState(account: frozen.account, origin: frozen.origin, entries: [frozen])
+        let data = try JSONEncoder().encode(state); XCTAssertEqual(try ChildTaskStructureDraftState(data: data), state)
+        let text = String(decoding: data, as: UTF8.self)
+        let bad = text.replacingOccurrences(of: "\"protocol\":1", with: "\"protocol\":1.00000000000000001")
+        XCTAssertNotEqual(text, bad); XCTAssertThrowsError(try ChildTaskStructureDraftState(data: Data(bad.utf8)))
+        var legacy = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(original)); legacy.removeValue(forKey: "pendingCommand")
+        let reopened = try JSONDecoder().decode(ChildTaskStructureDraft.self, from: encode(legacy)); XCTAssertEqual(reopened, original)
+    }
+}
+
 private func structureReply(_ c: ChildTaskStructureCommand, replayed: Bool = false) throws -> ChildTaskStructureReceipt {
     var raw = c.body.filter { ChildTaskStructureCommand.scopeKeys.contains($0.key) || ["request_id", "action"].contains($0.key) }
     raw["before_revision"] = c.body["structure_revision"]; raw["after_revision"] = .number(Double(c.body["structure_revision"]!.integer + 1))

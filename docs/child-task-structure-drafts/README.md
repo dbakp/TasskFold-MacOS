@@ -1,5 +1,7 @@
 # Organizer draft storage
 
+This records the earlier storage-only stage. The [native follow-up](../child-task-structure-draft-native/README.md) connects its screens and records the current verification limits.
+
 This stage adds durable private storage for unfinished Add/Move organizer content in each independently owned app. It is a storage foundation: the organizer screen is not yet connected to it, so closing that screen can still lose unsaved composer text. No new everyday-use feature is claimed.
 
 ## Behavior

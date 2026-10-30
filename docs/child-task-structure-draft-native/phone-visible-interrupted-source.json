@@ -1,0 +1,8 @@
+{
+  "Taskfold/Core/ChildTaskStructureDraft.swift": "7ab70b978f7d8ac2222099fd70e7448242741b058974135849e91ff4dd0952b1",
+  "Taskfold/Core/ChildTaskStructurePresentation.swift": "a7ba2678e2cacda7e65bf67d60a0bd901157685dcbdfa19bde17d47769b26b5e",
+  "Taskfold/Views/ChildTaskStructureViews.swift": "d25f5131dd4fa6a3f9e12a4e6caa46f4cdb1ee4e51d03bbe56fee77e0666e27d",
+  "Taskfold/ChildFieldNativeFixture.swift": "3e763cb951e6d2a66f6421463bbb9e692387a0c094dd5d069c0e6c8e096edf8c",
+  "TaskfoldUITests/AudioCommentUITests.swift": "c46bd9ca7eb1394ef75cb0754dfd6c2861de43111868e4b11cbf41b7f25f889f",
+  "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "cafd21051a28356eab64ea0c6737708474d3a4a6c95358c7ed6554be0ef8d98c"
+}

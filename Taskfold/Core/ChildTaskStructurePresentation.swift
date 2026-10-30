@@ -7,12 +7,15 @@ import Observation
     private(set) var entries: [ChildTaskStructureJournalState.Entry] = []
     private(set) var disposals: [ChildTaskStructureJournalState.Disposal] = []
     private(set) var archives: [ChildTaskStructureReceipt] = []
+    private(set) var drafts: [ChildTaskStructureDraft] = []
+    private(set) var draftsFailure: String?
     private(set) var loaded = false
     private(set) var archivesLoaded = false
     private(set) var busy = false
     private(set) var message: String?
     let scope: ChildTaskFieldClientScope
     private let journal: ChildTaskStructureJournal
+    private let draftJournal: ChildTaskStructureDraftJournal?
     private let sender: ChildTaskStructureSender
     private let current: () -> ChildTaskFieldClientScope?
     private let canQueue: (ChildTaskStructureCommand) -> Bool
@@ -20,14 +23,18 @@ import Observation
     private var closed = false
     init(scope: ChildTaskFieldClientScope, journal: ChildTaskStructureJournal, service: any ChildTaskStructureCommandService,
          current: @escaping () -> ChildTaskFieldClientScope?, canQueue: @escaping (ChildTaskStructureCommand) -> Bool,
-         canSend: @escaping (ChildTaskStructureCommand) -> Bool) {
-        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue
+         canSend: @escaping (ChildTaskStructureCommand) -> Bool, draftJournal: ChildTaskStructureDraftJournal? = nil) {
+        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.draftJournal = draftJournal
         sender = .init(scope: scope, journal: journal, service: service, current: current, canSend: canSend)
     }
-    func close() { closed = true; lease.cancel(); sender.close(); entries = []; disposals = []; archives = []; loaded = false; archivesLoaded = false; message = nil; busy = false }
+    func close() { closed = true; lease.cancel(); sender.close(); entries = []; disposals = []; archives = []; drafts = []; draftsFailure = nil; loaded = false; archivesLoaded = false; message = nil; busy = false }
     private func check() throws { try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
     private func update() async throws {
         let state = try await journal.load(); try check(); entries = state.entries; disposals = state.disposals; loaded = true
+        if let draftJournal {
+            do { let saved = try await draftJournal.load(); try check(); drafts = saved.entries; draftsFailure = nil }
+            catch { try check(); drafts = []; draftsFailure = "Saved drafts couldn’t be read. They are kept; try again when secure storage is available." }
+        }
     }
     private func failure(_ error: Error) {
         guard (try? check()) != nil else { close(); return }
@@ -46,6 +53,13 @@ import Observation
         }
     }
     func load() async { _ = await work { try await update() } }
+    func discardDraft(_ draft: ChildTaskStructureDraft) async {
+        _ = await work {
+            guard let draftJournal, drafts.contains(draft) else { throw ChildTaskStructureDraft.invalid }
+            try await draftJournal.discard(draft, lease: lease); try check(); try await update()
+            message = "Unfinished draft removed. Tasks and saved actions are unchanged."
+        }
+    }
     func discoverArchives() async {
         _ = await work {
             let values = try await sender.archives(); try check(); archives = values.entries; archivesLoaded = true
@@ -65,6 +79,23 @@ import Observation
         await work {
             _ = try await sender.send(command); try check(); try await update()
             message = command.action == .undo ? "Undo confirmed." : command.action == .insert ? "Subtask added." : command.action == .move ? "Subtask moved." : "Subtasks removed."
+        }
+    }
+    /// A frozen draft may have reached the journal before a lost local reply.
+    /// Recover that exact saved action before requiring another structural read.
+    @discardableResult func queueDraftAction(_ command: ChildTaskStructureCommand, read: ChildTaskStructureRead) async -> Bool {
+        await work {
+            guard command.account == scope.account, command.origin == scope.origin else { throw CancellationError() }
+            let saved = try await journal.load(); try check()
+            if let previous = saved.entries.first(where: { $0.command.id == command.id }) {
+                guard previous.command == command else { throw ChildTaskStructureCommand.invalid }
+                try await update(); message = "The original action is already saved. Review it in Saved hierarchy actions."; return
+            }
+            guard ChildTaskFieldClientScope(read.context) == scope else { throw CancellationError() }
+            try command.review(read)
+            guard canQueue(command) else { throw ChildTaskStructureFailure(reason: .unavailable) }
+            try await journal.enqueue(command, lease: lease); try check(); try await update()
+            message = "Action saved on this device. Review and send it when ready."
         }
     }
     func stop(_ command: ChildTaskStructureCommand) async {

@@ -1,0 +1,27 @@
+{
+  "retained": "Compressed logs, official summaries, per-phase source hashes and selected images",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-composer-native-phone.xcresult",
+      "allocatedBytes": 112619520
+    },
+    {
+      "path": "/tmp/taskfold-composer-native-phone-visible.xcresult",
+      "allocatedBytes": 160739328
+    },
+    {
+      "path": "/tmp/taskfold-composer-native-phone-loaded.xcresult",
+      "allocatedBytes": 114638848
+    },
+    {
+      "path": "/tmp/taskfold-composer-native-phone-checked.xcresult",
+      "allocatedBytes": 5644288
+    },
+    {
+      "path": "/tmp/taskfold-composer-phone-loaded-images",
+      "allocatedBytes": 107520000
+    }
+  ],
+  "allocatedFileBytesPruned": 501161984,
+  "freeBytesAfter": 47698276352
+}

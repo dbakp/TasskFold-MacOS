@@ -918,7 +918,7 @@ extension TaskfoldMacUITests {
         XCTAssertNotNil(done, app.debugDescription); if let done { childPress(done) }
     }
     @MainActor private func childProbe(_ app: XCUIApplication, _ text: String) {
-        let probe = app.staticTexts["childNativeProbe"]; childReveal(probe, app, diagnosticText: true)
+        let probe = app.staticTexts[text.hasPrefix("structure") ? "childNativeStructureProbe" : "childNativeProbe"]; childReveal(probe, app, diagnosticText: true)
         XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text), object: probe)], timeout: 12) == .completed, app.debugDescription)
     }
     @MainActor private func childSave(_ app: XCUIApplication, title: String) {
@@ -1430,6 +1430,69 @@ extension TaskfoldMacUITests {
         app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native")
         childProbe(app, "structureConfirmed=1 structureClosed=0 structureWrites=1 structureRequests=1")
         childHomePress("childNativeStructure", app); XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Sketch the follow-up, level ")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+    }
+    @MainActor func testChildStructureDraftColdResumeAndSeparateActionSave() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-structure-native", large: true)
+        childHomePress("childNativeStructure", app)
+        completionReadyPress(app.buttons["childStructureAdd"], app)
+        let title = "Keep this organizer draft"
+        let field = childField("childStructureNewTitle", app); childPress(field); field.typeText(title)
+        XCTAssertEqual(field.value as? String, title)
+        childDone(app)
+        let resume = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "resumeChildStructureDraft-")).firstMatch
+        childReveal(resume, app)
+        XCTAssertTrue(resume.waitForExistence(timeout: 12), app.debugDescription)
+        structureSnapshot(app, "Organizer unfinished draft saved")
+        childDone(app); childProbe(app, "structureDrafts=1 structureDraftPending=0 structureQueued=0 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native", large: true)
+        childProbe(app, "structureDrafts=1 structureDraftPending=0")
+        childHomePress("childNativeStructure", app); completionReadyPress(resume, app)
+        let restored = childField("childStructureNewTitle", app)
+        XCTAssertEqual(restored.value as? String, title)
+        childPress(restored); restored.typeText(" revised")
+        let updated = try XCTUnwrap(restored.value as? String)
+        XCTAssertEqual(updated.replacingOccurrences(of: " revised", with: ""), title)
+        structureSnapshot(app, "Organizer draft restored after cold launch")
+        completionReadyPress(app.buttons["childStructureReviewApply"], app)
+        XCTAssertTrue(app.staticTexts["childStructureNotice"].waitForExistence(timeout: 12), app.debugDescription)
+        structureOpenRecovery(app)
+        childReveal(childSavedText(updated, app), app)
+        XCTAssertTrue(childSavedText(updated, app).waitForExistence(timeout: 12), app.debugDescription)
+        structureSnapshot(app, "Draft becomes a saved unsent action")
+        childDone(app); childDone(app)
+        childProbe(app, "structureDrafts=0 structureDraftPending=0 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native", large: true)
+        childProbe(app, "structureDrafts=0 structureDraftPending=0 structureQueued=1 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+    }
+    @MainActor func testChildStructureDraftDiscardCancelAndConfirmation() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-structure-native", large: true)
+        childHomePress("childNativeStructure", app); completionReadyPress(app.buttons["childStructureAdd"], app)
+        let field = childField("childStructureNewTitle", app); childPress(field); field.typeText("Discard only this draft")
+        childDone(app)
+        let discard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "discardChildStructureDraft-")).firstMatch
+        childReveal(discard, app)
+        let resumeBefore = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "resumeChildStructureDraft-")).firstMatch
+        XCTAssertGreaterThanOrEqual(discard.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(resumeBefore.frame.height, 44)
+        XCTAssertGreaterThanOrEqual(discard.frame.minY, resumeBefore.frame.maxY)
+        XCTAssertLessThan(discard.frame.height, 80)
+        structureSnapshot(app, "Readable draft actions at largest text")
+        completionReadyPress(discard, app)
+        let alert = app.alerts.firstMatch; XCTAssertTrue(alert.waitForExistence(timeout: 10), app.debugDescription)
+        childPress(alert.buttons["Cancel"])
+        let resume = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "resumeChildStructureDraft-")).firstMatch
+        XCTAssertTrue(resume.waitForExistence(timeout: 10), app.debugDescription)
+        completionReadyPress(resume, app)
+        XCTAssertEqual(childField("childStructureNewTitle", app).value as? String, "Discard only this draft")
+        childDone(app)
+        completionReadyPress(discard, app); XCTAssertTrue(alert.waitForExistence(timeout: 10), app.debugDescription)
+        childPress(alert.buttons["Discard draft"])
+        XCTAssertTrue(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: resume)], timeout: 12) == .completed, app.debugDescription)
+        structureSnapshot(app, "Only the unfinished draft is removed")
+        childDone(app); childProbe(app, "structureDrafts=0 structureDraftPending=0")
+        childProbe(app, "structureQueued=0 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
     }
     @MainActor func testChildStructureNativeLostReplyColdRetryOnlyOnce() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-structure-lose-reply")

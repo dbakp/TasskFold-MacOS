@@ -207,6 +207,10 @@ struct ChildFieldNativeFixtureView: View {
     @State private var privateTitle = ""
     @State private var queueingCompletion = false
     @State private var historyProgress = 0
+    private var structureProbe: String {
+        guard let start = probe.range(of: " structureDrafts=") else { return "Reading current hierarchy diagnostics…" }
+        return String(probe[probe.index(after: start.lowerBound)...])
+    }
     var body: some View {
         NavigationStack {
             List {
@@ -216,6 +220,7 @@ struct ChildFieldNativeFixtureView: View {
                     if ChildStructureNativePeer.enabled {
                         Button("Open saved hierarchy") { opening = "structure" }.accessibilityIdentifier("childNativeStructure")
                         Button("Open hierarchy actions") { opening = "structureRecovery" }.accessibilityIdentifier("childNativeStructureRecovery")
+                        Text(structureProbe).accessibilityIdentifier("childNativeStructureProbe")
                         Button("Forget only the local hierarchy test journal") {
                             Task { do { try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount(); await inspect() } catch { problem = error.localizedDescription } }
                         }.accessibilityIdentifier("childNativeLoseStructureJournal")
@@ -317,6 +322,8 @@ struct ChildFieldNativeFixtureView: View {
             }
             if ChildStructureNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
                 let structural = try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                let organizerDrafts = try await store.childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
+                nextProbe += " structureDrafts=\(organizerDrafts.count) structureDraftPending=\(organizerDrafts.filter { $0.pendingCommand != nil }.count)"
                 nextProbe += " structureQueued=\(structural.entries.filter { $0.phase == .queued }.count) structureAttempted=\(structural.entries.filter { $0.phase == .attempted }.count) structureConfirmed=\(structural.entries.filter { $0.phase == .confirmed }.count) structureClosed=\(structural.entries.filter { $0.phase == .closed }.count) structureWrites=\(state["structureWrites"]?.integer ?? 0) structureRequests=\(state["structureRequests"]?.integer ?? 0) structureArchives=\(state["structureArchives"]?.object.count ?? 0) structureOrder=\(ChildStructureNativePeer.flatKeys(Record(state["root"]!.object)["subtasks"]).joined(separator: ">")) structureDisposals=\(structural.disposals.filter { $0.phase == .confirmed }.count)"
             }
             // Publish one complete snapshot. A partial label across the journal

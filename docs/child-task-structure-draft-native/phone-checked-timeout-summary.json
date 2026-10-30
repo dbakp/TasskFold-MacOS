@@ -1,0 +1,16 @@
+{
+  "totalTestCount": 1,
+  "passedTests": 0,
+  "failedTests": 1,
+  "skippedTests": 0,
+  "testFailures": [
+    {
+      "failureText": "Test exceeded execution time allowance of 3 minutes",
+      "targetName": "TaskfoldUITests",
+      "testIdentifier": 1,
+      "testIdentifierString": "TaskfoldUITests/testChildStructureDraftColdResumeAndSeparateActionSave()",
+      "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testChildStructureDraftColdResumeAndSeparateActionSave",
+      "testName": "testChildStructureDraftColdResumeAndSeparateActionSave()"
+    }
+  ]
+}
