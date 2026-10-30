@@ -864,11 +864,24 @@ struct ChildTaskRecordRead: Sendable {
     /// Keep an original JSON value as bytes while decoding only its envelope.
     /// Opaque numeric precision and distinct Unicode keys never pass through JSON.
     static func separatingJSONField(_ field: String, data: Data, maximum: Int, integerPaths: Set<[String]>, nullableIntegerPaths: Set<[String]>) throws -> (metadata: Data, value: Data) {
+        let parts = try separatingJSONFields([field], data: data, maximum: maximum, integerPaths: integerPaths, nullableIntegerPaths: nullableIntegerPaths)
+        return (parts.metadata, parts.values[field]!)
+    }
+    /// Capture all opaque siblings in one syntax pass. Separating one at a time
+    /// would still decode or normalize keys in the other original/proposed tree.
+    static func separatingJSONFields(_ fields: Set<String>, data: Data, maximum: Int, integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = []) throws -> (metadata: Data, values: [String: Data]) {
         guard data.count <= maximum else { throw ChildTaskRecordFailure.oversized }
-        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths.union(nullableIntegerPaths), nullableIntegerPaths: nullableIntegerPaths, capturedPath: [field])
+        guard !fields.isEmpty, fields.count <= 8, fields.allSatisfy({ !$0.isEmpty }) else { throw ChildTaskRecordFailure.review }
+        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths.union(nullableIntegerPaths), nullableIntegerPaths: nullableIntegerPaths, capturedPaths: Set(fields.map { [$0] }))
         try syntax.value(depth: 0); syntax.space()
-        guard syntax.index == syntax.bytes.count, let range = syntax.capturedRange else { throw ChildTaskRecordFailure.review }
-        return (Data(syntax.bytes.prefix(range.lowerBound)) + Data("null".utf8) + Data(syntax.bytes.suffix(from: range.upperBound)), Data(syntax.bytes[range]))
+        guard syntax.index == syntax.bytes.count, syntax.capturedRanges.count == fields.count else { throw ChildTaskRecordFailure.review }
+        var metadata = Data(), values: [String: Data] = [:], cursor = 0
+        for (path, range) in syntax.capturedRanges.sorted(by: { $0.value.lowerBound < $1.value.lowerBound }) {
+            guard path.count == 1, fields.contains(path[0]), range.lowerBound >= cursor else { throw ChildTaskRecordFailure.review }
+            metadata.append(contentsOf: syntax.bytes[cursor..<range.lowerBound]); metadata.append(contentsOf: [110,117,108,108])
+            values[path[0]] = Data(syntax.bytes[range]); cursor = range.upperBound
+        }
+        metadata.append(contentsOf: syntax.bytes[cursor...]); return (metadata, values)
     }
     init(data: Data, context: ChildTaskRecordContext) throws {
         guard data.count <= Self.maximumBytes else { throw ChildTaskRecordFailure.oversized }
@@ -954,9 +967,9 @@ struct ChildTaskRecordRead: Sendable {
         let integerPaths: Set<[String]>
         let nullableIntegerPaths: Set<[String]>
         var index=0
-        let capturedPath: [String]?
-        var capturedRange: Range<Int>?
-        init(bytes: [UInt8], integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = [], capturedPath: [String]? = nil) { self.bytes = bytes; self.integerPaths = integerPaths; self.nullableIntegerPaths = nullableIntegerPaths; self.capturedPath = capturedPath }
+        let capturedPaths: Set<[String]>
+        var capturedRanges: [[String]: Range<Int>] = [:]
+        init(bytes: [UInt8], integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = [], capturedPaths: Set<[String]> = []) { self.bytes = bytes; self.integerPaths = integerPaths; self.nullableIntegerPaths = nullableIntegerPaths; self.capturedPaths = capturedPaths }
         mutating func space() {while index<bytes.count && [9,10,13,32].contains(bytes[index]) {index+=1}}
         mutating func take(_ byte:UInt8)->Bool {space();if index<bytes.count,bytes[index]==byte {index+=1;return true};return false}
         mutating func string() throws -> String {
@@ -971,33 +984,39 @@ struct ChildTaskRecordRead: Sendable {
             }
             throw ChildTaskRecordFailure.review
         }
+        private func integerToken(path: [String], start: Int) throws {
+            guard integerPaths.contains(path) else { return }
+            let token = bytes[start..<index]
+            let nullable = nullableIntegerPaths.contains(path) && token.elementsEqual([110,117,108,108])
+            guard nullable || (!token.isEmpty && token.count <= 16 && token.allSatisfy({ (48...57).contains($0) }) &&
+                              (token.count == 1 || token.first != 48)) else { throw ChildTaskRecordFailure.review }
+        }
         mutating func value(depth:Int, path: [String] = []) throws {
             try Task.checkCancellation()
-            guard depth<=128 else {throw ChildTaskRecordFailure.review};space()
+            guard depth <= (capturedPaths.contains(where: { path.starts(with: $0) }) ? 512 : 128) else {throw ChildTaskRecordFailure.review};space()
             guard index<bytes.count else {throw ChildTaskRecordFailure.review}
             if bytes[index]==34 {_=try string();return}
             if take(123) {
                 if take(125) {return};var keys:Set<String>=[]; var rawKeys:Set<Data>=[]
                 while true {
                     let key = try string()
-                    let opaque = capturedPath.map { path.starts(with: $0) } ?? false
+                    let opaque = capturedPaths.contains(where: { path.starts(with: $0) })
                     guard (opaque ? rawKeys.insert(Data(key.utf8)).inserted : keys.insert(key).inserted),take(58) else {throw ChildTaskRecordFailure.review}
-                    let childPath = integerPaths.isEmpty && capturedPath == nil ? [] : path + [key]
+                    let childPath = integerPaths.isEmpty && capturedPaths.isEmpty ? [] : path + [key]
                     space(); let start = index
                     try value(depth:depth+1, path: childPath)
-                    if childPath == capturedPath { capturedRange = start..<index }
-                    if integerPaths.contains(childPath) {
-                        let token = bytes[start..<index]
-                        let nullable = nullableIntegerPaths.contains(childPath) && token.elementsEqual([110, 117, 108, 108])
-                        guard nullable || (!token.isEmpty && token.count <= 16 && token.allSatisfy({ (48...57).contains($0) }) &&
-                              (token.count == 1 || token.first != 48)) else { throw ChildTaskRecordFailure.review }
-                    }
+                    if capturedPaths.contains(childPath) { capturedRanges[childPath] = start..<index }
+                    try integerToken(path: childPath, start: start)
                     if take(125) {return};guard take(44) else {throw ChildTaskRecordFailure.review}
                 }
             }
             if take(91) {
                 if take(93) {return}
-                while true {try value(depth:depth+1, path: integerPaths.isEmpty && capturedPath == nil ? [] : path + ["[]"]);if take(93) {return};guard take(44) else {throw ChildTaskRecordFailure.review}}
+                while true {
+                    let childPath = integerPaths.isEmpty && capturedPaths.isEmpty ? [] : path + ["[]"]
+                    space(); let start = index; try value(depth: depth + 1, path: childPath); try integerToken(path: childPath, start: start)
+                    if take(93) {return};guard take(44) else {throw ChildTaskRecordFailure.review}
+                }
             }
             let start=index
             while index<bytes.count && ![9,10,13,32,44,93,125].contains(bytes[index]) {index+=1}

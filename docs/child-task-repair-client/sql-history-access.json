@@ -1,0 +1,660 @@
+{
+  "checks": {
+    "root object becomes list without field loss": true,
+    "root and identity proposal validates": true,
+    "operations remain explicit and ordered": true,
+    "scalar wrapper retains \"Original task text\"": true,
+    "wrapper validates \"Original task text\"": true,
+    "scalar wrapper retains 42": true,
+    "wrapper validates 42": true,
+    "scalar wrapper retains false": true,
+    "wrapper validates false": true,
+    "scalar wrapper retains null": true,
+    "wrapper validates null": true,
+    "scalar wrapper retains [1,\"two\"]": true,
+    "wrapper validates [1,\"two\"]": true,
+    "malformed child object is retained in list": true,
+    "child object proposal validates": true,
+    "nested scalar is retained": true,
+    "nested scalar validates": true,
+    "explicit duplicate repair retains other raw ID": true,
+    "explicit duplicate repair validates": true,
+    "partial proposal stays invalid": true,
+    "partial proposal reports remaining duplicate": true,
+    "partial proposal makes no misleading node total": true,
+    "new collisions are detected": true,
+    "destination position adjusts after earlier source removal": true,
+    "null child list becomes explicit list on move": true,
+    "nested branch can lift to root end": true,
+    "root move retains exact subtree": true,
+    "same-parent index is defined after removal": true,
+    "missing child list created only for explicit move": true,
+    "depth25 branch lifts without data loss": true,
+    "deep lifted value intact": true,
+    "deep repair retains all 25 tasks": true,
+    "node overflow remains an explicit unresolved issue": true,
+    "node overflow proposal retains every task": true,
+    "node overflow has no partial success count": true,
+    "sequential paths refer to preceding proposal": true,
+    "scalar root survives two explicit operations": true,
+    "repair never descends into unknown fields": true,
+    "empty operations": true,
+    "too many operations": true,
+    "unknown operation": true,
+    "extra operation fields": true,
+    "missing operation fields": true,
+    "negative position": true,
+    "decimal position": true,
+    "string position": true,
+    "out of range position": true,
+    "position above bound": true,
+    "too deep path": true,
+    "scalar path": true,
+    "scalar ancestor": true,
+    "missing child list": true,
+    "empty reference": true,
+    "oversized reference": true,
+    "numeric reference": true,
+    "same reference": true,
+    "assign scalar": true,
+    "wrap object": true,
+    "blank title": true,
+    "linebreak-only title": true,
+    "long title": true,
+    "multibyte title limit": true,
+    "root wrapper on list": true,
+    "root wrapper on null": true,
+    "root wrapper needs root path": true,
+    "reference needs node path": true,
+    "missing children": true,
+    "null children": true,
+    "array children": true,
+    "move into own branch": true,
+    "move into self": true,
+    "move after invalid position": true,
+    "move negative index": true,
+    "move fractional index": true,
+    "move string index": true,
+    "move bound": true,
+    "move to scalar parent": true,
+    "move to malformed children": true,
+    "move noop": true,
+    "later move noop": true,
+    "oversized source rejected without truncation": true,
+    "oversized request rejected": true,
+    "repair rollout defaults off": true,
+    "repair gate denies before preview": true,
+    "preview includes exact original": true,
+    "preview contains only reviewed proposal": true,
+    "preview is valid": true,
+    "valid preview still cannot mutate": true,
+    "unindexed preview has no custody success claim": true,
+    "preview makes no source index history or receipt writes": true,
+    "repeat preview digest stable": true,
+    "repair digest is full sha256": true,
+    "full-root title change invalidates repair digest": true,
+    "foreign account blocked by caller RLS": true,
+    "different account in body denied": true,
+    "unknown top-level fields refused": true,
+    "invalid digest refused": true,
+    "stale review digest refused": true,
+    "stale project refused": true,
+    "stale workspace refused": true,
+    "stale generation refused": true,
+    "changed children reject old review": true,
+    "stale preview preserves newer source": true,
+    "concurrent root writer refuses preview without waiting": true,
+    "service returns unresolved proposal honestly": true,
+    "service names remaining repair issue": true,
+    "invalid preview is completely read-only": true,
+    "archived source may be reviewed without mutation": true,
+    "indexed copies require separate custody repair": true,
+    "indexed custody blocks mutation": true,
+    "conflicting copies retained exactly": true,
+    "current shared viewer may inspect proposal": true,
+    "revoked shared viewer cannot inspect stale preview": true,
+    "shared read rollout enforced by caller RLS": true,
+    "expired session cannot preview": true,
+    "parent rollout enforced": true,
+    "source integer remains exact": true,
+    "large original number retains precision": true,
+    "distinct Unicode keys remain distinct": true,
+    "raw preview keeps exact integer on both sides": true,
+    "raw preview keeps huge number on both sides": true,
+    "SQL null needs no manufactured task": true,
+    "SQL null original distinction preserved": true,
+    "anon cannot call public preview": true,
+    "service_role cannot call public preview": true,
+    "anon cannot call pure helper child_repair_path(jsonb,jsonb)": true,
+    "anon cannot call pure helper plan_child_repair(jsonb,jsonb)": true,
+    "authenticated cannot call pure helper child_repair_path(jsonb,jsonb)": true,
+    "authenticated cannot call pure helper plan_child_repair(jsonb,jsonb)": true,
+    "service_role cannot call pure helper child_repair_path(jsonb,jsonb)": true,
+    "service_role cannot call pure helper plan_child_repair(jsonb,jsonb)": true,
+    "public preview is caller RLS invoker": true,
+    "repair writes default disabled": true,
+    "unsent repair is unknown": true,
+    "checking unsent repair creates no receipt": true,
+    "disabled repair cannot write": true,
+    "disabled repair creates no original": true,
+    "eligible preview reflects explicitly enabled save gate": true,
+    "reviewed repair applies": true,
+    "new repair is not replayed": true,
+    "one complete original archived": true,
+    "one durable repair receipt": true,
+    "only reviewed child reference changes": true,
+    "all unrelated root fields retained": true,
+    "complete root archived exactly": true,
+    "original source SQL-null marker retained": true,
+    "archive includes honest empty original records": true,
+    "archive includes original history": true,
+    "repair promotes separate record authority": true,
+    "repaired independent reconstruction exact": true,
+    "repair does not invent completion events": true,
+    "receipt metadata contains no original note": true,
+    "original retrieval returns exact root": true,
+    "corrupt original refused before delivery": true,
+    "damaged original keeps immutable metadata receipt": true,
+    "expired session cannot recover repair receipt": true,
+    "repaired child accepts normal independent field edit": true,
+    "normal field edit reaches repaired mirror": true,
+    "normal field edit preserves archived source": true,
+    "edited independent tree still reconstructs exactly": true,
+    "exact original retry recovers receipt": true,
+    "retry never overwrites later work": true,
+    "retry never duplicates archive": true,
+    "applied check immutable": true,
+    "close cannot reverse applied repair": true,
+    "changed repair digest cannot reuse nonce": true,
+    "changed operations cannot reuse nonce": true,
+    "other actor cannot recover repair": true,
+    "unexpected raw replacement refused": true,
+    "unapplied repair closes": true,
+    "stopped repair never sends": true,
+    "closed root exact": true,
+    "closed request has no archive": true,
+    "closed request has no original": true,
+    "full-root-only change rejects stale repair": true,
+    "stale root remains unchanged": true,
+    "child edit rejects stale repair": true,
+    "preview diagnoses historical identity custody": true,
+    "identity rewrite cannot detach existing history": true,
+    "history conflict preserves full root": true,
+    "new ID cannot inherit historical node events": true,
+    "unresolved duplicate proposal cannot save": true,
+    "indexed mismatches cannot save": true,
+    "indexed refusal retains both copies": true,
+    "late receipt failure rolls back repair": true,
+    "late failure preserves original root": true,
+    "late failure rolls back archive": true,
+    "late failure rolls back projection and authority": true,
+    "late failure leaves unknown receipt": true,
+    "same original request succeeds after rollback": true,
+    "repair nonce fences old adoption closure": true,
+    "repair nonce fences old field closure": true,
+    "old adoption nonce fences repair closure": true,
+    "old field nonce fences repair closure": true,
+    "nonce fence registered on child_task_edit_preparations": true,
+    "nonce fence registered on child_task_edit_receipts": true,
+    "nonce fence registered on child_task_edit_closures": true,
+    "nonce fence registered on child_task_completion_receipts": true,
+    "nonce fence registered on child_task_completion_closures": true,
+    "nonce fence registered on child_task_structure_receipts": true,
+    "nonce fence registered on child_task_structure_closures": true,
+    "nonce fence registered on team_task_edits": true,
+    "nonce fence registered on personal_task_moves": true,
+    "nonce fence registered on team_task_batches": true,
+    "nonce fence registered on child_task_transfers": true,
+    "nonce fence registered on child_task_adoptions": true,
+    "nonce fence registered on child_task_repairs": true,
+    "competing writer refuses repair": true,
+    "archived project refuses repair": true,
+    "dependent edit rollout required": true,
+    "actor quota refuses before writing": true,
+    "quota refusal preserves root": true,
+    "quota refusal adds no archive": true,
+    "single oversized original refused intact": true,
+    "oversized original source is not truncated": true,
+    "oversized original creates no archive": true,
+    "untrusted own closure can stop itself": true,
+    "untrusted closure cannot claim team nonce": true,
+    "shared viewer preview cannot enable saving": true,
+    "current viewer cannot repair": true,
+    "team archive quota refuses before writing": true,
+    "team quota preserves original source": true,
+    "team repair removes transaction edit scope": true,
+    "real editor repair survives other actor fake closure": true,
+    "team original has team custody": true,
+    "repaired team child accepts existing team field adapter": true,
+    "team follow-up retains original archive": true,
+    "changed own closure cannot replace its original decision": true,
+    "live shared editor may repair": true,
+    "applied team repair nonce fences another actor actual repair send": true,
+    "same-team nonce refusal rolls back root": true,
+    "same-team nonce refusal rolls back archive": true,
+    "shared repair fences other actor real team adoption send": true,
+    "cross-actor nonce refusal rolls back tentative promotion": true,
+    "receipt recovery survives access revocation": true,
+    "original content does not survive revoked read access": true,
+    "original replay survives disabled rollout": true,
+    "closed original survives disabled rollout": true,
+    "applied receipt survives root deletion": true,
+    "deleted root original is not exposed": true,
+    "deleted root retains original in team custody": true,
+    "editor account deletion retains team original": true,
+    "archived huge and exact integers retained": true,
+    "repaired independent fields retain opaque precision": true,
+    "metadata receipt survives logical workspace deletion": true,
+    "team deletion removes original content in that realm": true,
+    "anon cannot read child_task_repair_originals": true,
+    "anon cannot read child_task_repairs": true,
+    "authenticated cannot read child_task_repair_originals": true,
+    "authenticated cannot read child_task_repairs": true,
+    "service_role cannot read child_task_repair_originals": true,
+    "service_role cannot read child_task_repairs": true,
+    "anon cannot call repair RPC": true,
+    "service_role cannot call repair RPC": true,
+    "repair public wrapper uses caller RLS": true,
+    "fixture has prior project history": true,
+    "initial actual RLS permits all archived history": true,
+    "explicit guard agrees with actual RLS before revocation": true,
+    "fully readable original can be repaired": true,
+    "initial full-history original is deliverable": true,
+    "root remains readable after only historical grant revocation": true,
+    "real RLS now hides prior history": true,
+    "explicit guard agrees with actual RLS after revocation": true,
+    "public original delivery refuses unreadable older history": true,
+    "granted private entry also refuses unreadable history": true,
+    "old unguarded implementation has no client privilege": true,
+    "history revocation still allows contentless confirmation": true,
+    "history refusal never rewrites archived original": true,
+    "preview names hidden history custody blocker": true,
+    "hidden-history preview cannot enable save": true,
+    "hidden history blocks before source mutation": true,
+    "hidden history refusal keeps complete source": true,
+    "hidden history refusal creates no archive": true,
+    "restored genuine historical access delivers same original": true,
+    "fixture really anonymized the current historical actor": true,
+    "redacted historical actor cannot leak from archived export": true,
+    "redacted history keeps receipt recoverable": true,
+    "redaction does not silently edit immutable original": true,
+    "anon cannot call superseded implementation": true,
+    "authenticated cannot call superseded implementation": true,
+    "service_role cannot call superseded implementation": true,
+    "history-access wrapper preserves caller RLS": true,
+    "no new advisor findings": true
+  },
+  "candidateSHA256": "b0503d3aaf01059087ff8763d92d7e409caa134923c22eaa9451e057d52eb771",
+  "deployed": false,
+  "baselineAdvisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      }
+    ]
+  },
+  "lastExpectedDiagnostic": {
+    "code": "42501",
+    "value": null,
+    "reason": "Original history access changed; the saved original is kept",
+    "context": "PL/pgSQL function taskfold_private.commit_child_repair(text,jsonb) line 8 at RAISE\nPL/pgSQL function public.taskfold_repair_children(text,jsonb) line 2 at assignment\nSQL statement \"insert into fixture_result values(to_jsonb(public.taskfold_repair_children('original','{\"protocol\":1,\"account\":\"fe4ec58f-108a-49e9-814e-0afb9b534a05\",\"task_id\":\"0940728d-44a7-4958-9298-d9e19cc48ec8\",\"task_generation\":\"401004a6-faa6-433d-a4f7-8446db6896a5\",\"project_id\":\"053ceaf6-22d5-47f4-bd3c-9edb2af9859e\",\"workspace_id\":\"acc6ee3c-0835-4344-93ad-9859e4b14147\",\"review_digest\":\"3f3e6de8938f5001b7cdd84199c1a18ee0431c7a476168a2cb8f6f092e8161c8\",\"changes\":[{\"kind\":\"assign_reference\",\"path\":[0],\"reference\":\"fresh-history-reference\"}],\"request_id\":\"fd9e9141-2cdc-40d3-bee8-bdef5f79dde1\",\"repair_digest\":\"6780fbb5aa723ac556118b128e6ab759ee817034cbf87150c31d9ab2adb29282\"}'::jsonb)),null,null,null)\"\nPL/pgSQL function inline_code_block line 1 at SQL statement"
+  },
+  "preview": {
+    "steps": [
+      {
+        "kind": "assign_reference",
+        "path": [
+          0
+        ],
+        "ordinal": 1,
+        "after_kind": "object",
+        "before_kind": "object"
+      }
+    ],
+    "account": "28e9098d-aeac-4e81-b122-976890d0c6ab",
+    "changes": [
+      {
+        "kind": "assign_reference",
+        "path": [
+          0
+        ],
+        "reference": "reviewed"
+      }
+    ],
+    "task_id": "50345564-8aab-4128-b1ea-2b473e2fdbd2",
+    "protocol": 1,
+    "node_count": 1,
+    "project_id": "edc6e315-21b5-4dbd-b81f-0d30290cdad8",
+    "workspace_id": null,
+    "original_tree": [
+      {
+        "id": 7,
+        "title": "Retain notes",
+        "future": {
+          "é": 1,
+          "é": 2,
+          "flag": false,
+          "empty": null
+        }
+      }
+    ],
+    "proposed_tree": [
+      {
+        "id": "reviewed",
+        "title": "Retain notes",
+        "future": {
+          "é": 1,
+          "é": 2,
+          "flag": false,
+          "empty": null
+        }
+      }
+    ],
+    "repair_digest": "7da2b965ef747fd38699f69ffe9d5458bba49c9de16039771d3da6bcc6eae2a4",
+    "review_digest": "ca64e1c204b2b521adf712f20f2e237f69b9967cb6b914c16642481f6d1ca3fd",
+    "proposal_valid": true,
+    "custody_blocker": null,
+    "remaining_issue": null,
+    "task_generation": "a86be690-8ee7-4da0-a293-6d27e7a2c247",
+    "original_sql_null": false,
+    "mutation_available": false
+  },
+  "opaqueReplySHA256": "5406d3dda6b2db9a942fdd3283a2b0a6845a40b7348c161c3d44649e25d970c7",
+  "repairCommand": {
+    "protocol": 1,
+    "account": "28e9098d-aeac-4e81-b122-976890d0c6ab",
+    "task_id": "e346418e-7889-420f-b628-e0e2c52b22a6",
+    "task_generation": "3bf73f56-d2b2-4dd5-b1b8-71a48c95c46a",
+    "project_id": "edc6e315-21b5-4dbd-b81f-0d30290cdad8",
+    "workspace_id": null,
+    "review_digest": "74054636cb08bf25e14b02c6e8fbdd52f1113608b7e8a31b76327a2ffbacb769",
+    "changes": [
+      {
+        "kind": "assign_reference",
+        "path": [
+          0
+        ],
+        "reference": "fixed"
+      }
+    ],
+    "request_id": "f3bd0c98-80e6-4f7f-ba3e-1244b10152a5",
+    "repair_digest": "043e79ab9a6e0d80936d1d9cb72645ff58491bc9772790a12d3bad5c9722ed43"
+  },
+  "repairReceipt": {
+    "state": "applied",
+    "account": "28e9098d-aeac-4e81-b122-976890d0c6ab",
+    "task_id": "e346418e-7889-420f-b628-e0e2c52b22a6",
+    "protocol": 1,
+    "replayed": false,
+    "archive_id": "3f2af077-03ec-4c70-9fcf-54b17e249059",
+    "node_count": 1,
+    "project_id": "edc6e315-21b5-4dbd-b81f-0d30290cdad8",
+    "request_id": "f3bd0c98-80e6-4f7f-ba3e-1244b10152a5",
+    "workspace_id": null,
+    "archive_bytes": 2121,
+    "repair_digest": "043e79ab9a6e0d80936d1d9cb72645ff58491bc9772790a12d3bad5c9722ed43",
+    "review_digest": "74054636cb08bf25e14b02c6e8fbdd52f1113608b7e8a31b76327a2ffbacb769",
+    "archive_digest": "b6f3988257fdfeee2ba771774734af1cf396600bc53a400533c5262fd374e213",
+    "task_generation": "3bf73f56-d2b2-4dd5-b1b8-71a48c95c46a"
+  },
+  "originalReplySHA256": "8db4a48da36435da4583bf79e89eab7f14a719a843e1c773f43f8dc48d01d98a",
+  "finalAdvisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_select` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_update` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_update"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_delete` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.tasks` has a row level security policy `fixture_automation_task_insert` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "tasks",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.projects` has a row level security policy `fixture_project_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "projects",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.sections` has a row level security policy `fixture_section_access` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "sections",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+      },
+      {
+        "name": "auth_rls_initplan",
+        "title": "Auth RLS Initialization Plan",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies are being unnecessarily re-evaluated for each row",
+        "detail": "Table `public.project_collaborators` has a row level security policy `fixture_collaborator_read` that re-evaluates current_setting() or auth.<function>() for each row. This produces suboptimal query performance at scale. Resolve the issue by replacing `auth.<function>()` with `(select auth.<function>())`. See [docs](https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select) for more info.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+        "metadata": {
+          "name": "project_collaborators",
+          "type": "table",
+          "schema": "public"
+        },
+        "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+      }
+    ]
+  },
+  "passed": true,
+  "fixtureRemoved": true
+}

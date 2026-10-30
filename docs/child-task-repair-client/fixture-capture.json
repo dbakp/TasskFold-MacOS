@@ -1,0 +1,14 @@
+{
+  "deployed": false,
+  "passed": true,
+  "hashes": {
+    "review": "ce64683d5cea2cb8a233818601ac32dcf1c633f175a38343f3ba8662ff632c05",
+    "preview": "56f123d601edaa0aec864fd718eb6e20bcac26636424e033e28751a7efdd5636",
+    "receipt": "4f9172b708904fe991751a30420e08aa56afbef4d7e58667b1a75d3ed82edc5a",
+    "closed": "3464352aae265c62a385c68d2a947d69777a15e516b6f4672557423785a6bf15",
+    "unknown": "82cf5cc08a19fda91e60474fef0f43ff438404cab72617d53605f62c0a3db09c",
+    "original": "db8d07f07705fbd924cb5a9efdff2668271eac3685d4756d824d8d59a89bd859"
+  },
+  "nativeFixtureSource": "20261030192638_child_repair_original_history_access.sql",
+  "fixtureRemoved": true
+}

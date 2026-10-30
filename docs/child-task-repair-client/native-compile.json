@@ -1,0 +1,23 @@
+{
+  "platform": "mac",
+  "buildForTestingPassed": true,
+  "nativeRepairRuntimeVerified": false,
+  "appLaunched": false,
+  "checks": [
+    {
+      "bundle": "Taskfold.app",
+      "strictDeepDevelopmentSignatureVerified": true,
+      "executableSHA256": "8795b28efb7a9a9f5bf8b07187bc13384f9411cbcaf22ab0623cea4e6c8ff1d9"
+    },
+    {
+      "bundle": "TaskfoldUITests-Runner.app",
+      "strictDeepDevelopmentSignatureVerified": true,
+      "executableSHA256": "c2e8fc8a95a1cca013bacd5573749bd455e4f4ce1263b04246bbbd4da903feef"
+    }
+  ],
+  "isolatedHostCoreSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "29e8e05c8170d51eeadfc6da3a9d5ef4bd98f3867a2371226ad86c65db338809",
+    "Taskfold/Core/SubtaskTree.swift": "d6ab8fbcfa3a8a586d4652e0f587a67a411c01919c7a02d4c2a3217e4a5aa086",
+    "Taskfold/Core/Backend.swift": "ef8855dfdd2b8eda211d8f70c4ad92f54dd426f16e465302331b1c9d05b17a72"
+  }
+}

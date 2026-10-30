@@ -1389,3 +1389,12 @@ Evidence: `child-task-repair-preview/verification.json` and its README. This is 
 - [ ] Add native raw-payload contracts/transport, encrypted commands and Store/private-draft admission, premium before/after/export/recovery controls and actual app acceptance. Indexed/history custody reconciliation, larger-work repair, normal opaque-cache support, reviewed cleanup/restoration and broader lifecycle/rollout work remain.
 
 Evidence: `child-task-repair-commits/verification.json`. This is a disabled server candidate, not native repair availability or complete migration acceptance. No app source, native build/runtime, hosted schema or normal feature flag changed. Full local migration-history checks cannot connect. All user deferrals remain unchanged.
+
+## 30 October — exact repair contracts and saved-request recovery components
+
+- [x] Add typed operations, exact raw original/proposal capture, strict result/original scope and hash validation, bounded session-bound transport and a separate encrypted request journal/model in each app.
+- [x] Fix scalar array integer-token checks. Independently pass 590 selected Core checks per repo, including 25 new repair cases; compile both native app/test targets and verify development signatures.
+- [x] Close original export's historical-access gap: compare private admission with actual RLS, refuse unreadable/changed archived events, revoke the superseded helper and preserve metadata confirmation. Each repo passes 283 database checks including the previous 256; no added advisor findings and all fixtures are removed.
+- [ ] Wire actual Store/draft/account cleanup and native guided review, export and recovery. Complete genuine HTTP/file/UI/spoken acceptance, indexed/history mapping, normal opaque editing, larger-work preflight/repair and broader lifecycle checks.
+
+Evidence: `child-task-repair-client/verification.json`. This checks components and compilation, not usable native repair, real Keychain/provider acceptance or complete migration. Normal flags and hosted schema stay unchanged; all user deferrals remain paused.
