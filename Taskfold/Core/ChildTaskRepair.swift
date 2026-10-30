@@ -446,3 +446,81 @@ extension Backend: ChildTaskRepairService {}
         _ = await work { try await journal.discard(command, lease: lease); try check(); try await update(); message = "Saved repair history removed. Your tasks are unchanged." }
     }
 }
+
+/// Read-only structure for guided repairs. Unknown values remain in the opaque
+/// source; numbers are classified without ever decoding them as Double.
+struct ChildTaskRepairOutline: Sendable {
+    enum Kind: String, Sendable { case object, array, string, number, boolean, null }
+    struct Item: Identifiable, Sendable {
+        let path: [Int], title: String, kind: Kind, referenceNeedsRepair: Bool, malformedChildren: Bool, siblings: Int
+        var id: String { path.map(String.init).joined(separator: ".") }
+        var depth: Int { path.count }
+    }
+    let rootKind: Kind
+    let items: [Item]
+    let rootCount: Int
+    private final class Budget { var count = 0 }
+    private static let budgetKey = CodingUserInfoKey(rawValue: "taskfold.repair-outline-budget")!
+    private enum Keys: String, CodingKey { case id, title, subtasks }
+    private static func kind(_ d: Decoder) throws -> Kind {
+        if (try? d.container(keyedBy: Keys.self)) != nil { return .object }
+        if (try? d.unkeyedContainer()) != nil { return .array }
+        let c = try d.singleValueContainer()
+        if c.decodeNil() { return .null }; if (try? c.decode(String.self)) != nil { return .string }; if (try? c.decode(Bool.self)) != nil { return .boolean }; return .number
+    }
+    private static func label(_ value: String) -> String {
+        let limited = String(String.UnicodeScalarView(value.unicodeScalars.prefix(160)))
+        return limited.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+    private struct Node: Decodable {
+        let kind: Kind, reference: String?, title: String, malformedChildren: Bool, children: [Node]
+        init(from d: Decoder) throws {
+            try Task.checkCancellation()
+            guard let budget = d.userInfo[budgetKey] as? Budget, budget.count < 1000, d.codingPath.count <= 128 else { throw ChildTaskRepairOutline.unavailable }
+            budget.count += 1; kind = try ChildTaskRepairOutline.kind(d)
+            if kind == .object {
+                let c = try d.container(keyedBy: Keys.self); reference = try? c.decode(String.self, forKey: .id)
+                let name = ChildTaskRepairOutline.label((try? c.decode(String.self, forKey: .title)) ?? "")
+                title = name.isEmpty ? "Untitled task" : name
+                if !c.contains(.subtasks) { children = []; malformedChildren = false }
+                else if try c.decodeNil(forKey: .subtasks) { children = []; malformedChildren = false }
+                else if (try? c.nestedUnkeyedContainer(forKey: .subtasks)) != nil { children = try c.decode([Node].self, forKey: .subtasks); malformedChildren = false }
+                else { children = []; malformedChildren = true }
+            } else {
+                reference = nil; children = []; malformedChildren = false
+                let value = kind == .string ? (try d.singleValueContainer().decode(String.self)) : ""
+                let name = ChildTaskRepairOutline.label(value); title = name.isEmpty ? "Recovered item" : name
+            }
+        }
+    }
+    private struct Root: Decodable {
+        let kind: Kind, nodes: [Node]
+        init(from d: Decoder) throws {
+            kind = try ChildTaskRepairOutline.kind(d)
+            if kind == .array { var c = try d.unkeyedContainer(); var rows: [Node] = []; while !c.isAtEnd { rows.append(try c.decode(Node.self)) }; nodes = rows }
+            else { nodes = [] }
+        }
+    }
+    static var unavailable: AppFailure { AppFailure(message: "This older structure needs a larger-work review. Its complete original is kept; export it to continue.") }
+    init(data: Data) throws {
+        guard data.count <= 2_000_000 else { throw Self.unavailable }
+        _ = try ChildTaskRecordRead.separatingJSONField("tree", data: Data("{\"tree\":".utf8) + data + Data("}".utf8), maximum: 2_000_020, integerPaths: [], nullableIntegerPaths: [])
+        let decoder = JSONDecoder(); decoder.userInfo[Self.budgetKey] = Budget(); let root = try decoder.decode(Root.self, from: data)
+        var references: [String: Int] = [:]
+        func valid(_ reference: String?) -> String? {
+            guard let reference, !reference.isEmpty, reference.utf8.count <= 128 else { return nil }; let key = reference.precomposedStringWithCanonicalMapping
+            return key.utf8.count <= 128 ? key : nil
+        }
+        func count(_ nodes: [Node]) { for node in nodes { if let key = valid(node.reference) { references[key, default: 0] += 1 }; count(node.children) } }
+        count(root.nodes); var items: [Item] = []
+        func walk(_ nodes: [Node], path: [Int]) throws {
+            guard path.count < 64 || nodes.isEmpty else { throw Self.unavailable }
+            for (position,node) in nodes.enumerated() {
+                let key = valid(node.reference)
+                items.append(.init(path: path + [position], title: node.title, kind: node.kind, referenceNeedsRepair: node.kind == .object && (key == nil || (key.flatMap { references[$0] } ?? 0) > 1), malformedChildren: node.malformedChildren, siblings: nodes.count))
+                try walk(node.children, path: path + [position])
+            }
+        }
+        try walk(root.nodes, path: []); rootKind = root.kind; self.items = items; rootCount = root.nodes.count
+    }
+}

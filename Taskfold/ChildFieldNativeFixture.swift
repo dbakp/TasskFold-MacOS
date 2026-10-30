@@ -48,6 +48,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             initialChildren[0] = .object(first)
         }
         if ChildAdoptionNativePeer.enabled, (ProcessInfo.processInfo.arguments.contains("--child-adoption-malformed") || ChildAdoptionNativePeer.exportTesting) { initialChildren[0] = .string("Keep this older text unchanged") }
+        if ChildRepairNativePeer.enabled { initialChildren = [.object(["id":.number(7),"title":.string("Plan the workshop"),"future":.object(["keep":.bool(true)])]), .string("Keep the workshop notes")] }
         return ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array(initialChildren)]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
     }
     static func save(_ state: [String: JSON]) throws {
@@ -137,6 +138,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         }
         let body = try JSONDecoder().decode([String: JSON].self, from: data)
         var state = try state(); let root = Record(state["root"]!.object)
+        if ChildRepairNativePeer.enabled, ChildRepairNativePeer.paths.contains(request.url?.path ?? "") { return try ChildRepairNativePeer.response(path:request.url!.path,body:body,state:&state) }
         if ChildAdoptionNativePeer.enabled, ChildAdoptionNativePeer.paths.contains(request.url?.path ?? "") {
             return try ChildAdoptionNativePeer.response(path: request.url!.path, body: body, state: &state)
         }
@@ -234,6 +236,7 @@ struct ChildFieldNativeFixtureView: View {
                             Task { do { try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount(); await inspect() } catch { problem = error.localizedDescription } }
                         }.accessibilityIdentifier("childNativeLoseStructureJournal")
                     }
+                    if ChildRepairNativePeer.enabled { Button("Review older subtasks") { opening = "repair" }.accessibilityIdentifier("childNativeRepair"); Button("Open saved repairs") { opening = "repairRecovery" }.accessibilityIdentifier("childNativeRepairRecovery") }
                     if ChildAdoptionNativePeer.enabled {
                         Button("Review subtask storage") { opening = "adoption" }.accessibilityIdentifier("childNativeAdoption")
                         Button("Open saved upgrades") { opening = "adoptionRecovery" }.accessibilityIdentifier("childNativeAdoptionRecovery")
@@ -289,7 +292,9 @@ struct ChildFieldNativeFixtureView: View {
             } catch is CancellationError { } catch { problem = error.localizedDescription }
         }
         .sheet(isPresented: Binding(get: { opening != nil }, set: { if !$0 { opening = nil } })) {
-            WorkflowShell(title: opening == "adoption" || opening == "adoptionRecovery" ? "Subtask storage" : opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : opening == "transfers" ? "Saved subtask moves" : "Saved subtask changes") {
+            if opening == "repair" { ChildTaskRepairView(rootID: ChildFieldNativeIdentity.rootID) }
+            else if opening == "repairRecovery" { ChildTaskRepairView() }
+            else { WorkflowShell(title: opening == "adoption" || opening == "adoptionRecovery" ? "Subtask storage" : opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : opening == "transfers" ? "Saved subtask moves" : "Saved subtask changes") {
                 if opening == "adoption" { ChildTaskAdoptionView(rootID: ChildFieldNativeIdentity.rootID) }
                 else if opening == "adoptionRecovery" { ChildTaskAdoptionView() }
                 else if opening == "editor" { ChildTaskFieldEditorView(rootID: ChildFieldNativeIdentity.rootID) }
@@ -298,6 +303,7 @@ struct ChildFieldNativeFixtureView: View {
                 else if opening == "transfers" { ChildTaskTransferRecoveryView() }
                 else if opening == "completion" { ChildTaskCompletionRecoveryView() }
                 else { ChildTaskFieldRecoveryView() }
+            }
             }
         }
     }
@@ -363,6 +369,13 @@ struct ChildFieldNativeFixtureView: View {
                 let privateBytes = try? Data(contentsOf: file)
                 let privateHash = privateBytes.map { SHA256.hash(data: $0).map { String(format: "%02x", $0) }.joined() } ?? "none"
                 nextProbe += " adoptionQueued=\(saved.entries.filter { $0.phase == .queued }.count) adoptionAttempted=\(saved.entries.filter { $0.phase == .attempted }.count) adoptionApplied=\(saved.entries.filter { $0.phase == .applied }.count) adoptionClosed=\(saved.entries.filter { $0.phase == .closed }.count) adoptionWrites=\(state["adoptionWrites"]?.integer ?? 0) adoptionRequests=\(state["adoptionRequests"]?.integer ?? 0) adoptionRootHash=\(try ChildAdoptionNativePeer.hash(state["root"]!)) adoptionPrivateHash=\(privateHash)"
+            }
+            if ChildRepairNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
+                let repairs = try await store.childTaskRepairJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                let originals = state["repairReceipts"]?.object.values.compactMap { $0.object["original"]?.text }.filter { !$0.isEmpty } ?? []
+                let originalRoot = originals.first.flatMap { try? JSONDecoder().decode([String:JSON].self,from:Data($0.utf8))["root"] }
+                let originalHash = try originalRoot.map { try ChildAdoptionNativePeer.hash($0) } ?? "none"
+                nextProbe += " repairWrites=\(state["repairWrites"]?.integer ?? 0) repairApplied=\(repairs.entries.filter { $0.phase == .applied }.count) repairPending=\(repairs.entries.filter { $0.phase == .queued || $0.phase == .attempted }.count) repairOriginalRootHash=\(originalHash)"
             }
             if ChildTransferNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
                 let transfers = try await store.childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()

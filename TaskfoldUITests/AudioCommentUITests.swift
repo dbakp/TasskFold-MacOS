@@ -1910,6 +1910,54 @@ extension TaskfoldMacUITests {
         childDone(app); childProbe(app, "adoptionQueued=0 adoptionAttempted=0 adoptionApplied=0 adoptionClosed=1 adoptionWrites=0 adoptionRequests=2")
         XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
     }
+    @MainActor private func repairReview(_ app: XCUIApplication) {
+        childHomePress("childNativeRepair", app)
+        let reference = app.buttons["childRepairReference-0"];childReveal(reference,app);XCTAssertTrue(reference.waitForExistence(timeout:15),app.debugDescription);completionReadyPress(reference,app)
+        let wrap = app.buttons["childRepairWrap-1"];childReveal(wrap,app);completionReadyPress(wrap,app)
+        let ready = app.staticTexts["childRepairReady"];childReveal(ready,app);XCTAssertTrue(ready.waitForExistence(timeout:15),app.debugDescription)
+    }
+    @MainActor func testChildRepairNativeReviewSaveAndColdConfirmation() throws {
+        let app=XCUIApplication();addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app,extra:"--child-adoption-repair")
+        let before=adoptionProbeValue("adoptionRootHash",app);XCTAssertEqual(before.count,64)
+        repairReview(app)
+        structureSnapshot(app,"Review keeps original and lists two repaired tasks")
+        let save=app.buttons["childRepairSave"];childReveal(save,app);XCTAssertTrue(save.isEnabled);completionReadyPress(save,app)
+        childPress(app.buttons["Save repair"].firstMatch)
+        let status=app.staticTexts["childRepairStatus"];childReveal(status,app)
+        XCTAssertTrue(XCTWaiter.wait(for:[XCTNSPredicateExpectation(predicate:NSPredicate(format:"label == %@","Repair saved"),object:status)],timeout:15) == .completed,app.debugDescription)
+        XCTAssertTrue(app.buttons["childRepairExportSaved"].exists)
+        structureSnapshot(app,"Repair confirmed with original available")
+        childPress(app.buttons["Close"].firstMatch)
+        childProbe(app,"repairWrites=1 repairApplied=1 repairPending=0")
+        XCTAssertEqual(adoptionProbeValue("repairOriginalRootHash",app),before)
+        let after=adoptionProbeValue("adoptionRootHash",app);XCTAssertNotEqual(before,after)
+        app.terminate();try childOpen(app,reset:false,extra:"--child-adoption-repair")
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash",app),after)
+        childProbe(app,"repairWrites=1 repairApplied=1 repairPending=0")
+        XCTAssertEqual(adoptionProbeValue("repairOriginalRootHash",app),before)
+        childHomePress("childNativeRepairRecovery",app)
+        let saved=app.staticTexts["childRepairStatus"];childReveal(saved,app);XCTAssertEqual(saved.label,"Repair saved")
+        XCTAssertTrue(app.buttons["childRepairExportSaved"].isEnabled)
+        structureSnapshot(app,"Cold saved repair and original access survive relaunch")
+    }
+    @MainActor func testChildRepairNativePrivateDraftBlocksSaving() throws {
+        let app=XCUIApplication();addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app,extra:"--child-adoption-repair")
+        let before=adoptionProbeValue("adoptionRootHash",app)
+        childHomePress("childNativeAdoptionPrivate",app)
+        repairReview(app)
+        let save=app.buttons["childRepairSave"];childReveal(save,app);completionReadyPress(save,app);childPress(app.buttons["Save repair"].firstMatch)
+        let feedback=app.staticTexts["childRepairFeedback"];childReveal(feedback,app)
+        XCTAssertTrue(feedback.label.contains("saved edits"),app.debugDescription)
+        XCTAssertFalse(app.staticTexts["childRepairStatus"].exists)
+        structureSnapshot(app,"Private editor recovery blocks repair submission")
+        childPress(app.buttons["Close"].firstMatch)
+        childPress(app.buttons["Discard review"].firstMatch)
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash",app),before)
+        XCTAssertEqual(adoptionProbeValue("adoptionPrivateHash",app).count,64)
+    }
+
     @MainActor func testChildAdoptionNativeMalformedReviewAndOriginalExportCancel() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
         try childOpen(app, extra: "--child-adoption-malformed")

@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Repair data and saved-request recovery checked",
-  "latest": "Repair data handling and encrypted saved-request recovery now pass component checks in both apps. Exact original files are verified, and exports recheck permission to older history. Both app builds pass. Store integration, native before-and-after controls and broader migration work still need implementation; everyday use stays disabled.",
+  "focus": "P2 · Guided repair and native recovery checked",
+  "latest": "Guided repair screens and Store recovery are implemented in both apps. Mac review, exact original export and cold recovery pass; iPhone and iPad each pass two native journeys, including refusal when private edits are waiting. Each repo passes 30 repair component checks. Broader older-work migration remains unfinished and disabled for everyday use.",
   "next": [
-    "Wire repair recovery into Store, private drafts and account cleanup, then add premium native before-and-after, export and recovery screens. Complete normal opaque editing, indexed/history mapping and larger-work preflight before everyday use.",
-    "Finish shared attachment/discussion custody and client shared-workspace gate combinations.",
-    "Finish genuine account, secure storage, window, background, concurrent work, VoiceOver and larger-library checks, plus actual Mac file-export delivery. Keep the agreed rollout, provider and device deferrals paused."
+    "Finish normal opaque editing, indexed/history mapping, attachment/discussion custody and bounded larger-history preflight before enabling older-work migration.",
+    "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
+    "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
   "stages": [
     {
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Repair saving, exact-data transport and encrypted recovery components pass recorded checks. Original export now respects older-history permissions. Actual Store admission, cleanup and native controls remain to build, alongside indexed/history mapping, normal opaque editing, larger-work preflight and wider app, file and spoken acceptance. Ordinary use stays disabled."
+              "detail": "Guided repair, Store recovery and representative native checks now pass. Mac original export is exact; mobile private edits block saving. Normal opaque editing, indexed/history mapping, custody, larger-history preflight and wider lifecycle/spoken acceptance remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -648,7 +648,8 @@
     "reviewed-child-adoption/verification.json",
     "reviewed-child-adoption-client/verification.json",
     "reviewed-child-adoption-native/verification.json",
-    "child-adoption-original-export/verification.json"
+    "child-adoption-original-export/verification.json",
+    "child-task-repair-ui/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
@@ -668,6 +669,7 @@
     "child-task-repair-client/verification.json": "3ca3894b91aaaf54d50f8da36b874080301f7ee041634e6372fedb9bfed75c9f",
     "child-task-repair-commits/verification.json": "0f460ffc101a675f2efa0c537735a4f8df45b2e91670b24f31c3f89dbee918af",
     "child-task-repair-preview/verification.json": "48521f8636dfccbed5de1b9aa1dadce64b17910767249b784527197efc968df4",
+    "child-task-repair-ui/verification.json": "0eb7a81813f282fc8ffa2b1ffe39730967512b0e39fce9408c4f437ab8e010d2",
     "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
     "child-task-structure-drafts/verification.json": "6f91cbc365f58a184bcf7f39a2dbdbeaa87fcb5b801fda8fa955d192c7ab9f71",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",

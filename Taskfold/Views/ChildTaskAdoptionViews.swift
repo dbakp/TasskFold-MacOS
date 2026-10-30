@@ -4,6 +4,8 @@ import UniformTypeIdentifiers
 struct SavedChildTaskAdoptionsLink: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
+    @State private var repairVisible = false
+    @State private var repairShowing = false
     @State private var visible = false
     @State private var showing = false
     @State private var revision = UUID()
@@ -13,13 +15,16 @@ struct SavedChildTaskAdoptionsLink: View {
             if scope != nil, visible || store.childTaskAdoptionEnabled {
                 Section { Button("Subtask storage", systemImage: "arrow.up.circle") { showing = true }.accessibilityIdentifier("savedChildAdoptions") }
             }
+            if scope != nil, repairVisible || store.childTaskRepairEnabled { Section { Button("Repair older subtasks", systemImage: "doc.badge.clock") { repairShowing = true }.accessibilityIdentifier("savedChildRepairs") } }
         }
         .task(id: scope) { await discover() }
         .task(id: revision) { await discover() }
         .sheet(isPresented: $showing, onDismiss: { revision = UUID() }) { WorkflowShell(title: "Subtask storage") { ChildTaskAdoptionView() } }
+        .sheet(isPresented: $repairShowing, onDismiss: { revision = UUID() }) { ChildTaskRepairView() }
     }
     private func discover() async {
-        visible = false; guard let captured = scope else { return }
+        visible = false; repairVisible = false; guard let captured = scope else { return }
+        do { let state = try await store.childTaskRepairJournal(account: captured.account, origin: captured.origin).load(); guard captured == scope, !Task.isCancelled else { return }; repairVisible = !state.entries.isEmpty } catch { guard captured == scope, !Task.isCancelled else { return }; repairVisible = true }
         do {
             let state = try await store.childTaskAdoptionJournal(account: captured.account, origin: captured.origin).load()
             guard captured == scope, !Task.isCancelled else { return }; visible = !state.entries.isEmpty

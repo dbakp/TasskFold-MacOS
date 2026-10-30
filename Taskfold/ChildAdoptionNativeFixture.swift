@@ -100,7 +100,7 @@ import CryptoKit
         if path.hasSuffix("taskfold_review_child_adoption") {
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"] else { throw ChildFieldNativeRefusal(code:"PT409") }
             if exportTesting { return (try exportReview(state),false) }
-            return (try JSONEncoder().encode(review(state)),false)
+            return (ChildRepairNativePeer.enabled ? try ChildRepairNativePeer.bytes(review(state)) : try JSONEncoder().encode(review(state)),false)
         }
         guard Set(body.keys) == ["_operation","_body"], let operation=ChildTaskAdoptionOperation(rawValue:body["_operation"]?.text ?? ""), case .object(let raw)?=body["_body"] else { throw ChildFieldNativeRefusal(code:"22023") }
         let id=try TeamOrganizationValue.id(raw["request_id"])

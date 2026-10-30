@@ -1,0 +1,50 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "9CC7E237-59D0-4900-B7CE-01D7B62656C3.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Private editor recovery blocks repair submission_0_1E30DBC3-157D-4667-A388-183929B9612A.png",
+        "timestamp": 1793392423.365
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testChildRepairNativePrivateDraftBlocksSaving()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testChildRepairNativePrivateDraftBlocksSaving"
+  },
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "9C8F00AD-7397-416E-9DC9-8EED9657C16C.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Cold saved repair and original access survive relaunch_0_7B342152-8C07-4715-A405-383EF29BB450.png",
+        "timestamp": 1793392529.4
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "6B699BCF-BB81-49D0-B8AD-DE0F8DFB25F0.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Repair confirmed with original available_0_AA5B8E85-9FC8-4F7D-A516-58B5CB7DD83D.png",
+        "timestamp": 1793392496.116
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "exportedFileName": "70F35E41-77F5-4B78-9107-4A1604A2ECD0.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Review keeps original and lists two repaired tasks_0_E9F4FB1D-3BE6-49F1-AF05-C57EA20F6429.png",
+        "timestamp": 1793392482.862
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testChildRepairNativeReviewSaveAndColdConfirmation()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testChildRepairNativeReviewSaveAndColdConfirmation"
+  }
+]

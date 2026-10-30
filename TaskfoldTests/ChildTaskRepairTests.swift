@@ -213,4 +213,42 @@ final class ChildTaskRepairTests: XCTestCase {
         RepairHTTP.handler={_,peer in peer.finish(200,Data(),headers:["Content-Length":"4300001"])};do{_=try await api.childTaskRepairPreview(review(session:api.reminderSessionIncarnation),changes:changes());XCTFail("Declared oversized preview")}catch{guard let e=error as? ChildTaskRepairFailure else{return XCTFail("Repair failure required")};if case .limit=e.reason{}else{XCTFail("Size limit")}}
         RepairHTTP.handler={_,peer in peer.finish(200,Data(),headers:["Content-Length":"8100001"])};do{_=try await api.childTaskRepairOriginal(c,result:result(),session:api.reminderSessionIncarnation);XCTFail("Declared oversized original")}catch{guard let e=error as? ChildTaskRepairFailure else{return XCTFail("Repair failure required")};if case .limit=e.reason{}else{XCTFail("Size limit")}}
     }
+    func testRepairOutlineUsesPositionsAndMarksDuplicateCanonicalReferences() throws {
+        let raw = Data(#"[{"id":"é","title":"  First\n task ","subtasks":[{"id":"ok","title":"Child"}]},{"id":"e\u0301","title":"Second"},{"id":7,"subtasks":"keep this"}]"#.utf8)
+        let outline = try ChildTaskRepairOutline(data: raw)
+        XCTAssertEqual(outline.items.map(\.id), ["0","0.0","1","2"])
+        XCTAssertEqual(outline.items.map(\.referenceNeedsRepair), [true,false,true,true])
+        XCTAssertEqual(outline.items.map(\.malformedChildren), [false,false,false,true])
+        XCTAssertEqual(outline.items[0].title,"First task")
+        XCTAssertEqual(outline.items.map(\.siblings),[3,1,3,3])
+    }
+    func testRepairOutlineClassifiesOpaqueScalarsWithoutNumericConversion() throws {
+        let data = Data(#"[1e1000,9007199254740993,true,null,[{"opaque":"kept"}],"Keep this note"]"#.utf8)
+        let outline = try ChildTaskRepairOutline(data: data)
+        XCTAssertEqual(outline.items.map(\.kind),[.number,.number,.boolean,.null,.array,.string])
+        XCTAssertEqual(outline.items.last?.title,"Keep this note")
+        XCTAssertEqual(outline.rootCount,6)
+    }
+    func testRepairOutlineBoundsLabelsAndDoesNotEnumerateUnknownContents() throws {
+        let title=String(repeating:"🪴",count:200)
+        let raw=try JSONSerialization.data(withJSONObject:[["id":"safe","title":title,"opaque":["nested":["id":7]],"subtasks":NSNull()]])
+        let outline=try ChildTaskRepairOutline(data:raw)
+        XCTAssertEqual(outline.items.count,1);XCTAssertEqual(outline.items[0].title.unicodeScalars.count,160)
+        XCTAssertFalse(outline.items[0].referenceNeedsRepair);XCTAssertFalse(outline.items[0].malformedChildren)
+    }
+    func testRepairOutlineRefusesWholeOverLimitTreeInsteadOfPartialItems() throws {
+        let row="{\"id\":\"ok\"}"
+        XCTAssertEqual(try ChildTaskRepairOutline(data:Data(("["+Array(repeating:row,count:1000).joined(separator:",")+"]").utf8)).items.count,1000)
+        XCTAssertThrowsError(try ChildTaskRepairOutline(data:Data(("["+Array(repeating:row,count:1001).joined(separator:",")+"]").utf8)))
+        var nested=row
+        for _ in 0..<64 { nested="{\"id\":\"nested\",\"subtasks\":["+nested+"]}" }
+        XCTAssertThrowsError(try ChildTaskRepairOutline(data:Data(("["+nested+"]").utf8)))
+    }
+    func testRepairOutlineRecognizesRootShapeAndRejectsMalformedInput() throws {
+        for (text,kind) in [("null",ChildTaskRepairOutline.Kind.null),("{}",.object),("1e1000",.number),("[]",.array)] {
+            let outline=try ChildTaskRepairOutline(data:Data(text.utf8));XCTAssertEqual(outline.rootKind,kind);XCTAssertTrue(outline.items.isEmpty)
+        }
+        for raw in ["[1,]","{broken}","[NaN]","[01]"] { XCTAssertThrowsError(try ChildTaskRepairOutline(data:Data(raw.utf8))) }
+    }
+
 }

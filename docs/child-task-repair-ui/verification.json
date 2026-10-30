@@ -1,0 +1,57 @@
+{
+  "reviewedAt": "2026-10-30T20:36:05.279381+00:00",
+  "scope": "Bounded guided repair Store/native candidate; ordinary use disabled; broader migration To build",
+  "coreRepairTests": {
+    "passed": 30,
+    "failed": 0,
+    "newOutlineCases": 5,
+    "log": "core-tests.log.gz"
+  },
+  "nativeBuild": {
+    "appAndTestTargets": true,
+    "strictSignaturesVerified": true,
+    "log": "native-build.log.gz"
+  },
+  "nativeMac": {
+    "method": "CUA with authorized Terminal launch",
+    "observations": "mac-native.json",
+    "actualExport": "mac-exported-original.json",
+    "coldReceiptAndNoDuplicateWrite": true
+  },
+  "nativeMobile": {
+    "phone": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "summary": "phone-summary.json",
+      "phase": "phone-phase.json"
+    },
+    "ipad": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "summary": "ipad-summary.json",
+      "phase": "ipad-phase.json"
+    }
+  },
+  "newSimulators": false,
+  "ordinaryRepairFlagEnabled": false,
+  "hostedServiceOrSchemaChanges": false,
+  "sourceBinding": "source-manifest.json",
+  "limitations": [
+    "Native peer uses synthetic data and a synthetic encryption key, not real Keychain or HTTP/database authorization.",
+    "Current-source Mac private-draft refusal and unreadable-cache runtime acceptance remain open; mobile refusal is verified.",
+    "New repair-control VoiceOver/largest-text, account/window/background, concurrent edits, mobile/export-provider and late-picker acceptance remain open.",
+    "Further native move/list-shape, Check/Retry/Stop and actual Account entry journeys remain open.",
+    "Partial review draft persistence, normal opaque editing, indexed/history mapping, attachment/discussion custody, bounded larger-history preflight, original cleanup/restoration/Undo and genuine PostgREST wire proof remain open."
+  ],
+  "sessionCleanup": "session-cleanup.json",
+  "visualReview": {
+    "phoneReviewAndPrivateRefusal": true,
+    "ipadReview": true,
+    "macReviewAndSavedState": true,
+    "normalTextOnly": true
+  }
+}

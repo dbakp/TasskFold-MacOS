@@ -50,11 +50,5 @@
   "networkDependencies": false,
   "keyboardEnterAndSpace": true,
   "segmentWidthsMatchCheckpointCounts": true,
-  "readOnlyProgress": true,
-  "staleEvidenceRejected": true,
-  "staleGeneratedOutputRejected": true,
-  "realEvidenceModifiedByFreshnessTest": false,
-  "independentOwnedOutputsMatch": true,
-  "artifactSHA256": "840e88879ba6b91baf4f1949f9861f31d6981dd0b23d30c1f15768ccad647e4a",
-  "fragmentSHA256": "3b54e03da5aae5dcd24fc2ea85292599ad908b2637a4982ad3899a12be82cb33"
+  "readOnlyProgress": true
 }

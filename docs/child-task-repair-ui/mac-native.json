@@ -1,0 +1,38 @@
+{
+  "platform": "macOS",
+  "method": "CUA native controls, user-authorized Terminal launch",
+  "previewLeftSourceUnchanged": true,
+  "repairWrites": 1,
+  "savedRequests": 1,
+  "originalRootExact": true,
+  "archiveHashAndLengthMatch": true,
+  "legacyValueAndUnknownFieldsPreserved": true,
+  "rootAfterSHA256": "ecbcf766ca23bf234df6c8a6a63c2a7c2be5dd8b9449c16e50234ee425b38e1c",
+  "requestID": "1354cd33-4016-483f-a5d9-fcc4295d2979",
+  "receipt": {
+    "project_id": null,
+    "task_id": "ec990000-0000-4000-8000-000000000002",
+    "request_id": "1354cd33-4016-483f-a5d9-fcc4295d2979",
+    "workspace_id": null,
+    "protocol": 1,
+    "archive_digest": "56273946d9b467764b474f3832beae8d5f672e5dcd03ed9536116b0975a9f7d9",
+    "account": "ec990000-0000-4000-8000-000000000001",
+    "archive_bytes": 582,
+    "task_generation": "ec990000-0000-4000-8000-000000000003",
+    "archive_id": "4e3ee77b-d235-461e-a8d9-7eb4060cbbbd",
+    "node_count": 2,
+    "state": "applied",
+    "repair_digest": "d18fac9a3b8bc5312fc595ded0d4acbc9f1933ce35cbef616e58752be7d11c11",
+    "review_digest": "0cf296adcef16d37ef973942cb460cc74e392857d9703fbd6cdd964aaf73a5eb",
+    "replayed": false
+  },
+  "actualNativeSavedOriginalExport": {
+    "bytes": 582,
+    "sha256": "56273946d9b467764b474f3832beae8d5f672e5dcd03ed9536116b0975a9f7d9",
+    "matchesArchiveExactly": true
+  },
+  "coldSavedConfirmationObserved": true,
+  "coldRootUnchanged": true,
+  "processClosed": true,
+  "appSHA256": "e8a886b7ccf66cc74e10c87f7b333566d74f119c04e1155cae41fa5688fb1a54"
+}

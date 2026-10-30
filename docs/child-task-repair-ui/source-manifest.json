@@ -1,0 +1,28 @@
+{
+  "createdAt": "2026-10-30T20:26:02.264975+00:00",
+  "parent": "5ad2dfd8d595c2accb4a67451f4c4792c97699e4",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "cce6f0ace3ea72e7f985c633ee6ef9141aca39c25980080418b7332ad94497a7",
+    "Taskfold/Core/Store.swift": "ae6856ac3c70bdf359eecf37b0a8563c0aaa5c2f2cc6fa206ec69e114607e97b",
+    "Taskfold/Views/ChildTaskRepairView.swift": "c2a594ddd3a181995c33f43a37b9daf6e261cb273416ff2d07777e9c75dd7a0e",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "dc3058ff0b1e52b72b29b63654c02abc818dac8173528e629ce7dbfe6247969d",
+    "Taskfold/ChildRepairNativeFixture.swift": "cc23052db1a0718e54e2e98ebc48be5e279c0543bdd40328f030f34e974f85e4",
+    "Taskfold/ChildAdoptionNativeFixture.swift": "c1622297c1d758cc22348138751fcd810d544da7f3c413c2210afc28dd4a9928",
+    "Taskfold/ChildFieldNativeFixture.swift": "d77d41bcca0429af9b8380c921aec477ba91383dacfac8e0a61b89d73287b262",
+    "TaskfoldTests/ChildTaskRepairTests.swift": "49fbae804f5fb173d56d6b6e5377b97c754d7b0c88d933bd9c3365adac97c72d",
+    "TaskfoldUITests/AudioCommentUITests.swift": "367a59c6ff5974d6055a6e42f49925d7703055f50d9e05d64832258e6c23d6ce",
+    "Taskfold.xcodeproj/project.pbxproj": "a82b26c3716cce8962ad6b78263ef038b545c09faa685788ee348e06b09c78e3"
+  },
+  "isolatedHostSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "cce6f0ace3ea72e7f985c633ee6ef9141aca39c25980080418b7332ad94497a7",
+    "Taskfold/Core/Store.swift": "a35fdbdb367895bc7705bb800baaa18455a7866b50e4385f101e06c36b4307bd",
+    "Taskfold/Views/ChildTaskRepairView.swift": "c2a594ddd3a181995c33f43a37b9daf6e261cb273416ff2d07777e9c75dd7a0e",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "dc3058ff0b1e52b72b29b63654c02abc818dac8173528e629ce7dbfe6247969d",
+    "Taskfold/ChildRepairNativeFixture.swift": "cc23052db1a0718e54e2e98ebc48be5e279c0543bdd40328f030f34e974f85e4",
+    "Taskfold/ChildAdoptionNativeFixture.swift": "c1622297c1d758cc22348138751fcd810d544da7f3c413c2210afc28dd4a9928",
+    "Taskfold/ChildFieldNativeFixture.swift": "d77d41bcca0429af9b8380c921aec477ba91383dacfac8e0a61b89d73287b262",
+    "TaskfoldUITests/AudioCommentUITests.swift": "367a59c6ff5974d6055a6e42f49925d7703055f50d9e05d64832258e6c23d6ce",
+    "Taskfold.xcodeproj/project.pbxproj": "f3da79ef2371f631f5220a24936e69fbf8c21ea99c3b6c2cbe254975e78e0bb5"
+  },
+  "ordinaryRepairFlagAbsent": true
+}
