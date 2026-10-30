@@ -16,6 +16,8 @@ try {
   const {loadChildAuthorityDependencies,childAuthorityMigration}=await import('./child-task-authority-schema.mjs');await loadChildAuthorityDependencies(pg);
   const authority=await readFile(new URL('../../supabase/migrations/'+childAuthorityMigration,import.meta.url),'utf8');await pg.raw(authority);
   const transfer=await readFile(process.env.TASKFOLD_CHILD_TRANSFER_SQL,'utf8');await pg.raw(transfer);
+ if(process.env.TASKFOLD_CHILD_ADOPTION_SQL)await pg.raw(await readFile(process.env.TASKFOLD_CHILD_ADOPTION_SQL,'utf8'));
+ if(process.env.TASKFOLD_PERSONAL_MOVE_SQL){const personal=await readFile(process.env.TASKFOLD_PERSONAL_MOVE_SQL,'utf8');await pg.raw(personal);report.personalMoveMigrationSHA256=createHash('sha256').update(personal).digest('hex');}
   report.authorityMigrationSHA256=createHash('sha256').update(authority).digest('hex');report.transferMigrationSHA256=createHash('sha256').update(transfer).digest('hex');
  }else{await loadTeamWorkspaceSchema(pg.raw);await pg.raw(sql);}
  report.migrationSHA256=createHash('sha256').update(sql).digest('hex');

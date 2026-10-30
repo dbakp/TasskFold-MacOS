@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/Models.swift": "3f3be11c48183bcd93df5a9d1525424473487540d3ada3c2cd9e36e28e38811d",
+    "Taskfold/Core/Store.swift": "856248acfd5278e222631f648bfbbc609048fb2c62b75c8a39eed3b46cdc1305",
+    "Taskfold/Core/Backend.swift": "d12672273cffcc84b3d3686aebf2d45462d440724c7a062644c70b5a2302b94e",
+    "Taskfold/Core/TeamTaskMove.swift": "466d73558b89bc4152bf39aa3537e0195c4af489a961efe2c0cf1a251002b413",
+    "TaskfoldTests/TeamTaskMoveTests.swift": "70c0086a0f0a0e9c28ae2541e327f5f625a5218e3bc203fd10b362e79c13d299",
+    "TaskfoldTests/Fixtures/personal-child-task-move-v1.json": "27564c5716bc9b8ed27a3fd0ffbdfea13b6971281190894fc9f1bc74b9a91286",
+    "Taskfold/Info.plist": "e8a7f8daa65ed3d5def3e7193ae104aa87790edc0563ddde231325555ea75087",
+    "Scripts/Database/test-personal-child-moves.mjs": "4cf10f562b8cedccbb21a8fa11ac6abfc59a006f22933a738a9889c9ce27c2c4",
+    "Scripts/Database/test-child-task-record-authority.mjs": "302ff58560082e6233a629367eb73a963a3226304db437b76a8fd33cde15c081",
+    "Scripts/Database/test-child-task-structure-commands.mjs": "f6ecfe9d0beea0b553f6f12daeb943b95841f0b55c0ce1dc75c140037c4d1a30",
+    "Scripts/Database/test-team-task-moves.mjs": "6d1d8bd46a3cb79200cc8e300b38d9f39a7f05e7494c3693af8185b5a5ab7ce7",
+    "Scripts/Database/test-child-project-adoption.mjs": "7c5a8b429dd3a2a4056f431f1b319425af4085bf304168f31f6b404b632a3582",
+    "supabase/migrations/20261030104147_personal_child_record_task_moves.sql": "98da78036c4f9f2a08cf8c61e6bfbbfbedc38a92deebdb7a9fdb559eb74c989a"
+  },
+  "namespaceAdjustedBuiltHostSHA256": {
+    "Taskfold/Core/Models.swift": "3f3be11c48183bcd93df5a9d1525424473487540d3ada3c2cd9e36e28e38811d",
+    "Taskfold/Core/Store.swift": "b62924d90b416cd5ad4b78ebb683058a4af02d669aee9aee1e1518c0eb17b0ad",
+    "Taskfold/Core/Backend.swift": "ac49f7561077b0b75c79da7eb8a99fd4f4c2145af4765f13e0abdc8fe013ed00",
+    "Taskfold/Core/TeamTaskMove.swift": "466d73558b89bc4152bf39aa3537e0195c4af489a961efe2c0cf1a251002b413"
+  },
+  "compiledWireFixtureSHA256": "27564c5716bc9b8ed27a3fd0ffbdfea13b6971281190894fc9f1bc74b9a91286",
+  "databaseChecks": {
+    "personal": 75,
+    "authority": 96,
+    "structure": 221,
+    "team": 90,
+    "adoption": 56,
+    "totalPassed": 538
+  },
+  "corePassed": 235,
+  "coreFailed": 0,
+  "allDatabaseFixturesRemoved": true,
+  "officialAdvisorsAddedFindings": 0,
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "developmentSignaturesVerified": true,
+  "developmentSigningReceipt": {
+    "Taskfold.app": {
+      "strictDeepSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "strictDeepSignatureVerified": true
+    }
+  },
+  "normalFeatureFlags": {
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "hostedMigrationApplied": false,
+  "realRootsPromoted": 0,
+  "newSimulators": 0,
+  "newNativeRuntimeAccepted": false,
+  "newSpokenOrLargestTextAccepted": false,
+  "localSupabaseMigrationHistoryVerified": false,
+  "wireFixtureSource": "Actual final Mac-owned 75-case personal-move fixture, bound to this canonical SQL; owned copies independently compiled and decoded in both client suites.",
+  "scope": "Separate-subtask personal project/Inbox moves, compact ordinary queue, source-bound private Undo, metadata-only exact retry/status, local projection/conflict/history integration and source-matched builds.",
+  "remaining": [
+    "Cross-root child moves and older-data review/adoption tools",
+    "Whole-schema discussion/provider/Storage custody, shared-workspace transfers and large workloads",
+    "Broader native/account/window/background/spoken acceptance and all existing user deferrals"
+  ]
+}

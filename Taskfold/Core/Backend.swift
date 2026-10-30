@@ -448,6 +448,11 @@ final class Backend: NSObject {
             if ["/rest/v1/rpc/taskfold_patch_task", "/rest/v1/rpc/taskfold_delete_task"].contains(path), error.string("code") == "PT409" {
                 throw TeamTaskReviewRequired()
             }
+            if path == "/rest/v1/rpc/taskfold_move_personal_task" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if error.string("code") == "PT409" { throw AppFailure(message: "TASKFOLD_CONFLICT: This project move changed. Review the current task and your saved move.") }
+                throw AppFailure(message: "The project move couldn’t be confirmed. It remains saved on this device for retry.")
+            }
             // Raw Auth responses use error_code (code may be numeric HTTP status).
             // Retain support for normalized string-code responses, without using msg.
             let authCode = error.string("error_code").isEmpty ? error.string("code") : error.string("error_code")
@@ -1089,10 +1094,23 @@ final class Backend: NSObject {
         return review
     }
 
+    func confirmPersonalTaskMove(_ change: Mutation, expectedAccount: String) async throws -> Bool {
+        guard session?.user.id == expectedAccount else { throw CancellationError() }
+        let body = try PersonalTaskMove.body(change, account: expectedAccount)
+        let data = try await request("/rest/v1/rpc/taskfold_move_personal_task", method: "POST", body: ["_body": .object(body), "_confirm_only": .bool(true)], expectedAccount: expectedAccount)
+        return try PersonalTaskMove.status(JSONDecoder().decode([String: JSON].self, from: data), change: change, account: expectedAccount)
+    }
     @discardableResult func send(_ change: Mutation, expectedAccount: String? = nil) async throws -> Record? {
         guard change.table != TaskNodeActivity.table, change.table != TaskNodeActivity.epochTable, change.table != TaskActivity.table, change.table != TaskActivity.epochTable, change.table != TaskAssignmentProvenance.table else { throw AppFailure(message: "Activity history is read-only.") }
         let expectedOwner = expectedAccount ?? session?.user.id
         guard expectedOwner == session?.user.id else { throw CancellationError() }
+        if change.personalTaskMove == true {
+            guard let expectedOwner else { throw CancellationError() }
+            let body = try PersonalTaskMove.body(change, account: expectedOwner)
+            let data = try await request("/rest/v1/rpc/taskfold_move_personal_task", method: "POST", body: ["_body": .object(body)], expectedAccount: expectedOwner)
+            let reply = try JSONDecoder().decode([String: JSON].self, from: data)
+            return try PersonalTaskMove.confirmed(reply, change: change, account: expectedOwner)
+        }
         if WorkflowUndo.matches(change) {
             guard WorkflowUndo.items(change) != nil, WorkflowUndo.fitsBody(change), change.fields["user_id"]?.text == expectedOwner else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
             let data = try await request("/rest/v1/rpc/taskfold_undo_private_workflow", method: "POST", body: [

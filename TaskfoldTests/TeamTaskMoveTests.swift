@@ -1,6 +1,223 @@
 import XCTest
 @testable import TaskfoldCore
 
+final class PersonalTaskMoveTests: XCTestCase {
+    func testActualSQLMoveAndConfirmationOnlyReceipts() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "personal-child-task-move-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)), body = raw["command"]!.object
+        XCTAssertEqual(raw["syntheticOnly"], .bool(true)); XCTAssertEqual(raw["containerRemoved"], .bool(true))
+        var change = Mutation(table: "tasks", recordID: body["task_id"]!.text, method: "PATCH", fields: body["changes"]!.object, baseline: body["baseline"]!.object, personalTaskMove: true)
+        change.id = try XCTUnwrap(UUID(uuidString: body["request_id"]!.text))
+        let owner = body["account"]!.text
+        XCTAssertEqual(try PersonalTaskMove.body(change, account: owner), body)
+        XCTAssertNil(change.fields["subtasks"])
+        XCTAssertNil(try PersonalTaskMove.confirmed(raw["receipt"]!.object, change: change, account: owner))
+        XCTAssertNil(try PersonalTaskMove.confirmed(raw["replay"]!.object, change: change, account: owner))
+        XCTAssertTrue(try PersonalTaskMove.status(raw["confirmation"]!.object, change: change, account: owner))
+    }
+    private let account = "a1111111-1111-4111-8111-111111111111"
+    private let taskID = "a2222222-2222-4222-8222-222222222222"
+    private let source = "a3333333-3333-4333-8333-333333333333"
+    private let destination = "a4444444-4444-4444-8444-444444444444"
+    private func move() -> Mutation {
+        Mutation(table: "tasks", recordID: taskID, method: "PATCH", fields: ["project_id": .string(destination)], baseline: ["task_generation": .null, "project_id": .string(source)], personalTaskMove: true)
+    }
+    private func reply(_ move: Mutation, replayed: Bool = false) -> [String: JSON] {
+        ["protocol": .number(1), "account": .string(account), "request_id": .string(move.id.uuidString.lowercased()), "task_id": .string(move.recordID), "task_generation": move.baseline!["task_generation"]!, "source_project_id": move.baseline!["project_id"]!, "destination_project_id": move.fields["project_id"]!, "applied": .bool(true), "replayed": .bool(replayed), "task": .null]
+    }
+    func testAssignmentNormalizationPreservesSparseNullAndUnknownFields() throws {
+        let tree: JSON = .array([.object(["id": .string("one"), "title": .string("Parent"), "assigned_to": .string(account), "subtasks": .array([.object(["id": .string("nested"), "title": .string("Nested"), "subtasks": .null])]), "future": .object(["opaque": .array([.null, .bool(false)])])]), .object(["id": .string("sparse"), "title": .string("Note")])])
+        let cleared = PersonalTaskMove.clearAssignments(tree)
+        XCTAssertNil(cleared.list[0].object["assigned_to"])
+        XCTAssertEqual(cleared.list[0].object["subtasks"]?.list[0].object["subtasks"], .null)
+        XCTAssertNil(cleared.list[1].object["subtasks"])
+        XCTAssertEqual(cleared.list[0].object["future"], tree.list[0].object["future"])
+        XCTAssertEqual(PersonalTaskMove.clearAssignments(.null), .null)
+        XCTAssertEqual(PersonalTaskMove.clearAssignments(.array([])), .array([]))
+        try TeamTaskMoveTree.validate(cleared)
+    }
+    func testMarkerSurvivesQueuePersistenceAndLegacyQueuesStayUnmarked() throws {
+        let value = move(); let saved = try JSONEncoder().encode(value)
+        XCTAssertEqual(try JSONDecoder().decode(Mutation.self, from: saved), value)
+        var legacy = try JSONDecoder().decode([String: JSON].self, from: saved); legacy.removeValue(forKey: "personalTaskMove")
+        XCTAssertNil(try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(legacy)).personalTaskMove)
+    }
+    func testMoveNormalizationKeepsIdentityAndSeparatesExplicitAssignment() throws {
+        var old = Record.task(user: account); old["id"] = .string(taskID); old["project_id"] = .string(source); old["subtasks"] = .null
+        var edit = move(); edit.fields["assigned_to"] = .string(account)
+        let changes = TaskAssignment.mutations(edit, existing: old)
+        XCTAssertEqual(changes.count, 2); XCTAssertEqual(changes[0].id, edit.id); XCTAssertEqual(changes[0].personalTaskMove, true)
+        XCTAssertNil(changes[0].fields["subtasks"]); XCTAssertNil(changes[0].fields["assigned_to"])
+        XCTAssertNil(changes[1].personalTaskMove); XCTAssertNotEqual(changes[1].id, edit.id)
+    }
+    func testCompactMoveProjectsAssignmentClearingWithoutQueuingWholeTree() throws {
+        var old = Record.task(user: account); old["id"] = .string(taskID); old["project_id"] = .string(source); old["assigned_to"] = .string(account)
+        old["task_generation"] = .null
+        old["subtasks"] = .array([.object(["id": .string("one"), "title": .string("Newest child title"), "description": .string("Never copy this into move wire data"), "assigned_to": .string(account), "subtasks": .null])])
+        let changes = TaskAssignment.mutations(move(), existing: old)
+        XCTAssertEqual(changes.count, 1); XCTAssertNil(changes[0].fields["subtasks"]); XCTAssertNil(changes[0].fields["assigned_to"])
+        XCTAssertFalse(String(decoding: try JSONEncoder().encode(PersonalTaskMove.body(changes[0], account: account)), as: UTF8.self).contains("Never copy"))
+        var snapshot = Snapshot(); snapshot.tables["tasks"] = [old]; snapshot.apply(changes[0])
+        XCTAssertEqual(snapshot.tables["tasks"]?[0]["project_id"], .string(destination)); XCTAssertEqual(snapshot.tables["tasks"]?[0]["assigned_to"], .null)
+        let child = try XCTUnwrap(snapshot.tables["tasks"]?[0]["subtasks"].list.first)
+        XCTAssertEqual(child.object["description"], old["subtasks"].list[0].object["description"]); XCTAssertEqual(child.object["subtasks"], .null); XCTAssertNil(child.object["assigned_to"])
+    }
+    func testExplicitMoveReviewUsesFreshIdentityAndCurrentSource() throws {
+        let value = move(); var remote = Record.task(user: account); remote["id"] = .string(taskID); remote["project_id"] = .null; remote["task_generation"] = .null
+        var snapshot = Snapshot(); snapshot.tables["tasks"] = [remote]; snapshot.pending = [value]
+        let next = try XCTUnwrap(SyncConflict(mutation: value, remote: remote).resolving(snapshot, keepLocal: true))
+        let replacement = try XCTUnwrap(next.pending.first); XCTAssertNotEqual(replacement.id, value.id); XCTAssertEqual(replacement.personalTaskMove, true)
+        XCTAssertEqual(replacement.baseline?["project_id"], .null); _ = try PersonalTaskMove.body(replacement, account: account)
+        XCTAssertEqual(snapshot.pending, [value])
+    }
+    func testReviewOfAlreadyMovedTaskKeepsOtherAuthoredEditsWithoutAnotherMove() throws {
+        var value = move(); value.fields["description"] = .string("My authored root note"); value.baseline?["description"] = .string("Original")
+        var remote = Record.task(user: account); remote["id"] = .string(taskID); remote["project_id"] = .string(destination); remote["task_generation"] = .null; remote["description"] = .string("Remote note")
+        var snapshot = Snapshot(); snapshot.tables["tasks"] = [remote]; snapshot.pending = [value]
+        let next = try XCTUnwrap(SyncConflict(mutation: value, remote: remote).resolving(snapshot, keepLocal: true))
+        let replacement = try XCTUnwrap(next.pending.first)
+        XCTAssertNil(replacement.personalTaskMove); XCTAssertNil(replacement.fields["project_id"]); XCTAssertEqual(replacement.fields["description"], .string("My authored root note")); XCTAssertNotEqual(replacement.id, value.id)
+        value = move(); snapshot.pending = [value]
+        XCTAssertTrue(try XCTUnwrap(SyncConflict(mutation: value, remote: remote).resolving(snapshot, keepLocal: true)).pending.isEmpty)
+    }
+    func testUndoRestoresSectionAndRootAssignmentAndRedoIsANewRequest() throws {
+        var old = Record.task(user: account); old["id"] = .string(taskID); old["project_id"] = .string(source); old["task_generation"] = .null
+        old["section_id"] = .string("a5555555-5555-4555-8555-555555555555"); old["assigned_to"] = .string(account); old["subtasks"] = .null
+        var snapshot = Snapshot(); snapshot.tables["tasks"] = [old]
+        let original = TaskAssignment.mutations(move(), existing: old)[0]
+        let history = EditHistory(changes: [original], snapshot: snapshot)
+        snapshot.apply(original)
+        XCTAssertEqual(snapshot.tables["tasks"]?[0]["section_id"], .null)
+        let undo = PersonalTaskMove.historyAction(try XCTUnwrap(history.undo.first))
+        XCTAssertEqual(undo.personalTaskMove, true); XCTAssertNotEqual(undo.id, original.id)
+        XCTAssertEqual(undo.fields["section_id"], old["section_id"]); XCTAssertEqual(undo.fields["assigned_to"], old["assigned_to"])
+        XCTAssertEqual(undo.baseline?["section_id"], .null); XCTAssertEqual(undo.baseline?["assigned_to"], .null)
+        let steps = TaskAssignment.mutations(undo, existing: snapshot.tables["tasks"]?[0])
+        XCTAssertEqual(steps.count, 2); XCTAssertEqual(steps[0].fields["section_id"], old["section_id"])
+        for step in steps { snapshot.apply(TaskCompletionRevision.capturing(step, existing: snapshot.tables["tasks"]?[0])) }
+        XCTAssertEqual(snapshot.tables["tasks"]?[0]["project_id"], old["project_id"]); XCTAssertEqual(snapshot.tables["tasks"]?[0]["section_id"], old["section_id"]); XCTAssertEqual(snapshot.tables["tasks"]?[0]["assigned_to"], old["assigned_to"])
+        let redo = PersonalTaskMove.historyAction(try XCTUnwrap(history.redo.first))
+        XCTAssertNotEqual(redo.id, original.id); XCTAssertNotEqual(redo.id, undo.id)
+        XCTAssertEqual(redo.fields, original.fields)
+        var ordinary = original; ordinary.personalTaskMove = nil
+        XCTAssertEqual(PersonalTaskMove.historyAction(ordinary), ordinary)
+    }
+    func testBodyBindsExactMutationAndNullableGenerationAndInbox() throws {
+        var value = move(); value.fields["project_id"] = .null
+        let body = try PersonalTaskMove.body(value, account: account)
+        XCTAssertEqual(body["request_id"], .string(value.id.uuidString.lowercased()))
+        XCTAssertEqual(body["baseline"], .object(value.baseline!)); XCTAssertEqual(body["changes"], .object(value.fields))
+        XCTAssertEqual(try PersonalTaskMove.body(value, account: account), body)
+        value.id = UUID(); XCTAssertNotEqual(try PersonalTaskMove.body(value, account: account)["request_id"], body["request_id"])
+    }
+    func testMalformedOrUnmarkedCommandsRefuseBeforeTransport() {
+        let original = move()
+        var invalid: [Mutation] = []
+        var value = original; value.personalTaskMove = nil; invalid.append(value)
+        value = original; value.method = "POST"; invalid.append(value)
+        value = original; value.table = "projects"; invalid.append(value)
+        value = original; value.recordID = "untrusted"; invalid.append(value)
+        value = original; value.baseline?.removeValue(forKey: "task_generation"); invalid.append(value)
+        value = original; value.fields["project_id"] = .number(2); invalid.append(value)
+        value = original; value.fields["project_id"] = value.baseline?["project_id"]; invalid.append(value)
+        value = original; value.fields["description"] = .string("Needs a baseline"); invalid.append(value)
+        value = original; value.fields["user_id"] = .string(account); value.baseline?["user_id"] = .string(account); invalid.append(value)
+        for edit in invalid { XCTAssertThrowsError(try PersonalTaskMove.body(edit, account: account)) }
+        XCTAssertThrowsError(try PersonalTaskMove.body(original, account: "invalid"))
+    }
+    func testReceiptRequiresEveryIdentityAndCurrentTaskProof() throws {
+        let value = move(), raw = reply(value)
+        XCTAssertNil(try PersonalTaskMove.confirmed(raw, change: value, account: account))
+        for key in ["account", "request_id", "task_id", "task_generation", "source_project_id", "destination_project_id", "applied", "protocol"] {
+            var bad = raw; bad[key] = .string("wrong")
+            XCTAssertThrowsError(try PersonalTaskMove.confirmed(bad, change: value, account: account), key)
+        }
+        for key in ["id", "task_generation", "project_id"] {
+            var bad = raw, task = bad["task"]!.object; task[key] = .string("wrong"); bad["task"] = .object(task)
+            XCTAssertThrowsError(try PersonalTaskMove.confirmed(bad, change: value, account: account))
+        }
+    }
+    func testReplayNeverAcceptsHistoricalTaskContent() throws {
+        let value = move(); var raw = reply(value, replayed: true)
+        XCTAssertNil(try PersonalTaskMove.confirmed(raw, change: value, account: account))
+        raw["task"] = .object(["id": .string(taskID), "description": .string("Historical note")])
+        XCTAssertThrowsError(try PersonalTaskMove.confirmed(raw, change: value, account: account))
+    }
+    func testReplayAcknowledgementCannotOverwriteLaterLocalWork() throws {
+        let value = move(); var snapshot = Snapshot()
+        let later = Mutation(table: "tasks", recordID: taskID, method: "PATCH", fields: ["description": .string("Later unsent note")])
+        snapshot.tables["tasks"] = [Record(["id": .string(taskID), "project_id": .null, "description": .string("Later unsent note")])]
+        snapshot.pending = [value, later]; let rows = snapshot.tables
+        XCTAssertTrue(snapshot.acknowledge(value, saved: try PersonalTaskMove.confirmed(reply(value, replayed: true), change: value, account: account)))
+        XCTAssertEqual(snapshot.tables, rows); XCTAssertEqual(snapshot.pending, [later])
+    }
+    func testConfirmationOnlyDistinguishesUnknownFromCommittedWithoutTaskContent() throws {
+        let value = move(); var status = reply(value, replayed: true)
+        XCTAssertTrue(try PersonalTaskMove.status(status, change: value, account: account))
+        status["applied"] = .bool(false); status["replayed"] = .bool(false)
+        XCTAssertFalse(try PersonalTaskMove.status(status, change: value, account: account))
+        status["task"] = .object(["id": .string(taskID)])
+        XCTAssertThrowsError(try PersonalTaskMove.status(status, change: value, account: account))
+        XCTAssertThrowsError(try PersonalTaskMove.status(reply(value), change: value, account: account))
+    }
+    @MainActor private func backend() throws -> Backend {
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [MoveHTTP.self]
+        let session = try JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
+        return Backend(configuration: ["URL": "https://backend.example", "Key": "synthetic-public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
+    }
+    private func capturedBody(_ request: URLRequest) throws -> [String: JSON] {
+        var data = request.httpBody ?? Data()
+        if let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }
+                data.append(contentsOf: bytes.prefix(count))
+            }
+        }
+        return try JSONDecoder().decode([String: JSON].self, from: data)
+    }
+    @MainActor func testTransportUsesExactSavedMoveEndpointWithoutLegacyFallback() async throws {
+        let value = move(), api = try backend(), raw = reply(value); let body = try PersonalTaskMove.body(value, account: account); var calls = 0
+        MoveHTTP.handler = { request, peer in
+            calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_move_personal_task")
+            XCTAssertEqual(try! self.capturedBody(request), ["_body": .object(body)])
+            peer.finish(raw)
+        }; defer { MoveHTTP.handler = nil }
+        let saved = try await api.send(value, expectedAccount: account)
+        XCTAssertNil(saved); XCTAssertEqual(calls, 1)
+    }
+    @MainActor func testTransportRetriesTheSameIdentityAfterLostResponse() async throws {
+        let value = move(), api = try backend(), raw = reply(value, replayed: true); var calls: [[String: JSON]] = []
+        MoveHTTP.handler = { request, peer in
+            calls.append(try! self.capturedBody(request))
+            if calls.count == 1 { peer.client?.urlProtocol(peer, didFailWithError: URLError(.networkConnectionLost)) }
+            else { peer.finish(raw) }
+        }; defer { MoveHTTP.handler = nil }
+        do { _ = try await api.send(value, expectedAccount: account); XCTFail("Lost reply must stay unconfirmed") } catch {}
+        let saved = try await api.send(value, expectedAccount: account)
+        XCTAssertNil(saved); XCTAssertEqual(calls.count, 2); XCTAssertEqual(calls[0], calls[1])
+    }
+    @MainActor func testBlockedConfirmationTransportCannotStartOriginalMove() async throws {
+        let value = move(), api = try backend(); var raw = reply(value, replayed: true); raw["applied"] = .bool(false); raw["replayed"] = .bool(false)
+        var calls = 0; let body = try PersonalTaskMove.body(value, account: account)
+        MoveHTTP.handler = { request, peer in
+            calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_move_personal_task")
+            XCTAssertEqual(try! self.capturedBody(request), ["_body": .object(body), "_confirm_only": .bool(true)])
+            peer.finish(raw)
+        }; defer { MoveHTTP.handler = nil }
+        let confirmed = try await api.confirmPersonalTaskMove(value, expectedAccount: account)
+        XCTAssertFalse(confirmed); XCTAssertEqual(calls, 1)
+    }
+    @MainActor func testPersonalReplyCannotCrossAccountSwitch() async throws {
+        let value = move(), api = try backend(), raw = reply(value), gate = MoveHTTPGate(), started = expectation(description: "Personal move held")
+        MoveHTTP.handler = { _, peer in gate.hold(peer); started.fulfill() }; defer { MoveHTTP.handler = nil }
+        let send = Task { try await api.send(value, expectedAccount: account) }
+        await fulfillment(of: [started], timeout: 3)
+        try await api.clearSession(); gate.release(raw)
+        do { _ = try await send.value; XCTFail("Old personal move crossed accounts") } catch { XCTAssertTrue(error is CancellationError) }
+    }
+}
+
 private final class MoveMemoryIO: CalendarSecureItemIO, @unchecked Sendable {
     private let lock = NSLock()
     var values: [String: Data] = [:]

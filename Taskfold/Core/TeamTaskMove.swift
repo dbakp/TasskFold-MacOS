@@ -1,4 +1,71 @@
 import Foundation
+
+/// A routine personal move stays in the existing queue and picker. Its saved
+/// request identity certifies retry without projecting historical task contents.
+enum PersonalTaskMove {
+    static var invalid: AppFailure { AppFailure(message: "TASKFOLD_CONFLICT: Review this saved project move before sending it.") }
+    static func historyAction(_ change: Mutation) -> Mutation {
+        guard change.personalTaskMove == true else { return change }
+        var action = change; action.id = UUID(); return action
+    }
+    static func clearAssignments(_ tree: JSON) -> JSON {
+        guard case .array(let rows) = tree else { return tree }
+        return .array(rows.map { item in
+            guard case .object(var fields) = item else { return item }
+            fields.removeValue(forKey: "assigned_to")
+            if case .array? = fields["subtasks"] { fields["subtasks"] = clearAssignments(fields["subtasks"]!) }
+            return .object(fields)
+        })
+    }
+    static func projectedFields(_ change: Mutation, onto old: Record) -> [String: JSON] {
+        var fields = change.fields
+        if change.personalTaskMove == true, change.table == "tasks", change.method == "PATCH",
+           let destination = fields["project_id"], destination != old["project_id"] {
+            fields["assigned_to"] = .null
+            if fields["section_id"] == nil { fields["section_id"] = .null }
+            if fields["subtasks"] == nil { fields["subtasks"] = clearAssignments(old["subtasks"]) }
+        }
+        return fields
+    }
+    static func body(_ change: Mutation, account: String) throws -> [String: JSON] {
+        guard change.personalTaskMove == true, change.table == "tasks", change.method == "PATCH", change.teamTaskScope == nil,
+              change.teamCompletion == nil, change.teamTaskBatch == nil, TeamProjectValue.id(account), TeamProjectValue.id(change.recordID),
+              let base = change.baseline, base["task_generation"] != nil, base["project_id"] != nil,
+              let destination = change.fields["project_id"], base["project_id"] != destination,
+              change.fields.keys.allSatisfy({ base[$0] != nil }), !change.fields.keys.contains(where: { ["id", "user_id", "task_generation", "completion_version"].contains($0) }) else { throw invalid }
+        _ = try TeamProjectValue.optionalID(base["task_generation"])
+        _ = try TeamProjectValue.optionalID(base["project_id"])
+        _ = try TeamProjectValue.optionalID(destination)
+        if let tree = change.fields["subtasks"] { try TeamTaskMoveTree.validate(tree) }
+        let body: [String: JSON] = ["protocol": .number(1), "account": .string(account), "request_id": .string(change.id.uuidString.lowercased()), "task_id": .string(change.recordID.lowercased()), "baseline": .object(base), "changes": .object(change.fields)]
+        guard try JSONEncoder().encode(body).count <= 4_194_304 else { throw invalid }
+        return body
+    }
+    static func confirmed(_ reply: [String: JSON], change: Mutation, account: String) throws -> Record? {
+        _ = try body(change, account: account)
+        guard Set(reply.keys) == ["protocol", "account", "request_id", "task_id", "task_generation", "source_project_id", "destination_project_id", "applied", "replayed", "task"],
+              reply["protocol"] == .number(1), reply["account"] == .string(account), reply["request_id"] == .string(change.id.uuidString.lowercased()),
+              reply["task_id"] == .string(change.recordID.lowercased()), reply["task_generation"] == change.baseline?["task_generation"],
+              reply["source_project_id"] == change.baseline?["project_id"], reply["destination_project_id"] == change.fields["project_id"],
+              reply["applied"] == .bool(true), case .bool(let replayed)? = reply["replayed"] else { throw invalid }
+        // Every confirmation is metadata-only. Current workspace reads supply
+        // the task, so even a first reply cannot overwrite newer local work.
+        _ = replayed
+        guard reply["task"] == .null else { throw invalid }
+        return nil
+    }
+    static func status(_ reply: [String: JSON], change: Mutation, account: String) throws -> Bool {
+        if reply["applied"] == .bool(true) {
+            guard reply["replayed"] == .bool(true) else { throw invalid }
+            _ = try confirmed(reply, change: change, account: account); return true
+        }
+        var hypothetical = reply
+        hypothetical["applied"] = .bool(true); hypothetical["replayed"] = .bool(true)
+        _ = try confirmed(hypothetical, change: change, account: account)
+        guard reply["applied"] == .bool(false), reply["replayed"] == .bool(false), reply["task"] == .null else { throw invalid }
+        return false
+    }
+}
 import Observation
 
 /// A reviewed move is deliberately separate from ordinary task editing. The

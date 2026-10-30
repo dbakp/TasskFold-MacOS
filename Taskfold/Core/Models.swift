@@ -295,6 +295,8 @@ struct Mutation: Codable, Identifiable, Equatable, Sendable {
     var teamTaskScope: TeamTaskEditScope? = nil
     var teamTaskBatch: TeamTaskBatch? = nil
     var teamCompletion: TeamCompletion? = nil
+    /// Opt-in personal project moves retain their durable queue identity on retry.
+    var personalTaskMove: Bool? = nil
     /// Personal workflow provenance survives queued creation and history recreation.
     var workflowRun: UUID? = nil
 }
@@ -500,6 +502,19 @@ struct SyncConflict: Identifiable {
             if remote.completed, mutation.fields["completed"] == .bool(true) {
                 cancelUnacceptedSuccessors(in: &result)
             }
+            if mutation.personalTaskMove == true, mutation.teamTaskScope == nil,
+               let replacement = result.pending.firstIndex(where: { $0.id == mutation.id }) {
+                // Explicit review is a fresh decision, never a changed body
+                // under the original receipt identity. If it is already in the
+                // desired project, retain only the other authored root edits.
+                result.pending[replacement].id = UUID()
+                if result.pending[replacement].fields["project_id"] == remote["project_id"] {
+                    result.pending[replacement].fields.removeValue(forKey: "project_id")
+                    result.pending[replacement].baseline?.removeValue(forKey: "project_id")
+                    result.pending[replacement].personalTaskMove = nil
+                    if result.pending[replacement].fields.isEmpty { result.pending.remove(at: replacement) }
+                }
+            }
         } else {
             result.pending.remove(at: index)
             if mutation.fields["completed"] == .bool(true) {
@@ -644,7 +659,7 @@ struct Snapshot: Codable, Equatable, Sendable {
         }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
-            var projected = change.fields
+            var projected = PersonalTaskMove.projectedFields(change, onto: rows[i])
             if change.table == "tasks", change.method == "PATCH", let base = change.baseline?["subtasks"], let desired = projected["subtasks"] {
                 // Keep the queued intent intact while retaining already observed child edits locally.
                 projected["subtasks"] = TaskEdit.keepingLocal(field: "subtasks", base: base, desired: desired, remote: rows[i]["subtasks"])
@@ -1296,10 +1311,13 @@ struct EditHistory: Sendable {
             }
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
                 var fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
+                if change.personalTaskMove == true, change.method == "PATCH", change.fields["project_id"] != old["project_id"] {
+                    fields["assigned_to"] = old["assigned_to"]; fields["section_id"] = old["section_id"]
+                }
                 if change.table == "tasks", change.method == "PATCH", change.fields["is_heading"] != nil, old["is_heading"] == .null {
                     fields["is_heading"] = .bool(false) // An explicit ordinary task, not removal of an unknown field.
                 }
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(change.fields, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(PersonalTaskMove.projectedFields(change, onto: old), to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope, personalTaskMove: change.personalTaskMove))
                 var forward = change
                 if change.method == "PATCH" { forward.baseline = change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: change.fields, from: old) : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
                 if let scope = change.teamTaskScope { forward.baseline?["project_id"] = .string(scope.project) }
@@ -1754,10 +1772,17 @@ enum TaskAssignment {
         guard change.table == "tasks", change.method == "PATCH", let existing,
               let project = change.fields["project_id"], project != existing["project_id"] else { return [change] }
         var move = change
-        move.fields["assigned_to"] = .null
-        move.fields["subtasks"] = clearChildren(change.fields["subtasks"] ?? existing["subtasks"])
+        if change.personalTaskMove == true {
+            // The row-first server clears current assignments. Do not upload
+            // an old whole checklist just to move a root; predict it locally.
+            move.fields.removeValue(forKey: "assigned_to")
+            if let authored = change.fields["subtasks"] { move.fields["subtasks"] = PersonalTaskMove.clearAssignments(authored) }
+        } else {
+            move.fields["assigned_to"] = .null
+            move.fields["subtasks"] = clearChildren(change.fields["subtasks"] ?? existing["subtasks"])
+        }
         if move.baseline != nil {
-            for field in ["assigned_to", "subtasks"] where move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
+            for field in ["assigned_to", "subtasks"] where move.fields[field] != nil && move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
         }
         if let person = change.fields["assigned_to"], !person.text.isEmpty, !project.text.isEmpty {
             return [move, Mutation(table: "tasks", recordID: change.recordID, method: "PATCH", fields: ["assigned_to": person], baseline: ["assigned_to": .null])]

@@ -1821,6 +1821,13 @@ final class Store {
             let orderingCommands = preparedChanges.map { change in
                 var change = change
                 if change.organizationOrder != nil { change.id = UUID() }
+                if change.table == "tasks", change.method == "PATCH", !localMode, childTaskFieldEditingEnabled,
+                   let destination = change.fields["project_id"], let current = record("tasks", id: change.recordID),
+                   destination != current["project_id"], change.teamTaskScope == nil,
+                   change.teamCompletion == nil, change.teamTaskBatch == nil,
+                   nativeConversationTeamCache?.knownTasks.contains(change.recordID) != true {
+                    change.personalTaskMove = true
+                }
                 return change
             }
             // Normalization precedes all mutation; reuse its immutable lookup/catalog.
@@ -2169,7 +2176,7 @@ final class Store {
     func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
     private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
         changes.map { original in
-            var change = TeamCompletion.historyAction(original,snapshot:snapshot)
+            var change = PersonalTaskMove.historyAction(TeamCompletion.historyAction(original,snapshot:snapshot))
             if change.table == "view_orders" { change.id = UUID(); change.orderRecovery = nil }
             if change.table == "tasks", change.method == "POST" {
                 return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
@@ -2215,7 +2222,7 @@ final class Store {
     /// A denied queued change must not block the refresh that removes revoked shared work.
     /// Keep its complete local snapshot in the encrypted vault before changing the live cache.
     private func recoverUnavailableProject(_ mutation: Mutation, generation: UUID, account: String) async -> Bool {
-        guard mutation.teamTaskScope == nil, mutation.teamCompletion == nil, mutation.teamTaskBatch == nil, generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
+        guard mutation.personalTaskMove != true, mutation.teamTaskScope == nil, mutation.teamCompletion == nil, mutation.teamTaskBatch == nil, generation == accountGeneration, snapshot.pending.contains(mutation) else { return false }
         let reviewed = snapshot
         let projectIDs = reviewed.recoveryProjectIDs(for: mutation)
         guard !projectIDs.isEmpty else { return false }
@@ -2288,6 +2295,15 @@ final class Store {
             let initialRequests=Set(snapshot.pending.map(\.id)),blockedRequests=access?.blocked(snapshot) ?? []
             while !hadConflict,let mutation = snapshot.pending.first {
                 if blockedRequests.contains(mutation.id) || (!initialRequests.contains(mutation.id) && access?.canSend(mutation,in:snapshot)==false) {
+                    if mutation.personalTaskMove == true {
+                        let confirmed = try await backend.confirmPersonalTaskMove(mutation, expectedAccount: account)
+                        guard generation == accountGeneration, snapshot.pending.first == mutation else { return }
+                        if confirmed {
+                            guard snapshot.acknowledge(mutation, saved: nil) else { throw PersonalTaskMove.invalid }
+                            try persist(); continue
+                        }
+                        notice = "Your original project move is saved. Its result is not confirmed; review access before trying it again."
+                    }
                     if let access, try await discoverBlockedTeamCompletion(access: access) { return }
                     break
                 }

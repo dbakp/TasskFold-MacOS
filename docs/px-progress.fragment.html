@@ -34,7 +34,7 @@
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--muted)" aria-hidden="true"></span>To build</span>
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-3)" aria-hidden="true"></span>Deferred</span>
 </div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope.</div>
-<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · Independent subtask migration</summary><div>Reviewed personal project branches now transfer into teams with separate subtasks. Deleted-subtask copies stay private, old pending actions must refresh, and lost replies can be retried safely. Both apps pass local checks/builds; wider migration and transfer paths remain open. Nothing is deployed.</div></details>
+<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · Independent subtask migration</summary><div>Personal task moves now preserve separate subtasks through the ordinary queue and picker. Requests stay compact, private Undo copies stay protected, and retries cannot reapply an already completed move. Valid section/assignment Undo and fresh Redo are covered. Both apps pass local checks/builds; broader migration remains open and nothing is deployed.</div></details>
 <details class="px-stage" id="px-p0" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P0 · Foundations</span></span><span class="text-small text-muted" aria-hidden="true">11 verified · 1 built / checks left · 1 to build · 3 deferred</span><svg class="px-meter" viewBox="0 0 16 1" preserveAspectRatio="none" role="img" aria-label="11 verified · 1 built / checks left · 1 to build · 3 deferred"><rect x="0" y="0" width="11" height="1" fill="var(--viz-series-1)"/><rect x="11" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="12" y="0" width="1" height="1" fill="var(--muted)"/><rect x="13" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">Core workflows accepted in recorded scope. Deletion recovery and three paused rollout gates remain.</div>
 <details class="px-group" id="p0-core" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Everyday task foundations</span></span><span class="text-small text-muted" aria-hidden="true">6 verified</span><svg class="px-meter" viewBox="0 0 6 1" preserveAspectRatio="none" role="img" aria-label="6 verified"><rect x="0" y="0" width="6" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p0-core-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Todoist import and safe retry</span><span class="text-small text-muted">Verified</span></div>
@@ -302,7 +302,7 @@
 <li class="px-item" data-state="verify" id="p2-teams-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real cloud-media and provider checks</span><span class="text-small text-muted">Built · checks left</span></div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-7"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Move subtask storage and preserve older work</span><span class="text-small text-muted">To build</span></div>
-<div class="px-item-detail text-small text-muted">The opt-in record-first candidate supports reviewed same-team move/Undo and personal-branch adoption into a team, preserving private deletion copies. Individual personal-task/cross-team/return-to-personal/cross-root transfers, older-data tools and full native/custody/workload acceptance remain. Unreviewed realm changes are fenced. Nothing is deployed.</div>
+<div class="px-item-detail text-small text-muted">The opt-in record-first candidate supports compact personal project/Inbox moves, reviewed same-team move/Undo and personal-branch adoption into a team, preserving private copies and durable retry. Cross-root/shared-workspace transfers, older-data tools and full discussion/provider/native/custody/workload acceptance remain. Nothing is deployed.</div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Shared audio publishing and storage permissions</span><span class="text-small text-muted">To build</span></div>
 <div class="px-item-detail text-small text-muted">Shared publishing/removal, older history handling and storage/access rules are unfinished.</div>
@@ -323,6 +323,7 @@
 <li>child-task-record-authority/verification.json</li>
 <li>child-task-record-transfers/verification.json</li>
 <li>child-project-adoption-custody/verification.json</li>
+<li>personal-child-record-moves/verification.json</li>
 </ul></details></details>
 <details class="px-group" id="p2-watch" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Apple Watch</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p2-watch-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Today, reviewed capture and offline completion implementation</span><span class="text-small text-muted">Verified</span></div>
@@ -338,8 +339,8 @@
 </ul></details></details>
 </details>
 <footer class="px-footer"><details id="px-next" data-remember><summary class="cursor-interaction">Next in the active work</summary><ol>
-<li>Finish individual personal-task and cross-root transfers, then older-data review tools.</li>
-<li>Finish cross-team/return-to-personal custody, full-schema checks, large workloads and native/lifecycle acceptance.</li>
+<li>Implement cross-root subtask moves, then older-data review/adoption tools.</li>
+<li>Finish whole-schema discussion/provider/Storage custody, shared-workspace transfers, large workloads and native/lifecycle acceptance.</li>
 <li>Finish remaining team/audio recovery; keep agreed deferrals paused.</li>
 </ol></details><div class="text-small text-muted">Both apps own their dashboard and sources. Reviewed snapshot; no live telemetry or completion-date estimate.</div></footer>
 </div>

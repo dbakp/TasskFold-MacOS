@@ -11,6 +11,7 @@ try {
  pg=await createPostgresFixture({advisors:true});await loadChildAuthorityDependencies(pg);
  for(const name of [childAuthorityMigration,'20261030093035_child_record_reviewed_team_transfers.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
  report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);
+ if(process.env.TASKFOLD_PERSONAL_MOVE_SQL){const personal=await readFile(process.env.TASKFOLD_PERSONAL_MOVE_SQL,'utf8');await pg.raw(personal);report.personalMoveMigrationSHA256=createHash('sha256').update(personal).digest('hex');}
  const users=Object.fromEntries(['owner','editor','viewer'].map(k=>[k,{id:randomUUID(),session:randomUUID()}]));const owner=users.owner,team=randomUUID();
  for(const u of Object.values(users))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});insert into public.profiles(user_id) values(${lit(u.id)});`);
  const identity=u=>`set local request.jwt.claim.sub=${lit(u.id)};set local request.jwt.claims=${lit(JSON.stringify({sub:u.id,session_id:u.session}))};`;

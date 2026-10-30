@@ -1272,3 +1272,14 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 - [ ] Individual personal-task transfers, cross-team/return-to-personal and cross-root transfers, older-data tools, full-schema/provider/Storage custody, workloads and wider native/lifecycle acceptance remain. Nothing is hosted/enabled for ordinary use; existing user deferrals remain.
 
 [Exact evidence and remaining scope](child-project-adoption-custody/README.md). This supersedes the temporary whole-project fence for **reviewed personal-branch adoption only**; unreviewed realm changes remain fenced, including unpromoted child projections.
+
+
+## Personal task moves with separate subtasks — 2026-10-30
+
+- [x] Routine personal project/Inbox moves use the existing durable queue/picker; compact requests omit old whole checklists. Current records, nullable/sparse containers, opaque data and newer disjoint child notes survive.
+- [x] Exact original retries and confirmation-only checks return metadata, preserve later work and recover after deletion/access loss/disabled rollout. Private deleted-subtask copies retain source binding; late failure rolls back actual rows and authority.
+- [x] Old section clearing, explicit destination validation, valid section/root-assignment Undo, fresh Undo/Redo IDs and explicit Keep mine replacement are integrated. Ordinary gates/default routes remain unchanged.
+- [x] Each owned repo passes 538 final-source database and 235 client checks, including the actual SQL wire fixture compiled independently. App/test builds and development signatures verify; no fresh whole-app/spoken acceptance is inferred.
+- [ ] Cross-root transfers, older-data review/adoption, full discussion/provider/Storage custody, large workloads and broader native/account/window/background/spoken acceptance remain. Existing user deferrals remain; nothing is deployed or promoted for real accounts.
+
+[Evidence and exact acceptance limits](personal-child-record-moves/README.md).

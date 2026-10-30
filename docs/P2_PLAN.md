@@ -6,6 +6,8 @@ Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Personal project/Inbox moves now preserve separate subtask records through compact queued commands, source-bound private Undo and contentless retry/status confirmation. Section/root-assignment history and fresh Undo/Redo/Keep mine identities are integrated. Each repo passes 538 database and 235 client checks; final app/test builds and signatures verify. [Current personal-move evidence](personal-child-record-moves/README.md). Cross-root moves, older-data tools, full discussion/provider/Storage custody, workload and broader native/lifecycle acceptance remain. No hosted roots or normal feature gates changed; earlier paragraphs retain their staged scopes.
+
 Reviewed personal project branches can now transfer into teams with separate subtask records. Signed reviews cover child custody; private deletion copies stay actor-only and cannot restore into the new realm. Pending child edits/Undo are fenced, and exact receipt retries remain safe. Each repo passes 576 database and 201 selected client checks; app/test builds and signatures verify. [Current project-transfer evidence](child-project-adoption-custody/README.md). Individual personal-task, cross-team/return-to-personal and cross-root transfers, older-data tools, full custody/workload/native acceptance and rollout remain open. Earlier paragraphs retain their staged scopes.
 
 Reviewed same-team transfers now preserve promoted child records and private Undo copies, with nullable review/receipt decoding in both apps. Each repo passes 475 SQL and 168 client checks; app/test builds and signatures pass. [Current transfer evidence](child-task-record-transfers/README.md). Personal/cross-team/whole-project/cross-root adapters, adoption tooling, complete custody/workload/native acceptance and rollout remain open.
@@ -7078,3 +7080,14 @@ Both apps now own scoped native hierarchy organization and recovery: reviewed ad
 - [ ] Individual personal-task transfers, cross-team/return-to-personal and cross-root transfers, older-data tools, full-schema/provider/Storage custody, workloads and wider native/lifecycle acceptance remain. Nothing is hosted/enabled for ordinary use; existing user deferrals remain.
 
 [Exact evidence and remaining scope](child-project-adoption-custody/README.md). This supersedes the temporary whole-project fence for **reviewed personal-branch adoption only**; unreviewed realm changes remain fenced, including unpromoted child projections.
+
+
+## Personal task moves with separate subtasks — 2026-10-30
+
+- [x] Routine personal project/Inbox moves use the existing durable queue/picker; compact requests omit old whole checklists. Current records, nullable/sparse containers, opaque data and newer disjoint child notes survive.
+- [x] Exact original retries and confirmation-only checks return metadata, preserve later work and recover after deletion/access loss/disabled rollout. Private deleted-subtask copies retain source binding; late failure rolls back actual rows and authority.
+- [x] Old section clearing, explicit destination validation, valid section/root-assignment Undo, fresh Undo/Redo IDs and explicit Keep mine replacement are integrated. Ordinary gates/default routes remain unchanged.
+- [x] Each owned repo passes 538 final-source database and 235 client checks, including the actual SQL wire fixture compiled independently. App/test builds and development signatures verify; no fresh whole-app/spoken acceptance is inferred.
+- [ ] Cross-root transfers, older-data review/adoption, full discussion/provider/Storage custody, large workloads and broader native/account/window/background/spoken acceptance remain. Existing user deferrals remain; nothing is deployed or promoted for real accounts.
+
+[Evidence and exact acceptance limits](personal-child-record-moves/README.md).
