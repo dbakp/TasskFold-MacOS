@@ -15,6 +15,8 @@ Bars count equally sized tracked checkpoints, not effort. No overall percentage 
 
 ## Update with each milestone
 
+The current focus names the next unfinished feature explicitly. Preparatory files, planned work and empty migration placeholders do not advance any checkpoint. Update this snapshot after each meaningful milestone, blocker change or user deferral; it does not update itself in the background.
+
 1. Read the changed evidence and revise the relevant snapshot rows, current focus, next steps and review date. Keep completed rows rather than replacing history with a new denominator.
 2. Run `python3 Scripts/render_px_progress.py --refresh-sources`. This records the reviewed evidence-file hashes and regenerates the standalone page and inline fragment.
 3. Run `python3 Scripts/render_px_progress.py --check`. This is read-only and fails for changed evidence hashes or stale generated output.
