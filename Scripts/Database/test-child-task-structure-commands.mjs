@@ -34,6 +34,7 @@ try {
  if(process.env.TASKFOLD_CHILD_TRANSFER_SQL){const transfer=await readFile(process.env.TASKFOLD_CHILD_TRANSFER_SQL,'utf8');await pg.raw(transfer);report.transferMigrationSHA256=createHash('sha256').update(transfer).digest('hex');}
  if(process.env.TASKFOLD_CHILD_ADOPTION_SQL){const adoption=await readFile(process.env.TASKFOLD_CHILD_ADOPTION_SQL,'utf8');await pg.raw(adoption);report.adoptionMigrationSHA256=createHash('sha256').update(adoption).digest('hex');}
  if(process.env.TASKFOLD_PERSONAL_MOVE_SQL){const personal=await readFile(process.env.TASKFOLD_PERSONAL_MOVE_SQL,'utf8');await pg.raw(personal);report.personalMoveMigrationSHA256=createHash('sha256').update(personal).digest('hex');}
+ if(process.env.TASKFOLD_CROSS_ROOT_SQL){const cross=await readFile(process.env.TASKFOLD_CROSS_ROOT_SQL,'utf8');await pg.raw(cross);report.crossRootMigrationSHA256=createHash('sha256').update(cross).digest('hex');}
  const people=Object.fromEntries(['owner','writer','viewer','outside'].map(who=>[who,{id:randomUUID(),session:randomUUID()}]));
  for(const u of Object.values(people))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
  const task=randomUUID(),project=randomUUID(),owner=people.owner;

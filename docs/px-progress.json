@@ -5,11 +5,11 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
   "focus": "P2 · Safer subtask storage and moves",
-  "latest": "Moving a whole task between personal projects or Inbox now preserves its subtasks, with safe retry and Undo. Local checks and app builds passed in both repos. Moving a subtask into another task is next: it is not implemented or verified yet. The broader storage migration is still unfinished and is not enabled for normal use.",
+  "latest": "The transfer service now moves a subtask and its nested work between personal tasks or within the same team in one transaction, with safe retry and Undo. Both app codebases preserve completion credit through the move and correct it on reopen. Local checks and app builds pass. The move picker and saved recovery flow still need implementation; this feature remains disabled for normal use.",
   "next": [
-    "Move a subtask and its nested work into another task without losing edits, completion history or Undo.",
+    "Connect typed transfer commands, durable two-task recovery and the destination/review/Undo controls; verify the full native move flow.",
     "Add review and migration tools for older saved work; finish shared-workspace, attachment and discussion preservation.",
-    "Verify everyday Mac/iPhone/iPad use and larger workloads, then finish the remaining team and audio recovery work. Keep agreed deferrals paused."
+    "Verify broader Mac/iPhone/iPad use and larger workloads, then finish the remaining team and audio recovery work. Keep agreed deferrals paused."
   ],
   "stages": [
     {
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Separate subtask storage and whole-task moves have passed local checks. Moving a subtask between tasks, migrating older saved work, preserving all shared attachments/discussions, and broader native and large-workload checks are unfinished. This candidate is not deployed or enabled for normal use."
+              "detail": "Separate subtask storage, whole-task moves and an atomic cross-task transfer service have passed local checks. Completion history survives transfers and reopen corrections. The cross-task move UI and saved recovery flow, migration of older work, full shared attachment/discussion custody and wider native/workload checks are unfinished. Normal use remains disabled; nothing is deployed."
             },
             {
               "state": "build",
@@ -580,7 +580,8 @@
             "child-task-record-authority/verification.json",
             "child-task-record-transfers/verification.json",
             "child-project-adoption-custody/verification.json",
-            "personal-child-record-moves/verification.json"
+            "personal-child-record-moves/verification.json",
+            "cross-root-child-transfers/verification.json"
           ],
           "focus": true
         },
@@ -630,14 +631,15 @@
     "child-task-record-authority/verification.json",
     "child-task-record-transfers/verification.json",
     "child-project-adoption-custody/verification.json",
-    "personal-child-record-moves/verification.json"
+    "personal-child-record-moves/verification.json",
+    "cross-root-child-transfers/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "f11438f9b78ca1819162af31017afdc4de06a1eb06edf915bd3e3467740af2e1",
-    "PX_CHECKLIST.md": "32ebbf14fb9e1c39b23b2f6d63ba585b7b07acc79de53742785b653508178f5d",
+    "P2_PLAN.md": "1bbea0c3320f401d5eab8257dc1bc8540066558768413d518978f4da2c00e960",
+    "PX_CHECKLIST.md": "d503a389f245836b42a03b0a9f7aa2ebfb1c6e7369dbcf7ad60f120cbd9144b5",
     "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
     "child-task-discard-intent/verification.json": "d7316dcf9e69c8c969cd13e44b311d0865fa76b1aef7b50641e4a7c1a6f50f06",
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
@@ -648,6 +650,7 @@
     "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
     "child-task-structure-drafts/verification.json": "6f91cbc365f58a184bcf7f39a2dbdbeaa87fcb5b801fda8fa955d192c7ab9f71",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",
+    "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
     "p1-completion-audit.json": "247195c4d7743f3eca09f8c8461e0a971aa9dbe89dd5c839a81c5454082ae41a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38"

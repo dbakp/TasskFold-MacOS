@@ -385,6 +385,38 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     let workBefore: Bool
     let workAfter: Bool
     let kinds: [Kind]
+    /// Server-captured metadata joins two root ledgers without moving private
+    /// content or inventing completion credit when either side is unavailable.
+    struct Transfer: Equatable, Sendable {
+        struct Subject: Equatable, Sendable {
+            let root: String, generation: String, key: String
+            let project: String?
+            var identity: String { [root, generation, key].joined(separator: ":") }
+            init?(_ value: JSON) {
+                guard case .object(let fields) = value, Set(fields.keys) == ["task_id", "task_generation", "project_id", "node_key"],
+                      let root = UUID(uuidString: fields["task_id"]?.text ?? ""),
+                      let generation = UUID(uuidString: fields["task_generation"]?.text ?? ""),
+                      case .string(let key)? = fields["node_key"], ChecklistRecovery.validIdentity(key) else { return nil }
+                if fields["project_id"] == .null { project = nil }
+                else if let value = UUID(uuidString: fields["project_id"]?.text ?? "") { project = value.uuidString.lowercased() }
+                else { return nil }
+                self.root = root.uuidString.lowercased(); self.generation = generation.uuidString.lowercased(); self.key = key
+            }
+        }
+        let request: String, incarnation: String, source: Subject, destination: Subject
+        var identity: String { request + ":" + incarnation }
+        init?(_ value: JSON) {
+            guard case .object(let fields) = value,
+                  Set(fields.keys) == ["version", "request_id", "incarnation", "source", "destination"], fields["version"] == .number(1),
+                  let request = UUID(uuidString: fields["request_id"]?.text ?? ""),
+                  let incarnation = UUID(uuidString: fields["incarnation"]?.text ?? ""),
+                  let source = Subject(fields["source"] ?? .null), let destination = Subject(fields["destination"] ?? .null),
+                  source.root != destination.root, source.key.utf8.elementsEqual(destination.key.utf8) else { return nil }
+            self.request = request.uuidString.lowercased(); self.incarnation = incarnation.uuidString.lowercased()
+            self.source = source; self.destination = destination
+        }
+    }
+    let transfer: Transfer?
     var isGap: Bool { kinds == [.coverage_gap] }
     var path: [String] { afterPath.isEmpty ? beforePath : afterPath }
     var subject: String { [rootID, generation ?? "unknown", nodeKey].joined(separator: ":") }
@@ -424,6 +456,13 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
                   typeBefore != "heading" || before["completed"] == .bool(false) && before["completed_at"] == .null,
                   typeAfter != "heading" || after["completed"] == .bool(false) && after["completed_at"] == .null,
                   kinds == Self.changes(before: before, after: after, beforePath: beforePath, afterPath: afterPath, workBefore: workBefore, workAfter: workAfter, typeBefore: typeBefore, typeAfter: typeAfter) else { return nil }
+        }
+        if row["transfer_context"] == .null { transfer = nil }
+        else {
+            guard let context = Transfer(row["transfer_context"]), row["actor_id"] != .null,
+                  (kinds == [.deleted] && context.source.root == row.string("task_id").lowercased() && context.source.generation == generation && context.source.key.utf8.elementsEqual(row.string("node_key").utf8) && (before["project_id"] == .null ? nil : before["project_id"]?.text.lowercased()) == context.source.project) ||
+                  (kinds == [.created] && context.destination.root == row.string("task_id").lowercased() && context.destination.generation == generation && context.destination.key.utf8.elementsEqual(row.string("node_key").utf8) && (after["project_id"] == .null ? nil : after["project_id"]?.text.lowercased()) == context.destination.project) else { return nil }
+            transfer = context
         }
         id = row.id.lowercased(); self.sequence = sequence; owner = row.string("user_id")
         rootID = row.string("task_id").lowercased(); self.generation = generation; nodeKey = row.string("node_key")
@@ -800,7 +839,11 @@ struct ProjectPulseReading {
             let before = e.before["project_id"]?.text.lowercased() == project.lowercased(), after = e.after["project_id"]?.text.lowercased() == project.lowercased()
             if e.kinds.contains(.completed), e.workBefore && e.workAfter, after { completions += 1 }
             if e.kinds.contains(.reopened), e.workBefore && e.workAfter, before { reopens += 1 }
-            if e.kinds.contains(.created), e.workAfter, after { additions += 1 }
+            if e.transfer == nil, e.kinds.contains(.created), e.workAfter, after { additions += 1 }
+            if let transfer = e.transfer, transfer.source.project != transfer.destination.project {
+                if e.kinds == [.created], e.workAfter, after { movedIn += 1 }
+                if e.kinds == [.deleted], e.workBefore, before { movedOut += 1 }
+            }
             if e.kinds.contains(.moved), e.workAfter, !before && after { movedIn += 1 }
             if e.kinds.contains(.moved), e.workBefore, before && !after { movedOut += 1 }
         }
@@ -1140,6 +1183,7 @@ enum WorkActivity: Identifiable, Equatable {
             }
             return e.kinds.map(\.rawValue)
         case .child(let e):
+            if e.transfer != nil { return ["moved"] }
             let changed = !e.before.isEmpty && !e.after.isEmpty && (e.workBefore != e.workAfter || e.typeBefore != e.typeAfter)
             return e.kinds.filter { !changed || $0 != .completed && $0 != .reopened }.map(\.rawValue)
         }
@@ -1225,13 +1269,26 @@ struct ChildWorkReading {
         var active: [String: InsightsReading.Credit] = [:], archived: [InsightsReading.Credit] = []
         var latest: [String: Int64] = [:], deleted = Set<String>(), lifecycle: [String: String] = [:], roots: [String: String] = [:]
         let dates = TaskNodeActivity.Parser()
+        var handoffs: [String: (event: TaskNodeActivity, credit: InsightsReading.Credit)] = [:]
         for e in events {
             if e.isGap {
+                handoffs = handoffs.filter { $0.value.event.transfer?.source.root != e.rootID && $0.value.event.transfer?.destination.root != e.rootID }
                 for subject in roots.keys.filter({ roots[$0] == e.rootID }) { active.removeValue(forKey: subject); latest.removeValue(forKey: subject); deleted.remove(subject); lifecycle[subject] = "after-gap:" + e.id }
                 continue
             }
             let subject = e.subject; roots[subject] = e.rootID
-            if e.kinds.contains(.created) { deleted.remove(subject); latest.removeValue(forKey: subject); lifecycle[subject] = e.id }
+            if e.kinds.contains(.created) {
+                deleted.remove(subject); latest.removeValue(forKey: subject); lifecycle[subject] = e.id
+                if let context = e.transfer, let handoff = handoffs.removeValue(forKey: context.identity),
+                   handoff.event.transfer == context, handoff.event.actor == e.actor,
+                   handoff.event.workBefore, e.workAfter,
+                   let index = archived.lastIndex(of: handoff.credit) {
+                    // Carry only observed productive credit. Retain original
+                    // completion date/project/actor and lifecycle across roots.
+                    archived.remove(at: index); active[subject] = handoff.credit
+                    lifecycle[subject] = handoff.credit.lifecycle
+                }
+            }
             // Becoming a heading/checklist detail closes productive scope without
             // undoing genuine earlier work. Promotion cannot manufacture a credit.
             if !e.before.isEmpty, !e.after.isEmpty, e.workBefore != e.workAfter || e.typeBefore != e.typeAfter {
@@ -1247,7 +1304,13 @@ struct ChildWorkReading {
                 if let date = e.after["completed_at"].flatMap({ dates.date($0.text) }) { credit.date = date; credit.version = e.completionVersion; active[subject] = credit }
                 else { active.removeValue(forKey: subject) }
             }
-            if e.kinds.contains(.deleted) { if let credit = active.removeValue(forKey: subject) { archived.append(credit) }; deleted.insert(subject) }
+            if e.kinds.contains(.deleted) {
+                if let credit = active.removeValue(forKey: subject) {
+                    archived.append(credit)
+                    if let context = e.transfer { handoffs[context.identity] = (e, credit) }
+                }
+                deleted.insert(subject)
+            }
         }
         return archived + Array(active.values)
     }

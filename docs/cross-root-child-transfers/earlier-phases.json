@@ -1,0 +1,55 @@
+[
+  {
+    "phase": "v1",
+    "checksReached": 0,
+    "error": {
+      "code": "23514",
+      "message": "Owned PostgreSQL query failed"
+    },
+    "containerRemoved": true,
+    "acceptedAsFinalSource": false
+  },
+  {
+    "phase": "v2",
+    "checksReached": 2,
+    "error": {
+      "code": "42702",
+      "message": "column reference \"r\" is ambiguous"
+    },
+    "containerRemoved": true,
+    "acceptedAsFinalSource": false
+  },
+  {
+    "phase": "v3",
+    "checksReached": 34,
+    "error": {
+      "code": "PT409",
+      "message": "This child field changed; review your saved edit"
+    },
+    "containerRemoved": true,
+    "acceptedAsFinalSource": false
+  },
+  {
+    "phase": "v4",
+    "checksReached": 63,
+    "error": {
+      "message": "Unexpected end of JSON input"
+    },
+    "containerRemoved": true,
+    "acceptedAsFinalSource": false
+  },
+  {
+    "phase": "v5",
+    "checksReached": 72,
+    "error": null,
+    "containerRemoved": true,
+    "acceptedAsFinalSource": false
+  },
+  {
+    "phase": "v6",
+    "checksReached": 77,
+    "error": null,
+    "containerRemoved": true,
+    "acceptedAsFinalSource": false
+  }
+]

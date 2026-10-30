@@ -6,6 +6,8 @@ Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Atomic cross-root transfer service and linked history now pass in both owned codebases. The disabled candidate supports personal/Inbox and same-team branch moves, metadata-only retry/closure, certified Undo and identity/version fences. Both clients preserve observed completion credit through a transfer and correct it on reopen; project summaries treat transfers as moves. Each repo passes 615 database and 521 selected client checks; app/test builds and development signatures verify. [Current service/history evidence](cross-root-child-transfers/README.md). Typed transfer commands, two-root durable recovery, premium native destination/review/Undo controls and broader custody/runtime/workload acceptance remain unfinished. No hosted schema, real tasks or normal feature gates changed.
+
 Personal project/Inbox moves now preserve separate subtask records through compact queued commands, source-bound private Undo and contentless retry/status confirmation. Section/root-assignment history and fresh Undo/Redo/Keep mine identities are integrated. Each repo passes 538 database and 235 client checks; final app/test builds and signatures verify. [Current personal-move evidence](personal-child-record-moves/README.md). Cross-root moves, older-data tools, full discussion/provider/Storage custody, workload and broader native/lifecycle acceptance remain. No hosted roots or normal feature gates changed; earlier paragraphs retain their staged scopes.
 
 Reviewed personal project branches can now transfer into teams with separate subtask records. Signed reviews cover child custody; private deletion copies stay actor-only and cannot restore into the new realm. Pending child edits/Undo are fenced, and exact receipt retries remain safe. Each repo passes 576 database and 201 selected client checks; app/test builds and signatures verify. [Current project-transfer evidence](child-project-adoption-custody/README.md). Individual personal-task, cross-team/return-to-personal and cross-root transfers, older-data tools, full custody/workload/native acceptance and rollout remain open. Earlier paragraphs retain their staged scopes.
@@ -7091,3 +7093,14 @@ Both apps now own scoped native hierarchy organization and recovery: reviewed ad
 - [ ] Cross-root transfers, older-data review/adoption, full discussion/provider/Storage custody, large workloads and broader native/account/window/background/spoken acceptance remain. Existing user deferrals remain; nothing is deployed or promoted for real accounts.
 
 [Evidence and exact acceptance limits](personal-child-record-moves/README.md).
+
+
+## Cross-root subtask transfer service and completion history — 2026-10-30
+
+- [x] Disabled server candidate atomically moves whole branches between personal tasks/Inbox and within one team. Both roots, current access/generations/projects, source versions/incarnations and destination placement are verified. Sparse/null/Unicode/opaque data and completion epochs survive; old field intents are fenced after root changes.
+- [x] Metadata-only Send/check/close, reciprocal nonce fences and unchanged-branch one-use Undo pass. Late failures roll back both roots, records and history; prior receipts remain harmless after Undo, access/root loss or a disabled gate.
+- [x] Captured history links preserve observed completion credit and later reopen corrections without inventing unseen work. Both app codebases display transfer events as moves and exclude them from new-task counts. Each app compiles actual history from its own final database fixture.
+- [x] 615 database and 521 selected Core checks pass per repo, including 14 new transfer-history cases. Final app/test builds and development signatures verify; no new native/spoken/large-text acceptance is claimed.
+- [ ] Implement typed transfer commands, two-root durable recovery and premium destination/review/Undo/retry controls, then verify genuine native flows. Cross-workspace/full discussion/provider/Storage custody, older-data tools and large workloads remain. Existing user deferrals stay paused. The broad migration checkpoint remains To build.
+
+[Evidence, source bindings, failed phases and acceptance limits](cross-root-child-transfers/README.md).
