@@ -5,11 +5,11 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
   "focus": "P2 · Older-work review and migration",
-  "latest": "The migration client now validates the review, preserves original JSON bytes, and saves compact requests with encrypted retry/status/Stop recovery. Each repo passes 558 client checks and builds successfully. Store safeguards and account-removal wiring, native review/recovery screens, malformed-content repair/export and broader acceptance remain unfinished. Normal use stays disabled.",
+  "latest": "P1’s agreed batch is accepted in its recorded scope. P2 is still in progress. The older-subtask migration service and typed client are verified in isolated checks. Store safeguards and native review, export and recovery screens are now being implemented, but their app build and end-to-end acceptance have not passed yet. They are not counted as complete; normal use remains disabled.",
   "next": [
-    "Wire the migration client into Store with private-draft/pending-action admission, current-context checks and account-removal cleanup.",
-    "Build premium native review/diagnostic/recovery controls and original export/malformed-content repair, then verify account, secure-storage, lifecycle and VoiceOver behavior.",
-    "Finish full attachment/discussion custody, larger workflows and remaining team/audio/provider checks. Keep agreed rollout and configuration deferrals paused."
+    "Finish and build the older-subtask review/recovery screens, then verify upgrade, preserved drafts, lost-response retry and original-content export on phone, tablet and Mac.",
+    "Complete malformed-content repair, shared attachment/discussion custody, account and secure-storage checks, larger workflows and remaining accessibility acceptance.",
+    "Finish the other open P2 checks shown below. Keep remote reminders, older-client rollout, distribution and your provider/device deferrals paused."
   ],
   "stages": [
     {
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Separate storage, cross-task moves and their recovery are gated candidates. The older-work adoption service now passes exact-review, preservation, permission, retry and prior-Undo checks. Its app review/recovery and malformed-content repair/export tools, full shared custody and wider native/workload checks are unfinished. Normal use stays disabled; nothing hosted was deployed."
+              "detail": "The older-work adoption service and typed retry/status client pass isolated checks. Store admission and native review/export/recovery screens are in progress; the current app build is not accepted. Malformed-content repair, full shared custody and wider native/workload checks remain unfinished. Normal use stays disabled; nothing hosted was deployed."
             },
             {
               "state": "build",
