@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Safer subtask storage and moves",
-  "latest": "Cross-task moves now have destination and placement review, encrypted saved requests, safe retry, Stop and Undo in both codebases. Two iPhone and two iPad Simulator journeys passed, including cold-launch Undo and retry without duplicate writes. Mac builds and client checks pass; its native walkthrough, wider account/lifecycle checks and older-work migration remain open. Normal use stays disabled.",
+  "focus": "P2 · Older-work review and migration",
+  "latest": "The clipped Undo label in the new cross-task move flow is fixed. Both apps build; two iPhone and two iPad Simulator journeys pass, including largest-text Undo and cold retry without duplicate writes. The next implementation gap is reviewing and adopting older saved work. Mac/spoken, shared-account lifecycle and genuine secure-storage checks remain open; normal use stays disabled.",
   "next": [
-    "Polish largest-text move feedback; finish Mac/VoiceOver, shared-account/window lifecycle and real secure-storage checks before enabling it.",
-    "Build review and migration tools for older work; complete shared attachment/discussion preservation and larger-workload checks.",
-    "Finish remaining team/audio recovery and broader native/provider checks. Keep your agreed configuration and release deferrals paused."
+    "Build reviewed adoption tools for older saved work, with explicit handling of malformed content and no silent conversion.",
+    "Finish Mac/VoiceOver, shared-account/window/background, secure-storage and full attachment/discussion custody checks before enabling the new storage.",
+    "Verify larger workflows and finish the remaining team/audio recovery and native/provider checks. Keep agreed deferrals paused."
   ],
   "stages": [
     {
@@ -582,7 +582,8 @@
             "child-project-adoption-custody/verification.json",
             "personal-child-record-moves/verification.json",
             "cross-root-child-transfers/verification.json",
-            "cross-root-transfer-client/verification.json"
+            "cross-root-transfer-client/verification.json",
+            "cross-root-transfer-layout/verification.json"
           ],
           "focus": true
         },
@@ -634,14 +635,15 @@
     "child-project-adoption-custody/verification.json",
     "personal-child-record-moves/verification.json",
     "cross-root-child-transfers/verification.json",
-    "cross-root-transfer-client/verification.json"
+    "cross-root-transfer-client/verification.json",
+    "cross-root-transfer-layout/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "0fcc26547ce266d6a1e07ba86da1e88eb7cd424179f702862f713a9e75895264",
-    "PX_CHECKLIST.md": "18a36247bebec11ce06f338e92ec6d51811cbb4bc128f13b31d819dfdde94b89",
+    "P2_PLAN.md": "2797e2cfcb0bc51cbaadcf0025b05f28f5011cd1f1a6385be9553285f2fd8702",
+    "PX_CHECKLIST.md": "cfb1d1326756ab2b57ebf164e1d8d741d2e722960688b512dc6ecd99b6a42ad9",
     "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
     "child-task-discard-intent/verification.json": "d7316dcf9e69c8c969cd13e44b311d0865fa76b1aef7b50641e4a7c1a6f50f06",
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
@@ -654,6 +656,7 @@
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
+    "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
     "p1-completion-audit.json": "247195c4d7743f3eca09f8c8461e0a971aa9dbe89dd5c839a81c5454082ae41a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38"

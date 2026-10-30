@@ -7117,3 +7117,12 @@ Both apps now own scoped native hierarchy organization and recovery: reviewed ad
 - [ ] Normal-use enablement remains withheld. No hosted transfer migration deployed.
 
 Evidence: `cross-root-transfer-client/verification.json`. The original broad checkpoint remains open; test counts are not product-completion percentages. Earlier phone selection/helper failures are excluded from acceptance. The prior server milestone's 615 checks were not rerun in this client milestone.
+
+
+## 30 October 2026 — readable transfer Undo at largest text
+
+- [x] Remove the clipped Undo action label in each independently owned view.
+- [x] Build/sign both isolated apps; record two passing native iPhone Simulator journeys and two iPad journeys, including reachable largest-text Undo and cold retry.
+- [ ] Mac/spoken/shared-account/window/secure-storage acceptance, older-work tools and full custody/workload checks remain. Normal-use gates stay off.
+
+Evidence: `cross-root-transfer-layout/verification.json`. Core/SQL counts belong to the preceding milestone and were not rerun for this view-only change.

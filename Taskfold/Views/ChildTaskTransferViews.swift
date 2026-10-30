@@ -205,7 +205,16 @@ private struct ChildTransferSavedRow: View {
             }
             if entry.phase == .applied, !entry.command.undoing,
                !model.entries.contains(where: { $0.command.undoing && $0.command.family == entry.command.id && $0.phase != .closed }) {
-                Button("Undo move", systemImage: "arrow.uturn.backward") { Task { await undo(entry) } }.disabled(model.busy || !store.online || !store.childTaskTransfersEnabled)
+                Button { Task { await undo(entry) } } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: "arrow.uturn.backward").accessibilityHidden(true)
+                        Text("Undo move").fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Undo move")
+                .disabled(model.busy || !store.online || !store.childTaskTransfersEnabled)
             }
             if entry.phase != .attempted {
                 Menu {
