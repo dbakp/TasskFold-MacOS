@@ -858,9 +858,9 @@ struct ChildTaskRecordRead: Sendable {
     let tree: JSON
     /// Bounded syntax validation also protects strict command receipts and
     /// encrypted command journals from duplicate JSON keys at any depth.
-    static func validateUniqueJSON(_ data: Data, maximum: Int, integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = []) throws {
+    static func validateUniqueJSON(_ data: Data, maximum: Int, integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = [], preservedValuePaths: Set<[String]> = []) throws {
         guard data.count <= maximum else { throw ChildTaskRecordFailure.oversized }
-        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths.union(nullableIntegerPaths), nullableIntegerPaths: nullableIntegerPaths)
+        var syntax = UniqueJSONKeys(bytes: Array(data), integerPaths: integerPaths.union(nullableIntegerPaths), nullableIntegerPaths: nullableIntegerPaths, preservedValuePaths: preservedValuePaths)
         try syntax.value(depth: 0); syntax.space()
         guard syntax.index == syntax.bytes.count else { throw ChildTaskRecordFailure.review }
     }
@@ -888,9 +888,8 @@ struct ChildTaskRecordRead: Sendable {
     }
     init(data: Data, context: ChildTaskRecordContext) throws {
         guard data.count <= Self.maximumBytes else { throw ChildTaskRecordFailure.oversized }
-        var syntax=UniqueJSONKeys(bytes:Array(data))
-        try syntax.value(depth:0); syntax.space()
-        guard syntax.index==syntax.bytes.count else {throw ChildTaskRecordFailure.review}
+        try Self.validateUniqueJSON(data, maximum: Self.maximumBytes,
+            preservedValuePaths: [["records", "[]", "fields"]])
         guard let raw=try? TaskfoldJSONDecoder().decode([String:JSON].self,from:data) else { throw ChildTaskRecordFailure.review }
         try self.init(envelope: raw, context: context)
     }
@@ -921,7 +920,8 @@ struct ChildTaskRecordRead: Sendable {
             else { throw ChildTaskRecordFailure.review }
             var path:[String]=[]
             for item in rawPath { guard case .string(let text)=item, !text.isEmpty, text.utf8.count<=128 else { throw ChildTaskRecordFailure.review }; path.append(text) }
-            // Refuse numbers the app's JSON representation cannot safely address.
+            // Ordinary numbers must remain addressable; validated opaque values
+            // retain exact content without becoming editable structural counters.
             var pending=Array(fields.values)
             while let field=pending.popLast() {
                 switch field {
@@ -964,15 +964,17 @@ struct ChildTaskRecordRead: Sendable {
         self.context=context; self.projectionRevision=revision; self.nodes=nodes; self.orderedNodes=orderedNodes; self.tree=tree
     }
     /// JSONDecoder's String dictionaries otherwise collapse canonically equal
-    /// object keys, including keys inside opaque future metadata.
+    /// object keys. Preserving readers may admit distinct raw keys only below
+    /// declared value containers; command identities and counters remain strict.
     private struct UniqueJSONKeys {
         let bytes:[UInt8]
         let integerPaths: Set<[String]>
         let nullableIntegerPaths: Set<[String]>
         var index=0
         let capturedPaths: Set<[String]>
+        let preservedValuePaths: Set<[String]>
         var capturedRanges: [[String]: Range<Int>] = [:]
-        init(bytes: [UInt8], integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = [], capturedPaths: Set<[String]> = []) { self.bytes = bytes; self.integerPaths = integerPaths; self.nullableIntegerPaths = nullableIntegerPaths; self.capturedPaths = capturedPaths }
+        init(bytes: [UInt8], integerPaths: Set<[String]> = [], nullableIntegerPaths: Set<[String]> = [], capturedPaths: Set<[String]> = [], preservedValuePaths: Set<[String]> = []) { self.bytes = bytes; self.integerPaths = integerPaths; self.nullableIntegerPaths = nullableIntegerPaths; self.capturedPaths = capturedPaths; self.preservedValuePaths = preservedValuePaths }
         mutating func space() {while index<bytes.count && [9,10,13,32].contains(bytes[index]) {index+=1}}
         mutating func take(_ byte:UInt8)->Bool {space();if index<bytes.count,bytes[index]==byte {index+=1;return true};return false}
         mutating func string() throws -> String {
@@ -1003,9 +1005,9 @@ struct ChildTaskRecordRead: Sendable {
                 if take(125) {return};var keys:Set<String>=[]; var rawKeys:Set<Data>=[]
                 while true {
                     let key = try string()
-                    let opaque = capturedPaths.contains(where: { path.starts(with: $0) })
+                    let opaque = capturedPaths.contains(where: { path.starts(with: $0) }) || preservedValuePaths.contains(where: { path.count > $0.count && path.starts(with: $0) })
                     guard (opaque ? rawKeys.insert(Data(key.utf8)).inserted : keys.insert(key).inserted),take(58) else {throw ChildTaskRecordFailure.review}
-                    let childPath = integerPaths.isEmpty && capturedPaths.isEmpty ? [] : path + [key]
+                    let childPath = integerPaths.isEmpty && capturedPaths.isEmpty && preservedValuePaths.isEmpty ? [] : path + [key]
                     space(); let start = index
                     try value(depth:depth+1, path: childPath)
                     if capturedPaths.contains(childPath) { capturedRanges[childPath] = start..<index }
@@ -1016,7 +1018,7 @@ struct ChildTaskRecordRead: Sendable {
             if take(91) {
                 if take(93) {return}
                 while true {
-                    let childPath = integerPaths.isEmpty && capturedPaths.isEmpty ? [] : path + ["[]"]
+                    let childPath = integerPaths.isEmpty && capturedPaths.isEmpty && preservedValuePaths.isEmpty ? [] : path + ["[]"]
                     space(); let start = index; try value(depth: depth + 1, path: childPath); try integerToken(path: childPath, start: start)
                     if take(93) {return};guard take(44) else {throw ChildTaskRecordFailure.review}
                 }
@@ -1065,7 +1067,8 @@ struct ChildTaskStructureRead: Sendable {
     init(data: Data, context: ChildTaskRecordContext) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes,
             integerPaths: [["protocol"], ["structure_revision"], ["projection_revision"],
-                           ["records", "[]", "revision"], ["records", "[]", "sibling_order"]])
+                           ["records", "[]", "revision"], ["records", "[]", "sibling_order"]],
+            preservedValuePaths: [["records", "[]", "fields"]])
         guard var raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data),
               Set(raw.keys) == Set(["protocol", "account", "project_id", "task_id", "task_generation",
                                     "projection_revision", "structure_revision", "root_kind", "records"]),

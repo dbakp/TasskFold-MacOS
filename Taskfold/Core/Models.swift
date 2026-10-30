@@ -16,7 +16,7 @@ enum AuthoredValueComparison {
         while let (a, b) = pending.popLast() {
             switch (a, b) {
             case (.null, .null): break
-            case (.preserved(let x), .preserved(let y)): if x != y { return false }
+            case (.preserved(let x), .preserved(let y)): if !x.sameContent(as: y) { return false }
             case (.bool(let x), .bool(let y)): if x != y { return false }
             case (.number(let x), .number(let y)): if x.bitPattern != y.bitPattern { return false }
             case (.string(let x), .string(let y)): if !x.utf8.elementsEqual(y.utf8) { return false }

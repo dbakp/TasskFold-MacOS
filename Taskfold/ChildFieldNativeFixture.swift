@@ -55,6 +55,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         if opaqueTesting {
             var root = state["root"]!.object, rows = root["subtasks"]!.list, first = rows[0].object
             root["source_metadata"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
+            first["future_exact"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
             first["future_number"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: Data("1e1000".utf8)); rows[0] = .object(first); root["subtasks"] = .array(rows); state["root"] = .object(root)
         }
         return state
@@ -377,6 +378,7 @@ struct ChildFieldNativeFixtureView: View {
                 let server = Record(state["root"]!.object)
                 let expected = try TaskfoldJSONDecoder().decode(JSON.self, from: Data("1e1000".utf8))
                 nextProbe += " opaqueRoot=\(root?["source_metadata"] == source && server["source_metadata"] == source) opaqueChild=\(child["future_number"] == expected && server["subtasks"].list.first?.object["future_number"] == expected)"
+                nextProbe += " opaqueChildMetadata=\(child["future_exact"] == source && server["subtasks"].list.first?.object["future_exact"] == source)"
             }
             if ChildAdoptionNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
                 let saved = try await store.childTaskAdoptionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()

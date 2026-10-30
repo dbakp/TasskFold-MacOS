@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Exact older content through normal data paths",
-  "latest": "Exact unknown numbers and distinct Unicode metadata keys now survive cache, requests and backups. Both repos pass their full Core regression runs (explicit skips listed). Synthetic edit/save/send/cold-return passes on Mac, iPhone and iPad. Broader subtask migration remains unfinished and disabled for everyday use.",
+  "focus": "P2 · Fresh subtask metadata reads checked",
+  "latest": "Fresh subtask reads now retain unfamiliar nested values, including exact numbers and distinct Unicode keys. Formatting differences no longer block matching content; changed content still requires review. Each repo passes 496 relevant checks with one explicit skip. Mac, iPhone and iPad save/send/cold-return checks pass in synthetic scope. Broader migration remains unfinished and disabled for everyday use.",
   "next": [
-    "Finish fresh child-field opaque objects, main-list acceptance, indexed/history mapping and attachment/discussion custody before enabling older-work migration. Extend checks to broader libraries and production workloads.",
+    "Finish main-list workflows, indexed/history mapping and attachment/discussion custody before enabling older-work migration. Extend checks to broader libraries and production workloads.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Guided repair and bounded original archives pass in recorded scope. Preserving normal data paths are implemented; full editing, indexed/history mapping, custody, broader libraries and lifecycle/spoken acceptance remain. Ordinary use stays disabled."
+              "detail": "Guided repair, bounded original archives and normal/fresh-read metadata preservation pass in recorded scope. Main-list acceptance, indexed/history mapping, custody, broader libraries and lifecycle/spoken checks remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -592,7 +592,8 @@
             "child-task-repair-preview/verification.json",
             "child-task-repair-commits/verification.json",
             "child-task-repair-client/verification.json",
-            "preserving-json/verification.json"
+            "preserving-json/verification.json",
+            "child-task-opaque-read/verification.json"
           ],
           "focus": true
         },
@@ -652,7 +653,8 @@
     "child-adoption-original-export/verification.json",
     "child-task-repair-ui/verification.json",
     "child-task-repair-preflight/verification.json",
-    "preserving-json/verification.json"
+    "preserving-json/verification.json",
+    "child-task-opaque-read/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
@@ -667,6 +669,7 @@
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
     "child-task-frozen-recovery/verification.json": "645e03d6a0afbdd459ae3aef65d6b90f03d76d8741a7dcf44bcd88ce5548b807",
     "child-task-move-draft-native/verification.json": "a1199efdb71eb0ba5f6f4fe5e90f808ecc625f1e1006f108d7853fef1791ecab",
+    "child-task-opaque-read/verification.json": "dfc35763ac6bb599d8378c36ed9164c666aa91e25cf1e15f5002639f2e455609",
     "child-task-record-authority/verification.json": "ebd1a0383975759212c624c5b90e33e586236f2cd3d0960d24e5f5c001fefe09",
     "child-task-record-transfers/verification.json": "c3340c7ad2e1d31353195db69d138510d09ec7632f41b4cc8fb9fd2ac0e8fb19",
     "child-task-repair-client/verification.json": "3ca3894b91aaaf54d50f8da36b874080301f7ee041634e6372fedb9bfed75c9f",

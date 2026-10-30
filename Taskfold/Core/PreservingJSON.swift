@@ -7,6 +7,18 @@ struct PreservedJSON: Equatable, Sendable {
     let data: Data
     let kind: Kind
     fileprivate init(data: Data, kind: Kind) { self.data = data; self.kind = kind }
+    /// Match authored content across JSONB whitespace, key ordering, escaped
+    /// strings and exact decimal notation. Raw bytes remain the write/export
+    /// representation. Neither keys nor numeric values pass through String-key
+    /// dictionaries or Double in this comparison.
+    func sameContent(as other: Self) -> Bool {
+        guard kind == other.kind else { return false }
+        if data == other.data { return true }
+        var left = PreservingJSONSyntax(data: data, detectOpaque: false)
+        var right = PreservingJSONSyntax(data: other.data, detectOpaque: false)
+        guard let a = try? left.identity(depth: 0), let b = try? right.identity(depth: 0) else { return false }
+        return a == b
+    }
     func validate(maximumDepth: Int, maximumArray: Int = .max, maximumObject: Int = .max, maximumValues: Int = .max) throws -> Int {
         var syntax = PreservingJSONSyntax(data: data, detectOpaque: false)
         syntax.maximumDepth = maximumDepth; syntax.maximumArray = maximumArray; syntax.maximumObject = maximumObject; syntax.maximumValues = maximumValues
@@ -150,6 +162,14 @@ final class TaskfoldJSONDecoder: @unchecked Sendable {
 
 }
 
+/// Identity comparison uses decoded UTF-8 bytes for strings/keys and exact
+/// normalized decimal tokens. Huge unaddressable exponents retain conservative
+/// lexical identity. This representation is never written to disk or sent.
+private indirect enum PreservedJSONIdentity: Equatable {
+    case string(Data), number(String), literal(UInt8)
+    case array([PreservedJSONIdentity]), object([Data: PreservedJSONIdentity])
+}
+
 /// Syntax-only scanner. Exact UTF-8 duplicate keys are rejected; distinct raw
 /// spellings that Swift dictionaries equate are retained as one opaque object.
 /// Normal short integers and unescaped ASCII keys take inexpensive fast paths.
@@ -209,6 +229,37 @@ private struct PreservingJSONSyntax {
             return [PreservedJSONPath(values: path): .init(range: range, kind: .number)]
         }
     }
+    mutating func identity(depth: Int) throws -> PreservedJSONIdentity {
+        guard depth <= maximumDepth else { throw PreservedJSONFailure.depth }; space()
+        guard offset < bytes.count else { throw PreservedJSONFailure.syntax }
+        switch bytes[offset] {
+        case 123:
+            offset += 1; var result: [Data: PreservedJSONIdentity] = [:]
+            if take(125) { return .object(result) }
+            repeat {
+                space(); let range = try string(); let key = Data(try decodedString(range).utf8)
+                guard result[key] == nil, take(58) else { throw PreservedJSONFailure.syntax }
+                result[key] = try identity(depth: depth + 1)
+                if take(125) { return .object(result) }; guard take(44) else { throw PreservedJSONFailure.syntax }
+            } while true
+        case 91:
+            offset += 1; var result: [PreservedJSONIdentity] = []
+            if take(93) { return .array(result) }
+            repeat {
+                result.append(try identity(depth: depth + 1))
+                if take(93) { return .array(result) }; guard take(44) else { throw PreservedJSONFailure.syntax }
+            } while true
+        case 34:
+            let range = try string(); return .string(Data(try decodedString(range).utf8))
+        case 116: try literal(Array("true".utf8)); return .literal(116)
+        case 102: try literal(Array("false".utf8)); return .literal(102)
+        case 110: try literal(Array("null".utf8)); return .literal(110)
+        default:
+            let range = try number(); let token = String(decoding: bytes[range], as: UTF8.self)
+            return .number(Self.decimal(token) ?? "raw:" + token)
+        }
+    }
+
     mutating func literal(_ value: [UInt8]) throws {
         guard offset + value.count <= bytes.count, Array(bytes[offset..<offset+value.count]) == value else { throw PreservedJSONFailure.syntax }; offset += value.count
     }
