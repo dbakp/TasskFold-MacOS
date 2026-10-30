@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-30",
+  "removedObsoleteOwnedResults": [
+    {
+      "name": "taskfold-composer-native-phone-move-target.xcresult",
+      "bytes": 14155557
+    },
+    {
+      "name": "taskfold-composer-native-phone-move-revealed.xcresult",
+      "bytes": 6022945
+    },
+    {
+      "name": "taskfold-composer-native-phone-move-scrolled.xcresult",
+      "bytes": 4703651
+    },
+    {
+      "name": "taskfold-composer-native-ipad-move-scrolled.xcresult",
+      "bytes": 5981537
+    },
+    {
+      "name": "taskfold-composer-native-phone-discard-reviewed.xcresult",
+      "bytes": 3621984
+    },
+    {
+      "name": "taskfold-composer-native-ipad-discard-reviewed.xcresult",
+      "bytes": 4595458
+    },
+    {
+      "name": "taskfold-composer-native-phone-frozen-recovery.xcresult",
+      "bytes": 2968276
+    },
+    {
+      "name": "taskfold-composer-native-ipad-frozen-recovery.xcresult",
+      "bytes": 3519545
+    }
+  ],
+  "bytesRemoved": 45568953,
+  "kept": "Most recent frozen-clear phone/iPad result bundles and reusable products; prior compressed logs, summaries, hashes and selected captures are committed in their original evidence folders",
+  "newSimulators": 0,
+  "unrelatedContainersOrDevicesTouched": false
+}

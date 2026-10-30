@@ -25,6 +25,12 @@ try {
     await pg.raw(nativeField);
     report.nativeFieldMigrationSHA256 = createHash("sha256").update(nativeField).digest("hex");
   }
+ if (process.env.TASKFOLD_RECORD_AUTHORITY_SQL) {
+  if (!process.env.TASKFOLD_FIELD_NATIVE_SQL) await pg.raw(await readFile(new URL('../../supabase/migrations/20261030012858_native_team_child_field_adapter.sql',import.meta.url),'utf8'));
+  const authority=await readFile(process.env.TASKFOLD_RECORD_AUTHORITY_SQL,'utf8');await pg.raw(authority);
+  report.recordAuthorityMigrationSHA256=createHash('sha256').update(authority).digest('hex');
+  check('record authority candidate never automatically enrolls roots',await pg.scalar('select count(*) from taskfold_private.child_task_record_authority'),0);
+ }
  const people=Object.fromEntries(['owner','writer','viewer','outside'].map(who=>[who,{id:randomUUID(),session:randomUUID()}]));
  for(const u of Object.values(people))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
  const task=randomUUID(),project=randomUUID(),owner=people.owner;

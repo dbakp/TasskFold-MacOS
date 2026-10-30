@@ -1241,3 +1241,13 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 - [ ] Full independent-record migration/older-data adoption, receipt/disposal coexistence and wider Mac/spoken/lifecycle acceptance remain. Normal-use gates stay off.
 
 [Exact evidence and phase limits](child-task-frozen-recovery/README.md).
+
+
+## Record-authoritative migration candidate — 2026-10-30
+
+- [x] Explicit exact-root promotion, row-only reconstruction and row-first typed personal/team fields, completion and structural writes, retaining the compatibility mirror.
+- [x] Deferred mirror checks, legacy-replacement refusal, exact retry, certified Undo and actual activity/receipt rollback. Each owned repo passes 96 promoted-record checks and 220 default-behavior command checks plus one enrollment guard; advisors add no findings.
+- [ ] Reviewed project/generation/cross-root transfers, older-data review/adoption tools, full-schema custody/native/lifecycle and large-workload performance. Promoted roots currently refuse scope changes.
+- [ ] Hosted rollout, older-client transition and distribution remain deferred. No real roots are promoted and ordinary gates stay off.
+
+[Evidence and exact limits](child-task-record-authority/README.md). This moves beyond a root-derived projection but does not finish migration or remove the compatibility tree.

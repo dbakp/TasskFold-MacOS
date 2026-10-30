@@ -6,6 +6,8 @@ Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Record-authoritative migration is now an opt-in local candidate: exact reviewed promotion, row-first typed writes, record-only reconstruction and transactional mirror checks. Each repo passes 96 promoted-record checks and 221 default-behavior/regression checks, with no added advisor findings. [Current migration evidence](child-task-record-authority/README.md). No hosted roots or normal flags changed. Reviewed scope transfers, older-data tools, full-schema/native/custody and workload acceptance remain. The paragraphs below retain earlier staged acceptance scopes.
+
 Organizer drafts are now connected in both apps: encrypted checkpoints, awaited Done, explicit Resume/Discard and stable handoff into separately sent actions. Each repo passes 126 hierarchy Core cases (11 integration/session cases beyond the prior 13 storage cases), and both builds/signatures verify. Phone/iPad Add-draft cold/edit/action readbacks and the final largest-text stacked-action/Resume/Cancel/discard flow pass in recorded phases. Failed loading/query/timeout phases remain visible; this is not a single-binary sweep or a Mac/spoken acceptance claim. [Native draft evidence](child-task-structure-draft-native/README.md). Ordinary gates stay off; full migration and broader lifecycle remain open.
 
 The field editor now has readable wrapping subtask selection and ordered full-title choices with visible nesting. Current dark largest-text phone/iPad switch/Cancel/private-draft/zero-write flows pass (one per platform), and both builds/signatures verify. That selection-only stage left Core unchanged; its counts do not include later draft work. [Selection evidence](child-task-field-selection/README.md). Mac/spoken and the broader hierarchy/lifecycle/migration work stay open.
@@ -7041,3 +7043,13 @@ Both apps now own scoped native hierarchy organization and recovery: reviewed ad
 - [ ] Full independent-record migration/older-data adoption, receipt/disposal coexistence and wider Mac/spoken/lifecycle acceptance remain. Normal-use gates stay off.
 
 [Exact evidence and phase limits](child-task-frozen-recovery/README.md).
+
+
+## Record-authoritative migration candidate — 2026-10-30
+
+- [x] Explicit exact-root promotion, row-only reconstruction and row-first typed personal/team fields, completion and structural writes, retaining the compatibility mirror.
+- [x] Deferred mirror checks, legacy-replacement refusal, exact retry, certified Undo and actual activity/receipt rollback. Each owned repo passes 96 promoted-record checks and 220 default-behavior command checks plus one enrollment guard; advisors add no findings.
+- [ ] Reviewed project/generation/cross-root transfers, older-data review/adoption tools, full-schema custody/native/lifecycle and large-workload performance. Promoted roots currently refuse scope changes.
+- [ ] Hosted rollout, older-client transition and distribution remain deferred. No real roots are promoted and ordinary gates stay off.
+
+[Evidence and exact limits](child-task-record-authority/README.md). This moves beyond a root-derived projection but does not finish migration or remove the compatibility tree.

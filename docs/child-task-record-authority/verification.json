@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Scripts/Database/test-child-task-record-authority.mjs": "0382492ce9766f97d40e64ad6e47c0a26f35c7511b3f8474335de3a645ad53ea",
+    "Scripts/Database/child-task-authority-schema.mjs": "ab0e1e07b584f66f7c2bdeb1ca4d334753c7ed70a424ef3470c01226149dda4e",
+    "Scripts/Database/test-child-task-structure-commands.mjs": "079ef7260d959101dd37411720aff350b33c26d82937ac0204c100d93651f221",
+    "supabase/migrations/20261030090934_child_task_record_authority.sql": "b2ff634e9b7e82daf35081643ba23c1effe09d77b4c3fbbbef8be91a9c067a99"
+  },
+  "authorityChecks": 96,
+  "existingStructureChecks": 220,
+  "newEnrollmentRegressionCheck": 1,
+  "regressionTotal": 221,
+  "officialAdvisorsAddedFindings": 0,
+  "authorityFixtureRemoved": true,
+  "regressionFixtureRemoved": true,
+  "serverVersion": 170006,
+  "normalFeatureFlags": {
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "hostedMigrationApplied": false,
+  "realRootsPromoted": 0,
+  "newSimulators": 0,
+  "swiftSourcesChanged": false,
+  "newNativeAcceptance": false,
+  "localSupabaseMigrationHistoryVerified": false,
+  "scope": [
+    "Explicit exact reviewed root promotion; no automatic enrollment",
+    "Row-first typed personal/team fields, completion, structure and exact retries",
+    "Row-only tree reconstruction, sparse roots, deletion/Undo, incarnation/epoch fencing",
+    "Real promotion lock race, legacy-tree refusal, account/role/archive boundaries, actual history and atomic rollback"
+  ],
+  "remaining": [
+    "Reviewed project/generation transfer and cross-root adapters; promoted roots currently refuse scope changes",
+    "Review tools and incremental adoption for older/malformed data; large-workload performance",
+    "Complete current-schema/native/Keychain/lifecycle/custody and receipt/disposal recovery acceptance",
+    "Hosted deployment, old-client transition and distribution stay deferred with other agreed gates"
+  ]
+}

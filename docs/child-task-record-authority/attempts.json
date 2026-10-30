@@ -1,0 +1,17 @@
+[
+  {
+    "phase": "initial",
+    "result": "failed; not counted as acceptance",
+    "reason": "harness expected jsonb from a composite public patch result; added explicit to_jsonb"
+  },
+  {
+    "phase": "extended",
+    "result": "failed; not counted as acceptance",
+    "reason": "harness lock observer queried PostgreSQL text boolean; corrected JSON encoding"
+  },
+  {
+    "phase": "current",
+    "result": "failed; not counted as acceptance",
+    "reason": "history expectation incorrectly included title-only edits; inspected existing event contract, then verified actual completion and receipt rollback history"
+  }
+]
