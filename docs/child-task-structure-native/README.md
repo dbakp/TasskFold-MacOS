@@ -51,4 +51,4 @@ swift test --jobs 2 --filter ChildTaskStructureRecoveryTests
 
 ## Current remaining gates
 
-Phone phase coverage now includes all eight representative journeys. Current Mac runtime is still blocked before the app, and iPad/spoken/genuine lifecycle coverage remains open. The final screenshot also shows the existing field-editor selected-node caption truncating at the largest accessibility size; full accessible labels remain available, but the selection control needs visual polish. Do not treat that control or the entire largest-text interface as accepted.
+Phone phase coverage now includes all eight representative journeys. Current Mac runtime is still blocked before the app, and iPad/spoken/genuine lifecycle coverage remains open. The selected-caption truncation shown in this stage is repaired in the subsequent [readable selection](../child-task-field-selection/README.md) checkpoint, with phone/iPad switch/Cancel/private-draft acceptance. Mac/spoken and the entire largest-text interface are still not universally accepted.

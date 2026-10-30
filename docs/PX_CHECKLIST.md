@@ -1187,4 +1187,13 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 
 [Implementation boundaries and phase evidence](child-task-structure-native/README.md).
 
-Current visual follow-up: the existing field-editor selected-node caption truncates at the largest accessibility size. Full accessible labels are present; visual picker polish and iPad/Mac acceptance remain open. Normal flags remain off.
+The selected-node caption and chooser now wrap at the largest accessibility size, with ordered/nested choices and private-draft/Cancel preservation verified on phone and iPad. Mac/spoken and broader hierarchy acceptance remain open. [Selection evidence](child-task-field-selection/README.md). Normal flags remain off.
+
+
+## 2026-10-30 — readable subtask selection
+
+- [x] Replace the truncated selected caption with a wrapping control and ordered native choices; retain nesting, selected state and 44-point targets.
+- [x] Verify switching, Cancel, exact private-title return and zero task writes in current largest-text phone/iPad flows (one case per platform, 90.393/96.388 seconds). Both app/test builds and signatures pass.
+- [ ] Mac native/spoken and broader account/window/failure/concurrent acceptance, structural-composer drafts and independent-record migration remain open. Ordinary flags and user deferrals are unchanged.
+
+[Source bindings, captures and retained failed phase](child-task-field-selection/README.md).

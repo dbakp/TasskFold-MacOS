@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "Moving subtasks to independent storage",
-  "latest": "Organizer, Undo/retry and private-draft return: eight phone journeys verified across phases. These new controls remain disabled pending migration and remaining checks.",
+  "focus": "Subtask drafts and independent storage",
+  "latest": "The subtask chooser now wraps full titles at the largest text size. iPhone/iPad switching, Cancel and private-draft return pass. Mac/spoken checks and migration remain; these new controls stay disabled for everyday use.",
   "next": [
-    "Polish the subtask selector and verify iPad/Mac flows.",
-    "Preserve unfinished organizer drafts and move older subtasks to independent storage.",
+    "Preserve unfinished organizer drafts.",
+    "Finish remaining iPad/Mac/spoken flows and migrate older subtask data.",
     "Finish team/audio recovery and storage checks; keep deferred work paused."
   ],
   "stages": [
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Moving older data and preserving unfinished organizer drafts remain. The subtask picker also needs largest-text polish."
+              "detail": "Moving older data and preserving unfinished organizer drafts remain. The phone/iPad chooser now wraps full titles and preserves private edits; Mac/spoken checks remain."
             },
             {
               "state": "build",
@@ -570,7 +570,8 @@
           "sources": [
             "PX_CHECKLIST.md",
             "P2_PLAN.md",
-            "child-task-structure-native/verification.json"
+            "child-task-structure-native/verification.json",
+            "child-task-field-selection/verification.json"
           ],
           "focus": true
         },
@@ -610,14 +611,16 @@
     "p1-completion-audit.json",
     "P2_PLAN.md",
     "ACCOUNT_REMOVAL.md",
-    "child-task-structure-native/verification.json"
+    "child-task-structure-native/verification.json",
+    "child-task-field-selection/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "feefc8da2e8a3902c7e1e29e3362b77149efe1fdba6571d38da06147805f9b1a",
-    "PX_CHECKLIST.md": "33be2f37fe24a89599c7d7470afb9446e5441cba3a7487f6cefd992624651180",
+    "P2_PLAN.md": "a8a970a9060d77730552dd9ab0516690899e90b0d2a9044b5afe2aa838189aa2",
+    "PX_CHECKLIST.md": "2c9d542878224760ea84cc2fc34d75f401dab88e656e87f910f8cd2590c8c628",
+    "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
     "p1-completion-audit.json": "247195c4d7743f3eca09f8c8461e0a971aa9dbe89dd5c839a81c5454082ae41a"

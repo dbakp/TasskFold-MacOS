@@ -48,13 +48,13 @@
   "noSaveOnLoadOrRestore": true,
   "consoleErrors": [],
   "networkDependencies": false,
+  "keyboardEnterAndSpace": true,
+  "segmentWidthsMatchCheckpointCounts": true,
+  "readOnlyProgress": true,
   "staleEvidenceRejected": true,
   "staleGeneratedOutputRejected": true,
   "realEvidenceModifiedByFreshnessTest": false,
   "independentOwnedOutputsMatch": true,
-  "artifactSHA256": "de96136cfe06afc5d6a29359e562d2a61297d91c9a388a9e88f96d3f5097dc51",
-  "fragmentSHA256": "7474b8c768e9056003d4bf6d54fdfe43f3e31ec94b25f2a6baeafd9f4f975a9a",
-  "keyboardEnterAndSpace": true,
-  "segmentWidthsMatchCheckpointCounts": true,
-  "readOnlyProgress": true
+  "artifactSHA256": "6ae0d3544e53129d259ae95795a939a9d8b5b81ff96c815185bb9ed0e91e9de5",
+  "fragmentSHA256": "49353516149f4717b45802e7cf71bdc6511c723e422faf367a922b7b378ba58d"
 }

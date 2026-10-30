@@ -237,6 +237,7 @@ struct ChildTaskFieldEditorView: View {
     @State private var reminders = ChildTaskRemindersDraft(original: Record())
     @State private var reminderEditor: TeamTaskRemindersRequest?
     @State private var reminderOwnership = ChildReminderOwnership()
+    @State private var choosingChild = false
     @State private var hierarchy = false
     @State private var recovery = false
     @State private var reload = UUID()
@@ -250,6 +251,11 @@ struct ChildTaskFieldEditorView: View {
         guard let read, ChildTaskFieldClientScope(read.context) == scope,
               let current = store.record("tasks", id: rootID) else { return false }
         return current["task_generation"] == read.context.root["task_generation"] && current["project_id"] == read.context.root["project_id"]
+    }
+    private var selectionValue: String {
+        guard let node = read?.nodes[key] else { return "Subtask" }
+        let name = node.fields["title"]?.text ?? "Subtask"
+        return node.path.count > 1 ? "\(name), nested level \(node.path.count)" : name
     }
     private var changes: [String: JSON] {
         guard let node = read?.nodes[key] else { return [:] }; var fields: [String: JSON] = [:]
@@ -274,14 +280,25 @@ struct ChildTaskFieldEditorView: View {
                 if read.nodes.isEmpty { ContentUnavailableView("No saved subtasks", systemImage: "list.bullet") }
                 else {
                     Section {
-                        Picker("Subtask", selection: $key) {
-                            ForEach(read.orderedNodes, id: \.key) { node in
-                                let title = node.fields["title"]?.text ?? "Subtask"
-                                Text(String(repeating: "  ", count: node.path.count - 1) + title)
-                                    .accessibilityLabel(node.path.count > 1 ? "\(title), nested level \(node.path.count)" : title)
-                                    .tag(node.key)
-                            }
-                        }.accessibilityIdentifier("independentChildSelection")
+                        Button {
+                            editingField = nil; checkpoint()
+                            guard draftSession?.flush() != false else { failure = draftSession?.failure; return }
+                            choosingChild = true
+                        } label: {
+                            HStack(alignment: .top, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Subtask").font(.caption).foregroundStyle(.secondary)
+                                    Text(read.nodes[key]?.fields["title"]?.text ?? "Subtask")
+                                        .font(.body).lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                                    if let node = read.nodes[key], node.path.count > 1 {
+                                        Text("Nested level \(node.path.count)").font(.caption).foregroundStyle(.secondary)
+                                    }
+                                }.frame(maxWidth: .infinity, alignment: .leading)
+                                Image(systemName: "chevron.up.chevron.down").font(.caption).accessibilityHidden(true)
+                            }.frame(minHeight: 44).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityIdentifier("independentChildSelection")
+                            .accessibilityLabel("Choose subtask")
+                            .accessibilityValue(selectionValue)
                         TextField("Title", text: Binding(get: { title }, set: { guard !title.utf8.elementsEqual($0.utf8) else { return }; title = $0; checkpoint(reopen: true) }), axis: .vertical).focused($editingField, equals: .title).accessibilityIdentifier("independentChildTitle")
                         TextField("Notes", text: Binding(get: { notes }, set: { guard !notes.utf8.elementsEqual($0.utf8) else { return }; notes = $0; checkpoint(reopen: true) }), axis: .vertical).lineLimit(3...12).focused($editingField, equals: .notes).accessibilityIdentifier("independentChildNotes")
                         Picker("Priority", selection: Binding(get: { priority }, set: { guard priority != $0 else { return }; priority = $0; checkpoint(reopen: true) })) { ForEach(1...4, id: \.self) { Text("Priority \($0)").tag($0) } }
@@ -406,10 +423,11 @@ struct ChildTaskFieldEditorView: View {
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: key) { _, _ in select() }
         .onChange(of: sourceAvailable) { _, value in if !value { checkpoint(); _ = draftSession?.flush() } }
-        .onChange(of: phase) { _, value in if value != .active { reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
+        .onChange(of: phase) { _, value in if value != .active { choosingChild = false; reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
         .onChange(of: recovery) { _, value in if value { noticeRequest = nil; editingRevision = UUID() } }
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
             let preferredSelection = sourceAvailable ? key : ""
+            choosingChild = false
             reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
             checkpoint(); for session in draftSessions.values { _ = session.flush() }
             let previousRead = read, previousSessions = draftSessions, previousDrafts = draftValues, previousLabels = labelInputs
@@ -440,6 +458,37 @@ struct ChildTaskFieldEditorView: View {
             // edit. Its presentation token, not parent visibility, owns Apply.
             if !reminderOwnership.active { editingRevision = UUID() }
             checkpoint(); _ = draftSession?.flush()
+        }
+        .sheet(isPresented: $choosingChild) {
+            WorkflowShell(title: "Subtasks") {
+                if let read, sourceAvailable {
+                    ScrollViewReader { selectionProxy in
+                        List {
+                            if let failure { Section { Text(failure).foregroundStyle(.secondary) } }
+                            ForEach(read.orderedNodes, id: \.key) { node in
+                                Button {
+                                    guard sourceAvailable, self.read?.context.matches(read.context) == true,
+                                          phase == .active else { failure = "Subtasks changed. Close and reopen selection."; return }
+                                    key = node.key; select()
+                                    if selectedKey == node.key { choosingChild = false }
+                                } label: {
+                                    HStack(alignment: .top, spacing: 12) {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(node.fields["title"]?.text ?? "Subtask").lineLimit(nil).fixedSize(horizontal: false, vertical: true)
+                                            if node.path.count > 1 { Text("Nested level \(node.path.count)").font(.caption).foregroundStyle(.secondary) }
+                                        }.frame(maxWidth: .infinity, alignment: .leading)
+                                        if node.key == key { Image(systemName: "checkmark").accessibilityHidden(true) }
+                                    }.padding(.leading, CGFloat(min(node.path.count - 1, 5)) * 12)
+                                        .frame(minHeight: 44).contentShape(Rectangle())
+                                }.buttonStyle(.plain).id(node.key)
+                                    .accessibilityIdentifier("chooseIndependentChild-" + node.key)
+                                    .accessibilityAddTraits(node.key == key ? .isSelected : [])
+                            }
+                        }.privacySensitive()
+                            .task { await Task.yield(); guard choosingChild, sourceAvailable, !Task.isCancelled else { return }; selectionProxy.scrollTo(key, anchor: .center) }
+                    }
+                } else { ContentUnavailableView("Open your workspace", systemImage: "lock.shield") }
+            }
         }
         .sheet(isPresented: $hierarchy, onDismiss: { reload = UUID() }) { WorkflowShell(title: "Organize subtasks") { ChildTaskStructureView(rootID: rootID) } }
         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }

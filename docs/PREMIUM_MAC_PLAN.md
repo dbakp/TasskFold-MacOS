@@ -9846,3 +9846,6 @@ Remaining visual finding: the largest-text field-editor selection caption trunca
 
 
 The maintained [Px progress dashboard](PX_PROGRESS.html) now summarizes current acceptance, implementation and explicit deferrals. Update its reviewed snapshot alongside meaningful milestones; see [maintenance](PX_PROGRESS.md).
+
+
+Readable subtask selection: the Mac editor now owns the same wrapping selected title and ordered native selection sheet, with nesting, selected trait, source-scope guards and retained private sessions. Current Mac app/test build and signatures pass. Phone/iPad current largest-text functional/visual scopes pass; no Mac runtime or speech pass is inferred. [Exact evidence](child-task-field-selection/README.md).

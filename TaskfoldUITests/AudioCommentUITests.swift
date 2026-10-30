@@ -1546,4 +1546,38 @@ extension TaskfoldMacUITests {
         childDone(app); childProbe(app, "structureQueued=0 structureAttempted=0 structureConfirmed=1 structureClosed=0 structureWrites=2 structureRequests=2 structureArchives=0 structureOrder=concept>review")
     }
 
+
+    @MainActor func testChildFieldsReadableSelectionPreservesDraftAndCancel() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-structure-nested", large: true)
+        completionReadyPress(app.buttons["childNativeEditor"], app)
+        let title = childField("independentChildTitle", app)
+        childReveal(title, app); childPress(title); title.typeText("Private ")
+        let privateTitle = try XCTUnwrap(title.value as? String); XCTAssertTrue(privateTitle.contains("Private "))
+        let selection = app.buttons["independentChildSelection"]
+        childReveal(selection, app, towardTop: true)
+        XCTAssertEqual(selection.value as? String, "Prepare the review")
+        XCTAssertGreaterThanOrEqual(selection.frame.height, 44)
+        structureSnapshot(app, "Largest text wrapping subtask selection")
+        completionReadyPress(selection, app)
+        let parent = app.buttons["chooseIndependentChild-concept"], nested = app.buttons["chooseIndependentChild-nested"], other = app.buttons["chooseIndependentChild-review"]
+        XCTAssertTrue(parent.waitForExistence(timeout: 12)); XCTAssertTrue(nested.exists); XCTAssertTrue(other.exists)
+        XCTAssertLessThan(parent.frame.minY, nested.frame.minY); XCTAssertLessThan(nested.frame.minY, other.frame.minY)
+        XCTAssertGreaterThanOrEqual(parent.frame.height, 44); XCTAssertGreaterThanOrEqual(nested.frame.height, 44)
+        structureSnapshot(app, "Largest text ordered subtask choices")
+        XCTAssertTrue(nested.isHittable); childPress(nested)
+        childReveal(title, app); XCTAssertEqual(title.value as? String, "Collect supporting notes")
+        childReveal(selection, app, towardTop: true); XCTAssertEqual(selection.value as? String, "Collect supporting notes, nested level 2")
+        completionReadyPress(selection, app); childDone(app)
+        childReveal(title, app); XCTAssertEqual(title.value as? String, "Collect supporting notes")
+        childReveal(selection, app, towardTop: true); completionReadyPress(selection, app)
+        let originalChoice = app.buttons["chooseIndependentChild-concept"]
+        XCTAssertTrue(originalChoice.waitForExistence(timeout: 12)); XCTAssertTrue(originalChoice.isHittable)
+        childPress(originalChoice)
+        childReveal(title, app); XCTAssertEqual(title.value as? String, privateTitle)
+        structureSnapshot(app, "Subtask selection returns private title")
+        childDone(app); childProbe(app, "queued=0 attempted=0 confirmed=0 writes=0 requests=0")
+        childProbe(app, "structureQueued=0 structureAttempted=0 structureConfirmed=0 structureClosed=0 structureWrites=0 structureRequests=0")
+    }
+
 }
