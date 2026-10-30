@@ -77,6 +77,7 @@ struct SavedChildTaskStructureLink: View {
 
 struct ChildTaskStructureView: View {
     let rootID: String
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
     @State private var model: ChildTaskStructurePresentation?
@@ -127,12 +128,21 @@ struct ChildTaskStructureView: View {
         }
         .safeAreaInset(edge: .bottom) {
             if let notice {
-                HStack(alignment: .top, spacing: 12) {
-                    HierarchyNotice(message: notice).accessibilityIdentifier("childStructureNotice")
-                    Spacer(minLength: 0)
-                    Button { recovery = true } label: { Image(systemName: "tray").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle()) }.accessibilityLabel("Open saved hierarchy actions")
-                    Button { self.notice = nil } label: { Image(systemName: "xmark.circle.fill").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle()) }.accessibilityLabel("Dismiss status")
+                Group {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HierarchyNotice(message: notice).accessibilityIdentifier("childStructureNotice")
+                            HStack { Spacer(minLength: 0); noticeButtons }
+                        }
+                    } else {
+                        HStack(alignment: .top, spacing: 12) {
+                            HierarchyNotice(message: notice).accessibilityIdentifier("childStructureNotice")
+                            Spacer(minLength: 0)
+                            noticeButtons
+                        }
+                    }
                 }.padding(14).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16)).padding(.horizontal).padding(.vertical, 8)
+                    .accessibilityElement(children: .contain).accessibilityIdentifier("childStructureStatusCard")
             }
         }
         .privacySensitive()
@@ -143,6 +153,12 @@ struct ChildTaskStructureView: View {
             if let model, modelScope == scope { WorkflowShell(title: "Review hierarchy change") { ChildHierarchyReviewView(request: request, model: model, feedback: { notice = $0 }) } }
         }
         .sheet(isPresented: $recovery, onDismiss: { Task { await returned() } }) { WorkflowShell(title: "Saved hierarchy actions") { ChildTaskStructureRecoveryView() } }
+    }
+    private var noticeButtons: some View {
+        HStack(spacing: 12) {
+            Button { recovery = true } label: { Image(systemName: "tray").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle()) }.accessibilityLabel("Open saved hierarchy actions")
+            Button { notice = nil } label: { Image(systemName: "xmark.circle.fill").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle()) }.accessibilityLabel("Dismiss status")
+        }
     }
     private func clear() { ticket = UUID(); model?.close(); model = nil; read = nil; modelScope = nil; reading = false; review = nil; recovery = false }
     private func sameSession(_ a: ChildTaskFieldClientScope?, _ b: ChildTaskFieldClientScope?) -> Bool {
@@ -167,9 +183,9 @@ struct ChildTaskStructureView: View {
         let affected = owner.entries.filter { $0.command.body["task_id"] == .string(rootID) && before[$0.command.id] != $0.phase }
         if owner.disposals.contains(where: { $0.source.raw["task_id"] == .string(rootID) && $0.phase == .confirmed && beforeDisposals[$0.id] != .confirmed }) { notice = "Saved Undo content removed." }
         else if affected.contains(where: { $0.phase == .confirmed }) { notice = "Hierarchy change confirmed." }
-        else if affected.contains(where: { $0.phase == .attempted }) { notice = "This action needs attention. Open saved actions to check its result." }
-        else if affected.contains(where: { $0.phase == .closed }) { notice = "Action stopped. Review current values to try again." }
-        else if affected.contains(where: { $0.phase == .queued }) { notice = "Fresh action saved. Review and send it when ready." }
+        else if affected.contains(where: { $0.phase == .attempted }) { notice = "Action needs attention." }
+        else if affected.contains(where: { $0.phase == .closed }) { notice = "Action stopped." }
+        else if affected.contains(where: { $0.phase == .queued }) { notice = "Fresh action saved." }
         await refresh(sync: true)
     }
     private func refresh(sync: Bool) async {
@@ -466,7 +482,7 @@ private struct ChildHierarchyReviewView: View {
             else if let saved, saved.phase == .closed { success = await model.replace(saved, with: command, read: read) }
             else { success = await model.queue(command, read: read) }
             guard captured == scope, !Task.isCancelled else { return }
-            if success { feedback(model.message ?? "Action saved."); dismiss() } else { failure = model.message }
+            if success { feedback(saved?.phase == .queued || saved?.phase == .attempted ? model.message ?? "Change confirmed." : "Action saved."); dismiss() } else { failure = model.message }
         }
     }
 }

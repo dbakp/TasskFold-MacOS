@@ -162,3 +162,19 @@ struct ChildTaskStructureOpening: Sendable {
         if let node { guard read.records.nodes[node]?.incarnation == incarnation else { throw ChildTaskStructureCommand.invalid } }
     }
 }
+
+/// A structural refresh may reorder nodes without changing a field draft's
+/// original. Carry only unchanged targets in the same live editing scope.
+enum ChildTaskFieldDraftContinuation {
+    static func retainedKeys(from previous: ChildTaskRecordRead, to current: ChildTaskRecordRead) -> Set<String> {
+        guard ChildTaskFieldClientScope(previous.context) == ChildTaskFieldClientScope(current.context),
+              previous.context.root.id == current.context.root.id,
+              previous.context.root["task_generation"] == current.context.root["task_generation"],
+              previous.context.root["project_id"] == current.context.root["project_id"] else { return [] }
+        return Set(previous.nodes.keys.filter { key in
+            guard let old = previous.nodes[key], let new = current.nodes[key] else { return false }
+            return old.incarnation == new.incarnation && old.revision == new.revision &&
+                AuthoredValueComparison.exactJSON(.object(old.fields), .object(new.fields))
+        })
+    }
+}

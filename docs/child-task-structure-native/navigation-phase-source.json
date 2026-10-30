@@ -1,0 +1,18 @@
+{
+  "sourceSHA256": {
+    "Package.swift": "b11ea152af22c59e28ff54d3e1bdd95481fb831eff0e6dc73a76c7f278fc34c8",
+    "Taskfold.xcodeproj/project.pbxproj": "8eadeef51d17719ad6c9d927a0ddce776d83ac5e0a222ed94dbaf0ee726a14ff",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "54119f102ae76464c41189aee63b6181fd08fa78f324a79bf91281d6186992a2",
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "68d6cc4daa987442c6b3120d48cbaaa8771d96a1a0033eeeb9b07caf1544a9b7",
+    "Taskfold/Core/ChildTaskStructureCommands.swift": "698ef01b8061878fcf1ea4775343e5106dc54ff2bbc75a97b14452cdf8fd00cb",
+    "Taskfold/Core/Store.swift": "be8431bf7765fd2de0b3a0289731ea050b59e5193d8d1f27451301ed70d8becc",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "71a4791f01316ae9edc60d4198e6a325b4c452cac6695ebf2346d8e193eee34f",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "01509d3e71f8f4525a7fb1d6f7deaee05efa79f659fb6436f15bf77cd2e1ae46",
+    "Taskfold/Views/SubtaskOrganizer.swift": "07f6f98dfe5aa6e1f181e629ea1d3f502fed301e0d14051db3acc6b8cad5ac9b",
+    "Taskfold/ChildStructureNativeFixture.swift": "a46a385fd919d1bf8c6978f08b78019478cf2d7a1f342d464440b3b8d3ec3c6b",
+    "Taskfold/ChildFieldNativeFixture.swift": "3d702e28a18c061e38657d08d8c29b1f4129bce09925201f562314707c065687",
+    "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "bba86db045757c866e7607acee70773aae50300175bab1343035169e0366d575",
+    "TaskfoldUITests/AudioCommentUITests.swift": "7c773d75e0d98071f6fe0db7a2461d8f8bc2acd85427dcac08b345204a4ef186"
+  },
+  "note": "Source for navigation phase: before same-scope unchanged-node draft continuation fix and stable-node saved-title assertion."
+}

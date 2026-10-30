@@ -9838,3 +9838,8 @@ Current-value review no longer echoes a previous parent confirmation. Feedback b
 ## Native hierarchy organization — current acceptance stage
 
 Both apps now own scoped native hierarchy organization and recovery: reviewed add/move/recursive remove, explicit saved Send, exact retry, stop/fresh review, Undo/archive discovery and permanent Undo disposal. The presentation/opening foundation passes 282 selected Core checks independently in each repository. Refined Mac products build and verify; final current-source runtime checks are still in progress. See [native phase evidence](child-task-structure-native/README.md). The original independent-child migration, genuine lifecycle, cross-root/project and wider Px scope remain open; ordinary flags stay off.
+
+
+Current native organization follow-up: compact accessibility status, independent archive controls and guarded field-draft continuation are implemented. Both apps build/sign; each repository independently passes 60 current recovery/presentation/continuation Core checks. Eight representative phone journeys now have passing phase evidence; the final largest-text draft return passes with unchanged saved original and zero field writes. Current Mac completion acceptance stopped before the app because UI Automation initialization timed out; direct app controls also timed out. The isolated app is closed. No Mac runtime or speech acceptance is inferred. [Exact phases](child-task-structure-native/README.md).
+
+Remaining visual finding: the largest-text field-editor selection caption truncates. Preserve its full accessible label and authored order while polishing its visible selection layout. This is not accepted Mac/iPad/spoken work.

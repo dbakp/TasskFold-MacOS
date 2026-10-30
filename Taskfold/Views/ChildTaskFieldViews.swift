@@ -411,14 +411,27 @@ struct ChildTaskFieldEditorView: View {
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
             let preferredSelection = sourceAvailable ? key : ""
             reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
-            checkpoint(); for session in draftSessions.values { _ = session.flush() }; draftSession = nil; draftSessions = [:]; draftValues = [:]; labelInputs = [:]; addingLabel = ""; selectedKey = ""
+            checkpoint(); for session in draftSessions.values { _ = session.flush() }
+            let previousRead = read, previousSessions = draftSessions, previousDrafts = draftValues, previousLabels = labelInputs
+            draftSession = nil; draftSessions = [:]; draftValues = [:]; labelInputs = [:]; addingLabel = ""; selectedKey = ""
             model?.close(); model = nil; read = nil; title = ""; notes = ""; key = ""; failure = nil
             guard let captured = scope else { return }
             do {
                 guard store.childTaskFieldEditingEnabled else { throw ChildTaskFieldWriteFailure(reason: .unavailable) }
                 let value = try await store.readChildTaskRecords(rootID)
                 guard captured == scope, !Task.isCancelled else { return }
+                var needsRecovery = false
+                if let previousRead {
+                    let retained = ChildTaskFieldDraftContinuation.retainedKeys(from: previousRead, to: value)
+                    if ChildTaskFieldClientScope(previousRead.context) == captured {
+                        needsRecovery = previousSessions.contains { !retained.contains($0.key) && !$0.value.closed && $0.value.latest != nil }
+                    }
+                    draftSessions = previousSessions.filter { retained.contains($0.key) }
+                    draftValues = previousDrafts.filter { retained.contains($0.key) }
+                    labelInputs = previousLabels.filter { retained.contains($0.key) }
+                }
                 read = value; model = try store.childTaskFieldRecoveryModel(); key = value.nodes[preferredSelection] != nil ? preferredSelection : value.orderedNodes.first?.key ?? ""; select()
+                if needsRecovery { failure = "Unfinished edits for changed subtasks are kept in recovery." }
             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = error.localizedDescription }
         }
         .onDisappear {

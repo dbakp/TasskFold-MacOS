@@ -1,7 +1,7 @@
 {
   "date": "2026-10-30",
   "platform": "macOS",
-  "selectedCoreTests": 282,
+  "selectedCoreTests": 60,
   "newPresentationAndOpeningTests": 11,
   "coreFailures": 0,
   "nativeRuntimeAccepted": false,
@@ -11,17 +11,19 @@
   "sourceSHA256": {
     "Package.swift": "b11ea152af22c59e28ff54d3e1bdd95481fb831eff0e6dc73a76c7f278fc34c8",
     "Taskfold.xcodeproj/project.pbxproj": "8eadeef51d17719ad6c9d927a0ddce776d83ac5e0a222ed94dbaf0ee726a14ff",
-    "Taskfold/Core/ChildTaskStructurePresentation.swift": "54119f102ae76464c41189aee63b6181fd08fa78f324a79bf91281d6186992a2",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "3ef5fda59fb6069b2fd9a814bf8bdd5f13fd99c31eb7cec5015d5e6ad738235f",
     "Taskfold/Core/ChildTaskStructureRecovery.swift": "68d6cc4daa987442c6b3120d48cbaaa8771d96a1a0033eeeb9b07caf1544a9b7",
     "Taskfold/Core/ChildTaskStructureCommands.swift": "698ef01b8061878fcf1ea4775343e5106dc54ff2bbc75a97b14452cdf8fd00cb",
     "Taskfold/Core/Store.swift": "be8431bf7765fd2de0b3a0289731ea050b59e5193d8d1f27451301ed70d8becc",
-    "Taskfold/Views/ChildTaskStructureViews.swift": "d2cde4a0a62ce66edd5be5a2dc82fa03d3f2c0e617f35f5543ffb9e05f834404",
-    "Taskfold/Views/ChildTaskFieldViews.swift": "01509d3e71f8f4525a7fb1d6f7deaee05efa79f659fb6436f15bf77cd2e1ae46",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "71a4791f01316ae9edc60d4198e6a325b4c452cac6695ebf2346d8e193eee34f",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "a6f8868159ae48976f1e79f90555e1b6393973b8e677a93e81f0ccbd546b8af4",
     "Taskfold/Views/SubtaskOrganizer.swift": "07f6f98dfe5aa6e1f181e629ea1d3f502fed301e0d14051db3acc6b8cad5ac9b",
     "Taskfold/ChildStructureNativeFixture.swift": "a46a385fd919d1bf8c6978f08b78019478cf2d7a1f342d464440b3b8d3ec3c6b",
     "Taskfold/ChildFieldNativeFixture.swift": "3d702e28a18c061e38657d08d8c29b1f4129bce09925201f562314707c065687",
-    "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "bba86db045757c866e7607acee70773aae50300175bab1343035169e0366d575",
-    "TaskfoldUITests/AudioCommentUITests.swift": "3a718604a560f231b637b9f86963c32b2431113916f9b281337e8dd715bac3e9"
+    "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "462603404a3e3e9971ce995f8fcb33b4d1eeb7d42644718cffe7464a236f6575",
+    "TaskfoldUITests/AudioCommentUITests.swift": "267b7584d13574418fce4e95e9035d0af098855a091a934aa1ee6a15a6a662ca",
+    "Scripts/prepare_child_fields_native_test.py": "bcf191c5a1ac492b069453f20a5fc5a8c914f5ac23ea4341c9e46c50b584a12f",
+    "Taskfold/Views/SettingsView.swift": "802994c05c4ee011990dce2ae6447d75a997e4b14e250fb02bba8b1338451569"
   },
   "nativePhases": [
     {
@@ -44,9 +46,200 @@
         "Fresh replacement sent successfully (Subtask added); confirmation-row assertion omitted scrolling past closed history."
       ],
       "finalAcceptance": false
+    },
+    {
+      "name": "phone-actions",
+      "tests": 4,
+      "passed": 2,
+      "failed": 2,
+      "sourceBinding": "actions-phase-source.json",
+      "passedJourneys": [
+        "archive discovery after local journal loss",
+        "stop/cancel/fresh review/separate send"
+      ],
+      "failures": [
+        "Largest-text subtree count below viewport; test now explicitly scrolls through count and nested instructions.",
+        "Largest-text saved-status card obscured organizer; private-draft journey timed out. Compact adaptive status correction pending runtime."
+      ],
+      "finalAcceptance": false
+    },
+    {
+      "name": "phone-accessibility",
+      "tests": 2,
+      "passed": 0,
+      "failed": 2,
+      "sourceBinding": "accessibility-phase-source.json",
+      "partialEvidence": [
+        "Largest-text status card measured 146.7 of 874 screen points (less than 45%); native assertion and screenshot passed.",
+        "Recursive deletion reached confirmed state, then test did not scroll up to the newly inserted message."
+      ],
+      "failures": [
+        "Deletion helper waited for a status above the scrolled position.",
+        "Private-draft journey reached compact-status assertion, then timed out searching upward for a below-viewport recovery action."
+      ],
+      "correction": "Use visible status-card recovery action; reveal status above action rows; original 180/240 CLI limits unchanged.",
+      "finalAcceptance": false
+    },
+    {
+      "name": "phone-navigation",
+      "tests": 2,
+      "passed": 1,
+      "failed": 1,
+      "sourceBinding": "navigation-phase-source.json",
+      "passedJourneys": [
+        "largest-text nested removal, certified Undo and cold restoration (165.850 seconds, original limit)"
+      ],
+      "failure": "Actual editor bug: saved private draft was checkpointed, but refresh cleared its in-memory values; original saved title replaced unsent typing on return.",
+      "correction": "Retain sessions, drafts and unfinished labels only for unchanged node fields/version/incarnation within the same account/server/workspace/session/access/root/project. Incompatible drafts stay in recovery. Final native preservation rerun pending.",
+      "finalAcceptance": false
+    },
+    {
+      "name": "phone-draft-retention",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "sourceBinding": "draft-retention-phase-source.json",
+      "failure": "Text-selection menu did not appear during initial private-title entry, before the continuation fix was exercised.",
+      "correction": "Use supported XCTest Command-A and retain exact entered-value assertion.",
+      "finalAcceptance": false
+    },
+    {
+      "name": "phone-keyboard",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "failure": "XCTest Command-A did not select text; exact input-value assertion failed before exercising draft continuation.",
+      "finalAcceptance": false
+    },
+    {
+      "name": "phone-insertion",
+      "tests": 1,
+      "passed": 0,
+      "failed": 1,
+      "failure": "Private-title return, compact status and saved original-node checks passed; fixture-entry search wasted about 36 seconds, and the unchanged 180-second limit expired during final probes.",
+      "finalAcceptance": false
+    },
+    {
+      "name": "phone-direct-entry",
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "seconds": 162.488,
+      "sourceBinding": "current sourceSHA256 and isolatedHostBindings",
+      "verified": [
+        "largest-text status geometry",
+        "private title and selected-node identity survive structural insertion",
+        "saved original title read by stable node identity",
+        "zero independent field writes",
+        "one structural write and request"
+      ],
+      "originalDefaultAllowanceSeconds": 180,
+      "maximumAllowanceSeconds": 240
     }
   ],
   "appAndTestBuild": "TEST BUILD SUCCEEDED",
   "strictAppAndRunnerSignatures": true,
-  "currentNativePhase": "phone-actions: four corrected journeys running; no pass claimed"
+  "currentNativePhase": "phone-direct-entry passed 1/1; eight distinct phone journeys have passing phase evidence; Mac/iPad/genuine lifecycle still open",
+  "macNativeCompletion": {
+    "selected": 2,
+    "appJourneysReached": 0,
+    "accepted": false,
+    "reason": "XCTest timed out enabling UI Automation before either test; direct app controls twice timed out; isolated app closed.",
+    "officialResult": {
+      "totalTestCount": 1,
+      "passedTests": 0,
+      "failedTests": 1,
+      "classification": "test-runner initialization failure"
+    }
+  },
+  "isolatedHostBindings": {
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": {
+      "namespaceAdjustedSHA256": "3ef5fda59fb6069b2fd9a814bf8bdd5f13fd99c31eb7cec5015d5e6ad738235f",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": {
+      "namespaceAdjustedSHA256": "68d6cc4daa987442c6b3120d48cbaaa8771d96a1a0033eeeb9b07caf1544a9b7",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/Core/ChildTaskStructureCommands.swift": {
+      "namespaceAdjustedSHA256": "698ef01b8061878fcf1ea4775343e5106dc54ff2bbc75a97b14452cdf8fd00cb",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "namespaceAdjustedSHA256": "7aefaa4e3f289c35d361be41bbb3c9fe70c186c8403723c00dc26dab1459ea9a",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/Views/ChildTaskStructureViews.swift": {
+      "namespaceAdjustedSHA256": "71a4791f01316ae9edc60d4198e6a325b4c452cac6695ebf2346d8e193eee34f",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/Views/ChildTaskFieldViews.swift": {
+      "namespaceAdjustedSHA256": "a6f8868159ae48976f1e79f90555e1b6393973b8e677a93e81f0ccbd546b8af4",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/Views/SubtaskOrganizer.swift": {
+      "namespaceAdjustedSHA256": "07f6f98dfe5aa6e1f181e629ea1d3f502fed301e0d14051db3acc6b8cad5ac9b",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/ChildStructureNativeFixture.swift": {
+      "namespaceAdjustedSHA256": "a46a385fd919d1bf8c6978f08b78019478cf2d7a1f342d464440b3b8d3ec3c6b",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/ChildFieldNativeFixture.swift": {
+      "namespaceAdjustedSHA256": "3d702e28a18c061e38657d08d8c29b1f4129bce09925201f562314707c065687",
+      "matchesBuiltHost": true
+    },
+    "TaskfoldUITests/AudioCommentUITests.swift": {
+      "namespaceAdjustedSHA256": "267b7584d13574418fce4e95e9035d0af098855a091a934aa1ee6a15a6a662ca",
+      "matchesBuiltHost": true
+    },
+    "Taskfold/Views/SettingsView.swift": {
+      "namespaceAdjustedSHA256": "802994c05c4ee011990dce2ae6447d75a997e4b14e250fb02bba8b1338451569",
+      "matchesBuiltHost": true
+    }
+  },
+  "priorBaselineSelectedCoreTests": 282,
+  "newDraftContinuationTests": 5,
+  "coreContinuationPhases": [
+    {
+      "platform": "macOS",
+      "selected": 5,
+      "passed": 2,
+      "failed": 3,
+      "reason": "Changed test records lacked matching root snapshots; decoder correctly refused. Fixtures corrected without relaxing validation."
+    },
+    {
+      "platform": "macOS",
+      "selected": 60,
+      "passed": 60,
+      "failed": 0
+    },
+    {
+      "platform": "iOS",
+      "selected": 60,
+      "passed": 60,
+      "failed": 0
+    }
+  ],
+  "phoneDistinctRepresentativeJourneysPassing": 8,
+  "phoneSameBinaryFullSuitePass": false,
+  "remainingVisualFindings": [
+    "At the largest accessibility size, the existing field-editor selected-node Picker caption truncates; full labels/order are exposed to accessibility. Needs visual selection-control polish."
+  ],
+  "normalFlagValues": {
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "reservedHostStructureFlags": {
+    "TaskfoldChildStructureReadsEnabled": true,
+    "TaskfoldChildStructureWritesEnabled": true
+  },
+  "preparerValidation": {
+    "syntaxAndHelp": true,
+    "structureOptionPresent": true,
+    "freshHostCreated": false
+  }
 }

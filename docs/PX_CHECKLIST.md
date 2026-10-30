@@ -1177,9 +1177,12 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 ## 2026-10-30 — native hierarchy organization (acceptance in progress)
 
 - [x] Own native reviewed insertion, move/reorder and recursive removal, saved retry/stop/fresh replacement, certified Undo, metadata archive discovery and explicit private Undo disposal in each repository.
-- [x] Preserve the opening root/node incarnation binding; keep save separate from send; retain private field drafts and restore selected-node identity when returning from organization.
-- [x] Independently pass 282 selected Core checks, including 11 presentation/opening checks, in both repositories. Refined Mac and iOS app/test builds and strict signatures pass.
-- [ ] Finish refined phone/tablet/Mac native journeys and largest-text/spoken acceptance. The first refined iPhone phase passes add/cold receipt, move, lost-reply retry and explicit Undo disposal (4/8); four corrected archive/large-text/fresh-review journeys are running. Earlier failures remain recorded.
+- [x] Preserve opening root/node incarnation binding and keep save separate from Send.
+- [x] Verify scoped field-draft retention and selected-node restoration in the largest-text phone journey: exact private title preserved, saved original unchanged, zero field writes and one structural write.
+- [x] Independently pass the 282-check organizer foundation, followed by 60 current recovery/presentation/continuation checks including five new retention guards in each repository. Suites overlap. Refined Mac and iOS app/test builds and strict signatures pass.
+- [ ] Finish refined phone/tablet/Mac native journeys and largest-text/spoken acceptance. Eight journeys have passing iPhone phase evidence: add/cold receipt, move, lost-reply retry, explicit Undo disposal, archive discovery/restore, stop/fresh review and largest-text nested removal/Undo/cold restoration. The final private-draft return passes in 162.488 seconds with all postconditions and original limits retained. These are phase-covered journeys, not a same-binary full-suite pass. Earlier failures remain recorded.
 - [ ] Genuine Keychain/Store/account/window lifecycle; structural composer drafts; cross-root/project, legacy/adoption and authoritative migration; full schema/Storage/team custody and wider Px. Normal flags stay off; prior user deferrals remain unchanged.
 
 [Implementation boundaries and phase evidence](child-task-structure-native/README.md).
+
+Current visual follow-up: the existing field-editor selected-node caption truncates at the largest accessibility size. Full accessible labels are present; visual picker polish and iPad/Mac acceptance remain open. Normal flags remain off.

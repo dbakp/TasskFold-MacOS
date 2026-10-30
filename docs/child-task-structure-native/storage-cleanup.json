@@ -1,0 +1,44 @@
+{
+  "removedCompletedBundles": [
+    {
+      "bundle": "taskfold-structure-ui-phone-initial.xcresult",
+      "allocatedBytesBeforeRemoval": 116305920
+    },
+    {
+      "bundle": "taskfold-structure-ui-phone-refined.xcresult",
+      "allocatedBytesBeforeRemoval": 144785408
+    },
+    {
+      "bundle": "taskfold-structure-ui-phone-actions.xcresult",
+      "allocatedBytesBeforeRemoval": 23543808
+    },
+    {
+      "bundle": "taskfold-structure-ui-phone-accessibility.xcresult",
+      "allocatedBytesBeforeRemoval": 103124992
+    },
+    {
+      "bundle": "taskfold-structure-ui-phone-navigation.xcresult",
+      "allocatedBytesBeforeRemoval": 99495936
+    },
+    {
+      "bundle": "taskfold-structure-ui-phone-draft-retention.xcresult",
+      "allocatedBytesBeforeRemoval": 42024960
+    },
+    {
+      "bundle": "taskfold-structure-ui-phone-keyboard.xcresult",
+      "allocatedBytesBeforeRemoval": 44093440
+    },
+    {
+      "bundle": "taskfold-structure-ui-phone-insertion.xcresult",
+      "allocatedBytesBeforeRemoval": 7475200
+    },
+    {
+      "bundle": "taskfold-structure-ui-mac-completion-current.xcresult",
+      "allocatedBytesBeforeRemoval": 352256
+    }
+  ],
+  "allocatedBytesRemoved": 581201920,
+  "freeBeforeBytes": 38834319360,
+  "freeAfterBytes": 39413899264,
+  "retained": "Current passing phone-direct-entry result, reusable build products, selected screenshots and compressed complete logs. No device data or Docker data removed."
+}

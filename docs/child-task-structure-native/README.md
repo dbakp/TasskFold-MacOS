@@ -1,19 +1,54 @@
-# Native saved-subtask organization — acceptance in progress
+# Native saved-subtask organization — gated implementation
 
-Both apps independently own a current-hierarchy organizer, reviewed add/move/remove controls, saved action recovery, exact retry, stop-and-review replacement, certified Undo, metadata-only archive discovery, and explicit permanent Undo-content removal. The normal feature flags remain off. This stage does not complete independent-child rollout or overall Px.
+Each app independently owns a current-hierarchy organizer with reviewed add/move/recursive removal, separate saved Send, exact retry, stop-and-review replacement, certified Undo, metadata archive discovery and explicit permanent Undo-content removal. Normal feature flags remain off. This stage does not complete independent-child rollout or overall Px.
 
-Actions save on this device before a separate Send. Removal reviews the entire affected subtree. Moving preserves current fields. A fresh review cannot retarget a recreated node or a replacement root. Existing private field edits are checkpointed before opening organization; selected-node restoration is covered by a native journey, whose result must be recorded before acceptance. Account/session/access/scene identity fences the presentation and asynchronous results. A visible status card carries returning-sheet feedback.
+Removal reviews the affected subtree and its nested instructions. Moving preserves current fields. Opening identity and fresh replacement refuse recreated nodes, replacement roots and changed account/project/session/access. Presentations fence late results and clear private data when closed. Existing field drafts are checkpointed before organization, with selected-node restoration on return. The largest-text native phone journey now verifies private-title and selected-node preservation, and independently rereads the saved original by stable identity.
 
-The new observable presentation and opening-review checks independently pass **282 selected Core tests in each repository**, including 11 new presentation/opening tests. These logs overlap prior suites and must not be summed. Complete refined Mac and iOS app/test products build and strict signatures verify, including the iOS extension identities, team and shared group. Final native results are pending; see the phase records when available.
+## Verification
 
-The first iPhone phase ran two journeys: the lost-reply cold retry passed with one structural write and two requests. The insertion journey passed save/send/cold persisted-state checks, then failed a test locator expecting an exact title while the accessible label correctly included its nesting level. The locator was corrected without changing the accessibility label. This historical failure is retained and does not count as a final pass.
+The initial organizer foundation independently passed **282 selected Core tests** per repository, including **11 new presentation/opening tests**. After the draft-retention correction, both repositories independently pass **60 current recovery/presentation/continuation checks**, including **five new continuation guards**. These suites overlap and must not be summed. Both complete current app/test products build, with strict development signatures and iOS extension/team/shared-group verification. Exact current source hashes and namespace-adjusted host bindings are in `verification.json`; earlier sources are retained separately.
 
-The isolated DEBUG peer persists synthetic v2 hierarchy, versions, per-incarnation identity, exact receipts, private inverse archives and disposal. It exercises native integration and app lifecycle; it does not establish real PostgreSQL permissions, transactions, hosted concurrency or Storage custody. The prior actual SQL fixtures remain separate evidence. The legacy native field/completion peer is flat: this stage does not certify combined field/completion sends after structural moves.
+| Phone phase | Passed / selected | Result and next action |
+| --- | --- | --- |
+| Initial | 1 / 2 | Lost-reply retry passed; insertion's final locator omitted its spoken nesting level. |
+| Refined | 4 / 8 | Add/cold receipt, move, lost-reply retry and explicit Undo disposal passed. |
+| Actions | 2 / 4 | Archive recovery and stop/Cancel/fresh review/separate Send passed. |
+| Accessibility | 0 / 2 | Status-size assertion passed; later scrolling/navigation failures prevented whole-journey acceptance. |
+| Navigation | 1 / 2 | Largest-text nested removal/Undo/cold restoration passed; actual field-draft reload loss was found. |
+| Draft retention | 0 / 1 | Corrected app build; initial selection-menu input failed before the draft fix was exercised. |
+| Keyboard | 0 / 1 | Simulator Command-A did not select text; exact input assertion failed. |
+| Insertion | 0 / 1 | Private return and saved original-node checks passed; wrong-direction fixture setup exhausted the original limit during final probes. |
+| Direct entry | **1 / 1** | **162.488 seconds.** Private title/selection retained; saved original unchanged; field writes 0, structural writes/requests 1. All assertions and original limits retained. |
 
-Remaining: final phone/tablet/Mac native runtime, largest-text and spoken checks; genuine Keychain/Store/account/window lifecycle; transient new structural composer draft persistence; cross-root/project, legacy/adoption and authoritative migration; full schema/Storage/team custody and wider Px. Existing user deferrals stay unchanged. No hosted schema, release signing or normal flags changed.
+The source correction separates archive-row buttons so restore cannot also invoke removal, enlarges touch targets, uses concise status text and stacks status controls at accessibility sizes. Full recovery messages remain in the scrollable action list. `largest-text-status-before.png` and `largest-text-status-after.png` show the actual captured layout change. No text scaling was capped.
 
-## First refined iPhone phase
+Xcode's optional diagnostic collector was stopped only after the first refined tests had finished; its verified process was collecting system diagnostics for this result. The official eight-test result and attachments were retained. Later runs use `-collect-test-diagnostics never`; no task data or result bundle was erased.
 
-The official result records **8 tests: 4 passed, 4 failed**. Add/cold receipt, move/destination, lost-reply cold retry and explicit Undo-content disposal passed. Archive restore did not open its review; its grouped list actions now use separate borderless buttons. Both largest-text journeys failed their fixture startup check before feature interaction; readiness now uses the first structural control. The stopped/fresh action produced “Subtask added,” but the assertion did not scroll to its confirmation below closed history; that check now scrolls. Larger touch targets are also implemented. The four corrected journeys are running; no corrected-phase pass is claimed yet. Earlier failures remain evidence, not passes.
+## Mac runtime boundary
 
-Xcode attempted an optional ten-minute simulator diagnostics collection after completed tests. Only that verified collector was stopped; the 8-test official result and attachments were retained. Corrected runs use `-collect-test-diagnostics never`. No app data or test result was erased.
+After the user unlocked the Mac, a current-source two-journey completion run stopped before app interaction with “Timed out while enabling automation mode.” Neither selected app journey was reached. The official result reports one runner initialization failure, zero passes. Two direct app-control reads also timed out; the isolated app was closed. No repeated permission request or broad automation reset was attempted. This does not prove Mac completion, structural or spoken acceptance.
+
+## Evidence boundaries and remaining work
+
+The strictly isolated DEBUG peer persists synthetic v2 hierarchy, per-incarnation identity, exact receipts, private inverse archives and disposal. It exercises native integration and cold persistence; it does not prove PostgreSQL permissions, transactions, hosted concurrency or Storage custody. Prior actual SQL fixtures remain separate evidence. The legacy native field/completion peer is flat, so combined field/completion sends after structural moves are not certified here.
+
+Remaining: final phone/tablet/Mac native and spoken acceptance; genuine Keychain/Store/account/window lifecycle; transient new structural composer draft persistence; cross-root/project, legacy/adoption and authoritative migration; full schema/Storage/team custody and wider Px. Existing user deferrals remain unchanged. No hosted schema, release signing or normal flags changed. Only existing owned test devices were reused.
+
+## Field-draft continuation correction
+
+The navigation phase proved nested removal, Undo and cold restoration. Its private-edit journey then correctly failed: the original saved title replaced the checkpointed unsent title when the owner reloaded. The current fix carries sessions, private values and unfinished label input across a structural refresh only when scope, root/project, node incarnation, revision and exact saved fields remain unchanged. Reordered positions do not change identity. Other drafts remain in encrypted recovery and are not silently applied to changed targets. Five new guard cases exercise reordering, changed/recreated/versioned nodes, all scope departures, root/project replacement, exact Unicode and removed nodes. The first test-fixture revision failed three cases because it did not update the root snapshot alongside changed records; the strict decoder was preserved and the fixtures corrected. Current recovery/continuation suite: independently 60/60 in both repositories. The final phone preservation journey passes. Eight distinct phone journeys have passing evidence across these source phases; this is not a same-binary eight-test pass, Mac/iPad acceptance or hosted-backend certification.
+
+## Reproduction and current rerun
+
+Run the current Core regression in either repository:
+
+```sh
+python3 Scripts/check_test_storage.py --path /tmp
+swift test --jobs 2 --filter ChildTaskStructureRecoveryTests
+```
+
+`Scripts/prepare_child_fields_native_test.py --output <new-isolated-directory> --structure` now prepares an independently owned reserved host with structural flags enabled. It refuses existing outputs. Use an existing host with explicit incremental source updates when reusing products, as done for these phases; no new host or simulator was created here. Normal project flags are unchanged. Build/test the reserved host with the eight `testChildStructureNative…` selectors in `TaskfoldUITests`, no parallel clones and `-collect-test-diagnostics never`. The final direct-entry private-draft journey passes with every assertion and the original 180-second default / 240-second maximum retained.
+
+## Current remaining gates
+
+Phone phase coverage now includes all eight representative journeys. Current Mac runtime is still blocked before the app, and iPad/spoken/genuine lifecycle coverage remains open. The final screenshot also shows the existing field-editor selected-node caption truncating at the largest accessibility size; full accessible labels remain available, but the selection control needs visual polish. Do not treat that control or the entire largest-text interface as accepted.

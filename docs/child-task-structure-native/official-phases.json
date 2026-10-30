@@ -1,0 +1,95 @@
+{
+  "phone-initial": {
+    "totalTestCount": 2,
+    "passedTests": 1,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "failures": [
+      "testChildStructureNativeInsertSavedSendAndColdReceipt()"
+    ]
+  },
+  "phone-refined": {
+    "totalTestCount": 8,
+    "passedTests": 4,
+    "failedTests": 4,
+    "skippedTests": 0,
+    "failures": [
+      "testChildStructureNativeArchiveDiscoveryAfterLocalJournalLoss()",
+      "testChildStructureNativeDeleteReviewUndoAndColdRestoration()",
+      "testChildStructureNativePreservesPrivateFieldDraftAndSelection()",
+      "testChildStructureNativeStopCancelFreshReviewAndSeparateSend()"
+    ]
+  },
+  "phone-actions": {
+    "totalTestCount": 4,
+    "passedTests": 2,
+    "failedTests": 2,
+    "skippedTests": 0,
+    "failures": [
+      "testChildStructureNativeDeleteReviewUndoAndColdRestoration()",
+      "testChildStructureNativePreservesPrivateFieldDraftAndSelection()"
+    ]
+  },
+  "phone-accessibility": {
+    "totalTestCount": 2,
+    "passedTests": 0,
+    "failedTests": 2,
+    "skippedTests": 0,
+    "failures": [
+      "testChildStructureNativeDeleteReviewUndoAndColdRestoration()",
+      "testChildStructureNativePreservesPrivateFieldDraftAndSelection()"
+    ]
+  },
+  "phone-navigation": {
+    "totalTestCount": 2,
+    "passedTests": 1,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "failures": [
+      "testChildStructureNativePreservesPrivateFieldDraftAndSelection()"
+    ]
+  },
+  "phone-draft-retention": {
+    "totalTestCount": 1,
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "failures": [
+      "testChildStructureNativePreservesPrivateFieldDraftAndSelection()"
+    ]
+  },
+  "phone-keyboard": {
+    "totalTestCount": 1,
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "failures": [
+      "testChildStructureNativePreservesPrivateFieldDraftAndSelection()"
+    ]
+  },
+  "phone-insertion": {
+    "totalTestCount": 1,
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "failures": [
+      "testChildStructureNativePreservesPrivateFieldDraftAndSelection()"
+    ]
+  },
+  "phone-direct-entry": {
+    "totalTestCount": 1,
+    "passedTests": 1,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "failures": []
+  },
+  "mac-completion-current": {
+    "totalTestCount": 1,
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0,
+    "failures": [
+      "TaskfoldUITests-Runner (44589) encountered an error"
+    ]
+  }
+}

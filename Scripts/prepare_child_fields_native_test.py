@@ -9,6 +9,7 @@ import sys
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--output", type=Path, required=True)
 parser.add_argument("--completions", action="store_true", help="Enable independent completion in this reserved test host only")
+parser.add_argument("--structure", action="store_true", help="Enable independent subtask organization in this reserved test host only")
 args = parser.parse_args()
 subprocess.run([sys.executable, str(Path(__file__).with_name("check_test_storage.py")), "--path", str(args.output.expanduser().parent)], check=True)
 root = args.output.expanduser().resolve()
@@ -21,6 +22,9 @@ value["TaskfoldChildRecordReadsEnabled"] = True
 value["TaskfoldChildRecordWritesEnabled"] = True
 if args.completions:
     value["TaskfoldChildRecordCompletionsEnabled"] = True
-value["CFBundleDisplayName"] = "Taskfold Child Field Test"
+if args.structure:
+    value["TaskfoldChildStructureReadsEnabled"] = True
+    value["TaskfoldChildStructureWritesEnabled"] = True
+value["CFBundleDisplayName"] = "Taskfold Child Structure Test" if args.structure else "Taskfold Child Field Test"
 path.write_bytes(plistlib.dumps(value))
-print("Launch with --team-editor-testing --child-fields-native; add --child-fields-native-reset only to reset the dedicated synthetic accounts.")
+print("Launch with --team-editor-testing --child-fields-native" + (" --child-structure-native" if args.structure else "") + "; add --child-fields-native-reset only to reset the dedicated synthetic accounts.")

@@ -688,4 +688,87 @@ final class ChildTaskStructureRecoveryTests: XCTestCase {
         XCTAssertThrowsError(try opening.validate(presentationRead(scope(command()))))
     }
 
+    @MainActor private func continuationRead(_ captured: ChildTaskFieldClientScope, root: Record? = nil, change: (inout [String: JSON]) -> Void = { _ in }) throws -> ChildTaskRecordRead {
+        var raw = try fixture()["fixtureRead"]!.object
+        var original = try root ?? Record(fixture()["fixtureRoot"]!.object)
+        raw["account"] = .string(captured.account); raw["task_id"] = .string(original.id)
+        raw["task_generation"] = original["task_generation"]; raw["project_id"] = original["project_id"]
+        change(&raw)
+        func branch(_ parent: String?) -> JSON {
+            let rows = raw["records"]!.list.map(\.object).filter { $0["parent_key"] == (parent.map(JSON.string) ?? .null) }.sorted { $0["sibling_order"]!.integer < $1["sibling_order"]!.integer }
+            return .array(rows.map { row in
+                var fields = row["fields"]!.object
+                if row["children_kind"] == .string("array") { fields["subtasks"] = branch(row["node_key"]!.text) }
+                else if row["children_kind"] == .string("null") { fields["subtasks"] = .null }
+                return .object(fields)
+            })
+        }
+        original["subtasks"] = raw["root_kind"] == .string("null") ? .null : branch(nil)
+        let context = try ChildTaskRecordContext(account: captured.account, origin: captured.origin, workspace: captured.workspace, session: captured.session, access: captured.access, snapshot: UUID(), root: original)
+        return try ChildTaskStructureRead(data: encode(raw), context: context).records
+    }
+    @MainActor func testFieldDraftContinuationFollowsIdentityAcrossSiblingReordering() throws {
+        let captured = scope(try command()), before = try continuationRead(captured)
+        let after = try continuationRead(captured) { raw in
+            raw["structure_revision"] = .number(3); raw["projection_revision"] = .number(4)
+            raw["records"] = .array(raw["records"]!.list.map { item in
+                var row = item.object
+                if row["node_key"] == .string("fresh") { row["sibling_order"] = .number(2) }
+                if row["node_key"] == .string("b") { row["sibling_order"] = .number(0) }
+                return .object(row)
+            })
+        }
+        XCTAssertNotEqual(before.orderedNodes.map(\.key), after.orderedNodes.map(\.key))
+        XCTAssertEqual(ChildTaskFieldDraftContinuation.retainedKeys(from: before, to: after), Set(before.nodes.keys))
+    }
+    @MainActor func testFieldDraftContinuationRejectsRecreatedRevisedAndChangedTargets() throws {
+        let captured = scope(try command()), before = try continuationRead(captured)
+        for variant in 0..<3 {
+            let after = try continuationRead(captured) { raw in
+                raw["records"] = .array(raw["records"]!.list.map { item in
+                    var row = item.object; guard row["node_key"] == .string("a") else { return item }
+                    if variant == 0 { row["incarnation"] = .string(UUID().uuidString.lowercased()) }
+                    if variant == 1 { row["revision"] = .number(Double(row["revision"]!.integer + 1)) }
+                    if variant == 2 { var fields = row["fields"]!.object; fields["title"] = .string("Changed elsewhere"); row["fields"] = .object(fields) }
+                    return .object(row)
+                })
+            }
+            let retained = ChildTaskFieldDraftContinuation.retainedKeys(from: before, to: after)
+            XCTAssertFalse(retained.contains("a")); XCTAssertTrue(retained.contains("b"))
+        }
+    }
+    @MainActor func testFieldDraftContinuationRefusesEveryScopeDeparture() throws {
+        let captured = scope(try command()), before = try continuationRead(captured)
+        let variants: [ChildTaskFieldClientScope] = [
+            .init(account: UUID().uuidString.lowercased(), origin: captured.origin, workspace: captured.workspace, session: captured.session, access: captured.access),
+            .init(account: captured.account, origin: "https://other.test", workspace: captured.workspace, session: captured.session, access: captured.access),
+            .init(account: captured.account, origin: captured.origin, workspace: UUID(), session: captured.session, access: captured.access),
+            .init(account: captured.account, origin: captured.origin, workspace: captured.workspace, session: UUID(), access: captured.access),
+            .init(account: captured.account, origin: captured.origin, workspace: captured.workspace, session: captured.session, access: UUID())]
+        for changed in variants { XCTAssertTrue(ChildTaskFieldDraftContinuation.retainedKeys(from: before, to: try continuationRead(changed)).isEmpty) }
+    }
+    @MainActor func testFieldDraftContinuationRefusesRootReplacementAndProjectTransfer() throws {
+        let captured = scope(try command()), before = try continuationRead(captured)
+        for field in ["id", "task_generation", "project_id"] {
+            var root = before.context.root; root[field] = .string(UUID().uuidString.lowercased())
+            XCTAssertTrue(ChildTaskFieldDraftContinuation.retainedKeys(from: before, to: try continuationRead(captured, root: root)).isEmpty)
+        }
+    }
+    @MainActor func testFieldDraftContinuationPreservesExactTextAndExcludesRemovedNodes() throws {
+        let captured = scope(try command())
+        func read(_ title: String, remove: Bool = false) throws -> ChildTaskRecordRead {
+            try continuationRead(captured) { raw in
+                raw["records"] = .array(raw["records"]!.list.compactMap { item in
+                    var row = item.object
+                    if remove && row["node_key"] == .string("nested") { return nil }
+                    if row["node_key"] == .string("a") { var fields = row["fields"]!.object; fields["title"] = .string(title); row["fields"] = .object(fields) }
+                    return .object(row)
+                })
+            }
+        }
+        let before = try read("caf\u{00e9}"), after = try read("cafe\u{0301}", remove: true)
+        let retained = ChildTaskFieldDraftContinuation.retainedKeys(from: before, to: after)
+        XCTAssertFalse(retained.contains("a")); XCTAssertFalse(retained.contains("nested")); XCTAssertTrue(retained.contains("b"))
+    }
+
 }
