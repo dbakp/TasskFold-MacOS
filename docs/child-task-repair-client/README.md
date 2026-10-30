@@ -51,3 +51,5 @@ The new SQL history guard mirrors the current policies and the public original w
 Development testing first exposed a fixture compile issue and then the array-position validation gap. The final shared parser and counter regressions cover the fix. Earlier focused phases are superseded; their test totals are not additional coverage.
 
 The full local Supabase stack still cannot connect, so migration-history/full-stack verification remains unavailable. Only owned synthetic SQL/runtime data is used; hosted services, real tasks, app windows and Simulators are untouched. No new dependency is introduced between repositories.
+
+A final whitespace check removed one trailing blank line after testing. `formatting-only.json` binds the compiled/tested source to the current file and proves the only change is the end-of-file newline; test and native source manifests retain their original hashes.

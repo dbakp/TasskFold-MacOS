@@ -446,4 +446,3 @@ extension Backend: ChildTaskRepairService {}
         _ = await work { try await journal.discard(command, lease: lease); try check(); try await update(); message = "Saved repair history removed. Your tasks are unchanged." }
     }
 }
-

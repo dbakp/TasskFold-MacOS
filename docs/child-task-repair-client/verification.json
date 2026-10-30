@@ -25,7 +25,7 @@
     "Normal opaque editing, larger-work preflight/repair, cleanup/restoration and wider lifecycle; user deferrals unchanged"
   ],
   "sourceSHA256": {
-    "Taskfold/Core/ChildTaskRepair.swift": "29e8e05c8170d51eeadfc6da3a9d5ef4bd98f3867a2371226ad86c65db338809",
+    "Taskfold/Core/ChildTaskRepair.swift": "452907944f14ce6c7aa8a2cd81f45c9164771441eb0988397f6381f16ff5b74e",
     "Taskfold/Core/SubtaskTree.swift": "d6ab8fbcfa3a8a586d4652e0f587a67a411c01919c7a02d4c2a3217e4a5aa086",
     "Taskfold/Core/Backend.swift": "fa8a14f3e41f581cea8d694641768756467d76fe3afb40a8089649b7d11a009b",
     "TaskfoldTests/ChildTaskRepairTests.swift": "8076df5c165fef817ef2266e0fe2af7dbd5a0f2a4f63aa172a9d4f58bc1ce2f0",
@@ -45,12 +45,17 @@
   "evidenceSHA256": {
     "local-migration-list.log": "51f80f996356bcc8d437c350c03cbdf512f5b48a4146394e6c7fe0de8c018a21",
     "fixture-capture.json": "2ad96f7663bff091d70f2fd5e94fd7aba0491e1fba0c0042bdcf79901b12e760",
+    "formatting-only.json": "991e15b4cb4ba2a20b0f3cac1204d6df907074717224010d3013d2fbc8f5122a",
     "native-compile.json": "286dfb5e7248255554a0b3ee1039dac17ac0e336df09ce6350f8fb792fcf219e",
     "core-final.log.gz": "842f5d14c855d1364d05fc78a2bf3431b76b8f3faf319442ba57adae9ca2ad25",
     "sql-history-access.log": "bd09d58641ec3563aab3cb8f19ec92206814ad76c2ca609c1499626852b01650",
-    "README.md": "3fd7bcf22aa2bf4ea4a5fb2a62912f79c4533a5d9f6c998036b6dfcbe70f386a",
+    "README.md": "67ebf263c1254b335c350fbf01d0cfd9af0a360fb967f6a5205536fc04961fa1",
     "core-source.json": "e63f5b0894f98b5c3a20977a217e33d0dada1eacb5fef13fea306e5757d1f547",
     "sql-history-access.json": "a97a4a12038d57f05e4af790c153e5c25c4c1edc97cf5c4238e93e5d2633a3f5",
     "app-build.log.gz": "98b1290976c94599af2c7921b6fc4211aab18ddc7c9b5e877c4784058413162a"
-  }
+  },
+  "testedSourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "29e8e05c8170d51eeadfc6da3a9d5ef4bd98f3867a2371226ad86c65db338809"
+  },
+  "formattingOnlyAfterChecks": true
 }
