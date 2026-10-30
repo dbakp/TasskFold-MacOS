@@ -16,6 +16,7 @@ enum AuthoredValueComparison {
         while let (a, b) = pending.popLast() {
             switch (a, b) {
             case (.null, .null): break
+            case (.preserved(let x), .preserved(let y)): if x != y { return false }
             case (.bool(let x), .bool(let y)): if x != y { return false }
             case (.number(let x), .number(let y)): if x.bitPattern != y.bitPattern { return false }
             case (.string(let x), .string(let y)): if !x.utf8.elementsEqual(y.utf8) { return false }
@@ -35,10 +36,12 @@ enum AuthoredValueComparison {
     }
 }
 
-/// Lossless JSON keeps optional and future backend fields intact across edits.
+/// Familiar values stay editable; unrepresentable future values retain exact
+/// validated bytes through Taskfold’s preserving codec.
 enum JSON: Codable, Equatable, Sendable {
-    case string(String), number(Double), bool(Bool), array([JSON]), object([String: JSON]), null
+    case string(String), number(Double), bool(Bool), array([JSON]), object([String: JSON]), null, preserved(PreservedJSON)
     init(from decoder: Decoder) throws {
+        if let context = decoder.userInfo[PreservedJSONDecodingContext.key] as? PreservedJSONDecodingContext, let value = try context.value(at: decoder.codingPath) { self = .preserved(value); return }
         let c = try decoder.singleValueContainer()
         if c.decodeNil() { self = .null }
         else if let v = try? c.decode(Bool.self) { self = .bool(v) }
@@ -56,11 +59,14 @@ enum JSON: Codable, Equatable, Sendable {
         case .array(let v): try c.encode(v)
         case .object(let v): try c.encode(v)
         case .null: try c.encodeNil()
+        case .preserved(let value):
+            guard let context = encoder.userInfo[PreservedJSONEncodingContext.key] as? PreservedJSONEncodingContext else { throw PreservedJSONFailure.encoderRequired }
+            try c.encode(context.register(value))
         }
     }
     var text: String { if case .string(let v) = self { return v }; return "" }
     var flag: Bool { if case .bool(let v) = self { return v }; return false }
-    var integer: Int { if case .number(let v) = self { return Int(v) }; return 0 }
+    var integer: Int { if case .number(let v) = self, v.isFinite, let value = Int(exactly: v.rounded(.towardZero)) { return value }; return 0 }
     var list: [JSON] { if case .array(let v) = self { return v }; return [] }
     var object: [String: JSON] { if case .object(let v) = self { return v }; return [:] }
 }
@@ -69,7 +75,10 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     var fields: [String: JSON]
     var id: String { string("id") }
     init(_ fields: [String: JSON] = [:]) { self.fields = fields }
-    init(from decoder: Decoder) throws { fields = try [String: JSON](from: decoder) }
+    init(from decoder: Decoder) throws {
+        try (decoder.userInfo[PreservedJSONDecodingContext.key] as? PreservedJSONDecodingContext)?.requireRecord(at: decoder.codingPath)
+        fields = try [String: JSON](from: decoder)
+    }
     func encode(to encoder: Encoder) throws { try fields.encode(to: encoder) }
     subscript(_ key: String) -> JSON {
         get { fields[key] ?? .null }
@@ -829,7 +838,7 @@ struct PreparedSnapshotEncoding: Sendable {
     private init(_ snapshot: Snapshot, widgetCompletionPrepared: Bool) throws {
         self.widgetCompletionPrepared = widgetCompletionPrepared
         self.snapshot = snapshot
-        data = try JSONEncoder().encode(snapshot)
+        data = try TaskfoldJSONEncoder().encode(snapshot)
         metadata = try Self.encodeMetadata(snapshot)
     }
     func hasPreparedWidgetCompletion(matching current: Snapshot) throws -> Bool {
@@ -853,7 +862,7 @@ struct PreparedSnapshotEncoding: Sendable {
     }
     private static func encodeMetadata(_ value: Snapshot) throws -> Data {
         var metadata = value; metadata.tables = [:]
-        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         return try encoder.encode(metadata)
     }
 }
@@ -1974,9 +1983,9 @@ struct WidgetPublicationInput: Sendable {
     func encoded() throws -> Data {
         var payload = WidgetProjection.payload(tasks: tasks, projects: projects, account: account, now: now, labels: labels, sections: sections, savedViews: savedViews, calendar: calendar, completionTokens: completionTokens, pendingSync: pendingSync, workingHours: workingHours, calendarWindow: calendarWindow, calendarFallback: calendarFallback, notePins: notePins, focusRecord: focusRecord, focusConflict: focusConflict, focusReadable: focusReadable, pulseActivity: pulseActivity, pulseEpoch: pulseEpoch, pulseChildren: pulseChildren, datePreferences: datePreferences, people: people, viewPreferences: viewPreferences, viewOrders: viewOrders, collaborators: collaborators, assignments: assignments)
         if let feedback, !account.isEmpty, feedback.account == account, now < feedback.expiresAt {
-            payload["completionFeedback"] = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(feedback))
+            payload["completionFeedback"] = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(feedback))
         }
-        return try JSONEncoder().encode(payload)
+        return try TaskfoldJSONEncoder().encode(payload)
     }
 }
 enum WidgetProjection {
@@ -2025,7 +2034,7 @@ enum WidgetProjection {
                 taskState: task.map { $0.completed ? "completed" : "open" } ?? "unavailable",
                 title: task.map { PinnedNotes.excerpt($0.title, characters: 160, bytes: 1000).0 })
         }
-        return (try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(FocusWidgetSnapshot(account: account, clock: clock, conflict: conflict)))) ?? .null
+        return (try? TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(FocusWidgetSnapshot(account: account, clock: clock, conflict: conflict)))) ?? .null
     }
 
     /// Materialize the planner's exact day semantics in a bounded, title-free projection.
@@ -2087,7 +2096,7 @@ enum WidgetProjection {
             return (ids,values)
         }
         func row(_ record: Record, kind: String, days: [String: [String]], groups: [String:[JSON]] = [:], error: Bool = false, clock: Bool = false) -> JSON {
-            let key = (try? JSONEncoder().encode([account, kind, record.id]).base64EncodedString()) ?? ""
+            let key = (try? TaskfoldJSONEncoder().encode([account, kind, record.id]).base64EncodedString()) ?? ""
             var fields: [String: JSON] = ["id": .string(key), "recordID": .string(record.id), "kind": .string(kind), "name": .string(record.name),
                 "days": .object(days.mapValues { .array($0.map(JSON.string)) }), "groups": .object(groups.mapValues(JSON.array)), "timeZone": .string(calendar.timeZone.identifier), "invalid": .bool(error)]
             if clock {

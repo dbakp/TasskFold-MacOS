@@ -7,8 +7,8 @@ import CryptoKit
 @MainActor enum ChildRepairNativePeer {
     static var enabled: Bool { ChildAdoptionNativePeer.enabled && ProcessInfo.processInfo.arguments.contains("--child-adoption-repair") }
     static let paths: Set<String> = ["/rest/v1/rpc/taskfold_preview_child_repair", "/rest/v1/rpc/taskfold_repair_children"]
-    static func bytes(_ value: [String: JSON]) throws -> Data { let e = JSONEncoder(); e.outputFormatting = [.sortedKeys]; return try e.encode(value) }
-    static func kind(_ value: JSON) -> String { switch value { case .object: return "object"; case .array: return "array"; case .string: return "string"; case .number: return "number"; case .bool: return "boolean"; case .null: return "null" } }
+    static func bytes(_ value: [String: JSON]) throws -> Data { let e = TaskfoldJSONEncoder(); e.outputFormatting = [.sortedKeys]; return try e.encode(value) }
+    static func kind(_ value: JSON) -> String { switch value { case .object: return "object"; case .array: return "array"; case .string: return "string"; case .number: return "number"; case .bool: return "boolean"; case .null: return "null"; case .preserved(let value): return value.kind == .number ? "number":"object" } }
     static func edit(_ tree: inout JSON, path: [Int], action: (inout JSON) throws -> Void) throws {
         guard let index = path.first else { try action(&tree); return }
         guard case .array(var rows) = tree, rows.indices.contains(index) else { throw ChildFieldNativeRefusal(code: "PT409") }

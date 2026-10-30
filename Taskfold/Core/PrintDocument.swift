@@ -187,7 +187,7 @@ enum TaskRowCSV {
                 stack = stack.filter { $0.key < item.depth }; stack[item.depth] = references[index]
                 rows.append([TaskRowCSVFormat.marker, references[index], parent, group.title, source.parentPath,
                     item.heading ? "heading" : item.completable ? "task" : "unavailable", try text("title"), options.notes ? try text("description") : "", completion, source.project,
-                    try number("priority", bounds: 1...4), try text("due_date"), try text("due_time"), try text("time_zone"), try text("scheduled_at"), try text("deadline_date"), try number("duration_minutes", bounds: 1...10080), String(decoding: try JSONEncoder().encode(source.labels), as: UTF8.self), source.assignee])
+                    try number("priority", bounds: 1...4), try text("due_date"), try text("due_time"), try text("time_zone"), try text("scheduled_at"), try text("deadline_date"), try number("duration_minutes", bounds: 1...10080), String(decoding: try TaskfoldJSONEncoder().encode(source.labels), as: UTF8.self), source.assignee])
             }
         }
         guard !rows.isEmpty else { throw AppFailure(message: "There are no task rows to export.") }

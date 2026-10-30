@@ -148,7 +148,7 @@ struct LocationReminderCandidate: Equatable, Sendable {
         self.ticket = ticket; self.place = place; title = task.title; priority = task.priority
     }
     /// Coordinates and a private place's label never enter notification content/receipts.
-    var receipt: Data? { try? JSONEncoder().encode(ticket) }
+    var receipt: Data? { try? TaskfoldJSONEncoder().encode(ticket) }
     /// Local-only comparison also catches two differently named saved pins at the
     /// same boundary. This geometry-derived key is never serialized into a receipt.
     var boundaryKey: String { LocationReminderIdentity.digest([ticket.device, ticket.taskID, ticket.generation, ticket.transition] + place.geometry.map(String.init)) }
@@ -798,7 +798,7 @@ struct LocationHandoffProposal: Equatable, Sendable {
     var authoredMilliseconds: Int { raw["authored_at_ms"]!.integer }
     var payload: [String: JSON] { raw.filter { Self.payloadKeys.contains($0.key) } }
     var payloadDigest: String {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return SHA256.hash(data: try! encoder.encode(payload)).map { String(format: "%02x", $0) }.joined()
     }
     init?(account: String, raw: [String: JSON]) {
@@ -916,7 +916,7 @@ struct LocationHandoffResponse: Sendable {
     let records: [LocationHandoffRecord]
     static func read(_ data: Data, account: String, device: String?) throws -> Self {
         guard data.count <= maximumBytes, LocationReminderIdentity.uuid(.string(account)), device.map({ LocationReminderIdentity.uuid(.string($0)) }) ?? true else { throw AppFailure(message: "Private place drafts could not be read. Your tasks are unchanged.") }
-        let json = try JSONDecoder().decode(JSON.self, from: data)
+        let json = try TaskfoldJSONDecoder().decode(JSON.self, from: data)
         guard case .object(let fields) = json, Set(fields.keys) == ["version","account_id","server_now_ms","items"], fields["version"] == .number(1), fields["account_id"] == .string(account),
               let now = Recurrence.number(fields["server_now_ms"] ?? .null, in: 0...LocationHandoffProposal.maximumTime), case .array(let items)? = fields["items"], items.count <= 256 else { throw AppFailure(message: "These private place drafts need a newer Taskfold version or a fresh sign-in.") }
         let records = items.compactMap { value -> LocationHandoffRecord? in guard case .object(let raw) = value else { return nil }; return LocationHandoffRecord(raw: raw, account: account, device: device, serverMilliseconds: now) }
@@ -1120,7 +1120,7 @@ enum LocationHandoffNativeFixture {
         UserDefaults.standard.set(false, forKey: ReminderPreferences.key(account))
         UserDefaults.standard.set(false, forKey: "dailyBackups." + account)
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [LocationHandoffFixtureHTTP.self]
-        let session = try! JSONDecoder().decode(Session.self, from: JSONEncoder().encode(JSON.object([
+        let session = try! Foundation.JSONDecoder().decode(Session.self, from: TaskfoldJSONEncoder().encode(JSON.object([
             "access_token": .string("synthetic-handoff-access"),"refresh_token": .string("synthetic-handoff-refresh"),"expires_in": .number(3600),
             "user": .object(["id": .string(account),"email": .string("handoff-native@example.invalid")])
         ])))
@@ -1158,14 +1158,14 @@ private final class LocationHandoffFixtureHTTP: URLProtocol, @unchecked Sendable
             stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096)
             while stream.hasBytesAvailable { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count)) }
         }
-        return try JSONDecoder().decode(JSON.self, from: data).object
+        return try TaskfoldJSONDecoder().decode(JSON.self, from: data).object
     }
     private func serve() throws -> (Int, JSON) {
         let fixture = LocationHandoffNativeFixture.self, now = Int(floor(Date().timeIntervalSince1970*1000))
         let url = fixture.root.appendingPathComponent("server.json")
         try FileManager.default.createDirectory(at: fixture.root, withIntermediateDirectories: true)
         var state: [String: JSON]
-        if let data = try? Data(contentsOf: url) { state = try JSONDecoder().decode(JSON.self, from: data).object }
+        if let data = try? Data(contentsOf: url) { state = try TaskfoldJSONDecoder().decode(JSON.self, from: data).object }
         else {
             state = ["records": .object([:]),"nonces": .object([:]),"putCalls": .number(0),"claimCalls": .number(0),"finishCalls": .number(0)]
             if !fixture.sender {
@@ -1210,7 +1210,7 @@ private final class LocationHandoffFixtureHTTP: URLProtocol, @unchecked Sendable
             rows[id] = .object(row); selected = [row]
         }
         state["records"] = .object(rows); state["nonces"] = .object(nonces)
-        try JSONEncoder().encode(state).write(to: url, options: .atomic)
+        try TaskfoldJSONEncoder().encode(state).write(to: url, options: .atomic)
         if status != 200 { return (status,.object(["message":.string("The connection was interrupted. Retry to confirm the same draft.")])) }
         selected = selected.map { raw in
             var row = raw
@@ -1225,7 +1225,7 @@ private final class LocationHandoffFixtureHTTP: URLProtocol, @unchecked Sendable
          "expires_at_ms":.number(Double(now+604_800_000)),"state":.string("pending"),"claim_device":.null,"available":.bool(true),"payload":.object(proposal.payload)]
     }
     private func finish(_ status: Int, _ value: JSON) {
-        let data = (try? JSONEncoder().encode(value)) ?? Data()
+        let data = (try? TaskfoldJSONEncoder().encode(value)) ?? Data()
         client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type":"application/json"] )!, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
     }

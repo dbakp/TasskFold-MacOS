@@ -39,7 +39,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
                   ids.allSatisfy({ $0.uuidString != "00000000-0000-0000-0000-000000000000" }) else { throw Self.invalid }
         }
         try copyAttempt?.validate(for:self)
-        guard try JSONEncoder().encode(self).count<=16_000_000 else {throw Self.invalid}
+        guard try TaskfoldJSONEncoder().encode(self).count<=16_000_000 else {throw Self.invalid}
     }
     func sameWork(as other:Self) -> Bool {
         version == other.version && original == other.original && record == other.record && markedForDeletion == other.markedForDeletion && edits == other.edits && conversations == other.conversations
@@ -88,7 +88,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
             let result:[String:JSON]=["original":.object(try draft.original.teamCompletion!.body(for:draft.original)),"record":.object(draft.record.fields),
              "request_id":.string(requestID.uuidString.lowercased()),"task_id":.string(taskID.uuidString.lowercased()),"task_generation":.string(generation.uuidString.lowercased()),
              "copy_assignments":.bool(assignments),"copy_reminders":.bool(reminders)]
-            guard try JSONEncoder().encode(result).count<=900000 else {throw AppFailure(message:"This saved draft is too large to copy. The full draft remains on this device.")}
+            guard try TaskfoldJSONEncoder().encode(result).count<=900000 else {throw AppFailure(message:"This saved draft is too large to copy. The full draft remains on this device.")}
             return result
         }
     }
@@ -168,7 +168,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
                 }
             }
             for change in snapshot.pending {
-                guard let data=try? JSONEncoder().encode(change),let value=try? JSONDecoder().decode(JSON.self,from:data),!references(value) else {return nil}
+                guard let data=try? TaskfoldJSONEncoder().encode(change),let value=try? TaskfoldJSONDecoder().decode(JSON.self,from:data),!references(value) else {return nil}
             }
             guard !(snapshot.tables[ConversationOutbox.table] ?? []).contains(where:{references(.object($0.fields))}) else {return nil}
             var result=snapshot;result.tables["tasks",default:[]].append(task);return result
@@ -222,7 +222,7 @@ struct TeamCompletionDraft: Codable, Equatable, Identifiable, Sendable {
             for change in snapshot.pending.dropFirst() {
                 if change.table == "tasks",change.recordID == proposed.id,change.baseline?["task_generation"] == proposed["task_generation"] {edits.append(change)}
                 else {
-                    guard let data=try? JSONEncoder().encode(change),let value=try? JSONDecoder().decode(JSON.self,from:data),!references(value,[command.source.id,proposed.id]) else {return nil}
+                    guard let data=try? TaskfoldJSONEncoder().encode(change),let value=try? TaskfoldJSONDecoder().decode(JSON.self,from:data),!references(value,[command.source.id,proposed.id]) else {return nil}
                 }
             }
             for row in snapshot.tables[ConversationOutbox.table] ?? [] {
@@ -331,7 +331,7 @@ struct TeamCompletionDraftVault: Sendable {
     private func writeVerified(_ draft: TeamCompletionDraft) throws -> TeamCompletionDraft {
         try draft.validate(); try checkDirectory()
         guard draft.scope.account == account, draft.scope.origin == origin else { throw TeamCompletionDraft.invalid }
-        let sealed = try AES.GCM.seal(JSONEncoder().encode(draft), using: key(), authenticating: context)
+        let sealed = try AES.GCM.seal(TaskfoldJSONEncoder().encode(draft), using: key(), authenticating: context)
         guard let bytes = sealed.combined, bytes.count <= 16_001_024 else { throw TeamCompletionDraft.invalid }
         let old = try entries()
         let total = try old.filter { $0.id != draft.id }.reduce(0) { try $0 + ciphertextSize(file($1.id)) }
@@ -363,7 +363,7 @@ struct TeamCompletionDraftVault: Sendable {
         let size = try ciphertextSize(file(id))
         let data=try Data(contentsOf:file(id));guard data.count == size, data.count<=16_001_024 else {throw TeamCompletionDraft.invalid}
         let plain=try AES.GCM.open(AES.GCM.SealedBox(combined:data),using:key(),authenticating:context)
-        let value=try JSONDecoder().decode(TeamCompletionDraft.self,from:plain);try value.validate()
+        let value=try TaskfoldJSONDecoder().decode(TeamCompletionDraft.self,from:plain);try value.validate()
         guard value.id == id,value.scope.account == account,value.scope.origin == origin else {throw TeamCompletionDraft.invalid}
         return value
     }
@@ -445,7 +445,7 @@ struct TeamCompletionBatchDraft: Codable, Equatable, Identifiable, Sendable {
               snapshot.tables.values.reduce(0, { $0 + $1.count }) <= 50000 else { throw Self.invalid }
         _ = try batch.body(for: original)
         let value = try TeamTaskBatch.Review(review, for: original)
-        guard value.parkingPreview(snapshot) != nil, try JSONEncoder().encode(self).count <= 16_000_000 else { throw Self.invalid }
+        guard value.parkingPreview(snapshot) != nil, try TaskfoldJSONEncoder().encode(self).count <= 16_000_000 else { throw Self.invalid }
     }
     func sameWork(as other: Self) -> Bool { original == other.original && snapshot == other.snapshot }
     var parkedChanges: [Mutation] {
@@ -493,12 +493,12 @@ struct TeamCompletionBatchDraft: Codable, Equatable, Identifiable, Sendable {
     /// workspace snapshot, access cache, device receipts or unrelated outboxes.
     func data() throws -> Data {
         try validate()
-        func json<T: Encodable>(_ value: T) throws -> JSON { try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)) }
+        func json<T: Encodable>(_ value: T) throws -> JSON { try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(value)) }
         var body: [String: JSON] = ["format": .string("com.taskfold.saved-selection"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)),
             "original": try json(original), "changes": try json(parkedChanges), "tasks": .array(records.map { .object($0.fields) }), "conversations": .array(parkedConversations.map { .object($0.fields) })]
         let context = ConversationRecoveryExport.context(parkedConversations, snapshot: snapshot)
         if !context.isEmpty { body["conversation_context"] = .array(context) }
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; return try encoder.encode(body)
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; return try encoder.encode(body)
     }
 }
 
@@ -529,7 +529,7 @@ struct TeamCompletionBatchDraftVault: Sendable {
         guard metadata.isSymbolicLink != true, let size = metadata.fileSize, size <= 16_001_024 else { throw TeamCompletionBatchDraft.invalid }
         let data = try Data(contentsOf: url); guard data.count <= 16_001_024 else { throw TeamCompletionBatchDraft.invalid }
         let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key(), authenticating: context)
-        let draft = try JSONDecoder().decode(TeamCompletionBatchDraft.self, from: plain); try draft.validate()
+        let draft = try TaskfoldJSONDecoder().decode(TeamCompletionBatchDraft.self, from: plain); try draft.validate()
         guard draft.id == id, draft.scope.account == account, draft.scope.origin == origin else { throw TeamCompletionBatchDraft.invalid }
         return draft
     }
@@ -539,7 +539,7 @@ struct TeamCompletionBatchDraftVault: Sendable {
         try draft.validate(); guard draft.scope.account == account, draft.scope.origin == origin else { throw TeamCompletionBatchDraft.invalid }
         let old = try entries(); if let existing = old.first(where: { $0.sameWork(as: draft) }) { return existing }
         guard old.count < 20, !FileManager.default.fileExists(atPath: file(draft.id).path) else { throw AppFailure(message: "Your saved selections are full. Review or remove an older selection first. Your queued changes are kept.") }
-        let sealed = try AES.GCM.seal(JSONEncoder().encode(draft), using: key(), authenticating: context)
+        let sealed = try AES.GCM.seal(TaskfoldJSONEncoder().encode(draft), using: key(), authenticating: context)
         guard let bytes = sealed.combined, try old.reduce(0, { try $0 + Data(contentsOf: file($1.id)).count }) + bytes.count <= 64_000_000 else { throw TeamCompletionBatchDraft.invalid }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try bytes.write(to: file(draft.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -627,7 +627,7 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
         guard [1, 2].contains(version), createdAt.timeIntervalSince1970.isFinite, snapshot.pending.first == original,
               Set(snapshot.pending.map(\.id)).count == snapshot.pending.count, snapshot.pending.count <= 1000, snapshot.tables.values.reduce(0, { $0 + $1.count }) <= 50000,
               let kept = preview(), changes(keeping: kept).count > 1 || !conversations(keeping: kept).isEmpty,
-              try JSONEncoder().encode(self).count <= 16_000_000 else { throw Self.invalid }
+              try TaskfoldJSONEncoder().encode(self).count <= 16_000_000 else { throw Self.invalid }
         if version == 1 {
             guard cancellations == nil else { throw Self.invalid }
             if original.teamTaskBatch == nil { guard try TeamCompletion.Review(review, for: original).isRecorded else { throw Self.invalid } }
@@ -739,12 +739,12 @@ struct TeamCompletionRecoveryDraft: Codable, Equatable, Identifiable, Sendable {
     /// crosses the explicit export boundary.
     func data() throws -> Data { try exportData(content(keeping: try validatedPreview())) }
     private func exportData(_ content: Content) throws -> Data {
-        func json<T: Encodable>(_ value: T) throws -> JSON { try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)) }
+        func json<T: Encodable>(_ value: T) throws -> JSON { try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(value)) }
         var body: [String: JSON] = ["format": .string("com.taskfold.saved-edits"), "version": .number(1), "created_at": .string(ISO8601DateFormatter().string(from: createdAt)), "original": try json(original), "changes": try json(content.changes), "tasks": .array(content.records.map { .object($0.fields) }), "conversations": .array(content.conversations.map { .object($0.fields) })]
         if isCancellationDraft { body["version"] = .number(2); body["state"] = .string(cancellationConfirmed ? "cancelled" : "unconfirmed") }
         let context = ConversationRecoveryExport.context(content.conversations, snapshot: snapshot)
         if !context.isEmpty { body["conversation_context"] = .array(context) }
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; return try encoder.encode(body)
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]; return try encoder.encode(body)
     }
 }
 
@@ -781,7 +781,7 @@ struct TeamCompletionRecoveryDraftVault: Sendable {
         guard meta.isSymbolicLink != true, let size = meta.fileSize, size <= 16_001_024 else { throw TeamCompletionRecoveryDraft.invalid }
         let data = try Data(contentsOf: url); guard data.count <= 16_001_024 else { throw TeamCompletionRecoveryDraft.invalid }
         let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key(), authenticating: context)
-        let draft = try JSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: plain); try draft.validate()
+        let draft = try TaskfoldJSONDecoder().decode(TeamCompletionRecoveryDraft.self, from: plain); try draft.validate()
         guard draft.id == id, draft.account == account, draft.origin == origin, draft.isCancellationDraft == cancelled else { throw TeamCompletionRecoveryDraft.invalid }; return draft
     }
     @discardableResult func save(_ draft: TeamCompletionRecoveryDraft) throws -> TeamCompletionRecoveryDraft {
@@ -790,7 +790,7 @@ struct TeamCompletionRecoveryDraftVault: Sendable {
         try draft.validate(); guard draft.account == account, draft.origin == origin, draft.isCancellationDraft == cancelled else { throw TeamCompletionRecoveryDraft.invalid }
         let old = try entries(); if let existing = old.first(where: { $0.sameWork(as: draft) }) { return existing }
         guard old.count < 20, !FileManager.default.fileExists(atPath: file(draft.id).path) else { throw AppFailure(message: "Your saved edits are full. Review or remove an older draft first. Your queued work is kept.") }
-        let sealed = try AES.GCM.seal(JSONEncoder().encode(draft), using: key(), authenticating: context)
+        let sealed = try AES.GCM.seal(TaskfoldJSONEncoder().encode(draft), using: key(), authenticating: context)
         guard let bytes = sealed.combined, try old.reduce(0, { try $0 + Data(contentsOf: file($1.id)).count }) + bytes.count <= 64_000_000 else { throw TeamCompletionRecoveryDraft.invalid }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true); try checkDirectory()
         try bytes.write(to: file(draft.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -805,7 +805,7 @@ struct TeamCompletionRecoveryDraftVault: Sendable {
         guard saved.sameWork(as: draft) else { throw TeamCompletionRecoveryDraft.invalid }
         let next = try saved.withCancellation(proof)
         if saved == next { return saved }
-        let old = try entries(), sealed = try AES.GCM.seal(JSONEncoder().encode(next), using: key(), authenticating: context)
+        let old = try entries(), sealed = try AES.GCM.seal(TaskfoldJSONEncoder().encode(next), using: key(), authenticating: context)
         guard let bytes = sealed.combined,
               try old.filter({ $0.id != saved.id }).reduce(0, { try $0 + Data(contentsOf: file($1.id)).count }) + bytes.count <= 64_000_000 else { throw TeamCompletionRecoveryDraft.invalid }
         try bytes.write(to: file(saved.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -820,7 +820,7 @@ struct TeamCompletionRecoveryDraftVault: Sendable {
         guard saved.sameWork(as: draft) else { throw TeamCompletionRecoveryDraft.invalid }
         let next = try saved.withProvisionalRetirement(proof)
         if saved == next { return saved }
-        let old = try entries(), sealed = try AES.GCM.seal(JSONEncoder().encode(next), using: key(), authenticating: context)
+        let old = try entries(), sealed = try AES.GCM.seal(TaskfoldJSONEncoder().encode(next), using: key(), authenticating: context)
         guard let bytes = sealed.combined,
               try old.filter({ $0.id != saved.id }).reduce(0, { try $0 + Data(contentsOf: file($1.id)).count }) + bytes.count <= 64_000_000 else { throw TeamCompletionRecoveryDraft.invalid }
         try bytes.write(to: file(saved.id), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])

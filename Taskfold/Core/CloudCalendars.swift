@@ -95,7 +95,7 @@ actor CalendarReadAPI {
             try Task.checkCancellation();try lease?.check()
             guard let http=response as? HTTPURLResponse else {throw CalendarReadFailure.invalidResponse}
             switch http.statusCode {case 200:break;case 401:throw CalendarReadFailure.signIn;case 403:throw CalendarReadFailure.permission;case 429:throw CalendarReadFailure.throttled;default:throw CalendarReadFailure.unavailable}
-            guard data.count<=6*1024*1024,case .object(let object)=try? JSONDecoder().decode(JSON.self,from:data),case .array(let items)=object[service == .google ? "items":"value"] else {throw CalendarReadFailure.invalidResponse}
+            guard data.count<=6*1024*1024,case .object(let object)=try? TaskfoldJSONDecoder().decode(JSON.self,from:data),case .array(let items)=object[service == .google ? "items":"value"] else {throw CalendarReadFailure.invalidResponse}
             for item in items {guard case .object(let row)=item else {throw CalendarReadFailure.invalidResponse};rows.append(row);guard rows.count<=maximumItems else {throw CalendarReadFailure.tooManyResults}}
             let continuation=object[service == .google ? "nextPageToken":"@odata.nextLink"] ?? .null
             if continuation == .null {return rows}

@@ -38,8 +38,8 @@ import Foundation
     static func item(_ id: String, name: String, document: JSON) -> [String: JSON] {
         ["id": .string(id), "name": .string(name), "document": document, "revision": .number(1), "created_at": .string("2026-10-25T10:00:00Z"), "updated_at": .string("2026-10-25T10:00:00Z")]
     }
-    static func save(_ state: State) throws { guard enabled else { throw CancellationError() }; try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); try JSONEncoder().encode(state).write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
-    static func load() throws -> State { guard enabled else { throw CancellationError() }; return try JSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func save(_ state: State) throws { guard enabled else { throw CancellationError() }; try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); try TaskfoldJSONEncoder().encode(state).write(to: file, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
+    static func load() throws -> State { guard enabled else { throw CancellationError() }; return try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
     static func reset() throws {
         var initial = State(items: [item(definitionID, name: "Design review kit", document: document()), item(futureID, name: "Future workflow", document: .object(["version": .number(2), "future": .string("Preserve these instructions")]))], loseNext: ProcessInfo.processInfo.arguments.contains("--team-library-lose-reply"))
         initial.loseNextWorkflow = ProcessInfo.processInfo.arguments.contains("--workflow-run-lose-reply")
@@ -47,7 +47,7 @@ import Foundation
     }
     static func backend() -> Backend {
         let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [TeamTemplateNativeHTTP.self]
-        let session = try! JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(TeamEditorNativeFixture.account)\"}}".utf8))
+        let session = try! Foundation.JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(TeamEditorNativeFixture.account)\"}}".utf8))
         return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
     }
     static func read(_ request: URLRequest) throws -> JSON {
@@ -67,7 +67,7 @@ import Foundation
     }
     static func handle(_ request: URLRequest, data: Data) throws -> (raw: [String: JSON], status: Int, lose: Bool) {
         guard enabled, request.url?.scheme == "https", request.url?.host == "synthetic.example", request.httpMethod == "POST" else { throw URLError(.notConnectedToInternet) }
-        let path = request.url!.path, params = try JSONDecoder().decode([String: JSON].self, from: data)
+        let path = request.url!.path, params = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
         var state = try load()
         if path == "/rest/v1/rpc/taskfold_workspace_boundary" { return (try TeamEditorNativeFixture.boundary(viewer: state.unavailable).raw, 200, false) }
         if path == "/rest/v1/rpc/taskfold_teams", ["list", "invitations"].contains(params["_action"]?.text ?? "") {
@@ -149,7 +149,7 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
                 if request.httpMethod == "GET" {
                     let value = try TeamTemplateNativeFixture.read(request)
                     client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
-                    client?.urlProtocol(self, didLoad: try JSONEncoder().encode(value)); client?.urlProtocolDidFinishLoading(self); return
+                    client?.urlProtocol(self, didLoad: try TaskfoldJSONEncoder().encode(value)); client?.urlProtocolDidFinishLoading(self); return
                 }
                 var data = request.httpBody ?? Data()
                 if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable, data.count <= 4_300_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count)) } }
@@ -157,7 +157,7 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
                 let reply = try TeamTemplateNativeFixture.handle(request, data: data)
                 guard !reply.lose else { throw URLError(.networkConnectionLost) }
                 client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: reply.status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
-                client?.urlProtocol(self, didLoad: try JSONEncoder().encode(reply.raw)); client?.urlProtocolDidFinishLoading(self)
+                client?.urlProtocol(self, didLoad: try TaskfoldJSONEncoder().encode(reply.raw)); client?.urlProtocolDidFinishLoading(self)
             } catch { client?.urlProtocol(self, didFailWithError: error) }
         }
     }
@@ -201,8 +201,8 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
         var transitions = 0
         var loseNext = false
     }
-    static func read() throws -> State { try JSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
-    static func write(_ value: State) throws { try JSONEncoder().encode(value).write(to: file, options: .atomic) }
+    static func read() throws -> State { try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func write(_ value: State) throws { try TaskfoldJSONEncoder().encode(value).write(to: file, options: .atomic) }
     static func reset(_ row: Record) throws {
         var state = State(row: row)
         if ProcessInfo.processInfo.arguments.contains("--personal-heading-capability-off") { state.support = 0 }
@@ -226,7 +226,7 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
                 let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; result.append(contentsOf: bytes.prefix(count))
             }; data = result
         }
-        return try JSONDecoder().decode([String: JSON].self, from: data ?? Data("{}".utf8))
+        return try TaskfoldJSONDecoder().decode([String: JSON].self, from: data ?? Data("{}".utf8))
     }
     static func response(_ request: URLRequest) throws -> (Data, Bool) {
         guard enabled, request.url?.host == "synthetic.example", request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-auth" else { throw URLError(.userAuthenticationRequired) }
@@ -252,11 +252,11 @@ private final class TeamTemplateNativeHTTP: URLProtocol, @unchecked Sendable {
             let lose = state.loseNext; state.loseNext = false
             if lose { state.support = 0 }
             try write(state)
-            return (try JSONEncoder().encode(state.row), lose)
+            return (try TaskfoldJSONEncoder().encode(state.row), lose)
         }
         else if path == "/rest/v1/tasks" { value = .array([.object(try read().row.fields)]) }
         else { value = .array([]) }
-        return (try JSONEncoder().encode(value), false)
+        return (try TaskfoldJSONEncoder().encode(value), false)
     }
 }
 #endif
@@ -299,8 +299,8 @@ import CryptoKit
                 .object(["id": .string("delivery"), "title": .string("Publish the design"), "priority": .number(3), "project_id": .string("child"), "labels": .array([]), "subtasks": .array([])])])])
         return Record(["id": .string(templateID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Native workflow proof"), "document": document])
     }
-    static func read() throws -> State { try JSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
-    static func write(_ state: State) throws { try JSONEncoder().encode(state).write(to: file, options: .atomic) }
+    static func read() throws -> State { try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func write(_ state: State) throws { try TaskfoldJSONEncoder().encode(state).write(to: file, options: .atomic) }
     static func reset(_ original: Record) throws {
         var state = State(rows: ["tasks": [original], WorkflowTemplate.table: [template]])
         state.loseUndo = ProcessInfo.processInfo.arguments.contains("--workflow-undo-lose-reply")
@@ -310,7 +310,7 @@ import CryptoKit
         let state = try read()
         let projects = (state.rows["projects"] ?? []).sorted { $0.id < $1.id }.map { row in JSON.object(["id": .string(row.id), "team_id": .null, "role": .string("owner"), "archived": .bool(false), "can_send_tasks": .bool(true)]) }
         var raw: [String: JSON] = ["workspace_boundary_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "native_team_reads_enabled": .bool(false), "setup_paused": .bool(true), "task_types_protocol": .number(0), "task_type_lifecycle_protocol": .number(0), "personal_task_types_protocol": .number(1), "personal_workflow_undo_protocol": .number(Double(state.support)), "projects": .array(projects), "teams": .array([])]
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         raw["token"] = .string(SHA256.hash(data: try encoder.encode(JSON.object(raw))).map { String(format: "%02x", $0) }.joined())
         return try TeamWorkspaceBoundary(raw, account: TeamEditorNativeFixture.account, origin: "https://synthetic.example")
     }
@@ -321,7 +321,7 @@ import CryptoKit
             let body = try PersonalHeadingNativePeer.body(request); var state = try read()
             guard state.support == 1, let id = body["_request"]?.text, let nonce = UUID(uuidString: id) else { throw URLError(.badServerResponse) }
             state.attempts.append(body)
-            if let receipt = state.receipts[id] { try write(state); return (try JSONEncoder().encode(receipt), false) }
+            if let receipt = state.receipts[id] { try write(state); return (try TaskfoldJSONEncoder().encode(receipt), false) }
             // The peer models outcome/transport. Actual SQL semantics are tested
             // against PostgreSQL independently, not inferred from this helper.
             let run = UUID(), fields = body["_body"]!.object
@@ -339,7 +339,7 @@ import CryptoKit
             let reply = Record(["id": .string(id), "applied": .bool(applied), "rows": .array(current)])
             state.receipts[id] = reply
             let lose = state.loseUndo; state.loseUndo = false; if lose { state.support = 0 }
-            try write(state); return (try JSONEncoder().encode(reply), lose)
+            try write(state); return (try TaskfoldJSONEncoder().encode(reply), lose)
         }
         guard path.hasPrefix("/rest/v1/") else { return nil }
         let table = String(path.dropFirst("/rest/v1/".count))
@@ -353,14 +353,14 @@ import CryptoKit
                 rows[index] = Record(fields)
             } else { rows.append(Record(fields)) }
             state.rows[table] = rows; try write(state)
-            return (try JSONEncoder().encode(rows.filter { $0.id == id }), false)
+            return (try TaskfoldJSONEncoder().encode(rows.filter { $0.id == id }), false)
         }
         guard request.httpMethod == "GET" else { throw URLError(.unsupportedURL) }
         for query in URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems ?? [] {
             if query.name == "id", let value = query.value, value.hasPrefix("eq.") { rows = rows.filter { $0.id == String(value.dropFirst(3)) } }
             if query.name == "user_id", let value = query.value, value.hasPrefix("eq.") { rows = rows.filter { $0.string("user_id") == String(value.dropFirst(3)) } }
         }
-        return (try JSONEncoder().encode(rows), false)
+        return (try TaskfoldJSONEncoder().encode(rows), false)
     }
     static func require<T>(_ value: T?) throws -> T { guard let value else { throw URLError(.badServerResponse) }; return value }
 }
@@ -384,7 +384,7 @@ import CryptoKit
                                 let directory = TeamTemplateNativeFixture.root.appendingPathComponent("WidgetPublicationChecks/\(proof.uuidString.lowercased())", isDirectory: true)
                                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
                                 let result = try await store.verifyWorkflowWidgetPublication()
-                                try JSONEncoder().encode(result).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                                try TaskfoldJSONEncoder().encode(result).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
                             } catch {
                                 store.error = error.localizedDescription
                                 if let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--workflow-commit-proof=") }),
@@ -392,7 +392,7 @@ import CryptoKit
                                     let failure: [String: JSON] = ["error": .string(error.localizedDescription), "phase": .string(store.notice ?? "none")]
                                     let directory = TeamTemplateNativeFixture.root.appendingPathComponent("WidgetPublicationChecks/\(proof.uuidString.lowercased())", isDirectory: true)
                                     try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-                                    try? JSONEncoder().encode(failure).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
+                                    try? TaskfoldJSONEncoder().encode(failure).write(to: directory.appendingPathComponent("result.json"), options: .atomic)
                                 }
                             }
                         }
@@ -532,13 +532,13 @@ import CryptoKit
                         fields["widgetAccount"] = projection["account"] ?? .null
                         data = .object(fields)
                     }
-                    try JSONEncoder().encode(data).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
+                    try TaskfoldJSONEncoder().encode(data).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
                 } catch {
                     // Publish a terminal diagnostic instead of making the native
                     // runner wait three minutes when test widget storage is absent.
                     if case .object(var fields) = data {
                         fields["widgetError"] = .string(error.localizedDescription)
-                        try? JSONEncoder().encode(JSON.object(fields)).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
+                        try? TaskfoldJSONEncoder().encode(JSON.object(fields)).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("commit-scale-\(proof.uuidString.lowercased()).json"), options: .atomic)
                     }
                     store.error = error.localizedDescription
                 }

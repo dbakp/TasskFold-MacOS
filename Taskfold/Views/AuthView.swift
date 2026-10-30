@@ -130,7 +130,7 @@ extension Backend {
         let code = try OAuthCallback.code(from: callback)
         let data = try await request("/auth/v1/token?grant_type=pkce", method: "POST", body: ["auth_code": .string(code), "code_verifier": .string(verifier)], authenticated: false)
         try requireAuthentication(attempt)
-        let next = try JSONDecoder().decode(Session.self, from: data)
+        let next = try Foundation.JSONDecoder().decode(Session.self, from: data)
         try await acceptAuthentication(next,attempt:attempt,reauthenticating:context,willCommit:willCommit)
     }
 }

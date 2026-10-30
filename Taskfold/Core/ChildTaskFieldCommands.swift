@@ -29,7 +29,7 @@ struct ChildTaskFieldCommand: ReviewedTeamCommand, CustomStringConvertible, Cust
         for (key,value) in changes {try Self.validate(key,value)}
         // Pretty output is conservative relative to PostgreSQL's spaced JSONB
         // envelope and avoids compact-JSON boundary surprises.
-        let encoder=JSONEncoder();encoder.outputFormatting=[.prettyPrinted,.sortedKeys]
+        let encoder=TaskfoldJSONEncoder();encoder.outputFormatting=[.prettyPrinted,.sortedKeys]
         guard try encoder.encode(body).count<=128_000 else {throw Self.invalid}
         self.account=account;self.origin=origin;self.body=body
     }
@@ -173,12 +173,12 @@ actor ChildTaskFieldJournal {
     private func read() throws -> ChildTaskFieldJournalState {
         guard let data=try io.read(key:key) else {return try .init(account:account,origin:origin)}
         guard data.count<=ChildTaskFieldJournalState.maximumStoredBytes else {throw ChildTaskFieldCommand.invalid}
-        let state=try JSONDecoder().decode(ChildTaskFieldJournalState.self,from:data)
+        let state=try TaskfoldJSONDecoder().decode(ChildTaskFieldJournalState.self,from:data)
         guard state.account==account,state.origin==origin else {throw ChildTaskFieldCommand.invalid};return state
     }
     private func write(_ state:ChildTaskFieldJournalState,lease:CalendarReadLease) throws {
         _=try ChildTaskFieldJournalState(account:account,origin:origin,entries:state.entries)
-        let data=try JSONEncoder().encode(state);guard data.count<=ChildTaskFieldJournalState.maximumStoredBytes else {throw ChildTaskFieldCommand.invalid}
+        let data=try TaskfoldJSONEncoder().encode(state);guard data.count<=ChildTaskFieldJournalState.maximumStoredBytes else {throw ChildTaskFieldCommand.invalid}
         try lease.check();try io.write(data,key:key)
     }
     func load() throws -> ChildTaskFieldJournalState {try guarded(lease:nil){try read()}}

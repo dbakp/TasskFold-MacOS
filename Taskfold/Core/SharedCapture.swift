@@ -154,7 +154,7 @@ final class SharedCaptureDisk: @unchecked Sendable {
         }
         guard data.count <= Self.maximumFileBytes else { throw SharedCaptureFailure("Saved sharing data needs attention. Open Taskfold before trying again.") }
         let state: State
-        do { state = try JSONDecoder().decode(State.self, from: data) }
+        do { state = try TaskfoldJSONDecoder().decode(State.self, from: data) }
         catch { throw SharedCaptureFailure("Saved drafts couldn’t be read. They have been kept on this device, and your tasks are unchanged.") }
         guard state.version == 1, state.drafts.count <= Self.capacity, Set(state.drafts.map(\.id)).count == state.drafts.count else {
             throw SharedCaptureFailure("Saved sharing data needs a supported version of Taskfold.")
@@ -164,7 +164,7 @@ final class SharedCaptureDisk: @unchecked Sendable {
         return state
     }
     private func write(_ state: State) throws {
-        let data = try JSONEncoder().encode(state)
+        let data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= Self.maximumFileBytes else { throw SharedCaptureFailure("Open Taskfold to review saved drafts before sharing more.") }
         try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)

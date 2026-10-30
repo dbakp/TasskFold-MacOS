@@ -21,7 +21,7 @@ struct TeamWorkflowRunCommand: ReviewedTeamCommand, ReviewedTeamFileCommand, Cus
         var keys: Set<String> = ["team_id", "request_id", "team_revision", "source", "destination", "projects", "sections", "tasks", "orders"]
         if body["workflow_types_protocol"] != nil { keys.insert("workflow_types_protocol") }
         guard Set(body.keys) == keys,
-              try JSONEncoder().encode(body).count <= 4_200_000 else { throw Self.invalid }
+              try TaskfoldJSONEncoder().encode(body).count <= 4_200_000 else { throw Self.invalid }
         _ = try TeamOrganizationValue.id(body["team_id"]); _ = try TeamOrganizationValue.id(body["request_id"])
         _ = try TeamProjectValue.revision(body["team_revision"])
         guard case .object(let source)? = body["source"], Set(source.keys) == ["kind", "id", "team_id", "revision", "document"], let document = source["document"] else { throw Self.invalid }
@@ -142,7 +142,7 @@ extension Backend: TeamWorkflowRunService {
         let fence = try reauthenticationContext(account: command.account)
         let data = try await request("/rest/v1/rpc/taskfold_team_workflow_run", method: "POST", body: ["_body": .object(command.body)], expectedAccount: command.account)
         try requireReauthentication(fence)
-        guard data.count <= 1_000_000, let raw = try? JSONDecoder().decode([String: JSON].self, from: data) else { throw TeamWorkflowRunCommand.invalid }
+        guard data.count <= 1_000_000, let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamWorkflowRunCommand.invalid }
         return try command.confirmed(raw)
     }
 }
@@ -282,7 +282,7 @@ extension Backend {
         var query = URLComponents(); query.queryItems = [URLQueryItem(name: "select", value: "id,user_id,name,document"), URLQueryItem(name: "id", value: "eq." + id), URLQueryItem(name: "user_id", value: "eq." + account), URLQueryItem(name: "limit", value: "1")]
         let bytes = try await request("/rest/v1/project_templates?" + query.percentEncodedQuery!, expectedAccount: account, workflowReadLimit: 3_000_000)
         try requireReauthentication(fence)
-        let rows = try JSONDecoder().decode([Record].self, from: bytes)
+        let rows = try TaskfoldJSONDecoder().decode([Record].self, from: bytes)
         guard rows.count == 1, let row = rows.first, Set(row.fields.keys) == ["id", "user_id", "name", "document"], row.id == id, row["user_id"] == .string(account) else { throw TeamWorkflowRunCommand.invalid }
         _ = try WorkflowTemplate(document: row["document"])
         return .personal(row)
@@ -299,7 +299,7 @@ extension Backend {
             let bytes = try await request("/rest/v1/view_orders?" + query.percentEncodedQuery!, expectedAccount: plan.account, workflowReadLimit: 4_200_000)
             try requireReauthentication(fence); received += bytes.count
             guard received <= 4_200_000 else { throw TeamWorkflowRunCommand.invalid }
-            let rows = try JSONDecoder().decode([Record].self, from: bytes)
+            let rows = try TaskfoldJSONDecoder().decode([Record].self, from: bytes)
             guard rows.count <= batch.count else { throw TeamWorkflowRunCommand.invalid }
             for row in rows {
                 guard Set(row.fields.keys) == ["id", "user_id", "ids"], row["user_id"] == .string(plan.account), batch.contains(row.id), seen.insert(row.id).inserted,

@@ -71,7 +71,7 @@ struct ChildTaskCompletionCommand: ReviewedTeamCommand, CustomStringConvertible,
             try ChildTaskCompletionDraft.validate(account: account, origin: origin, body: body)
         }
         self.account = account; self.origin = origin; self.body = body; self.original = original
-        guard try JSONEncoder().encode(self).count <= Self.maximumStoredBytes else { throw Self.invalid }
+        guard try TaskfoldJSONEncoder().encode(self).count <= Self.maximumStoredBytes else { throw Self.invalid }
     }
     static let identity = ["protocol", "account", "task_id", "task_generation", "project_id", "node_key", "incarnation"]
     func sameTarget(_ other: Self) -> Bool { account == other.account && origin == other.origin && Self.identity.allSatisfy { body[$0] == other.body[$0] } }
@@ -235,7 +235,7 @@ struct ChildTaskCompletionJournalState: ReviewedTeamFileCommand, CustomStringCon
     /// Array order tracks acknowledgement recency without persisting a clock.
     mutating func makeRoom(preserving request: String?) throws {
         func fits() throws -> Bool {
-            try entries.count <= Self.maximumEntries && JSONEncoder().encode(self).count <= Self.maximumStoredBytes
+            try entries.count <= Self.maximumEntries && TaskfoldJSONEncoder().encode(self).count <= Self.maximumStoredBytes
         }
         guard try !fits() else { return }
         func group(_ entry: Entry) -> String { entry.command.original?.body["request_id"]?.text ?? entry.command.id }
@@ -291,14 +291,14 @@ actor ChildTaskCompletionJournal {
     private func read() throws -> ChildTaskCompletionJournalState {
         guard let data = try io.read(key: key) else { return try .init(account: account, origin: origin) }
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: ChildTaskCompletionJournalState.maximumStoredBytes)
-        let state = try JSONDecoder().decode(ChildTaskCompletionJournalState.self, from: data)
+        let state = try TaskfoldJSONDecoder().decode(ChildTaskCompletionJournalState.self, from: data)
         guard state.account == account, state.origin == origin else { throw ChildTaskCompletionDraft.invalid }; return state
     }
     private func write(_ candidate: ChildTaskCompletionJournalState, lease: CalendarReadLease, preserving request: String? = nil) throws {
         var state = candidate
         try state.makeRoom(preserving: request)
         _ = try ChildTaskCompletionJournalState(account: account, origin: origin, entries: state.entries)
-        let data = try JSONEncoder().encode(state)
+        let data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= ChildTaskCompletionJournalState.maximumStoredBytes else { throw ChildTaskCompletionDraft.invalid }
         try lease.check(); try io.write(data, key: key)
     }

@@ -8,7 +8,7 @@ import SwiftUI
     static let origin = "https://synthetic.example"
     static var packet: [String: JSON] {
         precondition(enabled)
-        guard let url = Bundle.main.url(forResource: "ProjectAdoptionNative", withExtension: "json"), let data = try? Data(contentsOf: url), let p = try? JSONDecoder().decode([String: JSON].self, from: data), p["syntheticOnly"] == .bool(true), p["containerRemoved"] == .bool(true), p["origin"] == .string(origin) else { preconditionFailure("Prepared synthetic contract required") }
+        guard let url = Bundle.main.url(forResource: "ProjectAdoptionNative", withExtension: "json"), let data = try? Data(contentsOf: url), let p = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), p["syntheticOnly"] == .bool(true), p["containerRemoved"] == .bool(true), p["origin"] == .string(origin) else { preconditionFailure("Prepared synthetic contract required") }
         return p
     }
     static var account: String { packet["account"]!.text }
@@ -25,12 +25,12 @@ import SwiftUI
         var lastInspection: [String: JSON]?
         var lastReview: [String: JSON]?
     }
-    static func read() throws -> State { guard enabled else { throw CancellationError() }; return try JSONDecoder().decode(State.self, from: Data(contentsOf: stateURL)) }
-    static func write(_ state: State) throws { guard enabled else { throw CancellationError() }; try FileManager.default.createDirectory(at: stateURL.deletingLastPathComponent(), withIntermediateDirectories: true); try JSONEncoder().encode(state).write(to: stateURL, options: .atomic) }
+    static func read() throws -> State { guard enabled else { throw CancellationError() }; return try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: stateURL)) }
+    static func write(_ state: State) throws { guard enabled else { throw CancellationError() }; try FileManager.default.createDirectory(at: stateURL.deletingLastPathComponent(), withIntermediateDirectories: true); try TaskfoldJSONEncoder().encode(state).write(to: stateURL, options: .atomic) }
     static func reset() throws { try write(State()) }
     static func backend() -> Backend {
         let c = URLSessionConfiguration.ephemeral; c.protocolClasses = [ProjectAdoptionNoNetwork.self]
-        let s = try! JSONDecoder().decode(Session.self, from: JSONEncoder().encode(["access_token": JSON.string("synthetic-auth"), "refresh_token": .string("synthetic-refresh"), "expires_in": .number(3600), "user": .object(["id": .string(account)])]))
+        let s = try! Foundation.JSONDecoder().decode(Session.self, from: TaskfoldJSONEncoder().encode(["access_token": JSON.string("synthetic-auth"), "refresh_token": .string("synthetic-refresh"), "expires_in": .number(3600), "user": .object(["id": .string(account)])]))
         return Backend(configuration: ["URL": origin, "Key": "synthetic-public"], http: URLSession(configuration: c), session: s, persistSession: { _ in })
     }
     static func boundary(_ s: State) -> [String: JSON] {
@@ -72,7 +72,7 @@ import SwiftUI
         r["decisions"] = .array(choices.sorted { $0.id < $1.id }.map { d in var fields = d.body.object; fields["effective_role"] = p["review"]!.object["decisions"]!.list.first { $0.object["user_id"] == .string(d.user) }!.object["effective_role"]; return .object(fields) })
         let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime,.withFractionalSeconds]
         r["expires_at"] = .string(formatter.string(from: Date().addingTimeInterval(ProcessInfo.processInfo.arguments.contains("--project-adoption-short-review") ? 30 : 900)))
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         r["review_token"] = .string(CalendarOAuthConfiguration.digest(String(decoding: try encoder.encode(r), as: UTF8.self)))
         s.lastReview = r; try write(s); return (r,200)
     }
@@ -87,7 +87,7 @@ private final class ProjectAdoptionNoNetwork: URLProtocol, @unchecked Sendable {
             do {
                 var data = request.httpBody ?? Data()
                 if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating:0,count:4096); while stream.hasBytesAvailable && data.count <= 300000 { let n = stream.read(&bytes,maxLength:bytes.count); if n <= 0 { break }; data.append(contentsOf:bytes.prefix(n)) } }
-                let b = data.isEmpty ? [:] : try JSONDecoder().decode([String: JSON].self, from: data), path = request.url!.path
+                let b = data.isEmpty ? [:] : try TaskfoldJSONDecoder().decode([String: JSON].self, from: data), path = request.url!.path
                 var result: JSON; var status = 200
                 var s = try ProjectAdoptionNativeFixture.read(); s.requests.append((request.httpMethod ?? "GET") + " " + path); try ProjectAdoptionNativeFixture.write(s); let p = ProjectAdoptionNativeFixture.packet
                 if request.httpMethod == "GET", path.hasPrefix("/rest/v1/"), !path.hasPrefix("/rest/v1/rpc/") {
@@ -116,7 +116,7 @@ private final class ProjectAdoptionNoNetwork: URLProtocol, @unchecked Sendable {
     }
     private func finish(_ value: JSON,status: Int) {
         client?.urlProtocol(self,didReceive:HTTPURLResponse(url:request.url!,statusCode:status,httpVersion:nil,headerFields:["Content-Type":"application/json"])!,cacheStoragePolicy:.notAllowed)
-        client?.urlProtocol(self,didLoad:try! JSONEncoder().encode(value));client?.urlProtocolDidFinishLoading(self)
+        client?.urlProtocol(self,didLoad:try! TaskfoldJSONEncoder().encode(value));client?.urlProtocolDidFinishLoading(self)
     }
 }
 struct ProjectAdoptionNativeFixtureView: View {

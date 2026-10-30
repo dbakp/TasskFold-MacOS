@@ -322,7 +322,7 @@ final class Workspace {
         if let path = Self.subtaskPath(id) {
             expandedTasks.insert(path[0])
             if path.count > 2 {
-                for end in 2..<path.count { expandedTasks.insert("subtask:" + (try! JSONEncoder().encode(Array(path.prefix(end)))).base64EncodedString()) }
+                for end in 2..<path.count { expandedTasks.insert("subtask:" + (try! TaskfoldJSONEncoder().encode(Array(path.prefix(end)))).base64EncodedString()) }
             }
         }
         let project = task.string("project_id")

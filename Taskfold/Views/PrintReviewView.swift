@@ -371,7 +371,7 @@ private struct TaskCSVReview: View {
             let planning = [row[9], row[10].isEmpty ? "" : row[10] == "4" ? "No priority" : "P" + row[10], row[11], row[12], row[13], row[15].isEmpty ? "" : "Deadline " + row[15], row[16].isEmpty ? "" : row[16] + " min", row[18]].filter { !$0.isEmpty }.joined(separator: " · ")
             if !planning.isEmpty { Text(planning).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
             if !row[14].isEmpty { Text("Exact scheduled time: " + row[14]).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
-            if let labels = try? JSONDecoder().decode([String].self, from: Data(row[17].utf8)), !labels.isEmpty {
+            if let labels = try? TaskfoldJSONDecoder().decode([String].self, from: Data(row[17].utf8)), !labels.isEmpty {
                 Text(labels.map { "@" + $0 }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }.accessibilityIdentifier("csvRow-" + row[1])

@@ -271,6 +271,7 @@ struct ConflictReview: View {
             return store.record(table, id: value.text)?.name ?? "Unavailable \(key == "project_id" ? "project" : "section")"
         }
         switch value {
+        case .preserved: return "Original content kept"
         case .null: return "None"
         case .string(let text): return text.isEmpty ? "Empty" : text
         case .bool(let flag): return flag ? "Yes" : "No"
@@ -510,7 +511,7 @@ struct SavedTeamDraftsView: View {
                             #if DEBUG
                             .task {
                                 if ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), (Bundle.main.bundleIdentifier ?? "").contains("workflowteststeameditbridge") {
-                                    try? JSONEncoder().encode(draft).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-connected-provisional-copy-proof.json"), options: .atomic)
+                                    try? TaskfoldJSONEncoder().encode(draft).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-connected-provisional-copy-proof.json"), options: .atomic)
                                 }
                             }
                             #endif
@@ -994,7 +995,7 @@ private struct SavedRecordedEditsView: View {
                 text = result.0; exportData = result.1
                 #if DEBUG
                 if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-recorded-draft-testing"), draft.account == TeamEditorNativeFixture.account, draft.origin == "https://synthetic.example" {
-                    try JSONEncoder().encode(draft).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-recorded-draft-proof.json"), options: .atomic)
+                    try TaskfoldJSONEncoder().encode(draft).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-recorded-draft-proof.json"), options: .atomic)
                     try result.1.write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-recorded-export-proof.json"), options: .atomic)
                 }
                 #endif

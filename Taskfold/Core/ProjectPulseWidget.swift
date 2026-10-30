@@ -24,9 +24,9 @@ public struct PulseProject: Codable, Equatable, Identifiable, Sendable {
     public init(account: String, recordID: String, name: String, total: Int, completed: Int, days: [String: PulseDay], countsIncomplete: Bool = false, historyPartial: Bool = false) {
         self.id = Self.key(account: account, project: recordID); self.recordID = recordID; self.name = name; self.total = total; self.completed = completed; self.days = days; self.countsIncomplete = countsIncomplete ? true : nil; self.historyPartial = historyPartial ? true : nil
     }
-    public static func key(account: String, project: String) -> String { (try? JSONEncoder().encode([account, project]).base64EncodedString()) ?? "" }
+    public static func key(account: String, project: String) -> String { (try? TaskfoldJSONEncoder().encode([account, project]).base64EncodedString()) ?? "" }
     public static func link(for id: String) -> ProjectPulseLink? {
-        guard id.utf8.count <= 1024, let data = Data(base64Encoded: id), let parts = try? JSONDecoder().decode([String].self, from: data), parts.count == 2, validID(parts[0]), validID(parts[1]), key(account: parts[0], project: parts[1]) == id else { return nil }
+        guard id.utf8.count <= 1024, let data = Data(base64Encoded: id), let parts = try? TaskfoldJSONDecoder().decode([String].self, from: data), parts.count == 2, validID(parts[0]), validID(parts[1]), key(account: parts[0], project: parts[1]) == id else { return nil }
         return ProjectPulseLink(account: parts[0], project: parts[1])
     }
     static func validID(_ value: String) -> Bool { !value.isEmpty && value.utf8.count <= 256 }
@@ -137,7 +137,7 @@ extension WidgetProjection {
         }
         let snapshot = ProjectPulseSnapshot(account: account, timeZone: calendar.timeZone.identifier, history: malformed ? "incomplete" : recorded == nil ? "unavailable" : "ready", recordedFrom: recorded, projects: cards, omitted: max(0, all.count - cards.count))
         guard snapshot.valid(for: account) else { return .null }
-        return (try? JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(snapshot))) ?? .null
+        return (try? TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(snapshot))) ?? .null
     }
 }
 #endif

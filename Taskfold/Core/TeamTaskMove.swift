@@ -38,7 +38,7 @@ enum PersonalTaskMove {
         _ = try TeamProjectValue.optionalID(destination)
         if let tree = change.fields["subtasks"] { try TeamTaskMoveTree.validate(tree) }
         let body: [String: JSON] = ["protocol": .number(1), "account": .string(account), "request_id": .string(change.id.uuidString.lowercased()), "task_id": .string(change.recordID.lowercased()), "baseline": .object(base), "changes": .object(change.fields)]
-        guard try JSONEncoder().encode(body).count <= 4_194_304 else { throw invalid }
+        guard try TaskfoldJSONEncoder().encode(body).count <= 4_194_304 else { throw invalid }
         return body
     }
     static func confirmed(_ reply: [String: JSON], change: Mutation, account: String) throws -> Record? {
@@ -123,7 +123,7 @@ struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomD
               case .string(let expiresText)? = raw["expires_at"], Self.validDate(expiresText),
               case .object(let fields)? = raw["task"], fields["id"] == .string(scope.task), fields["task_generation"] == .string(scope.generation), fields["project_id"] == .string(scope.source),
               case .string(let visibility)? = raw["destination_visibility"], let visibility = TeamProjectVisibility(rawValue: visibility),
-              try JSONEncoder().encode(fields).count <= 128_000 else { throw TeamTaskMoveCommand.invalid }
+              try TaskfoldJSONEncoder().encode(fields).count <= 128_000 else { throw TeamTaskMoveCommand.invalid }
         _ = try TeamOrganizationValue.id(fields["user_id"])
         guard case .string(let title)? = fields["title"], title.utf8.count <= 120_000 else { throw TeamTaskMoveCommand.invalid }
         try TeamTaskMoveTree.validate(fields["subtasks"] ?? .array([]))
@@ -167,7 +167,7 @@ struct TeamTaskMoveCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
         guard Set(body.keys) == Set(scope.body.keys).union(["request_id", "review_token", "expires_at"]),
               case .string(let token)? = body["review_token"], TeamTaskMoveReview.validToken(token),
               case .string(let expires)? = body["expires_at"], TeamTaskMoveReview.validDate(expires),
-              try JSONEncoder().encode(body).count <= 16_384 else { throw Self.invalid }
+              try TaskfoldJSONEncoder().encode(body).count <= 16_384 else { throw Self.invalid }
         _ = try TeamOrganizationValue.id(body["request_id"]); _ = try TeamOrganizationValue.date(body["expires_at"]); self.body = body
     }
     private enum CodingKeys: String, CodingKey { case account, origin, body }
@@ -186,7 +186,7 @@ struct TeamTaskMoveCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
         if raw["task"] == .null { guard replayed else { throw Self.invalid }; task = nil }
         else {
             guard case .object(let fields)? = raw["task"], fields["id"] == .string(scope.task), fields["task_generation"] == .string(scope.generation), fields["project_id"] == .string(scope.destination),
-                  try JSONEncoder().encode(fields).count <= 128_000 else { throw Self.invalid }
+                  try TaskfoldJSONEncoder().encode(fields).count <= 128_000 else { throw Self.invalid }
             _ = try TeamOrganizationValue.id(fields["user_id"])
             guard case .string? = fields["title"] else { throw Self.invalid }
             try TeamTaskMoveTree.validate(fields["subtasks"] ?? .array([])); task = Record(fields)
@@ -239,8 +239,8 @@ actor TeamTaskMoveVault {
         guard let data = try io.read(key: key(account, origin)) else { return State() }
         guard data.count <= 512_000 else { throw TeamTaskMoveCommand.invalid }
         let value: State
-        if let state = try? JSONDecoder().decode(State.self, from: data) { value = state }
-        else if let old = try? JSONDecoder().decode(Legacy.self, from: data), old.version == 1, data.count <= 20_000 { value = State(pending: old.command) }
+        if let state = try? TaskfoldJSONDecoder().decode(State.self, from: data) { value = state }
+        else if let old = try? TaskfoldJSONDecoder().decode(Legacy.self, from: data), old.version == 1, data.count <= 20_000 { value = State(pending: old.command) }
         else { throw TeamTaskMoveCommand.invalid }
         let commands = value.history.map(\.latest) + (value.pending.map { [$0] } ?? [])
         guard value.version == 1, value.history.count <= 20, Set(value.history.map(\.id)).count == value.history.count,
@@ -251,7 +251,7 @@ actor TeamTaskMoveVault {
     private func save(_ state: State, _ account: String, _ origin: String, _ lease: CalendarReadLease) throws {
         try lease.check()
         if state.pending == nil && state.history.isEmpty { try io.remove(key: key(account, origin)); return }
-        let data = try JSONEncoder().encode(state); guard data.count <= 512_000 else { throw TeamTaskMoveCommand.invalid }
+        let data = try TaskfoldJSONEncoder().encode(state); guard data.count <= 512_000 else { throw TeamTaskMoveCommand.invalid }
         try lease.check(); try io.write(data, key: key(account, origin))
     }
     func state(account: String, origin: String) throws -> State {

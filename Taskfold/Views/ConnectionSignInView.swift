@@ -156,7 +156,7 @@ struct SyncSignInButton: View {
         precondition(Self.enabled)
         ConnectionReauthenticationHTTP.reset()
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [ConnectionReauthenticationHTTP.self]
-        let session = try JSONDecoder().decode(Session.self,from:JSONSerialization.data(withJSONObject:["access_token":"fixture-old","refresh_token":"fixture-refresh","expires_at":Date().addingTimeInterval(3600).timeIntervalSince1970,"user":["id":Self.account,"email":"connection-fixture@example.invalid"]]))
+        let session = try Foundation.JSONDecoder().decode(Session.self,from:JSONSerialization.data(withJSONObject:["access_token":"fixture-old","refresh_token":"fixture-refresh","expires_at":Date().addingTimeInterval(3600).timeIntervalSince1970,"user":["id":Self.account,"email":"connection-fixture@example.invalid"]]))
         backend = Backend(configuration:["URL":Self.origin,"Key":"synthetic-public"],http:URLSession(configuration:config),session:session,persistSession:{_ in})
         let memory = ConnectionReauthenticationMemory()
         webhookVault = WebhookEnrollmentVault(io:memory); automationVault = AutomationEnrollmentVault(io:memory)
@@ -193,7 +193,7 @@ private final class ConnectionReauthenticationHTTP: URLProtocol, @unchecked Send
                 stream.open();defer{stream.close()};var bytes=[UInt8](repeating:0,count:4096)
                 while stream.hasBytesAvailable {let n=stream.read(&bytes,maxLength:bytes.count);if n<=0{break};data.append(bytes,count:n);guard data.count<=64000 else {throw WebhookValue.invalid}}
             }
-            let body = try JSONDecoder().decode([String:JSON].self,from:data)
+            let body = try TaskfoldJSONDecoder().decode([String:JSON].self,from:data)
             let args = ProcessInfo.processInfo.arguments
             if request.url?.query == "grant_type=password", args.contains("--connection-reauthentication-hold") {return}
             let response:(Int,[String:JSON]) = try Self.lock.withLock {
@@ -216,7 +216,7 @@ private final class ConnectionReauthenticationHTTP: URLProtocol, @unchecked Send
                     reply["next_cursor"] = .null;return (200,reply)
                 }
                 if action == "create" {
-                    let encoder=JSONEncoder();encoder.outputFormatting=[.sortedKeys]
+                    let encoder=TaskfoldJSONEncoder();encoder.outputFormatting=[.sortedKeys]
                     let digest=Data(SHA256.hash(data:try encoder.encode(fields)))
                     if let old=Self.intent {guard old==digest else{return (409,["error":.string("Synthetic enrollment changed")])}}
                     if Self.record == nil {
@@ -232,7 +232,7 @@ private final class ConnectionReauthenticationHTTP: URLProtocol, @unchecked Send
                 }
                 throw WebhookValue.invalid
             }
-            let encoded=try JSONEncoder().encode(response.1)
+            let encoded=try TaskfoldJSONEncoder().encode(response.1)
             client?.urlProtocol(self,didReceive:HTTPURLResponse(url:request.url!,statusCode:response.0,httpVersion:nil,headerFields:["Content-Type":"application/json"])!,cacheStoragePolicy:.notAllowed)
             client?.urlProtocol(self,didLoad:encoded);client?.urlProtocolDidFinishLoading(self)
         } catch {client?.urlProtocol(self,didFailWithError:error)}

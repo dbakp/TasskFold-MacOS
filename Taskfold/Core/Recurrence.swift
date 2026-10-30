@@ -199,7 +199,7 @@ struct DatePhrasePreferences: Hashable, Sendable {
     init(nextWeek: Int = 2, weekend: Int = 7) { self.nextWeek = nextWeek; self.weekend = weekend }
     init(document: JSON) throws {
         if document == .null { self.init(); return }
-        guard (try? JSONEncoder().encode(document).count).map({ $0 <= 2048 }) == true, document.object["version"] == .number(1),
+        guard (try? TaskfoldJSONEncoder().encode(document).count).map({ $0 <= 2048 }) == true, document.object["version"] == .number(1),
               let week = Self.weekday(document.object["next_week"] ?? .null),
               let weekend = Self.weekday(document.object["weekend"] ?? .null) else {
             throw PlannerFailure(message: "These date preferences are unsupported. Update Taskfold before changing them.")

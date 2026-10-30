@@ -50,7 +50,7 @@ struct TeamTemplateCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
                 guard body["workflow_types_protocol"] == .number(1) else { throw Self.invalid }
             }
         }
-        guard Set(body.keys) == fields, try JSONEncoder().encode(body).count <= 2_050_000 else { throw Self.invalid }
+        guard Set(body.keys) == fields, try TaskfoldJSONEncoder().encode(body).count <= 2_050_000 else { throw Self.invalid }
         self.account = account; self.origin = origin; self.action = action; self.body = body
     }
     private enum CodingKeys: String, CodingKey { case account, origin, action, body }

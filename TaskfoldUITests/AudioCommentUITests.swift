@@ -1112,6 +1112,21 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app)
         XCTAssertTrue(childSavedText("Review the polished child screen", app).waitForExistence(timeout: 10), app.debugDescription); XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch.exists)
     }
+    @MainActor func testChildFieldsNativeOpaqueValuesSurviveSaveSendAndColdReturn() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-fields-opaque")
+        childProbe(app,"opaqueRoot=true opaqueChild=true")
+        childSave(app, title: "Keep exact older content")
+        childDone(app); childProbe(app, "queued=1 attempted=0 confirmed=0 writes=0")
+        childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childFieldPhase-", "Confirmed", "Confirmed")).firstMatch.waitForExistence(timeout: 12), app.debugDescription)
+        childDone(app); childProbe(app, "confirmed=1 writes=1 requests=1 current=Keep exact older content")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-fields-opaque"); childProbe(app,"opaqueRoot=true opaqueChild=true"); childProbe(app, "confirmed=1 writes=1 requests=1")
+        structureSnapshot(app,"Exact numeric and Unicode content survives field send and cold return")
+        childHomePress("childNativeRecovery", app)
+        XCTAssertTrue(childSavedText("Keep exact older content", app).waitForExistence(timeout: 10), app.debugDescription); XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch.exists)
+    }
     @MainActor func testChildFieldsNativeLostReplyColdRetryOnce() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-fields-lose-reply")
         childSave(app, title: "Retry the exact saved child request"); childDone(app)

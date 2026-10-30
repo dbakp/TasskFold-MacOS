@@ -88,7 +88,7 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
         guard raw["project_adoption_protocol"] == .number(1), raw["account"] == .string(scope.account), scope.body.allSatisfy({ raw[$0.key] == $0.value }),
               case .string(let token)? = raw["inspection_token"], TeamTaskMoveReview.validToken(token), raw["creates_memberships"] == .bool(false), raw["sends_invitations"] == .bool(false), raw["automatic_undo"] == .bool(false),
               case .bool(let enabled)? = raw["commit_supported"], case .bool(let archived)? = raw["destination_archived"], case .object(let contents)? = raw["contents"],
-              case .object(let counts)? = contents["counts"], try JSONEncoder().encode(raw).count <= 3_000_000 else { throw TeamProjectAdoptionValue.invalid }
+              case .object(let counts)? = contents["counts"], try TaskfoldJSONEncoder().encode(raw).count <= 3_000_000 else { throw TeamProjectAdoptionValue.invalid }
         self.scope = scope; self.token = token; teamName = try TeamOrganizationValue.name(raw["team_name"]); commitSupported = enabled; destinationArchived = archived
         teamMembers = try TeamProjectAdoptionValue.count(raw["team_member_count"], limit: 2000)
         projects = try TeamOrganizationValue.rows(raw["projects"], limit: 1000).map { row in
@@ -218,7 +218,7 @@ struct TeamProjectAdoptionCommand: ReviewedTeamCommand, CustomStringConvertible,
         try self.init(account: i.scope.account, origin: i.scope.origin, body: b, projects: i.projects.map(\.id).sorted(), assignmentsCleared: review.assignmentsCleared, invitationsClosed: review.invitationsClosed, connectionEffects: review.connectionEffects)
     }
     init(account: String, origin: String, body: [String: JSON], projects: [String], assignmentsCleared: Int, invitationsClosed: Int, connectionEffects: TeamProjectConnectionEffects? = nil) throws {
-        guard Set(body.keys) == Set(["team_id", "roots", "visibility", "folder_id", "parent_id", "inspection_token", "decisions", "review_token", "expires_at", "request_id"] + (body["connection_policy"] == nil ? [] : ["connection_policy"])), let v = body["visibility"]?.text, let visibility = TeamProjectVisibility(rawValue: v), try JSONEncoder().encode(body).count <= 262144 else { throw Self.invalid }
+        guard Set(body.keys) == Set(["team_id", "roots", "visibility", "folder_id", "parent_id", "inspection_token", "decisions", "review_token", "expires_at", "request_id"] + (body["connection_policy"] == nil ? [] : ["connection_policy"])), let v = body["visibility"]?.text, let visibility = TeamProjectVisibility(rawValue: v), try TaskfoldJSONEncoder().encode(body).count <= 262144 else { throw Self.invalid }
         let roots = try TeamProjectAdoptionValue.ids(body["roots"], limit: 100)
         scope = try TeamProjectAdoptionScope(account: account, origin: origin, team: TeamOrganizationValue.id(body["team_id"]), roots: roots, visibility: visibility, folder: TeamProjectValue.optionalID(body["folder_id"]), parent: TeamProjectValue.optionalID(body["parent_id"]))
         guard try TeamProjectAdoptionValue.ids(.array(projects.map(JSON.string)), limit: 1000) == projects, Set(roots).isSubset(of: Set(projects)), !projects.contains(scope.parent ?? ""), assignmentsCleared >= 0, assignmentsCleared <= 1_000_010_000, (0...1000).contains(invitationsClosed) else { throw Self.invalid }

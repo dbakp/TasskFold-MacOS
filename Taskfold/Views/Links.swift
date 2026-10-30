@@ -36,7 +36,7 @@ enum Linkify {
 @MainActor @Observable
 final class LinkTitles {
     static let shared = LinkTitles()
-    private(set) var titles: [String: String] = (try? JSONDecoder().decode([String: String].self, from: UserDefaults.standard.data(forKey: "linkTitles") ?? Data())) ?? [:]
+    private(set) var titles: [String: String] = (try? TaskfoldJSONDecoder().decode([String: String].self, from: UserDefaults.standard.data(forKey: "linkTitles") ?? Data())) ?? [:]
     @ObservationIgnored private(set) var metadata: [String: LPLinkMetadata] = [:]
     @ObservationIgnored private var inFlight = Set<String>()
     @ObservationIgnored private var failed = Set<String>()
@@ -69,7 +69,7 @@ final class LinkTitles {
                 if let title = result.title?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
                     titles[key] = title.count > 70 ? String(title.prefix(67)) + "…" : title
                     if titles.count > 400 { titles = Dictionary(uniqueKeysWithValues: Array(titles.suffix(300))) }
-                    UserDefaults.standard.set(try? JSONEncoder().encode(titles), forKey: "linkTitles")
+                    UserDefaults.standard.set(try? TaskfoldJSONEncoder().encode(titles), forKey: "linkTitles")
                 }
             } else { failed.insert(key) }
             let callbacks = waiters.removeValue(forKey: key) ?? []

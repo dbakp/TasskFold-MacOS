@@ -458,7 +458,7 @@ indirect enum FilterRule: Hashable, Sendable {
     var querySectionKeys: [String] {
         guard case .sections(let queries) = self else { return [] }
         var occurrences: [String: Int] = [:]
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return queries.map { query in
             let digest = SHA256.hash(data: (try? encoder.encode(query.json)) ?? Data()).map { String(format: "%02x", $0) }.joined()
             let ordinal = occurrences[digest, default: 0]; occurrences[digest] = ordinal + 1

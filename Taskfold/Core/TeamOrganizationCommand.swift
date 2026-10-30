@@ -115,7 +115,7 @@ struct TeamOrganizationCommand: Equatable, Sendable, Codable, CustomStringConver
         if action.needsRole { fields.insert("role") }
         if action == .invite { fields.insert("email") }
         if action == .transferAccept { fields.insert("transfer_id") }
-        guard Set(body.keys) == fields, try JSONEncoder().encode(body).count <= 16_384 else { throw Self.invalid }
+        guard Set(body.keys) == fields, try TaskfoldJSONEncoder().encode(body).count <= 16_384 else { throw Self.invalid }
         for key in ["team_id", "request_id"] + (action.needsFolder ? ["folder_id"] : []) + (action.needsUser ? ["user_id"] : []) + (action.needsInvitation ? ["invitation_id"] : []) + (action == .transferAccept ? ["transfer_id"] : []) { _ = try TeamOrganizationValue.id(body[key]) }
         guard let stamp = body["issued_at"]?.text, stamp.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$"#, options: .regularExpression) != nil else { throw Self.invalid }
         _ = try TeamOrganizationValue.date(body["issued_at"])
@@ -212,7 +212,7 @@ actor ReviewedTeamCommandVault<Command: ReviewedTeamCommand> {
     private func read(account: String, origin: String) throws -> Command? {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard let data = try io.read(key: key(account, origin: origin)) else { return nil }
-        guard data.count <= Command.maximumStoredBytes, let value = try? JSONDecoder().decode(Envelope.self, from: data), value.version == 1,
+        guard data.count <= Command.maximumStoredBytes, let value = try? TaskfoldJSONDecoder().decode(Envelope.self, from: data), value.version == 1,
               value.command.account == account, value.command.origin == origin else { throw Command.invalid }
         return value.command
     }
@@ -225,7 +225,7 @@ actor ReviewedTeamCommandVault<Command: ReviewedTeamCommand> {
                 if let old = try read(account: command.account, origin: command.origin) {
                     guard old == command else { throw AppFailure(message: "Finish or review your saved team request first.") }; return
                 }
-                let data = try JSONEncoder().encode(Envelope(command: command))
+                let data = try TaskfoldJSONEncoder().encode(Envelope(command: command))
                 guard data.count <= Command.maximumStoredBytes else { throw Command.invalid }
                 try lease.check(); try io.write(data, key: key(command.account, origin: command.origin))
             }

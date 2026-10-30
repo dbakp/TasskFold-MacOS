@@ -20,7 +20,7 @@ import Foundation
     static func read(_ root: Record, state: inout [String: JSON]) throws -> ChildTaskStructureRead {
         guard let scope = Store.shared.childTaskFieldRecoveryScope else { throw CancellationError() }
         let context = try ChildTaskRecordContext(account: scope.account, origin: scope.origin, workspace: scope.workspace, session: scope.session, access: scope.access, snapshot: Store.shared.snapshotRevision, root: root)
-        return try .init(data: JSONEncoder().encode(wire(root, state: &state)), context: context)
+        return try .init(data: TaskfoldJSONEncoder().encode(wire(root, state: &state)), context: context)
     }
     static func response(path: String, body: [String: JSON], state: inout [String: JSON]) throws -> (Data, Bool) {
         guard enabled, Store.shared.userID == ChildFieldNativeIdentity.account else { throw ChildFieldNativeRefusal(code: "42501") }
@@ -28,7 +28,7 @@ import Foundation
         let roots = [original.id: original, dest.id: dest]
         if path != "/rest/v1/rpc/taskfold_transfer_child" {
             guard let root = roots[body["_id"]?.text ?? ""], root["task_generation"] == body["_generation"] else { throw ChildFieldNativeRefusal(code: "PT409") }
-            let raw = wire(root, state: &state, structure: path.hasSuffix("taskfold_read_child_structure")); try ChildFieldNativePeer.save(state); return (try JSONEncoder().encode(raw), false)
+            let raw = wire(root, state: &state, structure: path.hasSuffix("taskfold_read_child_structure")); try ChildFieldNativePeer.save(state); return (try TaskfoldJSONEncoder().encode(raw), false)
         }
         guard let operation = ChildTaskTransferOperation(rawValue: body["_operation"]?.text ?? "") else { throw ChildFieldNativeRefusal(code: "22023") }
         let command = try ChildTaskTransferCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: body["_body"]!.object)
@@ -36,10 +36,10 @@ import Foundation
         state["transferRequests"] = .number(Double((state["transferRequests"]?.integer ?? 0) + 1))
         if let old = receipts[command.id]?.object {
             guard ChildTaskStructureCommand.exact(old["body"], .object(command.body)) else { throw ChildFieldNativeRefusal(code: "PT409") }
-            var proof = old["result"]!.object; proof["replayed"] = .bool(true); _ = try command.result(proof); try ChildFieldNativePeer.save(state); return (try JSONEncoder().encode(proof), false)
+            var proof = old["result"]!.object; proof["replayed"] = .bool(true); _ = try command.result(proof); try ChildFieldNativePeer.save(state); return (try TaskfoldJSONEncoder().encode(proof), false)
         }
         if operation == .check {
-            try ChildFieldNativePeer.save(state); return (try JSONEncoder().encode(["protocol": JSON.number(1), "account": .string(command.account), "request_id": .string(command.id), "state": .string("unknown")]), false)
+            try ChildFieldNativePeer.save(state); return (try TaskfoldJSONEncoder().encode(["protocol": JSON.number(1), "account": .string(command.account), "request_id": .string(command.id), "state": .string("unknown")]), false)
         }
         var proof: [String: JSON] = ["protocol": .number(1), "account": .string(command.account), "request_id": .string(command.id), "state": .string(operation == .close ? "closed" : "applied"), "replayed": .bool(false), "action": command.body["action"]!, "undo_of": command.body["undo_of"] ?? .null, "node_key": command.body["node_key"]!, "incarnation": command.body["incarnation"]!, "moved_count": .number(0), "return_parent": .null, "return_index": .null]
         for name in ["source", "destination"] {
@@ -77,9 +77,9 @@ import Foundation
         } else { receipts[command.id] = .object(["body": .object(command.body), "result": .object(proof)]) }
         _ = try command.result(proof); state["transferReceipts"] = .object(receipts); try ChildFieldNativePeer.save(state)
         if operation == .send, ProcessInfo.processInfo.arguments.contains("--child-transfer-lose-reply"), state["transferReplyLost"] != .bool(true) {
-            state["transferReplyLost"] = .bool(true); try ChildFieldNativePeer.save(state); return (try JSONEncoder().encode(proof), true)
+            state["transferReplyLost"] = .bool(true); try ChildFieldNativePeer.save(state); return (try TaskfoldJSONEncoder().encode(proof), true)
         }
-        return (try JSONEncoder().encode(proof), false)
+        return (try TaskfoldJSONEncoder().encode(proof), false)
     }
 }
 #endif

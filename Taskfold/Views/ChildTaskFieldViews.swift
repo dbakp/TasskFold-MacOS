@@ -154,7 +154,7 @@ struct ChildTaskFieldRecoveryView: View {
             return formatter.string(from: date) + " UTC"
         }
         if case .string(let text) = value { return text.isEmpty ? "Empty" : text }
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return (try? encoder.encode(value)).map { String(decoding: $0, as: UTF8.self) } ?? "Saved value"
     }
 }

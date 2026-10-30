@@ -515,7 +515,7 @@ enum ReminderPreferences {
 enum ReminderSignature {
     static func milliseconds(_ date: Date) -> String { String(Int64((date.timeIntervalSince1970 * 1000).rounded())) }
     static func legacy(task: Record, spec: ReminderSpec, date: Date) -> String {
-        let encoder=JSONEncoder(); encoder.outputFormatting=[.sortedKeys]
+        let encoder=TaskfoldJSONEncoder(); encoder.outputFormatting=[.sortedKeys]
         let encoded=(try? encoder.encode(JSON.object(spec.raw))).flatMap { String(data:$0,encoding:.utf8) } ?? ""
         return DueReminder.digest(encoded+"|"+String(date.timeIntervalSince1970)+"|completion:"+String(task["completion_version"].integer))
     }
@@ -1033,7 +1033,7 @@ enum FocusFinish {
         var fields: [String: JSON] = ["state": session.document, "baseline": .object(FocusSessionChange.baseline(row)), "completion": task["completion_version"]]
         if !task.string("task_generation").isEmpty { fields["task_generation"] = task["task_generation"] }
         let document: JSON = .object(fields)
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         guard let data = try? encoder.encode(document), let encoded = String(data: data, encoding: .utf8) else { return nil }
         // Calendar notification triggers resolve to whole seconds. Never alert before the timer ends.
         return DueReminder(kind: .focusFinish, id: "focus." + session.id, title: "Time well spent",
@@ -1189,7 +1189,7 @@ enum ReminderSnooze {
     }
     static func validDocument(_ document: JSON) -> Bool {
         // Compact UTF-8 must accept every server-approved 8 KB frame, including opaque metadata.
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
         guard let version = version(document), let data = try? encoder.encode(document), data.count <= 8192 else { return false }
         return version != 1 || minutes(document) != nil && ReminderAutomatic.minutes(document) != nil
     }

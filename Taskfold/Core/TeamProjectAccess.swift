@@ -215,7 +215,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
             "request_id": .string(change.id.uuidString.lowercased()), "task_generation": .string(generation), "base": .object(base), "changes": .object(change.fields)]
         if TeamTaskTypes.requiresProtocol(change) { body["task_types_protocol"] = .number(1) }
         if let checklistRestoreRequest { body["checklist_restore_from"] = .string(checklistRestoreRequest.uuidString.lowercased()) }
-        guard try JSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
+        guard try TaskfoldJSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
         return body
     }
     func saved(_ reply: [String: JSON], for change: Mutation) throws -> Record {
@@ -277,7 +277,7 @@ extension TeamTaskEditScope {
                   TeamProjectValue.id(parentGeneration) else { throw Self.conflict }
             body["parent_generation"] = .string(parentGeneration)
         }
-        guard try JSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
+        guard try TaskfoldJSONEncoder().encode(body).count <= 128000 else { throw Self.invalid }
         return body
     }
     func lifecycleSaved(_ reply: [String: JSON], for change: Mutation) throws -> Record? {

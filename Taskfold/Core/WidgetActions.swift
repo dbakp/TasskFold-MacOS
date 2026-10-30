@@ -121,7 +121,7 @@ public struct WidgetCompletionFeedback: Codable, Equatable, Sendable {
             struct List: Decodable { var id: String; var days: [String: [String]]; var timeZone: String }
             var account: String; var tasks: [Task]; var nestedTasks: [Task]?; var lists: [List]
         }
-        guard let projection, let value = try? JSONDecoder().decode(Projection.self, from: projection),
+        guard let projection, let value = try? TaskfoldJSONDecoder().decode(Projection.self, from: projection),
               value.account == request.account,
               let task = (value.tasks + (value.nestedTasks ?? [])).first(where: { WidgetTaskIdentity.key($0.id) == WidgetTaskIdentity.key(request.taskID) && $0.completionToken == request.token }) else { return nil }
         let lists = value.lists.filter { list in
@@ -176,7 +176,7 @@ public final class WidgetActionDisk: @unchecked Sendable {
     private func queue() throws -> Queue {
         let url = directory.appendingPathComponent("widget-actions.json")
         guard FileManager.default.fileExists(atPath: url.path) else { return Queue() }
-        let queue = try JSONDecoder().decode(Queue.self, from: Data(contentsOf: url))
+        let queue = try TaskfoldJSONDecoder().decode(Queue.self, from: Data(contentsOf: url))
         guard queue.version == 1, queue.requests.count <= Self.capacity, Set(queue.requests.map(\.id)).count == queue.requests.count,
               queue.requests.allSatisfy({ UUID(uuidString: $0.token) == $0.id && !$0.account.isEmpty && !$0.taskID.isEmpty }) else {
             throw WidgetActionFailure("The widget action file needs attention. Open Taskfold before trying again.")
@@ -184,7 +184,7 @@ public final class WidgetActionDisk: @unchecked Sendable {
         return queue
     }
     private func write(_ queue: Queue) throws {
-        try JSONEncoder().encode(queue).write(to: directory.appendingPathComponent("widget-actions.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        try TaskfoldJSONEncoder().encode(queue).write(to: directory.appendingPathComponent("widget-actions.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
     }
     public func publish(_ data: Data) throws {
         try locked { try data.write(to: directory.appendingPathComponent("widget.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
@@ -194,12 +194,12 @@ public final class WidgetActionDisk: @unchecked Sendable {
             var pending = try queue(); pending.requests.removeAll { $0.account == account }; try write(pending)
             let projection = directory.appendingPathComponent("widget.json")
             if FileManager.default.fileExists(atPath: projection.path) {
-                let current = try JSONDecoder().decode(Projection.self, from: Data(contentsOf: projection))
+                let current = try TaskfoldJSONDecoder().decode(Projection.self, from: Data(contentsOf: projection))
                 if current.account == account { try FileManager.default.removeItem(at: projection) }
             }
             let feedback = directory.appendingPathComponent("widget-feedback-dismissal.json")
             if FileManager.default.fileExists(atPath: feedback.path),
-               try JSONDecoder().decode(FeedbackDismissal.self, from: Data(contentsOf: feedback)).account == account {
+               try TaskfoldJSONDecoder().decode(FeedbackDismissal.self, from: Data(contentsOf: feedback)).account == account {
                 try FileManager.default.removeItem(at: feedback)
             }
         }
@@ -225,12 +225,12 @@ public final class WidgetActionDisk: @unchecked Sendable {
                   feedback["taskID"] as? String == taskID,
                   feedback["savedAt"] as? Double == savedAt else { return }
             let dismissal = FeedbackDismissal(account: account, taskID: taskID, savedAt: savedAt)
-            try JSONEncoder().encode(dismissal).write(to: directory.appendingPathComponent("widget-feedback-dismissal.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            try TaskfoldJSONEncoder().encode(dismissal).write(to: directory.appendingPathComponent("widget-feedback-dismissal.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         }
     }
     private func removingDismissedFeedback(from data: Data) -> Data {
         guard let dismissalData = try? Data(contentsOf: directory.appendingPathComponent("widget-feedback-dismissal.json")),
-              let dismissal = try? JSONDecoder().decode(FeedbackDismissal.self, from: dismissalData),
+              let dismissal = try? TaskfoldJSONDecoder().decode(FeedbackDismissal.self, from: dismissalData),
               var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               object["account"] as? String == dismissal.account,
               let feedback = object["completionFeedback"] as? [String: Any],
@@ -244,7 +244,7 @@ public final class WidgetActionDisk: @unchecked Sendable {
         try locked {
             let url = directory.appendingPathComponent("widget.json")
             guard FileManager.default.fileExists(atPath: url.path) else { return WidgetActionRead(data: nil, pendingTaskIDs: []) }
-            let data = removingDismissedFeedback(from: try Data(contentsOf: url)), projection = try JSONDecoder().decode(Projection.self, from: data)
+            let data = removingDismissedFeedback(from: try Data(contentsOf: url)), projection = try TaskfoldJSONDecoder().decode(Projection.self, from: data)
             guard projection.version == 2, !projection.account.isEmpty else { return WidgetActionRead(data: data, pendingTaskIDs: []) }
             let pending = try queue().requests.filter { projection.accepts($0) }.map(\.taskID)
             return WidgetActionRead(data: data, pendingTaskIDs: pending)
@@ -253,7 +253,7 @@ public final class WidgetActionDisk: @unchecked Sendable {
     public func enqueue(_ request: WidgetCompletionRequest) throws -> WidgetCompletionRequest {
         try locked {
             var queue = try queue()
-            let projection = try JSONDecoder().decode(Projection.self, from: Data(contentsOf: directory.appendingPathComponent("widget.json")))
+            let projection = try TaskfoldJSONDecoder().decode(Projection.self, from: Data(contentsOf: directory.appendingPathComponent("widget.json")))
             guard UUID(uuidString: request.token) == request.id, projection.accepts(request) else { throw WidgetActionFailure("This task or workspace changed. Refresh the widget before completing it.") }
             if let existing = queue.requests.first(where: { $0.id == request.id }) {
                 guard existing.matches(request) else { throw WidgetActionFailure("Refresh the widget before completing this task.") }

@@ -58,7 +58,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
         }
         var result:[String:JSON] = ["team_id":.string(scope.team),"project_id":.string(scope.project),"task_id":.string(source.id),"task_generation":source["task_generation"],"request_id":.string(header.id.uuidString.lowercased()),"record":.object(source.fields),"completed_at":.string(completedAt),"input_zone":.string(inputZone),"next_generation":.string(nextGeneration),"planned_next_id":proposed.map{.string($0.id)} ?? .null,"series_id":.string(seriesID),"series_generation":.string(seriesGeneration),"series_project_id":.string(seriesProject)]
         if let related { result[operation == .undo ? "undoes":"redo_of"] = .string(related.uuidString.lowercased()) }
-        guard try JSONEncoder().encode(result).count<=128000 else { throw Self.invalid }
+        guard try TaskfoldJSONEncoder().encode(result).count<=128000 else { throw Self.invalid }
         return result
     }
     func inverse(of header:Mutation) throws -> Mutation {
@@ -275,7 +275,7 @@ extension TeamCompletion {
             // Include nested batch envelopes, completion/history references,
             // pinned-note intents and independent comment/mention outboxes.
             for later in snapshot.pending.dropFirst() {
-                guard let encoded=try? JSONEncoder().encode(later),let value=try? JSONDecoder().decode(JSON.self,from:encoded),!references(value) else {return nil}
+                guard let encoded=try? TaskfoldJSONEncoder().encode(later),let value=try? TaskfoldJSONDecoder().decode(JSON.self,from:encoded),!references(value) else {return nil}
                 if later.table == "projects",later.recordID.lowercased() == command.scope.project.lowercased() {return nil}
             }
             guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: command.scope.account, origin: command.scope.origin, affected: ids,
@@ -433,7 +433,7 @@ extension TeamCompletion.Review {
         }
         guard !(snapshot.tables[ConversationOutbox.table] ?? []).contains(where: { references(.object($0.fields)) }) else { return nil }
         for later in next.pending {
-            guard let data = try? JSONEncoder().encode(later), let value = try? JSONDecoder().decode(JSON.self, from: data), !references(value) else { return nil }
+            guard let data = try? TaskfoldJSONEncoder().encode(later), let value = try? TaskfoldJSONDecoder().decode(JSON.self, from: data), !references(value) else { return nil }
         }
         guard let refreshed = try? TeamWorkspaceCache(boundary: cache.boundary, previous: cache, pending: next.pending, tasks: next.tables["tasks"] ?? []) else { return nil }
         next.teamWorkspace = refreshed

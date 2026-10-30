@@ -485,7 +485,7 @@ private final class WebhookFixtureMemory: CalendarSecureItemIO, @unchecked Senda
             if FileManager.default.fileExists(atPath:root.path) { try FileManager.default.removeItem(at:root) }
         }
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [WebhookKeychainHTTP.self]
-        let session = try JSONDecoder().decode(Session.self,from:JSONSerialization.data(withJSONObject:["access_token":"synthetic-webhook-"+account,"refresh_token":"synthetic-refresh","expires_at":Date().addingTimeInterval(3600).timeIntervalSince1970,"user":["id":account,"email":"webhook-fixture@example.invalid"]]))
+        let session = try Foundation.JSONDecoder().decode(Session.self,from:JSONSerialization.data(withJSONObject:["access_token":"synthetic-webhook-"+account,"refresh_token":"synthetic-refresh","expires_at":Date().addingTimeInterval(3600).timeIntervalSince1970,"user":["id":account,"email":"webhook-fixture@example.invalid"]]))
         let backend = Backend(configuration:["URL":origin,"Key":"synthetic-public"],http:URLSession(configuration:config),session:session,persistSession:{_ in})
         return WebhookAccessModel(account:account,origin:origin,service:backend,vault:vault,isCurrent:{true})
     }
@@ -508,11 +508,11 @@ private final class WebhookKeychainHTTP: URLProtocol, @unchecked Sendable {
                 stream.open();defer{stream.close()};var result = Data(), buffer = [UInt8](repeating:0,count:1024)
                 while stream.hasBytesAvailable { let n = stream.read(&buffer,maxLength:buffer.count);guard n >= 0,result.count+n <= 8192 else { throw WebhookValue.invalid };if n == 0 {break};result.append(buffer,count:n) };data = result
             }
-            guard let data,data.count <= 8192,let input = try? JSONDecoder().decode([String:JSON].self,from:data),case .object(let body) = input["body"] else { throw WebhookValue.invalid }
+            guard let data,data.count <= 8192,let input = try? TaskfoldJSONDecoder().decode([String:JSON].self,from:data),case .object(let body) = input["body"] else { throw WebhookValue.invalid }
             let root = URL.applicationSupportDirectory.appendingPathComponent("WebhookKeychainFixture",isDirectory:true)
             try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true,attributes:[.posixPermissions:0o700])
             let file = root.appendingPathComponent("metadata.json")
-            var state = FileManager.default.fileExists(atPath:file.path) ? try JSONDecoder().decode([String:JSON].self,from:Data(contentsOf:file)) : [:]
+            var state = FileManager.default.fileExists(atPath:file.path) ? try TaskfoldJSONDecoder().decode([String:JSON].self,from:Data(contentsOf:file)) : [:]
             var rows = state["connections"]?.list.compactMap{v->[String:JSON]? in if case .object(let r) = v{return r};return nil} ?? []
             let action = input["action"]?.text ?? "", id = body["id"]?.text ?? ""
             var reply: [String:JSON] = ["account":.string(account)]
@@ -524,7 +524,7 @@ private final class WebhookKeychainHTTP: URLProtocol, @unchecked Sendable {
             } else if action == "create" {
                 bump("create_attempts")
                 guard AutomationKey.canonicalID(id),let secret = body["secret"]?.text,secret.hasPrefix("tfwh_v1_"),secret.utf8.count == 51 else { throw WebhookValue.invalid }
-                let encoder = JSONEncoder();encoder.outputFormatting = [.sortedKeys]
+                let encoder = TaskfoldJSONEncoder();encoder.outputFormatting = [.sortedKeys]
                 let hash = SHA256.hash(data:try encoder.encode(body)).map{String(format:"%02x",$0)}.joined()
                 var hashes = state["intent_hashes"]?.object ?? [:]
                 if let old = hashes[id] { guard old == .string(hash) else { throw WebhookValue.invalid } } else { hashes[id] = .string(hash) }
@@ -549,11 +549,11 @@ private final class WebhookKeychainHTTP: URLProtocol, @unchecked Sendable {
             } else if action == "revoke",let n = rows.firstIndex(where:{$0["id"] == .string(id) && $0["fixture_account"] == .string(account)}) {
                 rows[n]["state"] = .string("revoked");rows[n]["revoked_at"] = .string(ISO8601DateFormatter().string(from:Date()));rows[n]["revision"] = .string(UUID().uuidString.lowercased());reply["subscription"] = .object(rows[n].filter{$0.key != "fixture_account"});bump("revoke_attempts")
             } else { throw URLError(.unsupportedURL) }
-            state["connections"] = .array(rows.map(JSON.object));let encoded = try JSONEncoder().encode(state)
+            state["connections"] = .array(rows.map(JSON.object));let encoded = try TaskfoldJSONEncoder().encode(state)
             guard !String(decoding:encoded,as:UTF8.self).contains("tfwh_v1_") else { throw WebhookValue.invalid }
             try encoded.write(to:file,options:.atomic)
             if failed { throw URLError(.networkConnectionLost) }
-            let result = try JSONEncoder().encode(reply)
+            let result = try TaskfoldJSONEncoder().encode(reply)
             client?.urlProtocol(self,didReceive:HTTPURLResponse(url:request.url!,statusCode:200,httpVersion:nil,headerFields:["Content-Type":"application/json"])!,cacheStoragePolicy:.notAllowed);client?.urlProtocol(self,didLoad:result);client?.urlProtocolDidFinishLoading(self)
         } catch { client?.urlProtocol(self,didFailWithError:error) }
     }

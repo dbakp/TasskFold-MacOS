@@ -44,7 +44,7 @@ private struct TeamMembershipFixtureIO: CalendarSecureItemIO {
 @MainActor private final class TeamMembershipFixturePeer: TeamOrganizationCommandService {
     private var file: URL { TeamMembershipFixtureIO.root.appendingPathComponent("peer.json") }
     private func read() throws -> [String: JSON] {
-        if FileManager.default.fileExists(atPath: file.path) { return try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file)) }
+        if FileManager.default.fileExists(atPath: file.path) { return try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file)) }
         let team = TeamMembershipFixture.team
         let members: [JSON] = [(TeamMembershipFixture.owner, "owner"), (TeamMembershipFixture.admin, "admin"), (TeamMembershipFixture.member, "member"), (TeamMembershipFixture.guest, "guest")].map { .object(["user_id": .string($0.0), "role": .string($0.1)]) }
         return ["teams": .object([team: .object(["id": .string(team), "name": .string("Design studio"), "state": .string("active"), "revision": .number(3)])]),
@@ -52,7 +52,7 @@ private struct TeamMembershipFixtureIO: CalendarSecureItemIO {
             "folders": .object([team: .array([.object(["id": .string("ea320000-0000-4000-8000-000000000011"), "name": .string("Design systems"), "position": .number(0)])])]),
             "invitations": .object([:]), "transfers": .object([:]), "requests": .object([:]), "receipts": .object([:]), "history": .array([]), "lost_role_reply": .bool(false)]
     }
-    private func write(_ data: [String: JSON]) throws { try FileManager.default.createDirectory(at: TeamMembershipFixtureIO.root, withIntermediateDirectories: true); try JSONEncoder().encode(data).write(to: file, options: .atomic) }
+    private func write(_ data: [String: JSON]) throws { try FileManager.default.createDirectory(at: TeamMembershipFixtureIO.root, withIntermediateDirectories: true); try TaskfoldJSONEncoder().encode(data).write(to: file, options: .atomic) }
     private func role(_ data: [String: JSON], team: String, account: String) -> String? {
         guard data["teams"]!.object[team]?.object["state"] != .string("deleted"), let row = data["members"]!.object[team]?.list.first(where: { $0.object["user_id"] == .string(account) }) else { return nil }
         return data["owners"]!.object[team] == .string(account) ? "owner" : row.object["role"]?.text

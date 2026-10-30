@@ -55,7 +55,7 @@ import CryptoKit
         metadata["state"] = .string("review"); metadata["issue"] = .string("identity")
         metadata["node_count"] = .null; metadata["max_depth"] = .null; metadata["can_adopt"] = .bool(false)
         metadata["review_digest"] = .string(SHA256.hash(data: exportSource + Data(try hash(state["root"]!).utf8)).map { String(format:"%02x",$0) }.joined())
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         var result = try encoder.encode(metadata)
         let marker = Data("\"source_tree\":null".utf8)
         guard let range = result.range(of: marker) else { throw CancellationError() }
@@ -64,7 +64,7 @@ import CryptoKit
     }
     static let paths: Set<String> = ["/rest/v1/rpc/taskfold_child_adoption_targets", "/rest/v1/rpc/taskfold_review_child_adoption", "/rest/v1/rpc/taskfold_adopt_child_records"]
     static func hash(_ value: JSON) throws -> String {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return SHA256.hash(data: try encoder.encode(value)).map { String(format: "%02x", $0) }.joined()
     }
     static func stats(_ value: JSON, depth: Int = 1) -> (count: Int, depth: Int)? {
@@ -85,7 +85,7 @@ import CryptoKit
         let applied = state["adoptionApplied"] == .bool(true)
         return ["protocol":.number(1),"account":.string(ChildFieldNativeIdentity.account),"task_id":.string(root.id),"task_generation":root["task_generation"],"project_id":root["project_id"],"workspace_id":.null,
                 "review_digest":.string(try hash(.object(["root":.object(root.fields),"applied":.bool(applied)]))),"state":.string(metrics == nil ? "review" : applied ? "records" : "ready"),"issue":metrics == nil ? .string("identity") : .null,
-                "node_count":metrics.map{.number(Double($0.count))} ?? .null,"max_depth":metrics.map{.number(Double($0.depth))} ?? .null,"source_bytes":.number(Double(try JSONEncoder().encode(tree).count)),
+                "node_count":metrics.map{.number(Double($0.count))} ?? .null,"max_depth":metrics.map{.number(Double($0.depth))} ?? .null,"source_bytes":.number(Double(try TaskfoldJSONEncoder().encode(tree).count)),
                 "root_kind":.string(tree == .null ? "null":"array"),"source_included":.bool(true),"source_tree":tree,"projection_revision":applied ? .number(1):.null,"structure_revision":applied ? .number(1):.null,"can_adopt":.bool(metrics != nil && !applied)]
     }
     static func response(path: String, body: [String: JSON], state: inout [String: JSON]) throws -> (Data,Bool) {
@@ -95,12 +95,12 @@ import CryptoKit
             guard Set(body.keys) == ["_after", "_limit", "_id"] else { throw ChildFieldNativeRefusal(code:"22023") }
             let item: [String: JSON] = ["task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": root["project_id"], "title": .string(root.title), "title_truncated": .bool(false)]
             let included = (body["_id"] == .null || body["_id"] == .string(root.id)) && (body["_after"] == .null || body["_after"]!.text < root.id)
-            return (try JSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "items": .array(included ? [.object(item)] : []), "next_after": .null]), false)
+            return (try TaskfoldJSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "items": .array(included ? [.object(item)] : []), "next_after": .null]), false)
         }
         if path.hasSuffix("taskfold_review_child_adoption") {
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"] else { throw ChildFieldNativeRefusal(code:"PT409") }
             if exportTesting { return (try exportReview(state),false) }
-            return (ChildRepairNativePeer.enabled ? try ChildRepairNativePeer.bytes(review(state)) : try JSONEncoder().encode(review(state)),false)
+            return (ChildRepairNativePeer.enabled ? try ChildRepairNativePeer.bytes(review(state)) : try TaskfoldJSONEncoder().encode(review(state)),false)
         }
         guard Set(body.keys) == ["_operation","_body"], let operation=ChildTaskAdoptionOperation(rawValue:body["_operation"]?.text ?? ""), case .object(let raw)?=body["_body"] else { throw ChildFieldNativeRefusal(code:"22023") }
         let id=try TeamOrganizationValue.id(raw["request_id"])
@@ -110,10 +110,10 @@ import CryptoKit
         state["adoptionRequests"] = .number(Double((state["adoptionRequests"]?.integer ?? 0)+1))
         if let old {
             guard ChildTaskStructureCommand.exact(old["body"],.object(raw)) else {throw ChildFieldNativeRefusal(code:"PT409")}
-            var result=old["result"]!.object;result["replayed"] = .bool(true);try ChildFieldNativePeer.save(state);return (try JSONEncoder().encode(result),false)
+            var result=old["result"]!.object;result["replayed"] = .bool(true);try ChildFieldNativePeer.save(state);return (try TaskfoldJSONEncoder().encode(result),false)
         }
         if operation == .check {
-            try ChildFieldNativePeer.save(state);return (try JSONEncoder().encode(["protocol":JSON.number(1),"account":.string(command.account),"request_id":.string(command.id),"state":.string("unknown")]),false)
+            try ChildFieldNativePeer.save(state);return (try TaskfoldJSONEncoder().encode(["protocol":JSON.number(1),"account":.string(command.account),"request_id":.string(command.id),"state":.string("unknown")]),false)
         }
         var result=raw;result["state"] = .string(operation == .send ? "applied":"closed");result["replayed"] = .bool(false);result["node_count"] = operation == .send ? .number(Double(command.nodeCount)):.null
         if operation == .send {
@@ -126,7 +126,7 @@ import CryptoKit
         receipts[id] = .object(["body":.object(raw),"result":.object(result)]);state["adoptionReceipts"] = .object(receipts)
         let lose=operation == .send && ProcessInfo.processInfo.arguments.contains("--child-adoption-lose-reply") && state["adoptionLost"] != .bool(true)
         if lose {state["adoptionLost"] = .bool(true)}
-        try ChildFieldNativePeer.save(state);return (try JSONEncoder().encode(result),lose)
+        try ChildFieldNativePeer.save(state);return (try TaskfoldJSONEncoder().encode(result),lose)
     }
 }
 #endif

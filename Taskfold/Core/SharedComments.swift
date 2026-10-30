@@ -16,7 +16,7 @@ private enum SharedWire {
     static var invalidChange: AppFailure { AppFailure(message: "This saved conversation change cannot be sent. Review it before trying again.") }
     static var invalidReply: AppFailure { AppFailure(message: "This conversation response could not be verified. Refresh before trying again.") }
     static func reply(_ data: Data) throws -> Record {
-        guard let row = try? JSONDecoder().decode(Record.self, from: data) else { throw invalidReply }; return row
+        guard let row = try? TaskfoldJSONDecoder().decode(Record.self, from: data) else { throw invalidReply }; return row
     }
     static func acknowledged(_ row: Record, operation: String, expected: Int64, current: Int64) -> Int64? {
         guard id(row["operation_id"]) == operation, let ack = revision(row["acknowledged_revision"]), ack <= current,
@@ -228,14 +228,14 @@ struct MentionRecoveryContext: Codable, Equatable, Sendable {
               thread.id == change.commentID, marker.id == change.mentionID,
               marker.commentID == thread.id, marker.recipientID == change.account,
               marker.revision == change.expectedRevision,
-              try JSONEncoder().encode(self).count <= 64_000 else { throw SharedWire.invalidChange }
+              try TaskfoldJSONEncoder().encode(self).count <= 64_000 else { throw SharedWire.invalidChange }
     }
     static func saved(in row: Record) throws -> Self? {
         guard let value = row.fields[field] else { return nil }
         guard Set(value.object.keys) == ["version", "origin", "intent", "comment", "mention"] else { throw SharedWire.invalidChange }
-        let data = try JSONEncoder().encode(value)
+        let data = try TaskfoldJSONEncoder().encode(value)
         guard data.count <= 64_000 else { throw SharedWire.invalidChange }
-        let result = try JSONDecoder().decode(Self.self, from: data)
+        let result = try TaskfoldJSONDecoder().decode(Self.self, from: data)
         try result.validate(row); return result
     }
     static func capturing(_ row: Record, snapshot: Snapshot, origin: String) -> Self? {
@@ -310,7 +310,7 @@ enum ConversationOutbox {
     static func enqueue(_ intent: Record, into snapshot: inout Snapshot, now: Date = Date(), origin: String? = nil) throws {
         var row = Record(["id": intent["operation_id"], "version": .number(1), "account": intent["account"], "intent": .object(intent.fields), "state": .string("pending"), "created_at": .string(TaskActivity.stamp(now))])
         if let origin, let captured = MentionRecoveryContext.capturing(row, snapshot: snapshot, origin: origin) {
-            row[MentionRecoveryContext.field] = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(captured))
+            row[MentionRecoveryContext.field] = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(captured))
         }
         guard valid(row) else { throw AppFailure(message: "This conversation change needs a valid account and identity.") }
         let existing = snapshot.tables[table] ?? []
@@ -437,7 +437,7 @@ extension Backend {
         guard let taskID = SharedWire.id(task["id"]), let generation = SharedWire.id(task["task_generation"]), let project = SharedWire.id(task["project_id"]) else { throw SharedWire.invalidChange }
         let path = conversationPath(SharedComment.table, filters: [URLQueryItem(name: "task_id", value: "eq." + taskID), URLQueryItem(name: "task_generation", value: "eq." + generation), URLQueryItem(name: "project_id", value: "eq." + project)], cursor: cursor)
         let data = try await request(path, expectedAccount: account)
-        let rows = try JSONDecoder().decode([Record].self, from: data)
+        let rows = try TaskfoldJSONDecoder().decode([Record].self, from: data)
         guard rows.count <= 50, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ row in
             guard let value = SharedComment(row) else { return false }; return value.taskID == taskID && value.taskGeneration == generation && value.projectID == project
         }) else { throw SharedWire.invalidReply }
@@ -450,7 +450,7 @@ extension Backend {
         var filters = [URLQueryItem(name: "recipient_id", value: "eq." + account)]
         if unreadOnly { filters.append(URLQueryItem(name: "read_at", value: "is.null")) }
         let data = try await request(conversationPath(SharedMention.table, filters: filters, cursor: cursor), expectedAccount: account)
-        let rows = try JSONDecoder().decode([Record].self, from: data)
+        let rows = try TaskfoldJSONDecoder().decode([Record].self, from: data)
         guard rows.count <= 50, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ row in SharedMention(row).map { $0.recipientID == account && (!unreadOnly || !$0.isRead) } == true }) else { throw SharedWire.invalidReply }
         let next = rows.last.flatMap(ConversationCursor.init); guard next == nil || next != cursor else { throw SharedWire.invalidReply }
         return ConversationPage(rows: rows, cursor: next)
@@ -460,7 +460,7 @@ extension Backend {
         guard ids.count <= 50, ids.allSatisfy({ UUID(uuidString: $0) != nil }) else { throw SharedWire.invalidChange }
         if ids.isEmpty { return [] }
         let path = "/rest/v1/task_comments?select=*&id=in.(" + Set(ids.map { $0.lowercased() }).sorted().joined(separator: ",") + ")&limit=50"
-        let data = try await request(path, expectedAccount: account), rows = try JSONDecoder().decode([Record].self, from: data)
+        let data = try await request(path, expectedAccount: account), rows = try TaskfoldJSONDecoder().decode([Record].self, from: data)
         let requested = Set(ids.map { $0.lowercased() })
         guard rows.count <= 50, Set(rows.map(\.id)).count == rows.count, rows.allSatisfy({ SharedComment($0).map { requested.contains($0.id) } == true }) else { throw SharedWire.invalidReply }
         return rows

@@ -179,7 +179,7 @@ struct CollaboratorsView: View {
         busy = true; defer { busy = false }
         do {
             let data = try await store.backend.request("/rest/v1/rpc/get_project_collaborators_safe", method: "POST", body: ["_project_id": .string(project.id)])
-            collaborators = try JSONDecoder().decode([Record].self, from: data)
+            collaborators = try TaskfoldJSONDecoder().decode([Record].self, from: data)
             await store.sync()
             await workspace.refreshMemberDirectory(force: [project.id])
         } catch { message = error.localizedDescription }
@@ -314,7 +314,7 @@ struct TodoistImportView: View {
                 #else
                 data = try await store.backend.request("/functions/v1/import-todoist", method: "POST", body: request.body)
                 #endif
-                let row = try JSONDecoder().decode(Record.self, from: data)
+                let row = try TaskfoldJSONDecoder().decode(Record.self, from: data)
                 if try flow.accept(row, request: request, workspace: store.workspaceGeneration) { await store.sync() }
             } catch { flow.fail(error, request: request, workspace: store.workspaceGeneration) }
         }
@@ -324,7 +324,7 @@ struct TodoistImportView: View {
     private func fixtureResponse(_ request: TodoistImportFlow.Request) async throws -> Data {
         try await Task.sleep(for: .seconds(1))
         if request.token == "fixture-rejected-token" { throw AppFailure(message: "Todoist rejected this API token. Check the token and its permissions.") }
-        if request.token == "fixture-malformed-token" { return try JSONEncoder().encode(Record(["preview": .bool(true), "sourceAccount": .string("fixture-source"), "counts": .object([:]), "warnings": .array([])])) }
+        if request.token == "fixture-malformed-token" { return try TaskfoldJSONEncoder().encode(Record(["preview": .bool(true), "sourceAccount": .string("fixture-source"), "counts": .object([:]), "warnings": .array([])])) }
         var fields: [String: JSON] = ["sourceAccount": .string("fixture-source"), "warnings": .array([.string("Completed history and archived projects are not imported."), .string("Reminder settings and saved filters stay in Todoist.")])]
         if request.previewOnly {
             fields["preview"] = .bool(true)
@@ -342,7 +342,7 @@ struct TodoistImportView: View {
 
             for key in TodoistImportFlow.resultKeys { fields[key] = .number(key.hasSuffix("Skipped") ? (key == "tasksSkipped" ? 4 : 2) : 0) }
         }
-        return try JSONEncoder().encode(Record(fields))
+        return try TaskfoldJSONEncoder().encode(Record(fields))
     }
     #endif
 }

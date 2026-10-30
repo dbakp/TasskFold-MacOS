@@ -68,7 +68,7 @@ enum EmailCaptureKeychainFixture {
             vault = EmailAddressVault(io: EmailKeychainWriteFault(actual: CalendarKeychainIO(service: service)), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("EmailAddressLocks", isDirectory: true))
         } else { vault = actual }
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [EmailKeychainHTTP.self]
-        let session = try JSONDecoder().decode(Session.self, from: JSONSerialization.data(withJSONObject: ["access_token": "synthetic-email-" + account, "refresh_token": "synthetic-refresh", "expires_at": Date().addingTimeInterval(3600).timeIntervalSince1970, "user": ["id": account, "email": "workshop@example.invalid"]]))
+        let session = try Foundation.JSONDecoder().decode(Session.self, from: JSONSerialization.data(withJSONObject: ["access_token": "synthetic-email-" + account, "refresh_token": "synthetic-refresh", "expires_at": Date().addingTimeInterval(3600).timeIntervalSince1970, "user": ["id": account, "email": "workshop@example.invalid"]]))
         let backend = Backend(configuration: ["URL": origin, "Key": "synthetic-public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
         return EmailCaptureModel(account: account, origin: origin, service: backend, vault: vault, isCurrent: { true })
     }
@@ -136,10 +136,10 @@ private final class EmailKeychainHTTP: URLProtocol, @unchecked Sendable {
     }
     private static func read() throws -> [String: JSON] {
         guard FileManager.default.fileExists(atPath: file.path) else { return ["rows": .object([:]), "requests": .object([:]), "counters": .object([:]), "lost": .bool(false)] }
-        let bytes = try Data(contentsOf: file); guard bytes.count <= 65536 else { throw EmailCaptureValue.invalid }; return try JSONDecoder().decode([String: JSON].self, from: bytes)
+        let bytes = try Data(contentsOf: file); guard bytes.count <= 65536 else { throw EmailCaptureValue.invalid }; return try TaskfoldJSONDecoder().decode([String: JSON].self, from: bytes)
     }
     private static func write(_ state: [String: JSON]) throws {
-        let bytes = try JSONEncoder().encode(state); guard bytes.count <= 65536 else { throw EmailCaptureValue.invalid }
+        let bytes = try TaskfoldJSONEncoder().encode(state); guard bytes.count <= 65536 else { throw EmailCaptureValue.invalid }
         try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         try bytes.write(to: file, options: .atomic); try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
     }
@@ -151,7 +151,7 @@ private final class EmailKeychainHTTP: URLProtocol, @unchecked Sendable {
             guard [EmailCaptureKeychainFixture.a, EmailCaptureKeychainFixture.b].contains(owner), request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-email-" + owner else { throw EmailCaptureValue.invalid }
             var data = request.httpBody ?? Data()
             if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable { let count = stream.read(&buffer, maxLength: buffer.count); guard count >= 0, data.count + count <= 8192 else { throw EmailCaptureValue.invalid }; if count == 0 { break }; data.append(buffer, count: count) } }
-            guard data.count <= 8192, let input = try? JSONDecoder().decode([String: JSON].self, from: data), case .object(let body) = input["body"] else { throw EmailCaptureValue.invalid }
+            guard data.count <= 8192, let input = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), case .object(let body) = input["body"] else { throw EmailCaptureValue.invalid }
             let action = input["action"]?.text ?? ""; var state = try Self.read(), rows = state["rows"]?.object ?? [:], requests = state["requests"]?.object ?? [:], counters = state["counters"]?.object ?? [:]
             var reply: [String: JSON] = ["protocol": .number(2), "account": .string(owner)]
             if action == "list" { reply["available"] = .bool(true); reply["domain"] = .string("mail.example.invalid"); reply["routes"] = .array(rows.values.filter { $0.object["fixture_account"] == .string(owner) }.map { .object($0.object.filter { $0.key != "fixture_account" }) }) }
@@ -169,7 +169,7 @@ private final class EmailKeychainHTTP: URLProtocol, @unchecked Sendable {
                 if lose { throw URLError(.networkConnectionLost) }
                 reply["route"] = .object(rows[id]!.object.filter { $0.key != "fixture_account" })
             } else { throw EmailCaptureValue.invalid }
-            let bytes = try JSONEncoder().encode(reply)
+            let bytes = try TaskfoldJSONEncoder().encode(reply)
             client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed); client?.urlProtocol(self, didLoad: bytes); client?.urlProtocolDidFinishLoading(self)
         } catch { client?.urlProtocol(self, didFailWithError: error) }
     }

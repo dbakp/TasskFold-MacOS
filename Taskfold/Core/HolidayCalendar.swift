@@ -381,14 +381,14 @@ enum CountryHolidayCalendar {
     }
     static func countries(data: Data) throws -> [Country] {
         guard data.count <= HolidayCalendarFile.maximumBytes else { throw failure }
-        let result = try JSONDecoder().decode([Country].self, from: data)
+        let result = try TaskfoldJSONDecoder().decode([Country].self, from: data)
         guard !result.isEmpty, result.count <= 300, Set(result.map(\.countryCode)).count == result.count,
               result.allSatisfy({ validCountry($0.countryCode) && validName($0.name) }) else { throw failure }
         return result.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
     static func snapshot(data: Data, year: Int, country: String) throws -> Snapshot {
         guard (1...9999).contains(year), validCountry(country), data.count <= HolidayCalendarFile.maximumBytes else { throw failure }
-        let values = try JSONDecoder().decode([Holiday].self, from: data)
+        let values = try TaskfoldJSONDecoder().decode([Holiday].self, from: data)
         let types: Set<String> = ["Public", "Bank", "School", "Authorities", "Optional", "Observance"]
         guard values.count <= 1000, values.allSatisfy({ value in
             guard let day = ReminderCivilDay(value.date), day.year == year, value.countryCode == country, validName(value.name),

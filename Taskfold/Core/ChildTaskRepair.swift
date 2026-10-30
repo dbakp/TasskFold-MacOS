@@ -47,7 +47,7 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     func encode(to encoder: Encoder) throws { try raw.encode(to: encoder) }
     static func == (a: Self, b: Self) -> Bool { ChildTaskStructureCommand.exact(.object(a.raw), .object(b.raw)) }
     static func validate(_ changes: [Self]) throws {
-        guard (1...64).contains(changes.count), try JSONEncoder().encode(changes).count <= 65_536 else { throw ChildTaskRepairCommand.invalid }
+        guard (1...64).contains(changes.count), try TaskfoldJSONEncoder().encode(changes).count <= 65_536 else { throw ChildTaskRepairCommand.invalid }
     }
     static let counterPaths: Set<[String]> = [["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]
 }
@@ -86,7 +86,7 @@ struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStr
         let expected = try Self.body(review: review, changes: changes)
         let parts = try ChildTaskRecordRead.separatingJSONFields(["original_tree", "proposed_tree"], data: data, maximum: Self.maximumBytes,
             integerPaths: Set<[String]>([["protocol"], ["node_count"], ["steps", "[]", "ordinal"], ["steps", "[]", "path", "[]"]]).union(ChildTaskRepairChange.counterPaths), nullableIntegerPaths: [["node_count"]])
-        let raw = try JSONDecoder().decode([String: JSON].self, from: parts.metadata)
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
         guard Set(raw.keys) == Self.keys, expected.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }),
               ChildTaskAdoptionCommand.digest(raw["repair_digest"]), case .bool(let valid)? = raw["proposal_valid"], case .bool(let mayWrite)? = raw["mutation_available"],
               case .bool(let sqlNull)? = raw["original_sql_null"], case .array(let steps)? = raw["steps"], steps.count == changes.count,
@@ -104,7 +104,7 @@ struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStr
         var items: [ChildTaskAdoptionReview.Item] = []
         if valid {
             guard raw["remaining_issue"] == .null else { throw ChildTaskRepairCommand.invalid }
-            let nodes = proposed == Data("null".utf8) ? [] : try JSONDecoder().decode([Node].self, from: proposed)
+            let nodes = proposed == Data("null".utf8) ? [] : try TaskfoldJSONDecoder().decode([Node].self, from: proposed)
             var seen = Set<String>()
             func walk(_ nodes: [Node], depth: Int) throws {
                 guard depth <= 24 else { throw ChildTaskRepairCommand.invalid }
@@ -155,7 +155,7 @@ struct ChildTaskRepairCommand: ReviewedTeamCommand, CustomStringConvertible, Cus
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard origin.utf8.count <= 2048, Set(body.keys) == Self.keys, body["protocol"] == .number(1), body["account"] == .string(account),
               ChildTaskAdoptionCommand.digest(body["review_digest"]), ChildTaskAdoptionCommand.digest(body["repair_digest"]), (0...1000).contains(nodeCount),
-              case .array(let values)? = body["changes"], try JSONEncoder().encode(body).count <= 70_000 else { throw Self.invalid }
+              case .array(let values)? = body["changes"], try TaskfoldJSONEncoder().encode(body).count <= 70_000 else { throw Self.invalid }
         _ = try TeamOrganizationValue.id(body["request_id"]); _ = try TeamOrganizationValue.id(body["task_id"])
         for key in ["task_generation", "project_id", "workspace_id"] { _ = try TeamProjectValue.optionalID(body[key]) }
         let changes = try values.map { value -> ChildTaskRepairChange in guard case .object(let r) = value else { throw Self.invalid }; return try .init(raw: r) }
@@ -171,7 +171,7 @@ struct ChildTaskRepairCommand: ReviewedTeamCommand, CustomStringConvertible, Cus
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["nodeCount"], ["body", "protocol"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["body"] + $0 })))
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     func result(_ raw: [String: JSON]) throws -> ChildTaskRepairResult { try .init(command: self, raw: raw) }
 }
@@ -182,7 +182,7 @@ struct ChildTaskRepairResult: Codable, Equatable, Sendable {
     init(from decoder: Decoder) throws { try structureKeys(decoder, ["raw"]); raw = try decoder.container(keyedBy: CodingKeys.self).decode([String: JSON].self, forKey: .raw) }
     init(command: ChildTaskRepairCommand, data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: 16_384, integerPaths: [["protocol"], ["node_count"], ["archive_bytes"]], nullableIntegerPaths: [["node_count"], ["archive_bytes"]])
-        try self.init(command: command, raw: JSONDecoder().decode([String: JSON].self, from: data))
+        try self.init(command: command, raw: TaskfoldJSONDecoder().decode([String: JSON].self, from: data))
     }
     init(command: ChildTaskRepairCommand, raw: [String: JSON]) throws {
         guard raw["protocol"] == .number(1), raw["account"] == .string(command.account), raw["request_id"] == .string(command.id) else { throw ChildTaskRepairCommand.invalid }
@@ -230,12 +230,12 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
     init(data: Data, command: ChildTaskRepairCommand, result: ChildTaskRepairResult) throws {
         _ = try command.result(result.raw); guard result.applied else { throw ChildTaskRepairCommand.invalid }
         let parts = try ChildTaskRecordRead.separatingJSONField("original", data: data, maximum: Self.maximumBytes, integerPaths: [["protocol"], ["original", "protocol"]], nullableIntegerPaths: [])
-        let raw = try JSONDecoder().decode([String: JSON].self, from: parts.metadata)
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
         guard Set(raw.keys) == ["protocol", "account", "request_id", "archive_id", "archive_digest", "original"], raw["protocol"] == .number(1),
               raw["account"] == .string(command.account), raw["request_id"] == .string(command.id), raw["archive_id"] == result.raw["archive_id"],
               raw["archive_digest"] == result.raw["archive_digest"], parts.value.count == (try ChildTaskAdoptionReview.count(result.raw["archive_bytes"], maximum: 8_000_000)),
               SHA256.hash(data: parts.value).map({ String(format: "%02x", $0) }).joined() == result.raw["archive_digest"]?.text else { throw ChildTaskRepairCommand.invalid }
-        let header = try JSONDecoder().decode(Header.self, from: parts.value)
+        let header = try TaskfoldJSONDecoder().decode(Header.self, from: parts.value)
         guard header.protocolVersion == 1, header.root.id == command.rootID, header.root.task_generation == (try TeamProjectValue.optionalID(command.body["task_generation"])),
               header.root.project_id == (try TeamProjectValue.optionalID(command.body["project_id"])), header.reviewDigest == command.body["review_digest"]!.text, header.repairDigest == command.body["repair_digest"]!.text else { throw ChildTaskRepairCommand.invalid }
         self.data = parts.value
@@ -297,7 +297,7 @@ struct ChildTaskRepairState: ReviewedTeamFileCommand {
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
     init(from decoder: Decoder) throws {
@@ -330,7 +330,7 @@ actor ChildTaskRepairJournal {
         guard state.account == account, state.origin == origin else { throw ChildTaskRepairCommand.invalid }; return state
     }
     private func write(_ entries: [ChildTaskRepairState.Entry], lease: CalendarReadLease) throws {
-        let state = try ChildTaskRepairState(account: account, origin: origin, entries: entries), data = try JSONEncoder().encode(state)
+        let state = try ChildTaskRepairState(account: account, origin: origin, entries: entries), data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= ChildTaskRepairState.maximumStoredBytes else { throw ChildTaskRepairFailure(reason: .limit) }
         try lease.check(); try io.write(data, key: key)
     }
@@ -505,7 +505,7 @@ struct ChildTaskRepairOutline: Sendable {
     init(data: Data) throws {
         guard data.count <= 2_000_000 else { throw Self.unavailable }
         _ = try ChildTaskRecordRead.separatingJSONField("tree", data: Data("{\"tree\":".utf8) + data + Data("}".utf8), maximum: 2_000_020, integerPaths: [], nullableIntegerPaths: [])
-        let decoder = JSONDecoder(); decoder.userInfo[Self.budgetKey] = Budget(); let root = try decoder.decode(Root.self, from: data)
+        let decoder = TaskfoldJSONDecoder(); decoder.userInfo[Self.budgetKey] = Budget(); let root = try decoder.decode(Root.self, from: data)
         var references: [String: Int] = [:]
         func valid(_ reference: String?) -> String? {
             guard let reference, !reference.isEmpty, reference.utf8.count <= 128 else { return nil }; let key = reference.precomposedStringWithCanonicalMapping

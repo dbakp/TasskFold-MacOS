@@ -518,7 +518,7 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
             didReset = true
             if TeamProjectFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-project-reset-fixture"), FileManager.default.fileExists(atPath: TeamProjectFixtureIO.root.path) { try FileManager.default.removeItem(at: TeamProjectFixtureIO.root) }
         }
-        if FileManager.default.fileExists(atPath: file.path) { return try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file)) }
+        if FileManager.default.fileExists(atPath: file.path) { return try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file)) }
         var seed: [String: JSON] = [:]
         if ProcessInfo.processInfo.arguments.contains("--team-project-seed") {
             let id = "ea330000-0000-4000-8000-000000000001"
@@ -532,8 +532,8 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
         }
         return ["projects": .object(seed), "receipts": .object([:]), "history": .array([]), "lost": .bool(false)]
     }
-    private func write(_ data: [String: JSON]) throws { try FileManager.default.createDirectory(at: TeamProjectFixtureIO.root, withIntermediateDirectories: true); try JSONEncoder().encode(data).write(to: file, options: .atomic) }
-    func fence() throws -> String { let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys; return CalendarOAuthConfiguration.digest(try encoder.encode(read()).base64EncodedString() + account + String(TeamMembershipFixture.setupEnabled)) }
+    private func write(_ data: [String: JSON]) throws { try FileManager.default.createDirectory(at: TeamProjectFixtureIO.root, withIntermediateDirectories: true); try TaskfoldJSONEncoder().encode(data).write(to: file, options: .atomic) }
+    func fence() throws -> String { let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys; return CalendarOAuthConfiguration.digest(try encoder.encode(read()).base64EncodedString() + account + String(TeamMembershipFixture.setupEnabled)) }
     func team() throws -> TeamOrganizationDetail {
         let role = TeamProjectFixture.teamRole(account)
         var raw: [String: JSON] = ["id": .string(TeamProjectFixture.projectTeam), "name": .string("Design studio"), "role": .string(role), "state": .string("active"), "revision": .number(3)]
@@ -609,7 +609,7 @@ private struct TeamProjectFixtureIO: CalendarSecureItemIO {
         var data = try read(), projects = data["projects"]!.object, receipts = data["receipts"]!.object
         var row = projects[command.project]?.object
         guard command.action.creation ? (TeamProjectFixture.teamRole(account) != "guest" && (row == nil || row.map({ role($0) == "manager" }) == true)) : row.map({ role($0) == "manager" }) == true else { throw TeamOrganizationCommandFailure(code: "42501") }
-        let encoded = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(command))
+        let encoded = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(command))
         if let old = receipts[command.id]?.object { guard old["command"] == encoded else { throw TeamOrganizationCommandFailure(code: "PT409") }; return try command.confirmed(old["result"]!.object) }
         guard command.body["team_revision"] == .number(3), command.action.creation ? row == nil : command.body["revision"] == row?["revision"] else { throw TeamOrganizationCommandFailure(code: "PT409") }
         if !TeamMembershipFixture.setupEnabled {

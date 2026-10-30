@@ -117,14 +117,14 @@ actor EmailAddressVault {
     private func read(_ account: String, _ origin: String) throws -> EmailVaultEnvelope {
         guard EmailCaptureValue.id(account), WebhookValue.origin(origin) else { throw EmailCaptureValue.invalid }
         guard let bytes = try io.read(key: key(account)) else { return EmailVaultEnvelope(account: account, origin: origin) }
-        guard bytes.count <= 65536, let value = try? JSONDecoder().decode(EmailVaultEnvelope.self, from: bytes), value.version == 1, value.account == account, value.origin == origin, value.addresses.count <= 32 else { throw EmailCaptureValue.invalid }
+        guard bytes.count <= 65536, let value = try? TaskfoldJSONDecoder().decode(EmailVaultEnvelope.self, from: bytes), value.version == 1, value.account == account, value.origin == origin, value.addresses.count <= 32 else { throw EmailCaptureValue.invalid }
         let drafts = try value.addresses.map(EmailAddressDraft.init)
         guard Set(drafts.map(\.id)).count == drafts.count, drafts.allSatisfy({ $0.account == account && $0.origin == origin }) else { throw EmailCaptureValue.invalid }
         if let op = try value.pending?.operation() { guard op.draft == nil || (op.draft!.account == account && op.draft!.origin == origin) else { throw EmailCaptureValue.invalid } }
         return value
     }
     private func write(_ value: EmailVaultEnvelope, _ lease: CalendarReadLease) throws {
-        let bytes = try JSONEncoder().encode(value); guard bytes.count <= 65536, value.addresses.count <= 32 else { throw EmailCaptureValue.invalid }; try lease.check(); try io.write(bytes, key: key(value.account))
+        let bytes = try TaskfoldJSONEncoder().encode(value); guard bytes.count <= 65536, value.addresses.count <= 32 else { throw EmailCaptureValue.invalid }; try lease.check(); try io.write(bytes, key: key(value.account))
     }
     func recovery(account: String, origin: String) throws -> EmailAddressRecovery {
         try lock.withExclusive(account: account) { let value = try read(account, origin); return EmailAddressRecovery(addresses: try value.addresses.map(EmailAddressDraft.init), pending: try value.pending?.operation()) }

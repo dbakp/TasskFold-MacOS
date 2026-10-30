@@ -37,7 +37,7 @@ enum TaskAssignmentProvenance {
                 JSON.array([.string(key.task),.string(key.generation),.string(key.node),.array(grouped![key]!.map { .object($0.fields) })])
             }
             if let ordered {
-                let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+                let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
                 fingerprint = Data(SHA256.hash(data: (try? encoder.encode(ordered)) ?? Data()))
             } else { fingerprint = Data() }
             var parsed: [String:Date] = [:]
@@ -473,7 +473,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     static func path(_ value: JSON) -> [String]? {
         guard case .array(let list) = value, list.count <= SubtaskTree.readableDepth,
               list.allSatisfy({ if case .string(let key) = $0 { return ChecklistRecovery.validIdentity(key) }; return false }),
-              let data = try? JSONEncoder().encode(value), data.count <= 65_536 else { return nil }
+              let data = try? TaskfoldJSONEncoder().encode(value), data.count <= 65_536 else { return nil }
         return list.map(\.text)
     }
     static func changes(before: [String: JSON], after: [String: JSON], beforePath: [String], afterPath: [String], workBefore: Bool, workAfter: Bool, typeBefore: String?, typeAfter: String?) -> [Kind] {
@@ -517,7 +517,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     private static func nodes(_ root: Record?, dates: LocalActivityDates, hierarchy: LocalActivityHierarchy? = nil) -> [String: Node]? {
         guard let root else { return [:] }
         guard let generation = generation(root), TaskKind(root) != .unsupported,
-              let bytes = try? JSONEncoder().encode(root["subtasks"]), bytes.count <= ChecklistRecovery.maximumBytes else { return nil }
+              let bytes = try? TaskfoldJSONEncoder().encode(root["subtasks"]), bytes.count <= ChecklistRecovery.maximumBytes else { return nil }
         let items: [TaskHierarchyIndex.Item]?
         if let hierarchy { items = hierarchy.items }
         else { items = LocalActivityHierarchy.read(root, scope: "node-history") }
@@ -556,7 +556,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         func append(_ key: String, generation: String?, nodeKey: String, b: [String: JSON], a: [String: JSON], oldPath: [String], newPath: [String], oldWork: Bool, newWork: Bool, oldType: String?, newType: String?, revision: Int64, kinds: [Kind]) {
             guard !kinds.isEmpty else { return }
             guard sequence < 9_007_199_254_740_991 else { overflow = true; return }; sequence += 1
-            let identity = try! JSONEncoder().encode([change.id.uuidString.lowercased(), root.id, key])
+            let identity = try! TaskfoldJSONEncoder().encode([change.id.uuidString.lowercased(), root.id, key])
             let hash = SHA256.hash(data: identity).map { String(format: "%02x", $0) }.joined()
             let raw = String(hash.prefix(32)), points = [8,12,16,20]
             let id = raw.enumerated().map { (points.contains($0.offset) ? "-" : "") + String($0.element) }.joined()
@@ -673,7 +673,7 @@ struct ProjectWorkScope {
                     let id: String
                     if positions.isEmpty { id = root.id }
                     else {
-                        let identity = try! JSONEncoder().encode([root.id.lowercased()] + positions.map(String.init))
+                        let identity = try! TaskfoldJSONEncoder().encode([root.id.lowercased()] + positions.map(String.init))
                         id = "work:" + SHA256.hash(data: identity).map { String(format: "%02x", $0) }.joined()
                     }
                     var task = source; task["id"] = .string(id)
@@ -880,7 +880,7 @@ struct ProductivityGoals: Equatable {
             dailyTarget=0;weeklyTarget=0;activeWeekdays=Set(2...6);weekStart=2;timeZone=calendar.timeZone.identifier;original=[:];return
         }
         guard case .object(let fields)=document, fields["version"] == .number(1),
-              let data=try? JSONEncoder().encode(document),data.count<=4096 else { throw AppFailure(message:"These goals need a newer Taskfold version. Your settings are preserved.") }
+              let data=try? TaskfoldJSONEncoder().encode(document),data.count<=4096 else { throw AppFailure(message:"These goals need a newer Taskfold version. Your settings are preserved.") }
         func integer(_ field:String,range:ClosedRange<Int>) throws -> Int {
             guard let raw=fields[field],let value=TaskActivity.integer(raw),let number=Int(exactly:value),range.contains(number) else { throw AppFailure(message:"Choose valid whole-number goals and weekdays.") }
             return number

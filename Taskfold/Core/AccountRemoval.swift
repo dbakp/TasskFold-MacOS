@@ -48,7 +48,7 @@ actor AccountRemovalVault {
         do { stored = try io.read(key: key) }
         catch { throw AppFailure(message: "Account removal recovery could not be read securely. Unlock this device and try again.") }
         guard let data = stored else { return [] }
-        guard data.count <= 100_000, let commands = try? JSONDecoder().decode([AccountRemovalCommand].self, from: data),
+        guard data.count <= 100_000, let commands = try? TaskfoldJSONDecoder().decode([AccountRemovalCommand].self, from: data),
               commands.count <= 8, commands.allSatisfy(\.valid), Set(commands.map(\.account)).count == commands.count,
               Set(commands.map(\.id)).count == commands.count else {
             throw AppFailure(message: "Account removal recovery could not be read securely. Your device data has been kept.")
@@ -58,7 +58,7 @@ actor AccountRemovalVault {
     private func save(_ commands: [AccountRemovalCommand]) throws {
         do {
             if commands.isEmpty { try io.remove(key: key) }
-            else { try io.write(JSONEncoder().encode(commands), key: key) }
+            else { try io.write(TaskfoldJSONEncoder().encode(commands), key: key) }
         } catch { throw AppFailure(message: "Account removal recovery could not be saved securely. Unlock this device and try again.") }
     }
     func command(account: String, origin: String) throws -> AccountRemovalCommand? {

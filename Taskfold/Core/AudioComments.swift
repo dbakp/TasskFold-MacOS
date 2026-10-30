@@ -260,14 +260,14 @@ struct AudioCommentPortableRecording: Sendable {
     func encoded() throws -> Data {
         let value = Record(["format": .string(Self.format), "caption": .string(caption),
                             "descriptor": .object(clip.descriptor.record.fields), "audio_base64": .string(clip.data.base64EncodedString())])
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         let data = try encoder.encode(value)
         guard data.count <= Self.maximumFileBytes else { throw AudioCommentFailure.invalid }
         return data
     }
     init(encoded data: Data) throws {
         guard !data.isEmpty, data.count <= Self.maximumFileBytes else { throw AudioCommentFailure.invalid }
-        let value = try JSONDecoder().decode(Record.self, from: data)
+        let value = try TaskfoldJSONDecoder().decode(Record.self, from: data)
         guard Set(value.fields.keys) == ["format", "caption", "descriptor", "audio_base64"],
               value["format"] == .string(Self.format), case .string(let caption) = value["caption"],
               case .object(let descriptor) = value["descriptor"], case .string(let audio) = value["audio_base64"],

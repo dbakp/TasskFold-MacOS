@@ -136,10 +136,10 @@ struct ChildTaskStructureCommand: ReviewedTeamCommand, CustomStringConvertible, 
                   Self.scopeKeys.allSatisfy({ Self.exact(body[$0], receipt.raw[$0]) }),
                   body["structure_revision"] == receipt.raw["after_revision"] else { throw Self.invalid }
         } else if original != nil { throw Self.invalid }
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         guard try encoder.encode(body).count <= Self.maximumRequestBytes else { throw Self.invalid }
         self.account = account; self.origin = origin; self.body = body; self.original = original
-        guard try JSONEncoder().encode(self).count <= Self.maximumStoredBytes else { throw Self.invalid }
+        guard try TaskfoldJSONEncoder().encode(self).count <= Self.maximumStoredBytes else { throw Self.invalid }
     }
     /// Encrypted storage readers must use this bounded entry point before
     /// Codable decoding; Double decoding alone cannot certify wire counters.
@@ -151,7 +151,7 @@ struct ChildTaskStructureCommand: ReviewedTeamCommand, CustomStringConvertible, 
             paths.formUnion(ChildTaskStructureReceipt.integerPaths.map { ["original", "receipt"] + $0 })
         }
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: paths)
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     static func counterPaths(_ body: [String: JSON], prefix: [String]) -> Set<[String]> {
         var paths: Set<[String]> = [prefix + ["protocol"], prefix + ["structure_revision"], prefix + ["index"]]
@@ -300,7 +300,7 @@ struct ChildTaskStructureReceipt: Codable, Equatable, Sendable, CustomStringConv
         } else {
             guard raw["undo_of"] == .null, (action == .delete) == (raw["incarnation"] == .null) else { throw ChildTaskStructureCommand.invalid }
         }
-        guard try JSONEncoder().encode(raw).count <= Self.maximumBytes else { throw ChildTaskStructureCommand.invalid }
+        guard try TaskfoldJSONEncoder().encode(raw).count <= Self.maximumBytes else { throw ChildTaskStructureCommand.invalid }
         self.raw = raw
     }
     init(command: ChildTaskStructureCommand, data: Data) throws {
@@ -404,6 +404,6 @@ struct ChildTaskStructureUndoDisposalReceipt: Codable, Equatable, Sendable {
 private enum ChildTaskStructureWire {
     static func object(_ data: Data, maximum: Int, integerPaths: Set<[String]>) throws -> [String: JSON] {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: maximum, integerPaths: integerPaths)
-        return try JSONDecoder().decode([String: JSON].self, from: data)
+        return try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
     }
 }

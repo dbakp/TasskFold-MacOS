@@ -46,7 +46,7 @@ enum AudioCommentPublicationStatus: Sendable {
     case closed(AudioCommentPublicationClosed)
     init(data:Data,publication:AudioCommentPublication,allowPending:Bool) throws {
         guard !data.isEmpty,data.count<=64000 else {throw AudioCommentFailure.invalid}
-        let envelope=try JSONDecoder().decode(Record.self,from:data)
+        let envelope=try TaskfoldJSONDecoder().decode(Record.self,from:data)
         if Set(envelope.fields.keys)==["receipt"],case .object(let fields)=envelope["receipt"] {
             self = .published(try .init(record:Record(fields),publication:publication));return
         }
@@ -104,7 +104,7 @@ struct AudioCommentPublicationJournal: Sendable {
     func confirmed(_ receipt: AudioCommentPublishedReceipt, retainingAudio: Bool = false) throws -> Self { try .init(self, receipt: receipt, retainingAudio: retainingAudio) }
     func releasingConfirmedAudio() throws -> Self { guard let receipt else { throw AudioCommentStorageFailure.conflict }; return try .init(self, receipt: receipt, retainingAudio: false) }
     func encoded() throws -> Data {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         var fields: [String:Any] = ["format": closedReceipt != nil ? "taskfold-audio-publication-v3" : (receipt != nil && clip != nil ? "taskfold-audio-publication-v2" : "taskfold-audio-publication-v1"), "origin": origin, "source": source.uuidString.lowercased(), "revision": revision.uuidString.lowercased(), "intent": try encoder.encode(publication), "audio": clip?.data ?? Data(), "receipt": try receipt.map { try encoder.encode($0.record) } ?? Data()]
         if let closedReceipt {fields["closed"] = try encoder.encode(closedReceipt.record)}
         return try PropertyListSerialization.data(fromPropertyList:fields,format:.binary,options:0)
@@ -119,11 +119,11 @@ struct AudioCommentPublicationJournal: Sendable {
               let revision = (fields["revision"] as? String).flatMap(UUID.init(uuidString:)), revision != AudioCommentTarget.zero,
               let intent = fields["intent"] as? Data, intent.count <= 32_000, let audio = fields["audio"] as? Data, let receipt = fields["receipt"] as? Data, receipt.count <= 64_000 else { throw AudioCommentFailure.invalid }
         self.origin = try Self.canonicalOrigin(origin); self.source = source; self.revision = revision
-        publication = try JSONDecoder().decode(AudioCommentPublication.self, from: intent)
+        publication = try TaskfoldJSONDecoder().decode(AudioCommentPublication.self, from: intent)
         guard publication.account == account else { throw AudioCommentFailure.changed }
         if fields["format"] as? String == "taskfold-audio-publication-v3" {
             guard receipt.isEmpty,let proof=fields["closed"] as? Data,!proof.isEmpty,proof.count<=32000 else {throw AudioCommentFailure.invalid}
-            closedReceipt=try .init(record:JSONDecoder().decode(Record.self,from:proof),publication:publication)
+            closedReceipt=try .init(record:TaskfoldJSONDecoder().decode(Record.self,from:proof),publication:publication)
             self.receipt=nil;clip=audio.isEmpty ? nil:try AudioCommentClip(restoring:audio,descriptor:publication.descriptor)
         } else if receipt.isEmpty {
             closedReceipt=nil
@@ -134,7 +134,7 @@ struct AudioCommentPublicationJournal: Sendable {
             let retained = fields["format"] as? String == "taskfold-audio-publication-v2"
             guard retained != audio.isEmpty else { throw AudioCommentFailure.invalid }
             clip = retained ? try AudioCommentClip(restoring: audio, descriptor: publication.descriptor) : nil
-            self.receipt = try .init(record: JSONDecoder().decode(Record.self, from: receipt), publication: publication)
+            self.receipt = try .init(record: TaskfoldJSONDecoder().decode(Record.self, from: receipt), publication: publication)
         }
     }
 }
@@ -419,7 +419,7 @@ struct AudioCommentRemote: Sendable, Equatable, Identifiable {
     }
     static func list(_ data: Data, account: UUID, target: AudioCommentTarget) throws -> [Self] {
         guard !data.isEmpty, data.count <= 640_000 else { throw AudioCommentFailure.invalid }
-        let envelope = try JSONDecoder().decode(Record.self, from: data)
+        let envelope = try TaskfoldJSONDecoder().decode(Record.self, from: data)
         guard Set(envelope.fields.keys) == ["protocol", "account", "items"], envelope["protocol"] == .number(1), envelope["account"] == .string(account.uuidString.lowercased()), case .array(let items) = envelope["items"], items.count <= 20 else { throw AudioCommentFailure.invalid }
         let rows = try items.map { value -> Self in
             guard case .object(let fields) = value else { throw AudioCommentFailure.invalid }
@@ -435,7 +435,7 @@ struct AudioCommentRemoteRemoval: Sendable {
     let operation: UUID
     init(data: Data, expected: AudioCommentRemote) throws {
         guard !data.isEmpty, data.count <= 64_000 else { throw AudioCommentFailure.invalid }
-        let row = try JSONDecoder().decode(Record.self, from: data)
+        let row = try TaskfoldJSONDecoder().decode(Record.self, from: data)
         guard Set(row.fields.keys) == ["protocol", "account", "operation_id", "comment_id", "state"], row["protocol"] == .number(1), row["account"] == .string(expected.publication.account.uuidString.lowercased()), row["operation_id"] == .string(expected.publication.operation.uuidString.lowercased()), row["comment_id"] == .string(expected.id.uuidString.lowercased()), ["retired", "purged"].contains(row.string("state")) else { throw AudioCommentFailure.invalid }
         comment = expected.id; operation = expected.publication.operation
     }
@@ -466,10 +466,10 @@ struct AudioCommentPage: Sendable {
     let next: AudioCommentPageCursor?
     init(data: Data, account: UUID, target: AudioCommentTarget, after: AudioCommentPageCursor?) throws {
         guard data.count <= 640_000, after == nil || after?.account == account && after?.target == target else { throw AudioCommentFailure.changed }
-        let row=try JSONDecoder().decode(Record.self,from:data)
+        let row=try TaskfoldJSONDecoder().decode(Record.self,from:data)
         guard Set(row.fields.keys)==["protocol","account","items","next"] else { throw AudioCommentFailure.invalid }
         var list=row.fields;list.removeValue(forKey:"next")
-        items=try AudioCommentRemote.list(JSONEncoder().encode(Record(list)),account:account,target:target)
+        items=try AudioCommentRemote.list(TaskfoldJSONEncoder().encode(Record(list)),account:account,target:target)
         switch row["next"] {
         case .null:next=nil
         case .object(let fields):

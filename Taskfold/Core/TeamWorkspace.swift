@@ -167,7 +167,7 @@ struct TeamWorkspaceCache: Equatable, Sendable, Codable {
         }
         for change in snapshot.pending {
             produced[change.id]=identities(change)
-            guard let data=try? JSONEncoder().encode(change),let value=try? JSONDecoder().decode(JSON.self,from:data) else {blocked.insert(change.id);continue}
+            guard let data=try? TaskfoldJSONEncoder().encode(change),let value=try? TaskfoldJSONDecoder().decode(JSON.self,from:data) else {blocked.insert(change.id);continue}
             for id in references(value) {dependents[id,default:[]].insert(change.id)}
         }
         var queue=Array(blocked),index=0,visited=Set<String>()
@@ -266,7 +266,7 @@ struct TeamAccessFenceDisk:Sendable {
     let origin:String
     func save(_ boundary:TeamWorkspaceBoundary) throws {
         guard boundary.belongs(account:disk.account,origin:origin) else {throw TeamProjectValue.invalid}
-        let data=try JSONEncoder().encode(boundary)
+        let data=try TaskfoldJSONEncoder().encode(boundary)
         guard data.count<=4000000 else {throw TeamProjectValue.invalid}
         try disk.writable {try data.write(to:disk.teamAccessFence,options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])}
     }
@@ -277,7 +277,7 @@ struct TeamAccessFenceDisk:Sendable {
         let handle=try FileHandle(forReadingFrom:disk.teamAccessFence);defer{try? handle.close()}
         let data=try handle.read(upToCount:4000001) ?? Data()
         guard data.count<=4000000 else {throw TeamProjectValue.invalid}
-        let value=try JSONDecoder().decode(TeamWorkspaceBoundary.self,from:data)
+        let value=try TaskfoldJSONDecoder().decode(TeamWorkspaceBoundary.self,from:data)
         guard value.belongs(account:disk.account,origin:origin) else {throw CancellationError()}
         return value
     }
@@ -316,7 +316,7 @@ struct TeamWorkspaceRead: Sendable {let tables:[String:[Record]];let boundary:Te
             catch is TeamWorkspaceUnavailable {throw TeamWorkspaceUnavailable()}
             throw TeamWorkspaceServiceIncomplete()
         }
-        return try TeamWorkspaceBoundary(JSONDecoder().decode([String:JSON].self,from:data),account:account,origin:origin)
+        return try TeamWorkspaceBoundary(TaskfoldJSONDecoder().decode([String:JSON].self,from:data),account:account,origin:origin)
     }
     func workspaceRead(account:String,initial:TeamWorkspaceBoundary?,allowLegacy:Bool) async throws -> TeamWorkspaceRead {
         if let initial {guard initial.belongs(account:account,origin:try accountRemovalOrigin) else {throw CancellationError()}}

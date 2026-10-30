@@ -37,7 +37,7 @@ struct WorkspaceBackup: Codable, Sendable {
                     tables: tables, unsyncedChanges: snapshot.pending.count + ConversationOutbox.rows(snapshot, account: account).count)
     }
     func data() throws -> Data {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(self)
         guard data.count <= Self.maximumBytes else { throw BackupFailure(message: "This backup exceeds the 256 MB file limit.") }
         return data
@@ -51,19 +51,19 @@ struct WorkspaceBackup: Codable, Sendable {
     static func read(_ data: Data) throws -> Self {
         guard data.count <= maximumBytes else { throw BackupFailure(message: "Choose a backup no larger than 256 MB.") }
         do {
-            let root = try JSONDecoder().decode(JSON.self, from: data)
+            let root = try TaskfoldJSONDecoder().decode(JSON.self, from: data)
             guard case .object(let object) = root else { throw BackupFailure(message: "A Taskfold backup must be a JSON object.") }
             var backup: Self
             if object["format"] != nil || object["version"] != nil {
                 guard object["format"] == .string("com.taskfold.workspace"), [JSON.number(1), .number(2)].contains(object["version"] ?? .null) else {
                     throw BackupFailure(message: "This backup format or version is unsupported. Update Taskfold before restoring it.")
                 }
-                backup = try JSONDecoder().decode(Self.self, from: data)
+                backup = try TaskfoldJSONDecoder().decode(Self.self, from: data)
                 guard UUID(uuidString: backup.id) != nil, TaskPlanning.instant(backup.createdAt) != nil,
                       backup.sourceAccount.count <= 200, backup.unsyncedChanges >= 0 else { throw BackupFailure(message: "The backup header is invalid.") }
             } else {
                 // Original native exports were the table dictionary. Never interpret a cache/session as one.
-                let tables = try JSONDecoder().decode([String: [Record]].self, from: data)
+                let tables = try TaskfoldJSONDecoder().decode([String: [Record]].self, from: data)
                 guard !Set(tables.keys).isDisjoint(with: Set(workTables)) else { throw BackupFailure(message: "This file contains no Taskfold workspace tables.") }
                 backup = Self(id: stableID("legacy-file", String(SHA256.hash(data: data).description)), createdAt: Dates.timestamp(), sourceAccount: "", tables: tables, unsyncedChanges: 0, legacy: true)
             }
@@ -163,7 +163,7 @@ struct WorkspaceBackup: Codable, Sendable {
                 if table == WorkflowTemplate.table {
                     guard case .object(let document) = row["document"], case .number(let version) = document["version"], version >= 1, version.rounded() == version,
                           !row.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, row.name.count <= 160,
-                          (try JSONEncoder().encode(row["document"])).count <= 2_000_000 else { throw BackupFailure(message: "A template document is invalid.") }
+                          (try TaskfoldJSONEncoder().encode(row["document"])).count <= 2_000_000 else { throw BackupFailure(message: "A template document is invalid.") }
                     // Preserve newer definitions losslessly; applying one still requires a supported reader.
                     if version == 1 || version == 2 && document["capabilities"] == .array([.string("task_headings")]) { _ = try WorkflowTemplate(document: row["document"]) }
                 }
@@ -188,7 +188,7 @@ struct WorkspaceBackup: Codable, Sendable {
                 if table == "saved_views" { _ = try FilterRule(document: row["query_ast"]) }
                 if row[ProductivityGoals.field] != .null {
                     guard table=="view_preferences",row.id==ProductivityGoals.recordID else { throw BackupFailure(message:"The goal settings have an invalid record scope.") }
-                    guard case .object(let document)=row[ProductivityGoals.field],case .number(let version)=document["version"],version>=1,version.rounded(.down)==version,(try JSONEncoder().encode(row[ProductivityGoals.field])).count<=4096 else { throw BackupFailure(message:"The saved goals have an invalid definition.") }
+                    guard case .object(let document)=row[ProductivityGoals.field],case .number(let version)=document["version"],version>=1,version.rounded(.down)==version,(try TaskfoldJSONEncoder().encode(row[ProductivityGoals.field])).count<=4096 else { throw BackupFailure(message:"The saved goals have an invalid definition.") }
                     if version==1 { _ = try ProductivityGoals(document:row[ProductivityGoals.field]) }
                 }
                 if row["date_preferences"] != .null { _ = try DatePhrasePreferences(document: row["date_preferences"]) }
@@ -205,6 +205,9 @@ struct WorkspaceBackup: Codable, Sendable {
     private static func checkJSON(_ value: JSON, depth: Int) throws {
         guard depth <= 32 else { throw BackupFailure(message: "A backup value is nested too deeply.") }
         switch value {
+        case .preserved(let value):
+            do { _ = try value.validate(maximumDepth: 32-depth, maximumArray: 10000, maximumObject: 1000) }
+            catch { throw BackupFailure(message: "A preserved backup value exceeds its supported size or depth.") }
         case .number(let n): guard n.isFinite && abs(n) <= 9_000_000_000_000_000 else { throw BackupFailure(message: "A backup number is out of range.") }
         case .array(let values): guard values.count <= 10000 else { throw BackupFailure(message: "A backup collection is too large.") }; for v in values { try checkJSON(v, depth: depth + 1) }
         case .object(let values): guard values.count <= 1000 else { throw BackupFailure(message: "A backup object is too large.") }; for v in values.values { try checkJSON(v, depth: depth + 1) }
@@ -503,7 +506,7 @@ struct BackupVault: Sendable {
         Self.lock.lock(); defer { Self.lock.unlock() }
         let url = directory.appendingPathComponent("index.json")
         if !FileManager.default.fileExists(atPath: url.path) { return [] }
-        return try JSONDecoder().decode([RecoveryEntry].self, from: Data(contentsOf: url)).sorted { $0.createdAt > $1.createdAt }
+        return try TaskfoldJSONDecoder().decode([RecoveryEntry].self, from: Data(contentsOf: url)).sorted { $0.createdAt > $1.createdAt }
     }
     func save(_ snapshot: Snapshot, kind: String, now: Date = Date()) throws -> RecoveryEntry {
         if let gate = removalGate {
@@ -512,7 +515,7 @@ struct BackupVault: Sendable {
         }
         Self.lock.lock(); defer { Self.lock.unlock() }
         let backup = WorkspaceBackup.make(snapshot, account: account, now: now)
-        let plaintext = try JSONEncoder().encode(RecoveryPayload(workspace: backup, snapshot: snapshot))
+        let plaintext = try TaskfoldJSONEncoder().encode(RecoveryPayload(workspace: backup, snapshot: snapshot))
         guard plaintext.count <= WorkspaceBackup.maximumBytes else { throw BackupFailure(message: "This recovery backup exceeds the 256 MB limit.") }
         let sealed = try AES.GCM.seal(plaintext, using: key())
         guard let data = sealed.combined else { throw BackupFailure(message: "Could not encrypt the recovery backup.") }
@@ -521,7 +524,7 @@ struct BackupVault: Sendable {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try data.write(to: file(entry), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         let kept = Array(list.prefix(max(1, retention)))
-        do { try JSONEncoder().encode(kept).write(to: directory.appendingPathComponent("index.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
+        do { try TaskfoldJSONEncoder().encode(kept).write(to: directory.appendingPathComponent("index.json"), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]) }
         catch { try? FileManager.default.removeItem(at: file(entry)); throw error }
         for old in list.dropFirst(kept.count) { try? FileManager.default.removeItem(at: file(old)) }
         return entry
@@ -532,7 +535,7 @@ struct BackupVault: Sendable {
         guard data.count <= WorkspaceBackup.maximumBytes + 1024 else { throw BackupFailure(message: "The recovery file is too large.") }
         do {
             let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key())
-            let payload = try JSONDecoder().decode(RecoveryPayload.self, from: plain)
+            let payload = try TaskfoldJSONDecoder().decode(RecoveryPayload.self, from: plain)
             guard payload.workspace.sourceAccount == account else { throw BackupFailure(message: "This recovery file belongs to another workspace.") }
             try payload.workspace.validate(); return payload
         } catch let error as BackupFailure { throw error }
@@ -752,7 +755,7 @@ extension BackupVault {
     /// A review fingerprint also prevents replacing a file changed by a later writer.
     func unreadableFingerprint(_ source: URL) throws -> String {
         let data = try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes)
-        guard (try? JSONDecoder().decode(Snapshot.self, from: data)) == nil else {
+        guard (try? TaskfoldJSONDecoder().decode(Snapshot.self, from: data)) == nil else {
             throw BackupFailure(message: "The saved workspace is readable now. Reopen it before making changes.")
         }
         return Self.digest(data)
@@ -771,7 +774,7 @@ extension BackupVault {
         Self.lock.lock(); defer { Self.lock.unlock() }
         let data = try Self.boundedFile(preservedFile(id), limit: WorkspaceBackup.maximumBytes * 2)
         let plain = try AES.GCM.open(AES.GCM.SealedBox(combined: data), using: key())
-        let payload = try JSONDecoder().decode(PreservedWorkspacePayload.self, from: plain)
+        let payload = try TaskfoldJSONDecoder().decode(PreservedWorkspacePayload.self, from: plain)
         guard payload.version == 1, payload.account == account, payload.original.count <= WorkspaceBackup.maximumBytes,
               payload.digest == Self.digest(payload.original) else { throw BackupFailure(message: "This preserved file does not belong to this workspace or is damaged.") }
         return payload.original
@@ -792,7 +795,7 @@ extension BackupVault {
         let original = try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes)
         guard Self.digest(original) == expectedDigest else { throw CancellationError() }
         let payload = PreservedWorkspacePayload(version: 1, account: account, digest: expectedDigest, original: original)
-        let sealed = try AES.GCM.seal(JSONEncoder().encode(payload), using: secret)
+        let sealed = try AES.GCM.seal(TaskfoldJSONEncoder().encode(payload), using: secret)
         guard let bytes = sealed.combined else { throw BackupFailure(message: "The original file could not be encrypted. It is unchanged.") }
         let entry = PreservedWorkspaceFile(id: UUID(), createdAt: Date())
         try FileManager.default.createDirectory(at: preservedDirectory, withIntermediateDirectories: true)
@@ -801,7 +804,7 @@ extension BackupVault {
         guard try verifier.preservedBytes(entry.id) == original,
               try Self.boundedFile(source, limit: WorkspaceBackup.maximumBytes) == original else { throw BackupFailure(message: "The original changed during recovery. Both files are kept; reopen recovery to try again.") }
         // No cloud mutations or queue replay are inferred from malformed bytes.
-        try JSONEncoder().encode(Snapshot()).write(to: source, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        try TaskfoldJSONEncoder().encode(Snapshot()).write(to: source, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         return entry
     }
 }
@@ -921,7 +924,7 @@ extension BackupVault {
         do {
             let ciphertext=try Self.boundedFile(editorFile(id),limit:WorkspaceBackup.maximumBytes+1024)
             let data=try AES.GCM.open(AES.GCM.SealedBox(combined:ciphertext),using:key())
-            let value=try JSONDecoder().decode(TaskEditorRecovery.self,from:data)
+            let value=try TaskfoldJSONDecoder().decode(TaskEditorRecovery.self,from:data)
             try value.validate()
             guard value.id==id,value.account==account,value.origin==origin else {throw BackupFailure(message:"This edit belongs to another workspace. Its original is kept.")}
             return value
@@ -949,7 +952,7 @@ extension BackupVault {
                 return
             }
         }
-        let plaintext=try JSONEncoder().encode(value)
+        let plaintext=try TaskfoldJSONEncoder().encode(value)
         guard plaintext.count<=WorkspaceBackup.maximumBytes else {throw BackupFailure(message:"This edit exceeds the 256 MB recovery limit. Keep this window open.")}
         guard let ciphertext=try AES.GCM.seal(plaintext,using:secret).combined else {throw BackupFailure(message:"This edit could not be encrypted. Keep this window open.")}
         try FileManager.default.createDirectory(at:editorDirectory,withIntermediateDirectories:true)
@@ -957,7 +960,7 @@ extension BackupVault {
         defer {try? FileManager.default.removeItem(at:staging)}
         try ciphertext.write(to:staging,options:[.atomic,.completeFileProtectionUntilFirstUserAuthentication])
         let persisted=try Self.boundedFile(staging,limit:WorkspaceBackup.maximumBytes+1024)
-        let verified=try JSONDecoder().decode(TaskEditorRecovery.self,from:AES.GCM.open(AES.GCM.SealedBox(combined:persisted),using:secret))
+        let verified=try TaskfoldJSONDecoder().decode(TaskEditorRecovery.self,from:AES.GCM.open(AES.GCM.SealedBox(combined:persisted),using:secret))
         guard verified==value else {throw BackupFailure(message:"The saved edit could not be verified. Keep this window open.")}
         guard Darwin.rename(staging.path,editorFile(value.id).path)==0 else {throw BackupFailure(message:"The verified edit could not replace its previous version. Keep this window open and retry.")}
     }

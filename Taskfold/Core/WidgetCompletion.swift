@@ -20,7 +20,7 @@ enum WidgetCompletion {
     static func prepare(_ snapshot: inout Snapshot) {
         let tasks = snapshot.tables["tasks"] ?? []
         let instants = InstantNormalizer()
-        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         let children = childItems(snapshot, account: "widget-index")
         let ids = Set(tasks.map { WidgetTaskIdentity.key($0.id) } + children.map(\.id))
         snapshot.widgetCompletion.states = snapshot.widgetCompletion.states.filter { ids.contains($0.key) }
@@ -57,7 +57,7 @@ enum WidgetCompletion {
     /// Root incarnation and path bind a link without making completion/editing invalidate it.
     static func routeContext(_ item: TaskHierarchyIndex.Item) -> String? {
         let values: [JSON] = [.string(item.id), item.root["task_generation"], item.root["created_at"], item.root["project_id"], item.root["section_id"], item.source["task_generation"], item.source["created_at"]]
-        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         return (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) }
     }
     private static func childSignature(_ item: TaskHierarchyIndex.Item) -> String? {
@@ -65,7 +65,7 @@ enum WidgetCompletion {
         // must not invalidate its parent's still-visible checkbox.
         var own = item.source.fields; own.removeValue(forKey: "subtasks")
         let values: [JSON] = [.string(item.id), .object(own), item.root["task_generation"], item.root["created_at"], item.root["project_id"], item.root["section_id"]]
-        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         return (try? encoder.encode(values)).map { DueReminder.digest(String(decoding: $0, as: UTF8.self)) }
     }
     static func tokens(_ snapshot: Snapshot) -> [String: String] { snapshot.widgetCompletion.states.mapValues(\.token) }

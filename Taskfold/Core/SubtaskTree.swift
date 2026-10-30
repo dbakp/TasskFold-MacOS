@@ -36,12 +36,12 @@ enum SubtaskTree {
     static let readableDepth = 32
     static func referencePath(_ id: String) -> [String]? {
         guard id.hasPrefix("subtask:"), let data = Data(base64Encoded: String(id.dropFirst(8))),
-              let path = try? JSONDecoder().decode([String].self, from: data), (2...readableDepth + 1).contains(path.count), path.allSatisfy({ !$0.isEmpty }) else { return nil }
+              let path = try? TaskfoldJSONDecoder().decode([String].self, from: data), (2...readableDepth + 1).contains(path.count), path.allSatisfy({ !$0.isEmpty }) else { return nil }
         return path
     }
     static func reference(parent: String, key: String) -> String {
         let path = (referencePath(parent) ?? [parent]) + [key]
-        return "subtask:" + (try! JSONEncoder().encode(path)).base64EncodedString()
+        return "subtask:" + (try! TaskfoldJSONEncoder().encode(path)).base64EncodedString()
     }
     static let childQuickEntryExclusions: Set<String> = ["project_id", "section_id", "labels", "recurrence", "reminder_specs"]
     /// Context is visible in the editor but ownership and containment remain on the parent.
@@ -729,11 +729,14 @@ enum ChecklistRecovery {
             case .number(let number): guard number.isFinite else { throw SubtaskTree.Failure(message: "This checklist contains unreadable data. Your saved content is unchanged.") }
             case .array(let values): for child in values { try visit(child, depth: depth + 1) }
             case .object(let fields): for (key, child) in fields { try charge(key.utf8.count); try visit(child, depth: depth + 1) }
+            case .preserved(let value):
+                let count = try value.validate(maximumDepth: 128-depth, maximumValues: 100001-nodes)
+                nodes += count-1; try charge(value.data.count)
             case .null, .bool: break
             }
         }
         try visit(source, depth: 0)
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
         let data = try encoder.encode(source)
         guard data.count <= maximumBytes else { throw SubtaskTree.Failure(message: "This checklist is too large to recover here. Its original content is kept in the task and workspace backups.") }
         return data
@@ -888,7 +891,7 @@ struct ChildTaskRecordRead: Sendable {
         var syntax=UniqueJSONKeys(bytes:Array(data))
         try syntax.value(depth:0); syntax.space()
         guard syntax.index==syntax.bytes.count else {throw ChildTaskRecordFailure.review}
-        guard let raw=try? JSONDecoder().decode([String:JSON].self,from:data) else { throw ChildTaskRecordFailure.review }
+        guard let raw=try? TaskfoldJSONDecoder().decode([String:JSON].self,from:data) else { throw ChildTaskRecordFailure.review }
         try self.init(envelope: raw, context: context)
     }
     /// The caller must already validate bounded wire syntax and unique keys.
@@ -979,7 +982,7 @@ struct ChildTaskRecordRead: Sendable {
                 let byte=bytes[index];index+=1
                 if byte==92 {guard index<bytes.count else {throw ChildTaskRecordFailure.review};index+=1}
                 else if byte==34 {
-                    guard let text=try? JSONDecoder().decode(String.self,from:Data(bytes[start..<index])) else {throw ChildTaskRecordFailure.review};return text
+                    guard let text=try? Foundation.JSONDecoder().decode(String.self,from:Data(bytes[start..<index])) else {throw ChildTaskRecordFailure.review};return text
                 }
             }
             throw ChildTaskRecordFailure.review
@@ -1063,7 +1066,7 @@ struct ChildTaskStructureRead: Sendable {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes,
             integerPaths: [["protocol"], ["structure_revision"], ["projection_revision"],
                            ["records", "[]", "revision"], ["records", "[]", "sibling_order"]])
-        guard var raw = try? JSONDecoder().decode([String: JSON].self, from: data),
+        guard var raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data),
               Set(raw.keys) == Set(["protocol", "account", "project_id", "task_id", "task_generation",
                                     "projection_revision", "structure_revision", "root_kind", "records"]),
               raw["protocol"] == .number(2),

@@ -203,7 +203,7 @@ actor AutomationEnrollmentVault {
         do { stored = try io.read(key: key(account)) }
         catch { throw Self.unavailable }
         guard let stored else { return nil }
-        guard stored.count <= 4096, let envelope = try? JSONDecoder().decode(AutomationEnrollmentEnvelope.self, from: stored),
+        guard stored.count <= 4096, let envelope = try? TaskfoldJSONDecoder().decode(AutomationEnrollmentEnvelope.self, from: stored),
               let draft = try? envelope.draft(), draft.account == account else { throw Self.unavailable }
         guard draft.origin == origin else { throw AppFailure(message: "Return to this account’s original server to finish setting up its key.") }
         return AutomationEnrollmentRecovery(draft: draft, cancelling: envelope.cancellationRequested == true)
@@ -216,7 +216,7 @@ actor AutomationEnrollmentVault {
         try processLock.withExclusive(account: draft.account, check: { try lease.check() }) {
             guard let old = try readRecovery(account: draft.account, origin: draft.origin), old.draft.id == draft.id, old.draft.body == draft.body else { throw CancellationError() }
             if old.cancelling { return }
-            let data = try JSONEncoder().encode(AutomationEnrollmentEnvelope(draft, cancelling: true))
+            let data = try TaskfoldJSONEncoder().encode(AutomationEnrollmentEnvelope(draft, cancelling: true))
             guard data.count <= 4096 else { throw Self.unavailable }
             try lease.check()
             do { try io.write(data, key: key(draft.account)) } catch { throw Self.unavailable }
@@ -225,7 +225,7 @@ actor AutomationEnrollmentVault {
     func begin(_ draft: AutomationKeyDraft, lease: CalendarReadLease) throws -> AutomationKeyDraft {
         try processLock.withExclusive(account: draft.account, check: { try lease.check() }) {
             if let old = try readRecovery(account: draft.account, origin: draft.origin) { return old.draft }
-            let data = try JSONEncoder().encode(AutomationEnrollmentEnvelope(draft))
+            let data = try TaskfoldJSONEncoder().encode(AutomationEnrollmentEnvelope(draft))
             guard data.count <= 4096 else { throw Self.unavailable }
             try lease.check()
             do { try io.write(data, key: key(draft.account)) }
@@ -250,7 +250,7 @@ actor AutomationEnrollmentVault {
         try processLock.withExclusive(account: account) {
             let location = try key(account)
             guard let data = try io.read(key: location) else { return }
-            guard data.count <= 4096, let envelope = try? JSONDecoder().decode(AutomationEnrollmentEnvelope.self, from: data),
+            guard data.count <= 4096, let envelope = try? TaskfoldJSONDecoder().decode(AutomationEnrollmentEnvelope.self, from: data),
                   let draft = try? envelope.draft(), draft.account == account else { throw Self.unavailable }
             guard draft.origin == origin else { return }
             try io.remove(key: location)

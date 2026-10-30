@@ -392,7 +392,7 @@ struct AudioCommentNativeFixtureView: View {
         let start=after.flatMap { cursor in rows.firstIndex { $0.record["comment_id"]==cursor.position["comment_id"] }.map { $0+1 } } ?? 0
         let values=Array(rows.dropFirst(start).prefix(20)),next:JSON
         if start+20<rows.count,let last=values.last {next = .object(["published_at":last.record["published_at"],"comment_id":last.record["comment_id"]])}else{next = .null}
-        return try .init(data:JSONEncoder().encode(Record(["protocol":.number(1),"account":.string(account.uuidString.lowercased()),"items":.array(values.map { .object($0.record.fields) }),"next":next])),account:account,target:target,after:after)
+        return try .init(data:TaskfoldJSONEncoder().encode(Record(["protocol":.number(1),"account":.string(account.uuidString.lowercased()),"items":.array(values.map { .object($0.record.fields) }),"next":next])),account:account,target:target,after:after)
     }
     func listAudio(account:UUID,target:AudioCommentTarget,origin:String,incarnation:UUID) async throws -> [AudioCommentRemote] { try await pageAudio(account:account,target:target,after:nil,origin:origin,incarnation:incarnation).items }
     func downloadAudio(_ comment:AudioCommentRemote,origin:String,incarnation:UUID) async throws -> AudioCommentClip {
@@ -403,7 +403,7 @@ struct AudioCommentNativeFixtureView: View {
     func removeAudio(_ comment:AudioCommentRemote,origin:String,incarnation:UUID) async throws -> AudioCommentRemoteRemoval {
         guard active,owner,rows.contains(comment) else { throw AudioCommentReadAccessUnavailable() }
         removals += 1;rows.removeAll { $0.id==comment.id }
-        return try .init(data:JSONEncoder().encode(Record(["protocol":.number(1),"account":.string(scope.workspace.account),"comment_id":.string(comment.id.uuidString.lowercased()),"operation_id":.string(comment.publication.operation.uuidString.lowercased()),"state":.string("retired")])),expected:comment)
+        return try .init(data:TaskfoldJSONEncoder().encode(Record(["protocol":.number(1),"account":.string(scope.workspace.account),"comment_id":.string(comment.id.uuidString.lowercased()),"operation_id":.string(comment.publication.operation.uuidString.lowercased()),"state":.string("retired")])),expected:comment)
     }
 }
 @MainActor private final class AudioConversationSilentPlayer: AudioCommentPlaying {

@@ -47,7 +47,7 @@ enum PinnedNotes {
         self.tasks(tasks, pins: pins, account: account).map { task in
             let title = excerpt(task.title, characters: 160, bytes: 1000)
             let text = NoteMarkup.preview(task.string("description"), characters: 1200, bytes: 6000)
-            let id = (try? JSONEncoder().encode([account, "note", task.id]).base64EncodedString()) ?? ""
+            let id = (try? TaskfoldJSONEncoder().encode([account, "note", task.id]).base64EncodedString()) ?? ""
             return .object(["id": .string(id), "taskID": .string(task.id), "title": .string(title.0), "text": .string(text.0), "truncated": .bool(text.1), "completed": .bool(task.completed)])
         }
     }
@@ -176,7 +176,7 @@ struct TaskOrderRecovery: Codable, Equatable, Sendable {
             default: return false
             }
         }
-        guard let data = try? JSONEncoder().encode(change), let value = try? JSONDecoder().decode(JSON.self, from: data) else { return true }
+        guard let data = try? TaskfoldJSONEncoder().encode(change), let value = try? TaskfoldJSONDecoder().decode(JSON.self, from: data) else { return true }
         return contains(value)
     }
     /// Entire same-row histories are parked. Splitting a user's ordering vector

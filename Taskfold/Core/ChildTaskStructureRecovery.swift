@@ -127,7 +127,7 @@ struct ChildTaskStructureJournalState: ReviewedTeamFileCommand, CustomStringConv
     /// merely because its original task mutation was acknowledged.
     mutating func makeRoom(preserving request: String? = nil) throws {
         func fits() throws -> Bool {
-            try entries.count <= Self.maximumEntries && disposals.count <= Self.maximumEntries && JSONEncoder().encode(self).count <= Self.maximumStoredBytes
+            try entries.count <= Self.maximumEntries && disposals.count <= Self.maximumEntries && TaskfoldJSONEncoder().encode(self).count <= Self.maximumStoredBytes
         }
         guard try !fits() else { return }
         let order = entries.map { $0.command.familyID } + disposals.map(\.id)
@@ -147,7 +147,7 @@ struct ChildTaskStructureJournalState: ReviewedTeamFileCommand, CustomStringConv
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes)
-        let raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
         var paths: Set<[String]> = [["version"]]
         for entry in raw["entries"]?.list ?? [] {
             let command = entry.object["command"]?.object ?? [:], prefix = ["entries", "[]", "command"]
@@ -162,7 +162,7 @@ struct ChildTaskStructureJournalState: ReviewedTeamFileCommand, CustomStringConv
         }
         paths.formUnion([["entries", "[]", "resolution", "raw", "protocol"], ["disposals", "[]", "receipt", "raw", "protocol"]])
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: paths)
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries, disposals }
     init(from decoder: Decoder) throws {
@@ -211,7 +211,7 @@ actor ChildTaskStructureJournal {
     private func write(_ candidate: ChildTaskStructureJournalState, lease: CalendarReadLease, preserving request: String? = nil) throws {
         var state = candidate; try state.makeRoom(preserving: request)
         _ = try ChildTaskStructureJournalState(account: account, origin: origin, entries: state.entries, disposals: state.disposals)
-        let data = try JSONEncoder().encode(state)
+        let data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= ChildTaskStructureJournalState.maximumStoredBytes else { throw ChildTaskStructureCapacityFailure() }
         try lease.check(); try io.write(data, key: key)
     }

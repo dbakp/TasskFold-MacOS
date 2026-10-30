@@ -96,7 +96,7 @@ struct ReminderDeviceCommand: Equatable, Sendable {
     func body() throws -> [String: JSON] {
         guard valid else { throw AppFailure(message: "Invalid device registration command.") }
         var fields: [String: JSON] = ["_device": .string(device), "_secret": .string(secret), "_revision": .number(Double(revision))]
-        if let binding { fields["_binding"] = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(binding)) }
+        if let binding { fields["_binding"] = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(binding)) }
         if let authorityTransition, let localCutoffMS {
             fields["_authority_nonce"] = .string(authorityTransition.uuidString.lowercased())
             fields["_local_cutoff_ms"] = .number(Double(localCutoffMS))
@@ -256,14 +256,14 @@ enum ReminderDeviceVault {
         let status = SecItemCopyMatching(q as CFDictionary, &result)
         if status == errSecItemNotFound { return nil }
         guard status == errSecSuccess, let data = result as? Data,
-              let value = try? JSONDecoder().decode(ReminderDeviceInstallation.self, from: data), value.valid else {
+              let value = try? TaskfoldJSONDecoder().decode(ReminderDeviceInstallation.self, from: data), value.valid else {
             throw AppFailure(message: "This device's secure registration could not be read. It has not been replaced.")
         }
         return value
     }
     static func save(_ value: ReminderDeviceInstallation, bundle: String) throws {
         guard value.valid else { throw AppFailure(message: "Invalid secure device registration.") }
-        let data = try JSONEncoder().encode(value), q = query(bundle: bundle)
+        let data = try TaskfoldJSONEncoder().encode(value), q = query(bundle: bundle)
         var status = SecItemUpdate(q as CFDictionary, [kSecValueData as String: data] as CFDictionary)
         if status == errSecItemNotFound {
             var created = q; created[kSecValueData as String] = data
@@ -286,14 +286,14 @@ enum ReminderAuthorityVault {
         let status = SecItemCopyMatching(q as CFDictionary, &result)
         if status == errSecItemNotFound { return nil }
         guard status == errSecSuccess, let data = result as? Data, data.count <= 4096,
-              let value = try? JSONDecoder().decode(ReminderDeliveryAuthority.self, from: data), value.valid else {
+              let value = try? TaskfoldJSONDecoder().decode(ReminderDeliveryAuthority.self, from: data), value.valid else {
             throw AppFailure(message: "This device's reminder delivery choice could not be read. Check remote setup before scheduling task reminders.")
         }
         return value
     }
     static func save(_ value: ReminderDeliveryAuthority, bundle: String) throws {
         guard value.valid else { throw AppFailure(message: "Invalid reminder delivery choice.") }
-        let data = try JSONEncoder().encode(value), q = query(bundle: bundle)
+        let data = try TaskfoldJSONEncoder().encode(value), q = query(bundle: bundle)
         var status = SecItemUpdate(q as CFDictionary, [kSecValueData as String: data] as CFDictionary)
         if status == errSecItemNotFound {
             var created = q; created[kSecValueData as String] = data
@@ -326,7 +326,7 @@ extension Backend {
         guard expectedIncarnation == reminderSessionIncarnation, account == session?.user.id else { throw CancellationError() }
         let data = try await request("/rest/v1/rpc/taskfold_reminder_delivery_available", method: "POST", body: [:], authenticated: true, expectedAccount: account)
         guard expectedIncarnation == reminderSessionIncarnation else { throw CancellationError() }
-        let value = try JSONDecoder().decode(JSON.self, from: data).object
+        let value = try TaskfoldJSONDecoder().decode(JSON.self, from: data).object
         guard value["version"] == .number(1), value["account"] == .string(account),
               case .bool(let available)? = value["available"] else { throw AppFailure(message: "Remote reminder availability could not be confirmed.") }
         return available
@@ -339,7 +339,7 @@ extension Backend {
         let data = try await request(command.path, method: "POST", body: command.body(),
                                      authenticated: command.binding != nil, expectedAccount: command.account)
         if let expectedIncarnation, expectedIncarnation != reminderSessionIncarnation { throw CancellationError() }
-        let receipt = try JSONDecoder().decode(ReminderDeviceReceipt.self, from: data)
+        let receipt = try TaskfoldJSONDecoder().decode(ReminderDeviceReceipt.self, from: data)
         guard receipt.confirms(command) else {
             throw AppFailure(message: "The server did not confirm this device registration. Delivery has not been enabled.")
         }

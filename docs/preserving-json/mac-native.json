@@ -1,0 +1,16 @@
+{
+  "appSHA256": "b0defffff24d33de8e1ef83281745a1d87f1d8b5dba1e2b5ab17d8fa74f20086",
+  "confirmed": 1,
+  "writes": 1,
+  "requests": 1,
+  "opaqueRoot": true,
+  "opaqueChild": true,
+  "quitVerified": true,
+  "serverRawNumeralsRetained": true,
+  "coldLaunchConfirmed": true,
+  "coldReceiptVisible": true,
+  "finalQuitVerified": true,
+  "structuralDecimalReadback": true,
+  "unicodeUTF8KeySpellings": 2,
+  "childTitleExact": true
+}

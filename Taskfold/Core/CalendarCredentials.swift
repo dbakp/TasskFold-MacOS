@@ -75,7 +75,7 @@ actor CalendarCredentialVault {
     func read(owner:String,service:CalendarService) throws ->CalendarCredentialRecord? {
         guard !owner.isEmpty else {throw CalendarReadFailure.unavailable}
         guard let data=try io.read(key:Self.key(owner:owner,service:service)) else {return nil}
-        guard data.count<=1024*1024,let record=try? JSONDecoder().decode(CalendarCredentialRecord.self,from:data),record.version==1,!record.identity.id.isEmpty,!record.state.isEmpty else {throw CalendarReadFailure.unavailable};return record
+        guard data.count<=1024*1024,let record=try? TaskfoldJSONDecoder().decode(CalendarCredentialRecord.self,from:data),record.version==1,!record.identity.id.isEmpty,!record.state.isEmpty else {throw CalendarReadFailure.unavailable};return record
     }
     func write(_ record:CalendarCredentialRecord,owner:String,service:CalendarService,lease:CalendarReadLease,expectedID:UUID?=nil) throws {
         try lease.check();guard !owner.isEmpty,record.version==1,!record.state.isEmpty else {throw CalendarReadFailure.unavailable}
@@ -84,7 +84,7 @@ actor CalendarCredentialVault {
             if previous==record {return}
             guard (record.sequence ?? 0)>(previous.sequence ?? 0) else {throw CancellationError()}
         }
-        let data=try JSONEncoder().encode(record);guard data.count<=1024*1024 else {throw CalendarReadFailure.unavailable}
+        let data=try TaskfoldJSONEncoder().encode(record);guard data.count<=1024*1024 else {throw CalendarReadFailure.unavailable}
         try lease.check();try io.write(data,key:Self.key(owner:owner,service:service))
     }
     func remove(owner:String,service:CalendarService,ifID:UUID?=nil) throws {

@@ -345,7 +345,7 @@ struct BackupTools: View {
             let value=try await Task.detached(priority:.utility) {try vault.editorDraft(entry.id,origin:origin)}.value
             guard generation==store.workspaceGeneration,account==store.userID else {throw CancellationError()}
             if exportOriginal {
-                let data=try await Task.detached(priority:.utility) {try JSONEncoder().encode(value)}.value
+                let data=try await Task.detached(priority:.utility) {try TaskfoldJSONEncoder().encode(value)}.value
                 guard generation==store.workspaceGeneration else {throw CancellationError()}
                 ui.exportFilename="Taskfold-original-edit";document=WorkspaceDocument(data:data);exporting=true
             } else {

@@ -70,7 +70,7 @@ struct TeamProjectCommand: ReviewedTeamCommand, CustomStringConvertible, CustomD
             if action == .createSubproject { guard count == 1, !archived else { throw Self.invalid } }
         }
         if action == .setAccess { keys.insert("role"); guard let value = body["role"]?.text, TeamProjectRole(rawValue: value) != nil else { throw Self.invalid } }
-        guard Set(body.keys) == keys, try JSONEncoder().encode(body).count <= 16_384,
+        guard Set(body.keys) == keys, try TaskfoldJSONEncoder().encode(body).count <= 16_384,
               let text = body["issued_at"]?.text, text.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$"#, options: .regularExpression) != nil else { throw Self.invalid }
         _ = try TeamOrganizationValue.date(body["issued_at"])
         _ = try TeamProjectValue.revision(body["team_revision"])

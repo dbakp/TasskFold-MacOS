@@ -9,7 +9,7 @@ enum TeamTemplateLibraryValue {
         return value
     }
     static func documentBytes(_ document: JSON) throws -> Int {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
         return try encoder.encode(document).count
     }
     static func name(_ raw: JSON?) throws -> String {
@@ -156,7 +156,7 @@ extension Backend {
         let context = try reauthenticationContext(account: account)
         let data = try await request("/rest/v1/rpc/taskfold_team_templates", method: "POST", body: ["_operation": .string(operation), "_body": .object(body)], expectedAccount: account)
         try requireReauthentication(context)
-        guard data.count <= 3_000_000, let raw = try? JSONDecoder().decode([String: JSON].self, from: data) else { throw TeamTemplateLibraryValue.invalid }; return raw
+        guard data.count <= 3_000_000, let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamTemplateLibraryValue.invalid }; return raw
     }
     func teamTemplatePage(team: String, account: String, origin: String, after: String? = nil, revision: Double? = nil) async throws -> TeamTemplatePage {
         guard TeamProjectValue.id(team), after == nil || TeamProjectValue.id(after!), after == nil || revision != nil else { throw TeamTemplateLibraryValue.invalid }

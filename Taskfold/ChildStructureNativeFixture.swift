@@ -83,14 +83,14 @@ import CryptoKit
         fields[TeamChecklist.key] = .object(["epoch": .string(UUID().uuidString.lowercased()), "version": .number(0)])
         if case .array(let children)? = fields["subtasks"] { fields["subtasks"] = .array(children.map { fresh($0, restoring: restoring) }) }; return .object(fields)
     }
-    private static func digest(_ value: JSON) throws -> String { let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys; return SHA256.hash(data: try encoder.encode(value)).map { String(format: "%02x", $0) }.joined() }
+    private static func digest(_ value: JSON) throws -> String { let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys; return SHA256.hash(data: try encoder.encode(value)).map { String(format: "%02x", $0) }.joined() }
     static func response(path: String, body: [String: JSON], state: inout [String: JSON]) throws -> (Data, Bool) {
         guard enabled else { throw CancellationError() }
         let account = Store.shared.userID, isOwner = account == ChildFieldNativeIdentity.account
         var receipts = state["structureReceipts"]?.object ?? [:], archives = state["structureArchives"]?.object ?? [:]
         var root = Record(state["root"]!.object)
         let rows = records(root, state: &state), revision = Double(state["structureRevision"]?.integer ?? 1)
-        func encoded(_ raw: [String: JSON]) throws -> (Data, Bool) { (try JSONEncoder().encode(raw), false) }
+        func encoded(_ raw: [String: JSON]) throws -> (Data, Bool) { (try TaskfoldJSONEncoder().encode(raw), false) }
         if path.hasSuffix("taskfold_child_structure_undo_archives") {
             let entries = isOwner ? archives.keys.sorted().compactMap { id -> JSON? in guard var raw = receipts[id]?.object["receipt"]?.object else { return nil }; raw["replayed"] = .bool(true); return .object(raw) } : []
             try ChildFieldNativePeer.save(state); return try encoded(["protocol": .number(1), "account": .string(account), "entries": .array(entries)])
@@ -190,7 +190,7 @@ import CryptoKit
         state["root"] = .object(root.fields); state["structureRevision"] = .number(revision + 1); state["structureReceipts"] = .object(receipts); state["structureArchives"] = .object(archives); state["structureWrites"] = .number(Double((state["structureWrites"]?.integer ?? 0) + 1))
         let lost = ProcessInfo.processInfo.arguments.contains("--child-structure-lose-reply") && state["structureLost"] != .bool(true)
         if lost { state["structureLost"] = .bool(true) }; try ChildFieldNativePeer.save(state)
-        return (try JSONEncoder().encode(proof), lost)
+        return (try TaskfoldJSONEncoder().encode(proof), lost)
     }
     static func flatKeys(_ rows: JSON) -> [String] { rows.list.flatMap { [$0.object["id"]!.text.precomposedStringWithCanonicalMapping] + flatKeys($0.object["subtasks"] ?? .null) } }
 }

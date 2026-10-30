@@ -42,7 +42,7 @@ extension Backend {
         guard context.origin == draft.scope.origin, context.incarnation == draft.session else { throw CancellationError() }
         let data = try await request("/rest/v1/rpc/taskfold_team_task_recipients", method: "POST", body: ["_team_id": .string(draft.scope.team), "_project_id": .string(draft.scope.project)], expectedAccount: draft.scope.account)
         try requireReauthentication(context)
-        guard data.count <= 350_000, let raw = try? JSONDecoder().decode([String: JSON].self, from: data) else { throw TeamTaskRecipientCatalog.invalid }
+        guard data.count <= 350_000, let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw TeamTaskRecipientCatalog.invalid }
         return try TeamTaskRecipientCatalog(raw, draft: draft)
     }
 }

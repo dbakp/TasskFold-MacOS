@@ -26,7 +26,7 @@ enum AccountRemovalNativeFixture {
         var result: CFTypeRef?; return SecItemCopyMatching(query as CFDictionary, &result)
     }
     static func session(_ account: String) throws -> Session {
-        try JSONDecoder().decode(Session.self, from: JSONSerialization.data(withJSONObject: ["access_token": account == owner ? "synthetic-A" : "synthetic-B", "refresh_token": "synthetic-refresh", "expires_at": Date().addingTimeInterval(3600).timeIntervalSince1970, "user": ["id": account, "email": "taskfold-removal-proof@example.invalid"]]))
+        try Foundation.JSONDecoder().decode(Session.self, from: JSONSerialization.data(withJSONObject: ["access_token": account == owner ? "synthetic-A" : "synthetic-B", "refresh_token": "synthetic-refresh", "expires_at": Date().addingTimeInterval(3600).timeIntervalSince1970, "user": ["id": account, "email": "taskfold-removal-proof@example.invalid"]]))
     }
     @MainActor static func backend() -> Backend {
         precondition(enabled)
@@ -56,7 +56,7 @@ final class AccountRemovalProofHTTP: URLProtocol, @unchecked Sendable {
            request.url?.path == "/auth/v1/token", request.url?.query == "grant_type=refresh_token" {
             Self.lock.lock(); Self.refreshes += 1; Self.lock.unlock()
             var next = try! AccountRemovalNativeFixture.session(AccountRemovalNativeFixture.owner); next.access_token = "synthetic-A-renewed"
-            reply(200, body: try! JSONEncoder().encode(next)); return
+            reply(200, body: try! TaskfoldJSONEncoder().encode(next)); return
         }
         let permitted = request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-A" ||
             AccountRemovalNativeFixture.expiring && request.value(forHTTPHeaderField: "Authorization") == "Bearer synthetic-A-renewed"
@@ -67,7 +67,7 @@ final class AccountRemovalProofHTTP: URLProtocol, @unchecked Sendable {
         }
         if request.value(forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof") == nil {
             let body: [String: JSON] = ["prepared": .bool(true), "account": .string(AccountRemovalNativeFixture.owner), "proof": .string("fixture." + String(repeating: "a", count: 43))]
-            reply(200, body: try! JSONEncoder().encode(body)); return
+            reply(200, body: try! TaskfoldJSONEncoder().encode(body)); return
         }
         Self.lock.lock(); Self.requests += 1; let index = Self.requests
         if AccountRemovalNativeFixture.switching && index == 1 { Self.held = self; Self.lock.unlock(); return }
@@ -111,7 +111,7 @@ enum AccountRemovalLiveReplyFault {
         guard enabled || exists else { return }
         var trace: Trace
         if exists {
-            trace = try JSONDecoder().decode(Trace.self, from: Data(contentsOf: url))
+            trace = try TaskfoldJSONDecoder().decode(Trace.self, from: Data(contentsOf: url))
             guard trace.version == 1, trace.account == command.account, trace.origin == command.origin,
                   trace.serverConfirmedResponses < 8 else { return }
         } else {
@@ -124,7 +124,7 @@ enum AccountRemovalLiveReplyFault {
         let discard = enabled && trace.discardedAcknowledgements == 0
         if discard { trace.discardedAcknowledgements = 1 }
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try JSONEncoder().encode(trace).write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        try TaskfoldJSONEncoder().encode(trace).write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         if discard { throw URLError(.networkConnectionLost) }
     }
 }

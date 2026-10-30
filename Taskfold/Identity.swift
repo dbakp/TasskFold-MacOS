@@ -28,7 +28,7 @@ extension Workspace {
     func restoreMemberCache() {
         guard rosterAccount != store.userID else { return }
         rosterAccount = store.userID
-        rosterCache = (try? Data(contentsOf: memberCacheURL)).flatMap { try? JSONDecoder().decode(MemberCache.self, from: $0) } ?? MemberCache()
+        rosterCache = (try? Data(contentsOf: memberCacheURL)).flatMap { try? TaskfoldJSONDecoder().decode(MemberCache.self, from: $0) } ?? MemberCache()
         projectMembers = rosterCache.people
     }
     func persistMemberCache() {
@@ -36,7 +36,7 @@ extension Workspace {
         rosterCache.people = projectMembers
         do {
             try FileManager.default.createDirectory(at: memberCacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try JSONEncoder().encode(rosterCache).write(to: memberCacheURL, options: .atomic)
+            try TaskfoldJSONEncoder().encode(rosterCache).write(to: memberCacheURL, options: .atomic)
         } catch { memberLoadError = "Names are available for this session, but couldn’t be saved for offline use." }
     }
     func refreshMemberDirectory(force projects: Set<String> = []) async {
@@ -58,7 +58,7 @@ extension Workspace {
             do {
                 let data = try await store.backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(project.id)])
                 guard !Task.isCancelled, store.userID == account else { return }
-                projectMembers[project.id] = try JSONDecoder().decode([Record].self, from: data)
+                projectMembers[project.id] = try TaskfoldJSONDecoder().decode([Record].self, from: data)
                 rosterCache.dates[project.id] = Date(); rosterCache.signatures[project.id] = signature
             } catch { failed = true }
         }

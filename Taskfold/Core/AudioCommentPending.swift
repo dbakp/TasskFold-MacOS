@@ -12,7 +12,7 @@ struct AudioCommentPending: Sendable {
         self.publication = publication; self.clip = clip
     }
     func encoded() throws -> Data {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         let data = try PropertyListSerialization.data(fromPropertyList: [
             "format": "taskfold-audio-pending-v1",
             "intent": try encoder.encode(publication),
@@ -29,7 +29,7 @@ struct AudioCommentPending: Sendable {
               fields["format"] as? String == "taskfold-audio-pending-v1",
               let intent = fields["intent"] as? Data, intent.count <= 32_000,
               let audio = fields["audio"] as? Data else { throw AudioCommentFailure.invalid }
-        let publication = try JSONDecoder().decode(AudioCommentPublication.self, from: intent)
+        let publication = try TaskfoldJSONDecoder().decode(AudioCommentPublication.self, from: intent)
         guard publication.account == account else { throw AudioCommentFailure.changed }
         try self.init(publication: publication, clip: AudioCommentClip(restoring: audio, descriptor: publication.descriptor))
     }

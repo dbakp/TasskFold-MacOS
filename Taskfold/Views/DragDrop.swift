@@ -7,7 +7,7 @@ import AppKit
 @MainActor
 func taskItemProvider(for tasks: [Record]) -> NSItemProvider {
     let provider = NSItemProvider(object: tasks.map(\.title).joined(separator: "\n") as NSString)
-    let payload = try? JSONEncoder().encode(tasks.map(\.id))
+    let payload = try? TaskfoldJSONEncoder().encode(tasks.map(\.id))
     provider.registerDataRepresentation(forTypeIdentifier: UTType.taskfoldTask.identifier, visibility: .ownProcess) { completion in
         completion(payload, nil); return nil
     }
@@ -101,7 +101,7 @@ struct RowDropDelegate: DropDelegate {
         }
         for provider in providers where provider.hasItemConformingToTypeIdentifier(UTType.taskfoldTask.identifier) {
             provider.loadDataRepresentation(forTypeIdentifier: UTType.taskfoldTask.identifier) { data, _ in
-                guard let data, let ids = try? JSONDecoder().decode([String].self, from: data) else { return }
+                guard let data, let ids = try? TaskfoldJSONDecoder().decode([String].self, from: data) else { return }
                 Task { @MainActor in workspace.move(ids, to: DragSlot(day: day, before: before)) }
             }
         }

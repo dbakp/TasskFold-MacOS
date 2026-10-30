@@ -468,7 +468,7 @@ private struct TeamOrganizationFixtureIO: CalendarSecureItemIO {
 @MainActor private final class TeamOrganizationFixturePeer: TeamOrganizationCommandService {
     private var file: URL { TeamOrganizationFixtureIO.root.appendingPathComponent("peer.json") }
     private func read() throws -> [String: JSON] {
-        if TeamOrganizationFixture.management, FileManager.default.fileExists(atPath: file.path) { return try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file)) }
+        if TeamOrganizationFixture.management, FileManager.default.fileExists(atPath: file.path) { return try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file)) }
         return ["teams": .object([TeamOrganizationFixture.team: .object(TeamOrganizationFixture.row)]),
                 "folders": .object([TeamOrganizationFixture.team: .array([
                     .object(["id": .string("ea300000-0000-4000-8000-000000000003"), "name": .string("Product design"), "position": .number(0)]),
@@ -476,7 +476,7 @@ private struct TeamOrganizationFixtureIO: CalendarSecureItemIO {
     }
     private func write(_ raw: [String: JSON]) throws {
         try FileManager.default.createDirectory(at: TeamOrganizationFixtureIO.root, withIntermediateDirectories: true)
-        try JSONEncoder().encode(raw).write(to: file, options: .atomic)
+        try TaskfoldJSONEncoder().encode(raw).write(to: file, options: .atomic)
     }
     func overview() throws -> TeamOrganizationOverview {
         let raw = try read()

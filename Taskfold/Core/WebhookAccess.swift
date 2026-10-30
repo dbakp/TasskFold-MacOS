@@ -138,20 +138,20 @@ actor WebhookEnrollmentVault {
     private func key(_ account: String) throws -> String { guard AutomationKey.canonicalID(account) else { throw WebhookValue.invalid }; return "webhook-enrollment-v1." + account }
     private func read(_ account: String, _ origin: String) throws -> WebhookRecovery? {
         guard let data = try io.read(key:key(account)) else { return nil }
-        guard data.count <= 8192, let e = try? JSONDecoder().decode(WebhookEnvelope.self,from:data), let d = try? e.draft(), d.account == account else { throw WebhookValue.invalid }
+        guard data.count <= 8192, let e = try? TaskfoldJSONDecoder().decode(WebhookEnvelope.self,from:data), let d = try? e.draft(), d.account == account else { throw WebhookValue.invalid }
         guard d.origin == origin else { throw AppFailure(message:"Return to the original account server to finish this connection.") }; return WebhookRecovery(draft:d,cancelling:e.cancelling)
     }
     func recovery(account: String, origin: String) throws -> WebhookRecovery? { try lock.withExclusive(account:account) { try read(account,origin) } }
     func begin(_ d: WebhookDraft, lease: CalendarReadLease) throws -> WebhookRecovery {
         try lock.withExclusive(account:d.account,check:{try lease.check()}) {
             if let old = try read(d.account,d.origin) { return old }
-            let bytes = try JSONEncoder().encode(WebhookEnvelope(d)); guard bytes.count <= 8192 else { throw WebhookValue.invalid }; try lease.check(); try io.write(bytes,key:key(d.account)); return WebhookRecovery(draft:d,cancelling:false)
+            let bytes = try TaskfoldJSONEncoder().encode(WebhookEnvelope(d)); guard bytes.count <= 8192 else { throw WebhookValue.invalid }; try lease.check(); try io.write(bytes,key:key(d.account)); return WebhookRecovery(draft:d,cancelling:false)
         }
     }
     func cancel(_ d: WebhookDraft, lease: CalendarReadLease) throws {
         try lock.withExclusive(account:d.account,check:{try lease.check()}) {
             guard let old = try read(d.account,d.origin), old.draft.body == d.body else { throw CancellationError() }
-            try lease.check(); try io.write(try JSONEncoder().encode(WebhookEnvelope(d,cancelling:true)),key:key(d.account))
+            try lease.check(); try io.write(try TaskfoldJSONEncoder().encode(WebhookEnvelope(d,cancelling:true)),key:key(d.account))
         }
     }
     func finish(_ d: WebhookDraft, lease: CalendarReadLease, cancelled: Bool = false) throws {
@@ -164,7 +164,7 @@ actor WebhookEnrollmentVault {
     func removeAccount(_ account: String, origin: String) throws {
         try lock.withExclusive(account:account) {
             guard let bytes = try io.read(key:key(account)) else { return }
-            guard bytes.count <= 8192, let envelope = try? JSONDecoder().decode(WebhookEnvelope.self,from:bytes), let d = try? envelope.draft(), d.account == account else { throw WebhookValue.invalid }
+            guard bytes.count <= 8192, let envelope = try? TaskfoldJSONDecoder().decode(WebhookEnvelope.self,from:bytes), let d = try? envelope.draft(), d.account == account else { throw WebhookValue.invalid }
             if d.origin == origin { try io.remove(key:key(account)) }
         }
     }

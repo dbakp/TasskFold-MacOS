@@ -58,7 +58,7 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
         }
         var body:[String:JSON]=["team_id":.string(team),"request_id":.string(header.id.uuidString.lowercased()),"items":.array(values)]
         if let restores { body[isCompletion ? "related_request" : "restores"] = .string(restores.uuidString.lowercased()) }
-        guard try JSONEncoder().encode(body).count <= 1_500_000 else { throw AppFailure(message:"This selection is too large. Choose fewer tasks.") }
+        guard try TaskfoldJSONEncoder().encode(body).count <= 1_500_000 else { throw AppFailure(message:"This selection is too large. Choose fewer tasks.") }
         return body
     }
     func confirm(_ reply:[String:JSON],for header:Mutation) throws {
@@ -267,7 +267,7 @@ extension TeamTaskBatch {
               reply["request_id"] == request["request_id"], reply["operation"] == .string(action.rawValue),
               reply["related_request"] == (request["related_request"] ?? .null), case .bool? = reply["replayed"],
               case .array(let replies)? = reply["items"], replies.count == items.count,
-              try JSONEncoder().encode(reply).count <= 4_300_000 else { throw Self.invalid }
+              try TaskfoldJSONEncoder().encode(reply).count <= 4_300_000 else { throw Self.invalid }
         return try zip(items, replies).map { item, value in
             guard case .object(let raw) = value, raw["replayed"] == reply["replayed"], let command = item.teamCompletion else { throw Self.invalid }
             return try command.receipt(raw, for: item)
@@ -636,7 +636,7 @@ private struct CompletionBatchReconciliation {
             let parkedComments = try CompletionRecoveryConversations.parked(in: original, account: batch.account, origin: batch.origin, affected: affected,
                 tasks: taskRows)
             for i in changes.indices where !selected.contains(i) && !orders.indices.contains(i) {
-                let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
+                let value = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(changes[i]))
                 guard !references(value) else { throw TeamTaskBatch.conflict }
             }
             var result = seed
@@ -674,7 +674,7 @@ private struct CompletionBatchReconciliation {
             guard try CompletionRecoveryConversations.parked(in: original, account: batch.account, origin: batch.origin, affected: displaced,
                 tasks: (expected.tables["tasks"] ?? []) + Array(current.values)).isEmpty else { throw TeamTaskBatch.conflict }
             for i in changes.indices where !selected.contains(i) {
-                let value = try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(changes[i]))
+                let value = try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(changes[i]))
                 guard !references(value) else { throw TeamTaskBatch.conflict }
             }
         }
@@ -756,7 +756,7 @@ extension TeamTaskBatch {
                   reply["operation"] == .string(action.rawValue), reply["related_request"] == (body["related_request"] ?? .null),
                   let state = reply["state"]?.text, ["unrecorded", "recorded", "cancelled"].contains(state),
                   case .array(let values)? = reply["items"], values.count == batch.items.count,
-                  try JSONEncoder().encode(reply).count <= 8_500_000 else { throw Self.invalid }
+                  try TaskfoldJSONEncoder().encode(reply).count <= 8_500_000 else { throw Self.invalid }
             let keys: Set<String> = ["review_protocol", "account", "team_id", "project_id", "task_id", "task_generation", "request_id", "operation", "series_id", "series_generation", "series_project_id", "planned_next_id", "state", "project_role", "task", "series", "successor", "receipt", "can_edit_current", "can_edit_series"]
             let members = try zip(values, batch.items).map { value, item -> TeamCompletion.Review in
                 guard case .object(let raw) = value, Set(raw.keys) == keys, raw["state"] == .string(state),
@@ -826,7 +826,7 @@ extension TeamTaskBatch {
             // until then the whole queue stays saved and this action is withheld.
             for later in snapshot.pending.dropFirst() {
                 guard !["projects", "sections"].contains(later.table),
-                      let encoded = try? JSONEncoder().encode(later), let value = try? JSONDecoder().decode(JSON.self, from: encoded), !references(value) else { return nil }
+                      let encoded = try? TaskfoldJSONEncoder().encode(later), let value = try? TaskfoldJSONDecoder().decode(JSON.self, from: encoded), !references(value) else { return nil }
             }
             guard let conversations = try? CompletionRecoveryConversations.parked(in: snapshot, account: batch.account, origin: batch.origin, affected: ids,
                 tasks: (snapshot.tables["tasks"] ?? []) + commands.flatMap { [$0.source] + [$0.proposed].compactMap { $0 } }), conversations.isEmpty else { return nil }

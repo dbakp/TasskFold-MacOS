@@ -78,7 +78,7 @@ struct ChildTaskTransferCommand: ReviewedTeamCommand, CustomStringConvertible, C
             guard case .object(let row) = value, Set(row.keys) == ["incarnation", "revision"], try TeamProjectValue.revision(row["revision"]) >= 1, try TeamProjectValue.revision(row["revision"]) < 9_007_199_254_740_991 else { throw Self.invalid }
             _ = try TeamOrganizationValue.id(row["incarnation"])
         }
-        guard try JSONEncoder().encode(body).count <= Self.maximumRequestBytes else { throw Self.invalid }
+        guard try TaskfoldJSONEncoder().encode(body).count <= Self.maximumRequestBytes else { throw Self.invalid }
         self.account = account; self.origin = origin; self.body = body
     }
     func validateUndo(original: Self, receipt: ChildTaskTransferResult) throws {
@@ -126,9 +126,9 @@ struct ChildTaskTransferCommand: ReviewedTeamCommand, CustomStringConvertible, C
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes)
-        let raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Self.counterPaths(raw["body"]?.object ?? [:], prefix: ["body"]))
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case account, origin, body }
     init(from decoder: Decoder) throws {
@@ -147,7 +147,7 @@ struct ChildTaskTransferResult: Codable, Equatable, Sendable {
     static let counters: Set<[String]> = [["protocol"], ["source_revision"], ["destination_revision"], ["moved_count"], ["return_index"]]
     init(command: ChildTaskTransferCommand, data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: 16_384, integerPaths: Self.counters, nullableIntegerPaths: [["return_index"]])
-        try self.init(command: command, raw: JSONDecoder().decode([String: JSON].self, from: data))
+        try self.init(command: command, raw: TaskfoldJSONDecoder().decode([String: JSON].self, from: data))
     }
     init(command: ChildTaskTransferCommand, raw: [String: JSON]) throws {
         guard raw["protocol"] == .number(1), raw["account"] == .string(command.account), raw["request_id"] == .string(command.id) else { throw ChildTaskTransferCommand.invalid }
@@ -234,14 +234,14 @@ struct ChildTaskTransferState: ReviewedTeamFileCommand {
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes)
-        let raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
         var paths: Set<[String]> = [["version"]]
         for row in raw["entries"]?.list ?? [] {
             paths.formUnion(ChildTaskTransferCommand.counterPaths(row.object["command"]?.object["body"]?.object ?? [:], prefix: ["entries", "[]", "command", "body"]))
         }
         paths.formUnion(ChildTaskTransferResult.counters.map { ["entries", "[]", "result", "raw"] + $0 })
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: paths, nullableIntegerPaths: [["entries", "[]", "result", "raw", "return_index"]])
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
     init(from decoder: Decoder) throws {
@@ -275,7 +275,7 @@ actor ChildTaskTransferJournal {
         guard state.account == account, state.origin == origin else { throw ChildTaskTransferCommand.invalid }; return state
     }
     private func write(_ entries: [ChildTaskTransferState.Entry], lease: CalendarReadLease) throws {
-        let state = try ChildTaskTransferState(account: account, origin: origin, entries: entries), data = try JSONEncoder().encode(state)
+        let state = try ChildTaskTransferState(account: account, origin: origin, entries: entries), data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= ChildTaskTransferState.maximumStoredBytes else { throw ChildTaskTransferFailure(reason: .limit) }
         try lease.check(); try io.write(data, key: key)
     }

@@ -389,7 +389,7 @@ private struct AutomationKeyComposer: View {
         }
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [AutomationManagementHTTP.self]
-        let session = try JSONDecoder().decode(Session.self, from: JSONSerialization.data(withJSONObject: ["access_token": "synthetic-enrollment", "refresh_token": "synthetic-refresh", "expires_at": Date().addingTimeInterval(3600).timeIntervalSince1970, "user": ["id": account, "email": "automation-fixture@example.invalid"]]))
+        let session = try Foundation.JSONDecoder().decode(Session.self, from: JSONSerialization.data(withJSONObject: ["access_token": "synthetic-enrollment", "refresh_token": "synthetic-refresh", "expires_at": Date().addingTimeInterval(3600).timeIntervalSince1970, "user": ["id": account, "email": "automation-fixture@example.invalid"]]))
         let backend = Backend(configuration: ["URL": "https://automation-management.test", "Key": "synthetic-public"], http: URLSession(configuration: config), session: session)
         return AutomationAccessModel(account: account, origin: "https://automation-management.test", service: backend, vault: vault, isCurrent: { true })
     }
@@ -417,11 +417,11 @@ private final class AutomationManagementHTTP: URLProtocol, @unchecked Sendable {
                 }
                 data = result
             }
-            guard let data, let input = try? JSONDecoder().decode([String: JSON].self, from: data), case .object(let body) = input["body"] else { throw AutomationKey.invalid }
+            guard let data, let input = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), case .object(let body) = input["body"] else { throw AutomationKey.invalid }
             let root = URL.applicationSupportDirectory.appendingPathComponent("AutomationManagementFixture", isDirectory: true)
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
             let file = root.appendingPathComponent("metadata.json")
-            var state = (try? JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file))) ?? [:]
+            var state = (try? TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file))) ?? [:]
             var rows: [[String: JSON]] = state["keys"]?.list.compactMap { value -> [String: JSON]? in if case .object(let row) = value { return row }; return nil } ?? []
             let action = input["action"]?.text ?? ""
             let account = "f096cafe-1111-4111-8111-000000000001"
@@ -442,7 +442,7 @@ private final class AutomationManagementHTTP: URLProtocol, @unchecked Sendable {
             } else if action == "create" {
                 state["create_attempts"] = .number(Double((state["create_attempts"]?.integer ?? 0) + 1))
                 if ProcessInfo.processInfo.arguments.contains("--automation-management-fail-before-create") {
-                    try JSONEncoder().encode(state).write(to: file, options: .atomic)
+                    try TaskfoldJSONEncoder().encode(state).write(to: file, options: .atomic)
                     throw URLError(.notConnectedToInternet)
                 }
                 let id = body["id"]?.text ?? ""
@@ -465,9 +465,9 @@ private final class AutomationManagementHTTP: URLProtocol, @unchecked Sendable {
             if lost { state["lost_reply"] = .bool(true) }
             let lostCancel = action == "cancel" && ProcessInfo.processInfo.arguments.contains("--automation-management-discard-lost-reply") && state["lost_cancel_reply"] != .bool(true)
             if lostCancel { state["lost_cancel_reply"] = .bool(true) }
-            try JSONEncoder().encode(state).write(to: file, options: .atomic)
+            try TaskfoldJSONEncoder().encode(state).write(to: file, options: .atomic)
             if lost || lostCancel { throw URLError(.networkConnectionLost) }
-            let reply = try JSONEncoder().encode(result)
+            let reply = try TaskfoldJSONEncoder().encode(result)
             client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: reply); client?.urlProtocolDidFinishLoading(self)
         } catch { client?.urlProtocol(self, didFailWithError: error) }

@@ -58,7 +58,7 @@ struct AudioCommentSavedDraft: Equatable, Sendable {
         lhs.id == rhs.id && lhs.revision == rhs.revision && lhs.origin == rhs.origin && lhs.owner == rhs.owner && lhs.target == rhs.target && lhs.caption.utf8.elementsEqual(rhs.caption.utf8) && lhs.clip.data == rhs.clip.data
     }
     func encoded(recovery: Bool = false) throws -> Data {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return try PropertyListSerialization.data(fromPropertyList: [
             "format": recovery ? "taskfold-audio-recovery-v2" : "taskfold-audio-review-v2", "account": owner.account,
             "id": id.uuidString.lowercased(), "revision": revision.uuidString.lowercased(),
@@ -80,13 +80,13 @@ struct AudioCommentSavedDraft: Equatable, Sendable {
         let origin: AudioCommentReviewReference?
         if let data = fields["origin"] as? Data {
             guard data.count <= 512 else { throw AudioCommentStorageFailure.unreadable }
-            origin = try JSONDecoder().decode(AudioCommentReviewReference?.self, from: data)
+            origin = try TaskfoldJSONDecoder().decode(AudioCommentReviewReference?.self, from: data)
         } else {
             guard fields["origin"] == nil else { throw AudioCommentStorageFailure.unreadable }; origin = nil
         }
-        let descriptor = try JSONDecoder().decode(AudioCommentDescriptor.self, from: descriptorData)
+        let descriptor = try TaskfoldJSONDecoder().decode(AudioCommentDescriptor.self, from: descriptorData)
         let clip = try AudioCommentClip(restoring: audio, descriptor: descriptor)
-        try self.init(owner: owner, target: JSONDecoder().decode(AudioCommentTarget.self, from: targetData), caption: caption, clip: clip, id: id, revision: revision, origin: origin)
+        try self.init(owner: owner, target: TaskfoldJSONDecoder().decode(AudioCommentTarget.self, from: targetData), caption: caption, clip: clip, id: id, revision: revision, origin: origin)
     }
 }
 
@@ -179,7 +179,7 @@ struct AudioCommentSaveIntent: Equatable, Sendable {
     func markingDiscard() throws -> Self { try .init(next: next, base: base, reviews: reviews, id: id, phase: .discarding, stage: stage) }
     func sameAuthorization(as other: Self) -> Bool { id == other.id && next == other.next && base == other.base && reviews == other.reviews && stage == other.stage }
     func encoded() throws -> Data {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         var fields: [String: Any] = ["format": stage == nil ? "taskfold-audio-save-v2" : "taskfold-audio-save-v3", "phase": phase.rawValue, "account": next.owner.account, "id": id.uuidString.lowercased(), "next": try next.encoded(), "base": base?.uuidString.lowercased() ?? "", "reviews": try encoder.encode(reviews)]
         if let stage { fields["stage"] = try encoder.encode(stage) }
         return try PropertyListSerialization.data(fromPropertyList: fields, format: .binary, options: 0)
@@ -202,9 +202,9 @@ struct AudioCommentSaveIntent: Equatable, Sendable {
         let stage: AudioCommentStageReference?
         if fields["format"] as? String == "taskfold-audio-save-v3" {
             guard let bytes = fields["stage"] as? Data, bytes.count <= 512 else { throw AudioCommentStorageFailure.unreadable }
-            stage = try JSONDecoder().decode(AudioCommentStageReference.self, from: bytes)
+            stage = try TaskfoldJSONDecoder().decode(AudioCommentStageReference.self, from: bytes)
         } else { stage = nil }
-        try self.init(next: AudioCommentSavedDraft(encoded: payload, owner: owner), base: UUID(uuidString: baseText), reviews: JSONDecoder().decode([AudioCommentReviewReference].self, from: refs), id: id, phase: phase, stage: stage)
+        try self.init(next: AudioCommentSavedDraft(encoded: payload, owner: owner), base: UUID(uuidString: baseText), reviews: TaskfoldJSONDecoder().decode([AudioCommentReviewReference].self, from: refs), id: id, phase: phase, stage: stage)
     }
 }
 

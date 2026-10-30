@@ -54,7 +54,7 @@ struct ChildTaskCompletionDraft: Codable, Equatable, Sendable, CustomStringConve
         _ = try TeamProjectValue.optionalID(body["task_generation"])
         _ = try TeamProjectValue.optionalID(body["project_id"])
         guard try (1...9_007_199_254_740_990).contains(TeamProjectValue.revision(body["revision"])) else { throw Self.invalid }
-        guard try JSONEncoder().encode(body).count <= 4096 else { throw Self.invalid }
+        guard try TaskfoldJSONEncoder().encode(body).count <= 4096 else { throw Self.invalid }
     }
 
     /// A changed general revision can be a disjoint edit. A valid completion

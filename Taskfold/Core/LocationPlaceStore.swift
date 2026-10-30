@@ -42,7 +42,7 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
         places.compactMap(LocationPrivatePlace.init(raw:)).filter { $0.account == account }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
     static func decode(_ data: Data) throws -> Self {
-        let json = try JSONDecoder().decode(JSON.self, from: data)
+        let json = try TaskfoldJSONDecoder().decode(JSON.self, from: data)
         func keys(_ value: JSON, allowed: Set<String>) -> Bool { if case .object(let object) = value { return Set(object.keys).isSubset(of: allowed) }; return false }
         guard keys(json, allowed: ["version","device","places","journal","allowedAccounts","supersedesEarlierInstallations","handoffReviews","handoffEpochs"]), let journal = json.object["journal"],
               keys(journal, allowed: ["version","device","entries","revoked"]), case .object(let entries)? = journal.object["entries"] else { throw LocationStorageFailure.unreadable }
@@ -56,7 +56,7 @@ struct LocationPrivateArchive: Codable, Equatable, Sendable {
                 guard keys(value, allowed: ["version","account","id","device","nonce","taskID","generation","completion","expiresMilliseconds","payloadDigest","placeID","placeRevision","specID","arm"]) else { throw LocationStorageFailure.unreadable }
             }
         }
-        let archive = try JSONDecoder().decode(Self.self, from: data)
+        let archive = try TaskfoldJSONDecoder().decode(Self.self, from: data)
         guard archive.valid else { throw LocationStorageFailure.unreadable }; return archive
     }
 }
@@ -148,7 +148,7 @@ struct LocationPrivateFile: Sendable {
     }
     private func write(_ archive: LocationPrivateArchive) throws {
         guard archive.valid else { throw LocationStorageFailure.unreadable }
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         let data = try encoder.encode(archive)
         guard data.count <= Self.maximumBytes else { throw LocationStorageFailure(message: "This device’s saved-place storage is full.") }
         // Refuse aliased targets even on reset; never follow a link into other data.

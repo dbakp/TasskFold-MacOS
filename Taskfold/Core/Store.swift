@@ -1436,7 +1436,7 @@ final class Store {
         guard record("projects",id:projectID) != nil else {throw TeamProjectAccessUnavailable()}
         let generation = accountGeneration, accessRevision=workspaceReadRevision, account=userID
         let data = try await backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(projectID)], expectedAccount:account)
-        let people = try JSONDecoder().decode([Record].self, from: data).map { person in
+        let people = try TaskfoldJSONDecoder().decode([Record].self, from: data).map { person in
             var member = person; member["status"] = .string("accepted"); return member
         }
         guard generation == accountGeneration, accessRevision==workspaceReadRevision, record("projects",id:projectID) != nil else { throw CancellationError() }
@@ -1456,7 +1456,7 @@ final class Store {
         }
         guard FileManager.default.fileExists(atPath: cacheURL.path) else { snapshot = Snapshot(); workspaceCacheDecoded=true;workspaceCacheReadable = true; return }
         do {
-            let loaded=try JSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+            let loaded=try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
             snapshot=loaded;workspaceCacheDecoded=true
             if let boundary=try teamAccessFenceDisk?.load() {
                 teamAccessMask=try TeamWorkspaceCache(boundary:boundary,previous:loaded.teamWorkspace,pending:loaded.pending,tasks:loaded.tables["tasks"] ?? [])
@@ -1488,7 +1488,7 @@ final class Store {
             WidgetCompletion.prepare(&snapshot)
         }
         try FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) : Snapshot()
+        let previous = FileManager.default.fileExists(atPath: cacheURL.path) ? try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) : Snapshot()
         var durable = snapshot
         durable.locationImports = try LocationHandoffImportLedger.staging(previous: previous, proposed: durable)
         durable.timeSnoozes = try stagedTimeSnoozes(previous: previous, proposed: durable, newIntent: timeSnooze)
@@ -1497,7 +1497,7 @@ final class Store {
         #if DEBUG
         if preparedEncoding != nil { workflowPreparedEncodingUsed = preparedData != nil }
         #endif
-        let data = try preparedData ?? JSONEncoder().encode(durable)
+        let data = try preparedData ?? TaskfoldJSONEncoder().encode(durable)
         if UUID(uuidString: userID) != nil {
             try AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: userID).writable {
                 try data.write(to: cacheURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -1507,7 +1507,7 @@ final class Store {
         publishWidgetSnapshot(background: backgroundWidgets)
         #if DEBUG
         if userID == "ui-testing", ProcessInfo.processInfo.arguments.contains("--uitesting"), ProcessInfo.processInfo.arguments.contains("--workflow-diagnostics"), Bundle.main.bundleIdentifier?.contains(".workflowtests") == true {
-            let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+            let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
             if let data = try? encoder.encode(snapshot), let text = String(data: data, encoding: .utf8) { print("WORKFLOW_SNAPSHOT " + text); fflush(stdout) }
         }
         #endif
@@ -1577,7 +1577,7 @@ final class Store {
     var workflowWidgetPublicationIdle: Bool { widgetPublicationQueue.isIdle }
     func workflowWidgetNativeProjection() throws -> [String: JSON] {
         guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
-        return try JSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data ?? Data())
+        return try TaskfoldJSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data ?? Data())
     }
     func verifyWorkflowWidgetPublication() async throws -> [String: JSON] {
         guard WorkflowUndoNativePeer.enabled else { throw CancellationError() }
@@ -1636,7 +1636,7 @@ final class Store {
         try await waitForIdle()
         try require(try workflowWidgetNativeProjection()["account"] == .string(userID), "Latest workspace did not recover")
         try require(snapshot == original, "Projection check modified saved work")
-        let durable = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+        let durable = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
         try require(durable == original, "Projection check modified durable work")
         return ["signOutRedactedImmediately": .bool(true), "staleResultRejected": .bool(true), "accessFenceRejected": .bool(true), "latestRecovered": .bool(true), "savedDataUnchanged": .bool(true)]
     }
@@ -2518,7 +2518,7 @@ final class Store {
             if TeamBatchRecoveryNativePeer.blockedSync {
                 let proof: [String: JSON] = ["completionReview": .bool(syncConflict?.completionReview != nil), "batchReview": .bool(syncConflict?.completionBatchReview != nil), "notice": notice.map(JSON.string) ?? .null, "error": error.map(JSON.string) ?? .null,
                     "windowCount": .number(Double(NSApp.windows.count)), "visibleWindows": .number(Double(NSApp.windows.filter(\.isVisible).count))]
-                try? JSONEncoder().encode(proof).write(to: TeamBatchRecoveryNativePeer.traceFile.deletingLastPathComponent().appendingPathComponent("taskfold-cold-discovery-diagnostic.json"), options: .atomic)
+                try? TaskfoldJSONEncoder().encode(proof).write(to: TeamBatchRecoveryNativePeer.traceFile.deletingLastPathComponent().appendingPathComponent("taskfold-cold-discovery-diagnostic.json"), options: .atomic)
             }
             #endif
             if let retry = syncAfterSignInRequested {
@@ -2639,7 +2639,7 @@ final class Store {
                 if error.localizedDescription.contains("TASKFOLD_FOCUS_CONFLICT:"), let mutation = sending,
                    mutation.table == FocusSessionChange.table,
                    let data = try? await backend.request("/rest/v1/focus_sessions?id=eq.current&select=*"),
-                   let remoteRows = try? JSONDecoder().decode([Record].self, from: data),
+                   let remoteRows = try? TaskfoldJSONDecoder().decode([Record].self, from: data),
                    generation == accountGeneration, snapshot.pending.contains(mutation) {
                     let remote = remoteRows.first ?? FocusSessionChange.emptyRow(account: userID)
                     guard FocusSessionChange.validRow(remote, account: userID) else { return }
@@ -2650,7 +2650,7 @@ final class Store {
                 }
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"),let mutation=sending,ProductivityGoalEdit.matches(mutation),
                    let data=try? await backend.request("/rest/v1/view_preferences?id=eq.insights&select=*",expectedAccount:account),
-                   let rows=try? JSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
+                   let rows=try? TaskfoldJSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
                     let remote=rows.first ?? ProductivityGoalEdit.emptyRow(account:account)
                     if remote.id==ProductivityGoals.recordID,remote.string("user_id")==account {
                         syncConflict=SyncConflict(mutation:mutation,remote:remote);notice="Goals changed on another device. Review both choices to resume sync."
@@ -2659,7 +2659,7 @@ final class Store {
                 if error.localizedDescription.contains("TASKFOLD_CONFLICT:"), let mutation=sending,mutation.table==WorkflowTemplate.table,
                    let escaped=mutation.recordID.addingPercentEncoding(withAllowedCharacters:.alphanumerics),
                    let data=try? await backend.request("/rest/v1/project_templates?id=eq.\(escaped)&select=*"),
-                   let rows=try? JSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
+                   let rows=try? TaskfoldJSONDecoder().decode([Record].self,from:data),generation==accountGeneration,snapshot.pending.contains(mutation) {
                     syncConflict=SyncConflict(mutation:mutation,remote:rows.first ?? Record(["id":.string(mutation.recordID),"name":.string("Deleted template")]))
                     notice="This template changed on another device. Review it to resume sync."
                 }
@@ -2667,7 +2667,7 @@ final class Store {
                    mutation.table == "tasks", ["PATCH", "DELETE"].contains(mutation.method),
                    let escaped = mutation.recordID.addingPercentEncoding(withAllowedCharacters: .alphanumerics),
                    let data = try? await backend.request("/rest/v1/tasks?id=eq.\(escaped)&select=*"),
-                   let remote = try? JSONDecoder().decode([Record].self, from: data).first,
+                   let remote = try? TaskfoldJSONDecoder().decode([Record].self, from: data).first,
                    generation == accountGeneration, snapshot.pending.contains(mutation),
                    remote.id.lowercased() == mutation.recordID.lowercased() {
                     syncConflict = SyncConflict(mutation: mutation, remote: remote)
@@ -3252,16 +3252,16 @@ final class Store {
                 for key in ["installation", "authority", "lostAck", "serverRevision", "serverExpiry"] { defaults.removeObject(forKey: prefix + key) }
             }
             if let data = defaults.data(forKey: prefix + "authority") {
-                let value = try JSONDecoder().decode(ReminderDeliveryAuthority.self, from: data)
+                let value = try TaskfoldJSONDecoder().decode(ReminderDeliveryAuthority.self, from: data)
                 guard value.valid else { throw AppFailure(message: "Invalid isolated authority fixture.") }
                 reminderAuthority = value
             }
         }
-        var installation = defaults.data(forKey: prefix + "installation").flatMap { try? JSONDecoder().decode(ReminderDeviceInstallation.self, from: $0) }
+        var installation = defaults.data(forKey: prefix + "installation").flatMap { try? TaskfoldJSONDecoder().decode(ReminderDeviceInstallation.self, from: $0) }
         if installation == nil, create { installation = ReminderDeviceInstallation(id: "f0729000-0000-4000-8000-000000000101", secret: String(repeating: "a", count: 64)) }
         guard let installation else { return nil }
         let engine = try ReminderDeviceLifecycle(installation: installation,
-            save: { defaults.set(try JSONEncoder().encode($0), forKey: prefix + "installation") },
+            save: { defaults.set(try TaskfoldJSONEncoder().encode($0), forKey: prefix + "installation") },
             send: { command, _ in
                 // Synthetic receipts only. This path never calls Backend or APNs registration.
                 let serverRevision = Int64(defaults.double(forKey: prefix + "serverRevision"))
@@ -3283,7 +3283,7 @@ final class Store {
             },
             changed: { [weak self] status, busy in self?.remoteReminderStatus = status; self?.remoteReminderBusy = busy },
             authority: reminderAuthority,
-            saveAuthority: { defaults.set(try JSONEncoder().encode($0), forKey: prefix + "authority") },
+            saveAuthority: { defaults.set(try TaskfoldJSONEncoder().encode($0), forKey: prefix + "authority") },
             authorityChanged: { [weak self] next in
                 guard let self else { return }; self.reminderAuthority = next
                 Task { await self.reschedule() }
@@ -3689,16 +3689,16 @@ extension Store {
     }
     func focusWidgetFixtureProjection() -> String {
         _ = widgetPublicationRevision
-        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data),
-              let encoded = try? JSONEncoder().encode(payload["focusSession"] ?? .null),
-              let focus = try? JSONDecoder().decode(FocusWidgetSnapshot.self, from: encoded), focus.valid(for: userID) else { return "Focus: refresh" }
+        guard let data = try? widgetActionDisk().read().data, let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data),
+              let encoded = try? TaskfoldJSONEncoder().encode(payload["focusSession"] ?? .null),
+              let focus = try? TaskfoldJSONDecoder().decode(FocusWidgetSnapshot.self, from: encoded), focus.valid(for: userID) else { return "Focus: refresh" }
         return "Focus: " + (focus.conflict ? "review" : focus.clock?.status ?? "idle")
     }
     func pulseWidgetFixtureProjection() -> String {
         _ = widgetPublicationRevision
-        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data),
-              let encoded = try? JSONEncoder().encode(payload["projectPulse"] ?? .null),
-              let pulse = try? JSONDecoder().decode(ProjectPulseSnapshot.self, from: encoded), pulse.valid(for: userID),
+        guard let data = try? widgetActionDisk().read().data, let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data),
+              let encoded = try? TaskfoldJSONEncoder().encode(payload["projectPulse"] ?? .null),
+              let pulse = try? TaskfoldJSONDecoder().decode(ProjectPulseSnapshot.self, from: encoded), pulse.valid(for: userID),
               let project = pulse.projects.first, let day = project.days[ProjectPulseSnapshot.day(Date())] else { return "Pulse: refresh" }
         return "Pulse: \(project.completed)/\(project.total) · \(day.completions) completion events · \(day.reopens) reopen events"
     }
@@ -3773,7 +3773,7 @@ extension Store {
     }
     func pinnedNotesFixtureProjection() -> String {
         _ = widgetPublicationRevision
-        guard let data = try? widgetActionDisk().read().data, let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Notes: unavailable" }
+        guard let data = try? widgetActionDisk().read().data, let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { return "Notes: unavailable" }
         let notes = payload["notes"]?.list ?? []
         return "Notes: \(notes.count) · Private: \(notes.contains { $0.object["taskID"] == .string("note-private") } ? "visible" : "hidden")"
     }
@@ -3803,7 +3803,7 @@ extension Store {
     func inboxWidgetFixtureCount() -> String {
         _ = widgetPublicationRevision
         guard let read = try? widgetActionDisk().read(), let data = read.data,
-              let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Inbox unavailable" }
+              let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { return "Inbox unavailable" }
         let count = payload["tasks"]?.list.filter { $0.object["projectID"]?.text == "" }.count ?? 0
         return "Inbox: \(count)"
     }
@@ -3826,7 +3826,7 @@ extension Store {
     func capacityWidgetFixtureDay() -> String {
         _ = widgetPublicationRevision
         guard let read = try? widgetActionDisk().read(), let data = read.data,
-              let payload = try? JSONDecoder().decode([String: JSON].self, from: data) else { return "Capacity unavailable" }
+              let payload = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { return "Capacity unavailable" }
         let day = payload["capacity"]?.object["days"]?.object[TaskPlanner.dayKey(Date())]?.object ?? [:]
         let state = payload["capacity"]?.object["calendarState"]?.text ?? "missing"
         return "Work \(day["working"]?.integer ?? -1) · Tasks \(day["estimated"]?.integer ?? -1) · Unknown \(day["unknown"]?.integer ?? -1) · Calendar \(state)"
@@ -4251,7 +4251,7 @@ extension Store {
             try require(sent.id == proposal.id && sent.state == .pending, "retry confirms same immutable proposal")
             let rows = try await locationHandoffs(workspace: workspace)
             try require(rows.count == 1 && rows[0].proposal == proposal, "list recovers one pending proposal")
-            let counter = try JSONDecoder().decode(JSON.self, from: Data(contentsOf: LocationHandoffNativeFixture.root.appendingPathComponent("server.json"))).object
+            let counter = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(contentsOf: LocationHandoffNativeFixture.root.appendingPathComponent("server.json"))).object
             try require(counter["putCalls"] == .number(2) && counter["records"]!.object.count == 1, "retry uploads one logical draft")
             let stale = WorkspaceBinding(account: userID, generation: UUID())
             do { _ = try await sendLocationHandoff(proposal, workspace: stale); throw AppFailure(message: "Stale workspace accepted") }
@@ -4261,10 +4261,10 @@ extension Store {
             try require(terminal.count == 1 && terminal[0].state == .discarded && terminal[0].proposal == nil, "discard removes geometry without task mutation")
             try require(snapshot == before, "send retry list discard leave task cache unchanged")
             let report: [String:JSON] = ["passed":.bool(true),"checks":.array(checks.map(JSON.string))]
-            try JSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
+            try TaskfoldJSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
         } catch {
             let report: [String:JSON] = ["passed":.bool(false),"checks":.array(checks.map(JSON.string)),"error":.string(error.localizedDescription)]
-            try? JSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
+            try? TaskfoldJSONEncoder().encode(report).write(to: LocationHandoffNativeFixture.root.appendingPathComponent("sender-proof.json"), options: .atomic)
         }
     }
 }
@@ -4321,12 +4321,12 @@ extension Store {
             localMode = false; signedIn = true; workspaceCacheReadable = true
             removalPendingAccounts = []; accountRemovalStatus = nil
             try persist()
-            let aCache = cacheURL, before = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
+            let aCache = cacheURL, before = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL))
             var b = Record.task(user: outside); b["title"] = .string("Keep outsider work")
             var bSnapshot = Snapshot(tables: ["tasks": [b]])
             bSnapshot.pending = [Mutation(table: "tasks", recordID: b.id, method: "POST", fields: b.fields)]
             let bCache = aCache.deletingLastPathComponent().appendingPathComponent(outside + ".json")
-            try JSONEncoder().encode(bSnapshot).write(to: bCache, options: .atomic)
+            try TaskfoldJSONEncoder().encode(bSnapshot).write(to: bCache, options: .atomic)
             var bBytes = try Data(contentsOf: bCache)
             let ownedVault = backupVault.directory
             let outsiderVault = ownedVault.deletingLastPathComponent().appendingPathComponent(WorkspaceBackup.stableID("vault", outside))
@@ -4364,7 +4364,7 @@ extension Store {
                 AccountRemovalProofHTTP.release(); try await deleting.value
                 try require("otherSessionKept", backend.session?.user.id == outside && signedIn && userID == outside)
                 try require("otherMemoryKept", snapshot == active)
-                let activeWidget = try JSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
+                let activeWidget = try TaskfoldJSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
                 try require("otherWidgetKept", activeWidget["account"] == .string(outside) && activeWidget["tasks"]?.list.contains(where: { $0.object["title"] == .string("Keep outsider work") }) == true)
                 try require("otherShareKept", try shares.workspace() == context && shares.drafts(account: outside) == [draft])
             } else if AccountRemovalNativeFixture.expiring {
@@ -4374,13 +4374,13 @@ extension Store {
             } else {
                 do { try await deleteAccount(expected: WorkspaceBinding(account: account, generation: workspaceGeneration)); throw AppFailure(message: "Synthetic failure was accepted") }
                 catch { try require("interruptedResultRefused", AccountRemovalProofHTTP.count == 1) }
-                let diagnosticEncoder = JSONEncoder(); diagnosticEncoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+                let diagnosticEncoder = TaskfoldJSONEncoder(); diagnosticEncoder.outputFormatting = [.sortedKeys, .prettyPrinted]
                 try diagnosticEncoder.encode(before).write(to: AccountRemovalNativeFixture.root.appendingPathComponent("before-cache.json"))
-                let afterFailure = try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: aCache))
+                let afterFailure = try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: aCache))
                 try diagnosticEncoder.encode(afterFailure).write(to: AccountRemovalNativeFixture.root.appendingPathComponent("after-cache.json"))
                 try require("failedRequestKeepsCache", afterFailure == before)
                 try require("failedRequestKeepsSession", backend.session?.user.id == account && signedIn)
-                let pausedWidget = try JSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
+                let pausedWidget = try TaskfoldJSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
                 try require("pendingWidgetPrivate", pausedWidget["account"] == .string("") && pausedWidget["tasks"]?.list.isEmpty == true)
                 let restarted = AccountRemovalVault(io: io), pending = try await restarted.pending()
                 try require("originalAuthorizationDurable", pending.count == 1 && pending.first?.authorization == "synthetic-A" && pending.first?.confirmed == false)
@@ -4450,7 +4450,7 @@ extension Store {
         if TeamTemplateNativeFixture.enabled { return TeamTemplateNativeFixture.backend() }
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [TeamEditorNoNetwork.self]
-        let session = try! JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
+        let session = try! Foundation.JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
         return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
     }
     static func boundary(viewer: Bool = false) throws -> TeamWorkspaceBoundary {
@@ -4489,7 +4489,7 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
                 } catch let error as ChildFieldNativeRefusal {
                     let response = HTTPURLResponse(url: request.url!, statusCode: 409, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!
                     client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-                    client?.urlProtocol(self, didLoad: try! JSONEncoder().encode(["code": error.code])); client?.urlProtocolDidFinishLoading(self)
+                    client?.urlProtocol(self, didLoad: try! TaskfoldJSONEncoder().encode(["code": error.code])); client?.urlProtocolDidFinishLoading(self)
                 } catch { client?.urlProtocol(self, didFailWithError: error) }
                 return
             }
@@ -4738,11 +4738,11 @@ extension Store {
     static func write(_ state: State) throws {
         guard enabled else { throw CancellationError() }
         try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try JSONEncoder().encode(state).write(to: file, options: .atomic)
+        try TaskfoldJSONEncoder().encode(state).write(to: file, options: .atomic)
     }
-    static func read() throws -> State { guard enabled else { throw CancellationError() }; return try JSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
+    static func read() throws -> State { guard enabled else { throw CancellationError() }; return try TaskfoldJSONDecoder().decode(State.self, from: Data(contentsOf: file)) }
     static func proof(_ scope: TeamTaskMoveScope, _ task: Record, _ expires: String) throws -> String {
-        let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
         return CalendarOAuthConfiguration.digest(String(decoding: try encoder.encode(["scope": JSON.object(scope.body), "task": .object(task.fields), "expires": .string(expires)]), as: UTF8.self))
     }
     private func task(_ scope: TeamTaskMoveScope, state: State) throws -> Record {
@@ -4906,7 +4906,7 @@ extension Store {
             let rejected = !undo(old)
             let unchanged = snapshot.tables == before.tables && snapshot.pending == before.pending && undoStack.map(\.id) == beforeUndo && redoStack.map(\.id) == beforeRedo
             let report: [String: JSON] = ["sameDepth": .bool(oldDepth == undoStack.count), "depth": .number(Double(undoStack.count)), "newEntry": .bool(oldEntry != undoStack.last?.id), "rejected": .bool(rejected), "snapshotAndStacksUnchanged": .bool(unchanged)]
-            try JSONEncoder().encode(report).write(to: cacheURL.deletingLastPathComponent().appendingPathComponent("history-binding-proof.json"), options: .atomic)
+            try TaskfoldJSONEncoder().encode(report).write(to: cacheURL.deletingLastPathComponent().appendingPathComponent("history-binding-proof.json"), options: .atomic)
             self.error = nil
         } catch { self.error = error.localizedDescription }
     }
@@ -4924,10 +4924,10 @@ extension Store {
     static var traceFile: URL { FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("taskfold-cold-discovery-trace.json") }
     static func trace(_ request: URLRequest) {
         guard blockedSync else { return }
-        var entries = (try? JSONDecoder().decode([[String: String]].self, from: Data(contentsOf: traceFile))) ?? []
+        var entries = (try? TaskfoldJSONDecoder().decode([[String: String]].self, from: Data(contentsOf: traceFile))) ?? []
         entries.append(["method": request.httpMethod ?? "", "path": request.url?.path ?? ""])
         try? FileManager.default.createDirectory(at: traceFile.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? JSONEncoder().encode(Array(entries.suffix(128))).write(to: traceFile, options: .atomic)
+        try? TaskfoldJSONEncoder().encode(Array(entries.suffix(128))).write(to: traceFile, options: .atomic)
     }
     static func readBoundary() throws -> TeamWorkspaceBoundary {
         guard enabled else { throw CancellationError() }
@@ -4948,8 +4948,8 @@ extension Store {
         else { throw TeamCompletion.invalid }
         let value: [String: JSON] = ["_action": .string("complete"), "_body": .object(body)]
         if FileManager.default.fileExists(atPath: recurringProof.path) {
-            guard try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recurringProof)) == value else { throw TeamCompletion.invalid }
-        } else { try JSONEncoder().encode(value).write(to: recurringProof, options: .atomic) }
+            guard try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recurringProof)) == value else { throw TeamCompletion.invalid }
+        } else { try TaskfoldJSONEncoder().encode(value).write(to: recurringProof, options: .atomic) }
     }
     /// A sealed first-completion observation, not an emulation of later writes.
     /// The domain forecast is already checked against independent SQL fixtures.
@@ -4974,7 +4974,7 @@ extension Store {
     static func recurringResponse(_ params: [String: JSON], single: Bool) throws -> Data {
         guard recurring, let operation = TeamCompletion.Operation(rawValue: params["_action"]?.text ?? ""),
               let body = params["_body"]?.object else { throw TeamCompletion.invalid }
-        let proof = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recurringProof))
+        let proof = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recurringProof))
         let original = proof["_body"]!.object
         let originalItems = original["items"]?.list ?? [.object(original)], items = single ? [.object(body)] : body["items"]?.list ?? []
         guard !items.isEmpty else { throw TeamCompletion.invalid }
@@ -5020,14 +5020,14 @@ extension Store {
             view["can_edit_current"] = .bool(readOnlyMode == nil); view["can_edit_series"] = .bool(readOnlyMode == nil)
             views.append(.object(view))
         }
-        if single { return try JSONEncoder().encode(views[0]) }
+        if single { return try TaskfoldJSONEncoder().encode(views[0]) }
         let receipt: JSON = state == "recorded" ? .object(["batch_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string(operation.rawValue), "related_request": body["related_request"] ?? .null, "items": .array(views.map { $0.object["receipt"]! }), "replayed": .bool(true)]) : .null
-        return try JSONEncoder().encode(["group_review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string(operation.rawValue), "related_request": body["related_request"] ?? .null, "state": .string(state), "items": .array(views), "receipt": receipt])
+        return try TaskfoldJSONEncoder().encode(["group_review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string(operation.rawValue), "related_request": body["related_request"] ?? .null, "state": .string(state), "items": .array(views), "receipt": receipt])
     }
     static func response(_ request: URLRequest) -> Data? {
         guard enabled, request.url?.host == "synthetic.example" else { return nil }
         trace(request)
-        if blockedSync, request.httpMethod == "POST", request.url?.path == "/rest/v1/rpc/taskfold_workspace_boundary" { return try? JSONEncoder().encode(readBoundary().raw) }
+        if blockedSync, request.httpMethod == "POST", request.url?.path == "/rest/v1/rpc/taskfold_workspace_boundary" { return try? TaskfoldJSONEncoder().encode(readBoundary().raw) }
         guard request.httpMethod == "POST",
               ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch", "/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion", "/rest/v1/rpc/taskfold_retire_team_provisional"].contains(request.url?.path ?? "") else { return nil }
         var data = request.httpBody
@@ -5035,17 +5035,17 @@ extension Store {
             stream.open(); defer { stream.close() }; var value = Data(), bytes = [UInt8](repeating: 0, count: 4096)
             while stream.hasBytesAvailable && value.count < 2_000_000 { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; value.append(contentsOf: bytes.prefix(count)) }; data = value
         }
-        guard let data, let params = try? JSONDecoder().decode([String: JSON].self, from: data) else { return nil }
+        guard let data, let params = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { return nil }
         if recurring, request.url?.path == "/rest/v1/rpc/taskfold_retire_team_provisional" {
             guard ProcessInfo.processInfo.arguments.contains("--team-connected-provisional-testing"), Set(params.keys) == ["_body"], let body = params["_body"]?.object,
                   let data = try? recurringResponse(["_action": .string("complete"), "_body": .object(body)], single: true),
-                  let read = try? JSONDecoder().decode([String: JSON].self, from: data), read["state"] == .string("recorded") else { return nil }
+                  let read = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data), read["state"] == .string("recorded") else { return nil }
             let response: [String: JSON] = ["draft_retirement_protocol": .number(1), "generation_unavailable": .bool(true), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "project_id": body["project_id"]!, "request_id": body["request_id"]!, "task_id": body["planned_next_id"]!, "task_generation": body["next_generation"]!, "review": .object(read), "current_proposed": read["successor"] ?? .null]
             let file = recurringProof.deletingLastPathComponent().appendingPathComponent("taskfold-connected-provisional-rpc-proof.json")
-            var calls = (try? JSONDecoder().decode([JSON].self, from: Data(contentsOf: file))) ?? []
+            var calls = (try? TaskfoldJSONDecoder().decode([JSON].self, from: Data(contentsOf: file))) ?? []
             calls.append(.object(["path": .string(request.url!.path), "body": .object(params), "response": .object(response)]))
-            try? JSONEncoder().encode(Array(calls.suffix(16))).write(to: file, options: .atomic)
-            return try? JSONEncoder().encode(response)
+            try? TaskfoldJSONEncoder().encode(Array(calls.suffix(16))).write(to: file, options: .atomic)
+            return try? TaskfoldJSONEncoder().encode(response)
         }
         if recurring { return try? recurringResponse(params, single: ["/rest/v1/rpc/taskfold_review_team_completion", "/rest/v1/rpc/taskfold_cancel_team_completion"].contains(request.url?.path ?? "")) }
         guard params["_action"] == .string("complete"),
@@ -5055,26 +5055,26 @@ extension Store {
         let items = single ? [JSON.object(body)] : body["items"]?.list ?? []
         guard (1...100).contains(items.count) else { return nil }
         let file = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("taskfold-group-review-peer.json")
-        var retired = (try? JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file))) ?? [:]
+        var retired = (try? TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: file))) ?? [:]
         if let old = retired[nonce], old != .object(body) { return nil }
         let alreadyCancelled = ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-cancelled")
         let support = file.deletingLastPathComponent(), recordedFile = support.appendingPathComponent("taskfold-single-cancel-recorded-peer.json")
-        var recordedActions = (try? JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recordedFile))) ?? [:]
+        var recordedActions = (try? TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: recordedFile))) ?? [:]
         if let old = recordedActions[nonce], old != .object(body) { return nil }
         let raceRecorded = ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-recorded-race") && request.url!.path.contains("cancel_")
         let recorded = (ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-recorded") && !alreadyCancelled) || recordedActions[nonce] != nil || raceRecorded
         if raceRecorded {
-            recordedActions[nonce] = .object(body); try? JSONEncoder().encode(recordedActions).write(to: recordedFile, options: .atomic)
+            recordedActions[nonce] = .object(body); try? TaskfoldJSONEncoder().encode(recordedActions).write(to: recordedFile, options: .atomic)
         }
         if ProcessInfo.processInfo.arguments.contains("--team-cancelled-draft-testing"), request.url!.path.contains("cancel_") {
             let trace = support.appendingPathComponent("taskfold-single-cancel-attempts.json")
-            var attempts = (try? JSONDecoder().decode([JSON].self, from: Data(contentsOf: trace))) ?? []
+            var attempts = (try? TaskfoldJSONDecoder().decode([JSON].self, from: Data(contentsOf: trace))) ?? []
             attempts.append(.object(["path": .string(request.url!.path), "request_id": .string(nonce), "body": .object(body)]))
-            try? JSONEncoder().encode(Array(attempts.suffix(128))).write(to: trace, options: .atomic)
+            try? TaskfoldJSONEncoder().encode(Array(attempts.suffix(128))).write(to: trace, options: .atomic)
         }
         if request.url!.path.contains("cancel_"), !recorded {
             retired[nonce] = .object(body)
-            do { try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true); try JSONEncoder().encode(retired).write(to: file, options: .atomic) } catch { return nil }
+            do { try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true); try TaskfoldJSONEncoder().encode(retired).write(to: file, options: .atomic) } catch { return nil }
         }
         let state = alreadyCancelled ? "cancelled" : recorded ? "recorded" : retired[nonce] != nil ? "cancelled" : "unrecorded"
         var views: [JSON] = [], receipts: [JSON] = []
@@ -5100,12 +5100,12 @@ extension Store {
                 var view = views[0].object, receipt = view["receipt"]!.object, task = view["task"]!.object
                 task["description"] = .string(singleReviewCount > 1 ? "Updated synced instructions" : "Initial synced instructions")
                 view["task"] = .object(task); view["series"] = .object(task); receipt["task"] = .object(task); view["receipt"] = .object(receipt)
-                return try? JSONEncoder().encode(view)
+                return try? TaskfoldJSONEncoder().encode(view)
             }
-            return try? JSONEncoder().encode(views[0])
+            return try? TaskfoldJSONEncoder().encode(views[0])
         }
         let receipt: JSON = recorded ? .object(["batch_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string("complete"), "related_request": .null, "items": .array(receipts), "replayed": .bool(true)]) : .null
-        return try? JSONEncoder().encode(["group_review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string("complete"), "related_request": .null, "state": .string(state), "items": .array(views), "receipt": receipt])
+        return try? TaskfoldJSONEncoder().encode(["group_review_protocol": .number(1), "account": .string(TeamEditorNativeFixture.account), "team_id": body["team_id"]!, "request_id": body["request_id"]!, "operation": .string("complete"), "related_request": .null, "state": .string(state), "items": .array(views), "receipt": receipt])
     }
 }
 extension Store {
@@ -5256,7 +5256,7 @@ extension Store {
         let fm = FileManager.default
         guard !fm.fileExists(atPath: journal.path), !fm.fileExists(atPath: prior.path), !fm.fileExists(atPath: held.path) else { throw TeamCompletion.invalid }
         let hadVault = fm.fileExists(atPath: vault.path)
-        try JSONEncoder().encode(["fault": JSON.string(fault), "hadVault": .bool(hadVault)]).write(to: journal, options: .atomic)
+        try TaskfoldJSONEncoder().encode(["fault": JSON.string(fault), "hadVault": .bool(hadVault)]).write(to: journal, options: .atomic)
         if hadVault { try fm.moveItem(at: vault, to: prior) }
         let destination = target(fault)
         try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -5277,7 +5277,7 @@ extension Store {
               ProcessInfo.processInfo.arguments.contains("--team-editor-reset") || ProcessInfo.processInfo.arguments.contains("--team-recovery-storage-cleanup") else { return }
         let fm = FileManager.default
         guard fm.fileExists(atPath: journal.path) else { return }
-        let proof = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: journal))
+        let proof = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: journal))
         guard ["cache", "draft", "backup", "connected-copy"].contains(proof["fault"]?.text ?? ""), let hadVault = proof["hadVault"]?.flag else { throw TeamCompletion.invalid }
         if fm.fileExists(atPath: held.path) {
             if fm.fileExists(atPath: cache.path) { try fm.removeItem(at: cache) }
@@ -5316,7 +5316,7 @@ extension Store {
         guard armed, let mode, let expected,
               request.url?.path.contains(mode.contains("cancel") ? "cancel_team_completion" : "review_team_completion") == true else { return data }
         armed = false
-        var raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        var raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
         if !mode.contains("cancel") {
             func changed(_ member: [String: JSON]) -> [String: JSON] {
                 var view = member, task = view["task"]!.object
@@ -5337,10 +5337,10 @@ extension Store {
         validated = true; path = request.url!.path; held = true
         await withCheckedContinuation { resume = $0 }
         if mode.hasSuffix("error") { throw URLError(.timedOut) }
-        return try JSONEncoder().encode(raw)
+        return try TaskfoldJSONEncoder().encode(raw)
     }
     static func session(_ account: String) throws -> Session {
-        try JSONDecoder().decode(Session.self, from: Data(("{\"access_token\":\"synthetic-race-access\",\"refresh_token\":\"synthetic-race-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"" + account + "\"}}").utf8))
+        try Foundation.JSONDecoder().decode(Session.self, from: Data(("{\"access_token\":\"synthetic-race-access\",\"refresh_token\":\"synthetic-race-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"" + account + "\"}}").utf8))
     }
 }
 
@@ -5362,7 +5362,7 @@ extension Store {
             checks[name] = .bool(condition)
             if !condition { throw AppFailure(message: "Race check failed: " + name) }
         }
-        func encoded(_ value: Snapshot) throws -> JSON { try JSONDecoder().decode(JSON.self, from: JSONEncoder().encode(value)) }
+        func encoded(_ value: Snapshot) throws -> JSON { try TaskfoldJSONDecoder().decode(JSON.self, from: TaskfoldJSONEncoder().encode(value)) }
         do {
             proof["before"] = try encoded(original)
             if mode.contains("account") { try require("priorOtherWorkspaceReadable", !FileManager.default.fileExists(atPath: outsiderFile.path) || priorOutsider != nil) }
@@ -5383,7 +5383,7 @@ extension Store {
                 var outside = Snapshot(); var task = Record.task(user: outsider)
                 task["id"] = .string("ec240000-0000-4000-8000-000000000097"); task["title"] = .string("Other workspace untouched proof")
                 outside.tables["tasks"] = [task]
-                try JSONEncoder().encode(outside).write(to: outsiderFile, options: .atomic); touchedOutsider = true
+                try TaskfoldJSONEncoder().encode(outside).write(to: outsiderFile, options: .atomic); touchedOutsider = true
                 try await backend.accept(TeamRecoveryRaceNativeFixture.session(outsider)); await authenticated()
                 if mode == "refresh-account-return" { try await backend.accept(TeamRecoveryRaceNativeFixture.session(owner)); await authenticated() }
                 try require("realWorkspaceGenerationChanged", accountGeneration != originalGeneration)
@@ -5431,7 +5431,7 @@ extension Store {
             try require("currentWorkspaceFileExact", try Data(contentsOf: cacheURL) == changedBytes)
             proof["after"] = try encoded(snapshot)
             if mode.contains("account") {
-                try require("originalQueueFileKept", try JSONDecoder().decode(Snapshot.self, from: Data(contentsOf: ownerFile)).pending == original.pending)
+                try require("originalQueueFileKept", try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: ownerFile)).pending == original.pending)
                 try await backend.accept(TeamRecoveryRaceNativeFixture.session(owner)); await authenticated()
                 try require("originalQueueReloads", snapshot == original)
                 if mode == "cancel-account", let vault = teamSelectionDraftVault {
@@ -5455,7 +5455,7 @@ extension Store {
         proof["attemptedPaths"] = .array(TeamRecoveryRaceNativeFixture.attemptedPaths.map(JSON.string))
         if let error = self.error { proof["actionMessage"] = .string(error) }
 
-        do { try JSONEncoder().encode(proof).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-completion-race-proof.json"), options: .atomic) }
+        do { try TaskfoldJSONEncoder().encode(proof).write(to: URL.applicationSupportDirectory.appendingPathComponent("taskfold-completion-race-proof.json"), options: .atomic) }
         catch { teamRecoveryRaceStatus = "Failed proof persistence" }
         self.error = nil
     }
@@ -5519,7 +5519,7 @@ extension Store {
     }
     func childFieldNativeSwitchAccount() async throws {
         guard ChildFieldNativeIdentity.enabled,userID==ChildFieldNativeIdentity.account else {throw CancellationError()}
-        let session=try JSONDecoder().decode(Session.self,from:Data("{\"access_token\":\"synthetic-b\",\"refresh_token\":\"synthetic-b\",\"expires_in\":3600,\"user\":{\"id\":\"\(ChildFieldNativeIdentity.other)\"}}".utf8))
+        let session=try Foundation.JSONDecoder().decode(Session.self,from:Data("{\"access_token\":\"synthetic-b\",\"refresh_token\":\"synthetic-b\",\"expires_in\":3600,\"user\":{\"id\":\"\(ChildFieldNativeIdentity.other)\"}}".utf8))
         try await backend.accept(session);accountGeneration=UUID();teamAccessMask=nil;snapshot=Snapshot();undoStack=[];redoStack=[]
     }
 }

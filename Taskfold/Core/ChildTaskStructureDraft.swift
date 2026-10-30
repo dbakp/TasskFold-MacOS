@@ -148,7 +148,7 @@ struct ChildTaskStructureDraftState: ReviewedTeamFileCommand, CustomStringConver
         let counters = ChildTaskStructureCommand.counterPaths([:], prefix: ["entries", "[]", "pendingCommand", "body"])
             .union([["version"], ["entries", "[]", "body", "structure_revision"], ["entries", "[]", "body", "index"]])
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: counters)
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
     init(from decoder: Decoder) throws {
@@ -187,7 +187,7 @@ actor ChildTaskStructureDraftJournal {
     }
     private func write(_ entries: [ChildTaskStructureDraft], lease: CalendarReadLease) throws {
         let state = try ChildTaskStructureDraftState(account: account, origin: origin, entries: entries)
-        let data = try JSONEncoder().encode(state)
+        let data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= ChildTaskStructureDraftState.maximumStoredBytes else { throw ChildTaskStructureDraft.invalid }
         try lease.check(); try io.write(data, key: key)
     }

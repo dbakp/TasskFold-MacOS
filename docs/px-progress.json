@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Bounded repair originals checked",
-  "latest": "Repair originals now use a streaming size check before retaining history. Both repos pass 313 database checks: exact size limits, complete history preservation, a repair with 3,000 entries and safe oversized refusal. No new advisor findings. Guided repair controls remain checked in their recorded scope; broader migration stays unfinished and disabled for everyday use.",
+  "focus": "P2 · Exact older content through normal data paths",
+  "latest": "Exact unknown numbers and distinct Unicode metadata keys now survive cache, requests and backups. Both repos pass their full Core regression runs (explicit skips listed). Synthetic edit/save/send/cold-return passes on Mac, iPhone and iPad. Broader subtask migration remains unfinished and disabled for everyday use.",
   "next": [
-    "Finish normal opaque editing, indexed/history mapping and attachment/discussion custody before enabling older-work migration. Extend the checked archive limits to broader library and production workloads.",
+    "Finish fresh child-field opaque objects, main-list acceptance, indexed/history mapping and attachment/discussion custody before enabling older-work migration. Extend checks to broader libraries and production workloads.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Guided repair, Store recovery, native checks and bounded original archives pass in recorded scope. Normal opaque editing, indexed/history mapping, custody, broader library workloads and wider lifecycle/spoken acceptance remain. Ordinary use stays disabled."
+              "detail": "Guided repair and bounded original archives pass in recorded scope. Preserving normal data paths are implemented; full editing, indexed/history mapping, custody, broader libraries and lifecycle/spoken acceptance remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -591,7 +591,8 @@
             "child-adoption-discovery/verification.json",
             "child-task-repair-preview/verification.json",
             "child-task-repair-commits/verification.json",
-            "child-task-repair-client/verification.json"
+            "child-task-repair-client/verification.json",
+            "preserving-json/verification.json"
           ],
           "focus": true
         },
@@ -650,7 +651,8 @@
     "reviewed-child-adoption-native/verification.json",
     "child-adoption-original-export/verification.json",
     "child-task-repair-ui/verification.json",
-    "child-task-repair-preflight/verification.json"
+    "child-task-repair-preflight/verification.json",
+    "preserving-json/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
@@ -681,6 +683,7 @@
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
     "p1-completion-audit.json": "247195c4d7743f3eca09f8c8461e0a971aa9dbe89dd5c839a81c5454082ae41a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38",
+    "preserving-json/verification.json": "32245580dd9fdd9cc710c036398ed1c8a26e3ba2e156fb8bf721808db242f3b1",
     "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",
     "reviewed-child-adoption-native/verification.json": "0b1d67d06dd2b65172d4b8ebb4c3e3677df460d7b1a0f26a9b907a987b7ab5fd",
     "reviewed-child-adoption/verification.json": "488443346a14f4df5aa1cc16cdb53aadbf5f3334d4a1940b99088ad3ccef462c"

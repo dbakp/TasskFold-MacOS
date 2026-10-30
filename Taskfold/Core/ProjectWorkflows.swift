@@ -40,7 +40,7 @@ struct WorkflowTemplateFile: Sendable {
         let prefix = String(decoding: data.prefix(80), as: UTF8.self).replacingOccurrences(of: "\u{feff}", with: "")
         if prefix.hasPrefix("format,document_version,") || prefix.hasPrefix("\"format\",\"document_version\",") { self = try WorkflowTemplateCSV.decode(data); return }
         let value: JSON
-        do { value = try JSONDecoder().decode(JSON.self, from: data) }
+        do { value = try TaskfoldJSONDecoder().decode(JSON.self, from: data) }
         catch { throw AppFailure(message: "This isn’t a readable Taskfold template file.") }
         let root = value.object
         guard Set(root.keys) == ["format", "version", "name", "document"], root["format"] == .string("taskfold-template"), [JSON.number(1), .number(2)].contains(root["version"] ?? .null), root["document"]?.object["version"] == root["version"], case .string? = root["name"] else {
@@ -86,7 +86,7 @@ struct WorkflowTemplateFile: Sendable {
         document["tasks"] = .array(template.tasks.enumerated().map { task($0.element, path: "task-\($0.offset + 1)") })
         let portable = JSON.object(document)
         _ = try WorkflowTemplate(document: portable)
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(JSON.object(["format": .string("taskfold-template"), "version": template.document.object["version"]!, "name": .string(name), "document": portable]))
         guard data.count <= Self.maximumBytes else { throw AppFailure(message: "This template is too large to share as a file.") }
         return data
@@ -285,7 +285,7 @@ struct WorkflowTemplate: Sendable {
         }
         self.document = document
         guard projects.count <= 1000, sections.count <= 5000, tasks.count <= 5000,
-              (try JSONEncoder().encode(document)).count <= 2_000_000 else { throw AppFailure(message: "This template is too large.") }
+              (try TaskfoldJSONEncoder().encode(document)).count <= 2_000_000 else { throw AppFailure(message: "This template is too large.") }
         func unique(_ rows: [Record]) -> Bool { rows.allSatisfy { !$0.id.isEmpty } && Set(rows.map(\.id)).count == rows.count }
         guard unique(projects), unique(sections), unique(tasks) else { throw AppFailure(message: "The template has missing or duplicate references.") }
         let projectIDs = Set(projects.map(\.id)), sectionRows = Dictionary(sections.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -851,7 +851,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
         let identities = projectRows.map(\.id) + sectionRows.map(\.id) + taskRows.map(\.id)
         guard Set(identities).count == identities.count, identities.allSatisfy(TeamProjectValue.id),
               identities.allSatisfy({ $0 != target }),
-              try JSONEncoder().encode(projectRows.map(\.fields) + sectionRows.map(\.fields) + taskRows.map(\.fields)).count <= 2_000_000 else { throw Self.invalid }
+              try TaskfoldJSONEncoder().encode(projectRows.map(\.fields) + sectionRows.map(\.fields) + taskRows.map(\.fields)).count <= 2_000_000 else { throw Self.invalid }
         self.account = account; self.origin = origin; self.team = team; self.source = source; self.supportsHeadings = definition.requiresHeadingSupport
         self.destination = destination; self.workspace = workspace; self.session = session; self.run = run
         projects = projectRows; sections = sectionRows; tasks = taskRows; orders = orderRows
@@ -886,7 +886,7 @@ struct TeamWorkflowRunPlan: Sendable, CustomStringConvertible, CustomDebugString
             "orders": .array(zip(orders, keys).map { order, key in .object(["project_id": .string(order.project), "section_id": order.section.map(JSON.string) ?? .null,
                 "base_ids": .array(baseOrders[key]!.map(JSON.string)), "task_ids": .array(order.tasks.map(JSON.string))]) })]
         if supportsHeadings { body["workflow_types_protocol"] = .number(1) }
-        guard try JSONEncoder().encode(body).count <= 4_200_000 else { throw Self.invalid }
+        guard try TaskfoldJSONEncoder().encode(body).count <= 4_200_000 else { throw Self.invalid }
         return body
     }
 
@@ -915,7 +915,7 @@ enum WorkflowTemplateCSV {
     static func string(_ value: JSON) throws -> String {
         if value == .null { return "" }
         if case .string(let text) = value { return escape(text) }
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return String(decoding: try encoder.encode(value), as: UTF8.self)
     }
     static func encode(_ file: WorkflowTemplateFile) throws -> Data {
@@ -1001,7 +1001,7 @@ enum WorkflowTemplateCSV {
         }
         func structured(_ row: [String:String], _ key: String) throws -> JSON? {
             guard let raw = row[key], !raw.isEmpty else { return nil }
-            guard let value = try? JSONDecoder().decode(JSON.self, from: Data(raw.utf8)) else { throw failure("The CSV’s \(key) is not a valid structured value.") }
+            guard let value = try? TaskfoldJSONDecoder().decode(JSON.self, from: Data(raw.utf8)) else { throw failure("The CSV’s \(key) is not a valid structured value.") }
             return value
         }
         let common = Set(metaKeys + ["entity"])
@@ -1152,7 +1152,7 @@ struct WorkflowCSVSource: Identifiable, Sendable {
             var labels: [JSON] = [], seen = Set<String>()
             let labelParts: [String], canonicalLabels = taskRowLabelsColumn.map { mapping.columns[.labels] == $0 } ?? false
             if canonicalLabels {
-                guard let parsed = try? JSONDecoder().decode([String].self, from: Data(value(row, .labels).utf8)) else { throw fail("the Taskfold labels cell is not a supported list of names.") }
+                guard let parsed = try? TaskfoldJSONDecoder().decode([String].self, from: Data(value(row, .labels).utf8)) else { throw fail("the Taskfold labels cell is not a supported list of names.") }
                 labelParts = parsed
             } else { labelParts = value(row, .labels).split(separator: ";").map(String.init) }
             for part in labelParts {
@@ -1329,11 +1329,12 @@ enum WorkflowUndo {
         return counter.bytes(.object(change.fields)) ?? encodedBodyBytes(change)
     }
     private struct BodySizeCounter {
-        private let numbersEncoder = JSONEncoder()
+        private let numbersEncoder = TaskfoldJSONEncoder()
         private var numbers: [UInt64: Int] = [:]
         mutating func bytes(_ value: JSON, depth: Int = 0) -> Int? {
             guard depth < 128 else { return nil }
             switch value {
+            case .preserved: return nil
             case .null: return 4
             case .bool(let value): return value ? 4 : 5
             case .string(let value): return stringBytes(value)
@@ -1348,8 +1349,10 @@ enum WorkflowUndo {
                     let mantissa = String(text[..<e]), sign = mantissa.hasPrefix("-") ? 1 : 0
                     let unsigned = sign == 1 ? String(mantissa.dropFirst()) : mantissa
                     let parts = unsigned.split(separator: ".", omittingEmptySubsequences: false)
-                    let digits = parts.reduce(0) { $0 + $1.utf8.count }, position = parts[0].utf8.count + exponent
+                    let digits = parts.reduce(0) { $0 + $1.utf8.count }, addition = parts[0].utf8.count.addingReportingOverflow(exponent)
+                    guard !addition.overflow, abs(Double(addition.partialValue)) < Double(Int.max/2) else { return nil }; let position = addition.partialValue
                     size = sign + (position >= digits ? position : position > 0 ? digits + 1 : 2 - position + digits)
+                } else if text.contains(where: { $0 == "e" || $0 == "E" }) { return nil
                 } else if text.hasPrefix("-"), text.dropFirst().allSatisfy({ $0 == "0" || $0 == "." }) {
                     size = text.utf8.count - 1
                 } else { size = text.utf8.count }
@@ -1384,7 +1387,7 @@ enum WorkflowUndo {
         }
     }
     static func encodedBodyBytes(_ change: Mutation) -> Int? {
-        let encoder = JSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.withoutEscapingSlashes]
         guard let data = try? encoder.encode(JSON.object(change.fields)) else { return nil }
         let bytes = Array(data)
         var size = bytes.count, index = 0, quoted = false, escaped = false
@@ -1404,9 +1407,11 @@ enum WorkflowUndo {
                     let mantissa = String(text[..<e]), sign = mantissa.hasPrefix("-") ? 1 : 0
                     let unsigned = sign == 1 ? String(mantissa.dropFirst()) : mantissa
                     let parts = unsigned.split(separator: ".", omittingEmptySubsequences: false)
-                    let digits = parts.reduce(0) { $0 + $1.utf8.count }, position = parts[0].utf8.count + exponent
+                    let digits = parts.reduce(0) { $0 + $1.utf8.count }, addition = parts[0].utf8.count.addingReportingOverflow(exponent)
+                    guard !addition.overflow, abs(Double(addition.partialValue)) < Double(Int.max/2) else { return nil }; let position = addition.partialValue
                     let expanded = sign + (position >= digits ? position : position > 0 ? digits + 1 : 2 - position + digits)
-                    size += expanded - text.utf8.count
+                    let next = size.addingReportingOverflow(expanded - text.utf8.count); guard !next.overflow else { return nil }; size = next.partialValue
+                } else if text.contains(where: { $0 == "e" || $0 == "E" }) { return nil
                 } else if text.hasPrefix("-"), text.dropFirst().allSatisfy({ $0 == "0" || $0 == "." }) {
                     size -= 1 // jsonb normalizes a negative zero's sign.
                 }

@@ -32,7 +32,7 @@ struct ChildTaskAdoptionTargetPage: Sendable {
         guard (1...100).contains(limit), id == nil || after == nil && limit == 1 else { throw ChildTaskAdoptionCommand.invalid }
         for value in [after, id].compactMap({ $0 }) { guard UUID(uuidString: value)?.uuidString.lowercased() == value else { throw ChildTaskAdoptionCommand.invalid } }
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes, integerPaths: [["protocol"]])
-        let raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
         guard Set(raw.keys) == ["protocol", "account", "items", "next_after"], raw["protocol"] == .number(1), raw["account"] == .string(account),
               case .array(let items)? = raw["items"], items.count <= limit else { throw ChildTaskAdoptionCommand.invalid }
         var targets: [ChildTaskAdoptionTarget] = [], previous = after
@@ -79,7 +79,7 @@ struct ChildTaskAdoptionReview: Sendable, CustomStringConvertible, CustomDebugSt
     init(data: Data, context: ChildTaskRecordContext, workspaceID: String?) throws {
         if let workspaceID { _ = try TeamOrganizationValue.id(.string(workspaceID)) }
         let parts = try ChildTaskRecordRead.separatingJSONField("source_tree", data: data, maximum: Self.maximumBytes, integerPaths: Self.counters, nullableIntegerPaths: Self.nullableCounters)
-        let raw = try JSONDecoder().decode([String: JSON].self, from: parts.metadata)
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
         guard Set(raw.keys) == ["protocol", "account", "task_id", "task_generation", "project_id", "workspace_id", "review_digest", "state", "issue", "node_count", "max_depth", "source_bytes", "root_kind", "source_included", "source_tree", "projection_revision", "structure_revision", "can_adopt"],
               raw["protocol"] == .number(1), raw["account"] == .string(context.account), raw["task_id"] == .string(context.root.id),
               raw["task_generation"] == context.root["task_generation"], raw["project_id"] == context.root["project_id"],
@@ -96,7 +96,7 @@ struct ChildTaskAdoptionReview: Sendable, CustomStringConvertible, CustomDebugSt
         var preview: [Item] = []
         if state != "review" {
             guard included, raw["issue"] == .null, kind == "null" || kind == "array", state != "records" || !canAdopt else { throw ChildTaskAdoptionCommand.invalid }
-            let nodes = kind == "null" ? [] : try JSONDecoder().decode([Node].self, from: parts.value)
+            let nodes = kind == "null" ? [] : try TaskfoldJSONDecoder().decode([Node].self, from: parts.value)
             var seen = Set<String>()
             func walk(_ rows: [Node], depth: Int) throws {
                 guard depth <= 24 else { throw ChildTaskAdoptionCommand.invalid }
@@ -144,7 +144,7 @@ struct ChildTaskAdoptionCommand: ReviewedTeamCommand, CustomStringConvertible, C
     }
     init(account: String, origin: String, body: [String: JSON], nodeCount: Int) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
-        guard origin.utf8.count <= 2048, Set(body.keys) == Self.keys, body["protocol"] == .number(1), body["account"] == .string(account), Self.digest(body["review_digest"]), (0...1000).contains(nodeCount), try JSONEncoder().encode(body).count <= 2000 else { throw Self.invalid }
+        guard origin.utf8.count <= 2048, Set(body.keys) == Self.keys, body["protocol"] == .number(1), body["account"] == .string(account), Self.digest(body["review_digest"]), (0...1000).contains(nodeCount), try TaskfoldJSONEncoder().encode(body).count <= 2000 else { throw Self.invalid }
         _ = try TeamOrganizationValue.id(body["request_id"]); _ = try TeamOrganizationValue.id(body["task_id"])
         for key in ["task_generation", "project_id", "workspace_id"] { _ = try TeamProjectValue.optionalID(body[key]) }
         self.account = account; self.origin = origin; self.body = body; self.nodeCount = nodeCount
@@ -160,7 +160,7 @@ struct ChildTaskAdoptionCommand: ReviewedTeamCommand, CustomStringConvertible, C
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: [["nodeCount"], ["body", "protocol"]])
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     func result(_ raw: [String: JSON]) throws -> ChildTaskAdoptionResult { try .init(command: self, raw: raw) }
 }
@@ -176,7 +176,7 @@ struct ChildTaskAdoptionResult: Codable, Equatable, Sendable {
     var unknown: Bool { raw["state"] == .string("unknown") }
     init(command: ChildTaskAdoptionCommand, data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: 16_384, integerPaths: [["protocol"], ["node_count"]], nullableIntegerPaths: [["node_count"]])
-        try self.init(command: command, raw: JSONDecoder().decode([String: JSON].self, from: data))
+        try self.init(command: command, raw: TaskfoldJSONDecoder().decode([String: JSON].self, from: data))
     }
     init(command: ChildTaskAdoptionCommand, raw: [String: JSON]) throws {
         guard raw["protocol"] == .number(1), raw["account"] == .string(command.account), raw["request_id"] == .string(command.id) else { throw ChildTaskAdoptionCommand.invalid }
@@ -247,7 +247,7 @@ struct ChildTaskAdoptionState: ReviewedTeamFileCommand {
     }
     init(data: Data) throws {
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: [["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"]], nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"]])
-        self = try JSONDecoder().decode(Self.self, from: data)
+        self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
     init(from decoder: Decoder) throws {
@@ -280,7 +280,7 @@ actor ChildTaskAdoptionJournal {
         guard state.account == account, state.origin == origin else { throw ChildTaskAdoptionCommand.invalid }; return state
     }
     private func write(_ entries: [ChildTaskAdoptionState.Entry], lease: CalendarReadLease) throws {
-        let state = try ChildTaskAdoptionState(account: account, origin: origin, entries: entries), data = try JSONEncoder().encode(state)
+        let state = try ChildTaskAdoptionState(account: account, origin: origin, entries: entries), data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= ChildTaskAdoptionState.maximumStoredBytes else { throw ChildTaskAdoptionFailure(reason: .limit) }
         try lease.check(); try io.write(data, key: key)
     }

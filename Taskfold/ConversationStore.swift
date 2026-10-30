@@ -251,17 +251,17 @@ extension Store {
     private func fixtureCommentReply(_ change: SharedCommentChange) throws -> SharedCommentReply {
         let existing = record(SharedComment.table, id: change.commentID), now = Dates.timestamp()
         if let existing, (TaskActivity.integer(existing["revision"]) ?? 0) != change.expectedRevision {
-            return try SharedCommentReply(data: JSONEncoder().encode(Record(["status": .string("conflict"), "current": .object(existing.fields)])), change: change)
+            return try SharedCommentReply(data: TaskfoldJSONEncoder().encode(Record(["status": .string("conflict"), "current": .object(existing.fields)])), change: change)
         }
         var row = existing ?? Record(["id": .string(change.commentID), "task_id": .string(change.taskID), "task_generation": .string(change.taskGeneration), "project_id": .string(change.projectID), "author_id": .string(userID), "created_at": .string(now)])
         let revision = (existing.flatMap { TaskActivity.integer($0["revision"]) } ?? 0) + 1
         row["body"] = .string(change.body); row["mention_ids"] = .array(change.mentionIDs.map(JSON.string)); row["revision"] = .number(Double(revision)); row["updated_at"] = .string(now); row["deleted_at"] = change.deleting ? .string(now) : .null
-        return try SharedCommentReply(data: JSONEncoder().encode(Record(["status": .string("saved"), "operation_id": .string(change.operationID), "acknowledged_revision": .number(Double(revision)), "current": .object(row.fields)])), change: change)
+        return try SharedCommentReply(data: TaskfoldJSONEncoder().encode(Record(["status": .string("saved"), "operation_id": .string(change.operationID), "acknowledged_revision": .number(Double(revision)), "current": .object(row.fields)])), change: change)
     }
     private func fixtureMentionReply(_ change: SharedMentionChange) throws -> SharedMentionReply {
         guard var row = record(SharedMention.table, id: change.mentionID) else { return try SharedMentionReply(data: Data(#"{"status":"unavailable"}"#.utf8), change: change) }
         let revision = (TaskActivity.integer(row["revision"]) ?? 0) + 1; row["read_at"] = change.read ? .string(Dates.timestamp()) : .null; row["revision"] = .number(Double(revision))
-        return try SharedMentionReply(data: JSONEncoder().encode(Record(["status": .string("saved"), "operation_id": .string(change.operationID), "acknowledged_revision": .number(Double(revision)), "current": .object(row.fields)])), change: change)
+        return try SharedMentionReply(data: TaskfoldJSONEncoder().encode(Record(["status": .string("saved"), "operation_id": .string(change.operationID), "acknowledged_revision": .number(Double(revision)), "current": .object(row.fields)])), change: change)
     }
 }
 #endif

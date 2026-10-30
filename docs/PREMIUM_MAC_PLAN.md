@@ -10023,3 +10023,12 @@ Each repository independently passes **185 PostgreSQL/RLS checks**, with no adde
 The initial phone cold-return assertion did not scroll to a lazy off-screen receipt; its failure, source/log and hierarchy are retained. A preliminary Mac heading error and the subsequent local unreadable/access-fence guard audit are also retained as superseded findings. Final scope, original-byte export/readback, source fingerprints, build/signature checks and captures are in [discovery evidence](child-adoption-discovery/README.md).
 
 **Still open:** explicit reviewed repairs; normal editable-cache support for opaque payloads; full shared attachment/discussion custody and client shared-workspace gate combinations; genuine account/reauth/secure-storage, window/background/concurrency/VoiceOver and larger-library acceptance; actual Mac original-file Save/readback. The broader migration checkpoint remains To build and everyday use remains disabled. Hosted schema, normal feature flags and all user deferrals are unchanged.
+
+
+## 30 October — exact older JSON through normal data paths
+
+The Mac now preserves validated unknown numbers and distinct Unicode metadata keys through cache, requests, private drafts and backup/recovery. Ordinary editable values retain their existing representation; the writer emits plain JSON and refuses unsafe fallback conversion. Existing quota checks also inspect opaque content. The project generator retains the codec in the widget target.
+
+Own full Core suite: **3,176 passed, 33 explicitly skipped, zero failures** (3,209 executed), including 22 new codec cases. The isolated Mac app and test products build and pass strict development signatures. Authorized Terminal launch plus direct computer use verified title edit → private save → one confirmed request/write → verified quit → cold launch → retained receipt, with exact numeric and Unicode content still intact. The app was closed afterward. A release-optimized 5,000-record component benchmark is retained with its scope; it does not establish whole-app latency.
+
+Evidence: `preserving-json/verification.json`, component benchmark and concise logs. The broader older-subtask migration remains To build: fresh child-field opaque objects/main-list acceptance, indexed/history mapping, shared attachment/discussion custody and wider account/protected-storage/window/background/concurrency/spoken/library checks remain. No hosted change, normal feature enablement or release/distribution acceptance is claimed. User deferrals remain unchanged.
