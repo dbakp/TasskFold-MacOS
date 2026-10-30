@@ -1380,3 +1380,12 @@ The initial phone cold-return assertion did not scroll to a lazy off-screen rece
 - [ ] Implement original/copy archival, guarded apply and durable check/close/recovery with reciprocal nonce fences; finish identity/history custody, strict native raw-payload transport and before/after controls, private-draft admission, larger-work repair, normal opaque-cache support and broader acceptance.
 
 Evidence: `child-task-repair-preview/verification.json` and its README. This is a service preview foundation, not usable repair or complete migration acceptance. No app source or UI changed, no native runtime was retested, normal gates stay off and no hosted schema changed. Full local migration-history verification still cannot connect; the candidate and dependencies pass in the owned fixture. All user deferrals remain unchanged.
+
+## 30 October — atomic repair saving and original custody candidate
+
+- [x] Save the exact complete original before the first source write; recheck the full-root review, then atomically repair and promote separate records. Original personal/team field commands work afterward.
+- [x] Add permanent exact-request send/check/close recovery, current-access-only integrity-checked original delivery, reciprocal task-command nonce fences and bounded original storage. Preserve team originals across editor account deletion; purge content through the actual logical Delete team lifecycle while metadata remains recoverable.
+- [x] Independently pass 256 database checks per repo, including 133 preview regressions. Stale reviews, history/indexed custody refusal, archive-before-write, late rollback, quotas, concurrent writers, access loss and real public team deletion are covered. No added advisor findings; owned containers are removed.
+- [ ] Add native raw-payload contracts/transport, encrypted commands and Store/private-draft admission, premium before/after/export/recovery controls and actual app acceptance. Indexed/history custody reconciliation, larger-work repair, normal opaque-cache support, reviewed cleanup/restoration and broader lifecycle/rollout work remain.
+
+Evidence: `child-task-repair-commits/verification.json`. This is a disabled server candidate, not native repair availability or complete migration acceptance. No app source, native build/runtime, hosted schema or normal feature flag changed. Full local migration-history checks cannot connect. All user deferrals remain unchanged.
