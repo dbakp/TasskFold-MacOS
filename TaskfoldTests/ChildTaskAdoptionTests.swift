@@ -247,5 +247,68 @@ final class ChildTaskAdoptionTests: XCTestCase {
         do { try await ChildTaskAdoptionAdmission.checkPreservedEdits(root: c.rootID, vault: vault, origin: c.origin); XCTFail("Foreign edit must be reviewed explicitly") } catch {}
         verifyEqual(try Data(contentsOf: file), before)
     }
+    func discoveryItem(_ review: [String: JSON], id: String? = nil) -> [String: JSON] {
+        ["task_id": id.map(JSON.string) ?? review["task_id"]!, "task_generation": review["task_generation"]!, "project_id": review["project_id"]!, "title": .string("Older task"), "title_truncated": .bool(false)]
+    }
+    func discoveryBytes(_ account: String, items: [[String: JSON]], next: String? = nil) throws -> Data {
+        try bytes(["protocol": .number(1), "account": .string(account), "items": .array(items.map(JSON.object)), "next_after": next.map(JSON.string) ?? .null])
+    }
+    func testMetadataDiscoveryRejectsWrongIdentityOpaqueFieldsAndAmbiguousPagination() throws {
+        let review = try fixture()["review"]!.object, account = review["account"]!.text, item = discoveryItem(review), id = item["task_id"]!.text
+        let page = try ChildTaskAdoptionTargetPage(data: discoveryBytes(account, items: [item]), account: account, after: nil, limit: 1, id: id)
+        verifyEqual(page.targets.first?.id, id); XCTAssertNil(page.next)
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: discoveryBytes(UUID().uuidString, items: [item]), account: account, after: nil, limit: 1, id: nil))
+        for key in ["task_id", "task_generation", "project_id", "title", "title_truncated"] {
+            var damaged = item; damaged.removeValue(forKey: key); XCTAssertThrowsError(try ChildTaskAdoptionTarget(damaged), key)
+        }
+        var opaque = item; opaque["subtasks"] = .array([]); XCTAssertThrowsError(try ChildTaskAdoptionTarget(opaque))
+        var long = item; long["title"] = .string(String(repeating: "🪴", count: 513)); XCTAssertThrowsError(try ChildTaskAdoptionTarget(long))
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: discoveryBytes(account, items: [item,item]), account: account, after: nil, limit: 2, id: nil))
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: discoveryBytes(account, items: [item]), account: account, after: id, limit: 1, id: nil))
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: discoveryBytes(account, items: [item], next: UUID().uuidString.lowercased()), account: account, after: nil, limit: 1, id: nil))
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: discoveryBytes(account, items: [], next: id), account: account, after: nil, limit: 1, id: nil))
+        XCTAssertThrowsError(try ChildTaskAdoptionTargetPage(data: discoveryBytes(account, items: [item]), account: account, after: nil, limit: 2, id: id))
+        let full = try ChildTaskAdoptionTargetPage(data: discoveryBytes(account, items: [item], next: id), account: account, after: nil, limit: 1, id: nil)
+        verifyEqual(full.next,id)
+        let captured = try context(review), scope = ChildTaskFieldClientScope(captured), metadataContext = try XCTUnwrap(full.targets.first).context(scope: scope,snapshot: captured.snapshot)
+        verifyEqual(ChildTaskFieldClientScope(metadataContext),scope); verifyEqual(metadataContext.root["task_generation"],review["task_generation"]!)
+        XCTAssertNil(metadataContext.root.fields["subtasks"])
+    }
+    @MainActor func testRealMetadataTransportReachesOpaqueReviewWithoutOrdinaryTaskFetch() async throws {
+        let f = try fixture(), c = try command(f), config=URLSessionConfiguration.ephemeral; config.protocolClasses=[AdoptionHTTP.self]
+        let session=try JSONDecoder().decode(Session.self,from:bytes(["access_token":.string("synthetic"),"refresh_token":.string("synthetic"),"expires_in":.number(3600),"user":.object(["id":.string(c.account)])]))
+        let api=Backend(configuration:["URL":origin,"Key":"synthetic-public"],http:URLSession(configuration:config),session:session,persistSession:{_ in})
+        let context = try context(f["review"]!.object,session:api.reminderSessionIncarnation), scope = ChildTaskFieldClientScope(context)
+        let workspace = UUID().uuidString.lowercased()
+        var raw=f["review"]!.object;raw["workspace_id"] = .string(workspace);raw["source_tree"] = .null;raw["node_count"] = .number(1);raw["max_depth"] = .number(1)
+        let source="[{\"id\":\"one\",\"future\":{\"large\":1e1000,\"precise\":9007199254740993,\"é\":1,\"e\u{301}\":2}}]"
+        raw["source_bytes"] = .number(Double(source.utf8.count))
+        let envelope=Data(String(decoding:try bytes(raw),as:UTF8.self).replacingOccurrences(of:"\"source_tree\":null",with:"\"source_tree\":"+source).utf8)
+        let metadata=try discoveryBytes(c.account,items:[discoveryItem(raw)]);var paths:[String]=[]
+        AdoptionHTTP.handler={request,peer in
+            paths.append(request.url!.path)
+            self.verifyEqual(request.value(forHTTPHeaderField:"Cache-Control"),"no-store");self.verifyFalse(request.httpShouldHandleCookies)
+            peer.finish(200, request.url!.path.hasSuffix("taskfold_child_adoption_targets") ? metadata : envelope)
+        };defer{AdoptionHTTP.handler=nil}
+        let page=try await api.childTaskAdoptionTargets(scope:scope,limit:1,id:c.rootID)
+        let discovered=try XCTUnwrap(page.targets.first).context(scope:scope,snapshot:context.snapshot)
+        let reviewed=try await api.childTaskAdoptionDiscoveredReview(discovered)
+        verifyEqual(reviewed.originalSource,Data(source.utf8));verifyEqual(reviewed.workspaceID,workspace)
+        verifyEqual(paths,["/rest/v1/rpc/taskfold_child_adoption_targets","/rest/v1/rpc/taskfold_review_child_adoption"])
+        XCTAssertNil(discovered.root.fields["subtasks"])
+        var foreign=raw;foreign["task_generation"] = .string(UUID().uuidString.lowercased())
+        AdoptionHTTP.handler={_,peer in peer.finish(200,try! self.bytes(foreign))}
+        do {_ = try await api.childTaskAdoptionDiscoveredReview(discovered);XCTFail("Generation change must reject review")}catch{}
+        let before=paths.count
+        do {_ = try await api.childTaskAdoptionTargets(scope:scope,after:c.rootID,limit:1,id:c.rootID);XCTFail("Invalid lookup must not request")}catch{}
+        verifyEqual(paths.count,before)
+    }
+    func testActualOwnedSQLMetadataPageHasNoOriginalPayloadAndBuildsScopedTarget() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-adoption-discovery-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let data = try Data(contentsOf: url), raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        let page = try ChildTaskAdoptionTargetPage(data: data, account: raw["account"]!.text, after: nil, limit: 1, id: raw["items"]!.list[0].object["task_id"]!.text)
+        XCTAssertEqual(page.targets.count,1);XCTAssertEqual(page.targets[0].title.count,512);XCTAssertTrue(page.targets[0].titleTruncated)
+        XCTAssertFalse(String(decoding:data,as:UTF8.self).contains("subtasks"))
+    }
 
 }

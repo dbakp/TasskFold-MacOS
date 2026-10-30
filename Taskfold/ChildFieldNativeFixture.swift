@@ -211,6 +211,7 @@ struct ChildFieldNativeFixtureView: View {
     @State private var opening: String?
     @State private var problem: String?
     @State private var probe = "Preparing"
+    @State private var adoptionAdmission = ""
     @State private var privateTitle = ""
     @State private var queueingCompletion = false
     @State private var historyProgress = 0
@@ -243,6 +244,19 @@ struct ChildFieldNativeFixtureView: View {
                                 try store.backupVault.saveEditorDraft(edit)
                             } catch { problem = "Synthetic private edit failed" }
                         }.accessibilityIdentifier("childNativeAdoptionPrivate")
+                        if ProcessInfo.processInfo.arguments.contains("--child-adoption-unreadable-cache") {
+                            Button("Test direct upgrade admission") {
+                                Task {
+                                    do {
+                                        let review = try await store.readChildTaskAdoption(ChildFieldNativeIdentity.rootID)
+                                        let model = try store.childTaskAdoptionModel(); defer { model.close() }; await model.load()
+                                        let accepted = await model.queue(try ChildTaskAdoptionCommand(review: review), review: review)
+                                        adoptionAdmission = !accepted && model.loaded && model.entries.isEmpty ? "Unverified saved edits protected" : "Unexpected admission result"
+                                    } catch { adoptionAdmission = "Admission check could not run" }
+                                }
+                            }.accessibilityIdentifier("childNativeAdoptionDirectAdmission")
+                            if !adoptionAdmission.isEmpty { Text(adoptionAdmission).accessibilityIdentifier("childNativeAdoptionAdmissionResult") }
+                        }
                         Button("Remove only the synthetic private edit") { do { try store.backupVault.closeEditorDraft(ChildAdoptionNativePeer.privateID) } catch { problem = "Synthetic edit cleanup failed" } }.accessibilityIdentifier("childNativeAdoptionRemovePrivate")
                     }
                     Button("Open subtask editor") { opening = "editor" }.accessibilityIdentifier("childNativeEditor")

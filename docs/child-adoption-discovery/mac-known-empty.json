@@ -1,0 +1,13 @@
+{
+  "build": "adoption-discovery-v5",
+  "method": "Direct CUA after explicitly authorized Terminal launch; not XCTest",
+  "verified": [
+    "Known readable saved workspace with zero editable task rows",
+    "Fresh metadata review shows correct root name and 3 original nodes",
+    "Explicit upgrade preserves original root and makes exactly one request/write",
+    "Verified process absence before cold launch without reset; saved named applied decision retained"
+  ],
+  "fullyAcceptedForEverydayUse": false,
+  "normalUseEnabled": false,
+  "appQuit": true
+}

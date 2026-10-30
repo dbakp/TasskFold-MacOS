@@ -35,6 +35,10 @@ struct ChildTaskAdoptionView: View {
     @State private var modelScope: ChildTaskFieldClientScope?
     @State private var read: ChildTaskAdoptionReview?
     @State private var reading = false
+    @State private var targets: [ChildTaskAdoptionTarget] = []
+    @State private var nextTarget: String?
+    @State private var discovering = false
+    @State private var discoveryTicket = UUID()
     @State private var ticket = UUID()
     @State private var activeID: String?
     @State private var failure: String?
@@ -58,6 +62,12 @@ struct ChildTaskAdoptionView: View {
         #endif
         return "original-subtasks-" + Dates.day(Date())
     }
+    private var displayedTargets: [ChildTaskAdoptionTarget] {
+        targets.filter { search.isEmpty || $0.title.localizedStandardContains(search) }.sorted {
+            let order = $0.title.localizedStandardCompare($1.title)
+            return order == .orderedSame ? $0.id < $1.id : order == .orderedAscending
+        }
+    }
     private var form: some View {
         List {
             if usable, let model {
@@ -66,7 +76,7 @@ struct ChildTaskAdoptionView: View {
                 if let exportMessage { Section { Text(exportMessage).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childAdoptionExportFeedback") } }
                 if let selected {
                     Section {
-                        Text(active != nil ? "Saved upgrade" : store.record("tasks", id: selected)?.title ?? "Task unavailable").font(.headline).fixedSize(horizontal: false, vertical: true)
+                        Text(active != nil ? "Saved upgrade" : currentRead?.context.root.title ?? targets.first(where: { $0.id == selected })?.title ?? "Review saved task").font(.headline).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childAdoptionTaskTitle")
                         Button("All tasks and saved decisions") { select(nil) }.accessibilityIdentifier("childAdoptionAll")
                     }
                     if let active {
@@ -87,7 +97,10 @@ struct ChildTaskAdoptionView: View {
                                 Text("Close this task’s editors and finish unsent changes first. Use a current Taskfold app for future subtask edits.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                                 if read.eligible {
                                     Button { Task { await upgrade(read) } } label: { ChildAdoptionActionLabel(title: "Upgrade subtasks", icon: "arrow.up.circle") }
-                                        .disabled(model.busy || !store.online || !store.childTaskAdoptionReviewIsCurrent(read)).accessibilityIdentifier("childAdoptionSend")
+                                        .disabled(model.busy || !store.online || !store.childTaskAdoptionWritesAvailable || !store.childTaskAdoptionReviewIsCurrent(read)).accessibilityIdentifier("childAdoptionSend")
+                                    if !store.childTaskAdoptionWritesAvailable {
+                                        Text("This device’s workspace needs recovery before upgrading. You can still review or export the saved task. Your pending edits are kept.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childAdoptionLocalReviewOnly")
+                                    }
                                 } else { Text("Upgrade is unavailable with the current workspace permissions or settings.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                             }
                         }
@@ -118,9 +131,13 @@ struct ChildTaskAdoptionView: View {
                     if store.childTaskAdoptionEnabled {
                         Section("Review a task") {
                             Text("Upgrade saved subtasks one task at a time. Private drafts and unfinished actions stay protected.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                            ForEach(store.childTaskAdoptionTargets().filter { search.isEmpty || $0.title.localizedStandardContains(search) }) { root in
-                                Button(root.title) { select(root.id) }.disabled(model.busy || !model.loaded).accessibilityIdentifier("childAdoptionTarget-" + root.id)
+                            ForEach(displayedTargets) { root in
+                                Button(root.title + (root.titleTruncated ? "…" : "")) { select(root.id) }.disabled(model.busy || !model.loaded).accessibilityIdentifier("childAdoptionTarget-" + root.id)
                             }
+                            if discovering { ProgressView("Finding saved tasks…") }
+                            if let nextTarget { Button("Load more tasks") { Task { await discover(after: nextTarget) } }.disabled(discovering || model.busy).accessibilityIdentifier("childAdoptionMore") }
+                            Button("Refresh tasks", systemImage: "arrow.clockwise") { Task { await discover() } }.disabled(discovering || model.busy || !store.online).accessibilityIdentifier("childAdoptionDiscover")
+                            if !search.isEmpty { Text("Search covers the tasks loaded here. Load more to include more tasks.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                         }
                     }
                     if !model.entries.isEmpty {
@@ -159,14 +176,32 @@ struct ChildTaskAdoptionView: View {
             }
     }
     private func select(_ root: String?) { ticket = UUID(); selected = root; activeID = nil; read = nil; failure = nil; exportMessage = nil; reading = false; if root != nil { Task { await refresh() } } }
-    private func close() { model?.close(); model = nil; modelScope = nil; read = nil; ticket = UUID(); reading = false; failure = nil }
+    private func close() { targets = []; nextTarget = nil; discovering = false; discoveryTicket = UUID(); model?.close(); model = nil; modelScope = nil; read = nil; ticket = UUID(); reading = false; failure = nil }
     private func open() async {
         close(); guard phase == .active, let captured = scope else { return }
         do {
             let value = try store.childTaskAdoptionModel(); model = value; modelScope = captured; await value.load()
             guard captured == scope, model === value, phase == .active, !Task.isCancelled else { return }
-            if selected != nil, active == nil { await refresh() }
+            if selected != nil, active == nil { await refresh() } else if selected == nil, store.childTaskAdoptionEnabled { await discover() }
         } catch { guard captured == scope else { return }; failure = "Saved upgrades couldn’t be read. Their originals are kept." }
+    }
+    private func discover(after: String? = nil) async {
+        guard usable, store.childTaskAdoptionEnabled else { return }
+        let captured = scope, request = UUID(); discoveryTicket = request; discovering = true; failure = nil
+        if after == nil { targets = []; nextTarget = nil }
+        defer { if discoveryTicket == request { discovering = false } }
+        do {
+            let page = try await store.childTaskAdoptionTargets(after: after)
+            guard usable, captured == scope, discoveryTicket == request, phase == .active, !Task.isCancelled else { return }
+            if after != nil {
+                guard targets.last?.id == after, Set(targets.map(\.id)).isDisjoint(with: page.targets.map(\.id)) else { throw ChildTaskAdoptionCommand.invalid }
+                targets += page.targets
+            } else { targets = page.targets }
+            nextTarget = page.next
+        } catch {
+            guard usable, captured == scope, discoveryTicket == request else { return }
+            failure = "Saved tasks couldn’t be listed. Refresh to try again; their original content is kept."
+        }
     }
     private func refresh() async {
         guard usable, let root = selected else { return }
@@ -213,7 +248,9 @@ private struct ChildAdoptionSavedRow: View {
     @Environment(Store.self) private var store
     @State private var stopping = false
     @State private var forgetting = false
-    private var title: String { store.childTaskAdoptionTitle(entry.command) }
+    @State private var liveTitle: String?
+    @State private var titleScope: ChildTaskFieldClientScope?
+    private var title: String { titleScope == store.childTaskFieldRecoveryScope ? liveTitle ?? store.childTaskAdoptionTitle(entry.command) : store.childTaskAdoptionTitle(entry.command) }
     private var status: String { switch entry.phase { case .queued: return "Saved on this device"; case .attempted: return "Awaiting confirmation"; case .applied: return "Subtasks upgraded"; case .closed: return "Upgrade stopped" } }
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -229,6 +266,11 @@ private struct ChildAdoptionSavedRow: View {
                 Menu { Button(entry.phase == .queued ? "Remove unsent upgrade" : "Remove saved history", role: .destructive) { forgetting = true } } label: { ChildAdoptionActionLabel(title: "More", icon: "ellipsis") }.disabled(model.busy)
             }
         }.padding(.vertical, 4).buttonStyle(.borderless)
+        .task(id: store.childTaskFieldRecoveryScope) {
+            liveTitle = nil; titleScope = nil
+            let captured = store.childTaskFieldRecoveryScope
+            if let value = try? await store.childTaskAdoptionLiveTitle(entry.command), captured == store.childTaskFieldRecoveryScope, !Task.isCancelled { liveTitle = value; titleScope = captured }
+        }
         .confirmationDialog("Check and stop this upgrade?", isPresented: $stopping, titleVisibility: .visible) {
             Button("Check and stop", role: .destructive) { Task { if await model.run(entry.command, operation: .close) { await store.sync() } } }
         } message: { Text("An upgrade already applied keeps its confirmation. An unapplied request will be permanently stopped before you review a new one.") }

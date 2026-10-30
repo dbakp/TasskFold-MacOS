@@ -1,0 +1,7 @@
+{
+  "interruptedPIDs": [
+    6726
+  ],
+  "reason": "Preserve the existing local access-fence write barrier as well as the undecodable-workspace barrier; rebuild the final guard and synthetic modes together",
+  "acceptanceClaimed": false
+}

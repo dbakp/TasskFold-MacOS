@@ -62,7 +62,7 @@ import CryptoKit
         result.replaceSubrange(range, with: Data("\"source_tree\":".utf8) + exportSource)
         return result
     }
-    static let paths: Set<String> = ["/rest/v1/rpc/taskfold_review_child_adoption", "/rest/v1/rpc/taskfold_adopt_child_records"]
+    static let paths: Set<String> = ["/rest/v1/rpc/taskfold_child_adoption_targets", "/rest/v1/rpc/taskfold_review_child_adoption", "/rest/v1/rpc/taskfold_adopt_child_records"]
     static func hash(_ value: JSON) throws -> String {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return SHA256.hash(data: try encoder.encode(value)).map { String(format: "%02x", $0) }.joined()
@@ -91,6 +91,12 @@ import CryptoKit
     static func response(path: String, body: [String: JSON], state: inout [String: JSON]) throws -> (Data,Bool) {
         guard enabled, Store.shared.userID == ChildFieldNativeIdentity.account else { throw ChildFieldNativeRefusal(code:"42501") }
         let root = Record(state["root"]!.object)
+        if path.hasSuffix("taskfold_child_adoption_targets") {
+            guard Set(body.keys) == ["_after", "_limit", "_id"] else { throw ChildFieldNativeRefusal(code:"22023") }
+            let item: [String: JSON] = ["task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": root["project_id"], "title": .string(root.title), "title_truncated": .bool(false)]
+            let included = (body["_id"] == .null || body["_id"] == .string(root.id)) && (body["_after"] == .null || body["_after"]!.text < root.id)
+            return (try JSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "items": .array(included ? [.object(item)] : []), "next_after": .null]), false)
+        }
         if path.hasSuffix("taskfold_review_child_adoption") {
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"] else { throw ChildFieldNativeRefusal(code:"PT409") }
             if exportTesting { return (try exportReview(state),false) }

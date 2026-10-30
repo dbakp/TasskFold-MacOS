@@ -1,0 +1,14 @@
+{
+  "appSHA256": "d26722075b29d243e0c4c7294834d61673a22c5fce53081607bcc315ee928afe",
+  "args": [
+    "--uitesting",
+    "--team-editor-testing",
+    "--child-fields-native",
+    "--child-fields-native-reset",
+    "--child-adoption-empty-cache",
+    "-ApplePersistenceIgnoreState",
+    "YES"
+  ],
+  "explicitTerminalLaunchAuthorization": true,
+  "processAbsentBeforeLaunch": true
+}

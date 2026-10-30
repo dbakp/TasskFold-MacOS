@@ -1,0 +1,72 @@
+{
+  "reviewed": "2026-10-30",
+  "platform": "mac",
+  "status": "Metadata-first signed-in review entry candidate; broader migration remains open",
+  "goalCheckpointComplete": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "SQLChecks": 185,
+  "SQLFixtureRemoved": true,
+  "addedAdvisorFindings": 0,
+  "coreBroadPhasePassed": 565,
+  "coreFinalAdoptionPassed": 25,
+  "corePhaseScope": "565 selected checks passed before the off-main transport refinement; final 25 adoption checks include that refinement. Store/views are excluded from SwiftPM and verified separately through native builds/flows.",
+  "buildAndStrictDevelopmentSignatureChecksPassed": true,
+  "remaining": [
+    "Explicit reviewed repairs for malformed older content",
+    "Ordinary editable-cache support for payloads the legacy JSON model cannot represent; metadata is never installed as partial editable data",
+    "Full shared attachment/discussion custody and client shared-workspace gate combinations",
+    "Mac actual original-file Save/readback, genuine account/reauth/secure-storage, window/background/concurrency/VoiceOver and larger-library acceptance",
+    "Normal rollout, older-client transition and user-deferred release/provider/device work stay paused"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "69f7a8b20556446e0c3877f25255ff88603fd6923c43938843d6c2274dabd5b3",
+    "Taskfold/Core/ChildTaskAdoption.swift": "8cd83492b1ba8deff709a3f3f6a67292b299adbfdfbc3e867be900d4f6c63933",
+    "Taskfold/Core/Store.swift": "52d05919b0f26a61ab26993dad32bf299943c528266a290e926258d272bc6bed",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "aabfb3874b579affa0226c35d362cdb15abe9a1923b3f66e7e9c2b5bbfeb84e8",
+    "Taskfold/ChildAdoptionNativeFixture.swift": "f27ea6ec5504ed1274c7b26d784bb2f50b0d9728f45cc216b0fe3e30b24ee595",
+    "Taskfold/ChildFieldNativeFixture.swift": "9e2cea51e384a13daf65a0d363da6b1a0e93dd3b9821008102cc69eb04960d4a",
+    "TaskfoldTests/ChildTaskAdoptionTests.swift": "f3127500e942ed8b20b16ffb4c60ad45cc3011e046705481d9f40278ae3c09f8",
+    "TaskfoldTests/Fixtures/child-adoption-discovery-v1.json": "1e453b21704a4e3831838ec5acf33cc6e89416dfbd24208031d9c180b7673e6e",
+    "TaskfoldUITests/AudioCommentUITests.swift": "8409b680012e771c98c4305600ac609d6057d5c204dfc61eb048aae76e46a1f4",
+    "Taskfold/Info.plist": "e8a7f8daa65ed3d5def3e7193ae104aa87790edc0563ddde231325555ea75087",
+    "supabase/migrations/20261030170753_child_adoption_metadata_discovery.sql": "34785f153d112ee2ef518eb960d982b404cb36f53a3c5ec3954f30d13357038d",
+    "Scripts/Database/test-reviewed-child-adoption.mjs": "732de24ad5cd98a72740d76928ccf5011d0d2bd2b9b941a4667963e58780f51e"
+  },
+  "localFullStackMigrationHistoryVerified": false,
+  "native": "Direct CUA: known-empty-cache review/upgrade/cold retained decision, plus unreadable-workspace review/export-control and direct queue refusal. Not XCTest, real corrupt-file, original-export Save, or spoken acceptance.",
+  "rootUnchangedSHA256": "bbff64cea881217aff5946c2c7dd2e8eae8f31d9f21f477b78d10b1767688ada",
+  "nativeProof": [
+    "mac-readonly.json",
+    "mac-known-empty.json"
+  ],
+  "evidenceSHA256": {
+    "local-migration-list.log": "51f80f996356bcc8d437c350c03cbdf512f5b48a4146394e6c7fe0de8c018a21",
+    "mac-known-empty.json": "0bbebaaf33e1c10c9683add56996aad638c88b17fcbde2bda22f9f016d1b04dc",
+    "mac-direct-before.json": "44625214f499d8f92591af65599047ca768cf9f0907bcdfdce0e691119091fd0",
+    "mac-readonly.json": "f2eb5b269ec832621c71d024ff2443a704749446bb09bf5e5bee8bb55c2d48eb",
+    "mac-known-empty-after.json": "662a8390c722f1f34a218609658dcc5d0efd72f999926c6157a0377a0ada390c",
+    "mac-readonly-state.json": "00cd2dba0a20dc54143f2049f1f58511fc26861898bdb50a0e39d72a5a116c12",
+    "mac-readonly-launch.json": "830423b57cc908d4b7e9245b1ac1420892895cd7450409a7daa2701be1b32911",
+    "core-final-25.log.gz": "b8ee8f16166ccff497163570c1f8201da3fdb3c31efcf829df22ea9b5262a3c6",
+    "README.md": "434c069e5c87ad6a4ca471ef229d221829f119a34c20f0582ddb566904a4e38a",
+    "preliminary-mac.json": "5420f0cc72ee834dbea754c3fd472ec8e6aeb16b127d394ccbcc4c739cc00c02",
+    "sql.json": "f798e661fba1937718bed1fda187345ad504597b3a4f11f5c7c58a8f17040c48",
+    "mac-known-empty-before.json": "44d41184c7e4c17fdf26710a1935ade0c5c2569e743617e534a44589e9f7e355",
+    "mac-direct-cold.json": "f4d7422930fde44e4b9a8f696c53a4ddde74852c7358326624654d76401bc87b",
+    "pruned-final-results.json": "8595e986faf33e022eff0908827883f7c077507e7fac1f2f72c9889e1ee5f9f8",
+    "sql.log.gz": "a7831d0e416501895fd67db2260a169ae56d2dc12c4cd7b7a1b397a9547444a1",
+    "core-final-source.json": "1039d12b1c5708ca9868ea9226cc8f04625821e334dd4776885eb1e90d189c27",
+    "preliminary-sql.json": "dde889763f1e8a9ea5647e79344af7453c7c3d2a106f35e6d67ee6df85691ab2",
+    "preliminary-build-interruption.json": "8791803fcabd4858aedd6f133c79d72953db98d7813b57215480b6632a7fb2a1",
+    "mac-direct-after.json": "4edaa7980983be159940016d3d34abfc36e77b4ba7a34265dc3cfaa3c9f342be",
+    "mac-known-empty-cold.json": "2ae391ed82afb3d5303ac5a1b0afe21cb49c26aad5839abb47a2ad2610b5c082",
+    "mac-direct-launch.json": "4c29af348b481e7df0d2b9aaaedc73f6a52d9c760655341cdac4efd1dff29edc",
+    "core-phase-565.log.gz": "3a13b38d1bca34cc61d213d95adcb75411db68bb578b1714785339a915e5db48",
+    "preliminary-mac-functional-v2.json": "61e15354c0f50a9ae0551f6bde8139037b838cd1c12399481c9df08c2e1abbcc",
+    "app-build.log.gz": "29b2821d28111f174fb7e50ed969b06f2c79315c112fc907663ad41e48957f5d"
+  },
+  "visualReview": [
+    "Direct CUA review heading, nested order, disabled action/recovery explanation and retained named receipt inspected"
+  ]
+}

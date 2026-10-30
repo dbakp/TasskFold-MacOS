@@ -1,6 +1,53 @@
 import Foundation
 import Observation
 
+/// Read-only discovery metadata. Never insert these partial rows into Snapshot.
+struct ChildTaskAdoptionTarget: Identifiable, Sendable {
+    let id: String
+    let generation: JSON
+    let project: JSON
+    let title: String
+    let titleTruncated: Bool
+    init(_ raw: [String: JSON]) throws {
+        guard Set(raw.keys) == ["task_id", "task_generation", "project_id", "title", "title_truncated"],
+              case .string(let id)? = raw["task_id"], UUID(uuidString: id)?.uuidString.lowercased() == id,
+              case .bool(let shortened)? = raw["title_truncated"] else { throw ChildTaskAdoptionCommand.invalid }
+        for key in ["task_generation", "project_id"] { _ = try TeamProjectValue.optionalID(raw[key]) }
+        let title: String
+        switch raw["title"] { case .string(let s)?: title = s; case .null?: title = ""; default: throw ChildTaskAdoptionCommand.invalid }
+        guard title.utf8.count <= 2048 else { throw ChildTaskAdoptionCommand.invalid }
+        self.id = id; generation = raw["task_generation"]!; project = raw["project_id"]!
+        self.title = title.isEmpty ? "Untitled task" : title; titleTruncated = shortened
+    }
+    func context(scope: ChildTaskFieldClientScope, snapshot: UUID) throws -> ChildTaskRecordContext {
+        try .init(account: scope.account, origin: scope.origin, workspace: scope.workspace, session: scope.session,
+                  access: scope.access, snapshot: snapshot, root: Record(["id": .string(id), "task_generation": generation, "project_id": project, "title": .string(title)]))
+    }
+}
+struct ChildTaskAdoptionTargetPage: Sendable {
+    static let maximumBytes = 300_000
+    let targets: [ChildTaskAdoptionTarget]
+    let next: String?
+    init(data: Data, account: String, after: String?, limit: Int, id: String?) throws {
+        guard (1...100).contains(limit), id == nil || after == nil && limit == 1 else { throw ChildTaskAdoptionCommand.invalid }
+        for value in [after, id].compactMap({ $0 }) { guard UUID(uuidString: value)?.uuidString.lowercased() == value else { throw ChildTaskAdoptionCommand.invalid } }
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes, integerPaths: [["protocol"]])
+        let raw = try JSONDecoder().decode([String: JSON].self, from: data)
+        guard Set(raw.keys) == ["protocol", "account", "items", "next_after"], raw["protocol"] == .number(1), raw["account"] == .string(account),
+              case .array(let items)? = raw["items"], items.count <= limit else { throw ChildTaskAdoptionCommand.invalid }
+        var targets: [ChildTaskAdoptionTarget] = [], previous = after
+        for item in items {
+            guard case .object(let value) = item else { throw ChildTaskAdoptionCommand.invalid }
+            let target = try ChildTaskAdoptionTarget(value)
+            guard previous == nil || previous! < target.id, id == nil || id == target.id else { throw ChildTaskAdoptionCommand.invalid }
+            targets.append(target); previous = target.id
+        }
+        let next = try TeamProjectValue.optionalID(raw["next_after"])
+        guard next == nil || id == nil && targets.count == limit && next == targets.last?.id else { throw ChildTaskAdoptionCommand.invalid }
+        self.targets = targets; self.next = next
+    }
+}
+
 /// Ephemeral review. Original content stays as raw JSON bytes, never as a
 /// replacement task or part of the durable request.
 struct ChildTaskAdoptionReview: Sendable, CustomStringConvertible, CustomDebugStringConvertible {

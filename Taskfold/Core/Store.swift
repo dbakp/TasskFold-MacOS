@@ -461,6 +461,9 @@ final class Store {
     var childTaskAdoptionEnabled: Bool {
         childTaskStructureEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildAdoptionEnabled") as? Bool == true
     }
+    /// Remote review can work without local rows. Writes must still prove that
+    /// the saved workspace was decoded, otherwise its pending edits are unknown.
+    var childTaskAdoptionWritesAvailable: Bool { childTaskAdoptionEnabled && workspaceCacheDecoded && workspaceCacheReadable }
     func childTaskAdoptionJournal(account: String, origin: String) throws -> ChildTaskAdoptionJournal {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
@@ -478,15 +481,18 @@ final class Store {
                          coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildAdoptionCommandLocks", isDirectory: true), removalDirectory: root)
     }
     func permitsChildTaskAdoption(_ command: ChildTaskAdoptionCommand, sending: Bool) -> Bool {
-        guard let root = record("tasks", id: command.rootID) else { return false }
-        let project = root.string("project_id"), cache = nativeConversationTeamCache
-        guard cache?.knownTasks.contains(root.id) != true || cache?.knownTeams[project] != nil,
-              command.body["workspace_id"] == (cache?.knownTeams[project].map(JSON.string) ?? .null) else { return false }
-        return permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskAdoptionEnabled, sending: sending)
+        guard childTaskAdoptionWritesAvailable, let scope = childTaskFieldRecoveryScope,
+              command.account == scope.account, command.origin == scope.origin,
+              !sending || online && !syncing,
+              !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == command.rootID }) else { return false }
+        // The adoption service owns live project/workspace/permission admission.
+        // Missing or unreadable ordinary rows are never replaced with metadata.
+        return true
     }
     func childTaskAdoptionReviewIsCurrent(_ read: ChildTaskAdoptionReview) -> Bool {
-        guard childTaskAdoptionEnabled, let current = try? childTaskRecordContext(read.context.root.id) else { return false }
-        return read.context.matches(current) && read.workspaceID == nativeConversationTeamCache?.knownTeams[current.root.string("project_id")]
+        childTaskAdoptionEnabled && online && childTaskFieldRecoveryScope == ChildTaskFieldClientScope(read.context)
+        && read.context.snapshot == snapshotRevision
+        && !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == read.context.root.id })
     }
     func childTaskAdoptionTitle(_ command: ChildTaskAdoptionCommand) -> String {
         guard command.account == userID, command.origin == (try? backend.accountRemovalOrigin),
@@ -496,16 +502,32 @@ final class Store {
               command.body["workspace_id"] == (realm.map(JSON.string) ?? .null) else { return "Task unavailable" }
         return root.title
     }
-    func childTaskAdoptionTargets() -> [Record] {
-        guard childTaskAdoptionEnabled, childTaskFieldRecoveryScope != nil else { return [] }
-        return rows("tasks").sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    func childTaskAdoptionLiveTitle(_ command: ChildTaskAdoptionCommand) async throws -> String {
+        guard command.account == userID, command.origin == (try? backend.accountRemovalOrigin) else { throw CancellationError() }
+        let context = try await childTaskAdoptionLiveContext(command.rootID)
+        guard context.root["task_generation"] == command.body["task_generation"], context.root["project_id"] == command.body["project_id"] else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        return context.root.title
+    }
+    func childTaskAdoptionTargets(after: String? = nil) async throws -> ChildTaskAdoptionTargetPage {
+        guard childTaskAdoptionEnabled, online, let scope = childTaskFieldRecoveryScope else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        let page = try await backend.childTaskAdoptionTargets(scope: scope, after: after)
+        try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == scope, childTaskAdoptionEnabled else { throw CancellationError() }
+        return page
+    }
+    private func childTaskAdoptionLiveContext(_ id: String) async throws -> ChildTaskRecordContext {
+        guard childTaskAdoptionEnabled, online, let scope = childTaskFieldRecoveryScope else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        let revision = snapshotRevision
+        let page = try await backend.childTaskAdoptionTargets(scope: scope, limit: 1, id: id)
+        try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == scope, revision == snapshotRevision, childTaskAdoptionEnabled else { throw CancellationError() }
+        guard let target = page.targets.first else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        return try target.context(scope: scope, snapshot: revision)
     }
     func readChildTaskAdoption(_ id: String) async throws -> ChildTaskAdoptionReview {
-        guard childTaskAdoptionEnabled, !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == id }) else { throw ChildTaskAdoptionAdmission.unfinished }
-        try await synchronizeChildTaskStructureReads()
-        let captured = try childTaskRecordContext(id), realm = nativeConversationTeamCache?.knownTeams[captured.root.string("project_id")]
-        guard nativeConversationTeamCache?.knownTasks.contains(id) != true || realm != nil else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
-        let read = try await backend.childTaskAdoptionReview(captured, workspaceID: realm)
+        guard !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == id }) else { throw ChildTaskAdoptionAdmission.unfinished }
+        let captured = try await childTaskAdoptionLiveContext(id)
+        let read = try await backend.childTaskAdoptionDiscoveredReview(captured)
         try Task.checkCancellation()
         guard childTaskAdoptionReviewIsCurrent(read) else { throw CancellationError() }
         return read
@@ -523,6 +545,8 @@ final class Store {
     private func admitChildTaskAdoption(_ command: ChildTaskAdoptionCommand) async throws {
         let captured = childTaskFieldRecoveryScope
         guard permitsChildTaskAdoption(command, sending: false) else { throw ChildTaskAdoptionFailure(reason: .unavailable) }
+        let live = try await childTaskAdoptionLiveContext(command.rootID)
+        guard live.root["task_generation"] == command.body["task_generation"], live.root["project_id"] == command.body["project_id"] else { throw ChildTaskAdoptionFailure(reason: .review) }
         let fields = try await childTaskFieldJournal(account: command.account, origin: command.origin).load()
         let completions = try await childTaskCompletionJournal(account: command.account, origin: command.origin).load()
         let structures = try await childTaskStructureJournal(account: command.account, origin: command.origin).load()
@@ -5413,7 +5437,11 @@ extension Store {
     }
     func childFieldNativeRefresh() throws {
         guard ChildFieldNativeIdentity.enabled,signedIn,!localMode,!signingOut,!accountRemovalBlocked,online else {return}
-        if ChildTransferNativePeer.enabled, userID == ChildFieldNativeIdentity.account {
+        if ChildAdoptionNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--child-adoption-empty-cache") || ProcessInfo.processInfo.arguments.contains("--child-adoption-unreadable-cache") {
+            snapshot.tables["tasks"] = []
+            workspaceCacheDecoded = !ProcessInfo.processInfo.arguments.contains("--child-adoption-unreadable-cache")
+            workspaceCacheReadable = workspaceCacheDecoded
+        } else if ChildTransferNativePeer.enabled, userID == ChildFieldNativeIdentity.account {
             var peer = try ChildFieldNativePeer.state(); let destination = ChildTransferNativePeer.destination(&peer); try ChildFieldNativePeer.save(peer)
             snapshot.tables["tasks"] = [Record(peer["root"]!.object), destination]
         } else {

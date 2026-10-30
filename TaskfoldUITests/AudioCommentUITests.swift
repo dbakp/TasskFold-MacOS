@@ -872,7 +872,14 @@ extension TaskfoldMacUITests {
             let bounds = form?.frame ?? app.frame
             let top = max(bounds.minY, app.navigationBars.allElementsBoundByIndex.last(where: { !$0.frame.isEmpty })?.frame.maxY ?? bounds.minY)
             let keyboard = app.keyboards.firstMatch
-            let bottom = min(bounds.maxY, keyboard.exists && !keyboard.frame.isEmpty ? keyboard.frame.minY : bounds.maxY)
+            var bottom = min(bounds.maxY, keyboard.exists && !keyboard.frame.isEmpty ? keyboard.frame.minY : bounds.maxY)
+            #if os(iOS)
+            // A docked native search field can cover content inside List's frame.
+            let search = app.searchFields["Find a task"]
+            if search.exists, !search.frame.isEmpty, search.frame.minY > bounds.midY {
+                bottom = min(bottom, search.frame.minY - 4)
+            }
+            #endif
             // A first List row can begin exactly below the native navigation bar.
             // The adoption warning must fit below that bar; it cannot acquire
             // extra top padding by scrolling beyond the beginning of the list.
@@ -1804,6 +1811,43 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(send.isEnabled, app.debugDescription)
         structureSnapshot(app, "Review original older subtasks before upgrade")
         completionReadyPress(send, app)
+    }
+    @MainActor func testChildAdoptionNativeUnreadableWorkspaceAllowsReviewButRefusesUpgrade() throws {
+        let app=XCUIApplication();addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app,extra:"--child-adoption-unreadable-cache",large:true)
+        let original=adoptionProbeValue("adoptionRootHash",app)
+        childHomePress("childNativeAdoptionRecovery",app)
+        let target=app.buttons["childAdoptionTarget-ec990000-0000-4000-8000-000000000002"];childReveal(target,app);completionReadyPress(target,app)
+        let count=app.staticTexts["childAdoptionCount"];childReveal(count,app);XCTAssertEqual(count.label,"3 saved subtasks")
+        let send=app.buttons["childAdoptionSend"];childReveal(send,app,diagnosticText:true);XCTAssertFalse(send.isEnabled)
+        let hint=app.staticTexts["childAdoptionLocalReviewOnly"];childReveal(hint,app,diagnosticText:true);XCTAssertTrue(hint.label.contains("workspace needs recovery"))
+        let export=app.buttons["childAdoptionExport"];childReveal(export,app);XCTAssertTrue(export.isEnabled)
+        structureSnapshot(app,"Unreadable saved workspace keeps remote review and export available but blocks upgrade")
+        childDone(app);childProbe(app,"adoptionWrites=0 adoptionRequests=0");XCTAssertEqual(adoptionProbeValue("adoptionRootHash",app),original)
+        childHomePress("childNativeAdoptionDirectAdmission",app)
+        let admission=app.staticTexts["childNativeAdoptionAdmissionResult"];childReveal(admission,app,diagnosticText:true)
+        XCTAssertEqual(admission.label,"Unverified saved edits protected")
+        childProbe(app,"adoptionWrites=0 adoptionRequests=0");XCTAssertEqual(adoptionProbeValue("adoptionRootHash",app),original)
+    }
+    @MainActor func testChildAdoptionNativeDiscoveryWithoutEditableTaskCache() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-adoption-empty-cache", large: true)
+        let original = adoptionProbeValue("adoptionRootHash", app)
+        childHomePress("childNativeAdoptionRecovery", app)
+        let target = app.buttons["childAdoptionTarget-ec990000-0000-4000-8000-000000000002"]
+        childReveal(target,app); XCTAssertTrue(target.isEnabled); structureSnapshot(app,"Live metadata finds older work without editable task cache")
+        completionReadyPress(target,app)
+        let count=app.staticTexts["childAdoptionCount"];childReveal(count,app);XCTAssertEqual(count.label,"3 saved subtasks")
+        let title=app.staticTexts["childAdoptionTaskTitle"];childReveal(title,app);XCTAssertEqual(title.label,"Native child workspace")
+        let send=app.buttons["childAdoptionSend"];childReveal(send,app);completionReadyPress(send,app)
+        let status=childSavedText("Subtasks upgraded",app);childReveal(status,app);XCTAssertTrue(status.waitForExistence(timeout:15))
+        structureSnapshot(app,"Metadata-only older work upgrades with a retained decision")
+        childDone(app);childProbe(app,"adoptionWrites=1 adoptionRequests=1");XCTAssertEqual(adoptionProbeValue("adoptionRootHash",app),original)
+        app.terminate();try childOpen(app,reset:false,extra:"--child-adoption-empty-cache",large:true)
+        childHomePress("childNativeAdoptionRecovery",app)
+        let coldStatus=childSavedText("Subtasks upgraded",app);childReveal(coldStatus,app,diagnosticText:true)
+        XCTAssertTrue(coldStatus.waitForExistence(timeout:15));structureSnapshot(app,"Older-work decision survives cold return without task cache")
+        childDone(app);childProbe(app,"adoptionWrites=1 adoptionRequests=1");XCTAssertEqual(adoptionProbeValue("adoptionRootHash",app),original)
     }
     @MainActor func testChildAdoptionNativeLargestReviewUpgradeAndColdStatus() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
