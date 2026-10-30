@@ -1,0 +1,53 @@
+{
+  "platformSource": "TasskFold-MacOS",
+  "tests": 68,
+  "failures": 0,
+  "newRetentionTests": [
+    {
+      "name": "testRetentionConcurrentJournalsKeepAllNewRequestsAtCapacity",
+      "seconds": 1.475
+    },
+    {
+      "name": "testRetentionFullPendingQueueShowsReviewWithoutSendingOrLosingWork",
+      "seconds": 0.082
+    },
+    {
+      "name": "testRetentionInvalidUndoDoesNotPruneUnrelatedHistory",
+      "seconds": 0.167
+    },
+    {
+      "name": "testRetentionKeepsRecentlyConfirmedUndoGroupTogether",
+      "seconds": 0.237
+    },
+    {
+      "name": "testRetentionNeverEvictsStoppedRequestsToMakeRoom",
+      "seconds": 0.104
+    },
+    {
+      "name": "testRetentionPreservesPendingStoppedAndSameTargetOrdering",
+      "seconds": 0.29
+    },
+    {
+      "name": "testRetentionProtectsQueuedAttemptedAndClosedUndoLineage",
+      "seconds": 1.442
+    },
+    {
+      "name": "testRetentionPrunesConfirmedUndoTogetherWithItsOriginal",
+      "seconds": 0.261
+    },
+    {
+      "name": "testRetentionRecencyUsesLateConfirmationAndAppliedResolution",
+      "seconds": 0.739
+    },
+    {
+      "name": "testRetentionSupportsSustainedEncryptedCompletionAndColdUndo",
+      "seconds": 49.562
+    },
+    {
+      "name": "testRetentionWriteFailureDoesNotPartiallyEraseHistory",
+      "seconds": 0.388
+    }
+  ],
+  "command": "swift test --jobs 2 --filter ChildTaskCompletionCommandTests",
+  "scope": "Client completion command, sender, encrypted journal and recovery model. No hosted backend or ordinary rollout acceptance."
+}

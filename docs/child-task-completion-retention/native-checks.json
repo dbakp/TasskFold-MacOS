@@ -1,0 +1,124 @@
+{
+  "phases": [
+    {
+      "name": "initial-phone",
+      "suiteSucceeded": false,
+      "scope": "Before batched names/pending-first layout; offscreen queued Send assertion failed although the fresh request was durable with zero writes.",
+      "tests": [
+        {
+          "name": "testChildCompletionNativeCheckAppliedAfterLostReply",
+          "outcome": "passed",
+          "seconds": 71.741
+        },
+        {
+          "name": "testChildCompletionNativeReopenAndUndoRestoreOriginalTime",
+          "outcome": "passed",
+          "seconds": 93.321
+        },
+        {
+          "name": "testChildCompletionNativeStopReviewFreshReplacementAndNoOp",
+          "outcome": "failed",
+          "seconds": 88.948
+        }
+      ]
+    },
+    {
+      "name": "phone-follow-up",
+      "suiteSucceeded": true,
+      "scope": "Batched names and pending-first layout; before the diagnostic-only atomic publication repair.",
+      "tests": [
+        {
+          "name": "testChildCompletionNativeStopReviewFreshReplacementAndNoOp",
+          "outcome": "passed",
+          "seconds": 149.478
+        },
+        {
+          "name": "testChildCompletionNativeSustainedHistoryAndBatchedNames",
+          "outcome": "passed",
+          "seconds": 109.302
+        }
+      ]
+    },
+    {
+      "name": "initial-tablet",
+      "suiteSucceeded": false,
+      "scope": "Three workflows passed; cold status assertion failed while the fixture could expose a partial label across its journal await. Final diagnostic tree and peer state held the expected 64 confirmations and 70 writes.",
+      "tests": [
+        {
+          "name": "testChildCompletionNativeCheckAppliedAfterLostReply",
+          "outcome": "passed",
+          "seconds": 74.883
+        },
+        {
+          "name": "testChildCompletionNativeReopenAndUndoRestoreOriginalTime",
+          "outcome": "passed",
+          "seconds": 90.61
+        },
+        {
+          "name": "testChildCompletionNativeStopReviewFreshReplacementAndNoOp",
+          "outcome": "passed",
+          "seconds": 124.181
+        },
+        {
+          "name": "testChildCompletionNativeSustainedHistoryAndBatchedNames",
+          "outcome": "failed",
+          "seconds": 118.082
+        }
+      ]
+    },
+    {
+      "name": "tablet-atomic-combined",
+      "suiteSucceeded": true,
+      "scope": "Final fixture publishes complete scoped diagnostic snapshots once; original 12-second cold assertion retained and initial stress predicate strengthened with history=70. All four cases pass together.",
+      "tests": [
+        {
+          "name": "testChildCompletionNativeCheckAppliedAfterLostReply",
+          "outcome": "passed",
+          "seconds": 71.075
+        },
+        {
+          "name": "testChildCompletionNativeReopenAndUndoRestoreOriginalTime",
+          "outcome": "passed",
+          "seconds": 83.064
+        },
+        {
+          "name": "testChildCompletionNativeStopReviewFreshReplacementAndNoOp",
+          "outcome": "passed",
+          "seconds": 120.72
+        },
+        {
+          "name": "testChildCompletionNativeSustainedHistoryAndBatchedNames",
+          "outcome": "passed",
+          "seconds": 106.175
+        }
+      ]
+    }
+  ],
+  "retentionWitness": {
+    "perDeviceNativeTransitionsBeforeColdLaunch": 70,
+    "retainedConfirmedRecords": 64,
+    "newParentReadsWhileViewingAndScrollingHistory": 1,
+    "totalTransitionsAfterColdUndo": 71,
+    "coreEncryptedColdTransitionsPerRepository": 160
+  },
+  "builds": {
+    "mac": {
+      "appAndTestProductsBuild": true,
+      "strictAppAndRunnerSignatures": true,
+      "nativeRuntime": "Not executed: Mac lock reconfirmed after Simulator testing."
+    },
+    "ios": {
+      "appAndTestProductsBuild": true,
+      "strictTeamAndNamespaceSignatures": true
+    }
+  },
+  "ordinaryFeatureFlags": "Absent/off; no hosted change.",
+  "visualInspection": "All four final iPad window-only screenshots and representative iPhone phase images inspected. No desktop capture exported.",
+  "remainingVisualFinding": "Current-value review can repeat the parent model\u2019s previous confirmation; scope feedback to the operation being reviewed and verify disabled styling/spoken behavior before acceptance.",
+  "productionSourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "6a073721b57d00cbcbb396da8dad4ac91df3ec3e3ce641755468d37f80b93e2c",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "cedd83f85e470558f2e3dc76cac607020356c50f2888754aebb7c8332795e241"
+  },
+  "finalNativeFixtureSHA256": "267808c50a24c129ea7a92490a89f664ad8583bd382f3bb0bf8523a95f057192",
+  "finalUITestSourceSHA256": "722c4803c673389cd402d0dd4e0dec8cec89f310908c2f864fc244e963de8d9d"
+}

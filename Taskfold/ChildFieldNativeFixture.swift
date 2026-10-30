@@ -132,6 +132,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         var state = try state(); let root = Record(state["root"]!.object)
         if request.url?.path == "/rest/v1/rpc/taskfold_read_child_tasks" {
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"], Store.shared.userID == ChildFieldNativeIdentity.account else { throw CancellationError() }
+            state["childReads"] = .number(Double((state["childReads"]?.integer ?? 0) + 1)); try save(state)
             let records = root["subtasks"].list.enumerated().map { i, value -> JSON in
                 let key = value.object["id"]!.text
                 return .object(["node_key": .string(key), "incarnation": .string(i == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006"), "revision": state["versions"]!.object[key]!, "parent_key": .null, "sibling_order": .number(Double(i)), "identity_path": .array([.string(key)]), "fields": value, "children_kind": .string("absent")])
@@ -195,6 +196,8 @@ struct ChildFieldNativeFixtureView: View {
     @State private var problem: String?
     @State private var probe = "Preparing"
     @State private var privateTitle = ""
+    @State private var queueingCompletion = false
+    @State private var historyProgress = 0
     var body: some View {
         NavigationStack {
             List {
@@ -203,6 +206,11 @@ struct ChildFieldNativeFixtureView: View {
                 if ready {
                     Button("Open subtask editor") { opening = "editor" }.accessibilityIdentifier("childNativeEditor")
                     Button("Open saved actions") { opening = "completion" }.accessibilityIdentifier("childNativeCompletionRecovery")
+                    Button("Save an offline test completion") { Task { await queueCompletion() } }
+                        .disabled(queueingCompletion || !store.online).accessibilityIdentifier("childNativeQueueCompletion")
+                    Button("Exercise completion history") { Task { await exerciseHistory() } }
+                        .disabled(queueingCompletion || !store.online).accessibilityIdentifier("childNativeExerciseHistory")
+                    if queueingCompletion { Text("Preparing synthetic history: \(historyProgress)").accessibilityIdentifier("childNativeHistoryProgress") }
                     Button("Open saved changes") { opening = "recovery" }.accessibilityIdentifier("childNativeRecovery")
                     Button("Change test title on server") {
                         do {
@@ -221,21 +229,51 @@ struct ChildFieldNativeFixtureView: View {
         .task {
             guard ChildFieldNativeIdentity.enabled else { return }
             do {
-                try await store.childFieldNativeStart(); ready = true
-                while !Task.isCancelled { await inspect(); try await Task.sleep(nanoseconds: 400_000_000) }
+                try await store.childFieldNativeStart(); await inspect(); ready = true
+                while !Task.isCancelled { try await Task.sleep(nanoseconds: 400_000_000); await inspect() }
             } catch is CancellationError { } catch { problem = error.localizedDescription }
         }
         .sheet(isPresented: Binding(get: { opening != nil }, set: { if !$0 { opening = nil } })) {
-            WorkflowShell(title: opening == "editor" ? "Subtask changes" : "Saved subtask changes") {
+            WorkflowShell(title: opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : "Saved subtask changes") {
                 if opening == "editor" { ChildTaskFieldEditorView(rootID: ChildFieldNativeIdentity.rootID) }
                 else if opening == "completion" { ChildTaskCompletionRecoveryView() }
                 else { ChildTaskFieldRecoveryView() }
             }
         }
     }
+    private func exerciseHistory() async {
+        guard ChildFieldNativeIdentity.enabled, store.online, let scope = store.childTaskFieldRecoveryScope else { return }
+        queueingCompletion = true; historyProgress = 0; defer { queueingCompletion = false }
+        do {
+            let model = try store.childTaskCompletionRecoveryModel(); defer { model.close() }
+            for index in 0..<70 {
+                guard store.childTaskFieldRecoveryScope == scope else { throw CancellationError() }
+                let read = try await store.readChildTaskRecords(ChildFieldNativeIdentity.rootID)
+                guard await model.perform(read: read, key: "concept", action: index.isMultiple(of: 2) ? .complete : .reopen) != nil else {
+                    throw AppFailure(message: "Synthetic completion history could not be confirmed.")
+                }
+                historyProgress = index + 1
+            }
+        } catch { problem = error.localizedDescription }
+    }
+    private func queueCompletion() async {
+        guard ChildFieldNativeIdentity.enabled, store.online, let scope = store.childTaskFieldRecoveryScope else { return }
+        queueingCompletion = true; defer { queueingCompletion = false }
+        do {
+            let read = try await store.readChildTaskRecords(ChildFieldNativeIdentity.rootID)
+            guard store.childTaskFieldRecoveryScope == scope else { return }
+            let model = try store.childTaskCompletionRecoveryModel()
+            store.online = false
+            defer { model.close(); if store.childTaskFieldRecoveryScope == scope { store.online = true } }
+            guard await model.perform(read: read, key: "concept", action: .complete) != nil else {
+                throw AppFailure(message: "The synthetic offline action could not be saved.")
+            }
+        } catch { problem = error.localizedDescription }
+    }
     private func inspect() async {
         do {
             guard ChildFieldNativeIdentity.enabled else { return }
+            let captured = store.childTaskFieldRecoveryScope
             let state = try ChildFieldNativePeer.state()
             let journal = try store.childTaskFieldJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin)
             let entries = try await journal.load().entries
@@ -244,7 +282,7 @@ struct ChildFieldNativeFixtureView: View {
             let drafts = try store.backupVault.editorEntries().compactMap { entry -> TaskEditorRecovery? in
                 guard let value = try? store.backupVault.editorDraft(entry.id, origin: ChildFieldNativeIdentity.origin), value.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) else { return nil }; return value
             }
-            privateTitle = drafts.first?.draft.title ?? ""
+            let nextTitle = drafts.first?.draft.title ?? ""
             let child = store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object ?? [:]
             let labelValues = child["labels"]?.list.map(\.text).joined(separator: ",") ?? ""
             let pendingLabel = drafts.first?.extras["unsubmitted_child_label"]?.text ?? ""
@@ -253,11 +291,17 @@ struct ChildFieldNativeFixtureView: View {
             let localSpecs = schedules.compactMap { ReminderSpec(row: $0) }
             let enabledSchedules = localSpecs.filter(\.enabled).count
             let beforeTen = localSpecs.filter { $0.enabled && $0.kind == "relative" && $0.offset == -10 }.count
-            probe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) reminderDraft=\(reminderDrafts) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") closed=\(entries.filter { $0.phase == .closed }.count) closes=\(state["closeRequests"]?.integer ?? 0) labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
+            var nextProbe = "\(counts) writes=\(state["writes"]!.integer) requests=\(state["requests"]!.integer) current=\(current) account=\(store.userID == ChildFieldNativeIdentity.account ? "A" : "B") private=\(drafts.count) minutes=\(store.record("tasks", id: ChildFieldNativeIdentity.rootID)?["subtasks"].list.first?.object["duration_minutes"]?.integer ?? 0) schedules=\(schedules.count) enabled=\(enabledSchedules) before10=\(beforeTen) reminderDraft=\(reminderDrafts) kind=\(TaskKind(Record(child)) == .heading ? "heading" : "task") closed=\(entries.filter { $0.phase == .closed }.count) closes=\(state["closeRequests"]?.integer ?? 0) labels=\(labelValues) pendingLabel=\(pendingLabel) assigned=\(child["assigned_to"]?.text ?? "")"
             if store.userID == ChildFieldNativeIdentity.account {
                 let completionEntries = try await store.childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
-                probe += " completionQueued=\(completionEntries.filter { $0.phase == .queued }.count) completionAttempted=\(completionEntries.filter { $0.phase == .attempted }.count) completionConfirmed=\(completionEntries.filter { $0.phase == .confirmed }.count) completionClosed=\(completionEntries.filter { $0.phase == .closed }.count) completionWrites=\(state["completionWrites"]?.integer ?? 0) completionRequests=\(state["completionRequests"]?.integer ?? 0) done=\(child["completed"]?.flag == true) notes=\(child["description"]?.text ?? "")"
+                nextProbe += " completionQueued=\(completionEntries.filter { $0.phase == .queued }.count) completionAttempted=\(completionEntries.filter { $0.phase == .attempted }.count) completionConfirmed=\(completionEntries.filter { $0.phase == .confirmed }.count) completionClosed=\(completionEntries.filter { $0.phase == .closed }.count) completionWrites=\(state["completionWrites"]?.integer ?? 0) completionRequests=\(state["completionRequests"]?.integer ?? 0) done=\(child["completed"]?.flag == true) notes=\(child["description"]?.text ?? "")"
+                nextProbe += " completionCloses=\(state["completionCloses"]?.integer ?? 0) childReads=\(state["childReads"]?.integer ?? 0) history=\(historyProgress) stamp=\(child["completed_at"]?.text.isEmpty == false ? child["completed_at"]!.text : "none")"
             }
+            // Publish one complete snapshot. A partial label across the journal
+            // await can make accessibility reads observe missing count fields.
+            guard captured == store.childTaskFieldRecoveryScope, !Task.isCancelled else { return }
+            if privateTitle != nextTitle { privateTitle = nextTitle }
+            if probe != nextProbe { probe = nextProbe }
         } catch { problem = error.localizedDescription }
     }
 }

@@ -1,4 +1,4 @@
-# Px checklist — 29 October 2026
+# Px checklist — 30 October 2026
 
 This is a feature-level progress snapshot, not a release-readiness certificate.
 Checked items are complete within their recorded acceptance scope. Open items
@@ -1097,8 +1097,22 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [x] Add saved-action discovery, explicit uncertain-action stop confirmation, current-value review and save-only fresh replacement.
 - [x] Independently pass 190 focused Core checks per repository, including seven new presentation/recovery model cases.
 - [x] Build final app/test products independently on Mac/iOS and verify isolated signatures. Pass initial Complete/Undo/cold-retry journeys on iPhone/iPad, then focused final-source keyboard/draft/cold-state checks on each device; inspect window-only screenshots.
-- [ ] Finish native Reopen, stop/review/replacement, Mac/runtime/lifecycle and spoken acceptance; exact phase distinctions and the Mac unlock blocker are in the implementation note.
-- [ ] Add dependency-safe confirmed-receipt retention for sustained completion use beyond the bounded 64-record journal.
+- [x] Native Reopen/timestamp Undo and stop/review/fresh replacement/no-op/applied-receipt recovery pass on phone/iPad within recorded phases; see the 30 October follow-up.
+- [ ] Finish Mac/runtime/lifecycle, spoken/largest-text and current-review feedback/styling acceptance; exact phase distinctions and the Mac unlock blocker remain recorded.
+- [x] Add dependency-safe confirmed-receipt retention for sustained completion use; independent 68-case completion suites include 160 encrypted cold transitions and protected-work/capacity/concurrency checks. Native stress acceptance is recorded separately below.
 - [ ] Complete structural/legacy/adoption/authoritative migration and wider genuine acceptance. Ordinary flags stay off; user deferrals and the existing iPhone combined-run finding remain.
 
 [Implementation and exact verification scope](child-task-completion-ui/README.md).
+
+
+## 2026-10-30 — sustained completion history and recovery
+
+- [x] Automatically clear only old entirely confirmed families, preserving every uncertain/stopped action and required Undo proof; keep version-1 encrypted format and fixed file/record bounds.
+- [x] Pass 68 completion tests independently in each repository, including eleven new sustained-use, cold-file, dependency, capacity, failed-write and concurrency cases.
+- [x] Implement pending-first recovery, batched current-parent name reads and return from successful reviewed Send/Undo.
+- [x] Pass iPhone follow-up and a final four-case combined iPad run for recovery/replacement/no-op, Reopen/timestamp Undo and sustained history; 70 transitions retain 64 records, one parent read serves the history list, and recent Undo survives a cold launch. Verify final builds/signatures and inspect window-only screenshots.
+- [x] Preserve the initial offscreen-row failure and the later partial-diagnostic-label failure; repair pending-first presentation, offscreen test reveal and atomic scoped fixture publication. The unchanged-budget combined iPad rerun passes.
+- [ ] Scope review feedback to the current operation and verify disabled/spoken/largest-text behavior; broader lifecycle remains open.
+- [ ] Complete genuine Mac/private-Keychain/lifecycle/spoken acceptance and remaining structural/legacy/adoption/authoritative migration work. Ordinary flags and user deferrals remain unchanged.
+
+[Implementation and exact evidence](child-task-completion-retention/README.md).

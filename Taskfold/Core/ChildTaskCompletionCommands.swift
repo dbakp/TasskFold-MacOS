@@ -202,6 +202,7 @@ struct ChildTaskCompletionJournalState: ReviewedTeamFileCommand, CustomStringCon
     static let fileName = "requests.taskfoldchildcompletions"
     static let encryptionContext = "com.taskfold.child-completion-journal.v1"
     static let maximumStoredBytes = 2_100_000
+    static let maximumEntries = 64
     static var invalid: AppFailure { ChildTaskCompletionDraft.invalid }
     let account: String, origin: String
     var entries: [Entry]
@@ -209,7 +210,7 @@ struct ChildTaskCompletionJournalState: ReviewedTeamFileCommand, CustomStringCon
     var debugDescription: String { description }
     init(account: String, origin: String, entries: [Entry] = []) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
-        guard origin.utf8.count <= 2048, entries.count <= 64 else { throw Self.invalid }
+        guard origin.utf8.count <= 2048, entries.count <= Self.maximumEntries else { throw Self.invalid }
         var ids: Set<String> = []
         for entry in entries {
             let command = entry.command
@@ -228,6 +229,26 @@ struct ChildTaskCompletionJournalState: ReviewedTeamFileCommand, CustomStringCon
             }
         }
         self.account = account; self.origin = origin; self.entries = entries
+    }
+    /// Keep uncertainty and review work intact. A confirmed original and all
+    /// its Undo records form one retention unit, so pruning cannot orphan proof.
+    /// Array order tracks acknowledgement recency without persisting a clock.
+    mutating func makeRoom(preserving request: String?) throws {
+        func fits() throws -> Bool {
+            try entries.count <= Self.maximumEntries && JSONEncoder().encode(self).count <= Self.maximumStoredBytes
+        }
+        guard try !fits() else { return }
+        func group(_ entry: Entry) -> String { entry.command.original?.body["request_id"]?.text ?? entry.command.id }
+        var groups: [String: [Int]] = [:]
+        for (index, entry) in entries.enumerated() { groups[group(entry), default: []].append(index) }
+        let eligible = groups.filter { _, indices in
+            indices.allSatisfy { entries[$0].phase == .confirmed && entries[$0].command.id != request }
+        }.sorted { $0.value.last! < $1.value.last! }.map(\.key)
+        for id in eligible {
+            entries.removeAll { group($0) == id }
+            if try fits() { return }
+        }
+        throw ChildTaskCompletionCapacityFailure()
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
     init(from decoder: Decoder) throws {
@@ -273,7 +294,9 @@ actor ChildTaskCompletionJournal {
         let state = try JSONDecoder().decode(ChildTaskCompletionJournalState.self, from: data)
         guard state.account == account, state.origin == origin else { throw ChildTaskCompletionDraft.invalid }; return state
     }
-    private func write(_ state: ChildTaskCompletionJournalState, lease: CalendarReadLease) throws {
+    private func write(_ candidate: ChildTaskCompletionJournalState, lease: CalendarReadLease, preserving request: String? = nil) throws {
+        var state = candidate
+        try state.makeRoom(preserving: request)
         _ = try ChildTaskCompletionJournalState(account: account, origin: origin, entries: state.entries)
         let data = try JSONEncoder().encode(state)
         guard data.count <= ChildTaskCompletionJournalState.maximumStoredBytes else { throw ChildTaskCompletionDraft.invalid }
@@ -308,7 +331,8 @@ actor ChildTaskCompletionJournal {
             var state = try read()
             guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .queued, state.entries[i].phase != .closed else { throw ChildTaskCompletionDraft.invalid }
             if let old = state.entries[i].receipt { guard old.agrees(receipt) else { throw ChildTaskCompletionDraft.invalid }; return }
-            state.entries[i].phase = .confirmed; state.entries[i].receipt = receipt; try write(state, lease: lease)
+            var entry = state.entries.remove(at: i); entry.phase = .confirmed; entry.receipt = receipt
+            state.entries.append(entry); try write(state, lease: lease, preserving: command.id)
         }
     }
     /// Resolution never sends task changes, so it may settle a later queued
@@ -329,11 +353,12 @@ actor ChildTaskCompletionJournal {
             if state.entries[i].phase == .closed { guard state.entries[i].resolution == decision else { throw ChildTaskCompletionDraft.invalid }; return }
             if let old = state.entries[i].receipt { guard let proof = decision.receipt, old.agrees(proof) else { throw ChildTaskCompletionDraft.invalid }; return }
             if let proof = decision.receipt {
-                state.entries[i].phase = .confirmed; state.entries[i].receipt = proof
+                var entry = state.entries.remove(at: i); entry.phase = .confirmed; entry.receipt = proof
+                state.entries.append(entry)
             } else {
                 state.entries[i].phase = .closed; state.entries[i].resolution = decision
             }
-            try write(state, lease: lease)
+            try write(state, lease: lease, preserving: command.id)
         }
     }
     func replaceClosed(_ original: ChildTaskCompletionCommand, with replacement: ChildTaskCompletionCommand, lease: CalendarReadLease) throws {
@@ -360,6 +385,9 @@ actor ChildTaskCompletionJournal {
         }
     }
     func removeAccount() throws { try lock.withExclusive(account: account) { try io.remove(key: key) } }
+}
+struct ChildTaskCompletionCapacityFailure: LocalizedError {
+    var errorDescription: String? { "Review saved subtask actions before adding another. Pending and stopped actions are kept until you review them." }
 }
 struct ChildTaskCompletionFailure: LocalizedError {
     let reason: ChildTaskFieldWriteFailure.Reason
@@ -464,7 +492,8 @@ extension Backend: ChildTaskCompletionCommandService {}
     private func failure(_ error: Error) {
         guard (try? check()) != nil else { close(); return }
         if error is CancellationError { return }
-        if let value = error as? ChildTaskCompletionFailure { message = value.localizedDescription }
+        if let value = error as? ChildTaskCompletionCapacityFailure { message = value.localizedDescription }
+        else if let value = error as? ChildTaskCompletionFailure { message = value.localizedDescription }
         else if error is AccountSessionAuthorizationRequired { message = "Sign in again to check this saved action. Your work is kept." }
         else { message = "This action couldn’t be confirmed. Your saved work is kept; review it before trying again." }
     }

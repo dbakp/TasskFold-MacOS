@@ -685,3 +685,155 @@ extension ChildTaskCompletionCommandTests {
         XCTAssertNil(pending); XCTAssertTrue(peer.calls.isEmpty); XCTAssertTrue(model.entries.isEmpty); XCTAssertNotNil(model.message)
     }
 }
+
+extension ChildTaskCompletionCommandTests {
+    private func retainedCommand(_ node: String) throws -> ChildTaskCompletionCommand {
+        let c = try command(); var body = c.body
+        body["request_id"] = .string(UUID().uuidString.lowercased()); body["node_key"] = .string(node)
+        return try .init(account: c.account, origin: c.origin, body: body)
+    }
+    private func settledHistory(_ count: Int) throws -> [ChildTaskCompletionJournalState.Entry] {
+        try (0..<count).map { index in
+            let c = try retainedCommand("history-\(index)")
+            return .init(command: c, phase: .confirmed, receipt: try completionReply(c))
+        }
+    }
+    private func seedHistory(_ entries: [ChildTaskCompletionJournalState.Entry], io: any CalendarSecureItemIO) throws {
+        let c = try command(), state = try ChildTaskCompletionJournalState(account: c.account, origin: c.origin, entries: entries)
+        try io.write(JSONEncoder().encode(state), key: ChildTaskCompletionJournalState.storagePrefix + c.account + "." + CalendarOAuthConfiguration.digest(c.origin))
+    }
+    func testRetentionSupportsSustainedEncryptedCompletionAndColdUndo() async throws {
+        let template = try command(), directory = try root(), key = SymmetricKey(size: .bits256)
+        let io = try ChildTaskCompletionJournalFileIO(directory: directory, account: template.account, origin: template.origin, encryptionKey: { key })
+        var body = template.body, last = template
+        for index in 0..<160 {
+            body["request_id"] = .string(UUID().uuidString.lowercased())
+            body["action"] = .string(index.isMultiple(of: 2) ? "complete" : "reopen")
+            let c = try ChildTaskCompletionCommand(account: template.account, origin: template.origin, body: body)
+            // Reopen the actual encrypted file for every transition.
+            let cold = try journal(c, io, directory)
+            try await cold.enqueue(c, lease: CalendarReadLease()); _ = try await cold.attempt(c, lease: CalendarReadLease())
+            let proof = try completionReply(c); try await cold.confirm(c, receipt: proof, lease: CalendarReadLease())
+            let saved = try await cold.load()
+            XCTAssertLessThanOrEqual(saved.entries.count, 64); XCTAssertEqual(saved.entries.last?.command, c)
+            XCTAssertLessThanOrEqual(try Data(contentsOf: io.file).count, ChildTaskCompletionJournalState.maximumStoredBytes)
+            body["baseline"] = proof.raw["after"]; body["revision"] = proof.raw["revision"]; last = c
+        }
+        let j = try journal(last, io, directory), proof = try completionReply(last), undo = try undo(last, proof: proof)
+        try await j.enqueue(undo, lease: CalendarReadLease()); _ = try await j.attempt(undo, lease: CalendarReadLease())
+        try await j.confirm(undo, receipt: completionReply(undo), lease: CalendarReadLease())
+        let cold = try journal(last, io, directory), saved = try await cold.load()
+        XCTAssertNotNil(saved.entries.first { $0.command == last }); XCTAssertEqual(saved.entries.last?.command, undo)
+        XCTAssertFalse(String(decoding: try Data(contentsOf: io.file), as: UTF8.self).contains(last.id))
+        XCTAssertEqual(saved.entries.last?.receipt?.raw["after"]?.object["completed_at"], proof.raw["before"]?.object["completed_at"])
+    }
+    func testRetentionPreservesPendingStoppedAndSameTargetOrdering() async throws {
+        let c = try command(), io = CompletionIO(), j = try journal(c, io, root())
+        let queued = try retainedCommand("child"), attempted = try retainedCommand("uncertain"), stopped = try retainedCommand("stopped")
+        let protected: [ChildTaskCompletionJournalState.Entry] = [
+            .init(command: queued, phase: .queued, receipt: nil), .init(command: attempted, phase: .attempted, receipt: nil),
+            .init(command: stopped, phase: .closed, receipt: nil, resolution: try completionDecision(stopped))]
+        let history = try settledHistory(61); try seedHistory(protected + history, io: io)
+        try await j.enqueue(c, lease: CalendarReadLease()); let saved = try await j.load()
+        XCTAssertEqual(saved.entries.count, 64); XCTAssertEqual(Array(saved.entries.prefix(3)), protected)
+        XCTAssertFalse(saved.entries.contains { $0.command == history[0].command })
+        XCTAssertTrue(saved.entries.contains { $0.command == history[1].command })
+        do { _ = try await j.attempt(c, lease: CalendarReadLease()); XCTFail("Earlier queued action still fences this target") } catch {}
+    }
+    func testRetentionProtectsQueuedAttemptedAndClosedUndoLineage() async throws {
+        for phase in [ChildTaskCompletionJournalState.Phase.queued, .attempted, .closed] {
+            let c = try command(), proof = try completionReply(c), u = try undo(c), io = CompletionIO(), j = try journal(c, io, root())
+            let original = ChildTaskCompletionJournalState.Entry(command: c, phase: .confirmed, receipt: proof)
+            let dependent = ChildTaskCompletionJournalState.Entry(command: u, phase: phase, receipt: nil, resolution: phase == .closed ? try completionDecision(u) : nil)
+            let history = try settledHistory(62); try seedHistory([original, dependent] + history, io: io)
+            let incoming = try retainedCommand("new-child"); try await j.enqueue(incoming, lease: CalendarReadLease())
+            let saved = try await j.load(); XCTAssertEqual(saved.entries.count, 64)
+            XCTAssertEqual(saved.entries.first { $0.command == c }, original); XCTAssertEqual(saved.entries.first { $0.command == u }, dependent)
+            let active: ChildTaskCompletionCommand
+            if phase == .closed {
+                active = try undo(c); try await j.replaceClosed(u, with: active, lease: CalendarReadLease())
+            } else { active = u }
+            _ = try await j.attempt(active, lease: CalendarReadLease()); try await j.confirm(active, receipt: completionReply(active), lease: CalendarReadLease())
+            let confirmed = try await j.load(); XCTAssertEqual(confirmed.entries.last?.command, active)
+            XCTAssertNotNil(confirmed.entries.first { $0.command == c })
+        }
+    }
+    func testRetentionPrunesConfirmedUndoTogetherWithItsOriginal() async throws {
+        let c = try command(), u = try undo(c), io = CompletionIO(), j = try journal(c, io, root())
+        let pair: [ChildTaskCompletionJournalState.Entry] = [.init(command: c, phase: .confirmed, receipt: try completionReply(c)), .init(command: u, phase: .confirmed, receipt: try completionReply(u))]
+        try seedHistory(pair + settledHistory(62), io: io)
+        let incoming = try retainedCommand("new-child"); try await j.enqueue(incoming, lease: CalendarReadLease())
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.count, 63)
+        XCTAssertFalse(saved.entries.contains { $0.command == c || $0.command == u })
+        _ = try ChildTaskCompletionJournalState(account: c.account, origin: c.origin, entries: saved.entries)
+    }
+    func testRetentionKeepsRecentlyConfirmedUndoGroupTogether() async throws {
+        let c = try command(), u = try undo(c), io = CompletionIO(), j = try journal(c, io, root()), history = try settledHistory(62)
+        try seedHistory([.init(command: c, phase: .confirmed, receipt: try completionReply(c))] + history + [.init(command: u, phase: .confirmed, receipt: try completionReply(u))], io: io)
+        let incoming = try retainedCommand("new-child"); try await j.enqueue(incoming, lease: CalendarReadLease())
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.count, 64)
+        XCTAssertTrue(saved.entries.contains { $0.command == c }); XCTAssertTrue(saved.entries.contains { $0.command == u })
+        XCTAssertFalse(saved.entries.contains { $0.command == history[0].command })
+    }
+    @MainActor func testRetentionFullPendingQueueShowsReviewWithoutSendingOrLosingWork() async throws {
+        let c = try command(), r = try read(c, fields: c.body["baseline"]!.object), scope = ChildTaskFieldClientScope(r.context), io = CompletionIO(), j = try journal(c, io, root()), peer = CompletionPeer()
+        let entries = try (0..<64).map { ChildTaskCompletionJournalState.Entry(command: try retainedCommand("pending-\($0)"), phase: .queued, receipt: nil) }
+        try seedHistory(entries, io: io); let before = io.rows
+        let model = ChildTaskCompletionRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {})
+        let result = await model.perform(read: r, key: c.body["node_key"]!.text, action: .complete)
+        XCTAssertNil(result); XCTAssertTrue(peer.calls.isEmpty); XCTAssertEqual(io.rows, before)
+        XCTAssertEqual(model.entries, entries); XCTAssertEqual(model.message, ChildTaskCompletionCapacityFailure().localizedDescription)
+    }
+    func testRetentionNeverEvictsStoppedRequestsToMakeRoom() async throws {
+        let c = try command(), io = CompletionIO(), j = try journal(c, io, root())
+        let entries = try (0..<64).map { index -> ChildTaskCompletionJournalState.Entry in
+            let command = try retainedCommand("stopped-\(index)")
+            return .init(command: command, phase: .closed, receipt: nil, resolution: try completionDecision(command))
+        }
+        try seedHistory(entries, io: io); let before = io.rows
+        do { try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("Protected stopped work fills the journal") } catch is ChildTaskCompletionCapacityFailure {} catch { XCTFail("Unexpected error: \(error)") }
+        XCTAssertEqual(io.rows, before)
+        do { try await j.enqueue(entries[0].command, lease: CalendarReadLease()); XCTFail("Cannot revive the closed identity") } catch let failure as ChildTaskCompletionFailure { XCTAssertEqual(failure.reason, .closed) }
+    }
+    func testRetentionWriteFailureDoesNotPartiallyEraseHistory() async throws {
+        let c = try command(), io = CompletionIO(), j = try journal(c, io, root()), history = try settledHistory(64)
+        try seedHistory(history, io: io); let before = io.rows; io.failWrite = true
+        do { try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("Write must fail") } catch {}
+        XCTAssertEqual(io.rows, before); io.failWrite = false
+        try await j.enqueue(c, lease: CalendarReadLease()); let saved = try await j.load()
+        XCTAssertEqual(saved.entries.count, 64); XCTAssertEqual(saved.entries.last?.command, c)
+        XCTAssertFalse(saved.entries.contains { $0.command == history[0].command })
+    }
+    func testRetentionInvalidUndoDoesNotPruneUnrelatedHistory() async throws {
+        let c = try command(), io = CompletionIO(), j = try journal(c, io, root())
+        try seedHistory(settledHistory(64), io: io); let before = io.rows, invalid = try undo(c)
+        do { try await j.enqueue(invalid, lease: CalendarReadLease()); XCTFail("Original proof must exist in the retained journal") } catch {}
+        XCTAssertEqual(io.rows, before)
+    }
+    func testRetentionRecencyUsesLateConfirmationAndAppliedResolution() async throws {
+        for resolution in [false, true] {
+            let c = try command(), io = CompletionIO(), j = try journal(c, io, root()), history = try settledHistory(63)
+            try seedHistory([.init(command: c, phase: .attempted, receipt: nil)] + history, io: io)
+            let proof = try completionReply(c)
+            if resolution { try await j.resolve(c, decision: completionDecision(c, receipt: proof), lease: CalendarReadLease()) }
+            else { try await j.confirm(c, receipt: proof, lease: CalendarReadLease()) }
+            let recent = try await j.load(); XCTAssertEqual(recent.entries.last?.command, c)
+            let incoming = try retainedCommand("new-child"); try await j.enqueue(incoming, lease: CalendarReadLease())
+            let saved = try await j.load(); XCTAssertTrue(saved.entries.contains { $0.command == c })
+            XCTAssertFalse(saved.entries.contains { $0.command == history[0].command })
+        }
+    }
+    func testRetentionConcurrentJournalsKeepAllNewRequestsAtCapacity() async throws {
+        let c = try command(), io = CompletionIO(), directory = try root(), j = try journal(c, io, directory), k = try journal(c, io, directory)
+        try seedHistory(settledHistory(64), io: io); var requests: [ChildTaskCompletionCommand] = []
+        for index in 0..<8 {
+            let first = try retainedCommand("incoming-a-\(index)"), second = try retainedCommand("incoming-b-\(index)")
+            requests += [first, second]
+            async let one: Void = j.enqueue(first, lease: CalendarReadLease()); async let two: Void = k.enqueue(second, lease: CalendarReadLease())
+            _ = try await (one, two)
+        }
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.count, 64)
+        XCTAssertEqual(Set(saved.entries.filter { $0.phase == .queued }.map(\.command.id)), Set(requests.map(\.id)))
+        XCTAssertEqual(saved.entries.filter { $0.phase == .confirmed }.count, 48)
+    }
+}

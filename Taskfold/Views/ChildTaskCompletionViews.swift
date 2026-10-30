@@ -5,6 +5,14 @@ private struct ChildCompletionReadRequest: Hashable {
     let retry: UUID
 }
 
+private struct ChildCompletionTargetsRequest: Hashable {
+    let scope: ChildTaskFieldClientScope?
+    let requests: [String]
+    let revision: UUID
+    let online: Bool
+    let enabled: Bool
+}
+
 struct SavedChildTaskCompletionsLink: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
@@ -117,18 +125,36 @@ struct ChildTaskCompletionRecoveryView: View {
     @State private var reviewing: ChildTaskCompletionJournalState.Entry?
     @State private var failure: String?
     @State private var targetReadRevision = UUID()
+    @State private var targetNames: [String: String] = [:]
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    private var targetRequest: ChildCompletionTargetsRequest {
+        .init(scope: scope, requests: modelScope == scope ? (model?.entries.map(\.command.id) ?? []) : [], revision: targetReadRevision, online: store.online, enabled: store.childTaskFieldEditingEnabled)
+    }
+    private var orderedEntries: [ChildTaskCompletionJournalState.Entry] {
+        func priority(_ phase: ChildTaskCompletionJournalState.Phase) -> Int {
+            switch phase { case .queued, .attempted: return 0; case .closed: return 1; case .confirmed: return 2 }
+        }
+        return (model?.entries ?? []).enumerated().sorted {
+            let left = priority($0.element.phase), right = priority($1.element.phase)
+            if left != right { return left < right }
+            return left == 0 ? $0.offset < $1.offset : $0.offset > $1.offset
+        }.map(\.element)
+    }
     var body: some View {
         List {
-            Section { Text("Each saved action belongs to its original account and subtask. Retrying uses the same request.").foregroundStyle(.secondary) }
+            Section {
+                Text("Each saved action belongs to its original account and subtask. Retrying uses the same request.").foregroundStyle(.secondary)
+                Text("Older confirmations are cleared automatically. Pending and stopped actions stay here until reviewed.").font(.footnote).foregroundStyle(.secondary)
+            }
             if let model, scope != nil, scope == modelScope {
                 if let message = model.message { Section { ChildCompletionNotice(message: message).accessibilityIdentifier("childCompletionRecoveryStatus") } }
                 if model.loaded, model.entries.isEmpty { ContentUnavailableView("All clear", systemImage: "checkmark.circle", description: Text("Saved subtask actions will appear here.")) }
-                ForEach(model.entries, id: \.command.id) { entry in
+                ForEach(orderedEntries, id: \.command.id) { entry in
                     Section {
                         Label(entry.command.isUndo ? "Undo subtask action" : entry.command.body["action"] == .string("complete") ? "Complete subtask" : "Reopen subtask", systemImage: entry.command.isUndo ? "arrow.uturn.backward" : "checkmark.circle")
                             .font(.headline)
-                        ChildCompletionTargetLabel(command: entry.command, revision: targetReadRevision)
+                        Text(targetNames[entry.command.id] ?? "Review the current subtask when connected.")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).privacySensitive()
                         Text(status(entry.phase)).foregroundStyle(.secondary)
                         if entry.phase == .queued || entry.phase == .attempted {
                             Button(entry.phase == .queued ? "Send saved action" : "Retry original action", systemImage: "arrow.up.circle") { Task { await model.send(entry.command) } }
@@ -155,7 +181,8 @@ struct ChildTaskCompletionRecoveryView: View {
             do { let value = try store.childTaskCompletionRecoveryModel(); model = value; modelScope = captured; await value.load() }
             catch { guard scope == captured else { return }; failure = "Saved actions could not be loaded. Your work is kept." }
         }
-        .onDisappear { model?.close(); model = nil; modelScope = nil; stopping = nil; reviewing = nil }
+        .task(id: targetRequest) { await readTargetNames(targetRequest) }
+        .onDisappear { targetNames = [:]; model?.close(); model = nil; modelScope = nil; stopping = nil; reviewing = nil }
         .onChange(of: scope) { _, _ in stopping = nil; reviewing = nil }
         .onChange(of: model?.message) { _, _ in targetReadRevision = UUID() }
         .alert("Check this action and stop it if pending?", isPresented: Binding(get: { stopping != nil }, set: { if !$0 { stopping = nil } })) {
@@ -169,6 +196,27 @@ struct ChildTaskCompletionRecoveryView: View {
             if let entry = reviewing, let model, scope == modelScope {
                 WorkflowShell(title: "Review subtask action") { ChildCompletionCurrentReview(entry: entry, model: model) }
             }
+        }
+    }
+    /// Fetch each parent once per live presentation revision, rather than once
+    /// per saved action. Names remain in scoped memory and are never journaled.
+    private func readTargetNames(_ request: ChildCompletionTargetsRequest) async {
+        targetNames = [:]
+        guard let captured = request.scope, captured == modelScope, request.online, request.enabled else { return }
+        let commands = orderedEntries.map(\.command)
+        var visited: Set<String> = []
+        for command in commands {
+            let root = command.body["task_id"]!.text
+            guard visited.insert(root).inserted else { continue }
+            do {
+                let read = try await store.readChildTaskRecords(root)
+                guard request == targetRequest, scope == captured, !Task.isCancelled else { return }
+                for candidate in commands where candidate.body["task_id"] == .string(root) {
+                    guard read.context.root["task_generation"] == candidate.body["task_generation"], read.context.root["project_id"] == candidate.body["project_id"],
+                          let node = read.nodes[candidate.body["node_key"]!.text], candidate.body["incarnation"] == .string(node.incarnation) else { continue }
+                    targetNames[candidate.id] = node.fields["title"]?.text ?? "Subtask"
+                }
+            } catch { guard request == targetRequest, scope == captured, !Task.isCancelled else { return } }
         }
     }
     private func status(_ phase: ChildTaskCompletionJournalState.Phase) -> String {
@@ -225,13 +273,24 @@ private struct ChildCompletionCurrentReview: View {
                 } else if entry.phase == .queued || entry.phase == .attempted {
                     Section {
                         Text("Sending keeps the original saved action. Current values do not replace it; the service will check whether it can still apply.")
-                        Button(entry.phase == .attempted ? "Retry original action" : "Send saved action", systemImage: "arrow.up.circle") { Task { await model.send(entry.command) } }
-                            .disabled(model.busy || !store.permitsChildTaskCompletionRequest(entry.command, sending: true))
+                        Button(entry.phase == .attempted ? "Retry original action" : "Send saved action", systemImage: "arrow.up.circle") {
+                            Task {
+                                await model.send(entry.command)
+                                if model.entries.contains(where: { $0.command == entry.command && $0.phase == .confirmed }) { dismiss() }
+                            }
+                        }.disabled(model.busy || !store.permitsChildTaskCompletionRequest(entry.command, sending: true))
+                            .accessibilityIdentifier("reviewSendChildCompletion")
                     }
                 } else {
                     Section {
                         Text("Undo restores the completion state from before this saved action. It does not change other subtask fields.")
-                        Button("Undo this action", systemImage: "arrow.uturn.backward") { Task { await model.undo(entry, read: read) } }.disabled(model.busy || reviewProblem != nil || !store.childTaskCompletionEnabled)
+                        Button("Undo this action", systemImage: "arrow.uturn.backward") {
+                            Task {
+                                await model.undo(entry, read: read)
+                                if model.entries.contains(where: { $0.command.body["undo_of"] == .string(entry.command.id) && $0.phase == .confirmed }) { dismiss() }
+                            }
+                        }.disabled(model.busy || reviewProblem != nil || !store.childTaskCompletionEnabled)
+                            .accessibilityIdentifier("reviewUndoChildCompletion")
                     }
                 }
                 if let message = model.message { ChildCompletionNotice(message: message) }
@@ -267,33 +326,5 @@ private struct ChildCompletionNotice: View {
                 announcement.accessibilitySpeechAnnouncementPriority = .high
                 AccessibilityNotification.Announcement(announcement).post()
             }
-    }
-}
-
-/// Names come only from a current scoped read, never from the durable receipt.
-private struct ChildCompletionTargetLabel: View {
-    let command: ChildTaskCompletionCommand
-    let revision: UUID
-    @Environment(Store.self) private var store
-    @Environment(\.scenePhase) private var phase
-    @State private var name: String?
-    @State private var captured: ChildTaskFieldClientScope?
-    private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
-    var body: some View {
-        Text(scope == nil ? "Open the original workspace to review this subtask." : captured == scope ? (name ?? "Review the current subtask when connected.") : "Review the current subtask when connected.")
-            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            .task(id: ChildCompletionReadRequest(scope: scope, retry: revision)) {
-                name = nil; captured = nil
-                guard let current = scope, store.online, store.childTaskFieldEditingEnabled else { return }; captured = current
-                do {
-                    let read = try await store.readChildTaskRecords(command.body["task_id"]!.text)
-                    guard scope == current, !Task.isCancelled,
-                          read.context.root["task_generation"] == command.body["task_generation"], read.context.root["project_id"] == command.body["project_id"],
-                          let node = read.nodes[command.body["node_key"]!.text], command.body["incarnation"] == .string(node.incarnation) else { return }
-                    name = node.fields["title"]?.text ?? "Subtask"
-                } catch { }
-            }
-            .onDisappear { name = nil; captured = nil }
-            .privacySensitive()
     }
 }

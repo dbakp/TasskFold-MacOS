@@ -947,6 +947,107 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: value)], timeout: 15), .completed, app.debugDescription)
         childPress(value)
     }
+    @MainActor private func completionMessage(_ text: String, _ app: XCUIApplication, recovery: Bool = false) {
+        let status = app.staticTexts[recovery ? "childCompletionRecoveryStatus" : "childCompletionStatus"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", text, text), object: status)], timeout: 15), .completed, app.debugDescription)
+        childReveal(status, app, diagnosticText: true)
+    }
+    @MainActor private func stopSavedCompletion(_ app: XCUIApplication) {
+        let stop = app.buttons["Check and stop if pending"]; childReveal(stop, app); childPress(stop)
+        childPress(app.buttons["Check and stop"])
+    }
+    @MainActor func testChildCompletionNativeReopenAndUndoRestoreOriginalTime() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childHomePress("childNativeEditor", app)
+        let action = app.buttons["childCompletionAction"]; completionReadyPress(action, app); completionMessage("Completion confirmed", app)
+        childDone(app); childProbe(app, "completionConfirmed=1 completionClosed=0 completionWrites=1 completionRequests=1 done=true")
+        let probe = app.staticTexts["childNativeProbe"], contents = probe.label + (probe.value as? String ?? "")
+        let stamp = try XCTUnwrap(contents.components(separatedBy: "stamp=").last?.components(separatedBy: .whitespacesAndNewlines).first)
+        XCTAssertNotEqual(stamp, "none"); XCTAssertTrue(stamp.contains("T"))
+        childHomePress("childNativeEditor", app)
+        XCTAssertTrue(action.waitForExistence(timeout: 12)); XCTAssertTrue(action.label.contains("Reopen"), app.debugDescription)
+        completionReadyPress(action, app); completionMessage("Reopened", app)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "Subtask reopened with current state"; shot.lifetime = .keepAlways; add(shot)
+        completionReadyPress(app.buttons["childCompletionUndo"], app); completionMessage("Undo confirmed", app)
+        childDone(app); childProbe(app, "completionConfirmed=3 completionClosed=0 completionWrites=3 completionRequests=3 done=true")
+        childProbe(app, "stamp=" + stamp)
+        app.terminate(); try childOpen(app, reset: false); childProbe(app, "stamp=" + stamp)
+        childProbe(app, "completionConfirmed=3 completionClosed=0 completionWrites=3 completionRequests=3 done=true")
+    }
+    @MainActor func testChildCompletionNativeStopReviewFreshReplacementAndNoOp() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childHomePress("childNativeQueueCompletion", app)
+        childProbe(app, "completionQueued=1 completionAttempted=0 completionConfirmed=0 completionClosed=0 completionWrites=0 completionRequests=0")
+        childHomePress("childNativeCompletionRecovery", app); stopSavedCompletion(app)
+        completionMessage("stopped before applying", app, recovery: true)
+        XCTAssertTrue(childSavedText("Stopped · cannot send again", app).waitForExistence(timeout: 12))
+        childDone(app); childProbe(app, "completionClosed=1 completionWrites=0 completionRequests=0 done=false")
+        childProbe(app, "completionCloses=1")
+        app.terminate(); try childOpen(app, reset: false)
+        childHomePress("childNativeCompletionRecovery", app)
+        let review = app.buttons["Review a fresh action"]; childReveal(review, app); childPress(review)
+        XCTAssertTrue(childSavedText("Prepare the review", app).waitForExistence(timeout: 12), app.debugDescription)
+        let save = app.buttons["Save fresh action"]; childReveal(save, app); childPress(save)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildCompletion-")).firstMatch
+        childReveal(send, app)
+        XCTAssertTrue(send.waitForExistence(timeout: 12), app.debugDescription)
+        childDone(app); childProbe(app, "completionQueued=1 completionAttempted=0 completionConfirmed=0 completionClosed=1 completionWrites=0 completionRequests=0")
+        childHomePress("childNativeCompletionRecovery", app)
+        let current = app.buttons["Review current subtask"]; childReveal(current, app); childPress(current)
+        XCTAssertTrue(childSavedText("Prepare the review", app).waitForExistence(timeout: 12), app.debugDescription)
+        completionReadyPress(app.buttons["reviewSendChildCompletion"], app)
+        completionMessage("Completion confirmed", app, recovery: true)
+        childReveal(review, app, towardTop: true); childPress(review)
+        XCTAssertTrue(childSavedText("This subtask is already completed. No new action is needed.", app).waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertFalse(save.isEnabled, app.debugDescription)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "Closed action reviews current completed subtask without another write"; shot.lifetime = .keepAlways; add(shot)
+        childDone(app); childDone(app)
+        childProbe(app, "completionQueued=0 completionAttempted=0 completionConfirmed=1 completionClosed=1 completionWrites=1 completionRequests=1 done=true")
+        app.terminate(); try childOpen(app, reset: false)
+        childProbe(app, "completionConfirmed=1 completionClosed=1 completionWrites=1 completionRequests=1 done=true")
+    }
+    @MainActor func testChildCompletionNativeCheckAppliedAfterLostReply() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-completion-lose-reply")
+        childHomePress("childNativeEditor", app); completionReadyPress(app.buttons["childCompletionAction"], app)
+        completionMessage("couldn’t be confirmed", app); childDone(app)
+        childProbe(app, "completionAttempted=1 completionConfirmed=0 completionClosed=0 completionWrites=1 completionRequests=1")
+        app.terminate(); try childOpen(app, reset: false)
+        childHomePress("childNativeCompletionRecovery", app); stopSavedCompletion(app)
+        completionMessage("already applied", app, recovery: true)
+        XCTAssertTrue(childSavedText("Confirmed · task may have changed since", app).waitForExistence(timeout: 12), app.debugDescription)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "Uncertain completion resolves to its original confirmation"; shot.lifetime = .keepAlways; add(shot)
+        childDone(app)
+        childProbe(app, "completionAttempted=0 completionConfirmed=1 completionClosed=0 completionWrites=1 completionRequests=1 done=true")
+        childProbe(app, "completionCloses=1")
+    }
+    @MainActor private func completionProbeInteger(_ name: String, _ app: XCUIApplication) throws -> Int {
+        let probe = app.staticTexts["childNativeProbe"], text = probe.label + (probe.value as? String ?? "")
+        let value = text.components(separatedBy: name + "=").last?.components(separatedBy: .whitespacesAndNewlines).first
+        return try XCTUnwrap(value.flatMap(Int.init), "Missing synthetic probe value: " + name)
+    }
+    @MainActor func testChildCompletionNativeSustainedHistoryAndBatchedNames() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
+        childHomePress("childNativeExerciseHistory", app)
+        let probe = app.staticTexts["childNativeProbe"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "(label CONTAINS %@ AND label CONTAINS %@) OR (value CONTAINS %@ AND value CONTAINS %@)", "completionConfirmed=64 completionClosed=0 completionWrites=70 completionRequests=70 done=false", "history=70", "completionConfirmed=64 completionClosed=0 completionWrites=70 completionRequests=70 done=false", "history=70"), object: probe)], timeout: 120), .completed, app.debugDescription)
+        childProbe(app, "completionConfirmed=64 completionClosed=0 completionWrites=70 completionRequests=70 done=false")
+        let before = try completionProbeInteger("childReads", app)
+        childHomePress("childNativeCompletionRecovery", app)
+        XCTAssertTrue(childSavedText("Prepare the review", app).waitForExistence(timeout: 15), app.debugDescription)
+        #if os(iOS)
+        let list = try XCTUnwrap(app.collectionViews.allElementsBoundByIndex.last { $0.exists && $0.isHittable })
+        list.swipeUp(); list.swipeUp()
+        #else
+        app.scrollViews.allElementsBoundByIndex.last?.scroll(byDeltaX: 0, deltaY: -700)
+        #endif
+        childDone(app); childProbe(app, "childReads=\(before + 1)")
+        app.terminate(); try childOpen(app, reset: false)
+        childProbe(app, "completionConfirmed=64 completionClosed=0 completionWrites=70 completionRequests=70 done=false")
+        childHomePress("childNativeEditor", app); completionReadyPress(app.buttons["childCompletionUndo"], app)
+        completionMessage("Undo confirmed", app)
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = "Recent Undo survives sustained completion history"; shot.lifetime = .keepAlways; add(shot)
+        childDone(app); childProbe(app, "completionConfirmed=64 completionClosed=0 completionWrites=71 completionRequests=71 done=true")
+    }
     @MainActor func testChildCompletionNativeUndoPreservesUnsentFields() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
         childHomePress("childNativeEditor", app)
