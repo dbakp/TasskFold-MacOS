@@ -13,6 +13,168 @@ private final class StructureJournalIO: CalendarSecureItemIO, @unchecked Sendabl
     var contents: [String: Data] { lock.lock(); defer { lock.unlock() }; return rows }
     func replace(_ data: Data) { lock.lock(); defer { lock.unlock() }; for key in rows.keys { rows[key] = data } }
 }
+
+extension ChildTaskStructureRecoveryTests {
+    @MainActor private func composerDraft(_ title: String = "", moving: String? = nil) throws -> ChildTaskStructureDraft {
+        let read = try presentationRead(scope(command()))
+        let draft = try ChildTaskStructureDraft(read: read, moving: moving)
+        var body = draft.body; body["title"] = .string(title)
+        return try .init(account: draft.account, origin: draft.origin, body: body)
+    }
+    private func draftJournal(_ draft: ChildTaskStructureDraft, _ io: any CalendarSecureItemIO, _ directory: URL) throws -> ChildTaskStructureDraftJournal {
+        try .init(account: draft.account, origin: draft.origin, io: io, coordinationDirectory: directory.appendingPathComponent("locks"), removalDirectory: directory.appendingPathComponent("removal"))
+    }
+    @MainActor func testComposerDraftReopensExactUnfinishedTextWithoutQueuingAction() async throws {
+        let draft = try composerDraft(" \ncafe\u{0301} unfinished \n"), io = StructureJournalIO(), root = try directory()
+        let first = try draftJournal(draft, io, root)
+        try await first.save(draft, replacing: nil, lease: CalendarReadLease())
+        let second = try draftJournal(draft, io, root), reopened = try await second.load()
+        XCTAssertEqual(reopened.entries, [draft]); XCTAssertTrue(reopened.entries[0].body["title"]!.text.utf8.elementsEqual(draft.body["title"]!.text.utf8))
+        let commands = try journal(command(), io, root)
+        let queued = try await commands.load(); XCTAssertTrue(queued.entries.isEmpty)
+        XCTAssertFalse(String(describing: draft).contains("unfinished")); XCTAssertFalse(String(reflecting: reopened).contains("unfinished"))
+    }
+    @MainActor func testComposerBlankAndUnplaceableDraftsPersistButCannotBecomeCommands() async throws {
+        let read = try presentationRead(scope(command())), draft = try ChildTaskStructureDraft(read: read)
+        let io = StructureJournalIO(), j = try draftJournal(draft, io, directory())
+        try await j.save(draft, replacing: nil, lease: CalendarReadLease())
+        XCTAssertThrowsError(try draft.reviewedCommand(read))
+        var body = draft.body; body["title"] = .string("A title"); body["index"] = .number(999)
+        let unplaced = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: body)
+        try await j.save(unplaced, replacing: draft.token, lease: CalendarReadLease())
+        XCTAssertThrowsError(try unplaced.reviewedCommand(read)); let state = try await j.load(); XCTAssertEqual(state.entries, [unplaced])
+    }
+    @MainActor func testComposerReviewUsesStableIdentityAndRequiresUnchangedHierarchy() throws {
+        let captured = scope(try command()), read = try presentationRead(captured), initial = try ChildTaskStructureDraft(read: read)
+        var body = initial.body; body["title"] = .string("Reviewed title")
+        let draft = try ChildTaskStructureDraft(account: initial.account, origin: initial.origin, body: body)
+        let candidate = try draft.reviewedCommand(read)
+        XCTAssertEqual(candidate.id, draft.id); XCTAssertEqual(candidate.body["node"]?.object["title"], body["title"])
+        XCTAssertThrowsError(try draft.reviewedCommand(presentationRead(captured, revision: 3)))
+        // Session identities are deliberately not durable authority. A future
+        // live editor still needs its own lease and current access checks.
+        XCTAssertEqual(try draft.reviewedCommand(presentationRead(scope(command()))).id, draft.id)
+        for key in ["task_id", "task_generation", "project_id"] {
+            var changed = body; changed[key] = .string(UUID().uuidString.lowercased())
+            let other = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: changed)
+            XCTAssertThrowsError(try other.reviewedCommand(read), key)
+        }
+        XCTAssertThrowsError(try ChildTaskStructureDraft(account: draft.account, origin: "https://other.test", body: body).reviewedCommand(read))
+    }
+    @MainActor func testComposerMoveAndDestinationRefuseRecreatedIncarnations() throws {
+        let read = try presentationRead(scope(command())), initial = try ChildTaskStructureDraft(read: read, moving: "a")
+        var body = initial.body; body["parent_key"] = .string("b"); body["parent_incarnation"] = .string(read.records.nodes["b"]!.incarnation); body["index"] = .number(0)
+        let draft = try ChildTaskStructureDraft(account: initial.account, origin: initial.origin, body: body)
+        XCTAssertEqual(try draft.reviewedCommand(read).action, .move)
+        for key in ["incarnation", "parent_incarnation"] {
+            var changed = body; changed[key] = .string(UUID().uuidString.lowercased())
+            let other = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: changed)
+            XCTAssertThrowsError(try other.reviewedCommand(read), key)
+        }
+    }
+    @MainActor func testComposerTwoWindowsCannotOverwriteOrDiscardNewerDraft() async throws {
+        let initial = try composerDraft("First"), io = StructureJournalIO(), root = try directory()
+        let a = try draftJournal(initial, io, root), b = try draftJournal(initial, io, root)
+        try await a.save(initial, replacing: nil, lease: CalendarReadLease())
+        var body = initial.body; body["title"] = .string("Second window")
+        let next = try ChildTaskStructureDraft(account: initial.account, origin: initial.origin, body: body)
+        try await b.save(next, replacing: initial.token, lease: CalendarReadLease())
+        for expected in [nil, initial.token] as [UUID?] {
+            do { try await a.save(initial, replacing: expected, lease: CalendarReadLease()); XCTFail("Stale overwrite") } catch { }
+        }
+        do { try await a.discard(initial, lease: CalendarReadLease()); XCTFail("Stale discard") } catch { }
+        let state = try await b.load(); XCTAssertEqual(state.entries, [next])
+        try await b.discard(next, lease: CalendarReadLease())
+        do { try await a.save(initial, replacing: initial.token, lease: CalendarReadLease()); XCTFail("Recreated removed draft") } catch { }
+    }
+    @MainActor func testComposerRetryIsIdempotentAndCannotRetargetSameID() async throws {
+        let draft = try composerDraft("Kept"), io = StructureJournalIO(), j = try draftJournal(draft, io, directory())
+        try await j.save(draft, replacing: nil, lease: CalendarReadLease())
+        try await j.save(draft, replacing: nil, lease: CalendarReadLease())
+        for key in ["task_id", "task_generation", "project_id"] {
+            var body = draft.body; body[key] = .string(UUID().uuidString.lowercased())
+            let changed = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: body)
+            do { try await j.save(changed, replacing: draft.token, lease: CalendarReadLease()); XCTFail("Retargeted draft") } catch { }
+        }
+        let state = try await j.load(); XCTAssertEqual(state.entries, [draft])
+    }
+    @MainActor func testComposerCancelledLeaseAndFailedWriteKeepPriorDraft() async throws {
+        let draft = try composerDraft("Kept"), io = StructureJournalIO(), j = try draftJournal(draft, io, directory())
+        try await j.save(draft, replacing: nil, lease: CalendarReadLease())
+        var body = draft.body; body["title"] = .string("Not saved")
+        let next = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: body)
+        let lease = CalendarReadLease(); lease.cancel()
+        do { try await j.save(next, replacing: draft.token, lease: lease); XCTFail("Cancelled write") } catch { XCTAssertTrue(error is CancellationError) }
+        io.failWrite = true
+        do { try await j.save(next, replacing: draft.token, lease: CalendarReadLease()); XCTFail("Failed write") } catch { }
+        io.failWrite = false
+        let state = try await j.load(); XCTAssertEqual(state.entries, [draft])
+    }
+    @MainActor func testComposerAccountRemovalPreventsRecreationAndCleanupNeedsNoKey() async throws {
+        let draft = try composerDraft("Kept"), root = try directory(), secret = SymmetricKey(size: .bits256)
+        let io = ReviewedTeamCommandFileIO<ChildTaskStructureDraftState>(directory: root.appendingPathComponent("private"), account: draft.account, origin: draft.origin, encryptionKey: { secret })
+        let j = try draftJournal(draft, io, root)
+        try await j.save(draft, replacing: nil, lease: CalendarReadLease())
+        try AccountRemovalDisk(directory: root.appendingPathComponent("removal"), account: draft.account).removeCache()
+        do { try await j.save(draft, replacing: nil, lease: CalendarReadLease()); XCTFail("Removed account write") } catch { }
+        let unavailable = ReviewedTeamCommandFileIO<ChildTaskStructureDraftState>(directory: root.appendingPathComponent("private"), account: draft.account, origin: draft.origin, encryptionKey: { throw URLError(.userAuthenticationRequired) })
+        try await draftJournal(draft, unavailable, root).removeAccount()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: io.file.path))
+    }
+    @MainActor func testComposerCiphertextScopeAndPermissions() async throws {
+        let draft = try composerDraft("Confidential composer title"), root = try directory(), secret = SymmetricKey(size: .bits256)
+        let io = ReviewedTeamCommandFileIO<ChildTaskStructureDraftState>(directory: root.appendingPathComponent("private"), account: draft.account, origin: draft.origin, encryptionKey: { secret })
+        try await draftJournal(draft, io, root).save(draft, replacing: nil, lease: CalendarReadLease())
+        let encrypted = try Data(contentsOf: io.file)
+        XCTAssertNil(encrypted.range(of: Data("Confidential composer title".utf8)))
+        XCTAssertEqual((try FileManager.default.attributesOfItem(atPath: io.file.path)[.posixPermissions] as? NSNumber)?.intValue, 0o600)
+        let copied = ReviewedTeamCommandFileIO<ChildTaskStructureDraftState>(directory: root.appendingPathComponent("private"), account: draft.account, origin: "https://other.test", encryptionKey: { secret })
+        let other = try ChildTaskStructureDraftJournal(account: draft.account, origin: "https://other.test", io: copied, coordinationDirectory: root.appendingPathComponent("locks"), removalDirectory: root.appendingPathComponent("removal"))
+        do { _ = try await other.load(); XCTFail("Cross-origin ciphertext") } catch { }
+        var corrupt = encrypted; corrupt[corrupt.count / 2] ^= 1; try corrupt.write(to: io.file)
+        do { _ = try await draftJournal(draft, io, root).load(); XCTFail("Corrupt ciphertext") } catch { }
+    }
+    @MainActor func testComposerCapacityNeverPrunesUnsentWork() async throws {
+        let draft = try composerDraft("First"), io = StructureJournalIO(), j = try draftJournal(draft, io, directory())
+        var expected: [ChildTaskStructureDraft] = []
+        for _ in 0..<ChildTaskStructureDraftState.maximumEntries {
+            var body = draft.body; body["request_id"] = .string(UUID().uuidString.lowercased())
+            let next = try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: body)
+            try await j.save(next, replacing: nil, lease: CalendarReadLease()); expected.append(next)
+        }
+        do { try await j.save(draft, replacing: nil, lease: CalendarReadLease()); XCTFail("Silently evicted work") } catch { }
+        let state = try await j.load(); XCTAssertEqual(state.entries, expected)
+    }
+    @MainActor func testComposerWireRejectsUnknownDuplicateAndRoundedNumbers() throws {
+        let draft = try composerDraft("Exact"), state = try ChildTaskStructureDraftState(account: draft.account, origin: draft.origin, entries: [draft])
+        let data = try JSONEncoder().encode(state), text = String(decoding: data, as: UTF8.self)
+        XCTAssertEqual(try ChildTaskStructureDraftState(data: data), state)
+        for pair in [("\"index\":0", "\"index\":0.00000000000000000001"), ("\"version\":1", "\"version\":1,\"version\":1"), ("\"structure_revision\":2", "\"structure_revision\":2.000000000000000001")] {
+            let changed = text.replacingOccurrences(of: pair.0, with: pair.1)
+            XCTAssertNotEqual(text, changed); XCTAssertThrowsError(try ChildTaskStructureDraftState(data: Data(changed.utf8)))
+        }
+        var raw = try JSONDecoder().decode([String: JSON].self, from: data); raw["extra"] = .null
+        XCTAssertThrowsError(try ChildTaskStructureDraftState(data: encode(raw)))
+        XCTAssertThrowsError(try ChildTaskStructureDraftState(account: draft.account, origin: draft.origin, entries: [draft, draft]))
+        var body = draft.body; body["title"] = .string(String(repeating: "a", count: 40_001))
+        XCTAssertThrowsError(try ChildTaskStructureDraft(account: draft.account, origin: draft.origin, body: body))
+    }
+    @MainActor func testComposerConcurrentWindowsKeepIndependentDrafts() async throws {
+        let first = try composerDraft("First window"), second = try composerDraft("Second window"), io = StructureJournalIO(), root = try directory()
+        let a = try draftJournal(first, io, root), b = try draftJournal(first, io, root)
+        async let one: Void = a.save(first, replacing: nil, lease: CalendarReadLease())
+        async let two: Void = b.save(second, replacing: nil, lease: CalendarReadLease())
+        _ = try await (one, two)
+        let state = try await a.load(); XCTAssertEqual(Set(state.entries.map(\.id)), [first.id, second.id])
+    }
+    @MainActor func testComposerUnreadableStorageIsNeverOverwrittenByNewDraft() async throws {
+        let draft = try composerDraft("Keep original"), io = StructureJournalIO(), j = try draftJournal(draft, io, directory())
+        try await j.save(draft, replacing: nil, lease: CalendarReadLease())
+        let corrupt = Data("unsupported private draft format".utf8); io.replace(corrupt)
+        do { try await j.save(composerDraft("New"), replacing: nil, lease: CalendarReadLease()); XCTFail("Replaced unreadable work") } catch { }
+        XCTAssertEqual(Array(io.contents.values), [corrupt])
+    }
+}
 private func structureReply(_ c: ChildTaskStructureCommand, replayed: Bool = false) throws -> ChildTaskStructureReceipt {
     var raw = c.body.filter { ChildTaskStructureCommand.scopeKeys.contains($0.key) || ["request_id", "action"].contains($0.key) }
     raw["before_revision"] = c.body["structure_revision"]; raw["after_revision"] = .number(Double(c.body["structure_revision"]!.integer + 1))

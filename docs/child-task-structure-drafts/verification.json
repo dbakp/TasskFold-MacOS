@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-30",
+  "platformOwnedSources": "mac",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "938a2dec93cef2caabb7673a38086b10905452a55b27081b44d7a20fcfc0e951",
+    "Taskfold/Core/Store.swift": "015fd1406f35fd26609fdf8aa7658ec440fdc8bb9ec209b1c3009109f5ac4c48",
+    "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "00bf93997081ec257766c3380c3f848f32333a77f7b480de8250c669f31153c2",
+    "Package.swift": "8ed954fa591f6121491675784e097c5d534ce4e7e2bd3451f4c0b7dcaafcc62c",
+    "Taskfold.xcodeproj/project.pbxproj": "616a382bc425a5766d8f475b9ebfa0dd86791257d78a2e4a3c2e824de4664521"
+  },
+  "namespaceAdjustedBuiltHostSHA256": {
+    "Taskfold/Core/ChildTaskStructureDraft.swift": "938a2dec93cef2caabb7673a38086b10905452a55b27081b44d7a20fcfc0e951",
+    "Taskfold/Core/Store.swift": "630c0cc10402d28d40c4681b55b00e3ccf818338c3cecd1bef6e37b5d00442b1"
+  },
+  "coreSelectedTestCount": 115,
+  "corePassedTests": 115,
+  "coreFailedTests": 0,
+  "suites": {
+    "ChildTaskStructureCommandTests": 29,
+    "ChildTaskStructureReadTests": 13,
+    "ChildTaskStructureRecoveryTests": 73
+  },
+  "newComposerTests": 13,
+  "earlierMacPhases": [
+    {
+      "tests": 71,
+      "failed": 1,
+      "cause": "Test retained source position 1 for empty new destination; valid review requires explicitly choosing position 0."
+    },
+    {
+      "tests": 71,
+      "failed": 0,
+      "scope": "Same-sized intermediate suite after correcting test setup; before two more draft regressions were added."
+    }
+  ],
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "developmentSignaturesVerified": true,
+  "sourceIncludedInAppCompilerInput": true,
+  "normalFeatureFlags": {
+    "TaskfoldChildRecordWritesEnabled": null,
+    "TaskfoldChildRecordReadsEnabled": null,
+    "TaskfoldChildRecordCompletionsEnabled": null,
+    "TaskfoldChildStructureReadsEnabled": null,
+    "TaskfoldChildStructureWritesEnabled": null
+  },
+  "nativeComposerConnected": false,
+  "nativeComposerAcceptance": false,
+  "storeDeletionRuntimeNewlyAccepted": false,
+  "newSimulators": 0,
+  "newSQL": false,
+  "remaining": [
+    "Native checkpoints, explicit Resume/Discard and editor-scope lifecycle",
+    "Safe promotion into saved actions with stable identity after uncertain local writes",
+    "Phone/iPad/Mac, speech, current-access and competing-window acceptance",
+    "Independent-record migration, older-data adoption and remaining Px work"
+  ]
+}

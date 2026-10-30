@@ -1197,3 +1197,9 @@ The selected-node caption and chooser now wrap at the largest accessibility size
 - [ ] Mac native/spoken and broader account/window/failure/concurrent acceptance, structural-composer drafts and independent-record migration remain open. Ordinary flags and user deferrals are unchanged.
 
 [Source bindings, captures and retained failed phase](child-task-field-selection/README.md).
+
+## 2026-10-30 — organizer draft storage foundation
+
+- [x] Independently owned encrypted storage for unfinished Add/Move composer content, exact text, current identity/revision review, stale-window protection, keyless account cleanup and no automatic task-action queueing.
+- [x] Each repo: 115 hierarchy Core checks pass, including 13 composer-draft cases. Earlier failed setup and intermediate/final phases are retained in [draft evidence](child-task-structure-drafts/README.md).
+- [ ] Connect native checkpoints, Resume/Discard and safe promotion to saved actions; closing the current composer can still lose unsaved text. Phone/iPad/Mac lifecycle, spoken and broader migration acceptance remain open.

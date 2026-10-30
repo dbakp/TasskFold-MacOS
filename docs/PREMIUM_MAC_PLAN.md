@@ -9849,3 +9849,5 @@ The maintained [Px progress dashboard](PX_PROGRESS.html) now summarizes current 
 
 
 Readable subtask selection: the Mac editor now owns the same wrapping selected title and ordered native selection sheet, with nesting, selected trait, source-scope guards and retained private sessions. Current Mac app/test build and signatures pass. Phone/iPad current largest-text functional/visual scopes pass; no Mac runtime or speech pass is inferred. [Exact evidence](child-task-field-selection/README.md).
+
+2026-10-30: Organizer draft storage now preserves exact unfinished content privately, serializes competing windows and fences removed accounts; 115 selected hierarchy Core checks pass (13 new draft cases). The Mac screen is not yet connected, so closing an unsaved composer can still lose text. Native Resume/Discard/action promotion and broader lifecycle/spoken/migration acceptance remain open. See [storage evidence](child-task-structure-drafts/README.md).

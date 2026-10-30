@@ -409,6 +409,22 @@ final class Store {
         return try .init(account: account, origin: origin, io: io,
                          coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildStructureCommandLocks", isDirectory: true), removalDirectory: root)
     }
+    func childTaskStructureDraftJournal(account: String, origin: String) throws -> ChildTaskStructureDraftJournal {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child hierarchy drafts", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskStructureDraftState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildStructureDraftLocks", isDirectory: true), removalDirectory: root)
+    }
     func permitsChildTaskStructureRequest(_ command: ChildTaskStructureCommand, sending: Bool) -> Bool {
         permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskStructureEditingEnabled, sending: sending)
     }
@@ -1677,6 +1693,7 @@ final class Store {
         try await childTaskFieldJournal(account:account,origin:command.origin).removeAccount()
         try await childTaskCompletionJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskStructureJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskStructureDraftJournal(account: account, origin: command.origin).removeAccount()
         try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
         try await projectAdoptionVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
@@ -5207,6 +5224,7 @@ extension Store {
             try await childTaskFieldJournal(account:ChildFieldNativeIdentity.account,origin:ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             for entry in try backupVault.editorEntries() {
                 if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) {try backupVault.closeEditorDraft(entry.id)}
             }
