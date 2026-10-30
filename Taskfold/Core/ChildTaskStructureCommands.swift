@@ -6,7 +6,7 @@ private struct ChildStructureKey: CodingKey {
     init?(stringValue: String) { self.stringValue = stringValue }
     init?(intValue: Int) { return nil }
 }
-private func structureKeys(_ decoder: Decoder, _ expected: Set<String>) throws {
+func structureKeys(_ decoder: Decoder, _ expected: Set<String>) throws {
     let container = try decoder.container(keyedBy: ChildStructureKey.self)
     guard Set(container.allKeys.map(\.stringValue)) == expected else { throw ChildTaskStructureCommand.invalid }
 }
@@ -153,7 +153,7 @@ struct ChildTaskStructureCommand: ReviewedTeamCommand, CustomStringConvertible, 
         try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: paths)
         self = try JSONDecoder().decode(Self.self, from: data)
     }
-    private static func counterPaths(_ body: [String: JSON], prefix: [String]) -> Set<[String]> {
+    static func counterPaths(_ body: [String: JSON], prefix: [String]) -> Set<[String]> {
         var paths: Set<[String]> = [prefix + ["protocol"], prefix + ["structure_revision"], prefix + ["index"]]
         if case .object(let versions)? = body["subtree_versions"] {
             for key in versions.keys { paths.insert(prefix + ["subtree_versions", key, "revision"]) }
@@ -319,7 +319,7 @@ struct ChildTaskStructureReceipt: Codable, Equatable, Sendable, CustomStringConv
     }
 }
 
-struct ChildTaskStructureResolution: Equatable, Sendable {
+struct ChildTaskStructureResolution: Codable, Equatable, Sendable {
     let raw: [String: JSON]
     let receipt: ChildTaskStructureReceipt?
     var closed: Bool { receipt == nil }
@@ -338,6 +338,25 @@ struct ChildTaskStructureResolution: Equatable, Sendable {
     init(command: ChildTaskStructureCommand, data: Data) throws {
         let paths = Set(ChildTaskStructureReceipt.integerPaths.map { ["receipt"] + $0 }).union([["protocol"]])
         try self.init(command: command, raw: ChildTaskStructureWire.object(data, maximum: 12_000, integerPaths: paths))
+    }
+}
+extension ChildTaskStructureResolution {
+    private enum CodingKeys: String, CodingKey { case raw }
+    init(from decoder: Decoder) throws {
+        try structureKeys(decoder, ["raw"])
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        raw = try c.decode([String: JSON].self, forKey: .raw)
+        if case .object(let proof)? = raw["receipt"] {
+            receipt = try .init(account: try TeamOrganizationValue.id(raw["account"]), raw: proof)
+        } else { receipt = nil }
+        // The owning journal revalidates this decoded decision against its exact
+        // command. Decoding alone never authorizes replacement or forgetting.
+    }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(raw, forKey: .raw)
+    }
+    init(command: ChildTaskStructureCommand, receipt: ChildTaskStructureReceipt) throws {
+        try self.init(command: command, raw: ["protocol": .number(1), "account": .string(command.account), "request_id": .string(command.id), "outcome": .string("applied"), "receipt": .object(receipt.raw)])
     }
 }
 struct ChildTaskStructureUndoArchives: Sendable {
@@ -364,10 +383,22 @@ struct ChildTaskStructureUndoDisposal: Sendable {
         guard origin.utf8.count <= 2048, TeamProjectValue.id(requestID) else { throw ChildTaskStructureCommand.invalid }
         self.account = account; self.origin = origin; self.requestID = requestID
     }
-    func confirmed(_ data: Data) throws {
-        let raw = try ChildTaskStructureWire.object(data, maximum: 4_000, integerPaths: [["protocol"]])
+    func confirmed(_ data: Data) throws -> ChildTaskStructureUndoDisposalReceipt {
+        try confirmed(ChildTaskStructureWire.object(data, maximum: 4_000, integerPaths: [["protocol"]]))
+    }
+    func confirmed(_ raw: [String: JSON]) throws -> ChildTaskStructureUndoDisposalReceipt {
         guard Set(raw.keys) == ["protocol", "account", "request_id", "outcome"], raw["protocol"] == .number(1),
               raw["account"] == .string(account), raw["request_id"] == .string(requestID), raw["outcome"] == .string("forgotten") else { throw ChildTaskStructureCommand.invalid }
+        return .init(raw: raw)
+    }
+}
+struct ChildTaskStructureUndoDisposalReceipt: Codable, Equatable, Sendable {
+    let raw: [String: JSON]
+    private enum CodingKeys: String, CodingKey { case raw }
+    init(raw: [String: JSON]) { self.raw = raw }
+    init(from decoder: Decoder) throws {
+        try structureKeys(decoder, ["raw"])
+        let c = try decoder.container(keyedBy: CodingKeys.self); raw = try c.decode([String: JSON].self, forKey: .raw)
     }
 }
 private enum ChildTaskStructureWire {

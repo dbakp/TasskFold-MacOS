@@ -1157,6 +1157,18 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [x] Validate receipts, terminal outcomes, bounded account-owned archive discovery and disposal acknowledgements; support deletion Undo after local journal loss without copying archived content.
 - [x] Reject ambiguous/rounded wire counters and malformed saved commands; preserve new-node raw identities/container shapes and reject forged metadata.
 - [x] Independently pass 146 selected Core checks (29 new) and rerun 220 structural database checks per repository. Both app/test builds and signatures pass; no native runtime acceptance is inferred.
-- [ ] Implement scoped transport, encrypted journal/sender/recovery/lifecycle integration and premium native controls; finish broader migration/custody/genuine acceptance and remaining Px work.
+- [x] Implement scoped transport, encrypted journal/sender recovery and Store ownership/cleanup hooks; see the following stage.
+- [ ] Implement premium native controls and genuine Store/Keychain/lifecycle acceptance; finish broader migration/custody and remaining Px work.
 
 [Exact implementation, independent server fixtures and limits](child-task-structure-client-proofs/README.md). No normal flag or hosted schema changes; prior deferrals remain.
+
+## 2026-10-30 — durable structural transport and recovery
+
+- [x] Add bounded scoped edit/close/archive/disposal transport, exact original bodies, strict proof decoding, sanitized errors and late success/failure cancellation.
+- [x] Add encrypted per-account/server journals and senders, durable attempted states, exact retry, terminal-before-replacement, root ordering and lost-proof recovery.
+- [x] Track explicit Undo disposal separately and refuse concurrent Undo/disposal. Preserve pending/stopped work and server-restorable deletions while pruning only settled complete history families within fixed limits.
+- [x] Connect Store factories, existing write admission, absent-by-default structure gates, account-removal and synthetic-reset cleanup hooks.
+- [x] Independently pass 271 selected Core tests (44 new) per repository, including 70 encrypted cold-file iterations; final app/test builds and strict signatures pass.
+- [ ] Implement premium native recovery/review/authoring controls and actual Store/Keychain/removal, keyboard/spoken/large-text/runtime/lifecycle acceptance. Finish broader migration/custody and remaining Px work.
+
+[Exact behavior, phase counts, source bindings and limits](child-task-structure-client-recovery/README.md). No normal flag, SQL or hosted schema change; prior deferrals remain.

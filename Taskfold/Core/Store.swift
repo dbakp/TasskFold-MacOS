@@ -391,6 +391,33 @@ final class Store {
                      canSend: { [weak self] in self?.permitsChildTaskCompletionRequest($0, sending: true) == true },
                      refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() })
     }
+    var childTaskStructureEditingEnabled: Bool {
+        childTaskCompletionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureWritesEnabled") as? Bool == true
+    }
+    func childTaskStructureJournal(account: String, origin: String) throws -> ChildTaskStructureJournal {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child hierarchy requests", isDirectory: true)
+        let io = try ChildTaskStructureJournalFileIO(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildStructureCommandLocks", isDirectory: true), removalDirectory: root)
+    }
+    func permitsChildTaskStructureRequest(_ command: ChildTaskStructureCommand, sending: Bool) -> Bool {
+        permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskStructureEditingEnabled, sending: sending)
+    }
+    func childTaskStructureSender() throws -> ChildTaskStructureSender {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskStructureJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true })
+    }
     var syncing = false
     var online = true
     @ObservationIgnored private var teamCompletionErrorRevision = UUID()
@@ -1618,6 +1645,7 @@ final class Store {
         try await teamWorkflowRunVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
         try await childTaskFieldJournal(account:account,origin:command.origin).removeAccount()
         try await childTaskCompletionJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskStructureJournal(account: account, origin: command.origin).removeAccount()
         try await teamTaskMoveVault.removeAccount(account, origin: command.origin)
         try await projectAdoptionVault.removeAccount(account, origin: command.origin)
         try await accountRemovalVault.finish(command)
@@ -5147,6 +5175,7 @@ extension Store {
             try ChildFieldNativePeer.save(ChildFieldNativePeer.initial())
             try await childTaskFieldJournal(account:ChildFieldNativeIdentity.account,origin:ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             for entry in try backupVault.editorEntries() {
                 if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) {try backupVault.closeEditorDraft(entry.id)}
             }

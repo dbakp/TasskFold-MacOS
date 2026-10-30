@@ -9822,3 +9822,14 @@ Current-value review no longer echoes a previous parent confirmation. Feedback b
 - [ ] Implement scoped transport, encrypted journal/sender/recovery/lifecycle integration and premium native controls; finish broader migration/custody/genuine acceptance and remaining Px work.
 
 [Exact implementation, independent server fixtures and limits](child-task-structure-client-proofs/README.md). No normal flag or hosted schema changes; prior deferrals remain.
+
+## 2026-10-30 — durable structural transport and recovery
+
+- [x] Add bounded scoped edit/close/archive/disposal transport, exact original bodies, strict proof decoding, sanitized errors and late success/failure cancellation.
+- [x] Add encrypted per-account/server journals and senders, durable attempted states, exact retry, terminal-before-replacement, root ordering and lost-proof recovery.
+- [x] Track explicit Undo disposal separately and refuse concurrent Undo/disposal. Preserve pending/stopped work and server-restorable deletions while pruning only settled complete history families within fixed limits.
+- [x] Connect Store factories, existing write admission, absent-by-default structure gates, account-removal and synthetic-reset cleanup hooks.
+- [x] Independently pass 271 selected Core tests (44 new) per repository, including 70 encrypted cold-file iterations; final app/test builds and strict signatures pass.
+- [ ] Implement premium native recovery/review/authoring controls and actual Store/Keychain/removal, keyboard/spoken/large-text/runtime/lifecycle acceptance. Finish broader migration/custody and remaining Px work.
+
+[Exact behavior, phase counts, source bindings and limits](child-task-structure-client-recovery/README.md). No normal flag, SQL or hosted schema change; prior deferrals remain.

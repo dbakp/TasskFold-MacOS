@@ -41,3 +41,7 @@ swift test -j 2 -Xswiftc -driver-batch-count -Xswiftc 2 --filter '(ChildTaskStru
 ```
 
 For database fixtures, set `TASKFOLD_FIELD_NATIVE_SQL` to this repository's native team child-field adapter migration, then run `node Scripts/Database/test-child-task-structure-commands.mjs /tmp/structure-proofs.json`. The fixture exports independent real proofs alongside its unchanged checks. Use only synthetic fixtures and preserve the storage floor.
+
+## Subsequent durable recovery stage
+
+[Structural client recovery](../child-task-structure-client-recovery/README.md) adds the bounded transport, encrypted journal/sender, terminal recovery, explicit disposal lifecycle and Store ownership/cleanup hooks. Its 271 selected Core tests and final builds are separate evidence. Native recovery/authoring controls and genuine lifecycle acceptance remain open.

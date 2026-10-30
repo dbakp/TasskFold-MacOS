@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-30",
+  "selectedCoreTests": 271,
+  "newRecoveryTests": 44,
+  "failures": 0,
+  "phases": [
+    {
+      "selectedTests": 56,
+      "failures": 0
+    },
+    {
+      "selectedTests": 185,
+      "failures": 0
+    },
+    {
+      "selectedTests": 271,
+      "failures": 0
+    }
+  ],
+  "appAndTestBuild": "TEST BUILD SUCCEEDED",
+  "strictAppAndRunnerSignatures": true,
+  "newSQL": false,
+  "newDatabaseChecksClaimed": false,
+  "nativeRuntimeAccepted": false,
+  "ordinaryFlagsEnabled": false,
+  "hostedSchemaChanged": false,
+  "coldEncryptedActionIterations": 70,
+  "journalBounds": {
+    "commands": 64,
+    "disposals": 64,
+    "bytes": 8400000
+  },
+  "sourceSHA256": {
+    "Package.swift": "ad9f49cd59b91dc77d22a1b5173406d260dc72d97241b691edfb9205bad0dd2d",
+    "Taskfold.xcodeproj/project.pbxproj": "cf4c23b9a8695005de0048aba9b2da34ccf6319e0ec11872cadb49129c0b8ac5",
+    "Taskfold/Core/ChildTaskStructureCommands.swift": "698ef01b8061878fcf1ea4775343e5106dc54ff2bbc75a97b14452cdf8fd00cb",
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "68d6cc4daa987442c6b3120d48cbaaa8771d96a1a0033eeeb9b07caf1544a9b7",
+    "Taskfold/Core/Backend.swift": "c5823aa5c0dabf51c44a64109a9f6c8112cea9f1caee1e3c82a0955a913b53f4",
+    "Taskfold/Core/Store.swift": "660e82ff5a6e6f2b1742ef7742c2008f4e9019ad58c646dcc4a4fc141d15abaa",
+    "TaskfoldTests/ChildTaskStructureRecoveryTests.swift": "c9d1a84506520c9517b6718b36d2cb6754441336312eb9225242a60021914502",
+    "TaskfoldTests/Fixtures/child-task-structure-proofs.json": "4674980fb143a95749faf93977dedab5cc57693a6ca4fbc5efc1256ca1a9be0a"
+  },
+  "previousServerEvidence": "../child-task-structure-client-proofs/database.json",
+  "remaining": [
+    "native recovery/review/authoring controls",
+    "actual Store/Keychain/removal and native lifecycle acceptance",
+    "cross-root/legacy/adoption/authoritative migration",
+    "full schema/Storage custody and wider Px scope"
+  ]
+}
