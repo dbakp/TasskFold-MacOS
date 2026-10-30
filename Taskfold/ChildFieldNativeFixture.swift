@@ -41,7 +41,13 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             if id == "concept", ProcessInfo.processInfo.arguments.contains("--child-fields-native-heading") { fields["is_heading"] = .bool(true) }
             return .object(fields)
         }
-        return ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array([child("concept", "Prepare the review"), child("review", "Publish the summary")])]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
+        var initialChildren = [child("concept", "Prepare the review"), child("review", "Publish the summary")]
+        if ProcessInfo.processInfo.arguments.contains("--child-structure-nested") {
+            var first = initialChildren[0].object
+            first["subtasks"] = .array([.object(["id": .string("nested"), "title": .string("Collect supporting notes"), "description": .string("Keep these nested instructions"), "future": .object(["keep": .bool(true)])])])
+            initialChildren[0] = .object(first)
+        }
+        return ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array(initialChildren)]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
     }
     static func save(_ state: [String: JSON]) throws {
         guard ChildFieldNativeIdentity.enabled else { throw CancellationError() }
@@ -130,6 +136,9 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         }
         let body = try JSONDecoder().decode([String: JSON].self, from: data)
         var state = try state(); let root = Record(state["root"]!.object)
+        if ChildStructureNativePeer.enabled, ChildStructureNativePeer.paths.contains(request.url?.path ?? "") {
+            return try ChildStructureNativePeer.response(path: request.url!.path, body: body, state: &state)
+        }
         if request.url?.path == "/rest/v1/rpc/taskfold_read_child_tasks" {
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"], Store.shared.userID == ChildFieldNativeIdentity.account else { throw CancellationError() }
             state["childReads"] = .number(Double((state["childReads"]?.integer ?? 0) + 1)); try save(state)
@@ -204,6 +213,13 @@ struct ChildFieldNativeFixtureView: View {
                 Text("Synthetic child field acceptance").font(.headline)
                 if let problem { Text(problem).accessibilityIdentifier("childNativeProblem") }
                 if ready {
+                    if ChildStructureNativePeer.enabled {
+                        Button("Open saved hierarchy") { opening = "structure" }.accessibilityIdentifier("childNativeStructure")
+                        Button("Open hierarchy actions") { opening = "structureRecovery" }.accessibilityIdentifier("childNativeStructureRecovery")
+                        Button("Forget only the local hierarchy test journal") {
+                            Task { do { try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount(); await inspect() } catch { problem = error.localizedDescription } }
+                        }.accessibilityIdentifier("childNativeLoseStructureJournal")
+                    }
                     Button("Open subtask editor") { opening = "editor" }.accessibilityIdentifier("childNativeEditor")
                     Button("Open saved actions") { opening = "completion" }.accessibilityIdentifier("childNativeCompletionRecovery")
                     Button("Save an offline test completion") { Task { await queueCompletion() } }
@@ -234,8 +250,10 @@ struct ChildFieldNativeFixtureView: View {
             } catch is CancellationError { } catch { problem = error.localizedDescription }
         }
         .sheet(isPresented: Binding(get: { opening != nil }, set: { if !$0 { opening = nil } })) {
-            WorkflowShell(title: opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : "Saved subtask changes") {
+            WorkflowShell(title: opening == "editor" ? "Subtask changes" : opening == "completion" ? "Saved subtask actions" : opening == "structure" ? "Organize subtasks" : opening == "structureRecovery" ? "Saved hierarchy actions" : "Saved subtask changes") {
                 if opening == "editor" { ChildTaskFieldEditorView(rootID: ChildFieldNativeIdentity.rootID) }
+                else if opening == "structure" { ChildTaskStructureView(rootID: ChildFieldNativeIdentity.rootID) }
+                else if opening == "structureRecovery" { ChildTaskStructureRecoveryView() }
                 else if opening == "completion" { ChildTaskCompletionRecoveryView() }
                 else { ChildTaskFieldRecoveryView() }
             }
@@ -296,6 +314,10 @@ struct ChildFieldNativeFixtureView: View {
                 let completionEntries = try await store.childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load().entries
                 nextProbe += " completionQueued=\(completionEntries.filter { $0.phase == .queued }.count) completionAttempted=\(completionEntries.filter { $0.phase == .attempted }.count) completionConfirmed=\(completionEntries.filter { $0.phase == .confirmed }.count) completionClosed=\(completionEntries.filter { $0.phase == .closed }.count) completionWrites=\(state["completionWrites"]?.integer ?? 0) completionRequests=\(state["completionRequests"]?.integer ?? 0) done=\(child["completed"]?.flag == true) notes=\(child["description"]?.text ?? "")"
                 nextProbe += " completionCloses=\(state["completionCloses"]?.integer ?? 0) childReads=\(state["childReads"]?.integer ?? 0) history=\(historyProgress) stamp=\(child["completed_at"]?.text.isEmpty == false ? child["completed_at"]!.text : "none")"
+            }
+            if ChildStructureNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
+                let structural = try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()
+                nextProbe += " structureQueued=\(structural.entries.filter { $0.phase == .queued }.count) structureAttempted=\(structural.entries.filter { $0.phase == .attempted }.count) structureConfirmed=\(structural.entries.filter { $0.phase == .confirmed }.count) structureClosed=\(structural.entries.filter { $0.phase == .closed }.count) structureWrites=\(state["structureWrites"]?.integer ?? 0) structureRequests=\(state["structureRequests"]?.integer ?? 0) structureArchives=\(state["structureArchives"]?.object.count ?? 0) structureOrder=\(ChildStructureNativePeer.flatKeys(Record(state["root"]!.object)["subtasks"]).joined(separator: ">")) structureDisposals=\(structural.disposals.filter { $0.phase == .confirmed }.count)"
             }
             // Publish one complete snapshot. A partial label across the journal
             // await can make accessibility reads observe missing count fields.

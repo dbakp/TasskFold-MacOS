@@ -418,6 +418,37 @@ final class Store {
                      current: { [weak self] in self?.childTaskFieldRecoveryScope },
                      canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true })
     }
+    /// Join an existing sync before asking for current task data. A second
+    /// caller must not mistake sync()'s busy early return for fresh cache data.
+    func synchronizeChildTaskStructureReads() async throws {
+        guard let captured = childTaskFieldRecoveryScope, online else { throw ChildTaskRecordFailure.unavailable }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(25))
+        func waitForSync() async throws {
+            while syncing {
+                try Task.checkCancellation()
+                guard childTaskFieldRecoveryScope == captured else { throw CancellationError() }
+                guard ContinuousClock.now < deadline else { throw ChildTaskRecordFailure.unavailable }
+                try await Task.sleep(for: .milliseconds(50))
+            }
+        }
+        let joinedExistingSync = syncing
+        try await waitForSync(); try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == captured else { throw CancellationError() }
+        if !joinedExistingSync { await sync() }
+        try await waitForSync(); try Task.checkCancellation()
+        guard childTaskFieldRecoveryScope == captured else { throw CancellationError() }
+    }
+    func readCurrentChildTaskStructure(_ root: String) async throws -> ChildTaskStructureRead {
+        try await synchronizeChildTaskStructureReads()
+        return try await readChildTaskStructure(root)
+    }
+    func childTaskStructurePresentation() throws -> ChildTaskStructurePresentation {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskStructureJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canQueue: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: false) == true },
+                     canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true })
+    }
     var syncing = false
     var online = true
     @ObservationIgnored private var teamCompletionErrorRevision = UUID()

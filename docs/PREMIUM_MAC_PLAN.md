@@ -9833,3 +9833,8 @@ Current-value review no longer echoes a previous parent confirmation. Feedback b
 - [ ] Implement premium native recovery/review/authoring controls and actual Store/Keychain/removal, keyboard/spoken/large-text/runtime/lifecycle acceptance. Finish broader migration/custody and remaining Px work.
 
 [Exact behavior, phase counts, source bindings and limits](child-task-structure-client-recovery/README.md). No normal flag, SQL or hosted schema change; prior deferrals remain.
+
+
+## Native hierarchy organization — current acceptance stage
+
+Both apps now own scoped native hierarchy organization and recovery: reviewed add/move/recursive remove, explicit saved Send, exact retry, stop/fresh review, Undo/archive discovery and permanent Undo disposal. The presentation/opening foundation passes 282 selected Core checks independently in each repository. Refined Mac products build and verify; final current-source runtime checks are still in progress. See [native phase evidence](child-task-structure-native/README.md). The original independent-child migration, genuine lifecycle, cross-root/project and wider Px scope remain open; ordinary flags stay off.

@@ -1172,3 +1172,14 @@ This closes the exact-reservation terminal gap; the full audio/Px feature stays 
 - [ ] Implement premium native recovery/review/authoring controls and actual Store/Keychain/removal, keyboard/spoken/large-text/runtime/lifecycle acceptance. Finish broader migration/custody and remaining Px work.
 
 [Exact behavior, phase counts, source bindings and limits](child-task-structure-client-recovery/README.md). No normal flag, SQL or hosted schema change; prior deferrals remain.
+
+
+## 2026-10-30 — native hierarchy organization (acceptance in progress)
+
+- [x] Own native reviewed insertion, move/reorder and recursive removal, saved retry/stop/fresh replacement, certified Undo, metadata archive discovery and explicit private Undo disposal in each repository.
+- [x] Preserve the opening root/node incarnation binding; keep save separate from send; retain private field drafts and restore selected-node identity when returning from organization.
+- [x] Independently pass 282 selected Core checks, including 11 presentation/opening checks, in both repositories. Refined Mac and iOS app/test builds and strict signatures pass.
+- [ ] Finish refined phone/tablet/Mac native journeys and largest-text/spoken acceptance. The first refined iPhone phase passes add/cold receipt, move, lost-reply retry and explicit Undo disposal (4/8); four corrected archive/large-text/fresh-review journeys are running. Earlier failures remain recorded.
+- [ ] Genuine Keychain/Store/account/window lifecycle; structural composer drafts; cross-root/project, legacy/adoption and authoritative migration; full schema/Storage/team custody and wider Px. Normal flags stay off; prior user deferrals remain unchanged.
+
+[Implementation boundaries and phase evidence](child-task-structure-native/README.md).

@@ -593,4 +593,99 @@ final class ChildTaskStructureRecoveryTests: XCTestCase {
         try await equalAsync(try await j.load().entries.first?.phase, .queued)
     }
 
+    @MainActor private func presentationRead(_ scope: ChildTaskFieldClientScope, revision: Double = 2) throws -> ChildTaskStructureRead {
+        let f = try fixture(); var raw = f["fixtureRead"]!.object; raw["structure_revision"] = .number(revision)
+        let context = try ChildTaskRecordContext(account: scope.account, origin: scope.origin, workspace: scope.workspace, session: scope.session, access: scope.access, snapshot: UUID(), root: Record(f["fixtureRoot"]!.object))
+        return try .init(data: encode(raw), context: context)
+    }
+    @MainActor func testNativePresentationSavesThenExplicitlySendsWithoutPatchingSource() async throws {
+        let c = try command(), captured = scope(c), read = try presentationRead(captured), io = StructureJournalIO(), j = try journal(c, io, directory()), peer = StructurePeer()
+        let model = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true })
+        let next = try ChildTaskStructureCommand(insert: .object(["id": .string("new-native"), "title": .string("Native reviewed change")]), parent: nil, index: 0, read: read)
+        try await trueAsync(await model.queue(next, read: read)); XCTAssertEqual(model.entries.first?.phase, .queued); XCTAssertTrue(peer.calls.isEmpty)
+        try await trueAsync(await model.send(next)); XCTAssertEqual(model.entries.first?.phase, .confirmed); XCTAssertEqual(peer.calls.map(\.id), [next.id])
+        XCTAssertNil(read.records.nodes["new-native"]); XCTAssertEqual(model.message, "Subtask added.")
+    }
+    @MainActor func testNativePresentationStopAndFreshReviewAreSaveOnly() async throws {
+        let c = try command(), captured = scope(c), read = try presentationRead(captured), io = StructureJournalIO(), j = try journal(c, io, directory()), peer = StructurePeer()
+        let model = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true })
+        let move = try ChildTaskStructureCommand(move: "a", parent: "b", index: 0, read: read)
+        try await trueAsync(await model.queue(move, read: read)); await model.stop(move)
+        let entry = try XCTUnwrap(model.entries.first); XCTAssertEqual(entry.phase, .closed)
+        let stable = UUID(), fresh = try ChildTaskStructureReview.fresh(move, read: read, parent: nil, index: 2, requestID: stable)
+        XCTAssertEqual(fresh.id, stable.uuidString.lowercased()); try await trueAsync(await model.replace(entry, with: fresh, read: read))
+        XCTAssertEqual(model.entries.last?.phase, .queued); XCTAssertTrue(peer.calls.isEmpty); XCTAssertEqual(peer.closes.count, 1)
+    }
+    @MainActor func testNativePresentationRefusesQueueAfterAdmissionOrScopeLoss() async throws {
+        let c = try command(), captured = scope(c), read = try presentationRead(captured), io = StructureJournalIO(), j = try journal(c, io, directory()), peer = StructurePeer()
+        let move = try ChildTaskStructureCommand(move: "a", parent: "b", index: 0, read: read)
+        let model = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { captured }, canQueue: { _ in false }, canSend: { _ in true })
+        try await falseAsync(await model.queue(move, read: read)); try await trueAsync(try await j.load().entries.isEmpty)
+        let foreign = try presentationRead(scope(c))
+        let other = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true })
+        try await falseAsync(await other.queue(move, read: foreign)); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testNativePresentationCloseFencesLateSendAndClearsVisibleData() async throws {
+        let c = try command(), captured = scope(c), read = try presentationRead(captured), io = StructureJournalIO(), j = try journal(c, io, directory()), peer = StructurePeer()
+        let model = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { captured }, canQueue: { _ in true }, canSend: { _ in true })
+        let move = try ChildTaskStructureCommand(move: "a", parent: "b", index: 0, read: read)
+        try await trueAsync(await model.queue(move, read: read)); peer.onSend = { model.close() }
+        try await falseAsync(await model.send(move)); XCTAssertTrue(model.entries.isEmpty); XCTAssertNil(model.message); XCTAssertFalse(model.loaded)
+        try await equalAsync(try await j.load().entries.first?.phase, .attempted)
+    }
+    @MainActor func testNativePresentationDiscoveryDoesNotDisposeUntilExplicitAction() async throws {
+        let c = try command(), captured = scope(c), io = StructureJournalIO(), j = try journal(c, io, directory()), peer = StructurePeer()
+        peer.archiveData = try encode(fixture()["fixtureUndoArchives"]!.object)
+        let model = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { captured }, canQueue: { _ in false }, canSend: { _ in false })
+        await model.load(); await model.discoverArchives(); XCTAssertEqual(model.availableArchives.count, 64); XCTAssertTrue(peer.forgotten.isEmpty)
+        let source = try XCTUnwrap(model.availableArchives.first); await model.dispose(source)
+        XCTAssertEqual(peer.forgotten, [source.raw["request_id"]!.text]); XCTAssertEqual(model.disposals.first?.phase, .confirmed); XCTAssertEqual(model.availableArchives.count, 63)
+        XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testNativePresentationUnsentDisposalCanBeCancelledWithoutServiceCall() async throws {
+        let c = try command("Delete"), captured = scope(c), io = StructureJournalIO(), j = try journal(c, io, directory()), peer = StructurePeer()
+        try await j.enqueueDisposal(structureReply(c), lease: CalendarReadLease())
+        let model = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { captured }, canQueue: { _ in false }, canSend: { _ in false })
+        await model.load(); let item = try XCTUnwrap(model.disposals.first); await model.cancelUnsentDisposal(item); XCTAssertTrue(model.disposals.isEmpty); XCTAssertTrue(peer.disposalCalls.isEmpty)
+    }
+    @MainActor func testNativePresentationArchiveFailureAfterDepartureClearsMetadata() async throws {
+        let c = try command(), captured = scope(c), io = StructureJournalIO(), j = try journal(c, io, directory()), peer = StructurePeer()
+        peer.archiveData = try encode(fixture()["fixtureUndoArchives"]!.object); var live: ChildTaskFieldClientScope? = captured
+        let model = ChildTaskStructurePresentation(scope: captured, journal: j, service: peer, current: { live }, canQueue: { _ in false }, canSend: { _ in false })
+        await model.load(); peer.onArchives = { live = nil }; await model.discoverArchives()
+        XCTAssertTrue(model.archives.isEmpty); XCTAssertFalse(model.loaded); XCTAssertNil(model.message)
+    }
+    @MainActor func testNativeDestinationChoicesExcludeMovingBranchAndUseAuthoredOrder() throws {
+        let read = try presentationRead(scope(command()))
+        XCTAssertEqual(ChildTaskStructureReview.destinations(read, moving: "a").map(\.key), ["fresh", "b"])
+        XCTAssertEqual(ChildTaskStructureReview.siblings(read, parent: nil, moving: "a").map(\.key), ["fresh", "b"])
+        XCTAssertEqual(ChildTaskStructureReview.siblings(read, parent: "a", moving: nil).map(\.key), ["nested"])
+    }
+
+    @MainActor func testNativeOpeningRefusesRecreatedNodeAndMissingSelection() throws {
+        let captured = scope(try command()), read = try presentationRead(captured), opening = try ChildTaskStructureOpening(read: read, node: "a")
+        var raw = try fixture()["fixtureRead"]!.object, rows = raw["records"]!.list
+        let index = try XCTUnwrap(rows.firstIndex { $0.object["node_key"] == .string("a") })
+        var row = rows[index].object; row["incarnation"] = .string(UUID().uuidString.lowercased()); rows[index] = .object(row); raw["records"] = .array(rows)
+        let changed = try ChildTaskStructureRead(data: encode(raw), context: read.context)
+        XCTAssertThrowsError(try opening.validate(changed)); XCTAssertThrowsError(try ChildTaskStructureOpening(read: read, node: "missing"))
+        let oldMove = try ChildTaskStructureCommand(move: "a", parent: "b", index: 0, read: read)
+        XCTAssertThrowsError(try ChildTaskStructureReview.fresh(oldMove, read: changed, parent: "b", index: 0))
+    }
+    @MainActor func testNativeOpeningRefusesRootGenerationAndProjectReplacement() throws {
+        let captured = scope(try command()), read = try presentationRead(captured), opening = try ChildTaskStructureOpening(read: read)
+        for key in ["task_generation", "project_id"] {
+            var root = read.context.root, raw = try fixture()["fixtureRead"]!.object
+            let replacement = JSON.string(UUID().uuidString.lowercased()); root[key] = replacement; raw[key] = replacement
+            let context = try ChildTaskRecordContext(account: captured.account, origin: captured.origin, workspace: captured.workspace, session: captured.session, access: captured.access, snapshot: UUID(), root: root)
+            let changed = try ChildTaskStructureRead(data: encode(raw), context: context)
+            XCTAssertThrowsError(try opening.validate(changed), key)
+        }
+    }
+    @MainActor func testNativeOpeningAllowsFreshReviewOfSameIncarnationAfterStructureChange() throws {
+        let captured = scope(try command()), read = try presentationRead(captured), opening = try ChildTaskStructureOpening(read: read, node: "a")
+        XCTAssertNoThrow(try opening.validate(presentationRead(captured, revision: 4)))
+        XCTAssertThrowsError(try opening.validate(presentationRead(scope(command()))))
+    }
+
 }

@@ -4,6 +4,8 @@ Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-aud
 
 ## Current implementation focus
 
+Native hierarchy organization is now implemented in both independently owned apps: reviewed add/move/recursive removal, saved Send/retry/stop/fresh replacement, Undo/archive recovery and explicit private-content disposal. Both repositories pass 282 selected Core checks (11 new presentation/opening checks), and the refined Mac and iOS app/test products build with verified development signatures. Current-source native journeys are running; broader lifecycle/accessibility and migration acceptance remain open. [Current native evidence](child-task-structure-native/README.md).
+
 Structural edits now have bounded scoped transport, encrypted journals, exact uncertain-outcome retry, terminal-before-replacement, root ordering and separately durable Undo disposal. Retention preserves server-restorable deletions and recent Undo families. Store factories and account-removal/reset hooks are connected. Both repositories independently pass 271 selected Core checks (44 new), and app/test builds/signatures pass. [Current recovery evidence](child-task-structure-client-recovery/README.md). Next are native recovery/review/authoring controls and genuine Store/Keychain/runtime/lifecycle acceptance; wider migration/custody/Px remain open.
 
 Typed structural requests and strict receipt/terminal/archive/disposal proofs now pass 146 selected Core checks per repository, including 29 new cases bound to independently generated server proofs. Deletion Undo can be prepared after local journal loss using server metadata. Each repository reruns 220 structural database checks; app/test builds and signatures pass. [Current proof evidence](child-task-structure-client-proofs/README.md). The following recovery stage implements scoped transport and encrypted journals; native controls and genuine acceptance remain open.
@@ -6998,3 +7000,8 @@ accepts the synthetic conversation component scopes above; audio/Px remain open.
 
 [Evidence, exact limits and reproduction](audio-publication-closed/README.md).
 This closes the exact-reservation terminal gap; the full audio/Px feature stays open.
+
+
+## Native hierarchy organization — current acceptance stage
+
+Both apps now own scoped native hierarchy organization and recovery: reviewed add/move/recursive remove, explicit saved Send, exact retry, stop/fresh review, Undo/archive discovery and permanent Undo disposal. The presentation/opening foundation passes 282 selected Core checks independently in each repository. Refined Mac products build and verify; final current-source runtime checks are still in progress. See [native phase evidence](child-task-structure-native/README.md). The original independent-child migration, genuine lifecycle, cross-root/project and wider Px scope remain open; ordinary flags stay off.

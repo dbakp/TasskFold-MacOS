@@ -237,6 +237,7 @@ struct ChildTaskFieldEditorView: View {
     @State private var reminders = ChildTaskRemindersDraft(original: Record())
     @State private var reminderEditor: TeamTaskRemindersRequest?
     @State private var reminderOwnership = ChildReminderOwnership()
+    @State private var hierarchy = false
     @State private var recovery = false
     @State private var reload = UUID()
     @State private var draftSession: TaskEditorSession?
@@ -263,6 +264,13 @@ struct ChildTaskFieldEditorView: View {
             Section { Text("Save a subtask change, then review and send it.").foregroundStyle(.secondary) }
             if let failure { Section { Text(failure).foregroundStyle(.secondary); Button("Read current subtasks again") { reload = UUID() } } }
             if let read, let model, sourceAvailable {
+                if store.childTaskStructureEditingEnabled {
+                    Section { Button("Organize saved subtasks", systemImage: "list.bullet.indent") {
+                        editingField = nil; checkpoint()
+                        guard draftSession?.flush() != false else { failure = draftSession?.failure; return }
+                        hierarchy = true
+                    }.accessibilityIdentifier("childFieldOrganizeStructure") }
+                }
                 if read.nodes.isEmpty { ContentUnavailableView("No saved subtasks", systemImage: "list.bullet") }
                 else {
                     Section {
@@ -401,6 +409,7 @@ struct ChildTaskFieldEditorView: View {
         .onChange(of: phase) { _, value in if value != .active { reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
         .onChange(of: recovery) { _, value in if value { noticeRequest = nil; editingRevision = UUID() } }
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
+            let preferredSelection = sourceAvailable ? key : ""
             reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; messageKey = nil; editingRevision = UUID(); noticeBounds = .zero
             checkpoint(); for session in draftSessions.values { _ = session.flush() }; draftSession = nil; draftSessions = [:]; draftValues = [:]; labelInputs = [:]; addingLabel = ""; selectedKey = ""
             model?.close(); model = nil; read = nil; title = ""; notes = ""; key = ""; failure = nil
@@ -409,7 +418,7 @@ struct ChildTaskFieldEditorView: View {
                 guard store.childTaskFieldEditingEnabled else { throw ChildTaskFieldWriteFailure(reason: .unavailable) }
                 let value = try await store.readChildTaskRecords(rootID)
                 guard captured == scope, !Task.isCancelled else { return }
-                read = value; model = try store.childTaskFieldRecoveryModel(); key = value.orderedNodes.first?.key ?? ""; select()
+                read = value; model = try store.childTaskFieldRecoveryModel(); key = value.nodes[preferredSelection] != nil ? preferredSelection : value.orderedNodes.first?.key ?? ""; select()
             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = error.localizedDescription }
         }
         .onDisappear {
@@ -419,6 +428,7 @@ struct ChildTaskFieldEditorView: View {
             if !reminderOwnership.active { editingRevision = UUID() }
             checkpoint(); _ = draftSession?.flush()
         }
+        .sheet(isPresented: $hierarchy, onDismiss: { reload = UUID() }) { WorkflowShell(title: "Organize subtasks") { ChildTaskStructureView(rootID: rootID) } }
         .sheet(isPresented: $recovery) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
         .sheet(item: $sharedAssignee) { TeamTaskAssigneePicker(request: $0) }
         .sheet(item: $personalAssignee) { ChildPersonalAssigneeView(request: $0) }

@@ -212,6 +212,7 @@ struct AccountSettings: View {
             SavedTeamTemplateRequestLink()
             SavedChildTaskFieldChangesLink()
             SavedChildTaskCompletionsLink()
+            SavedChildTaskStructureLink()
             SavedTeamWorkflowRequestLink()
             if TeamOrganizationAvailability.enabled && store.signedIn && !store.localMode {
                 Section("Teams") { Button("Your teams…", systemImage: "person.3") { teamsPresented = true } }
