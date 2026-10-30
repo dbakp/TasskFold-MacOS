@@ -1,0 +1,15 @@
+{
+  "launchedAtUTC": "2026-10-30T16:35:40.989215+00:00",
+  "app": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+  "appSHA256": "8ecbf5e9bcce6bab255b1309bed9d15ae4ffd8377828ed19ab3729e927ea6b52",
+  "arguments": [
+    "--uitesting",
+    "--team-editor-testing",
+    "--child-fields-native",
+    "--child-fields-native-reset",
+    "--child-transfer-native",
+    "-ApplePersistenceIgnoreState",
+    "YES"
+  ],
+  "authorization": "User explicitly authorized Terminal launch of the isolated test app; synthetic data only."
+}

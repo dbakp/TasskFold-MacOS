@@ -883,7 +883,12 @@ extension TaskfoldMacUITests {
             guard value.exists, !value.frame.isEmpty else { return false }
             #if os(iOS)
             let viewport = area()
-            if diagnosticText && value.frame.height > viewport.height { return value.frame.intersection(viewport).height >= 24 }
+            // Reading a static label does not require a tappable hit target.
+            // Geometry still verifies the complete text, or a scrollable slice
+            // for diagnostic paragraphs taller than the available viewport.
+            if diagnosticText {
+                return value.frame.height > viewport.height ? value.frame.intersection(viewport).height >= 24 : viewport.contains(value.frame)
+            }
             return value.isHittable && viewport.contains(value.frame)
             #else
             return value.isHittable
@@ -1892,6 +1897,80 @@ extension TaskfoldMacUITests {
         structureSnapshot(app, "Original export cancelled without changing older content")
         childDone(app); childProbe(app, "adoptionWrites=0 adoptionRequests=0")
         XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
+    }
+
+    @MainActor private func adoptionExportHome() throws -> URL {
+        #if os(iOS)
+        return try audioTaskHome()
+        #else
+        return URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data", isDirectory: true)
+        #endif
+    }
+    @MainActor func testChildAdoptionNativeOriginalExportSaveAndColdReadback() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-adoption-export", large: true)
+        let home = try adoptionExportHome(), peer = home.appendingPathComponent("Library/Application Support/Child field native peer", isDirectory: true)
+        let expectedFile = peer.appendingPathComponent("adoption-export-original.json"), receipt = peer.appendingPathComponent("adoption-export-receipt.json")
+        let destination = home.appendingPathComponent("Documents/Taskfold-original-subtasks-proof.json")
+        let expected = try Data(contentsOf: expectedFile)
+        XCTAssertTrue(expected.range(of: Data("9007199254740993".utf8)) != nil)
+        XCTAssertTrue(expected.range(of: Data("1e1000".utf8)) != nil)
+        XCTAssertTrue(expected.range(of: Data("\"é\"".utf8)) != nil)
+        XCTAssertTrue(expected.range(of: Data("\"e\u{0301}\"".utf8)) != nil)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path)); XCTAssertFalse(FileManager.default.fileExists(atPath: receipt.path))
+        let originalRoot = adoptionProbeValue("adoptionRootHash", app); XCTAssertEqual(originalRoot.count, 64)
+        childHomePress("childNativeAdoption", app)
+        let warning = app.staticTexts["childAdoptionNeedsReview"]; childReveal(warning, app)
+        XCTAssertFalse(app.buttons["childAdoptionSend"].exists)
+        let export = app.buttons["childAdoptionExport"]; childReveal(export, app); completionReadyPress(export, app)
+        #if os(iOS)
+        let save = app.buttons["DOCPicker.actionButton"]; XCTAssertTrue(save.waitForExistence(timeout: 25), app.debugDescription)
+        let folder = app.collectionViews.staticTexts["Taskfold Team Editor Test"].firstMatch
+        if folder.waitForExistence(timeout: 3), folder.isHittable { childPress(folder) }
+        let provider = app.otherElements.matching(NSPredicate(format: "identifier BEGINSWITH %@", "DOC.browsingRoot Source: com.apple.FileProvider.LocalStorage,")).firstMatch
+        let namedRoot = app.otherElements["DOC.browsingRoot Source: com.apple.FileProvider.LocalStorage, Title: Taskfold Team Editor Test"]
+        let namedToolbar = app.buttons["Taskfold Team Editor Test, Actions Menu"]
+        let marker = app.collectionViews.staticTexts["Taskfold-originals-destination"].firstMatch
+        guard provider.waitForExistence(timeout: 8), namedRoot.exists || namedToolbar.exists, marker.waitForExistence(timeout: 8) else {
+            XCTFail("Save only to the isolated app’s observed local Documents: " + app.debugDescription); return
+        }
+        structureSnapshot(app, "Original subtask export uses observed local Files destination")
+        childPress(save); XCTAssertTrue(save.waitForNonExistence(timeout: 15), app.debugDescription)
+        #else
+        let save = app.sheets.buttons["Save"].firstMatch.exists ? app.sheets.buttons["Save"].firstMatch : app.sheets.buttons["Export"].firstMatch
+        XCTAssertTrue(save.waitForExistence(timeout: 15), app.debugDescription)
+        app.typeKey("g", modifierFlags: [.command, .shift])
+        let path = app.sheets.textFields["PathTextField"].firstMatch
+        XCTAssertTrue(path.waitForExistence(timeout: 8), app.debugDescription)
+        path.click(); app.typeKey("a", modifierFlags: .command); path.typeText(destination.deletingLastPathComponent().path); app.typeKey(.return, modifierFlags: [])
+        let name = app.sheets.textFields.matching(NSPredicate(format: "value CONTAINS %@", "Taskfold-original-subtasks-proof")).firstMatch
+        XCTAssertTrue(name.waitForExistence(timeout: 8), app.debugDescription)
+        structureSnapshot(app, "Original subtask export uses isolated local Documents")
+        childPress(save)
+        #endif
+        let delivered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: receipt.path) && FileManager.default.fileExists(atPath: destination.path) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [delivered], timeout: 15), .completed)
+        let result = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: receipt)) as? [String: String])
+        XCTAssertNotNil(result["request"].flatMap(UUID.init(uuidString:)))
+        XCTAssertEqual(result["account"], "ec990000-0000-4000-8000-000000000001")
+        XCTAssertEqual(result["root"], "ec990000-0000-4000-8000-000000000002")
+        let picked = try XCTUnwrap(result["url"].flatMap(URL.init(string:)))
+        XCTAssertTrue(picked.isFileURL); XCTAssertEqual(picked.resolvingSymlinksInPath(), destination.resolvingSymlinksInPath())
+        XCTAssertEqual(try Data(contentsOf: picked), expected); XCTAssertEqual(try Data(contentsOf: expectedFile), expected)
+        let feedback = app.staticTexts["childAdoptionExportFeedback"]; childReveal(feedback, app, diagnosticText: true)
+        XCTAssertEqual(feedback.label, "Original content exported. Your saved task is unchanged.")
+        let proof = XCTAttachment(data: try Data(contentsOf: destination), uniformTypeIdentifier: "public.json"); proof.name = "Original subtask bytes delivered by native Save"; proof.lifetime = .keepAlways; add(proof)
+        structureSnapshot(app, "Original subtask export confirms complete byte preservation")
+        childDone(app); childProbe(app, "adoptionWrites=0 adoptionRequests=0")
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), originalRoot)
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-adoption-export", large: true)
+        XCTAssertEqual(try Data(contentsOf: picked), expected); XCTAssertEqual(try Data(contentsOf: expectedFile), expected)
+        XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), originalRoot)
+        childHomePress("childNativeAdoption", app)
+        childReveal(warning, app)
+        XCTAssertTrue(warning.waitForExistence(timeout: 15), app.debugDescription); XCTAssertFalse(app.buttons["childAdoptionSend"].exists)
+        XCTAssertFalse(app.staticTexts["childAdoptionExportFeedback"].exists, "Fresh review must not inherit old export feedback")
+        structureSnapshot(app, "Saved original export and malformed review survive cold return")
     }
 
 }

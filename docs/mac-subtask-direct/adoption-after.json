@@ -1,0 +1,79 @@
+{
+  "adoptionWrites": 1,
+  "adoptionReceipts": {
+    "2f965117-e011-4f4a-8eb9-e70db57ce271": {
+      "body": {
+        "review_digest": "55da2decaaa5d99f85c3feb7aed0763b02526a1796363fee44f93ceaad23291c",
+        "protocol": 1,
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "request_id": "2f965117-e011-4f4a-8eb9-e70db57ce271",
+        "workspace_id": null,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "project_id": null
+      },
+      "result": {
+        "review_digest": "55da2decaaa5d99f85c3feb7aed0763b02526a1796363fee44f93ceaad23291c",
+        "replayed": false,
+        "node_count": 3,
+        "protocol": 1,
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "request_id": "2f965117-e011-4f4a-8eb9-e70db57ce271",
+        "workspace_id": null,
+        "state": "applied",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "project_id": null
+      }
+    }
+  },
+  "adoptionApplied": true,
+  "adoptionRequests": 1,
+  "root": {
+    "subtasks": [
+      {
+        "description": "Original saved notes",
+        "future": {
+          "keep": true
+        },
+        "title": "Prepare the review",
+        "id": "concept",
+        "subtasks": [
+          {
+            "future": {
+              "keep": true
+            },
+            "id": "nested",
+            "title": "Collect supporting notes",
+            "description": "Keep these nested instructions"
+          }
+        ],
+        "completed": false,
+        "priority": 4
+      },
+      {
+        "id": "review",
+        "future": {
+          "keep": true
+        },
+        "title": "Publish the summary",
+        "description": "Original saved notes",
+        "completed": false,
+        "priority": 4
+      }
+    ],
+    "project_id": null,
+    "id": "ec990000-0000-4000-8000-000000000002",
+    "task_generation": "ec990000-0000-4000-8000-000000000003",
+    "user_id": "ec990000-0000-4000-8000-000000000001",
+    "title": "Native child workspace"
+  },
+  "receipts": {},
+  "lost": false,
+  "writes": 0,
+  "versions": {
+    "concept": 1,
+    "review": 1
+  },
+  "requests": 0
+}

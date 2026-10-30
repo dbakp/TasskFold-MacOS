@@ -1,0 +1,36 @@
+{
+  "platform": "mac",
+  "names": [
+    "testChildTransferNativeMoveColdUndoAndReturn",
+    "testChildTransferNativeLostReplyColdRetryUsesOriginalRequest",
+    "testChildAdoptionNativeLargestReviewUpgradeAndColdStatus",
+    "testChildAdoptionNativeLostReplyColdRetryUsesOriginalRequest",
+    "testChildAdoptionNativeMalformedReviewAndOriginalExportCancel",
+    "testChildAdoptionNativePrivateDraftProtectionAndUnappliedStop",
+    "testChildAdoptionNativeOriginalExportSaveAndColdReadback"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskAdoption.swift": "78ff4cd457df61b5cf18edb1c464e5be28b52c5e4900267fa9df4defdecd6c27",
+    "Taskfold/Core/ChildTaskTransfers.swift": "49301ebb9734b793044b419c7c3802891b8fdd165d425e25955bffc6e2aacc7c",
+    "Taskfold/Core/Store.swift": "ba6159671a9213f5517803caeb737e983f17b76b0a62f4044c82cbd07b41eaac",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "9428938636aa67f27a774ca0aeac09386486dfa3cea99e777ee835f9a2d7494d",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "e07a030db864c4d404fbaab56c375e877930aa48e86427c29c23d52501420556",
+    "Taskfold/ChildAdoptionNativeFixture.swift": "f8b9825de594c1dd29fb4d7551da20aad676d6ffcbf1f0a78cc8daaee907e5bb",
+    "Taskfold/ChildFieldNativeFixture.swift": "f34abd911a26052d2b24f1205072b8d34d50b20b705d7d4ef03c819c3d7a44a5",
+    "Taskfold/ChildTransferNativeFixture.swift": "5c365e4d0d813e8c60ec7e2c37bd746931d7d75d0d9b58a25cac4f61cd86198b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "a46c36635ecc71e4c9d294ef6771eb1bd76b98b2ddeb0c4529ebbc15786a86d2"
+  },
+  "builtHostSHA256": {
+    "Taskfold/Core/ChildTaskAdoption.swift": "78ff4cd457df61b5cf18edb1c464e5be28b52c5e4900267fa9df4defdecd6c27",
+    "Taskfold/Core/ChildTaskTransfers.swift": "49301ebb9734b793044b419c7c3802891b8fdd165d425e25955bffc6e2aacc7c",
+    "Taskfold/Core/Store.swift": "8941e3e1d298ff42679649ad5a8de2833bd001cc2145cf09f7efb53aa6725110",
+    "Taskfold/Views/ChildTaskAdoptionViews.swift": "9428938636aa67f27a774ca0aeac09386486dfa3cea99e777ee835f9a2d7494d",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "e07a030db864c4d404fbaab56c375e877930aa48e86427c29c23d52501420556",
+    "Taskfold/ChildAdoptionNativeFixture.swift": "f8b9825de594c1dd29fb4d7551da20aad676d6ffcbf1f0a78cc8daaee907e5bb",
+    "Taskfold/ChildFieldNativeFixture.swift": "f34abd911a26052d2b24f1205072b8d34d50b20b705d7d4ef03c819c3d7a44a5",
+    "Taskfold/ChildTransferNativeFixture.swift": "5c365e4d0d813e8c60ec7e2c37bd746931d7d75d0d9b58a25cac4f61cd86198b",
+    "TaskfoldUITests/AudioCommentUITests.swift": "a46c36635ecc71e4c9d294ef6771eb1bd76b98b2ddeb0c4529ebbc15786a86d2"
+  },
+  "appSHA256": "8ecbf5e9bcce6bab255b1309bed9d15ae4ffd8377828ed19ab3729e927ea6b52",
+  "temporaryDisplayAwakeAssertion": "caffeinate -d -i -t 1800 scoped to xcodebuild; no persistent settings changed"
+}

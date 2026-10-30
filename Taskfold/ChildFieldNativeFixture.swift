@@ -47,7 +47,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             first["subtasks"] = .array([.object(["id": .string("nested"), "title": .string("Collect supporting notes"), "description": .string("Keep these nested instructions"), "future": .object(["keep": .bool(true)])])])
             initialChildren[0] = .object(first)
         }
-        if ChildAdoptionNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--child-adoption-malformed") { initialChildren[0] = .string("Keep this older text unchanged") }
+        if ChildAdoptionNativePeer.enabled, (ProcessInfo.processInfo.arguments.contains("--child-adoption-malformed") || ChildAdoptionNativePeer.exportTesting) { initialChildren[0] = .string("Keep this older text unchanged") }
         return ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array(initialChildren)]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
     }
     static func save(_ state: [String: JSON]) throws {

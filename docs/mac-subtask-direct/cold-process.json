@@ -1,0 +1,20 @@
+{
+  "timeUTC": "2026-10-30T16:54:40.129965+00:00",
+  "oldIsolatedPIDs": [
+    93484
+  ],
+  "verifiedStopped": true,
+  "newIsolatedPIDs": [
+    95576
+  ],
+  "arguments": [
+    "--uitesting",
+    "--team-editor-testing",
+    "--child-fields-native",
+    "--child-transfer-native",
+    "-ApplePersistenceIgnoreState",
+    "YES"
+  ],
+  "reset": false,
+  "reason": "Earlier UI observation could reopen an app without its test arguments; process absence now checked using canonical executable paths."
+}

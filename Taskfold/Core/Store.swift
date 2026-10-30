@@ -5407,6 +5407,7 @@ extension Store {
                 if let draft=try? backupVault.editorDraft(entry.id,origin:ChildFieldNativeIdentity.origin),(draft.extras["independent_child_fields"]?.object["root"] == .string(ChildFieldNativeIdentity.rootID) || ChildAdoptionNativePeer.enabled && ChildTaskAdoptionAdmission.roots(draft).contains(ChildFieldNativeIdentity.rootID)) {try backupVault.closeEditorDraft(entry.id)}
             }
         }
+        try ChildAdoptionNativePeer.prepareExport(reset: ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset"))
         accountGeneration=UUID();signedIn=true;localMode=false;workspaceCacheDecoded=true;workspaceCacheReadable=true;teamAccessMask=nil
         snapshot=Snapshot();undoStack=[];redoStack=[];try childFieldNativeRefresh()
     }

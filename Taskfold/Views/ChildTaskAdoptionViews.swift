@@ -52,6 +52,12 @@ struct ChildTaskAdoptionView: View {
         guard usable else { return nil }
         return model?.entries.first { $0.command.id == activeID } ?? model?.entries.first { $0.command.rootID == selected && ($0.phase == .queued || $0.phase == .attempted) }
     }
+    private var exportFilename: String {
+        #if DEBUG
+        if ChildAdoptionNativePeer.exportTesting { return ChildAdoptionNativePeer.exportFilename }
+        #endif
+        return "original-subtasks-" + Dates.day(Date())
+    }
     private var form: some View {
         List {
             if usable, let model {
@@ -127,6 +133,9 @@ struct ChildTaskAdoptionView: View {
     var body: some View {
         Group { if selected == nil { form.searchable(text: $search, prompt: "Find a task") } else { form } }
             .privacySensitive()
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .task(id: scope) { await open() }
             .onChange(of: phase) { _, value in if value == .active { Task { await open() } } else { close() } }
             .onChange(of: scope) { before, after in
@@ -135,11 +144,16 @@ struct ChildTaskAdoptionView: View {
             }
             .onChange(of: store.snapshotRevision) { _, _ in if !reading { read = nil } }
             .onDisappear { close() }
-            .fileExporter(isPresented: $exporting, document: exportDocument, contentType: .json, defaultFilename: "original-subtasks-" + Dates.day(Date())) { result in
+            .fileExporter(isPresented: $exporting, document: exportDocument, contentType: .json, defaultFilename: exportFilename) { result in
                 guard exportScope == scope, exportRoot == selected else { return }
                 exportDocument = nil
                 switch result {
-                case .success: exportMessage = "Original content exported. Your saved task is unchanged."
+                case .success(let url):
+                    _ = url // The production build does not record test receipts.
+                    exportMessage = "Original content exported. Your saved task is unchanged."
+                    #if DEBUG
+                    ChildAdoptionNativePeer.recordExport(url)
+                    #endif
                 case .failure(let error): exportMessage = (error as NSError).code == NSUserCancelledError ? nil : "Export couldn’t finish. Your original content is still saved."
                 }
             }

@@ -7,6 +7,61 @@ import CryptoKit
 @MainActor enum ChildAdoptionNativePeer {
     static let privateID = UUID(uuidString: "ec990000-0000-4000-8000-000000000030")!
     static var enabled: Bool { ChildFieldNativeIdentity.enabled && ProcessInfo.processInfo.arguments.contains(where: { $0.hasPrefix("--child-adoption-") }) }
+    static var exportTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--child-adoption-export") }
+    static let exportFilename = "Taskfold-original-subtasks-proof"
+    /// Raw RPC content deliberately includes values the legacy Double-backed
+    /// cache cannot represent. The expected file is independent of the client
+    /// parser and FileDocument; its exact bytes are placed into the RPC reply.
+    static var exportSource: Data { Data(#"""
+[
+  "Keep this older text unchanged",
+  {"id":"review","title":"Review café 🪴","opaque":{"integer":9007199254740993,"exponent":1e1000,"é":"composed","é":"decomposed","ordered":[null,false,{"untouched":"Line\\nkept"}]}}
+]
+"""#.utf8) }
+    static var exportExpectedFile: URL { ChildFieldNativePeer.folder.appendingPathComponent("adoption-export-original.json") }
+    static var exportReceiptFile: URL { ChildFieldNativePeer.folder.appendingPathComponent("adoption-export-receipt.json") }
+    static func prepareExport(reset: Bool) throws {
+        guard exportTesting else { return }
+        try FileManager.default.createDirectory(at: ChildFieldNativePeer.folder, withIntermediateDirectories: true)
+        let documents = URL.documentsDirectory
+        try FileManager.default.createDirectory(at: documents, withIntermediateDirectories: true)
+        let destination = documents.appendingPathComponent(exportFilename + ".json")
+        if reset {
+            if FileManager.default.fileExists(atPath: destination.path) {
+                guard try Data(contentsOf: destination) == exportSource else { throw AppFailure(message: "Reserved export destination contains unfamiliar data.") }
+                try FileManager.default.removeItem(at: destination)
+            }
+            if FileManager.default.fileExists(atPath: exportReceiptFile.path) { try FileManager.default.removeItem(at: exportReceiptFile) }
+        }
+        let marker = documents.appendingPathComponent("Taskfold-originals-destination")
+        let markerBytes = Data("Synthetic Taskfold original-content export destination".utf8)
+        if FileManager.default.fileExists(atPath: marker.path) {
+            guard try Data(contentsOf: marker) == markerBytes else { throw AppFailure(message: "Reserved export marker contains unfamiliar data.") }
+        } else { try markerBytes.write(to: marker, options: .atomic) }
+        if FileManager.default.fileExists(atPath: exportExpectedFile.path) {
+            guard try Data(contentsOf: exportExpectedFile) == exportSource else { throw AppFailure(message: "Reserved original-content fixture changed.") }
+        } else { try exportSource.write(to: exportExpectedFile, options: .atomic) }
+    }
+    static func recordExport(_ url: URL) {
+        guard exportTesting, url.isFileURL else { return }
+        do {
+            let data = try JSONSerialization.data(withJSONObject: ["url":url.absoluteString,"request":UUID().uuidString.lowercased(),"account":ChildFieldNativeIdentity.account,"root":ChildFieldNativeIdentity.rootID], options: [.sortedKeys])
+            try data.write(to: exportReceiptFile, options: .atomic)
+        } catch { assertionFailure("Synthetic original-content export receipt could not be saved") }
+    }
+    static func exportReview(_ state: [String: JSON]) throws -> Data {
+        var metadata = try review(state)
+        metadata["source_tree"] = .null; metadata["source_bytes"] = .number(Double(exportSource.count))
+        metadata["state"] = .string("review"); metadata["issue"] = .string("identity")
+        metadata["node_count"] = .null; metadata["max_depth"] = .null; metadata["can_adopt"] = .bool(false)
+        metadata["review_digest"] = .string(SHA256.hash(data: exportSource + Data(try hash(state["root"]!).utf8)).map { String(format:"%02x",$0) }.joined())
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        var result = try encoder.encode(metadata)
+        let marker = Data("\"source_tree\":null".utf8)
+        guard let range = result.range(of: marker) else { throw CancellationError() }
+        result.replaceSubrange(range, with: Data("\"source_tree\":".utf8) + exportSource)
+        return result
+    }
     static let paths: Set<String> = ["/rest/v1/rpc/taskfold_review_child_adoption", "/rest/v1/rpc/taskfold_adopt_child_records"]
     static func hash(_ value: JSON) throws -> String {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
@@ -38,6 +93,7 @@ import CryptoKit
         let root = Record(state["root"]!.object)
         if path.hasSuffix("taskfold_review_child_adoption") {
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"] else { throw ChildFieldNativeRefusal(code:"PT409") }
+            if exportTesting { return (try exportReview(state),false) }
             return (try JSONEncoder().encode(review(state)),false)
         }
         guard Set(body.keys) == ["_operation","_body"], let operation=ChildTaskAdoptionOperation(rawValue:body["_operation"]?.text ?? ""), case .object(let raw)?=body["_body"] else { throw ChildFieldNativeRefusal(code:"22023") }

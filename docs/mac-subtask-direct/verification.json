@@ -1,0 +1,35 @@
+{
+  "reviewed": "2026-10-30",
+  "method": "Direct CUA controls on the signed isolated Mac app, launched from Terminal with explicit user authorization. Not an XCTest pass.",
+  "nativePersonalMoveColdUndoAccepted": true,
+  "fullyAcceptedForEverydayUse": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "verified": [
+    "GUI reviewed Prepare the review with 1 nested item into Transfer destination, top level, at the end",
+    "GUI showed Subtask moved and retained Move confirmed",
+    "Source organizer then contained only Publish the summary",
+    "Verified process stop and fresh process without reset; GUI retained the applied move and original receipt",
+    "GUI Undo returned Move undone and restored concept > nested > review",
+    "Source and destination root fields match their original canonical JSON exactly; 2 writes and 2 requests",
+    "GUI review showed all 3 original nodes in order; explicit Upgrade subtasks returned Subtasks upgraded with unchanged-content confirmation",
+    "Normal quit and verified process absence; fresh launch without reset showed original saved upgrade, one request and one write"
+  ],
+  "originalRootSHA256": "bbff64cea881217aff5946c2c7dd2e8eae8f31d9f21f477b78d10b1767688ada",
+  "restoredRootSHA256": "bbff64cea881217aff5946c2c7dd2e8eae8f31d9f21f477b78d10b1767688ada",
+  "destinationRestoredExactly": true,
+  "remaining": [
+    "Mac lost-response and other transfer edge cases",
+    "Mac original-export Save/readback, lost replies, secure-storage/account/window/background/VoiceOver checks",
+    "Real shared-account and full attachment/discussion custody"
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskTransfers.swift": "49301ebb9734b793044b419c7c3802891b8fdd165d425e25955bffc6e2aacc7c",
+    "Taskfold/Core/Store.swift": "ba6159671a9213f5517803caeb737e983f17b76b0a62f4044c82cbd07b41eaac",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "e07a030db864c4d404fbaab56c375e877930aa48e86427c29c23d52501420556",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "f2ba71c19a3d44f42da55f11b7b7cd9e6f548250755a84f2823300ab06ce00a4",
+    "Taskfold/ChildTransferNativeFixture.swift": "5c365e4d0d813e8c60ec7e2c37bd746931d7d75d0d9b58a25cac4f61cd86198b",
+    "Taskfold/ChildFieldNativeFixture.swift": "f34abd911a26052d2b24f1205072b8d34d50b20b705d7d4ef03c819c3d7a44a5"
+  },
+  "nativeReviewedUpgradeColdStatusAccepted": true
+}
