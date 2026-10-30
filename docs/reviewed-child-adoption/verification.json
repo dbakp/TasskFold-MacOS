@@ -1,0 +1,84 @@
+{
+  "reviewed": "2026-10-30",
+  "status": "Service foundation tested locally; app integration and migration tools unfinished",
+  "platform": "mac",
+  "sqlChecks": 138,
+  "failures": 0,
+  "deployed": false,
+  "ordinaryFeatureEnabled": false,
+  "isolatedContainerRemoved": true,
+  "addedAdvisorFindings": [],
+  "sourceSHA256": {
+    "supabase/migrations/20261030134132_reviewed_child_record_adoption.sql": "71ada450f12087c5b8e34b643b9e01315a54389495e4a707b008e86122fea7c2",
+    "Scripts/Database/test-reviewed-child-adoption.mjs": "9782103380c98032d75513f975deadc058db732af652adeaf273cd6ac5ce5f75"
+  },
+  "evidenceSHA256": {
+    "local-migration-list.log": "51f80f996356bcc8d437c350c03cbdf512f5b48a4146394e6c7fe0de8c018a21",
+    "sql.json": "fa5690826ea14647a2c78dba6605352a298bebfbb54489eff85ff7de863c9c2a",
+    "sql.log.gz": "50ed7c71882b1dc1ec8cb320f41704ed187bc388d2c9d733af55f5addfd02ab6"
+  },
+  "reviewKeys": [
+    "account",
+    "can_adopt",
+    "issue",
+    "max_depth",
+    "node_count",
+    "project_id",
+    "projection_revision",
+    "protocol",
+    "review_digest",
+    "root_kind",
+    "source_bytes",
+    "source_included",
+    "source_tree",
+    "state",
+    "structure_revision",
+    "task_generation",
+    "task_id",
+    "workspace_id"
+  ],
+  "commandKeys": [
+    "account",
+    "project_id",
+    "protocol",
+    "request_id",
+    "review_digest",
+    "task_generation",
+    "task_id",
+    "workspace_id"
+  ],
+  "receiptKeys": [
+    "account",
+    "node_count",
+    "project_id",
+    "protocol",
+    "replayed",
+    "request_id",
+    "review_digest",
+    "state",
+    "task_generation",
+    "task_id",
+    "workspace_id"
+  ],
+  "verificationScope": [
+    "Real PostgreSQL public RPC entry points under authenticated role and actual RLS",
+    "Original tree, opaque extensions, Unicode identity, sibling shape and pre-existing record versions preserved",
+    "Stale content/row identity/workspace review, revoked role, expired session, archived project and disabled gates refused",
+    "Private deletion archive retained and its prior Undo still usable after adoption",
+    "Late receipt failure rolls back records and authority; replay/check/close remain safe",
+    "Reciprocal field/transfer nonce fencing and untrusted team-closure reservation refusal"
+  ],
+  "remaining": [
+    "Strict typed app transport, encrypted pending requests and uncertain-reply recovery",
+    "Store admission with private drafts and other pending child actions",
+    "Native review/diagnostic/recovery screens and explicit malformed-content repair/export",
+    "Native/VoiceOver/account/window/background and genuine secure-storage acceptance",
+    "Full custody, large workflows and coordinated rollout; existing user deferrals unchanged"
+  ],
+  "localSupabaseStack": "Not running: migration list --local could not connect. SQL compiled and executed in the owned isolated fixture; no hosted deployment or full local-stack migration-history acceptance claimed.",
+  "notes": [
+    "The current root guard assigns generation markers; tests reject a stale null marker. No child identities are synthesized.",
+    "Earlier iterations are not added to the accepted test total. They caught a PL/pgSQL CASE syntax issue and fixture JSON/large-read/automatic-binding assumptions.",
+    "No Swift/app implementation changed in this milestone; earlier Core/native test totals are not rerun claims."
+  ]
+}

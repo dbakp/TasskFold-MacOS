@@ -1316,3 +1316,15 @@ Evidence: `cross-root-transfer-client/verification.json`. The original broad che
 - [ ] Mac/spoken/shared-account/window/secure-storage acceptance, older-work tools and full custody/workload checks remain. Normal-use gates stay off.
 
 Evidence: `cross-root-transfer-layout/verification.json`. Core/SQL counts belong to the preceding milestone and were not rerun for this view-only change.
+
+
+## 30 October 2026 — explicit older-subtask adoption service
+
+- [x] Read-only original-content review with bounded diagnostics and a fingerprint of the exact task/workspace/tree/record state.
+- [x] Explicit root-by-root adoption, metadata-only send/check/close, safe replay and cross-protocol nonce fences.
+- [x] Preserve public task content, opaque/Unicode fields, existing record identity/revisions, activity counts and prior deletion Undo.
+- [x] Each repository: 138 genuine PostgreSQL/RLS checks; no added advisor findings; owned container removed.
+- [ ] Typed client/transport, encrypted recovery, Store/private-draft admission and native review/diagnostic/repair/export tools.
+- [ ] Native/spoken/secure-storage/lifecycle, full custody, larger workloads and rollout remain unfinished. Normal-use gates stay off; nothing hosted was changed.
+
+Evidence: `reviewed-child-adoption/verification.json`. No earlier Core/native counts are presented as reruns. The full local Supabase stack was unavailable for migration-history listing; isolated SQL acceptance does not clear deployment or older-client rollout gates.

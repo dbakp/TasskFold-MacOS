@@ -34,7 +34,7 @@
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--muted)" aria-hidden="true"></span>To build</span>
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-3)" aria-hidden="true"></span>Deferred</span>
 </div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope.</div>
-<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · P2 · Older-work review and migration</summary><div>The clipped Undo label in the new cross-task move flow is fixed. Both apps build; two iPhone and two iPad Simulator journeys pass, including largest-text Undo and cold retry without duplicate writes. The next implementation gap is reviewing and adopting older saved work. Mac/spoken, shared-account lifecycle and genuine secure-storage checks remain open; normal use stays disabled.</div></details>
+<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · P2 · Older-work review and migration</summary><div>The older-work adoption service now reviews original subtask content without changing it and adopts only the exact version reviewed. Each repo passes 138 isolated database checks, including permissions, retry, preservation and prior Undo. App review/recovery screens, malformed-content repair/export and broader acceptance are still unfinished. Normal use remains disabled; nothing was deployed.</div></details>
 <details class="px-stage" id="px-p0" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P0 · Foundations</span></span><span class="text-small text-muted" aria-hidden="true">11 verified · 1 built / checks left · 1 to build · 3 deferred</span><svg class="px-meter" viewBox="0 0 16 1" preserveAspectRatio="none" role="img" aria-label="11 verified · 1 built / checks left · 1 to build · 3 deferred"><rect x="0" y="0" width="11" height="1" fill="var(--viz-series-1)"/><rect x="11" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="12" y="0" width="1" height="1" fill="var(--muted)"/><rect x="13" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">Core workflows accepted in recorded scope. Deletion recovery and three paused rollout gates remain.</div>
 <details class="px-group" id="p0-core" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Everyday task foundations</span></span><span class="text-small text-muted" aria-hidden="true">6 verified</span><svg class="px-meter" viewBox="0 0 6 1" preserveAspectRatio="none" role="img" aria-label="6 verified"><rect x="0" y="0" width="6" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p0-core-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Todoist import and safe retry</span><span class="text-small text-muted">Verified</span></div>
@@ -302,7 +302,7 @@
 <li class="px-item" data-state="verify" id="p2-teams-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real cloud-media and provider checks</span><span class="text-small text-muted">Built · checks left</span></div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-7"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Move subtask storage and preserve older work</span><span class="text-small text-muted">To build</span></div>
-<div class="px-item-detail text-small text-muted">Separate storage, atomic cross-task transfers, completion history, the move UI and encrypted recovery are implemented as gated candidates. Four mobile Simulator journeys and both client suites pass. Older-work migration, full shared attachment/discussion custody and wider native/workload checks remain unfinished. Normal use stays disabled; no hosted transfer changes are deployed.</div>
+<div class="px-item-detail text-small text-muted">Separate storage, cross-task moves and their recovery are gated candidates. The older-work adoption service now passes exact-review, preservation, permission, retry and prior-Undo checks. Its app review/recovery and malformed-content repair/export tools, full shared custody and wider native/workload checks are unfinished. Normal use stays disabled; nothing hosted was deployed.</div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Shared audio publishing and storage permissions</span><span class="text-small text-muted">To build</span></div>
 <div class="px-item-detail text-small text-muted">Shared publishing/removal, older history handling and storage/access rules are unfinished.</div>
@@ -327,6 +327,7 @@
 <li>cross-root-child-transfers/verification.json</li>
 <li>cross-root-transfer-client/verification.json</li>
 <li>cross-root-transfer-layout/verification.json</li>
+<li>reviewed-child-adoption/verification.json</li>
 </ul></details></details>
 <details class="px-group" id="p2-watch" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Apple Watch</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p2-watch-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Today, reviewed capture and offline completion implementation</span><span class="text-small text-muted">Verified</span></div>
@@ -342,9 +343,9 @@
 </ul></details></details>
 </details>
 <footer class="px-footer"><details id="px-next" data-remember><summary class="cursor-interaction">Next in the active work</summary><ol>
-<li>Build reviewed adoption tools for older saved work, with explicit handling of malformed content and no silent conversion.</li>
-<li>Finish Mac/VoiceOver, shared-account/window/background, secure-storage and full attachment/discussion custody checks before enabling the new storage.</li>
-<li>Verify larger workflows and finish the remaining team/audio recovery and native/provider checks. Keep agreed deferrals paused.</li>
+<li>Connect strict typed adoption commands, encrypted pending-request recovery and Store admission that preserves private drafts and other pending actions.</li>
+<li>Build the native original-content review, diagnostic/recovery screens and explicit malformed-content repair/export; verify real account, secure-storage, lifecycle and VoiceOver behavior.</li>
+<li>Finish full attachment/discussion custody, larger workflows and remaining team/audio/provider checks. Keep agreed rollout and configuration deferrals paused.</li>
 </ol></details><div class="text-small text-muted">Both apps own their dashboard and sources. Reviewed snapshot; no live telemetry or completion-date estimate.</div></footer>
 </div>
 <script>
