@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-31",
+  "repository": "TasskFold-MacOS",
+  "scope": "Encrypted repair-review choices with cold resume, exact-original guards and atomic queue handoff",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "14bcda49b2ff2b915bf9098674097bc68c60b37f8434bb7f59b3848dd3e34f35",
+    "Taskfold/Core/Store.swift": "e50b756fefd1ca31cd989b193346628a239fd605cbb1b167d09f4b39da4d443d",
+    "Taskfold/Views/ChildTaskRepairView.swift": "0489af3099bab0d2bc91115caaedae5124510d3f778d179f12fc3fe4967e0dec",
+    "TaskfoldTests/ChildTaskRepairTests.swift": "7aab672483ef323975316073811b95b087540d44b97877f770172729703b34bc"
+  },
+  "core": {
+    "tests": 47,
+    "failures": 0,
+    "newDraftTests": 7,
+    "logSHA256": "31c34d1b503497cfdda450ac6061e8e74baac9ab3f753bd1578e415add41c230",
+    "report": "core.log.gz"
+  },
+  "native": {
+    "method": "Explicitly authorized Terminal launch and direct computer use; signed isolated v5 app with synthetic HTTP peer",
+    "flows": [
+      "First choice saves locally; zero repair writes",
+      "Close and quit",
+      "Cold saved-review discovery with one choice and no duplicate fresh task row",
+      "Click empty middle of the expanded saved-review row; exact review opens",
+      "Exact first choice resumes; second choice forms valid two-task preview",
+      "Preview stays usable after 30-second wait",
+      "Explicit confirmation saves one repair and keeps original copy",
+      "Test app closed"
+    ],
+    "repairWrites": 1,
+    "receipts": 1,
+    "appsClosed": true,
+    "strictDevelopmentSignature": true,
+    "build": "native-build.json",
+    "fullProductAcceptance": false,
+    "savedOriginalEqualsUnchangedSeedRoot": true,
+    "seedFixture": "Native v4 captured deterministic root, unchanged and identical in v5"
+  },
+  "hostedChanges": false,
+  "ordinaryFlagsChanged": false,
+  "fullMigrationAccepted": false,
+  "earlierBuild": "Mac v1 was intentionally cancelled because final scope and paused-state refinements changed source before runtime testing; not an acceptance run.",
+  "earlierFindings": [
+    "Mac v2 cold resume preserved the draft, but duplicate root row identities caused the saved-review row to display as a fresh task entry. Final v3 gives draft rows their unique token identity and excludes drafted roots from the fresh-task section. No Core logic changed after the final 47-case run.",
+    "Mac v3 resumed the exact saved choice, but an unchanged routine workspace snapshot cleared the proposal. Final v4 refreshes the authorized preview automatically while keeping saved identity/digest checks. Core remains unchanged.",
+    "The v4 iPad test reached cold saved-review discovery but its center tap did not activate the label-sized row. Final v5 makes the saved-review label fill the row and gives it a rectangular hit area. Core and mutation/recovery behavior are unchanged."
+  ]
+}

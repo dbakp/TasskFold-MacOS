@@ -124,6 +124,7 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 - [ ] Broader role/recovery/Mac/spoken checks and production exposure of gated
   candidates. New client UI alone does not establish server role enforcement.
 - [ ] Independent child-task database migration.
+- [x] Saved repair-review choices, exact-original cold resume and atomic queued-repair handoff in recorded Mac/iPhone/iPad scopes. [Evidence](child-repair-drafts/README.md).
 - [x] Private opt-in child records: exact adoption, lossless fields/order/shapes,
   stable current identity and fresh incarnations after removal/recreation, atomic
   legacy-write synchronization and review instead of guessed identities.

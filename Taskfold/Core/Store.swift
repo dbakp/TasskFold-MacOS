@@ -426,7 +426,7 @@ final class Store {
             case .adoptions:
                 let state = try await self.childTaskAdoptionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
             case .repairs:
-                let state = try await self.childTaskRepairJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+                let state = try await self.childTaskRepairJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty || !state.drafts.isEmpty
             }
         }
     }

@@ -36,6 +36,10 @@ def validate(data):
             sources.update(group['sources'])
             for item in group['items']:
                 assert item['state'] in STATES and item['title'].strip()
+                steps = item.get('steps', [])
+                assert isinstance(steps, list) and len(steps) <= 16
+                for step in steps:
+                    assert set(step) == {'state', 'title'} and step['state'] in STATES and step['title'].strip()
     hashes = {}
     for ref in sorted(sources):
         assert re.fullmatch(r'[A-Za-z0-9_./-]+', ref), ref
@@ -79,7 +83,7 @@ def render(data, links=False):
     out.append('<div class="px-legend" aria-label="Milestone states">')
     for label, color, _ in STATES.values():
         out.append(f'<span class="px-key text-small"><span class="px-swatch" style="background:{color}" aria-hidden="true"></span>{escape(label)}</span>')
-    out.append('</div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope.</div>')
+    out.append('</div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope. Substeps show progress within a checkpoint and do not change bar totals.</div>')
     out.append(f'<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · {escape(data["focus"])}</summary><div>{escape(data["latest"])}</div></details>')
     for stage in data['stages']:
         all_items = [item for group in stage['groups'] for item in group['items']]
@@ -93,6 +97,12 @@ def render(data, links=False):
                 out.append(f'<li class="px-item" data-state="{item["state"]}" id="{group["id"]}-item-{index}"><span style="color:{glyph_color}" aria-hidden="true">{glyph}</span><div><div class="px-item-head"><span class="px-item-title">{escape(item["title"])}</span><span class="text-small text-muted">{escape(label)}</span></div>')
                 if item.get('detail'):
                     out.append(f'<div class="px-item-detail text-small text-muted">{escape(item["detail"])}</div>')
+                if item.get('steps'):
+                    out.append('<ul class="px-steps text-small" aria-label="Progress within this checkpoint">')
+                    for step in item['steps']:
+                        step_label, _, step_glyph = STATES[step['state']]
+                        out.append(f'<li class="px-step" data-state="{step["state"]}"><span aria-hidden="true">{step_glyph}</span><span><span class="sr-only">{escape(step_label)}: </span>{escape(step["title"])}</span></li>')
+                    out.append('</ul>')
                 out.append('</div></li>')
             out.append(f'</ul><details class="px-sources" id="{group["id"]}-evidence" data-remember><summary class="cursor-interaction text-small">Evidence for this section</summary><ul class="px-source-list text-small">')
             for ref in group['sources']:
@@ -114,6 +124,7 @@ STANDALONE_CSS = '''
 body { margin: 0 auto; padding: 24px; max-width: 880px; background: var(--background); color: var(--foreground); font: 14px/1.5 system-ui, sans-serif; }
 h1 { font-size: 1.4em; font-weight: 500; }
 .text-small { font-size: 12px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .text-muted { color: var(--muted-foreground); }
 .viz-badge { background: var(--muted); border-radius: 6px; padding: 2px 7px; font-size: 12px; }
 a { color: LinkText; }

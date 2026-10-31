@@ -5,6 +5,7 @@
 body { margin: 0 auto; padding: 24px; max-width: 880px; background: var(--background); color: var(--foreground); font: 14px/1.5 system-ui, sans-serif; }
 h1 { font-size: 1.4em; font-weight: 500; }
 .text-small { font-size: 12px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .text-muted { color: var(--muted-foreground); }
 .viz-badge { background: var(--muted); border-radius: 6px; padding: 2px 7px; font-size: 12px; }
 a { color: LinkText; }
@@ -40,6 +41,8 @@ if (!window.openai) {
 #taskfold-px-progress .px-item-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
 #taskfold-px-progress .px-item-title { flex: 1 1 220px; }
 #taskfold-px-progress .px-item-detail { margin-top: 4px; }
+#taskfold-px-progress .px-steps { list-style: none; padding: 0; margin: 10px 0 0; }
+#taskfold-px-progress .px-step { display: grid; grid-template-columns: 1.2em minmax(0, 1fr); gap: 8px; margin: 6px 0; }
 #taskfold-px-progress .px-sources { margin: 0 0 12px 16px; }
 #taskfold-px-progress .px-source-list { padding-left: 20px; overflow-wrap: anywhere; }
 #taskfold-px-progress .px-footer { border-top: 1px solid var(--border); margin-top: 16px; }
@@ -55,8 +58,8 @@ if (!window.openai) {
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-2)" aria-hidden="true"></span>Built · checks left</span>
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--muted)" aria-hidden="true"></span>To build</span>
 <span class="px-key text-small"><span class="px-swatch" style="background:var(--viz-series-3)" aria-hidden="true"></span>Deferred</span>
-</div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope.</div>
-<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · P2 · Combined completion, Undo and recovery working</summary><div>Combined parent/subtask completion now works in the isolated Mac, iPhone and iPad apps, with whole-selection Undo and saved interrupted-request recovery. Reopen and Command-Z also pass on Mac. This finishes the missing app integration; the wider subtask-storage migration remains unfinished and disabled for normal use.</div></details>
+</div><div class="text-small text-muted">Bars count tracked checkpoints, not effort or release readiness. “Verified” means the recorded scope. Substeps show progress within a checkpoint and do not change bar totals.</div>
+<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · P2 · Repair reviews now survive closing</summary><div>Repair-review choices now save locally before they are accepted, survive closing/relaunch and resume against the exact original task. Native Mac/iPhone/iPad journeys pass. Together with the earlier combined completion/Undo flow, this closes two app-integration gaps. Full Redo/history, older-data mapping, shared content custody and wider acceptance remain.</div></details>
 <details class="px-stage" id="px-p0" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">P0 · Foundations</span></span><span class="text-small text-muted" aria-hidden="true">11 verified · 1 built / checks left · 1 to build · 3 deferred</span><svg class="px-meter" viewBox="0 0 16 1" preserveAspectRatio="none" role="img" aria-label="11 verified · 1 built / checks left · 1 to build · 3 deferred"><rect x="0" y="0" width="11" height="1" fill="var(--viz-series-1)"/><rect x="11" y="0" width="1" height="1" fill="var(--viz-series-2)"/><rect x="12" y="0" width="1" height="1" fill="var(--muted)"/><rect x="13" y="0" width="3" height="1" fill="var(--viz-series-3)"/></svg></span></summary><div class="text-small text-muted px-intro">Core workflows accepted in recorded scope. Deletion recovery and three paused rollout gates remain.</div>
 <details class="px-group" id="p0-core" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">Everyday task foundations</span></span><span class="text-small text-muted" aria-hidden="true">6 verified</span><svg class="px-meter" viewBox="0 0 6 1" preserveAspectRatio="none" role="img" aria-label="6 verified"><rect x="0" y="0" width="6" height="1" fill="var(--viz-series-1)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p0-core-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Todoist import and safe retry</span><span class="text-small text-muted">Verified</span></div>
@@ -324,7 +327,16 @@ if (!window.openai) {
 <li class="px-item" data-state="verify" id="p2-teams-item-6"><span style="color:var(--viz-series-2)" aria-hidden="true">◐</span><div><div class="px-item-head"><span class="px-item-title">Real cloud-media and provider checks</span><span class="text-small text-muted">Built · checks left</span></div>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-7"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Move subtask storage and preserve older work</span><span class="text-small text-muted">To build</span></div>
-<div class="px-item-detail text-small text-muted">Combined parent/subtask completion, reopen, strict confirmations, encrypted saved recovery and whole-selection Undo are connected in both apps. Recorded native Mac/iPhone/iPad journeys pass. Full Redo/history, indexed mapping, content custody, repair drafts and wider checks remain. Normal use stays disabled.</div>
+<div class="px-item-detail text-small text-muted">Combined completion/Undo/recovery and saved repair-review choices now work in the recorded native Mac/iPhone/iPad flows. The checklist below shows the remaining migration work. Normal use stays disabled.</div>
+<ul class="px-steps text-small" aria-label="Progress within this checkpoint">
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Separate subtask records and guarded editing foundations</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Complete tasks and subtasks together, then Undo the whole selection</span></li>
+<li class="px-step" data-state="done"><span aria-hidden="true">✓</span><span><span class="sr-only">Verified: </span>Keep repair-review choices across closing and relaunch</span></li>
+<li class="px-step" data-state="build"><span aria-hidden="true">○</span><span><span class="sr-only">To build: </span>Redo and a consistent shared activity history</span></li>
+<li class="px-step" data-state="build"><span aria-hidden="true">○</span><span><span class="sr-only">To build: </span>Carry older tasks and history into the new storage</span></li>
+<li class="px-step" data-state="build"><span aria-hidden="true">○</span><span><span class="sr-only">To build: </span>Keep shared files and discussions with the right workspace</span></li>
+<li class="px-step" data-state="verify"><span aria-hidden="true">◐</span><span><span class="sr-only">Built · checks left: </span>Finish account, privacy, window, speech and large-library checks</span></li>
+</ul>
 </div></li>
 <li class="px-item" data-state="build" id="p2-teams-item-8"><span style="color:var(--muted-foreground)" aria-hidden="true">○</span><div><div class="px-item-head"><span class="px-item-title">Shared audio publishing and storage permissions</span><span class="text-small text-muted">To build</span></div>
 <div class="px-item-detail text-small text-muted">Shared publishing/removal, older history handling and storage/access rules are unfinished.</div>
@@ -376,6 +388,8 @@ if (!window.openai) {
 <li><a href="mixed-task-completion/README.md" target="_blank" rel="noopener">mixed-task-completion/README.md</a></li>
 <li><a href="mixed-task-completion-native/verification.json" target="_blank" rel="noopener">mixed-task-completion-native/verification.json</a></li>
 <li><a href="mixed-task-completion-native/README.md" target="_blank" rel="noopener">mixed-task-completion-native/README.md</a></li>
+<li><a href="child-repair-drafts/verification.json" target="_blank" rel="noopener">child-repair-drafts/verification.json</a></li>
+<li><a href="child-repair-drafts/README.md" target="_blank" rel="noopener">child-repair-drafts/README.md</a></li>
 </ul></details></details>
 <details class="px-group" id="p2-watch" data-remember><summary class="cursor-interaction"><span class="px-summary"><span class="px-heading"><span class="px-title">7 · Apple Watch</span></span><span class="text-small text-muted" aria-hidden="true">2 verified · 1 built / checks left</span><svg class="px-meter" viewBox="0 0 3 1" preserveAspectRatio="none" role="img" aria-label="2 verified · 1 built / checks left"><rect x="0" y="0" width="2" height="1" fill="var(--viz-series-1)"/><rect x="2" y="0" width="1" height="1" fill="var(--viz-series-2)"/></svg></span></summary><ul class="px-items">
 <li class="px-item" data-state="done" id="p2-watch-item-0"><span style="color:var(--viz-series-1)" aria-hidden="true">✓</span><div><div class="px-item-head"><span class="px-item-title">Today, reviewed capture and offline completion implementation</span><span class="text-small text-muted">Verified</span></div>
@@ -392,7 +406,7 @@ if (!window.openai) {
 </details>
 <footer class="px-footer"><details id="px-next" data-remember><summary class="cursor-interaction">Next in the active work</summary><ol>
 <li>Finish the broader subtask-storage migration: full Redo/shared history, indexed mapping and shared attachment/discussion custody. Keep acceptance bounded to each delivered workflow.</li>
-<li>Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.</li>
+<li>Finish broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.</li>
 <li>Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused.</li>
 </ol></details><div class="text-small text-muted">Both apps own their dashboard and sources. Reviewed snapshot; no live telemetry or completion-date estimate.</div></footer>
 </div>

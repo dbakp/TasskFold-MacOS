@@ -257,6 +257,43 @@ struct ChildTaskRepairFailure: LocalizedError {
 }
 
 
+/// A local review is not a queued mutation. Only small explicit choices are saved;
+/// opaque original content stays on its existing read/export path.
+struct ChildTaskRepairDraft: Codable, Equatable, Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    let account: String, origin: String
+    let identity: [String: JSON]
+    let changes: [ChildTaskRepairChange], labels: [String]
+    let token: UUID
+    var rootID: String { identity["task_id"]!.text }
+    var description: String { "Private saved repair review" }
+    var debugDescription: String { description }
+    static let identityKeys: Set<String> = ["task_id", "task_generation", "project_id", "workspace_id", "review_digest"]
+    init(account: String, origin: String, identity: [String: JSON], changes: [ChildTaskRepairChange], labels: [String], token: UUID = UUID()) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard Set(identity.keys) == Self.identityKeys, ChildTaskAdoptionCommand.digest(identity["review_digest"]),
+              labels.count == changes.count, labels.allSatisfy({ !$0.isEmpty && $0.utf8.count <= 2048 }) else { throw ChildTaskRepairCommand.invalid }
+        _ = try TeamOrganizationValue.id(identity["task_id"])
+        for key in ["task_generation", "project_id", "workspace_id"] { _ = try TeamProjectValue.optionalID(identity[key]) }
+        try ChildTaskRepairChange.validate(changes)
+        self.account = account; self.origin = origin; self.identity = identity; self.changes = changes; self.labels = labels; self.token = token
+    }
+    init(review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange], labels: [String]) throws {
+        try self.init(account: review.context.account, origin: review.context.origin, identity: review.metadata.filter { Self.identityKeys.contains($0.key) }, changes: changes, labels: labels)
+    }
+    func matches(_ review: ChildTaskAdoptionReview) -> Bool {
+        account == review.context.account && origin == review.context.origin && Self.identityKeys.allSatisfy { ChildTaskStructureCommand.exact(identity[$0], review.metadata[$0]) }
+    }
+    private enum CodingKeys: String, CodingKey { case account, origin, identity, changes, labels, token }
+    init(from decoder: Decoder) throws {
+        try structureKeys(decoder, ["account", "origin", "identity", "changes", "labels", "token"])
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), identity: c.decode([String: JSON].self, forKey: .identity), changes: c.decode([ChildTaskRepairChange].self, forKey: .changes), labels: c.decode([String].self, forKey: .labels), token: c.decode(UUID.self, forKey: .token))
+    }
+    static func == (a: Self, b: Self) -> Bool {
+        a.account == b.account && a.origin == b.origin && a.token == b.token && a.changes == b.changes && a.labels == b.labels && ChildTaskStructureCommand.exact(.object(a.identity), .object(b.identity))
+    }
+}
+
 struct ChildTaskRepairState: ReviewedTeamFileCommand {
     enum Phase: String, Codable, Sendable { case queued, attempted, applied, closed }
     struct Entry: Codable, Equatable, Sendable {
@@ -281,7 +318,8 @@ struct ChildTaskRepairState: ReviewedTeamFileCommand {
     static var invalid: AppFailure { ChildTaskRepairCommand.invalid }
     let account: String, origin: String
     var entries: [Entry]
-    init(account: String, origin: String, entries: [Entry] = []) throws {
+    var drafts: [ChildTaskRepairDraft]
+    init(account: String, origin: String, entries: [Entry] = [], drafts: [ChildTaskRepairDraft] = []) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard entries.count <= 64 else { throw ChildTaskRepairFailure(reason: .limit) }
         var ids = Set<String>(), pendingRoots = Set<String>()
@@ -293,21 +331,23 @@ struct ChildTaskRepairState: ReviewedTeamFileCommand {
                 guard entry.phase == .applied && result.applied || entry.phase == .closed && result.closed else { throw Self.invalid }
             } else { guard entry.phase == .queued || entry.phase == .attempted else { throw Self.invalid } }
         }
-        self.account = account; self.origin = origin; self.entries = entries
+        guard drafts.count <= 32, Set(drafts.map(\.rootID)).count == drafts.count,
+              drafts.allSatisfy({ $0.account == account && $0.origin == origin && !pendingRoots.contains($0.rootID) }) else { throw Self.invalid }
+        self.account = account; self.origin = origin; self.entries = entries; self.drafts = drafts
     }
     init(data: Data) throws {
-        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 } + ChildTaskRepairChange.counterPaths.map { ["drafts", "[]"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
         self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
-    private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
+    private enum CodingKeys: String, CodingKey { case version, account, origin, entries, drafts }
     init(from decoder: Decoder) throws {
-        try structureKeys(decoder, ["version", "account", "origin", "entries"])
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        try structureKeys(decoder, c.contains(.drafts) ? ["version", "account", "origin", "entries", "drafts"] : ["version", "account", "origin", "entries"])
         guard try c.decode(Int.self, forKey: .version) == 1 else { throw Self.invalid }
-        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), entries: c.decode([Entry].self, forKey: .entries))
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), entries: c.decode([Entry].self, forKey: .entries), drafts: c.contains(.drafts) ? c.decode([ChildTaskRepairDraft].self, forKey: .drafts) : [])
     }
     func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(1, forKey: .version); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(entries, forKey: .entries)
+        var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(1, forKey: .version); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(entries, forKey: .entries); if !drafts.isEmpty { try c.encode(drafts, forKey: .drafts) }
     }
 }
 
@@ -331,27 +371,32 @@ actor ChildTaskRepairJournal {
         let state = try ChildTaskRepairState(data: data)
         guard state.account == account, state.origin == origin else { throw ChildTaskRepairCommand.invalid }; return state
     }
-    private func write(_ entries: [ChildTaskRepairState.Entry], lease: CalendarReadLease) throws {
-        let state = try ChildTaskRepairState(account: account, origin: origin, entries: entries), data = try TaskfoldJSONEncoder().encode(state)
+    private func write(_ value: ChildTaskRepairState, lease: CalendarReadLease) throws {
+        let state = try ChildTaskRepairState(account: account, origin: origin, entries: value.entries, drafts: value.drafts), data = try TaskfoldJSONEncoder().encode(state)
         guard data.count <= ChildTaskRepairState.maximumStoredBytes else { throw ChildTaskRepairFailure(reason: .limit) }
         try lease.check(); try io.write(data, key: key)
     }
     func load() throws -> ChildTaskRepairState { try guarded(nil) { try read() } }
-    func enqueue(_ command: ChildTaskRepairCommand, lease: CalendarReadLease) throws {
+    func enqueue(_ command: ChildTaskRepairCommand, lease: CalendarReadLease, draftToken: UUID? = nil) throws {
         try guarded(lease) {
             try admit([command.body["task_id"]!.text])
             guard command.account == account, command.origin == origin else { throw ChildTaskRepairCommand.invalid }
             var state = try read()
             if let old = state.entries.first(where: { $0.command.id == command.id }) { guard old.command == command, old.phase != .closed else { throw ChildTaskRepairCommand.invalid }; return }
             guard !state.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && $0.command.rootID == command.rootID }) else { throw ChildTaskRepairFailure(reason: .busy) }
-            state.entries.append(.init(command: command)); try write(state.entries, lease: lease)
+            if let draft = state.drafts.first(where: { $0.rootID == command.rootID }) {
+                guard draft.token == draftToken, ChildTaskStructureCommand.exact(.array(draft.changes.map { .object($0.raw) }), command.body["changes"]),
+                      ChildTaskRepairDraft.identityKeys.allSatisfy({ ChildTaskStructureCommand.exact(draft.identity[$0], command.body[$0]) }) else { throw ChildTaskRepairCommand.invalid }
+                state.drafts.removeAll { $0.rootID == command.rootID }
+            } else { guard draftToken == nil else { throw ChildTaskRepairCommand.invalid } }
+            state.entries.append(.init(command: command)); try write(state, lease: lease)
         }
     }
     func attempt(_ command: ChildTaskRepairCommand, lease: CalendarReadLease, resolving: Bool = false) throws -> ChildTaskRepairState.Entry {
         try guarded(lease) {
             if !resolving { try admit([command.body["task_id"]!.text]) }
             var state = try read(); guard let i = state.entries.firstIndex(where: { $0.command == command }) else { throw ChildTaskRepairCommand.invalid }
-            if state.entries[i].phase == .queued { state.entries[i].phase = .attempted; try write(state.entries, lease: lease) }
+            if state.entries[i].phase == .queued { state.entries[i].phase = .attempted; try write(state, lease: lease) }
             return state.entries[i]
         }
     }
@@ -360,14 +405,25 @@ actor ChildTaskRepairJournal {
             _ = try command.result(result.raw); guard !result.unknown else { throw ChildTaskRepairCommand.invalid }
             var state = try read(); guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .queued else { throw ChildTaskRepairCommand.invalid }
             if let old = state.entries[i].result { guard old.agrees(result) else { throw ChildTaskRepairCommand.invalid }; return }
-            state.entries[i].phase = result.applied ? .applied : .closed; state.entries[i].result = result; try write(state.entries, lease: lease)
+            state.entries[i].phase = result.applied ? .applied : .closed; state.entries[i].result = result; try write(state, lease: lease)
         }
     }
     func discard(_ command: ChildTaskRepairCommand, lease: CalendarReadLease) throws {
         try guarded(lease) {
             var state = try read(); guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .attempted else { throw ChildTaskRepairCommand.invalid }
             state.entries.remove(at: i)
-            try write(state.entries, lease: lease)
+            try write(state, lease: lease)
+        }
+    }
+    /// Compare-and-swap prevents another window from replacing newer choices.
+    func saveDraft(_ draft: ChildTaskRepairDraft?, rootID: String, expected: UUID?, lease: CalendarReadLease) throws {
+        try guarded(lease) {
+            var state = try read()
+            guard state.drafts.first(where: { $0.rootID == rootID })?.token == expected,
+                  !state.entries.contains(where: { $0.command.rootID == rootID && ($0.phase == .queued || $0.phase == .attempted) }) else { throw ChildTaskRepairCommand.invalid }
+            if let draft { guard draft.rootID == rootID, draft.account == account, draft.origin == origin else { throw ChildTaskRepairCommand.invalid } }
+            state.drafts.removeAll { $0.rootID == rootID }; if let draft { state.drafts.append(draft) }
+            try write(state, lease: lease)
         }
     }
     func removeAccount() throws { try lock.withExclusive(account: account) { try io.remove(key: key) } }
@@ -380,6 +436,7 @@ enum ChildTaskRepairOperation: String, Sendable { case send, check, close }
 extension Backend: ChildTaskRepairService {}
 @MainActor @Observable final class ChildTaskRepairModel {
     private(set) var entries: [ChildTaskRepairState.Entry] = []
+    private(set) var drafts: [ChildTaskRepairDraft] = []
     private(set) var busy = false
     private(set) var loaded = false
     private(set) var message: String?
@@ -394,15 +451,15 @@ extension Backend: ChildTaskRepairService {}
     init(scope: ChildTaskFieldClientScope, journal: ChildTaskRepairJournal, service: any ChildTaskRepairService, current: @escaping () -> ChildTaskFieldClientScope?, canSend: @escaping (ChildTaskRepairCommand) -> Bool, admit: @escaping (ChildTaskRepairCommand) async throws -> Void, reviewCurrent: @escaping (ChildTaskRepairPreview) -> Bool) {
         self.scope = scope; self.journal = journal; self.service = service; self.current = current; self.canSend = canSend; self.admit = admit; self.reviewCurrent = reviewCurrent
     }
-    func close() { closed = true; lease.cancel(); entries = []; message = nil; loaded = false; busy = false }
+    func close() { closed = true; lease.cancel(); entries = []; drafts = []; message = nil; loaded = false; busy = false }
     private func check() throws { try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
-    private func update() async throws { let state = try await journal.load(); try check(); entries = state.entries; loaded = true }
+    private func update() async throws { let state = try await journal.load(); try check(); entries = state.entries; drafts = state.drafts; loaded = true }
     private func work(_ action: () async throws -> Void) async -> Bool {
         guard !busy else { return false }; busy = true; defer { busy = false }
         do { try check(); try await action(); try check(); return true }
         catch {
             guard (try? check()) != nil else { close(); return false }
-            do { try await update() } catch { entries = []; loaded = false }
+            do { try await update() } catch { entries = []; drafts = []; loaded = false }
             guard (try? check()) != nil else { close(); return false }
             if error is AccountSessionAuthorizationRequired { message = "Sign in again to check your saved repair." }
             else if let failure = error as? ChildTaskRepairFailure { message = failure.localizedDescription }
@@ -412,14 +469,27 @@ extension Backend: ChildTaskRepairService {}
         }
     }
     func load() async { _ = await work { try await update() } }
-    func queue(_ command: ChildTaskRepairCommand, review: ChildTaskRepairPreview) async -> Bool {
+    func queue(_ command: ChildTaskRepairCommand, review: ChildTaskRepairPreview, draftToken: UUID? = nil) async -> Bool {
         await work {
             guard ChildTaskFieldClientScope(review.context) == scope, reviewCurrent(review) else { throw CancellationError() }
             try command.review(review)
             try await admit(command); try check()
             guard reviewCurrent(review) else { throw CancellationError() }
-            try await journal.enqueue(command, lease: lease); try check(); try await update(); message = "Repair saved on this device."
+            try await journal.enqueue(command, lease: lease, draftToken: draftToken); try check(); try await update(); message = "Repair saved on this device."
         }
+    }
+    func saveDraft(_ draft: ChildTaskRepairDraft?, rootID: String, expected: UUID?) async -> Bool {
+        let completed = await work {
+            try await journal.saveDraft(draft, rootID: rootID, expected: expected, lease: lease); try check(); try await update()
+        }
+        // A secure write may finish before reporting an error. Accept only the
+        // complete validated draft read back from disk, never the attempted value.
+        guard (completed || loaded), (try? check()) != nil, drafts.first(where: { $0.rootID == rootID }) == draft else {
+            if (try? check()) != nil { message = "This review couldn’t be saved. Your previous saved choices are kept. Close and reopen to review them." }
+            return false
+        }
+        message = draft == nil ? "Saved review removed. Your task is unchanged." : "Review saved on this device. Your task is unchanged."
+        return true
     }
     func run(_ command: ChildTaskRepairCommand, operation: ChildTaskRepairOperation) async -> Bool {
         let completed = await work {

@@ -252,3 +252,87 @@ final class ChildTaskRepairTests: XCTestCase {
     }
 
 }
+
+extension ChildTaskRepairTests {
+    func savedDraft() throws -> ChildTaskRepairDraft {
+        try .init(review: review(), changes: changes(), labels: changes().map { _ in "Repair older task" })
+    }
+    func testSavedReviewRoundTripRequiresExactOriginalAndNeverStoresOpaqueTree() throws {
+        let draft = try savedDraft(), c = try command()
+        let state = try ChildTaskRepairState(account: c.account, origin: c.origin, drafts: [draft])
+        let data = try JSONEncoder().encode(state), cold = try ChildTaskRepairState(data: data)
+        XCTAssertEqual(cold.drafts, [draft]); XCTAssertTrue(draft.matches(try review()))
+        let text = String(decoding: data, as: UTF8.self)
+        XCTAssertFalse(text.contains("9007199254740993")); XCTAssertFalse(text.contains("original_tree")); XCTAssertFalse(draft.debugDescription.contains(c.rootID))
+        var identity = draft.identity; identity["task_generation"] = .string(UUID().uuidString.lowercased())
+        let recreated = try ChildTaskRepairDraft(account: draft.account, origin: draft.origin, identity: identity, changes: draft.changes, labels: draft.labels)
+        XCTAssertFalse(recreated.matches(try review()))
+        identity = draft.identity; identity["review_digest"] = .string(String(repeating: "0", count: 64))
+        XCTAssertFalse(try ChildTaskRepairDraft(account: draft.account, origin: draft.origin, identity: identity, changes: draft.changes, labels: draft.labels).matches(review()))
+        let older = try ChildTaskRepairState(account: c.account, origin: c.origin, entries: [.init(command: c)])
+        XCTAssertTrue(try ChildTaskRepairState(data: JSONEncoder().encode(older)).drafts.isEmpty)
+        XCTAssertThrowsError(try ChildTaskRepairState(account: c.account, origin: c.origin, entries: [.init(command: c)], drafts: [draft]))
+        XCTAssertThrowsError(try ChildTaskRepairState(account: c.account, origin: c.origin, drafts: [draft, draft]))
+    }
+    func testTwoWindowsCannotOverwriteOrDiscardNewerSavedReview() async throws {
+        let first = try savedDraft(), c = try command(), io = RepairMemoryIO(), d = try directory(), one = try journal(c, io, d), two = try journal(c, io, d), lease = CalendarReadLease()
+        try await one.saveDraft(first, rootID: first.rootID, expected: nil, lease: lease)
+        let newer = try savedDraft(); try await two.saveDraft(newer, rootID: first.rootID, expected: first.token, lease: lease)
+        let bytes = try io.read(key: "synthetic")
+        do { try await one.saveDraft(first, rootID: first.rootID, expected: first.token, lease: lease); XCTFail("Stale window overwrote newer choices") } catch {}
+        do { try await one.saveDraft(nil, rootID: first.rootID, expected: first.token, lease: lease); XCTFail("Stale window discarded newer choices") } catch {}
+        XCTAssertEqual(try io.read(key: "synthetic"), bytes)
+        let cold = try await one.load(); XCTAssertEqual(cold.drafts, [newer])
+    }
+    func testQueueAtomicallyConsumesOnlyTheReviewedDraft() async throws {
+        let draft = try savedDraft(), c = try command(), io = RepairMemoryIO(), j = try journal(c, io, directory()), lease = CalendarReadLease()
+        try await j.saveDraft(draft, rootID: draft.rootID, expected: nil, lease: lease)
+        do { try await j.enqueue(c, lease: lease); XCTFail("Must bind the reviewed draft") } catch {}
+        var state = try await j.load(); XCTAssertEqual(state.drafts, [draft]); XCTAssertTrue(state.entries.isEmpty)
+        try await j.enqueue(c, lease: lease, draftToken: draft.token)
+        state = try await j.load(); XCTAssertTrue(state.drafts.isEmpty); XCTAssertEqual(state.entries.first?.command, c)
+        do { try await j.saveDraft(draft, rootID: draft.rootID, expected: nil, lease: lease); XCTFail("Cannot reintroduce draft beside queued mutation") } catch {}
+    }
+    func testSavedDraftEncryptedColdReturnWrongKeyAndAccountRemoval() async throws {
+        let c = try command(), draft = try savedDraft(), d = try directory(), key = SymmetricKey(size: .bits256)
+        let io = ReviewedTeamCommandFileIO<ChildTaskRepairState>(directory: d.appendingPathComponent("vault"), account: c.account, origin: c.origin, encryptionKey: { key }), j = try journal(c, io, d), lease = CalendarReadLease()
+        try await j.saveDraft(draft, rootID: draft.rootID, expected: nil, lease: lease)
+        let bytes = try Data(contentsOf: io.file); XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains("Repair older task"))
+        let cold = try await journal(c, io, d).load(); XCTAssertEqual(cold.drafts, [draft])
+        let wrong = ReviewedTeamCommandFileIO<ChildTaskRepairState>(directory: d.appendingPathComponent("vault"), account: c.account, origin: c.origin, encryptionKey: { SymmetricKey(size: .bits256) })
+        do { try await journal(c, wrong, d).saveDraft(nil, rootID: draft.rootID, expected: draft.token, lease: lease); XCTFail("Wrong key discarded draft") } catch {}
+        XCTAssertEqual(try Data(contentsOf: io.file), bytes)
+        lease.cancel(); do { try await j.saveDraft(nil, rootID: draft.rootID, expected: draft.token, lease: lease); XCTFail("Cancelled lease changed draft") } catch {}
+        XCTAssertEqual(try Data(contentsOf: io.file), bytes)
+        try await j.removeAccount(); XCTAssertFalse(FileManager.default.fileExists(atPath: io.file.path))
+    }
+    @MainActor func testSavedDraftSurvivesModelCloseWithoutSendingAndScopeChangeHidesIt() async throws {
+        let p = try preview(), c = try command(), scope = ChildTaskFieldClientScope(p.context), io = RepairMemoryIO(), d = try directory(), service = RepairServiceDouble(try result().raw), draft = try savedDraft()
+        var current: ChildTaskFieldClientScope? = scope
+        let first = model(scope, try journal(c, io, d), service, current: { current })
+        verifyTrue(await first.saveDraft(draft, rootID: c.rootID, expected: nil)); first.close(); XCTAssertTrue(first.drafts.isEmpty)
+        let cold = model(scope, try journal(c, io, d), service, current: { current }); await cold.load(); XCTAssertEqual(cold.drafts, [draft]); XCTAssertTrue(service.calls.isEmpty)
+        current = nil; verifyFalse(await cold.saveDraft(nil, rootID: c.rootID, expected: draft.token)); XCTAssertTrue(cold.drafts.isEmpty)
+        let saved = try await journal(c, io, d).load(); XCTAssertEqual(saved.drafts, [draft])
+    }
+    @MainActor func testSavedDraftWriteFailureKeepsPreviousChoicesAndAfterWriteReloadsProof() async throws {
+        let p = try preview(), c = try command(), scope = ChildTaskFieldClientScope(p.context), io = RepairMemoryIO(), service = RepairServiceDouble(try result().raw), m = model(scope, try journal(c, io, directory()), service, current: { scope }), first = try savedDraft()
+        verifyTrue(await m.saveDraft(first, rootID: c.rootID, expected: nil)); io.failWrite = true
+        verifyFalse(await m.saveDraft(try savedDraft(), rootID: c.rootID, expected: first.token)); XCTAssertEqual(m.drafts, [first])
+        io.failWrite = false; io.failAfterWrite = true; let second = try savedDraft()
+        verifyTrue(await m.saveDraft(second, rootID: c.rootID, expected: first.token)); XCTAssertEqual(m.drafts, [second]); XCTAssertTrue(service.calls.isEmpty)
+    }
+    func testRepairCommandLifecyclePreservesAnotherTasksDraftAndRefusesMalformedSavedChoices() async throws {
+        let c = try command(), first = try savedDraft(), io = RepairMemoryIO(), j = try journal(c, io, directory()), lease = CalendarReadLease()
+        var identity = first.identity; identity["task_id"] = .string(UUID().uuidString.lowercased())
+        let other = try ChildTaskRepairDraft(account: first.account, origin: first.origin, identity: identity, changes: first.changes, labels: first.labels)
+        try await j.saveDraft(other, rootID: other.rootID, expected: nil, lease: lease)
+        try await j.enqueue(c, lease: lease); _ = try await j.attempt(c, lease: lease); try await j.settle(c, result: result(), lease: lease); try await j.discard(c, lease: lease)
+        let state = try await j.load(); XCTAssertEqual(state.drafts, [other]); XCTAssertTrue(state.entries.isEmpty)
+        let raw = try JSONEncoder().encode(state), wire = String(decoding: raw, as: UTF8.self)
+        XCTAssertThrowsError(try ChildTaskRepairState(data: Data(wire.replacingOccurrences(of: "\"path\":[0]", with: "\"path\":[0.0]").utf8)))
+        var fields = try JSONDecoder().decode([String: JSON].self, from: raw); fields["drafts"] = .null
+        XCTAssertThrowsError(try ChildTaskRepairState(data: JSONEncoder().encode(fields)))
+    }
+
+}

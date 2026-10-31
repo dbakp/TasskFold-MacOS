@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Combined completion, Undo and recovery working",
-  "latest": "Combined parent/subtask completion now works in the isolated Mac, iPhone and iPad apps, with whole-selection Undo and saved interrupted-request recovery. Reopen and Command-Z also pass on Mac. This finishes the missing app integration; the wider subtask-storage migration remains unfinished and disabled for normal use.",
+  "focus": "P2 · Repair reviews now survive closing",
+  "latest": "Repair-review choices now save locally before they are accepted, survive closing/relaunch and resume against the exact original task. Native Mac/iPhone/iPad journeys pass. Together with the earlier combined completion/Undo flow, this closes two app-integration gaps. Full Redo/history, older-data mapping, shared content custody and wider acceptance remain.",
   "next": [
     "Finish the broader subtask-storage migration: full Redo/shared history, indexed mapping and shared attachment/discussion custody. Keep acceptance bounded to each delivered workflow.",
-    "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
+    "Finish broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
   "stages": [
@@ -554,7 +554,37 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Combined parent/subtask completion, reopen, strict confirmations, encrypted saved recovery and whole-selection Undo are connected in both apps. Recorded native Mac/iPhone/iPad journeys pass. Full Redo/history, indexed mapping, content custody, repair drafts and wider checks remain. Normal use stays disabled."
+              "detail": "Combined completion/Undo/recovery and saved repair-review choices now work in the recorded native Mac/iPhone/iPad flows. The checklist below shows the remaining migration work. Normal use stays disabled.",
+              "steps": [
+                {
+                  "state": "done",
+                  "title": "Separate subtask records and guarded editing foundations"
+                },
+                {
+                  "state": "done",
+                  "title": "Complete tasks and subtasks together, then Undo the whole selection"
+                },
+                {
+                  "state": "done",
+                  "title": "Keep repair-review choices across closing and relaunch"
+                },
+                {
+                  "state": "build",
+                  "title": "Redo and a consistent shared activity history"
+                },
+                {
+                  "state": "build",
+                  "title": "Carry older tasks and history into the new storage"
+                },
+                {
+                  "state": "build",
+                  "title": "Keep shared files and discussions with the right workspace"
+                },
+                {
+                  "state": "verify",
+                  "title": "Finish account, privacy, window, speech and large-library checks"
+                }
+              ]
             },
             {
               "state": "build",
@@ -610,7 +640,9 @@
             "mixed-task-completion/verification.json",
             "mixed-task-completion/README.md",
             "mixed-task-completion-native/verification.json",
-            "mixed-task-completion-native/README.md"
+            "mixed-task-completion-native/README.md",
+            "child-repair-drafts/verification.json",
+            "child-repair-drafts/README.md"
           ],
           "focus": true
         },
@@ -677,8 +709,8 @@
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "c5d8201ac2f9cb887e0cb59ddd7627ab5b0b6ef914f9f8c10de2a95ff98b9492",
-    "PX_CHECKLIST.md": "7d0a8a21840fee74b66d17c1f5ebbc06b07d74cd9202278f6380abb7bf12607f",
+    "P2_PLAN.md": "05ee6de653ad66d8b8603e94d39832abef3cc17590a8cf506798274615583e97",
+    "PX_CHECKLIST.md": "dfebc940885b4b43b0d23dd6344e0aa67164b6332de835317889485df14825ce",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",
     "child-bulk-list-completion/verification.json": "02faef41d645b895990ec194507da81396d352a430a6c30f92fb48fbb6929026",
@@ -690,6 +722,8 @@
     "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
     "child-recovery-discovery/README.md": "968b95a9984c6da5640108ad0f94145a4aa77d2ba500833d516770af80fbce7a",
     "child-recovery-discovery/verification.json": "8fb5c8402ad281205b49e2357e75cd9e916f8e91b6b129ffbf8c0fb8c04461a6",
+    "child-repair-drafts/README.md": "dc31fc390b52818468edef9a8ab49bdf5db08dd4cb25e0d587e793bb5822efb7",
+    "child-repair-drafts/verification.json": "917d273b444826167ded55eefd18c227efa44a08b17de64b1248e853777d8fb3",
     "child-task-discard-intent/verification.json": "d7316dcf9e69c8c969cd13e44b311d0865fa76b1aef7b50641e4a7c1a6f50f06",
     "child-task-field-selection/verification.json": "8306c42ada892f132314072175c29db8c605707737b27bcc8b73a885aec4fe31",
     "child-task-frozen-recovery/verification.json": "645e03d6a0afbdd459ae3aef65d6b90f03d76d8741a7dcf44bcd88ce5548b807",

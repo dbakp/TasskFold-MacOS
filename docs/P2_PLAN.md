@@ -1,5 +1,16 @@
 # Remaining product backlog
 
+## Current status — 31 October 2026
+
+- [x] Combined parent/subtask completion, whole-selection Undo and interrupted-request recovery in the isolated Mac/iPhone/iPad apps. [Recorded scope](mixed-task-completion-native/README.md).
+- [x] Encrypted repair-review choices survive Close and relaunch, resume against the exact original, and hand off atomically into the queued repair. Native Mac/iPhone/iPad scope and independent Core results are in [saved repair reviews](child-repair-drafts/README.md).
+- [ ] Full Redo/shared history, indexed/history mapping and shared attachment/discussion custody.
+- [ ] Wider real-account, protected-storage, window/background/concurrency, spoken and large-library acceptance.
+
+The wider migration remains unfinished and gated. No hosted schema or ordinary-use flags changed. Explicit rollout/provider/distribution/audio/device deferrals remain paused. The entries below preserve earlier staged scopes; newer evidence here supersedes their remaining lists.
+
+## Earlier staged implementation notes
+
 Exact repair contracts, bounded session-aware transport and encrypted saved-request recovery components now pass 590 selected Core checks per repo, including 25 new cases. Original bytes are verified against their archive proof, and a historical-permission correction passes 283 database checks. Both native app/test targets build and signatures verify. Actual Store admission, cleanup, premium native controls and workflow acceptance remain to build. See [repair client scope](child-task-repair-client/README.md).
 
 Reviewed older-subtask repairs now have a disabled atomic save/recovery service. The complete original is archived before the source changes; explicit repairs promote separate records, preserve later edits on retry and keep originals in personal/team custody. Each repo passes 256 database checks, including 133 preview regressions, with no new advisor findings. Native raw-payload contracts, encrypted recovery, premium controls, indexed/history reconciliation and broader migration acceptance remain. See [repair save scope](child-task-repair-commits/README.md).
@@ -8,9 +19,9 @@ Lossless older-subtask repair previews now support five explicit operations, exa
 
 [Progress dashboard](PX_PROGRESS.html) · [Snapshot and maintenance](PX_PROGRESS.md)
 
-Updated 30 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
+Updated 31 October 2026. The agreed P1 batch is complete; see `p1-completion-audit.json`. This plan audits the advanced backlog recorded in `TODOIST_PORT_PLAN.md`; it does not claim a new audit of Todoist's current product.
 
-## Current implementation focus
+## Earlier implementation stages
 
 Atomic cross-root transfer service and linked history now pass in both owned codebases. The disabled candidate supports personal/Inbox and same-team branch moves, metadata-only retry/closure, certified Undo and identity/version fences. Both clients preserve observed completion credit through a transfer and correct it on reopen; project summaries treat transfers as moves. Each repo passes 615 database and 521 selected client checks; app/test builds and development signatures verify. [Current service/history evidence](cross-root-child-transfers/README.md). Typed transfer commands, two-root durable recovery, premium native destination/review/Undo controls and broader custody/runtime/workload acceptance remain unfinished. No hosted schema, real tasks or normal feature gates changed.
 
