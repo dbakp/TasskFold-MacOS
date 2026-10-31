@@ -312,10 +312,12 @@ struct ChildTaskRepairState: ReviewedTeamFileCommand {
 }
 
 actor ChildTaskRepairJournal {
+    private let admit: @Sendable (Set<String>) throws -> Void
     let account: String, origin: String
     private let io: any CalendarSecureItemIO, lock: AutomationEnrollmentProcessLock, removalDirectory: URL
     private var key: String { ChildTaskRepairState.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
-    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL) throws {
+    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL, admit: @escaping @Sendable (Set<String>) throws -> Void = { _ in }) throws {
+        self.admit = admit;
         try TeamOrganizationValue.scope(account: account, origin: origin)
         self.account = account; self.origin = origin; self.io = io; lock = .init(directory: coordinationDirectory); self.removalDirectory = removalDirectory
     }
@@ -337,6 +339,7 @@ actor ChildTaskRepairJournal {
     func load() throws -> ChildTaskRepairState { try guarded(nil) { try read() } }
     func enqueue(_ command: ChildTaskRepairCommand, lease: CalendarReadLease) throws {
         try guarded(lease) {
+            try admit([command.body["task_id"]!.text])
             guard command.account == account, command.origin == origin else { throw ChildTaskRepairCommand.invalid }
             var state = try read()
             if let old = state.entries.first(where: { $0.command.id == command.id }) { guard old.command == command, old.phase != .closed else { throw ChildTaskRepairCommand.invalid }; return }
@@ -344,8 +347,9 @@ actor ChildTaskRepairJournal {
             state.entries.append(.init(command: command)); try write(state.entries, lease: lease)
         }
     }
-    func attempt(_ command: ChildTaskRepairCommand, lease: CalendarReadLease) throws -> ChildTaskRepairState.Entry {
+    func attempt(_ command: ChildTaskRepairCommand, lease: CalendarReadLease, resolving: Bool = false) throws -> ChildTaskRepairState.Entry {
         try guarded(lease) {
+            if !resolving { try admit([command.body["task_id"]!.text]) }
             var state = try read(); guard let i = state.entries.firstIndex(where: { $0.command == command }) else { throw ChildTaskRepairCommand.invalid }
             if state.entries[i].phase == .queued { state.entries[i].phase = .attempted; try write(state.entries, lease: lease) }
             return state.entries[i]
@@ -421,7 +425,7 @@ extension Backend: ChildTaskRepairService {}
         let completed = await work {
             guard command.account == scope.account, command.origin == scope.origin else { throw CancellationError() }
             if operation == .send { guard canSend(command) else { throw ChildTaskRepairFailure(reason: .unavailable) }; try await admit(command); try check() }
-            let entry = try await journal.attempt(command, lease: lease); try check()
+            let entry = try await journal.attempt(command, lease: lease, resolving: operation != .send); try check()
             let result: ChildTaskRepairResult
             if let old = entry.result { result = try command.result(old.raw) }
             else {

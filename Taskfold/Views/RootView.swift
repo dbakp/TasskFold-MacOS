@@ -47,6 +47,9 @@ struct RootView: View {
         .environment(\.openPinnedNotes, { pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openFocusSession, { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openInsights,{insightsRequest=InsightsRequest(workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))})
+        .sheet(isPresented: Binding(get: { workspace.childGroupReview }, set: { workspace.childGroupReview = $0 })) {
+            WorkflowShell(title: "Saved subtask selections") { ChildTaskGroupRecoveryView() }
+        }
         .sheet(isPresented: Binding(get: { workspace.childCompletionReview }, set: { workspace.childCompletionReview = $0 })) {
             WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() }
         }

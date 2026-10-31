@@ -274,12 +274,14 @@ struct ChildTaskCompletionJournalFileIO: CalendarSecureItemIO {
     func remove(key: String) throws { try base.remove(key: key) }
 }
 actor ChildTaskCompletionJournal {
+    private let admit: @Sendable (Set<String>) throws -> Void
     private let io: any CalendarSecureItemIO
     private let lock: AutomationEnrollmentProcessLock
     private let removalDirectory: URL
     let account: String, origin: String
     private var key: String { ChildTaskCompletionJournalState.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
-    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL) throws {
+    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL, admit: @escaping @Sendable (Set<String>) throws -> Void = { _ in }) throws {
+        self.admit = admit;
         try TeamOrganizationValue.scope(account: account, origin: origin)
         self.account = account; self.origin = origin; self.io = io; lock = .init(directory: coordinationDirectory); self.removalDirectory = removalDirectory
     }
@@ -306,6 +308,7 @@ actor ChildTaskCompletionJournal {
     /// Never coalesce completion transitions, including provably unsent ones.
     func enqueue(_ command: ChildTaskCompletionCommand, lease: CalendarReadLease) throws {
         try guarded(lease: lease) {
+            try admit([command.body["task_id"]!.text])
             guard command.account == account, command.origin == origin else { throw ChildTaskCompletionDraft.invalid }
             var state = try read()
             if let old = state.entries.first(where: { $0.command.id == command.id }) {
@@ -317,6 +320,7 @@ actor ChildTaskCompletionJournal {
     }
     func attempt(_ command: ChildTaskCompletionCommand, lease: CalendarReadLease) throws -> ChildTaskCompletionJournalState.Entry {
         try guarded(lease: lease) {
+            try admit([command.body["task_id"]!.text])
             var state = try read()
             guard let i = state.entries.firstIndex(where: { $0.command == command }),
                   !state.entries[..<i].contains(where: { $0.phase != .confirmed && $0.phase != .closed && $0.command.sameTarget(command) }) else { throw ChildTaskCompletionDraft.invalid }
@@ -363,6 +367,7 @@ actor ChildTaskCompletionJournal {
     }
     func replaceClosed(_ original: ChildTaskCompletionCommand, with replacement: ChildTaskCompletionCommand, lease: CalendarReadLease) throws {
         try guarded(lease: lease) {
+            try admit([replacement.body["task_id"]!.text])
             var state = try read()
             guard let entry = state.entries.first(where: { $0.command == original }), entry.phase == .closed, entry.resolution?.closed == true,
                   original.sameTarget(replacement), replacement.id != original.id, replacement.body["action"] == original.body["action"],
@@ -492,7 +497,8 @@ extension Backend: ChildTaskCompletionCommandService {}
     private func failure(_ error: Error) {
         guard (try? check()) != nil else { close(); return }
         if error is CancellationError { return }
-        if let value = error as? ChildTaskCompletionCapacityFailure { message = value.localizedDescription }
+        if error is ChildTaskActionAdmissionFailure { message = ChildTaskActionAdmissionFailure().localizedDescription }
+        else if let value = error as? ChildTaskCompletionCapacityFailure { message = value.localizedDescription }
         else if let value = error as? ChildTaskCompletionFailure { message = value.localizedDescription }
         else if error is AccountSessionAuthorizationRequired { message = "Sign in again to check this saved action. Your work is kept." }
         else { message = "This action couldn’t be confirmed. Your saved work is kept; review it before trying again." }
@@ -832,12 +838,14 @@ struct ChildTaskCompletionBatchState: ReviewedTeamFileCommand, CustomStringConve
 }
 
 actor ChildTaskCompletionBatchJournal {
+    private let admit: @Sendable (Set<String>) throws -> Void
     let account: String, origin: String
     private let io: any CalendarSecureItemIO
     private let lock: AutomationEnrollmentProcessLock
     private let removalDirectory: URL
     private var key: String { ChildTaskCompletionBatchState.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
-    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL) throws {
+    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL, admit: @escaping @Sendable (Set<String>) throws -> Void = { _ in }) throws {
+        self.admit = admit;
         try TeamOrganizationValue.scope(account: account, origin: origin)
         self.account = account; self.origin = origin; self.io = io; self.lock = .init(directory: coordinationDirectory); self.removalDirectory = removalDirectory
     }
@@ -863,6 +871,7 @@ actor ChildTaskCompletionBatchJournal {
     func load() throws -> ChildTaskCompletionBatchState { try guarded(nil) { try read() } }
     func enqueue(_ command: ChildTaskCompletionBatchCommand, lease: CalendarReadLease) throws {
         try guarded(lease) {
+            try admit(Set(command.items.map { $0.body["task_id"]!.text }))
             guard command.account == account, command.origin == origin else { throw ChildTaskCompletionBatchState.invalid }
             var state = try read()
             if let old = state.entries.first(where: { $0.command.id == command.id }) {
@@ -876,6 +885,7 @@ actor ChildTaskCompletionBatchJournal {
     }
     func begin(_ command: ChildTaskCompletionBatchCommand, resolving: Bool = false, lease: CalendarReadLease) throws -> ChildTaskCompletionBatchState.Entry {
         try guarded(lease) {
+            if !resolving { try admit(Set(command.items.map { $0.body["task_id"]!.text })) }
             var state = try read()
             guard let i = state.entries.firstIndex(where: { $0.command == command }) else { throw ChildTaskCompletionBatchState.invalid }
             if !resolving {
@@ -908,6 +918,7 @@ actor ChildTaskCompletionBatchJournal {
     }
     func replaceClosed(_ command: ChildTaskCompletionBatchCommand, with replacement: ChildTaskCompletionBatchCommand, lease: CalendarReadLease) throws {
         try guarded(lease) {
+            try admit(Set(replacement.items.map { $0.body["task_id"]!.text }))
             var state = try read()
             guard state.entries.contains(where: { $0.command == command && $0.phase == .closed }),
                   command.id != replacement.id, command.items.count == replacement.items.count,
@@ -996,7 +1007,8 @@ extension Backend: ChildTaskCompletionBatchService {}
         do { try await update() } catch { entries = []; loaded = false }
         guard (try? check()) != nil else { close(); return }
         if error is CancellationError { return }
-        if let value = error as? ChildTaskCompletionCapacityFailure { message = value.localizedDescription }
+        if error is ChildTaskActionAdmissionFailure { message = ChildTaskActionAdmissionFailure().localizedDescription }
+        else if let value = error as? ChildTaskCompletionCapacityFailure { message = value.localizedDescription }
         else if let value = error as? ChildTaskCompletionFailure { message = value.localizedDescription }
         else if error is AccountSessionAuthorizationRequired { message = "Sign in again to check this saved selection. Your work is kept." }
         else { message = "This selection couldn’t be confirmed. Your saved work is kept; review it before trying again." }
@@ -1049,4 +1061,101 @@ extension Backend: ChildTaskCompletionBatchService {}
         do { try check(); try await journal.discard(command, lease: lease); try check(); try await update(); message = "Saved record removed from this device. Task changes are kept." }
         catch { await recover(error) }
     }
+}
+
+/// Store factories use one account process lock for all child journals. These
+/// synchronous reads run inside that lock, without taking another journal lock.
+struct ChildTaskActionAdmission: Sendable {
+    let account: String, origin: String
+    let directory: URL
+    let encryptionKey: @Sendable () throws -> SymmetricKey
+    private func read<T: ReviewedTeamFileCommand>(_ type: T.Type, folder: String) throws -> T? {
+        let io = ReviewedTeamCommandFileIO<T>(directory: directory.appendingPathComponent(folder)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin)), account: account, origin: origin, encryptionKey: encryptionKey)
+        guard let bytes = try io.read(key: T.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin)) else { return nil }
+        try ChildTaskRecordRead.validateUniqueJSON(bytes, maximum: T.maximumStoredBytes)
+        let state = try TaskfoldJSONDecoder().decode(T.self, from: bytes)
+        guard state.account == account, state.origin == origin else { throw ChildTaskCompletionBatchState.invalid }; return state
+    }
+    private func refuse(_ roots: Set<String>, overlapping pending: Set<String>) throws {
+        guard roots.isDisjoint(with: pending) else { throw ChildTaskActionAdmissionFailure() }
+    }
+    func checkOther(_ roots: Set<String>) throws {
+        let groups = try read(ChildTaskCompletionBatchState.self, folder: "Child completion groups")
+        let pending = Set((groups?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.flatMap { $0.command.items.map { $0.body["task_id"]!.text } })
+        try refuse(roots, overlapping: pending)
+    }
+    func checkBatch(_ roots: Set<String>) throws {
+        var pending = Set<String>()
+        let fields = try read(ChildTaskFieldJournalState.self, folder: "Child field requests")
+        pending.formUnion((fields?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        let completions = try read(ChildTaskCompletionJournalState.self, folder: "Child completion requests")
+        pending.formUnion((completions?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        let structures = try read(ChildTaskStructureJournalState.self, folder: "Child hierarchy requests")
+        pending.formUnion((structures?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        let drafts = try read(ChildTaskStructureDraftState.self, folder: "Child hierarchy drafts")
+        pending.formUnion((drafts?.entries ?? []).map { $0.body["task_id"]!.text })
+        let moves = try read(ChildTaskTransferState.self, folder: "Child transfer requests")
+        pending.formUnion((moves?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.flatMap { $0.command.roots })
+        let adoptions = try read(ChildTaskAdoptionState.self, folder: "Child adoption requests")
+        pending.formUnion((adoptions?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        let repairs = try read(ChildTaskRepairState.self, folder: "Child repair requests")
+        pending.formUnion((repairs?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
+        try refuse(roots, overlapping: pending)
+    }
+}
+
+struct ChildTaskListBatchIntent: Sendable {
+    let scope: ChildTaskFieldClientScope
+    let members: [ChildTaskListCompletionIntent]
+    let completed: Bool
+    init(tasks: [Record], roots: [Record], projects: [Record], scope: ChildTaskFieldClientScope, completed: Bool) throws {
+        guard (1...32).contains(tasks.count), Set(tasks.map(\.id)).count == tasks.count,
+              tasks.allSatisfy({ SubtaskTree.referencePath($0.id) != nil && TaskKind.mayComplete($0) }) else { throw ChildTaskCompletionBatchCommand.invalid }
+        let members = try tasks.map { task -> ChildTaskListCompletionIntent in
+            guard let id = SubtaskTree.referencePath(task.id)?.first, let root = roots.first(where: { $0.id == id }) else { throw ChildTaskCompletionBatchCommand.invalid }
+            return try ChildTaskListCompletionIntent(task: task, root: root, projects: projects, scope: scope)
+        }.filter { $0.completed != completed }
+        guard !members.isEmpty else { throw AppFailure(message: completed ? "These subtasks are already completed." : "These subtasks are already open.") }
+        self.scope = scope; self.members = members; self.completed = completed
+    }
+    func command(reads: [String: ChildTaskRecordRead]) throws -> ChildTaskCompletionBatchCommand {
+        let commands = try members.map { member -> ChildTaskCompletionCommand in
+            guard let read = reads[member.opening.rootID] else { throw ChildTaskCompletionBatchCommand.invalid }
+            return try .init(ChildTaskCompletionDraft(read: read, key: member.key(in: read), action: completed ? .complete : .reopen))
+        }
+        return try .init(account: scope.account, origin: scope.origin, items: commands)
+    }
+}
+struct ChildTaskListBatchUndo: Equatable, Sendable {
+    let scope: ChildTaskFieldClientScope
+    let command: ChildTaskCompletionBatchCommand
+}
+struct ChildTaskListBatchResult {
+    let message: String
+    let undo: ChildTaskListBatchUndo?
+    var needsReview = false
+}
+extension ChildTaskCompletionBatchCommand {
+    func fresh(reads: [String: ChildTaskRecordRead]) throws -> Self {
+        let updated = try items.map { old -> ChildTaskCompletionCommand in
+            guard let read = reads[old.body["task_id"]!.text] else { throw Self.invalid }
+            let new: ChildTaskCompletionCommand
+            if let source = old.original {
+                let original = try ChildTaskCompletionCommand(account: account, origin: origin, body: source.body)
+                new = try .init(undo: original, receipt: original.confirmed(source.receipt), read: read)
+            } else {
+                guard let action = ChildTaskCompletionDraft.Action(rawValue: old.body["action"]!.text) else { throw Self.invalid }
+                new = try .init(ChildTaskCompletionDraft(read: read, key: old.body["node_key"]!.text, action: action))
+            }
+            guard ChildTaskCompletionCommand.identity.allSatisfy({ AuthoredValueComparison.exactJSON(old.body[$0]!, new.body[$0]!) }) else { throw Self.invalid }
+            return new
+        }
+        guard Set(reads.values.map { ChildTaskFieldClientScope($0.context) }).count == 1 else { throw Self.invalid }
+        return try .init(account: account, origin: origin, items: updated)
+    }
+}
+
+struct ChildTaskActionAdmissionFailure: LocalizedError {
+    var errorDescription: String? { "Another saved subtask action needs review before these tasks can change." }
 }

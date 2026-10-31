@@ -214,12 +214,14 @@ struct ChildTaskFieldJournalFileIO:CalendarSecureItemIO {
     func remove(key:String) throws {try base.remove(key:key)}
 }
 actor ChildTaskFieldJournal {
+    private let admit: @Sendable (Set<String>) throws -> Void
     private let io:any CalendarSecureItemIO
     private let lock:AutomationEnrollmentProcessLock
     private let removalDirectory:URL
     let account:String,origin:String
     private var key:String {ChildTaskFieldJournalState.storagePrefix+account+"."+CalendarOAuthConfiguration.digest(origin)}
-    init(account:String,origin:String,io:any CalendarSecureItemIO,coordinationDirectory:URL,removalDirectory:URL) throws {
+    init(account:String,origin:String,io:any CalendarSecureItemIO,coordinationDirectory:URL,removalDirectory:URL, admit: @escaping @Sendable (Set<String>) throws -> Void = { _ in }) throws {
+        self.admit = admit;
         try TeamOrganizationValue.scope(account:account,origin:origin)
         self.account=account;self.origin=origin;self.io=io;lock = .init(directory:coordinationDirectory);self.removalDirectory=removalDirectory
     }
@@ -244,6 +246,7 @@ actor ChildTaskFieldJournal {
     /// Once attempted, both body and request identity remain immutable.
     func enqueue(_ command:ChildTaskFieldCommand,lease:CalendarReadLease) throws -> ChildTaskFieldCommand {
         try guarded(lease:lease) {
+            try admit([command.body["task_id"]!.text])
             guard command.account==account,command.origin==origin else {throw ChildTaskFieldCommand.invalid};var state=try read()
             if let old=state.entries.first(where:{$0.command.id==command.id}) {guard old.command==command else {throw ChildTaskFieldCommand.invalid};return old.command}
             if let index=state.entries.lastIndex(where:{$0.phase == .queued && $0.command.sameTarget(command) && $0.command.body["revision"]==command.body["revision"]}) {
@@ -257,6 +260,7 @@ actor ChildTaskFieldJournal {
     }
     func attempt(_ reviewed:ChildTaskFieldCommand,lease:CalendarReadLease) throws -> ChildTaskFieldJournalState.Entry {
         try guarded(lease:lease) {
+            try admit([reviewed.body["task_id"]!.text])
             var state=try read();guard let index=state.entries.firstIndex(where:{$0.command.id==reviewed.id}),state.entries[index].command==reviewed else {throw ChildTaskFieldCommand.invalid}
             guard !state.entries[..<index].contains(where:{$0.phase != .confirmed && $0.phase != .closed && $0.command.sameTarget(reviewed)}) else {throw ChildTaskFieldCommand.invalid}
             guard state.entries[index].phase != .closed else {throw ChildTaskFieldWriteFailure(reason:.closed)}
@@ -300,6 +304,7 @@ actor ChildTaskFieldJournal {
     /// proof. It cannot silently coalesce with another window's saved intent.
     func replaceClosed(_ original: ChildTaskFieldCommand, with replacement: ChildTaskFieldCommand, lease: CalendarReadLease) throws {
         try guarded(lease: lease) {
+            try admit([replacement.body["task_id"]!.text])
             var state = try read()
             guard let old = state.entries.first(where: { $0.command.id == original.id }), old.command == original,
                   old.phase == .closed, old.resolution?.closed == true,

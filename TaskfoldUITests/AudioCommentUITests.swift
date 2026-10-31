@@ -1112,11 +1112,13 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app)
         XCTAssertTrue(childSavedText("Review the polished child screen", app).waitForExistence(timeout: 10), app.debugDescription); XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch.exists)
     }
-    @MainActor private func childCompletionListLaunch(_ app: XCUIApplication, reset: Bool, lost: Bool = false) throws -> String {
+    @MainActor private func childCompletionListLaunch(_ app: XCUIApplication, reset: Bool, lost: Bool = false, groupLost: Bool = false, blocking: Bool = false) throws -> String {
         try childGuard()
         app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-opaque", "--child-fields-list-completion", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
         if reset { app.launchArguments.append("--child-fields-native-reset") }
         if lost { app.launchArguments.append("--child-completion-lose-reply") }
+        if groupLost { app.launchArguments.append("--child-batch-lose-reply") }
+        if blocking { app.launchArguments.append("--child-batch-blocking-single") }
         app.launch(); app.activate()
         let root = "ec990000-0000-4000-8000-000000000002"
         let ref = "subtask:" + (try JSONSerialization.data(withJSONObject: [root, "review"])).base64EncodedString()
@@ -1126,6 +1128,55 @@ extension TaskfoldMacUITests {
         if expand.value as? String != "Expanded" { childPress(expand) }
         #endif
         return ref
+    }
+
+    @MainActor private func childGroupListLaunch(_ app: XCUIApplication, reset: Bool, lost: Bool = false, blocking: Bool = false) throws {
+        _ = try childCompletionListLaunch(app, reset: reset, groupLost: lost, blocking: blocking)
+    }
+    @MainActor private func childGroupSelectBoth(_ app: XCUIApplication) throws {
+        #if os(macOS)
+        throw XCTSkip("Mac group interaction uses authorized direct computer use after XCTest initialization failure")
+        #else
+        let options = app.buttons["Task options"]
+        XCTAssertTrue(options.waitForExistence(timeout: 20), app.debugDescription); childPress(options)
+        let select = app.buttons["Select tasks"]; XCTAssertTrue(select.waitForExistence(timeout: 10), app.debugDescription); childPress(select)
+        for title in ["Prepare the review", "Publish the summary"] {
+            let row = app.buttons["Select " + title]; childReveal(row, app); XCTAssertTrue(row.waitForExistence(timeout: 12), app.debugDescription); childPress(row)
+        }
+        let complete = app.buttons["Complete selected tasks"].firstMatch; XCTAssertTrue(complete.waitForExistence(timeout: 12), app.debugDescription); childPress(complete)
+        #endif
+    }
+    @MainActor func testChildGroupMainListWholeUndoAndColdReturn() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childGroupListLaunch(app, reset: true); try childGroupSelectBoth(app)
+        let undo = app.buttons["undoToast"]; XCTAssertTrue(undo.waitForExistence(timeout: 20), app.debugDescription); childPress(undo)
+        for title in ["Prepare the review", "Publish the summary"] { XCTAssertTrue(app.buttons["Complete " + title].waitForExistence(timeout: 20), app.debugDescription) }
+        app.terminate(); try childGroupListLaunch(app, reset: false)
+        for title in ["Prepare the review", "Publish the summary"] { XCTAssertTrue(app.buttons["Complete " + title].waitForExistence(timeout: 20), app.debugDescription) }
+        structureSnapshot(app, "Whole selection and receipt-based Undo survive cold return")
+    }
+    @MainActor func testChildGroupMainListUncertainReviewRetriesOriginal() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childGroupListLaunch(app, reset: true, lost: true); try childGroupSelectBoth(app)
+        let review = app.buttons["reviewListChildGroup"]; XCTAssertTrue(review.waitForExistence(timeout: 20), app.debugDescription); XCTAssertFalse(app.buttons["undoToast"].exists); childPress(review)
+        let retry = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildGroup-")).firstMatch
+        XCTAssertTrue(retry.waitForExistence(timeout: 15), app.debugDescription); childReveal(retry,app); childPress(retry)
+        let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childGroupPhase-", "Confirmed", "Confirmed")).firstMatch
+        XCTAssertTrue(confirmed.waitForExistence(timeout: 20), app.debugDescription); XCTAssertFalse(retry.exists)
+        structureSnapshot(app, "Lost group reply confirms its original request")
+        childDone(app); XCTAssertFalse(review.exists)
+    }
+    @MainActor func testChildGroupMainListPreservesEarlierSingleAction() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childGroupListLaunch(app, reset: true, blocking: true); try childGroupSelectBoth(app)
+        let review = app.buttons["reviewListChildGroup"]; XCTAssertTrue(review.waitForExistence(timeout: 20), app.debugDescription); childPress(review)
+        let single = app.buttons["savedChildCompletions"]; childReveal(single,app); XCTAssertTrue(single.waitForExistence(timeout: 15), app.debugDescription); childPress(single)
+        let queued = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childCompletionPhase-", "not sent", "not sent")).firstMatch
+        XCTAssertTrue(queued.waitForExistence(timeout: 20), app.debugDescription)
+        structureSnapshot(app, "Earlier single action remains saved and blocks overlapping bulk work")
     }
     @MainActor func testChildCompletionMainListUndoAndColdReturn() throws {
         let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }

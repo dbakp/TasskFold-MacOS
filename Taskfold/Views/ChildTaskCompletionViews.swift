@@ -11,29 +11,17 @@ private struct ChildCompletionTargetsRequest: Hashable {
 struct SavedChildTaskCompletionsLink: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
-    @State private var visible = false
     @State private var showing = false
-    @State private var revision = UUID()
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         Group {
-            if visible, scope != nil {
+            if let scope, store.childRecoveryPresenceScope == scope, store.hasSavedChildCompletions {
                 Section { Button("Saved subtask actions", systemImage: "checkmark.circle") { showing = true }.accessibilityIdentifier("savedChildCompletions") }
             }
         }
-        .task(id: scope) { await discover() }
-        .task(id: revision) { await discover() }
-        .sheet(isPresented: $showing, onDismiss: { revision = UUID() }) {
+        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) {
             WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() }
         }
-    }
-    private func discover() async {
-        visible = false; guard let captured = scope else { return }
-        do {
-            let journal = try store.childTaskCompletionJournal(account: captured.account, origin: captured.origin)
-            let state = try await journal.load()
-            guard captured == scope, !Task.isCancelled else { return }; visible = !state.entries.isEmpty
-        } catch { guard captured == scope, !Task.isCancelled else { return }; visible = true }
     }
 }
 
@@ -145,6 +133,7 @@ struct ChildTaskCompletionRecoveryView: View {
     }
     var body: some View {
         List {
+            SavedChildTaskGroupsLink()
             Section {
                 Text("Each saved action belongs to its original account and subtask. Retrying uses the same request.").foregroundStyle(.secondary)
                 Text("Older confirmations are cleared automatically. Pending and stopped actions stay here until reviewed.").font(.footnote).foregroundStyle(.secondary)
@@ -178,6 +167,7 @@ struct ChildTaskCompletionRecoveryView: View {
             else if scope == nil { ContentUnavailableView("Open your workspace", systemImage: "lock.shield") }
             else { ProgressView("Reading saved actions…") }
         }
+        .modifier(ChildTaskRecoveryPresence())
         .task(id: scope) {
             model?.close(); model = nil; modelScope = nil; stopping = nil; reviewing = nil; failure = nil
             guard let captured = scope else { return }
@@ -355,5 +345,189 @@ private struct ChildCompletionReviewActionLabel: View {
     init(_ title: String, image: String, unavailable: Bool) { self.title = title; self.image = image; self.unavailable = unavailable }
     var body: some View {
         Label(title, systemImage: image).foregroundStyle(unavailable ? Color.secondary : Color.accentColor)
+    }
+}
+
+struct SavedChildTaskGroupsLink: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @State private var showing = false
+    private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    var body: some View {
+        Group {
+            if let scope, store.childRecoveryPresenceScope == scope, store.hasSavedChildGroups {
+                Section { Button("Saved subtask selections", systemImage: "checkmark.circle") { showing = true }.accessibilityIdentifier("savedChildGroups") }
+            }
+        }
+        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) {
+            WorkflowShell(title: "Saved subtask selections") { ChildTaskGroupRecoveryView() }
+        }
+    }
+}
+
+struct ChildTaskGroupRecoveryView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @State private var model: ChildTaskCompletionBatchRecoveryModel?
+    @State private var modelScope: ChildTaskFieldClientScope?
+    @State private var stopping: ChildTaskCompletionBatchCommand?
+    @State private var reviewing: ChildTaskCompletionBatchState.Entry?
+    @State private var failure: String?
+    private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    private var ordered: [ChildTaskCompletionBatchState.Entry] {
+        (model?.entries ?? []).enumerated().sorted {
+            let left = $0.element.phase == .queued || $0.element.phase == .attempted
+            let right = $1.element.phase == .queued || $1.element.phase == .attempted
+            if left != right { return left }; return left ? $0.offset < $1.offset : $0.offset > $1.offset
+        }.map(\.element)
+    }
+    private func dependent(_ command: ChildTaskCompletionBatchCommand) -> Bool {
+        let ids = Set(command.items.map(\.id))
+        return model?.entries.contains { $0.command.items.contains { ids.contains($0.body["undo_of"]?.text ?? "") } } == true
+    }
+    private func activeUndo(_ command: ChildTaskCompletionBatchCommand) -> ChildTaskCompletionBatchState.Entry? {
+        let ids = Set(command.items.map(\.id))
+        return model?.entries.last { $0.phase != .closed && $0.command.isUndo && $0.command.items.contains { ids.contains($0.body["undo_of"]?.text ?? "") } }
+    }
+    var body: some View {
+        List {
+            Section { Text("A selection is saved and applied together. Retrying keeps its original request.").foregroundStyle(.secondary) }
+            if let model, scope != nil, scope == modelScope {
+                if let message = model.message { Section { ChildCompletionNotice(message: message).accessibilityIdentifier("childGroupStatus") } }
+                if model.loaded, model.entries.isEmpty { ContentUnavailableView("All clear", systemImage: "checkmark.circle", description: Text("Saved subtask selections will appear here.")) }
+                ForEach(ordered, id: \.command.id) { entry in
+                    Section {
+                        Label(entry.command.isUndo ? "Undo selection" : entry.command.items[0].body["action"] == .string("complete") ? "Complete selection" : "Reopen selection", systemImage: entry.command.isUndo ? "arrow.uturn.backward" : "checkmark.circle")
+                            .font(.headline)
+                        Text("\(entry.command.items.count) \(entry.command.items.count == 1 ? "subtask" : "subtasks")").foregroundStyle(.secondary)
+                        Text(status(entry)).foregroundStyle(.secondary).accessibilityIdentifier("childGroupPhase-" + entry.command.id)
+                        if entry.phase == .queued || entry.phase == .attempted {
+                            Button(entry.phase == .queued ? "Send saved selection" : "Retry original selection", systemImage: "arrow.up.circle") { Task { await model.send(entry.command) } }
+                                .disabled(model.busy || !store.permitsChildTaskCompletionBatch(entry.command, sending: true)).accessibilityIdentifier("sendChildGroup-" + entry.command.id)
+                            Button("Check and stop if pending", systemImage: "hand.raised") { stopping = entry.command }.disabled(model.busy || !store.online)
+                        }
+                        if entry.phase != .confirmed || (!entry.command.isUndo && activeUndo(entry.command) == nil) {
+                            Button(entry.phase == .confirmed ? "Review Undo" : entry.phase == .closed ? "Review a fresh selection" : "Review current subtasks", systemImage: "arrow.left.arrow.right") { reviewing = entry }
+                                .disabled(model.busy || !store.online || !store.childTaskCompletionBatchesEnabled).accessibilityIdentifier("reviewChildGroup-" + entry.command.id)
+                        }
+                        if entry.phase != .attempted, !dependent(entry.command) {
+                            Button("Forget saved record", role: .destructive) { Task { await model.discard(entry.command) } }.disabled(model.busy)
+                        }
+                    }
+                }
+                if model.busy { ProgressView("Updating saved selection…") }
+                if !model.loaded, !model.busy { Button("Read saved selections again") { Task { await model.load() } } }
+            } else if let failure { Text(failure) }
+            else if scope == nil { ContentUnavailableView("Open your workspace", systemImage: "lock.shield") }
+            else { ProgressView("Reading saved selections…") }
+            SavedChildTaskCompletionsLink()
+            SavedChildTaskFieldChangesLink()
+            SavedChildTaskStructureLink()
+        }
+        .modifier(ChildTaskRecoveryPresence())
+        .task(id: scope) {
+            model?.close(); model = nil; modelScope = nil; stopping = nil; reviewing = nil; failure = nil
+            guard let captured = scope else { return }
+            do { let value = try store.childTaskCompletionBatchRecoveryModel(); model = value; modelScope = captured; await value.load() }
+            catch { guard scope == captured else { return }; failure = "Saved selections could not be read. Your work is kept." }
+        }
+        .onDisappear { model?.close(); model = nil; modelScope = nil; stopping = nil; reviewing = nil }
+        .onChange(of: scope) { _, _ in stopping = nil; reviewing = nil }
+        .alert("Check this selection and stop it if pending?", isPresented: Binding(get: { stopping != nil }, set: { if !$0 { stopping = nil } })) {
+            Button("Check and stop", role: .destructive) {
+                guard let command = stopping, let model, scope == modelScope else { return }; stopping = nil
+                Task { await model.send(command, resolving: true) }
+            }
+            Button("Cancel", role: .cancel) { stopping = nil }
+        } message: { Text("An applied selection keeps its confirmation. An unapplied selection is stopped and needs a fresh review before another attempt.") }
+        .sheet(isPresented: Binding(get: { reviewing != nil }, set: { if !$0 { reviewing = nil } })) {
+            if let entry = reviewing, let model, scope == modelScope {
+                WorkflowShell(title: "Review selection") { ChildTaskGroupReview(entry: entry, model: model) }
+            }
+        }
+    }
+    private func status(_ entry: ChildTaskCompletionBatchState.Entry) -> String {
+        if entry.phase == .confirmed, !entry.command.isUndo, let undo = activeUndo(entry.command) { return undo.phase == .confirmed ? "Undone" : "Confirmed · Undo awaiting confirmation" }
+        switch entry.phase { case .queued: return "Saved · not sent"; case .attempted: return "Unconfirmed · original selection kept"; case .confirmed: return "Confirmed · tasks may have changed since"; case .closed: return "Stopped · cannot send again" }
+    }
+}
+
+private struct ChildTaskGroupReview: View {
+    let entry: ChildTaskCompletionBatchState.Entry
+    let model: ChildTaskCompletionBatchRecoveryModel
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @State private var reads: [String: ChildTaskRecordRead] = [:]
+    @State private var readScope: ChildTaskFieldClientScope?
+    @State private var failure: String?
+    @State private var reading = false
+    private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    private var current: Bool { !reads.isEmpty && scope == readScope && reads.values.allSatisfy(store.childTaskFieldComparisonIsCurrent) }
+    private var candidate: ChildTaskCompletionBatchCommand? {
+        guard current else { return nil }
+        if entry.phase == .confirmed, let proof = entry.proof { return try? entry.command.undo(reads: reads, decision: proof) }
+        if entry.phase == .closed { return try? entry.command.fresh(reads: reads) }
+        return nil
+    }
+    var body: some View {
+        List {
+            Section {
+                Text("Review \(entry.command.items.count) \(entry.command.items.count == 1 ? "subtask" : "subtasks"). The saved selection is kept until its outcome is confirmed.").foregroundStyle(.secondary)
+                if let failure { Text(failure).foregroundStyle(.secondary) }
+                if reading { ProgressView("Reading current subtasks…") }
+            }
+            if current {
+                ForEach(entry.command.items, id: \.id) { item in
+                    if let read = reads[item.body["task_id"]!.text],
+                       read.context.root["task_generation"] == item.body["task_generation"], read.context.root["project_id"] == item.body["project_id"],
+                       let node = read.nodes[item.body["node_key"]!.text], item.body["incarnation"] == .string(node.incarnation) {
+                        Section {
+                            Text(node.fields["title"]?.text ?? "Subtask").font(.headline).privacySensitive()
+                            Label(node.fields["completed"]?.flag == true ? "Completed" : "Open", systemImage: node.fields["completed"]?.flag == true ? "checkmark.circle.fill" : "circle")
+                        }
+                    }
+                }
+                if let candidate {
+                    Section {
+                        if entry.phase == .confirmed {
+                            Button("Undo entire selection", systemImage: "arrow.uturn.backward") { Task { _ = await model.undo(entry, reads: reads) } }
+                                .disabled(model.busy || !store.permitsChildTaskCompletionBatch(candidate, sending: false)).accessibilityIdentifier("undoReviewedChildGroup")
+                        } else if entry.phase == .closed {
+                            Button("Save fresh selection", systemImage: "tray.and.arrow.down") { Task { await model.replace(entry, with: candidate) } }
+                                .disabled(model.busy || model.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && $0.command.overlaps(entry.command) }) || !store.permitsChildTaskCompletionBatch(candidate, sending: false)).accessibilityIdentifier("replaceReviewedChildGroup")
+                        }
+                    }
+                } else if entry.phase == .confirmed || entry.phase == .closed {
+                    Text("This selection has changed. Review the current tasks before choosing another action.").foregroundStyle(.secondary)
+                }
+            }
+            if let message = model.message { Section { ChildCompletionNotice(message: message) } }
+            Section { Button("Refresh selection", systemImage: "arrow.clockwise") { Task { await load() } }.disabled(model.busy || reading || !store.online) }
+        }
+        .task(id: scope) { await load() }
+        .onDisappear { reads = [:]; readScope = nil }
+    }
+    private func load() async {
+        reads = [:]; readScope = nil; failure = nil
+        guard let captured = scope, store.online, !reading else { return }; reading = true; defer { reading = false }
+        do {
+            await store.sync()
+            guard scope == captured, !Task.isCancelled else { return }
+            let values = try await store.readChildBatch(entry.command)
+            guard scope == captured, !Task.isCancelled else { return }; reads = values; readScope = captured
+        } catch { guard scope == captured, !Task.isCancelled else { return }; failure = "The current selection could not be read. Your saved action is kept." }
+    }
+}
+
+/// Discovery runs on a mounted screen, even when its conditional links start empty.
+struct ChildTaskRecoveryPresence: ViewModifier {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    func body(content: Content) -> some View {
+        content.task(id: scope) {
+            if scope != nil { await store.refreshChildTaskRecoveryPresence() }
+            else { store.hideChildTaskRecoveryPresence() }
+        }
     }
 }

@@ -68,6 +68,8 @@ struct Confirmation: Equatable {
     var historyRequest: EditHistoryRequest?
     var childCompletion: ChildTaskListCompletionUndo? = nil
     var childCompletionReview = false
+    var childGroup: ChildTaskListBatchUndo? = nil
+    var childGroupReview = false
 }
 
 /// Window-level state shared by the sidebar, the list, the inspector, and the menu bar commands.
@@ -283,7 +285,7 @@ final class Workspace {
         if store.undoStack.last?.redo.map(\.id) != previous { register(name) }
     }
     private func register(_ name: String) {
-        childCompletionUndoID = nil
+        childCompletionUndoID = nil; childGroupUndoID = nil
         guard let undoManager else { return }
         undoManager.setActionName(name)
         undoManager.registerUndo(withTarget: self) { workspace in
@@ -295,6 +297,7 @@ final class Workspace {
     }
 
     func confirm(_ message: String, undoable: Bool = true) {
+        childCompletionUndoID = nil; childGroupUndoID = nil
         confirmationTimer?.cancel()
         withAnimation(layout) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil) }
         confirmationTimer = Task { [weak self] in
@@ -315,11 +318,14 @@ final class Workspace {
         confirmationTimer?.cancel(); withAnimation(layout) { confirmation = nil }
     }
 
+    var childGroupReview = false
+    private var childGroupUndoID: String?
     var childCompletionReview = false
     private var childCompletionUndoID: String?
     func clearChildCompletion() {
+        childGroupUndoID = nil; childGroupReview = false
         childCompletionUndoID = nil; childCompletionReview = false
-        if confirmation?.childCompletion != nil || confirmation?.childCompletionReview == true { confirmationTimer?.cancel(); confirmation = nil }
+        if confirmation?.childCompletion != nil || confirmation?.childCompletionReview == true || confirmation?.childGroup != nil || confirmation?.childGroupReview == true { confirmationTimer?.cancel(); confirmation = nil }
     }
     func reviewChildCompletion() {
         confirmationTimer?.cancel(); confirmation = nil; childCompletionReview = true
@@ -346,6 +352,30 @@ final class Workspace {
     func undoChildCompletion(_ token: ChildTaskListCompletionUndo) {
         guard canUndoChildCompletion(token), let manager = undoManager, manager.canUndo else { return }
         manager.undo()
+    }
+    func reviewChildGroup() { confirmationTimer?.cancel(); confirmation = nil; childGroupReview = true }
+    func canUndoChildGroup(_ token: ChildTaskListBatchUndo) -> Bool { childGroupUndoID == token.command.id && store.canUndoChildListBatch(token) }
+    private func showChildGroup(_ result: ChildTaskListBatchResult) {
+        confirm(result.message, undoable: false); confirmation?.childGroup = result.undo; confirmation?.childGroupReview = result.needsReview
+        guard let token = result.undo, let manager = undoManager else { return }; childGroupUndoID = token.command.id
+        manager.registerUndo(withTarget: self) { workspace in
+            guard workspace.canUndoChildGroup(token) else { return }; workspace.childGroupUndoID = nil
+            Task { [weak workspace] in
+                guard let workspace, let result = await workspace.store.undoChildBatchFromList(token) else { return }; workspace.showChildGroup(result)
+            }
+        }
+        manager.setActionName(token.command.items[0].body["action"] == .string("complete") ? "Complete Subtasks" : "Reopen Subtasks")
+    }
+    func undoChildGroup(_ token: ChildTaskListBatchUndo) { guard canUndoChildGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
+    private func completeIndependentGroup(_ tasks: [Record]) {
+        do {
+            let intent = try store.captureChildListBatch(tasks, completed: tasks.contains { !$0.completed })
+            Task { [weak self] in
+                guard let self, let result = await self.store.completeChildBatchFromList(intent) else { return }
+                if result.undo != nil { self.selection.subtract(tasks.map(\.id)); Feedback.complete() }
+                self.showChildGroup(result)
+            }
+        } catch { store.error = error.localizedDescription }
     }
     private func completeIndependentChild(_ task: Record) {
         do {
@@ -422,8 +452,10 @@ final class Workspace {
     }
     func toggle(_ ids: Set<String>) {
         if store.childTaskCompletionEnabled, ids.contains(where: { Self.subtaskPath($0) != nil }) {
-            guard ids.count == 1, let id = ids.first, let task = taskRecord(id) else { store.error = "Select one subtask to complete or reopen it."; return }
-            complete(task); return
+            if ids.count == 1, let id = ids.first, let task = taskRecord(id) { complete(task); return }
+            guard store.childTaskCompletionBatchesEnabled else { store.error = "Bulk subtask completion is not available yet."; return }
+            do { completeIndependentGroup(try ids.sorted().map { try store.selectionRecord($0) }) } catch { store.error = error.localizedDescription }
+            return
         }
         guard ids.allSatisfy({ id in taskRecord(id).map(TaskKind.mayComplete) == true }) else {
             store.error = "Headings stay open. Select tasks to complete."; return

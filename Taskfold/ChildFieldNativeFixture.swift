@@ -77,7 +77,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         let bytes = try Data(contentsOf: file); guard bytes.count < 1_000_000 else { throw CancellationError() }
         return try TaskfoldJSONDecoder().decode([String: JSON].self, from: bytes)
     }
-    static func completionResponse(_ body: [String: JSON], closing: Bool, state: inout [String: JSON]) throws -> (Data, Bool) {
+    static func completionResponse(_ body: [String: JSON], closing: Bool, state: inout [String: JSON], persist: Bool = true) throws -> (Data, Bool) {
         guard Set(body.keys) == ["_body"], Store.shared.userID == ChildFieldNativeIdentity.account else { throw CancellationError() }
         let raw = body["_body"]!.object
         var receipts = state["completionReceipts"]?.object ?? [:]
@@ -100,14 +100,14 @@ struct ChildFieldNativeRefusal: Error { let code: String }
                 closed[command.id] = .object(raw); state["completionClosures"] = .object(closed)
                 result["outcome"] = .string("closed"); result["receipt"] = .null
             }
-            _ = try ChildTaskCompletionResolution(command: command, raw: result); try save(state)
+            _ = try ChildTaskCompletionResolution(command: command, raw: result); if persist { try save(state) }
             return (try TaskfoldJSONEncoder().encode(result), false)
         }
         state["completionRequests"] = .number(Double((state["completionRequests"]?.integer ?? 0) + 1))
-        if state["completionClosures"]?.object[command.id] != nil { try save(state); throw ChildFieldNativeRefusal(code: "PT410") }
+        if state["completionClosures"]?.object[command.id] != nil { if persist { try save(state) }; throw ChildFieldNativeRefusal(code: "PT410") }
         if let saved = receipts[command.id]?.object {
             guard AuthoredValueComparison.exactJSON(saved["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
-            var proof = saved["receipt"]!.object; proof["replayed"] = .bool(true); try save(state)
+            var proof = saved["receipt"]!.object; proof["replayed"] = .bool(true); if persist { try save(state) }
             return (try TaskfoldJSONEncoder().encode(proof), false)
         }
         var root = Record(state["root"]!.object), rows = root["subtasks"].list
@@ -119,7 +119,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         let before = fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) }
         let expected = original?.receipt["after"] ?? raw["baseline"]!
         guard AuthoredValueComparison.exactJSON(.object(before), expected), raw["revision"]!.integer <= versions[key]!.integer,
-              before[TeamChecklist.key] != nil || raw["revision"] == versions[key] else { try save(state); throw ChildFieldNativeRefusal(code: "PT409") }
+              before[TeamChecklist.key] != nil || raw["revision"] == versions[key] else { if persist { try save(state) }; throw ChildFieldNativeRefusal(code: "PT409") }
         var after = original?.receipt["before"]?.object ?? before
         let token = TeamChecklist.token(before[TeamChecklist.key])
         after[TeamChecklist.key] = .object(["epoch": .string(token?.epoch ?? "ec990000-0000-4000-8000-000000000010"), "version": .number((token?.version ?? 0) + 1)])
@@ -138,7 +138,43 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         state["root"] = .object(root.fields); state["versions"] = .object(versions); state["completionReceipts"] = .object(receipts)
         state["completionWrites"] = .number(Double((state["completionWrites"]?.integer ?? 0) + 1)); state["writes"] = .number(Double(state["writes"]!.integer + 1))
         let lose = ProcessInfo.processInfo.arguments.contains("--child-completion-lose-reply") && state["completionLost"]?.flag != true
-        if lose { state["completionLost"] = .bool(true) }; try save(state)
+        if lose { state["completionLost"] = .bool(true) }; if persist { try save(state) }
+        return (try TaskfoldJSONEncoder().encode(proof), lose)
+    }
+    static func batchResponse(_ body: [String: JSON], closing: Bool, state: inout [String: JSON]) throws -> (Data, Bool) {
+        guard Set(body.keys) == ["_body"] else { throw CancellationError() }
+        let raw = body["_body"]!.object
+        let items = try raw["items"]!.list.map { value -> ChildTaskCompletionCommand in
+            let b = value.object
+            let source = b["undo_of"].flatMap { state["completionReceipts"]?.object[$0.text]?.object }
+            let original = source.map { ChildTaskCompletionCommand.Original(body: $0["body"]!.object, receipt: $0["receipt"]!.object) }
+            return try .init(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: b, original: original)
+        }
+        guard let id = UUID(uuidString: raw["batch_id"]!.text) else { throw CancellationError() }
+        let command = try ChildTaskCompletionBatchCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, items: items, batchID: id)
+        guard AuthoredValueComparison.exactJSON(.object(command.body), .object(raw)) else { throw CancellationError() }
+        state["batchRequests"] = .number(Double((state["batchRequests"]?.integer ?? 0) + 1))
+        if let old = state["batchDecisions"]?.object[command.id]?.object {
+            guard AuthoredValueComparison.exactJSON(old["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+            var proof = old["proof"]!.object
+            if !closing, proof["outcome"] == .string("closed") { try save(state); throw ChildFieldNativeRefusal(code: "PT410") }
+            proof["replayed"] = .bool(true)
+            proof["receipts"] = .array(proof["receipts"]!.list.map { value in var r = value.object; r["replayed"] = .bool(true); return .object(r) })
+            _ = try command.resolution(proof); try save(state); return (try TaskfoldJSONEncoder().encode(proof), false)
+        }
+        guard items.allSatisfy({ state["completionReceipts"]?.object[$0.id] == nil && state["completionClosures"]?.object[$0.id] == nil }) else { throw ChildFieldNativeRefusal(code: "PT409") }
+        var working = state, proofs: [JSON] = []
+        for item in items {
+            let result = try completionResponse(["_body": .object(item.body)], closing: closing, state: &working, persist: false)
+            let value = try TaskfoldJSONDecoder().decode([String: JSON].self, from: result.0)
+            if !closing { proofs.append(.object(value)) }
+        }
+        let proof: [String: JSON] = ["protocol": .number(1), "account": .string(command.account), "batch_id": .string(command.id), "outcome": .string(closing ? "closed" : "applied"), "replayed": .bool(false), "receipts": .array(proofs)]
+        _ = try command.resolution(proof)
+        var decisions = working["batchDecisions"]?.object ?? [:]; decisions[command.id] = .object(["body": .object(raw), "proof": .object(proof)]); working["batchDecisions"] = .object(decisions)
+        if !closing { working["batchWrites"] = .number(Double((working["batchWrites"]?.integer ?? 0) + 1)) }
+        let lose = !closing && ProcessInfo.processInfo.arguments.contains("--child-batch-lose-reply") && working["batchLost"]?.flag != true
+        if lose { working["batchLost"] = .bool(true) }; state = working; try save(state)
         return (try TaskfoldJSONEncoder().encode(proof), lose)
     }
     static func response(_ request: URLRequest) async throws -> (Data, Bool) {
@@ -171,6 +207,9 @@ struct ChildFieldNativeRefusal: Error { let code: String }
                 return .object(["node_key": .string(key), "incarnation": .string(i == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006"), "revision": state["versions"]!.object[key]!, "parent_key": .null, "sibling_order": .number(Double(i)), "identity_path": .array([.string(key)]), "fields": value, "children_kind": .string("absent")])
             }
             return (try TaskfoldJSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": .null, "projection_revision": .number(Double(state["writes"]!.integer + 1)), "root_kind": .string("array"), "records": .array(records)]), false)
+        }
+        if ["/rest/v1/rpc/taskfold_complete_child_tasks", "/rest/v1/rpc/taskfold_close_child_completion_batch"].contains(request.url?.path ?? "") {
+            return try batchResponse(body, closing: request.url?.path == "/rest/v1/rpc/taskfold_close_child_completion_batch", state: &state)
         }
         if ["/rest/v1/rpc/taskfold_complete_child_task", "/rest/v1/rpc/taskfold_close_child_completion"].contains(request.url?.path ?? "") {
             return try completionResponse(body, closing: request.url?.path == "/rest/v1/rpc/taskfold_close_child_completion", state: &state)
@@ -238,6 +277,11 @@ struct ChildFieldMainListNativeFixtureView: View {
             guard ChildFieldNativeIdentity.mainListTesting else { return }
             do {
                 try await store.childFieldNativeStart()
+                if ProcessInfo.processInfo.arguments.contains("--child-batch-blocking-single"), ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") {
+                    let read = try await store.readChildTaskRecords(ChildFieldNativeIdentity.rootID)
+                    let command = try ChildTaskCompletionCommand(ChildTaskCompletionDraft(read: read, key: "concept", action: .complete))
+                    try await store.childTaskCompletionJournal(account: command.account, origin: command.origin).enqueue(command, lease: CalendarReadLease())
+                }
                 #if os(macOS)
                 workspace.section = .inbox
                 workspace.expandedTasks.insert(ChildFieldNativeIdentity.rootID)

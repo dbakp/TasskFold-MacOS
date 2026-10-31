@@ -212,6 +212,7 @@ struct AccountSettings: View {
             SavedTeamTemplateRequestLink()
             SavedChildTaskFieldChangesLink()
             SavedChildTaskCompletionsLink()
+            SavedChildTaskGroupsLink()
             SavedChildTaskStructureLink()
             SavedTeamWorkflowRequestLink()
             if TeamOrganizationAvailability.enabled && store.signedIn && !store.localMode {
@@ -238,6 +239,7 @@ struct AccountSettings: View {
                 }
             }
         }
+        .modifier(ChildTaskRecoveryPresence())
         .modifier(BackupPresentation())
         .formStyle(.grouped)
         .onAppear { refreshProfileDraft(); consumeSignInRequest() }

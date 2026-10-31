@@ -166,12 +166,14 @@ struct ChildTaskStructureDraftState: ReviewedTeamFileCommand, CustomStringConver
 /// Reuse authenticated file encryption, process coordination and removal fences.
 /// Unsent drafts are never evicted to make room for another draft.
 actor ChildTaskStructureDraftJournal {
+    private let admit: @Sendable (Set<String>) throws -> Void
     private let io: any CalendarSecureItemIO
     private let lock: AutomationEnrollmentProcessLock
     private let removalDirectory: URL
     let account: String, origin: String
     private var key: String { ChildTaskStructureDraftState.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
-    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL) throws {
+    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL, admit: @escaping @Sendable (Set<String>) throws -> Void = { _ in }) throws {
+        self.admit = admit;
         try TeamOrganizationValue.scope(account: account, origin: origin)
         self.account = account; self.origin = origin; self.io = io; lock = .init(directory: coordinationDirectory); self.removalDirectory = removalDirectory
     }
@@ -194,6 +196,7 @@ actor ChildTaskStructureDraftJournal {
     func load() throws -> ChildTaskStructureDraftState { try guarded(lease: nil) { try read() } }
     func save(_ draft: ChildTaskStructureDraft, replacing expected: UUID?, lease: CalendarReadLease) throws {
         try guarded(lease: lease) {
+            try admit([draft.body["task_id"]!.text])
             guard draft.account == account, draft.origin == origin else { throw ChildTaskStructureDraft.invalid }
             var state = try read()
             if let index = state.entries.firstIndex(where: { $0.id == draft.id }) {

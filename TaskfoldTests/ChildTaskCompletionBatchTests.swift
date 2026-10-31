@@ -456,3 +456,122 @@ extension ChildTaskCompletionBatchTests {
         XCTAssertEqual(io.rows, before)
     }
 }
+
+extension ChildTaskCompletionBatchTests {
+    private func actionIO<T: ReviewedTeamFileCommand>(_ type: T.Type, _ command: ChildTaskCompletionBatchCommand, _ dir: URL, _ folder: String) -> ReviewedTeamCommandFileIO<T> {
+        .init(directory: dir.appendingPathComponent("vault").appendingPathComponent(folder).appendingPathComponent(command.account).appendingPathComponent(CalendarOAuthConfiguration.digest(command.origin)), account: command.account, origin: command.origin, encryptionKey: { SymmetricKey(data: Data(repeating: 77, count: 32)) })
+    }
+    private func actionAdmission(_ c: ChildTaskCompletionBatchCommand, _ d: URL) -> ChildTaskActionAdmission {
+        .init(account: c.account, origin: c.origin, directory: d.appendingPathComponent("vault"), encryptionKey: { SymmetricKey(data: Data(repeating: 77, count: 32)) })
+    }
+    private func admittedGroup(_ c: ChildTaskCompletionBatchCommand, _ d: URL) throws -> ChildTaskCompletionBatchJournal {
+        let admission = actionAdmission(c,d)
+        return try .init(account: c.account, origin: c.origin, io: actionIO(ChildTaskCompletionBatchState.self,c,d,"Child completion groups"), coordinationDirectory: d.appendingPathComponent("shared"), removalDirectory: d.appendingPathComponent("removal"), admit: { try admission.checkBatch($0) })
+    }
+    private func admittedSingle(_ c: ChildTaskCompletionBatchCommand, _ d: URL) throws -> ChildTaskCompletionJournal {
+        let admission = actionAdmission(c,d)
+        return try .init(account: c.account, origin: c.origin, io: actionIO(ChildTaskCompletionJournalState.self,c,d,"Child completion requests"), coordinationDirectory: d.appendingPathComponent("shared"), removalDirectory: d.appendingPathComponent("removal"), admit: { try admission.checkOther($0) })
+    }
+    func testPendingSingleAndBulkHaveAtomicCrossJournalAdmission() async throws {
+        let c = try command(), d = try groupDirectory(), group = try admittedGroup(c,d), single = try admittedSingle(c,d), lease = CalendarReadLease()
+        func enqueueGroup() async -> Bool { do { try await group.enqueue(c, lease: lease); return true } catch { return false } }
+        func enqueueSingle() async -> Bool { do { try await single.enqueue(c.items[0], lease: lease); return true } catch { return false } }
+        async let a = enqueueGroup(); async let b = enqueueSingle(); let outcomes = await [a,b]
+        XCTAssertEqual(outcomes.filter { $0 }.count, 1)
+        let groups = try await group.load(), singles = try await single.load(); XCTAssertEqual(groups.entries.count + singles.entries.count, 1)
+    }
+    func testGroupTerminalResolutionRemainsAvailableWhileAnOlderSingleExists() async throws {
+        let c = try command(), d = try groupDirectory(), group = try admittedGroup(c,d), single = try admittedSingle(c,d), lease = CalendarReadLease()
+        try await single.enqueue(c.items[0], lease: lease)
+        do { try await group.enqueue(c, lease: lease); XCTFail("Pending single must block") } catch {}
+        let bare = try ChildTaskCompletionBatchJournal(account: c.account, origin: c.origin, io: actionIO(ChildTaskCompletionBatchState.self,c,d,"Child completion groups"), coordinationDirectory: d.appendingPathComponent("shared"), removalDirectory: d.appendingPathComponent("removal"))
+        try await bare.enqueue(c, lease: lease)
+        do { _ = try await group.begin(c, lease: lease); XCTFail("Conflicting send must block") } catch {}
+        _ = try await group.begin(c, resolving: true, lease: lease); try await group.settle(c, decision: c.resolution(reply(c,closed:true)), lease: lease)
+        _ = try await single.beginResolution(c.items[0], lease: lease)
+        let state = try await group.load(); XCTAssertEqual(state.entries.first?.phase,.closed)
+    }
+    func testPendingBulkBlocksSingleAndUnblocksAfterDurableClosure() async throws {
+        let c = try command(), d = try groupDirectory(), group = try admittedGroup(c,d), single = try admittedSingle(c,d), lease = CalendarReadLease()
+        try await group.enqueue(c, lease: lease)
+        do { try await single.enqueue(c.items[0], lease: lease); XCTFail("Pending selection must block") } catch {}
+        _ = try await group.begin(c,resolving:true,lease:lease); try await group.settle(c,decision:c.resolution(reply(c,closed:true)),lease:lease)
+        try await single.enqueue(c.items[0],lease:lease); let state = try await single.load(); XCTAssertEqual(state.entries.count,1)
+    }
+    func testAdmissionRefusesCorruptPendingStorageWithoutReplacingIt() async throws {
+        let c = try command(), d = try groupDirectory(), single = try admittedSingle(c,d), lease = CalendarReadLease()
+        try await single.enqueue(c.items[0],lease:lease)
+        let io = actionIO(ChildTaskCompletionJournalState.self,c,d,"Child completion requests"), broken = Data("corrupt".utf8)
+        try broken.write(to:io.file)
+        do { try await admittedGroup(c,d).enqueue(c,lease:lease); XCTFail("Corruption cannot look empty") } catch {}
+        XCTAssertEqual(try Data(contentsOf:io.file),broken)
+    }
+    func testAdmissionAllowsASeparateRootAndSettledHistory() async throws {
+        let c = try command(), d = try groupDirectory(), group = try admittedGroup(c,d), single = try admittedSingle(c,d), lease = CalendarReadLease()
+        try await group.enqueue(c,lease:lease)
+        let other = try item("elsewhere",root:UUID().uuidString.lowercased());try await single.enqueue(other,lease:lease)
+        let state = try await single.load();XCTAssertEqual(state.entries.first?.command,other)
+    }
+}
+extension ChildTaskCompletionBatchTests {
+    @MainActor func testAdmissionFailureExplainsEarlierWorkAndNeverStartsBulkNetwork() async throws {
+        let c = try command(), d = try groupDirectory(), group = try admittedGroup(c,d), single = try admittedSingle(c,d), s = scope(c), p = peer()
+        try await single.enqueue(c.items[0],lease:CalendarReadLease())
+        let model = ChildTaskCompletionBatchRecoveryModel(scope:s,journal:group,service:p,current:{s},canQueue:{_ in true},canSend:{_ in true},refresh:{})
+        let result = await model.perform(c);XCTAssertFalse(result);XCTAssertTrue(p.calls.isEmpty);XCTAssertTrue(model.entries.isEmpty);XCTAssertEqual(model.message,ChildTaskActionAdmissionFailure().localizedDescription)
+        let saved = try await single.load();XCTAssertEqual(saved.entries.first?.phase,.queued)
+    }
+}
+
+extension ChildTaskCompletionBatchTests {
+    private func contract(_ name: String) throws -> [String:JSON] {
+        let url = try XCTUnwrap(Bundle.module.url(forResource:name,withExtension:"json",subdirectory:"Fixtures"))
+        return try TaskfoldJSONDecoder().decode([String:JSON].self,from:Data(contentsOf:url))
+    }
+    private func registryRefuses<T: ReviewedTeamFileCommand>(_ state: T, folder: String, roots: Set<String>) throws {
+        let original = try command(), d = try groupDirectory()
+        var body = original.items[0].body;body["account"] = .string(state.account);body["task_id"] = .string(roots.sorted()[0])
+        let item = try ChildTaskCompletionCommand(account:state.account,origin:state.origin,body:body), c = try ChildTaskCompletionBatchCommand(account:state.account,origin:state.origin,items:[item])
+        let io = actionIO(T.self,c,d,folder), key = T.storagePrefix + c.account + "." + CalendarOAuthConfiguration.digest(c.origin)
+        try io.write(TaskfoldJSONEncoder().encode(state),key:key)
+        XCTAssertThrowsError(try actionAdmission(c,d).checkBatch(roots)) { XCTAssertTrue($0 is ChildTaskActionAdmissionFailure) }
+        XCTAssertNoThrow(try actionAdmission(c,d).checkBatch([UUID().uuidString.lowercased()]))
+    }
+    func testRegistryReadsEveryOtherPendingChildJournalAndPrivateHierarchyDraft() throws {
+        let f = try contract("child-task-structure-proofs"), b = f["fixtureCommand"]!.object, account = b["account"]!.text
+        let structure = try ChildTaskStructureCommand(account:account,origin:origin,body:b)
+        try registryRefuses(ChildTaskStructureJournalState(account:account,origin:origin,entries:[.init(command:structure)]),folder:"Child hierarchy requests",roots:[b["task_id"]!.text])
+        let draftBody: [String:JSON] = ["account":.string(account),"request_id":.string(UUID().uuidString.lowercased()),"task_id":b["task_id"]!,"task_generation":b["task_generation"]!,"project_id":b["project_id"]!,"action":.string("insert"),"node_key":.null,"incarnation":.null,"structure_revision":.number(1),"parent_key":.null,"parent_incarnation":.null,"index":.number(0),"title":.string("Private draft")]
+        let draft = try ChildTaskStructureDraft(account:account,origin:origin,body:draftBody)
+        try registryRefuses(ChildTaskStructureDraftState(account:account,origin:origin,entries:[draft]),folder:"Child hierarchy drafts",roots:[b["task_id"]!.text])
+        let tf = try contract("cross-root-transfer-client-v1"), tb = tf["command"]!.object, ta = tb["account"]!.text
+        let transfer = try ChildTaskTransferCommand(account:ta,origin:origin,body:tb)
+        try registryRefuses(ChildTaskTransferState(account:ta,origin:origin,entries:[.init(command:transfer)]),folder:"Child transfer requests",roots:transfer.roots)
+        let af = try contract("child-adoption-contract-v1"), ab = af["command"]!.object, aa = ab["account"]!.text
+        let adoption = try ChildTaskAdoptionCommand(account:aa,origin:origin,body:ab,nodeCount:af["review"]!.object["node_count"]!.integer)
+        try registryRefuses(ChildTaskAdoptionState(account:aa,origin:origin,entries:[.init(command:adoption)]),folder:"Child adoption requests",roots:[ab["task_id"]!.text])
+        let rf = try contract("child-repair-contract-v1"), rb = rf["command"]!.object, ra = rb["account"]!.text
+        let repair = try ChildTaskRepairCommand(account:ra,origin:origin,body:rb,nodeCount:rf["nodeCount"]!.integer)
+        try registryRefuses(ChildTaskRepairState(account:ra,origin:origin,entries:[.init(command:repair)]),folder:"Child repair requests",roots:[rb["task_id"]!.text])
+        let ff = try contract("child-task-field-command"), fb = ff["body"]!.object, fa = fb["account"]!.text
+        let field = try ChildTaskFieldCommand(account:fa,origin:origin,body:fb)
+        try registryRefuses(ChildTaskFieldJournalState(account:fa,origin:origin,entries:[.init(command:field,phase:.queued,receipt:nil)]),folder:"Child field requests",roots:[fb["task_id"]!.text])
+    }
+    func testRepairAdoptionAndTransferMetadataAttemptsBypassWriteAdmission() async throws {
+        let d = try groupDirectory(), io = BatchIO(), lease = CalendarReadLease()
+        let tf = try contract("cross-root-transfer-client-v1"), tb = tf["command"]!.object, transfer = try ChildTaskTransferCommand(account:tb["account"]!.text,origin:origin,body:tb)
+        let tj = try ChildTaskTransferJournal(account:transfer.account,origin:origin,io:io,coordinationDirectory:d.appendingPathComponent("moves"),removalDirectory:d,admit:{_ in throw ChildTaskActionAdmissionFailure()})
+        let seedT = try ChildTaskTransferJournal(account:transfer.account,origin:origin,io:io,coordinationDirectory:d.appendingPathComponent("moves"),removalDirectory:d)
+        try await seedT.enqueue(transfer,lease:lease)
+        do { _ = try await tj.attempt(transfer,lease:lease);XCTFail("Write must be admitted") } catch is ChildTaskActionAdmissionFailure {} catch { XCTFail("Wrong error") }
+        _ = try await tj.attempt(transfer,lease:lease,resolving:true)
+        let af = try contract("child-adoption-contract-v1"), ab = af["command"]!.object, adoption = try ChildTaskAdoptionCommand(account:ab["account"]!.text,origin:origin,body:ab,nodeCount:af["review"]!.object["node_count"]!.integer)
+        let aj = try ChildTaskAdoptionJournal(account:adoption.account,origin:origin,io:io,coordinationDirectory:d.appendingPathComponent("adoption"),removalDirectory:d,admit:{_ in throw ChildTaskActionAdmissionFailure()})
+        let seedA = try ChildTaskAdoptionJournal(account:adoption.account,origin:origin,io:io,coordinationDirectory:d.appendingPathComponent("adoption"),removalDirectory:d)
+        try await seedA.enqueue(adoption,lease:lease);_ = try await aj.attempt(adoption,lease:lease,resolving:true)
+        let rf = try contract("child-repair-contract-v1"), rb = rf["command"]!.object, repair = try ChildTaskRepairCommand(account:rb["account"]!.text,origin:origin,body:rb,nodeCount:rf["nodeCount"]!.integer)
+        let rj = try ChildTaskRepairJournal(account:repair.account,origin:origin,io:io,coordinationDirectory:d.appendingPathComponent("repair"),removalDirectory:d,admit:{_ in throw ChildTaskActionAdmissionFailure()})
+        let seedR = try ChildTaskRepairJournal(account:repair.account,origin:origin,io:io,coordinationDirectory:d.appendingPathComponent("repair"),removalDirectory:d)
+        try await seedR.enqueue(repair,lease:lease);_ = try await rj.attempt(repair,lease:lease,resolving:true)
+    }
+}

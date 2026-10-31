@@ -1,0 +1,9 @@
+{
+  "batchRequests": 2,
+  "atomicGroupWrites": 1,
+  "memberWrites": 2,
+  "source": "actual isolated Mac peer after UI Retry",
+  "serverSHA256": "316d309833254de7db57f69fdd9b44dffef13093b0bb2d3c7a61f1417ebd002a",
+  "coldSavedGroupDiscovery": true,
+  "alreadyUndoneGroupShowsUndone": true
+}

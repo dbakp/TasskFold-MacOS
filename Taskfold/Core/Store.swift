@@ -316,7 +316,18 @@ final class Store {
         Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordWritesEnabled") as? Bool == true &&
         Bundle.main.object(forInfoDictionaryKey:"TaskfoldChildRecordReadsEnabled") as? Bool == true
     }
+    private func childTaskActionAdmission(account: String, origin: String) -> ChildTaskActionAdmission {
+        let directory = cacheURL.deletingLastPathComponent().appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+        return .init(account: account, origin: origin, directory: directory, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+    }
     func childTaskFieldJournal(account:String,origin:String) throws -> ChildTaskFieldJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account:account,origin:origin)
         let root=cacheURL.deletingLastPathComponent()
         let directory=root.appendingPathComponent("Backups",isDirectory:true)
@@ -330,7 +341,7 @@ final class Store {
                 return try BackupVault.deviceKey(account:account)
             })
         return try ChildTaskFieldJournal(account:account,origin:origin,io:io,
-            coordinationDirectory:URL.applicationSupportDirectory.appendingPathComponent("ChildFieldCommandLocks",isDirectory:true),removalDirectory:root)
+            coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
     }
     func permitsChildTaskFieldRequest(_ command: ChildTaskFieldCommand, sending: Bool) -> Bool {
         permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskFieldEditingEnabled, sending: sending)
@@ -365,6 +376,7 @@ final class Store {
         childTaskFieldEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRecordCompletionsEnabled") as? Bool == true
     }
     func childTaskCompletionJournal(account: String, origin: String) throws -> ChildTaskCompletionJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
         let directory = root.appendingPathComponent("Backups", isDirectory: true)
@@ -377,9 +389,32 @@ final class Store {
             return try BackupVault.deviceKey(account: account)
         })
         return try .init(account: account, origin: origin, io: io,
-                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildCompletionCommandLocks", isDirectory: true), removalDirectory: root)
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
+    }
+    private var childRecoveryPresenceTicket = UUID()
+    private(set) var childRecoveryPresenceScope: ChildTaskFieldClientScope?
+    private(set) var hasSavedChildFields = false
+    private(set) var hasSavedChildCompletions = false
+    private(set) var hasSavedChildGroups = false
+    func hideChildTaskRecoveryPresence() {
+        childRecoveryPresenceTicket = UUID(); childRecoveryPresenceScope = nil
+        hasSavedChildFields = false; hasSavedChildCompletions = false; hasSavedChildGroups = false
+    }
+    func refreshChildTaskRecoveryPresence() async {
+        guard let captured = childTaskFieldRecoveryScope else { hideChildTaskRecoveryPresence(); return }
+        let ticket = UUID(); childRecoveryPresenceTicket = ticket
+        func current() -> Bool { !Task.isCancelled && childTaskFieldRecoveryScope == captured && childRecoveryPresenceTicket == ticket }
+        var fields = false, singles = false, groups = false
+        do { let state = try await childTaskFieldJournal(account: captured.account, origin: captured.origin).load(); fields = !state.entries.isEmpty } catch { fields = true }
+        guard current() else { return }
+        do { let state = try await childTaskCompletionJournal(account: captured.account, origin: captured.origin).load(); singles = !state.entries.isEmpty } catch { singles = true }
+        guard current() else { return }
+        do { let state = try await childTaskCompletionBatchJournal(account: captured.account, origin: captured.origin).load(); groups = !state.entries.isEmpty } catch { groups = true }
+        guard current() else { return }
+        hasSavedChildFields = fields; hasSavedChildCompletions = singles; hasSavedChildGroups = groups; childRecoveryPresenceScope = captured
     }
     func childTaskCompletionBatchJournal(account: String, origin: String) throws -> ChildTaskCompletionBatchJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
         let directory = root.appendingPathComponent("Backups", isDirectory: true)
@@ -393,7 +428,7 @@ final class Store {
             return try BackupVault.deviceKey(account: account)
         })
         return try .init(account: account, origin: origin, io: io,
-                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildCompletionGroupLocks", isDirectory: true), removalDirectory: root)
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkBatch($0) })
     }
     var childTaskCompletionBatchesEnabled: Bool {
         childTaskCompletionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildCompletionBatchesEnabled") as? Bool == true
@@ -414,6 +449,63 @@ final class Store {
                          guard let self, self.childTaskFieldRecoveryScope == scope else { return }
                          await self.sync()
                      })
+    }
+    func permitsChildTaskCompletionBatch(_ command: ChildTaskCompletionBatchCommand, sending: Bool) -> Bool {
+        childTaskCompletionBatchesEnabled && command.items.allSatisfy { permitsChildTaskCompletionRequest($0, sending: sending) }
+    }
+    func captureChildListBatch(_ tasks: [Record], completed: Bool) throws -> ChildTaskListBatchIntent {
+        guard childTaskCompletionBatchesEnabled, online, let scope = childTaskFieldRecoveryScope else { throw ChildTaskCompletionBatchCommand.invalid }
+        return try .init(tasks: tasks, roots: activeTasks, projects: allProjects, scope: scope, completed: completed)
+    }
+    func readChildBatch(_ command: ChildTaskCompletionBatchCommand) async throws -> [String: ChildTaskRecordRead] {
+        guard let scope = childTaskFieldRecoveryScope, scope.account == command.account, scope.origin == command.origin, online else { throw CancellationError() }
+        var reads: [String: ChildTaskRecordRead] = [:]
+        for id in Set(command.items.map { $0.body["task_id"]!.text }).sorted() {
+            reads[id] = try await ChildTaskListRead.fresh(scope: scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(id) })
+        }
+        guard childTaskFieldRecoveryScope == scope, reads.values.allSatisfy(childTaskFieldComparisonIsCurrent) else { throw CancellationError() }
+        return reads
+    }
+    func completeChildBatchFromList(_ intent: ChildTaskListBatchIntent) async -> ChildTaskListBatchResult? {
+        guard !childListCompletionBusy, childTaskCompletionBatchesEnabled, online, childTaskFieldRecoveryScope == intent.scope else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            var reads: [String: ChildTaskRecordRead] = [:]
+            for member in intent.members {
+                guard member.opening.permits(account: userID, generation: workspaceGeneration, root: record("tasks", id: member.opening.rootID)) else { throw ChildTaskCompletionBatchCommand.invalid }
+                if reads[member.opening.rootID] == nil {
+                    reads[member.opening.rootID] = try await ChildTaskListRead.fresh(scope: intent.scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(member.opening.rootID) })
+                }
+            }
+            guard childTaskFieldRecoveryScope == intent.scope, reads.values.allSatisfy(childTaskFieldComparisonIsCurrent) else { throw CancellationError() }
+            let command = try intent.command(reads: reads), model = try childTaskCompletionBatchRecoveryModel(); defer { model.close() }
+            let applied = await model.perform(command)
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            if applied { return .init(message: "\(intent.completed ? "Completed" : "Reopened") \(command.items.count) \(command.items.count == 1 ? "subtask" : "subtasks")", undo: .init(scope: intent.scope, command: command)) }
+            return .init(message: model.message ?? "Review this saved selection before trying again.", undo: nil, needsReview: true)
+        } catch {
+            guard childTaskFieldRecoveryScope == intent.scope, !Task.isCancelled else { return nil }
+            return .init(message: "The selection changed or has another saved action. Review it before trying again.", undo: nil, needsReview: true)
+        }
+    }
+    func canUndoChildListBatch(_ token: ChildTaskListBatchUndo) -> Bool {
+        !childListCompletionBusy && childTaskFieldRecoveryScope == token.scope && permitsChildTaskCompletionBatch(token.command, sending: true)
+    }
+    func undoChildBatchFromList(_ token: ChildTaskListBatchUndo) async -> ChildTaskListBatchResult? {
+        guard canUndoChildListBatch(token) else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let reads = try await readChildBatch(token.command), model = try childTaskCompletionBatchRecoveryModel(); defer { model.close() }
+            await model.load()
+            guard let entry = model.entries.first(where: { $0.command == token.command && $0.phase == .confirmed }) else { throw ChildTaskCompletionBatchCommand.invalid }
+            let undo = await model.undo(entry, reads: reads)
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            if let undo, model.entries.contains(where: { $0.command == undo && $0.phase == .confirmed }) { return .init(message: "Undid selection of \(token.command.items.count) \(token.command.items.count == 1 ? "subtask" : "subtasks")", undo: nil) }
+            return .init(message: model.message ?? "Review the saved selection Undo.", undo: nil, needsReview: true)
+        } catch {
+            guard childTaskFieldRecoveryScope == token.scope, !Task.isCancelled else { return nil }
+            return .init(message: "This selection Undo needs review. Your saved work is kept.", undo: nil, needsReview: true)
+        }
     }
     func permitsChildTaskCompletionRequest(_ command: ChildTaskCompletionCommand, sending: Bool) -> Bool {
         guard childTaskCompletionEnabled else { return false }
@@ -484,6 +576,7 @@ final class Store {
         childTaskCompletionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureWritesEnabled") as? Bool == true
     }
     func childTaskStructureJournal(account: String, origin: String) throws -> ChildTaskStructureJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
         let directory = root.appendingPathComponent("Backups", isDirectory: true)
@@ -496,9 +589,10 @@ final class Store {
             return try BackupVault.deviceKey(account: account)
         })
         return try .init(account: account, origin: origin, io: io,
-                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildStructureCommandLocks", isDirectory: true), removalDirectory: root)
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
     }
     func childTaskStructureDraftJournal(account: String, origin: String) throws -> ChildTaskStructureDraftJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
         let directory = root.appendingPathComponent("Backups", isDirectory: true)
@@ -512,7 +606,7 @@ final class Store {
             return try BackupVault.deviceKey(account: account)
         })
         return try .init(account: account, origin: origin, io: io,
-                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildStructureDraftLocks", isDirectory: true), removalDirectory: root)
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
     }
     func permitsChildTaskStructureRequest(_ command: ChildTaskStructureCommand, sending: Bool) -> Bool {
         permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskStructureEditingEnabled, sending: sending)
@@ -554,6 +648,7 @@ final class Store {
     /// the saved workspace was decoded, otherwise its pending edits are unknown.
     var childTaskAdoptionWritesAvailable: Bool { childTaskAdoptionEnabled && workspaceCacheDecoded && workspaceCacheReadable }
     func childTaskAdoptionJournal(account: String, origin: String) throws -> ChildTaskAdoptionJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
         let directory = root.appendingPathComponent("Backups", isDirectory: true)
@@ -567,7 +662,7 @@ final class Store {
             return try BackupVault.deviceKey(account: account)
         })
         return try .init(account: account, origin: origin, io: io,
-                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildAdoptionCommandLocks", isDirectory: true), removalDirectory: root)
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
     }
     func permitsChildTaskAdoption(_ command: ChildTaskAdoptionCommand, sending: Bool) -> Bool {
         guard childTaskAdoptionWritesAvailable, let scope = childTaskFieldRecoveryScope,
@@ -669,6 +764,7 @@ final class Store {
     }
     var childTaskRepairWritesAvailable: Bool { childTaskRepairEnabled && workspaceCacheDecoded && workspaceCacheReadable }
     func childTaskRepairJournal(account: String, origin: String) throws -> ChildTaskRepairJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
         let directory = root.appendingPathComponent("Backups", isDirectory: true)
@@ -682,7 +778,7 @@ final class Store {
             return try BackupVault.deviceKey(account: account)
         })
         return try .init(account: account, origin: origin, io: io,
-                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildRepairCommandLocks", isDirectory: true), removalDirectory: root)
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
     }
     func permitsChildTaskRepair(_ command: ChildTaskRepairCommand, sending: Bool) -> Bool {
         guard childTaskRepairWritesAvailable, let identity = try? repairAdoptionIdentity(command) else { return false }
@@ -732,6 +828,7 @@ final class Store {
         childTaskStructureEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildTransfersEnabled") as? Bool == true
     }
     func childTaskTransferJournal(account: String, origin: String) throws -> ChildTaskTransferJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
         let directory = root.appendingPathComponent("Backups", isDirectory: true)
@@ -745,7 +842,7 @@ final class Store {
             return try BackupVault.deviceKey(account: account)
         })
         return try .init(account: account, origin: origin, io: io,
-                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTransferCommandLocks", isDirectory: true), removalDirectory: root)
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
     }
     private func permitsChildTransferRoot(_ root: Record, sending: Bool) -> Bool {
         permitsChildTaskRequest(account: userID, origin: (try? backend.accountRemovalOrigin) ?? "", identity: ["task_id": .string(root.id), "task_generation": root["task_generation"], "project_id": root["project_id"]], enabled: childTaskTransfersEnabled, sending: sending)

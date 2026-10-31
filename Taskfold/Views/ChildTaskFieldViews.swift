@@ -7,29 +7,17 @@ import UIKit
 struct SavedChildTaskFieldChangesLink: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
-    @State private var visible = false
     @State private var showing = false
-    @State private var revision = UUID()
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         Group {
-            if visible, scope != nil {
+            if let scope, store.childRecoveryPresenceScope == scope, store.hasSavedChildFields {
                 Section { Button("Saved subtask changes", systemImage: "tray.and.arrow.up") { showing = true }.accessibilityIdentifier("savedChildFieldChanges") }
             }
         }
-        .task(id: scope) { await discover() }
-        .task(id: revision) { await discover() }
-        .sheet(isPresented: $showing, onDismiss: { revision = UUID() }) {
+        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) {
             WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() }
         }
-    }
-    private func discover() async {
-        visible = false; guard let captured = scope else { return }
-        do {
-            let journal = try store.childTaskFieldJournal(account: captured.account, origin: captured.origin)
-            let saved = try await journal.load()
-            guard scope == captured, !Task.isCancelled else { return }; visible = !saved.entries.isEmpty
-        } catch { guard scope == captured, !Task.isCancelled else { return }; visible = true }
     }
 }
 
@@ -101,6 +89,7 @@ struct ChildTaskFieldRecoveryView: View {
             else if scope == nil { ContentUnavailableView("Open your workspace", systemImage: "lock.shield", description: Text("Saved requests belong to their original account.")) }
             else { ProgressView("Reading saved changes…") }
         }
+        .modifier(ChildTaskRecoveryPresence())
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
             model?.close(); model = nil; modelScope = nil; failure = nil; removing = nil; comparing = nil
             guard scope != nil else { return }

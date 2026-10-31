@@ -148,3 +148,49 @@ final class ChildTaskListCompletionTests: XCTestCase {
     }
 
 }
+
+extension ChildTaskListCompletionTests {
+    func testBulkIntentUsesObservedChildAndDoesNotIncludeWholeTree() throws {
+        let (root, task, read, projects) = try fixture(), scope = ChildTaskFieldClientScope(read.context)
+        let intent = try ChildTaskListBatchIntent(tasks: [task], roots: [root], projects: projects, scope: scope, completed: true)
+        let command = try intent.command(reads: [root.id: read])
+        XCTAssertEqual(command.items.count, 1); XCTAssertEqual(command.items[0].body["node_key"], read.orderedNodes[0].fields["id"])
+        XCTAssertNil(command.body["subtasks"]); XCTAssertNil(command.items[0].body["subtasks"])
+    }
+    func testBulkIntentRefusesMixedRootSelectionDuplicatesAndMissingRoots() throws {
+        let (root, task, read, projects) = try fixture(), scope = ChildTaskFieldClientScope(read.context)
+        for tasks in [[root,task],[task,task],[]] { XCTAssertThrowsError(try ChildTaskListBatchIntent(tasks: tasks, roots: [root], projects: projects, scope: scope, completed: true)) }
+        XCTAssertThrowsError(try ChildTaskListBatchIntent(tasks: [task], roots: [], projects: projects, scope: scope, completed: true))
+        XCTAssertThrowsError(try ChildTaskListBatchIntent(tasks: [task], roots: [root], projects: projects, scope: scope, completed: false))
+    }
+    func testBulkIntentNeverChangesTargetsAfterCohortOrScopeChange() throws {
+        let (root, task, read, projects) = try fixture()
+        let intent = try ChildTaskListBatchIntent(tasks: [task], roots: [root], projects: projects, scope: ChildTaskFieldClientScope(read.context), completed: true)
+        XCTAssertThrowsError(try intent.command(reads: [:])); XCTAssertThrowsError(try intent.command(reads: [root.id: altered(read, access: UUID())]))
+        var changed = root, child = root["subtasks"].list[0].object; child["completed"] = .bool(true); child["completed_at"] = .string("2026-10-31T12:00:00Z"); changed["subtasks"] = .array([.object(child)])
+        XCTAssertThrowsError(try intent.command(reads: [root.id: altered(read, root: changed)]))
+    }
+}
+
+extension ChildTaskListCompletionTests {
+    private func twoChildren() throws -> (Record,[Record],ChildTaskRecordRead,[Record]) {
+        let (original,_,read,projects) = try fixture();var root = original, first = root["subtasks"].list[0].object, second = first
+        first["title"] = .string("First child");second["id"] = .string("second");second["title"] = .string("Second child");root["subtasks"] = .array([.object(first),.object(second)])
+        let c = read.context, context = try ChildTaskRecordContext(account:c.account,origin:c.origin,workspace:c.workspace,session:c.session,access:c.access,snapshot:c.snapshot,root:root)
+        let rows = [first,second].enumerated().map { index, fields -> JSON in .object(["node_key":fields["id"]!,"incarnation":.string(index == 0 ? read.orderedNodes[0].incarnation : "77110000-0000-4000-8000-000000000001"),"revision":.number(1),"parent_key":.null,"sibling_order":.number(Double(index)),"identity_path":.array([fields["id"]!]),"fields":.object(fields),"children_kind":.string("absent")]) }
+        let raw: [String:JSON] = ["protocol":.number(1),"account":.string(c.account),"task_id":.string(root.id),"task_generation":root["task_generation"],"project_id":root["project_id"],"projection_revision":.number(1),"root_kind":.string("array"),"records":.array(rows)]
+        let fresh = try ChildTaskRecordRead(data:TaskfoldJSONEncoder().encode(raw),context:context)
+        let tasks = try TaskHierarchyIndex(roots:[root],projects:projects,workspace:WorkspaceBinding(account:c.account,generation:c.workspace)).items.filter(\.isSubtask).map(\.record)
+        return (root,tasks,fresh,projects)
+    }
+    func testBulkIntentBuildsBothMembersAndRejectsAChangedLaterCohortAsAWhole() throws {
+        let (root,tasks,read,projects) = try twoChildren(), scope = ChildTaskFieldClientScope(read.context)
+        let intent = try ChildTaskListBatchIntent(tasks:tasks,roots:[root],projects:projects,scope:scope,completed:true)
+        let group = try intent.command(reads:[root.id:read]);XCTAssertEqual(group.items.count,2);XCTAssertEqual(group.items.map { $0.body["node_key"]!.text },read.orderedNodes.map(\.key))
+        var changed = root, rows = root["subtasks"].list, last = rows[1].object;last["completed"] = .bool(true);last["completed_at"] = .string("2026-10-31T12:00:00Z");rows[1] = .object(last);changed["subtasks"] = .array(rows)
+        let c = read.context, context = try ChildTaskRecordContext(account:c.account,origin:c.origin,workspace:c.workspace,session:c.session,access:c.access,snapshot:c.snapshot,root:changed)
+        let raw: [String:JSON] = ["protocol":.number(1),"account":.string(c.account),"task_id":.string(root.id),"task_generation":root["task_generation"],"project_id":root["project_id"],"projection_revision":.number(1),"root_kind":.string("array"),"records":.array(read.orderedNodes.enumerated().map { index,node in .object(["node_key":.string(node.key),"incarnation":.string(node.incarnation),"revision":.number(1),"parent_key":.null,"sibling_order":.number(Double(index)),"identity_path":.array([.string(node.key)]),"fields":rows[index],"children_kind":.string("absent")]) })]
+        let altered = try ChildTaskRecordRead(data:TaskfoldJSONEncoder().encode(raw),context:context)
+        XCTAssertThrowsError(try intent.command(reads:[root.id:altered]))
+    }
+}

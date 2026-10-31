@@ -189,12 +189,14 @@ struct ChildTaskStructureJournalFileIO: CalendarSecureItemIO {
     func remove(key: String) throws { try base.remove(key: key) }
 }
 actor ChildTaskStructureJournal {
+    private let admit: @Sendable (Set<String>) throws -> Void
     private let io: any CalendarSecureItemIO
     private let lock: AutomationEnrollmentProcessLock
     private let removalDirectory: URL
     let account: String, origin: String
     private var key: String { ChildTaskStructureJournalState.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
-    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL) throws {
+    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL, admit: @escaping @Sendable (Set<String>) throws -> Void = { _ in }) throws {
+        self.admit = admit;
         try TeamOrganizationValue.scope(account: account, origin: origin)
         self.account = account; self.origin = origin; self.io = io; lock = .init(directory: coordinationDirectory); self.removalDirectory = removalDirectory
     }
@@ -218,6 +220,7 @@ actor ChildTaskStructureJournal {
     func load() throws -> ChildTaskStructureJournalState { try guarded(lease: nil) { try read() } }
     func enqueue(_ command: ChildTaskStructureCommand, lease: CalendarReadLease) throws {
         try guarded(lease: lease) {
+            try admit([command.body["task_id"]!.text])
             guard command.account == account, command.origin == origin else { throw ChildTaskStructureCommand.invalid }
             var state = try read()
             if let old = state.entries.first(where: { $0.command.id == command.id }) {
@@ -229,6 +232,7 @@ actor ChildTaskStructureJournal {
     }
     func attempt(_ command: ChildTaskStructureCommand, lease: CalendarReadLease) throws -> ChildTaskStructureJournalState.Entry {
         try guarded(lease: lease) {
+            try admit([command.body["task_id"]!.text])
             var state = try read()
             guard let index = state.entries.firstIndex(where: { $0.command == command }),
                   !state.entries[..<index].contains(where: { $0.phase != .confirmed && $0.phase != .closed && $0.command.sameRoot(command) }) else { throw ChildTaskStructureCommand.invalid }
@@ -270,6 +274,7 @@ actor ChildTaskStructureJournal {
     }
     func replaceClosed(_ original: ChildTaskStructureCommand, with replacement: ChildTaskStructureCommand, lease: CalendarReadLease) throws {
         try guarded(lease: lease) {
+            try admit([replacement.body["task_id"]!.text])
             var state = try read()
             guard let entry = state.entries.first(where: { $0.command == original }), entry.phase == .closed, entry.resolution?.closed == true,
                   replacement.replaces(original), !state.entries.contains(where: { $0.command.id == replacement.id || ($0.phase != .confirmed && $0.phase != .closed && $0.command.sameRoot(replacement)) }) else { throw ChildTaskStructureCommand.invalid }

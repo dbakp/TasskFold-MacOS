@@ -1,0 +1,12 @@
+{
+  "batchRequests": 0,
+  "atomicGroupWrites": 0,
+  "memberWrites": 0,
+  "savedGroupEntries": 0,
+  "allGroupEntriesConfirmed": true,
+  "earlierSinglePreserved": true,
+  "wholeGroupUndo": false,
+  "bothChildrenCompleted": false,
+  "exactMetadataRetained": true,
+  "serverSHA256": "92b7686e429c013b7d410ccf6596db6f2ae9998a749a988afbd03d247d056806"
+}
