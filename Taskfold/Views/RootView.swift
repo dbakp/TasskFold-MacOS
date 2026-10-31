@@ -38,6 +38,7 @@ struct RootView: View {
         }
         .animation(Motion.respecting(reduceMotion, Motion.layout), value: store.signedIn)
         .onAppear { workspace.reduceMotion = reduceMotion; workspace.undoManager = undoManager; seed() }
+        .onChange(of: store.childTaskFieldRecoveryScope) { _, _ in workspace.clearChildCompletion() }
         .onChange(of: store.userID) { _, _ in workspace.clearNavigationMemory(); workspace.section = .today }
         .onChange(of: store.signedIn) { _, signedIn in if !signedIn { workspace.clearNavigationMemory() } }
         .onChange(of: reduceMotion) { _, value in workspace.reduceMotion = value }
@@ -46,6 +47,9 @@ struct RootView: View {
         .environment(\.openPinnedNotes, { pinnedNote = PinnedNoteRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openFocusSession, { focusRequest = FocusSessionRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .environment(\.openInsights,{insightsRequest=InsightsRequest(workspace:WorkspaceBinding(account:store.userID,generation:store.workspaceGeneration))})
+        .sheet(isPresented: Binding(get: { workspace.childCompletionReview }, set: { workspace.childCompletionReview = $0 })) {
+            WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() }
+        }
         .sheet(item:$insightsRequest) { InsightsView(request:$0) }
         .environment(\.openMentions, { mentionsRequest = MentionsRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration)) })
         .sheet(item: $mentionsRequest) { request in MentionsInboxView(request: request) { task in

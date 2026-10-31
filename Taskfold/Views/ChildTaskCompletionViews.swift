@@ -97,17 +97,20 @@ struct ChildTaskCompletionControls: View {
             do { let value = try store.childTaskCompletionRecoveryModel(); model = value; modelScope = captured; await value.load(); await refresh() }
             catch { guard scope == captured else { return }; failure = "Completion could not be loaded. Your edits are kept." }
         }
+        .onChange(of: store.record("tasks", id: rootID)) { _, _ in
+            Task { await model?.load(); await refresh(sync: false) }
+        }
         .onDisappear { clear() }
         .sheet(isPresented: $showing, onDismiss: { Task { await model?.load(); await refresh() } }) {
             WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() }
         }
     }
     private func clear() { presentation = UUID(); reading = false; model?.close(); model = nil; modelScope = nil; read = nil; failure = nil; showing = false }
-    private func refresh() async {
+    private func refresh(sync: Bool = true) async {
         guard let captured = scope, captured == modelScope, !reading, store.online else { return }
         let ticket = presentation; reading = true; defer { if ticket == presentation { reading = false } }
         do {
-            await store.sync()
+            if sync { await store.sync() }
             guard scope == captured, modelScope == captured, presentation == ticket, !Task.isCancelled else { return }
             let value = try await store.readChildTaskRecords(rootID)
             guard scope == captured, modelScope == captured, presentation == ticket, !Task.isCancelled else { return }
@@ -155,7 +158,7 @@ struct ChildTaskCompletionRecoveryView: View {
                             .font(.headline)
                         Text(targetNames[entry.command.id] ?? "Review the current subtask when connected.")
                             .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).privacySensitive()
-                        Text(status(entry.phase)).foregroundStyle(.secondary)
+                        Text(status(entry.phase)).foregroundStyle(.secondary).accessibilityIdentifier("childCompletionPhase-" + entry.command.id)
                         if entry.phase == .queued || entry.phase == .attempted {
                             Button(entry.phase == .queued ? "Send saved action" : "Retry original action", systemImage: "arrow.up.circle") { Task { await model.send(entry.command) } }
                                 .disabled(model.busy || !store.permitsChildTaskCompletionRequest(entry.command, sending: true)).accessibilityIdentifier("sendChildCompletion-" + entry.command.id)

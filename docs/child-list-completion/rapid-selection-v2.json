@@ -1,0 +1,7 @@
+{
+  "phase": "v2",
+  "appSHA256": "0d2fac3c82314abf1b41fcaa59b10946994c0639b4ca353ffbaa8f0ad7c55c4f",
+  "finding": "Selecting a child then immediately pressing Space collided with the inspector sync, showing CancellationError before any command or write",
+  "completionWrites": 0,
+  "completionRequests": 0
+}

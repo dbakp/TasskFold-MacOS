@@ -1,0 +1,5 @@
+{
+  "CDHash": "f1bfc6d056cfa269dd98d8d479e86a9ba6378ced",
+  "appSHA256": "e396e7e09e533e97ab6e9bf34b9da8e272929e4d373cdcaaa82567204e1ff063",
+  "scope": "Runtime-tested v3 application code before UITest-only text-size/scroll refinement"
+}

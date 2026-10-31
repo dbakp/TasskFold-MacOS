@@ -383,6 +383,59 @@ final class Store {
         guard childTaskCompletionEnabled else { return false }
         return permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskCompletionEnabled, sending: sending)
     }
+    /// Shared across windows: a second list click cannot race the first local
+    /// preparation. Other processes remain protected by the command journal.
+    var childListCompletionBusy = false
+    func captureChildListCompletion(_ task: Record) throws -> ChildTaskListCompletionIntent {
+        guard childTaskCompletionEnabled, let scope = childTaskFieldRecoveryScope,
+              let rootID = SubtaskTree.referencePath(task.id)?.first, let root = record("tasks", id: rootID) else { throw ChildTaskCompletionDraft.invalid }
+        guard online else { throw AppFailure(message: "Connect to change this subtask’s completion.") }
+        return try .init(task: task, root: root, projects: allProjects, scope: scope)
+    }
+    func canUndoChildListCompletion(_ token: ChildTaskListCompletionUndo) -> Bool {
+        !childListCompletionBusy && childTaskCompletionEnabled && online && childTaskFieldRecoveryScope == token.scope && permitsChildTaskCompletionRequest(token.command, sending: true)
+    }
+    func completeChildFromList(_ intent: ChildTaskListCompletionIntent) async -> ChildTaskListCompletionResult? {
+        guard !childListCompletionBusy, childTaskCompletionEnabled, online, childTaskFieldRecoveryScope == intent.scope else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            guard intent.opening.permits(account: userID, generation: workspaceGeneration, root: record("tasks", id: intent.opening.rootID)) else { throw ChildTaskCompletionDraft.invalid }
+            let read = try await ChildTaskListRead.fresh(scope: intent.scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(intent.opening.rootID) })
+            let key = try intent.key(in: read)
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            let model = try childTaskCompletionRecoveryModel(); defer { model.close() }
+            await model.load()
+            let command = await model.perform(read: read, key: key, action: intent.completed ? .reopen : .complete)
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            if let command, model.entries.contains(where: { $0.command == command && $0.phase == .confirmed }) {
+                return .init(message: (intent.completed ? "Reopened “" : "Completed “") + intent.title + "”", undo: .init(scope: intent.scope, command: command, title: intent.title))
+            }
+            return .init(message: model.message ?? "Saved action needs review. Open Saved subtask actions.", undo: nil, needsReview: true)
+        } catch {
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            self.error = error is CancellationError ? "This subtask changed while loading. Try again." : error.localizedDescription
+            return nil
+        }
+    }
+    func undoChildFromList(_ token: ChildTaskListCompletionUndo) async -> ChildTaskListCompletionResult? {
+        guard canUndoChildListCompletion(token) else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let read = try await ChildTaskListRead.fresh(scope: token.scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(token.command.body["task_id"]!.text) })
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            let model = try childTaskCompletionRecoveryModel(); defer { model.close() }
+            await model.load()
+            guard let entry = model.entries.first(where: { $0.command == token.command && $0.phase == .confirmed }) else { throw ChildTaskCompletionDraft.invalid }
+            let previous = Set(model.entries.map { $0.command.id })
+            await model.undo(entry, read: read)
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            let confirmed = model.entries.contains { !previous.contains($0.command.id) && $0.command.body["undo_of"] == .string(token.command.id) && $0.phase == .confirmed }
+            return .init(message: confirmed ? "Undid change to “" + token.title + "”" : model.message ?? "Undo saved; review Saved subtask actions.", undo: nil, needsReview: !confirmed)
+        } catch {
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            self.error = error is CancellationError ? "This subtask changed while loading. Try again." : error.localizedDescription; return nil
+        }
+    }
     func childTaskCompletionRecoveryModel() throws -> ChildTaskCompletionRecoveryModel {
         guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
         return .init(scope: scope, journal: try childTaskCompletionJournal(account: scope.account, origin: scope.origin), service: backend,

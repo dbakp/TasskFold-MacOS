@@ -1,0 +1,14 @@
+{
+  "phase": "v3",
+  "appSHA256": "e396e7e09e533e97ab6e9bf34b9da8e272929e4d373cdcaaa82567204e1ff063",
+  "rapidSelectAndSpaceReachedSavedCommandWithoutAlert": true,
+  "pendingReviewOfferedWithoutUndo": true,
+  "originalRequestRetryConfirmed": true,
+  "obsoleteWarningGoneAfterReview": true,
+  "existingInspectorShowsCompleted": true,
+  "existingInspectorOffersUndo": true,
+  "completionWrites": 1,
+  "completionRequests": 2,
+  "firstChildUnchanged": true,
+  "exactMetadataRetained": true
+}

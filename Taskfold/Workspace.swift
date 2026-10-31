@@ -66,6 +66,8 @@ struct Confirmation: Equatable {
     var message: String
     var undoable = true
     var historyRequest: EditHistoryRequest?
+    var childCompletion: ChildTaskListCompletionUndo? = nil
+    var childCompletionReview = false
 }
 
 /// Window-level state shared by the sidebar, the list, the inspector, and the menu bar commands.
@@ -281,6 +283,7 @@ final class Workspace {
         if store.undoStack.last?.redo.map(\.id) != previous { register(name) }
     }
     private func register(_ name: String) {
+        childCompletionUndoID = nil
         guard let undoManager else { return }
         undoManager.setActionName(name)
         undoManager.registerUndo(withTarget: self) { workspace in
@@ -295,7 +298,12 @@ final class Workspace {
         confirmationTimer?.cancel()
         withAnimation(layout) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil) }
         confirmationTimer = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(4))
+            #if DEBUG
+            let delay = ChildFieldNativeIdentity.mainListTesting && ProcessInfo.processInfo.arguments.contains("--child-fields-list-completion") ? 90.0 : 4.0
+            #else
+            let delay = 4.0
+            #endif
+            try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled, let self else { return }
             withAnimation(self.layout) { self.confirmation = nil }
         }
@@ -305,6 +313,49 @@ final class Workspace {
         manager.undo()
         guard store.redoStack.last?.id == request.entry else { return }
         confirmationTimer?.cancel(); withAnimation(layout) { confirmation = nil }
+    }
+
+    var childCompletionReview = false
+    private var childCompletionUndoID: String?
+    func clearChildCompletion() {
+        childCompletionUndoID = nil; childCompletionReview = false
+        if confirmation?.childCompletion != nil || confirmation?.childCompletionReview == true { confirmationTimer?.cancel(); confirmation = nil }
+    }
+    func reviewChildCompletion() {
+        confirmationTimer?.cancel(); confirmation = nil; childCompletionReview = true
+    }
+    func canUndoChildCompletion(_ token: ChildTaskListCompletionUndo) -> Bool {
+        childCompletionUndoID == token.command.id && store.canUndoChildListCompletion(token)
+    }
+    private func showChildCompletion(_ result: ChildTaskListCompletionResult) {
+        confirm(result.message, undoable: false)
+        confirmation?.childCompletion = result.undo
+        confirmation?.childCompletionReview = result.needsReview
+        guard let token = result.undo, let manager = undoManager else { return }
+        childCompletionUndoID = token.command.id
+        manager.registerUndo(withTarget: self) { workspace in
+            guard workspace.canUndoChildCompletion(token) else { return }
+            workspace.childCompletionUndoID = nil
+            Task { [weak workspace] in
+                guard let workspace, let result = await workspace.store.undoChildFromList(token) else { return }
+                workspace.showChildCompletion(result)
+            }
+        }
+        manager.setActionName(token.command.body["action"] == .string("complete") ? "Complete Subtask" : "Reopen Subtask")
+    }
+    func undoChildCompletion(_ token: ChildTaskListCompletionUndo) {
+        guard canUndoChildCompletion(token), let manager = undoManager, manager.canUndo else { return }
+        manager.undo()
+    }
+    private func completeIndependentChild(_ task: Record) {
+        do {
+            let intent = try store.captureChildListCompletion(task)
+            Task { [weak self] in
+                guard let self, let result = await self.store.completeChildFromList(intent) else { return }
+                if result.undo != nil { self.selection.remove(task.id); if !intent.completed { Feedback.complete() } }
+                self.showChildCompletion(result)
+            }
+        } catch { store.error = error.localizedDescription }
     }
 
     // MARK: Task actions
@@ -336,6 +387,7 @@ final class Workspace {
     /// Persist completion before returning from the action, including an immediate app exit.
     func complete(_ task: Record) {
         guard TaskKind.mayComplete(task) else { store.error = "Headings stay open. Open the heading to edit its details."; return }
+        if store.childTaskCompletionEnabled, Self.subtaskPath(task.id) != nil { completeIndependentChild(task); return }
         if Self.subtaskPath(task.id) == nil, store.hasSharedTaskSelection([task.id]) {
             var saved = false
             run(task.completed ? "Reopen Task" : "Complete Task") { withAnimation(layout) { saved = store.toggleNativeTask(task) } }
@@ -369,6 +421,10 @@ final class Workspace {
         if !task.completed { Feedback.complete(); confirm("Completed “\(task.title)”") }
     }
     func toggle(_ ids: Set<String>) {
+        if store.childTaskCompletionEnabled, ids.contains(where: { Self.subtaskPath($0) != nil }) {
+            guard ids.count == 1, let id = ids.first, let task = taskRecord(id) else { store.error = "Select one subtask to complete or reopen it."; return }
+            complete(task); return
+        }
         guard ids.allSatisfy({ id in taskRecord(id).map(TaskKind.mayComplete) == true }) else {
             store.error = "Headings stay open. Select tasks to complete."; return
         }

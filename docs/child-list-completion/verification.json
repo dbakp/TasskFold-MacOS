@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-31",
+  "scope": "Single-child list completion, receipt-based Undo and uncertain-result Review accepted in recorded synthetic personal Inbox scope",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "2881d0c3cb4022d6d68ac9ef69c63cc56ac37ffdb09c0d4da3597481caf8bbd5",
+    "Taskfold/Core/Store.swift": "864c75ad530e503c75d2bfc6336a8cef0b81fce6bc2c76d6ebc9f29b1b4cf4f6",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "eb5a35a738fb31aa6e8b1c52f4ff40c2bdb73f961bc1f53f1095290815db2cda",
+    "TaskfoldUITests/AudioCommentUITests.swift": "6a7dfe5f9be41842960fad2e5ea447b059b1e53ea5fad0a7e7625f50c6f29866",
+    "TaskfoldTests/ChildTaskListCompletionTests.swift": "53e06c628c43653f7b5fb0020267b4993f2488626bf0eab247352bb283e36b89",
+    "Taskfold/Workspace.swift": "956cf6ba1ac8c788c6320795d3588f3775f612bdfbdc218b63a4e017a22f10aa",
+    "Taskfold/Views/RootView.swift": "f33d482f80832475b50d9481bbf4b91a7f0f09ffea2ddf3043e197245d32b015",
+    "Taskfold/Views/TaskListView.swift": "9ad03cf8842c4f7d81efaff8148d305b943260dd3869572f7a520a7e30bb59c8",
+    "Taskfold/Views/TaskRowView.swift": "8a2e116b26c3797edae075359bad1af3a29e5e891510468b1bdf082dad314c56"
+  },
+  "nativeHostSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "2881d0c3cb4022d6d68ac9ef69c63cc56ac37ffdb09c0d4da3597481caf8bbd5",
+    "Taskfold/Core/Store.swift": "c426bd899138debb8ffc6d2780a7b934e2f408449f9ff7c336776a241d820d85",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "eb5a35a738fb31aa6e8b1c52f4ff40c2bdb73f961bc1f53f1095290815db2cda",
+    "TaskfoldUITests/AudioCommentUITests.swift": "6a7dfe5f9be41842960fad2e5ea447b059b1e53ea5fad0a7e7625f50c6f29866",
+    "Taskfold/Workspace.swift": "6db12c9fdbee9f89ed5fba02eeaf50953890e99e8b3d9f3e009d0d4561e9f3eb",
+    "Taskfold/Views/RootView.swift": "f33d482f80832475b50d9481bbf4b91a7f0f09ffea2ddf3043e197245d32b015",
+    "Taskfold/Views/TaskListView.swift": "9ad03cf8842c4f7d81efaff8148d305b943260dd3869572f7a520a7e30bb59c8",
+    "Taskfold/Views/TaskRowView.swift": "8a2e116b26c3797edae075359bad1af3a29e5e891510468b1bdf082dad314c56"
+  },
+  "normalChildFlagsEnabled": false,
+  "hostedChanges": false,
+  "broaderMigrationComplete": false,
+  "remaining": [
+    "Bulk/mixed completion",
+    "Full Redo and shared history integration",
+    "Additional scopes and broader lifecycle/spoken/workload acceptance",
+    "Shared attachment/discussion custody"
+  ],
+  "core": {
+    "broad": {
+      "passed": 101,
+      "failed": 0,
+      "skipped": 0
+    },
+    "finalIntentAndRead": {
+      "passed": 15,
+      "failed": 0,
+      "overlapWithBroad": 9
+    },
+    "distinctAcceptedCases": 107,
+    "phased": true
+  },
+  "nativeHostIsolationSubstitutions": {
+    "Taskfold/Core/Store.swift": "Isolated app-group identifier only",
+    "Taskfold/Workspace.swift": "Isolated drag-item type identifier only"
+  },
+  "normalizedNativeSourcesMatch": true,
+  "finalBuildPhase": "v4",
+  "buildAndDevelopmentSignaturesPassed": true,
+  "native": {
+    "method": "Authorized Terminal launch and direct computer use",
+    "finalPhase": "v3",
+    "rapidKeyboardReviewRetry": true,
+    "staleWarningAndInspectorFixed": true,
+    "checkboxAndCommandZUndo": true,
+    "coldReturnAndQuit": true,
+    "sequenceCompletionWrites": 3,
+    "sequenceCompletionRequests": 4,
+    "retryAloneWrites": 1,
+    "retryAloneRequests": 2,
+    "exactMetadataRetained": true,
+    "compiledApplicationUnchangedInV4": true,
+    "compiledCodeIdentityProof": "mac-v4-code.json"
+  },
+  "acceptanceLimits": [
+    "No full-product regression repeated",
+    "No real cloud/account/Keychain/shared-workspace acceptance",
+    "No broader concurrency/window/background/spoken/workload acceptance",
+    "Fresh read requires connectivity"
+  ]
+}

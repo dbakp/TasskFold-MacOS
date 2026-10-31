@@ -63,6 +63,7 @@ struct TaskRowView: View {
             .modifier(HoverLift())
             .pointerStyle(.link)
             .accessibilityLabel(checked ? "Reopen \(task.title)" : "Complete \(task.title)")
+            .disabled(store.childTaskCompletionEnabled && Workspace.subtaskPath(task.id) != nil && store.childListCompletionBusy)
             .accessibilityIdentifier((checked ? "reopen-" : "complete-") + task.id)
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
             } else {

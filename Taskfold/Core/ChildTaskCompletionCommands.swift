@@ -568,3 +568,64 @@ extension Backend: ChildTaskCompletionCommandService {}
         catch { await recover(error) }
     }
 }
+
+/// A list click must retain its workspace, full path and observed completion
+/// cohort while the fresh independent read is in flight.
+struct ChildTaskListCompletionIntent: Equatable, Sendable {
+    let opening: ChildTaskFieldOpening
+    let scope: ChildTaskFieldClientScope
+    let title: String
+    let baseline: [String: JSON]
+    let completed: Bool
+    init(task: Record, root: Record, projects: [Record], scope: ChildTaskFieldClientScope) throws {
+        let binding = WorkspaceBinding(account: scope.account, generation: scope.workspace)
+        opening = try ChildTaskFieldOpening(reference: task.id, root: root, workspace: binding)
+        let index = try TaskHierarchyIndex(roots: [root], projects: projects, workspace: binding)
+        guard let item = index.item(task.id), item.isSubtask,
+              ["project_id", "user_id", "task_generation"].allSatisfy({ AuthoredValueComparison.exactJSON(task[$0], item.record[$0]) }),
+              AuthoredValueComparison.exactJSON(.object(item.record.fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) }),
+                                               .object(task.fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) })) else { throw ChildTaskCompletionDraft.invalid }
+        baseline = item.source.fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) }
+        completed = try ChildTaskCompletionDraft.completed(baseline)
+        self.scope = scope; title = item.source.title
+    }
+    func key(in read: ChildTaskRecordRead) throws -> String {
+        guard scope == ChildTaskFieldClientScope(read.context) else { throw CancellationError() }
+        let key = try opening.key(in: read)
+        guard let node = read.nodes[key],
+              AuthoredValueComparison.exactJSON(.object(node.fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) }), .object(baseline)),
+              baseline[TeamChecklist.key] != nil || AuthoredValueComparison.exactJSON(opening.root["subtasks"], read.context.root["subtasks"]) else { throw ChildTaskCompletionDraft.invalid }
+        return key
+    }
+}
+struct ChildTaskListCompletionUndo: Equatable, Sendable {
+    let scope: ChildTaskFieldClientScope
+    let command: ChildTaskCompletionCommand
+    let title: String
+}
+struct ChildTaskListCompletionResult {
+    let message: String
+    let undo: ChildTaskListCompletionUndo?
+    var needsReview = false
+}
+
+/// Only retry a read cancelled by an in-place snapshot refresh. The original
+/// intent still validates the returned identity/cohort before any command exists.
+enum ChildTaskListRead {
+    @MainActor static func fresh(scope: ChildTaskFieldClientScope, current: () -> ChildTaskFieldClientScope?, operation: () async throws -> ChildTaskRecordRead) async throws -> ChildTaskRecordRead {
+        for attempt in 0...1 {
+            try Task.checkCancellation()
+            guard current() == scope else { throw CancellationError() }
+            do {
+                let read = try await operation()
+                try Task.checkCancellation()
+                guard current() == scope else { throw CancellationError() }
+                return read
+            } catch is CancellationError {
+                try Task.checkCancellation()
+                guard attempt == 0, current() == scope else { throw CancellationError() }
+            }
+        }
+        throw CancellationError()
+    }
+}

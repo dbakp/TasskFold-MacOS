@@ -640,7 +640,13 @@ struct ConfirmationBar: View {
             Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.taskfold).id(confirmation.id).transition(.iconSwap)
             Text(confirmation.message).lineLimit(1).id(confirmation.id).transition(.textSwap)
             Spacer()
-            if confirmation.undoable, let request = confirmation.historyRequest, store.canApplyHistory(request) {
+            if confirmation.childCompletionReview {
+                Button("Review") { workspace.reviewChildCompletion() }.buttonStyle(.link).accessibilityIdentifier("reviewListChildCompletion")
+            }
+            if let token = confirmation.childCompletion, workspace.canUndoChildCompletion(token) {
+                Button("Undo") { workspace.undoChildCompletion(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
+                Text("⌘Z").foregroundStyle(.tertiary)
+            } else if confirmation.undoable, let request = confirmation.historyRequest, store.canApplyHistory(request) {
                 Button("Undo") { workspace.undoFromConfirmation(request, confirmationID: confirmation.id) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
                 Text("⌘Z").foregroundStyle(.tertiary)
             }

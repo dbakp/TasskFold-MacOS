@@ -1,0 +1,8 @@
+error: SwiftCompile normal arm64 /Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/ChildTaskListCompletionTests.swift failed with a nonzero exit code. Command line:     cd /Users/davidbakposada/.codex/workspaces/taskfold-acceptance
+/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/TaskfoldTests/ChildTaskListCompletionTests.swift:109:35: error: global function 'XCTAssertEqual(_:_:_:file:line:)' requires that 'ChildTaskRecordRead.Node' conform to 'Equatable'
+    |                                   `- error: global function 'XCTAssertEqual(_:_:_:file:line:)' requires that 'ChildTaskRecordRead.Node' conform to 'Equatable'
+Swift.Array:1:11: note: requirement from conditional conformance of '[ChildTaskRecordRead.Node]' to 'Equatable'
+1 | extension Array : Equatable where Element : Equatable {
+  |           `- note: requirement from conditional conformance of '[ChildTaskRecordRead.Node]' to 'Equatable'
+error: Build failed
+error: fatalError

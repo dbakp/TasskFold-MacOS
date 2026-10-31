@@ -1112,6 +1112,59 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app)
         XCTAssertTrue(childSavedText("Review the polished child screen", app).waitForExistence(timeout: 10), app.debugDescription); XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch.exists)
     }
+    @MainActor private func childCompletionListLaunch(_ app: XCUIApplication, reset: Bool, lost: Bool = false) throws -> String {
+        try childGuard()
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-opaque", "--child-fields-list-completion", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        if reset { app.launchArguments.append("--child-fields-native-reset") }
+        if lost { app.launchArguments.append("--child-completion-lose-reply") }
+        app.launch(); app.activate()
+        let root = "ec990000-0000-4000-8000-000000000002"
+        let ref = "subtask:" + (try JSONSerialization.data(withJSONObject: [root, "review"])).base64EncodedString()
+        #if os(iOS)
+        let expand = app.buttons["expandChildRows-" + root]
+        XCTAssertTrue(expand.waitForExistence(timeout: 30), app.debugDescription)
+        if expand.value as? String != "Expanded" { childPress(expand) }
+        #endif
+        return ref
+    }
+    @MainActor func testChildCompletionMainListUndoAndColdReturn() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let ref = try childCompletionListLaunch(app, reset: true)
+        #if os(macOS)
+        let complete = app.buttons["complete-" + ref], undo = app.buttons["undoConfirmation"]
+        #else
+        let complete = app.buttons["Complete Publish the summary"], undo = app.buttons["undoToast"]
+        #endif
+        childReveal(complete, app); XCTAssertTrue(complete.waitForExistence(timeout: 20), app.debugDescription); childPress(complete)
+        XCTAssertTrue(undo.waitForExistence(timeout: 20), app.debugDescription)
+        childPress(undo)
+        XCTAssertTrue(complete.waitForExistence(timeout: 20), app.debugDescription)
+        app.terminate(); _ = try childCompletionListLaunch(app, reset: false)
+        XCTAssertTrue(complete.waitForExistence(timeout: 20), app.debugDescription)
+        structureSnapshot(app, "List completion and receipt-based Undo survive cold return")
+    }
+    @MainActor func testChildCompletionMainListUncertainReviewRetriesOnce() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let ref = try childCompletionListLaunch(app, reset: true, lost: true)
+        #if os(macOS)
+        let complete = app.buttons["complete-" + ref], undo = app.buttons["undoConfirmation"]
+        #else
+        let complete = app.buttons["Complete Publish the summary"], undo = app.buttons["undoToast"]
+        #endif
+        childReveal(complete, app); XCTAssertTrue(complete.waitForExistence(timeout: 20), app.debugDescription); childPress(complete)
+        let review = app.buttons["reviewListChildCompletion"]
+        XCTAssertTrue(review.waitForExistence(timeout: 20), app.debugDescription); XCTAssertFalse(undo.exists)
+        childPress(review)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildCompletion-")).firstMatch
+        XCTAssertTrue(send.waitForExistence(timeout: 15), app.debugDescription); childReveal(send, app); childPress(send)
+        let confirmed = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)", "childCompletionPhase-", "Confirmed", "Confirmed")).firstMatch
+        XCTAssertTrue(confirmed.waitForExistence(timeout: 20), app.debugDescription)
+        XCTAssertFalse(send.exists)
+        structureSnapshot(app, "Uncertain list completion confirms its original saved request")
+        childDone(app); XCTAssertFalse(review.exists, "Review must dismiss its obsolete warning")
+    }
     @MainActor func testChildFieldsMainListOpensSelectedChildAndColdReturn() throws {
         try childGuard()
         let voiceWasOn = try ownerVoiceDisabled()
