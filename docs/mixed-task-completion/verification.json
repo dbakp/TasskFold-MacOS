@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-31",
+  "repository": "TasskFold-MacOS",
+  "scope": "Disabled server-only atomic parent/subtask complete, reopen and metadata-only close",
+  "candidateSHA256": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd",
+  "databaseRuns": [
+    {
+      "suite": "complete",
+      "acceptedChecks": 185,
+      "failures": 0,
+      "report": "accepted-complete.json.gz",
+      "uncompressedReportSHA256": "6569c4fdc3229067f4dd01e7ac4cf7b2b18e36681fd2b31f14f3c0ce16e88a29",
+      "candidateSHA256": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd",
+      "noAddedAdvisorFindings": true,
+      "ownedContainerRemoved": true
+    },
+    {
+      "suite": "single",
+      "acceptedChecks": 98,
+      "failures": 0,
+      "report": "accepted-single.json.gz",
+      "uncompressedReportSHA256": "a6aa235c1b9831bf0743b55fd31ed6f08309189f1307a541c60a0ba482b93307",
+      "candidateSHA256": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd",
+      "noAddedAdvisorFindings": true,
+      "ownedContainerRemoved": true
+    },
+    {
+      "suite": "batch",
+      "acceptedChecks": 151,
+      "failures": 0,
+      "report": "accepted-batch.json.gz",
+      "uncompressedReportSHA256": "a33d9a801a3c1ffb0ff56a13d71bc5e4e89f0ed02f28aaca3eb49d9d8198eaae",
+      "candidateSHA256": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd",
+      "noAddedAdvisorFindings": true,
+      "ownedContainerRemoved": true
+    },
+    {
+      "suite": "read",
+      "acceptedChecks": 65,
+      "failures": 0,
+      "report": "accepted-read.json.gz",
+      "uncompressedReportSHA256": "b8b9689e17bc251faa1ed54c7dbe327ad97f04f10595da2cd2b9cb357224741a",
+      "candidateSHA256": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd",
+      "noAddedAdvisorFindings": true,
+      "ownedContainerRemoved": true
+    }
+  ],
+  "sourceSHA256": {
+    "supabase/migrations/20261031040011_mixed_task_completion_transactions.sql": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd",
+    "Scripts/Database/mixed-task-completion-schema.mjs": "7372adb7c67e7fa697520c6a959e77b00b0f32efd2625884b19f4e65a63c1c4c",
+    "Scripts/Database/test-mixed-task-completion.mjs": "0e995c21c2643465b9c957f320580bc7322e19ad17099c04816acf557ec9cf5d",
+    "Scripts/Database/test-child-task-completion.mjs": "06104504c6e2271fe58cf4d1bd7ee551c127dc8eb511725344dfe286fe510d2c",
+    "Scripts/Database/test-child-completion-batches.mjs": "76b0e0f479414b1c560355b0cd7267791ed0ee07a1ccee78bf69690626499059",
+    "Scripts/Database/test-completion-selection-roots.mjs": "8377616684f60b7f36ccd1601cc73501b7ff8e053bacdf728c202a12c7448920",
+    "Scripts/Database/postgres-fixture.mjs": "75cfc46185da64e1be100680c9af3d15c5bc7fbbb9cf4cb9b9f4227f9ee14759",
+    "Scripts/check_test_storage.py": "4fac002529fe002692b49bbf2045957bf6bd8d2823b776669c232cc67ec43c15"
+  },
+  "deployed": false,
+  "ordinaryFlagsEnabled": false,
+  "nativeRuntimeRepeated": false,
+  "fullProductAcceptance": false,
+  "progressCheckpointChanged": false,
+  "remaining": [
+    "Typed mixed write and strict confirmation transport",
+    "Encrypted group journal, cross-journal admission and account cleanup",
+    "Whole-selection certified Undo",
+    "Native list/review/feedback and Mac/iPhone/iPad lifecycle acceptance",
+    "Full Redo/history, indexed mapping, shared content custody and broader migration acceptance"
+  ],
+  "unacceptedStressCase": {
+    "fixture": "Three recurring roots with 1000 children each, near the aggregate source budget",
+    "result": "No parseable result returned by the owned runner around its 20-second query window; no product acceptance or established root cause claimed",
+    "acceptedBudgetCase": "Three recurring roots with 100 children each and larger source text exceed the same 4 MB successor budget, refuse with 54000 and leave all tasks/nodes/projections/history/generations/ledgers unchanged"
+  },
+  "earlierFindings": [
+    "earlier-phases.json",
+    "superseded-acceptance.json"
+  ],
+  "deferralsChanged": false
+}

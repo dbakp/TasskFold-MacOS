@@ -14,6 +14,10 @@ let pg;
 try {
   report.stage = "owned database with actual node history and custody";
   pg = await createPostgresFixture({ advisors: true });
+if(process.env.TASKFOLD_TEST_MIXED_COMPLETION_UPGRADE==='1') {
+   const {loadMixedTaskCompletionRegression}=await import('./mixed-task-completion-schema.mjs');
+   await loadMixedTaskCompletionRegression(pg,report);
+ } else {
   process.env.TASKFOLD_TEST_NODE_ADOPTION = "0";
   process.env.TASKFOLD_TEST_HISTORY_CUSTODY = "0";
   await loadWorkflowRunSchema(pg.raw, { taskTypes: true });
@@ -54,6 +58,8 @@ try {
     await pg.raw(nativeField);
     report.nativeFieldMigrationSHA256 = createHash("sha256").update(nativeField).digest("hex");
   }
+
+ }
   const people = Object.fromEntries(["owner", "writer", "viewer", "outside"].map(k => [k, { id: randomUUID(), session: randomUUID() }]));
   for (const u of Object.values(people)) await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id + "@example.invalid")},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
   const owner = people.owner, task = randomUUID(), project = randomUUID();

@@ -9,11 +9,17 @@ const report={checks:{},deployed:false,candidateSHA256:createHash('sha256').upda
 const check=(name,actual,expected)=>{assert.deepEqual(actual,expected,name);report.checks[name]=true;};
 const json=x=>lit(JSON.stringify(x))+'::jsonb';let pg;
 try {
- report.stage='owned schema and advisors';pg=await createPostgresFixture({advisors:true});await loadChildAuthorityDependencies(pg);
+ report.stage='owned schema and advisors';pg=await createPostgresFixture({advisors:true});if(process.env.TASKFOLD_TEST_MIXED_COMPLETION_UPGRADE==='1') {
+   const {loadMixedTaskCompletionRegression}=await import('./mixed-task-completion-schema.mjs');
+   await loadMixedTaskCompletionRegression(pg,report);
+ } else {
+await loadChildAuthorityDependencies(pg);
  await pg.raw(await readFile(new URL('../../supabase/migrations/'+childAuthorityMigration,import.meta.url),'utf8'));
  report.baselineAdvisors=await pg.advisors();
  const schema=await pg.scalar(`create temp table load_result(code text,reason text,context text);do $load$declare c text;begin begin execute ${lit(sql)};insert into load_result values(null,null,null);exception when others then get stacked diagnostics c=PG_EXCEPTION_CONTEXT;insert into load_result values(sqlstate,sqlerrm,c);end;end$load$;select to_jsonb(r) from load_result r;`);
  report.schemaDiagnostic=schema;if(schema.code)throw new Error(schema.reason);
+
+ }
  report.stage="synthetic people/project fixture";
  const people=Object.fromEntries(['owner','writer','viewer','outside'].map(name=>[name,{id:randomUUID(),session:randomUUID()}]));
  for(const u of Object.values(people))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);

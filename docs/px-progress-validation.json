@@ -51,7 +51,6 @@
   "keyboardEnterAndSpace": true,
   "segmentWidthsMatchCheckpointCounts": true,
   "readOnlyProgress": true,
-  "visualSource": "TasskFold-MacOS/docs/PX_PROGRESS.html",
-  "verifiedRenderedSHA256": "8f12b568c6feaa1ceb9d39967480a363c6e3ae4bb460450930ad7badf4018fcc",
-  "repositoryRendererCheckPassed": true
+  "renderedHTMLSHA256": "4010559996ac82a6d8cc904143ce1154284ea56b07cca219539b11b6f17cb409",
+  "renderedFragmentSHA256": "b1caa2e43ae50a5ada1b1762138b162339e004fde810a2fb21e13fb0f939b0fd"
 }

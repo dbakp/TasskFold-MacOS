@@ -1,0 +1,46 @@
+[
+  {
+    "suite": "complete",
+    "report": "superseded-complete.json.gz",
+    "acceptedChecksInThisEarlierPhase": 177,
+    "passed": true,
+    "error": null,
+    "candidateSHA256": "bec6fbe2f4e51150a6850ee6edb0ff596dbe5a6f837c25f4aa5b75c842788cab",
+    "ownedContainerRemoved": true
+  },
+  {
+    "suite": "single",
+    "report": "superseded-single.json.gz",
+    "acceptedChecksInThisEarlierPhase": 98,
+    "passed": true,
+    "error": null,
+    "candidateSHA256": "bec6fbe2f4e51150a6850ee6edb0ff596dbe5a6f837c25f4aa5b75c842788cab",
+    "ownedContainerRemoved": true
+  },
+  {
+    "suite": "batch",
+    "report": "superseded-batch.json.gz",
+    "acceptedChecksInThisEarlierPhase": 151,
+    "passed": true,
+    "error": null,
+    "candidateSHA256": "bec6fbe2f4e51150a6850ee6edb0ff596dbe5a6f837c25f4aa5b75c842788cab",
+    "ownedContainerRemoved": true
+  },
+  {
+    "suite": "read",
+    "report": "superseded-read.json.gz",
+    "acceptedChecksInThisEarlierPhase": 65,
+    "passed": true,
+    "error": null,
+    "candidateSHA256": "bec6fbe2f4e51150a6850ee6edb0ff596dbe5a6f837c25f4aa5b75c842788cab",
+    "ownedContainerRemoved": true
+  },
+  {
+    "suite": "complete-before-explicit-record-authority-case",
+    "report": "earlier-final-contract-181.json.gz",
+    "acceptedChecksInThisEarlierPhase": 181,
+    "passed": true,
+    "candidateSHA256": "86da93374be5c3a6d32dc92eba90978967033f3cee4f48eca010a5833245e1dd",
+    "ownedContainerRemoved": true
+  }
+]

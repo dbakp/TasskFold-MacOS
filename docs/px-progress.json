@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Parent reads connected to both clients",
-  "latest": "Both clients now decode and validate parent-task observations, preserve exact content and legacy null flags, and reject mismatched snapshots or late account replies. The new large-response reader runs in the background. Atomic mixed writing, recovery, Undo and native integration remain; normal use stays disabled.",
+  "focus": "P2 · Combined completion verified on server",
+  "latest": "Combined parent/subtask completion, reopen and exact outcome recovery now pass scoped server checks in both repos, including tasks using the new subtask storage. Client writing, saved mixed recovery, whole-selection Undo and native controls remain unfinished. Normal use stays disabled.",
   "next": [
-    "Implement the combined root/subtask completion/reopen transaction, immutable confirmations, saved recovery and whole-selection Undo. Then verify native controls; full Redo/history, mapping, custody and wider acceptance remain.",
+    "Connect combined completion to strict client confirmations and encrypted saved recovery. Implement whole-selection Undo and verify native controls; full Redo/history, mapping, custody and wider acceptance remain.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Recorded repair, child completion/Undo and paused recovery pass in scope. Mixed-selection preparation, parent server observations/guards and typed client reads are built. Atomic mixed writes, recovery/Undo, native integration, full Redo/history, mapping, custody and wider checks remain. Ordinary use stays disabled."
+              "detail": "Recorded repair, child-only completion/Undo and paused recovery pass in scope. Mixed selection, typed parent reads and atomic server complete/reopen/close are built. Client writing, saved mixed recovery/Undo, native integration, full Redo/history, mapping, custody and wider checks remain. Normal use stays disabled."
             },
             {
               "state": "build",
@@ -606,7 +606,9 @@
             "completion-selection-roots/verification.json",
             "completion-selection-roots/README.md",
             "completion-selection-root-client/verification.json",
-            "completion-selection-root-client/README.md"
+            "completion-selection-root-client/README.md",
+            "mixed-task-completion/verification.json",
+            "mixed-task-completion/README.md"
           ],
           "focus": true
         },
@@ -709,6 +711,8 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
+    "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",
+    "mixed-task-completion/verification.json": "7c77ec64ceae3791b438781c7cf88a8dddd720c7c9b64e9391f324b3de8893fe",
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",
     "p1-completion-audit.json": "247195c4d7743f3eca09f8c8461e0a971aa9dbe89dd5c839a81c5454082ae41a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38",
