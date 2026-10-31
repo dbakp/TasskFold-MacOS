@@ -1099,6 +1099,88 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(childSavedText("Confirmed · task may have changed since", app).waitForExistence(timeout: 15), app.debugDescription)
         childDone(app); childProbe(app, "completionAttempted=0 completionConfirmed=1 completionClosed=0 completionWrites=1 completionRequests=2 done=true")
     }
+    @MainActor func testChildFieldsMainListNativeUndoRedoUndo() throws {
+        #if os(macOS)
+        throw XCTSkip("Mac shortcuts use the direct isolated-app walkthrough")
+        #else
+        try childGuard()
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let arguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        let reference = "subtask:" + (try JSONSerialization.data(withJSONObject: ["ec990000-0000-4000-8000-000000000002", "concept"])).base64EncodedString()
+        let row = app.buttons["taskDetails-" + reference]
+        app.launchArguments = arguments + ["--child-fields-native-reset"]; app.launch(); app.activate()
+        func showRow() {
+            let parent = app.buttons["taskDetails-ec990000-0000-4000-8000-000000000002"]
+            XCTAssertTrue(parent.waitForExistence(timeout: 30), app.debugDescription)
+            if !row.exists { childPress(app.buttons["expandChildRows-ec990000-0000-4000-8000-000000000002"]) }
+            XCTAssertTrue(row.waitForExistence(timeout: 12), app.debugDescription); childPress(row)
+        }
+        showRow()
+        let title = childField("independentChildTitle", app); XCTAssertTrue(title.waitForExistence(timeout: 15), app.debugDescription); childType("Field history proof", title)
+        let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); childPress(save)
+        XCTAssertTrue(childField("independentChildDetailSaved", app).waitForExistence(timeout: 20), app.debugDescription); childDone(app)
+        func history(_ title: String, message: String) {
+            let options = app.buttons["Task options"]; XCTAssertTrue(options.waitForExistence(timeout: 10), app.debugDescription); childPress(options)
+            let menu = app.buttons["Undo & redo"]; XCTAssertTrue(menu.waitForExistence(timeout: 10), app.debugDescription); childPress(menu)
+            let action = app.buttons[title]
+            if !action.waitForExistence(timeout: 2), menu.exists, menu.isHittable { menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.15) }
+            XCTAssertTrue(action.waitForExistence(timeout: 10), app.debugDescription); XCTAssertTrue(action.isEnabled); childPress(action)
+            if action.exists, action.isHittable, action.isEnabled { action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.15) }
+            XCTAssertTrue(app.staticTexts[message].waitForExistence(timeout: 20), app.debugDescription)
+        }
+        history("Undo", message: "Undid subtask edit")
+        history("Redo", message: "Redid subtask edit")
+        history("Undo", message: "Undid subtask edit")
+        structureSnapshot(app, "Ordinary task menu supports field Undo Redo Undo")
+        app.terminate(); app.launchArguments = arguments; app.launch(); app.activate()
+        showRow()
+        XCTAssertTrue(title.waitForExistence(timeout: 15), app.debugDescription); XCTAssertEqual(title.value as? String, "Prepare the review")
+        structureSnapshot(app, "Field history keeps the exact title after a cold return")
+        #endif
+    }
+
+    @MainActor func testChildFieldsNativeSavedUndoColdRedoAndUndo() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, large: true)
+        childHomePress("childNativeEditor", app)
+        let title = childField("independentChildTitle", app); childReveal(title, app); childType("Field history proof", title)
+        let plan = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Plan")).firstMatch
+        childReveal(plan, app); childPress(plan)
+        let estimate = childField("childEstimateEnabled", app); childReveal(estimate, app)
+        #if os(iOS)
+        childPress(estimate.descendants(matching: .switch).firstMatch)
+        XCTAssertEqual(estimate.value as? String, "1", app.debugDescription)
+        #else
+        childPress(estimate)
+        #endif
+        let save = app.buttons["saveIndependentChildFields"]; childReveal(save, app); childPress(save)
+        childSavedNoticeVisible(app); childDone(app)
+        childHomePress("childNativeRecovery", app)
+        let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch
+        childReveal(send, app); childPress(send)
+        let undo = app.buttons["Undo edit"]
+        childReveal(undo, app); XCTAssertTrue(undo.waitForExistence(timeout: 20), app.debugDescription)
+        structureSnapshot(app, "Saved field edit offers Undo at largest text")
+        childDone(app); childProbe(app, "confirmed=1 writes=1 requests=1 current=Field history proof"); childProbe(app, "minutes=30")
+        app.terminate(); try childOpen(app, reset: false, large: true)
+        childHomePress("childNativeRecovery", app); childReveal(undo, app); childPress(undo)
+        let redo = app.buttons["Redo edit"]
+        childReveal(redo, app); XCTAssertTrue(redo.waitForExistence(timeout: 20), app.debugDescription)
+        childReveal(redo, app); structureSnapshot(app, "Undo restores absent estimate and exposes saved Redo")
+        childDone(app); childProbe(app, "confirmed=2 writes=2 requests=2 current=Prepare the review"); childProbe(app, "minutes=0")
+        app.terminate(); try childOpen(app, reset: false, large: true)
+        childHomePress("childNativeRecovery", app); childReveal(redo, app); childPress(redo)
+        childReveal(undo, app); XCTAssertTrue(undo.waitForExistence(timeout: 20), app.debugDescription)
+        childReveal(undo, app); structureSnapshot(app, "Cold Redo restores title and estimate")
+        childDone(app); childProbe(app, "confirmed=3 writes=3 requests=3 current=Field history proof"); childProbe(app, "minutes=30")
+        childHomePress("childNativeRecovery", app); childReveal(undo, app); childPress(undo)
+        childReveal(redo, app); XCTAssertTrue(redo.waitForExistence(timeout: 20), app.debugDescription)
+        childDone(app); childProbe(app, "confirmed=4 writes=4 requests=4 current=Prepare the review"); childProbe(app, "minutes=0")
+        app.terminate(); try childOpen(app, reset: false, large: true)
+        childProbe(app, "confirmed=4 writes=4 requests=4 current=Prepare the review"); childProbe(app, "minutes=0")
+    }
+
     @MainActor func testChildFieldsNativeSaveSendColdReceipt() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app)
         childSave(app, title: "Review the polished child screen")

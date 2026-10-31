@@ -71,22 +71,37 @@ struct ChildTaskFieldCommand: ReviewedTeamCommand, CustomStringConvertible, Cust
     var id:String {body["request_id"]!.text}
     var description:String {"Private child field request"}
     var debugDescription:String {description}
-    init(read:ChildTaskRecordRead,key:String,changes:[String:JSON],requestID:UUID=UUID()) throws {
+    var removedFields: Set<String> { Set(body["remove_fields"]?.list.map(\.text) ?? []) }
+    var touchedFields: Set<String> { Set(body["changes"]!.object.keys).union(removedFields) }
+    var after: ChildTaskFieldBaseline { .init(fields: touchedFields, values: body["changes"]!.object) }
+    init(read:ChildTaskRecordRead,key:String,changes:[String:JSON],removing:Set<String>=[],revision:Double?=nil,requestID:UUID=UUID()) throws {
+        var validation = changes
+        for field in removing { validation[field] = field == "priority" ? .number(4) : ["labels", "reminder_specs"].contains(field) ? .array([]) : .null }
         guard let node=read.nodes[key],TaskKind(Record(node.fields)) != .unsupported,
-              TaskKind.permits(Mutation(table:"tasks",recordID:node.fields["id"]!.text,method:"PATCH",fields:changes),existing:Record(node.fields)) else {throw Self.invalid}
-        try self.init(account:read.context.account,origin:read.context.origin,body:["protocol":.number(1),"account":.string(read.context.account),"request_id":.string(requestID.uuidString.lowercased()),"task_id":.string(read.context.root.id),"task_generation":read.context.root["task_generation"],"project_id":read.context.root["project_id"],"node_key":.string(node.key),"incarnation":.string(node.incarnation),"revision":.number(node.revision),"changes":.object(changes)])
+              revision == nil || (revision! >= 1 && revision! <= node.revision),
+              TaskKind.permits(Mutation(table:"tasks",recordID:node.fields["id"]!.text,method:"PATCH",fields:validation),existing:Record(node.fields)) else {throw Self.invalid}
+        var body:[String:JSON] = ["protocol":.number(removing.isEmpty ? 1 : 2),"account":.string(read.context.account),"request_id":.string(requestID.uuidString.lowercased()),"task_id":.string(read.context.root.id),"task_generation":read.context.root["task_generation"],"project_id":read.context.root["project_id"],"node_key":.string(node.key),"incarnation":.string(node.incarnation),"revision":.number(revision ?? node.revision),"changes":.object(changes)]
+        if !removing.isEmpty { body["remove_fields"] = .array(removing.sorted().map(JSON.string)) }
+        try self.init(account:read.context.account,origin:read.context.origin,body:body)
     }
     init(account:String,origin:String,body:[String:JSON]) throws {
         try TeamOrganizationValue.scope(account:account,origin:origin)
-        guard origin.utf8.count<=2048,Set(body.keys)==["protocol","account","request_id","task_id","task_generation","project_id","node_key","incarnation","revision","changes"],body["protocol"] == .number(1),body["account"] == .string(account) else {throw Self.invalid}
+        let keys:Set<String> = ["protocol","account","request_id","task_id","task_generation","project_id","node_key","incarnation","revision","changes"]
+        let v2 = body["protocol"] == .number(2)
+        guard origin.utf8.count<=2048,Set(body.keys)==(v2 ? keys.union(["remove_fields"]) : keys),v2 || body["protocol"] == .number(1),body["account"] == .string(account) else {throw Self.invalid}
         for key in ["request_id","task_id","incarnation"] {_=try TeamOrganizationValue.id(body[key])}
         _=try TeamProjectValue.optionalID(body["task_generation"]);_=try TeamProjectValue.optionalID(body["project_id"])
         let rev=try TeamProjectValue.revision(body["revision"])
+        var removed:Set<String> = []
+        if v2 {
+            guard case .array(let rows)? = body["remove_fields"], rows.count <= 11 else { throw Self.invalid }
+            for row in rows {
+                guard case .string(let key) = row, key != "title", Self.fields.contains(key), removed.insert(key).inserted else { throw Self.invalid }
+            }
+        }
         guard rev<9_007_199_254_740_991,case .string(let key)?=body["node_key"],!key.isEmpty,key.utf8.count<=128,key.utf8.elementsEqual(key.precomposedStringWithCanonicalMapping.utf8),
-              case .object(let changes)?=body["changes"],!changes.isEmpty,Set(changes.keys).isSubset(of:Self.fields) else {throw Self.invalid}
+              case .object(let changes)?=body["changes"],!changes.isEmpty || !removed.isEmpty,Set(changes.keys).isSubset(of:Self.fields),removed.isDisjoint(with:changes.keys) else {throw Self.invalid}
         for (key,value) in changes {try Self.validate(key,value)}
-        // Pretty output is conservative relative to PostgreSQL's spaced JSONB
-        // envelope and avoids compact-JSON boundary surprises.
         let encoder=TaskfoldJSONEncoder();encoder.outputFormatting=[.prettyPrinted,.sortedKeys]
         guard try encoder.encode(body).count<=128_000 else {throw Self.invalid}
         self.account=account;self.origin=origin;self.body=body
@@ -101,7 +116,7 @@ struct ChildTaskFieldCommand: ReviewedTeamCommand, CustomStringConvertible, Cust
     private enum CodingKeys:String,CodingKey {case account,origin,body}
     init(from decoder:Decoder) throws {let c=try decoder.container(keyedBy:CodingKeys.self);try self.init(account:c.decode(String.self,forKey:.account),origin:c.decode(String.self,forKey:.origin),body:c.decode([String:JSON].self,forKey:.body))}
     func confirmed(_ raw:[String:JSON]) throws -> ChildTaskFieldReceipt {
-        guard Set(raw.keys)==["protocol","account","request_id","task_id","task_generation","project_id","node_key","incarnation","revision","replayed"],raw["protocol"] == .number(1),raw["account"] == .string(account),
+        guard Set(raw.keys)==["protocol","account","request_id","task_id","task_generation","project_id","node_key","incarnation","revision","replayed"],raw["protocol"] == body["protocol"],raw["account"] == .string(account),
               ["request_id","task_id","task_generation","project_id","node_key","incarnation"].allSatisfy({raw[$0]==body[$0]}),case .bool?=raw["replayed"],
               try TeamProjectValue.revision(raw["revision"])>=TeamProjectValue.revision(body["revision"]) else {throw Self.invalid}
         return ChildTaskFieldReceipt(raw:raw)
@@ -134,6 +149,41 @@ struct ChildTaskFieldCommand: ReviewedTeamCommand, CustomStringConvertible, Cust
             default:break
             }
         }
+    }
+}
+/// Private inverse metadata records only touched fields. A missing key remains
+/// distinct from an explicit null; neither a task snapshot nor a network payload.
+struct ChildTaskFieldBaseline: Codable, Sendable, Equatable {
+    let fields: Set<String>
+    let values: [String: JSON]
+    static func ==(a: Self, b: Self) -> Bool {
+        a.fields == b.fields && AuthoredValueComparison.exactJSON(.object(a.values), .object(b.values))
+    }
+    func validate(for command: ChildTaskFieldCommand) throws {
+        guard fields == command.touchedFields, Set(values.keys).isSubset(of: fields),
+              !fields.contains("title") || values["title"] != nil else { throw ChildTaskFieldCommand.invalid }
+        for (key, value) in values { try ChildTaskFieldCommand.validate(key, value) }
+        guard try TaskfoldJSONEncoder().encode(self).count <= 140_000 else { throw ChildTaskFieldCommand.invalid }
+    }
+    init(fields: Set<String>, values: [String: JSON]) { self.fields = fields; self.values = values }
+    init(read: ChildTaskRecordRead, command: ChildTaskFieldCommand) throws {
+        guard command.account == read.context.account, command.origin == read.context.origin,
+              command.body["task_id"] == .string(read.context.root.id), command.body["task_generation"] == read.context.root["task_generation"],
+              command.body["project_id"] == read.context.root["project_id"], let node = read.nodes[command.body["node_key"]!.text],
+              command.body["incarnation"] == .string(node.incarnation), command.body["revision"] == .number(node.revision) else { throw ChildTaskFieldCommand.invalid }
+        self.init(fields: command.touchedFields, values: node.fields.filter { command.touchedFields.contains($0.key) })
+        try validate(for: command)
+    }
+    func inverse(of entry: ChildTaskFieldJournalState.Entry, read: ChildTaskRecordRead, requestID: UUID = UUID()) throws -> ChildTaskFieldCommand {
+        let c = entry.command, context = read.context
+        try validate(for: c)
+        guard entry.phase == .confirmed, let receipt = entry.receipt, try c.confirmed(receipt.raw) == receipt,
+              entry.before == self, self != c.after, c.account == context.account, c.origin == context.origin,
+              c.body["task_id"] == .string(context.root.id), c.body["task_generation"] == context.root["task_generation"], c.body["project_id"] == context.root["project_id"],
+              let node = read.nodes[c.body["node_key"]!.text], c.body["incarnation"] == .string(node.incarnation),
+              node.revision >= Double(receipt.raw["revision"]!.integer),
+              AuthoredValueComparison.exactJSON(.object(node.fields.filter { fields.contains($0.key) }), .object(c.after.values)), requestID.uuidString.lowercased() != c.id else { throw ChildTaskFieldCommand.invalid }
+        return try .init(read: read, key: node.key, changes: values, removing: fields.subtracting(values.keys), revision: Double(receipt.raw["revision"]!.integer), requestID: requestID)
     }
 }
 struct ChildTaskFieldReceipt:Equatable,Sendable,Codable {let raw:[String:JSON]}
@@ -169,7 +219,7 @@ struct ChildTaskFieldResolution: Equatable, Sendable, Codable {
 }
 struct ChildTaskFieldJournalState:ReviewedTeamFileCommand,CustomStringConvertible,CustomDebugStringConvertible {
     enum Phase:String,Codable,Sendable {case queued,attempted,confirmed,closed}
-    struct Entry:Codable,Sendable {let command:ChildTaskFieldCommand;var phase:Phase;var receipt:ChildTaskFieldReceipt?;var resolution:ChildTaskFieldResolution? = nil}
+    struct Entry:Codable,Sendable {let command:ChildTaskFieldCommand;var phase:Phase;var receipt:ChildTaskFieldReceipt?;var resolution:ChildTaskFieldResolution? = nil;var before:ChildTaskFieldBaseline? = nil;var historyOf:String? = nil}
     static let storagePrefix="child-field-journal-v1."
     static let fileName="requests.taskfoldchildfields"
     static let encryptionContext="com.taskfold.child-field-journal.v1"
@@ -182,7 +232,15 @@ struct ChildTaskFieldJournalState:ReviewedTeamFileCommand,CustomStringConvertibl
     init(account:String,origin:String,entries:[Entry]=[]) throws {
         try TeamOrganizationValue.scope(account:account,origin:origin)
         guard origin.utf8.count<=2048,entries.count<=64 else {throw Self.invalid};var ids:Set<String>=[]
+        var prior: [String: Entry] = [:], activeParents: Set<String> = []
         for row in entries {
+            try row.before?.validate(for: row.command)
+            if let parentID = row.historyOf {
+                guard let parent = prior[parentID], parent.phase == .confirmed, let before = parent.before, let proof = parent.receipt,
+                      row.command.sameTarget(parent.command), row.command.body["revision"] == proof.raw["revision"], row.before == parent.command.after,
+                      row.command.after == before, row.phase == .closed || activeParents.insert(parentID).inserted else { throw Self.invalid }
+            }
+            prior[row.command.id] = row
             guard row.command.account==account,row.command.origin==origin,ids.insert(row.command.id).inserted else {throw Self.invalid}
             if row.phase == .confirmed {guard let receipt=row.receipt,try row.command.confirmed(receipt.raw)==receipt,row.resolution==nil else {throw Self.invalid}}
             else if row.phase == .closed {guard row.receipt==nil,let proof=row.resolution,try ChildTaskFieldResolution(command:row.command,raw:proof.raw)==proof,proof.closed else {throw Self.invalid}}
@@ -191,14 +249,17 @@ struct ChildTaskFieldJournalState:ReviewedTeamFileCommand,CustomStringConvertibl
         self.account=account;self.origin=origin;self.entries=entries
     }
     static func ==(a:Self,b:Self)->Bool {
-        a.account==b.account && a.origin==b.origin && a.entries.count==b.entries.count && zip(a.entries,b.entries).allSatisfy{$0.command==$1.command && $0.phase==$1.phase && $0.receipt==$1.receipt && $0.resolution==$1.resolution}
+        a.account==b.account && a.origin==b.origin && a.entries.count==b.entries.count && zip(a.entries,b.entries).allSatisfy{$0.command==$1.command && $0.phase==$1.phase && $0.receipt==$1.receipt && $0.resolution==$1.resolution && $0.before==$1.before && $0.historyOf==$1.historyOf}
     }
     private enum CodingKeys:String,CodingKey {case version,account,origin,entries}
     init(from decoder:Decoder) throws {
-        let c=try decoder.container(keyedBy:CodingKeys.self);guard try c.decode(Int.self,forKey:.version)==1 else {throw Self.invalid}
-        try self.init(account:c.decode(String.self,forKey:.account),origin:c.decode(String.self,forKey:.origin),entries:c.decode([Entry].self,forKey:.entries))
+        let c=try decoder.container(keyedBy:CodingKeys.self), version=try c.decode(Int.self,forKey:.version)
+        guard [1,2].contains(version) else {throw Self.invalid}
+        let entries=try c.decode([Entry].self,forKey:.entries)
+        guard version == 2 || entries.allSatisfy({ $0.before == nil && $0.historyOf == nil && $0.command.body["protocol"] == .number(1) }) else { throw Self.invalid }
+        try self.init(account:c.decode(String.self,forKey:.account),origin:c.decode(String.self,forKey:.origin),entries:entries)
     }
-    func encode(to encoder:Encoder) throws {var c=encoder.container(keyedBy:CodingKeys.self);try c.encode(1,forKey:.version);try c.encode(account,forKey:.account);try c.encode(origin,forKey:.origin);try c.encode(entries,forKey:.entries)}
+    func encode(to encoder:Encoder) throws {var c=encoder.container(keyedBy:CodingKeys.self);try c.encode(entries.contains { $0.before != nil || $0.historyOf != nil || $0.command.body["protocol"] == .number(2) } ? 2 : 1,forKey:.version);try c.encode(account,forKey:.account);try c.encode(origin,forKey:.origin);try c.encode(entries,forKey:.entries)}
 }
 /// Derive the physical path from account/origin as well as binding ciphertext AAD.
 /// A cleanup for another origin cannot unlink this scope's file without a key.
@@ -244,18 +305,48 @@ actor ChildTaskFieldJournal {
     func load() throws -> ChildTaskFieldJournalState {try guarded(lease:nil){try read()}}
     /// Coalesce only provably unsent intents for the same captured revision.
     /// Once attempted, both body and request identity remain immutable.
-    func enqueue(_ command:ChildTaskFieldCommand,lease:CalendarReadLease) throws -> ChildTaskFieldCommand {
+    func enqueue(_ command:ChildTaskFieldCommand,before:ChildTaskFieldBaseline?=nil,lease:CalendarReadLease) throws -> ChildTaskFieldCommand {
         try guarded(lease:lease) {
+            try before?.validate(for: command)
             try admit([command.body["task_id"]!.text])
             guard command.account==account,command.origin==origin else {throw ChildTaskFieldCommand.invalid};var state=try read()
-            if let old=state.entries.first(where:{$0.command.id==command.id}) {guard old.command==command else {throw ChildTaskFieldCommand.invalid};return old.command}
-            if let index=state.entries.lastIndex(where:{$0.phase == .queued && $0.command.sameTarget(command) && $0.command.body["revision"]==command.body["revision"]}) {
-                let old=state.entries[index].command;var body=old.body;body["changes"] = .object(old.body["changes"]!.object.merging(command.body["changes"]!.object){_,new in new})
-                let merged=try ChildTaskFieldCommand(account:account,origin:origin,body:body);state.entries[index] = .init(command:merged,phase:.queued,receipt:nil)
+            if let old=state.entries.first(where:{$0.command.id==command.id}) {guard old.command==command,old.before==before else {throw ChildTaskFieldCommand.invalid};return old.command}
+            if let index=state.entries.lastIndex(where:{$0.phase == .queued && $0.historyOf == nil && $0.command.sameTarget(command) && $0.command.body["revision"]==command.body["revision"]}) {
+                let oldEntry = state.entries[index], old = oldEntry.command
+                var body = old.body, values = old.body["changes"]!.object, removed = old.removedFields
+                for field in command.touchedFields { values[field] = command.body["changes"]!.object[field]; removed.remove(field) }
+                removed.formUnion(command.removedFields)
+                body["changes"] = .object(values); body["protocol"] = .number(removed.isEmpty ? 1 : 2)
+                body["remove_fields"] = removed.isEmpty ? nil : .array(removed.sorted().map(JSON.string))
+                let merged=try ChildTaskFieldCommand(account:account,origin:origin,body:body)
+                var baseline: ChildTaskFieldBaseline?
+                if let a = oldEntry.before, let b = before {
+                    let overlap = a.fields.intersection(b.fields)
+                    guard AuthoredValueComparison.exactJSON(.object(a.values.filter { overlap.contains($0.key) }), .object(b.values.filter { overlap.contains($0.key) })) else { throw ChildTaskFieldCommand.invalid }
+                    baseline = .init(fields: a.fields.union(b.fields), values: a.values.merging(b.values) { old, _ in old })
+                }
+                state.entries[index] = .init(command:merged,phase:.queued,receipt:nil,before:baseline)
                 try write(state,lease:lease);return merged
             }
             guard state.entries.count<64 else {throw ChildTaskFieldCommand.invalid}
-            state.entries.append(.init(command:command,phase:.queued,receipt:nil));try write(state,lease:lease);return command
+            state.entries.append(.init(command:command,phase:.queued,receipt:nil,before:before));try write(state,lease:lease);return command
+        }
+    }
+    /// Under the same process/account lock, two windows share one inverse ID.
+    func enqueueInverse(of reviewed: ChildTaskFieldJournalState.Entry, read fresh: ChildTaskRecordRead, lease: CalendarReadLease) throws -> ChildTaskFieldCommand {
+        try guarded(lease: lease) {
+            var state = try read()
+            guard let parent = state.entries.first(where: { $0.command.id == reviewed.command.id }), parent.command == reviewed.command,
+                  parent.receipt == reviewed.receipt, parent.before == reviewed.before, parent.historyOf == reviewed.historyOf,
+                  parent.phase == .confirmed, let before = parent.before else { throw ChildTaskFieldCommand.invalid }
+            try admit([parent.command.body["task_id"]!.text])
+            // The existing exact inverse remains retryable after a lost reply,
+            // even if its own application has changed the fresh field values.
+            if let existing = state.entries.first(where: { $0.historyOf == parent.command.id && $0.phase != .closed }) { return existing.command }
+            let command = try before.inverse(of: parent, read: fresh)
+            guard state.entries.count < 64 else { throw ChildTaskFieldCommand.invalid }
+            state.entries.append(.init(command: command, phase: .queued, receipt: nil, before: parent.command.after, historyOf: parent.command.id))
+            try write(state, lease: lease); return command
         }
     }
     func attempt(_ reviewed:ChildTaskFieldCommand,lease:CalendarReadLease) throws -> ChildTaskFieldJournalState.Entry {
@@ -302,18 +393,19 @@ actor ChildTaskFieldJournal {
     }
     /// A replacement has a fresh identity and preserves the original terminal
     /// proof. It cannot silently coalesce with another window's saved intent.
-    func replaceClosed(_ original: ChildTaskFieldCommand, with replacement: ChildTaskFieldCommand, lease: CalendarReadLease) throws {
+    func replaceClosed(_ original: ChildTaskFieldCommand, with replacement: ChildTaskFieldCommand, before: ChildTaskFieldBaseline? = nil, lease: CalendarReadLease) throws {
         try guarded(lease: lease) {
+            try before?.validate(for: replacement)
             try admit([replacement.body["task_id"]!.text])
             var state = try read()
             guard let old = state.entries.first(where: { $0.command.id == original.id }), old.command == original,
                   old.phase == .closed, old.resolution?.closed == true,
                   original.sameTarget(replacement), replacement.id != original.id,
                   replacement.body["revision"]!.integer >= original.body["revision"]!.integer,
-                  Set(replacement.body["changes"]!.object.keys).isSubset(of: Set(original.body["changes"]!.object.keys)),
+                  replacement.touchedFields.isSubset(of: original.touchedFields),
                   !state.entries.contains(where: { $0.command.id == replacement.id || ($0.phase != .closed && $0.phase != .confirmed && $0.command.sameTarget(replacement)) }),
                   state.entries.count < 64 else { throw ChildTaskFieldCommand.invalid }
-            state.entries.append(.init(command: replacement, phase: .queued, receipt: nil)); try write(state, lease: lease)
+            state.entries.append(.init(command: replacement, phase: .queued, receipt: nil, before: before)); try write(state, lease: lease)
         }
     }
     /// Explicitly discarding an uncertain request never cancels service work.
@@ -321,6 +413,7 @@ actor ChildTaskFieldJournal {
         try guarded(lease:lease) {
             var state=try read();guard let index=state.entries.firstIndex(where:{$0.command.id==reviewed.id}),state.entries[index].command==reviewed else {throw ChildTaskFieldCommand.invalid}
             guard state.entries[index].phase != .attempted || allowUnconfirmed else {throw ChildTaskFieldCommand.invalid}
+            guard !state.entries.contains(where: { $0.historyOf == reviewed.id }) else { throw AppFailure(message: "Remove the newer saved Undo or Redo requests first. Their recovery still needs this receipt.") }
             state.entries.remove(at:index);try write(state,lease:lease)
         }
     }
@@ -423,12 +516,13 @@ extension Backend:ChildTaskFieldCommandService {}
     private let current: () -> ChildTaskFieldClientScope?
     private let canQueue: (ChildTaskFieldCommand) -> Bool
     private let refresh: () async -> Void
+    private let didApply: (ChildTaskFieldJournalState.Entry, ChildTaskFieldClientScope) -> Void
     private let lease = CalendarReadLease()
     private var closed = false
     init(scope: ChildTaskFieldClientScope, journal: ChildTaskFieldJournal, service: any ChildTaskFieldCommandService,
          current: @escaping () -> ChildTaskFieldClientScope?, canQueue: @escaping (ChildTaskFieldCommand) -> Bool,
-         canSend: @escaping (ChildTaskFieldCommand) -> Bool, refresh: @escaping () async -> Void) {
-        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.refresh = refresh
+         canSend: @escaping (ChildTaskFieldCommand) -> Bool, refresh: @escaping () async -> Void, didApply: @escaping (ChildTaskFieldJournalState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) {
+        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.refresh = refresh; self.didApply = didApply
         sender = ChildTaskFieldSender(scope: scope, journal: journal, service: service, current: current, canSend: canSend)
     }
     func close() {
@@ -451,26 +545,28 @@ extension Backend:ChildTaskFieldCommandService {}
     /// Durable staging only: saving never performs network I/O or an optimistic
     /// cache write. Sending requires a separate call from an explicit Save/Send
     /// intent; opening or restoring a draft never sends it.
-    @discardableResult func save(_ command: ChildTaskFieldCommand) async -> ChildTaskFieldCommand? {
+    @discardableResult func save(_ command: ChildTaskFieldCommand, before: ChildTaskFieldBaseline? = nil) async -> ChildTaskFieldCommand? {
         guard !busy else { return nil }; busy = true; defer { busy = false }
         do {
             try check(); guard command.account == scope.account, command.origin == scope.origin, canQueue(command) else { throw ChildTaskFieldWriteFailure(reason: .unavailable) }
-            let saved = try await journal.enqueue(command, lease: lease); try check(); try await update()
+            let saved = try await journal.enqueue(command, before: before, lease: lease); try check(); try await update()
             message = "Saved on this device. Review the request when you’re ready to send."; return saved
         } catch { failure(error); return nil }
     }
-    func send(_ reviewed: ChildTaskFieldCommand) async {
-        guard !busy else { return }; busy = true; defer { busy = false }
+    @discardableResult func send(_ reviewed: ChildTaskFieldCommand) async -> Bool {
+        guard !busy else { return false }; busy = true; defer { busy = false }
         do {
-            try check(); _ = try await sender.send(reviewed); try check(); try await update()
+            try check(); let wasConfirmed = entries.contains { $0.command == reviewed && $0.phase == .confirmed }
+            _ = try await sender.send(reviewed); try check(); try await update()
+            if !wasConfirmed, let entry = entries.first(where: { $0.command == reviewed && $0.phase == .confirmed }), let before = entry.before, before != reviewed.after { didApply(entry, scope) }
             message = "Change confirmed. Refreshing current tasks…"
             await refresh(); try check()
-            message = "Change confirmed. The saved request is kept until you remove it."
+            message = "Change confirmed. The saved request is kept until you remove it."; return true
         } catch {
             // A failed response/save may have left durable attempted state.
             // Re-read before offering controls; never show the old queued phase.
             do { try check(); try await update() } catch { loaded = false; entries = [] }
-            failure(error)
+            failure(error); return false
         }
     }
     @discardableResult func saveReplacement(_ comparison: ChildTaskFieldComparison, choosing groups: Set<String>) async -> ChildTaskFieldCommand? {
@@ -478,20 +574,42 @@ extension Backend:ChildTaskFieldCommandService {}
         do {
             try check()
             guard let replacement = try comparison.replacement(choosing: groups), canQueue(replacement) else { throw ChildTaskFieldWriteFailure(reason: .review) }
-            try await journal.replaceClosed(comparison.original, with: replacement, lease: lease)
+            try await journal.replaceClosed(comparison.original, with: replacement, before: try ChildTaskFieldBaseline(read: comparison.read, command: replacement), lease: lease)
             try check(); try await update(); message = "Reviewed changes saved on this device. Review the new request before sending."; return replacement
         } catch { failure(error); return nil }
     }
     func closeOriginal(_ reviewed: ChildTaskFieldCommand) async {
         guard !busy else { return }; busy = true; defer { busy = false }
         do {
-            try check(); let result = try await sender.resolve(reviewed); try check(); try await update()
+            try check(); let wasConfirmed = entries.contains { $0.command == reviewed && $0.phase == .confirmed }
+            let result = try await sender.resolve(reviewed); try check(); try await update()
+            if !wasConfirmed, let entry = entries.first(where: { $0.command == reviewed && $0.phase == .confirmed }), let before = entry.before, before != reviewed.after { didApply(entry, scope) }
             if result.closed { message = "Original request closed. Your task was not changed by closing it." }
             else { await refresh(); try check(); message = "The original change had already applied. Its confirmation is saved." }
         } catch {
             do { try check(); try await update() } catch { loaded = false; entries = [] }
             failure(error)
         }
+    }
+    func canReverse(_ entry: ChildTaskFieldJournalState.Entry) -> Bool {
+        entry.phase == .confirmed && entry.before != nil && entry.before != entry.command.after && !entries.contains { $0.historyOf == entry.command.id && $0.phase != .closed }
+    }
+    func isRedo(_ entry: ChildTaskFieldJournalState.Entry) -> Bool {
+        var depth = 0, current = entry
+        while let parent = current.historyOf, let row = entries.first(where: { $0.command.id == parent }) { depth += 1; current = row }
+        return depth % 2 == 1
+    }
+    func showHistoryNotice(_ notice: ChildTaskHistoryNotice) {
+        guard notice.scope == scope, notice.kind == .fields, (try? check()) != nil else { return }
+        message = notice.message
+    }
+    @discardableResult func queueInverse(_ entry: ChildTaskFieldJournalState.Entry, read: ChildTaskRecordRead) async -> ChildTaskFieldCommand? {
+        guard !busy else { return nil }; busy = true; defer { busy = false }
+        do {
+            try check(); guard ChildTaskFieldClientScope(read.context) == scope, canQueue(entry.command) else { throw CancellationError() }
+            let saved = try await journal.enqueueInverse(of: entry, read: read, lease: lease)
+            try check(); try await update(); message = "Saved on this device. The original confirmation is kept."; return saved
+        } catch { failure(error); return nil }
     }
     func discard(_ reviewed: ChildTaskFieldCommand, uncertainConfirmed: Bool = false) async {
         guard !busy else { return }; busy = true; defer { busy = false }
@@ -756,15 +874,15 @@ struct ChildTaskFieldComparison: Sendable {
         let current = Record(node.fields), changes = original.body["changes"]!.object
         var groups: [Group] = []
         for id in ["title", "description", "priority", "plan", "deadline_date", "duration_minutes", "assigned_to", "labels", "reminder_specs"] {
-            let fields = changes.keys.filter { id == "plan" ? Self.planning.contains($0) : $0 == id }.sorted()
+            let fields = original.touchedFields.filter { id == "plan" ? Self.planning.contains($0) : $0 == id }.sorted()
             guard !fields.isEmpty else { continue }
             let warning: String?
-            if id == "reminder_specs", !Self.remindersMayReplace(current[id], with: changes[id]!) {
+            if id == "reminder_specs", !Self.remindersMayReplace(current[id], with: changes[id] ?? .array([])) {
                 warning = "Reminder data changed that this review cannot safely replace. Reopen the current task’s reminders to edit them."
             } else if id == "labels", !TeamTaskLabelsDraft(current[id]).supported {
                 warning = "These current labels need their original app or a newer version before editing."
             } else { warning = nil }
-            groups.append(.init(id: id, fields: fields, differs: fields.contains { !AuthoredValueComparison.exactJSON(current[$0], changes[$0]!) }, warning: warning))
+            groups.append(.init(id: id, fields: fields, differs: fields.contains { field in !AuthoredValueComparison.exactJSON(.object(current.fields.filter { $0.key == field }), .object(changes.filter { $0.key == field })) }, warning: warning))
         }
         self.original = original; self.read = read; self.current = current; self.groups = groups
     }
@@ -817,9 +935,10 @@ struct ChildTaskFieldComparison: Sendable {
         guard selected.isSubset(of: Set(groups.filter { $0.differs && $0.warning == nil }.map(\.id))), requestID.uuidString.lowercased() != original.id else { throw ChildTaskFieldCommand.invalid }
         var changes: [String: JSON] = [:]
         for group in groups where selected.contains(group.id) {
-            for field in group.fields { changes[field] = original.body["changes"]!.object[field]! }
+            for field in group.fields { changes[field] = original.body["changes"]!.object[field] }
         }
-        guard !changes.isEmpty else { return nil }
-        return try ChildTaskFieldCommand(read: read, key: original.body["node_key"]!.text, changes: changes, requestID: requestID)
+        let removing = Set(groups.filter { selected.contains($0.id) }.flatMap(\.fields)).intersection(original.removedFields)
+        guard !changes.isEmpty || !removing.isEmpty else { return nil }
+        return try ChildTaskFieldCommand(read: read, key: original.body["node_key"]!.text, changes: changes, removing: removing, requestID: requestID)
     }
 }

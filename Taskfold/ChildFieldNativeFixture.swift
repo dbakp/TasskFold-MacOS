@@ -284,7 +284,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         guard command.body["task_id"] == .string(root.id), command.body["task_generation"] == root["task_generation"], command.body["project_id"] == .null, Store.shared.userID == command.account else { throw CancellationError() }
         var receipts = state["receipts"]!.object
         if closing {
-            var result = command.body.filter { !["changes", "revision"].contains($0.key) }
+            var result = command.body.filter { !["changes", "revision", "remove_fields"].contains($0.key) }
             state["closeRequests"] = .number(Double((state["closeRequests"]?.integer ?? 0) + 1))
             if let prior = receipts[command.id]?.object {
                 guard AuthoredValueComparison.exactJSON(prior["body"]!, .object(command.body)) else { throw ChildFieldNativeRefusal(code: "PT409") }
@@ -310,11 +310,19 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         let key = command.body["node_key"]!.text
         guard let index = root["subtasks"].list.firstIndex(where: { $0.object["id"] == .string(key) }),
               command.body["incarnation"] == .string(index == 0 ? "ec990000-0000-4000-8000-000000000005" : "ec990000-0000-4000-8000-000000000006") else { throw CancellationError() }
-        if command.body["revision"]!.integer < state["versions"]!.object[key]!.integer { try save(state); throw ChildFieldNativeRefusal(code: "PT409") }
+        var fieldVersions: [String: Int] = [:]
+        for saved in receipts.values {
+            let prior = saved.object["body"]!.object
+            guard prior["node_key"] == .string(key) else { continue }
+            let revision = saved.object["receipt"]!.object["revision"]!.integer
+            let touched = Set(prior["changes"]!.object.keys).union(prior["remove_fields"]?.list.map(\.text) ?? [])
+            for field in touched { fieldVersions[field] = max(fieldVersions[field] ?? 1, revision) }
+        }
+        if command.body["revision"]!.integer > state["versions"]!.object[key]!.integer || command.touchedFields.contains(where: { (fieldVersions[$0] ?? 1) > command.body["revision"]!.integer }) { try save(state); throw ChildFieldNativeRefusal(code: "PT409") }
         var changed = root, rows = root["subtasks"].list, fields = rows[index].object
-        fields.merge(command.body["changes"]!.object) { _, new in new }; rows[index] = .object(fields); changed["subtasks"] = .array(rows)
+        fields.merge(command.body["changes"]!.object) { _, new in new }; for field in command.removedFields { fields.removeValue(forKey: field) }; rows[index] = .object(fields); changed["subtasks"] = .array(rows)
         var versions = state["versions"]!.object; versions[key] = .number(Double(versions[key]!.integer + 1))
-        var proof = command.body.filter { $0.key != "changes" }; proof["revision"] = versions[key]; proof["replayed"] = .bool(false)
+        var proof = command.body.filter { !["changes", "remove_fields"].contains($0.key) }; proof["revision"] = versions[key]; proof["replayed"] = .bool(false)
         _ = try command.confirmed(proof)
         receipts[command.id] = .object(["body": .object(command.body), "receipt": .object(proof)])
         state["root"] = .object(changed.fields); state["versions"] = .object(versions); state["receipts"] = .object(receipts); state["writes"] = .number(Double(state["writes"]!.integer + 1))

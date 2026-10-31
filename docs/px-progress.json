@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Cross-task move Redo tested; Mac keys pending",
-  "latest": "Cross-task subtask moves now have guarded Redo, saved recovery and native history integration. Both repos pass 44 focused checks and both apps build/sign. iPhone saved/cold and ordinary task-menu journeys, plus iPad at largest text, preserve the exact branch and sibling through four unique operations. Mac keyboard acceptance remains open while locked. Field/hierarchy Redo, shared history, older-data mapping and shared file/discussion custody remain unfinished; ordinary migration use stays gated.",
+  "focus": "P2 · Subtask field Undo/Redo verified; migration still gated",
+  "latest": "Field-editor saves now support guarded Undo/Redo through saved recovery and native history. Both repos pass 133 focused client checks and 71 local database checks. Mac shortcuts refresh the list and inspector; iPhone/iPad saved/cold journeys and the ordinary iPhone menu preserve exact task fields through four unique operations. Hosted migration deployment and genuine shared-account acceptance remain open; ordinary migration use stays disabled.",
   "next": [
-    "Continue field-edit and other hierarchy Redo, then consistent shared activity/history. Complete whole workflows with bounded acceptance.",
-    "Finish older-data/history mapping and shared file/discussion custody. Keep normal migration use disabled until the required acceptance passes.",
-    "Complete the remaining Mac/cloud/account/window/speech and larger-workflow checks when available; preserve the separate deletion-recovery gaps and all agreed deferrals."
+    "Finish other hierarchy Redo and consistent shared activity/history. Keep delivery bounded to complete workflows.",
+    "Carry older tasks/history into the new storage and keep shared files/discussions with their workspace. Deploy and verify the hosted changes before normal migration use.",
+    "Complete the remaining cross-task-move Mac keyboard and wider account/window/privacy/speech/large-library checks. Preserve the separate deletion-recovery gaps and all agreed deferrals."
   ],
   "stages": [
     {
@@ -556,7 +556,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Combined completion supports native Undo/Redo. Cross-task move Redo now passes iPhone/iPad and focused Core checks; the Mac app builds but its keyboard walkthrough remains open while locked. Repair choices survive closing. The remaining migration work is shown below; normal use stays disabled.",
+              "detail": "Combined completion and cross-task moves support guarded Undo/Redo. Field-edit history now passes client/database checks in both repos and recorded Mac/iPhone/iPad workflows, including exact missing-field restoration and inspector refresh. Other hierarchy Redo, shared history, older-data mapping and file/discussion custody remain unfinished. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -579,8 +579,12 @@
                   "title": "Redo cross-task subtask moves; finish the Mac keyboard check"
                 },
                 {
+                  "state": "done",
+                  "title": "Implement field Undo/Redo and verify saved/native history in isolated clients"
+                },
+                {
                   "state": "build",
-                  "title": "Finish field and hierarchy Redo, and consistent shared activity history"
+                  "title": "Finish other hierarchy Redo and consistent shared activity history"
                 },
                 {
                   "state": "build",
@@ -656,7 +660,9 @@
             "completion-redo/verification.json",
             "completion-redo/README.md",
             "transfer-redo/README.md",
-            "transfer-redo/verification.json"
+            "transfer-redo/verification.json",
+            "field-history/README.md",
+            "field-history/verification.json"
           ],
           "focus": true
         },
@@ -723,7 +729,7 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "9d5d9f7f7f91220877e04d5a6ef67e187a81b5570ab377ff629c95d178ac58a6",
+    "P2_PLAN.md": "74339da194e7a94f0c1e3e768c47d3e1a7e2fe8e8be5b448590ff020de7c64d9",
     "PX_CHECKLIST.md": "528842bc8074a90d87e7873402fd4ed236f8950f4ba21cf6bbd7fc1768de5643",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",
@@ -763,6 +769,8 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
+    "field-history/README.md": "5b06f10129fc2515d2ff19280fceb406ac4bd50186f334d0501d2c7483547d87",
+    "field-history/verification.json": "4b5168fb9ec05cee2e9ddc59127ca320232d9e6d2e4f5463e9939783092ed1e9",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",

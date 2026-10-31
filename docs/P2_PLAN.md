@@ -7212,3 +7212,10 @@ The initial phone cold-return assertion did not scroll to a lazy off-screen rece
 - [ ] Field-edit and other hierarchy Redo, consistent shared activity, older-data/history mapping and shared file/discussion custody remain. Normal migration/transfer gates stay disabled.
 
 [Evidence and precise scope](transfer-redo/README.md). No server/schema deployment or user-paused provider/rollout/release work is included.
+
+
+## 31 October · guarded field-edit history
+
+New field-editor saves capture their exact original touched values privately, preserving absent versus null fields. Saved recovery offers Undo/Redo; newly confirmed edits join the native history controls. Every inverse is a fresh request using the previous receipt's field-version cutoff. Unrelated later fields survive; same-field conflicts require review. The encrypted journal preserves inverse identities through cold relaunch, unknown replies and competing windows. Clean inspectors refresh after a native history action while unsent typing remains protected.
+
+The independently owned database migration adds optional-field removal without enabling migration gates or expanding RPC permissions. Its local SQL/client/native evidence and limitations are maintained in [field-history/README.md](field-history/README.md) and [field-history/verification.json](field-history/verification.json). Hosted deployment, wider genuine-account acceptance, other hierarchy Redo, consistent shared activity/history, older-data mapping and shared file/discussion custody remain separate work. Normal migration use remains disabled.

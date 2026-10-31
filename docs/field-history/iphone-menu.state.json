@@ -1,0 +1,153 @@
+{
+  "root": {
+    "subtasks": [
+      {
+        "description": "Original saved notes",
+        "future": {
+          "keep": true
+        },
+        "completed": false,
+        "priority": 4,
+        "title": "Prepare the review",
+        "id": "concept"
+      },
+      {
+        "completed": false,
+        "future": {
+          "keep": true
+        },
+        "description": "Original saved notes",
+        "priority": 4,
+        "title": "Publish the summary",
+        "id": "review"
+      }
+    ],
+    "title": "Native child workspace",
+    "user_id": "ec990000-0000-4000-8000-000000000001",
+    "task_generation": "ec990000-0000-4000-8000-000000000003",
+    "project_id": null,
+    "id": "ec990000-0000-4000-8000-000000000002"
+  },
+  "lost": false,
+  "receipts": {
+    "d85cd3d3-59f8-4209-92e1-a737d0c25446": {
+      "receipt": {
+        "project_id": null,
+        "request_id": "d85cd3d3-59f8-4209-92e1-a737d0c25446",
+        "revision": 4,
+        "node_key": "concept",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "protocol": 1,
+        "replayed": false
+      },
+      "body": {
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "project_id": null,
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "node_key": "concept",
+        "request_id": "d85cd3d3-59f8-4209-92e1-a737d0c25446",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "revision": 3,
+        "changes": {
+          "title": "Field history proof"
+        },
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "protocol": 1
+      }
+    },
+    "906cc1d5-1ff2-4b68-8659-2d1532b87a26": {
+      "receipt": {
+        "project_id": null,
+        "revision": 5,
+        "request_id": "906cc1d5-1ff2-4b68-8659-2d1532b87a26",
+        "node_key": "concept",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "protocol": 1,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "replayed": false
+      },
+      "body": {
+        "project_id": null,
+        "revision": 4,
+        "request_id": "906cc1d5-1ff2-4b68-8659-2d1532b87a26",
+        "changes": {
+          "title": "Prepare the review"
+        },
+        "node_key": "concept",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "protocol": 1
+      }
+    },
+    "dc0900cc-f3a0-4896-958b-f6d980093ca8": {
+      "receipt": {
+        "project_id": null,
+        "revision": 3,
+        "request_id": "dc0900cc-f3a0-4896-958b-f6d980093ca8",
+        "node_key": "concept",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "protocol": 1,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "replayed": false
+      },
+      "body": {
+        "project_id": null,
+        "changes": {
+          "title": "Prepare the review"
+        },
+        "request_id": "dc0900cc-f3a0-4896-958b-f6d980093ca8",
+        "revision": 2,
+        "node_key": "concept",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "protocol": 1,
+        "account": "ec990000-0000-4000-8000-000000000001"
+      }
+    },
+    "78bad865-57ac-44b2-a749-f46129826cc9": {
+      "receipt": {
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "project_id": null,
+        "replayed": false,
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "node_key": "concept",
+        "request_id": "78bad865-57ac-44b2-a749-f46129826cc9",
+        "revision": 2,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "protocol": 1
+      },
+      "body": {
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "project_id": null,
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "node_key": "concept",
+        "request_id": "78bad865-57ac-44b2-a749-f46129826cc9",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "revision": 1,
+        "changes": {
+          "title": "Field history proof"
+        },
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "protocol": 1
+      }
+    }
+  },
+  "requests": 4,
+  "childReads": 9,
+  "writes": 4,
+  "versions": {
+    "review": 1,
+    "concept": 5
+  }
+}

@@ -412,8 +412,8 @@ extension Backend: ChildTaskTransferService {}
         }
     }
     func load() async { _ = await work { try await update() } }
-    func showHistoryNotice(_ notice: ChildTaskTransferHistoryNotice) {
-        guard notice.scope == scope, (try? check()) != nil else { return }
+    func showHistoryNotice(_ notice: ChildTaskHistoryNotice) {
+        guard notice.kind == .transfer, notice.scope == scope, (try? check()) != nil else { return }
         message = notice.message
     }
     func queue(_ command: ChildTaskTransferCommand, source: ChildTaskStructureRead, destination: ChildTaskStructureRead) async -> Bool {
@@ -488,7 +488,9 @@ extension Backend: ChildTaskTransferService {}
 }
 
 /// Transient, workspace-bound feedback; command/proof contents remain private.
-struct ChildTaskTransferHistoryNotice: Identifiable {
+struct ChildTaskHistoryNotice: Identifiable {
+    enum Kind { case transfer, fields }
+    var kind: Kind = .transfer
     let id = UUID()
     let scope: ChildTaskFieldClientScope
     let commandID: String?

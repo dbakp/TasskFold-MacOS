@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "reviewed": "2026-10-31",
+  "status": "implemented-and-verified-in-recorded-isolated-scope",
+  "scope": "Guarded Undo/Redo for new independent-subtask field-editor saves; broader migration is incomplete",
+  "client": {
+    "status": "passed",
+    "tests": 133,
+    "newFieldHistoryTests": 6,
+    "filter": "ChildTaskFieldCommandTests|ChildTaskTransferTests|ChildTaskTransferHistoryTests|ConfirmedHistoryBridgeTests",
+    "source": "Own independently built Core suite",
+    "fullLogSHA256": "166ea439a4cd68abcbbed228845eba21ecf234470edadbafd5a1143ed64b68ac"
+  },
+  "database": {
+    "status": "passed",
+    "checks": 71,
+    "evidence": "sql-verification.json",
+    "newAdvisorFindings": 0,
+    "ownedContainerRemoved": true,
+    "hostedDeployment": false
+  },
+  "fullAppsBuildAndStrictSignatureVerification": {
+    "mac": true,
+    "ios": true
+  },
+  "native": {
+    "iphone-saved": {
+      "status": "passed",
+      "summary": "iphone-saved.summary.json",
+      "dataProof": "iphone-saved.peer-proof.json",
+      "sourceAndBuild": "iphone-saved.phase.json"
+    },
+    "ipad-saved": {
+      "status": "passed",
+      "summary": "ipad-saved.summary.json",
+      "dataProof": "ipad-saved.peer-proof.json",
+      "sourceAndBuild": "ipad-saved.phase.json"
+    },
+    "iphone-menu": {
+      "status": "passed",
+      "summary": "iphone-menu.summary.json",
+      "dataProof": "iphone-menu.peer-proof.json",
+      "sourceAndBuild": "iphone-menu.phase.json"
+    },
+    "mac": {
+      "status": "passed",
+      "dataAndDirectObservation": "mac-native-proof.json",
+      "tested": "Title edit through normal inspector; Command-Z / Command-Shift-Z / Command-Z; clean inspector refresh and cold return"
+    }
+  },
+  "normalMigrationGatesEnabled": false,
+  "normalChildInfoFlags": {},
+  "sourceSHA256": {
+    "Taskfold/ChildFieldNativeFixture.swift": "2202bfa2e5bfad00344bf9b965009ff76d3ac94f3a22c7e07fbfd38da537d85c",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "2a6fa14a95523b39aefffb3cae78d832d56d9930d6e36a13ae28e4164993a58d",
+    "Taskfold/Core/ChildTaskTransfers.swift": "5acbb2439bb4697026afcce7f836c0e3cee7e84347525d40e910d3f3977c0493",
+    "Taskfold/Core/Store.swift": "ab80ca8566c16278dc6eccb4fa6ab86c3fbc356bbbf02edcaa0cec26f38b576f",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "3a920bdf5a52d29e904b0b8c618c8a0407e4cd6138249b00e1b05aab9e292c0c",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "a8fa479273bdf1db3a339702b755519e37ac8a92c172ffc7218d4ab07a1fcc14",
+    "Taskfold/Workspace.swift": "6b3fa4d010561f37b5f7cedd06234743c7dc9cac1ac35fe7953463556ff95ca6",
+    "TaskfoldTests/ChildTaskFieldCommandTests.swift": "42b5d70b1d5afe9826746be68ac6647110fbd89c9aa2268a57e2f11b02b64b97",
+    "TaskfoldUITests/AudioCommentUITests.swift": "740c87aa3d8bf3ab9e115294cefe9f82268a495919648313f3f5626b5b4dc372",
+    "supabase/migrations/20261031180359_child_field_history_removals.sql": "0831a3ce0d673984a5fb8b37fa487e70780750a54b43e25d7be8816f846e7fbc",
+    "Scripts/Database/test-child-field-history.mjs": "39421295472f386b7251d7b853b749f82e58db0dfc8cbe804400f029da6f2542",
+    "Scripts/verify_child_field_history_peer.py": "0ccdd2602010d869d48a602a366f48f8a31f380073598f5ee29232d9c23599af"
+  },
+  "localStackCLI": {
+    "dbPull": "Configured full local stack could not be reached. CLI-created migration was verified by direct iteration in each owned minimal Postgres fixture.",
+    "migrationList": "Configured full local stack could not be reached. No hosted migration history changed."
+  },
+  "openRequirements": [
+    "Hosted deployment and genuine shared-account acceptance before normal migration use",
+    "Other hierarchy Redo and consistent shared activity/history",
+    "Older-data/history mapping and shared file/discussion custody",
+    "Wider account, window, privacy, speech and large-library migration acceptance"
+  ],
+  "unchangedDeferrals": [
+    "Remote reminders and device/reinstall recovery",
+    "Older-client rollout safeguards",
+    "Release signing, distribution and App Store",
+    "Real calendar OAuth registrations",
+    "Inbound email domain/provider",
+    "Real dictation",
+    "Physical geofence delivery"
+  ],
+  "mobileAppSourcesUnchangedAcrossAcceptedPhases": true,
+  "menuTestSetupCorrection": "The first menu test expected collapsed child rows to exist. The accepted test expands the parent before opening the subtask; app source is unchanged.",
+  "finalBuildSourceMatchesAfterIsolation": {
+    "Taskfold/ChildFieldNativeFixture.swift": true,
+    "Taskfold/Core/ChildTaskFieldCommands.swift": true,
+    "Taskfold/Core/ChildTaskTransfers.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Views/ChildTaskFieldViews.swift": true,
+    "Taskfold/Views/ChildTaskTransferViews.swift": true,
+    "Taskfold/Workspace.swift": true
+  },
+  "finalExecutableSHA256": "02a39400a0b8bcd25587d5fbdd3b4f82fe73740a939d10da5aee1c9ff4fa6f54"
+}

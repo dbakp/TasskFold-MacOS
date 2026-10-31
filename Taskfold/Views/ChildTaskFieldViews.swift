@@ -36,6 +36,9 @@ private struct ChildFieldRemovalReview {
 }
 
 struct ChildTaskFieldRecoveryView: View {
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
     @State private var model: ChildTaskFieldRecoveryModel?
@@ -55,14 +58,14 @@ struct ChildTaskFieldRecoveryView: View {
                     Section {
                         Label(status(entry.phase), systemImage: entry.phase == .confirmed ? "checkmark.circle" : entry.phase == .attempted ? "clock.badge.questionmark" : "tray")
                             .font(.headline).accessibilityIdentifier("childFieldPhase-" + entry.command.id)
-                        ForEach(entry.command.body["changes"]!.object.keys.sorted().map { ChildFieldReviewItem(request: entry.command.id, field: $0) }) { item in
+                        ForEach(entry.command.touchedFields.sorted().map { ChildFieldReviewItem(request: entry.command.id, field: $0) }) { item in
                             let field = item.field
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(fieldTitle(field)).font(.caption).foregroundStyle(.secondary)
                                 if field == "assigned_to" {
                                     ChildFieldAssigneeReview(command: entry.command)
                                 } else {
-                                    Text(render(field, entry.command.body["changes"]!.object[field]!, command: entry.command)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                                    Text(entry.command.removedFields.contains(field) ? "Not set" : render(field, entry.command.body["changes"]!.object[field]!, command: entry.command)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                                         .accessibilityIdentifier("childFieldValue-" + item.id)
                                 }
                             }.id(item.id)
@@ -79,6 +82,10 @@ struct ChildTaskFieldRecoveryView: View {
                             Button("Compare with current values", systemImage: "arrow.left.arrow.right") { comparing = entry.command }
                                 .disabled(model.busy).accessibilityIdentifier("compareChildField-" + entry.command.id)
                         }
+                        if model.canReverse(entry) {
+                            Button(model.isRedo(entry) ? "Redo edit" : "Undo edit", systemImage: model.isRedo(entry) ? "arrow.uturn.forward" : "arrow.uturn.backward") { Task { await reverse(entry) } }
+                                .disabled(model.busy || store.childTransferHistoryBusy || !store.online).accessibilityIdentifier("reverseChildField-" + entry.command.id)
+                        }
                         Button(entry.phase == .confirmed ? "Remove saved receipt" : entry.phase == .closed ? "Remove closed request" : "Discard saved request", role: .destructive) { if let scope { removing = ChildFieldRemovalReview(entry: entry, model: model, scope: scope) } }
                             .disabled(model.busy).accessibilityIdentifier("discardChildField-" + entry.command.id)
                     }
@@ -93,8 +100,12 @@ struct ChildTaskFieldRecoveryView: View {
         .task(id: ChildFieldReadRequest(scope: scope, retry: reload)) {
             model?.close(); model = nil; modelScope = nil; failure = nil; removing = nil; comparing = nil
             guard scope != nil else { return }
-            do { let value = try store.childTaskFieldRecoveryModel(); modelScope = scope; model = value; await value.load() }
+            do { let value = try makeHistoryModel(); modelScope = scope; model = value; await value.load() }
             catch { failure = error.localizedDescription }
+        }
+        .onChange(of: store.childHistoryNotice?.id) { _, _ in
+            guard let notice = store.childHistoryNotice, notice.kind == .fields, notice.scope == scope, let model else { return }
+            Task { await model.load(); model.showHistoryNotice(notice) }
         }
         .onChange(of: scope) { _, _ in removing = nil; comparing = nil }
         .onDisappear { removing = nil; model?.close() }
@@ -111,8 +122,34 @@ struct ChildTaskFieldRecoveryView: View {
             }
             Button("Cancel", role: .cancel) { removing = nil }
         } message: {
-            Text(removing?.entry.phase == .attempted ? "The server may already have applied this change. Removing its recovery request cannot cancel or undo it. Refresh current tasks before editing again." : "This removes only the saved request or receipt on this device. It does not undo a server change.")
+            Text(removing?.entry.phase == .attempted ? "The server may already have applied this change. Removing its recovery request cannot cancel or undo it. Refresh current tasks before editing again." : "This removes the saved request or receipt on this device and its Undo information. Remove newer Undo or Redo requests first. It does not undo a server change.")
         }
+    }
+    private func makeHistoryModel() throws -> ChildTaskFieldRecoveryModel {
+        #if os(macOS)
+        let owner = workspace
+        return try store.childTaskFieldRecoveryModel(didApply: { [weak owner] entry, scope in owner?.rememberChildField(entry, scope: scope) })
+        #else
+        let owner = store
+        return try store.childTaskFieldRecoveryModel(didApply: { [weak owner] entry, scope in
+            guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
+            owner.viewHistory.record(owner.childFieldHistoryStep(entry, scope: scope))
+        })
+        #endif
+    }
+    private func reverse(_ entry: ChildTaskFieldJournalState.Entry) async {
+        guard let model, modelScope == scope else { return }
+        #if os(macOS)
+        if workspace.invokeChildFieldHistory(entry) { return }
+        #else
+        if store.viewHistory.canUndo(key: entry.command.id) { store.viewHistory.undo(); return }
+        if store.viewHistory.canRedo(key: entry.command.id) { store.viewHistory.redo(); return }
+        #endif
+        do {
+            let read = try await store.readChildTaskRecords(entry.command.body["task_id"]!.text)
+            guard modelScope == scope else { return }
+            if let saved = await model.queueInverse(entry, read: read) { await model.send(saved) }
+        } catch { failure = "This edit changed and needs a fresh review. Your current work is kept." }
     }
     private func status(_ phase: ChildTaskFieldJournalState.Phase) -> String {
         switch phase { case .queued: return "Saved · not sent"; case .attempted: return "Unconfirmed · original request kept"; case .confirmed: return "Confirmed · receipt saved"; case .closed: return "Closed · original request cannot send" }
@@ -230,6 +267,9 @@ struct ChildTaskFieldDetailView: View {
 }
 
 struct ChildTaskFieldEditorView: View {
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
     private enum Field: Hashable { case title, notes, label }
     @FocusState private var editingField: Field?
     @AccessibilityFocusState private var savedNoticeFocused: Bool
@@ -393,10 +433,11 @@ struct ChildTaskFieldEditorView: View {
                         Button(opening == nil ? "Save on this device" : "Save changes", systemImage: opening == nil ? "tray.and.arrow.down" : "checkmark") {
                             do {
                                 let command = try ChildTaskFieldCommand(read: read, key: key, changes: changes)
+                                let before = try ChildTaskFieldBaseline(read: read, command: command)
                                 let session = draftSession, revision = session?.latest?.revision, captured = scope, capturedEditing = editingRevision, unsubmittedLabel = addingLabel
                                 savedNoticeFocused = false; messageKey = nil
                                 Task {
-                                    let saved = await model.save(command)
+                                    let saved = await model.save(command, before: before)
                                     if let saved, opening != nil, session?.latest?.revision == revision, selectedKey == command.body["node_key"]?.text,
                                        scope == captured, editingRevision == capturedEditing, appeared, phase == .active {
                                         await model.send(saved)
@@ -468,6 +509,15 @@ struct ChildTaskFieldEditorView: View {
         .privacySensitive()
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: key) { _, _ in select() }
+        .onChange(of: store.childHistoryNotice?.id) { _, _ in
+            guard let notice = store.childHistoryNotice, notice.kind == .fields, notice.scope == scope, appeared, phase == .active else { return }
+            // A confirmed history operation refreshes a clean inspector. Keep
+            // genuine unsent typing (and other children's drafts) intact.
+            guard changes.isEmpty, addingLabel.isEmpty, !reminderOwnership.active else { model?.showHistoryNotice(notice); return }
+            if let session = draftSession, !session.finish(ifRevision: session.latest?.revision) { return }
+            draftSession = nil; draftSessions.removeValue(forKey: selectedKey); draftValues.removeValue(forKey: selectedKey); labelInputs.removeValue(forKey: selectedKey)
+            selectedKey = ""; detailSaved = false; reload = UUID()
+        }
         .onChange(of: sourceAvailable) { _, value in if !value { checkpoint(); _ = draftSession?.flush() } }
         .onChange(of: phase) { _, value in if value != .active { choosingChild = false; reminderOwnership.close("source"); sharedAssignee = nil; personalAssignee = nil; reminderEditor = nil; noticeRequest = nil; editingRevision = UUID(); checkpoint(); _ = draftSession?.flush() } }
         .onChange(of: recovery) { _, value in if value { noticeRequest = nil; editingRevision = UUID() } }
@@ -495,7 +545,7 @@ struct ChildTaskFieldEditorView: View {
                     labelInputs = previousLabels.filter { retained.contains($0.key) }
                 }
                 let selected = try opening?.key(in: value) ?? (value.nodes[preferredSelection] != nil ? preferredSelection : value.orderedNodes.first?.key ?? "")
-                read = value; model = try store.childTaskFieldRecoveryModel(); key = selected; select()
+                read = value; model = try makeHistoryModel(); key = selected; select()
                 if needsRecovery { failure = "Unfinished edits for changed subtasks are kept in recovery." }
             } catch { guard captured == scope, !Task.isCancelled else { return }; failure = error.localizedDescription }
         }
@@ -543,6 +593,18 @@ struct ChildTaskFieldEditorView: View {
         .sheet(item: $personalAssignee) { ChildPersonalAssigneeView(request: $0) }
         .sheet(item: $reminderEditor) { TeamTaskRemindersEditor(request: $0).id($0.id) }
         }
+    }
+    private func makeHistoryModel() throws -> ChildTaskFieldRecoveryModel {
+        #if os(macOS)
+        let owner = workspace
+        return try store.childTaskFieldRecoveryModel(didApply: { [weak owner] entry, scope in owner?.rememberChildField(entry, scope: scope) })
+        #else
+        let owner = store
+        return try store.childTaskFieldRecoveryModel(didApply: { [weak owner] entry, scope in
+            guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
+            owner.viewHistory.record(owner.childFieldHistoryStep(entry, scope: scope))
+        })
+        #endif
     }
     private func openReminders() {
         guard sourceAvailable, let read, let captured = scope, let original = read.nodes[selectedKey], TaskKind(Record(original.fields)) == .task else { return }
@@ -912,6 +974,9 @@ private struct ChildFieldAssigneeReview: View {
 /// Each comparison owns a fresh recovery model. The underlying saved-request
 /// screen may disappear under this sheet without cancelling this review.
 private struct ChildFieldConflictReview: View {
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
     @Environment(\.dismiss) private var dismiss
@@ -955,7 +1020,7 @@ private struct ChildFieldConflictReview: View {
                                         Text("Current").font(.caption).foregroundStyle(.secondary)
                                         reviewValue(field, comparison.current[field])
                                         Text("Your saved change").font(.caption).foregroundStyle(.secondary)
-                                        reviewValue(field, command.body["changes"]!.object[field]!)
+                                        if command.removedFields.contains(field) { Text("Not set") } else { reviewValue(field, command.body["changes"]!.object[field] ?? .null) }
                                     }.fixedSize(horizontal: false, vertical: true)
                                 }
                                 if let warning = group.warning { Text(warning).font(.footnote).foregroundStyle(.secondary) }
@@ -1007,7 +1072,7 @@ private struct ChildFieldConflictReview: View {
             model?.close(); model = nil; comparison = nil; chosen = []; failure = nil
             guard available else { return }
             do {
-                let value = try store.childTaskFieldRecoveryModel(); model = value; await value.load()
+                let value = try makeHistoryModel(); model = value; await value.load()
                 guard available else { value.close(); return }; await refresh()
             } catch { if available { failure = error.localizedDescription } }
         }
@@ -1033,6 +1098,18 @@ private struct ChildFieldConflictReview: View {
         } catch is CancellationError {} catch {
             if available { failure = "Couldn’t compare this task. It may have moved, been recreated, or become unavailable. The original request stays saved." }
         }
+    }
+    private func makeHistoryModel() throws -> ChildTaskFieldRecoveryModel {
+        #if os(macOS)
+        let owner = workspace
+        return try store.childTaskFieldRecoveryModel(didApply: { [weak owner] entry, scope in owner?.rememberChildField(entry, scope: scope) })
+        #else
+        let owner = store
+        return try store.childTaskFieldRecoveryModel(didApply: { [weak owner] entry, scope in
+            guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
+            owner.viewHistory.record(owner.childFieldHistoryStep(entry, scope: scope))
+        })
+        #endif
     }
     private func groupTitle(_ id: String) -> String { id == "plan" ? "Plan" : fieldTitle(id) }
     private func fieldTitle(_ id: String) -> String {

@@ -18,7 +18,7 @@ private final class ChildFieldIO: CalendarSecureItemIO, @unchecked Sendable {
     func childTaskFieldCommand(_ command: ChildTaskFieldCommand, session: UUID) async throws -> ChildTaskFieldReceipt {
         guard closed[command.id] == nil else { throw ChildTaskFieldWriteFailure(reason: .closed) }
         calls.append(command)
-        var raw = command.body.filter { $0.key != "changes" }
+        var raw = command.body.filter { !["changes", "remove_fields"].contains($0.key) }
         raw["revision"] = .number(Double(command.body["revision"]!.integer) + 1)
         raw["replayed"] = .bool(applied[command.id] != nil)
         let receipt = try command.confirmed(raw)
@@ -29,7 +29,7 @@ private final class ChildFieldIO: CalendarSecureItemIO, @unchecked Sendable {
     }
     func closeChildTaskFieldCommand(_ command: ChildTaskFieldCommand, session: UUID) async throws -> ChildTaskFieldResolution {
         closeCalls.append(command)
-        var raw = command.body.filter { !["changes", "revision"].contains($0.key) }
+        var raw = command.body.filter { !["changes", "revision", "remove_fields"].contains($0.key) }
         if let receipt = applied[command.id] { raw["outcome"] = .string("applied"); raw["receipt"] = .object(receipt.raw) }
         else { closed[command.id] = command; raw["outcome"] = .string("closed"); raw["receipt"] = .null }
         onClose?()
@@ -70,9 +70,138 @@ final class ChildTaskFieldCommandTests: XCTestCase {
         try .init(account: command.account, origin: command.origin, io: io, coordinationDirectory: root.appendingPathComponent("locks"), removalDirectory: root.appendingPathComponent("removal"))
     }
     func receipt(_ c: ChildTaskFieldCommand, revision: Double? = nil) throws -> ChildTaskFieldReceipt {
-        var raw = c.body.filter { $0.key != "changes" }; raw["revision"] = .number(revision ?? Double(c.body["revision"]!.integer) + 1); raw["replayed"] = .bool(false)
+        var raw = c.body.filter { !["changes", "remove_fields"].contains($0.key) }; raw["revision"] = .number(revision ?? Double(c.body["revision"]!.integer) + 1); raw["replayed"] = .bool(false)
         return try c.confirmed(raw)
     }
+
+    func historyRead(_ old: ChildTaskRecordRead, fields: [String: JSON], revision: Double, incarnation: String? = nil) throws -> ChildTaskRecordRead {
+        let data = try XCTUnwrap(Bundle.module.url(forResource: "child-task-record-read", withExtension: "json", subdirectory: "Fixtures"))
+        var raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: data))["response"]!.object
+        var rows = raw["records"]!.list
+        for i in rows.indices where rows[i].object["node_key"] == .string("child") {
+            var row = rows[i].object; row["fields"] = .object(fields); row["revision"] = .number(revision)
+            if let incarnation { row["incarnation"] = .string(incarnation) }
+            rows[i] = .object(row)
+        }
+        raw["records"] = .array(rows)
+        // The read contract verifies its legacy mirror too. Build the matching
+        // root using the fixture's existing tree and replace the addressed row.
+        func tree(_ rows: [JSON]) -> [JSON] { rows.map { value in
+            var row = value.object
+            if row["id"] == .string("child") { row = fields }
+            if case .array(let children)? = row["subtasks"] { row["subtasks"] = .array(tree(children)) }
+            return .object(row)
+        } }
+        var root = old.context.root
+        root["subtasks"] = .array(tree(root["subtasks"].list))
+        let context = try ChildTaskRecordContext(account: old.context.account, origin: old.context.origin, workspace: old.context.workspace, session: old.context.session, access: old.context.access, snapshot: UUID(), root: root)
+        return try ChildTaskRecordRead(data: JSONEncoder().encode(raw), context: context)
+    }
+    func testFieldHistoryExactAbsenceNullAndFreshCutoff() throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Changed"), "due_date": .string("2026-11-02")])
+        let before = try ChildTaskFieldBaseline(read: r, command: c), proof = try receipt(c)
+        let entry = ChildTaskFieldJournalState.Entry(command: c, phase: .confirmed, receipt: proof, before: before)
+        var fields = r.nodes["child"]!.fields; fields.merge(c.body["changes"]!.object) { _, new in new }; fields["description"] = .string("A later unrelated note")
+        let current = try historyRead(r, fields: fields, revision: Double(proof.raw["revision"]!.integer) + 1)
+        let inverse = try before.inverse(of: entry, read: current)
+        XCTAssertEqual(inverse.body["revision"], proof.raw["revision"])
+        XCTAssertEqual(inverse.body["changes"]?.object["title"], before.values["title"])
+        XCTAssertEqual(inverse.removedFields.contains("due_date"), !before.values.keys.contains("due_date"))
+        XCTAssertNil(inverse.body["changes"]?.object["description"])
+        XCTAssertEqual(inverse.after, before)
+        var changed = fields; changed["title"] = .string("Someone else's newer title")
+        XCTAssertThrowsError(try before.inverse(of: entry, read: historyRead(r, fields: changed, revision: current.nodes["child"]!.revision)))
+        XCTAssertThrowsError(try before.inverse(of: entry, read: historyRead(r, fields: fields, revision: current.nodes["child"]!.revision, incarnation: UUID().uuidString.lowercased())))
+    }
+    func testFieldRemovalProtocolValidationAndBoundReceipt() throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: [:], removing: ["description", "due_date"])
+        XCTAssertEqual(c.body["protocol"], .number(2)); XCTAssertEqual(c.removedFields, ["description", "due_date"])
+        XCTAssertNoThrow(try receipt(c))
+        var proof = try receipt(c).raw; proof["protocol"] = .number(1); XCTAssertThrowsError(try c.confirmed(proof))
+        for bad: JSON in [.array([.string("title")]), .array([.string("id")]), .array([.string("description"), .string("description")]), .null, .array([.number(2)]), .array([])] {
+            var b = c.body; b["remove_fields"] = bad
+            XCTAssertThrowsError(try ChildTaskFieldCommand(account: c.account, origin: c.origin, body: b))
+        }
+        XCTAssertThrowsError(try ChildTaskFieldCommand(read: r, key: "child", changes: ["description": .null], removing: ["description"]))
+        XCTAssertThrowsError(try ChildTaskFieldCommand(read: r, key: "child", changes: [:], removing: ["title"]))
+        let explicit = ChildTaskFieldBaseline(fields: ["description"], values: ["description": .null])
+        XCTAssertNotEqual(explicit, ChildTaskFieldBaseline(fields: ["description"], values: [:]))
+    }
+    func testFieldHistoryEncryptedColdUndoRedoAndDuplicateWindows() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Changed"), "due_date": .string("2026-11-02")])
+        let before = try ChildTaskFieldBaseline(read: r, command: c), directory = try root(), key = SymmetricKey(size: .bits256)
+        let io = try ChildTaskFieldJournalFileIO(directory: directory, account: c.account, origin: c.origin, encryptionKey: { key })
+        let j = try journal(c, io: io, root: directory), lease = CalendarReadLease()
+        _ = try await j.enqueue(c, before: before, lease: lease); _ = try await j.attempt(c, lease: lease)
+        let proof = try receipt(c); try await j.confirm(c, receipt: proof, lease: lease)
+        let cold = try journal(c, io: io, root: directory), state = try await cold.load(), parent = try XCTUnwrap(state.entries.first)
+        var fields = r.nodes["child"]!.fields; fields.merge(c.body["changes"]!.object) { _, new in new }
+        let fresh = try historyRead(r, fields: fields, revision: Double(proof.raw["revision"]!.integer))
+        async let a = j.enqueueInverse(of: parent, read: fresh, lease: lease)
+        async let b = cold.enqueueInverse(of: parent, read: fresh, lease: lease)
+        let (undo, duplicate) = try await (a,b); XCTAssertEqual(undo, duplicate)
+        _ = try await cold.attempt(undo, lease: lease); let undone = try receipt(undo); try await cold.confirm(undo, receipt: undone, lease: lease)
+        let after = try await journal(c, io: io, root: directory).load(), inverse = try XCTUnwrap(after.entries.last)
+        var restored = fields; for field in undo.removedFields { restored.removeValue(forKey: field) }; restored.merge(undo.body["changes"]!.object) { _,new in new }
+        let restoredRead = try historyRead(r, fields: restored, revision: Double(undone.raw["revision"]!.integer))
+        let redo = try await cold.enqueueInverse(of: inverse, read: restoredRead, lease: lease)
+        XCTAssertEqual(redo.after, c.after); XCTAssertNotEqual(redo.id, c.id); XCTAssertNotEqual(redo.id, undo.id)
+        do { try await cold.discard(c, lease: lease); XCTFail("Parent recovery must remain") } catch {}
+        let kept = try await cold.load(); XCTAssertEqual(kept.entries.count, 3)
+        let encoded = try JSONDecoder().decode([String: JSON].self, from: TaskfoldJSONEncoder().encode(kept)); XCTAssertEqual(encoded["version"], .number(2))
+        let bytes = try Data(contentsOf: io.file); XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains("Changed"))
+        var forged = kept.entries; forged[2].before = .init(fields: before.fields, values: ["title": .string("Forged old value")])
+        XCTAssertThrowsError(try ChildTaskFieldJournalState(account: c.account, origin: c.origin, entries: forged))
+    }
+    func testFieldHistoryCoalescesEarliestBeforeAndLegacyHasNoInventedUndo() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("First")]), d = try ChildTaskFieldCommand(read: r, key: "child", changes: ["title": .string("Last"), "due_date": .string("2026-11-02")])
+        let io = ChildFieldIO(), j = try journal(c, io: io, root: root()), lease = CalendarReadLease()
+        _ = try await j.enqueue(c, before: ChildTaskFieldBaseline(read: r, command: c), lease: lease)
+        let merged = try await j.enqueue(d, before: ChildTaskFieldBaseline(read: r, command: d), lease: lease)
+        let state = try await j.load(); XCTAssertEqual(merged.id, c.id); XCTAssertEqual(state.entries.count, 1)
+        XCTAssertEqual(state.entries[0].before, try ChildTaskFieldBaseline(read: r, command: merged))
+        let legacy = try ChildTaskFieldJournalState(account: c.account, origin: c.origin, entries: [.init(command: c, phase: .confirmed, receipt: receipt(c))])
+        let roundtrip = try TaskfoldJSONDecoder().decode(ChildTaskFieldJournalState.self, from: TaskfoldJSONEncoder().encode(legacy))
+        XCTAssertNil(roundtrip.entries[0].before)
+        var malformed = state.entries; malformed[0].historyOf = merged.id
+        XCTAssertThrowsError(try ChildTaskFieldJournalState(account: c.account, origin: c.origin, entries: malformed))
+    }
+
+    @MainActor func testFieldHistoryLostReplyRetryRegistersOnlyConfirmedOriginal() async throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: ["due_date": .string("2026-11-02")]), before = try ChildTaskFieldBaseline(read: r, command: c)
+        let io = ChildFieldIO(), directory = try root(), j = try journal(c, io: io, root: directory), peer = ChildFieldPeer(), scope = ChildTaskFieldClientScope(r.context)
+        var applied: [ChildTaskFieldJournalState.Entry] = []
+        let model = ChildTaskFieldRecoveryModel(scope: scope, journal: j, service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {}, didApply: { entry, got in XCTAssertEqual(got, scope); applied.append(entry) })
+        _ = await model.save(c, before: before); peer.lose = true
+        let lost = await model.send(c); XCTAssertFalse(lost); XCTAssertEqual(model.entries[0].phase, .attempted); XCTAssertTrue(applied.isEmpty)
+        let retried = await model.send(c); XCTAssertTrue(retried); XCTAssertEqual(peer.calls.map(\.id), [c.id, c.id]); XCTAssertEqual(applied.count, 1)
+        let replayed = await model.send(c); XCTAssertTrue(replayed); XCTAssertEqual(applied.count, 1); XCTAssertEqual(peer.calls.count, 2)
+        let parent = try XCTUnwrap(model.entries.first)
+        var fields = r.nodes["child"]!.fields; fields["due_date"] = .string("2026-11-02")
+        let fresh = try historyRead(r, fields: fields, revision: Double(parent.receipt!.raw["revision"]!.integer))
+        let savedInverse = await model.queueInverse(parent, read: fresh)
+        let inverse = try XCTUnwrap(savedInverse)
+        peer.lose = true; let lostInverse = await model.send(inverse); XCTAssertFalse(lostInverse)
+        XCTAssertEqual(applied.count, 1); XCTAssertEqual(model.entries.last?.phase, .attempted)
+        model.close()
+        let cold = ChildTaskFieldRecoveryModel(scope: scope, journal: try journal(c, io: io, root: directory), service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {}, didApply: { entry,_ in applied.append(entry) })
+        await cold.load(); let confirmed = await cold.send(inverse); XCTAssertTrue(confirmed)
+        XCTAssertEqual(peer.calls.suffix(2).map(\.id), [inverse.id, inverse.id]); XCTAssertEqual(peer.applied.count, 2); XCTAssertEqual(applied.count, 2)
+        XCTAssertEqual(cold.entries.last?.before, c.after); XCTAssertEqual(cold.entries.last?.historyOf, c.id)
+        cold.close()
+    }
+    func testFieldHistoryRemovalConflictReviewKeepsAbsence() throws {
+        let r = try read(), c = try ChildTaskFieldCommand(read: r, key: "child", changes: [:], removing: ["due_date"])
+        var fields = r.nodes["child"]!.fields; fields["due_date"] = .string("2026-11-02")
+        let fresh = try historyRead(r, fields: fields, revision: r.nodes["child"]!.revision + 2)
+        let comparison = try ChildTaskFieldComparison(original: c, read: fresh)
+        XCTAssertEqual(comparison.groups.map(\.id), ["plan"]); XCTAssertTrue(comparison.groups[0].differs)
+        let replacement = try XCTUnwrap(comparison.replacement(choosing: ["plan"]))
+        XCTAssertEqual(replacement.removedFields, ["due_date"]); XCTAssertTrue(replacement.body["changes"]!.object.isEmpty)
+        XCTAssertEqual(replacement.body["revision"], .number(fresh.nodes["child"]!.revision))
+        let before = try ChildTaskFieldBaseline(read: fresh, command: replacement); XCTAssertEqual(before.values["due_date"], .string("2026-11-02"))
+    }
+
     func testActualPostgresCommandAndOriginalReplayReceiptsAgree() throws {
         let url = try XCTUnwrap(Bundle.module.url(forResource: "child-task-field-command", withExtension: "json", subdirectory: "Fixtures"))
         let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
@@ -755,7 +884,7 @@ extension ChildTaskFieldCommandTests {
 
 extension ChildTaskFieldCommandTests {
     private func resolution(_ c: ChildTaskFieldCommand, applied: ChildTaskFieldReceipt? = nil) throws -> ChildTaskFieldResolution {
-        var raw = c.body.filter { !["changes", "revision"].contains($0.key) }
+        var raw = c.body.filter { !["changes", "revision", "remove_fields"].contains($0.key) }
         raw["outcome"] = .string(applied == nil ? "closed" : "applied"); raw["receipt"] = applied.map { .object($0.raw) } ?? .null
         return try ChildTaskFieldResolution(command: c, raw: raw)
     }

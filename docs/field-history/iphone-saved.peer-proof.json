@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "requests": 4,
+  "writes": 4,
+  "freshIdentities": 4,
+  "sequence": [
+    "edit",
+    "undo",
+    "redo",
+    "undo"
+  ],
+  "finalFieldsExact": true,
+  "estimateEditAndRemovalExercised": true,
+  "absentEstimateRestoredExactly": true,
+  "untouchedSiblingVersion": 1,
+  "editedNodeVersion": 5,
+  "scope": "Reserved synthetic native HTTP peer; not hosted SQL or real shared-account acceptance",
+  "peerSHA256": "8f0e07f4b1aae617a336cd2aa130087d8d58e7e778458026179a3d94f4f901c5"
+}

@@ -1,0 +1,36 @@
+{
+  "platform": "phone",
+  "sourceSHA256": {
+    "Taskfold/ChildFieldNativeFixture.swift": "2202bfa2e5bfad00344bf9b965009ff76d3ac94f3a22c7e07fbfd38da537d85c",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "2a6fa14a95523b39aefffb3cae78d832d56d9930d6e36a13ae28e4164993a58d",
+    "Taskfold/Core/ChildTaskTransfers.swift": "5acbb2439bb4697026afcce7f836c0e3cee7e84347525d40e910d3f3977c0493",
+    "Taskfold/Core/Store.swift": "d3ef8e966a401b6ed21774f8c255b8a55132b62783bea78042be57cbd41c4588",
+    "Taskfold/TaskfoldApp.swift": "ee1c0a6386471adb1590c1743ce2373f9f6bb3a007d6f8f391b8871878a88ba1",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "3a920bdf5a52d29e904b0b8c618c8a0407e4cd6138249b00e1b05aab9e292c0c",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "a8fa479273bdf1db3a339702b755519e37ac8a92c172ffc7218d4ab07a1fcc14",
+    "TaskfoldUITests/AudioCommentUITests.swift": "29846801b438e6b0e7c8b70f890c707e8b32ba0da73e450a0a615119a1ab793e"
+  },
+  "builtHostSHA256": {
+    "Taskfold/ChildFieldNativeFixture.swift": "2202bfa2e5bfad00344bf9b965009ff76d3ac94f3a22c7e07fbfd38da537d85c",
+    "Taskfold/Core/ChildTaskFieldCommands.swift": "2a6fa14a95523b39aefffb3cae78d832d56d9930d6e36a13ae28e4164993a58d",
+    "Taskfold/Core/ChildTaskTransfers.swift": "5acbb2439bb4697026afcce7f836c0e3cee7e84347525d40e910d3f3977c0493",
+    "Taskfold/Core/Store.swift": "e3bc45c0fd3d02530643eaeb20413c1274c1902b3c5bc67f2931ea301c7a9c73",
+    "Taskfold/TaskfoldApp.swift": "ee1c0a6386471adb1590c1743ce2373f9f6bb3a007d6f8f391b8871878a88ba1",
+    "Taskfold/Views/ChildTaskFieldViews.swift": "3a920bdf5a52d29e904b0b8c618c8a0407e4cd6138249b00e1b05aab9e292c0c",
+    "Taskfold/Views/ChildTaskTransferViews.swift": "a8fa479273bdf1db3a339702b755519e37ac8a92c172ffc7218d4ab07a1fcc14",
+    "TaskfoldUITests/AudioCommentUITests.swift": "29846801b438e6b0e7c8b70f890c707e8b32ba0da73e450a0a615119a1ab793e"
+  },
+  "appSHA256": "f81b1205d27d0f50205e9b11458aff181f35fdbea0be369b5384ed1b3706d183",
+  "newSimulator": false,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/ChildFieldNativeFixture.swift": true,
+    "Taskfold/Core/ChildTaskFieldCommands.swift": true,
+    "Taskfold/Core/ChildTaskTransfers.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/TaskfoldApp.swift": true,
+    "Taskfold/Views/ChildTaskFieldViews.swift": true,
+    "Taskfold/Views/ChildTaskTransferViews.swift": true,
+    "TaskfoldUITests/AudioCommentUITests.swift": true
+  }
+}

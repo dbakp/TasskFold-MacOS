@@ -361,7 +361,7 @@ final class Store {
         }
         return root.string("user_id")==scope.account && editorMayWrite(source:root,proposed:root)
     }
-    func childTaskFieldRecoveryModel() throws -> ChildTaskFieldRecoveryModel {
+    func childTaskFieldRecoveryModel(didApply: @escaping (ChildTaskFieldJournalState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) throws -> ChildTaskFieldRecoveryModel {
         guard let scope=childTaskFieldRecoveryScope else {throw CancellationError()}
         return ChildTaskFieldRecoveryModel(scope:scope,journal:try childTaskFieldJournal(account:scope.account,origin:scope.origin),service:backend,
             current:{[weak self] in self?.childTaskFieldRecoveryScope},
@@ -370,7 +370,7 @@ final class Store {
             refresh:{[weak self] in
                 guard let self,self.childTaskFieldRecoveryScope==scope else {return}
                 await self.sync()
-            })
+            }, didApply: didApply)
     }
     var childTaskCompletionEnabled: Bool {
         childTaskFieldEditingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildRecordCompletionsEnabled") as? Bool == true
@@ -909,8 +909,8 @@ final class Store {
                      admit: { [weak self] command, a, b in guard let self else { throw CancellationError() }; try await self.admitChildTaskTransfer(command, source: a, destination: b) }, didApply: { entry in didApply?(entry, scope) })
     }
     private(set) var childTransferHistoryBusy = false
-    private(set) var childTransferHistoryNotice: ChildTaskTransferHistoryNotice?
-    func childTransferHistoryStep(_ entry: ChildTaskTransferState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskTransferHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+    private(set) var childHistoryNotice: ChildTaskHistoryNotice?
+    func childTransferHistoryStep(_ entry: ChildTaskTransferState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
         let actionName = name ?? (entry.command.undoing ? "Undo Subtask Move" : "Move Subtask")
         return .init(name: actionName, key: entry.command.id,
               retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope },
@@ -930,13 +930,40 @@ final class Store {
                       let next = model.entries.first(where: { $0.command == saved && $0.phase == .applied }) else { throw ChildTaskTransferCommand.invalid }
                 await self.sync()
                 guard self.childTaskFieldRecoveryScope == scope else { return nil }
-                let notice = ChildTaskTransferHistoryNotice(scope: scope, commandID: saved.id, message: saved.undoing ? "Undid subtask move" : "Redid subtask move")
-                self.childTransferHistoryNotice = notice; report(notice)
+                let notice = ChildTaskHistoryNotice(scope: scope, commandID: saved.id, message: saved.undoing ? "Undid subtask move" : "Redid subtask move")
+                self.childHistoryNotice = notice; report(notice)
                 return self.childTransferHistoryStep(next, scope: scope, name: actionName, report: report)
             } catch {
                 guard self.childTaskFieldRecoveryScope == scope else { return nil }
-                let notice = ChildTaskTransferHistoryNotice(scope: scope, commandID: nil, message: "This move needs review. Open Saved subtask moves to check its original request.")
-                self.childTransferHistoryNotice = notice; report(notice); return nil
+                let notice = ChildTaskHistoryNotice(scope: scope, commandID: nil, message: "This move needs review. Open Saved subtask moves to check its original request.")
+                self.childHistoryNotice = notice; report(notice); return nil
+            }
+        })
+    }
+    func childFieldHistoryStep(_ entry: ChildTaskFieldJournalState.Entry, scope: ChildTaskFieldClientScope, name: String = "Edit Subtask", report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+        .init(name: name, key: entry.command.id,
+              retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope },
+              available: { [weak self] in
+                  guard let self else { return false }
+                  return !self.childTransferHistoryBusy && !self.childListCompletionBusy && self.online && self.permitsChildTaskFieldRequest(entry.command, sending: true)
+              }, perform: { [weak self] in
+            guard let self, !self.childTransferHistoryBusy, self.childTaskFieldRecoveryScope == scope else { return nil }
+            self.childTransferHistoryBusy = true; defer { self.childTransferHistoryBusy = false }
+            do {
+                let model = try self.childTaskFieldRecoveryModel(); defer { model.close() }; await model.load()
+                let read = try await self.readChildTaskRecords(entry.command.body["task_id"]!.text)
+                guard self.childTaskFieldRecoveryScope == scope else { throw CancellationError() }
+                let redo = model.isRedo(entry)
+                guard let saved = await model.queueInverse(entry, read: read), await model.send(saved),
+                      let next = model.entries.first(where: { $0.command == saved && $0.phase == .confirmed }) else { throw ChildTaskFieldCommand.invalid }
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(kind: .fields, scope: scope, commandID: saved.id, message: redo ? "Redid subtask edit" : "Undid subtask edit")
+                self.childHistoryNotice = notice; report(notice)
+                return self.childFieldHistoryStep(next, scope: scope, name: name, report: report)
+            } catch {
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(kind: .fields, scope: scope, commandID: nil, message: "This edit needs review. Open Saved subtask changes to check its original request.")
+                self.childHistoryNotice = notice; report(notice); return nil
             }
         })
     }

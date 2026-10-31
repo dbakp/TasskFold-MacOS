@@ -129,8 +129,8 @@ struct ChildTaskTransferView: View {
         .task(id: scope) { await open() }
         .task(id: destination) { if !destination.isEmpty { await readPair() } }
         .onChange(of: parent) { _, _ in index = 0 }
-        .onChange(of: store.childTransferHistoryNotice?.id) { _, _ in
-            guard let notice = store.childTransferHistoryNotice, notice.scope == scope, modelScope == scope else { return }
+        .onChange(of: store.childHistoryNotice?.id) { _, _ in
+            guard let notice = store.childHistoryNotice, notice.kind == .transfer, notice.scope == scope, modelScope == scope else { return }
             if let commandID = notice.commandID { activeID = commandID } else { failure = notice.message }
             model?.showHistoryNotice(notice)
             Task { await model?.load() }
@@ -294,8 +294,8 @@ struct ChildTaskTransferRecoveryView: View {
             do { let value = try makeModel(); model = value; modelScope = captured; await value.load() }
             catch { guard captured == scope else { return }; failure = "Saved moves couldn’t be read. Their originals are kept." }
         }
-        .onChange(of: store.childTransferHistoryNotice?.id) { _, _ in
-            guard let notice = store.childTransferHistoryNotice, notice.scope == scope, modelScope == scope else { return }
+        .onChange(of: store.childHistoryNotice?.id) { _, _ in
+            guard let notice = store.childHistoryNotice, notice.kind == .transfer, notice.scope == scope, modelScope == scope else { return }
             if notice.commandID == nil { failure = notice.message }
             model?.showHistoryNotice(notice)
             Task { await model?.load() }
