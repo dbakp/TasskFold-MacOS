@@ -1,0 +1,38 @@
+{
+  "taskContentUnchanged": true,
+  "taskWrites": 0,
+  "metadataChecks": 1,
+  "journals": {
+    "hierarchy": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "33dcf96ccfebe435b3c52f8115408615b2e58c1a70b278a3d49e76a81cfacdde",
+      "bodyUnchanged": true
+    },
+    "drafts": {
+      "entries": 1,
+      "phase": "private draft",
+      "encryptedSHA256": "4ec2dba5081b0ae35913e936bdb8ad7580a5b6ba1ea89b53302fdfccabc3f851",
+      "bodyUnchanged": true
+    },
+    "transfer": {
+      "entries": 1,
+      "phase": "attempted",
+      "encryptedSHA256": "cea832d35eb321592a3887ffff58e6e36fdfa2a686e8f8eba86c4f6f589e30b1",
+      "bodyUnchanged": true
+    },
+    "adoption": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "8baf7e14b80703cb4f3c80f69901ed69bdc643f2bc995502f950cac509c5725f",
+      "bodyUnchanged": true
+    },
+    "repair": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "aaa7e3d432a9d9dde38ae71daf54325af66e496b5a800046326fc57c9d8c5461",
+      "bodyUnchanged": true
+    }
+  },
+  "serverSHA256": "727e67715cb5034fdf7d54cbdc195cda856c93b48e8d15769d931815073fe2a7"
+}

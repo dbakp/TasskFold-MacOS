@@ -575,3 +575,100 @@ extension ChildTaskCompletionBatchTests {
         try await seedR.enqueue(repair,lease:lease);_ = try await rj.attempt(repair,lease:lease,resolving:true)
     }
 }
+
+@MainActor final class ChildTaskRecoveryDiscoveryTests: XCTestCase {
+    private func scope(account: String = "ec990000-0000-4000-8000-000000000001") -> ChildTaskFieldClientScope {
+        .init(account: account, origin: "https://recovery.test", workspace: UUID(), session: UUID(), access: UUID())
+    }
+    private final class Gate {
+        let entered: XCTestExpectation
+        var continuation: CheckedContinuation<Bool, Error>?
+        init(_ entered: XCTestExpectation) { self.entered = entered }
+        func read() async throws -> Bool {
+            try await withCheckedThrowingContinuation { continuation = $0; entered.fulfill() }
+        }
+        func finish(_ value: Bool) { continuation?.resume(returning: value); continuation = nil }
+    }
+    func testEachJournalFamilyCanBeDiscoveredWithoutWriteFlags() async {
+        let s = scope()
+        for target in ChildTaskRecoveryKind.allCases {
+            let model = ChildTaskRecoveryDiscovery(); var reads: [ChildTaskRecoveryKind] = []
+            await model.refresh(scope: s, current: { s }) { kind in reads.append(kind); return kind == target }
+            XCTAssertEqual(reads, ChildTaskRecoveryKind.allCases)
+            for kind in ChildTaskRecoveryKind.allCases { XCTAssertEqual(model.contains(kind, scope: s), kind == target) }
+        }
+    }
+    func testEmptyRefreshRemovesSettledPresenceWithoutChangingFiles() async {
+        let s = scope(), model = ChildTaskRecoveryDiscovery()
+        await model.refresh(scope: s, current: { s }) { _ in true }
+        await model.refresh(scope: s, current: { s }) { _ in false }
+        XCTAssertEqual(model.scope, s)
+        XCTAssertFalse(ChildTaskRecoveryKind.allCases.contains { model.contains($0, scope: s) })
+    }
+    func testUnreadableFamilyStaysReachableAndOtherFamiliesStillLoad() async {
+        let s = scope()
+        for target in ChildTaskRecoveryKind.allCases {
+            let model = ChildTaskRecoveryDiscovery(); var reads = 0
+            await model.refresh(scope: s, current: { s }) { kind in
+                reads += 1; if kind == target { throw URLError(.cannotDecodeContentData) }; return false
+            }
+            XCTAssertEqual(reads, 7); XCTAssertTrue(model.contains(target, scope: s))
+            XCTAssertFalse(ChildTaskRecoveryKind.allCases.filter { $0 != target }.contains { model.contains($0, scope: s) })
+        }
+    }
+    func testWrongScopeStartsNoJournalReads() async {
+        let s = scope(), model = ChildTaskRecoveryDiscovery(); var reads = 0
+        await model.refresh(scope: s, current: { nil }) { _ in reads += 1; return true }
+        XCTAssertEqual(reads, 0); XCTAssertNil(model.scope)
+    }
+    func testPresenceCannotCrossAccountWorkspaceSessionOrAccessBoundaries() async {
+        let s = scope(), model = ChildTaskRecoveryDiscovery()
+        await model.refresh(scope: s, current: { s }) { _ in true }
+        let changes = [scope(account: "ec990000-0000-4000-8000-000000000009"),
+                       ChildTaskFieldClientScope(account:s.account,origin:s.origin,workspace:UUID(),session:s.session,access:s.access),
+                       ChildTaskFieldClientScope(account:s.account,origin:s.origin,workspace:s.workspace,session:UUID(),access:s.access),
+                       ChildTaskFieldClientScope(account:s.account,origin:s.origin,workspace:s.workspace,session:s.session,access:UUID()),
+                       ChildTaskFieldClientScope(account:s.account,origin:"https://other.test",workspace:s.workspace,session:s.session,access:s.access)]
+        for changed in changes { for kind in ChildTaskRecoveryKind.allCases { XCTAssertFalse(model.contains(kind, scope: changed)) } }
+        XCTAssertFalse(model.contains(.fields, scope: nil))
+    }
+    func testAccountChangeDuringReadStopsDiscoveryAndCannotPublish() async {
+        let s = scope(), model = ChildTaskRecoveryDiscovery(), entered = expectation(description: "read")
+        let gate = Gate(entered); var current: ChildTaskFieldClientScope? = s; var reads = 0
+        let work = Task { await model.refresh(scope: s, current: { current }) { _ in reads += 1; return try await gate.read() } }
+        await fulfillment(of: [entered], timeout: 2); current = nil; gate.finish(true); await work.value
+        XCTAssertEqual(reads, 1); XCTAssertNil(model.scope)
+    }
+    func testClosingDiscoveryRejectsLateResultEvenIfScopeReturns() async {
+        let s = scope(), model = ChildTaskRecoveryDiscovery(), entered = expectation(description: "read")
+        let gate = Gate(entered)
+        let work = Task { await model.refresh(scope: s, current: { s }) { _ in try await gate.read() } }
+        await fulfillment(of: [entered], timeout: 2); model.close(); gate.finish(true); await work.value
+        XCTAssertNil(model.scope); XCTAssertFalse(model.contains(.fields, scope: s))
+    }
+    func testLatestRefreshWinsAcrossConcurrentMountedScreens() async {
+        let s = scope(), model = ChildTaskRecoveryDiscovery(), entered = expectation(description: "older read")
+        let gate = Gate(entered)
+        let old = Task { await model.refresh(scope: s, current: { s }) { _ in try await gate.read() } }
+        await fulfillment(of: [entered], timeout: 2)
+        await model.refresh(scope: s, current: { s }) { $0 == .repairs }
+        gate.finish(true); await old.value
+        XCTAssertTrue(model.contains(.repairs, scope: s)); XCTAssertFalse(model.contains(.fields, scope: s))
+    }
+    func testLateOldAccountReadCannotOverwriteNewAccountDiscovery() async {
+        let a = scope(), b = scope(account: "ec990000-0000-4000-8000-000000000009"), model = ChildTaskRecoveryDiscovery()
+        let entered = expectation(description: "old account"), gate = Gate(entered); var current = a
+        let old = Task { await model.refresh(scope: a, current: { current }) { _ in try await gate.read() } }
+        await fulfillment(of: [entered], timeout: 2); current = b
+        await model.refresh(scope: b, current: { current }) { $0 == .transfers }
+        gate.finish(true); await old.value
+        XCTAssertEqual(model.scope, b); XCTAssertTrue(model.contains(.transfers, scope: b)); XCTAssertFalse(model.contains(.fields, scope: a))
+    }
+    func testCancelledDiscoveryDoesNotPublishOrContinueReading() async {
+        let s = scope(), model = ChildTaskRecoveryDiscovery(), entered = expectation(description: "read")
+        let gate = Gate(entered); var reads = 0
+        let work = Task { await model.refresh(scope: s, current: { s }) { _ in reads += 1; return try await gate.read() } }
+        await fulfillment(of: [entered], timeout: 2); work.cancel(); gate.finish(true); await work.value
+        XCTAssertEqual(reads, 1); XCTAssertNil(model.scope)
+    }
+}

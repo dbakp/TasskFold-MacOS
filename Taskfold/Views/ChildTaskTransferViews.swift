@@ -16,26 +16,17 @@ struct ChildTaskTransferLink: View {
 struct SavedChildTaskTransfersLink: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
-    @State private var visible = false
     @State private var showing = false
-    @State private var revision = UUID()
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         Group {
-            if scope != nil, visible || store.childTaskTransfersEnabled {
-                Section { Button("Saved subtask moves", systemImage: "arrow.left.arrow.right") { showing = true }.accessibilityIdentifier("savedChildTransfers") }
+            if scope != nil, store.hasSavedChildRecovery(.transfers) || store.childTaskTransfersEnabled {
+                Section {
+                    Button("Saved subtask moves", systemImage: "arrow.left.arrow.right") { showing = true }.accessibilityIdentifier("savedChildTransfers")
+                        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) { WorkflowShell(title: "Saved subtask moves") { ChildTaskTransferRecoveryView() } }
+                }
             }
         }
-        .task(id: scope) { await discover() }
-        .task(id: revision) { await discover() }
-        .sheet(isPresented: $showing, onDismiss: { revision = UUID() }) { WorkflowShell(title: "Saved subtask moves") { ChildTaskTransferRecoveryView() } }
-    }
-    private func discover() async {
-        visible = false; guard let captured = scope else { return }
-        do {
-            let state = try await store.childTaskTransferJournal(account: captured.account, origin: captured.origin).load()
-            guard captured == scope, !Task.isCancelled else { return }; visible = !state.entries.isEmpty
-        } catch { guard captured == scope, !Task.isCancelled else { return }; visible = true }
     }
 }
 

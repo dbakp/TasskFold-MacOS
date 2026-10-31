@@ -1,0 +1,56 @@
+{
+  "taskContentUnchanged": true,
+  "taskWrites": 0,
+  "metadataChecks": 1,
+  "journals": {
+    "fields": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "77bf10163213bb00d7d8d0d947190fbfc9ddba77e08d50c284940c3797761064",
+      "bodyUnchanged": true
+    },
+    "completion": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "4bb95e7f2b01f10f90bb669d6148c0a140eabf2885da0ceb71eb4350bd5ba028",
+      "bodyUnchanged": true
+    },
+    "group": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "288cc108ce9016d64a824f1e43cd63121afb4513bb35034b2eb7fb1f165b32a7",
+      "bodyUnchanged": true
+    },
+    "hierarchy": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "57dfdc2ece674e3d5ed3062cdb91b9dfbff163883ced3519732608f9f3a0df4c",
+      "bodyUnchanged": true
+    },
+    "drafts": {
+      "entries": 1,
+      "phase": "private draft",
+      "encryptedSHA256": "0450d11d8e8abfbf50a1e5b7e22a264fb17cfb41d15dcafdbefe7a4037066c0d",
+      "bodyUnchanged": true
+    },
+    "transfer": {
+      "entries": 1,
+      "phase": "attempted",
+      "encryptedSHA256": "83f9801c60e4aba9fe0ab8cf775fb29aa9b16b4d08e3ca7517ed33b25127f84d",
+      "bodyUnchanged": true
+    },
+    "adoption": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "ec9261d356310911e4c639ed7f248cb28b104a401f255f6d843c6ad37de7dd2e",
+      "bodyUnchanged": true
+    },
+    "repair": {
+      "entries": 1,
+      "phase": "queued",
+      "encryptedSHA256": "3541e275a3dc08f01ebf4420d9c87979ca9346ae2270cda0ccaeefcc89a9f8f7",
+      "bodyUnchanged": true
+    }
+  },
+  "serverSHA256": "aac1d4e7b5ac27fa8ab5f47098b3693fcb578fc7e9b43db86cab01874ed388a2"
+}

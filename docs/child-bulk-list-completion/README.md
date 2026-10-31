@@ -25,3 +25,5 @@ The independently owned iOS evidence accepts four v6 journeys: iPhone completion
 ## Still open
 
 Mounted-screen discovery for older structural/transfer/adoption/repair recovery while those feature flags are paused is still needed. Current native admission/recovery evidence uses enabled test gates; data refusal does not establish every paused-feature recovery route. Mixed root/child completion, full Redo/shared history ordering and persistence, indexed/history mapping, shared attachment/discussion custody and wider scope/account/protected-storage/window/background/concurrency/spoken/library acceptance. Core state-machine coverage is not evidence of all those native journeys. Ordinary child flags remain absent and the server gate remains off. The user's rollout, provider, distribution, dictation and physical-device deferrals remain unchanged.
+
+Later on 31 October, the paused-feature discovery gap above was resolved in [saved recovery discovery](../child-recovery-discovery/README.md). That later evidence also records and fixes an iPhone recovery-sheet presentation defect. This document retains the earlier milestone's scope and findings.

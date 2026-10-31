@@ -51,33 +51,23 @@ struct ChildTaskStructureLink: View {
         }
     }
 }
+// A Group distributes presentation modifiers across its children. Each link owns one presenter.
 struct SavedChildTaskStructureLink: View {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
-    @State private var visible = false
     @State private var showing = false
-    @State private var revision = UUID()
     private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
     var body: some View {
         Group {
             SavedChildTaskTransfersLink()
             SavedChildTaskAdoptionsLink()
-            if scope != nil, visible || Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true {
-                Section { Button("Saved hierarchy actions", systemImage: "square.stack.3d.up") { showing = true }.accessibilityIdentifier("savedChildStructure") }
+            if scope != nil, store.hasSavedChildRecovery(.hierarchy) || Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildStructureReadsEnabled") as? Bool == true {
+                Section {
+                    Button("Saved hierarchy actions", systemImage: "square.stack.3d.up") { showing = true }.accessibilityIdentifier("savedChildStructure")
+                        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) { WorkflowShell(title: "Saved hierarchy actions") { ChildTaskStructureRecoveryView() } }
+                }
             }
         }
-        .task(id: scope) { await discover() }
-        .task(id: revision) { await discover() }
-        .sheet(isPresented: $showing, onDismiss: { revision = UUID() }) { WorkflowShell(title: "Saved hierarchy actions") { ChildTaskStructureRecoveryView() } }
-    }
-    private func discover() async {
-        visible = false; guard let captured = scope else { return }
-        do {
-            let state = try await store.childTaskStructureJournal(account: captured.account, origin: captured.origin).load()
-            guard captured == scope, !Task.isCancelled else { return }; let drafts = try await store.childTaskStructureDraftJournal(account: captured.account, origin: captured.origin).load()
-            guard captured == scope, !Task.isCancelled else { return }
-            visible = !state.entries.isEmpty || !state.disposals.isEmpty || !drafts.entries.isEmpty
-        } catch { guard captured == scope, !Task.isCancelled else { return }; visible = true }
     }
 }
 

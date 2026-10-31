@@ -391,27 +391,42 @@ final class Store {
         return try .init(account: account, origin: origin, io: io,
                          coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkOther($0) })
     }
-    private var childRecoveryPresenceTicket = UUID()
-    private(set) var childRecoveryPresenceScope: ChildTaskFieldClientScope?
-    private(set) var hasSavedChildFields = false
-    private(set) var hasSavedChildCompletions = false
-    private(set) var hasSavedChildGroups = false
+    private let childRecoveryDiscovery = ChildTaskRecoveryDiscovery()
+    var childRecoveryPresenceScope: ChildTaskFieldClientScope? { childRecoveryDiscovery.scope }
+    func hasSavedChildRecovery(_ kind: ChildTaskRecoveryKind) -> Bool {
+        childRecoveryDiscovery.contains(kind, scope: childTaskFieldRecoveryScope)
+    }
+    var hasSavedChildFields: Bool { hasSavedChildRecovery(.fields) }
+    var hasSavedChildCompletions: Bool { hasSavedChildRecovery(.completions) }
+    var hasSavedChildGroups: Bool { hasSavedChildRecovery(.groups) }
     func hideChildTaskRecoveryPresence() {
-        childRecoveryPresenceTicket = UUID(); childRecoveryPresenceScope = nil
-        hasSavedChildFields = false; hasSavedChildCompletions = false; hasSavedChildGroups = false
+        // An inactive window must not clear another mounted screen's discovery.
+        guard childTaskFieldRecoveryScope == nil else { return }
+        childRecoveryDiscovery.close()
     }
     func refreshChildTaskRecoveryPresence() async {
         guard let captured = childTaskFieldRecoveryScope else { hideChildTaskRecoveryPresence(); return }
-        let ticket = UUID(); childRecoveryPresenceTicket = ticket
-        func current() -> Bool { !Task.isCancelled && childTaskFieldRecoveryScope == captured && childRecoveryPresenceTicket == ticket }
-        var fields = false, singles = false, groups = false
-        do { let state = try await childTaskFieldJournal(account: captured.account, origin: captured.origin).load(); fields = !state.entries.isEmpty } catch { fields = true }
-        guard current() else { return }
-        do { let state = try await childTaskCompletionJournal(account: captured.account, origin: captured.origin).load(); singles = !state.entries.isEmpty } catch { singles = true }
-        guard current() else { return }
-        do { let state = try await childTaskCompletionBatchJournal(account: captured.account, origin: captured.origin).load(); groups = !state.entries.isEmpty } catch { groups = true }
-        guard current() else { return }
-        hasSavedChildFields = fields; hasSavedChildCompletions = singles; hasSavedChildGroups = groups; childRecoveryPresenceScope = captured
+        await childRecoveryDiscovery.refresh(scope: captured, current: { self.childTaskFieldRecoveryScope }) { kind in
+            switch kind {
+            case .fields:
+                let state = try await self.childTaskFieldJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .completions:
+                let state = try await self.childTaskCompletionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .groups:
+                let state = try await self.childTaskCompletionBatchJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .hierarchy:
+                let state = try await self.childTaskStructureJournal(account: captured.account, origin: captured.origin).load()
+                guard !Task.isCancelled, self.childTaskFieldRecoveryScope == captured else { throw CancellationError() }
+                let drafts = try await self.childTaskStructureDraftJournal(account: captured.account, origin: captured.origin).load()
+                return !state.entries.isEmpty || !state.disposals.isEmpty || !drafts.entries.isEmpty
+            case .transfers:
+                let state = try await self.childTaskTransferJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .adoptions:
+                let state = try await self.childTaskAdoptionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .repairs:
+                let state = try await self.childTaskRepairJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            }
+        }
     }
     func childTaskCompletionBatchJournal(account: String, origin: String) throws -> ChildTaskCompletionBatchJournal {
         let admission = childTaskActionAdmission(account: account, origin: origin)

@@ -277,6 +277,7 @@ struct ChildFieldMainListNativeFixtureView: View {
             guard ChildFieldNativeIdentity.mainListTesting else { return }
             do {
                 try await store.childFieldNativeStart()
+                try await ChildRecoveryNativeSeed.prepare(store: store)
                 if ProcessInfo.processInfo.arguments.contains("--child-batch-blocking-single"), ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") {
                     let read = try await store.readChildTaskRecords(ChildFieldNativeIdentity.rootID)
                     let command = try ChildTaskCompletionCommand(ChildTaskCompletionDraft(read: read, key: "concept", action: .complete))
@@ -489,6 +490,40 @@ struct ChildFieldNativeFixtureView: View {
             if privateTitle != nextTitle { privateTitle = nextTitle }
             if probe != nextProbe { probe = nextProbe }
         } catch { problem = error.localizedDescription }
+    }
+}
+
+
+/// Simulates work saved before gates were paused; reserved synthetic identity only.
+@MainActor enum ChildRecoveryNativeSeed {
+    static var enabled: Bool { ChildFieldNativeIdentity.mainListTesting && ProcessInfo.processInfo.arguments.contains("--child-recovery-paused") }
+    static func prepare(store: Store) async throws {
+        guard enabled, ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") else { return }
+        let account = ChildFieldNativeIdentity.account, origin = ChildFieldNativeIdentity.origin
+        let rows = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(#"{"structure":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"970f669e-d37a-4820-9ded-bef75ca1abb7","task_id":"7758f5b1-ae00-4cf0-af1d-3fbf1cf91c48","task_generation":"809a2a88-4af3-4d78-b63a-8e67d7b47462","project_id":"4f450387-1db1-48bf-b8f6-b48e832db62a","structure_revision":1,"action":"insert","parent_key":null,"index":0,"node":{"id":"fresh","title":"Fresh subtask"}},"transfer":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"8011c74b-2156-4441-8590-732b47fe490b","source":{"task_id":"4f15d1cf-d316-4b32-a617-be91132c05e9","task_generation":"900bd8b6-cd04-4bb5-9ba3-fa72f7c8f4bd","project_id":"ea9f44c2-cee0-4942-8bac-5097a6bfec17","structure_revision":1},"destination":{"task_id":"76ab089c-953b-47a3-99fb-562e7ff4ee30","task_generation":"8580c483-c9f7-47dc-8b26-d52e944a7552","project_id":"ea9f44c2-cee0-4942-8bac-5097a6bfec17","structure_revision":1,"parent_key":"heading","parent_incarnation":"813bf7ab-6aba-4894-ac3a-a65efcaac1a1","index":0},"action":"transfer","node_key":"branch","incarnation":"e1429dad-42ba-47ca-ae8b-33f0609f1d05","subtree_versions":{"branch":{"incarnation":"e1429dad-42ba-47ca-ae8b-33f0609f1d05","revision":1},"é":{"incarnation":"0debf56c-7122-4910-bd50-23c5061e05e7","revision":1}}},"adoption":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","task_id":"3b75ba52-8e73-4c22-9dc0-fdcf1aeea417","task_generation":"5a007aeb-cf39-4741-bcf7-712c1300ccab","project_id":"077685c9-cd55-461c-a80f-45cdcdf4ed4e","workspace_id":null,"review_digest":"53316036ee9625c55957c0b2cb24415088df5753c40c2385c6559e63763ff625","request_id":"5c31b0b9-5b90-4a62-95f8-c795401b809c"},"adoptionCount":3,"repair":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","task_id":"2f52833a-020b-458b-b1a2-7ba68f8949fa","task_generation":"22f32836-61d1-4f4d-9e77-90262e2c944f","project_id":null,"workspace_id":null,"review_digest":"869359a687385a3eab9dbce4b8421b554b1957f6d4c2135d906388ee1e2f1699","changes":[{"kind":"assign_reference","path":[0],"reference":"repaired-reference"}],"request_id":"60c4ee41-38e0-4d01-940b-7c9539ac0f49","repair_digest":"9ff959aec957734e3f1266a2871b67c24f87756a1c65c027467762b4ad4a3e2a"},"repairCount":1,"fields":{"account":"ec990000-0000-4000-8000-000000000001","protocol":1,"request_id":"ec990000-0000-4000-8000-000000000060","task_id":"ec990000-0000-4000-8000-000000000040","task_generation":"17d75cdd-e638-43d5-9489-a814d0198dd0","project_id":"5fa27333-e733-4342-8549-bcd3978db3a2","node_key":"a","incarnation":"467c4fad-2694-496d-8416-eb1a497a93b9","revision":2,"changes":{"title":"Edited title"}},"completion":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"ec990000-0000-4000-8000-000000000061","task_id":"ec990000-0000-4000-8000-000000000041","task_generation":"afed6b9f-6fe5-4a56-85f4-89c4441f8f33","project_id":"755a2c2b-f35f-482c-9b1c-f6ef9780338f","node_key":"child","incarnation":"2e35063e-e344-478b-9950-0ac8b3fba65f","revision":1,"action":"complete","baseline":{"completed":false,"completed_at":null,"taskfold_completion_v1":{"epoch":"203c512a-d0e4-4af7-a51c-f31a2c4d8391","version":0}}},"group":{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","batch_id":"ec990000-0000-4000-8000-000000000080","items":[{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"ec990000-0000-4000-8000-000000000070","task_id":"ec990000-0000-4000-8000-000000000050","task_generation":"820cfffc-27b2-4fbf-9d29-18a0a7a6e6c1","project_id":"82d0e197-3f90-48c4-8989-b9c205740a72","node_key":"child-0","incarnation":"95686182-49cb-4530-b0cc-d96ba9123e85","revision":1,"action":"complete","baseline":{"completed":false,"completed_at":null,"taskfold_completion_v1":{"epoch":"6a01aa21-4abf-4444-bb1d-b811cf866bf7","version":0}}},{"protocol":1,"account":"ec990000-0000-4000-8000-000000000001","request_id":"ec990000-0000-4000-8000-000000000071","task_id":"ec990000-0000-4000-8000-000000000051","task_generation":"b22b4ab7-9235-48f2-a4cd-5d38e292ae5a","project_id":null,"node_key":"child-1","incarnation":"bee17567-0a15-4564-bbbc-c1163d46738e","revision":1,"action":"complete","baseline":{"completed":false,"completed_at":null,"taskfold_completion_v1":{"epoch":"e82a4f60-47d6-405a-abb1-f66d91b69ce8","version":0}}}]}}"#.utf8))
+        let body = rows["structure"]!.object
+        if !ProcessInfo.processInfo.arguments.contains("--child-recovery-draft-only") {
+            let fields = try ChildTaskFieldCommand(account: account, origin: origin, body: rows["fields"]!.object)
+            try await store.childTaskFieldJournal(account: account, origin: origin).enqueue(fields, lease: CalendarReadLease())
+            let completion = try ChildTaskCompletionCommand(account: account, origin: origin, body: rows["completion"]!.object)
+            try await store.childTaskCompletionJournal(account: account, origin: origin).enqueue(completion, lease: CalendarReadLease())
+            let hierarchy = try ChildTaskStructureCommand(account: account, origin: origin, body: body)
+            try await store.childTaskStructureJournal(account: account, origin: origin).enqueue(hierarchy, lease: CalendarReadLease())
+            let transfer = try ChildTaskTransferCommand(account: account, origin: origin, body: rows["transfer"]!.object)
+            try await store.childTaskTransferJournal(account: account, origin: origin).enqueue(transfer, lease: CalendarReadLease())
+            let adoption = try ChildTaskAdoptionCommand(account: account, origin: origin, body: rows["adoption"]!.object, nodeCount: rows["adoptionCount"]!.integer)
+            try await store.childTaskAdoptionJournal(account: account, origin: origin).enqueue(adoption, lease: CalendarReadLease())
+            let repair = try ChildTaskRepairCommand(account: account, origin: origin, body: rows["repair"]!.object, nodeCount: rows["repairCount"]!.integer)
+            try await store.childTaskRepairJournal(account: account, origin: origin).enqueue(repair, lease: CalendarReadLease())
+            let items = try rows["group"]!.object["items"]!.list.map { try ChildTaskCompletionCommand(account: account, origin: origin, body: $0.object) }
+            let group = try ChildTaskCompletionBatchCommand(account: account, origin: origin, items: items, batchID: UUID(uuidString: rows["group"]!.object["batch_id"]!.text)!)
+            try await store.childTaskCompletionBatchJournal(account: account, origin: origin).enqueue(group, lease: CalendarReadLease())
+        }
+        let draft = try ChildTaskStructureDraft(account: account, origin: origin, body: ["account": .string(account), "request_id": .string("ec990000-0000-4000-8000-000000000099"), "task_id": body["task_id"]!, "task_generation": body["task_generation"]!, "project_id": body["project_id"]!, "action": .string("insert"), "node_key": .null, "incarnation": .null, "structure_revision": .number(1), "parent_key": .null, "parent_incarnation": .null, "index": .number(0), "title": .string("Saved recovery draft")])
+        try await store.childTaskStructureDraftJournal(account: account, origin: origin).save(draft, replacing: nil, lease: CalendarReadLease())
+        var manifest = rows; manifest["root"] = try ChildFieldNativePeer.state()["root"]
+        manifest["draftOnly"] = .bool(ProcessInfo.processInfo.arguments.contains("--child-recovery-draft-only"))
+        try TaskfoldJSONEncoder().encode(manifest).write(to: ChildFieldNativePeer.folder.appendingPathComponent("paused-recovery-seed.json"), options: .atomic)
     }
 }
 #endif

@@ -1,0 +1,14 @@
+{
+  "taskContentUnchanged": true,
+  "taskWrites": 0,
+  "metadataChecks": 0,
+  "journals": {
+    "drafts": {
+      "entries": 1,
+      "phase": "private draft",
+      "encryptedSHA256": "942dc86f1096a5e4513749aa9b73e48681de8bc855240791a78ce41cea108855",
+      "bodyUnchanged": true
+    }
+  },
+  "serverSHA256": "6db456fe2a62767e976478296b96e0c0a024d0a273e8c7cdcf648b5977a1179a"
+}

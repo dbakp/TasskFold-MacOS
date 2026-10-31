@@ -1159,3 +1159,31 @@ extension ChildTaskCompletionBatchCommand {
 struct ChildTaskActionAdmissionFailure: LocalizedError {
     var errorDescription: String? { "Another saved subtask action needs review before these tasks can change." }
 }
+
+/// Recovery discovery is independent of write rollout gates and stores no task content.
+enum ChildTaskRecoveryKind: CaseIterable, Hashable, Sendable {
+    case fields, completions, groups, hierarchy, transfers, adoptions, repairs
+}
+@MainActor @Observable final class ChildTaskRecoveryDiscovery {
+    private var ticket = UUID()
+    private(set) var scope: ChildTaskFieldClientScope?
+    private var present = Set<ChildTaskRecoveryKind>()
+    func contains(_ kind: ChildTaskRecoveryKind, scope current: ChildTaskFieldClientScope?) -> Bool {
+        current != nil && current == scope && present.contains(kind)
+    }
+    func close() { ticket = UUID(); scope = nil; present = [] }
+    func refresh(scope captured: ChildTaskFieldClientScope,
+                 current: () -> ChildTaskFieldClientScope?,
+                 read: (ChildTaskRecoveryKind) async throws -> Bool) async {
+        let request = UUID(); ticket = request
+        func valid() -> Bool { !Task.isCancelled && ticket == request && current() == captured }
+        guard valid() else { return }
+        var found = Set<ChildTaskRecoveryKind>()
+        for kind in ChildTaskRecoveryKind.allCases {
+            do { if try await read(kind) { found.insert(kind) } }
+            catch { found.insert(kind) } // An unreadable journal must remain reachable for recovery.
+            guard valid() else { return }
+        }
+        present = found; scope = captured
+    }
+}

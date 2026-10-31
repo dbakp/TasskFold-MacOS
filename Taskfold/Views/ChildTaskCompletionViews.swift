@@ -16,11 +16,11 @@ struct SavedChildTaskCompletionsLink: View {
     var body: some View {
         Group {
             if let scope, store.childRecoveryPresenceScope == scope, store.hasSavedChildCompletions {
-                Section { Button("Saved subtask actions", systemImage: "checkmark.circle") { showing = true }.accessibilityIdentifier("savedChildCompletions") }
+                Section {
+                    Button("Saved subtask actions", systemImage: "checkmark.circle") { showing = true }.accessibilityIdentifier("savedChildCompletions")
+                        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) { WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() } }
+                }
             }
-        }
-        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) {
-            WorkflowShell(title: "Saved subtask actions") { ChildTaskCompletionRecoveryView() }
         }
     }
 }
@@ -356,11 +356,11 @@ struct SavedChildTaskGroupsLink: View {
     var body: some View {
         Group {
             if let scope, store.childRecoveryPresenceScope == scope, store.hasSavedChildGroups {
-                Section { Button("Saved subtask selections", systemImage: "checkmark.circle") { showing = true }.accessibilityIdentifier("savedChildGroups") }
+                Section {
+                    Button("Saved subtask selections", systemImage: "checkmark.circle") { showing = true }.accessibilityIdentifier("savedChildGroups")
+                        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) { WorkflowShell(title: "Saved subtask selections") { ChildTaskGroupRecoveryView() } }
+                }
             }
-        }
-        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) {
-            WorkflowShell(title: "Saved subtask selections") { ChildTaskGroupRecoveryView() }
         }
     }
 }

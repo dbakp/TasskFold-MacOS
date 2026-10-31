@@ -12,11 +12,11 @@ struct SavedChildTaskFieldChangesLink: View {
     var body: some View {
         Group {
             if let scope, store.childRecoveryPresenceScope == scope, store.hasSavedChildFields {
-                Section { Button("Saved subtask changes", systemImage: "tray.and.arrow.up") { showing = true }.accessibilityIdentifier("savedChildFieldChanges") }
+                Section {
+                    Button("Saved subtask changes", systemImage: "tray.and.arrow.up") { showing = true }.accessibilityIdentifier("savedChildFieldChanges")
+                        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) { WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() } }
+                }
             }
-        }
-        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) {
-            WorkflowShell(title: "Saved subtask changes") { ChildTaskFieldRecoveryView() }
         }
     }
 }

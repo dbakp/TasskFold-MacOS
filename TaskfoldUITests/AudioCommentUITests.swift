@@ -1112,6 +1112,62 @@ extension TaskfoldMacUITests {
         childHomePress("childNativeRecovery", app)
         XCTAssertTrue(childSavedText("Review the polished child screen", app).waitForExistence(timeout: 10), app.debugDescription); XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildField-")).firstMatch.exists)
     }
+
+    @MainActor private func childPausedRecoveryLaunch(_ app: XCUIApplication, reset: Bool, draftOnly: Bool = false) throws {
+        try childGuard()
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-recovery-paused", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        if reset { app.launchArguments.append("--child-fields-native-reset") }
+        if draftOnly { app.launchArguments.append("--child-recovery-draft-only") }
+        else { app.launchArguments.append("--child-transfer-native") }
+        app.launch(); app.activate()
+        #if os(macOS)
+        throw XCTSkip("Paused Mac recovery uses authorized direct computer use")
+        #else
+        let settings = app.buttons["openSettings"]; XCTAssertTrue(settings.waitForExistence(timeout: 30), app.debugDescription); childPress(settings)
+        let account = app.buttons["settings-Account"]; childReveal(account, app); XCTAssertTrue(account.exists, app.debugDescription); childPress(account)
+        XCTAssertTrue(app.navigationBars["Account"].waitForExistence(timeout: 15), app.debugDescription)
+        #endif
+    }
+    @MainActor func testChildPausedRecoveryLinksKeepOriginalsAcrossColdReturn() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childPausedRecoveryLaunch(app, reset: true)
+        for (id, retry) in [("savedChildTransfers", "Retry original move"), ("savedChildAdoptions", "Retry original upgrade"), ("savedChildRepairs", "childRepairRetry"), ("savedChildStructure", "sendChildStructure-"), ("savedChildFieldChanges", "sendChildField-"), ("savedChildCompletions", "sendChildCompletion-"), ("savedChildGroups", "sendChildGroup-")] {
+            let link = app.buttons[id]; childReveal(link, app); XCTAssertTrue(link.exists, app.debugDescription); childPress(link)
+            if retry.hasPrefix("sendChild") {
+                let send = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", retry)).firstMatch
+                childReveal(send, app, diagnosticText: true); XCTAssertTrue(send.exists, app.debugDescription); XCTAssertFalse(send.isEnabled)
+            } else {
+                let send = app.buttons[retry]; childReveal(send, app, diagnosticText: true); XCTAssertTrue(send.exists, app.debugDescription); XCTAssertFalse(send.isEnabled)
+                let check = app.buttons["Check status"].firstMatch; XCTAssertTrue(check.exists); XCTAssertTrue(check.isEnabled)
+                if id == "savedChildTransfers" {
+                    childPress(check); XCTAssertTrue(app.staticTexts["Awaiting confirmation"].waitForExistence(timeout: 15), app.debugDescription)
+                }
+            }
+            structureSnapshot(app, "Paused recovery " + id)
+            if id == "savedChildRepairs" { childPress(app.buttons["Close"]) } else { childDone(app) }
+        }
+        app.terminate(); try childPausedRecoveryLaunch(app, reset: false)
+        for id in ["savedChildFieldChanges", "savedChildCompletions", "savedChildGroups", "savedChildTransfers", "savedChildAdoptions", "savedChildRepairs", "savedChildStructure"] {
+            let link = app.buttons[id]; childReveal(link, app); XCTAssertTrue(link.exists, app.debugDescription)
+        }
+        structureSnapshot(app, "Paused recovery links survive cold return")
+    }
+    @MainActor func testChildPausedRecoveryFindsPrivateDraftWithoutSavedCommand() throws {
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childPausedRecoveryLaunch(app, reset: true, draftOnly: true)
+        let link = app.buttons["savedChildStructure"]; childReveal(link, app); XCTAssertTrue(link.exists, app.debugDescription); childPress(link)
+        let draft = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@", "childStructureDraftTitle-", "Saved recovery draft")).firstMatch
+        childReveal(draft, app); XCTAssertTrue(draft.exists, app.debugDescription)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "sendChildStructure-")).firstMatch.exists)
+        structureSnapshot(app, "Paused private hierarchy draft remains discoverable")
+        app.terminate(); try childPausedRecoveryLaunch(app, reset: false, draftOnly: true)
+        childReveal(link, app); XCTAssertTrue(link.exists, app.debugDescription); childPress(link)
+        childReveal(draft, app); XCTAssertTrue(draft.exists, app.debugDescription)
+        structureSnapshot(app, "Private draft survives cold return with gates paused")
+    }
+
     @MainActor private func childCompletionListLaunch(_ app: XCUIApplication, reset: Bool, lost: Bool = false, groupLost: Bool = false, blocking: Bool = false) throws -> String {
         try childGuard()
         app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-opaque", "--child-fields-list-completion", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
