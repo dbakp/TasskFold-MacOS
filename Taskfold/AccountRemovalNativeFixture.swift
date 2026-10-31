@@ -7,11 +7,18 @@ import CryptoKit
 
 /// Reserved synthetic native Store proof. Never enabled by a normal/release bundle.
 enum AccountRemovalNativeFixture {
-    static let owner = "f084cafe-1111-4111-8111-000000000001"
-    static let other = "f084cafe-1111-4111-8111-000000000002"
+    static let owner = "f084cafe-1031-4111-8111-000000000001"
+    static let other = "f084cafe-1031-4111-8111-000000000002"
     static var enabled: Bool {
-        ["com.dbakp.taskfold.workflowtestsremoval", "com.dbakp.taskfold.mac.workflowtestsremoval"].contains(Bundle.main.bundleIdentifier ?? "") &&
+        ["com.dbakp.taskfold.workflowtestsremoval", "com.dbakp.taskfold.mac.workflowtestsremoval", "com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") &&
             ProcessInfo.processInfo.arguments.contains("--account-removal-proof")
+    }
+    static var coordination: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--account-removal-coordination") }
+    static var vaultService: String { (Bundle.main.bundleIdentifier ?? "isolated") + ".account-removal-native-proof" }
+    static var sessionService: String { (Bundle.main.bundleIdentifier ?? "isolated") + ".removal-proof-session" }
+    static func persistedSession() throws -> Session? {
+        guard let bytes = try CalendarKeychainIO(service: sessionService).read(key: "session") else { return nil }
+        return try TaskfoldJSONDecoder().decode(Session.self, from: bytes)
     }
     static var expiring: Bool { ProcessInfo.processInfo.arguments.contains("--account-removal-expired") }
     static var switching: Bool { ProcessInfo.processInfo.arguments.contains("--account-removal-switch") }
@@ -37,7 +44,13 @@ enum AccountRemovalNativeFixture {
             UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)
         }
         let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [AccountRemovalProofHTTP.self]
-        return Backend(configuration: ["URL": "https://removal-native.test", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: try! session(owner))
+        return Backend(configuration: ["URL": "https://removal-native.test", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: try! session(owner), persistSession: { session in
+            try await SessionPersistence.perform {
+                let io = CalendarKeychainIO(service: sessionService)
+                if let session { try io.write(TaskfoldJSONEncoder().encode(session), key: "session") }
+                else { try io.remove(key: "session") }
+            }
+        })
     }
 }
 final class AccountRemovalProofHTTP: URLProtocol, @unchecked Sendable {

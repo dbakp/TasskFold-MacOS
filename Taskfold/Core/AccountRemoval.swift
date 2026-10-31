@@ -41,9 +41,35 @@ struct AccountRemovalAuthorizationRequired: LocalizedError {
 /// server. A lost reply or ordinary sign-out cannot discard an unfinished command.
 actor AccountRemovalVault {
     private let io: any CalendarSecureItemIO
+    private let processLock: AutomationEnrollmentProcessLock
     private let key = "unfinished-removals-v1"
-    init(io: any CalendarSecureItemIO) { self.io = io }
-    func pending() throws -> [AccountRemovalCommand] {
+    // All accounts share one Keychain envelope, so they must share one lock.
+    // The service-specific parent directory separates independently owned apps.
+    static let coordinationResource = "00000000-0000-4000-8000-000000000000"
+    static func coordinationDirectory(service: String, root: URL = .applicationSupportDirectory) -> URL {
+        root.appendingPathComponent("AccountRemovalLocks", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("service", service), isDirectory: true)
+    }
+    init(io: any CalendarSecureItemIO, coordinationDirectory: URL? = nil, lockTimeout: TimeInterval = 2) {
+        precondition(coordinationDirectory != nil || !(io is CalendarKeychainIO), "Keychain removal recovery requires process coordination")
+        self.io = io
+        self.processLock = AutomationEnrollmentProcessLock(directory: coordinationDirectory, timeout: lockTimeout)
+    }
+    private func coordinated<T>(_ operation: () throws -> T) throws -> T {
+        var entered = false
+        do {
+            return try processLock.withExclusive(account: Self.coordinationResource) {
+                entered = true
+                return try operation()
+            }
+        } catch is CancellationError { throw CancellationError() }
+        catch {
+            guard entered else { throw AppFailure(message: "Account removal recovery is busy or unavailable. Try again shortly. Your saved data has been kept.") }
+            throw error
+        }
+    }
+    func pending() throws -> [AccountRemovalCommand] { try coordinated { try read() } }
+    private func read() throws -> [AccountRemovalCommand] {
         let stored: Data?
         do { stored = try io.read(key: key) }
         catch { throw AppFailure(message: "Account removal recovery could not be read securely. Unlock this device and try again.") }
@@ -62,46 +88,65 @@ actor AccountRemovalVault {
         } catch { throw AppFailure(message: "Account removal recovery could not be saved securely. Unlock this device and try again.") }
     }
     func command(account: String, origin: String) throws -> AccountRemovalCommand? {
-        guard let command = try pending().first(where: { $0.account == account }) else { return nil }
-        guard command.origin == origin else { throw AppFailure(message: "Return to this account's original server to finish removal.") }
-        return command
+        try coordinated {
+            guard let command = try read().first(where: { $0.account == account }) else { return nil }
+            guard command.origin == origin else { throw AppFailure(message: "Return to this account's original server to finish removal.") }
+            return command
+        }
     }
     func begin(_ command: AccountRemovalCommand) throws -> AccountRemovalCommand {
-        guard command.valid, !command.confirmed else { throw CancellationError() }
-        var commands = try pending()
-        if let old = commands.first(where: { $0.account == command.account }) {
-            guard old.origin == command.origin else { throw CancellationError() }; return old
+        try coordinated {
+            guard command.valid, !command.confirmed else { throw CancellationError() }
+            var commands = try read()
+            if let old = commands.first(where: { $0.account == command.account }) {
+                guard old.origin == command.origin else { throw CancellationError() }; return old
+            }
+            guard commands.count < 8 else { throw AppFailure(message: "Finish an existing account removal before starting another.") }
+            commands.append(command); try save(commands); return command
         }
-        guard commands.count < 8 else { throw AppFailure(message: "Finish an existing account removal before starting another.") }
-        commands.append(command); try save(commands); return command
     }
     /// Called only after the original endpoint explicitly refuses authorization.
     /// Never replace a confirmed command or reuse a different account's login.
     func renew(_ original: AccountRemovalCommand, with replacement: AccountRemovalCommand) throws -> AccountRemovalCommand {
-        guard !original.confirmed, replacement.valid, !replacement.confirmed,
-              original.account == replacement.account, original.origin == replacement.origin,
-              original.authorization != replacement.authorization else { throw CancellationError() }
-        var commands = try pending()
-        guard let index = commands.firstIndex(of: original) else { throw CancellationError() }
-        commands[index] = replacement; try save(commands); return replacement
+        try coordinated {
+            guard !original.confirmed, replacement.valid, !replacement.confirmed,
+                  original.account == replacement.account, original.origin == replacement.origin,
+                  original.authorization != replacement.authorization else { throw CancellationError() }
+            var commands = try read()
+            guard let index = commands.firstIndex(of: original) else { throw CancellationError() }
+            commands[index] = replacement; try save(commands); return replacement
+        }
     }
     /// The status proof must reach protected storage before execution can start.
     func prepare(_ original: AccountRemovalCommand, proof: String) throws -> AccountRemovalCommand {
-        let prepared = try original.prepared(with: proof)
-        var commands = try pending()
-        guard let index = commands.firstIndex(of: original) else { throw CancellationError() }
-        commands[index] = prepared; try save(commands); return prepared
+        try coordinated {
+            let prepared = try original.prepared(with: proof)
+            var commands = try read()
+            guard let index = commands.firstIndex(of: original) else { throw CancellationError() }
+            commands[index] = prepared; try save(commands); return prepared
+        }
     }
     func confirm(_ command: AccountRemovalCommand) throws -> AccountRemovalCommand {
-        var commands = try pending()
-        guard command.valid, command.statusProof != nil || command.version == 1 && command.confirmed,
-              let index = commands.firstIndex(of: command) else { throw CancellationError() }
-        commands[index].confirmed = true; try save(commands); return commands[index]
+        try coordinated {
+            var commands = try read()
+            guard command.valid, command.statusProof != nil || command.version == 1 && command.confirmed else { throw CancellationError() }
+            var confirmed = command; confirmed.confirmed = true
+            guard let index = commands.firstIndex(where: { $0 == command || $0 == confirmed }) else { throw CancellationError() }
+            // Another process may already have saved this exact confirmation.
+            if commands[index] == confirmed { return confirmed }
+            commands[index] = confirmed; try save(commands); return confirmed
+        }
     }
     func finish(_ command: AccountRemovalCommand) throws {
-        var commands = try pending()
-        guard command.confirmed, commands.contains(command) else { throw CancellationError() }
-        commands.removeAll { $0 == command }; try save(commands)
+        try coordinated {
+            guard command.valid, command.confirmed else { throw CancellationError() }
+            var commands = try read()
+            // Repeating an acknowledged cleanup must not overwrite an account
+            // added by another process, or acknowledge a newer command for A.
+            guard let index = commands.firstIndex(where: { $0.account == command.account }) else { return }
+            guard commands[index] == command else { throw CancellationError() }
+            commands.remove(at: index); try save(commands)
+        }
     }
 }
 

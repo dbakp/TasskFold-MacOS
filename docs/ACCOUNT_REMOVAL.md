@@ -2,6 +2,33 @@
 
 Current status (22 October 2026): protocol-2 service and matching migration are deployed. Both apps save a private status proof before deletion. Real iPhone Simulator recovery after deliberate expiry/pruning of its exact synthetic receipt passes on ordinary relaunch. This closes the deleted-account/lost-reply late-expiry gap for proof-bearing commands. Mac runtime/profile, already-expired pre-proof legacy commands, residual-file repair and wider fault/concurrency variants remain open. Earlier candidate/gap sections below are historical; the final status-proof milestone supersedes them only within this scope.
 
+
+## Coordinated private recovery — 31 October 2026
+
+The native journal now locks the entire shared Keychain envelope across app
+processes. Concurrent changes for different accounts cannot overwrite each
+other. Repeating an exact confirmation or finished-cleanup acknowledgement is
+idempotent; stale work cannot remove a newer command for the same account.
+
+The Store also recognizes another process's finished cleanup only with a
+successful protected-journal read, no pending entry for that account, the
+matching server origin and the existing server-confirmed disk fence. It clears
+only the removed account's session, preserving a newer account or local
+workspace. A missing receipt alone cannot authorize erasure. A failed clear of
+that same account retains recovery instead of silently acknowledging it.
+
+Both independently owned Core suites pass 30 selected removal-related checks,
+including six new coordination cases and an actual external process holding
+the lock. Native acceptance and its limits are recorded in
+[the current evidence](removal-coordination/verification.json). The Mac's
+current isolated host builds and signs, but its runtime attempt stops at the
+first protected-session write; genuine Mac profile/Keychain acceptance remains
+open. No release signing change or real account deletion is claimed here.
+
+Already-expired pre-proof attempts, residual server-file repair and wider fault
+variants remain open. Local copies are still kept when server removal cannot be
+proved; no fallback product choice is assumed.
+
 ## Confirmed gap — 22 October 2026
 
 Both native `Backend.deleteAccount()` implementations POST to `/functions/v1/delete-account`. The Taskfold project's live Edge Function inventory has no delete-account function; direct management lookup returned Function not found. The app therefore exposes an action whose server implementation is unavailable. This remains a P0 gap, separate from deferred distribution, general older-client rollout and remote-reminder work.

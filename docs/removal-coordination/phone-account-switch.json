@@ -1,0 +1,26 @@
+{
+  "checks": {
+    "backupKeysExistBeforeRemoval": true,
+    "encryptedRecoveryRoundtrip": true,
+    "heldOriginalRequest": true,
+    "otherMemoryKept": true,
+    "otherSessionKept": true,
+    "otherShareKept": true,
+    "otherWidgetKept": true,
+    "outsiderBackupKeyKept": true,
+    "outsiderCacheExact": true,
+    "outsiderRecoveryExact": true,
+    "ownedBackupKeyRemoved": true,
+    "ownedRecoveryRemoved": true,
+    "ownerCacheRemoved": true,
+    "privatePlacesScoped": true,
+    "privateSessionPersisted": true,
+    "recoveryCommandFinished": true,
+    "reservedRecoveryOnly": true,
+    "staleCacheWriteRefused": true,
+    "staleConfirmationRefused": true
+  },
+  "scenario": "late-account-switch",
+  "scope": "Real native Store and file/Keychain cleanup with synthetic accounts and simulated endpoint replies. Fixture-owned sharing directory; not live Auth/Storage or normal App Group acceptance.",
+  "status": "passed"
+}

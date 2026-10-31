@@ -1,0 +1,9 @@
+{
+  "phoneRestoredToOriginalState": "Shutdown",
+  "ownedTaskfoldAppProcessesRemaining": 0,
+  "newSimulatorsCreated": 0,
+  "otherSimulatorsAndDockerUntouched": true,
+  "temporaryResultBundlesCreated": 0,
+  "evidenceRetained": "Small JSON reports and compressed logs; existing build hosts/products reused",
+  "availableBytes": 25864601600
+}

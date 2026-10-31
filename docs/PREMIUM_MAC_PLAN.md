@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 31 October 2026 · Coordinated account-removal recovery
+
+Private removal-journal transactions now coordinate across processes, and the Store can acknowledge cleanup completed elsewhere without clearing a newer cloud account or local workspace. Thirty scoped Core checks pass, including six new coordination cases and a real external-process lock. The full Mac app builds and signs. Its current host stops at a protected-session Keychain write, so native Mac acceptance remains open; no signing workaround or production data access is substituted. See [current scope](removal-coordination/README.md).
+
 ## 31 October 2026 · Combined completion Redo
 
 The isolated Mac app now passes combined task/subtask completion, Command-Z, Command-Shift-Z, another Command-Z and cold return. Native text Undo/Redo remains usable when moving between a field and the task list; command validation observes editor/history changes. The corresponding phone/tablet combined journeys also pass. Broader migration/other-operation history remains unfinished and gated. [Recorded scope](completion-redo/README.md).

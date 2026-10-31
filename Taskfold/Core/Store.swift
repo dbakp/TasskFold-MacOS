@@ -2029,7 +2029,16 @@ final class Store {
     @ObservationIgnored lazy var emailAddressVault = EmailAddressVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".email-addresses"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("EmailAddressLocks", isDirectory: true))
     @ObservationIgnored lazy var webhookEnrollmentVault = WebhookEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".webhook-enrollment"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("WebhookEnrollmentLocks", isDirectory: true))
     @ObservationIgnored lazy var automationEnrollmentVault = AutomationEnrollmentVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".automation-enrollment"), coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("AutomationEnrollmentLocks", isDirectory: true))
-    @ObservationIgnored private lazy var accountRemovalVault = AccountRemovalVault(io: CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".account-removal"))
+    private var accountRemovalService: String {
+        #if DEBUG
+        if AccountRemovalNativeFixture.enabled { return AccountRemovalNativeFixture.vaultService }
+        #endif
+        return (Bundle.main.bundleIdentifier ?? "com.taskfold") + ".account-removal"
+    }
+    private func accountRemovalCoordinationDirectory() -> URL {
+        AccountRemovalVault.coordinationDirectory(service: accountRemovalService)
+    }
+    @ObservationIgnored private lazy var accountRemovalVault = AccountRemovalVault(io: CalendarKeychainIO(service: accountRemovalService), coordinationDirectory: accountRemovalCoordinationDirectory())
     private(set) var accountRemovalStatus: String?
     private var removalPendingAccounts = Set<String>()
     private var removalRecoveryRunning = false
@@ -2064,15 +2073,50 @@ final class Store {
         removalRecoveryRunning = true; defer { removalRecoveryRunning = false; Task { await reschedule() } }
         do {
             let commands = try await accountRemovalVault.pending()
-            guard !commands.isEmpty else { return }
             var needsAttention = false
             for command in commands {
                 markRemovalPending(command.account)
                 do { try await finishAccountRemoval(command) }
-                catch { needsAttention = true }
+                catch {
+                    if let latest = try? await accountRemovalVault.pending(),
+                       await acknowledgeRemovalFinishedElsewhere(account: command.account, origin: command.origin, pending: latest) {
+                        continue
+                    }
+                    needsAttention = true
+                }
             }
-            if needsAttention { accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish." }
+            // A may have finished elsewhere while B still has a pending command.
+            // Reconcile remembered accounts after every pass, not only an empty
+            // initial journal, and never infer completion from absence alone.
+            let latest = try await accountRemovalVault.pending()
+            if let origin = try? backend.accountRemovalOrigin {
+                for account in removalPendingAccounts.union([userID]) {
+                    _ = await acknowledgeRemovalFinishedElsewhere(account: account, origin: origin, pending: latest)
+                }
+            }
+            if needsAttention || !removalPendingAccounts.isEmpty {
+                accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+            } else { accountRemovalStatus = nil }
         } catch { accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish." }
+    }
+    /// A successful, locked vault read plus the server-confirmed disk fence
+    /// can acknowledge another process's completed cleanup. A missing receipt
+    /// alone never permits erasure or a claim that server removal succeeded.
+    private func acknowledgeRemovalFinishedElsewhere(account: String, origin: String, pending: [AccountRemovalCommand]) async -> Bool {
+        guard let id = UUID(uuidString: account), id.uuidString.lowercased() == account,
+              origin == (try? backend.accountRemovalOrigin), !pending.contains(where: { $0.account == account }),
+              AccountRemovalDisk(directory: cacheURL.deletingLastPathComponent(), account: account).removed else { return false }
+        if backend.session?.user.id == account {
+            do { try await backend.clearSession() }
+            catch { guard backend.session?.user.id != account else { return false } }
+            guard backend.session?.user.id != account else { return false }
+        }
+        // Preserve a newer cloud account or the user's local workspace.
+        if backend.session == nil, !localMode { resetRemovedWorkspaceIfSignedOut() }
+        removalPendingAccounts.remove(account)
+        UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)
+        if removalPendingAccounts.isEmpty { accountRemovalStatus = nil }
+        return true
     }
     private func markRemovalPending(_ account: String) {
         removalPendingAccounts.insert(account)
@@ -2131,7 +2175,10 @@ final class Store {
         if backend.session?.user.id == account {
             // Confirmed Auth removal covers every incarnation of this account.
             // Backend's conditional clear still protects a concurrent B sign-in.
-            do { try await backend.clearSession() } catch is CancellationError { }
+            do { try await backend.clearSession() } catch is CancellationError {
+                guard backend.session?.user.id != account else { throw CancellationError() }
+            }
+            guard backend.session?.user.id != account else { throw CancellationError() }
             resetRemovedWorkspaceIfSignedOut()
         }
         try await automationEnrollmentVault.removeAccount(account, origin: command.origin)
@@ -4516,10 +4563,12 @@ extension Store {
         }
         do {
             let account = AccountRemovalNativeFixture.owner, outside = AccountRemovalNativeFixture.other
-            let io = CalendarKeychainIO(service: (Bundle.main.bundleIdentifier ?? "") + ".account-removal")
+            let io = CalendarKeychainIO(service: accountRemovalService)
             let old = try await accountRemovalVault.pending()
             try require("reservedRecoveryOnly", old.allSatisfy { $0.account == account || $0.account == outside })
             try io.remove(key: "unfinished-removals-v1")
+            try await backend.accept(AccountRemovalNativeFixture.session(account))
+            try require("privateSessionPersisted", try AccountRemovalNativeFixture.persistedSession()?.user.id == account)
             var a = Record.task(user: account); a["title"] = .string("Synthetic owner work")
             snapshot = Snapshot(tables: ["tasks": [a]])
             localMode = false; signedIn = true; workspaceCacheReadable = true
@@ -4586,7 +4635,7 @@ extension Store {
                 try require("failedRequestKeepsSession", backend.session?.user.id == account && signedIn)
                 let pausedWidget = try TaskfoldJSONDecoder().decode([String: JSON].self, from: widgetActionDisk().read().data!)
                 try require("pendingWidgetPrivate", pausedWidget["account"] == .string("") && pausedWidget["tasks"]?.list.isEmpty == true)
-                let restarted = AccountRemovalVault(io: io), pending = try await restarted.pending()
+                let restarted = AccountRemovalVault(io: io, coordinationDirectory: accountRemovalCoordinationDirectory()), pending = try await restarted.pending()
                 try require("originalAuthorizationDurable", pending.count == 1 && pending.first?.authorization == "synthetic-A" && pending.first?.confirmed == false)
                 try require("pendingWorkspaceQuiescent", accountRemovalBlocked && !commit([Mutation(table: "tasks", recordID: a.id, method: "PATCH", fields: ["title": .string("Must not save")])]))
                 await resumeAccountRemovals()
@@ -4608,6 +4657,60 @@ extension Store {
                 try await backend.accept(AccountRemovalNativeFixture.session(account))
                 await authenticated()
                 try require("lateRemovedAccountCannotReopen", backend.session == nil && !signedIn)
+            }
+            if AccountRemovalNativeFixture.coordination {
+                let origin = try backend.accountRemovalOrigin
+                // This Store still remembers A; a different vault instance has
+                // already acknowledged the exact server-confirmed cleanup.
+                try await backend.accept(AccountRemovalNativeFixture.session(account))
+                snapshot = before; signedIn = true; localMode = false
+                markRemovalPending(account)
+                await resumeAccountRemovals()
+                try require("finishedElsewhereClearsMatchingSession", backend.session == nil && !signedIn && snapshot == Snapshot() && accountRemovalStatus == nil)
+                try require("finishedElsewhereClearsPrivateSession", try AccountRemovalNativeFixture.persistedSession() == nil)
+                try require("finishedElsewhereDoesNotRepeatServerCall", AccountRemovalProofHTTP.count == 2)
+
+                let pendingB = try AccountRemovalCommand(account: outside, origin: origin, authorization: "synthetic-B")
+                _ = try await accountRemovalVault.begin(pendingB)
+                try await backend.accept(AccountRemovalNativeFixture.session(account))
+                snapshot = before; signedIn = true; localMode = false
+                markRemovalPending(account)
+                await resumeAccountRemovals()
+                let remainingB = try await accountRemovalVault.pending()
+                try require("finishedElsewhereWhileAnotherRemovalRemains", backend.session == nil && !signedIn && snapshot == Snapshot() && !removalPendingAccounts.contains(account) && removalPendingAccounts.contains(outside) && remainingB == [pendingB] && accountRemovalStatus != nil)
+                try require("otherPendingRemovalKeepsItsFiles", try Data(contentsOf: bCache) == bBytes && Data(contentsOf: outsideBackup.file(outsideEntry)) == outsideCiphertext)
+                // Only this reserved fixture's exact synthetic B command is
+                // discarded after the preservation assertion, never in app code.
+                try io.remove(key: "unfinished-removals-v1")
+                removalPendingAccounts.remove(outside)
+                UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + outside)
+                accountRemovalStatus = nil
+
+                try await backend.accept(AccountRemovalNativeFixture.session(outside))
+                await authenticated()
+                let active = snapshot
+                markRemovalPending(account)
+                await resumeAccountRemovals()
+                try require("finishedElsewherePreservesNewAccount", backend.session?.user.id == outside && signedIn && snapshot == active && accountRemovalStatus == nil)
+                try require("finishedElsewherePreservesNewPrivateSession", try AccountRemovalNativeFixture.persistedSession()?.user.id == outside)
+
+                try await backend.clearSession()
+                localMode = true; signedIn = true
+                var local = Record.task(user: userID); local["title"] = .string("Keep local workspace")
+                snapshot = Snapshot(tables: ["tasks": [local]])
+                let localSnapshot = snapshot
+                markRemovalPending(account)
+                await resumeAccountRemovals()
+                try require("finishedElsewherePreservesLocalWorkspace", localMode && signedIn && snapshot == localSnapshot && accountRemovalStatus == nil)
+
+                markRemovalPending(outside)
+                await resumeAccountRemovals()
+                try require("missingReceiptAloneDoesNotAcknowledge", removalPendingAccounts.contains(outside) && accountRemovalStatus != nil && snapshot == localSnapshot && FileManager.default.fileExists(atPath: bCache.path))
+                removalPendingAccounts.remove(outside)
+                UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + outside)
+                accountRemovalStatus = nil
+                localMode = false; signedIn = false; snapshot = Snapshot()
+                UserDefaults.standard.set(false, forKey: "localMode")
             }
             // Explicitly remove only the synthetic outsider's test key/session
             // after preservation is proved; do not leave credentials behind.

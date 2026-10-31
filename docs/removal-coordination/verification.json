@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-31",
+  "milestone": "Coordinated account-removal journal and cross-process Store reconciliation",
+  "scope": "Local journal/Store recovery; no server protocol, deployed service, schema or release change",
+  "core": {
+    "selectedTests": 30,
+    "failures": 0,
+    "newCoordinationTests": 6,
+    "externalProcessLock": true,
+    "evidence": "core.log.gz"
+  },
+  "nativePhone": [
+    {
+      "scenario": "finished-elsewhere",
+      "passedAssertions": 32,
+      "evidence": "phone-finished-elsewhere.json"
+    },
+    {
+      "scenario": "expired-authorization",
+      "passedAssertions": 17,
+      "evidence": "phone-expired-authorization.json"
+    },
+    {
+      "scenario": "account-switch",
+      "passedAssertions": 19,
+      "evidence": "phone-account-switch.json"
+    }
+  ],
+  "mac": {
+    "finalBuild": "passed",
+    "strictSignature": "passed",
+    "runtime": "not accepted",
+    "attemptedPhase": "v1",
+    "finalBuildPhase": "v2",
+    "limitation": "Earlier runtime attempt stops at first protected-session Keychain write in this test host. Final Store app behavior is verified in iPhone Simulator; genuine Mac private-Keychain/profile/Auth/Storage journey remains open.",
+    "evidence": "mac-keychain-block.json"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/AccountRemoval.swift": "ba2ee4a3cacc1adda3df6a5e24eff44bce512dd109af9338fbb5b6b3e117bdc9",
+    "Taskfold/Core/Store.swift": "fd96cd91f6409aa7b17734fcb5f772218582cc311591826d4bf96aeaf024424c",
+    "Taskfold/AccountRemovalNativeFixture.swift": "e841c0344dfc3fa9c781d2acff59f96423dc3f36c503674e256576dac5e575cd",
+    "TaskfoldTests/AccountRemovalCoordinationTests.swift": "fc7faeff2fb0084b72726a149a377da4a157c52cc4f5e3f19dcfe98e82302cee"
+  },
+  "hostSourceFidelity": true,
+  "finalBinarySHA256": {
+    "Contents/MacOS/Taskfold.debug.dylib": "024216d3d18a4c00c6580f703a55d9b9b00dbad7402d725bf050729a06d9d938",
+    "Contents/MacOS/Taskfold": "481265d7c48fd2af8ccc173a9ed1b4c2a4fe369e1b6d74bf4897c087d705de25"
+  },
+  "remaining": [
+    "Genuine Mac private-Keychain/profile/deletion acceptance",
+    "Unprovable expired pre-proof legacy attempts; no fallback choice assumed",
+    "Residual server-file repair",
+    "Wider failure/concurrency variants"
+  ],
+  "deferralsUnchanged": true
+}
