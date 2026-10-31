@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Mixed task and subtask selections",
-  "latest": "Mixed-selection preflight is implemented in both clients: it preserves selection order, checks root/child identities and scopes, and protects recurring-task successor content. It also fixes skipped fresh checks for selected rows already completed. Atomic mixed sending, recovery and whole-selection Undo remain to connect; normal use stays disabled.",
+  "focus": "P2 · Mixed completion server checks",
+  "latest": "Mixed selection preparation is built. Parent-task observations and server validation now pass 65 database checks in each repo, including recurring sources, permissions, stale completion, busy rows and exact content. Atomic mixed writing, client integration, recovery and whole-selection Undo remain; normal use stays disabled.",
   "next": [
-    "Implement the atomic mixed root/subtask completion contract, saved recovery and whole-selection Undo; then full Redo/history, indexed mapping, custody and broader migration acceptance.",
+    "Connect typed parent observations to the atomic mixed root/subtask write contract, then saved recovery and whole-selection Undo. Full Redo/history, indexed mapping, custody and wider migration acceptance remain.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Recorded repair, exact metadata, child fields, single/bulk completion and saved Undo pass in scope. Paused-feature recovery and private drafts pass native cold return. Mixed-selection preflight is built; atomic mixed sending/recovery/Undo, full Redo/history, indexed mapping, custody and broader acceptance remain. Ordinary use stays disabled."
+              "detail": "Recorded repair, child fields/completion and saved Undo pass in scope. Paused recovery passes native cold return. Mixed-selection preparation and parent server observations/guards are built. Atomic mixed writes, client integration, recovery/Undo, full Redo/history, mapping, custody and wider acceptance remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -602,7 +602,9 @@
             "child-recovery-discovery/README.md",
             "child-recovery-discovery/verification.json",
             "child-mixed-selection-preflight/verification.json",
-            "child-mixed-selection-preflight/README.md"
+            "child-mixed-selection-preflight/README.md",
+            "completion-selection-roots/verification.json",
+            "completion-selection-roots/README.md"
           ],
           "focus": true
         },
@@ -677,7 +679,7 @@
     "child-completion-batches/verification.json": "2ec6ab0db18232207cd897ca24d63fa0769d0a32af9f64dadd0b99afdf072fcb",
     "child-completion-group-recovery/verification.json": "c07a89832e98cedb3cbff59a496d56970b79a83eb776aded0abe38ab42fec5ab",
     "child-list-completion/verification.json": "44bbe137ce3108669564a22ad74abd4d04c843f28ff4460dd66f5da89a31e0b7",
-    "child-mixed-selection-preflight/README.md": "7b62ba45bed8130e2a2971d05c800eed38e6e4582ff40e1c03b5a973f21e1a39",
+    "child-mixed-selection-preflight/README.md": "ec9eec0fb95bfa9080058a8ef73c66deb196b2e165e90ebdb40c772fb7a28c10",
     "child-mixed-selection-preflight/verification.json": "6bc57dcccf9543673b4508c0285e47ecbe6097b5d05b3c025ce6c60018b3abc8",
     "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
     "child-recovery-discovery/README.md": "968b95a9984c6da5640108ad0f94145a4aa77d2ba500833d516770af80fbce7a",
@@ -698,6 +700,8 @@
     "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
     "child-task-structure-drafts/verification.json": "6f91cbc365f58a184bcf7f39a2dbdbeaa87fcb5b801fda8fa955d192c7ab9f71",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",
+    "completion-selection-roots/README.md": "b5836c4a9c8b1444d9f795978b79baf6924db8a7482daf789f3e8d9dbb6d9b26",
+    "completion-selection-roots/verification.json": "ca845522b8a90cad11dceebab32923dee268c7820dfe7422d5264a3e2baa9d90",
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
