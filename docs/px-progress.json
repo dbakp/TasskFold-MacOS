@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Saved recovery stays available when paused",
-  "latest": "All seven saved subtask action types remain discoverable with their feature switches off, including a private draft with no saved command. Mac/iPhone/iPad cold-return checks pass; original requests and task content are preserved. The instant-closing iPhone recovery sheet is fixed. Mixed selections, full Redo/history and the wider migration checks remain; ordinary use stays disabled.",
+  "focus": "P2 · Mixed task and subtask selections",
+  "latest": "Mixed-selection preflight is implemented in both clients: it preserves selection order, checks root/child identities and scopes, and protects recurring-task successor content. It also fixes skipped fresh checks for selected rows already completed. Atomic mixed sending, recovery and whole-selection Undo remain to connect; normal use stays disabled.",
   "next": [
-    "Implement mixed root/subtask selections, then full Redo/history, indexed mapping, custody and broader migration acceptance.",
+    "Implement the atomic mixed root/subtask completion contract, saved recovery and whole-selection Undo; then full Redo/history, indexed mapping, custody and broader migration acceptance.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Recorded repair, exact metadata, child fields, single/bulk completion and saved Undo pass in scope. Paused-feature recovery now passes Mac/iPhone/iPad discovery and cold return, including private drafts; duplicate sheet presentation is fixed. Mixed actions, full Redo/history, indexed mapping, custody and broader acceptance remain. Ordinary use stays disabled."
+              "detail": "Recorded repair, exact metadata, child fields, single/bulk completion and saved Undo pass in scope. Paused-feature recovery and private drafts pass native cold return. Mixed-selection preflight is built; atomic mixed sending/recovery/Undo, full Redo/history, indexed mapping, custody and broader acceptance remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -600,7 +600,9 @@
             "child-completion-group-recovery/verification.json",
             "child-bulk-list-completion/verification.json",
             "child-recovery-discovery/README.md",
-            "child-recovery-discovery/verification.json"
+            "child-recovery-discovery/verification.json",
+            "child-mixed-selection-preflight/verification.json",
+            "child-mixed-selection-preflight/README.md"
           ],
           "focus": true
         },
@@ -675,6 +677,8 @@
     "child-completion-batches/verification.json": "2ec6ab0db18232207cd897ca24d63fa0769d0a32af9f64dadd0b99afdf072fcb",
     "child-completion-group-recovery/verification.json": "c07a89832e98cedb3cbff59a496d56970b79a83eb776aded0abe38ab42fec5ab",
     "child-list-completion/verification.json": "44bbe137ce3108669564a22ad74abd4d04c843f28ff4460dd66f5da89a31e0b7",
+    "child-mixed-selection-preflight/README.md": "7b62ba45bed8130e2a2971d05c800eed38e6e4582ff40e1c03b5a973f21e1a39",
+    "child-mixed-selection-preflight/verification.json": "6bc57dcccf9543673b4508c0285e47ecbe6097b5d05b3c025ce6c60018b3abc8",
     "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
     "child-recovery-discovery/README.md": "968b95a9984c6da5640108ad0f94145a4aa77d2ba500833d516770af80fbce7a",
     "child-recovery-discovery/verification.json": "8fb5c8402ad281205b49e2357e75cd9e916f8e91b6b129ffbf8c0fb8c04461a6",

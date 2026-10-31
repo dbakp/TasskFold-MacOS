@@ -1105,24 +1105,136 @@ struct ChildTaskActionAdmission: Sendable {
     }
 }
 
-struct ChildTaskListBatchIntent: Sendable {
+/// A frozen selection, including rows already in the desired state. Preparation
+/// has no write/queue API: mixed results require one atomic executor, never a
+/// loop of legacy root mutations followed by independent child requests.
+struct TaskListCompletionSelectionIntent: Sendable {
+    struct Root: Sendable {
+        let source: Record
+        private let baseline: [String: JSON]
+        private static let identity: Set<String> = ["id", "user_id", "task_generation", "project_id", "section_id"]
+        private static let cohort: Set<String> = ["completed", "completed_at", "completion_version", "is_heading", "is_recurring"]
+        init(task: Record, root: Record) throws {
+            guard TeamProjectValue.id(root.id), TaskKind.mayComplete(root) else { throw TaskListCompletionSelectionIntent.invalid }
+            _ = try TeamProjectValue.optionalID(root.fields["task_generation"] ?? .null)
+            _ = try TeamProjectValue.optionalID(root.fields["project_id"] ?? .null)
+            source = root; baseline = Self.values(root)
+            guard AuthoredValueComparison.exactJSON(.object(Self.values(task)), .object(baseline)) else { throw TaskListCompletionSelectionIntent.invalid }
+            try Self.validate(root)
+        }
+        private static func values(_ root: Record) -> [String: JSON] {
+            // Completing a recurring root can copy its authored content into a
+            // successor, so its entire source must still agree. Ordinary roots
+            // permit unrelated title/note edits and compare only their cohort.
+            root["is_recurring"].flag ? root.fields : root.fields.filter { identity.union(cohort).contains($0.key) }
+        }
+        private static func validate(_ root: Record) throws {
+            for key in ["completed", "is_heading", "is_recurring"] {
+                if let value = root.fields[key], value != .null { guard case .bool = value else { throw TaskListCompletionSelectionIntent.invalid } }
+            }
+            if root.completed {
+                guard case .string(let timestamp)? = root.fields["completed_at"], timestamp.utf8.count <= 64,
+                      TaskPlanning.instant(timestamp) != nil else { throw TaskListCompletionSelectionIntent.invalid }
+            } else {
+                guard root.fields["completed_at"] == nil || root.fields["completed_at"] == .null else { throw TaskListCompletionSelectionIntent.invalid }
+            }
+            if let value = root.fields["completion_version"] {
+                guard case .number(let version) = value, version.isFinite, version >= 0,
+                      version <= 9_007_199_254_740_990, version.rounded(.down) == version else { throw TaskListCompletionSelectionIntent.invalid }
+            }
+        }
+        func current(_ root: Record) throws -> Record {
+            try Self.validate(root)
+            guard TaskKind.mayComplete(root), AuthoredValueComparison.exactJSON(.object(Self.values(root)), .object(baseline)) else { throw TaskListCompletionSelectionIntent.invalid }
+            return root
+        }
+    }
+    enum Member: Sendable {
+        case root(Root), child(ChildTaskListCompletionIntent)
+        var rootID: String { switch self { case .root(let value): value.source.id; case .child(let value): value.opening.rootID } }
+        var completed: Bool { switch self { case .root(let value): value.source.completed; case .child(let value): value.completed } }
+    }
+    struct Prepared: Sendable {
+        enum Member: Sendable { case root(Record), child(ChildTaskCompletionCommand) }
+        enum Observation: Sendable { case root(Record), child(ChildTaskRecordRead, key: String) }
+        let scope: ChildTaskFieldClientScope
+        let completed: Bool
+        /// Every selected row, in user order, including no-ops. A future atomic
+        /// executor must carry these guards as well as the changed members.
+        let observations: [Observation]
+        /// Keeps the user's order across both kinds; contains changed rows only.
+        let members: [Member]
+    }
+    static var invalid: AppFailure { .init(message: "This selection changed. Review its current tasks before trying again.") }
     let scope: ChildTaskFieldClientScope
+    let completed: Bool
+    let members: [Member]
+    var rootIDs: Set<String> { Set(members.map(\.rootID)) }
+    var childMembers: [ChildTaskListCompletionIntent] { members.compactMap { if case .child(let value) = $0 { return value }; return nil } }
+    init(tasks: [Record], roots: [Record], projects: [Record], scope: ChildTaskFieldClientScope, completed: Bool) throws {
+        try TeamOrganizationValue.scope(account: scope.account, origin: scope.origin)
+        guard (1...32).contains(tasks.count), Set(tasks.map(\.id)).count == tasks.count else { throw Self.invalid }
+        let grouped = Dictionary(grouping: roots, by: \.id)
+        let members = try tasks.map { task -> Member in
+            let path = SubtaskTree.referencePath(task.id)
+            let id = path?.first ?? task.id
+            guard !task.id.hasPrefix("subtask:") || path != nil,
+                  let matches = grouped[id], matches.count == 1,
+                  let root = matches.first else { throw Self.invalid }
+            try Self.project(root, projects: projects)
+            if path != nil { return .child(try .init(task: task, root: root, projects: projects, scope: scope)) }
+            return .root(try .init(task: task, root: root))
+        }
+        guard members.contains(where: { $0.completed != completed }) else { throw Self.invalid }
+        self.scope = scope; self.completed = completed; self.members = members
+    }
+    private static func project(_ root: Record, projects: [Record]) throws {
+        let id = try TeamProjectValue.optionalID(root.fields["project_id"] ?? .null)
+        guard let id else { return }
+        guard projects.filter({ $0.id == id }).count == 1, !ProjectOrganization.archivedIDs(in: projects).contains(id) else { throw Self.invalid }
+    }
+    func prepare(roots: [Record], projects: [Record], reads: [String: ChildTaskRecordRead], current: ChildTaskFieldClientScope) throws -> Prepared {
+        guard current == scope else { throw CancellationError() }
+        let grouped = Dictionary(grouping: roots, by: \.id)
+        var resolved: [Prepared.Member] = [], observations: [Prepared.Observation] = []
+        for member in members {
+            guard let matches = grouped[member.rootID], matches.count == 1, let root = matches.first else { throw Self.invalid }
+            try Self.project(root, projects: projects)
+            switch member {
+            case .root(let intent):
+                let fresh = try intent.current(root)
+                observations.append(.root(fresh))
+                if member.completed != completed { resolved.append(.root(fresh)) }
+            case .child(let intent):
+                guard let read = reads[member.rootID],
+                      AuthoredValueComparison.exactJSON(.object(root.fields), .object(read.context.root.fields)) else { throw Self.invalid }
+                let key = try intent.key(in: read) // Validate even a selected no-op.
+                observations.append(.child(read, key: key))
+                if member.completed != completed {
+                    resolved.append(.child(try .init(ChildTaskCompletionDraft(read: read, key: key, action: completed ? .complete : .reopen))))
+                }
+            }
+        }
+        return .init(scope: scope, completed: completed, observations: observations, members: resolved)
+    }
+}
+
+struct ChildTaskListBatchIntent: Sendable {
+    private let selection: TaskListCompletionSelectionIntent
+    private let projects: [Record]
+    let scope: ChildTaskFieldClientScope
+    /// Includes selected no-ops so their fresh read cannot be skipped.
     let members: [ChildTaskListCompletionIntent]
     let completed: Bool
     init(tasks: [Record], roots: [Record], projects: [Record], scope: ChildTaskFieldClientScope, completed: Bool) throws {
-        guard (1...32).contains(tasks.count), Set(tasks.map(\.id)).count == tasks.count,
-              tasks.allSatisfy({ SubtaskTree.referencePath($0.id) != nil && TaskKind.mayComplete($0) }) else { throw ChildTaskCompletionBatchCommand.invalid }
-        let members = try tasks.map { task -> ChildTaskListCompletionIntent in
-            guard let id = SubtaskTree.referencePath(task.id)?.first, let root = roots.first(where: { $0.id == id }) else { throw ChildTaskCompletionBatchCommand.invalid }
-            return try ChildTaskListCompletionIntent(task: task, root: root, projects: projects, scope: scope)
-        }.filter { $0.completed != completed }
-        guard !members.isEmpty else { throw AppFailure(message: completed ? "These subtasks are already completed." : "These subtasks are already open.") }
-        self.scope = scope; self.members = members; self.completed = completed
+        guard tasks.allSatisfy({ SubtaskTree.referencePath($0.id) != nil }) else { throw ChildTaskCompletionBatchCommand.invalid }
+        selection = try .init(tasks: tasks, roots: roots, projects: projects, scope: scope, completed: completed)
+        members = selection.childMembers; self.projects = projects; self.scope = scope; self.completed = completed
     }
     func command(reads: [String: ChildTaskRecordRead]) throws -> ChildTaskCompletionBatchCommand {
-        let commands = try members.map { member -> ChildTaskCompletionCommand in
-            guard let read = reads[member.opening.rootID] else { throw ChildTaskCompletionBatchCommand.invalid }
-            return try .init(ChildTaskCompletionDraft(read: read, key: member.key(in: read), action: completed ? .complete : .reopen))
+        let prepared = try selection.prepare(roots: reads.values.map { $0.context.root }, projects: projects, reads: reads, current: scope)
+        let commands = try prepared.members.map { member -> ChildTaskCompletionCommand in
+            guard case .child(let command) = member else { throw ChildTaskCompletionBatchCommand.invalid }; return command
         }
         return try .init(account: scope.account, origin: scope.origin, items: commands)
     }

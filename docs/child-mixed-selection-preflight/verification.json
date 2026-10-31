@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-31",
+  "scope": "Frozen root/child selection preflight and selected-no-op fresh-read protection",
+  "repository": "TasskFold-MacOS",
+  "core": {
+    "runner": "Mac-hosted Swift package, independent repository sources",
+    "filter": "ChildTaskListCompletionTests|ChildTaskCompletionBatch|ChildTaskCompletionDraft|ChildTaskCompletionCommand|MixedSelectionTests|TaskKindTests|CompletionRevision",
+    "accepted": 221,
+    "failures": 0,
+    "skips": 0,
+    "newCases": [
+      "testChildOnlyBatchStillReadsAndValidatesSelectedNoOps",
+      "testMixedPreflightAllowsUnrelatedOrdinaryRootEditsAndRetainsFreshContent",
+      "testMixedPreflightCanReopenCompletedRootAndChildTogether",
+      "testMixedPreflightRefusesAllNoOpsWithoutCreatingAnAction",
+      "testMixedPreflightRejectsACompletionCycleEvenWhenStatusReturnsToBaseline",
+      "testMixedPreflightRejectsChangedLaterRootWithoutReturningEarlierChild",
+      "testMixedPreflightRejectsDuplicateMalformedAndOversizedSelection",
+      "testMixedPreflightRejectsHeadingAndStaleSelectedRootCohort",
+      "testMixedPreflightRejectsInconsistentRootCompletionTimestamp",
+      "testMixedPreflightRejectsInvalidCompletionTypesAndExhaustedRootVersions",
+      "testMixedPreflightRejectsMissingDuplicateOrArchivedProject",
+      "testMixedPreflightRejectsMissingOrDuplicateAccessibleRoot",
+      "testMixedPreflightRejectsReplacedMovedOrReownedRoots",
+      "testMixedPreflightRequiresCurrentScopeAndReadScope",
+      "testMixedPreflightRequiresOneConsistentRootForChildRead",
+      "testMixedPreflightRetainsParentAndChildOrderWithoutLegacyMutations",
+      "testMixedPreflightSupportsIndependentRootAndSubtaskBranches",
+      "testMixedPreflightValidatesRootNoOpBeforeOmittingIt",
+      "testRecurringMixedPreflightDoesNotCopyAStaleSuccessorSource",
+      "testRootOnlyPreflightDoesNotRequireAnIndependentChildRead"
+    ],
+    "newCaseCount": 20,
+    "selectedListCaseCount": 39,
+    "log": "accepted-core.log.gz",
+    "uncompressedLogSHA256": "f1ab375b6712d4443be04f999b306ba13eb6c0e43c79a15c2eeba32be2cb0a88",
+    "durationSeconds": 83.768,
+    "phases": [
+      {
+        "scope": "Broader related completion/selection regression before final observation retention",
+        "accepted": 221,
+        "failures": 0,
+        "log": "accepted-core.log.gz",
+        "sourceSHA256": {
+          "Taskfold/Core/ChildTaskCompletionCommands.swift": "ae87d8deb83310678cfb8d5db3d648c1a20b293128756bf46cf26658302965b0",
+          "TaskfoldTests/ChildTaskListCompletionTests.swift": "39052020ea341cc7dd316c1cf2ad4f837b68a3850bced988aabc9b30b105db4b"
+        }
+      },
+      {
+        "scope": "Final selection preflight including retained no-op observations",
+        "accepted": 39,
+        "failures": 0,
+        "overlapWithEarlierPhase": 39,
+        "durationSeconds": 0.086,
+        "log": "final-observations-core.log.gz",
+        "uncompressedLogSHA256": "411379510b6a9dd7422df701d7e54aaf8589df8b256e78823cf5b44f1bcd72e3",
+        "sourceSHA256": {
+          "Taskfold/Core/ChildTaskCompletionCommands.swift": "f78c611594b717f2474fa0fc9770f672f52d6f7a4f34c3a651faf757a0a4cf06",
+          "TaskfoldTests/ChildTaskListCompletionTests.swift": "e950d56d0fe73e7ba168dd1923a35cf7335b82497c9f6137b0a16f7def1a5424"
+        }
+      }
+    ],
+    "acceptance": "221 distinct scoped cases across the 221-case broad phase and overlapping final 39-case preflight phase; not 260 distinct cases."
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "f78c611594b717f2474fa0fc9770f672f52d6f7a4f34c3a651faf757a0a4cf06",
+    "TaskfoldTests/ChildTaskListCompletionTests.swift": "e950d56d0fe73e7ba168dd1923a35cf7335b82497c9f6137b0a16f7def1a5424"
+  },
+  "earlierPhases": [
+    {
+      "file": "initial-35-core.log.gz",
+      "sha256": "459d6aa0d424fc404462161f89aef19591d3506e70df917d0fd21acbe4cfe5bc",
+      "outcome": "35 focused cases passed before the final validation additions"
+    },
+    {
+      "file": "test-compile-finding.log.gz",
+      "sha256": "0a2dabfc97a38a65396bdeed32155324540a81895393c8e1d6419c56543806a0",
+      "outcome": "Test fixture compile error: optional JSON timestamp needed explicit unwrapping; fixed before final acceptance"
+    }
+  ],
+  "limits": {
+    "mixedServerTransportAndJournalImplemented": false,
+    "mixedWholeSelectionUndoImplemented": false,
+    "nativeBuildOrRuntimeRepeatedForThisMilestone": false,
+    "ordinaryChildFeatureFlagsEnabled": false,
+    "hostedChanges": false,
+    "curatedCheckpointCountsChanged": false,
+    "broadMigrationComplete": false
+  },
+  "next": [
+    "Atomic mixed root/child completion, including recurrence and all-or-nothing admission/receipts",
+    "Saved recovery and whole-selection Undo",
+    "Native integration and acceptance before enabling mixed selections",
+    "Full Redo/history, indexed mapping, custody and broader migration acceptance"
+  ]
+}

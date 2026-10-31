@@ -50,5 +50,9 @@
   "networkDependencies": false,
   "keyboardEnterAndSpace": true,
   "segmentWidthsMatchCheckpointCounts": true,
-  "readOnlyProgress": true
+  "readOnlyProgress": true,
+  "verifiedRenderedSHA256": "b87d1e7cf2513300cde9649741f2662f25ebf9572987848fcc1db9a3a5f9bfc8",
+  "rendererOutputUnchangedAfterFinalEvidenceRefresh": true,
+  "visualSource": "TasskFold-MacOS/docs/PX_PROGRESS.html",
+  "repositoryRendererCheckPassed": true
 }
