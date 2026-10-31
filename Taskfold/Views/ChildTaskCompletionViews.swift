@@ -531,3 +531,110 @@ struct ChildTaskRecoveryPresence: ViewModifier {
         }
     }
 }
+
+struct SavedMixedTaskGroupsLink: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @State private var showing = false
+    var body: some View {
+        Group {
+            if phase == .active, store.hasSavedChildRecovery(.mixed) {
+                Section {
+                    Button("Saved task selections", systemImage: "checkmark.circle") { showing = true }
+                        .accessibilityIdentifier("savedMixedGroups")
+                        .sheet(isPresented: $showing, onDismiss: { Task { await store.refreshChildTaskRecoveryPresence() } }) {
+                            WorkflowShell(title: "Saved task selections") { MixedTaskGroupRecoveryView() }
+                        }
+                }
+            }
+        }.modifier(ChildTaskRecoveryPresence())
+    }
+}
+struct MixedTaskGroupRecoveryView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.scenePhase) private var phase
+    @State private var model: MixedTaskCompletionRecoveryModel?
+    @State private var modelScope: ChildTaskFieldClientScope?
+    @State private var stopping: MixedTaskCompletionCommand?
+    @State private var undoing: MixedTaskCompletionState.Entry?
+    @State private var failure: String?
+    private var scope: ChildTaskFieldClientScope? { phase == .active ? store.childTaskFieldRecoveryScope : nil }
+    private var ordered: [MixedTaskCompletionState.Entry] {
+        (model?.entries ?? []).enumerated().sorted {
+            let l = $0.element.phase == .queued || $0.element.phase == .attempted
+            let r = $1.element.phase == .queued || $1.element.phase == .attempted
+            return l == r ? (l ? $0.offset < $1.offset : $0.offset > $1.offset) : l
+        }.map(\.element)
+    }
+    private func activeUndo(_ command: MixedTaskCompletionCommand) -> MixedTaskCompletionState.Entry? {
+        model?.entries.last { $0.command.body["undo_of"] == .string(command.id) && $0.phase != .closed }
+    }
+    private func dependent(_ command: MixedTaskCompletionCommand) -> Bool { model?.entries.contains { $0.command.body["undo_of"] == .string(command.id) } == true }
+    private func status(_ entry: MixedTaskCompletionState.Entry) -> String {
+        if entry.phase == .confirmed, !entry.command.isUndo, let undo = activeUndo(entry.command) { return undo.phase == .confirmed ? "Undone" : "Confirmed · Undo awaiting confirmation" }
+        switch entry.phase { case .queued: return "Saved · not sent"; case .attempted: return "Unconfirmed · original selection kept"; case .confirmed: return "Confirmed · tasks may have changed since"; case .closed: return "Stopped · cannot send again" }
+    }
+    var body: some View {
+        List {
+            Section { Text("Parents and subtasks change together. Retrying keeps the original saved request.").foregroundStyle(.secondary) }
+            if let model, scope != nil, scope == modelScope {
+                if let message = model.message { Section { ChildCompletionNotice(message: message).accessibilityIdentifier("mixedGroupStatus") } }
+                if let failure { Section { ChildCompletionNotice(message: failure).accessibilityIdentifier("mixedGroupReadFailure") } }
+                if model.loaded, model.entries.isEmpty { ContentUnavailableView("All clear", systemImage: "checkmark.circle", description: Text("Saved task selections will appear here.")) }
+                ForEach(ordered, id: \.command.id) { entry in
+                    Section {
+                        Label(entry.command.isUndo ? "Undo selection" : entry.command.body["action"] == .string("complete") ? "Complete selection" : "Reopen selection", systemImage: entry.command.isUndo ? "arrow.uturn.backward" : "checkmark.circle").font(.headline)
+                        Text("\(entry.command.items.count) selected tasks").foregroundStyle(.secondary)
+                        Text(status(entry)).foregroundStyle(.secondary).accessibilityIdentifier("mixedGroupPhase-" + entry.command.id)
+                        if entry.phase == .queued || entry.phase == .attempted {
+                            Button(entry.phase == .queued ? "Send saved selection" : "Retry original selection", systemImage: "arrow.up.circle") { Task { await model.send(entry.command) } }
+                                .disabled(model.busy || !store.permitsMixedTaskCompletion(entry.command, sending: true)).accessibilityIdentifier("sendMixedGroup-" + entry.command.id)
+                            Button("Check and stop if pending", systemImage: "hand.raised") { stopping = entry.command }.disabled(model.busy || !store.online)
+                        }
+                        if entry.phase == .confirmed, !entry.command.isUndo, activeUndo(entry.command) == nil {
+                            Button("Undo selection", systemImage: "arrow.uturn.backward") { failure = nil; undoing = entry }
+                                .disabled(model.busy || !store.permitsMixedTaskCompletion(entry.command, sending: true)).accessibilityIdentifier("undoSavedMixedGroup")
+                        }
+                        if entry.phase == .closed { Text("Select the current tasks in the list to save a fresh action.").font(.footnote).foregroundStyle(.secondary) }
+                        if entry.phase != .attempted, !dependent(entry.command) { Button("Forget saved record", role: .destructive) { Task { await model.discard(entry.command) } }.disabled(model.busy) }
+                    }
+                }
+                if model.busy { ProgressView("Updating saved selection…") }
+                if !model.loaded, !model.busy { Button("Read saved selections again") { Task { await model.load() } } }
+            } else if let failure { Text(failure) }
+            else if scope == nil { ContentUnavailableView("Open your workspace", systemImage: "lock.shield") }
+            else { ProgressView("Reading saved selections…") }
+            SavedChildTaskGroupsLink()
+            SavedChildTaskCompletionsLink()
+            SavedChildTaskFieldChangesLink()
+            SavedChildTaskStructureLink()
+            SavedChildTaskTransfersLink()
+        }
+        .modifier(ChildTaskRecoveryPresence())
+        .task(id: scope) {
+            model?.close(); model = nil; modelScope = nil; stopping = nil; undoing = nil; failure = nil
+            guard let captured = scope else { return }
+            do { let value = try store.mixedTaskCompletionRecoveryModel(); model = value; modelScope = captured; await value.load() }
+            catch { guard scope == captured else { return }; failure = "Saved selections could not be read. Your work is kept." }
+        }
+        .onDisappear { model?.close(); model = nil; modelScope = nil; stopping = nil; undoing = nil }
+        .onChange(of: scope) { _, _ in stopping = nil; undoing = nil }
+        .alert("Check this selection and stop it if pending?", isPresented: Binding(get: { stopping != nil }, set: { if !$0 { stopping = nil } })) {
+            Button("Check and stop", role: .destructive) {
+                guard let command = stopping, let model, scope == modelScope else { return }; stopping = nil
+                Task { await model.send(command, resolving: true) }
+            }
+            Button("Cancel", role: .cancel) { stopping = nil }
+        } message: { Text("Applied tasks keep their confirmation. A pending selection is stopped so you can review the current tasks again.") }
+        .alert("Undo this selection?", isPresented: Binding(get: { undoing != nil }, set: { if !$0 { undoing = nil } })) {
+            Button("Undo selection") {
+                guard let entry = undoing, let model, let captured = scope, captured == modelScope else { return }; undoing = nil
+                Task {
+                    do { let reads = try await store.readMixedChildren(entry.command); _ = await model.undo(entry, reads: reads) }
+                    catch { guard scope == captured, modelScope == captured else { return }; failure = "These tasks changed. Your confirmed selection is kept." }
+                }
+            }
+            Button("Cancel", role: .cancel) { undoing = nil }
+        } message: { Text("All changed parents and subtasks are restored together. If a task or its new recurring occurrence has changed since, Undo will keep the current work and ask for review.") }
+    }
+}

@@ -1,0 +1,31 @@
+{
+  "phase": "mixed-completion-v5",
+  "repoSources": {
+    "Taskfold/ChildFieldNativeFixture.swift": "d67fcbafdf0c2a632e5b84c8b96eb656b83fa16a6433e59146c9a4a1ab771932",
+    "Taskfold/Core/Backend.swift": "3e257190b20f9e06b9f0468ac7aeb69b68e465ea363bbdd2cd2348220d2798ee",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "8ceb6eace866244a00332fff71032e39192e0092f1b92cd6b3fa458a618987ca",
+    "Taskfold/Core/Store.swift": "527ac1b0561995845ec3c41363b979853be41853492b70fc004aedfda069c8f2",
+    "Taskfold/Info.plist": "a5a633307b359243569b2e6dae5417abc1477f7e0222b9f21b04bd31cfae19a8",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "54149f5050c2b7189e3920f62fb6b8cb259321bb5350dc768a81985b7139b452",
+    "Taskfold/Views/RootView.swift": "12f74b78b51426ee46c0c983d9b9344f01a944a52669cc14fcfbfcd2777990f2",
+    "Taskfold/Views/SettingsView.swift": "e72c9c099219ab5fc3aaa31f28ef4af5875bb098175393985c0dc1695e41fac0",
+    "Taskfold/Views/TaskInspector.swift": "9fc8350cce69d727e038fa8bcc7bbb79e0c7226132148cb7c1cd2c61b3e0ddbb",
+    "Taskfold/Views/TaskListView.swift": "44a04be4f60c8564593691294502e58bf734cb46130272ed69cf86a9e0fd4747",
+    "Taskfold/Workspace.swift": "360616420ca7c167113278a05602f9a4be4df19d860852d22412f83e42b98766"
+  },
+  "isolatedSources": {
+    "Taskfold/ChildFieldNativeFixture.swift": "d67fcbafdf0c2a632e5b84c8b96eb656b83fa16a6433e59146c9a4a1ab771932",
+    "Taskfold/Core/Backend.swift": "f86deee292c9755286e576a11b3ed9cb8e4a35ad97feecaca3842c2aca213474",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "8ceb6eace866244a00332fff71032e39192e0092f1b92cd6b3fa458a618987ca",
+    "Taskfold/Core/Store.swift": "4526ebfa13e6cba39646ab39dbca719a6f40b38442fb3eee0459276f8a6b4e20",
+    "Taskfold/Info.plist": "4254dbca5de8ce6b2610061e90951ae92ac75ce4a43409f0ff2f38bdd47f330a",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "54149f5050c2b7189e3920f62fb6b8cb259321bb5350dc768a81985b7139b452",
+    "Taskfold/Views/RootView.swift": "12f74b78b51426ee46c0c983d9b9344f01a944a52669cc14fcfbfcd2777990f2",
+    "Taskfold/Views/SettingsView.swift": "e72c9c099219ab5fc3aaa31f28ef4af5875bb098175393985c0dc1695e41fac0",
+    "Taskfold/Views/TaskInspector.swift": "9fc8350cce69d727e038fa8bcc7bbb79e0c7226132148cb7c1cd2c61b3e0ddbb",
+    "Taskfold/Views/TaskListView.swift": "44a04be4f60c8564593691294502e58bf734cb46130272ed69cf86a9e0fd4747",
+    "Taskfold/Workspace.swift": "8517e191bad3c5773942f8bd876c9b7fdd37001e890ff1e8cd0df768613ecfe3"
+  },
+  "binarySHA256": "fa4eac237d529ae7309a7f305eee4e8f4d2fe21e08041de8a4580d2c6c3716f5",
+  "strictDevelopmentSignature": true
+}

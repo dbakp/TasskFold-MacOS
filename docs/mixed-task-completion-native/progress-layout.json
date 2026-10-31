@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-31",
+  "viewportChecks": [
+    {
+      "width": 320,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 736,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 736,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "rows": 74,
+      "expandedFits": true,
+      "disclosureAndPersistence": true
+    }
+  ],
+  "inlineStateRestore": true,
+  "noSaveOnLoadOrRestore": true,
+  "consoleErrors": [],
+  "networkDependencies": false,
+  "keyboardEnterAndSpace": true,
+  "segmentWidthsMatchCheckpointCounts": true,
+  "readOnlyProgress": true,
+  "standaloneSHA256": "88ee51032bc70798d885677ea0a2b5c1ba2b33c05b579f416d7581cf86dd99df",
+  "fragmentSHA256": "075200d72399b9cef5b158f559c4549a413f2242e4378d1825c53a894aee7dfc"
+}

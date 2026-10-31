@@ -213,6 +213,7 @@ struct AccountSettings: View {
             SavedChildTaskFieldChangesLink()
             SavedChildTaskCompletionsLink()
             SavedChildTaskGroupsLink()
+            SavedMixedTaskGroupsLink()
             SavedChildTaskStructureLink()
             SavedTeamWorkflowRequestLink()
             if TeamOrganizationAvailability.enabled && store.signedIn && !store.localMode {

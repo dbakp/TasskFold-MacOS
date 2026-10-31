@@ -2276,3 +2276,61 @@ extension TaskfoldMacUITests {
     }
 
 }
+
+extension TaskfoldMacUITests {
+    @MainActor private func mixedLaunch(_ app: XCUIApplication, reset: Bool, lost: Bool = false) throws {
+        try childGuard()
+        #if os(macOS)
+        throw XCTSkip("Mac mixed selection uses the authorized direct app walkthrough")
+        #else
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-fields-list-completion", "--mixed-completion-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        if reset { app.launchArguments.append("--child-fields-native-reset") }
+        if lost { app.launchArguments.append("--mixed-completion-lose-reply") }
+        app.launch(); app.activate()
+        let expand = app.buttons["expandChildRows-ec990000-0000-4000-8000-000000000002"]
+        XCTAssertTrue(expand.waitForExistence(timeout: 30), app.debugDescription)
+        if expand.value as? String != "Expanded" { childPress(expand) }
+        #endif
+    }
+    @MainActor private func mixedSelectAndComplete(_ app: XCUIApplication) throws {
+        let options = app.buttons["Task options"]; XCTAssertTrue(options.waitForExistence(timeout: 15), app.debugDescription); childPress(options)
+        let select = app.buttons["Select tasks"]; XCTAssertTrue(select.waitForExistence(timeout: 10), app.debugDescription); childPress(select)
+        for title in ["Plan the workshop", "Prepare the review"] {
+            let row = app.buttons["Select " + title]; childReveal(row, app); XCTAssertTrue(row.waitForExistence(timeout: 10), app.debugDescription); childPress(row)
+        }
+        let complete = app.buttons["Complete selected tasks"].firstMatch; XCTAssertTrue(complete.waitForExistence(timeout: 10), app.debugDescription); childPress(complete)
+    }
+    @MainActor private func mixedAssertRestored(_ app: XCUIApplication) {
+        let root = app.buttons["Complete Plan the workshop"]; XCTAssertTrue(root.waitForExistence(timeout: 20), app.debugDescription)
+        let expand = app.buttons["expandChildRows-ec990000-0000-4000-8000-000000000002"]
+        if expand.exists, expand.value as? String != "Expanded" { childPress(expand) }
+        XCTAssertTrue(app.buttons["Complete Prepare the review"].waitForExistence(timeout: 15), app.debugDescription)
+    }
+    @MainActor func testMixedSelectionWholeUndoAndColdReturn() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try mixedLaunch(app, reset: true); try mixedSelectAndComplete(app)
+        let undo = app.buttons["undoToast"]; XCTAssertTrue(undo.waitForExistence(timeout: 20), app.debugDescription)
+        structureSnapshot(app, "Parent and subtask completed together with Undo")
+        childPress(undo); mixedAssertRestored(app)
+        app.terminate(); try mixedLaunch(app, reset: false); mixedAssertRestored(app)
+        structureSnapshot(app, "Parent and subtask Undo survive cold return")
+    }
+    @MainActor func testMixedLostReplyColdReturnRetriesOriginalAndUndoesWholeSelection() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try mixedLaunch(app, reset: true, lost: true); try mixedSelectAndComplete(app)
+        XCTAssertTrue(app.buttons["reviewListMixedGroup"].waitForExistence(timeout: 20), app.debugDescription)
+        app.terminate(); try mixedLaunch(app, reset: false, lost: true)
+        let settings = app.buttons["openSettings"]; XCTAssertTrue(settings.waitForExistence(timeout: 20), app.debugDescription); childPress(settings)
+        let account = app.buttons["settings-Account"]; childReveal(account,app); XCTAssertTrue(account.exists,app.debugDescription);childPress(account)
+        let saved = app.buttons["savedMixedGroups"]; childReveal(saved,app);XCTAssertTrue(saved.waitForExistence(timeout:15),app.debugDescription);childPress(saved)
+        let retry = app.buttons.matching(NSPredicate(format:"identifier BEGINSWITH %@","sendMixedGroup-")).firstMatch
+        XCTAssertTrue(retry.waitForExistence(timeout:20),app.debugDescription);childPress(retry)
+        let confirmed = app.staticTexts.matching(NSPredicate(format:"identifier BEGINSWITH %@ AND (label CONTAINS %@ OR value CONTAINS %@)","mixedGroupPhase-","Confirmed","Confirmed")).firstMatch
+        XCTAssertTrue(confirmed.waitForExistence(timeout:20),app.debugDescription)
+        let undo=app.buttons["undoSavedMixedGroup"];XCTAssertTrue(undo.waitForExistence(timeout:10),app.debugDescription);childPress(undo)
+        let confirm=app.alerts.firstMatch.buttons["Undo selection"];XCTAssertTrue(confirm.waitForExistence(timeout:10),app.debugDescription);childPress(confirm)
+        let undone=app.staticTexts.matching(NSPredicate(format:"identifier BEGINSWITH %@ AND (label == %@ OR value == %@)","mixedGroupPhase-","Undone","Undone")).firstMatch
+        XCTAssertTrue(undone.waitForExistence(timeout:20),app.debugDescription)
+        structureSnapshot(app,"Interrupted mixed selection recovered after cold return and undone together")
+    }
+}

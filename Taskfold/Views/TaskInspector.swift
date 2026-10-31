@@ -42,7 +42,7 @@ struct MultiSelectionInspector: View {
                 Text("Changes apply to every selected task as one undoable step.").font(.callout).foregroundStyle(.secondary)
             }
             Section("Actions") {
-                Button("Complete", systemImage: "checkmark.circle") { workspace.toggle(workspace.selection) }.disabled(!workspace.selection.allSatisfy { workspace.taskRecord($0).map(TaskKind.mayComplete) == true })
+                Button(workspace.selection.allSatisfy { workspace.taskRecord($0)?.completed == true } ? "Reopen" : "Complete", systemImage: "checkmark.circle") { workspace.toggle(workspace.selection) }.disabled(!workspace.selection.allSatisfy { workspace.taskRecord($0).map(TaskKind.mayComplete) == true })
                 Menu("Reschedule") {
                     Button("Today") { workspace.reschedule(workspace.selection, to: Dates.day(Date()), label: "today") }
                     Button("Tomorrow") { workspace.reschedule(workspace.selection, to: Dates.day(Calendar.current.date(byAdding: .day, value: 1, to: Date())!), label: "tomorrow") }

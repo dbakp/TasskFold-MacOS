@@ -12,6 +12,10 @@ try {
  report.baselineAdvisors=await pg.advisors();
  const schema=await pg.scalar(`create temp table load_result(code text,reason text,context text);do $load$declare c text;begin begin execute ${lit(sql)};insert into load_result values(null,null,null);exception when others then get stacked diagnostics c=PG_EXCEPTION_CONTEXT;insert into load_result values(sqlstate,sqlerrm,c);end;end$load$;select to_jsonb(r) from load_result r;`);
  report.schemaDiagnostic=schema;if(schema.code)throw new Error(schema.reason);
+ if(process.env.TASKFOLD_TEST_MIXED_UNDO==='1') {
+  const undoSQL=await readFile(new URL('../../supabase/migrations/20261031050018_mixed_task_completion_undo.sql',import.meta.url),'utf8');report.undoMigrationSHA256=createHash('sha256').update(undoSQL).digest('hex');
+  await pg.raw(undoSQL);
+ }
  const people=Object.fromEntries(['owner','writer','viewer','outside'].map(name=>[name,{id:randomUUID(),session:randomUUID()}]));
  for(const u of Object.values(people))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into public.profiles(user_id) values(${lit(u.id)});insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});`);
  const owner=people.owner,project=randomUUID(),team=randomUUID(),teamProject=randomUUID();
@@ -58,6 +62,8 @@ try {
  (select jsonb_agg(to_jsonb(a) order by task_id) from taskfold_private.child_task_record_authority a),
  (select jsonb_agg(to_jsonb(a) order by sequence) from public.task_node_activity a),
  (select jsonb_agg(to_jsonb(g) order by task_id,generation) from taskfold_private.task_generations g),
+ (select jsonb_agg(to_jsonb(g) order by task_id,generation) from taskfold_private.team_provisional_retirements g),
+ ${process.env.TASKFOLD_TEST_MIXED_UNDO==='1'?"(select jsonb_agg(to_jsonb(g) order by task_id,generation) from taskfold_private.mixed_provisional_retirements g),":''}
  (select jsonb_agg(to_jsonb(e) order by team_id,request_id) from taskfold_private.team_task_edits e),
  (select jsonb_agg(to_jsonb(e) order by actor_id,request_id) from taskfold_private.child_task_completion_receipts e),
  (select jsonb_agg(to_jsonb(e) order by actor_id,request_id) from taskfold_private.child_task_completion_closures e),
@@ -167,6 +173,22 @@ try {
  check('effect fixture source fits aggregate budget',await pg.scalar(`select to_jsonb(sum(octet_length(to_jsonb(t)::text))<4000000) from public.tasks t where id in(${effectRoots.map(lit).join(',')})`),true);
  report.stage='aggregate effect prepare';const effectBody=await command(effectRoots,[]);report.stage='aggregate effect before hash';before=await full();report.stage='aggregate effect send';const effectReply=await run(effectBody);report.effectBudgetRefusal=effectReply;
  check('expanded recurring copies exceed aggregate effect budget',effectReply.code,'54000');check('aggregate effect refusal occurs after generated copies',effectReply.reason,'The next occurrences are too large for one selection');check('aggregate effect refusal rolls every copy and ledger back',await full(),before);
+ if(process.env.TASKFOLD_TEST_MIXED_UNDO==='1') {
+ report.stage='whole-selection Undo';
+ const undoCommand=async (b,reply)=>({protocol:1,account:b.account,batch_id:randomUUID(),undo_of:b.batch_id,items:await Promise.all(reply.receipts.map(async proof=>proof.kind==='root'?{kind:'root',request_id:randomUUID(),task_id:proof.task_id}:{kind:'child',command:{...await legacy(proof.receipt.task_id,'undo',randomUUID(),proof.request_id),account:b.account}}))});
+ for(const [label,p,who] of [['private',project,'owner'],['shared',teamProject,'writer']]) {
+  const id=await root({p,recurring:true}),b=await command([id],[id],{who,childFirst:true}),r=await run(b,{who}),u=await undoCommand(b,r.value);const next=r.value.receipts.find(x=>x.kind==='root').successor.id;
+  report[label+'UndoCommand']=u;report[label+'UndoSource']={command:b,receipt:r.value};const undone=await run(u,{who,fn:'public.taskfold_undo_mixed_completion'});report[label+'UndoReply']=undone;check(label+' whole mixed Undo applies',undone.code,null);
+  check(label+' Undo restores parent and child',[(await row(id)).completed,(await row(id)).subtasks[0].completed],[false,false]);check(label+' Undo removes only untouched new occurrence',await row(next),null);
+  before=await full();check(label+' lost Undo reply resolves exactly',withoutReplay((await run(u,{who,fn:'public.taskfold_undo_mixed_completion'})).value),withoutReplay(undone.value));check(label+' repeated Undo never mutates again',await full(),before);
+  check(label+' forward retry after Undo stays historical',(await run(b,{who})).value.outcome,'applied');check(label+' original forward does not reapply after Undo',(await row(id)).completed,false);
+  const redone=await run(await command([id],[id],{who}),{who});check(label+' fresh completion after Undo recreates next generation',redone.value.receipts.find(x=>x.kind==='root').successor.state,'created');
+ }
+ const editedNext=await root({recurring:true}),eb=await command([editedNext],[editedNext]),er=await run(eb),eu=await undoCommand(eb,er.value);await pg.raw(`update public.tasks set title='Keep newer future work' where id=${lit(er.value.receipts.find(x=>x.kind==='root').successor.id)}`);await unchanged('edited successor refuses entire Undo',eu,'PT409',{fn:'public.taskfold_undo_mixed_completion'});
+ const staleUndoRoot=await root(),sb=await command([staleUndoRoot],[staleUndoRoot]),sr=await run(sb),su=await undoCommand(sb,sr.value);await run(await legacy(staleUndoRoot,'reopen'),{fn:'public.taskfold_complete_child_task'});await unchanged('changed child refuses whole Undo including parent',su,'PT409',{fn:'public.taskfold_undo_mixed_completion'});
+ const closedUndoRoot=await root(),cb=await command([closedUndoRoot],[closedUndoRoot]),cr=await run(cb),cu=await undoCommand(cb,cr.value);check('unattempted Undo closes as one group',(await close(cu)).value.outcome,'closed');await unchanged('closed Undo cannot write',cu,'PT410',{fn:'public.taskfold_undo_mixed_completion'});check('closing Undo preserves completed parent and child',[(await row(closedUndoRoot)).completed,(await row(closedUndoRoot)).subtasks[0].completed],[true,true]);
+ const lateUndoRoot=await root({recurring:true}),lb=await command([lateUndoRoot],[lateUndoRoot]),lr=await run(lb),lu=await undoCommand(lb,lr.value);await pg.raw(`create function taskfold_private.synthetic_undo_failure() returns trigger language plpgsql as $f$begin if new.action='undo' then raise exception using errcode='54000',message='Synthetic late Undo failure';end if;return new;end$f$;create trigger synthetic_undo_failure before insert on taskfold_private.child_task_completion_receipts for each row execute function taskfold_private.synthetic_undo_failure();`);await unchanged('late Undo failure restores roots successors and all receipts',lu,'54000',{fn:'public.taskfold_undo_mixed_completion'});await pg.raw('drop trigger synthetic_undo_failure on taskfold_private.child_task_completion_receipts;drop function taskfold_private.synthetic_undo_failure()');check('saved Undo retries after late failure',(await run(lu,{fn:'public.taskfold_undo_mixed_completion'})).code,null);
+ }
  report.stage='whole-request quota and lost-access recovery';
  const gone=await root(),goneBody=await command([gone],[]),goneReply=await run(goneBody);await pg.raw(`delete from public.tasks where id=${lit(gone)}`);
  before=await full();check('exact outcome remains recoverable after root deletion',withoutReplay((await run(goneBody)).value),withoutReplay(goneReply.value));check('deleted-root recovery changes no saved data',await full(),before);
@@ -181,6 +203,9 @@ try {
  for(const signature of ['completion_selection_task(uuid,boolean)','mixed_completion_legacy_identity(uuid,uuid)','guard_mixed_completion_identity()','validate_mixed_completion(jsonb,uuid)','guard_mixed_completion_children(jsonb)','mixed_completion_recipient(uuid,uuid,uuid,uuid)','mixed_completion_successor_children(jsonb,uuid,uuid,uuid,uuid)','apply_mixed_completion_root(jsonb,jsonb,jsonb)','mixed_completion_reply(taskfold_private.mixed_completion_batches,boolean)','mixed_completion_can_edit(public.tasks)'])for(const role of ['anon','authenticated','service_role'])check(role+' cannot execute private '+signature,await pg.scalar(`select to_jsonb(has_function_privilege(${lit(role)},${lit('taskfold_private.'+signature)},'execute'))`),false);
  check('no transaction scope remains after all outcomes',await pg.scalar('select to_jsonb(count(*)) from taskfold_private.mixed_completion_scope'),0);
 
- report.stage='advisors';report.finalAdvisors=await pg.advisors();const old=new Set(report.baselineAdvisors.result.map(x=>x.cache_key));check('no added advisor findings',report.finalAdvisors.result.filter(x=>!old.has(x.cache_key)),[]);report.passed=true;console.log('PASS '+Object.keys(report.checks).length+' mixed task completion database checks');
+ report.stage='advisors';report.finalAdvisors=await pg.advisors();const old=new Set(report.baselineAdvisors.result.map(x=>x.cache_key));check('no added advisor findings',report.finalAdvisors.result.filter(x=>!old.has(x.cache_key)),[]);if(process.env.TASKFOLD_TEST_MIXED_UNDO==='1') {
+ const fixture={command:report.privateUndoSource.command,receipt:report.privateUndoSource.receipt,undo:report.privateUndoCommand,undoReceipt:report.privateUndoReply.value};
+ const bytes=JSON.stringify(fixture,null,2)+'\n';await writeFile(new URL('../../TaskfoldTests/Fixtures/mixed-task-completion.json',import.meta.url),bytes);report.clientFixtureSHA256=createHash('sha256').update(bytes).digest('hex');
+}report.passed=true;console.log('PASS '+Object.keys(report.checks).length+' mixed task completion database checks');
 } catch(error){report.passed=false;report.error={name:error.name,code:error.code??null,message:error.message,stack:error.stack};process.exitCode=1;console.error('FAIL '+report.stage+': '+error.message+' '+(error.code??''));}
 finally {if(pg)report.containerRemoved=await pg.close();await writeFile(process.argv[2]??'/tmp/taskfold-mixed-task-completion.json',JSON.stringify(report,null,2)+'\n');}

@@ -64,6 +64,11 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             second["future_exact"] = try! TaskfoldJSONDecoder().decode(JSON.self, from: opaqueMetadata)
             rows[1] = .object(second); root["subtasks"] = .array(rows); state["root"] = .object(root)
         }
+        if ProcessInfo.processInfo.arguments.contains("--mixed-completion-native") {
+            var root = state["root"]!.object
+            root.merge(["title": .string("Plan the workshop"), "section_id": .null, "completed": .bool(false), "completed_at": .null, "completion_version": .number(0), "is_heading": .bool(false), "is_recurring": .bool(false)]) { _, new in new }
+            state["root"] = .object(root)
+        }
         return state
     }
     static func save(_ state: [String: JSON]) throws {
@@ -177,6 +182,61 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         if lose { working["batchLost"] = .bool(true) }; state = working; try save(state)
         return (try TaskfoldJSONEncoder().encode(proof), lose)
     }
+    static func mixedResponse(_ body: [String: JSON], path: String, state: inout [String: JSON]) throws -> (Data, Bool) {
+        guard Store.shared.userID == ChildFieldNativeIdentity.account, let raw = body["_body"]?.object else { throw CancellationError() }
+        func baseline(_ root: [String: JSON]) -> [String: JSON] { root.filter { CompletionSelectionRootRead.baselineKeys.contains($0.key) } }
+        func replay(_ value: JSON) -> JSON {
+            switch value {
+            case .object(let object): return .object(object.mapValues(replay).merging(object["replayed"] != nil ? ["replayed": .bool(true)] : [:]) { _, new in new })
+            case .array(let values): return .array(values.map(replay))
+            default: return value
+            }
+        }
+        if path.hasSuffix("taskfold_read_completion_selection_roots") {
+            let root = state["root"]!.object
+            guard raw["task_ids"] == .array([root["id"]!]) else { throw ChildFieldNativeRefusal(code: "PT409") }
+            let hash = SHA256.hash(data: try TaskfoldJSONEncoder().encode(root)).map { String(format: "%02x", $0) }.joined()
+            return (try TaskfoldJSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "roots": .array([.object(["task": .object(root), "baseline": .object(baseline(root)), "source_hash": .string(hash)])])]), false)
+        }
+        let saved = raw["undo_of"].flatMap { state["mixedDecisions"]?.object[$0.text]?.object }
+        let original = saved.map { MixedTaskCompletionCommand.Original(body: $0["body"]!.object, receipt: $0["proof"]!.object) }
+        let command = try MixedTaskCompletionCommand(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin, body: raw, original: original)
+        let closing = path.hasSuffix("taskfold_close_mixed_completion")
+        state["mixedRequests"] = .number(Double((state["mixedRequests"]?.integer ?? 0) + 1))
+        if let saved = state["mixedDecisions"]?.object[command.id]?.object {
+            guard AuthoredValueComparison.exactJSON(saved["body"]!, .object(raw)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+            let proof = replay(saved["proof"]!).object
+            if !closing, proof["outcome"] == .string("closed") { throw ChildFieldNativeRefusal(code: "PT410") }
+            _ = try command.resolution(proof); try save(state); return (try TaskfoldJSONEncoder().encode(proof), false)
+        }
+        var working = state, proofs: [JSON] = []
+        if !closing {
+            for (index, item) in command.items.enumerated() {
+                if item.kind == "child" {
+                    let result = try completionResponse(["_body": .object(item.body)], closing: false, state: &working, persist: false)
+                    proofs.append(.object(["kind": .string("child"), "request_id": .string(item.id), "receipt": .object(try TaskfoldJSONDecoder().decode([String: JSON].self, from: result.0)), "replayed": .bool(false)]))
+                } else {
+                    var root = working["root"]!.object; let before = baseline(root)
+                    let expected = original == nil ? raw["roots"]!.list.first { $0.object["task_id"] == root["id"] }!.object["baseline"]! : original!.receipt["receipts"]!.list[index].object["after"]!
+                    guard AuthoredValueComparison.exactJSON(.object(before), expected) else { throw ChildFieldNativeRefusal(code: "PT409") }
+                    if let original {
+                        let restored = original.receipt["receipts"]!.list[index].object["before"]!.object
+                        root["completed"] = restored["completed"]; root["completed_at"] = restored["completed_at"]
+                    } else { root["completed"] = .bool(raw["action"] == .string("complete")); root["completed_at"] = root["completed"] == .bool(true) ? raw["completed_at"] : .null }
+                    root["completion_version"] = .number(Double(before["completion_version"]!.integer + 1)); working["root"] = .object(root)
+                    proofs.append(.object(["kind": .string("root"), "request_id": .string(item.id), "task_id": root["id"]!, "task_generation": root["task_generation"]!, "project_id": root["project_id"]!, "action": command.isUndo ? .string("undo") : raw["action"]!, "before": .object(before), "after": .object(baseline(root)), "successor": .object(["state": .string("none"), "planned_id": .null, "id": .null, "generation": .null, "created": .bool(false), "hash": .null]), "replayed": .bool(false)]))
+                    working["writes"] = .number(Double(working["writes"]!.integer + 1))
+                }
+            }
+            working["mixedWrites"] = .number(Double((working["mixedWrites"]?.integer ?? 0) + 1))
+        }
+        let proof: [String: JSON] = ["protocol": .number(1), "account": .string(command.account), "batch_id": .string(command.id), "outcome": .string(closing ? "closed" : "applied"), "replayed": .bool(false), "receipts": .array(proofs)]
+        _ = try command.resolution(proof)
+        var decisions = working["mixedDecisions"]?.object ?? [:]; decisions[command.id] = .object(["body": .object(raw), "proof": .object(proof)]); working["mixedDecisions"] = .object(decisions)
+        let lose = !closing && ProcessInfo.processInfo.arguments.contains("--mixed-completion-lose-reply") && working["mixedLost"]?.flag != true
+        if lose { working["mixedLost"] = .bool(true) }; state = working; try save(state)
+        return (try TaskfoldJSONEncoder().encode(proof), lose)
+    }
     static func response(_ request: URLRequest) async throws -> (Data, Bool) {
         guard ChildFieldNativeIdentity.enabled, request.url?.host == "synthetic.example", request.httpMethod == "POST" else { throw URLError(.unsupportedURL) }
         var data = request.httpBody ?? Data()
@@ -198,6 +258,10 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         }
         if ChildStructureNativePeer.enabled, ChildStructureNativePeer.paths.contains(request.url?.path ?? "") {
             return try ChildStructureNativePeer.response(path: request.url!.path, body: body, state: &state)
+        }
+        if ProcessInfo.processInfo.arguments.contains("--mixed-completion-native"),
+           ["/rest/v1/rpc/taskfold_read_completion_selection_roots", "/rest/v1/rpc/taskfold_complete_mixed_tasks", "/rest/v1/rpc/taskfold_undo_mixed_completion", "/rest/v1/rpc/taskfold_close_mixed_completion"].contains(request.url?.path ?? "") {
+            return try mixedResponse(body, path: request.url!.path, state: &state)
         }
         if request.url?.path == "/rest/v1/rpc/taskfold_read_child_tasks" {
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"], Store.shared.userID == ChildFieldNativeIdentity.account else { throw CancellationError() }

@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-31",
+  "repository": "TasskFold-MacOS",
+  "scope": "Gated combined parent/subtask completion, whole-selection Undo and saved interrupted-request recovery",
+  "ordinaryFlagsEnabled": false,
+  "hostedChanges": false,
+  "fullMigrationAccepted": false,
+  "checkpointRemains": "To build",
+  "sourceSHA256": {
+    "Scripts/Database/test-mixed-task-completion.mjs": "dfa3fab58bddb759bcbd6f9d193c021f2b1a6a3a6873a6340581aba3ea1d2352",
+    "Taskfold/ChildFieldNativeFixture.swift": "d67fcbafdf0c2a632e5b84c8b96eb656b83fa16a6433e59146c9a4a1ab771932",
+    "Taskfold/Core/Backend.swift": "3e257190b20f9e06b9f0468ac7aeb69b68e465ea363bbdd2cd2348220d2798ee",
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "8ceb6eace866244a00332fff71032e39192e0092f1b92cd6b3fa458a618987ca",
+    "Taskfold/Core/Store.swift": "527ac1b0561995845ec3c41363b979853be41853492b70fc004aedfda069c8f2",
+    "Taskfold/Info.plist": "a5a633307b359243569b2e6dae5417abc1477f7e0222b9f21b04bd31cfae19a8",
+    "Taskfold/Views/ChildTaskCompletionViews.swift": "54149f5050c2b7189e3920f62fb6b8cb259321bb5350dc768a81985b7139b452",
+    "Taskfold/Views/RootView.swift": "12f74b78b51426ee46c0c983d9b9344f01a944a52669cc14fcfbfcd2777990f2",
+    "Taskfold/Views/SettingsView.swift": "e72c9c099219ab5fc3aaa31f28ef4af5875bb098175393985c0dc1695e41fac0",
+    "Taskfold/Views/TaskInspector.swift": "9fc8350cce69d727e038fa8bcc7bbb79e0c7226132148cb7c1cd2c61b3e0ddbb",
+    "Taskfold/Views/TaskListView.swift": "44a04be4f60c8564593691294502e58bf734cb46130272ed69cf86a9e0fd4747",
+    "Taskfold/Workspace.swift": "360616420ca7c167113278a05602f9a4be4df19d860852d22412f83e42b98766",
+    "TaskfoldTests/ChildTaskCompletionBatchTests.swift": "424aa06abf3b018467076810f4989c662a233b695b77e2decc49d41c2481f315",
+    "TaskfoldTests/Fixtures/mixed-task-completion.json": "824bbf34802343b3beb387fbcff196147b06c5c05f2aaafd76520c8b08461d7c",
+    "TaskfoldTests/MixedTaskCompletionTests.swift": "803ca9818568dfb9d79d49026043a61a1501a86ed01e118cf5e253d822896dca",
+    "TaskfoldUITests/AudioCommentUITests.swift": "807478e236cb6d9f377cad9c2cd6debb91315e1c7a0a40d0d4a778df53a643f0",
+    "supabase/migrations/20261031050018_mixed_task_completion_undo.sql": "234162c9a7635e48b7eb7dbbf4bca180f785779c90718f26f0b8e6c6841a9581"
+  },
+  "database": {
+    "checks": 212,
+    "failures": 0,
+    "containerRemoved": true,
+    "report": "database.json.gz",
+    "reportSHA256": "374c3259d5ab439fb05a3f40ffddb5256d26621de0e6aef32c7bd7e12c3742d1",
+    "undoMigrationSHA256": "234162c9a7635e48b7eb7dbbf4bca180f785779c90718f26f0b8e6c6841a9581",
+    "clientFixtureSHA256": "824bbf34802343b3beb387fbcff196147b06c5c05f2aaafd76520c8b08461d7c"
+  },
+  "core": {
+    "tests": 89,
+    "failures": 0,
+    "newMixedTests": 9,
+    "report": "core.log.gz",
+    "reportSHA256": "c224a431d377ad93b748330a091b1f6d1836eb5e0d7b5f797ad5b5cf23cb4839"
+  },
+  "native": {
+    "method": "Explicitly authorized Terminal launch plus direct computer use; isolated synthetic HTTP peer, not PostgreSQL",
+    "build": "v5",
+    "strictDevelopmentSignature": true,
+    "flows": [
+      "Combined completion with lost reply shows uncertain feedback and Review",
+      "Quit/cold return preserves encrypted original request",
+      "Retry confirms original result without duplicate write",
+      "Whole saved-selection Undo restores parent and chosen child",
+      "Fresh combined completion",
+      "Completed-list combined Reopen",
+      "Command-Z undoes Reopen",
+      "Untouched sibling remains unchanged"
+    ],
+    "writes": 5,
+    "requests": 6,
+    "uniqueDecisions": 5,
+    "allTestSessionsClosed": true,
+    "earlierPhases": "v3 accepted normal and lost-reply flows before final polish; v2 test bundle failed to compile due to wrong platform test class. Only final v5 is fingerprinted here."
+  },
+  "remaining": [
+    "Full Redo and shared history",
+    "Indexed/history mapping",
+    "Shared attachments and discussion custody",
+    "Repair-review draft persistence",
+    "Wider real-account, reauthentication, protected-storage, window/background/concurrent, VoiceOver and large-library acceptance"
+  ],
+  "deferralsChanged": false
+}

@@ -637,16 +637,20 @@ struct ConfirmationBar: View {
     let confirmation: Confirmation
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.taskfold).id(confirmation.id).transition(.iconSwap)
+            Image(systemName: confirmation.mixedGroupReview ? "clock.arrow.circlepath" : "checkmark.circle.fill").foregroundStyle(Color.taskfold).id(confirmation.id).transition(.iconSwap)
             Text(confirmation.message).lineLimit(1).id(confirmation.id).transition(.textSwap)
             Spacer()
+            if confirmation.mixedGroupReview { Button("Review") { workspace.reviewMixedGroup() }.buttonStyle(.link).accessibilityIdentifier("reviewListMixedGroup") }
             if confirmation.childGroupReview {
                 Button("Review") { workspace.reviewChildGroup() }.buttonStyle(.link).accessibilityIdentifier("reviewListChildGroup")
             }
             if confirmation.childCompletionReview {
                 Button("Review") { workspace.reviewChildCompletion() }.buttonStyle(.link).accessibilityIdentifier("reviewListChildCompletion")
             }
-            if let token = confirmation.childGroup, workspace.canUndoChildGroup(token) {
+            if let token = confirmation.mixedGroup, workspace.canUndoMixedGroup(token) {
+                Button("Undo") { workspace.undoMixedGroup(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
+                Text("⌘Z").foregroundStyle(.tertiary)
+            } else if let token = confirmation.childGroup, workspace.canUndoChildGroup(token) {
                 Button("Undo") { workspace.undoChildGroup(token) }.buttonStyle(.link).accessibilityIdentifier("undoConfirmation")
                 Text("⌘Z").foregroundStyle(.tertiary)
             } else if let token = confirmation.childCompletion, workspace.canUndoChildCompletion(token) {

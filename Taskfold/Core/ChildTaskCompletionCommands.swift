@@ -1084,8 +1084,18 @@ struct ChildTaskActionAdmission: Sendable {
         let groups = try read(ChildTaskCompletionBatchState.self, folder: "Child completion groups")
         let pending = Set((groups?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.flatMap { $0.command.items.map { $0.body["task_id"]!.text } })
         try refuse(roots, overlapping: pending)
+        try checkMixed(roots)
     }
-    func checkBatch(_ roots: Set<String>) throws {
+    func checkMixed(_ roots: Set<String>) throws {
+        let state = try read(MixedTaskCompletionState.self, folder: "Task selection requests")
+        try refuse(roots, overlapping: Set((state?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.flatMap { $0.command.rootIDs }))
+    }
+    func checkForMixed(_ roots: Set<String>) throws {
+        try checkBatch(roots, includeMixed: false)
+        let groups = try read(ChildTaskCompletionBatchState.self, folder: "Child completion groups")
+        try refuse(roots, overlapping: Set((groups?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.flatMap { $0.command.items.map { $0.body["task_id"]!.text } }))
+    }
+    func checkBatch(_ roots: Set<String>, includeMixed: Bool = true) throws {
         var pending = Set<String>()
         let fields = try read(ChildTaskFieldJournalState.self, folder: "Child field requests")
         pending.formUnion((fields?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
@@ -1102,6 +1112,7 @@ struct ChildTaskActionAdmission: Sendable {
         let repairs = try read(ChildTaskRepairState.self, folder: "Child repair requests")
         pending.formUnion((repairs?.entries ?? []).filter { $0.phase == .queued || $0.phase == .attempted }.map { $0.command.body["task_id"]!.text })
         try refuse(roots, overlapping: pending)
+        if includeMixed { try checkMixed(roots) }
     }
 }
 
@@ -1274,7 +1285,7 @@ struct ChildTaskActionAdmissionFailure: LocalizedError {
 
 /// Recovery discovery is independent of write rollout gates and stores no task content.
 enum ChildTaskRecoveryKind: CaseIterable, Hashable, Sendable {
-    case fields, completions, groups, hierarchy, transfers, adoptions, repairs
+    case fields, completions, groups, mixed, hierarchy, transfers, adoptions, repairs
 }
 @MainActor @Observable final class ChildTaskRecoveryDiscovery {
     private var ticket = UUID()
@@ -1368,4 +1379,552 @@ struct CompletionSelectionRootRead: Sendable, CustomStringConvertible, CustomDeb
         }
         return try selection.prepare(roots: Array(sources.values), projects: projects, reads: childReads, current: current)
     }
+}
+
+/// The list sends one saved request for parents and children together. A saved
+/// request contains guards and completion cohorts, never task titles or notes.
+struct MixedTaskCompletionCommand: ReviewedTeamCommand, CustomStringConvertible, CustomDebugStringConvertible {
+    struct Original: Codable, Equatable, Sendable {
+        let body: [String: JSON], receipt: [String: JSON]
+        private enum CodingKeys: String, CodingKey { case body, receipt }
+        init(body: [String: JSON], receipt: [String: JSON]) { self.body = body; self.receipt = receipt }
+        init(from decoder: Decoder) throws {
+            try completionKeys(decoder, ["body", "receipt"])
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            body = try c.decode([String: JSON].self, forKey: .body); receipt = try c.decode([String: JSON].self, forKey: .receipt)
+        }
+    }
+    struct Member: Sendable {
+        let kind: String, body: [String: JSON]
+        var id: String { body["request_id"]!.text }
+        var rootID: String { body["task_id"]!.text }
+    }
+    static let storagePrefix = "mixed-completion-command-v1."
+    static let maximumStoredBytes = 524_288
+    static let maximumResponseBytes = 524_288
+    static var invalid: AppFailure { .init(message: "Review this task selection again. Your saved work is unchanged.") }
+    let account: String, origin: String, body: [String: JSON]
+    let original: Original?
+    var id: String { body["batch_id"]!.text }
+    var isUndo: Bool { original != nil }
+    var description: String { "Private task selection request" }
+    var debugDescription: String { description }
+    var items: [Member] { body["items"]!.list.map { value in let row = value.object; return .init(kind: row["kind"]!.text, body: row["kind"] == .string("root") ? row.filter { $0.key != "kind" } : row["command"]!.object) } }
+    var rootIDs: Set<String> {
+        if let original {
+            let created = original.receipt["receipts"]?.list.compactMap { value -> String? in
+                let next = value.object["successor"]?.object ?? [:]
+                return next["created"] == .bool(true) ? next["id"]?.text : nil
+            } ?? []
+            return Set(items.map(\.rootID)).union(created)
+        }
+        return Set((body["roots"]!.list + body["children"]!.list).map { $0.object["task_id"]!.text })
+    }
+    func overlaps(_ other: Self) -> Bool { account == other.account && origin == other.origin && !rootIDs.isDisjoint(with: other.rootIDs) }
+    init(prepared: TaskListCompletionSelectionIntent.Prepared, roots: CompletionSelectionRootRead?, completedAt: Date = Date(), timeZone: TimeZone = .current) throws {
+        if let roots { guard roots.scope == prepared.scope else { throw Self.invalid } }
+        var parents: [JSON] = [], children: [JSON] = []
+        for observation in prepared.observations {
+            switch observation {
+            case .root(let root):
+                guard let proof = roots?.roots.first(where: { $0.task.id == root.id }), AuthoredValueComparison.exactJSON(.object(proof.task.fields), .object(root.fields)) else { throw Self.invalid }
+                parents.append(.object(proof.guardBody))
+            case .child(let read, let key):
+                guard ChildTaskFieldClientScope(read.context) == prepared.scope, let node = read.nodes[key] else { throw Self.invalid }
+                let done = try ChildTaskCompletionDraft.completed(node.fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) })
+                let guardCommand = try ChildTaskCompletionCommand(ChildTaskCompletionDraft(read: read, key: key, action: done ? .reopen : .complete))
+                children.append(.object(guardCommand.body.filter { !["protocol", "account", "request_id", "action"].contains($0.key) }))
+            }
+        }
+        let members: [JSON] = prepared.members.map { member in
+            switch member {
+            case .root(let root): .object(["kind": .string("root"), "request_id": .string(UUID().uuidString.lowercased()), "task_id": .string(root.id)])
+            case .child(let command): .object(["kind": .string("child"), "command": .object(command.body)])
+            }
+        }
+        let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        try self.init(account: prepared.scope.account, origin: prepared.scope.origin, body: ["protocol": .number(1), "account": .string(prepared.scope.account), "batch_id": .string(UUID().uuidString.lowercased()), "action": .string(prepared.completed ? "complete" : "reopen"), "completed_at": .string(formatter.string(from: completedAt)), "input_zone": .string(timeZone.identifier), "roots": .array(parents), "children": .array(children), "items": .array(members)])
+    }
+    init(account: String, origin: String, body: [String: JSON], original: Original? = nil) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard origin.utf8.count <= 2048, body["protocol"] == .number(1), body["account"] == .string(account),
+              TeamProjectValue.id(body["batch_id"]?.text ?? ""), case .array(let rows)? = body["items"], (1...32).contains(rows.count) else { throw Self.invalid }
+        if let original {
+            let source = try Self(account: account, origin: origin, body: original.body)
+            let proof = try source.resolution(original.receipt)
+            guard Set(body.keys) == ["protocol", "account", "batch_id", "undo_of", "items"], proof.applied,
+                  body["undo_of"] == .string(source.id), body["batch_id"] != .string(source.id), rows.count == source.items.count else { throw Self.invalid }
+        } else {
+            guard Set(body.keys) == ["protocol", "account", "batch_id", "action", "completed_at", "input_zone", "roots", "children", "items"],
+                  body["action"] == .string("complete") || body["action"] == .string("reopen"),
+                  case .string(let stamp)? = body["completed_at"], stamp.utf8.count <= 64, TaskPlanning.instant(stamp) != nil,
+                  case .string(let zone)? = body["input_zone"], zone.utf8.count <= 128, TimeZone(identifier: zone) != nil,
+                  case .array(let parents)? = body["roots"], case .array(let children)? = body["children"], (1...32).contains(parents.count + children.count) else { throw Self.invalid }
+            for value in parents {
+                let guardBody = value.object
+                guard Set(guardBody.keys) == ["task_id", "baseline", "source_hash"], case .object(let baseline)? = guardBody["baseline"], guardBody["task_id"] == baseline["id"],
+                      case .string(let hash)? = guardBody["source_hash"], Self.hash(hash) else { throw Self.invalid }
+                try Self.baseline(baseline)
+            }
+            for value in children {
+                let guardBody = value.object
+                let done = try ChildTaskCompletionDraft.completed(guardBody["baseline"]?.object ?? [:])
+                _ = try ChildTaskCompletionCommand(account: account, origin: origin, body: guardBody.merging(["protocol": .number(1), "account": .string(account), "request_id": .string(UUID().uuidString.lowercased()), "action": .string(done ? "reopen" : "complete")]) { _, new in new })
+            }
+        }
+        // Validate all row shapes before any computed member can read them.
+        for value in rows {
+            guard case .object(let row) = value, case .string(let kind)? = row["kind"], ["root", "child"].contains(kind),
+                  Set(row.keys) == (kind == "root" ? ["kind", "request_id", "task_id"] : ["kind", "command"]) else { throw Self.invalid }
+            let fields: [String: JSON]
+            if kind == "child" { guard case .object(let child)? = row["command"] else { throw Self.invalid }; fields = child }
+            else { fields = row }
+            guard case .string? = fields["request_id"], case .string? = fields["task_id"] else { throw Self.invalid }
+        }
+        self.account = account; self.origin = origin; self.body = body; self.original = original
+        var requests: Set<String> = [id], targets = Set<Data>()
+        var expected = Set<Data>()
+        if original == nil {
+            for kind in ["root", "child"] {
+                let guards = body[kind == "root" ? "roots" : "children"]!.list
+                var seen = Set<Data>()
+                for value in guards {
+                    let target = try Self.target(kind, value.object)
+                    guard seen.insert(target).inserted else { throw Self.invalid }
+                    let done = kind == "root" ? value.object["baseline"]!.object["completed"]!.flag : try ChildTaskCompletionDraft.completed(value.object["baseline"]!.object)
+                    if done != (body["action"] == .string("complete")) { expected.insert(target) }
+                }
+            }
+        }
+        for (index, value) in rows.enumerated() {
+            guard case .object(let row) = value, let kind = row["kind"]?.text, ["root", "child"].contains(kind),
+                  Set(row.keys) == (kind == "root" ? ["kind", "request_id", "task_id"] : ["kind", "command"]) else { throw Self.invalid }
+            let member = items[index]
+            guard TeamProjectValue.id(member.id), member.id != body["undo_of"]?.text, requests.insert(member.id).inserted, TeamProjectValue.id(member.rootID), targets.insert(try Self.target(kind, member.body)).inserted else { throw Self.invalid }
+            if let original {
+                let source = try Self(account: account, origin: origin, body: original.body)
+                let sourceMember = source.items[index]
+                guard kind == sourceMember.kind, member.rootID == sourceMember.rootID else { throw Self.invalid }
+                if kind == "child" { _ = try childCommand(at: index) }
+            } else if kind == "root" {
+                guard body["roots"]!.list.contains(where: { $0.object["task_id"] == member.body["task_id"] }) else { throw Self.invalid }
+            } else {
+                let child = try childCommand(at: index)
+                guard child.body["action"] == body["action"], body["children"]!.list.contains(where: { AuthoredValueComparison.exactJSON($0, .object(child.body.filter { !["protocol", "account", "request_id", "action"].contains($0.key) })) }) else { throw Self.invalid }
+            }
+        }
+        guard original != nil || targets == expected else { throw Self.invalid }
+        let wire = TaskfoldJSONEncoder(); wire.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard try wire.encode(body).count <= 131_072, try TaskfoldJSONEncoder().encode(self).count <= Self.maximumStoredBytes else { throw Self.invalid }
+    }
+    private static func target(_ kind: String, _ value: [String: JSON]) throws -> Data { try TaskfoldJSONEncoder().encode([JSON.string(kind), value["task_id"] ?? .null, kind == "child" ? value["node_key"] ?? .null : .null]) }
+    fileprivate static func hash(_ value: String) -> Bool { value.utf8.count == 64 && value.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) } }
+    fileprivate static func rootVersion(_ value: JSON?) throws -> Double {
+        guard case .number(let version)? = value, version.isFinite, version >= 0, version <= 9_007_199_254_740_991, version.rounded(.down) == version else { throw invalid }
+        return version
+    }
+    fileprivate static func baseline(_ value: [String: JSON], allowExhausted: Bool = false) throws {
+        guard Set(value.keys) == CompletionSelectionRootRead.baselineKeys, value["completed"] == .bool(true) || value["completed"] == .bool(false), value["is_heading"] == .bool(false) || value["is_heading"] == .null, value["is_recurring"] == .bool(true) || value["is_recurring"] == .bool(false) || value["is_recurring"] == .null else { throw invalid }
+        for key in ["id", "user_id", "task_generation"] { _ = try TeamOrganizationValue.id(value[key]) }
+        for key in ["project_id", "section_id"] { _ = try TeamProjectValue.optionalID(value[key]) }
+        _ = try rootVersion(value["completion_version"])
+        var checked = value
+        if allowExhausted { checked["completion_version"] = .number(0) }
+        _ = try TaskListCompletionSelectionIntent.Root(task: Record(checked), root: Record(checked))
+    }
+    func childCommand(at index: Int) throws -> ChildTaskCompletionCommand {
+        let item = items[index]; guard item.kind == "child" else { throw Self.invalid }
+        if let original {
+            let source = try Self(account: account, origin: origin, body: original.body)
+            let proof = try source.resolution(original.receipt)
+            return try .init(account: account, origin: origin, body: item.body, original: .init(body: source.items[index].body, receipt: proof.receipts[index].raw["receipt"]!.object))
+        }
+        return try .init(account: account, origin: origin, body: item.body)
+    }
+    func resolution(_ raw: [String: JSON]) throws -> MixedTaskCompletionResolution { try .init(command: self, raw: raw) }
+    func undo(reads: [String: ChildTaskRecordRead], decision: MixedTaskCompletionResolution) throws -> Self {
+        let proof = try resolution(decision.raw); guard !isUndo, proof.applied else { throw Self.invalid }
+        let inverse: [JSON] = try items.enumerated().map { index, item in
+            if item.kind == "root" { return .object(["kind": .string("root"), "task_id": .string(item.rootID), "request_id": .string(UUID().uuidString.lowercased())]) }
+            guard let read = reads[item.rootID] else { throw Self.invalid }
+            let child = try childCommand(at: index)
+            let undo = try ChildTaskCompletionCommand(undo: child, receipt: child.confirmed(proof.receipts[index].raw["receipt"]!.object), read: read)
+            return .object(["kind": .string("child"), "command": .object(undo.body)])
+        }
+        return try .init(account: account, origin: origin, body: ["protocol": .number(1), "account": .string(account), "batch_id": .string(UUID().uuidString.lowercased()), "undo_of": .string(id), "items": .array(inverse)], original: .init(body: body, receipt: proof.raw))
+    }
+    private enum CodingKeys: String, CodingKey { case account, origin, body, original }
+    init(from decoder: Decoder) throws {
+        try completionKeys(decoder, ["account", "origin", "body", "original"])
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), body: c.decode([String: JSON].self, forKey: .body), original: c.decodeIfPresent(Original.self, forKey: .original))
+    }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(body, forKey: .body); try c.encode(original, forKey: .original)
+    }
+}
+struct MixedTaskCompletionReceipt: Equatable, Sendable {
+    let raw: [String: JSON]
+    func agrees(_ other: Self) -> Bool { AuthoredValueComparison.exactJSON(Self.stable(.object(raw)), Self.stable(.object(other.raw))) }
+    fileprivate static func stable(_ value: JSON) -> JSON {
+        switch value {
+        case .object(let values): .object(values.filter { $0.key != "replayed" }.mapValues(stable))
+        case .array(let values): .array(values.map(stable))
+        default: value
+        }
+    }
+}
+struct MixedTaskCompletionResolution: Equatable, Sendable {
+    let raw: [String: JSON], receipts: [MixedTaskCompletionReceipt]
+    var applied: Bool { raw["outcome"] == .string("applied") }
+    var closed: Bool { raw["outcome"] == .string("closed") }
+    init(command: MixedTaskCompletionCommand, raw: [String: JSON]) throws {
+        guard Set(raw.keys) == ["protocol", "account", "batch_id", "outcome", "replayed", "receipts"], raw["protocol"] == .number(1), raw["account"] == .string(command.account), raw["batch_id"] == .string(command.id), case .bool? = raw["replayed"], case .array(let values)? = raw["receipts"] else { throw MixedTaskCompletionCommand.invalid }
+        if raw["outcome"] == .string("closed") { guard values.isEmpty else { throw MixedTaskCompletionCommand.invalid }; receipts = [] }
+        else {
+            guard raw["outcome"] == .string("applied"), values.count == command.items.count else { throw MixedTaskCompletionCommand.invalid }
+            receipts = try values.enumerated().map { index, value in
+                guard case .object(let row) = value, row["kind"] == .string(command.items[index].kind), row["request_id"] == .string(command.items[index].id), row["replayed"] == raw["replayed"] else { throw MixedTaskCompletionCommand.invalid }
+                if command.items[index].kind == "child" {
+                    guard Set(row.keys) == ["kind", "request_id", "receipt", "replayed"], row["receipt"]?.object["replayed"] == raw["replayed"] else { throw MixedTaskCompletionCommand.invalid }
+                    _ = try command.childCommand(at: index).confirmed(row["receipt"]!.object)
+                } else { try Self.root(row, command: command, index: index) }
+                return .init(raw: row)
+            }
+        }
+        self.raw = raw
+    }
+    private static func root(_ row: [String: JSON], command: MixedTaskCompletionCommand, index: Int) throws {
+        guard Set(row.keys) == ["kind", "request_id", "task_id", "task_generation", "project_id", "action", "before", "after", "successor", "replayed"], row["task_id"] == .string(command.items[index].rootID), case .object(let before)? = row["before"], case .object(let after)? = row["after"], case .object(let next)? = row["successor"], Set(next.keys) == ["state", "planned_id", "id", "generation", "created", "hash"] else { throw MixedTaskCompletionCommand.invalid }
+        try MixedTaskCompletionCommand.baseline(before); try MixedTaskCompletionCommand.baseline(after, allowExhausted: true)
+        guard row["task_id"] == before["id"], row["task_generation"] == before["task_generation"], row["project_id"] == before["project_id"], try MixedTaskCompletionCommand.rootVersion(after["completion_version"]) == MixedTaskCompletionCommand.rootVersion(before["completion_version"]) + 1 else { throw MixedTaskCompletionCommand.invalid }
+        var expected = before
+        if let original = command.original {
+            let source = try MixedTaskCompletionCommand(account: command.account, origin: command.origin, body: original.body)
+            let proof = try source.resolution(original.receipt).receipts[index].raw
+            guard row["action"] == .string("undo"), AuthoredValueComparison.exactJSON(.object(before), proof["after"]!), next["created"] == .bool(false), next["hash"] == .null,
+                  next["planned_id"] == proof["successor"]?.object["planned_id"], next["id"] == proof["successor"]?.object["id"], next["generation"] == proof["successor"]?.object["generation"] else { throw MixedTaskCompletionCommand.invalid }
+            let created = proof["successor"]!.object["created"] == .bool(true)
+            guard created ? [.string("removed"), .string("absent")].contains(next["state"]!) : next["state"] == .string("none") else { throw MixedTaskCompletionCommand.invalid }
+            expected["completed"] = proof["before"]!.object["completed"]; expected["completed_at"] = proof["before"]!.object["completed_at"]
+        } else {
+            guard let original = command.body["roots"]!.list.first(where: { $0.object["task_id"] == row["task_id"] }), AuthoredValueComparison.exactJSON(.object(before), original.object["baseline"]!), row["action"] == command.body["action"] else { throw MixedTaskCompletionCommand.invalid }
+            let done = command.body["action"] == .string("complete")
+            expected["completed"] = .bool(done); expected["completed_at"] = done ? after["completed_at"] : .null
+            if done { guard TaskPlanning.instant(after["completed_at"]?.text ?? "") == TaskPlanning.instant(command.body["completed_at"]!.text) else { throw MixedTaskCompletionCommand.invalid } }
+            guard case .string(let state)? = next["state"], ["none", "created", "existing", "retired"].contains(state), next["created"] == .bool(state == "created") else { throw MixedTaskCompletionCommand.invalid }
+            for key in ["planned_id", "id", "generation"] { _ = try TeamProjectValue.optionalID(next[key]) }
+            if state == "created" || state == "existing" { guard next["id"] != .null, next["generation"] != .null, case .string(let hash)? = next["hash"], MixedTaskCompletionCommand.hash(hash), done, before["is_recurring"] == .bool(true), next["id"] != row["task_id"] else { throw MixedTaskCompletionCommand.invalid } }
+            else { guard next["id"] == .null, next["generation"] == .null, next["hash"] == .null else { throw MixedTaskCompletionCommand.invalid } }
+            if state == "none" { guard next["planned_id"] == .null else { throw MixedTaskCompletionCommand.invalid } }
+        }
+        expected["completion_version"] = after["completion_version"]
+        guard AuthoredValueComparison.exactJSON(.object(expected), .object(after)) else { throw MixedTaskCompletionCommand.invalid }
+    }
+    func agrees(_ other: Self) -> Bool { MixedTaskCompletionReceipt(raw: raw).agrees(.init(raw: other.raw)) }
+}
+
+struct MixedTaskCompletionState: ReviewedTeamFileCommand, CustomStringConvertible, CustomDebugStringConvertible {
+    enum Phase: String, Codable, Sendable { case queued, attempted, confirmed, closed }
+    struct Entry: Codable, Equatable, Sendable {
+        let command: MixedTaskCompletionCommand
+        var phase: Phase
+        var decision: [String: JSON]?
+        var proof: MixedTaskCompletionResolution? { decision.flatMap { try? command.resolution($0) } }
+        init(command: MixedTaskCompletionCommand, phase: Phase, decision: [String: JSON]? = nil) {
+            self.command = command; self.phase = phase; self.decision = decision
+        }
+        private enum CodingKeys: String, CodingKey { case command, phase, decision }
+        init(from decoder: Decoder) throws {
+            try completionKeys(decoder, ["command", "phase", "decision"])
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            command = try c.decode(MixedTaskCompletionCommand.self, forKey: .command)
+            phase = try c.decode(Phase.self, forKey: .phase)
+            decision = try c.decodeIfPresent([String: JSON].self, forKey: .decision)
+        }
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(command, forKey: .command); try c.encode(phase, forKey: .phase); try c.encode(decision, forKey: .decision)
+        }
+    }
+    static let storagePrefix = "mixed-completion-groups-v1."
+    static let fileName = "requests.taskfoldmixedcompletiongroups"
+    static let encryptionContext = "com.taskfold.mixed-completion-groups.v1"
+    static let maximumStoredBytes = 4_300_000
+    static let maximumEntries = 32
+    static var invalid: AppFailure { MixedTaskCompletionCommand.invalid }
+    let account: String, origin: String
+    var entries: [Entry]
+    var description: String { "Private task selection journal" }
+    var debugDescription: String { description }
+    init(account: String, origin: String, entries: [Entry] = []) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard origin.utf8.count <= 2048, entries.count <= Self.maximumEntries else { throw Self.invalid }
+        var groups = Set<String>(), members = Set<String>(), undoSources = Set<String>()
+        for entry in entries {
+            guard entry.command.account == account, entry.command.origin == origin, groups.insert(entry.command.id).inserted else { throw Self.invalid }
+            for item in entry.command.items { guard members.insert(item.id).inserted else { throw Self.invalid } }
+            switch entry.phase {
+            case .queued, .attempted: guard entry.decision == nil else { throw Self.invalid }
+            case .confirmed: guard entry.proof?.applied == true else { throw Self.invalid }
+            case .closed: guard entry.proof?.closed == true else { throw Self.invalid }
+            }
+        }
+        self.account = account; self.origin = origin; self.entries = entries
+        for entry in entries where entry.command.isUndo {
+            guard let parent = parent(of: entry.command) else { throw Self.invalid }
+            if entry.phase != .closed { guard undoSources.insert(parent.command.id).inserted else { throw Self.invalid } }
+        }
+    }
+    func parent(of command: MixedTaskCompletionCommand) -> Entry? {
+        guard let original = command.original else { return nil }
+        return entries.first { entry in
+            !entry.command.isUndo && entry.phase == .confirmed && entry.command.id == command.body["undo_of"]?.text &&
+            AuthoredValueComparison.exactJSON(.object(entry.command.body), .object(original.body)) &&
+            (try? entry.command.resolution(original.receipt).agrees(entry.proof!)) == true
+        }
+    }
+    mutating func makeRoom(preserving id: String?) throws {
+        func fits() throws -> Bool { try entries.count <= Self.maximumEntries && TaskfoldJSONEncoder().encode(self).count <= Self.maximumStoredBytes }
+        guard try !fits() else { return }
+        var families: [String: [String]] = [:]
+        for entry in entries {
+            let family = entry.command.isUndo ? parent(of: entry.command)?.command.id : entry.command.id
+            guard let family else { throw Self.invalid }
+            families[family, default: []].append(entry.command.id)
+        }
+        let eligible = families.values.filter { ids in
+            !ids.contains(id ?? "") && entries.filter { ids.contains($0.command.id) }.allSatisfy { $0.phase == .confirmed }
+        }.sorted { left, right in
+            entries.lastIndex { left.contains($0.command.id) }! < entries.lastIndex { right.contains($0.command.id) }!
+        }
+        for family in eligible {
+            entries.removeAll { family.contains($0.command.id) }
+            if try fits() { return }
+        }
+        throw ChildTaskCompletionCapacityFailure()
+    }
+    private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
+    init(from decoder: Decoder) throws {
+        try completionKeys(decoder, ["version", "account", "origin", "entries"])
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        guard try c.decode(Int.self, forKey: .version) == 1 else { throw Self.invalid }
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), entries: c.decode([Entry].self, forKey: .entries))
+    }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(1, forKey: .version); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(entries, forKey: .entries)
+    }
+}
+
+actor MixedTaskCompletionJournal {
+    private let admit: @Sendable (Set<String>) throws -> Void
+    let account: String, origin: String
+    private let io: any CalendarSecureItemIO
+    private let lock: AutomationEnrollmentProcessLock
+    private let removalDirectory: URL
+    private var key: String { MixedTaskCompletionState.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
+    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL, admit: @escaping @Sendable (Set<String>) throws -> Void = { _ in }) throws {
+        self.admit = admit;
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        self.account = account; self.origin = origin; self.io = io; self.lock = .init(directory: coordinationDirectory); self.removalDirectory = removalDirectory
+    }
+    private func guarded<T>(_ lease: CalendarReadLease?, _ operation: () throws -> T) throws -> T {
+        try lock.withExclusive(account: account, check: { try lease?.check() }) {
+            try AccountRemovalDisk(directory: removalDirectory, account: account).writable { try lease?.check(); return try operation() }
+        }
+    }
+    private func read() throws -> MixedTaskCompletionState {
+        guard let data = try io.read(key: key) else { return try .init(account: account, origin: origin) }
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: MixedTaskCompletionState.maximumStoredBytes)
+        let state = try TaskfoldJSONDecoder().decode(MixedTaskCompletionState.self, from: data)
+        guard state.account == account, state.origin == origin else { throw MixedTaskCompletionState.invalid }
+        return state
+    }
+    private func write(_ candidate: MixedTaskCompletionState, lease: CalendarReadLease, preserving id: String? = nil) throws {
+        var state = candidate; try state.makeRoom(preserving: id)
+        _ = try MixedTaskCompletionState(account: account, origin: origin, entries: state.entries)
+        let data = try TaskfoldJSONEncoder().encode(state)
+        guard data.count <= MixedTaskCompletionState.maximumStoredBytes else { throw MixedTaskCompletionState.invalid }
+        try lease.check(); try io.write(data, key: key)
+    }
+    func load() throws -> MixedTaskCompletionState { try guarded(nil) { try read() } }
+    func enqueue(_ command: MixedTaskCompletionCommand, lease: CalendarReadLease) throws {
+        try guarded(lease) {
+            try admit(command.rootIDs)
+            guard command.account == account, command.origin == origin else { throw MixedTaskCompletionState.invalid }
+            var state = try read()
+            if let old = state.entries.first(where: { $0.command.id == command.id }) {
+                guard old.command == command else { throw MixedTaskCompletionState.invalid }
+                guard old.phase != .closed else { throw ChildTaskCompletionFailure(reason: .closed) }; return
+            }
+            let reserved = Set(state.entries.flatMap { $0.command.items.map(\.id) })
+            guard command.items.allSatisfy({ !reserved.contains($0.id) }) else { throw MixedTaskCompletionState.invalid }
+            state.entries.append(.init(command: command, phase: .queued)); try write(state, lease: lease)
+        }
+    }
+    func begin(_ command: MixedTaskCompletionCommand, resolving: Bool = false, lease: CalendarReadLease) throws -> MixedTaskCompletionState.Entry {
+        try guarded(lease) {
+            if !resolving { try admit(command.rootIDs) }
+            var state = try read()
+            guard let i = state.entries.firstIndex(where: { $0.command == command }) else { throw MixedTaskCompletionState.invalid }
+            if !resolving {
+                guard state.entries[i].phase != .closed else { throw ChildTaskCompletionFailure(reason: .closed) }
+                guard !state.entries[..<i].contains(where: { ($0.phase == .queued || $0.phase == .attempted) && $0.command.overlaps(command) }) else { throw MixedTaskCompletionState.invalid }
+            }
+            if state.entries[i].phase == .queued { state.entries[i].phase = .attempted; try write(state, lease: lease) }
+            return state.entries[i]
+        }
+    }
+    func settle(_ command: MixedTaskCompletionCommand, decision: MixedTaskCompletionResolution, lease: CalendarReadLease) throws {
+        try guarded(lease) {
+            _ = try command.resolution(decision.raw)
+            var state = try read()
+            guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .queued else { throw MixedTaskCompletionState.invalid }
+            if let old = state.entries[i].proof { guard old.agrees(decision) else { throw MixedTaskCompletionState.invalid }; return }
+            if decision.applied {
+                var entry = state.entries.remove(at: i); entry.phase = .confirmed; entry.decision = decision.raw; state.entries.append(entry)
+            } else { state.entries[i].phase = .closed; state.entries[i].decision = decision.raw }
+            try write(state, lease: lease, preserving: command.id)
+        }
+    }
+    func discard(_ command: MixedTaskCompletionCommand, lease: CalendarReadLease) throws {
+        try guarded(lease) {
+            var state = try read()
+            guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .attempted,
+                  !state.entries.contains(where: { $0.command.isUndo && state.parent(of: $0.command)?.command == command }) else { throw MixedTaskCompletionState.invalid }
+            state.entries.remove(at: i); try write(state, lease: lease)
+        }
+    }
+    func removeAccount() throws { try lock.withExclusive(account: account) { try io.remove(key: key) } }
+}
+
+@MainActor protocol MixedTaskCompletionService: AnyObject {
+    func mixedTaskCompletion(_ command: MixedTaskCompletionCommand, session: UUID, close: Bool) async throws -> MixedTaskCompletionResolution
+}
+extension Backend: MixedTaskCompletionService {}
+@MainActor final class MixedTaskCompletionSender {
+    private let scope: ChildTaskFieldClientScope
+    private let journal: MixedTaskCompletionJournal
+    private let service: any MixedTaskCompletionService
+    private let current: () -> ChildTaskFieldClientScope?
+    private let canSend: (MixedTaskCompletionCommand) -> Bool
+    private let lease = CalendarReadLease()
+    private var closed = false
+    init(scope: ChildTaskFieldClientScope, journal: MixedTaskCompletionJournal, service: any MixedTaskCompletionService,
+         current: @escaping () -> ChildTaskFieldClientScope?, canSend: @escaping (MixedTaskCompletionCommand) -> Bool) {
+        self.scope = scope; self.journal = journal; self.service = service; self.current = current; self.canSend = canSend
+    }
+    func close() { closed = true; lease.cancel() }
+    private func check() throws { try Task.checkCancellation(); try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
+    func send(_ command: MixedTaskCompletionCommand, resolving: Bool = false) async throws -> MixedTaskCompletionResolution {
+        do {
+            try check(); guard command.account == scope.account, command.origin == scope.origin else { throw CancellationError() }
+            let state = try await journal.load(); try check()
+            guard let entry = state.entries.first(where: { $0.command == command }) else { throw MixedTaskCompletionState.invalid }
+            if let proof = entry.proof {
+                if !resolving && proof.closed { throw ChildTaskCompletionFailure(reason: .closed) }
+                return proof
+            }
+            guard resolving || canSend(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            _ = try await journal.begin(command, resolving: resolving, lease: lease); try check()
+            guard resolving || canSend(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            let proof: MixedTaskCompletionResolution
+            do { proof = try await service.mixedTaskCompletion(command, session: scope.session, close: resolving) }
+            catch is CancellationError { throw CancellationError() }
+            catch let failure as ChildTaskCompletionFailure { throw failure }
+            catch let required as AccountSessionAuthorizationRequired { throw required }
+            catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+            try check()
+            guard let checked = try? command.resolution(proof.raw), checked == proof, resolving || proof.applied else { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+            try await journal.settle(command, decision: proof, lease: lease); try check(); return proof
+        } catch { try check(); throw error }
+    }
+}
+
+@MainActor @Observable final class MixedTaskCompletionRecoveryModel {
+    private(set) var entries: [MixedTaskCompletionState.Entry] = []
+    private(set) var loaded = false
+    private(set) var busy = false
+    private(set) var message: String?
+    private let scope: ChildTaskFieldClientScope
+    private let journal: MixedTaskCompletionJournal
+    private let sender: MixedTaskCompletionSender
+    private let current: () -> ChildTaskFieldClientScope?
+    private let canQueue: (MixedTaskCompletionCommand) -> Bool
+    private let canSend: (MixedTaskCompletionCommand) -> Bool
+    private let refresh: () async -> Void
+    private let lease = CalendarReadLease()
+    private var closed = false
+    init(scope: ChildTaskFieldClientScope, journal: MixedTaskCompletionJournal, service: any MixedTaskCompletionService,
+         current: @escaping () -> ChildTaskFieldClientScope?, canQueue: @escaping (MixedTaskCompletionCommand) -> Bool,
+         canSend: @escaping (MixedTaskCompletionCommand) -> Bool, refresh: @escaping () async -> Void) {
+        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.canSend = canSend; self.refresh = refresh
+        sender = .init(scope: scope, journal: journal, service: service, current: current, canSend: canSend)
+    }
+    func close() { closed = true; lease.cancel(); sender.close(); entries = []; loaded = false; busy = false; message = nil }
+    private func check() throws { try Task.checkCancellation(); try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
+    private func update() async throws { let state = try await journal.load(); try check(); entries = state.entries; loaded = true }
+    private func recover(_ error: Error) async {
+        guard (try? check()) != nil else { close(); return }
+        do { try await update() } catch { entries = []; loaded = false }
+        guard (try? check()) != nil else { close(); return }
+        if error is CancellationError { return }
+        if error is ChildTaskActionAdmissionFailure { message = ChildTaskActionAdmissionFailure().localizedDescription }
+        else if let value = error as? ChildTaskCompletionCapacityFailure { message = value.localizedDescription }
+        else if let value = error as? ChildTaskCompletionFailure { message = value.localizedDescription }
+        else if error is AccountSessionAuthorizationRequired { message = "Sign in again to check this saved selection. Your work is kept." }
+        else { message = "This selection couldn’t be confirmed. Your saved work is kept; review it before trying again." }
+    }
+    func load() async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await update() } catch { await recover(error) }
+    }
+    private func sendSaved(_ command: MixedTaskCompletionCommand, resolving: Bool = false) async throws {
+        let proof = try await sender.send(command, resolving: resolving); try check(); try await update()
+        if proof.applied { await refresh(); try check() }
+        message = proof.closed ? "The original selection was stopped. Review current tasks before saving a fresh action." : command.isUndo ? "Selection Undo confirmed." : "Selection confirmed."
+    }
+    @discardableResult func perform(_ command: MixedTaskCompletionCommand) async -> Bool {
+        guard !busy else { return false }; busy = true; defer { busy = false }
+        do {
+            try check(); guard command.account == scope.account, command.origin == scope.origin, canQueue(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            try await journal.enqueue(command, lease: lease); try check(); try await update()
+            if canSend(command) { try await sendSaved(command) }
+            else { message = "Selection saved for later. No task change is confirmed yet." }
+            return entries.contains { $0.command == command && $0.phase == .confirmed }
+        } catch { await recover(error); return false }
+    }
+    func send(_ command: MixedTaskCompletionCommand, resolving: Bool = false) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await sendSaved(command, resolving: resolving) } catch { await recover(error) }
+    }
+    @discardableResult func undo(_ entry: MixedTaskCompletionState.Entry, reads: [String: ChildTaskRecordRead]) async -> MixedTaskCompletionCommand? {
+        guard !busy else { return nil }; busy = true; defer { busy = false }
+        do {
+            try check(); guard entries.contains(entry), entry.phase == .confirmed, let proof = entry.proof,
+                  reads.values.allSatisfy({ ChildTaskFieldClientScope($0.context) == scope }) else { throw MixedTaskCompletionState.invalid }
+            let command = try entry.command.undo(reads: reads, decision: proof)
+            guard canQueue(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            try await journal.enqueue(command, lease: lease); try check(); try await update()
+            if canSend(command) { try await sendSaved(command) } else { message = "Selection Undo saved for later. The tasks have not changed yet." }
+            return command
+        } catch { await recover(error); return nil }
+    }
+    func discard(_ command: MixedTaskCompletionCommand) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await journal.discard(command, lease: lease); try check(); try await update(); message = "Saved record removed from this device. Task changes are kept." }
+        catch { await recover(error) }
+    }
+}
+
+struct MixedTaskListUndo: Equatable, Sendable {
+    let scope: ChildTaskFieldClientScope
+    let command: MixedTaskCompletionCommand
+}
+struct MixedTaskListResult {
+    let message: String
+    let undo: MixedTaskListUndo?
+    var needsReview = false
 }

@@ -412,6 +412,8 @@ final class Store {
                 let state = try await self.childTaskFieldJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
             case .completions:
                 let state = try await self.childTaskCompletionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
+            case .mixed:
+                let state = try await self.mixedTaskCompletionJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
             case .groups:
                 let state = try await self.childTaskCompletionBatchJournal(account: captured.account, origin: captured.origin).load(); return !state.entries.isEmpty
             case .hierarchy:
@@ -5693,6 +5695,7 @@ extension Store {
             try await childTaskFieldJournal(account:ChildFieldNativeIdentity.account,origin:ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskCompletionBatchJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await mixedTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
@@ -5727,3 +5730,92 @@ extension Store {
     }
 }
 #endif
+
+extension Store {
+    var mixedTaskCompletionEnabled: Bool { childTaskCompletionBatchesEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldMixedCompletionEnabled") as? Bool == true }
+    func mixedTaskCompletionJournal(account: String, origin: String) throws -> MixedTaskCompletionJournal {
+        let admission = childTaskActionAdmission(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true).appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Task selection requests", isDirectory: true).appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<MixedTaskCompletionState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildTaskActionLocks", isDirectory: true), removalDirectory: root, admit: { try admission.checkForMixed($0) })
+    }
+    func permitsMixedTaskCompletion(_ command: MixedTaskCompletionCommand, sending: Bool) -> Bool {
+        guard mixedTaskCompletionEnabled else { return false }
+        let source = command.original?.body ?? command.body
+        let guards = source["roots"]!.list.map { value -> [String: JSON] in
+            var identity = value.object["baseline"]!.object; identity["task_id"] = value.object["task_id"]; return identity
+        } + source["children"]!.list.map(\.object)
+        return guards.allSatisfy { permitsChildTaskRequest(account: command.account, origin: command.origin, identity: $0, enabled: mixedTaskCompletionEnabled, sending: sending) }
+    }
+    func mixedTaskCompletionRecoveryModel() throws -> MixedTaskCompletionRecoveryModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try mixedTaskCompletionJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canQueue: { [weak self] in self?.permitsMixedTaskCompletion($0, sending: false) == true },
+                     canSend: { [weak self] in self?.permitsMixedTaskCompletion($0, sending: true) == true },
+                     refresh: { [weak self] in guard let self, self.childTaskFieldRecoveryScope == scope else { return }; await self.sync() })
+    }
+    func captureMixedListCompletion(_ tasks: [Record], completed: Bool) throws -> TaskListCompletionSelectionIntent {
+        guard mixedTaskCompletionEnabled, online, let scope = childTaskFieldRecoveryScope else { throw MixedTaskCompletionCommand.invalid }
+        return try .init(tasks: tasks, roots: activeTasks, projects: allProjects, scope: scope, completed: completed)
+    }
+    func completeMixedFromList(_ intent: TaskListCompletionSelectionIntent) async -> MixedTaskListResult? {
+        guard !childListCompletionBusy, mixedTaskCompletionEnabled, online, childTaskFieldRecoveryScope == intent.scope else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let openingSnapshot = snapshotRevision
+            let parentIDs = intent.members.compactMap { member -> String? in if case .root(let root) = member { return root.source.id }; return nil }
+            let parents = try await backend.completionSelectionRoots(parentIDs, scope: intent.scope)
+            var reads: [String: ChildTaskRecordRead] = [:]
+            for child in intent.childMembers where reads[child.opening.rootID] == nil {
+                let opening = try childTaskRecordContext(child.opening.rootID)
+                let root = parents.roots.first { $0.task.id == child.opening.rootID }?.task ?? opening.root
+                let current = try ChildTaskRecordContext(account: opening.account, origin: opening.origin, workspace: opening.workspace, session: opening.session, access: opening.access, snapshot: opening.snapshot, root: root)
+                let read = try await backend.childTaskRecords(current)
+                guard opening.matches(try childTaskRecordContext(child.opening.rootID)) else { throw CancellationError() }
+                reads[child.opening.rootID] = read
+            }
+            guard let current = childTaskFieldRecoveryScope, current == intent.scope, snapshotRevision == openingSnapshot else { throw CancellationError() }
+            let prepared = try parents.prepare(intent, projects: allProjects, childReads: reads, current: current)
+            let command = try MixedTaskCompletionCommand(prepared: prepared, roots: parents)
+            let model = try mixedTaskCompletionRecoveryModel(); defer { model.close() }
+            let applied = await model.perform(command)
+            guard childTaskFieldRecoveryScope == intent.scope else { return nil }
+            return .init(message: applied ? "\(intent.completed ? "Completed" : "Reopened") \(command.items.count) selected tasks" : model.message ?? "Review this saved selection before trying again.", undo: applied ? .init(scope: intent.scope, command: command) : nil, needsReview: !applied)
+        } catch {
+            guard !Task.isCancelled, childTaskFieldRecoveryScope == intent.scope else { return nil }
+            return .init(message: "These tasks changed. Review the current selection and try again.", undo: nil, needsReview: false)
+        }
+    }
+    func readMixedChildren(_ command: MixedTaskCompletionCommand) async throws -> [String: ChildTaskRecordRead] {
+        guard let scope = childTaskFieldRecoveryScope, scope.account == command.account, scope.origin == command.origin, online else { throw CancellationError() }
+        var reads: [String: ChildTaskRecordRead] = [:]
+        for id in Set(command.items.filter { $0.kind == "child" }.map(\.rootID)).sorted() {
+            reads[id] = try await ChildTaskListRead.fresh(scope: scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(id) })
+        }
+        guard childTaskFieldRecoveryScope == scope, reads.values.allSatisfy(childTaskFieldComparisonIsCurrent) else { throw CancellationError() }; return reads
+    }
+    func canUndoMixedFromList(_ token: MixedTaskListUndo) -> Bool { !childListCompletionBusy && childTaskFieldRecoveryScope == token.scope && permitsMixedTaskCompletion(token.command, sending: true) }
+    func undoMixedFromList(_ token: MixedTaskListUndo) async -> MixedTaskListResult? {
+        guard canUndoMixedFromList(token) else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let reads = try await readMixedChildren(token.command), model = try mixedTaskCompletionRecoveryModel(); defer { model.close() }; await model.load()
+            guard let entry = model.entries.first(where: { $0.command == token.command && $0.phase == .confirmed }) else { throw MixedTaskCompletionCommand.invalid }
+            let command = await model.undo(entry, reads: reads)
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            let confirmed = command.map { undo in model.entries.contains { $0.command == undo && $0.phase == .confirmed } } == true
+            return .init(message: confirmed ? "Undid selected tasks" : model.message ?? "Review this saved selection Undo.", undo: nil, needsReview: !confirmed)
+        } catch {
+            guard !Task.isCancelled, childTaskFieldRecoveryScope == token.scope else { return nil }
+            return .init(message: "This selection Undo needs review. Your saved work is kept.", undo: nil, needsReview: true)
+        }
+    }
+}

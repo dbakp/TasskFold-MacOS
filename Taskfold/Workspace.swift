@@ -68,6 +68,8 @@ struct Confirmation: Equatable {
     var historyRequest: EditHistoryRequest?
     var childCompletion: ChildTaskListCompletionUndo? = nil
     var childCompletionReview = false
+    var mixedGroup: MixedTaskListUndo? = nil
+    var mixedGroupReview = false
     var childGroup: ChildTaskListBatchUndo? = nil
     var childGroupReview = false
 }
@@ -285,7 +287,7 @@ final class Workspace {
         if store.undoStack.last?.redo.map(\.id) != previous { register(name) }
     }
     private func register(_ name: String) {
-        childCompletionUndoID = nil; childGroupUndoID = nil
+        childCompletionUndoID = nil; childGroupUndoID = nil; mixedGroupUndoID = nil
         guard let undoManager else { return }
         undoManager.setActionName(name)
         undoManager.registerUndo(withTarget: self) { workspace in
@@ -297,7 +299,7 @@ final class Workspace {
     }
 
     func confirm(_ message: String, undoable: Bool = true) {
-        childCompletionUndoID = nil; childGroupUndoID = nil
+        childCompletionUndoID = nil; childGroupUndoID = nil; mixedGroupUndoID = nil
         confirmationTimer?.cancel()
         withAnimation(layout) { confirmation = Confirmation(message: message, undoable: undoable, historyRequest: undoable ? store.captureHistoryRequest() : nil) }
         confirmationTimer = Task { [weak self] in
@@ -323,9 +325,9 @@ final class Workspace {
     var childCompletionReview = false
     private var childCompletionUndoID: String?
     func clearChildCompletion() {
-        childGroupUndoID = nil; childGroupReview = false
+        childGroupUndoID = nil; childGroupReview = false; mixedGroupUndoID = nil; mixedGroupReview = false
         childCompletionUndoID = nil; childCompletionReview = false
-        if confirmation?.childCompletion != nil || confirmation?.childCompletionReview == true || confirmation?.childGroup != nil || confirmation?.childGroupReview == true { confirmationTimer?.cancel(); confirmation = nil }
+        if confirmation?.mixedGroup != nil || confirmation?.mixedGroupReview == true || confirmation?.childCompletion != nil || confirmation?.childCompletionReview == true || confirmation?.childGroup != nil || confirmation?.childGroupReview == true { confirmationTimer?.cancel(); confirmation = nil }
     }
     func reviewChildCompletion() {
         confirmationTimer?.cancel(); confirmation = nil; childCompletionReview = true
@@ -367,6 +369,30 @@ final class Workspace {
         manager.setActionName(token.command.items[0].body["action"] == .string("complete") ? "Complete Subtasks" : "Reopen Subtasks")
     }
     func undoChildGroup(_ token: ChildTaskListBatchUndo) { guard canUndoChildGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
+    var mixedGroupReview = false
+    private var mixedGroupUndoID: String?
+    func reviewMixedGroup() { confirmationTimer?.cancel(); confirmation = nil; mixedGroupReview = true }
+    func canUndoMixedGroup(_ token: MixedTaskListUndo) -> Bool { mixedGroupUndoID == token.command.id && store.canUndoMixedFromList(token) }
+    private func showMixedGroup(_ result: MixedTaskListResult) {
+        confirm(result.message, undoable: false); confirmation?.mixedGroup = result.undo; confirmation?.mixedGroupReview = result.needsReview
+        guard let token = result.undo, let manager = undoManager else { return }; mixedGroupUndoID = token.command.id
+        manager.registerUndo(withTarget: self) { workspace in
+            guard workspace.canUndoMixedGroup(token) else { return }; workspace.mixedGroupUndoID = nil
+            Task { [weak workspace] in guard let workspace, let result = await workspace.store.undoMixedFromList(token) else { return }; workspace.showMixedGroup(result) }
+        }
+        manager.setActionName(token.command.body["action"] == .string("complete") ? "Complete Selected Tasks" : "Reopen Selected Tasks")
+    }
+    func undoMixedGroup(_ token: MixedTaskListUndo) { guard canUndoMixedGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
+    private func completeMixedGroup(_ tasks: [Record]) {
+        do {
+            let intent = try store.captureMixedListCompletion(tasks, completed: tasks.contains { !$0.completed })
+            Task { [weak self] in
+                guard let self, let result = await self.store.completeMixedFromList(intent) else { return }
+                if result.undo != nil { self.selection.subtract(tasks.map(\.id)); Feedback.complete() }
+                self.showMixedGroup(result)
+            }
+        } catch { store.error = error.localizedDescription }
+    }
     private func completeIndependentGroup(_ tasks: [Record]) {
         do {
             let intent = try store.captureChildListBatch(tasks, completed: tasks.contains { !$0.completed })
@@ -454,7 +480,13 @@ final class Workspace {
         if store.childTaskCompletionEnabled, ids.contains(where: { Self.subtaskPath($0) != nil }) {
             if ids.count == 1, let id = ids.first, let task = taskRecord(id) { complete(task); return }
             guard store.childTaskCompletionBatchesEnabled else { store.error = "Bulk subtask completion is not available yet."; return }
-            do { completeIndependentGroup(try ids.sorted().map { try store.selectionRecord($0) }) } catch { store.error = error.localizedDescription }
+            do {
+                let tasks = try ids.sorted().map { try store.selectionRecord($0) }
+                if tasks.contains(where: { Self.subtaskPath($0.id) == nil }) {
+                    guard store.mixedTaskCompletionEnabled else { throw MixedTaskCompletionCommand.invalid }
+                    completeMixedGroup(tasks)
+                } else { completeIndependentGroup(tasks) }
+            } catch { store.error = error.localizedDescription }
             return
         }
         guard ids.allSatisfy({ id in taskRecord(id).map(TaskKind.mayComplete) == true }) else {

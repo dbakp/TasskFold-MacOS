@@ -612,7 +612,7 @@ extension ChildTaskCompletionBatchTests {
             await model.refresh(scope: s, current: { s }) { kind in
                 reads += 1; if kind == target { throw URLError(.cannotDecodeContentData) }; return false
             }
-            XCTAssertEqual(reads, 7); XCTAssertTrue(model.contains(target, scope: s))
+            XCTAssertEqual(reads, 8); XCTAssertTrue(model.contains(target, scope: s))
             XCTAssertFalse(ChildTaskRecoveryKind.allCases.filter { $0 != target }.contains { model.contains($0, scope: s) })
         }
     }
