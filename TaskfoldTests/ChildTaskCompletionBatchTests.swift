@@ -1,11 +1,13 @@
 import XCTest
+import CryptoKit
 @testable import TaskfoldCore
 
 private final class BatchIO: CalendarSecureItemIO, @unchecked Sendable {
     private let lock = NSLock()
-    private var rows: [String: Data] = [:]
+    var rows: [String: Data] = [:]
+    var failWrite = false
     func read(key: String) throws -> Data? { lock.lock(); defer { lock.unlock() }; return rows[key] }
-    func write(_ data: Data, key: String) throws { lock.lock(); defer { lock.unlock() }; rows[key] = data }
+    func write(_ data: Data, key: String) throws { lock.lock(); defer { lock.unlock() }; if failWrite { throw URLError(.cannotWriteToFile) }; rows[key] = data }
     func remove(key: String) throws { lock.lock(); defer { lock.unlock() }; rows.removeValue(forKey: key) }
 }
 private final class BatchHTTP: URLProtocol, @unchecked Sendable {
@@ -190,5 +192,267 @@ final class ChildTaskCompletionBatchTests: XCTestCase {
         let c = try command(), backend = try backend(c)
         defer{BatchHTTP.handler=nil};BatchHTTP.handler={_,pipe in pipe.finish(400,Data("{\"code\":\"PT410\",\"message\":\"closed\"}".utf8))}
         do {_ = try await backend.childTaskCompletionBatch(c,session:backend.reminderSessionIncarnation);XCTFail("Closed group")}catch let failure as ChildTaskCompletionFailure{XCTAssertEqual(failure.reason,.closed)}
+    }
+}
+
+@MainActor private final class GroupPeer: ChildTaskCompletionBatchService {
+    var calls: [(ChildTaskCompletionBatchCommand, Bool)] = []
+    var proofs: [String: ChildTaskCompletionBatchResolution] = [:]
+    var lose = false
+    var onReply: (() -> Void)?
+    let make: (ChildTaskCompletionBatchCommand, Bool) throws -> ChildTaskCompletionBatchResolution
+    init(make: @escaping (ChildTaskCompletionBatchCommand, Bool) throws -> ChildTaskCompletionBatchResolution) { self.make = make }
+    func childTaskCompletionBatch(_ command: ChildTaskCompletionBatchCommand, session: UUID, close: Bool) async throws -> ChildTaskCompletionBatchResolution {
+        calls.append((command, close))
+        let proof = try proofs[command.id] ?? make(command, close); proofs[command.id] = proof
+        onReply?(); if lose { lose = false; throw URLError(.networkConnectionLost) }; return proof
+    }
+}
+extension ChildTaskCompletionBatchTests {
+    private func groupDirectory() throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-group-tests-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: url) }; return url
+    }
+    private func groupJournal(_ c: ChildTaskCompletionBatchCommand, _ io: any CalendarSecureItemIO, _ directory: URL) throws -> ChildTaskCompletionBatchJournal {
+        try .init(account: c.account, origin: c.origin, io: io, coordinationDirectory: directory.appendingPathComponent("locks"), removalDirectory: directory.appendingPathComponent("removal"))
+    }
+    private func scope(_ c: ChildTaskCompletionBatchCommand) -> ChildTaskFieldClientScope {
+        .init(account: c.account, origin: c.origin, workspace: UUID(), session: UUID(), access: UUID())
+    }
+    @MainActor private func peer() -> GroupPeer { GroupPeer { c, close in try c.resolution(self.reply(c, closed: close)) } }
+    func testGroupColdJournalKeepsAttemptAndWholeConfirmation() async throws {
+        let c = try command(), io = BatchIO(), d = try groupDirectory(), j = try groupJournal(c, io, d), lease = CalendarReadLease()
+        try await j.enqueue(c, lease: lease); _ = try await j.begin(c, lease: lease)
+        let cold = try groupJournal(c, io, d), pending = try await cold.load(); XCTAssertEqual(pending.entries.first?.phase, .attempted)
+        let proof = try c.resolution(reply(c)); try await cold.settle(c, decision: proof, lease: lease)
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.first?.proof, proof); XCTAssertEqual(saved.entries.first?.phase, .confirmed)
+    }
+    func testGroupCannotSettleBeforeAttemptOrForgetUncertainty() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), lease = CalendarReadLease()
+        try await j.enqueue(c, lease: lease)
+        do { try await j.settle(c, decision: c.resolution(reply(c)), lease: lease); XCTFail("Not attempted") } catch {}
+        _ = try await j.begin(c, lease: lease)
+        do { try await j.discard(c, lease: lease); XCTFail("Must resolve uncertainty") } catch {}
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.first?.phase, .attempted)
+    }
+    func testGroupStopsEveryMemberAndClosureCannotBeReplacedByAppliedProof() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), lease = CalendarReadLease()
+        try await j.enqueue(c, lease: lease); _ = try await j.begin(c, resolving: true, lease: lease)
+        let closed = try c.resolution(reply(c, closed: true)); try await j.settle(c, decision: closed, lease: lease)
+        do { _ = try await j.begin(c, lease: lease); XCTFail("Closed") } catch {}
+        do { try await j.enqueue(c, lease: lease); XCTFail("Cannot revive identity") } catch {}
+        do { try await j.settle(c, decision: c.resolution(reply(c)), lease: lease); XCTFail("Contradictory decision") } catch {}
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.first?.proof, closed)
+    }
+    func testGroupCorruptionAndDuplicateKeysCannotBeOverwritten() async throws {
+        for bytes in [Data("corrupt".utf8), Data("{\"version\":1,\"version\":1}".utf8)] {
+            let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory())
+            try await j.enqueue(c, lease: CalendarReadLease()); let key = try XCTUnwrap(io.rows.keys.first); io.rows[key] = bytes
+            do { try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("Cannot replace unreadable saved work") } catch {}
+            XCTAssertEqual(io.rows[key], bytes)
+        }
+    }
+    func testGroupScopeAndRemovalFencePreventNewStorageWrites() async throws {
+        let c = try command(), io = BatchIO(), d = try groupDirectory(), j = try groupJournal(c, io, d), lease = CalendarReadLease(); lease.cancel()
+        do { try await j.enqueue(c, lease: lease); XCTFail("Cancelled") } catch {}
+        XCTAssertTrue(io.rows.isEmpty)
+        try AccountRemovalDisk(directory: d.appendingPathComponent("removal"), account: c.account).removeCache()
+        do { try await j.enqueue(c, lease: CalendarReadLease()); XCTFail("Removed account") } catch {}
+        XCTAssertTrue(io.rows.isEmpty)
+    }
+    func testGroupEncryptedColdStorageWrongKeyAndRemoval() async throws {
+        let c = try command(), d = try groupDirectory(), key = SymmetricKey(size: .bits256), wrong = SymmetricKey(size: .bits256)
+        let io = ReviewedTeamCommandFileIO<ChildTaskCompletionBatchState>(directory: d.appendingPathComponent("protected"), account: c.account, origin: c.origin, encryptionKey: { key })
+        let j = try groupJournal(c, io, d); try await j.enqueue(c, lease: CalendarReadLease())
+        let bytes = try Data(contentsOf: io.file); XCTAssertFalse(String(decoding: bytes, as: UTF8.self).contains(c.id))
+        let bad = ReviewedTeamCommandFileIO<ChildTaskCompletionBatchState>(directory: d.appendingPathComponent("protected"), account: c.account, origin: c.origin, encryptionKey: { wrong })
+        do { _ = try await groupJournal(c, bad, d).load(); XCTFail("Wrong key") } catch {}
+        XCTAssertEqual(try Data(contentsOf: io.file), bytes)
+        let cold = try await groupJournal(c, io, d).load(); XCTAssertEqual(cold.entries.first?.command, c)
+        try await j.removeAccount(); XCTAssertFalse(FileManager.default.fileExists(atPath: io.file.path))
+    }
+    func testGroupUndoRequiresOneCompleteConfirmedParentAndKeepsIt() async throws {
+        let c = try command(), u = try command(undo: true), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), lease = CalendarReadLease()
+        do { try await j.enqueue(u, lease: lease); XCTFail("No parent") } catch {}
+        try await j.enqueue(c, lease: lease); _ = try await j.begin(c, lease: lease)
+        try await j.settle(c, decision: c.resolution(fixture()["receipt"]!.object), lease: lease)
+        try await j.enqueue(u, lease: lease)
+        do { try await j.discard(c, lease: lease); XCTFail("Undo still depends on original") } catch {}
+        _ = try await j.begin(u, lease: lease); try await j.settle(u, decision: u.resolution(fixture()["undoReceipt"]!.object), lease: lease)
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.count, 2); XCTAssertEqual(saved.parent(of: u)?.command, c)
+        let second = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: u.items)
+        do { try await j.enqueue(second, lease: lease); XCTFail("Members cannot belong to two groups") } catch {}
+    }
+    func testGroupPendingOverlapOrdersWholeSelectionsButResolutionCanStopLaterOne() async throws {
+        let c = try command(), fresh = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: [item(c.items[0].body["node_key"]!.text)]), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), lease = CalendarReadLease()
+        try await j.enqueue(c, lease: lease); try await j.enqueue(fresh, lease: lease)
+        do { _ = try await j.begin(fresh, lease: lease); XCTFail("Earlier selection overlaps") } catch {}
+        _ = try await j.begin(fresh, resolving: true, lease: lease); try await j.settle(fresh, decision: fresh.resolution(reply(fresh, closed: true)), lease: lease)
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.map(\.phase), [.queued, .closed])
+    }
+    func testGroupFreshReplacementNeedsClosureAndFreshMemberIDs() async throws {
+        let c = try command(), fresh = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: c.items.map { old in var b = old.body; b["request_id"] = .string(UUID().uuidString.lowercased()); return try .init(account: old.account, origin: old.origin, body: b) }), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), lease = CalendarReadLease()
+        try await j.enqueue(c, lease: lease)
+        do { try await j.replaceClosed(c, with: fresh, lease: lease); XCTFail("Not closed") } catch {}
+        _ = try await j.begin(c, resolving: true, lease: lease); try await j.settle(c, decision: c.resolution(reply(c, closed: true)), lease: lease)
+        try await j.replaceClosed(c, with: fresh, lease: lease)
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.map(\.phase), [.closed, .queued])
+    }
+    @MainActor func testGroupLostReplyRetriesExactSavedGroupAfterColdReturn() async throws {
+        let c = try command(), io = BatchIO(), d = try groupDirectory(), j = try groupJournal(c, io, d), s = scope(c), p = peer()
+        try await j.enqueue(c, lease: CalendarReadLease()); p.lose = true
+        let sender = ChildTaskCompletionBatchSender(scope: s, journal: j, service: p, current: { s }, canSend: { _ in true })
+        do { _ = try await sender.send(c); XCTFail("Lost reply") } catch {}
+        let uncertain = try await j.load(); XCTAssertEqual(uncertain.entries.first?.phase, .attempted); sender.close()
+        let cold = ChildTaskCompletionBatchSender(scope: s, journal: try groupJournal(c, io, d), service: p, current: { s }, canSend: { _ in true })
+        let result = try await cold.send(c); XCTAssertTrue(result.applied); XCTAssertEqual(p.calls.map { $0.0 }, [c,c]); XCTAssertEqual(p.proofs.count, 1)
+        _ = try await cold.send(c); XCTAssertEqual(p.calls.count, 2)
+    }
+    @MainActor func testGroupAttemptWriteFailurePreventsNetworkAndConfirmationFailureKeepsUncertainty() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), s = scope(c), p = peer()
+        try await j.enqueue(c, lease: CalendarReadLease()); io.failWrite = true
+        let sender = ChildTaskCompletionBatchSender(scope: s, journal: j, service: p, current: { s }, canSend: { _ in true })
+        do { _ = try await sender.send(c); XCTFail("Storage refused attempt") } catch {}
+        XCTAssertTrue(p.calls.isEmpty); io.failWrite = false; p.onReply = { io.failWrite = true }
+        do { _ = try await sender.send(c); XCTFail("Storage refused proof") } catch {}
+        let uncertain = try await j.load(); XCTAssertEqual(uncertain.entries.first?.phase, .attempted)
+        io.failWrite = false; p.onReply = nil; _ = try await sender.send(c); XCTAssertEqual(p.calls.count, 2)
+    }
+    @MainActor func testGroupLateScopeChangeKeepsUncertaintyAndSuppressesLateProof() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), s = scope(c), p = peer(); var current: ChildTaskFieldClientScope? = s
+        try await j.enqueue(c, lease: CalendarReadLease()); p.onReply = { current = nil }
+        let sender = ChildTaskCompletionBatchSender(scope: s, journal: j, service: p, current: { current }, canSend: { _ in true })
+        do { _ = try await sender.send(c); XCTFail("Scope changed") } catch is CancellationError {} catch { XCTFail("Wrong failure") }
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.first?.phase, .attempted)
+    }
+    @MainActor func testGroupResolutionWorksWithSendingOffAndClosedSenderNeverStartsNetwork() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), s = scope(c), p = peer()
+        try await j.enqueue(c, lease: CalendarReadLease())
+        let sender = ChildTaskCompletionBatchSender(scope: s, journal: j, service: p, current: { s }, canSend: { _ in false })
+        let result = try await sender.send(c, resolving: true); XCTAssertTrue(result.closed); XCTAssertTrue(p.calls[0].1)
+        _ = try await sender.send(c, resolving: true); XCTAssertEqual(p.calls.count, 1); sender.close()
+        do { _ = try await sender.send(c, resolving: true); XCTFail("Closed presentation") } catch {}
+        XCTAssertEqual(p.calls.count, 1)
+    }
+}
+
+extension ChildTaskCompletionBatchTests {
+    private func afterRead(_ item: ChildTaskCompletionCommand, _ receipt: ChildTaskCompletionReceipt, _ scope: ChildTaskFieldClientScope) throws -> ChildTaskRecordRead {
+        let b = item.body, key = b["node_key"]!.text, revision = receipt.raw["revision"]!
+        let fields = receipt.raw["after"]!.object.merging(["id": .string(key), "title": .string("Synthetic group task")]) { _, value in value }
+        let root = Record(["id": b["task_id"]!, "task_generation": b["task_generation"]!, "project_id": b["project_id"]!, "subtasks": .array([.object(fields)])])
+        let context = try ChildTaskRecordContext(account: scope.account, origin: scope.origin, workspace: scope.workspace, session: scope.session, access: scope.access, snapshot: UUID(), root: root)
+        let raw: [String: JSON] = ["protocol": .number(1), "account": .string(item.account), "task_id": b["task_id"]!, "task_generation": b["task_generation"]!, "project_id": b["project_id"]!, "projection_revision": revision, "root_kind": .string("array"), "records": .array([.object(["node_key": .string(key), "incarnation": b["incarnation"]!, "revision": revision, "parent_key": .null, "sibling_order": .number(0), "identity_path": .array([.string(key)]), "fields": .object(fields), "children_kind": .string("absent")])])]
+        return try .init(data: TaskfoldJSONEncoder().encode(raw), context: context)
+    }
+    func testGroupUndoFactoryRequiresAllFreshReadsFromOneLiveScope() throws {
+        let c = try command(), proof = try c.resolution(fixture()["receipt"]!.object), s = scope(c)
+        var reads = try Dictionary(uniqueKeysWithValues: zip(c.items, proof.receipts).map { ($0.0.body["task_id"]!.text, try afterRead($0.0, $0.1, s)) })
+        let undo = try c.undo(reads: reads, decision: proof)
+        XCTAssertTrue(undo.isUndo); XCTAssertEqual(undo.items.map { $0.body["undo_of"]!.text }, c.items.map(\.id))
+        XCTAssertThrowsError(try c.undo(reads: [:], decision: proof))
+        reads[c.items[0].body["task_id"]!.text] = try afterRead(c.items[0], proof.receipts[0], scope(c))
+        XCTAssertThrowsError(try c.undo(reads: reads, decision: proof))
+    }
+    func testGroupUndoCannotUsePartialOrMixedParentGroups() throws {
+        let c = try command(), u = try command(undo: true), proof = try fixture()["receipt"]!.object
+        let partial = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: [u.items[0]])
+        XCTAssertThrowsError(try ChildTaskCompletionBatchState(account: c.account, origin: c.origin, entries: [.init(command: c, phase: .confirmed, decision: proof), .init(command: partial, phase: .queued)]))
+        let valid = try ChildTaskCompletionBatchState(account: c.account, origin: c.origin, entries: [.init(command: c, phase: .confirmed, decision: proof), .init(command: u, phase: .queued)])
+        XCTAssertEqual(valid.parent(of: u)?.command, c, "The real database fixture reverses Undo member order")
+    }
+    func testGroupFullPendingHistoryCannotBePrunedToAdmitMoreWork() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), lease = CalendarReadLease()
+        try await j.enqueue(c, lease: lease); let key = try XCTUnwrap(io.rows.keys.first)
+        let history = try (0..<32).map { index -> ChildTaskCompletionBatchState.Entry in
+            let command = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: [item("pending-\(index)")]); return .init(command: command, phase: .attempted)
+        }
+        io.rows[key] = try TaskfoldJSONEncoder().encode(ChildTaskCompletionBatchState(account: c.account, origin: c.origin, entries: history)); let before = io.rows
+        do { try await j.enqueue(c, lease: lease); XCTFail("All uncertainty must survive") } catch is ChildTaskCompletionCapacityFailure {} catch { XCTFail("Wrong failure") }
+        XCTAssertEqual(io.rows, before)
+    }
+    func testGroupRetentionPrunesSettledUndoTogetherAndKeepsPendingUndoFamily() throws {
+        let c = try command(), u = try command(undo: true), f = try fixture()
+        let history = try (0..<30).map { index -> ChildTaskCompletionBatchState.Entry in
+            let c = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: [item("settled-\(index)")]); return .init(command: c, phase: .confirmed, decision: try reply(c))
+        }
+        for phase in [ChildTaskCompletionBatchState.Phase.confirmed, .attempted] {
+            var state = try ChildTaskCompletionBatchState(account: c.account, origin: c.origin, entries: [.init(command: c, phase: .confirmed, decision: f["receipt"]!.object), .init(command: u, phase: phase, decision: phase == .confirmed ? f["undoReceipt"]!.object : nil)] + history)
+            let incoming = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: [item("incoming")]); state.entries.append(.init(command: incoming, phase: .queued))
+            try state.makeRoom(preserving: incoming.id)
+            XCTAssertEqual(state.entries.contains { $0.command == c }, phase != .confirmed)
+            XCTAssertEqual(state.entries.contains { $0.command == u }, phase != .confirmed)
+            _ = try ChildTaskCompletionBatchState(account: c.account, origin: c.origin, entries: state.entries)
+        }
+    }
+    func testGroupConcurrentJournalsKeepBothSelections() async throws {
+        let c = try command(), other = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: [item("other")]), io = BatchIO(), d = try groupDirectory(), j = try groupJournal(c, io, d), k = try groupJournal(c, io, d)
+        async let one: Void = j.enqueue(c, lease: CalendarReadLease())
+        async let two: Void = k.enqueue(other, lease: CalendarReadLease())
+        _ = try await (one, two)
+        let state = try await j.load(); XCTAssertEqual(Set(state.entries.map(\.command.id)), [c.id, other.id])
+    }
+}
+
+extension ChildTaskCompletionBatchTests {
+    @MainActor func testGroupModelOfflineStageColdLoadAndExplicitSend() async throws {
+        let c = try command(), io = BatchIO(), d = try groupDirectory(), j = try groupJournal(c, io, d), s = scope(c), p = peer()
+        var online = false, refreshes = 0
+        func model() -> ChildTaskCompletionBatchRecoveryModel {
+            .init(scope: s, journal: j, service: p, current: { s }, canQueue: { _ in true }, canSend: { _ in online }, refresh: { refreshes += 1 })
+        }
+        let first = model(); let immediate = await first.perform(c); XCTAssertFalse(immediate); XCTAssertTrue(p.calls.isEmpty); first.close()
+        let cold = model(); await cold.load(); XCTAssertEqual(cold.entries.first?.command, c); XCTAssertTrue(p.calls.isEmpty)
+        online = true; await cold.send(c); XCTAssertEqual(cold.entries.first?.phase, .confirmed); XCTAssertEqual(refreshes, 1)
+    }
+    @MainActor func testGroupModelLostReplyNeverShowsConfirmationAndRetryRefreshesOnce() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), s = scope(c), p = peer(); p.lose = true; var refreshes = 0
+        let model = ChildTaskCompletionBatchRecoveryModel(scope: s, journal: j, service: p, current: { s }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { refreshes += 1 })
+        let result = await model.perform(c); XCTAssertFalse(result); XCTAssertEqual(model.entries.first?.phase, .attempted); XCTAssertEqual(refreshes, 0)
+        XCTAssertEqual(model.message, ChildTaskCompletionFailure(reason: .unconfirmed).localizedDescription)
+        await model.send(c); XCTAssertEqual(model.entries.first?.phase, .confirmed); XCTAssertEqual(refreshes, 1); XCTAssertEqual(p.calls.map { $0.0 }, [c,c])
+    }
+    @MainActor func testGroupModelWholeUndoUsesCurrentReadsAndCannotRepeatUndo() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), s = scope(c), p = peer()
+        let model = ChildTaskCompletionBatchRecoveryModel(scope: s, journal: j, service: p, current: { s }, canQueue: { _ in true }, canSend: { _ in true }, refresh: {})
+        let result = await model.perform(c); XCTAssertTrue(result)
+        let entry = try XCTUnwrap(model.entries.first), proof = try XCTUnwrap(entry.proof)
+        let reads = try Dictionary(uniqueKeysWithValues: zip(c.items, proof.receipts).map { ($0.0.body["task_id"]!.text, try afterRead($0.0, $0.1, s)) })
+        let produced = await model.undo(entry, reads: reads); let undo = try XCTUnwrap(produced); XCTAssertTrue(undo.isUndo); XCTAssertEqual(model.entries.count, 2)
+        XCTAssertEqual(model.entries.last?.phase, .confirmed); XCTAssertEqual(p.calls.count, 2)
+        let repeated = await model.undo(entry, reads: reads); XCTAssertNil(repeated); XCTAssertEqual(p.calls.count, 2)
+    }
+    @MainActor func testGroupModelCloseDuringReplySuppressesUIAndRefreshButKeepsSavedIntent() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), s = scope(c), p = peer(); var refreshes = 0
+        let model = ChildTaskCompletionBatchRecoveryModel(scope: s, journal: j, service: p, current: { s }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { refreshes += 1 })
+        p.onReply = { model.close() }
+        let result = await model.perform(c); XCTAssertFalse(result); XCTAssertTrue(model.entries.isEmpty); XCTAssertNil(model.message); XCTAssertFalse(model.loaded); XCTAssertEqual(refreshes, 0)
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.first?.phase, .attempted)
+    }
+    @MainActor func testGroupSendingPermissionRecheckedAfterAttemptAndResolutionRecoversAppliedResult() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), s = scope(c), p = peer(); var admissions = 0
+        try await j.enqueue(c, lease: CalendarReadLease())
+        let sender = ChildTaskCompletionBatchSender(scope: s, journal: j, service: p, current: { s }, canSend: { _ in admissions += 1; return admissions == 1 })
+        do { _ = try await sender.send(c); XCTFail("Access changed after durable attempt") } catch {}
+        XCTAssertTrue(p.calls.isEmpty)
+        p.proofs[c.id] = try c.resolution(reply(c))
+        let result = try await sender.send(c, resolving: true); XCTAssertTrue(result.applied)
+        let saved = try await j.load(); XCTAssertEqual(saved.entries.first?.phase, .confirmed)
+    }
+}
+
+extension ChildTaskCompletionBatchTests {
+    func testGroupMemberReuseIsRefusedBeforeSettledHistoryCanBePruned() async throws {
+        let c = try command(), io = BatchIO(), j = try groupJournal(c, io, groupDirectory()), lease = CalendarReadLease()
+        try await j.enqueue(c, lease: lease); let key = try XCTUnwrap(io.rows.keys.first)
+        let history = try (0..<32).map { index -> ChildTaskCompletionBatchState.Entry in
+            let command = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: [item("settled-reuse-\(index)")])
+            return .init(command: command, phase: .confirmed, decision: try reply(command))
+        }
+        io.rows[key] = try TaskfoldJSONEncoder().encode(ChildTaskCompletionBatchState(account: c.account, origin: c.origin, entries: history))
+        let before = io.rows, reused = try ChildTaskCompletionBatchCommand(account: c.account, origin: c.origin, items: history[0].command.items)
+        do { try await j.enqueue(reused, lease: lease); XCTFail("Reuse must be refused before retention can prune its earlier owner") } catch {}
+        XCTAssertEqual(io.rows, before)
     }
 }

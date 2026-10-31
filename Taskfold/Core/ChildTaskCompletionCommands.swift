@@ -696,3 +696,357 @@ struct ChildTaskCompletionBatchResolution: Equatable, Sendable {
     }
 }
 typealias ChildTaskCompletionBatchVault = ReviewedTeamCommandVault<ChildTaskCompletionBatchCommand>
+
+extension ChildTaskCompletionBatchCommand {
+    var isUndo: Bool { items[0].isUndo }
+    func overlaps(_ other: Self) -> Bool {
+        account == other.account && origin == other.origin && items.contains { left in
+            other.items.contains { right in
+                AuthoredValueComparison.exactJSON(left.body["task_id"]!, right.body["task_id"]!) &&
+                AuthoredValueComparison.exactJSON(left.body["node_key"]!, right.body["node_key"]!)
+            }
+        }
+    }
+    func undo(reads: [String: ChildTaskRecordRead], decision: ChildTaskCompletionBatchResolution) throws -> Self {
+        let proof = try resolution(decision.raw)
+        guard !isUndo, proof.applied else { throw Self.invalid }
+        let selectedReads = try items.map { item -> ChildTaskRecordRead in
+            guard let read = reads[item.body["task_id"]!.text] else { throw Self.invalid }; return read
+        }
+        guard Set(selectedReads.map { ChildTaskFieldClientScope($0.context) }).count == 1 else { throw Self.invalid }
+        let inverses = try zip(items, proof.receipts).map { item, receipt in
+            guard let read = reads[item.body["task_id"]!.text] else { throw Self.invalid }
+            return try ChildTaskCompletionCommand(undo: item, receipt: receipt, read: read)
+        }
+        return try .init(account: account, origin: origin, items: inverses)
+    }
+}
+extension ChildTaskCompletionBatchResolution {
+    func agrees(_ other: Self) -> Bool {
+        guard applied == other.applied, closed == other.closed, receipts.count == other.receipts.count else { return false }
+        var left = raw, right = other.raw
+        left.removeValue(forKey: "replayed"); right.removeValue(forKey: "replayed")
+        left.removeValue(forKey: "receipts"); right.removeValue(forKey: "receipts")
+        return AuthoredValueComparison.exactJSON(.object(left), .object(right)) && zip(receipts, other.receipts).allSatisfy { $0.agrees($1) }
+    }
+}
+
+/// One disk entry represents the entire atomic group. A decoded decision is
+/// never trusted until the enclosing state validates it against its command.
+struct ChildTaskCompletionBatchState: ReviewedTeamFileCommand, CustomStringConvertible, CustomDebugStringConvertible {
+    enum Phase: String, Codable, Sendable { case queued, attempted, confirmed, closed }
+    struct Entry: Codable, Equatable, Sendable {
+        let command: ChildTaskCompletionBatchCommand
+        var phase: Phase
+        var decision: [String: JSON]?
+        var proof: ChildTaskCompletionBatchResolution? { decision.flatMap { try? command.resolution($0) } }
+        init(command: ChildTaskCompletionBatchCommand, phase: Phase, decision: [String: JSON]? = nil) {
+            self.command = command; self.phase = phase; self.decision = decision
+        }
+        private enum CodingKeys: String, CodingKey { case command, phase, decision }
+        init(from decoder: Decoder) throws {
+            try completionKeys(decoder, ["command", "phase", "decision"])
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            command = try c.decode(ChildTaskCompletionBatchCommand.self, forKey: .command)
+            phase = try c.decode(Phase.self, forKey: .phase)
+            decision = try c.decodeIfPresent([String: JSON].self, forKey: .decision)
+        }
+        func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(command, forKey: .command); try c.encode(phase, forKey: .phase); try c.encode(decision, forKey: .decision)
+        }
+    }
+    static let storagePrefix = "child-completion-groups-v1."
+    static let fileName = "requests.taskfoldchildcompletiongroups"
+    static let encryptionContext = "com.taskfold.child-completion-groups.v1"
+    static let maximumStoredBytes = 4_300_000
+    static let maximumEntries = 32
+    static var invalid: AppFailure { ChildTaskCompletionBatchCommand.invalid }
+    let account: String, origin: String
+    var entries: [Entry]
+    var description: String { "Private subtask selection journal" }
+    var debugDescription: String { description }
+    init(account: String, origin: String, entries: [Entry] = []) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard origin.utf8.count <= 2048, entries.count <= Self.maximumEntries else { throw Self.invalid }
+        var groups = Set<String>(), members = Set<String>(), undoSources = Set<String>()
+        for entry in entries {
+            guard entry.command.account == account, entry.command.origin == origin, groups.insert(entry.command.id).inserted else { throw Self.invalid }
+            for item in entry.command.items { guard members.insert(item.id).inserted else { throw Self.invalid } }
+            switch entry.phase {
+            case .queued, .attempted: guard entry.decision == nil else { throw Self.invalid }
+            case .confirmed: guard entry.proof?.applied == true else { throw Self.invalid }
+            case .closed: guard entry.proof?.closed == true else { throw Self.invalid }
+            }
+        }
+        self.account = account; self.origin = origin; self.entries = entries
+        for entry in entries where entry.command.isUndo {
+            guard let parent = parent(of: entry.command) else { throw Self.invalid }
+            if entry.phase != .closed { guard undoSources.insert(parent.command.id).inserted else { throw Self.invalid } }
+        }
+    }
+    func parent(of command: ChildTaskCompletionBatchCommand) -> Entry? {
+        guard command.isUndo, let sourceID = command.items[0].original?.body["request_id"]?.text else { return nil }
+        return entries.first { entry in
+            guard !entry.command.isUndo, entry.command.items.contains(where: { $0.id == sourceID }), entry.phase == .confirmed, let proof = entry.proof,
+                  command.items.count == entry.command.items.count else { return false }
+            let sources = Dictionary(uniqueKeysWithValues: zip(entry.command.items, proof.receipts).map { ($0.0.id, ($0.0, $0.1)) })
+            return command.items.allSatisfy { undo in
+                guard let original = undo.original, let source = sources[original.body["request_id"]!.text] else { return false }
+                return AuthoredValueComparison.exactJSON(.object(original.body), .object(source.0.body)) &&
+                    (try? source.0.confirmed(original.receipt).agrees(source.1)) == true
+            }
+        }
+    }
+    mutating func makeRoom(preserving id: String?) throws {
+        func fits() throws -> Bool { try entries.count <= Self.maximumEntries && TaskfoldJSONEncoder().encode(self).count <= Self.maximumStoredBytes }
+        guard try !fits() else { return }
+        var families: [String: [String]] = [:]
+        for entry in entries {
+            let family = entry.command.isUndo ? parent(of: entry.command)?.command.id : entry.command.id
+            guard let family else { throw Self.invalid }
+            families[family, default: []].append(entry.command.id)
+        }
+        let eligible = families.values.filter { ids in
+            !ids.contains(id ?? "") && entries.filter { ids.contains($0.command.id) }.allSatisfy { $0.phase == .confirmed }
+        }.sorted { left, right in
+            entries.lastIndex { left.contains($0.command.id) }! < entries.lastIndex { right.contains($0.command.id) }!
+        }
+        for family in eligible {
+            entries.removeAll { family.contains($0.command.id) }
+            if try fits() { return }
+        }
+        throw ChildTaskCompletionCapacityFailure()
+    }
+    private enum CodingKeys: String, CodingKey { case version, account, origin, entries }
+    init(from decoder: Decoder) throws {
+        try completionKeys(decoder, ["version", "account", "origin", "entries"])
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        guard try c.decode(Int.self, forKey: .version) == 1 else { throw Self.invalid }
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), entries: c.decode([Entry].self, forKey: .entries))
+    }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(1, forKey: .version); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(entries, forKey: .entries)
+    }
+}
+
+actor ChildTaskCompletionBatchJournal {
+    let account: String, origin: String
+    private let io: any CalendarSecureItemIO
+    private let lock: AutomationEnrollmentProcessLock
+    private let removalDirectory: URL
+    private var key: String { ChildTaskCompletionBatchState.storagePrefix + account + "." + CalendarOAuthConfiguration.digest(origin) }
+    init(account: String, origin: String, io: any CalendarSecureItemIO, coordinationDirectory: URL, removalDirectory: URL) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        self.account = account; self.origin = origin; self.io = io; self.lock = .init(directory: coordinationDirectory); self.removalDirectory = removalDirectory
+    }
+    private func guarded<T>(_ lease: CalendarReadLease?, _ operation: () throws -> T) throws -> T {
+        try lock.withExclusive(account: account, check: { try lease?.check() }) {
+            try AccountRemovalDisk(directory: removalDirectory, account: account).writable { try lease?.check(); return try operation() }
+        }
+    }
+    private func read() throws -> ChildTaskCompletionBatchState {
+        guard let data = try io.read(key: key) else { return try .init(account: account, origin: origin) }
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: ChildTaskCompletionBatchState.maximumStoredBytes)
+        let state = try TaskfoldJSONDecoder().decode(ChildTaskCompletionBatchState.self, from: data)
+        guard state.account == account, state.origin == origin else { throw ChildTaskCompletionBatchState.invalid }
+        return state
+    }
+    private func write(_ candidate: ChildTaskCompletionBatchState, lease: CalendarReadLease, preserving id: String? = nil) throws {
+        var state = candidate; try state.makeRoom(preserving: id)
+        _ = try ChildTaskCompletionBatchState(account: account, origin: origin, entries: state.entries)
+        let data = try TaskfoldJSONEncoder().encode(state)
+        guard data.count <= ChildTaskCompletionBatchState.maximumStoredBytes else { throw ChildTaskCompletionBatchState.invalid }
+        try lease.check(); try io.write(data, key: key)
+    }
+    func load() throws -> ChildTaskCompletionBatchState { try guarded(nil) { try read() } }
+    func enqueue(_ command: ChildTaskCompletionBatchCommand, lease: CalendarReadLease) throws {
+        try guarded(lease) {
+            guard command.account == account, command.origin == origin else { throw ChildTaskCompletionBatchState.invalid }
+            var state = try read()
+            if let old = state.entries.first(where: { $0.command.id == command.id }) {
+                guard old.command == command else { throw ChildTaskCompletionBatchState.invalid }
+                guard old.phase != .closed else { throw ChildTaskCompletionFailure(reason: .closed) }; return
+            }
+            let reserved = Set(state.entries.flatMap { $0.command.items.map(\.id) })
+            guard command.items.allSatisfy({ !reserved.contains($0.id) }) else { throw ChildTaskCompletionBatchState.invalid }
+            state.entries.append(.init(command: command, phase: .queued)); try write(state, lease: lease)
+        }
+    }
+    func begin(_ command: ChildTaskCompletionBatchCommand, resolving: Bool = false, lease: CalendarReadLease) throws -> ChildTaskCompletionBatchState.Entry {
+        try guarded(lease) {
+            var state = try read()
+            guard let i = state.entries.firstIndex(where: { $0.command == command }) else { throw ChildTaskCompletionBatchState.invalid }
+            if !resolving {
+                guard state.entries[i].phase != .closed else { throw ChildTaskCompletionFailure(reason: .closed) }
+                guard !state.entries[..<i].contains(where: { ($0.phase == .queued || $0.phase == .attempted) && $0.command.overlaps(command) }) else { throw ChildTaskCompletionBatchState.invalid }
+            }
+            if state.entries[i].phase == .queued { state.entries[i].phase = .attempted; try write(state, lease: lease) }
+            return state.entries[i]
+        }
+    }
+    func settle(_ command: ChildTaskCompletionBatchCommand, decision: ChildTaskCompletionBatchResolution, lease: CalendarReadLease) throws {
+        try guarded(lease) {
+            _ = try command.resolution(decision.raw)
+            var state = try read()
+            guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .queued else { throw ChildTaskCompletionBatchState.invalid }
+            if let old = state.entries[i].proof { guard old.agrees(decision) else { throw ChildTaskCompletionBatchState.invalid }; return }
+            if decision.applied {
+                var entry = state.entries.remove(at: i); entry.phase = .confirmed; entry.decision = decision.raw; state.entries.append(entry)
+            } else { state.entries[i].phase = .closed; state.entries[i].decision = decision.raw }
+            try write(state, lease: lease, preserving: command.id)
+        }
+    }
+    func discard(_ command: ChildTaskCompletionBatchCommand, lease: CalendarReadLease) throws {
+        try guarded(lease) {
+            var state = try read()
+            guard let i = state.entries.firstIndex(where: { $0.command == command }), state.entries[i].phase != .attempted,
+                  !state.entries.contains(where: { $0.command.isUndo && state.parent(of: $0.command)?.command == command }) else { throw ChildTaskCompletionBatchState.invalid }
+            state.entries.remove(at: i); try write(state, lease: lease)
+        }
+    }
+    func replaceClosed(_ command: ChildTaskCompletionBatchCommand, with replacement: ChildTaskCompletionBatchCommand, lease: CalendarReadLease) throws {
+        try guarded(lease) {
+            var state = try read()
+            guard state.entries.contains(where: { $0.command == command && $0.phase == .closed }),
+                  command.id != replacement.id, command.items.count == replacement.items.count,
+                  zip(command.items, replacement.items).allSatisfy({ old, fresh in
+                      ChildTaskCompletionCommand.identity.allSatisfy({ AuthoredValueComparison.exactJSON(old.body[$0]!, fresh.body[$0]!) }) && old.body["action"] == fresh.body["action"] &&
+                      fresh.body["revision"]!.integer >= old.body["revision"]!.integer &&
+                      old.original?.body == fresh.original?.body &&
+                      (old.original == nil || ChildTaskCompletionReceipt(raw: old.original!.receipt).agrees(.init(raw: fresh.original!.receipt)))
+                  }), !state.entries.contains(where: { $0.command.id == replacement.id || (($0.phase == .queued || $0.phase == .attempted) && $0.command.overlaps(replacement)) }) else { throw ChildTaskCompletionBatchState.invalid }
+            let reserved = Set(state.entries.flatMap { $0.command.items.map(\.id) })
+            guard replacement.items.allSatisfy({ !reserved.contains($0.id) }) else { throw ChildTaskCompletionBatchState.invalid }
+            state.entries.append(.init(command: replacement, phase: .queued)); try write(state, lease: lease)
+        }
+    }
+    func removeAccount() throws { try lock.withExclusive(account: account) { try io.remove(key: key) } }
+}
+
+@MainActor protocol ChildTaskCompletionBatchService: AnyObject {
+    func childTaskCompletionBatch(_ command: ChildTaskCompletionBatchCommand, session: UUID, close: Bool) async throws -> ChildTaskCompletionBatchResolution
+}
+extension Backend: ChildTaskCompletionBatchService {}
+@MainActor final class ChildTaskCompletionBatchSender {
+    private let scope: ChildTaskFieldClientScope
+    private let journal: ChildTaskCompletionBatchJournal
+    private let service: any ChildTaskCompletionBatchService
+    private let current: () -> ChildTaskFieldClientScope?
+    private let canSend: (ChildTaskCompletionBatchCommand) -> Bool
+    private let lease = CalendarReadLease()
+    private var closed = false
+    init(scope: ChildTaskFieldClientScope, journal: ChildTaskCompletionBatchJournal, service: any ChildTaskCompletionBatchService,
+         current: @escaping () -> ChildTaskFieldClientScope?, canSend: @escaping (ChildTaskCompletionBatchCommand) -> Bool) {
+        self.scope = scope; self.journal = journal; self.service = service; self.current = current; self.canSend = canSend
+    }
+    func close() { closed = true; lease.cancel() }
+    private func check() throws { try Task.checkCancellation(); try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
+    func send(_ command: ChildTaskCompletionBatchCommand, resolving: Bool = false) async throws -> ChildTaskCompletionBatchResolution {
+        do {
+            try check(); guard command.account == scope.account, command.origin == scope.origin else { throw CancellationError() }
+            let state = try await journal.load(); try check()
+            guard let entry = state.entries.first(where: { $0.command == command }) else { throw ChildTaskCompletionBatchState.invalid }
+            if let proof = entry.proof {
+                if !resolving && proof.closed { throw ChildTaskCompletionFailure(reason: .closed) }
+                return proof
+            }
+            guard resolving || canSend(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            _ = try await journal.begin(command, resolving: resolving, lease: lease); try check()
+            guard resolving || canSend(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            let proof: ChildTaskCompletionBatchResolution
+            do { proof = try await service.childTaskCompletionBatch(command, session: scope.session, close: resolving) }
+            catch is CancellationError { throw CancellationError() }
+            catch let failure as ChildTaskCompletionFailure { throw failure }
+            catch let required as AccountSessionAuthorizationRequired { throw required }
+            catch { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+            try check()
+            guard let checked = try? command.resolution(proof.raw), checked == proof, resolving || proof.applied else { throw ChildTaskCompletionFailure(reason: .unconfirmed) }
+            try await journal.settle(command, decision: proof, lease: lease); try check(); return proof
+        } catch { try check(); throw error }
+    }
+}
+
+@MainActor @Observable final class ChildTaskCompletionBatchRecoveryModel {
+    private(set) var entries: [ChildTaskCompletionBatchState.Entry] = []
+    private(set) var loaded = false
+    private(set) var busy = false
+    private(set) var message: String?
+    private let scope: ChildTaskFieldClientScope
+    private let journal: ChildTaskCompletionBatchJournal
+    private let sender: ChildTaskCompletionBatchSender
+    private let current: () -> ChildTaskFieldClientScope?
+    private let canQueue: (ChildTaskCompletionBatchCommand) -> Bool
+    private let canSend: (ChildTaskCompletionBatchCommand) -> Bool
+    private let refresh: () async -> Void
+    private let lease = CalendarReadLease()
+    private var closed = false
+    init(scope: ChildTaskFieldClientScope, journal: ChildTaskCompletionBatchJournal, service: any ChildTaskCompletionBatchService,
+         current: @escaping () -> ChildTaskFieldClientScope?, canQueue: @escaping (ChildTaskCompletionBatchCommand) -> Bool,
+         canSend: @escaping (ChildTaskCompletionBatchCommand) -> Bool, refresh: @escaping () async -> Void) {
+        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.canSend = canSend; self.refresh = refresh
+        sender = .init(scope: scope, journal: journal, service: service, current: current, canSend: canSend)
+    }
+    func close() { closed = true; lease.cancel(); sender.close(); entries = []; loaded = false; busy = false; message = nil }
+    private func check() throws { try Task.checkCancellation(); try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
+    private func update() async throws { let state = try await journal.load(); try check(); entries = state.entries; loaded = true }
+    private func recover(_ error: Error) async {
+        guard (try? check()) != nil else { close(); return }
+        do { try await update() } catch { entries = []; loaded = false }
+        guard (try? check()) != nil else { close(); return }
+        if error is CancellationError { return }
+        if let value = error as? ChildTaskCompletionCapacityFailure { message = value.localizedDescription }
+        else if let value = error as? ChildTaskCompletionFailure { message = value.localizedDescription }
+        else if error is AccountSessionAuthorizationRequired { message = "Sign in again to check this saved selection. Your work is kept." }
+        else { message = "This selection couldn’t be confirmed. Your saved work is kept; review it before trying again." }
+    }
+    func load() async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await update() } catch { await recover(error) }
+    }
+    private func sendSaved(_ command: ChildTaskCompletionBatchCommand, resolving: Bool = false) async throws {
+        let proof = try await sender.send(command, resolving: resolving); try check(); try await update()
+        if proof.applied { await refresh(); try check() }
+        message = proof.closed ? "The original selection was stopped. Review current tasks before saving a fresh action." : command.isUndo ? "Selection Undo confirmed." : "Selection confirmed."
+    }
+    @discardableResult func perform(_ command: ChildTaskCompletionBatchCommand) async -> Bool {
+        guard !busy else { return false }; busy = true; defer { busy = false }
+        do {
+            try check(); guard command.account == scope.account, command.origin == scope.origin, canQueue(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            try await journal.enqueue(command, lease: lease); try check(); try await update()
+            if canSend(command) { try await sendSaved(command) }
+            else { message = "Selection saved for later. No task change is confirmed yet." }
+            return entries.contains { $0.command == command && $0.phase == .confirmed }
+        } catch { await recover(error); return false }
+    }
+    func send(_ command: ChildTaskCompletionBatchCommand, resolving: Bool = false) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await sendSaved(command, resolving: resolving) } catch { await recover(error) }
+    }
+    @discardableResult func undo(_ entry: ChildTaskCompletionBatchState.Entry, reads: [String: ChildTaskRecordRead]) async -> ChildTaskCompletionBatchCommand? {
+        guard !busy else { return nil }; busy = true; defer { busy = false }
+        do {
+            try check(); guard entries.contains(entry), entry.phase == .confirmed, let proof = entry.proof,
+                  reads.values.allSatisfy({ ChildTaskFieldClientScope($0.context) == scope }) else { throw ChildTaskCompletionBatchState.invalid }
+            let command = try entry.command.undo(reads: reads, decision: proof)
+            guard canQueue(command) else { throw ChildTaskCompletionFailure(reason: .unavailable) }
+            try await journal.enqueue(command, lease: lease); try check(); try await update()
+            if canSend(command) { try await sendSaved(command) } else { message = "Selection Undo saved for later. The tasks have not changed yet." }
+            return command
+        } catch { await recover(error); return nil }
+    }
+    func replace(_ entry: ChildTaskCompletionBatchState.Entry, with command: ChildTaskCompletionBatchCommand) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do {
+            try check(); guard entries.contains(entry), entry.phase == .closed, canQueue(command) else { throw ChildTaskCompletionBatchState.invalid }
+            try await journal.replaceClosed(entry.command, with: command, lease: lease); try check(); try await update()
+            message = "Fresh selection saved. Review it before sending."
+        } catch { await recover(error) }
+    }
+    func discard(_ command: ChildTaskCompletionBatchCommand) async {
+        guard !busy else { return }; busy = true; defer { busy = false }
+        do { try check(); try await journal.discard(command, lease: lease); try check(); try await update(); message = "Saved record removed from this device. Task changes are kept." }
+        catch { await recover(error) }
+    }
+}

@@ -379,6 +379,42 @@ final class Store {
         return try .init(account: account, origin: origin, io: io,
                          coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildCompletionCommandLocks", isDirectory: true), removalDirectory: root)
     }
+    func childTaskCompletionBatchJournal(account: String, origin: String) throws -> ChildTaskCompletionBatchJournal {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        let root = cacheURL.deletingLastPathComponent()
+        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+            .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
+            .appendingPathComponent("Child completion groups", isDirectory: true)
+            .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        let io = ReviewedTeamCommandFileIO<ChildTaskCompletionBatchState>(directory: directory, account: account, origin: origin, encryptionKey: {
+            #if DEBUG
+            if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
+            #endif
+            return try BackupVault.deviceKey(account: account)
+        })
+        return try .init(account: account, origin: origin, io: io,
+                         coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("ChildCompletionGroupLocks", isDirectory: true), removalDirectory: root)
+    }
+    var childTaskCompletionBatchesEnabled: Bool {
+        childTaskCompletionEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldChildCompletionBatchesEnabled") as? Bool == true
+    }
+    func childTaskCompletionBatchRecoveryModel() throws -> ChildTaskCompletionBatchRecoveryModel {
+        guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
+        return .init(scope: scope, journal: try childTaskCompletionBatchJournal(account: scope.account, origin: scope.origin), service: backend,
+                     current: { [weak self] in self?.childTaskFieldRecoveryScope },
+                     canQueue: { [weak self] command in
+                         guard let self, self.childTaskCompletionBatchesEnabled else { return false }
+                         return command.items.allSatisfy { self.permitsChildTaskCompletionRequest($0, sending: false) }
+                     },
+                     canSend: { [weak self] command in
+                         guard let self, self.childTaskCompletionBatchesEnabled else { return false }
+                         return command.items.allSatisfy { self.permitsChildTaskCompletionRequest($0, sending: true) }
+                     },
+                     refresh: { [weak self] in
+                         guard let self, self.childTaskFieldRecoveryScope == scope else { return }
+                         await self.sync()
+                     })
+    }
     func permitsChildTaskCompletionRequest(_ command: ChildTaskCompletionCommand, sending: Bool) -> Bool {
         guard childTaskCompletionEnabled else { return false }
         return permitsChildTaskRequest(account: command.account, origin: command.origin, identity: command.body, enabled: childTaskCompletionEnabled, sending: sending)
@@ -1993,6 +2029,7 @@ final class Store {
         try await teamWorkflowRunVault(account: account, origin: command.origin).removeAccount(account, origin: command.origin)
         try await childTaskFieldJournal(account:account,origin:command.origin).removeAccount()
         try await childTaskCompletionJournal(account: account, origin: command.origin).removeAccount()
+        try await childTaskCompletionBatchJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskStructureJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskStructureDraftJournal(account: account, origin: command.origin).removeAccount()
         try await childTaskTransferJournal(account: account, origin: command.origin).removeAccount()
@@ -5543,6 +5580,7 @@ extension Store {
             try ChildFieldNativePeer.save(ChildFieldNativePeer.initial())
             try await childTaskFieldJournal(account:ChildFieldNativeIdentity.account,origin:ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
+            try await childTaskCompletionBatchJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskStructureDraftJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()
