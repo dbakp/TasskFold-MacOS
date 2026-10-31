@@ -7209,7 +7209,7 @@ The initial phone cold-return assertion did not scroll to a lazy off-screen rece
 - [x] Add Redo to saved move recovery and connect newly confirmed moves to the existing native history owner and scoped feedback in each app.
 - [x] Both Core suites pass 44 selected cases; both app builds/signatures pass. iPhone saved/cold and normal task-menu journeys, plus iPad saved/cold at largest text, each pass with exactly four unique operations and exact preserved source/nested fields.
 - [ ] Mac keyboard walkthrough: the Mac is locked. Genuine cloud/account/window/speech and larger-workflow acceptance remains open.
-- [ ] Field-edit and other hierarchy Redo, consistent shared activity, older-data/history mapping and shared file/discussion custody remain. Normal migration/transfer gates stay disabled.
+- [ ] Mac native history acceptance, consistent shared activity, older-data/history mapping and shared file/discussion custody remain. Normal migration/transfer gates stay disabled.
 
 [Evidence and precise scope](transfer-redo/README.md). No server/schema deployment or user-paused provider/rollout/release work is included.
 
@@ -7218,4 +7218,13 @@ The initial phone cold-return assertion did not scroll to a lazy off-screen rece
 
 New field-editor saves capture their exact original touched values privately, preserving absent versus null fields. Saved recovery offers Undo/Redo; newly confirmed edits join the native history controls. Every inverse is a fresh request using the previous receipt's field-version cutoff. Unrelated later fields survive; same-field conflicts require review. The encrypted journal preserves inverse identities through cold relaunch, unknown replies and competing windows. Clean inspectors refresh after a native history action while unsent typing remains protected.
 
-The independently owned database migration adds optional-field removal without enabling migration gates or expanding RPC permissions. Its local SQL/client/native evidence and limitations are maintained in [field-history/README.md](field-history/README.md) and [field-history/verification.json](field-history/verification.json). Hosted deployment, wider genuine-account acceptance, other hierarchy Redo, consistent shared activity/history, older-data mapping and shared file/discussion custody remain separate work. Normal migration use remains disabled.
+The independently owned database migration adds optional-field removal without enabling migration gates or expanding RPC permissions. Its local SQL/client/native evidence and limitations are maintained in [field-history/README.md](field-history/README.md) and [field-history/verification.json](field-history/verification.json). Hosted deployment, wider genuine-account acceptance, Mac hierarchy keyboard acceptance, consistent shared activity/history, older-data mapping and shared file/discussion custody remain separate work. Normal migration use remains disabled.
+
+
+## 31 October · hierarchy Undo/Redo and stable organizer presentation
+
+Adding, moving and removing independent subtask branches now have linked Undo/Redo. Saved recovery offers Review Redo after confirmed Undo, and confirming an inverse there advances the matching native history frame without sending it again. Redo uses fresh typed requests and the confirmed structure cutoff; a later edit to a restored branch blocks removal. Encrypted cold recovery, competing writers and retention preserve the latest removal archive.
+
+The ordinary editor/inspector owns the organizer outside reusable Form rows and captures its root at opening. This fixes the nested Add review disappearing during presentation. The recorded iPhone journey covers one-tap Add, saved Undo, ordinary-menu Redo/Undo and cold return. The iPad largest-text journey covers removal of a nested branch, cold Redo and final restoration; a separate iPhone move cycle restores exact placement.
+
+Each repository owns its implementation, focused client checks, real local SQL fixture and evidence. See [hierarchy-history/README.md](hierarchy-history/README.md) and [verification.json](hierarchy-history/verification.json). Mac keyboard runtime acceptance remains open because the screen was locked; build/signature results are recorded separately. No new server migration or gate enablement is part of this change. Shared activity/history, older-data mapping, shared file/discussion custody, hosted deployment and genuine shared-account acceptance remain open. Ordinary migration use stays disabled.

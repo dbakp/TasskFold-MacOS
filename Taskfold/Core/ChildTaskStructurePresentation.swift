@@ -18,13 +18,14 @@ import Observation
     private let draftJournal: ChildTaskStructureDraftJournal?
     private let sender: ChildTaskStructureSender
     private let current: () -> ChildTaskFieldClientScope?
+    private let didApply: (ChildTaskStructureJournalState.Entry, ChildTaskFieldClientScope) -> Void
     private let canQueue: (ChildTaskStructureCommand) -> Bool
     private let lease = CalendarReadLease()
     private var closed = false
     init(scope: ChildTaskFieldClientScope, journal: ChildTaskStructureJournal, service: any ChildTaskStructureCommandService,
          current: @escaping () -> ChildTaskFieldClientScope?, canQueue: @escaping (ChildTaskStructureCommand) -> Bool,
-         canSend: @escaping (ChildTaskStructureCommand) -> Bool, draftJournal: ChildTaskStructureDraftJournal? = nil) {
-        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.draftJournal = draftJournal
+         canSend: @escaping (ChildTaskStructureCommand) -> Bool, draftJournal: ChildTaskStructureDraftJournal? = nil, didApply: @escaping (ChildTaskStructureJournalState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) {
+        self.scope = scope; self.journal = journal; self.current = current; self.canQueue = canQueue; self.draftJournal = draftJournal; self.didApply = didApply
         sender = .init(scope: scope, journal: journal, service: service, current: current, canSend: canSend)
     }
     func close() { closed = true; lease.cancel(); sender.close(); entries = []; disposals = []; archives = []; drafts = []; draftsFailure = nil; loaded = false; archivesLoaded = false; message = nil; busy = false }
@@ -89,8 +90,10 @@ import Observation
     }
     @discardableResult func send(_ command: ChildTaskStructureCommand) async -> Bool {
         await work {
+            let confirmed = entries.contains { $0.command == command && $0.phase == .confirmed }
             _ = try await sender.send(command); try check(); try await update()
-            message = command.action == .undo ? "Undo confirmed." : command.action == .insert ? "Subtask added." : command.action == .move ? "Subtask moved." : "Subtasks removed."
+            if !confirmed, let entry = entries.first(where: { $0.command == command && $0.phase == .confirmed }) { didApply(entry, scope) }
+            message = entries.first(where: { $0.command == command })?.redoOf != nil ? "Redo confirmed." : command.action == .undo ? "Undo confirmed." : command.action == .insert ? "Subtask added." : command.action == .move ? "Subtask moved." : "Subtasks removed."
         }
     }
     /// A frozen draft may have reached the journal before a lost local reply.
@@ -112,7 +115,9 @@ import Observation
     }
     func stop(_ command: ChildTaskStructureCommand) async {
         _ = await work {
+            let confirmed = entries.contains { $0.command == command && $0.phase == .confirmed }
             let result = try await sender.resolve(command); try check(); try await update()
+            if !confirmed, let entry = entries.first(where: { $0.command == command && $0.phase == .confirmed }) { didApply(entry, scope) }
             message = result.closed ? "The action was stopped before applying. Review current values to save a fresh action." : "The action had already applied. Its confirmation is saved."
         }
     }
@@ -150,7 +155,29 @@ import Observation
         _ = await work { guard disposals.contains(entry) else { throw ChildTaskStructureCommand.invalid }; try await journal.discardDisposal(entry.id, lease: lease); try check(); try await update(); message = "Undo content kept." }
     }
     func hasUndoOrDisposal(_ request: String) -> Bool {
-        entries.contains { $0.command.body["undo_of"] == .string(request) && $0.phase != .closed } || disposals.contains { $0.id == request }
+        entries.contains { ($0.command.body["undo_of"] == .string(request) || $0.redoOf == request) && $0.phase != .closed } || disposals.contains { $0.id == request }
+    }
+    @discardableResult func queueInverse(_ entry: ChildTaskStructureJournalState.Entry, read: ChildTaskStructureRead, requestID: UUID = UUID()) async -> ChildTaskStructureCommand? {
+        var saved: ChildTaskStructureCommand?
+        let succeeded = await work {
+            guard ChildTaskFieldClientScope(read.context) == scope, canQueue(entry.command) else { throw ChildTaskStructureFailure(reason: .unavailable) }
+            saved = try await journal.enqueueInverse(of: entry, read: read, requestID: requestID, lease: lease)
+            try check(); try await update(); message = "Action saved on this device. Review and send it when ready."
+        }
+        return succeeded ? saved : nil
+    }
+    func canReverse(_ entry: ChildTaskStructureJournalState.Entry) -> Bool { entry.phase == .confirmed && !hasUndoOrDisposal(entry.command.id) }
+    func canForget(_ entry: ChildTaskStructureJournalState.Entry) -> Bool {
+        guard entry.phase != .attempted, let families = try? ChildTaskStructureJournalState.families(entries), let family = families[entry.command.id] else { return false }
+        let rows = entries.filter { families[$0.command.id] == family }
+        if entry.phase == .confirmed && rows.contains(where: { $0.command.action == .undo && $0.phase == .confirmed }) {
+            return rows.allSatisfy { $0.phase == .confirmed } && ChildTaskStructureJournalState.deletionsSettled(rows, disposals: disposals)
+        }
+        guard !entries.contains(where: { $0.command.body["undo_of"] == .string(entry.command.id) || $0.redoOf == entry.command.id }) else { return false }
+        return entry.phase != .confirmed || entry.command.action != .delete || disposals.contains { $0.id == entry.command.id && $0.phase == .confirmed }
+    }
+    func showHistoryNotice(_ notice: ChildTaskHistoryNotice) {
+        guard notice.kind == .hierarchy, notice.scope == scope, (try? check()) != nil else { return }; message = notice.message
     }
     var availableArchives: [ChildTaskStructureReceipt] { archives.filter { !hasUndoOrDisposal($0.raw["request_id"]!.text) } }
 }

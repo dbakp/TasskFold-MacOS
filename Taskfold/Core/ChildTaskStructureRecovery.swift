@@ -43,20 +43,24 @@ struct ChildTaskStructureJournalState: ReviewedTeamFileCommand, CustomStringConv
         var phase: Phase
         var receipt: ChildTaskStructureReceipt?
         var resolution: ChildTaskStructureResolution?
-        init(command: ChildTaskStructureCommand, phase: Phase = .queued, receipt: ChildTaskStructureReceipt? = nil, resolution: ChildTaskStructureResolution? = nil) {
-            self.command = command; self.phase = phase; self.receipt = receipt; self.resolution = resolution
+        var redoOf: String?
+        init(command: ChildTaskStructureCommand, phase: Phase = .queued, receipt: ChildTaskStructureReceipt? = nil, resolution: ChildTaskStructureResolution? = nil, redoOf: String? = nil) {
+            self.command = command; self.phase = phase; self.receipt = receipt; self.resolution = resolution; self.redoOf = redoOf
         }
-        private enum CodingKeys: String, CodingKey { case command, phase, receipt, resolution }
+        private enum CodingKeys: String, CodingKey { case command, phase, receipt, resolution, redoOf }
         init(from decoder: Decoder) throws {
-            try structureKeys(decoder, ["command", "phase", "receipt", "resolution"])
+            let raw = try decoder.container(keyedBy: CodingKeys.self)
+            let hasRedo = raw.contains(.redoOf)
+            try structureKeys(decoder, hasRedo ? ["command", "phase", "receipt", "resolution", "redoOf"] : ["command", "phase", "receipt", "resolution"])
             let c = try decoder.container(keyedBy: CodingKeys.self)
             command = try c.decode(ChildTaskStructureCommand.self, forKey: .command); phase = try c.decode(Phase.self, forKey: .phase)
-            receipt = try c.decodeIfPresent(ChildTaskStructureReceipt.self, forKey: .receipt); resolution = try c.decodeIfPresent(ChildTaskStructureResolution.self, forKey: .resolution)
+            receipt = try c.decodeIfPresent(ChildTaskStructureReceipt.self, forKey: .receipt); resolution = try c.decodeIfPresent(ChildTaskStructureResolution.self, forKey: .resolution); redoOf = try c.decodeIfPresent(String.self, forKey: .redoOf)
+            if hasRedo { guard redoOf != nil else { throw ChildTaskStructureCommand.invalid } }
         }
         func encode(to encoder: Encoder) throws {
             var c = encoder.container(keyedBy: CodingKeys.self)
             try c.encode(command, forKey: .command); try c.encode(phase, forKey: .phase)
-            try c.encode(receipt, forKey: .receipt); try c.encode(resolution, forKey: .resolution)
+            try c.encode(receipt, forKey: .receipt); try c.encode(resolution, forKey: .resolution); try c.encodeIfPresent(redoOf, forKey: .redoOf)
         }
     }
     struct Disposal: Codable, Equatable, Sendable {
@@ -100,6 +104,12 @@ struct ChildTaskStructureJournalState: ReviewedTeamFileCommand, CustomStringConv
             case .closed: guard entry.receipt == nil, let result = entry.resolution, try ChildTaskStructureResolution(command: command, raw: result.raw) == result, result.closed else { throw Self.invalid }
             case .queued, .attempted: guard entry.receipt == nil, entry.resolution == nil else { throw Self.invalid }
             }
+            if let parentID = entry.redoOf {
+                guard command.action != .undo, let parent = entries.first(where: { $0.command.id == parentID }),
+                      parent.phase == .confirmed, let proof = parent.receipt else { throw Self.invalid }
+                try command.validateRedo(of: parent.command, receipt: proof)
+                guard entry.phase == .closed || undoIDs.insert("redo:" + parentID).inserted else { throw Self.invalid }
+            }
             if let original = command.original {
                 if entry.phase != .closed { guard undoIDs.insert(command.familyID).inserted else { throw Self.invalid } }
                 if let parent = entries.first(where: { $0.command.id == command.familyID }) {
@@ -120,7 +130,31 @@ struct ChildTaskStructureJournalState: ReviewedTeamFileCommand, CustomStringConv
             if item.phase == .confirmed { guard let receipt = item.receipt, try action.confirmed(receipt.raw) == receipt else { throw Self.invalid } }
             else { guard item.receipt == nil else { throw Self.invalid } }
         }
+        _ = try Self.families(entries)
         self.account = account; self.origin = origin; self.entries = entries; self.disposals = disposals
+    }
+    /// Connected history families keep all Redo dependencies and every active
+    /// deletion archive together. Missing legacy forward entries remain valid.
+    static func families(_ entries: [Entry]) throws -> [String: String] {
+        var parents: [String: String] = [:], result: [String: String] = [:]
+        for entry in entries {
+            if let parent = entry.redoOf { parents[entry.command.id] = parent }
+            else if let parent = entry.command.original?.receipt["request_id"]?.text { parents[entry.command.id] = parent }
+        }
+        for entry in entries {
+            var current = entry.command.id, seen: Set<String> = []
+            while let parent = parents[current] {
+                guard seen.insert(current).inserted, seen.count <= maximumEntries else { throw invalid }; current = parent
+            }
+            result[entry.command.id] = current
+        }
+        return result
+    }
+    static func deletionsSettled(_ rows: [Entry], disposals: [Disposal]) -> Bool {
+        rows.filter { $0.command.action == .delete && $0.phase == .confirmed }.allSatisfy { deletion in
+            rows.contains { $0.phase == .confirmed && $0.command.body["undo_of"] == .string(deletion.command.id) }
+            || disposals.contains { $0.id == deletion.command.id && $0.phase == .confirmed }
+        }
     }
     /// Families retain complete Undo lineage. A confirmed deletion still owns
     /// private server content until Undo/disposal is confirmed; never prune it
@@ -130,17 +164,16 @@ struct ChildTaskStructureJournalState: ReviewedTeamFileCommand, CustomStringConv
             try entries.count <= Self.maximumEntries && disposals.count <= Self.maximumEntries && TaskfoldJSONEncoder().encode(self).count <= Self.maximumStoredBytes
         }
         guard try !fits() else { return }
-        let order = entries.map { $0.command.familyID } + disposals.map(\.id)
+        let families = try Self.families(entries)
+        let order = entries.map { families[$0.command.id]! } + disposals.map { families[$0.id] ?? $0.id }
         var latest: [String: Int] = [:]
         for (index, family) in order.enumerated() { latest[family] = index }
         for family in latest.sorted(by: { $0.value < $1.value }).map(\.key) {
-            let rows = entries.filter { $0.command.familyID == family }, cleanup = disposals.filter { $0.id == family }
+            let rows = entries.filter { families[$0.command.id] == family }, cleanup = disposals.filter { (families[$0.id] ?? $0.id) == family }
             guard !rows.contains(where: { $0.command.id == request }), !cleanup.contains(where: { $0.id == request }),
                   rows.allSatisfy({ $0.phase == .confirmed }), cleanup.allSatisfy({ $0.phase == .confirmed }) else { continue }
-            let deleted = rows.contains { $0.command.action == .delete }
-            let undone = rows.contains { $0.command.action == .undo && $0.phase == .confirmed }
-            guard !deleted || undone || !cleanup.isEmpty else { continue }
-            entries.removeAll { $0.command.familyID == family }; disposals.removeAll { $0.id == family }
+            guard Self.deletionsSettled(rows, disposals: cleanup) else { continue }
+            entries.removeAll { families[$0.command.id] == family }; disposals.removeAll { (families[$0.id] ?? $0.id) == family }
             if try fits() { return }
         }
         throw ChildTaskStructureCapacityFailure()
@@ -168,12 +201,15 @@ struct ChildTaskStructureJournalState: ReviewedTeamFileCommand, CustomStringConv
     init(from decoder: Decoder) throws {
         try structureKeys(decoder, ["version", "account", "origin", "entries", "disposals"])
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        guard try c.decode(Int.self, forKey: .version) == 1 else { throw Self.invalid }
-        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), entries: c.decode([Entry].self, forKey: .entries), disposals: c.decode([Disposal].self, forKey: .disposals))
+        let version = try c.decode(Int.self, forKey: .version)
+        guard [1, 2].contains(version) else { throw Self.invalid }
+        let rows = try c.decode([Entry].self, forKey: .entries)
+        guard version == 2 || rows.allSatisfy({ $0.redoOf == nil }) else { throw Self.invalid }
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), entries: rows, disposals: c.decode([Disposal].self, forKey: .disposals))
     }
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encode(1, forKey: .version); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin)
+        try c.encode(entries.contains { $0.redoOf != nil } ? 2 : 1, forKey: .version); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin)
         try c.encode(entries, forKey: .entries); try c.encode(disposals, forKey: .disposals)
     }
 }
@@ -228,6 +264,20 @@ actor ChildTaskStructureJournal {
                 guard old.phase != .closed else { throw ChildTaskStructureFailure(reason: .closed) }; return
             }
             state.entries.append(.init(command: command)); try write(state, lease: lease)
+        }
+    }
+    func enqueueInverse(of reviewed: ChildTaskStructureJournalState.Entry, read fresh: ChildTaskStructureRead, requestID: UUID = UUID(), lease: CalendarReadLease) throws -> ChildTaskStructureCommand {
+        try guarded(lease: lease) {
+            var state = try read()
+            guard let parent = state.entries.first(where: { $0.command.id == reviewed.command.id }), parent == reviewed,
+                  parent.phase == .confirmed, let proof = parent.receipt,
+                  !state.disposals.contains(where: { $0.id == parent.command.id }) else { throw ChildTaskStructureCommand.invalid }
+            try admit([parent.command.body["task_id"]!.text])
+            if let child = state.entries.first(where: { $0.phase != .closed && ($0.redoOf == parent.command.id || $0.command.body["undo_of"] == .string(parent.command.id)) }) { return child.command }
+            let redo = parent.command.action == .undo
+            let candidate = try redo ? ChildTaskStructureCommand(redo: parent.command, receipt: proof, read: fresh, requestID: requestID) : ChildTaskStructureCommand(undo: parent.command, receipt: proof, read: fresh, requestID: requestID)
+            state.entries.append(.init(command: candidate, redoOf: redo ? parent.command.id : nil))
+            try write(state, lease: lease, preserving: candidate.id); return candidate
         }
     }
     func attempt(_ command: ChildTaskStructureCommand, lease: CalendarReadLease) throws -> ChildTaskStructureJournalState.Entry {
@@ -285,12 +335,14 @@ actor ChildTaskStructureJournal {
         try guarded(lease: lease) {
             var state = try read()
             guard let index = state.entries.firstIndex(where: { $0.command == command }), state.entries[index].phase != .attempted else { throw ChildTaskStructureCommand.invalid }
-            let family = state.entries.filter { $0.command.familyID == command.familyID }
+            let families = try ChildTaskStructureJournalState.families(state.entries), familyID = families[command.id]!
+            let family = state.entries.filter { families[$0.command.id] == familyID }
+            let cleanup = state.disposals.filter { (families[$0.id] ?? $0.id) == familyID }
             if state.entries[index].phase == .confirmed && family.contains(where: { $0.command.action == .undo && $0.phase == .confirmed }) {
-                guard family.allSatisfy({ $0.phase == .confirmed }) else { throw ChildTaskStructureCommand.invalid }
-                state.entries.removeAll { $0.command.familyID == command.familyID }
+                guard family.allSatisfy({ $0.phase == .confirmed }), ChildTaskStructureJournalState.deletionsSettled(family, disposals: cleanup) else { throw ChildTaskStructureCommand.invalid }
+                state.entries.removeAll { families[$0.command.id] == familyID }
             } else {
-                guard !state.entries.contains(where: { $0.command.body["undo_of"] == .string(command.id) }) else { throw ChildTaskStructureCommand.invalid }
+                guard !state.entries.contains(where: { $0.command.body["undo_of"] == .string(command.id) || $0.redoOf == command.id }) else { throw ChildTaskStructureCommand.invalid }
                 if state.entries[index].phase == .confirmed && command.action == .delete {
                     guard state.disposals.contains(where: { $0.id == command.id && $0.phase == .confirmed }) else { throw ChildTaskStructureCommand.invalid }
                 }

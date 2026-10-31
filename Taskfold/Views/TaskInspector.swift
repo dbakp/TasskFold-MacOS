@@ -89,6 +89,7 @@ struct TaskInspectorForm: View {
     @State private var selectedTeamName: String?
     @State private var selectedTeamID: String?
     @State private var subtaskOrganizing: SubtaskOrganizerRequest?
+    @State private var independentHierarchy: ChildTaskStructurePresentationRequest?
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceContext: TaskEditorSourceContext?
     @State private var sourceRoot: Record?
@@ -158,7 +159,7 @@ struct TaskInspectorForm: View {
         }
         recoverySession?.capture(draft,extras:recoveryExtras)
     }
-    private func stopEditing() {checkpoint();accessStopped=true;audioDraft=nil;audioConversation=nil;saveTask?.cancel();titleFocused=false}
+    private func stopEditing() {checkpoint();accessStopped=true;independentHierarchy=nil;audioDraft=nil;audioConversation=nil;saveTask?.cancel();titleFocused=false}
     var body: some View {
         Group {
             if editorAvailable {editingBody}
@@ -210,6 +211,10 @@ struct TaskInspectorForm: View {
             })
         }
         .sheet(item: $subtaskOrganizing) { SubtaskOrganizerPresentation(request: $0) }
+        // Reusable form rows must not own a nested hierarchy presentation.
+        .sheet(item: $independentHierarchy) { request in
+            WorkflowShell(title: "Organize subtasks") { ChildTaskStructureView(rootID: request.rootID) }
+        }
         .onChange(of:editorAvailable) {_,available in if !available {stopEditing()}}
         .onChange(of:recoveryExtras) {_,_ in checkpoint()}
         .onDisappear {checkpoint()}
@@ -405,7 +410,7 @@ struct TaskInspectorForm: View {
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
                 let childIndices = SubtaskTree.uniqueChildIndices(draft["subtasks"])
-                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 }, saveAndOpen: { children, path in
+                        SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 }, presentHierarchy: { independentHierarchy = .init(rootID: $0) }, saveAndOpen: { children, path in
                     let previous = draft
                     draft["subtasks"] = children
                     guard saveNow() else { draft = previous; return false }

@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "tests": 267,
+  "selection": "ChildTaskStructureCommandTests|ChildTaskStructureRecoveryTests|ConfirmedHistoryBridgeTests|ChildTaskFieldCommandTests|ChildTaskTransferTests|ChildTaskTransferHistoryTests",
+  "repository": "TasskFold-MacOS",
+  "exitCode": 0,
+  "suiteCases": {
+    "TaskfoldCoreTests.ChildTaskFieldCommandTests": 89,
+    "TaskfoldCoreTests.ChildTaskStructureCommandTests": 35,
+    "TaskfoldCoreTests.ChildTaskStructureRecoveryTests": 97,
+    "TaskfoldCoreTests.ChildTaskTransferHistoryTests": 14,
+    "TaskfoldCoreTests.ChildTaskTransferTests": 24,
+    "TaskfoldCoreTests.ConfirmedHistoryBridgeTests": 8
+  },
+  "testLogSHA256": "69996cafd39d33d0d6e21f321119b1c20ace66a38508231d776786c4dc298489",
+  "rawCaptureSHA256": "14d2457ed629895f5eed893b794a4ce3d29616dfb174e895fe22fd90946fadec",
+  "logNormalization": "Trailing spaces removed from captured compiler snippets; test lines and summaries unchanged."
+}

@@ -1728,6 +1728,97 @@ extension TaskfoldMacUITests {
     @MainActor private func structureSnapshot(_ app: XCUIApplication, _ name: String) {
         let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot()); shot.name = name; shot.lifetime = .keepAlways; add(shot)
     }
+    @MainActor private func hierarchyInverse(_ title: String, message: String, _ app: XCUIApplication) {
+        let review = app.buttons[title].firstMatch; completionReadyPress(review, app)
+        completionReadyPress(app.buttons["childStructureReviewApply"], app)
+        structureSend(app)
+        let status = app.staticTexts["childStructureRecoveryStatus"]; childReveal(status, app, towardTop: true)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", message), object: status)], timeout: 15), .completed, app.debugDescription)
+    }
+    @MainActor func testHierarchyDeleteUndoColdRedoAndUndoKeepsBranch() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-structure-nested", large: true)
+        childHomePress("childNativeStructure", app); completionReadyPress(app.buttons["removeChildStructure-concept"], app)
+        completionReadyPress(app.buttons["childStructureReviewApply"], app); structureOpenRecovery(app); structureSend(app)
+        hierarchyInverse("Review Undo", message: "Undo confirmed.", app)
+        childDone(app); childDone(app)
+        childProbe(app, "structureConfirmed=2 structureClosed=0 structureWrites=2 structureRequests=2 structureArchives=0 structureOrder=concept>nested>review")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-nested", large: true)
+        childHomePress("childNativeStructureRecovery", app)
+        hierarchyInverse("Review Redo", message: "Redo confirmed.", app)
+        structureSnapshot(app, "Redo removal keeps the latest archive at largest text")
+        childDone(app); childProbe(app, "structureConfirmed=3 structureClosed=0 structureWrites=3 structureRequests=3 structureArchives=1 structureOrder=review")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-nested", large: true)
+        childHomePress("childNativeStructureRecovery", app)
+        hierarchyInverse("Review Undo", message: "Undo confirmed.", app)
+        structureSnapshot(app, "Undo after Redo restores the complete nested branch")
+        childDone(app); childProbe(app, "structureConfirmed=4 structureClosed=0 structureWrites=4 structureRequests=4 structureArchives=0 structureOrder=concept>nested>review")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-nested", large: true)
+        childProbe(app, "structureConfirmed=4 structureClosed=0 structureWrites=4 structureRequests=4 structureArchives=0 structureOrder=concept>nested>review")
+    }
+    @MainActor func testHierarchyMoveUndoColdRedoAndUndoKeepsPlacement() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try childOpen(app, extra: "--child-structure-native")
+        childHomePress("childNativeStructure", app); completionReadyPress(app.buttons["moveChildStructure-concept"], app)
+        completionReadyPress(childField("childStructureParent", app), app)
+        #if os(macOS)
+        childPress(app.menuItems["Publish the summary"].firstMatch)
+        #else
+        childPress(app.buttons["Publish the summary"].firstMatch)
+        #endif
+        completionReadyPress(app.buttons["childStructureReviewApply"], app); structureOpenRecovery(app); structureSend(app)
+        hierarchyInverse("Review Undo", message: "Undo confirmed.", app)
+        childDone(app); childDone(app)
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native")
+        childHomePress("childNativeStructureRecovery", app)
+        hierarchyInverse("Review Redo", message: "Redo confirmed.", app)
+        childDone(app); childProbe(app, "structureConfirmed=3 structureClosed=0 structureWrites=3 structureRequests=3 structureArchives=0 structureOrder=review>concept")
+        childHomePress("childNativeStructureRecovery", app)
+        hierarchyInverse("Review Undo", message: "Undo confirmed.", app)
+        structureSnapshot(app, "Move Redo and Undo preserve the exact branch placement")
+        childDone(app); childProbe(app, "structureConfirmed=4 structureClosed=0 structureWrites=4 structureRequests=4 structureArchives=0 structureOrder=concept>review")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-structure-native")
+        childProbe(app, "structureConfirmed=4 structureClosed=0 structureWrites=4 structureRequests=4 structureArchives=0 structureOrder=concept>review")
+    }
+    @MainActor func testHierarchySavedInsertUndoJoinsNativeRedoAndUndo() throws {
+        #if os(macOS)
+        throw XCTSkip("Mac hierarchy keys use the direct isolated-app walkthrough")
+        #else
+        try childGuard()
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let arguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-structure-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        app.launchArguments = arguments + ["--child-fields-native-reset"]; app.launch(); app.activate()
+        let root = app.buttons["taskDetails-ec990000-0000-4000-8000-000000000002"]
+        XCTAssertTrue(root.waitForExistence(timeout: 30), app.debugDescription); childPress(root)
+        let organize = app.buttons["organizeIndependentChildren"]; completionReadyPress(organize, app)
+        completionReadyPress(app.buttons["childStructureAdd"], app)
+        let titleField = childField("childStructureNewTitle", app)
+        XCTAssertTrue(titleField.waitForExistence(timeout: 12), app.debugDescription)
+        childPress(titleField); titleField.typeText("Hierarchy history proof")
+        completionReadyPress(app.buttons["childStructureReviewApply"], app)
+        structureOpenRecovery(app); structureSend(app)
+        hierarchyInverse("Review Undo", message: "Undo confirmed.", app)
+        childDone(app); childDone(app)
+        let cancel = app.buttons["Cancel"].firstMatch; XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription); childPress(cancel)
+        func history(_ title: String, message: String) {
+            let options = app.buttons["Task options"]; XCTAssertTrue(options.waitForExistence(timeout: 10), app.debugDescription); childPress(options)
+            let menu = app.buttons["Undo & redo"]; XCTAssertTrue(menu.waitForExistence(timeout: 10), app.debugDescription); childPress(menu)
+            let action = app.buttons[title]
+            if !action.waitForExistence(timeout: 2), menu.exists, menu.isHittable { menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.15) }
+            XCTAssertTrue(action.waitForExistence(timeout: 10), app.debugDescription); XCTAssertTrue(action.isEnabled); childPress(action)
+            if action.exists, action.isHittable, action.isEnabled { action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.15) }
+            XCTAssertTrue(app.staticTexts[message].waitForExistence(timeout: 20), app.debugDescription)
+        }
+        history("Redo", message: "Subtask added")
+        history("Undo", message: "Removed added subtask")
+        structureSnapshot(app, "Saved hierarchy Undo joins the ordinary native Redo and Undo menu")
+        app.terminate(); app.launchArguments = arguments; app.launch(); app.activate()
+        XCTAssertTrue(root.waitForExistence(timeout: 30), app.debugDescription)
+        structureSnapshot(app, "Hierarchy history keeps the restored task list after cold return")
+        #endif
+    }
+
     @MainActor func testChildStructureNativeInsertSavedSendAndColdReceipt() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }; try childOpen(app, extra: "--child-structure-native")
         childHomePress("childNativeStructure", app); structureSaveNew(app, title: "Sketch the follow-up")

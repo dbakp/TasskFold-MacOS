@@ -2009,6 +2009,26 @@ struct MixedTaskListResult {
         manager.beginUndoGrouping(); install(frame); manager.endUndoGrouping()
         while frames.count > 30 { let old = frames.removeFirst(); manager.removeAllActions(withTarget: old); cursor -= 1 }
     }
+    /// A saved-action screen can confirm the inverse of the current frame.
+    /// Advance native history synchronously without submitting that action twice.
+    @discardableResult func acceptConfirmedInverse(of key: String, next: Step) -> Bool {
+        guard !busy, let nextKey = next.key, nextKey != key, next.retained() else { return false }
+        let undoing = cursor > 0 && frames[cursor - 1].step?.key == key
+        let redoing = cursor < frames.count && frames[cursor].step?.key == key
+        guard undoing || redoing, undoing ? manager.canUndo : manager.canRedo else { return false }
+        let frame = frames[undoing ? cursor - 1 : cursor]
+        guard let old = frame.step, old.retained() else { return false }
+        let inverse = Self.renaming(next, as: old.name)
+        frame.step = .init(name: old.name, key: key, retained: old.retained, immediate: { inverse })
+        if undoing { manager.undo() } else { manager.redo() }
+        return frame.step?.key == nextKey
+    }
+    private static func renaming(_ step: Step, as name: String) -> Step {
+        let immediate: (() -> Step?)? = step.immediate.map { action in { action().map { Self.renaming($0, as: name) } } }
+        return .init(name: name, key: step.key, retained: step.retained, available: step.available, immediate: immediate, perform: {
+            guard let next = await step.perform() else { return nil }; return Self.renaming(next, as: name)
+        })
+    }
     func contains(key: String) -> Bool { frames.contains { $0.step?.key == key } }
     func canRedo(key: String) -> Bool { canRedo && frames[cursor].step?.key == key }
     func canUndo(key: String) -> Bool { canUndo && frames[cursor - 1].step?.key == key }

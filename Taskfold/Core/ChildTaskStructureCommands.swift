@@ -77,6 +77,44 @@ struct ChildTaskStructureCommand: ReviewedTeamCommand, CustomStringConvertible, 
         try self.init(account: command.account, origin: command.origin, body: body, original: .init(body: command.body, receipt: receipt.raw))
         try review(read)
     }
+    /// Redo creates an ordinary fresh typed action, never a replay of the old
+    /// request. The confirmed Undo fixes the only eligible structure revision.
+    init(redo undo: Self, receipt: ChildTaskStructureReceipt, read: ChildTaskStructureRead, requestID: UUID = UUID()) throws {
+        guard undo.action == .undo, let original = undo.original else { throw Self.invalid }
+        _ = try undo.confirmed(receipt.raw)
+        switch original.receipt["action"] {
+        case .string("insert"):
+            guard let body = original.body else { throw Self.invalid }
+            try self.init(insert: body["node"]!, parent: body["parent_key"] == .null ? nil : body["parent_key"]!.text, index: body["index"]!.integer, read: read, requestID: requestID)
+        case .string("move"):
+            guard let body = original.body else { throw Self.invalid }
+            try self.init(move: original.receipt["node_key"]!.text, parent: body["parent_key"] == .null ? nil : body["parent_key"]!.text, index: body["index"]!.integer, read: read, requestID: requestID)
+        case .string("delete"):
+            try self.init(delete: original.receipt["node_key"]!.text, read: read, requestID: requestID)
+        default: throw Self.invalid
+        }
+        try validateRedo(of: undo, receipt: receipt)
+    }
+    func validateRedo(of undo: Self, receipt: ChildTaskStructureReceipt) throws {
+        guard undo.action == .undo, let original = undo.original, try undo.confirmed(receipt.raw) == receipt,
+              sameRoot(undo), action.rawValue == original.receipt["action"]?.text,
+              body["structure_revision"] == receipt.raw["after_revision"], id != undo.id, id != original.receipt["request_id"]?.text else { throw Self.invalid }
+        switch action {
+        case .insert:
+            guard let source = original.body, ["node", "parent_key", "index"].allSatisfy({ Self.exact(body[$0], source[$0]) }) else { throw Self.invalid }
+        case .move:
+            guard let source = original.body, ["parent_key", "index"].allSatisfy({ Self.exact(body[$0], source[$0]) }),
+                  body["node_key"] == receipt.raw["node_key"], body["incarnation"] == receipt.raw["incarnation"] else { throw Self.invalid }
+        case .delete:
+            let versions = body["subtree_versions"]!.object
+            guard body["node_key"] == receipt.raw["node_key"], body["incarnation"] == receipt.raw["incarnation"],
+                  versions.values.allSatisfy({ $0.object["revision"] == .number(1) }) else { throw Self.invalid }
+            // Restored records have fresh incarnations at revision 1. Never
+            // capture newer edits as fresh permission to remove restored work.
+            if let source = original.body { guard Set(versions.keys) == Set(source["subtree_versions"]!.object.keys) else { throw Self.invalid } }
+        case .undo: throw Self.invalid
+        }
+    }
     /// Recovery after device/journal loss uses the server's bounded deletion
     /// metadata. No archived title, fields or subtree is downloaded or invented.
     init(restoring archive: ChildTaskStructureReceipt, read: ChildTaskStructureRead, requestID: UUID = UUID()) throws {

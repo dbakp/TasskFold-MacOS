@@ -967,13 +967,48 @@ final class Store {
             }
         })
     }
-    func childTaskStructurePresentation() throws -> ChildTaskStructurePresentation {
+    func childStructureHistoryStep(_ entry: ChildTaskStructureJournalState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+        let actionName = name ?? ChildTaskStructureReview.title(entry.command)
+        return .init(name: actionName, key: entry.command.id,
+                     retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope },
+                     available: { [weak self] in
+            guard let self else { return false }
+            return !self.childTransferHistoryBusy && !self.childListCompletionBusy && self.online && self.permitsChildTaskStructureRequest(entry.command, sending: true)
+        }, perform: { [weak self] in
+            guard let self, !self.childTransferHistoryBusy, self.childTaskFieldRecoveryScope == scope else { return nil }
+            self.childTransferHistoryBusy = true; defer { self.childTransferHistoryBusy = false }
+            do {
+                let model = try self.childTaskStructurePresentation(); defer { model.close() }; await model.load()
+                let read = try await self.readCurrentChildTaskStructure(entry.command.body["task_id"]!.text)
+                guard self.childTaskFieldRecoveryScope == scope else { throw CancellationError() }
+                guard let saved = await model.queueInverse(entry, read: read), await model.send(saved),
+                      let next = model.entries.first(where: { $0.command == saved && $0.phase == .confirmed }) else { throw ChildTaskStructureCommand.invalid }
+                await self.sync(); guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let message: String
+                if saved.action == .undo {
+                    switch saved.original?.receipt["action"] {
+                    case .string("insert"): message = "Removed added subtask"
+                    case .string("move"): message = "Restored subtask position"
+                    default: message = "Restored subtasks"
+                    }
+                } else { message = saved.action == .insert ? "Subtask added" : saved.action == .move ? "Subtask moved" : "Subtasks removed" }
+                let notice = ChildTaskHistoryNotice(kind: .hierarchy, scope: scope, commandID: saved.id, message: message)
+                self.childHistoryNotice = notice; report(notice)
+                return self.childStructureHistoryStep(next, scope: scope, name: actionName, report: report)
+            } catch {
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskHistoryNotice(kind: .hierarchy, scope: scope, commandID: nil, message: "This hierarchy change needs review. Open Saved hierarchy actions to check its original action.")
+                self.childHistoryNotice = notice; report(notice); return nil
+            }
+        })
+    }
+    func childTaskStructurePresentation(didApply: @escaping (ChildTaskStructureJournalState.Entry, ChildTaskFieldClientScope) -> Void = { _, _ in }) throws -> ChildTaskStructurePresentation {
         guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
         return .init(scope: scope, journal: try childTaskStructureJournal(account: scope.account, origin: scope.origin), service: backend,
                      current: { [weak self] in self?.childTaskFieldRecoveryScope },
                      canQueue: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: false) == true },
                      canSend: { [weak self] in self?.permitsChildTaskStructureRequest($0, sending: true) == true },
-                     draftJournal: try childTaskStructureDraftJournal(account: scope.account, origin: scope.origin))
+                     draftJournal: try childTaskStructureDraftJournal(account: scope.account, origin: scope.origin), didApply: didApply)
     }
     var syncing = false
     var online = true

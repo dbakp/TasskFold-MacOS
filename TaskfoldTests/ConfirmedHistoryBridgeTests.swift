@@ -10,6 +10,29 @@ import XCTest
         for _ in 0..<1000 { if !bridge.busy { return }; await Task.yield() }
         XCTFail("History operation did not finish")
     }
+    func testConfirmedSavedInverseAdvancesHistoryWithoutSubmittingTwice() async {
+        let b = bridge(); var calls = 0
+        b.record(.init(name: "Add Subtask", key: "forward", retained: { true }, available: { false }, perform: { calls += 100; return nil }))
+        func next(_ key: String) -> ConfirmedHistoryBridge.Step {
+            .init(name: "Restored hierarchy", key: key, retained: { true }, perform: { calls += 1; return next(key == "undo" ? "redo" : "undo") })
+        }
+        XCTAssertTrue(b.acceptConfirmedInverse(of: "forward", next: next("undo")))
+        XCTAssertEqual(calls, 0); XCTAssertTrue(b.canRedo(key: "undo")); XCTAssertEqual(b.manager.redoActionName, "Add Subtask")
+        XCTAssertFalse(b.acceptConfirmedInverse(of: "forward", next: next("undo")))
+        b.redo(); await settle(b); XCTAssertEqual(calls, 1); XCTAssertEqual(b.manager.undoActionName, "Add Subtask")
+        b.undo(); await settle(b); XCTAssertEqual(calls, 2); XCTAssertEqual(b.manager.redoActionName, "Add Subtask")
+    }
+    func testConfirmedSavedInverseCannotReplaceAnotherActionOrChangedScope() {
+        let b = bridge(); var current = true
+        b.record(.init(name: "Older", key: "older", retained: { true }))
+        b.record(.init(name: "Current", key: "current", retained: { current }))
+        let next = ConfirmedHistoryBridge.Step(name: "Inverse", key: "inverse", retained: { current })
+        XCTAssertFalse(b.acceptConfirmedInverse(of: "current", next: .init(name: "Invalid", retained: { true })))
+        XCTAssertFalse(b.acceptConfirmedInverse(of: "current", next: .init(name: "Same", key: "current", retained: { true })))
+        XCTAssertFalse(b.acceptConfirmedInverse(of: "older", next: next)); XCTAssertTrue(b.canUndo(key: "current"))
+        current = false
+        XCTAssertFalse(b.acceptConfirmedInverse(of: "current", next: next)); XCTAssertFalse(b.contains(key: "inverse"))
+    }
     func testUndoRegistersRedoSynchronouslyButCannotRunUntilConfirmation() async {
         let b = bridge(); var resume: CheckedContinuation<Void, Never>?, value = 1
         func step(_ target: Int) -> ConfirmedHistoryBridge.Step {

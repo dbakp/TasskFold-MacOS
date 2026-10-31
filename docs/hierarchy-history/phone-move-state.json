@@ -1,0 +1,183 @@
+{
+  "writes": 0,
+  "structureReceipts": {
+    "406bfa22-81dd-4eee-9c39-100755affee7": {
+      "inverse": {},
+      "receipt": {
+        "before_revision": 4,
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "undo_of": "3295044c-9a57-479c-b9b8-758718e83b43",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "project_id": null,
+        "action": "undo",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "node_key": "concept",
+        "request_id": "406bfa22-81dd-4eee-9c39-100755affee7",
+        "replayed": false,
+        "protocol": 1,
+        "after_revision": 5
+      },
+      "body": {
+        "project_id": null,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "action": "undo",
+        "request_id": "406bfa22-81dd-4eee-9c39-100755affee7",
+        "undo_of": "3295044c-9a57-479c-b9b8-758718e83b43",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "structure_revision": 4,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "protocol": 1
+      }
+    },
+    "3295044c-9a57-479c-b9b8-758718e83b43": {
+      "inverse": {
+        "destination_kind": "absent",
+        "destination_parent": "review",
+        "index": 0,
+        "parent": null
+      },
+      "receipt": {
+        "before_revision": 3,
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "undo_of": null,
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "action": "move",
+        "project_id": null,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "node_key": "concept",
+        "request_id": "3295044c-9a57-479c-b9b8-758718e83b43",
+        "replayed": false,
+        "protocol": 1,
+        "after_revision": 4
+      },
+      "body": {
+        "index": 0,
+        "project_id": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "action": "move",
+        "protocol": 1,
+        "node_key": "concept",
+        "structure_revision": 3,
+        "request_id": "3295044c-9a57-479c-b9b8-758718e83b43",
+        "parent_key": "review"
+      },
+      "reversed": true
+    },
+    "3cad0ffe-f360-4350-b4c1-3753a9268d1a": {
+      "inverse": {
+        "destination_kind": "absent",
+        "parent": null,
+        "index": 0,
+        "destination_parent": "review"
+      },
+      "receipt": {
+        "before_revision": 1,
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "undo_of": null,
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "action": "move",
+        "project_id": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "node_key": "concept",
+        "request_id": "3cad0ffe-f360-4350-b4c1-3753a9268d1a",
+        "replayed": false,
+        "protocol": 1,
+        "after_revision": 2
+      },
+      "body": {
+        "project_id": null,
+        "node_key": "concept",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "request_id": "3cad0ffe-f360-4350-b4c1-3753a9268d1a",
+        "action": "move",
+        "parent_key": "review",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "structure_revision": 1,
+        "index": 0,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "protocol": 1
+      },
+      "reversed": true
+    },
+    "e72c1e86-6d8f-4657-b76a-34f0a4f33482": {
+      "inverse": {},
+      "receipt": {
+        "before_revision": 2,
+        "incarnation": "ec990000-0000-4000-8000-000000000005",
+        "undo_of": "3cad0ffe-f360-4350-b4c1-3753a9268d1a",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "action": "undo",
+        "project_id": null,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "node_key": "concept",
+        "request_id": "e72c1e86-6d8f-4657-b76a-34f0a4f33482",
+        "replayed": false,
+        "protocol": 1,
+        "after_revision": 3
+      },
+      "body": {
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "undo_of": "3cad0ffe-f360-4350-b4c1-3753a9268d1a",
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "action": "undo",
+        "project_id": null,
+        "protocol": 1,
+        "request_id": "e72c1e86-6d8f-4657-b76a-34f0a4f33482",
+        "structure_revision": 2
+      }
+    }
+  },
+  "structureArchives": {},
+  "versions": {
+    "review": 1,
+    "concept": 1
+  },
+  "lost": false,
+  "receipts": {},
+  "requests": 0,
+  "structureRequests": 4,
+  "structureWrites": 4,
+  "structureIncarnations": {
+    "review": "ec990000-0000-4000-8000-000000000006",
+    "concept": "ec990000-0000-4000-8000-000000000005"
+  },
+  "root": {
+    "task_generation": "ec990000-0000-4000-8000-000000000003",
+    "project_id": null,
+    "subtasks": [
+      {
+        "id": "concept",
+        "description": "Original saved notes",
+        "priority": 4,
+        "future": {
+          "keep": true
+        },
+        "completed": false,
+        "title": "Prepare the review"
+      },
+      {
+        "id": "review",
+        "description": "Original saved notes",
+        "priority": 4,
+        "future": {
+          "keep": true
+        },
+        "completed": false,
+        "title": "Publish the summary"
+      }
+    ],
+    "user_id": "ec990000-0000-4000-8000-000000000001",
+    "id": "ec990000-0000-4000-8000-000000000002",
+    "title": "Native child workspace"
+  },
+  "structureRevision": 5
+}

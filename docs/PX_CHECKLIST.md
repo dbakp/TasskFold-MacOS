@@ -1406,7 +1406,7 @@ Evidence: `child-task-repair-client/verification.json`. This checks components a
 - [x] Fresh, cohort-guarded Redo after a confirmed combined parent/subtask Undo; retain the root clock and zone, preserve current unrelated fields, and save the exact request before sending.
 - [x] Native Mac command/text history and iPhone/iPad combined-selection history controls, four distinct operations, notes/sibling preservation and cold return in recorded isolated scopes.
 - [x] Local-history regression: stale Undo at the 30-entry limit cannot retarget; exact earlier Undo and normal Redo remain usable.
-- [ ] Finish standalone/other-operation Redo, consistent shared activity timing, older-data/history mapping, shared content custody and broader migration acceptance.
+- [ ] Finish remaining Mac native history acceptance, consistent shared activity timing, older-data/history mapping, shared content custody and broader migration acceptance.
 
 Evidence: [completion Redo](completion-redo/README.md). No server, hosted configuration or normal-use gate changed. Existing deferrals stay paused.
 
@@ -1418,6 +1418,15 @@ Evidence: [completion Redo](completion-redo/README.md). No server, hosted config
 - [x] Add Redo to saved move recovery and connect newly confirmed moves to the existing native history owner and scoped feedback in each app.
 - [x] Both Core suites pass 44 selected cases; both app builds/signatures pass. iPhone saved/cold and normal task-menu journeys, plus iPad saved/cold at largest text, each pass with exactly four unique operations and exact preserved source/nested fields.
 - [ ] Mac keyboard walkthrough: the Mac is locked. Genuine cloud/account/window/speech and larger-workflow acceptance remains open.
-- [ ] Field-edit and other hierarchy Redo, consistent shared activity, older-data/history mapping and shared file/discussion custody remain. Normal migration/transfer gates stay disabled.
+- [ ] Mac native history acceptance, consistent shared activity, older-data/history mapping and shared file/discussion custody remain. Normal migration/transfer gates stay disabled.
 
 [Evidence and precise scope](transfer-redo/README.md). No server/schema deployment or user-paused provider/rollout/release work is included.
+
+
+## 31 October · hierarchy Undo/Redo and stable organizer presentation
+
+Adding, moving and removing independent subtask branches now have linked Undo/Redo. Saved recovery offers Review Redo after confirmed Undo, and confirming an inverse there advances the matching native history frame without sending it again. Redo uses fresh typed requests and the confirmed structure cutoff; a later edit to a restored branch blocks removal. Encrypted cold recovery, competing writers and retention preserve the latest removal archive.
+
+The ordinary editor/inspector owns the organizer outside reusable Form rows and captures its root at opening. This fixes the nested Add review disappearing during presentation. The recorded iPhone journey covers one-tap Add, saved Undo, ordinary-menu Redo/Undo and cold return. The iPad largest-text journey covers removal of a nested branch, cold Redo and final restoration; a separate iPhone move cycle restores exact placement.
+
+Each repository owns its implementation, focused client checks, real local SQL fixture and evidence. See [hierarchy-history/README.md](hierarchy-history/README.md) and [verification.json](hierarchy-history/verification.json). Mac keyboard runtime acceptance remains open because the screen was locked; build/signature results are recorded separately. No new server migration or gate enablement is part of this change. Shared activity/history, older-data mapping, shared file/discussion custody, hosted deployment and genuine shared-account acceptance remain open. Ordinary migration use stays disabled.

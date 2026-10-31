@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 @testable import TaskfoldCore
 
 final class ChildTaskStructureCommandTests: XCTestCase {
@@ -29,6 +30,133 @@ final class ChildTaskStructureCommandTests: XCTestCase {
         else { raw["incarnation"] = command.body["incarnation"] ?? command.original?.receipt["incarnation"] ?? .string(UUID().uuidString.lowercased()) }
         return raw
     }
+    private func historyRead(revision: Double, removing: Set<String> = [], restored: (String, String)? = nil, edited: String? = nil) throws -> ChildTaskStructureRead {
+        try read { root, raw in
+            raw["structure_revision"] = .number(revision); raw["projection_revision"] = .number(revision)
+            var rows = raw["records"]!.list.filter { !removing.contains($0.object["node_key"]!.text) }
+            for i in rows.indices {
+                var row = rows[i].object
+                if let restored, row["identity_path"]!.list.first?.text == restored.0 {
+                    row["incarnation"] = .string(row["node_key"]!.text == restored.0 ? restored.1 : UUID().uuidString.lowercased()); row["revision"] = .number(1)
+                }
+                if row["node_key"]?.text == edited { row["revision"] = .number(Double(row["revision"]!.integer + 1)) }
+                rows[i] = .object(row)
+            }
+            for parent in Set(rows.map { $0.object["parent_key"]!.text }) {
+                let indices = rows.indices.filter { rows[$0].object["parent_key"]!.text == parent }.sorted { rows[$0].object["sibling_order"]!.integer < rows[$1].object["sibling_order"]!.integer }
+                for (position, index) in indices.enumerated() { var row = rows[index].object; row["sibling_order"] = .number(Double(position)); rows[index] = .object(row) }
+            }
+            func tree(_ parent: JSON) -> [JSON] {
+                rows.filter { $0.object["parent_key"] == parent }.sorted { $0.object["sibling_order"]!.integer < $1.object["sibling_order"]!.integer }.map { node in
+                    let row = node.object; var fields = row["fields"]!.object
+                    if row["children_kind"] == .string("array") { fields["subtasks"] = .array(tree(row["node_key"]!)) }
+                    else if row["children_kind"] == .string("null") { fields["subtasks"] = .null }
+                    return .object(fields)
+                }
+            }
+            raw["records"] = .array(rows); root["subtasks"] = .array(tree(.null))
+        }
+    }
+    private func history(_ stem: String) throws -> (ChildTaskStructureCommand, ChildTaskStructureReceipt, ChildTaskStructureCommand, ChildTaskStructureReceipt) {
+        let f = try fixture(), body = f["fixture" + stem + "Command"]!.object
+        let forward = try ChildTaskStructureCommand(account: body["account"]!.text, origin: origin, body: body), proof = try forward.confirmed(f["fixture" + stem + "Receipt"]!.object)
+        var undoBody = body.filter { ChildTaskStructureCommand.scopeKeys.contains($0.key) }
+        undoBody["action"] = .string("undo"); undoBody["request_id"] = .string(UUID().uuidString.lowercased()); undoBody["undo_of"] = .string(forward.id); undoBody["structure_revision"] = proof.raw["after_revision"]
+        let undo = try ChildTaskStructureCommand(account: forward.account, origin: origin, body: undoBody, original: .init(body: body, receipt: proof.raw))
+        var reply = try receipt(undo)
+        if stem == "Delete" { reply["incarnation"] = .string(UUID().uuidString.lowercased()) }
+        return (forward, proof, undo, try undo.confirmed(reply))
+    }
+    func testHierarchyRedoInsertUsesFreshIdentityAndExactOriginalNode() throws {
+        let (forward, _, undo, proof) = try history("")
+        let current = try historyRead(revision: Double(proof.raw["after_revision"]!.integer), removing: ["fresh"])
+        let redo = try ChildTaskStructureCommand(redo: undo, receipt: proof, read: current)
+        XCTAssertEqual(redo.action, .insert); XCTAssertNotEqual(redo.id, forward.id); XCTAssertNotEqual(redo.id, undo.id)
+        XCTAssertEqual(redo.body["node"], forward.body["node"]); XCTAssertNil(redo.body["undo_of"])
+        XCTAssertEqual(redo.body["structure_revision"], proof.raw["after_revision"])
+        XCTAssertThrowsError(try ChildTaskStructureCommand(redo: undo, receipt: proof, read: historyRead(revision: current.structureRevision + 1, removing: ["fresh"])))
+        XCTAssertThrowsError(try ChildTaskStructureCommand(redo: undo, receipt: proof, read: current, requestID: UUID(uuidString: forward.id)!))
+    }
+    func testHierarchyRedoMoveKeepsAuthoredDestinationAndRejectsAlteredPlacement() throws {
+        let (forward, _, undo, proof) = try history("Move"), current = try historyRead(revision: Double(proof.raw["after_revision"]!.integer))
+        let redo = try ChildTaskStructureCommand(redo: undo, receipt: proof, read: current)
+        XCTAssertEqual(redo.action, .move); XCTAssertEqual(redo.body["parent_key"], forward.body["parent_key"]); XCTAssertEqual(redo.body["index"], forward.body["index"])
+        var body = redo.body; body["parent_key"] = .null
+        let retargeted = try ChildTaskStructureCommand(account: redo.account, origin: origin, body: body)
+        XCTAssertThrowsError(try retargeted.validateRedo(of: undo, receipt: proof))
+    }
+    func testHierarchyRedoDeleteFencesEveryRestoredNodeAndSupportsArchiveRecovery() throws {
+        let (forward, originalProof, undo, proof) = try history("Delete"), key = proof.raw["node_key"]!.text
+        let current = try historyRead(revision: Double(proof.raw["after_revision"]!.integer), restored: (key, proof.raw["incarnation"]!.text))
+        let redo = try ChildTaskStructureCommand(redo: undo, receipt: proof, read: current)
+        XCTAssertEqual(redo.action, .delete); XCTAssertEqual(Set(redo.body["subtree_versions"]!.object.keys), Set(forward.body["subtree_versions"]!.object.keys))
+        XCTAssertNotEqual(redo.body["incarnation"], forward.body["incarnation"])
+        for edited in [key, "nested"] {
+            XCTAssertThrowsError(try ChildTaskStructureCommand(redo: undo, receipt: proof, read: historyRead(revision: current.structureRevision, restored: (key, proof.raw["incarnation"]!.text), edited: edited)))
+        }
+        var archive = originalProof.raw; archive["replayed"] = .bool(true)
+        let recoveredUndo = try ChildTaskStructureCommand(account: undo.account, origin: origin, body: undo.body, original: .init(body: nil, receipt: archive))
+        XCTAssertNoThrow(try ChildTaskStructureCommand(redo: recoveredUndo, receipt: proof, read: current))
+        var changed = redo.body; changed["node_key"] = .string("nested"); changed["incarnation"] = current.records.nodes["nested"].map { .string($0.incarnation) }
+        XCTAssertThrowsError(try ChildTaskStructureCommand(account: redo.account, origin: origin, body: changed).validateRedo(of: undo, receipt: proof))
+    }
+    func testHierarchyRedoJournalRejectsMissingLineageAndVersionDowngrade() throws {
+        let (forward, first, undo, proof) = try history(""), current = try historyRead(revision: Double(proof.raw["after_revision"]!.integer), removing: ["fresh"])
+        let redo = try ChildTaskStructureCommand(redo: undo, receipt: proof, read: current)
+        let rows: [ChildTaskStructureJournalState.Entry] = [.init(command: forward, phase: .confirmed, receipt: first), .init(command: undo, phase: .confirmed, receipt: proof), .init(command: redo, redoOf: undo.id)]
+        let state = try ChildTaskStructureJournalState(account: forward.account, origin: origin, entries: rows)
+        let encoded = try TaskfoldJSONEncoder().encode(state); XCTAssertEqual(try ChildTaskStructureJournalState(data: encoded), state)
+        XCTAssertEqual(Set(try ChildTaskStructureJournalState.families(rows).values), [forward.id])
+        var raw = try JSONDecoder().decode([String: JSON].self, from: encoded); XCTAssertEqual(raw["version"], .number(2)); raw["version"] = .number(1)
+        XCTAssertThrowsError(try ChildTaskStructureJournalState(data: JSONEncoder().encode(raw)))
+        var missing = rows; missing.remove(at: 1)
+        XCTAssertThrowsError(try ChildTaskStructureJournalState(account: forward.account, origin: origin, entries: missing))
+    }
+    func testHierarchyRedoEncryptedColdRecoveryAndCompetingWindowsKeepOneIdentity() async throws {
+        let (forward, proof, _, _) = try history("")
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("taskfold-hierarchy-redo-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let key = SymmetricKey(size: .bits256)
+        let io = try ChildTaskStructureJournalFileIO(directory: root.appendingPathComponent("vault"), account: forward.account, origin: origin, encryptionKey: { key })
+        func journal() throws -> ChildTaskStructureJournal { try .init(account: forward.account, origin: origin, io: io, coordinationDirectory: root.appendingPathComponent("locks"), removalDirectory: root.appendingPathComponent("removal")) }
+        let a = try journal(), lease = CalendarReadLease()
+        try await a.enqueue(forward, lease: lease); _ = try await a.attempt(forward, lease: lease); try await a.confirm(forward, receipt: proof, lease: lease)
+        let first = try await a.load(), parent = try XCTUnwrap(first.entries.first)
+        let undo = try await a.enqueueInverse(of: parent, read: read(), lease: lease)
+        _ = try await a.attempt(undo, lease: lease); let undone = try undo.confirmed(receipt(undo)); try await a.confirm(undo, receipt: undone, lease: lease)
+        let b = try journal(), cold = try await b.load(), undoEntry = try XCTUnwrap(cold.entries.last)
+        let fresh = try historyRead(revision: Double(undone.raw["after_revision"]!.integer), removing: ["fresh"])
+        async let one = a.enqueueInverse(of: undoEntry, read: fresh, lease: lease)
+        async let two = b.enqueueInverse(of: undoEntry, read: fresh, lease: lease)
+        let (redo, duplicate) = try await (one, two); XCTAssertEqual(redo, duplicate)
+        let saved = try await b.load(); XCTAssertEqual(saved.entries.count, 3); XCTAssertEqual(saved.entries.last?.redoOf, undo.id)
+        _ = try await b.attempt(redo, lease: lease); let redone = try redo.confirmed(receipt(redo)); try await b.confirm(redo, receipt: redone, lease: lease)
+        let latest = try await a.load(), redoEntry = try XCTUnwrap(latest.entries.last)
+        let afterRedo = try historyRead(revision: Double(redone.raw["after_revision"]!.integer), restored: ("fresh", redone.raw["incarnation"]!.text))
+        let undoAgain = try await a.enqueueInverse(of: redoEntry, read: afterRedo, lease: lease)
+        _ = try await a.attempt(undoAgain, lease: lease); try await a.confirm(undoAgain, receipt: undoAgain.confirmed(receipt(undoAgain)), lease: lease)
+        let final = try await journal().load(); XCTAssertEqual(final.entries.count, 4); XCTAssertEqual(Set(try ChildTaskStructureJournalState.families(final.entries).values), [forward.id])
+        XCTAssertFalse(String(decoding: try Data(contentsOf: io.file), as: UTF8.self).contains("Fresh subtask"))
+    }
+    func testHierarchyRedoCapacityKeepsNewestLiveDeletionArchive() throws {
+        let (forward, first, undo, proof) = try history("Delete"), current = try historyRead(revision: Double(proof.raw["after_revision"]!.integer), restored: (proof.raw["node_key"]!.text, proof.raw["incarnation"]!.text))
+        let redo = try ChildTaskStructureCommand(redo: undo, receipt: proof, read: current)
+        var rows: [ChildTaskStructureJournalState.Entry] = [.init(command: forward, phase: .confirmed, receipt: first), .init(command: undo, phase: .confirmed, receipt: proof), .init(command: redo, phase: .confirmed, receipt: try redo.confirmed(receipt(redo)), redoOf: undo.id)]
+        let template = try source()
+        for _ in 0..<61 {
+            var body = template.body; body["request_id"] = .string(UUID().uuidString.lowercased()); let c = try ChildTaskStructureCommand(account: template.account, origin: origin, body: body)
+            rows.append(.init(command: c, phase: .confirmed, receipt: try c.confirmed(receipt(c))))
+        }
+        var state = try ChildTaskStructureJournalState(account: forward.account, origin: origin, entries: rows)
+        // One further settled family forces capacity pruning. A prior Undo must
+        // never make the latest Redo deletion look safe to forget.
+        var body = template.body; body["request_id"] = .string(UUID().uuidString.lowercased()); let c = try ChildTaskStructureCommand(account: template.account, origin: origin, body: body)
+        state.entries.append(.init(command: c, phase: .confirmed, receipt: try c.confirmed(receipt(c))))
+        try state.makeRoom()
+        XCTAssertTrue([forward.id, undo.id, redo.id].allSatisfy { id in state.entries.contains { $0.command.id == id } }); XCTAssertEqual(state.entries.count, 64)
+    }
+
     func testActualInsertReceiptAndCertifiedUndoBindExactly() throws {
         let command = try source(), f = try fixture(), proof = try command.confirmed(f["fixtureReceipt"]!.object)
         XCTAssertEqual(proof.raw["after_revision"], .number(2))

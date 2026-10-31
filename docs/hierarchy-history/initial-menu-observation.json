@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-31",
+  "phase": "phone-menu-v2",
+  "status": "failed before any hierarchy write",
+  "observation": "The organizer opened from the ordinary task details, but Add subtask did not open its editor after the row-center tap or a second row-center press. The Add button remained enabled and visible. The independent saved move journey passed.",
+  "requiredRegression": "One ordinary Add tap must open the editor, followed by saved Undo, normal-menu Redo and Undo, and a cold return.",
+  "changesUnderTest": "Move organizer presentation to the stable parent TaskEditor/TaskInspector. Capture the root in an immutable presentation request; close it when parent access stops. Remove the temporary diagnostics and unsuccessful button-style changes.",
+  "diagnostic": "The Add handler ran and its review began with a valid model and matching scope. The view disappeared and a fresh organizer immediately cleared its review. The row-owned presenter was replaced during nested presentation."
+}

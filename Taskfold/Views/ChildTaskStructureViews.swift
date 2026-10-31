@@ -39,13 +39,19 @@ private struct HierarchyConfirmation {
     }
 }
 
+struct ChildTaskStructurePresentationRequest: Identifiable {
+    let id = UUID()
+    let rootID: String
+}
+
 struct ChildTaskStructureLink: View {
     let rootID: String
+    var show: ((String) -> Void)? = nil
     @Environment(Store.self) private var store
     @State private var showing = false
     var body: some View {
         if store.childTaskStructureEditingEnabled, store.childTaskFieldRecoveryScope != nil, store.record("tasks", id: rootID) != nil {
-            Button("Organize saved subtasks", systemImage: "list.bullet.indent") { showing = true }
+            Button("Organize saved subtasks", systemImage: "list.bullet.indent") { if let show { show(rootID) } else { showing = true } }
                 .accessibilityIdentifier("organizeIndependentChildren")
                 .sheet(isPresented: $showing) { WorkflowShell(title: "Organize subtasks") { ChildTaskStructureView(rootID: rootID) } }
         }
@@ -72,6 +78,9 @@ struct SavedChildTaskStructureLink: View {
 }
 
 struct ChildTaskStructureView: View {
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
     let rootID: String
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(Store.self) private var store
@@ -160,6 +169,10 @@ struct ChildTaskStructureView: View {
         .privacySensitive()
         .onAppear { appeared = true }
         .task(id: scope) { if model == nil || modelScope != scope { await open() } }
+        .onChange(of: store.childHistoryNotice?.id) { _, _ in
+            guard let value = store.childHistoryNotice, value.kind == .hierarchy, value.scope == scope else { return }
+            notice = value.message; Task { await returned() }
+        }
         .onDisappear { appeared = false; if review == nil && !recovery && transfer == nil { clear() } }
         .sheet(item: $review, onDismiss: { Task { await returned() } }) { request in
             if let model, modelScope == scope { ChildHierarchyReviewView(request: request, model: model, feedback: { notice = $0 }) }
@@ -168,6 +181,20 @@ struct ChildTaskStructureView: View {
         .sheet(item: $transfer, onDismiss: { Task { await returned() } }) { opening in
             WorkflowShell(title: "Move subtask") { ChildTaskTransferView(rootID: rootID, nodeKey: opening.nodeKey) }
         }
+    }
+    private func makeHistoryModel() throws -> ChildTaskStructurePresentation {
+        #if os(macOS)
+        let owner = workspace
+        return try store.childTaskStructurePresentation(didApply: { [weak owner] entry, scope in owner?.rememberChildStructure(entry, scope: scope) })
+        #else
+        let owner = store
+        return try store.childTaskStructurePresentation(didApply: { [weak owner] entry, scope in
+            guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
+            let step = owner.childStructureHistoryStep(entry, scope: scope)
+            if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, owner.viewHistory.acceptConfirmedInverse(of: parent, next: step) { return }
+            owner.viewHistory.record(step)
+        })
+        #endif
     }
     private var noticeButtons: some View {
         HStack(spacing: 12) {
@@ -188,7 +215,7 @@ struct ChildTaskStructureView: View {
         if !sameSession(old, scope) { notice = nil }
         clear(); failure = nil; guard let captured = scope else { return }
         do {
-            let value = try store.childTaskStructurePresentation(); model = value; modelScope = captured; await value.load()
+            let value = try makeHistoryModel(); model = value; modelScope = captured; await value.load()
             guard modelScope == scope, !Task.isCancelled else { return }; await refresh(sync: false)
         } catch { guard scope == captured else { return }; failure = "Saved subtasks could not be read. Your work is unchanged." }
     }
@@ -219,6 +246,9 @@ struct ChildTaskStructureView: View {
 }
 
 struct ChildTaskStructureRecoveryView: View {
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
     @State private var model: ChildTaskStructurePresentation?
@@ -265,7 +295,7 @@ struct ChildTaskStructureRecoveryView: View {
                 if model.loaded, model.entries.isEmpty, model.disposals.isEmpty { ContentUnavailableView("No saved actions", systemImage: "checkmark.circle", description: Text("Unfinished drafts appear separately.")) }
                 ForEach(ordered, id: \.hierarchyRecoveryRowID) { entry in
                     Section {
-                        Label(ChildTaskStructureReview.title(entry.command), systemImage: entry.command.action == .undo ? "arrow.uturn.backward" : entry.phase == .attempted ? "clock.badge.questionmark" : "square.stack.3d.up")
+                        Label(entry.redoOf == nil ? ChildTaskStructureReview.title(entry.command) : "Redo " + ChildTaskStructureReview.title(entry.command).lowercased(), systemImage: entry.redoOf != nil ? "arrow.uturn.forward" : entry.command.action == .undo ? "arrow.uturn.backward" : entry.phase == .attempted ? "clock.badge.questionmark" : "square.stack.3d.up")
                             .font(.headline)
                         Text(taskName(entry.command.body)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         if let target = targetNames[entry.command.id] { Text(target).fixedSize(horizontal: false, vertical: true) }
@@ -277,10 +307,10 @@ struct ChildTaskStructureRecoveryView: View {
                                 .disabled(model.busy || !store.permitsChildTaskStructureRequest(entry.command, sending: true)).accessibilityIdentifier("sendChildStructure-" + entry.command.id)
                             Button("Check and stop if pending", systemImage: "hand.raised") { confirm(.stop(entry.command), model) }.disabled(model.busy || !store.online)
                         }
-                        if entry.phase == .confirmed, entry.command.action != .undo, model.hasUndoOrDisposal(entry.command.id) {
-                            Text("Undo is already saved or its content has been removed.").font(.footnote).foregroundStyle(.secondary)
-                        } else if entry.command.action != .undo || entry.phase != .confirmed {
-                            Button(entry.phase == .confirmed ? "Review Undo" : entry.phase == .closed ? "Review a fresh action" : "Review current values", systemImage: "arrow.left.arrow.right") {
+                        if entry.phase == .confirmed, model.hasUndoOrDisposal(entry.command.id) {
+                            Text("An inverse action is already saved or its content was removed.").font(.footnote).foregroundStyle(.secondary)
+                        } else {
+                            Button(entry.phase == .confirmed ? (entry.command.action == .undo ? "Review Redo" : "Review Undo") : entry.phase == .closed ? "Review a fresh action" : "Review current values", systemImage: "arrow.left.arrow.right") {
                                 review = .init(root: entry.command.body["task_id"]!.text, source: .saved(entry))
                             }.disabled(model.busy || !store.online || !store.childTaskStructureEditingEnabled)
                         }
@@ -325,11 +355,15 @@ struct ChildTaskStructureRecoveryView: View {
         .task(id: scope) {
             if model != nil, modelScope == scope { return }
             clear(); guard let captured = scope else { return }
-            do { let value = try store.childTaskStructurePresentation(); model = value; modelScope = captured; await value.load() }
+            do { let value = try makeHistoryModel(); model = value; modelScope = captured; await value.load() }
             catch { guard captured == scope else { return }; failure = "Saved hierarchy actions could not be loaded. Your work is kept." }
         }
         .task(id: targetRequest) { await readTargetNames(targetRequest) }
         .onChange(of: model?.message) { _, _ in targetRevision = UUID() }
+        .onChange(of: store.childHistoryNotice?.id) { _, _ in
+            guard let value = store.childHistoryNotice, value.kind == .hierarchy, value.scope == scope, let model else { return }
+            Task { await model.load(); model.showHistoryNotice(value); targetRevision = UUID() }
+        }
         .onDisappear { appeared = false; if review == nil { clear() } }
         .alert(confirmation?.title ?? "Review action", isPresented: Binding(get: { confirmation != nil }, set: { if !$0 { confirmation = nil } })) {
             Button(confirmation?.buttonTitle ?? "Continue", role: confirmation?.destructive == true ? .destructive : nil) { executeConfirmation() }
@@ -370,15 +404,25 @@ struct ChildTaskStructureRecoveryView: View {
             } catch { guard request == targetRequest, scope == captured, !Task.isCancelled else { return } }
         }
     }
+    private func makeHistoryModel() throws -> ChildTaskStructurePresentation {
+        #if os(macOS)
+        let owner = workspace
+        return try store.childTaskStructurePresentation(didApply: { [weak owner] entry, scope in owner?.rememberChildStructure(entry, scope: scope) })
+        #else
+        let owner = store
+        return try store.childTaskStructurePresentation(didApply: { [weak owner] entry, scope in
+            guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
+            let step = owner.childStructureHistoryStep(entry, scope: scope)
+            if let parent = entry.redoOf ?? entry.command.body["undo_of"]?.text, owner.viewHistory.acceptConfirmedInverse(of: parent, next: step) { return }
+            owner.viewHistory.record(step)
+        })
+        #endif
+    }
     private func taskName(_ body: [String: JSON]) -> String {
         guard let root = store.record("tasks", id: body["task_id"]!.text), root["task_generation"] == body["task_generation"], root["project_id"] == body["project_id"] else { return "Original task unavailable" }
         return root.title
     }
-    private func canForget(_ entry: ChildTaskStructureJournalState.Entry, _ model: ChildTaskStructurePresentation) -> Bool {
-        guard entry.phase != .attempted else { return false }
-        if entry.phase == .confirmed, entry.command.action == .delete { return model.disposals.contains { $0.id == entry.command.id && $0.phase == .confirmed } }
-        return !model.entries.contains { $0.command.body["undo_of"] == .string(entry.command.id) }
-    }
+    private func canForget(_ entry: ChildTaskStructureJournalState.Entry, _ model: ChildTaskStructurePresentation) -> Bool { model.canForget(entry) }
     private func confirm(_ action: HierarchyConfirmation.Action, _ model: ChildTaskStructurePresentation) { guard let scope, scope == modelScope else { return }; confirmation = .init(action: action, model: model, scope: scope) }
     private func executeConfirmation() {
         guard let value = confirmation, value.scope == scope, value.model === model else { confirmation = nil; return }
@@ -486,7 +530,7 @@ private struct ChildHierarchyReviewView: View {
             return try .init(restoring: receipt, read: read, requestID: newID)
         case .saved(let entry):
             if entry.phase == .queued || entry.phase == .attempted { try entry.command.review(read); return entry.command }
-            if entry.phase == .confirmed { guard !model.hasUndoOrDisposal(entry.command.id), let receipt = entry.receipt else { throw ChildTaskStructureCommand.invalid }; return try .init(undo: entry.command, receipt: receipt, read: read, requestID: newID) }
+            if entry.phase == .confirmed { guard !model.hasUndoOrDisposal(entry.command.id), let receipt = entry.receipt else { throw ChildTaskStructureCommand.invalid }; return try entry.command.action == .undo ? .init(redo: entry.command, receipt: receipt, read: read, requestID: newID) : .init(undo: entry.command, receipt: receipt, read: read, requestID: newID) }
             return try ChildTaskStructureReview.fresh(entry.command, read: read, parent: parent.isEmpty ? nil : parent, index: index, requestID: newID)
         }
     }
@@ -559,7 +603,7 @@ private struct ChildHierarchyReviewView: View {
                 }
                 if let command = proposal {
                     Section("Change") {
-                        Label(ChildTaskStructureReview.title(command), systemImage: command.action == .undo ? "arrow.uturn.backward" : "square.stack.3d.up")
+                        Label(saved?.phase == .confirmed && saved?.command.action == .undo ? "Redo " + ChildTaskStructureReview.title(command).lowercased() : ChildTaskStructureReview.title(command), systemImage: command.action == .undo ? "arrow.uturn.backward" : "square.stack.3d.up")
                         if command.action == .insert { Text(command.body["node"]!.object["title"]!.text).fixedSize(horizontal: false, vertical: true) }
                         else if command.action != .delete, let node = read.records.nodes[command.body["node_key"]?.text ?? command.original?.receipt["node_key"]?.text ?? ""] { Text(node.fields["title"]?.text ?? "Subtask").fixedSize(horizontal: false, vertical: true) }
                         if command.action == .delete {
@@ -673,6 +717,7 @@ private struct ChildHierarchyReviewView: View {
             let success: Bool
             if let saved, saved.phase == .queued || saved.phase == .attempted { success = await model.send(command) }
             else if let saved, saved.phase == .closed { success = await model.replace(saved, with: command, read: read) }
+            else if let saved, saved.phase == .confirmed { success = await model.queueInverse(saved, read: read, requestID: newID) != nil }
             else { success = await model.queue(command, read: read) }
             guard captured == scope, !Task.isCancelled else { return }
             if success { feedback(saved?.phase == .queued || saved?.phase == .attempted ? model.message ?? "Change confirmed." : "Action saved."); dismiss() } else { failure = model.message }

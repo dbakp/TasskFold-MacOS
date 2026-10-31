@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-31",
+  "repository": "TasskFold-MacOS",
+  "status": "implemented; mobile accepted; Mac runtime open",
+  "clientChecks": 267,
+  "localSQLChecks": 75,
+  "personalAndTeamEditorSQL": true,
+  "nativeJourneys": {
+    "phone-move": {
+      "status": "passed",
+      "appRepository": "TaskFold-iOS",
+      "requests": 4,
+      "writes": 4,
+      "stateSHA256": "d1dacfb6c4dbe619e68bd50a72a44375c972b64afad9052cf4814844f9215301",
+      "phase": "phone-move-phase.json"
+    },
+    "phone-menu": {
+      "status": "passed",
+      "appRepository": "TaskFold-iOS",
+      "requests": 4,
+      "writes": 4,
+      "stateSHA256": "d38dd5ce26bb36b4a39c7ab0c7e6946a5c2e4f3129f32df6525e16443810808d",
+      "phase": "phone-menu-phase.json"
+    },
+    "ipad-delete": {
+      "status": "passed",
+      "appRepository": "TaskFold-iOS",
+      "requests": 4,
+      "writes": 4,
+      "stateSHA256": "8f752579ee8f78ab6a8fa37490cd496df539c49d751cb12243ba18e6e47da792",
+      "phase": "ipad-delete-phase.json"
+    }
+  },
+  "movePhaseNote": "The move journey predates the presentation fix; final v5 exercises ordinary insert/native history and nested removal at largest text. Per-phase source bindings are retained.",
+  "macKeyboardAcceptance": {
+    "status": "open",
+    "reason": "Mac locked; no repeated launch attempt or manual prompt requested"
+  },
+  "serverMigrationAdded": false,
+  "hostedDeployment": false,
+  "ordinaryMigrationEnabled": false,
+  "remaining": [
+    "Mac hierarchy keyboard and inspector refresh",
+    "Mac cross-task move keyboard acceptance",
+    "Shared activity/history",
+    "Older-data/history mapping",
+    "Shared file/discussion custody",
+    "Hosted and genuine-account migration acceptance"
+  ]
+}

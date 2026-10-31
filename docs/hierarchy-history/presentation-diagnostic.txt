@@ -1,0 +1,9 @@
+Timestamp               Ty Process[PID:TID]
+2026-10-31 20:57:49.163 Df Taskfold[94625:2399734] (Foundation) TaskfoldHierarchy clear review=false appeared=true
+2026-10-31 20:57:55.041 Df Taskfold[94625:2399734] (Foundation) TaskfoldHierarchy Add tapped
+2026-10-31 20:57:55.043 Df Taskfold[94625:2399734] (Foundation) TaskfoldHierarchy present review model=true equalScope=true
+2026-10-31 20:57:55.194 Df Taskfold[94625:2399734] (Foundation) TaskfoldHierarchy disappear review=true model=true
+2026-10-31 20:57:55.215 Df Taskfold[94625:2399734] (Foundation) TaskfoldHierarchy clear review=false appeared=true
+2026-10-31 20:57:55.288 Df Taskfold[94625:2399734] (Foundation) TaskfoldHierarchy disappear review=false model=true
+2026-10-31 20:57:55.288 Df Taskfold[94625:2399734] (Foundation) TaskfoldHierarchy clear review=false appeared=false
+2026-10-31 20:57:55.302 Df Taskfold[94625:2399734] (Foundation) TaskfoldHierarchy clear review=false appeared=true

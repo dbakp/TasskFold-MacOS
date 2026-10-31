@@ -510,7 +510,7 @@ struct ChildTaskFieldEditorView: View {
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: key) { _, _ in select() }
         .onChange(of: store.childHistoryNotice?.id) { _, _ in
-            guard let notice = store.childHistoryNotice, notice.kind == .fields, notice.scope == scope, appeared, phase == .active else { return }
+            guard let notice = store.childHistoryNotice, notice.kind == .fields || notice.kind == .hierarchy, notice.scope == scope, appeared, phase == .active else { return }
             // A confirmed history operation refreshes a clean inspector. Keep
             // genuine unsent typing (and other children's drafts) intact.
             guard changes.isEmpty, addingLabel.isEmpty, !reminderOwnership.active else { model?.showHistoryNotice(notice); return }
