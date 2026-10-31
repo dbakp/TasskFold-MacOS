@@ -2,6 +2,8 @@
 
 ## Current status — 31 October 2026
 
+- [x] Guarded Redo for combined parent/subtask completions: Mac, iPhone and iPad pass Complete → Undo → Redo → Undo and cold return; mobile peers confirm exactly four distinct operations. Both repos pass 53 focused checks; the iPhone local-history limit/regression also passes. [Scope and evidence](completion-redo/README.md).
+
 - [x] Combined parent/subtask completion, whole-selection Undo and interrupted-request recovery in the isolated Mac/iPhone/iPad apps. [Recorded scope](mixed-task-completion-native/README.md).
 - [x] Encrypted repair-review choices survive Close and relaunch, resume against the exact original, and hand off atomically into the queued repair. Native Mac/iPhone/iPad scope and independent Core results are in [saved repair reviews](child-repair-drafts/README.md).
 - [ ] Full Redo/shared history, indexed/history mapping and shared attachment/discussion custody.

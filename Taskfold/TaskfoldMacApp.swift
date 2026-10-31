@@ -186,12 +186,42 @@ final class NotificationRoute {
 }
 
 /// Menu bar commands mirror every keyboard shortcut in the window so they are discoverable and scriptable.
+/// Native field editors own their text history. Refresh command validation when
+/// that responder's history changes, even when no workspace model changed.
+@MainActor @Observable private final class NativeHistoryCommandUpdates {
+    var revision = 0
+    @ObservationIgnored private var observers: [NSObjectProtocol] = []
+    init() {
+        let names: [Notification.Name] = [NSControl.textDidBeginEditingNotification, NSControl.textDidChangeNotification,
+            NSControl.textDidEndEditingNotification, NSText.didChangeNotification, .NSUndoManagerDidCloseUndoGroup, .NSUndoManagerDidUndoChange,
+            .NSUndoManagerDidRedoChange, NSWindow.didBecomeKeyNotification]
+        for name in names {
+            observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor [weak self] in self?.revision &+= 1 }
+            })
+        }
+    }
+    deinit { for observer in observers { NotificationCenter.default.removeObserver(observer) } }
+}
+
 struct TaskfoldCommands: Commands {
+    @State private var historyUpdates = NativeHistoryCommandUpdates()
     @FocusedValue(\.taskfoldPrint) private var printAction
     @Environment(\.openSettings) private var openSettings
     let workspace: Workspace
     let store: Store
     var body: some Commands {
+        let _ = historyUpdates.revision
+        CommandGroup(replacing: .undoRedo) {
+            Button(NSApp.keyWindow?.firstResponder?.undoManager?.undoMenuItemTitle ?? "Undo") {
+                NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
+            }.keyboardShortcut("z", modifiers: .command)
+                .disabled(workspace.completionHistory?.busy == true || store.childListCompletionBusy || NSApp.keyWindow?.firstResponder?.undoManager?.canUndo != true)
+            Button(NSApp.keyWindow?.firstResponder?.undoManager?.redoMenuItemTitle ?? "Redo") {
+                NSApp.sendAction(Selector(("redo:")), to: nil, from: nil)
+            }.keyboardShortcut("z", modifiers: [.command, .shift])
+                .disabled(workspace.completionHistory?.busy == true || store.childListCompletionBusy || NSApp.keyWindow?.firstResponder?.undoManager?.canRedo != true)
+        }
         CommandGroup(replacing: .printItem) {
             Button("Print or Export…") { printAction?.perform() }.keyboardShortcut("p", modifiers: .command).disabled(printAction?.isEnabled != true)
         }

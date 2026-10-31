@@ -1,0 +1,56 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v5-redo.xcresult",
+      "bytes": 11937780
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v5-redo-attachments",
+      "bytes": 11382560
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v6-redo.xcresult",
+      "bytes": 19091890
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v6-redo-attachments",
+      "bytes": 18491589
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v7-history.xcresult",
+      "bytes": 12302811
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v7-history-attachments",
+      "bytes": 12019149
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v7-redo.xcresult",
+      "bytes": 1263712
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v7-redo-attachments",
+      "bytes": 597866
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-ipad-v7-redo.xcresult",
+      "bytes": 1416746
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-ipad-v7-redo-attachments",
+      "bytes": 545355
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v9-history.xcresult",
+      "bytes": 1135803
+    },
+    {
+      "path": "/tmp/taskfold-completion-redo-native-phone-v9-history-attachments",
+      "bytes": 487797
+    }
+  ],
+  "removedBytes": 90673058,
+  "freeBefore": 33386807296,
+  "freeAfter": 33478795264,
+  "preserved": "Core/native logs, summaries, source/binary fingerprints, exact peer state, eight accepted mobile screenshots and failed-phase diagnostics; current hosts/products/devices reused."
+}

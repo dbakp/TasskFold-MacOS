@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 31 October 2026 · Combined completion Redo
+
+The isolated Mac app now passes combined task/subtask completion, Command-Z, Command-Shift-Z, another Command-Z and cold return. Native text Undo/Redo remains usable when moving between a field and the task list; command validation observes editor/history changes. The corresponding phone/tablet combined journeys also pass. Broader migration/other-operation history remains unfinished and gated. [Recorded scope](completion-redo/README.md).
+
 Bounded repair originals now pass 313 actual database checks per repo, including exact UTF-8 size boundaries, complete ordered history, a 3,000-entry repair and safe oversized rollback. The original builder uses a single forward cursor and an exact retained byte budget, with no new advisor findings. Ordinary use remains off; normal opaque editing, indexed/history custody and broader production/library/native acceptance remain open. See [bounded original evidence](child-task-repair-preflight/README.md).
 
 Guided older-subtask repair now has Store admission/recovery, account cleanup and native before-and-after controls in both apps. Each repo passes 30 repair Core checks, including five new outline cases. Both isolated app/test builds and strict signatures pass. Mac CUA verifies preview without writes, one saved repair, exact original preservation and actual local export, plus cold receipt recovery. iPhone/iPad each pass two native component journeys for private-edit refusal and save/cold recovery. Ordinary use stays off; full opaque editing, indexed/history custody, bounded larger-history preflight and broader lifecycle/spoken acceptance remain open. See [guided repair scope](child-task-repair-ui/README.md).

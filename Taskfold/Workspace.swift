@@ -371,16 +371,18 @@ final class Workspace {
     func undoChildGroup(_ token: ChildTaskListBatchUndo) { guard canUndoChildGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
     var mixedGroupReview = false
     private var mixedGroupUndoID: String?
+    private(set) var completionHistory: ConfirmedHistoryBridge?
     func reviewMixedGroup() { confirmationTimer?.cancel(); confirmation = nil; mixedGroupReview = true }
-    func canUndoMixedGroup(_ token: MixedTaskListUndo) -> Bool { mixedGroupUndoID == token.command.id && store.canUndoMixedFromList(token) }
+    func canUndoMixedGroup(_ token: MixedTaskListUndo) -> Bool { mixedGroupUndoID == token.command.id && completionHistory?.canUndo == true && store.canUndoMixedFromList(token) }
     private func showMixedGroup(_ result: MixedTaskListResult) {
         confirm(result.message, undoable: false); confirmation?.mixedGroup = result.undo; confirmation?.mixedGroupReview = result.needsReview
         guard let token = result.undo, let manager = undoManager else { return }; mixedGroupUndoID = token.command.id
-        manager.registerUndo(withTarget: self) { workspace in
-            guard workspace.canUndoMixedGroup(token) else { return }; workspace.mixedGroupUndoID = nil
-            Task { [weak workspace] in guard let workspace, let result = await workspace.store.undoMixedFromList(token) else { return }; workspace.showMixedGroup(result) }
-        }
-        manager.setActionName(token.command.body["action"] == .string("complete") ? "Complete Selected Tasks" : "Reopen Selected Tasks")
+        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
+        completionHistory?.record(store.mixedHistoryStep(token) { [weak self] value in
+            guard let self else { return }
+            self.confirm(value.message, undoable: false)
+            self.confirmation?.mixedGroupReview = value.needsReview
+        })
     }
     func undoMixedGroup(_ token: MixedTaskListUndo) { guard canUndoMixedGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
     private func completeMixedGroup(_ tasks: [Record]) {

@@ -5797,10 +5797,43 @@ extension Store {
     func readMixedChildren(_ command: MixedTaskCompletionCommand) async throws -> [String: ChildTaskRecordRead] {
         guard let scope = childTaskFieldRecoveryScope, scope.account == command.account, scope.origin == command.origin, online else { throw CancellationError() }
         var reads: [String: ChildTaskRecordRead] = [:]
-        for id in Set(command.items.filter { $0.kind == "child" }.map(\.rootID)).sorted() {
+        for id in Set((command.original?.body ?? command.body)["children"]!.list.map { $0.object["task_id"]!.text }).sorted() {
             reads[id] = try await ChildTaskListRead.fresh(scope: scope, current: { self.childTaskFieldRecoveryScope }, operation: { try await self.readChildTaskRecords(id) })
         }
         guard childTaskFieldRecoveryScope == scope, reads.values.allSatisfy(childTaskFieldComparisonIsCurrent) else { throw CancellationError() }; return reads
+    }
+    func mixedHistoryStep(_ token: MixedTaskListUndo, report: @escaping (MixedTaskListResult) -> Void) -> ConfirmedHistoryBridge.Step {
+        let original = token.command.original?.body ?? token.command.body
+        return .init(name: original["action"] == .string("complete") ? "Complete Selected Tasks" : "Reopen Selected Tasks", key: token.command.id, retained: { [weak self] in
+            self?.childTaskFieldRecoveryScope == token.scope
+        }, available: { [weak self] in self?.canUndoMixedFromList(token) == true }, perform: { [weak self] in
+            guard let self else { return nil }
+            let result = token.command.isUndo ? await self.redoMixedFromList(token) : await self.undoMixedFromList(token)
+            guard let result, self.childTaskFieldRecoveryScope == token.scope else { return nil }
+            report(result)
+            guard let next = result.undo ?? result.redo else { return nil }
+            return self.mixedHistoryStep(next, report: report)
+        })
+    }
+    func redoMixedFromList(_ token: MixedTaskListUndo) async -> MixedTaskListResult? {
+        guard token.command.isUndo, canUndoMixedFromList(token), let source = token.command.original else { return nil }
+        childListCompletionBusy = true; defer { childListCompletionBusy = false }
+        do {
+            let openingSnapshot = snapshotRevision
+            let parentIDs = source.body["roots"]!.list.map { $0.object["task_id"]!.text }
+            let parents = try await backend.completionSelectionRoots(parentIDs, scope: token.scope)
+            let reads = try await readMixedChildren(token.command)
+            let model = try mixedTaskCompletionRecoveryModel(); defer { model.close() }; await model.load()
+            guard childTaskFieldRecoveryScope == token.scope, snapshotRevision == openingSnapshot,
+                  let entry = model.entries.first(where: { $0.command == token.command && $0.phase == .confirmed }), let proof = entry.proof else { throw MixedTaskCompletionCommand.invalid }
+            let command = try token.command.redo(roots: parents, reads: reads, decision: proof)
+            let confirmed = await model.perform(command)
+            guard childTaskFieldRecoveryScope == token.scope else { return nil }
+            return .init(message: confirmed ? "Redid selected tasks" : model.message ?? "Review this saved selection Redo.", undo: confirmed ? .init(scope: token.scope, command: command) : nil, needsReview: !confirmed)
+        } catch {
+            guard !Task.isCancelled, childTaskFieldRecoveryScope == token.scope else { return nil }
+            return .init(message: "These tasks changed since Undo. Review their current state before completing them again.", undo: nil, needsReview: false)
+        }
     }
     func canUndoMixedFromList(_ token: MixedTaskListUndo) -> Bool { !childListCompletionBusy && childTaskFieldRecoveryScope == token.scope && permitsMixedTaskCompletion(token.command, sending: true) }
     func undoMixedFromList(_ token: MixedTaskListUndo) async -> MixedTaskListResult? {
@@ -5812,7 +5845,7 @@ extension Store {
             let command = await model.undo(entry, reads: reads)
             guard childTaskFieldRecoveryScope == token.scope else { return nil }
             let confirmed = command.map { undo in model.entries.contains { $0.command == undo && $0.phase == .confirmed } } == true
-            return .init(message: confirmed ? "Undid selected tasks" : model.message ?? "Review this saved selection Undo.", undo: nil, needsReview: !confirmed)
+            return .init(message: confirmed ? "Undid selected tasks" : model.message ?? "Review this saved selection Undo.", undo: nil, needsReview: !confirmed, redo: confirmed ? command.map { .init(scope: token.scope, command: $0) } : nil)
         } catch {
             guard !Task.isCancelled, childTaskFieldRecoveryScope == token.scope else { return nil }
             return .init(message: "This selection Undo needs review. Your saved work is kept.", undo: nil, needsReview: true)

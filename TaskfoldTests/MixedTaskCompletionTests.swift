@@ -23,6 +23,12 @@ private final class MixedHTTP: URLProtocol, @unchecked Sendable {
         return proof
     }
 }
+@MainActor private final class MixedLostPeer: MixedTaskCompletionService {
+    var commands: [MixedTaskCompletionCommand] = []
+    func mixedTaskCompletion(_ command: MixedTaskCompletionCommand, session: UUID, close: Bool) async throws -> MixedTaskCompletionResolution {
+        commands.append(command); throw URLError(.networkConnectionLost)
+    }
+}
 final class MixedTaskCompletionTests: XCTestCase {
     private let origin = "https://mixed-completion.test"
     private func fixture() throws -> [String: JSON] {
@@ -121,4 +127,54 @@ final class MixedTaskCompletionTests: XCTestCase {
             let result=try await backend.mixedTaskCompletion(c,session:backend.reminderSessionIncarnation,close:close);XCTAssertTrue(result.applied)
         }
     }
+    private func redoReads(rootChanges: [String: JSON] = [:], childChanges: [String: JSON] = [:], incarnation: String? = nil, revision: Double = 3) throws -> (CompletionSelectionRootRead, [String: ChildTaskRecordRead]) {
+        let f = try fixture(), u = try command(undo: true), rows = f["undoReceipt"]!.object["receipts"]!.list
+        var root = rows[1].object["after"]!.object, fields = rows[0].object["receipt"]!.object["after"]!.object
+        root.merge(rootChanges) { _, new in new }; fields.merge(childChanges) { _, new in new }
+        fields["id"] = .string("child"); fields["title"] = .string("Keep newer child title")
+        root["title"] = .string("Keep newer root title"); root["subtasks"] = .array([.object(fields)])
+        let scope = ChildTaskFieldClientScope(account: u.account, origin: u.origin, workspace: UUID(), session: UUID(), access: UUID())
+        let baseline = root.filter { CompletionSelectionRootRead.baselineKeys.contains($0.key) }
+        let parent: [String: JSON] = ["protocol": .number(1), "account": .string(u.account), "roots": .array([.object(["task": .object(root), "baseline": .object(baseline), "source_hash": .string(String(repeating: "a", count: 64))])])]
+        let roots = try CompletionSelectionRootRead(data: TaskfoldJSONEncoder().encode(parent), taskIDs: [root["id"]!.text], scope: scope)
+        let context = try ChildTaskRecordContext(account: u.account, origin: u.origin, workspace: scope.workspace, session: scope.session, access: scope.access, snapshot: UUID(), root: Record(root))
+        let response: [String: JSON] = ["protocol": .number(1), "account": .string(u.account), "task_id": root["id"]!, "task_generation": root["task_generation"]!, "project_id": root["project_id"]!, "root_kind": .string("array"), "projection_revision": .number(revision), "records": .array([.object(["node_key": .string("child"), "incarnation": .string(incarnation ?? u.items[0].body["incarnation"]!.text), "revision": .number(revision), "parent_key": .null, "children_kind": .string("absent"), "identity_path": .array([.string("child")]), "sibling_order": .number(0), "fields": .object(fields)])])]
+        return (roots, [root["id"]!.text: try ChildTaskRecordRead(data: TaskfoldJSONEncoder().encode(response), context: context)])
+    }
+    func testRedoUsesConfirmedUndoCohortsFreshNoncesAndOriginalClock() throws {
+        let u = try command(undo: true), (roots, reads) = try redoReads(revision: 8)
+        let redo = try u.redo(roots: roots, reads: reads, decision: u.resolution(fixture()["undoReceipt"]!.object))
+        XCTAssertFalse(redo.isUndo); XCTAssertNotEqual(redo.id, u.id); XCTAssertNotEqual(redo.id, try command().id)
+        XCTAssertEqual(redo.items.map(\.kind), ["child", "root"])
+        XCTAssertEqual(redo.body["completed_at"], u.original!.body["completed_at"])
+        XCTAssertEqual(redo.body["input_zone"], u.original!.body["input_zone"])
+        XCTAssertEqual(redo.items[0].body["revision"], .number(8))
+        XCTAssertEqual(redo.items[0].body["baseline"], try fixture()["undoReceipt"]!.object["receipts"]!.list[0].object["receipt"]!.object["after"])
+        XCTAssertTrue(Set(redo.items.map(\.id)).isDisjoint(with: Set(u.items.map(\.id) + (try command()).items.map(\.id))))
+        let wire = String(decoding: try TaskfoldJSONEncoder().encode(redo), as: UTF8.self)
+        XCTAssertFalse(wire.contains("Keep newer")); XCTAssertEqual(try TaskfoldJSONDecoder().decode(MixedTaskCompletionCommand.self, from: TaskfoldJSONEncoder().encode(redo)), redo)
+    }
+    func testRedoRefusesCompletionCyclesReplacementAndOlderReads() throws {
+        let u = try command(undo: true), proof = try u.resolution(fixture()["undoReceipt"]!.object)
+        let token = try fixture()["undoReceipt"]!.object["receipts"]!.list[0].object["receipt"]!.object["after"]!.object[TeamChecklist.key]!.object
+        for pair in [try redoReads(rootChanges: ["completion_version": .number(4)]),
+                     try redoReads(childChanges: [TeamChecklist.key: .object(token.merging(["version": .number(4)]) { _, n in n })]),
+                     try redoReads(incarnation: UUID().uuidString.lowercased()), try redoReads(revision: 2)] {
+            XCTAssertThrowsError(try u.redo(roots: pair.0, reads: pair.1, decision: proof))
+        }
+        let pair = try redoReads()
+        XCTAssertThrowsError(try command().redo(roots: pair.0, reads: pair.1, decision: proof))
+    }
+    @MainActor func testRedoWithLostResponseIsSavedAsOneFreshRequestAcrossColdReturn() async throws {
+        let u = try command(undo: true), pair = try redoReads()
+        let redo = try u.redo(roots: pair.0, reads: pair.1, decision: u.resolution(fixture()["undoReceipt"]!.object))
+        let d = try directory(), key = SymmetricKey(size: .bits256), peer = MixedLostPeer(), scope = pair.0.scope
+        let model = MixedTaskCompletionRecoveryModel(scope: scope, journal: try journal(redo, d, key: key), service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { XCTFail("Unconfirmed Redo cannot refresh as applied") })
+        let applied = await model.perform(redo); XCTAssertFalse(applied); model.close()
+        let cold = MixedTaskCompletionRecoveryModel(scope: scope, journal: try journal(redo, d, key: key), service: peer, current: { scope }, canQueue: { _ in true }, canSend: { _ in true }, refresh: { XCTFail("Unconfirmed retry cannot refresh as applied") })
+        await cold.load(); await cold.send(redo)
+        XCTAssertEqual(cold.entries.count, 1); XCTAssertEqual(cold.entries[0].command, redo); XCTAssertEqual(cold.entries[0].phase, .attempted)
+        XCTAssertEqual(peer.commands, [redo, redo]); cold.close()
+    }
+
 }

@@ -1,0 +1,35 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "2983CDC1-9B77-4D5D-9002-A5A8384DE40C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Completion Undo Redo Undo preserves work after cold return_0_465175E0-7078-4631-B6F3-38D9F15B689C.png",
+        "timestamp" : 1793433003.546
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "3EE08AD5-31F6-4138-9FED-4602598B8AC1.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Undo after Redo restores both tasks_0_6296688A-5B24-4E88-93A1-37AD3EA57AC0.png",
+        "timestamp" : 1793432987.205
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "3627DEA3-040D-45EC-9673-9FE48ED094E3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Redo completes the parent and subtask again_0_5056A729-3801-4E31-80C3-BC9CB38FC375.png",
+        "timestamp" : 1793432971.538
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testMixedSelectionNativeUndoRedoUndoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testMixedSelectionNativeUndoRedoUndoAndColdReturn"
+  }
+]

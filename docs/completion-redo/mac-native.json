@@ -1,0 +1,589 @@
+{
+  "phase": "Mac final v3",
+  "sourceMatchesIsolatedHost": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/TaskfoldMacApp.swift": true,
+    "Taskfold/Workspace.swift": true
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "03a580bf99d38587361dabc19a28d0c8b53ba8199efefbafe8c1f243f09e2c2d",
+    "Taskfold/Core/Store.swift": "13b5c04b9372542e4c566c95221ffdf7188f0677661e331812275519de5928d5",
+    "Taskfold/TaskfoldMacApp.swift": "ab17ef9e8960fd77dd27be271f8c22511a3818cadb358fb955f59f65f088d2ae",
+    "Taskfold/Workspace.swift": "d36086461571bbd4b7ff33db0a8862b720d47ef6a4e014862eb19433107b9601"
+  },
+  "hostSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "03a580bf99d38587361dabc19a28d0c8b53ba8199efefbafe8c1f243f09e2c2d",
+    "Taskfold/Core/Store.swift": "8e91f28f215db8703224d592ea22465f18ed9560b85c758d04fc4a89f0b39cd7",
+    "Taskfold/TaskfoldMacApp.swift": "ab17ef9e8960fd77dd27be271f8c22511a3818cadb358fb955f59f65f088d2ae",
+    "Taskfold/Workspace.swift": "03880cd1fe6c1ff4181d5ab064c06a8f3888398a9c0b6e927b1320e17559aec1"
+  },
+  "appSHA256": "96a12ca1ea55561efd429dc82f3492ab84d10da9efd65d3eaf48405eeb430d96",
+  "observedNativeActions": [
+    "Keyboard text Undo/Redo/Undo clears/restores filter without task writes",
+    "Select parent and first child; Complete; Command-Z; Command-Shift-Z; Command-Z",
+    "Both tasks restored, untouched sibling open, original notes retained",
+    "Quit; launch same binary without reset; restored tasks visible; quit"
+  ],
+  "mixedWrites": 4,
+  "rootCompleted": false,
+  "rootVersion": 4,
+  "children": [
+    {
+      "id": "concept",
+      "title": "Prepare the review",
+      "description": "Original saved notes",
+      "completed": false,
+      "completed_at": null,
+      "taskfold_completion_v1": {
+        "version": 4,
+        "epoch": "ec990000-0000-4000-8000-000000000010"
+      }
+    },
+    {
+      "id": "review",
+      "title": "Publish the summary",
+      "description": "Original saved notes",
+      "completed": false,
+      "completed_at": null,
+      "taskfold_completion_v1": null
+    }
+  ],
+  "decisions": {
+    "2fa64a7b-97e3-4d4a-868f-0c1eaf56e6d9": {
+      "proof": {
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "receipts": [
+          {
+            "before": {
+              "section_id": null,
+              "is_heading": false,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "completion_version": 1,
+              "completed": true,
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "project_id": null,
+              "completed_at": "2026-10-31T07:22:41.655Z",
+              "user_id": "ec990000-0000-4000-8000-000000000001"
+            },
+            "successor": {
+              "state": "none",
+              "generation": null,
+              "hash": null,
+              "planned_id": null,
+              "created": false,
+              "id": null
+            },
+            "kind": "root",
+            "request_id": "69756438-f992-4d93-b1a7-3779c1486eae",
+            "action": "undo",
+            "task_generation": "ec990000-0000-4000-8000-000000000003",
+            "project_id": null,
+            "replayed": false,
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "after": {
+              "is_recurring": false,
+              "user_id": "ec990000-0000-4000-8000-000000000001",
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "section_id": null,
+              "completed": false,
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "completion_version": 2,
+              "project_id": null,
+              "is_heading": false,
+              "completed_at": null
+            }
+          },
+          {
+            "receipt": {
+              "project_id": null,
+              "incarnation": "ec990000-0000-4000-8000-000000000005",
+              "revision": 3,
+              "after": {
+                "taskfold_completion_v1": {
+                  "version": 2,
+                  "epoch": "ec990000-0000-4000-8000-000000000010"
+                },
+                "completed": false
+              },
+              "request_id": "97413273-218c-4a9c-a926-2a179162a111",
+              "action": "undo",
+              "node_key": "concept",
+              "task_id": "ec990000-0000-4000-8000-000000000002",
+              "account": "ec990000-0000-4000-8000-000000000001",
+              "undo_of": "730d7aa6-9a16-4ff8-a75c-b963d125142a",
+              "protocol": 1,
+              "before": {
+                "completed_at": "2026-10-31T07:22:41Z",
+                "taskfold_completion_v1": {
+                  "version": 1,
+                  "epoch": "ec990000-0000-4000-8000-000000000010"
+                },
+                "completed": true
+              },
+              "replayed": false,
+              "task_generation": "ec990000-0000-4000-8000-000000000003"
+            },
+            "replayed": false,
+            "kind": "child",
+            "request_id": "97413273-218c-4a9c-a926-2a179162a111"
+          }
+        ],
+        "protocol": 1,
+        "replayed": false,
+        "outcome": "applied",
+        "batch_id": "2fa64a7b-97e3-4d4a-868f-0c1eaf56e6d9"
+      },
+      "body": {
+        "undo_of": "6f12de94-fabb-436d-b6ae-454f6b4aac2c",
+        "protocol": 1,
+        "items": [
+          {
+            "kind": "root",
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "request_id": "69756438-f992-4d93-b1a7-3779c1486eae"
+          },
+          {
+            "command": {
+              "protocol": 1,
+              "undo_of": "730d7aa6-9a16-4ff8-a75c-b963d125142a",
+              "request_id": "97413273-218c-4a9c-a926-2a179162a111",
+              "action": "undo",
+              "node_key": "concept",
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "task_id": "ec990000-0000-4000-8000-000000000002",
+              "project_id": null,
+              "revision": 2,
+              "incarnation": "ec990000-0000-4000-8000-000000000005",
+              "account": "ec990000-0000-4000-8000-000000000001"
+            },
+            "kind": "child"
+          }
+        ],
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "batch_id": "2fa64a7b-97e3-4d4a-868f-0c1eaf56e6d9"
+      }
+    },
+    "f1a5e1e3-76ab-4c9b-9896-381082ded6d6": {
+      "proof": {
+        "replayed": false,
+        "receipts": [
+          {
+            "kind": "root",
+            "successor": {
+              "state": "none",
+              "generation": null,
+              "hash": null,
+              "created": false,
+              "planned_id": null,
+              "id": null
+            },
+            "before": {
+              "is_recurring": false,
+              "user_id": "ec990000-0000-4000-8000-000000000001",
+              "completed": true,
+              "section_id": null,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "completion_version": 3,
+              "project_id": null,
+              "is_heading": false,
+              "completed_at": "2026-10-31T07:22:41.655Z"
+            },
+            "request_id": "be75c29d-ea66-4af7-a046-a52433cca90e",
+            "action": "undo",
+            "task_generation": "ec990000-0000-4000-8000-000000000003",
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "replayed": false,
+            "after": {
+              "section_id": null,
+              "is_heading": false,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "completion_version": 4,
+              "completed": false,
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "project_id": null,
+              "completed_at": null,
+              "user_id": "ec990000-0000-4000-8000-000000000001"
+            },
+            "project_id": null
+          },
+          {
+            "receipt": {
+              "project_id": null,
+              "revision": 5,
+              "after": {
+                "taskfold_completion_v1": {
+                  "version": 4,
+                  "epoch": "ec990000-0000-4000-8000-000000000010"
+                },
+                "completed": false
+              },
+              "incarnation": "ec990000-0000-4000-8000-000000000005",
+              "request_id": "45c51f24-2c8d-43de-b754-21f350356d19",
+              "action": "undo",
+              "node_key": "concept",
+              "task_id": "ec990000-0000-4000-8000-000000000002",
+              "account": "ec990000-0000-4000-8000-000000000001",
+              "undo_of": "31ab6072-35d6-4ef2-8a3a-e2d74fd718fa",
+              "protocol": 1,
+              "before": {
+                "taskfold_completion_v1": {
+                  "version": 3,
+                  "epoch": "ec990000-0000-4000-8000-000000000010"
+                },
+                "completed": true,
+                "completed_at": "2026-10-31T07:22:49Z"
+              },
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "replayed": false
+            },
+            "replayed": false,
+            "kind": "child",
+            "request_id": "45c51f24-2c8d-43de-b754-21f350356d19"
+          }
+        ],
+        "protocol": 1,
+        "outcome": "applied",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "batch_id": "f1a5e1e3-76ab-4c9b-9896-381082ded6d6"
+      },
+      "body": {
+        "undo_of": "9f9795f9-753c-4a8b-a37f-414ae7fa0802",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "items": [
+          {
+            "kind": "root",
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "request_id": "be75c29d-ea66-4af7-a046-a52433cca90e"
+          },
+          {
+            "command": {
+              "protocol": 1,
+              "undo_of": "31ab6072-35d6-4ef2-8a3a-e2d74fd718fa",
+              "request_id": "45c51f24-2c8d-43de-b754-21f350356d19",
+              "action": "undo",
+              "node_key": "concept",
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "revision": 4,
+              "project_id": null,
+              "task_id": "ec990000-0000-4000-8000-000000000002",
+              "incarnation": "ec990000-0000-4000-8000-000000000005",
+              "account": "ec990000-0000-4000-8000-000000000001"
+            },
+            "kind": "child"
+          }
+        ],
+        "protocol": 1,
+        "batch_id": "f1a5e1e3-76ab-4c9b-9896-381082ded6d6"
+      }
+    },
+    "9f9795f9-753c-4a8b-a37f-414ae7fa0802": {
+      "proof": {
+        "protocol": 1,
+        "receipts": [
+          {
+            "kind": "root",
+            "before": {
+              "section_id": null,
+              "is_heading": false,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "completion_version": 2,
+              "completed": false,
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "project_id": null,
+              "user_id": "ec990000-0000-4000-8000-000000000001",
+              "completed_at": null
+            },
+            "successor": {
+              "state": "none",
+              "hash": null,
+              "id": null,
+              "planned_id": null,
+              "generation": null,
+              "created": false
+            },
+            "request_id": "cfe1241f-eb79-44f2-8d47-72111f96c234",
+            "action": "complete",
+            "task_generation": "ec990000-0000-4000-8000-000000000003",
+            "project_id": null,
+            "after": {
+              "section_id": null,
+              "is_heading": false,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "completion_version": 3,
+              "completed": true,
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "project_id": null,
+              "user_id": "ec990000-0000-4000-8000-000000000001",
+              "completed_at": "2026-10-31T07:22:41.655Z"
+            },
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "replayed": false
+          },
+          {
+            "receipt": {
+              "project_id": null,
+              "revision": 4,
+              "after": {
+                "taskfold_completion_v1": {
+                  "version": 3,
+                  "epoch": "ec990000-0000-4000-8000-000000000010"
+                },
+                "completed": true,
+                "completed_at": "2026-10-31T07:22:49Z"
+              },
+              "incarnation": "ec990000-0000-4000-8000-000000000005",
+              "request_id": "31ab6072-35d6-4ef2-8a3a-e2d74fd718fa",
+              "action": "complete",
+              "node_key": "concept",
+              "task_id": "ec990000-0000-4000-8000-000000000002",
+              "account": "ec990000-0000-4000-8000-000000000001",
+              "undo_of": null,
+              "protocol": 1,
+              "before": {
+                "taskfold_completion_v1": {
+                  "version": 2,
+                  "epoch": "ec990000-0000-4000-8000-000000000010"
+                },
+                "completed": false
+              },
+              "replayed": false,
+              "task_generation": "ec990000-0000-4000-8000-000000000003"
+            },
+            "kind": "child",
+            "replayed": false,
+            "request_id": "31ab6072-35d6-4ef2-8a3a-e2d74fd718fa"
+          }
+        ],
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "replayed": false,
+        "outcome": "applied",
+        "batch_id": "9f9795f9-753c-4a8b-a37f-414ae7fa0802"
+      },
+      "body": {
+        "input_zone": "Europe/Copenhagen",
+        "protocol": 1,
+        "action": "complete",
+        "batch_id": "9f9795f9-753c-4a8b-a37f-414ae7fa0802",
+        "roots": [
+          {
+            "baseline": {
+              "section_id": null,
+              "is_heading": false,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "completion_version": 2,
+              "completed": false,
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "project_id": null,
+              "completed_at": null,
+              "user_id": "ec990000-0000-4000-8000-000000000001"
+            },
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "source_hash": "be545477f90e7fedb996f627239d008fe0d31951de59bd321ad5efa9565aceb3"
+          }
+        ],
+        "completed_at": "2026-10-31T07:22:41.655Z",
+        "items": [
+          {
+            "kind": "root",
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "request_id": "cfe1241f-eb79-44f2-8d47-72111f96c234"
+          },
+          {
+            "command": {
+              "protocol": 1,
+              "baseline": {
+                "taskfold_completion_v1": {
+                  "version": 2,
+                  "epoch": "ec990000-0000-4000-8000-000000000010"
+                },
+                "completed": false
+              },
+              "request_id": "31ab6072-35d6-4ef2-8a3a-e2d74fd718fa",
+              "action": "complete",
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "task_id": "ec990000-0000-4000-8000-000000000002",
+              "revision": 3,
+              "project_id": null,
+              "node_key": "concept",
+              "incarnation": "ec990000-0000-4000-8000-000000000005",
+              "account": "ec990000-0000-4000-8000-000000000001"
+            },
+            "kind": "child"
+          }
+        ],
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "children": [
+          {
+            "baseline": {
+              "taskfold_completion_v1": {
+                "version": 2,
+                "epoch": "ec990000-0000-4000-8000-000000000010"
+              },
+              "completed": false
+            },
+            "node_key": "concept",
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "revision": 3,
+            "task_generation": "ec990000-0000-4000-8000-000000000003",
+            "project_id": null,
+            "incarnation": "ec990000-0000-4000-8000-000000000005"
+          }
+        ]
+      }
+    },
+    "6f12de94-fabb-436d-b6ae-454f6b4aac2c": {
+      "proof": {
+        "receipts": [
+          {
+            "kind": "root",
+            "successor": {
+              "state": "none",
+              "generation": null,
+              "hash": null,
+              "planned_id": null,
+              "created": false,
+              "id": null
+            },
+            "before": {
+              "section_id": null,
+              "is_recurring": false,
+              "completed": false,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "user_id": "ec990000-0000-4000-8000-000000000001",
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "completion_version": 0,
+              "project_id": null,
+              "is_heading": false,
+              "completed_at": null
+            },
+            "request_id": "e0ed5656-fbdc-4e7d-9e80-5f373d4104ea",
+            "action": "complete",
+            "task_generation": "ec990000-0000-4000-8000-000000000003",
+            "project_id": null,
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "after": {
+              "section_id": null,
+              "is_heading": false,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "completion_version": 1,
+              "completed": true,
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "project_id": null,
+              "completed_at": "2026-10-31T07:22:41.655Z",
+              "user_id": "ec990000-0000-4000-8000-000000000001"
+            },
+            "replayed": false
+          },
+          {
+            "receipt": {
+              "project_id": null,
+              "revision": 2,
+              "after": {
+                "taskfold_completion_v1": {
+                  "version": 1,
+                  "epoch": "ec990000-0000-4000-8000-000000000010"
+                },
+                "completed_at": "2026-10-31T07:22:41Z",
+                "completed": true
+              },
+              "incarnation": "ec990000-0000-4000-8000-000000000005",
+              "request_id": "730d7aa6-9a16-4ff8-a75c-b963d125142a",
+              "action": "complete",
+              "node_key": "concept",
+              "task_id": "ec990000-0000-4000-8000-000000000002",
+              "account": "ec990000-0000-4000-8000-000000000001",
+              "undo_of": null,
+              "protocol": 1,
+              "before": {
+                "completed": false
+              },
+              "replayed": false,
+              "task_generation": "ec990000-0000-4000-8000-000000000003"
+            },
+            "kind": "child",
+            "replayed": false,
+            "request_id": "730d7aa6-9a16-4ff8-a75c-b963d125142a"
+          }
+        ],
+        "protocol": 1,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "replayed": false,
+        "outcome": "applied",
+        "batch_id": "6f12de94-fabb-436d-b6ae-454f6b4aac2c"
+      },
+      "body": {
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "protocol": 1,
+        "action": "complete",
+        "batch_id": "6f12de94-fabb-436d-b6ae-454f6b4aac2c",
+        "roots": [
+          {
+            "baseline": {
+              "section_id": null,
+              "is_heading": false,
+              "id": "ec990000-0000-4000-8000-000000000002",
+              "is_recurring": false,
+              "completion_version": 0,
+              "completed": false,
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "project_id": null,
+              "completed_at": null,
+              "user_id": "ec990000-0000-4000-8000-000000000001"
+            },
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "source_hash": "fe3f9420eabee8a848dfde323350c6e611edf32fa93cbe619b0207b5c5563727"
+          }
+        ],
+        "completed_at": "2026-10-31T07:22:41.655Z",
+        "input_zone": "Europe/Copenhagen",
+        "items": [
+          {
+            "kind": "root",
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "request_id": "e0ed5656-fbdc-4e7d-9e80-5f373d4104ea"
+          },
+          {
+            "command": {
+              "protocol": 1,
+              "baseline": {
+                "completed": false
+              },
+              "request_id": "730d7aa6-9a16-4ff8-a75c-b963d125142a",
+              "action": "complete",
+              "task_generation": "ec990000-0000-4000-8000-000000000003",
+              "project_id": null,
+              "revision": 1,
+              "node_key": "concept",
+              "task_id": "ec990000-0000-4000-8000-000000000002",
+              "incarnation": "ec990000-0000-4000-8000-000000000005",
+              "account": "ec990000-0000-4000-8000-000000000001"
+            },
+            "kind": "child"
+          }
+        ],
+        "children": [
+          {
+            "baseline": {
+              "completed": false
+            },
+            "task_generation": "ec990000-0000-4000-8000-000000000003",
+            "node_key": "concept",
+            "revision": 1,
+            "project_id": null,
+            "task_id": "ec990000-0000-4000-8000-000000000002",
+            "incarnation": "ec990000-0000-4000-8000-000000000005"
+          }
+        ]
+      }
+    }
+  },
+  "syntheticPeerSHA256": "7e6ef2e04dedd141a213dadaccb728a4de8f9ad9eed916ad9d94b22cdaf66a31"
+}

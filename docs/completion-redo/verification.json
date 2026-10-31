@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-31",
+  "scope": "Combined parent/subtask completion Undo/Redo; broader migration remains open",
+  "core": {
+    "tests": 53,
+    "failures": 0,
+    "newBridgeCases": 6,
+    "newRedoCases": 3,
+    "log": "core.log.gz",
+    "logSHA256": "86f4a20266cad9ab9ffd46fbaee3a4570fafc8a95d5d339993add7fc00282dbe",
+    "doesNotCompileStore": true,
+    "actualLostResponseRetries": 2
+  },
+  "macNative": {
+    "status": "passed",
+    "phase": "v3",
+    "source": "mac-native.json"
+  },
+  "iOSNative": {
+    "phone": {
+      "status": "passed",
+      "phase": "v7",
+      "summary": "phone-v7-redo.summary.json",
+      "state": "phone-v7-redo.state.json"
+    },
+    "ipad": {
+      "status": "passed",
+      "phase": "v7",
+      "summary": "ipad-v7-redo.summary.json",
+      "state": "ipad-v7-redo.state.json"
+    },
+    "localHistoryRegression": {
+      "status": "passed",
+      "phase": "v9",
+      "summary": "phone-v9-history.summary.json",
+      "scope": "Stale Undo at 30 entries refused; exact earlier action resumes, and normal Redo preserves the newer task notes.",
+      "proof": "local-history-proof.json"
+    },
+    "sourceRepository": "TaskFold-iOS",
+    "screenshotsReviewed": 8,
+    "iOSCounterpartAppSourceMatchesAcceptedJourneys": true,
+    "appsClosedByTestTeardown": true
+  },
+  "serverChanges": false,
+  "hostedChanges": false,
+  "normalUseGateEnabled": false,
+  "deferredWorkChanged": false,
+  "remaining": [
+    "Standalone child/batch and other new operation Redo",
+    "Consistent shared activity history",
+    "Older-data/history mapping",
+    "Shared file/discussion custody",
+    "Broader account, privacy, window, background, speech and large-library acceptance"
+  ],
+  "phaseFindings": [
+    "Mac v2 task history passed but text Undo state could stay stale. v3 observes native editor/history notifications; direct keyboard text Undo/Redo and task completion Undo/Redo pass.",
+    "Initial Core test compilation stopped on a declaration newline; corrected before final 53-test passes.",
+    "Phone v2 failed on a menu accessibility identifier unavailable in UIKit. The test now uses visible menu labels.",
+    "Phone v4-v6 exposed missed native menu activations; v5 evaluates history availability in the owning view. Diagnostics showed available actions, and VoiceOver was already off. The final test acknowledges menu dismissal and reactivates only a still-visible enabled control; exact peer counts rule out duplicate dispatch.",
+    "Phone v7 and iPad v7 pass the full journey and exact four-operation verification. The untouched sibling has no completion token; verification compares its entire original row rather than inventing version zero.",
+    "The first local-history regression inherited large typography and never reached its selection control. That history-only case now requests explicit Large typography; v9 passes. Large-text acceptance remains separately tracked.",
+    "An isolation preflight rejected the v8 regression before launch because its updated test helper was not copied. The host refresh now includes all changed UI-test files; v9 validates matching isolated sources."
+  ],
+  "status": "Accepted in the recorded gated scope",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "03a580bf99d38587361dabc19a28d0c8b53ba8199efefbafe8c1f243f09e2c2d",
+    "Taskfold/Core/Store.swift": "13b5c04b9372542e4c566c95221ffdf7188f0677661e331812275519de5928d5",
+    "Taskfold/TaskfoldMacApp.swift": "ab17ef9e8960fd77dd27be271f8c22511a3818cadb358fb955f59f65f088d2ae",
+    "Taskfold/Workspace.swift": "d36086461571bbd4b7ff33db0a8862b720d47ef6a4e014862eb19433107b9601",
+    "TaskfoldTests/MixedTaskCompletionTests.swift": "b6d826b2b47a1514c999604e7bec75af2c6ed9497e3bc87b8bd7c874b182199e",
+    "TaskfoldUITests/AudioCommentUITests.swift": "1d7ba801d00c3ce398d1aad861da19e45b6f96c8f88fe473f03cb1ac6e196f9a",
+    "TaskfoldTests/ConfirmedHistoryBridgeTests.swift": "f2f7af881ef3c83dfbba6edbef26b56bde8910ca1347229425e2f59f3e771300"
+  },
+  "progress": {
+    "layoutReport": "progress-layout.json",
+    "topLevelCheckpoints": 74,
+    "migrationSteps": 8,
+    "migrationDone": 4,
+    "migrationBuild": 3,
+    "migrationVerify": 1
+  },
+  "allTestAppProcessesClosed": true,
+  "cleanup": "cleanup.json"
+}

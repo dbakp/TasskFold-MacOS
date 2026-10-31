@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Repair reviews now survive closing",
-  "latest": "Repair-review choices now save locally before they are accepted, survive closing/relaunch and resume against the exact original task. Native Mac/iPhone/iPad journeys pass. Together with the earlier combined completion/Undo flow, this closes two app-integration gaps. Full Redo/history, older-data mapping, shared content custody and wider acceptance remain.",
+  "focus": "P2 · Combined completion Undo/Redo verified",
+  "latest": "Combined task/subtask completion now supports Undo → Redo → Undo on Mac, iPhone and iPad, including cold return. The mobile peers confirm exactly four distinct operations, preserved notes and an unchanged sibling. Both repos pass 53 focused checks; the local-history limit/regression also passes. Other operation Redo, shared history, older-data mapping and content custody remain unfinished; normal use stays gated.",
   "next": [
     "Finish the broader subtask-storage migration: full Redo/shared history, indexed mapping and shared attachment/discussion custody. Keep acceptance bounded to each delivered workflow.",
     "Finish broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Combined completion/Undo/recovery and saved repair-review choices now work in the recorded native Mac/iPhone/iPad flows. The checklist below shows the remaining migration work. Normal use stays disabled.",
+              "detail": "Combined completion now supports native Undo and Redo on Mac/iPhone/iPad, with cold-return preservation. Saved repair reviews also survive closing. The remaining migration work is shown below; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -569,8 +569,12 @@
                   "title": "Keep repair-review choices across closing and relaunch"
                 },
                 {
+                  "state": "done",
+                  "title": "Redo a combined task/subtask selection through normal history controls"
+                },
+                {
                   "state": "build",
-                  "title": "Redo and a consistent shared activity history"
+                  "title": "Finish other operation Redo and consistent shared activity history"
                 },
                 {
                   "state": "build",
@@ -642,7 +646,9 @@
             "mixed-task-completion-native/verification.json",
             "mixed-task-completion-native/README.md",
             "child-repair-drafts/verification.json",
-            "child-repair-drafts/README.md"
+            "child-repair-drafts/README.md",
+            "completion-redo/verification.json",
+            "completion-redo/README.md"
           ],
           "focus": true
         },
@@ -709,8 +715,8 @@
     "ACCOUNT_REMOVAL.md": "8e403d1ce847db94b286c6ad01ad9c71d302b53f352e4a898da5436dbf543a89",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "05ee6de653ad66d8b8603e94d39832abef3cc17590a8cf506798274615583e97",
-    "PX_CHECKLIST.md": "dfebc940885b4b43b0d23dd6344e0aa67164b6332de835317889485df14825ce",
+    "P2_PLAN.md": "27fb8f6876f01ac99e6af932b35b6f7dcb9d3e0acbfa1218bf9b4c50793d3ab7",
+    "PX_CHECKLIST.md": "962daaf1297faacb83056deab59625a9455943295c2b8d9a53fff2b9b05310b4",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",
     "child-bulk-list-completion/verification.json": "02faef41d645b895990ec194507da81396d352a430a6c30f92fb48fbb6929026",
@@ -740,6 +746,8 @@
     "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
     "child-task-structure-drafts/verification.json": "6f91cbc365f58a184bcf7f39a2dbdbeaa87fcb5b801fda8fa955d192c7ab9f71",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",
+    "completion-redo/README.md": "905efde8175424a745feec2cf2a81c0b7f43f907aab27866fbdafb9394276889",
+    "completion-redo/verification.json": "b4695c6f4c6ae93740b10780ed2871cf9df2a21c79ecdb19fd05b7a97f9437d7",
     "completion-selection-root-client/README.md": "c7558cb94b2ca102b09321b79acebb86159b43509c25b8507867d2d283cdad97",
     "completion-selection-root-client/verification.json": "aa0d66de6241ecfd910f6c15efee329ab88e6de5e0fed5d27ae74cdf8a78d4c8",
     "completion-selection-roots/README.md": "d5605a55e1aa7d01b1390c7c50c8f1beb330c3f0e7aebb4aa30f10df5e8d53a0",

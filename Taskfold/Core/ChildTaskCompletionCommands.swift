@@ -1553,6 +1553,48 @@ struct MixedTaskCompletionCommand: ReviewedTeamCommand, CustomStringConvertible,
         }
         return try .init(account: account, origin: origin, body: ["protocol": .number(1), "account": .string(account), "batch_id": .string(UUID().uuidString.lowercased()), "undo_of": .string(id), "items": .array(inverse)], original: .init(body: body, receipt: proof.raw))
     }
+    /// Redo is a fresh operation, guarded by the state certified by Undo. It
+    /// never resends the old completion or restores an old task document.
+    func redo(roots: CompletionSelectionRootRead, reads: [String: ChildTaskRecordRead], decision: MixedTaskCompletionResolution) throws -> Self {
+        let proof = try resolution(decision.raw)
+        guard let original, proof.applied, roots.scope.account == account, roots.scope.origin == origin,
+              reads.values.allSatisfy({ ChildTaskFieldClientScope($0.context) == roots.scope }) else { throw Self.invalid }
+        let source = try Self(account: account, origin: origin, body: original.body)
+        var body = source.body
+        body["batch_id"] = .string(UUID().uuidString.lowercased())
+        let oldRoots = source.body["roots"]!.list
+        guard Set(roots.roots.map { $0.task.id }) == Set(oldRoots.map { $0.object["task_id"]!.text }) else { throw Self.invalid }
+        body["roots"] = .array(try oldRoots.map { value in
+            let old = value.object
+            guard let fresh = roots.roots.first(where: { .string($0.task.id) == old["task_id"] }) else { throw Self.invalid }
+            let index = source.items.firstIndex { $0.kind == "root" && .string($0.rootID) == old["task_id"] }
+            let expected = index.map { proof.receipts[$0].raw["after"]! } ?? old["baseline"]!
+            guard AuthoredValueComparison.exactJSON(.object(fresh.baseline), expected) else { throw Self.invalid }
+            return .object(fresh.guardBody)
+        })
+        var childCommands: [Data: ChildTaskCompletionCommand] = [:]
+        body["children"] = .array(try source.body["children"]!.list.map { value in
+            let old = value.object, rootID = old["task_id"]!.text, key = old["node_key"]!.text
+            guard let read = reads[rootID], let node = read.nodes[key],
+                  old["task_generation"] == read.context.root["task_generation"],
+                  old["project_id"] == (read.context.root.fields["project_id"] ?? .null), old["incarnation"] == .string(node.incarnation) else { throw Self.invalid }
+            let index = source.items.firstIndex { $0.kind == "child" && $0.rootID == rootID && $0.body["node_key"] == old["node_key"] }
+            let expected = index.map { proof.receipts[$0].raw["receipt"]!.object["after"]! } ?? old["baseline"]!
+            let baseline = node.fields.filter { ChildTaskCompletionDraft.cohort.contains($0.key) }
+            let expectedRevision = index.map { Double(proof.receipts[$0].raw["receipt"]!.object["revision"]!.integer) } ?? Double(old["revision"]!.integer)
+            guard AuthoredValueComparison.exactJSON(.object(baseline), expected), node.revision >= expectedRevision else { throw Self.invalid }
+            let done = try ChildTaskCompletionDraft.completed(baseline)
+            let child = try ChildTaskCompletionCommand(ChildTaskCompletionDraft(read: read, key: key, action: done ? .reopen : .complete))
+            childCommands[try Self.target("child", old)] = child
+            return .object(child.body.filter { !["protocol", "account", "request_id", "action"].contains($0.key) })
+        })
+        body["items"] = .array(try source.items.map { item in
+            if item.kind == "root" { return .object(["kind": .string("root"), "request_id": .string(UUID().uuidString.lowercased()), "task_id": .string(item.rootID)]) }
+            guard let child = childCommands[try Self.target("child", item.body)] else { throw Self.invalid }
+            return .object(["kind": .string("child"), "command": .object(child.body)])
+        })
+        return try .init(account: account, origin: origin, body: body)
+    }
     private enum CodingKeys: String, CodingKey { case account, origin, body, original }
     init(from decoder: Decoder) throws {
         try completionKeys(decoder, ["account", "origin", "body", "original"])
@@ -1927,4 +1969,87 @@ struct MixedTaskListResult {
     let message: String
     let undo: MixedTaskListUndo?
     var needsReview = false
+    var redo: MixedTaskListUndo? = nil
+}
+
+/// Bridges confirmed asynchronous changes into native Undo/Redo. The inverse is
+/// registered synchronously while UndoManager is undoing; its payload becomes
+/// available only after the asynchronous operation confirms the next state.
+@MainActor @Observable final class ConfirmedHistoryBridge {
+    struct Step {
+        let name: String
+        let key: String?
+        let retained: () -> Bool
+        let available: () -> Bool
+        let immediate: (() -> Step?)?
+        let perform: () async -> Step?
+        init(name: String, key: String? = nil, retained: @escaping () -> Bool, available: @escaping () -> Bool = { true }, immediate: (() -> Step?)? = nil, perform: @escaping () async -> Step? = { nil }) {
+            self.name = name; self.key = key; self.retained = retained; self.available = available; self.immediate = immediate; self.perform = perform
+        }
+    }
+    private final class Frame: NSObject {
+        var step: Step?
+        init(_ step: Step) { self.step = step }
+    }
+    let manager: UndoManager
+    private var frames: [Frame] = []
+    private var cursor = 0
+    private var generation = UUID()
+    private(set) var busy = false
+    private let unavailable: () -> Void
+    var canUndo: Bool { !busy && manager.canUndo && cursor > 0 && frames[cursor - 1].step.map { $0.retained() && $0.available() } == true }
+    var canRedo: Bool { !busy && manager.canRedo && cursor < frames.count && frames[cursor].step.map { $0.retained() && $0.available() } == true }
+    init(manager: UndoManager, unavailable: @escaping () -> Void = {}) { self.manager = manager; self.unavailable = unavailable }
+    func record(_ step: Step) {
+        guard step.retained() else { return }
+        if busy { clear() } // A new edit owns history; late confirmations stay in saved recovery.
+        for frame in frames.dropFirst(cursor) { manager.removeAllActions(withTarget: frame) }
+        frames.removeSubrange(cursor...)
+        let frame = Frame(step); frames.append(frame); cursor = frames.count
+        manager.beginUndoGrouping(); install(frame); manager.endUndoGrouping()
+        while frames.count > 30 { let old = frames.removeFirst(); manager.removeAllActions(withTarget: old); cursor -= 1 }
+    }
+    func contains(key: String) -> Bool { frames.contains { $0.step?.key == key } }
+    func canRedo(key: String) -> Bool { canRedo && frames[cursor].step?.key == key }
+    func canUndo(key: String) -> Bool { canUndo && frames[cursor - 1].step?.key == key }
+    func undo() { guard canUndo else { return }; manager.undo() }
+    func redo() { guard canRedo else { return }; manager.redo() }
+    func clear() {
+        generation = UUID()
+        for frame in frames { frame.step = nil; manager.removeAllActions(withTarget: frame) }
+        frames = []; cursor = 0; busy = false
+    }
+    private func remove(_ frame: Frame) {
+        manager.removeAllActions(withTarget: frame)
+        if let index = frames.firstIndex(where: { $0 === frame }) { frames.remove(at: index); if index < cursor { cursor -= 1 } }
+        frame.step = nil
+    }
+    private func install(_ frame: Frame) {
+        manager.registerUndo(withTarget: frame) { [weak self] target in self?.invoke(target) }
+        if let step = frame.step { manager.setActionName(step.name) }
+    }
+    private func invoke(_ frame: Frame) {
+        if busy { generation = UUID(); busy = false; remove(frame); unavailable(); return }
+        let undoing = manager.isUndoing
+        let expected = undoing ? (cursor > 0 ? frames[cursor - 1] : nil) : (cursor < frames.count ? frames[cursor] : nil)
+        guard !busy, expected === frame, let step = frame.step, step.retained(), step.available() else {
+            remove(frame); unavailable(); return
+        }
+        let captured = generation
+        cursor += undoing ? -1 : 1
+        // Must happen before returning to UndoManager, never after awaiting.
+        install(frame); frame.step = nil; busy = true
+        if let immediate = step.immediate {
+            let next = immediate(); busy = false
+            guard step.retained(), let next, next.retained() else { remove(frame); return }
+            frame.step = next; return
+        }
+        Task { [weak self, weak frame] in
+            let next = await step.perform()
+            guard let self, let frame, self.generation == captured, self.frames.contains(where: { $0 === frame }) else { return }
+            self.busy = false
+            guard step.retained(), let next, next.retained() else { self.remove(frame); return }
+            frame.step = next
+        }
+    }
 }

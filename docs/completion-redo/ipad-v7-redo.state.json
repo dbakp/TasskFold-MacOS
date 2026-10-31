@@ -1,0 +1,13 @@
+{
+  "rootVersion": 4,
+  "mixedWrites": 4,
+  "mixedRequests": 4,
+  "uniqueDecisions": 4,
+  "originalNotesRetained": true,
+  "untouchedSiblingExact": true,
+  "untouchedSiblingCompletionVersion": null,
+  "freshRedoIdentity": true,
+  "rootClockAndZoneRetained": true,
+  "serverSHA256": "6833d1cd98f757b66cc4793c3debae0f544cf29ed8ea322395f6508e3d347bac",
+  "source": "Reserved synthetic HTTP peer, not hosted SQL"
+}

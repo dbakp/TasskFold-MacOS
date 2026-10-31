@@ -1399,3 +1399,13 @@ Evidence: `child-task-repair-commits/verification.json`. This is a disabled serv
 - [ ] Wire actual Store/draft/account cleanup and native guided review, export and recovery. Complete genuine HTTP/file/UI/spoken acceptance, indexed/history mapping, normal opaque editing, larger-work preflight/repair and broader lifecycle checks.
 
 Evidence: `child-task-repair-client/verification.json`. This checks components and compilation, not usable native repair, real Keychain/provider acceptance or complete migration. Normal flags and hosted schema stay unchanged; all user deferrals remain paused.
+
+
+## Combined completion Redo — 31 October 2026
+
+- [x] Fresh, cohort-guarded Redo after a confirmed combined parent/subtask Undo; retain the root clock and zone, preserve current unrelated fields, and save the exact request before sending.
+- [x] Native Mac command/text history and iPhone/iPad combined-selection history controls, four distinct operations, notes/sibling preservation and cold return in recorded isolated scopes.
+- [x] Local-history regression: stale Undo at the 30-entry limit cannot retarget; exact earlier Undo and normal Redo remain usable.
+- [ ] Finish standalone/other-operation Redo, consistent shared activity timing, older-data/history mapping, shared content custody and broader migration acceptance.
+
+Evidence: [completion Redo](completion-redo/README.md). No server, hosted configuration or normal-use gate changed. Existing deferrals stay paused.

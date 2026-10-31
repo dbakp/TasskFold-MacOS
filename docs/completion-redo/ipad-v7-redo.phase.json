@@ -1,0 +1,24 @@
+{
+  "platform": "ipad",
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "03a580bf99d38587361dabc19a28d0c8b53ba8199efefbafe8c1f243f09e2c2d",
+    "Taskfold/Core/Store.swift": "55d8efc2e0f6ca2c50cb4e76b4a4dd436662f01f49fa55973721590baeb969d2",
+    "Taskfold/TaskfoldApp.swift": "19fdc824ef03099445243efcd3778f058aa19b0f8c6290db04cd12edb86759a2",
+    "TaskfoldUITests/AudioCommentUITests.swift": "f1ba5e6a62bca1756013c5cfe9c1c2cd138609ecdf8137b75e8f9b607eb8a07e"
+  },
+  "builtHostSHA256": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": "03a580bf99d38587361dabc19a28d0c8b53ba8199efefbafe8c1f243f09e2c2d",
+    "Taskfold/Core/Store.swift": "c730e0d067a8d3d6359c713565864e1765e083fd08b054dbb5f001a3b9ebd425",
+    "Taskfold/TaskfoldApp.swift": "19fdc824ef03099445243efcd3778f058aa19b0f8c6290db04cd12edb86759a2",
+    "TaskfoldUITests/AudioCommentUITests.swift": "f1ba5e6a62bca1756013c5cfe9c1c2cd138609ecdf8137b75e8f9b607eb8a07e"
+  },
+  "appSHA256": "f1ef13a3b0b62a5ea6a4abe45254e44510be4f417f31e52cb744c1a97bcd6eae",
+  "newSimulator": false,
+  "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/ChildTaskCompletionCommands.swift": true,
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/TaskfoldApp.swift": true,
+    "TaskfoldUITests/AudioCommentUITests.swift": true
+  }
+}

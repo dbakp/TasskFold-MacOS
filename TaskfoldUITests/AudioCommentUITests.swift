@@ -2315,6 +2315,43 @@ extension TaskfoldMacUITests {
         app.terminate(); try mixedLaunch(app, reset: false); mixedAssertRestored(app)
         structureSnapshot(app, "Parent and subtask Undo survive cold return")
     }
+    @MainActor func testMixedSelectionNativeUndoRedoUndoAndColdReturn() throws {
+        let voiceWasOn = try ownerVoiceDisabled()
+        print("Completion history test: VoiceOver previously enabled = \(voiceWasOn)")
+        addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        try mixedLaunch(app, reset: true); try mixedSelectAndComplete(app)
+        let undo = app.buttons["undoToast"]; XCTAssertTrue(undo.waitForExistence(timeout: 20), app.debugDescription)
+        childPress(undo); mixedAssertRestored(app)
+        func history(_ identifier: String) {
+            childPress(app.buttons["Task options"])
+            let menu = app.buttons["Undo & redo"]; XCTAssertTrue(menu.waitForExistence(timeout: 10), app.debugDescription); childPress(menu)
+            let action = app.buttons[identifier == "redoViewChange" ? "Redo" : "Undo"]
+            #if os(iOS)
+            if !action.waitForExistence(timeout: 2), menu.exists, menu.isHittable {
+                menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.15)
+            }
+            #endif
+            XCTAssertTrue(action.waitForExistence(timeout: 10), app.debugDescription); XCTAssertTrue(action.isEnabled); childPress(action)
+            #if os(iOS)
+            let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: action)
+            if XCTWaiter.wait(for: [dismissed], timeout: 2) != .completed, action.exists, action.isHittable, action.isEnabled {
+                // UIKit can retain the visible menu after an unaccepted tap.
+                // Retry only that still-visible control, never the saved operation.
+                action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.15)
+            }
+            XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: action)], timeout: 5), .completed, app.debugDescription)
+            #endif
+        }
+        history("redoViewChange")
+        XCTAssertTrue(app.staticTexts["Redid selected tasks"].waitForExistence(timeout: 20), app.debugDescription)
+        XCTAssertFalse(app.buttons["Complete Plan the workshop"].exists)
+        structureSnapshot(app, "Redo completes the parent and subtask again")
+        history("undoViewChange"); mixedAssertRestored(app)
+        structureSnapshot(app, "Undo after Redo restores both tasks")
+        app.terminate(); try mixedLaunch(app, reset: false); mixedAssertRestored(app)
+        structureSnapshot(app, "Completion Undo Redo Undo preserves work after cold return")
+    }
     @MainActor func testMixedLostReplyColdReturnRetriesOriginalAndUndoesWholeSelection() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
         try mixedLaunch(app, reset: true, lost: true); try mixedSelectAndComplete(app)
