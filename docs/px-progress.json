@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Mixed completion server checks",
-  "latest": "Mixed selection preparation is built. Parent-task observations and server validation now pass 65 database checks in each repo, including recurring sources, permissions, stale completion, busy rows and exact content. Atomic mixed writing, client integration, recovery and whole-selection Undo remain; normal use stays disabled.",
+  "focus": "P2 · Parent reads connected to both clients",
+  "latest": "Both clients now decode and validate parent-task observations, preserve exact content and legacy null flags, and reject mismatched snapshots or late account replies. The new large-response reader runs in the background. Atomic mixed writing, recovery, Undo and native integration remain; normal use stays disabled.",
   "next": [
-    "Connect typed parent observations to the atomic mixed root/subtask write contract, then saved recovery and whole-selection Undo. Full Redo/history, indexed mapping, custody and wider migration acceptance remain.",
+    "Implement the combined root/subtask completion/reopen transaction, immutable confirmations, saved recovery and whole-selection Undo. Then verify native controls; full Redo/history, mapping, custody and wider acceptance remain.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Recorded repair, child fields/completion and saved Undo pass in scope. Paused recovery passes native cold return. Mixed-selection preparation and parent server observations/guards are built. Atomic mixed writes, client integration, recovery/Undo, full Redo/history, mapping, custody and wider acceptance remain. Ordinary use stays disabled."
+              "detail": "Recorded repair, child completion/Undo and paused recovery pass in scope. Mixed-selection preparation, parent server observations/guards and typed client reads are built. Atomic mixed writes, recovery/Undo, native integration, full Redo/history, mapping, custody and wider checks remain. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -604,7 +604,9 @@
             "child-mixed-selection-preflight/verification.json",
             "child-mixed-selection-preflight/README.md",
             "completion-selection-roots/verification.json",
-            "completion-selection-roots/README.md"
+            "completion-selection-roots/README.md",
+            "completion-selection-root-client/verification.json",
+            "completion-selection-root-client/README.md"
           ],
           "focus": true
         },
@@ -700,7 +702,9 @@
     "child-task-structure-draft-native/verification.json": "09ae451d8cb27c9f071202a5f024878e6fe7bc5c01f043084fd3acd2294a71b8",
     "child-task-structure-drafts/verification.json": "6f91cbc365f58a184bcf7f39a2dbdbeaa87fcb5b801fda8fa955d192c7ab9f71",
     "child-task-structure-native/verification.json": "d532906eaeb93eb56de8e660f308b460ed96b0a6789a8b9718d4ae20a9f27bc7",
-    "completion-selection-roots/README.md": "b5836c4a9c8b1444d9f795978b79baf6924db8a7482daf789f3e8d9dbb6d9b26",
+    "completion-selection-root-client/README.md": "c7558cb94b2ca102b09321b79acebb86159b43509c25b8507867d2d283cdad97",
+    "completion-selection-root-client/verification.json": "aa0d66de6241ecfd910f6c15efee329ab88e6de5e0fed5d27ae74cdf8a78d4c8",
+    "completion-selection-roots/README.md": "d5605a55e1aa7d01b1390c7c50c8f1beb330c3f0e7aebb4aa30f10df5e8d53a0",
     "completion-selection-roots/verification.json": "ca845522b8a90cad11dceebab32923dee268c7820dfe7422d5264a3e2baa9d90",
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",

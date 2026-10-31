@@ -1299,3 +1299,73 @@ enum ChildTaskRecoveryKind: CaseIterable, Hashable, Sendable {
         present = found; scope = captured
     }
 }
+
+
+/// A scoped read, never a completion receipt or permission to mutate a root.
+struct CompletionSelectionRootRead: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    static let maximumBytes = 4_194_304
+    static let maximumRootBytes = 2_000_000
+    static let baselineKeys: Set<String> = ["id", "user_id", "task_generation", "project_id", "section_id", "completed", "completed_at", "completion_version", "is_heading", "is_recurring"]
+    struct Observation: Sendable {
+        let task: Record
+        let baseline: [String: JSON]
+        let sourceHash: String
+        var guardBody: [String: JSON] { ["task_id": .string(task.id), "baseline": .object(baseline), "source_hash": .string(sourceHash)] }
+    }
+    let scope: ChildTaskFieldClientScope
+    let roots: [Observation]
+    var description: String { "Private parent completion observations" }
+    var debugDescription: String { description }
+    var guardBody: [String: JSON] { ["protocol": .number(1), "account": .string(scope.account), "roots": .array(roots.map { .object($0.guardBody) })] }
+    static func request(taskIDs: [String], scope: ChildTaskFieldClientScope) throws -> [String: JSON] {
+        try TeamOrganizationValue.scope(account: scope.account, origin: scope.origin)
+        guard scope.origin.utf8.count <= 2048, (1...32).contains(taskIDs.count), Set(taskIDs).count == taskIDs.count,
+              taskIDs.allSatisfy(TeamProjectValue.id) else { throw ChildTaskRecordFailure.review }
+        return ["protocol": .number(1), "account": .string(scope.account), "task_ids": .array(taskIDs.map(JSON.string))]
+    }
+    init(data: Data, taskIDs: [String], scope: ChildTaskFieldClientScope) throws {
+        try Task.checkCancellation()
+        _ = try Self.request(taskIDs: taskIDs, scope: scope)
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumBytes,
+            integerPaths: [["roots", "[]", "task", "completion_version"], ["roots", "[]", "baseline", "completion_version"]],
+            preservedValuePaths: [["roots", "[]", "task"]])
+        guard let raw = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: data) else { throw ChildTaskRecordFailure.review }
+        guard Set(raw.keys) == ["protocol", "account", "roots"], raw["protocol"] == .number(1), raw["account"] == .string(scope.account),
+              case .array(let values)? = raw["roots"], values.count == taskIDs.count else { throw ChildTaskRecordFailure.review }
+        roots = try zip(values, taskIDs).map { value, id in
+            try Task.checkCancellation()
+            guard case .object(let row) = value, Set(row.keys) == ["task", "baseline", "source_hash"],
+                  case .object(let source)? = row["task"], case .object(let baseline)? = row["baseline"],
+                  Set(baseline.keys) == Self.baselineKeys, Self.baselineKeys.isSubset(of: Set(source.keys)),
+                  source["id"] == .string(id), case .string(let hash)? = row["source_hash"],
+                  hash.utf8.count == 64, hash.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }),
+                  source["completed"] == .bool(false) || source["completed"] == .bool(true), source["is_heading"] == .bool(false) || source["is_heading"] == .null,
+                  source["is_recurring"] == .bool(false) || source["is_recurring"] == .bool(true) || source["is_recurring"] == .null,
+                  AuthoredValueComparison.exactJSON(.object(baseline), .object(source.filter { Self.baselineKeys.contains($0.key) })) else { throw ChildTaskRecordFailure.review }
+            _ = try TeamOrganizationValue.id(source["user_id"])
+            _ = try TeamOrganizationValue.id(source["task_generation"])
+            _ = try TeamProjectValue.optionalID(source["project_id"])
+            _ = try TeamProjectValue.optionalID(source["section_id"])
+            let task = Record(source)
+            _ = try TaskListCompletionSelectionIntent.Root(task: task, root: task)
+            guard try TaskfoldJSONEncoder().encode(JSON.object(source)).count <= Self.maximumRootBytes else { throw ChildTaskRecordFailure.oversized }
+            return Observation(task: task, baseline: baseline, sourceHash: hash)
+        }
+        self.scope = scope
+    }
+    /// Fresh sources remain paired with their server guards. Never stitch roots
+    /// from an unrelated request or child snapshot into a prepared selection.
+    func prepare(_ selection: TaskListCompletionSelectionIntent, projects: [Record], childReads: [String: ChildTaskRecordRead], current: ChildTaskFieldClientScope) throws -> TaskListCompletionSelectionIntent.Prepared {
+        guard current == scope, selection.scope == scope else { throw CancellationError() }
+        let selectedRoots = Set(selection.members.compactMap { if case .root(let root) = $0 { return root.source.id }; return nil })
+        guard Set(roots.map { $0.task.id }) == selectedRoots else { throw ChildTaskRecordFailure.review }
+        var sources = Dictionary(uniqueKeysWithValues: roots.map { ($0.task.id, $0.task) })
+        for member in selection.childMembers {
+            guard let read = childReads[member.opening.rootID], ChildTaskFieldClientScope(read.context) == scope else { throw ChildTaskRecordFailure.review }
+            if let root = sources[member.opening.rootID] {
+                guard AuthoredValueComparison.exactJSON(.object(root.fields), .object(read.context.root.fields)) else { throw ChildTaskRecordFailure.review }
+            } else { sources[member.opening.rootID] = read.context.root }
+        }
+        return try selection.prepare(roots: Array(sources.values), projects: projects, reads: childReads, current: current)
+    }
+}
