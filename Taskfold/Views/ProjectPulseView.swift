@@ -107,6 +107,9 @@ struct ProjectPulseView: View {
                     } else { Label("Some activity could not be read. Refresh before relying on these counts.", systemImage: "exclamationmark.arrow.triangle.2.circlepath").fixedSize(horizontal: false, vertical: true) }
                     if reading.historyIncomplete || (rootStart.map { $0 > reading.start } ?? true) { Label("Some history is unavailable. These are the recorded changes we can verify.", systemImage: "clock.badge.exclamationmark").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryPartial") }
                     Text("Recorded history starts \(recordedFrom.formatted(date: .abbreviated, time: .shortened)). Earlier work has no recorded timeline. Offline changes appear when received; a completion’s chosen time is retained.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryCoverage")
+                    if let start = childHistory.fieldRecordedFrom, start <= now {
+                        Text("Title, notes and other edit details start \(start.formatted(date: .abbreviated, time: .shortened)).").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseFieldHistoryCoverage")
+                    }
                     if let start = childStart { Text("Subtask history starts " + start.formatted(date: .abbreviated, time: .shortened) + ". Earlier subtask work may be unrecorded.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseChildCoverage") }
                     Text("\(store.localMode ? "Saved on this device." : "Activity is limited to currently accessible work.") Tasks within headings have their own history. Ordinary checklist details appear in activity but do not earn separate completion credit.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     Divider().padding(.vertical, 8)
@@ -164,6 +167,9 @@ struct ProjectPulseView: View {
         let context = activityContext(event)
         return VStack(alignment: .leading, spacing: 6) {
             Text((event.isChild ? "Subtask · " : "") + event.title).font(.subheadline.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseEvent-" + event.accessibilityKey)
+            if let fields = event.changedFieldsText {
+                Text(fields).font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseFields-" + event.accessibilityKey)
+            }
             Label(context.actor, systemImage: "person.crop.circle").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseActor-" + event.accessibilityKey)
             if let task = context.task {
                 Button {

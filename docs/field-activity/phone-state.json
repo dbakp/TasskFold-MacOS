@@ -1,0 +1,103 @@
+{
+  "events": [
+    {
+      "type_before": null,
+      "before_state": {},
+      "task_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa75",
+      "id": "83c69ec4-6955-cc50-fdac-7408d3171c82",
+      "work_before": false,
+      "user_id": "ui-testing",
+      "task_generation": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa90",
+      "completion_version": 0,
+      "recorded_at": "2026-10-30T20:57:34.043Z",
+      "format_version": 1,
+      "type_after": "task",
+      "sequence": 1,
+      "effective_at": "2026-10-30T20:57:34.043Z",
+      "after_state": {
+        "due_time": null,
+        "due_date": null,
+        "scheduled_at": null,
+        "section_id": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null,
+        "time_zone": null,
+        "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+        "completed": false,
+        "completed_at": null
+      },
+      "kinds": [
+        "created"
+      ],
+      "node_key": "concept",
+      "actor_id": "ui-testing",
+      "before_path": [],
+      "after_path": [
+        "concept"
+      ],
+      "work_after": true
+    },
+    {
+      "type_before": "task",
+      "before_state": {
+        "due_time": null,
+        "due_date": null,
+        "scheduled_at": null,
+        "section_id": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null,
+        "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71",
+        "time_zone": null,
+        "completed": false,
+        "completed_at": null
+      },
+      "work_before": true,
+      "id": "5e9b7bc8-2439-c25e-a24c-f2d2a089f28a",
+      "task_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa75",
+      "user_id": "ui-testing",
+      "task_generation": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa90",
+      "changed_fields": [
+        "description",
+        "priority"
+      ],
+      "recorded_at": "2026-10-31T20:56:34.043Z",
+      "completion_version": 0,
+      "type_after": "task",
+      "format_version": 2,
+      "sequence": 2,
+      "effective_at": "2026-10-31T20:56:34.043Z",
+      "after_state": {
+        "recurrence_parent_id": null,
+        "time_zone": null,
+        "scheduled_at": null,
+        "due_time": null,
+        "deadline_date": null,
+        "due_date": null,
+        "completed_at": null,
+        "section_id": null,
+        "completed": false,
+        "project_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa71"
+      },
+      "kinds": [
+        "edited"
+      ],
+      "node_key": "concept",
+      "actor_id": "ui-testing",
+      "work_after": true,
+      "after_path": [
+        "concept"
+      ],
+      "before_path": [
+        "concept"
+      ]
+    }
+  ],
+  "epoch": [
+    {
+      "field_recorded_from": "2026-10-31T20:56:34.043Z",
+      "recorded_from": "2026-10-30T20:57:34.043Z",
+      "id": "current"
+    }
+  ],
+  "pendingCount": 0
+}

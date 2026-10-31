@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-31",
+  "repository": "TasskFold-MacOS",
+  "status": "field activity implemented; mobile accepted; broader shared history open",
+  "clientChecks": 116,
+  "ownedSQLChecks": 73,
+  "migration": "20261031204437_child_field_activity_details.sql",
+  "migrationDeployed": false,
+  "normalMigrationGatesEnabled": false,
+  "newRPCGrants": false,
+  "native": {
+    "phone": "normal text/light; saved and cold return passed",
+    "ipad": "largest text/dark; saved and cold return passed",
+    "data": "one edited entry, actual field names only, no extra completion or pending network changes"
+  },
+  "macRuntime": {
+    "status": "open",
+    "reason": "Computer use confirmed Mac locked during this milestone; no repeated unlock request made"
+  },
+  "remaining": [
+    "Ordering and shared history grouping",
+    "Wider timing/lifecycle acceptance",
+    "Mac runtime display and prior keyboard checks",
+    "Older-data/history mapping",
+    "Shared file/discussion custody",
+    "Hosted and genuine-account migration acceptance"
+  ]
+}

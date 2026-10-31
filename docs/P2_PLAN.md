@@ -6,7 +6,9 @@
 
 - [x] Combined parent/subtask completion, whole-selection Undo and interrupted-request recovery in the isolated Mac/iPhone/iPad apps. [Recorded scope](mixed-task-completion-native/README.md).
 - [x] Encrypted repair-review choices survive Close and relaunch, resume against the exact original, and hand off atomically into the queued repair. Native Mac/iPhone/iPad scope and independent Core results are in [saved repair reviews](child-repair-drafts/README.md).
-- [ ] Full Redo/shared history, indexed/history mapping and shared attachment/discussion custody.
+- [x] Guarded field-edit, cross-task move and hierarchy Undo/Redo implemented; scoped mobile acceptance recorded. Mac keyboard acceptance remains open.
+- [x] Subtask field-edit activity with private field-name captions and separate coverage, including saved/cold mobile display. [Evidence](field-activity/README.md).
+- [ ] Ordering/shared-history grouping, indexed/history mapping and shared attachment/discussion custody.
 - [ ] Wider real-account, protected-storage, window/background/concurrency, spoken and large-library acceptance.
 
 The wider migration remains unfinished and gated. No hosted schema or ordinary-use flags changed. Explicit rollout/provider/distribution/audio/device deferrals remain paused. The entries below preserve earlier staged scopes; newer evidence here supersedes their remaining lists.
@@ -7228,3 +7230,14 @@ Adding, moving and removing independent subtask branches now have linked Undo/Re
 The ordinary editor/inspector owns the organizer outside reusable Form rows and captures its root at opening. This fixes the nested Add review disappearing during presentation. The recorded iPhone journey covers one-tap Add, saved Undo, ordinary-menu Redo/Undo and cold return. The iPad largest-text journey covers removal of a nested branch, cold Redo and final restoration; a separate iPhone move cycle restores exact placement.
 
 Each repository owns its implementation, focused client checks, real local SQL fixture and evidence. See [hierarchy-history/README.md](hierarchy-history/README.md) and [verification.json](hierarchy-history/verification.json). Mac keyboard runtime acceptance remains open because the screen was locked; build/signature results are recorded separately. No new server migration or gate enablement is part of this change. Shared activity/history, older-data mapping, shared file/discussion custody, hosted deployment and genuine shared-account acceptance remain open. Ordinary migration use stays disabled.
+
+
+## 31 October · subtask field-edit activity
+
+- [x] Show one “Subtask · Edited” activity entry with changed field names, actor, current-task link and separate coverage date. Preserve private contents outside the activity ledger and keep completion credit unchanged.
+- [x] Preserve older event bytes/readers, suppress no-op/retry duplicates, and roll back task, receipt and history together on failure. Both independently owned repositories pass 116 focused client checks and 73 local PostgreSQL checks.
+- [x] Verify saved and cold-return display on iPhone and largest-text/dark iPad; both apps build and development signatures verify.
+- [ ] Mac runtime display; ordering and shared-operation grouping; wider timing/lifecycle acceptance.
+- [ ] Older-data/history mapping, shared file/discussion custody, hosted deployment and genuine shared-account acceptance. Ordinary migration use stays disabled.
+
+[Exact scope and evidence](field-activity/README.md). This completes field-edit activity, not the full shared-history or migration checkpoint. Existing user deferrals remain paused.

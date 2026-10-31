@@ -364,7 +364,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     static let epochTable = "task_node_activity_epoch"
     static let legacyGeneration = "00000000-0000-0000-0000-000000000000"
     enum Kind: String, CaseIterable, Sendable {
-        case created, completed, reopened, completion_time, moved, rescheduled, deleted, scope_changed, type_changed, coverage_gap
+        case created, completed, reopened, completion_time, moved, rescheduled, deleted, scope_changed, type_changed, coverage_gap, edited
     }
     let id: String
     let sequence: Int64
@@ -417,12 +417,15 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         }
     }
     let transfer: Transfer?
+    /// Only field names leave the edit. Values remain in the current task.
+    static let editFields: Set<String> = ["assigned_to", "description", "duration_minutes", "labels", "priority", "reminder_specs", "title"]
+    let changedFields: [String]
     var isGap: Bool { kinds == [.coverage_gap] }
     var path: [String] { afterPath.isEmpty ? beforePath : afterPath }
     var subject: String { [rootID, generation ?? "unknown", nodeKey].joined(separator: ":") }
     init?(row: Record) { self.init(row: row, parseInstant: TaskPlanning.instant, validDay: { Dates.parse($0) != nil }) }
     init?(row: Record, parseInstant: (String) -> Date?, validDay: (String) -> Bool) {
-        guard row["format_version"] == .number(1), UUID(uuidString: row.id) != nil,
+        guard [JSON.number(1), .number(2)].contains(row["format_version"]), UUID(uuidString: row.id) != nil,
               let sequence = TaskActivity.integer(row["sequence"]), sequence > 0,
               TaskActivity.validID(row.string("user_id")), TaskActivity.validID(row.string("task_id")),
               row["actor_id"] == .null || TaskActivity.validID(row.string("actor_id")),
@@ -436,6 +439,16 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
               rawKinds.allSatisfy({ if case .string(let key) = $0 { return Kind(rawValue: key) != nil }; return false }),
               Set(rawKinds.map(\.text)).count == rawKinds.count else { return nil }
         let kinds = rawKinds.compactMap { Kind(rawValue: $0.text) }
+        if row["format_version"] == .number(2) {
+            guard case .array(let fields) = row["changed_fields"], !fields.isEmpty, fields.count <= Self.editFields.count,
+                  fields.allSatisfy({ if case .string(let key) = $0 { return Self.editFields.contains(key) }; return false }),
+                  fields.map(\.text) == Array(Set(fields.map(\.text))).sorted(),
+                  !before.isEmpty, !after.isEmpty, kinds.last == .edited else { return nil }
+            changedFields = fields.map(\.text)
+        } else {
+            guard row["changed_fields"] == .null || row["changed_fields"] == .array([]) else { return nil }
+            changedFields = []
+        }
         func type(_ key: String) -> String? { row[key] == .null ? nil : row.string(key) }
         let typeBefore = type("type_before"), typeAfter = type("type_after")
         guard [typeBefore, typeAfter].allSatisfy({ $0 == nil || ["task", "heading"].contains($0!) }) else { return nil }
@@ -455,7 +468,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
                   !workBefore || typeBefore == "task", !workAfter || typeAfter == "task",
                   typeBefore != "heading" || before["completed"] == .bool(false) && before["completed_at"] == .null,
                   typeAfter != "heading" || after["completed"] == .bool(false) && after["completed_at"] == .null,
-                  kinds == Self.changes(before: before, after: after, beforePath: beforePath, afterPath: afterPath, workBefore: workBefore, workAfter: workAfter, typeBefore: typeBefore, typeAfter: typeAfter) else { return nil }
+                  kinds == Self.changes(before: before, after: after, beforePath: beforePath, afterPath: afterPath, workBefore: workBefore, workAfter: workAfter, typeBefore: typeBefore, typeAfter: typeAfter) + (changedFields.isEmpty ? [] : [.edited]) else { return nil }
         }
         if row["transfer_context"] == .null { transfer = nil }
         else {
@@ -508,6 +521,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         let type: String
         let work: Bool
         let revision: Int64
+        let editState: [String: JSON]
         var key: String { generation + ":" + path.last! }
     }
     private static func generation(_ root: Record) -> String? {
@@ -532,7 +546,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
             let state = dates.state(item.record)
             guard TaskActivity.validState(state, parseInstant: dates.instant, validDay: dates.validDay), path(.array(item.path.map(JSON.string))) != nil,
                   let revision = item.source["completion_version"] == .null ? 0 : TaskActivity.integer(item.source["completion_version"]) else { return nil }
-            let node = Node(generation: generation, path: item.path, state: state, type: TaskKind(item.source) == .heading ? "heading" : "task", work: TaskKind.mayComplete(item.source) && work.contains(item.id), revision: revision)
+            let node = Node(generation: generation, path: item.path, state: state, type: TaskKind(item.source) == .heading ? "heading" : "task", work: TaskKind.mayComplete(item.source) && work.contains(item.id), revision: revision, editState: item.source.fields.filter { Self.editFields.contains($0.key) })
             result[node.key] = node
         }
         return result
@@ -553,7 +567,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
            before["project_id"] == after["project_id"], before["section_id"] == after["section_id"], before["task_generation"] == after["task_generation"] { return [] }
         let prior = nodes(before, dates: dates), current = nodes(after, dates: dates, hierarchy: hierarchy)
         var result: [Record] = [], sequence = afterSequence, overflow = false
-        func append(_ key: String, generation: String?, nodeKey: String, b: [String: JSON], a: [String: JSON], oldPath: [String], newPath: [String], oldWork: Bool, newWork: Bool, oldType: String?, newType: String?, revision: Int64, kinds: [Kind]) {
+        func append(_ key: String, generation: String?, nodeKey: String, b: [String: JSON], a: [String: JSON], oldPath: [String], newPath: [String], oldWork: Bool, newWork: Bool, oldType: String?, newType: String?, revision: Int64, kinds: [Kind], edited: [String] = []) {
             guard !kinds.isEmpty else { return }
             guard sequence < 9_007_199_254_740_991 else { overflow = true; return }; sequence += 1
             let identity = try! TaskfoldJSONEncoder().encode([change.id.uuidString.lowercased(), root.id, key])
@@ -561,10 +575,11 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
             let raw = String(hash.prefix(32)), points = [8,12,16,20]
             let id = raw.enumerated().map { (points.contains($0.offset) ? "-" : "") + String($0.element) }.joined()
             let effective = kinds.contains(.completed) ? a["completed_at"].flatMap { dates.instant($0.text) } ?? recordedAt : recordedAt
-            let row = Record(["id": .string(id), "format_version": .number(1), "sequence": .number(Double(sequence)), "user_id": .string(account), "task_id": .string(root.id), "task_generation": generation.map(JSON.string) ?? .null,
+            var row = Record(["id": .string(id), "format_version": .number(edited.isEmpty ? 1 : 2), "sequence": .number(Double(sequence)), "user_id": .string(account), "task_id": .string(root.id), "task_generation": generation.map(JSON.string) ?? .null,
                 "node_key": .string(nodeKey), "before_path": .array(oldPath.map(JSON.string)), "after_path": .array(newPath.map(JSON.string)), "actor_id": .string(account),
                 "recorded_at": .string(dates.stamp(recordedAt)), "effective_at": .string(dates.stamp(effective)), "completion_version": .number(Double(revision)),
                 "before_state": .object(b), "after_state": .object(a), "type_before": oldType.map(JSON.string) ?? .null, "type_after": newType.map(JSON.string) ?? .null, "work_before": .bool(oldWork), "work_after": .bool(newWork), "kinds": .array(kinds.map { .string($0.rawValue) })])
+            if !edited.isEmpty { row["changed_fields"] = .array(edited.map(JSON.string)) }
             if dates.node(row) != nil { result.append(row) }
         }
         guard let prior, let current else {
@@ -573,8 +588,15 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         for key in Set(prior.keys).union(current.keys).sorted() {
             let old = prior[key], new = current[key], node = new ?? old!
             let b = old?.state ?? [:], a = new?.state ?? [:], oldPath = old?.path ?? [], newPath = new?.path ?? []
+            let edited: [String] = old == nil || new == nil ? [] : Self.editFields.filter { field in
+                switch (old?.editState[field], new?.editState[field]) {
+                case (nil, nil): return false
+                case (let before?, let after?): return !AuthoredValueComparison.exactJSON(before, after)
+                default: return true
+                }
+            }.sorted()
             append(key, generation: node.generation, nodeKey: node.path.last!, b: b, a: a, oldPath: oldPath, newPath: newPath, oldWork: old?.work ?? false, newWork: new?.work ?? false, oldType: old?.type, newType: new?.type, revision: node.revision,
-                   kinds: changes(before: b, after: a, beforePath: oldPath, afterPath: newPath, workBefore: old?.work ?? false, workAfter: new?.work ?? false, typeBefore: old?.type, typeAfter: new?.type))
+                   kinds: changes(before: b, after: a, beforePath: oldPath, afterPath: newPath, workBefore: old?.work ?? false, workAfter: new?.work ?? false, typeBefore: old?.type, typeAfter: new?.type) + (edited.isEmpty ? [] : [.edited]), edited: edited)
         }
         return overflow ? [] : result
     }
@@ -590,6 +612,11 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         cursor.ids.formUnion(rows.map { $0.id.lowercased() })
         cursor.last = rows.compactMap { TaskActivity.integer($0["sequence"]) }.max() ?? cursor.last
         if snapshot.tables[epochTable]?.isEmpty != false { snapshot.tables[epochTable] = [Record(["id": .string("current"), "recorded_from": .string(dates.stamp(now))])] }
+        if rows.contains(where: { $0["format_version"] == .number(2) }),
+           let index = snapshot.tables[epochTable]?.firstIndex(where: { $0.id == "current" }),
+           snapshot.tables[epochTable]?[index]["field_recorded_from"] == .null {
+            snapshot.tables[epochTable]?[index]["field_recorded_from"] = .string(dates.stamp(now))
+        }
     }
     /// One parser belongs to one immutable read/validation pass. Formatters and
     /// memoized dates are never shared between accounts, threads or refreshes.
@@ -619,7 +646,10 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         var tables: [String: [Record]] { [TaskNodeActivity.table: rows, TaskNodeActivity.epochTable: epoch] }
     }
     static func validEpoch(_ rows: [Record]) -> Bool {
-        rows.count == 1 && rows[0].id == "current" && Set(rows[0].fields.keys) == ["id", "recorded_from"] && TaskPlanning.instant(rows[0].string("recorded_from")) != nil
+        guard rows.count == 1, rows[0].id == "current", TaskPlanning.instant(rows[0].string("recorded_from")) != nil else { return false }
+        let fields = Set(rows[0].fields.keys)
+        if fields == ["id", "recorded_from"] { return true }
+        return fields == ["id", "recorded_from", "field_recorded_from"] && TaskPlanning.instant(rows[0].string("field_recorded_from")) != nil
     }
     /// A fresh task read cannot certify an unavailable optional ledger. Remove
     /// both halves together, including cached history after access recovery.
@@ -1158,6 +1188,10 @@ struct ProjectActivityContext {
 struct ChildWorkHistory: Sendable {
     let rows: [Record]?
     let epoch: [Record]?
+    var fieldRecordedFrom: Date? {
+        guard let epoch, TaskNodeActivity.validEpoch(epoch) else { return nil }
+        return TaskPlanning.instant(epoch[0].string("field_recorded_from"))
+    }
     var recordedFrom: Date? {
         guard let epoch, TaskNodeActivity.validEpoch(epoch) else { return nil }
         return TaskPlanning.instant(epoch[0].string("recorded_from"))
@@ -1188,9 +1222,14 @@ enum WorkActivity: Identifiable, Equatable {
             return e.kinds.filter { !changed || $0 != .completed && $0 != .reopened }.map(\.rawValue)
         }
     }
+    var changedFieldsText: String? {
+        guard case .child(let event) = self, !event.changedFields.isEmpty else { return nil }
+        let labels = [("title", "Title"), ("description", "Notes"), ("priority", "Priority"), ("labels", "Labels"), ("duration_minutes", "Estimate"), ("assigned_to", "Assignee"), ("reminder_specs", "Reminders")]
+        return labels.filter { event.changedFields.contains($0.0) }.map { $0.1 }.joined(separator: " · ")
+    }
     var title: String { kinds.map { key in
         if let kind = TaskActivity.Kind(rawValue: key) { return kind.title }
-        switch key { case "scope_changed": return "Work scope changed"; case "type_changed": return "Type changed"; default: return "Some history unavailable" }
+        switch key { case "edited": return "Edited"; case "scope_changed": return "Work scope changed"; case "type_changed": return "Type changed"; default: return "Some history unavailable" }
     }.joined(separator: " · ") }
     var isChild: Bool { if case .child = self { return true }; return false }
     func involves(project: String) -> Bool { before["project_id"]?.text.lowercased() == project.lowercased() || after["project_id"]?.text.lowercased() == project.lowercased() }

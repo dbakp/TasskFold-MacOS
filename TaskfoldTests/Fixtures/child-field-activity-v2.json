@@ -1,0 +1,487 @@
+{
+  "epoch": [
+    {
+      "id": "current",
+      "recorded_from": "2026-10-31T21:11:52.080826+00:00",
+      "field_recorded_from": "2026-10-31T21:11:54.366731+00:00"
+    }
+  ],
+  "events": [
+    {
+      "id": "dfebfbf8-094c-4615-8096-940d66313f1d",
+      "kinds": [
+        "created"
+      ],
+      "task_id": "eb40af74-8bff-42e2-a611-074a4d4a1f7c",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": null,
+      "node_key": "first",
+      "sequence": 1,
+      "after_path": [
+        "first"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "268fbf23-e1bb-48a5-8314-0f237046ed86",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [],
+      "recorded_at": "2026-10-31T21:11:54.82542+00:00",
+      "type_before": null,
+      "work_before": false,
+      "before_state": {},
+      "effective_at": "2026-10-31T21:11:54.82542+00:00",
+      "changed_fields": [],
+      "format_version": 1,
+      "task_generation": "0a1e9463-32d9-4eb9-9ce4-9cd16f3bb381",
+      "completion_version": 0
+    },
+    {
+      "id": "d7c5c18e-ba55-42bc-9ee2-d463ef74158f",
+      "kinds": [
+        "created"
+      ],
+      "task_id": "eb40af74-8bff-42e2-a611-074a4d4a1f7c",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": null,
+      "node_key": "sibling",
+      "sequence": 2,
+      "after_path": [
+        "sibling"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "268fbf23-e1bb-48a5-8314-0f237046ed86",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [],
+      "recorded_at": "2026-10-31T21:11:54.82542+00:00",
+      "type_before": null,
+      "work_before": false,
+      "before_state": {},
+      "effective_at": "2026-10-31T21:11:54.82542+00:00",
+      "changed_fields": [],
+      "format_version": 1,
+      "task_generation": "0a1e9463-32d9-4eb9-9ce4-9cd16f3bb381",
+      "completion_version": 0
+    },
+    {
+      "id": "3f03dfb2-27f2-466a-b61a-8be916cf0a41",
+      "kinds": [
+        "edited"
+      ],
+      "task_id": "eb40af74-8bff-42e2-a611-074a4d4a1f7c",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "node_key": "first",
+      "sequence": 3,
+      "after_path": [
+        "first"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "268fbf23-e1bb-48a5-8314-0f237046ed86",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [
+        "first"
+      ],
+      "recorded_at": "2026-10-31T21:11:55.198148+00:00",
+      "type_before": "task",
+      "work_before": true,
+      "before_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "268fbf23-e1bb-48a5-8314-0f237046ed86",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "effective_at": "2026-10-31T21:11:55.198148+00:00",
+      "changed_fields": [
+        "description",
+        "priority",
+        "title"
+      ],
+      "format_version": 2,
+      "task_generation": "0a1e9463-32d9-4eb9-9ce4-9cd16f3bb381",
+      "completion_version": 0
+    },
+    {
+      "id": "5bc8c9be-e4d0-431b-ad9e-47bbd9d7ecb2",
+      "kinds": [
+        "rescheduled",
+        "edited"
+      ],
+      "task_id": "eb40af74-8bff-42e2-a611-074a4d4a1f7c",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "node_key": "first",
+      "sequence": 4,
+      "after_path": [
+        "first"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": "2026-11-02",
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "268fbf23-e1bb-48a5-8314-0f237046ed86",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [
+        "first"
+      ],
+      "recorded_at": "2026-10-31T21:11:56.07136+00:00",
+      "type_before": "task",
+      "work_before": true,
+      "before_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "268fbf23-e1bb-48a5-8314-0f237046ed86",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "effective_at": "2026-10-31T21:11:56.07136+00:00",
+      "changed_fields": [
+        "description"
+      ],
+      "format_version": 2,
+      "task_generation": "0a1e9463-32d9-4eb9-9ce4-9cd16f3bb381",
+      "completion_version": 0
+    },
+    {
+      "id": "9aa172ae-2204-4019-8ca4-28e967c7a845",
+      "kinds": [
+        "edited"
+      ],
+      "task_id": "eb40af74-8bff-42e2-a611-074a4d4a1f7c",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "node_key": "first",
+      "sequence": 5,
+      "after_path": [
+        "first"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": "2026-11-02",
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "268fbf23-e1bb-48a5-8314-0f237046ed86",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [
+        "first"
+      ],
+      "recorded_at": "2026-10-31T21:11:56.471642+00:00",
+      "type_before": "task",
+      "work_before": true,
+      "before_state": {
+        "due_date": "2026-11-02",
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "268fbf23-e1bb-48a5-8314-0f237046ed86",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "effective_at": "2026-10-31T21:11:56.471642+00:00",
+      "changed_fields": [
+        "duration_minutes"
+      ],
+      "format_version": 2,
+      "task_generation": "0a1e9463-32d9-4eb9-9ce4-9cd16f3bb381",
+      "completion_version": 0
+    },
+    {
+      "id": "ee69145f-ca6b-4ab1-a666-0327cd81f320",
+      "kinds": [
+        "created"
+      ],
+      "task_id": "d7b9ebf7-2ddd-4273-bf9e-2cacba014b36",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": null,
+      "node_key": "first",
+      "sequence": 7,
+      "after_path": [
+        "first"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "cd47fe0c-3b04-46fb-bda7-ccb136ef469a",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [],
+      "recorded_at": "2026-10-31T21:11:58.241603+00:00",
+      "type_before": null,
+      "work_before": false,
+      "before_state": {},
+      "effective_at": "2026-10-31T21:11:58.241603+00:00",
+      "changed_fields": [],
+      "format_version": 1,
+      "task_generation": "d4149aca-19ee-47f1-9627-e47b89d59315",
+      "completion_version": 0
+    },
+    {
+      "id": "24130923-6bf9-4b6f-9e9a-197b6e93f13b",
+      "kinds": [
+        "created"
+      ],
+      "task_id": "d7b9ebf7-2ddd-4273-bf9e-2cacba014b36",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": null,
+      "node_key": "sibling",
+      "sequence": 8,
+      "after_path": [
+        "sibling"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "cd47fe0c-3b04-46fb-bda7-ccb136ef469a",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [],
+      "recorded_at": "2026-10-31T21:11:58.241603+00:00",
+      "type_before": null,
+      "work_before": false,
+      "before_state": {},
+      "effective_at": "2026-10-31T21:11:58.241603+00:00",
+      "changed_fields": [],
+      "format_version": 1,
+      "task_generation": "d4149aca-19ee-47f1-9627-e47b89d59315",
+      "completion_version": 0
+    },
+    {
+      "id": "edc81d14-79c9-4fcc-a768-5688b463c93d",
+      "kinds": [
+        "edited"
+      ],
+      "task_id": "d7b9ebf7-2ddd-4273-bf9e-2cacba014b36",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": "0b219899-a524-44c6-8125-da2cb15eb85f",
+      "node_key": "first",
+      "sequence": 9,
+      "after_path": [
+        "first"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "cd47fe0c-3b04-46fb-bda7-ccb136ef469a",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [
+        "first"
+      ],
+      "recorded_at": "2026-10-31T21:11:58.613559+00:00",
+      "type_before": "task",
+      "work_before": true,
+      "before_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "cd47fe0c-3b04-46fb-bda7-ccb136ef469a",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "effective_at": "2026-10-31T21:11:58.613559+00:00",
+      "changed_fields": [
+        "description",
+        "priority",
+        "title"
+      ],
+      "format_version": 2,
+      "task_generation": "d4149aca-19ee-47f1-9627-e47b89d59315",
+      "completion_version": 0
+    },
+    {
+      "id": "642736b8-b8cd-41d6-853e-2cd3d2effce5",
+      "kinds": [
+        "rescheduled",
+        "edited"
+      ],
+      "task_id": "d7b9ebf7-2ddd-4273-bf9e-2cacba014b36",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": "0b219899-a524-44c6-8125-da2cb15eb85f",
+      "node_key": "first",
+      "sequence": 10,
+      "after_path": [
+        "first"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": "2026-11-02",
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "cd47fe0c-3b04-46fb-bda7-ccb136ef469a",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [
+        "first"
+      ],
+      "recorded_at": "2026-10-31T21:11:59.526887+00:00",
+      "type_before": "task",
+      "work_before": true,
+      "before_state": {
+        "due_date": null,
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "cd47fe0c-3b04-46fb-bda7-ccb136ef469a",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "effective_at": "2026-10-31T21:11:59.526887+00:00",
+      "changed_fields": [
+        "description"
+      ],
+      "format_version": 2,
+      "task_generation": "d4149aca-19ee-47f1-9627-e47b89d59315",
+      "completion_version": 0
+    },
+    {
+      "id": "ab65014a-d4f5-4529-9787-9175dd64b55b",
+      "kinds": [
+        "edited"
+      ],
+      "task_id": "d7b9ebf7-2ddd-4273-bf9e-2cacba014b36",
+      "user_id": "0695eb71-4ab2-4647-b04b-2dbe7267c0e0",
+      "actor_id": "0b219899-a524-44c6-8125-da2cb15eb85f",
+      "node_key": "first",
+      "sequence": 11,
+      "after_path": [
+        "first"
+      ],
+      "type_after": "task",
+      "work_after": true,
+      "after_state": {
+        "due_date": "2026-11-02",
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "cd47fe0c-3b04-46fb-bda7-ccb136ef469a",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "before_path": [
+        "first"
+      ],
+      "recorded_at": "2026-10-31T21:11:59.918581+00:00",
+      "type_before": "task",
+      "work_before": true,
+      "before_state": {
+        "due_date": "2026-11-02",
+        "due_time": null,
+        "completed": false,
+        "time_zone": null,
+        "project_id": "cd47fe0c-3b04-46fb-bda7-ccb136ef469a",
+        "section_id": null,
+        "completed_at": null,
+        "scheduled_at": null,
+        "deadline_date": null,
+        "recurrence_parent_id": null
+      },
+      "effective_at": "2026-10-31T21:11:59.918581+00:00",
+      "changed_fields": [
+        "duration_minutes"
+      ],
+      "format_version": 2,
+      "task_generation": "d4149aca-19ee-47f1-9627-e47b89d59315",
+      "completion_version": 0
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "nodeEvents": 2,
+  "editEntries": 1,
+  "actualFields": [
+    "description",
+    "priority"
+  ],
+  "planningStateUnchanged": true,
+  "noCompletionEventsInvented": true,
+  "privateContentAbsentFromLedger": true,
+  "currentTaskContentPreserved": true,
+  "noPendingNetworkMutations": true,
+  "snapshotSHA256": "4025ce41127ca360b07234f6828587860d03ee5625e08ba73ad5ed9ec569f9a7",
+  "scope": "Owned local synthetic workspace, actual SwiftUI and durable cache; SQL acceptance is separate"
+}

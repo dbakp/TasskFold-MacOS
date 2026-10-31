@@ -4064,6 +4064,22 @@ extension Store {
                 snapshot.apply(change); TaskActivity.recordLocal(change, before: task, after: record("tasks", id: task.id), snapshot: &snapshot, account: userID, now: now.addingTimeInterval(interval))
             }
         }
+        if ProcessInfo.processInfo.arguments.contains("--project-pulse-field-details") {
+            var parent = Record.task(user: userID, project: project)
+            parent["id"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa75")
+            parent["task_generation"] = .string("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa90")
+            parent["title"] = .string("Workshop"); parent["is_heading"] = .bool(true)
+            parent["subtasks"] = .array([.object(["id": .string("concept"), "title": .string("Prepare the concept"), "description": .string("Keep these original instructions private"), "priority": .number(4), "completed": .bool(false)])])
+            let creation = Mutation(table: "tasks", recordID: parent.id, method: "POST", fields: parent.fields)
+            snapshot.apply(creation)
+            TaskActivity.recordLocal(creation, before: nil, after: parent, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-86400))
+            TaskNodeActivity.recordLocal(creation, before: nil, after: parent, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-86400))
+            var edited = parent
+            edited["subtasks"] = SubtaskTree.changing(parent["subtasks"], id: "concept", fields: ["description": .string("Keep these revised instructions private"), "priority": .number(1)])
+            let change = Mutation(id: UUID(uuidString: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa91")!, table: "tasks", recordID: parent.id, method: "PATCH", fields: edited.fields)
+            snapshot.apply(change)
+            TaskNodeActivity.recordLocal(change, before: parent, after: edited, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-60))
+        }
         if ProcessInfo.processInfo.arguments.contains("--project-pulse-no-history") {
             snapshot.tables[TaskActivity.table] = []; snapshot.tables[TaskActivity.epochTable] = []
         }

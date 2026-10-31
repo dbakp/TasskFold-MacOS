@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "platform": "mac",
+  "scope": "Full app and strict signature; Mac runtime acceptance open",
+  "buildLogSHA256": "18c9c7b388d0f806f5969d6d0f2d9d023b70875510408af92036fe82fa583462",
+  "debugDylibSHA256": "eb5390eda9e6b494bb849fab72cc3206b55e31cb5da2c93dc081fe8932cd136a",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Core/TaskActivity.swift": true,
+    "Taskfold/Views/ProjectPulseView.swift": true
+  },
+  "productionGateEnablement": false
+}

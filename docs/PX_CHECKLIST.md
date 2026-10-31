@@ -1430,3 +1430,14 @@ Adding, moving and removing independent subtask branches now have linked Undo/Re
 The ordinary editor/inspector owns the organizer outside reusable Form rows and captures its root at opening. This fixes the nested Add review disappearing during presentation. The recorded iPhone journey covers one-tap Add, saved Undo, ordinary-menu Redo/Undo and cold return. The iPad largest-text journey covers removal of a nested branch, cold Redo and final restoration; a separate iPhone move cycle restores exact placement.
 
 Each repository owns its implementation, focused client checks, real local SQL fixture and evidence. See [hierarchy-history/README.md](hierarchy-history/README.md) and [verification.json](hierarchy-history/verification.json). Mac keyboard runtime acceptance remains open because the screen was locked; build/signature results are recorded separately. No new server migration or gate enablement is part of this change. Shared activity/history, older-data mapping, shared file/discussion custody, hosted deployment and genuine shared-account acceptance remain open. Ordinary migration use stays disabled.
+
+
+## 31 October · subtask field-edit activity
+
+- [x] Show one “Subtask · Edited” activity entry with changed field names, actor, current-task link and separate coverage date. Preserve private contents outside the activity ledger and keep completion credit unchanged.
+- [x] Preserve older event bytes/readers, suppress no-op/retry duplicates, and roll back task, receipt and history together on failure. Both independently owned repositories pass 116 focused client checks and 73 local PostgreSQL checks.
+- [x] Verify saved and cold-return display on iPhone and largest-text/dark iPad; both apps build and development signatures verify.
+- [ ] Mac runtime display; ordering and shared-operation grouping; wider timing/lifecycle acceptance.
+- [ ] Older-data/history mapping, shared file/discussion custody, hosted deployment and genuine shared-account acceptance. Ordinary migration use stays disabled.
+
+[Exact scope and evidence](field-activity/README.md). This completes field-edit activity, not the full shared-history or migration checkpoint. Existing user deferrals remain paused.

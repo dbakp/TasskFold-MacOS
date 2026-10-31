@@ -1,0 +1,25 @@
+{
+  "platform": "phone",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "645c79cd27385910236dca0c097009de5918ec30a1dcb5c8a7fb0f8b6a410578",
+    "Taskfold/Core/TaskActivity.swift": "4110439b64aa5483cf0998e2b9366575608f094437e260ca5569a99df9a7f764",
+    "Taskfold/Views/ProjectPulseView.swift": "ddba9326e2a64bd1ca3cbeef4428cc1d78818ebebbce14d45a78814a43da89b9",
+    "TaskfoldUITests/TaskfoldUITests.swift": "23465958c1dd1e4bec3d5604567edb431a197382e5366ec3292c7f23b676ac00"
+  },
+  "builtHostSHA256": {
+    "Taskfold/Core/Store.swift": "e5ce4cf296c600d763ce68cbed3af4c6ec3c48f82a56966bebc9372e2f198f14",
+    "Taskfold/Core/TaskActivity.swift": "4110439b64aa5483cf0998e2b9366575608f094437e260ca5569a99df9a7f764",
+    "Taskfold/Views/ProjectPulseView.swift": "ddba9326e2a64bd1ca3cbeef4428cc1d78818ebebbce14d45a78814a43da89b9",
+    "TaskfoldUITests/TaskfoldUITests.swift": "23465958c1dd1e4bec3d5604567edb431a197382e5366ec3292c7f23b676ac00"
+  },
+  "appSHA256": "85ccbcfb2976666a00fc8eb5599544180ea4f9e1e21cb2e69b7472ccba04845d",
+  "debugDylibSHA256": "6bfe8cefa774d6921dc52c5abfb71db439631aa42b81a8200c594abdd31870b4",
+  "newSimulator": false,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Core/TaskActivity.swift": true,
+    "Taskfold/Views/ProjectPulseView.swift": true,
+    "TaskfoldUITests/TaskfoldUITests.swift": true
+  }
+}

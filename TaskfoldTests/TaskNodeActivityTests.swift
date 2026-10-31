@@ -28,10 +28,83 @@ final class TaskNodeActivityTests: XCTestCase {
         let after=root([node("phase",heading:true,children:[node("done",done:true)])]),values=events(nil,after)
         XCTAssertEqual(values.count,2);XCTAssertTrue(values.allSatisfy{$0.kinds == [.created]});XCTAssertEqual(values.first{$0.nodeKey=="phase"}?.workAfter,false);XCTAssertEqual(values.first{$0.nodeKey=="done"}?.workAfter,true)
     }
-    func testNotesTitlesPriorityAndUnknownOpaqueFieldsDoNotInventTransitions() {
+    func testFieldEditsRecordOnlyNamesWithoutInventingPlanningOrCompletion() throws {
         let before=root([node("first")]);var after=before
         after["subtasks"] = SubtaskTree.changing(after["subtasks"],id:"first",fields:["title":.string("Private renamed title"),"description":.string("Private notes"),"priority":.number(1),"opaque_future":.object(["secret":.string("do not archive")])])
+        let saved=rows(before,after),event=try XCTUnwrap(saved.first.flatMap(TaskNodeActivity.init))
+        XCTAssertEqual(saved.count,1);XCTAssertEqual(event.kinds,[.edited]);XCTAssertEqual(event.changedFields,["description","priority","title"])
+        XCTAssertEqual(event.before,event.after);XCTAssertEqual(WorkActivity.child(event).title,"Edited")
+        XCTAssertEqual(WorkActivity.child(event).changedFieldsText,"Title · Notes · Priority")
+        let bytes=String(decoding:try TaskfoldJSONEncoder().encode(saved),as:UTF8.self)
+        for privateText in ["Private renamed title","Private notes","opaque_future","do not archive"] {XCTAssertFalse(bytes.contains(privateText))}
+    }
+    func testOpaqueOnlyEditsStayOutsideThePublicHistory() {
+        let before=root([node("first")]);var after=before
+        after["subtasks"] = SubtaskTree.changing(after["subtasks"],id:"first",fields:["opaque_future":.string("Keep private")])
         XCTAssertTrue(rows(before,after).isEmpty)
+    }
+    func testMalformedFieldDetailsCannotCertifyAnEdit() throws {
+        let before=root([node("first")]);var after=before
+        after["subtasks"] = SubtaskTree.changing(after["subtasks"],id:"first",fields:["description":.string("Changed notes")])
+        let valid=try XCTUnwrap(rows(before,after).first)
+        let invalid:[[String:JSON]]=[
+            ["format_version":.number(1)], ["changed_fields":.array([])],
+            ["changed_fields":.array([.string("description"),.string("description")])],
+            ["changed_fields":.array([.string("title"),.string("description")])],
+            ["changed_fields":.array([.string("private_notes_payload")])],
+            ["changed_fields":.array([.string("due_date")])],
+            ["changed_fields":.array([.object(["description":.string("Private payload")])])],
+            ["kinds":.array([.string("rescheduled")])], ["before_state":.object([:])]
+        ]
+        for mutation in invalid {var row=valid;for(k,v) in mutation {row[k]=v};XCTAssertNil(TaskNodeActivity(row:row),mutation.description)}
+    }
+    func testFieldDetailsCombineWithRealPlanAndCompletionWithoutExtraCredit() throws {
+        let before=root([node("first")]);var after=complete(before,"first",at:"2026-10-26T09:00:00Z")
+        after["subtasks"] = SubtaskTree.changing(after["subtasks"],id:"first",fields:["description":.string("Updated"),"due_date":.string("2026-10-27")])
+        let values=rows(before,after);let event=try XCTUnwrap(values.first.flatMap(TaskNodeActivity.init))
+        XCTAssertEqual(event.kinds,[.completed,.rescheduled,.edited]);XCTAssertEqual(event.changedFields,["description"])
+        let epoch=[Record(["id":.string("current"),"recorded_from":.string("2026-10-01T00:00:00Z")])]
+        let reading=ChildWorkReading(.init(rows:values,epoch:epoch),now:now)
+        XCTAssertEqual(reading.credits().count,1)
+        var edited=after;edited["subtasks"] = SubtaskTree.changing(edited["subtasks"],id:"first",fields:["description":.string("Later notes")])
+        let later=rows(after,edited,sequence:1)
+        XCTAssertEqual(ChildWorkReading(.init(rows:values+later,epoch:epoch),now:now).credits().count,1)
+        XCTAssertTrue(ChildWorkReading(.init(rows:later,epoch:epoch),now:now).credits().isEmpty)
+    }
+    func testFieldEditUndoRedoRetryAndCoverageRemainAccountLocal() throws {
+        let before=root([node("first")]);var after=before
+        after["subtasks"] = SubtaskTree.changing(after["subtasks"],id:"first",fields:["priority":.number(1)])
+        let id=UUID(),mutation=change(before,after,id:id)
+        var snapshot=Snapshot(tables:["tasks":[after],TaskNodeActivity.table:[],TaskNodeActivity.epochTable:[Record(["id":.string("current"),"recorded_from":.string("2026-10-01T00:00:00Z")])]])
+        TaskNodeActivity.recordLocal(mutation,before:before,after:after,snapshot:&snapshot,account:owner,now:now)
+        let saved=snapshot;TaskNodeActivity.recordLocal(mutation,before:before,after:after,snapshot:&snapshot,account:owner,now:now.addingTimeInterval(60));XCTAssertEqual(saved,snapshot)
+        let history=ChildWorkHistory(rows:snapshot.tables[TaskNodeActivity.table],epoch:snapshot.tables[TaskNodeActivity.epochTable])
+        XCTAssertEqual(history.fieldRecordedFrom,now);XCTAssertEqual(history.recordedFrom,TaskPlanning.instant("2026-10-01T00:00:00Z"))
+        XCTAssertEqual(events(after,before).first?.changedFields,["priority"]);XCTAssertEqual(events(before,after).first?.changedFields,["priority"])
+        var foreign=Snapshot();TaskNodeActivity.recordLocal(mutation,before:before,after:after,snapshot:&foreign,account:project,now:now);XCTAssertNil(foreign.tables[TaskNodeActivity.table])
+    }
+    func testActualSQLFieldActivityRowsUseTheStrictReaderAndNoCompletionCredit() throws {
+        struct Fixture: Decodable { let epoch: [Record]; let events: [Record] }
+        let url=try XCTUnwrap(Bundle.module.url(forResource:"child-field-activity-v2",withExtension:"json",subdirectory:"Fixtures"))
+        let fixture=try TaskfoldJSONDecoder().decode(Fixture.self,from:Data(contentsOf:url))
+        XCTAssertEqual(fixture.events.count,10)
+        let parsed=fixture.events.compactMap(TaskNodeActivity.init)
+        XCTAssertEqual(parsed.count,10);XCTAssertEqual(parsed.filter{$0.kinds.contains(.edited)}.count,6)
+        let history=ChildWorkHistory(rows:fixture.events,epoch:fixture.epoch)
+        XCTAssertNotNil(history.recordedFrom);XCTAssertNotNil(history.fieldRecordedFrom)
+        let reading=ChildWorkReading(history,now:Date.distantFuture)
+        XCTAssertFalse(reading.incomplete);XCTAssertEqual(reading.malformed,0);XCTAssertTrue(reading.credits().isEmpty)
+        XCTAssertTrue(parsed.filter{$0.kinds.contains(.edited)}.allSatisfy{WorkActivity.child($0).changedFieldsText != nil})
+        let encoded=String(decoding:try TaskfoldJSONEncoder().encode(fixture.events),as:UTF8.self)
+        XCTAssertFalse(encoded.contains("Private title and notes must stay out of the ledger"))
+    }
+    func testFieldCoverageAcceptsOnlyKnownValidEpochShapes() {
+        let old=Record(["id":.string("current"),"recorded_from":.string("2026-10-01T00:00:00Z")])
+        XCTAssertTrue(TaskNodeActivity.validEpoch([old]))
+        var modern=old;modern["field_recorded_from"] = .string("2026-10-31T10:00:00Z")
+        XCTAssertTrue(TaskNodeActivity.validEpoch([modern]))
+        modern["field_recorded_from"] = .string("not a timestamp");XCTAssertFalse(TaskNodeActivity.validEpoch([modern]))
+        modern=old;modern["unexpected"] = .string("not authority");XCTAssertFalse(TaskNodeActivity.validEpoch([modern]))
     }
     func testTwoSiblingChangesHaveDistinctStableRetryIdentities() {
         let before=root([node("a"),node("b")]),after=complete(complete(before,"a"),"b"),id=UUID()

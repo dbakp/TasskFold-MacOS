@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "tests": 116,
+  "rawCaptureSHA256": "96b6a93e39ee496bd6656c7f2ad9608e0101974fd99eeabd5f49cb4b4066e3f3",
+  "testLogSHA256": "96b6a93e39ee496bd6656c7f2ad9608e0101974fd99eeabd5f49cb4b4066e3f3",
+  "logNormalization": "Trailing spaces removed from compiler excerpts; test lines and summaries unchanged."
+}
