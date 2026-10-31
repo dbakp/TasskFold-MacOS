@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 31 October 2026 · Cross-task subtask move Redo
+
+Saved move recovery now implements guarded Redo, and newly confirmed actions integrate with the window’s existing history bridge. Both Core suites pass 44 selected checks and both apps build/sign. Mobile saved/cold and ordinary task-menu journeys pass; the Mac keyboard walkthrough remains unverified while the Mac is locked. The normal transfer/migration gates stay off. [Scoped evidence](transfer-redo/README.md).
+
 ## 31 October 2026 · Coordinated account-removal recovery
 
 Private removal-journal transactions now coordinate across processes, and the Store can acknowledge cleanup completed elsewhere without clearing a newer cloud account or local workspace. Thirty scoped Core checks pass, including six new coordination cases and a real external-process lock. The full Mac app builds and signs. Its current host stops at a protected-session Keychain write, so native Mac acceptance remains open; no signing workaround or production data access is substituted. See [current scope](removal-coordination/README.md).

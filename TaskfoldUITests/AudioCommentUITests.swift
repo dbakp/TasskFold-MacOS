@@ -1992,6 +1992,26 @@ extension TaskfoldMacUITests {
         XCTAssertTrue(restored.waitForExistence(timeout: 15), app.debugDescription)
         structureSnapshot(app, "Certified Undo restores original branch after relaunch")
         childDone(app); childProbe(app, "transferWrites=2 transferRequests=2 transferSource=concept>nested>review transferDestination=")
+        // Redo remains available from the saved Undo after a real cold return.
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-transfer-native", large: true)
+        childHomePress("childNativeTransfers", app)
+        let redo = app.buttons["redoChildTransfer"]; childReveal(redo, app)
+        XCTAssertTrue(redo.waitForExistence(timeout: 15), app.debugDescription); XCTAssertGreaterThanOrEqual(redo.frame.height, 44)
+        structureSnapshot(app, "Saved Undo offers readable Redo at largest text")
+        completionReadyPress(redo, app)
+        let movedFeedback = app.staticTexts["childTransferStatus"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in movedFeedback.exists && movedFeedback.label.contains("Subtask moved") }, object: nil)], timeout: 20), .completed, app.debugDescription)
+        structureSnapshot(app, "Redo moves the same branch with a fresh request")
+        childDone(app); childProbe(app, "transferWrites=3 transferRequests=3 transferSource=review transferDestination=concept>nested")
+        childHomePress("childNativeTransfers", app)
+        let nextUndo = app.buttons["Undo move"]; childReveal(nextUndo, app); completionReadyPress(nextUndo, app)
+        // Mobile routes the same-launch action through its existing history owner.
+        let feedback = app.staticTexts["childTransferStatus"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in feedback.exists && (feedback.label.contains("Undid subtask move") || feedback.label.contains("Move undone")) }, object: nil)], timeout: 20), .completed, app.debugDescription)
+        childDone(app); childProbe(app, "transferWrites=4 transferRequests=4 transferSource=concept>nested>review transferDestination=")
+        app.terminate(); try childOpen(app, reset: false, extra: "--child-transfer-native", large: true)
+        childProbe(app, "transferWrites=4 transferRequests=4 transferSource=concept>nested>review transferDestination=")
+        structureSnapshot(app, "Move Undo Redo Undo preserves the branch after relaunch")
     }
     @MainActor func testChildTransferNativeLostReplyColdRetryUsesOriginalRequest() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
@@ -2369,5 +2389,43 @@ extension TaskfoldMacUITests {
         let undone=app.staticTexts.matching(NSPredicate(format:"identifier BEGINSWITH %@ AND (label == %@ OR value == %@)","mixedGroupPhase-","Undone","Undone")).firstMatch
         XCTAssertTrue(undone.waitForExistence(timeout:20),app.debugDescription)
         structureSnapshot(app,"Interrupted mixed selection recovered after cold return and undone together")
+    }
+}
+
+extension TaskfoldMacUITests {
+    @MainActor func testChildTransferMainListNativeUndoRedoUndo() throws {
+        #if os(macOS)
+        throw XCTSkip("Mac history keys use the direct app walkthrough")
+        #else
+        try childGuard()
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let arguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-fields-main-list", "--child-transfer-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL", "-ApplePersistenceIgnoreState", "YES"]
+        app.launchArguments = arguments + ["--child-fields-native-reset"]; app.launch(); app.activate()
+        let details = app.buttons["taskDetails-ec990000-0000-4000-8000-000000000002"]; XCTAssertTrue(details.waitForExistence(timeout: 30), app.debugDescription); childPress(details)
+        let organize = app.buttons["organizeIndependentChildren"]; childReveal(organize, app); completionReadyPress(organize, app)
+        let move = app.buttons["transferChild-concept"]; childReveal(move, app); completionReadyPress(move, app)
+        let target = app.buttons["childTransferTarget-ec990000-0000-4000-8000-000000000020"]; childReveal(target, app); completionReadyPress(target, app)
+        let send = app.buttons["childTransferSend"]; childReveal(send, app); completionReadyPress(send, app)
+        XCTAssertTrue(childSavedText("Move confirmed", app).waitForExistence(timeout: 20), app.debugDescription)
+        childDone(app); childDone(app)
+        let cancel = app.buttons["Cancel"].firstMatch; XCTAssertTrue(cancel.waitForExistence(timeout: 10), app.debugDescription); childPress(cancel)
+        func history(_ title: String, message: String) {
+            let options = app.buttons["Task options"]; XCTAssertTrue(options.waitForExistence(timeout: 10), app.debugDescription); childPress(options)
+            let menu = app.buttons["Undo & redo"]; XCTAssertTrue(menu.waitForExistence(timeout: 10), app.debugDescription); childPress(menu)
+            let action = app.buttons[title]
+            if !action.waitForExistence(timeout: 2), menu.exists, menu.isHittable { menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.15) }
+            XCTAssertTrue(action.waitForExistence(timeout: 10), app.debugDescription); XCTAssertTrue(action.isEnabled); childPress(action)
+            if action.exists, action.isHittable, action.isEnabled { action.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.15) }
+            XCTAssertTrue(app.staticTexts[message].waitForExistence(timeout: 20), app.debugDescription)
+        }
+        history("Undo", message: "Undid subtask move")
+        history("Redo", message: "Redid subtask move")
+        history("Undo", message: "Undid subtask move")
+        structureSnapshot(app, "Ordinary task history supports move Undo Redo Undo")
+        app.terminate(); app.launchArguments = arguments; app.launch(); app.activate()
+        XCTAssertTrue(app.buttons["taskDetails-ec990000-0000-4000-8000-000000000002"].waitForExistence(timeout: 30), app.debugDescription)
+        structureSnapshot(app, "Normal list returns after the move history cycle")
+        #endif
     }
 }

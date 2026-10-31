@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P0 · Deletion-recovery coordination verified in scoped checks",
-  "latest": "Current app processes now coordinate the private deletion journal without losing another account’s pending work. The iPhone Store passes finished-elsewhere cleanup, expired retry and account-switch scenarios (32 / 17 / 19 assertions); both repos pass 30 focused Core checks and both apps build. Mac runtime stopped at a protected Keychain write and remains unaccepted. Expired pre-proof recovery and residual-file repair remain open. P2 migration remains unfinished and gated.",
+  "focus": "P2 · Cross-task move Redo tested; Mac keys pending",
+  "latest": "Cross-task subtask moves now have guarded Redo, saved recovery and native history integration. Both repos pass 44 focused checks and both apps build/sign. iPhone saved/cold and ordinary task-menu journeys, plus iPad at largest text, preserve the exact branch and sibling through four unique operations. Mac keyboard acceptance remains open while locked. Field/hierarchy Redo, shared history, older-data mapping and shared file/discussion custody remain unfinished; ordinary migration use stays gated.",
   "next": [
-    "Return to the subtask-storage migration: finish other operation Redo/shared history, older-data mapping and shared file/discussion custody. Deliver and accept one complete workflow at a time.",
-    "Finish genuine Mac protected-Keychain/deletion acceptance and the remaining legacy-attempt/residual-file recovery work. Do not erase copies when server removal is unprovable.",
-    "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
+    "Continue field-edit and other hierarchy Redo, then consistent shared activity/history. Complete whole workflows with bounded acceptance.",
+    "Finish older-data/history mapping and shared file/discussion custody. Keep normal migration use disabled until the required acceptance passes.",
+    "Complete the remaining Mac/cloud/account/window/speech and larger-workflow checks when available; preserve the separate deletion-recovery gaps and all agreed deferrals."
   ],
   "stages": [
     {
@@ -115,7 +115,7 @@
             "removal-coordination/README.md",
             "removal-coordination/verification.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p0-paused",
@@ -556,7 +556,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Combined completion now supports native Undo and Redo on Mac/iPhone/iPad, with cold-return preservation. Saved repair reviews also survive closing. The remaining migration work is shown below; normal use stays disabled.",
+              "detail": "Combined completion supports native Undo/Redo. Cross-task move Redo now passes iPhone/iPad and focused Core checks; the Mac app builds but its keyboard walkthrough remains open while locked. Repair choices survive closing. The remaining migration work is shown below; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -575,8 +575,12 @@
                   "title": "Redo a combined task/subtask selection through normal history controls"
                 },
                 {
+                  "state": "verify",
+                  "title": "Redo cross-task subtask moves; finish the Mac keyboard check"
+                },
+                {
                   "state": "build",
-                  "title": "Finish other operation Redo and consistent shared activity history"
+                  "title": "Finish field and hierarchy Redo, and consistent shared activity history"
                 },
                 {
                   "state": "build",
@@ -650,9 +654,11 @@
             "child-repair-drafts/verification.json",
             "child-repair-drafts/README.md",
             "completion-redo/verification.json",
-            "completion-redo/README.md"
+            "completion-redo/README.md",
+            "transfer-redo/README.md",
+            "transfer-redo/verification.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-watch",
@@ -717,8 +723,8 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "27fb8f6876f01ac99e6af932b35b6f7dcb9d3e0acbfa1218bf9b4c50793d3ab7",
-    "PX_CHECKLIST.md": "962daaf1297faacb83056deab59625a9455943295c2b8d9a53fff2b9b05310b4",
+    "P2_PLAN.md": "9d5d9f7f7f91220877e04d5a6ef67e187a81b5570ab377ff629c95d178ac58a6",
+    "PX_CHECKLIST.md": "528842bc8074a90d87e7873402fd4ed236f8950f4ba21cf6bbd7fc1768de5643",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",
     "child-bulk-list-completion/verification.json": "02faef41d645b895990ec194507da81396d352a430a6c30f92fb48fbb6929026",
@@ -769,6 +775,8 @@
     "removal-coordination/verification.json": "23bdbadae3aa8effbe7e92fc91394f1ecd00882a6db1e58cb2f321868b0676a2",
     "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",
     "reviewed-child-adoption-native/verification.json": "0b1d67d06dd2b65172d4b8ebb4c3e3677df460d7b1a0f26a9b907a987b7ab5fd",
-    "reviewed-child-adoption/verification.json": "488443346a14f4df5aa1cc16cdb53aadbf5f3334d4a1940b99088ad3ccef462c"
+    "reviewed-child-adoption/verification.json": "488443346a14f4df5aa1cc16cdb53aadbf5f3334d4a1940b99088ad3ccef462c",
+    "transfer-redo/README.md": "566c6d5c8827e2da94797158156107ef355553eb6906a3e7a46ddf19bd76b2ac",
+    "transfer-redo/verification.json": "9f0d45307cfa830c3af3934e43556f3ee217066994a6d542eca773381d45f6b0"
   }
 }

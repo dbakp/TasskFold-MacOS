@@ -1,0 +1,26 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "607CE929-A88F-4561-BFA1-38AF993B2351.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Normal list returns after the move history cycle_0_BF510D88-F088-4491-B421-5099EAB41561.png",
+        "timestamp": 1793467765.16
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "exportedFileName": "20990631-14B5-4F22-976F-8062D93FE262.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Ordinary task history supports move Undo Redo Undo_0_E8B9C81D-4024-4AEF-87F9-6735C007E01B.png",
+        "timestamp": 1793467755.66
+      }
+    ],
+    "testIdentifier": "TaskfoldUITests/testChildTransferMainListNativeUndoRedoUndo()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testChildTransferMainListNativeUndoRedoUndo"
+  }
+]

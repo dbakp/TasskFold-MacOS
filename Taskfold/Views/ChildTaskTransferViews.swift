@@ -33,6 +33,9 @@ struct SavedChildTaskTransfersLink: View {
 struct ChildTaskTransferView: View {
     let rootID: String, nodeKey: String
     @Environment(Store.self) private var store
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
     @Environment(\.scenePhase) private var phase
     @State private var model: ChildTaskTransferModel?
     @State private var modelScope: ChildTaskFieldClientScope?
@@ -106,10 +109,10 @@ struct ChildTaskTransferView: View {
                             if from.context.root["project_id"] != to.context.root["project_id"] { Text("Assignments in this branch will be cleared when it changes projects.").font(.footnote).foregroundStyle(.secondary) }
                             Text("You can Undo until either task is reorganized or the moved items change.").font(.footnote).foregroundStyle(.secondary)
                             Button("Move subtask", systemImage: "arrow.right.square") { Task { await move(from: from, to: to) } }
-                                .disabled(model.busy || reading || !store.online).accessibilityIdentifier("childTransferSend")
+                                .disabled(model.busy || store.childTransferHistoryBusy || reading || !store.online).accessibilityIdentifier("childTransferSend")
                         }
                     }
-                    if !reading { Section { Button("Refresh both tasks", systemImage: "arrow.clockwise") { Task { await readPair() } }.disabled(model.busy || !store.online) } }
+                    if !reading { Section { Button("Refresh both tasks", systemImage: "arrow.clockwise") { Task { await readPair() } }.disabled(model.busy || store.childTransferHistoryBusy || !store.online) } }
                 }
             } else { ContentUnavailableView("Move unavailable", systemImage: "arrow.left.arrow.right", description: Text("Return to your signed-in workspace to continue.")) }
         }
@@ -126,6 +129,12 @@ struct ChildTaskTransferView: View {
         .task(id: scope) { await open() }
         .task(id: destination) { if !destination.isEmpty { await readPair() } }
         .onChange(of: parent) { _, _ in index = 0 }
+        .onChange(of: store.childTransferHistoryNotice?.id) { _, _ in
+            guard let notice = store.childTransferHistoryNotice, notice.scope == scope, modelScope == scope else { return }
+            if let commandID = notice.commandID { activeID = commandID } else { failure = notice.message }
+            model?.showHistoryNotice(notice)
+            Task { await model?.load() }
+        }
         .onDisappear { model?.close(); ticket = UUID(); sourceRead = nil; destinationRead = nil }
     }
     private func siblings(_ read: ChildTaskStructureRead) -> [ChildTaskRecordRead.Node] { read.records.orderedNodes.filter { $0.parent == (parent.isEmpty ? nil : parent) } }
@@ -133,7 +142,7 @@ struct ChildTaskTransferView: View {
     private func open() async {
         model?.close(); model = nil; modelScope = nil; sourceRead = nil; destinationRead = nil; failure = nil; ticket = UUID()
         guard let captured = scope else { return }
-        do { let value = try store.childTaskTransferModel(); model = value; modelScope = captured; await value.load(); if !destination.isEmpty { await readPair() } }
+        do { let value = try makeModel(); model = value; modelScope = captured; await value.load(); if !destination.isEmpty { await readPair() } }
         catch { guard captured == scope else { return }; failure = "Saved moves couldn’t be read. Their originals are kept." }
     }
     private func readPair() async {
@@ -160,14 +169,36 @@ struct ChildTaskTransferView: View {
         } catch let error as ChildTaskTransferFailure { failure = error.localizedDescription }
         catch { failure = "This move needs a fresh review. Refresh both tasks or choose another destination." }
     }
+    private func invokeNativeHistory(_ entry: ChildTaskTransferState.Entry) -> Bool {
+        #if os(macOS)
+        return workspace.invokeChildTransferHistory(entry)
+        #else
+        if store.viewHistory.canUndo(key: entry.command.id) { store.viewHistory.undo(); return true }
+        if store.viewHistory.canRedo(key: entry.command.id) { store.viewHistory.redo(); return true }
+        return false
+        #endif
+    }
+    private func makeModel() throws -> ChildTaskTransferModel {
+        #if os(macOS)
+        let owner = workspace
+        return try store.childTaskTransferModel(didApply: { [weak owner] entry, scope in owner?.rememberChildTransfer(entry, scope: scope) })
+        #else
+        let owner = store
+        return try store.childTaskTransferModel(didApply: { [weak owner] entry, scope in
+            guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
+            owner.viewHistory.record(owner.childTransferHistoryStep(entry, scope: scope))
+        })
+        #endif
+    }
     private func prepareUndo(_ entry: ChildTaskTransferState.Entry) async {
-        guard let model, let receipt = entry.result, modelScope == scope else { return }
+        guard let model, entry.result != nil, modelScope == scope else { return }
+        if invokeNativeHistory(entry) { return }
         do {
             let (a, b) = try await store.readChildTaskTransferPair(source: entry.command.body["destination"]!.object["task_id"]!.text, destination: entry.command.body["source"]!.object["task_id"]!.text)
             guard modelScope == scope else { return }
-            let undo = try ChildTaskTransferCommand(undo: entry.command, receipt: receipt, source: a, destination: b)
-            if await model.queue(undo, source: a, destination: b) { activeID = undo.id; _ = await model.run(undo, operation: .send); await store.sync() }
-        } catch { failure = "This move can no longer be undone safely. Your current work is kept." }
+            let command = try model.historyCommand(entry, source: a, destination: b)
+            if let saved = await model.queueHistory(command, reversing: entry, source: a, destination: b) { activeID = saved.id; _ = await model.run(saved, operation: .send); await store.sync() }
+        } catch { failure = "This move changed and can’t be reversed safely. Your current work is kept." }
     }
 }
 
@@ -192,7 +223,7 @@ private struct ChildTransferSavedRow: View {
             Text(title("source") + " → " + title("destination")).fixedSize(horizontal: false, vertical: true)
             if entry.phase == .queued || entry.phase == .attempted {
                 ViewThatFits(in: .horizontal) { HStack(spacing: 16) { actions }; VStack(alignment: .leading, spacing: 12) { actions } }
-                Button("Check and stop move") { stopping = true }.disabled(model.busy || !store.online)
+                Button("Check and stop move") { stopping = true }.disabled(model.busy || store.childTransferHistoryBusy || !store.online)
             }
             if entry.phase == .applied, !entry.command.undoing,
                !model.entries.contains(where: { $0.command.undoing && $0.command.family == entry.command.id && $0.phase != .closed }) {
@@ -205,7 +236,14 @@ private struct ChildTransferSavedRow: View {
                     .contentShape(Rectangle())
                 }
                 .accessibilityLabel("Undo move")
-                .disabled(model.busy || !store.online || !store.childTaskTransfersEnabled)
+                .disabled(model.busy || store.childTransferHistoryBusy || !store.online || !store.childTaskTransfersEnabled)
+            }
+            if model.canRedo(entry) {
+                Button { Task { await undo(entry) } } label: {
+                    Label { Text("Redo move").fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: "arrow.uturn.forward").accessibilityHidden(true) }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+                }.accessibilityLabel("Redo move").accessibilityIdentifier("redoChildTransfer")
+                    .disabled(model.busy || store.childTransferHistoryBusy || !store.online || !store.childTaskTransfersEnabled)
             }
             if entry.phase != .attempted {
                 Menu {
@@ -219,16 +257,19 @@ private struct ChildTransferSavedRow: View {
         } message: { Text("An applied move keeps its confirmation. A move that has not happened will be permanently stopped before you review a new one.") }
         .confirmationDialog("Remove this saved history?", isPresented: $forgetting, titleVisibility: .visible) {
             Button("Remove", role: .destructive) { Task { await model.discard(entry.command) } }
-        } message: { Text(entry.phase == .queued ? "This unsent move will be removed from this device. Your tasks won’t change." : "Removing this history also removes its Undo shortcut. Your tasks won’t change.") }
+        } message: { Text(entry.phase == .queued ? "This unsent move will be removed from this device. Your tasks won’t change." : "Removing this history also removes its Undo and Redo shortcuts. Your tasks won’t change.") }
     }
     @ViewBuilder private var actions: some View {
-        Button("Check status", systemImage: "arrow.clockwise") { Task { if await model.run(entry.command, operation: .check) { await store.sync() } } }.disabled(model.busy || !store.online)
-        Button("Retry original move", systemImage: "arrow.right") { Task { if await model.run(entry.command, operation: .send) { await store.sync() } } }.disabled(model.busy || !store.online || !store.permitsChildTaskTransferRequest(entry.command, sending: true))
+        Button("Check status", systemImage: "arrow.clockwise") { Task { if await model.run(entry.command, operation: .check) { await store.sync() } } }.disabled(model.busy || store.childTransferHistoryBusy || !store.online)
+        Button("Retry original move", systemImage: "arrow.right") { Task { if await model.run(entry.command, operation: .send) { await store.sync() } } }.disabled(model.busy || store.childTransferHistoryBusy || !store.online || !store.permitsChildTaskTransferRequest(entry.command, sending: true))
     }
 }
 
 struct ChildTaskTransferRecoveryView: View {
     @Environment(Store.self) private var store
+    #if os(macOS)
+    @Environment(Workspace.self) private var workspace
+    #endif
     @Environment(\.scenePhase) private var phase
     @State private var model: ChildTaskTransferModel?
     @State private var modelScope: ChildTaskFieldClientScope?
@@ -250,19 +291,47 @@ struct ChildTaskTransferRecoveryView: View {
         .task(id: scope) {
             model?.close(); model = nil; modelScope = nil; failure = nil
             guard let captured = scope else { return }
-            do { let value = try store.childTaskTransferModel(); model = value; modelScope = captured; await value.load() }
+            do { let value = try makeModel(); model = value; modelScope = captured; await value.load() }
             catch { guard captured == scope else { return }; failure = "Saved moves couldn’t be read. Their originals are kept." }
+        }
+        .onChange(of: store.childTransferHistoryNotice?.id) { _, _ in
+            guard let notice = store.childTransferHistoryNotice, notice.scope == scope, modelScope == scope else { return }
+            if notice.commandID == nil { failure = notice.message }
+            model?.showHistoryNotice(notice)
+            Task { await model?.load() }
         }
         .onDisappear { model?.close() }
     }
+    private func invokeNativeHistory(_ entry: ChildTaskTransferState.Entry) -> Bool {
+        #if os(macOS)
+        return workspace.invokeChildTransferHistory(entry)
+        #else
+        if store.viewHistory.canUndo(key: entry.command.id) { store.viewHistory.undo(); return true }
+        if store.viewHistory.canRedo(key: entry.command.id) { store.viewHistory.redo(); return true }
+        return false
+        #endif
+    }
+    private func makeModel() throws -> ChildTaskTransferModel {
+        #if os(macOS)
+        let owner = workspace
+        return try store.childTaskTransferModel(didApply: { [weak owner] entry, scope in owner?.rememberChildTransfer(entry, scope: scope) })
+        #else
+        let owner = store
+        return try store.childTaskTransferModel(didApply: { [weak owner] entry, scope in
+            guard let owner, !owner.viewHistory.contains(key: entry.command.id) else { return }
+            owner.viewHistory.record(owner.childTransferHistoryStep(entry, scope: scope))
+        })
+        #endif
+    }
     private func undo(_ entry: ChildTaskTransferState.Entry) async {
-        guard let model, let receipt = entry.result, modelScope == scope else { return }
+        guard let model, entry.result != nil, modelScope == scope else { return }
+        if invokeNativeHistory(entry) { return }
         do {
             let (a, b) = try await store.readChildTaskTransferPair(source: entry.command.body["destination"]!.object["task_id"]!.text, destination: entry.command.body["source"]!.object["task_id"]!.text)
             guard modelScope == scope else { return }
-            let command = try ChildTaskTransferCommand(undo: entry.command, receipt: receipt, source: a, destination: b)
-            if await model.queue(command, source: a, destination: b) { _ = await model.run(command, operation: .send); await store.sync() }
-        } catch { failure = "This move can no longer be undone safely. Your current work is kept." }
+            let command = try model.historyCommand(entry, source: a, destination: b)
+            if let saved = await model.queueHistory(command, reversing: entry, source: a, destination: b) { _ = await model.run(saved, operation: .send); await store.sync() }
+        } catch { failure = "This move changed and can’t be reversed safely. Your current work is kept." }
     }
 }
 

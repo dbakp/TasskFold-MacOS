@@ -901,12 +901,44 @@ final class Store {
         }
         guard childTaskFieldRecoveryScope == scope, childTaskFieldComparisonIsCurrent(source.records), childTaskFieldComparisonIsCurrent(destination.records) else { throw CancellationError() }
     }
-    func childTaskTransferModel() throws -> ChildTaskTransferModel {
+    func childTaskTransferModel(didApply: ((ChildTaskTransferState.Entry, ChildTaskFieldClientScope) -> Void)? = nil) throws -> ChildTaskTransferModel {
         guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }
         return .init(scope: scope, journal: try childTaskTransferJournal(account: scope.account, origin: scope.origin), service: backend,
                      current: { [weak self] in self?.childTaskFieldRecoveryScope },
                      canSend: { [weak self] in self?.permitsChildTaskTransferRequest($0, sending: true) == true },
-                     admit: { [weak self] command, a, b in guard let self else { throw CancellationError() }; try await self.admitChildTaskTransfer(command, source: a, destination: b) })
+                     admit: { [weak self] command, a, b in guard let self else { throw CancellationError() }; try await self.admitChildTaskTransfer(command, source: a, destination: b) }, didApply: { entry in didApply?(entry, scope) })
+    }
+    private(set) var childTransferHistoryBusy = false
+    private(set) var childTransferHistoryNotice: ChildTaskTransferHistoryNotice?
+    func childTransferHistoryStep(_ entry: ChildTaskTransferState.Entry, scope: ChildTaskFieldClientScope, name: String? = nil, report: @escaping (ChildTaskTransferHistoryNotice) -> Void = { _ in }) -> ConfirmedHistoryBridge.Step {
+        let actionName = name ?? (entry.command.undoing ? "Undo Subtask Move" : "Move Subtask")
+        return .init(name: actionName, key: entry.command.id,
+              retained: { [weak self] in self?.childTaskFieldRecoveryScope == scope },
+              available: { [weak self] in
+                  guard let self else { return false }
+                  return !self.childTransferHistoryBusy && !self.childListCompletionBusy && self.online && self.permitsChildTaskTransferRequest(entry.command, sending: true)
+              }, perform: { [weak self] in
+            guard let self, !self.childTransferHistoryBusy, self.childTaskFieldRecoveryScope == scope else { return nil }
+            self.childTransferHistoryBusy = true; defer { self.childTransferHistoryBusy = false }
+            do {
+                let model = try self.childTaskTransferModel(); defer { model.close() }; await model.load()
+                let (a, b) = try await self.readChildTaskTransferPair(source: entry.command.body["destination"]!.object["task_id"]!.text, destination: entry.command.body["source"]!.object["task_id"]!.text)
+                guard self.childTaskFieldRecoveryScope == scope else { throw CancellationError() }
+                let command = try model.historyCommand(entry, source: a, destination: b)
+                guard let saved = await model.queueHistory(command, reversing: entry, source: a, destination: b),
+                      await model.run(saved, operation: .send),
+                      let next = model.entries.first(where: { $0.command == saved && $0.phase == .applied }) else { throw ChildTaskTransferCommand.invalid }
+                await self.sync()
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskTransferHistoryNotice(scope: scope, commandID: saved.id, message: saved.undoing ? "Undid subtask move" : "Redid subtask move")
+                self.childTransferHistoryNotice = notice; report(notice)
+                return self.childTransferHistoryStep(next, scope: scope, name: actionName, report: report)
+            } catch {
+                guard self.childTaskFieldRecoveryScope == scope else { return nil }
+                let notice = ChildTaskTransferHistoryNotice(scope: scope, commandID: nil, message: "This move needs review. Open Saved subtask moves to check its original request.")
+                self.childTransferHistoryNotice = notice; report(notice); return nil
+            }
+        })
     }
     func childTaskStructurePresentation() throws -> ChildTaskStructurePresentation {
         guard let scope = childTaskFieldRecoveryScope else { throw CancellationError() }

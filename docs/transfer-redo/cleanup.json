@@ -1,0 +1,27 @@
+{
+  "ownedTestAppsAndRunnersRemaining": 0,
+  "bothOwnedSimulatorsRestoredTo": "Shutdown",
+  "newSimulatorCreationCommands": 0,
+  "otherProjectsAndDockerUntouched": true,
+  "obsoleteResultBundlesRemoved": [
+    {
+      "path": "/tmp/taskfold-transfer-redo-native-phone-v1.xcresult",
+      "logicalBytes": 9605329
+    },
+    {
+      "path": "/tmp/taskfold-transfer-redo-native-phone-v1-main.xcresult",
+      "logicalBytes": 3812181
+    },
+    {
+      "path": "/tmp/taskfold-transfer-redo-native-phone-v2-main.xcresult",
+      "logicalBytes": 1961570
+    },
+    {
+      "path": "/tmp/taskfold-transfer-redo-native-ipad-v1.xcresult",
+      "logicalBytes": 7853623
+    }
+  ],
+  "logicalBytesRemoved": 23232703,
+  "freeBytesAfter": 28472696832,
+  "currentHostsAndProductsKeptForReuse": true
+}

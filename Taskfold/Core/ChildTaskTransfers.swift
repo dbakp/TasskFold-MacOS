@@ -52,6 +52,39 @@ struct ChildTaskTransferCommand: ReviewedTeamCommand, CustomStringConvertible, C
         try self.init(account: command.account, origin: command.origin, body: body)
         try validateUndo(original: original, receipt: proof)
     }
+    /// Redo is a fresh guarded transfer after a confirmed Undo, never a replay
+    /// of the old forward request or an authority to replace either subtree.
+    init(redo original: Self, receipt: ChildTaskTransferResult, undo: Self, undoReceipt: ChildTaskTransferResult,
+         source: ChildTaskStructureRead, destination: ChildTaskStructureRead, requestID: UUID = UUID()) throws {
+        let placement = original.body["destination"]!.object
+        let parent = placement["parent_key"] == .null ? nil : placement["parent_key"]!.text
+        try self.init(node: original.body["node_key"]!.text, parent: parent, index: placement["index"]!.integer,
+                      source: source, destination: destination, requestID: requestID)
+        try validateRedo(original: original, receipt: receipt, undo: undo, undoReceipt: undoReceipt)
+    }
+    func validateRedo(original: Self, receipt: ChildTaskTransferResult, undo: Self, undoReceipt: ChildTaskTransferResult) throws {
+        guard !undoing, !original.undoing, undo.undoing, account == original.account, origin == original.origin,
+              account == undo.account, origin == undo.origin, id != original.id, id != undo.id,
+              try original.result(receipt.raw).applied, try undo.result(undoReceipt.raw).applied else { throw Self.invalid }
+        try undo.validateUndo(original: original, receipt: receipt)
+        guard body["node_key"] == original.body["node_key"], body["incarnation"] == original.body["incarnation"] else { throw Self.invalid }
+        for (here, reversed) in [("source", "destination"), ("destination", "source")] {
+            let fresh = body[here]!.object, prior = original.body[here]!.object, reversedBody = undo.body[reversed]!.object
+            for key in ["task_id", "task_generation", "project_id"] {
+                guard ChildTaskStructureCommand.exact(fresh[key], prior[key]) else { throw Self.invalid }
+            }
+            guard fresh["structure_revision"] == .number(Double(reversedBody["structure_revision"]!.integer + 1)) else { throw Self.invalid }
+        }
+        for key in ["parent_key", "parent_incarnation", "index"] {
+            guard ChildTaskStructureCommand.exact(body["destination"]!.object[key], original.body["destination"]!.object[key]) else { throw Self.invalid }
+        }
+        let current = body["subtree_versions"]!.object, reversed = undo.body["subtree_versions"]!.object
+        guard Set(current.keys) == Set(reversed.keys) else { throw Self.invalid }
+        for (key, value) in current {
+            guard value.object["incarnation"] == reversed[key]?.object["incarnation"],
+                  value.object["revision"] == .number(Double(reversed[key]!.object["revision"]!.integer + 1)) else { throw Self.invalid }
+        }
+    }
     init(account: String, origin: String, body: [String: JSON]) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let undo = body["action"] == .string("undo")
@@ -292,6 +325,24 @@ actor ChildTaskTransferJournal {
             state.entries.append(.init(command: command)); try write(state.entries, lease: lease)
         }
     }
+    /// Both proofs must still exist in the locked journal. If another window
+    /// already saved this Redo, recover its identity instead of forking a retry.
+    func enqueueRedo(_ command: ChildTaskTransferCommand, original: ChildTaskTransferState.Entry, undo: ChildTaskTransferState.Entry, lease: CalendarReadLease) throws -> ChildTaskTransferCommand {
+        try guarded(lease) {
+            try admit(command.roots)
+            var state = try read()
+            guard state.entries.contains(original), state.entries.contains(undo), original.phase == .applied, undo.phase == .applied,
+                  let receipt = original.result, let reversed = undo.result else { throw ChildTaskTransferCommand.invalid }
+            try command.validateRedo(original: original.command, receipt: receipt, undo: undo.command, undoReceipt: reversed)
+            if let existing = state.entries.first(where: { entry in
+                entry.phase != .closed && (try? entry.command.validateRedo(original: original.command, receipt: receipt, undo: undo.command, undoReceipt: reversed)) != nil
+            }) { return existing.command }
+            guard command.account == account, command.origin == origin,
+                  !state.entries.contains(where: { $0.command.id == command.id }) else { throw ChildTaskTransferCommand.invalid }
+            guard !state.entries.contains(where: { ($0.phase == .queued || $0.phase == .attempted) && !$0.command.roots.isDisjoint(with: command.roots) }) else { throw ChildTaskTransferFailure(reason: .busy) }
+            state.entries.append(.init(command: command)); try write(state.entries, lease: lease); return command
+        }
+    }
     func attempt(_ command: ChildTaskTransferCommand, lease: CalendarReadLease, resolving: Bool = false) throws -> ChildTaskTransferState.Entry {
         try guarded(lease) {
             if !resolving { try admit(command.roots) }
@@ -338,9 +389,10 @@ extension Backend: ChildTaskTransferService {}
     private let canSend: (ChildTaskTransferCommand) -> Bool
     private let admit: (ChildTaskTransferCommand, ChildTaskStructureRead, ChildTaskStructureRead) async throws -> Void
     private let lease = CalendarReadLease()
+    private let didApply: ((ChildTaskTransferState.Entry) -> Void)?
     private var closed = false
-    init(scope: ChildTaskFieldClientScope, journal: ChildTaskTransferJournal, service: any ChildTaskTransferService, current: @escaping () -> ChildTaskFieldClientScope?, canSend: @escaping (ChildTaskTransferCommand) -> Bool, admit: @escaping (ChildTaskTransferCommand, ChildTaskStructureRead, ChildTaskStructureRead) async throws -> Void) {
-        self.scope = scope; self.journal = journal; self.service = service; self.current = current; self.canSend = canSend; self.admit = admit
+    init(scope: ChildTaskFieldClientScope, journal: ChildTaskTransferJournal, service: any ChildTaskTransferService, current: @escaping () -> ChildTaskFieldClientScope?, canSend: @escaping (ChildTaskTransferCommand) -> Bool, admit: @escaping (ChildTaskTransferCommand, ChildTaskStructureRead, ChildTaskStructureRead) async throws -> Void, didApply: ((ChildTaskTransferState.Entry) -> Void)? = nil) {
+        self.scope = scope; self.journal = journal; self.service = service; self.current = current; self.canSend = canSend; self.admit = admit; self.didApply = didApply
     }
     func close() { closed = true; lease.cancel(); entries = []; message = nil; loaded = false; busy = false }
     private func check() throws { try lease.check(); guard !closed, current() == scope else { throw CancellationError() } }
@@ -360,6 +412,10 @@ extension Backend: ChildTaskTransferService {}
         }
     }
     func load() async { _ = await work { try await update() } }
+    func showHistoryNotice(_ notice: ChildTaskTransferHistoryNotice) {
+        guard notice.scope == scope, (try? check()) != nil else { return }
+        message = notice.message
+    }
     func queue(_ command: ChildTaskTransferCommand, source: ChildTaskStructureRead, destination: ChildTaskStructureRead) async -> Bool {
         await work {
             guard ChildTaskFieldClientScope(source.context) == scope, ChildTaskFieldClientScope(destination.context) == scope else { throw CancellationError() }
@@ -368,11 +424,43 @@ extension Backend: ChildTaskTransferService {}
             try await journal.enqueue(command, lease: lease); try check(); try await update(); message = "Move saved on this device."
         }
     }
+    func originalForRedo(_ undo: ChildTaskTransferState.Entry) -> ChildTaskTransferState.Entry? {
+        guard entries.contains(undo), undo.command.undoing, undo.phase == .applied, undo.result?.applied == true else { return nil }
+        return entries.first { $0.command.id == undo.command.family && $0.phase == .applied && !$0.command.undoing && $0.result?.applied == true }
+    }
+    func canRedo(_ undo: ChildTaskTransferState.Entry) -> Bool {
+        guard let original = originalForRedo(undo), let receipt = original.result, let reversed = undo.result else { return false }
+        return !entries.contains { entry in entry.phase != .closed && (try? entry.command.validateRedo(original: original.command, receipt: receipt, undo: undo.command, undoReceipt: reversed)) != nil }
+    }
+    func historyCommand(_ entry: ChildTaskTransferState.Entry, source: ChildTaskStructureRead, destination: ChildTaskStructureRead) throws -> ChildTaskTransferCommand {
+        try check()
+        guard entries.contains(entry), entry.phase == .applied, let receipt = entry.result else { throw ChildTaskTransferCommand.invalid }
+        if entry.command.undoing {
+            guard let original = originalForRedo(entry), let proof = original.result else { throw ChildTaskTransferCommand.invalid }
+            return try .init(redo: original.command, receipt: proof, undo: entry.command, undoReceipt: receipt, source: source, destination: destination)
+        }
+        return try .init(undo: entry.command, receipt: receipt, source: source, destination: destination)
+    }
+    func queueHistory(_ command: ChildTaskTransferCommand, reversing entry: ChildTaskTransferState.Entry, source: ChildTaskStructureRead, destination: ChildTaskStructureRead) async -> ChildTaskTransferCommand? {
+        if !entry.command.undoing { return await queue(command, source: source, destination: destination) ? command : nil }
+        var saved: ChildTaskTransferCommand?
+        let completed = await work {
+            guard ChildTaskFieldClientScope(source.context) == scope, ChildTaskFieldClientScope(destination.context) == scope,
+                  let original = originalForRedo(entry) else { throw CancellationError() }
+            try command.review(source: source, destination: destination)
+            try await admit(command, source, destination); try check()
+            saved = try await journal.enqueueRedo(command, original: original, undo: entry, lease: lease)
+            try check(); try await update(); message = "Redo saved on this device."
+        }
+        return completed ? saved : nil
+    }
     func run(_ command: ChildTaskTransferCommand, operation: ChildTaskTransferOperation) async -> Bool {
+        var alreadyApplied = false
         let completed = await work {
             guard command.account == scope.account, command.origin == scope.origin else { throw CancellationError() }
             if operation == .send { guard canSend(command) else { throw ChildTaskTransferFailure(reason: .unavailable) } }
             let entry = try await journal.attempt(command, lease: lease, resolving: operation != .send); try check()
+            alreadyApplied = entry.phase == .applied
             let result: ChildTaskTransferResult
             if let old = entry.result { result = try command.result(old.raw) }
             else {
@@ -385,6 +473,7 @@ extension Backend: ChildTaskTransferService {}
             try await update()
             message = result.applied ? (command.undoing ? "Move undone." : "Subtask moved.") : result.closed ? "Move stopped. Your tasks are unchanged by this request." : "No confirmation yet. Retry the original move, or stop it before making a new one."
         }
+        if !alreadyApplied, (try? check()) != nil, let applied = entries.first(where: { $0.command == command && $0.phase == .applied }) { didApply?(applied) }
         // A file write can finish before reporting an I/O error. Trust only the
         // reloaded, fully validated proof; never retry with a different identity.
         if !completed, (try? check()) != nil, let result = entries.first(where: { $0.command == command })?.result {
@@ -396,4 +485,12 @@ extension Backend: ChildTaskTransferService {}
     func discard(_ command: ChildTaskTransferCommand) async {
         _ = await work { try await journal.discard(command, lease: lease); try check(); try await update(); message = "Saved move history removed. Your tasks are unchanged." }
     }
+}
+
+/// Transient, workspace-bound feedback; command/proof contents remain private.
+struct ChildTaskTransferHistoryNotice: Identifiable {
+    let id = UUID()
+    let scope: ChildTaskFieldClientScope
+    let commandID: String?
+    let message: String
 }

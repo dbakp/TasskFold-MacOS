@@ -7200,3 +7200,15 @@ Each repository independently passes **185 PostgreSQL/RLS checks**, with no adde
 The initial phone cold-return assertion did not scroll to a lazy off-screen receipt; its failure, source/log and hierarchy are retained. A preliminary Mac heading error and the subsequent local unreadable/access-fence guard audit are also retained as superseded findings. Final scope, original-byte export/readback, source fingerprints, build/signature checks and captures are in [discovery evidence](child-adoption-discovery/README.md).
 
 **Still open:** explicit reviewed repairs; normal editable-cache support for opaque payloads; full shared attachment/discussion custody and client shared-workspace gate combinations; genuine account/reauth/secure-storage, window/background/concurrency/VoiceOver and larger-library acceptance; actual Mac original-file Save/readback. The broader migration checkpoint remains To build and everyday use remains disabled. Hosted schema, normal feature flags and all user deferrals are unchanged.
+
+
+## Cross-task subtask move Redo — 31 October 2026
+
+- [x] Build a fresh normal transfer from the confirmed Undo and two fresh task reads; retain original placement and reject changed branches, parents, roots or scopes.
+- [x] Coordinate two windows through the existing encrypted journal, recovering one request identity and keeping exact cold-retry behavior after a lost HTTP reply.
+- [x] Add Redo to saved move recovery and connect newly confirmed moves to the existing native history owner and scoped feedback in each app.
+- [x] Both Core suites pass 44 selected cases; both app builds/signatures pass. iPhone saved/cold and normal task-menu journeys, plus iPad saved/cold at largest text, each pass with exactly four unique operations and exact preserved source/nested fields.
+- [ ] Mac keyboard walkthrough: the Mac is locked. Genuine cloud/account/window/speech and larger-workflow acceptance remains open.
+- [ ] Field-edit and other hierarchy Redo, consistent shared activity, older-data/history mapping and shared file/discussion custody remain. Normal migration/transfer gates stay disabled.
+
+[Evidence and precise scope](transfer-redo/README.md). No server/schema deployment or user-paused provider/rollout/release work is included.

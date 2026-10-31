@@ -384,6 +384,19 @@ final class Workspace {
             self.confirmation?.mixedGroupReview = value.needsReview
         })
     }
+    func invokeChildTransferHistory(_ entry: ChildTaskTransferState.Entry) -> Bool {
+        if completionHistory?.canUndo(key: entry.command.id) == true { completionHistory?.undo(); return true }
+        if completionHistory?.canRedo(key: entry.command.id) == true { completionHistory?.redo(); return true }
+        return false
+    }
+    func rememberChildTransfer(_ entry: ChildTaskTransferState.Entry, scope: ChildTaskFieldClientScope) {
+        guard let manager = undoManager, store.childTaskFieldRecoveryScope == scope else { return }
+        if completionHistory?.manager !== manager { completionHistory = .init(manager: manager) }
+        guard completionHistory?.contains(key: entry.command.id) != true else { return }
+        completionHistory?.record(store.childTransferHistoryStep(entry, scope: scope) { [weak self] notice in
+            self?.confirm(notice.message, undoable: false)
+        })
+    }
     func undoMixedGroup(_ token: MixedTaskListUndo) { guard canUndoMixedGroup(token), let manager = undoManager, manager.canUndo else { return }; manager.undo() }
     private func completeMixedGroup(_ tasks: [Record]) {
         do {
