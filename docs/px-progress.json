@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. Current work is P2.",
-  "focus": "P2 · Subtask list completion, Undo and recovery checked",
-  "latest": "Single-subtask list completion now uses saved commands with receipt-based Undo and direct recovery. Mac, iPhone and iPad Inbox checks pass; original-request retry avoids duplicate changes, and exact metadata survives. Stale recovery warnings, inspector state and a rapid-action read race are fixed. Bulk actions, full Redo/history and broader migration remain unfinished; ordinary use stays disabled.",
+  "focus": "P2 · Atomic bulk subtask completion foundation",
+  "latest": "The bulk foundation applies 1–32 subtask changes together, or leaves the entire selection unchanged. Local database checks pass independently in both repos, including Undo, exact retry, permissions, competing selections and capacity failures. Typed client validation rejects incomplete receipts. Bulk controls and durable group recovery are not connected yet; ordinary use stays disabled.",
   "next": [
-    "Finish bulk/mixed subtask completion and full Redo/history ordering, then indexed/history mapping, attachment/discussion custody and broader scope/lifecycle/workload acceptance before enabling older-work migration.",
+    "Connect durable bulk staging, original-request recovery and receipt-based group Undo to the list controls. Then finish mixed root/subtask selections, full Redo/history, indexed mapping, custody and broader migration acceptance.",
     "Complete repair-review draft persistence and broader account, protected storage, window, background, concurrent work, spoken and larger-library acceptance. Extend original-file checks beyond the accepted local Mac case.",
     "Keep the agreed rollout, provider, distribution, dictation and physical-device deferrals paused."
   ],
@@ -554,7 +554,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Guided repair, exact older metadata, selected-child field editing and single-child list completion/Undo/recovery pass in recorded scope. Bulk actions, full Redo/history, indexed/history mapping, custody and broader checks remain. Ordinary use stays disabled."
+              "detail": "Recorded repair, exact metadata, selected-child fields and single-child completion/Undo/recovery pass. Atomic bulk server/client contracts are checked; bulk controls and group recovery remain to build, followed by mixed actions, Redo/history, custody and broader acceptance. Ordinary use stays disabled."
             },
             {
               "state": "build",
@@ -595,7 +595,8 @@
             "preserving-json/verification.json",
             "child-task-opaque-read/verification.json",
             "child-task-list-fields/verification.json",
-            "child-list-completion/verification.json"
+            "child-list-completion/verification.json",
+            "child-completion-batches/verification.json"
           ],
           "focus": true
         },
@@ -666,6 +667,7 @@
     "PX_CHECKLIST.md": "7d0a8a21840fee74b66d17c1f5ebbc06b07d74cd9202278f6380abb7bf12607f",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",
+    "child-completion-batches/verification.json": "2ec6ab0db18232207cd897ca24d63fa0769d0a32af9f64dadd0b99afdf072fcb",
     "child-list-completion/verification.json": "44bbe137ce3108669564a22ad74abd4d04c843f28ff4460dd66f5da89a31e0b7",
     "child-project-adoption-custody/verification.json": "dd521bee61b5419ee147d51238a833716762311f31bdfd8fa6fe154f8bb563af",
     "child-task-discard-intent/verification.json": "d7316dcf9e69c8c969cd13e44b311d0865fa76b1aef7b50641e4a7c1a6f50f06",

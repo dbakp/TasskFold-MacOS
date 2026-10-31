@@ -629,3 +629,70 @@ enum ChildTaskListRead {
         throw CancellationError()
     }
 }
+
+/// One atomic selection; its group identity is separate from the original,
+/// individually reserved item request identities. No parent tree is sent.
+struct ChildTaskCompletionBatchCommand: ReviewedTeamCommand, CustomStringConvertible, CustomDebugStringConvertible {
+    static let storagePrefix = "child-completion-batch-v1."
+    static let maximumStoredBytes = 524_288
+    static let maximumResponseBytes = 524_288
+    static var invalid: AppFailure { AppFailure(message: "Review this subtask selection again. Your saved work is unchanged.") }
+    let account: String, origin: String, batchID: String
+    let items: [ChildTaskCompletionCommand]
+    var id: String { batchID }
+    var body: [String: JSON] { ["protocol": .number(1), "account": .string(account), "batch_id": .string(batchID), "items": .array(items.map { .object($0.body) })] }
+    var description: String { "Private subtask selection request" }
+    var debugDescription: String { description }
+    init(account: String, origin: String, items: [ChildTaskCompletionCommand], batchID: UUID = UUID()) throws {
+        try self.init(account: account, origin: origin, items: items, storedID: batchID.uuidString.lowercased())
+    }
+    private init(account: String, origin: String, items: [ChildTaskCompletionCommand], storedID: String) throws {
+        try TeamOrganizationValue.scope(account: account, origin: origin)
+        guard origin.utf8.count <= 2048, (1...32).contains(items.count), let id = UUID(uuidString: storedID), storedID == id.uuidString.lowercased() else { throw Self.invalid }
+        var requests = Set<UUID>(), targets = Set<Data>()
+        let action = items[0].body["action"]
+        for item in items {
+            guard item.account == account, item.origin.utf8.elementsEqual(origin.utf8), item.body["action"] == action,
+                  let request = UUID(uuidString: item.id), request != id, requests.insert(request).inserted,
+                  let task = UUID(uuidString: item.body["task_id"]!.text) else { throw Self.invalid }
+            let target = try TaskfoldJSONEncoder().encode([task.uuidString.lowercased(), item.body["node_key"]!.text])
+            guard targets.insert(target).inserted else { throw Self.invalid }
+        }
+        self.account = account; self.origin = origin; self.items = items; batchID = storedID
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        guard try encoder.encode(body).count <= 131_072, try TaskfoldJSONEncoder().encode(self).count <= 500_000 else { throw Self.invalid }
+    }
+    private enum CodingKeys: String, CodingKey { case account, origin, batchID, items }
+    init(from decoder: Decoder) throws {
+        try completionKeys(decoder, ["account", "origin", "batchID", "items"])
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), items: c.decode([ChildTaskCompletionCommand].self, forKey: .items), storedID: c.decode(String.self, forKey: .batchID))
+    }
+    func resolution(_ raw: [String: JSON]) throws -> ChildTaskCompletionBatchResolution {
+        try .init(command: self, raw: raw)
+    }
+}
+struct ChildTaskCompletionBatchResolution: Equatable, Sendable {
+    let raw: [String: JSON]
+    let receipts: [ChildTaskCompletionReceipt]
+    var applied: Bool { raw["outcome"] == .string("applied") }
+    var closed: Bool { raw["outcome"] == .string("closed") }
+    init(command: ChildTaskCompletionBatchCommand, raw: [String: JSON]) throws {
+        guard Set(raw.keys) == ["protocol", "account", "batch_id", "outcome", "receipts", "replayed"],
+              raw["protocol"] == .number(1), raw["account"] == .string(command.account), raw["batch_id"] == .string(command.id),
+              case .bool? = raw["replayed"], case .array(let values)? = raw["receipts"] else { throw ChildTaskCompletionBatchCommand.invalid }
+        switch raw["outcome"] {
+        case .string("closed"):
+            guard values.isEmpty else { throw ChildTaskCompletionBatchCommand.invalid }; receipts = []
+        case .string("applied"):
+            guard values.count == command.items.count else { throw ChildTaskCompletionBatchCommand.invalid }
+            receipts = try zip(command.items, values).map { item, value in
+                guard case .object(let proof) = value else { throw ChildTaskCompletionBatchCommand.invalid }
+                return try item.confirmed(proof)
+            }
+        default: throw ChildTaskCompletionBatchCommand.invalid
+        }
+        self.raw = raw
+    }
+}
+typealias ChildTaskCompletionBatchVault = ReviewedTeamCommandVault<ChildTaskCompletionBatchCommand>

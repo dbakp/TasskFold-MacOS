@@ -33,6 +33,11 @@ try {
     await pg.raw(resolution);
     report.completionResolutionSHA256 = createHash("sha256").update(resolution).digest("hex");
   }
+  if (process.env.TASKFOLD_COMPLETION_BATCH_SQL) {
+    if (!process.argv.includes("--with-completion-resolution")) throw new Error("Batch regression requires completion resolution");
+    const batchSQL = await readFile(process.env.TASKFOLD_COMPLETION_BATCH_SQL, "utf8");
+    await pg.raw(batchSQL); report.completionBatchMigrationSHA256 = createHash("sha256").update(batchSQL).digest("hex");
+  }
   if (process.env.TASKFOLD_STRUCTURE_SQL) {
     const structure = await readFile(process.env.TASKFOLD_STRUCTURE_SQL, "utf8");
     await pg.raw(structure);
