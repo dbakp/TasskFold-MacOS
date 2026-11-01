@@ -598,6 +598,7 @@ enum TaskSelectionPlan {
         for change in childChanges { working[change.recordID]?["subtasks"] = change.fields["subtasks"] ?? .null }
         var deleted = Set<String>(), extras: [Mutation] = []
         var completionIDs: [String: UUID] = [:]
+        var assignmentBudget = TaskAssignmentTree.Budget()
         var prospective = accessibleRoots.map { working[$0.id] ?? $0 }
         let allowedRootFields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "time_zone", "scheduled_at", "deadline_date", "duration_minutes", "assigned_to", "labels", "project_id", "section_id"]
         for id in rootRequests.keys.sorted() {
@@ -611,6 +612,9 @@ enum TaskSelectionPlan {
                     if let field = fields[key], field != .null {
                         guard case .string(let id) = field, !id.isEmpty else { throw failure("Choose a valid project or section.") }
                     }
+                }
+                if let project = fields["project_id"], project != value["project_id"] {
+                    _ = try TaskAssignmentTree.cleared(value["subtasks"], removing: true, budget: &assignmentBudget)
                 }
                 var desired = value
                 for (key, field) in fields { desired[key] = field }

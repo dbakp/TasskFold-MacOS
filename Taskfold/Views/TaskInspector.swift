@@ -75,6 +75,7 @@ struct TaskInspectorForm: View {
     @State private var creationFinished = false
     @State private var discardCreation = false
     @State private var creationFailure: String?
+    @State private var projectChangeFailure: String?
     private var isCreating: Bool { admission?.teamDraft?.kind == .creation }
     @State private var teamDraft: TeamTaskEditorDraft?
     @State private var teamDraftCaptured = false
@@ -131,6 +132,17 @@ struct TaskInspectorForm: View {
         if isCreating { return admission!.source.record["task_generation"] }
         let root = Workspace.subtaskPath(taskID)?.first ?? taskID
         return store.record("tasks", id: root)?["task_generation"] ?? .null
+    }
+    private func projectFailure(_ error: Error) {
+        projectChangeFailure = error.localizedDescription
+        var announcement = AttributedString(error.localizedDescription)
+        announcement.accessibilitySpeechAnnouncementPriority = .high
+        AccessibilityNotification.Announcement(announcement).post()
+    }
+    private func changeTaskProject(_ id: String) {
+        guard editorAvailable else { return }
+        do { let moved = try TaskAssignment.movingDraft(draft, to: id.isEmpty ? .null : .string(id)); projectChangeFailure = nil; draft = moved }
+        catch { projectFailure(error) }
     }
     private func text(_ key: String) -> Binding<String> {
         Binding(get: { draft.string(key) }, set: { draft[key] = $0.isEmpty && ["project_id", "section_id", "due_time", "time_zone"].contains(key) ? .null : .string($0) })
@@ -367,10 +379,11 @@ struct TaskInspectorForm: View {
                     }
                 }
                 if Workspace.subtaskPath(taskID) == nil {
-                Picker("Project", selection: text("project_id")) {
+                Picker("Project", selection: Binding(get: { draft.string("project_id") }, set: changeTaskProject)) {
                     Text("Inbox").tag("")
                     ForEach(store.projects) { Text($0.name).tag($0.id) }
-                }.disabled(isTeamTask).onChange(of: draft.string("project_id")) { old, new in if old != new && new != original.string("project_id") { draft = Workspace.clearingAssignments(draft); draft["section_id"] = .null } }
+                }.disabled(isTeamTask)
+                if let projectChangeFailure { Text(projectChangeFailure).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("taskProjectMoveFailure") }
                 if !draft.string("project_id").isEmpty {
                     Picker("Section", selection: text("section_id")) {
                         Text("No section").tag("")
@@ -635,9 +648,8 @@ struct TaskInspectorForm: View {
         guard editorAvailable,workspaceBinding?.matches(account: store.userID, generation: store.workspaceGeneration) == true, (current != nil || isCreating) else { return }
         guard QuickReferenceCompletion(draft.title, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices)).range == nil else { titleParsingBaseline = draft.title; return }
         guard let parsed = suggestions, parsed.hasSuggestions else { titleParsingBaseline = draft.title; return }
-        withAnimation(workspace.layout) {
-            draft = parsed.applying(to: draft)
-        }
+        do { let applied = try parsed.applyingChecked(to: draft); projectChangeFailure = nil; withAnimation(workspace.layout) { draft = applied } }
+        catch { projectFailure(error); return }
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.name == value.text || $0.id == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
         }
@@ -648,7 +660,8 @@ struct TaskInspectorForm: View {
         let referenceGroups: Set<String> = ["project_id", "section_id", "assigned_to", "labels"]
         let excluded = Set(QuickEntry.groups).subtracting(referenceGroups).union(declined).union(quickExclusions)
         let parsed = QuickEntry(draft.title, disabled: excluded, context: workspace.quickEntryContext(project: workspace.assignmentProject(draft, contextID: taskID)).choosingReferences(referenceChoices), task: draft)
-        draft = parsed.applying(to: draft)
+        do { draft = try parsed.applyingChecked(to: draft); projectChangeFailure = nil }
+        catch { projectFailure(error); return }
         for value in parsed.updates["labels"]?.list ?? [] where !store.labels.contains(where: { $0.id == value.text || $0.name == value.text }) {
             _ = store.save("labels", Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(store.userID), "name": value, "color": .string("#e31e4b")]))
         }

@@ -27,13 +27,13 @@ final class PersonalTaskMoveTests: XCTestCase {
     }
     func testAssignmentNormalizationPreservesSparseNullAndUnknownFields() throws {
         let tree: JSON = .array([.object(["id": .string("one"), "title": .string("Parent"), "assigned_to": .string(account), "subtasks": .array([.object(["id": .string("nested"), "title": .string("Nested"), "subtasks": .null])]), "future": .object(["opaque": .array([.null, .bool(false)])])]), .object(["id": .string("sparse"), "title": .string("Note")])])
-        let cleared = PersonalTaskMove.clearAssignments(tree)
+        let cleared = try PersonalTaskMove.clearAssignments(tree)
         XCTAssertNil(cleared.list[0].object["assigned_to"])
         XCTAssertEqual(cleared.list[0].object["subtasks"]?.list[0].object["subtasks"], .null)
         XCTAssertNil(cleared.list[1].object["subtasks"])
         XCTAssertEqual(cleared.list[0].object["future"], tree.list[0].object["future"])
-        XCTAssertEqual(PersonalTaskMove.clearAssignments(.null), .null)
-        XCTAssertEqual(PersonalTaskMove.clearAssignments(.array([])), .array([]))
+        XCTAssertEqual(try PersonalTaskMove.clearAssignments(.null), .null)
+        XCTAssertEqual(try PersonalTaskMove.clearAssignments(.array([])), .array([]))
         try TeamTaskMoveTree.validate(cleared)
     }
     func testMarkerSurvivesQueuePersistenceAndLegacyQueuesStayUnmarked() throws {
@@ -45,7 +45,7 @@ final class PersonalTaskMoveTests: XCTestCase {
     func testMoveNormalizationKeepsIdentityAndSeparatesExplicitAssignment() throws {
         var old = Record.task(user: account); old["id"] = .string(taskID); old["project_id"] = .string(source); old["subtasks"] = .null
         var edit = move(); edit.fields["assigned_to"] = .string(account)
-        let changes = TaskAssignment.mutations(edit, existing: old)
+        let changes = try TaskAssignment.mutations(edit, existing: old)
         XCTAssertEqual(changes.count, 2); XCTAssertEqual(changes[0].id, edit.id); XCTAssertEqual(changes[0].personalTaskMove, true)
         XCTAssertNil(changes[0].fields["subtasks"]); XCTAssertNil(changes[0].fields["assigned_to"])
         XCTAssertNil(changes[1].personalTaskMove); XCTAssertNotEqual(changes[1].id, edit.id)
@@ -54,7 +54,7 @@ final class PersonalTaskMoveTests: XCTestCase {
         var old = Record.task(user: account); old["id"] = .string(taskID); old["project_id"] = .string(source); old["assigned_to"] = .string(account)
         old["task_generation"] = .null
         old["subtasks"] = .array([.object(["id": .string("one"), "title": .string("Newest child title"), "description": .string("Never copy this into move wire data"), "assigned_to": .string(account), "subtasks": .null])])
-        let changes = TaskAssignment.mutations(move(), existing: old)
+        let changes = try TaskAssignment.mutations(move(), existing: old)
         XCTAssertEqual(changes.count, 1); XCTAssertNil(changes[0].fields["subtasks"]); XCTAssertNil(changes[0].fields["assigned_to"])
         XCTAssertFalse(String(decoding: try JSONEncoder().encode(PersonalTaskMove.body(changes[0], account: account)), as: UTF8.self).contains("Never copy"))
         var snapshot = Snapshot(); snapshot.tables["tasks"] = [old]; snapshot.apply(changes[0])
@@ -84,7 +84,7 @@ final class PersonalTaskMoveTests: XCTestCase {
         var old = Record.task(user: account); old["id"] = .string(taskID); old["project_id"] = .string(source); old["task_generation"] = .null
         old["section_id"] = .string("a5555555-5555-4555-8555-555555555555"); old["assigned_to"] = .string(account); old["subtasks"] = .null
         var snapshot = Snapshot(); snapshot.tables["tasks"] = [old]
-        let original = TaskAssignment.mutations(move(), existing: old)[0]
+        let original = try TaskAssignment.mutations(move(), existing: old)[0]
         let history = EditHistory(changes: [original], snapshot: snapshot)
         snapshot.apply(original)
         XCTAssertEqual(snapshot.tables["tasks"]?[0]["section_id"], .null)
@@ -92,7 +92,7 @@ final class PersonalTaskMoveTests: XCTestCase {
         XCTAssertEqual(undo.personalTaskMove, true); XCTAssertNotEqual(undo.id, original.id)
         XCTAssertEqual(undo.fields["section_id"], old["section_id"]); XCTAssertEqual(undo.fields["assigned_to"], old["assigned_to"])
         XCTAssertEqual(undo.baseline?["section_id"], .null); XCTAssertEqual(undo.baseline?["assigned_to"], .null)
-        let steps = TaskAssignment.mutations(undo, existing: snapshot.tables["tasks"]?[0])
+        let steps = try TaskAssignment.mutations(undo, existing: snapshot.tables["tasks"]?[0])
         XCTAssertEqual(steps.count, 2); XCTAssertEqual(steps[0].fields["section_id"], old["section_id"])
         for step in steps { snapshot.apply(TaskCompletionRevision.capturing(step, existing: snapshot.tables["tasks"]?[0])) }
         XCTAssertEqual(snapshot.tables["tasks"]?[0]["project_id"], old["project_id"]); XCTAssertEqual(snapshot.tables["tasks"]?[0]["section_id"], old["section_id"]); XCTAssertEqual(snapshot.tables["tasks"]?[0]["assigned_to"], old["assigned_to"])
@@ -110,7 +110,7 @@ final class PersonalTaskMoveTests: XCTestCase {
         XCTAssertEqual(try PersonalTaskMove.body(value, account: account), body)
         value.id = UUID(); XCTAssertNotEqual(try PersonalTaskMove.body(value, account: account)["request_id"], body["request_id"])
     }
-    func testMalformedOrUnmarkedCommandsRefuseBeforeTransport() {
+    func testMalformedOrUnmarkedCommandsRefuseBeforeTransport() throws {
         let original = move()
         var invalid: [Mutation] = []
         var value = original; value.personalTaskMove = nil; invalid.append(value)

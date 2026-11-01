@@ -203,20 +203,20 @@ final class BackupTests: XCTestCase {
         let plan = try backup().plan(current: current, account: owner, policy: .backupValues)
         let updates = plan.changes.filter { $0.table == "tasks" }
         XCTAssertEqual(updates.count, 2)
-        let moves = TaskAssignment.mutations(updates[0], existing: current.tables["tasks"]![0])
+        let moves = try TaskAssignment.mutations(updates[0], existing: current.tables["tasks"]![0])
         XCTAssertEqual(moves[0].fields["assigned_to"], .null)
         XCTAssertEqual(moves.count, 1)
         XCTAssertEqual(updates[1].fields["assigned_to"], .string(owner))
         XCTAssertEqual(moves[0].baseline?["assigned_to"], .string(owner))
         XCTAssertEqual(moves[0].baseline?["subtasks"], current.tables["tasks"]![0]["subtasks"])
         XCTAssertEqual(updates[1].fields["subtasks"], fixture().tables["tasks"]![0]["subtasks"])
-        XCTAssertEqual(updates[1].baseline?["subtasks"], TaskAssignment.clearChildren(fixture().tables["tasks"]![0]["subtasks"]))
+        XCTAssertEqual(updates[1].baseline?["subtasks"], try TaskAssignment.clearChildren(fixture().tables["tasks"]![0]["subtasks"]))
     }
 
     func testProjectMoveDoesNotRepeatAnAlreadyRestoredRootAssignment() throws {
         var current = fixture(); current.tables["tasks"]![0]["project_id"] = .string("88888888-8888-4888-8888-888888888888"); current.tables["tasks"]![0]["assigned_to"] = .string(other)
         let updates = try backup().plan(current: current, account: owner, policy: .backupValues).changes.filter { $0.table == "tasks" }
-        let moves = TaskAssignment.mutations(updates[0], existing: current.tables["tasks"]![0])
+        let moves = try TaskAssignment.mutations(updates[0], existing: current.tables["tasks"]![0])
         XCTAssertEqual(moves.count, 2); XCTAssertEqual(moves[1].fields["assigned_to"], .string(owner))
         XCTAssertNil(updates[1].fields["assigned_to"]); XCTAssertNotNil(updates[1].fields["subtasks"])
     }

@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 1 November 2026 · Assignment clearing preserves checklist source
+
+Project changes now clear incompatible assignments without flattening preserved child objects, exact metadata or legacy text. Both pickers and quick-entry writes prepare a complete draft before publishing; unsupported child structures refuse unchanged with an inline/spoken error. Personal move requests omit assignment-only historical trees and their baselines, retaining newer child notes. Each repository passes 187 focused Core checks and signed app/runner builds. New picker/speech runtime acceptance and complex recipient/history semantics remain open; wider migration stays gated. [Scoped evidence](assignment-tree-preservation/README.md).
+
 ## 31 October 2026 · Cross-task subtask move Redo
 
 Saved move recovery now implements guarded Redo, and newly confirmed actions integrate with the window’s existing history bridge. Both Core suites pass 44 selected checks and both apps build/sign. Mobile saved/cold and ordinary task-menu journeys pass; the Mac keyboard walkthrough remains unverified while the Mac is locked. The normal transfer/migration gates stay off. [Scoped evidence](transfer-redo/README.md).

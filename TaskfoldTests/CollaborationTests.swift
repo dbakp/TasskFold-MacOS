@@ -25,18 +25,18 @@ final class CollaborationTests: XCTestCase {
         XCTAssertEqual(member?.string("display_name"), "Morgan")
         XCTAssertEqual(member?.string("avatar_url"), "https://example.com/custom.jpg")
     }
-    func testProjectMoveClearsOldAssignmentsAndQueuesNewMemberAfterMove() {
+    func testProjectMoveClearsOldAssignmentsAndQueuesNewMemberAfterMove() throws {
         let old = Record(["id": .string("task"), "project_id": .string("a"), "assigned_to": .string("old-person"), "subtasks": .array([.object(["title": .string("Child"), "assigned_to": .string("old-person")])])])
         var change = Mutation(table: "tasks", recordID: "task", method: "PATCH", fields: ["project_id": .string("b"), "assigned_to": .string("new-person")])
-        let mutations = TaskAssignment.mutations(change, existing: old)
+        let mutations = try TaskAssignment.mutations(change, existing: old)
         XCTAssertEqual(mutations.count, 2)
         XCTAssertEqual(mutations[0].fields["assigned_to"], .null)
         XCTAssertEqual(mutations[0].fields["subtasks"]?.list.first?.object["assigned_to"], .null)
         XCTAssertEqual(mutations[1].fields, ["assigned_to": .string("new-person")])
         XCTAssertEqual(mutations[1].baseline, ["assigned_to": .null])
         change.fields = ["project_id": .null]
-        XCTAssertEqual(TaskAssignment.mutations(change, existing: old).count, 1)
-        XCTAssertEqual(TaskAssignment.mutations(change, existing: old)[0].fields["assigned_to"], .null)
+        XCTAssertEqual(try TaskAssignment.mutations(change, existing: old).count, 1)
+        XCTAssertEqual(try TaskAssignment.mutations(change, existing: old)[0].fields["assigned_to"], .null)
     }
     func json(_ string: String) throws -> JSON { try JSONDecoder().decode(JSON.self, from: Data(string.utf8)) }
     func testConflictResolutionPreservesIndependentCommentsAndNestedEdits() throws {

@@ -455,7 +455,7 @@ extension WorkspaceBackup {
                             values.contains { value in let child = Record(value.object); return !child.string("assigned_to").isEmpty || hasAssignment(child["subtasks"].list) }
                         }
                         if hasAssignment(row["subtasks"].list) { assignments["subtasks"] = row["subtasks"] }
-                        if !assignments.isEmpty { result.changes.append(Mutation(table: table, recordID: row.id, method: "PATCH", fields: assignments, baseline: Dictionary(uniqueKeysWithValues: assignments.keys.map { ($0, $0 == "assigned_to" ? JSON.null : TaskAssignment.clearChildren(row["subtasks"])) }))) }
+                        if !assignments.isEmpty { result.changes.append(Mutation(table: table, recordID: row.id, method: "PATCH", fields: assignments, baseline: Dictionary(uniqueKeysWithValues: try assignments.keys.map { ($0, $0 == "assigned_to" ? JSON.null : try TaskAssignment.clearChildren(row["subtasks"])) }))) }
                     }
                     result.updated += 1
                 } else {

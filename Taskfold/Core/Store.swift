@@ -2455,7 +2455,9 @@ final class Store {
             func normalizationRecord(_ table: String, id: String) -> Record? { normalizationRows[table]?[id] }
             let normalizationLabels = orderingCommands.contains { $0.table == "tasks" && $0.method != "DELETE" } ? labels : []
             let normalizationCache = nativeConversationTeamCache
-            changes = orderingCommands.flatMap { TaskAssignment.mutations($0, existing: normalizationRecord($0.table, id: $0.recordID)) }.map { change in
+            do {
+            var assignmentBudget = TaskAssignmentTree.Budget()
+            changes = try orderingCommands.flatMap { try TaskAssignment.mutations($0, existing: normalizationRecord($0.table, id: $0.recordID), budget: &assignmentBudget) }.map { change in
                 var change = change
                 if change.table == "tasks", change.method != "DELETE" {
                     change.fields = TaskPlanning.fields(change.fields, existing: normalizationRecord("tasks", id: change.recordID))
@@ -2477,6 +2479,7 @@ final class Store {
                 }
                 return change
             }
+            } catch { self.error = error.localizedDescription; return false }
         }
         #if DEBUG
         workflowPreparedNormalizationUsed = admittedHistory != nil
@@ -5249,10 +5252,8 @@ extension Store {
         if let related = command.scope.undoes, let original = state.before[related] {
             for key in ["section_id", "assigned_to", "subtasks"] { after[key] = original[key] }
         } else {
-            func clear(_ value: JSON) -> JSON {
-                .array(value.list.map { child in var row = child.object; row.removeValue(forKey: "assigned_to"); if let nested = row["subtasks"] { row["subtasks"] = clear(nested) }; return .object(row) })
-            }
-            after["assigned_to"] = .null; after["section_id"] = .null; after["subtasks"] = clear(after["subtasks"])
+            let children = try PersonalTaskMove.clearAssignments(after["subtasks"])
+            after["assigned_to"] = .null; after["section_id"] = .null; after["subtasks"] = children
         }
         var raw = command.scope.body; raw.removeValue(forKey: "undoes")
         raw.merge(["protocol": .number(1), "account": .string(command.account), "request_id": .string(command.id), "operation": .string(command.operation), "related_request": command.scope.undoes.map(JSON.string) ?? .null, "replayed": .bool(false), "task": .object(after.fields)]) { _, new in new }

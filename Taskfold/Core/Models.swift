@@ -668,7 +668,7 @@ struct Snapshot: Codable, Equatable, Sendable {
         }
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
-            var projected = PersonalTaskMove.projectedFields(change, onto: rows[i])
+            guard var projected = try? PersonalTaskMove.projectedFields(change, onto: rows[i]) else { return }
             if change.table == "tasks", change.method == "PATCH", let base = change.baseline?["subtasks"], let desired = projected["subtasks"] {
                 // Keep the queued intent intact while retaining already observed child edits locally.
                 projected["subtasks"] = TaskEdit.keepingLocal(field: "subtasks", base: base, desired: desired, remote: rows[i]["subtasks"])
@@ -1111,11 +1111,16 @@ struct QuickEntry {
 
     /// Accepted references are applied together. Moving projects clears incompatible destinations
     /// and assignments, while additional labels preserve the task's existing labels.
-    func applying(to task: Record) -> Record {
+    func applying(to task: Record) -> Record { (try? applyingChecked(to: task)) ?? task }
+    func applyingChecked(to task: Record) throws -> Record { try applying(to: task, clearChildren: true) }
+    /// Read-only reminder/assignee chips do not rebuild a checklist on every keystroke.
+    /// This field preview is never a replacement task; writes use applyingChecked.
+    func fieldPreview(to task: Record) -> Record { (try? applying(to: task, clearChildren: false)) ?? task }
+    private func applying(to task: Record, clearChildren: Bool) throws -> Record {
         var result = task
         if let project = updates["project_id"], project != task["project_id"] {
-            result["section_id"] = .null; result["assigned_to"] = .null
-            if !result["subtasks"].list.isEmpty { result["subtasks"] = TaskAssignment.clearChildren(result["subtasks"]) }
+            if clearChildren { result = try TaskAssignment.movingDraft(result, to: project) }
+            else { result["assigned_to"] = .null; result["section_id"] = .null }
         }
         result["title"] = .string(title.trimmingCharacters(in: .whitespacesAndNewlines))
         for (key, value) in updates where key != "labels" && key != "reminder_specs" { result[key] = value }
@@ -1319,6 +1324,7 @@ struct EditHistory: Sendable {
                 continue
             }
             if let old = current.tables[change.table]?.first(where: { $0.id == change.recordID }) {
+                guard let projected = try? PersonalTaskMove.projectedFields(change, onto: old) else { undo = []; redo = []; return }
                 var fields = change.method == "DELETE" ? old.fields : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old.fields[$0] ?? .null) })
                 if change.personalTaskMove == true, change.method == "PATCH", change.fields["project_id"] != old["project_id"] {
                     fields["assigned_to"] = old["assigned_to"]; fields["section_id"] = old["section_id"]
@@ -1326,7 +1332,7 @@ struct EditHistory: Sendable {
                 if change.table == "tasks", change.method == "PATCH", change.fields["is_heading"] != nil, old["is_heading"] == .null {
                     fields["is_heading"] = .bool(false) // An explicit ordinary task, not removal of an unknown field.
                 }
-                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(PersonalTaskMove.projectedFields(change, onto: old), to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope, personalTaskMove: change.personalTaskMove))
+                inverse.append(Mutation(table: change.table, recordID: change.recordID, method: change.method == "DELETE" ? "POST" : "PATCH", fields: fields, baseline: change.method == "DELETE" ? nil : (change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: fields, from: TaskCompletionRevision.applying(projected, to: old)) : change.fields), insertOnly: change.method == "DELETE" && change.table == "tasks" ? true : nil, teamTaskScope: change.teamTaskScope, personalTaskMove: change.personalTaskMove))
                 var forward = change
                 if change.method == "PATCH" { forward.baseline = change.table == "tasks" ? TaskCompletionRevision.editBaseline(for: change.fields, from: old) : Dictionary(uniqueKeysWithValues: change.fields.keys.map { ($0, old[$0]) }) }
                 if let scope = change.teamTaskScope { forward.baseline?["project_id"] = .string(scope.project) }
@@ -1767,17 +1773,31 @@ enum TaskAssignment {
         }
         return people.values.sorted { $0.string("display_name").localizedStandardCompare($1.string("display_name")) == .orderedAscending }
     }
-    static func clearChildren(_ value: JSON) -> JSON {
-        .array(value.list.map { child in
-            var fields = child.object
-            fields["assigned_to"] = .null
-            if fields["subtasks"] != nil { fields["subtasks"] = clearChildren(fields["subtasks"]!) }
-            return .object(fields)
-        })
+    static func clearChildren(_ value: JSON) throws -> JSON {
+        try TaskAssignmentTree.cleared(value, removing: false)
+    }
+    static func clearingAssignments(_ task: Record, budget: inout TaskAssignmentTree.Budget) throws -> Record {
+        var result = task
+        if let tree = task.fields["subtasks"] { result["subtasks"] = try TaskAssignmentTree.cleared(tree, removing: false, budget: &budget) }
+        result["assigned_to"] = .null
+        return result
+    }
+    static func movingDraft(_ task: Record, to project: JSON, budget: inout TaskAssignmentTree.Budget) throws -> Record {
+        guard project == .null || { if case .string(let id) = project { return !id.isEmpty }; return false }() else { throw TaskAssignmentTree.invalid }
+        guard !AuthoredValueComparison.exactJSON(task["project_id"], project) else { return task }
+        var result = try clearingAssignments(task, budget: &budget)
+        result["project_id"] = project; result["section_id"] = .null
+        return result
+    }
+    static func movingDraft(_ task: Record, to project: JSON) throws -> Record {
+        var budget = TaskAssignmentTree.Budget(); return try movingDraft(task, to: project, budget: &budget)
     }
     /// The server clears assignments on a project move. Send an explicit new
     /// assignment after the move so both writes obey the existing membership guard.
-    static func mutations(_ change: Mutation, existing: Record?) -> [Mutation] {
+    static func mutations(_ change: Mutation, existing: Record?) throws -> [Mutation] {
+        var budget = TaskAssignmentTree.Budget(); return try mutations(change, existing: existing, budget: &budget)
+    }
+    static func mutations(_ change: Mutation, existing: Record?, budget: inout TaskAssignmentTree.Budget) throws -> [Mutation] {
         guard change.table == "tasks", change.method == "PATCH", let existing,
               let project = change.fields["project_id"], project != existing["project_id"] else { return [change] }
         var move = change
@@ -1785,13 +1805,24 @@ enum TaskAssignment {
             // The row-first server clears current assignments. Do not upload
             // an old whole checklist just to move a root; predict it locally.
             move.fields.removeValue(forKey: "assigned_to")
-            if let authored = change.fields["subtasks"] { move.fields["subtasks"] = PersonalTaskMove.clearAssignments(authored) }
+            if let authored = change.fields["subtasks"] {
+                let cleared = try TaskAssignmentTree.cleared(authored, removing: true, budget: &budget)
+                let baseline = try TaskAssignmentTree.cleared(change.baseline?["subtasks"] ?? existing["subtasks"], removing: true, budget: &budget)
+                if AuthoredValueComparison.exactJSON(cleared, baseline) {
+                    // The editor only cleared assignments. Let the server clear its
+                    // current tree, including newer child edits absent from the draft.
+                    move.fields.removeValue(forKey: "subtasks")
+                    move.baseline?.removeValue(forKey: "subtasks")
+                    _ = try TaskAssignmentTree.cleared(existing["subtasks"], removing: true, budget: &budget)
+                } else { move.fields["subtasks"] = cleared }
+            } else { _ = try TaskAssignmentTree.cleared(existing["subtasks"], removing: true, budget: &budget) }
         } else {
             move.fields["assigned_to"] = .null
-            move.fields["subtasks"] = clearChildren(change.fields["subtasks"] ?? existing["subtasks"])
+            if move.fields["section_id"] == nil { move.fields["section_id"] = .null }
+            move.fields["subtasks"] = try TaskAssignmentTree.cleared(change.fields["subtasks"] ?? existing["subtasks"], removing: false, budget: &budget)
         }
         if move.baseline != nil {
-            for field in ["assigned_to", "subtasks"] where move.fields[field] != nil && move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
+            for field in ["assigned_to", "subtasks", "section_id"] where move.fields[field] != nil && move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
         }
         if let person = change.fields["assigned_to"], !person.text.isEmpty, !project.text.isEmpty {
             return [move, Mutation(table: "tasks", recordID: change.recordID, method: "PATCH", fields: ["assigned_to": person], baseline: ["assigned_to": .null])]

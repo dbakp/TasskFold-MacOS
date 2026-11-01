@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · iPad history recovery accepted; preserve legacy checklist data",
-  "latest": "The existing-history iPad workflow now passes against the real local database, including cold review, a lost-reply save, original-request recovery and exact native export/readback. Source-aware child indexing is implemented. Two legacy transforms now keep untouched preserved/text/number siblings and refuse unsafe indentation instead of replacing original data. Each repo passes 219 focused checks and final signed app/runner builds. Broader legacy/cache integration, opaque-row native acceptance, complex histories, Mac/wider acceptance and shared custody remain open; normal use stays disabled.",
+  "focus": "P2 · Preserve checklist data when changing projects",
+  "latest": "Both clients now clear assignments without flattening preserved checklist data. Project pickers and checked quick-entry writes prepare the full change before replacing a draft; unsupported shapes refuse unchanged. Personal moves omit assignment-only old checklist payloads, retaining newer child notes. Core verification and app builds are recorded separately from native picker/speech acceptance. Wider migration, complex histories, Mac acceptance and shared custody remain open; normal use stays disabled.",
   "next": [
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
-    "Continue the remaining legacy-transform audit, including assignment clearing, and finish broader cache/editor integration and complex recipient/recurrence histories. Indexed reads/private originals and the two protected legacy transforms now have scoped core/build proof.",
+    "Accept the new project-picker refusal and assignment-clearing behavior natively, then continue broader legacy/cache/editor integration and complex recipient/recurrence histories. Assignment clearing now has bounded, full-source Core proof; wider migration remains open.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
@@ -559,7 +559,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Existing-history review/save/lost-reply recovery/exact export has iPhone and iPad native proof in the recorded ordinary-data scope. Preserved fields survive private drafts and indexed cold reads/actions; two legacy edit/indent data-loss paths are fixed (core/build). Broader legacy/cache/editor integration, complex histories, Mac/wider native and shared custody remain open; normal use stays disabled.",
+              "detail": "Existing-history review/save/lost-reply recovery/exact export has scoped iPhone/iPad native proof. Private drafts, indexed reads and legacy edit/indent/assignment transforms preserve source fields (Core/build); new project-picker runtime/speech checks remain. Broader cache/editor integration, complex histories, Mac/wider native and shared custody remain open; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -828,7 +828,9 @@
     "child-copy-mapping-native/README.md",
     "child-copy-mapping-native/ipad-verification.json",
     "legacy-child-preservation/README.md",
-    "legacy-child-preservation/verification.json"
+    "legacy-child-preservation/verification.json",
+    "assignment-tree-preservation/README.md",
+    "assignment-tree-preservation/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
@@ -838,6 +840,8 @@
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
+    "assignment-tree-preservation/README.md": "3e122f1f8409f577877f09c56749f6866dbb8b12dff1ec13b1ff4fb59db42c2d",
+    "assignment-tree-preservation/verification.json": "fd496b987e0387a5e8d9ee3a3624e6f141d24cab66840ed3977170a6e0770889",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",
     "child-bulk-list-completion/verification.json": "02faef41d645b895990ec194507da81396d352a430a6c30f92fb48fbb6929026",

@@ -78,7 +78,7 @@ final class InboxReviewTests: XCTestCase {
         row["subtasks"] = .array([.object(["id": .string("child"), "title": .string("Child"), "assigned_to": .string("old-member")])])
         let move = try InboxReviewRequest.move(row, to: "project")
         XCTAssertEqual(Set(move.fields.keys), ["project_id", "section_id"])
-        let changes = TaskAssignment.mutations(move, existing: row).map { change -> Mutation in
+        let changes = try TaskAssignment.mutations(move, existing: row).map { change -> Mutation in
             var value = change; value.fields = TaskPlanning.fields(value.fields, existing: row); return value
         }
         let original = Snapshot(tables: ["tasks": [row]]), history = EditHistory(changes: changes, snapshot: original)

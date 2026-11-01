@@ -1,5 +1,44 @@
 import Foundation
 
+/// Assignment changes operate on full source objects, never display projections.
+/// One budget may cover an entire selection before any mutation is published.
+enum TaskAssignmentTree {
+    struct Budget { var nodes = 0; var rawBytes = 0 }
+    static var invalid: AppFailure { AppFailure(message: "Review this task’s checklist before changing its project. Your task is unchanged.") }
+    static func cleared(_ tree: JSON, removing: Bool, budget: inout Budget) throws -> JSON {
+        func list(_ value: JSON, depth: Int, budget: inout Budget) throws -> JSON {
+            if value == .null { return value }
+            guard depth <= SubtaskTree.readableDepth, case .array(let rows) = value else { throw invalid }
+            return .array(try rows.map { source in
+                budget.nodes += 1
+                guard budget.nodes <= TaskHierarchyIndex.maximumItems else { throw invalid }
+                // Legacy text rows have no assignment and remain text.
+                if case .string = source { return source }
+                let fields: [String: JSON]
+                switch source {
+                case .object(let values): fields = values
+                case .preserved(let raw) where raw.kind == .object:
+                    guard raw.data.count <= TaskHierarchyIndex.maximumPreservedProjectionBytes - budget.rawBytes else { throw invalid }
+                    budget.rawBytes += raw.data.count
+                    fields = try source.fieldEditingProjection()
+                default: throw invalid
+                }
+                var changes: [String: JSON] = removing ? [:] : ["assigned_to": .null]
+                if let children = fields["subtasks"], children != .null {
+                    changes["subtasks"] = try list(children, depth: depth + 1, budget: &budget)
+                }
+                return try source.editingASCIIFields(changes, removing: removing ? ["assigned_to"] : [])
+            })
+        }
+        do { return try list(tree, depth: 0, budget: &budget) }
+        catch { throw invalid }
+    }
+    static func cleared(_ tree: JSON, removing: Bool) throws -> JSON {
+        var budget = Budget(); return try cleared(tree, removing: removing, budget: &budget)
+    }
+}
+
+
 /// A routine personal move stays in the existing queue and picker. Its saved
 /// request identity certifies retry without projecting historical task contents.
 enum PersonalTaskMove {
@@ -8,22 +47,16 @@ enum PersonalTaskMove {
         guard change.personalTaskMove == true else { return change }
         var action = change; action.id = UUID(); return action
     }
-    static func clearAssignments(_ tree: JSON) -> JSON {
-        guard case .array(let rows) = tree else { return tree }
-        return .array(rows.map { item in
-            guard case .object(var fields) = item else { return item }
-            fields.removeValue(forKey: "assigned_to")
-            if case .array? = fields["subtasks"] { fields["subtasks"] = clearAssignments(fields["subtasks"]!) }
-            return .object(fields)
-        })
+    static func clearAssignments(_ tree: JSON) throws -> JSON {
+        try TaskAssignmentTree.cleared(tree, removing: true)
     }
-    static func projectedFields(_ change: Mutation, onto old: Record) -> [String: JSON] {
+    static func projectedFields(_ change: Mutation, onto old: Record) throws -> [String: JSON] {
         var fields = change.fields
         if change.personalTaskMove == true, change.table == "tasks", change.method == "PATCH",
            let destination = fields["project_id"], destination != old["project_id"] {
             fields["assigned_to"] = .null
             if fields["section_id"] == nil { fields["section_id"] = .null }
-            if fields["subtasks"] == nil { fields["subtasks"] = clearAssignments(old["subtasks"]) }
+            fields["subtasks"] = try clearAssignments(fields["subtasks"] ?? old["subtasks"])
         }
         return fields
     }

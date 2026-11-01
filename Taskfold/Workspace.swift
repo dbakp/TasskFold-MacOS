@@ -1063,12 +1063,17 @@ extension Workspace {
     func updateTasks(_ ids: Set<String>, fields: [String: JSON], name: String) -> Bool {
         if hierarchyPresentation { return runSelection(ids, name: name, action: { _ in .patch(fields) }) }
         var roots: [String: Record] = [:]
+        var assignmentBudget = TaskAssignmentTree.Budget()
         for id in ids.sorted(by: { taskDepth($0) < taskDepth($1) }) {
-            guard var task = taskRecord(id) else { continue }
-            if let project = fields["project_id"], project != task["project_id"] { task = Self.clearingAssignments(task) }
+            guard var task = taskRecord(id) else { store.error = "A selected task is no longer available. Select the tasks again."; return false }
+            if let project = fields["project_id"], project != task["project_id"] {
+                do { task = try TaskAssignment.movingDraft(task, to: project, budget: &assignmentBudget) }
+                catch { store.error = error.localizedDescription; return false }
+            }
             for (key, value) in fields { task[key] = value }
             if let path = Self.subtaskPath(id), let root = roots[path[0]] ?? store.record("tasks", id: path[0]) {
-                roots[path[0]] = Self.replacing(root, path: Array(path.dropFirst()), value: task)
+                guard let changed = Self.replacing(root, path: Array(path.dropFirst()), value: task) else { store.error = "A selected subtask changed. Select the tasks again."; return false }
+                roots[path[0]] = changed
             } else { roots[id] = task }
         }
         let changes = roots.values.compactMap { record -> Mutation? in

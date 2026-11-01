@@ -8,14 +8,6 @@ import UIKit
 #endif
 
 extension Workspace {
-    static func clearingAssignments(_ task: Record) -> Record {
-        var result = task; result["assigned_to"] = .null
-        if !task["subtasks"].list.isEmpty {
-            result["subtasks"] = .array(task["subtasks"].list.map { .object(clearingAssignments(Record($0.object)).fields) })
-        }
-        return result
-    }
-
     func rootTask(_ id: String) -> Record? {
         store.record("tasks", id: Self.subtaskPath(id)?.first ?? id)
     }

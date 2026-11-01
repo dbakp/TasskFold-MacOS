@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "sourceBaselineCommit": "c63a3290aca03f73922a9b188b20430eb8c5b6fa",
+  "sourceProof": {
+    "Taskfold/Collaboration.swift": {
+      "sourceSHA256": "d71d620c64f5fa8d8162ad3c095543a5cda112bd4d92bfd86f7cef4c097acd96",
+      "hostSHA256": "d71d620c64f5fa8d8162ad3c095543a5cda112bd4d92bfd86f7cef4c097acd96",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Backups.swift": {
+      "sourceSHA256": "f0564ced9ce10e5acbc24fecd7d58707add06325009093d82215cca568804ce7",
+      "hostSHA256": "c1c28001090511bd2091a5ab40d2b0dbb533c9b40fa857d9d4ce4bb3b87f78b2",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Models.swift": {
+      "sourceSHA256": "9591d1868f0c8b3b0b7abd46b959d06f8bc96930eaaa9a175cfc04d95bc04b68",
+      "hostSHA256": "9591d1868f0c8b3b0b7abd46b959d06f8bc96930eaaa9a175cfc04d95bc04b68",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "f777bec452a0b9c4dbaab4993797f85bdea19dbf05f9611565ea4387ef5f1a98",
+      "hostSHA256": "3679481aa32b903d705fb349d9effbd93a28f48f77e18a384dd8bdddbebdf1ed",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/SubtaskTree.swift": {
+      "sourceSHA256": "d611c4c5164ac0fa95aaeec8a46ccb3f230190395f8eb0e6be7c65e74ca2690e",
+      "hostSHA256": "d611c4c5164ac0fa95aaeec8a46ccb3f230190395f8eb0e6be7c65e74ca2690e",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/TeamTaskMove.swift": {
+      "sourceSHA256": "1d8a772667fc320a1614f1d467615a25507596a11de98024d5294571884c3a41",
+      "hostSHA256": "1d8a772667fc320a1614f1d467615a25507596a11de98024d5294571884c3a41",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "sourceSHA256": "e297c75cdb47aa2e1aa7a2ea2ee11471a66d8ccd8e662031dff507b6c7a25840",
+      "hostSHA256": "e297c75cdb47aa2e1aa7a2ea2ee11471a66d8ccd8e662031dff507b6c7a25840",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Views/TaskListView.swift": {
+      "sourceSHA256": "bb5cbc9cc08e976c4517ef41f5b38d3bd15d3f8dba93d150bc3a25eda02e7841",
+      "hostSHA256": "bb5cbc9cc08e976c4517ef41f5b38d3bd15d3f8dba93d150bc3a25eda02e7841",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Workspace.swift": {
+      "sourceSHA256": "78fe242d0ad317ccb421e1074527d7281b5dc9a36d5d1d8879fc20c613506207",
+      "hostSHA256": "d4b6015e8feb5d231bc4b57be099fd6ef898297a6b6740402dd32ae103ddfeb4",
+      "matchesDocumentedIsolation": true
+    }
+  },
+  "testSHA256": {
+    "TaskfoldTests/BackupTests.swift": "efc914baee0abfeef80b000de37f20659c79b2476682a8ae980282c92abdc9bb",
+    "TaskfoldTests/CollaborationTests.swift": "7da604d9dc0d217b573d2259d64027f5237c88fe289cfe596435513424f55e5b",
+    "TaskfoldTests/InboxReviewTests.swift": "dec7abb5cabc9b2b593785e3b10703500164cdb178084517cbf83e584fffcf05",
+    "TaskfoldTests/TeamTaskMoveTests.swift": "e7ff14bf3ffa7a5ff42725b6d61838c5c3879698ce96bed715a3895d85360e36",
+    "TaskfoldTests/AssignmentTreePreservationTests.swift": "61535b350ddfda5fba74ad7a6352125771f5945d3017623deda95fa17abd5898"
+  },
+  "core": {
+    "passedTests": 187,
+    "failedTests": 0,
+    "newRegressionMethods": 9,
+    "filter": "AssignmentTreePreservationTests|PersonalTaskMoveTests|CollaborationTests|QuickEntry|InboxReviewTests|BackupTests|SubtaskTreeTests|TaskSelectionPlan",
+    "logSHA256": "5dcdb3f677f37dedf844b473498243f341839bf58c98b4d36468d242877c2035"
+  },
+  "build": {
+    "phase": "assignment-clearing",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "f5049b0f3ba5ad113fbb431c0720838ffe7acc264e7efe44ba6d9e9077fbaac5",
+    "appBinariesSHA256": {
+      "Taskfold": "3f54372abdd295eae1b0efdcd09e0aa6d7a256f931bd8b22b6592bc3d100cdb0",
+      "Taskfold.debug.dylib": "5408e7a4db3e5bfbd50be2b4b3e92b4cab8b3fa238cca259f1c732362f2c6913"
+    }
+  },
+  "newProjectPickerNativeRuntimeAccepted": false,
+  "newFailureSpeechAccepted": false,
+  "hostedChanges": false,
+  "normalUseEnabled": false,
+  "remaining": "Native picker/error-speech acceptance; complex recipient reselection and history semantics; broader cache/editor integration, Mac/wider history and shared custody."
+}
