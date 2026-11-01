@@ -5906,3 +5906,110 @@ extension TaskfoldMacUITests {
         XCTAssertEqual(try outputTables(), before)
     }
 }
+
+
+extension TaskfoldMacUITests {
+
+    private var assignmentRootID: String { "a5110000-0000-4000-8000-000000000001" }
+    private var assignmentSourceID: String { "a5110000-0000-4000-8000-000000000002" }
+    private var assignmentDestinationID: String { "a5110000-0000-4000-8000-000000000003" }
+    private var assignmentTokens: [String] { [#""é":9007199254740993"#, #""e\u0301":17"#, #""future":{"keep":"exact"}"#] }
+    @MainActor private func assignmentRead(_ cache: URL) throws -> [String: Any] {
+        try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: cache)) as? [String: Any])
+    }
+    @MainActor private func assignmentAttach(_ cache: URL, name: String) throws {
+        let attachment = XCTAttachment(data: try Data(contentsOf: cache), uniformTypeIdentifier: "public.json")
+        attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
+    }
+    @MainActor private func assignmentEquivalent(_ first: Data, _ second: Data) throws {
+        // Cache dictionary order is not stable across process launches. Exact
+        // opaque tokens are checked separately and the exported snapshots also
+        // receive an independent lossless comparison outside Foundation.
+        XCTAssertTrue((try XCTUnwrap(JSONSerialization.jsonObject(with: first) as? NSDictionary)).isEqual(try JSONSerialization.jsonObject(with: second)))
+    }
+    @MainActor private func assignmentVerifySaved(_ cache: URL) throws {
+        let text = try String(contentsOf: cache, encoding: .utf8)
+        for token in assignmentTokens { XCTAssertTrue(text.contains(token), "Missing exact original token: " + token) }
+        let snapshot = try assignmentRead(cache)
+        let root = try XCTUnwrap(((snapshot["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])?.first { $0["id"] as? String == assignmentRootID })
+        XCTAssertEqual(root["project_id"] as? String, assignmentDestinationID)
+        XCTAssertTrue(root["assigned_to"] is NSNull); XCTAssertTrue(root["section_id"] is NSNull)
+        XCTAssertEqual(root["title"] as? String, "Project change preservation proof")
+        let children = try XCTUnwrap(root["subtasks"] as? [Any]); XCTAssertEqual(children.count, 2); XCTAssertEqual(children[1] as? String, "Legacy text")
+        let child = try XCTUnwrap(children[0] as? [String: Any]); XCTAssertTrue(child["assigned_to"] is NSNull)
+        let nested = try XCTUnwrap((child["subtasks"] as? [[String: Any]])?.first)
+        XCTAssertTrue(nested["assigned_to"] is NSNull); XCTAssertTrue(nested["subtasks"] is NSNull)
+        let saved = XCTAttachment(data: Data(text.utf8), uniformTypeIdentifier: "public.json"); saved.name = "Actual saved project change cache"; saved.lifetime = .keepAlways; add(saved)
+    }
+
+    @MainActor private func assignmentCache() -> URL {
+        URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data/Library/Application Support/Taskfold/ui-testing.json")
+    }
+    @MainActor private func assignmentStart(_ app: XCUIApplication, unsupported: Bool) throws -> URL {
+        guard ["com.dbakp.taskfold.mac.workflowteststeameditbridge.runner", "com.dbakp.taskfold.mac.workflowteststeameditbridge.runner.xctrunner"].contains(Bundle.main.bundleIdentifier ?? "") else { throw XCTSkip("Reserved synthetic host required") }
+        continueAfterFailure = false
+        app.launchArguments = ["--uitesting", "--workflow-fixture", "--assignment-tree-fixture", "-localMode", "YES", "-appearance", "dark"]
+        if unsupported { app.launchArguments.append("--assignment-tree-unsupported") }
+        try launchHeadingWorkspace(app)
+        XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 15), app.debugDescription)
+        let cache = assignmentCache()
+        app.launchArguments.removeAll { ["--workflow-fixture", "--assignment-tree-fixture", "--assignment-tree-unsupported"].contains($0) }
+        let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
+        let row = app.staticTexts["title-" + assignmentRootID].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 12), app.debugDescription); row.click(); app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(app.textFields["taskTitle"].waitForExistence(timeout: 8), app.debugDescription)
+        return cache
+    }
+    @MainActor private func assignmentChooseDestination(_ app: XCUIApplication) {
+        let picker = app.popUpButtons["taskProjectPicker"]
+        let inspector = app.scrollViews.containing(.textField, identifier: "taskTitle").firstMatch
+        if inspector.exists {
+            for _ in 0..<12 where !picker.isHittable { inspector.scroll(byDeltaX: 0, deltaY: -220) }
+        } else { outputReveal(picker, app) }
+        XCTAssertTrue(picker.isHittable, app.debugDescription); picker.click()
+        let choice = picker.menuItems["Assignment destination"]
+        XCTAssertTrue(choice.waitForExistence(timeout: 8), app.debugDescription); choice.click()
+    }
+    @MainActor func testProjectChangePreservesExactChecklistThroughSaveAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        let cache = try assignmentStart(app, unsupported: false)
+        try assignmentAttach(cache, name: "Original project change source")
+        assignmentChooseDestination(app)
+        let saved = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let snapshot = try? self.assignmentRead(cache), let root = ((snapshot["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])?.first else { return false }
+            return root["project_id"] as? String == self.assignmentDestinationID
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 12), .completed, app.debugDescription)
+        try assignmentVerifySaved(cache)
+        retainWindow(app, name: "Mac native project destination saved")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        let before = try Data(contentsOf: cache)
+        try launchHeadingWorkspace(app)
+        let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
+        XCTAssertTrue(app.staticTexts["title-" + assignmentRootID].waitForExistence(timeout: 12))
+        try assignmentVerifySaved(cache); try assignmentEquivalent(Data(contentsOf: cache), before)
+    }
+    @MainActor func testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        let cache = try assignmentStart(app, unsupported: true), before = try Data(contentsOf: cache)
+        try assignmentAttach(cache, name: "Unsupported project change source")
+        assignmentChooseDestination(app)
+        let warning = app.staticTexts["taskProjectMoveFailure"]
+        XCTAssertTrue(warning.waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertEqual(warning.value as? String ?? warning.label, "Review this task’s checklist before changing its project. Your task is unchanged.")
+        XCTAssertEqual(app.popUpButtons["taskProjectPicker"].value as? String, "Assignment origin")
+        let viewport = app.scrollViews["inspector"]
+        let visible = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            warning.isHittable && warning.frame.minY >= viewport.frame.minY + 4 && warning.frame.maxY <= viewport.frame.maxY - 4
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [visible], timeout: 8), .completed, "The complete review message must be visible without another scroll")
+        retainWindow(app, name: "Mac unsupported project move keeps original selection")
+        XCTAssertEqual(try Data(contentsOf: cache), before)
+        try assignmentAttach(cache, name: "Unsupported source after refusal")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        try assignmentEquivalent(Data(contentsOf: cache), before)
+        try launchHeadingWorkspace(app); XCTAssertTrue(app.buttons["openTemplates"].waitForExistence(timeout: 12))
+        try assignmentAttach(cache, name: "Unsupported source after cold return")
+        try assignmentEquivalent(Data(contentsOf: cache), before)
+    }
+}

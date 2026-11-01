@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-01",
+  "recipientRepository": "TasskFold-MacOS",
+  "sourceBaselineCommit": "cceeafa3cb8121bde005393d1230d6c79d8a1dfa",
+  "sourceProof": {
+    "Taskfold/Views/TaskInspector.swift": {
+      "sourceSHA256": "b2851c235b98148a3686b9b0f6e2eba202cb583ffcdafb480347cdf89db82104",
+      "hostSHA256": "b2851c235b98148a3686b9b0f6e2eba202cb583ffcdafb480347cdf89db82104",
+      "matchesDocumentedIsolation": true
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "sourceSHA256": "206eb43de0e72d7bc31bd650136688ce4510366bc8dec5d61ecb0f8cce28b295",
+      "hostSHA256": "206eb43de0e72d7bc31bd650136688ce4510366bc8dec5d61ecb0f8cce28b295",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Models.swift": {
+      "sourceSHA256": "9591d1868f0c8b3b0b7abd46b959d06f8bc96930eaaa9a175cfc04d95bc04b68",
+      "hostSHA256": "9591d1868f0c8b3b0b7abd46b959d06f8bc96930eaaa9a175cfc04d95bc04b68",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/TeamTaskMove.swift": {
+      "sourceSHA256": "1d8a772667fc320a1614f1d467615a25507596a11de98024d5294571884c3a41",
+      "hostSHA256": "1d8a772667fc320a1614f1d467615a25507596a11de98024d5294571884c3a41",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "f777bec452a0b9c4dbaab4993797f85bdea19dbf05f9611565ea4387ef5f1a98",
+      "hostSHA256": "3679481aa32b903d705fb349d9effbd93a28f48f77e18a384dd8bdddbebdf1ed",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Views/RootView.swift": {
+      "sourceSHA256": "74beaa0727d336c1682c3cb71d06cba1b2738326cb52726499d66d103644a5db",
+      "hostSHA256": "74beaa0727d336c1682c3cb71d06cba1b2738326cb52726499d66d103644a5db",
+      "matchesDocumentedIsolation": true
+    }
+  },
+  "mobileNativeOrigin": {
+    "repository": "TaskFold-iOS",
+    "sourceSHA256": {
+      "Taskfold/Views/TaskEditor.swift": "70f8211699d5cf5029867a546db8f1e02864d9630ab63d53473068e74c52fc17",
+      "TaskfoldUITests/TaskfoldUITests.swift": "a9dde0bfa6909b1e2e55a64ff9eba933ccd854048540644140e5f1f1bd10a193",
+      "Taskfold/Core/Models.swift": "9591d1868f0c8b3b0b7abd46b959d06f8bc96930eaaa9a175cfc04d95bc04b68",
+      "Taskfold/Core/TeamTaskMove.swift": "1d8a772667fc320a1614f1d467615a25507596a11de98024d5294571884c3a41",
+      "Taskfold/Core/Store.swift": "c53c5385f73613cd521c19e53e9092cd9ff435c01e0bb12e5b87eb8db15c61c2"
+    },
+    "acceptedDestinations": [
+      "iPhone 18 Pro Simulator",
+      "iPad Simulator"
+    ],
+    "flowsPerDestination": 2
+  },
+  "macNativeAccepted": true,
+  "macAttemptResult": "Passed",
+  "build": {
+    "phase": "assignment-native-v5",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "4c92f87c6174355bd074eca2d8166704785a0a705c96825a58b7c4edbeb03bf8",
+    "appBinariesSHA256": {
+      "Taskfold": "25951fc9af0f310bc1be59186703115cb06a4e3efaf7370f9b8698487d606f6f",
+      "Taskfold.debug.dylib": "b86107bbffd716bf8d51b1b40727aecbb7cfeba720c12b1dcd8ae7f3df3f5f8f"
+    }
+  },
+  "independentVerifier": {
+    "passedChecks": 8,
+    "logSHA256": "4b92ce3f57f7e3091fbef700838ab26b43d18ffe6861884452086037377dc559",
+    "scriptSHA256": "feb3aef5152b14bb1d6c25ce0ea6643de40fd3eb11ad563f4627da641f1406e5",
+    "checksSHA256": "89b5b81bf54bfba5b45dee86d8e7be28112ae1836b127c07a0282193d81e9ece"
+  },
+  "scope": "Local synthetic root editor project change, exact checklist fields, refusal and cold return. No cloud delivery, actual speech, wider recipient/history or universal accessibility claim.",
+  "normalUseEnabled": false,
+  "hostedChanges": false
+}

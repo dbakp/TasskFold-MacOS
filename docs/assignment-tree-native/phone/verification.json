@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "scope": "Observed local synthetic native project picker, save/autosave, refusal and cold return; no cloud delivery or spoken-output claim",
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "deviceName": "iPhone 18 Pro",
+    "modelName": "iPhone 18 Pro",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "summarySHA256": "5863be5181816dac3b30cacebc86d7e238520a9da5e4fdf19bcce608f34b380e",
+  "manifestSHA256": "9c15ac381daf306572368bd4045c0ea519a7f1de79402890662dd612bf1b47f3",
+  "fullRootMoveHasOnlyExpectedChanges": true,
+  "exactUnicodeKeysAndLargeIntegerPreserved": true,
+  "fullSnapshotColdReturnPreserved": true,
+  "refusalSourceBytesUntouched": true,
+  "refusalFullSnapshotColdReturnPreserved": true,
+  "attachments": [
+    {
+      "name": "Original project change source_0_94BCE36B-5B7E-41AF-A417-DF48869937D9.json",
+      "sha256": "f2c33259753e6ae592e28a77f3d0ab77c5fbff6fd98114c490f14a874e1121e9",
+      "bytes": 1273
+    },
+    {
+      "name": "Actual saved project change cache_0_212368CF-683C-4BF0-B906-BC326C6FD90D.json",
+      "sha256": "ac453f90832f17ede948c47d9547cf1b82879226af883945dea09089e0dbeab5",
+      "bytes": 3664
+    },
+    {
+      "name": "Actual saved project change cache_0_D827B92C-5616-4542-8F9C-7E6D9D117182.json",
+      "sha256": "1b6e866bba420537312b68ad7a2644618cb45fcc6ea0ca39386cb98157320ba4",
+      "bytes": 3664
+    },
+    {
+      "name": "Unsupported project change source_0_D29CB30E-69AA-4E80-B5CC-0B0C4D5A0EB0.json",
+      "sha256": "e08a1c72b5ba22bfbfcf809cca24324dbe3a7ce7168ca44ffbb6671ea8141fb3",
+      "bytes": 1030
+    },
+    {
+      "name": "Unsupported source after refusal_0_D47913E4-1607-4B85-ABBD-75319235A45D.json",
+      "sha256": "e08a1c72b5ba22bfbfcf809cca24324dbe3a7ce7168ca44ffbb6671ea8141fb3",
+      "bytes": 1030
+    },
+    {
+      "name": "Unsupported source after cold return_0_D9E07786-CBB0-4DE7-9ABB-8C64CA230287.json",
+      "sha256": "755a3c21d6e4f9bbbd9e9202798ec6c149919f8b024989231425fb2fa6c93393",
+      "bytes": 1030
+    }
+  ]
+}

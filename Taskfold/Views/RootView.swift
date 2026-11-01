@@ -277,6 +277,23 @@ struct RootView: View {
         }
         if ConversationFixture.enabled { store.startLocal(); store.seedConversationFixture(); workspace.section = .inbox }
         if arguments.contains("--uitesting") && arguments.contains("--workflow-fixture") { store.startLocal(); store.seedWorkflowFixture(); workspace.section = .inbox }
+        // The sandboxed UI runner cannot write this app's protected cache.
+        // Seed only inside the reserved synthetic host, never a normal app build.
+        if arguments.contains("--uitesting"), arguments.contains("--assignment-tree-fixture"),
+           Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowteststeameditbridge",
+           store.userID == "ui-testing", store.localMode {
+            do {
+                store.dailyBackupsEnabled = false; store.disableNotifications()
+                let origin = "a5110000-0000-4000-8000-000000000002", destination = "a5110000-0000-4000-8000-000000000003"
+                var task = Record.task(user: store.userID, project: origin, date: Date())
+                task["id"] = .string("a5110000-0000-4000-8000-000000000001"); task["title"] = .string("Project change preservation proof")
+                task["assigned_to"] = .string("ui-testing"); task["section_id"] = .null
+                let raw = arguments.contains("--assignment-tree-unsupported") ? #"{"future_container":"Keep this unsupported source"}"# : #"[{"id":"a5110000-0000-4000-8000-000000000004","title":"Preserve every detail","assigned_to":"alex","é":9007199254740993,"e\u0301":17,"future":{"keep":"exact"},"subtasks":[{"id":"a5110000-0000-4000-8000-000000000005","title":"Nested proof","assigned_to":"alex","subtasks":null}]},"Legacy text"]"#
+                task["subtasks"] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(raw.utf8))
+                store.snapshot = Snapshot(tables: ["tasks": [task], "projects": [(origin, "Assignment origin"), (destination, "Assignment destination")].map { Record(["id": .string($0.0), "name": .string($0.1), "user_id": .string(store.userID)]) }, "sections": []])
+                try store.persist(); workspace.section = .today
+            } catch { store.error = error.localizedDescription }
+        }
         if arguments.contains("--uitesting") && arguments.contains("--workflow-diagnostics") { try? store.persist() }
         if arguments.contains("--uitesting") && arguments.contains("--quick-entry-fixture") {
             store.startLocal(); store.snapshot = Snapshot.quickEntryFixture(user: store.userID); workspace.section = .inbox

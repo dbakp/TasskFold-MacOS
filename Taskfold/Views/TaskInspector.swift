@@ -76,6 +76,7 @@ struct TaskInspectorForm: View {
     @State private var discardCreation = false
     @State private var creationFailure: String?
     @State private var projectChangeFailure: String?
+    @State private var projectFailureReveal = UUID()
     private var isCreating: Bool { admission?.teamDraft?.kind == .creation }
     @State private var teamDraft: TeamTaskEditorDraft?
     @State private var teamDraftCaptured = false
@@ -135,6 +136,7 @@ struct TaskInspectorForm: View {
     }
     private func projectFailure(_ error: Error) {
         projectChangeFailure = error.localizedDescription
+        projectFailureReveal = UUID()
         var announcement = AttributedString(error.localizedDescription)
         announcement.accessibilitySpeechAnnouncementPriority = .high
         AccessibilityNotification.Announcement(announcement).post()
@@ -232,6 +234,7 @@ struct TaskInspectorForm: View {
         .onDisappear {checkpoint()}
     }
     private var editingBody: some View {
+        ScrollViewReader { proxy in
         Form {
             Section {
                 TextField("Title", text: text("title"), selection: $titleSelection, prompt: Text("What needs doing?"), axis: .vertical)
@@ -382,8 +385,8 @@ struct TaskInspectorForm: View {
                 Picker("Project", selection: Binding(get: { draft.string("project_id") }, set: changeTaskProject)) {
                     Text("Inbox").tag("")
                     ForEach(store.projects) { Text($0.name).tag($0.id) }
-                }.disabled(isTeamTask)
-                if let projectChangeFailure { Text(projectChangeFailure).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("taskProjectMoveFailure") }
+                }.disabled(isTeamTask).accessibilityIdentifier("taskProjectPicker")
+                if let projectChangeFailure { Text(projectChangeFailure).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("taskProjectMoveFailure").id("taskProjectMoveFailure") }
                 if !draft.string("project_id").isEmpty {
                     Picker("Section", selection: text("section_id")) {
                         Text("No section").tag("")
@@ -553,6 +556,14 @@ struct TaskInspectorForm: View {
             }
         }
         .formStyle(.grouped)
+        .onChange(of: projectFailureReveal) { _, _ in
+            guard projectChangeFailure != nil else { return }
+            // Reveal after the conditional message has joined the form layout.
+            DispatchQueue.main.async {
+                withAnimation(workspace.layout) { proxy.scrollTo("taskProjectMoveFailure", anchor: .center) }
+            }
+        }
+        }
         .confirmationDialog("Delete “\(draft.title)”?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {guard editorAvailable else {stopEditing();return};workspace.delete([taskID])}
         } message: { Text("You can undo this from the Edit menu.") }

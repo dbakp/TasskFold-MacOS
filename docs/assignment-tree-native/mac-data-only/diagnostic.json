@@ -1,0 +1,6 @@
+{
+  "dataFlowsAccepted": true,
+  "completeMessageVisibilityAccepted": false,
+  "reason": "Both native data flows and independent snapshot verification pass, but screenshot inspection showed the refusal message extending below the inspector viewport. The final Mac test also verifies complete message visibility after automatic reveal.",
+  "supersededBy": "../mac/test-summary.json"
+}

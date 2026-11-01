@@ -1,0 +1,86 @@
+[
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "5B2884C9-AC24-4F49-A720-14D6D74116A4.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Actual saved project change cache_0_1B4DC7B5-6568-4F21-B06B-86422CD9AC1F.json",
+        "timestamp": 1793561600.984
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "78C4D8CA-B059-4824-853C-378D18665EE1.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Mac native project destination saved_0_A5C3BB0F-F0A6-41C8-8891-DC19A6E9209C.png",
+        "timestamp": 1793561596.149
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "3D79030C-F8EF-4261-AEBB-85905BB73D21.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Actual saved project change cache_0_848A24B6-2A04-4074-9B7C-1E85E53BF000.json",
+        "timestamp": 1793561596.022
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "0ABD595E-9845-42A8-A12D-50C52AB4C186.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Original project change source_0_B324B00B-75C1-4806-8D2B-3A737220B9DA.json",
+        "timestamp": 1793561589.343
+      }
+    ],
+    "testIdentifier": "TaskfoldMacUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testProjectChangePreservesExactChecklistThroughSaveAndColdReturn"
+  },
+  {
+    "attachments": [
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "E5B4616B-E101-459D-8493-8F7C7D2D5CB1.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported source after cold return_0_BD8EDBF0-13B4-44A0-B46A-1049F384209F.json",
+        "timestamp": 1793561623.757
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "82156D57-AF6D-495D-B6E8-44A2C1BD19AD.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported source after refusal_0_6651441D-B6BB-4AF0-83E1-8E7120BD529D.json",
+        "timestamp": 1793561620.599
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "44074809-4175-45C2-9B19-743CDF925CBB.png",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Mac unsupported project move keeps original selection_0_F661E261-6C19-4352-8139-D79F4D1A144E.png",
+        "timestamp": 1793561620.598
+      },
+      {
+        "configurationName": "Test Scheme Action",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "exportedFileName": "AAD9C36D-422B-4D6D-8E0B-35E734D6141C.json",
+        "isAssociatedWithFailure": false,
+        "suggestedHumanReadableName": "Unsupported project change source_0_D7223893-4014-4327-86AE-948A09F63CF2.json",
+        "timestamp": 1793561611.998
+      }
+    ],
+    "testIdentifier": "TaskfoldMacUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource()",
+    "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testProjectChangeUnsupportedChecklistRefusesWithoutChangingSource"
+  }
+]

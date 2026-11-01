@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 1 November 2026 · Native assignment-clearing safeguards
+
+The actual project picker now passes local save/autosave, safe refusal and cold return on iPhone, iPad and Mac. The Mac inspector reveals the complete refusal message automatically; the native check verifies its full viewport bounds. Exported snapshots independently prove only expected root/child assignment changes, exact metadata preservation and untouched refusal bytes; eight adversarial verifier checks pass in each independently owned repository. Both app/runner builds/signatures pass. Spoken output, genuine cloud delivery, complex recipient/history semantics and broader migration acceptance remain open. [Native evidence](assignment-tree-native/README.md).
+
 ## 1 November 2026 · Assignment clearing preserves checklist source
 
 Project changes now clear incompatible assignments without flattening preserved child objects, exact metadata or legacy text. Both pickers and quick-entry writes prepare a complete draft before publishing; unsupported child structures refuse unchanged with an inline/spoken error. Personal move requests omit assignment-only historical trees and their baselines, retaining newer child notes. Each repository passes 187 focused Core checks and signed app/runner builds. New picker/speech runtime acceptance and complex recipient/history semantics remain open; wider migration stays gated. [Scoped evidence](assignment-tree-preservation/README.md).

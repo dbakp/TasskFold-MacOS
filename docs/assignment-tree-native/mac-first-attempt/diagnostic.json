@@ -1,0 +1,6 @@
+{
+  "accepted": false,
+  "stage": "Fixture setup; project picker not exercised",
+  "reason": "The sandboxed UI runner cannot write the isolated app\u2019s protected cache. Setup now runs inside the explicitly guarded DEBUG isolated app; no permissions or sandbox settings changed.",
+  "logSHA256": "6d08e7c5cebccc1fe41f0759413531b4baefbfd8b818dcb8d618affe21a7f5c4"
+}
