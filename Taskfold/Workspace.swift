@@ -1078,7 +1078,7 @@ extension Workspace {
         }
         let changes = roots.values.compactMap { record -> Mutation? in
             guard let original = store.record("tasks", id: record.id) else { return nil }
-            let changed = record.fields.filter { original.fields[$0.key] != $0.value }
+            let changed = TaskAssignment.preservingAssignmentIntent(record.fields.filter { original.fields[$0.key] != $0.value }, authored: record.fields)
             return changed.isEmpty ? nil : Mutation(table: "tasks", recordID: record.id, method: "PATCH", fields: changed)
         }
         guard !changes.isEmpty else { return true }

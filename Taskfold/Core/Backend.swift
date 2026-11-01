@@ -481,7 +481,11 @@ final class Backend: NSObject {
                 if error.string("code") == "PT404" { throw TeamProjectAccessUnavailable() }
                 throw TeamProjectValue.invalid
             }
-            if ["/rest/v1/rpc/taskfold_patch_task", "/rest/v1/rpc/taskfold_delete_task"].contains(path), error.string("code") == "PT409" {
+            if path == "/rest/v1/rpc/taskfold_assign_task_scoped" {
+                if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+                if ["PT503", "PGRST202"].contains(error.string("code")) { throw AppFailure(message: "This server cannot apply the saved assignment yet. Your choice is kept for retry.") }
+            }
+            if ["/rest/v1/rpc/taskfold_patch_task", "/rest/v1/rpc/taskfold_delete_task", "/rest/v1/rpc/taskfold_assign_task_scoped"].contains(path), error.string("code") == "PT409" {
                 throw TeamTaskReviewRequired()
             }
             if path == "/rest/v1/rpc/taskfold_move_personal_task" {
@@ -1455,11 +1459,18 @@ final class Backend: NSObject {
                     throw AppFailure(message: "TASKFOLD_CONFLICT: Review this older completion before replacing synced state.")
                 }
             }
-            let data = try await request("/rest/v1/rpc/taskfold_patch_task", method: "POST", body: [
+            let scopedAssignment = TaskAssignment.scopedProject(change) != nil
+            let endpoint = scopedAssignment ? "taskfold_assign_task_scoped" : "taskfold_patch_task"
+            let data = try await request("/rest/v1/rpc/" + endpoint, method: "POST", body: [
                 "_id": .string(change.recordID), "_base": .object(baseline), "_changes": .object(change.fields)], expectedAccount: expectedOwner)
             let saved = try TaskfoldJSONDecoder().decode(Record.self, from: data)
             guard saved.id.lowercased() == change.recordID.lowercased() else {
                 throw AppFailure(message: "The server did not confirm this edit. Your change is saved on this device.")
+            }
+            if scopedAssignment {
+                guard TaskAssignment.permitsScope(change, current: saved), TaskAssignment.sameIdentity(saved["assigned_to"], change.fields["assigned_to"]!) else {
+                    throw AppFailure(message: "The server did not confirm this assignment. Your choice is saved on this device.")
+                }
             }
             return saved
         }

@@ -7286,3 +7286,11 @@ Each repository owns its implementation, focused client checks, real local SQL f
 - [ ] Broader recipient/recurrence histories, exact editable caches, shared custody, genuine shared-account/hosted acceptance and other Mac/wider checks. All normal-use flags and existing user deferrals remain unchanged.
 
 [Evidence and exact acceptance limits](child-copy-mapping-client/README.md). The native implementation is built, not fully accepted.
+
+### 2026-11-01 — Root assignee intent and scoped project-history safety
+
+Explicit destination assignees now survive a project change even when the chosen person matches the opening value. Ordered normalization and guarded history preserve root assignment/section Undo and Redo; stale project/generation or later-assignee changes refuse before applying the group. A new authenticated invoker endpoint adds strict project/assignee conditions to the existing task editor, including atomic note conflict handling and lost-reply retry. Missing server support keeps the choice for retry without falling back to the older endpoint.
+
+Each repository independently passes 131 focused Core tests and 101 actual local PostgreSQL assertions, with no skips/failures, additional advisor findings or retained fixture containers. Both apps/runners build and sign. The ordinary local native flow passes on iPhone and iPad, including actual Undo/Redo and cold return; each repo independently checks all ten exact saved snapshots. The extended Mac native flow remains unaccepted: two attempts confirmed the move, then stopped at the paused source-bound inspector/re-entry before destination assignment or history actions. The mobile Save groups the move and assignment. See [recorded proof and limits](move-assignment-intent/README.md).
+
+No hosted schema deployment or normal-use gate change. New scoped cloud assignments require the candidate endpoint before rollout. Existing unscoped queues/older clients, historical child recipients, recurrence/lifecycle histories, wider migration/cache/editor integration, shared custody and broader accessibility/account/window acceptance remain open. Curated checkpoint/substep totals are unchanged.

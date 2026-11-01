@@ -1,0 +1,170 @@
+{
+  "date": "2026-11-01",
+  "repository": "TasskFold-MacOS",
+  "sourceBaselineCommit": "b27a60be331bc7761faa35af2438e15fc45d1d06",
+  "core": {
+    "tests": 131,
+    "failures": 0,
+    "skipped": 0,
+    "logSHA256": "e59e6fe0c28595873a601f1dd92b28af0d20d356a063b89650f789fa1e728d86"
+  },
+  "database": {
+    "assertions": 101,
+    "fixtureRemoved": true,
+    "additionalAdvisorFindings": 0,
+    "candidateDeployed": false,
+    "reportSHA256": "ec0fa1121f47860e66579f16366b13ca828786a2b2a1cadef339c2ceaced9f90"
+  },
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "legacyUnscopedQueuesRetroactivelyGuarded": false,
+  "native": {
+    "phone": {
+      "passed": true,
+      "savedDataVerified": true,
+      "originRepository": "TaskFold-iOS",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "modelName": "iPhone 18 Pro",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "verifierReportSHA256": "53334bd36af0e6b141d0a17e0947c4d2b22e91faeddade1502249234a7f97504"
+    },
+    "ipad": {
+      "passed": true,
+      "savedDataVerified": true,
+      "originRepository": "TaskFold-iOS",
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "modelName": "iPad Pro 13-inch (M5)",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "verifierReportSHA256": "0bfbf472471a04bd1e19f8aebf5c241268d5a9a216d1b48acd94e876c9413ddf"
+    },
+    "mac": {
+      "passed": false,
+      "accepted": false,
+      "originRepository": "TasskFold-MacOS",
+      "buildAndSignaturesPassed": true,
+      "scope": "Extended root assignee/Undo/Redo flow remains unaccepted; earlier separate project-change preservation/refusal acceptance remains historical proof.",
+      "attempts": [
+        {
+          "attempt": "v1",
+          "result": "Failed",
+          "passedTests": 0,
+          "failedTests": 1,
+          "skippedTests": 0,
+          "reason": "Project saved; old source-bound inspector paused before the assignee control.",
+          "summarySHA256": "5e44a5e6f6f72fe12550c93e50a3dd2ba8383d6e3b8cd7d3082c6a8777f070c8",
+          "logSHA256": "f38332e255cfd13fc95e1e93f9a3ed869d903eac440282293567c29aed47eea7"
+        },
+        {
+          "attempt": "v2",
+          "result": "Failed",
+          "passedTests": 0,
+          "failedTests": 1,
+          "skippedTests": 0,
+          "reason": "Project saved; re-entry test stopped before verifying cleared selection. Destination assignment and Undo/Redo were not reached.",
+          "summarySHA256": "188c4cd3fdea1e166ba39a0ed44348c54a2045da008a0ea3ca0d33c8e9694bb5",
+          "logSHA256": "1988e5aeb91717ea40759d7b194ec3eb51e824292ffc568bcd1dc4d58bbd8dab"
+        }
+      ]
+    }
+  },
+  "sourceProof": {
+    "Taskfold/Collaboration.swift": {
+      "sourceSHA256": "c59d8af53a42dd693ea73f0b1a79c723064224a193b6dad052166a606239add3",
+      "hostSHA256": "c59d8af53a42dd693ea73f0b1a79c723064224a193b6dad052166a606239add3",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Backend.swift": {
+      "sourceSHA256": "30c00a1725672cb0791284070965d271dbe0ec8f76158e5a000f422f6ada4d9f",
+      "hostSHA256": "b721a94d8a760abc8167b0d77bc9188f7138df18894d6b694f8c8be2b3060937",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Models.swift": {
+      "sourceSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+      "hostSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/PinnedNotes.swift": {
+      "sourceSHA256": "4acf7ae657c2ab8cb9ded1aedf77f459db6362e5f6e83d5145f9f874a6504fd3",
+      "hostSHA256": "4acf7ae657c2ab8cb9ded1aedf77f459db6362e5f6e83d5145f9f874a6504fd3",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "05d91a665d1d86bf89328e5939dfdeffe542175db5394f9f8f1812649b692267",
+      "hostSHA256": "1e44494046480891ad721352a0c653f18e522dd68c30f4feeb6ea8d8375e331c",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/SubtaskTree.swift": {
+      "sourceSHA256": "30ff159fbf407e1024af6f161624f7205928cd56fd0eae3a95afae67ce0aaa77",
+      "hostSHA256": "30ff159fbf407e1024af6f161624f7205928cd56fd0eae3a95afae67ce0aaa77",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/TeamTaskMove.swift": {
+      "sourceSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+      "hostSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Workspace.swift": {
+      "sourceSHA256": "ab36a4a9207e053017dcb16a411aaa7bbf21eb870129ee0f7793e6a9f2141bdc",
+      "hostSHA256": "1987bd767adc466ab7bff01a8d28d7bb880e169d2baf5a6f8d3808f9a8b63f00",
+      "matchesDocumentedIsolation": true
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "sourceSHA256": "48fce526e7173528c2e291a9927a1f76caf8986a8a6cbcd61a9fca8ac5e451e1",
+      "hostSHA256": "48fce526e7173528c2e291a9927a1f76caf8986a8a6cbcd61a9fca8ac5e451e1",
+      "matchesDocumentedIsolation": true
+    }
+  },
+  "newIntentTestsSHA256": "ba8ebb43b36707562bf1c901c31eabf8cbed776775ca9934c61b4c0734cf3a36",
+  "macFirstAttempt": {
+    "passed": false,
+    "reason": "The source-bound inspector pauses after a project change. The test attempted another edit without reopening the current task.",
+    "correctedTestFlow": "Clear selection, reopen current details, then choose the destination assignee. No source/generation guard was relaxed."
+  },
+  "build": {
+    "repository": "TasskFold-MacOS",
+    "phase": "move-assignment-v3",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "700927d7af0d10a7b9b4fd49cc9479d1d0d627ee9b4852922ea50dd47016da7d",
+    "appBinariesSHA256": {
+      "Taskfold": "f6a70e466e912584113f9bf0fbe59b8275c59a11f3a4dd491d0aa6c0d712dc40",
+      "Taskfold.debug.dylib": "a8684a9fc1f1814945df57bca8c5b879c43dfd6c916855b8865ce38f6a672438"
+    }
+  },
+  "nativeBuildOrigins": {
+    "mac": {
+      "repository": "TasskFold-MacOS",
+      "phase": "move-assignment-v3",
+      "appAndRunnerSignaturesVerified": true,
+      "logSHA256": "700927d7af0d10a7b9b4fd49cc9479d1d0d627ee9b4852922ea50dd47016da7d",
+      "appBinariesSHA256": {
+        "Taskfold": "f6a70e466e912584113f9bf0fbe59b8275c59a11f3a4dd491d0aa6c0d712dc40",
+        "Taskfold.debug.dylib": "a8684a9fc1f1814945df57bca8c5b879c43dfd6c916855b8865ce38f6a672438"
+      }
+    },
+    "ios": {
+      "repository": "TaskFold-iOS",
+      "phase": "move-assignment-v2",
+      "appAndRunnerSignaturesVerified": true,
+      "logSHA256": "a3f45e2790f6ab3ac12127e5eb2d533a4ffe5e0c50a48427c2922efe7a411ed3",
+      "appBinariesSHA256": {
+        "Taskfold": "b174b0fd37c052b096cd24d4daaac4422ebe8d131d0b58d83c0f737ac684cd7b",
+        "Taskfold.debug.dylib": "0599192accee6736146786ae13208df47a20344d7893f3d930eb88b9475a192f"
+      }
+    }
+  },
+  "independentVerifierSHA256": "02be4e54edc77f8690bc250703099d0dab89b00a0992da582e24c182d69f2004",
+  "wireTestsSHA256": "98d67e8e92d721aab32d87ec5840838cc013e12b0261c328564b4e01bd7a55e9",
+  "scope": "Core/local database guard and local mobile native root assignee history. Extended Mac native history, hosted delivery and broader child-recipient/recurrence/custody integration remain open."
+}

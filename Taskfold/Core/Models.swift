@@ -469,6 +469,7 @@ struct SyncConflict: Identifiable {
     var completionReview: TeamCompletion.Review? = nil
     var completionBatchReview: TeamTaskBatch.Review? = nil
     var id: UUID { mutation.id }
+    var assignmentContextChanged: Bool { !TaskAssignment.permitsScope(mutation, current: remote) }
 
     /// Resolve only the edit that was reviewed, then replay later offline work.
     /// Returning nil leaves stale or mismatched review requests untouched.
@@ -482,13 +483,16 @@ struct SyncConflict: Identifiable {
         if let scope = mutation.teamTaskScope, keepLocal {
             guard remote["project_id"] == .string(scope.project), remote["task_generation"] == mutation.baseline?["task_generation"] else { return nil }
         }
+        if keepLocal, !TaskAssignment.permitsScope(mutation, current: remote) { return nil }
+        let dependentAssignment = TaskAssignment.dependentAssignment(after: mutation, at: index, pending: snapshot.pending)
         let laterMutationIDs = Set(snapshot.pending.dropFirst(index + 1).map(\.id))
         var result = snapshot
         if keepLocal, mutation.method == "DELETE" {
             result.pending[index].baseline = remote.fields
         } else if keepLocal {
+            let explicitAssignment = TaskAssignment.scopedProject(mutation) != nil
             result.pending[index].fields = Dictionary(uniqueKeysWithValues: mutation.fields.map { key, value in
-                (key, mutation.baseline?[key].map { TaskEdit.keepingLocal(field: key, base: $0, desired: value, remote: remote[key]) } ?? value)
+                (key, explicitAssignment && key == "assigned_to" ? value : mutation.baseline?[key].map { TaskEdit.keepingLocal(field: key, base: $0, desired: value, remote: remote[key]) } ?? value)
             })
             result.pending[index].baseline = Dictionary(uniqueKeysWithValues: mutation.fields.keys.map { ($0, remote[$0]) })
             result.pending[index] = TaskCompletionRevision.capturing(result.pending[index], existing: remote)
@@ -526,6 +530,7 @@ struct SyncConflict: Identifiable {
             }
         } else {
             result.pending.remove(at: index)
+            if let dependentAssignment { result.pending.removeAll { $0.id == dependentAssignment } }
             if mutation.fields["completed"] == .bool(true) {
                 cancelUnacceptedSuccessors(in: &result)
             }
@@ -1773,6 +1778,101 @@ enum TaskAssignment {
         }
         return people.values.sorted { $0.string("display_name").localizedStandardCompare($1.string("display_name")) == .orderedAscending }
     }
+    /// A project move implicitly clears assignments. A deliberate final choice
+    /// therefore remains authored even when it equals the opening assignee.
+    static func preservingAssignmentIntent(_ changed: [String: JSON], authored: [String: JSON]) -> [String: JSON] {
+        var result = changed
+        if result["project_id"] != nil, case .string(let person)? = authored["assigned_to"], !person.isEmpty { result["assigned_to"] = .string(person) }
+        if result["assigned_to"] != nil, result["project_id"] == nil, let project = authored["project_id"] { result["project_id"] = project }
+        return result
+    }
+    static func sameIdentity(_ first: JSON, _ second: JSON) -> Bool {
+        if case .string(let a) = first, case .string(let b) = second, let left = UUID(uuidString: a), let right = UUID(uuidString: b) { return left == right }
+        return AuthoredValueComparison.exactJSON(first, second)
+    }
+    static var staleMove: AppFailure { AppFailure(message: "This task moved or was replaced. Reopen it before applying this saved action. Your task is unchanged.") }
+    /// A no-op project field is a server-checked context fence, not a second move.
+    /// Existing queues without this pair retain their original representation.
+    static func scopedProject(_ change: Mutation) -> JSON? {
+        guard change.table == "tasks", change.method == "PATCH", change.personalTaskMove != true, change.teamTaskScope == nil,
+              change.fields["assigned_to"] != nil,
+              let project = change.fields["project_id"], let baseline = change.baseline,
+              let originalProject = baseline["project_id"], baseline["task_generation"] != nil,
+              sameIdentity(project, originalProject) else { return nil }
+        return project
+    }
+    static func permitsScope(_ change: Mutation, current: Record) -> Bool {
+        guard let project = scopedProject(change) else { return true }
+        return sameIdentity(project, current["project_id"]) &&
+            sameIdentity(change.baseline!["task_generation"]!, current["task_generation"])
+    }
+    static func dependentAssignment(after move: Mutation, at index: Int, pending: [Mutation]) -> UUID? {
+        guard move.table == "tasks", move.method == "PATCH", let project = move.fields["project_id"],
+              let source = move.baseline?["project_id"], !AuthoredValueComparison.exactJSON(project, source),
+              pending.indices.contains(index + 1) else { return nil }
+        let next = pending[index + 1]
+        guard next.recordID == move.recordID, let scope = scopedProject(next), AuthoredValueComparison.exactJSON(scope, project),
+              next.baseline?["task_generation"] == move.baseline?["task_generation"] else { return nil }
+        return next.id
+    }
+    /// Normalize a group against its projected predecessors. This also makes
+    /// already-normalized history replay idempotent for move/assignment pairs.
+    static func normalizedChanges(_ changes: [Mutation], existing: (String) -> Record?, markMove: (Mutation, Record?) -> Mutation = { value, _ in value }) throws -> [Mutation] {
+        guard changes.contains(where: { $0.table == "tasks" && $0.method == "PATCH" && ($0.fields["project_id"] != nil || $0.fields["assigned_to"] != nil) }) else { return changes }
+        var rows: [String: Record] = [:], loaded = Set<String>(), result: [Mutation] = []
+        var budget = TaskAssignmentTree.Budget()
+        for input in changes {
+            guard input.table == "tasks" else { result.append(input); continue }
+            if loaded.insert(input.recordID).inserted, let row = existing(input.recordID) { rows[input.recordID] = row }
+            var current = rows[input.recordID]
+            let change = markMove(input, current)
+            for output in try mutations(change, existing: current, budget: &budget) {
+                result.append(output)
+                var projection = Snapshot(tables: ["tasks": current.map { [$0] } ?? []])
+                projection.apply(TaskCompletionRevision.capturing(output, existing: current))
+                current = projection.tables["tasks"]?.first
+            }
+            rows[input.recordID] = current
+        }
+        return result
+    }
+    /// Rebase a project history group in order, refuse moved/replaced roots,
+    /// and return the normalized commands that history will actually record.
+    static func replayingHistory(_ changes: [Mutation], existing: (String, String) -> Record?, markMove: (Mutation, Record?) -> Mutation = { value, _ in value }) throws -> [Mutation] {
+        let projectRoots = Set(changes.filter { $0.table == "tasks" && $0.method == "PATCH" && $0.fields["project_id"] != nil }.map(\.recordID))
+        var rows: [String: Record] = [:], loaded = Set<String>(), result: [Mutation] = []
+        var budget = TaskAssignmentTree.Budget()
+        for change in changes {
+            let tracksProject = change.table == "tasks" && projectRoots.contains(change.recordID)
+            if tracksProject, loaded.insert(change.recordID).inserted, let row = existing("tasks", change.recordID) { rows[change.recordID] = row }
+            let current = tracksProject ? rows[change.recordID] : existing(change.table, change.recordID)
+            var next = change
+            if change.table == "tasks", change.method == "PATCH", let base = change.baseline, let current {
+                if tracksProject {
+                    if let generation = base["task_generation"], !sameIdentity(generation, current["task_generation"]) { throw staleMove }
+                    if change.fields["project_id"] != nil, let project = base["project_id"], !sameIdentity(project, current["project_id"]) { throw staleMove }
+                    if scopedProject(change) != nil, let assigned = base["assigned_to"], let desired = change.fields["assigned_to"],
+                       !sameIdentity(current["assigned_to"], assigned), !sameIdentity(current["assigned_to"], desired) {
+                        throw AppFailure(message: "The assignment changed since this action. Reopen the task before changing it again. Your task is unchanged.")
+                    }
+                }
+                next.fields = Dictionary(uniqueKeysWithValues: change.fields.map { key, value in
+                    (key, TaskEdit.keepingLocal(field: key, base: base[key] ?? .null, desired: value, remote: current[key]))
+                })
+                next.baseline = nil
+            } else if tracksProject, change.method == "PATCH" { throw staleMove }
+            guard tracksProject else { result.append(next); continue }
+            var projected = current
+            for output in try mutations(markMove(next, current), existing: current, budget: &budget) {
+                result.append(output)
+                var projection = Snapshot(tables: ["tasks": projected.map { [$0] } ?? []])
+                projection.apply(TaskCompletionRevision.capturing(output, existing: projected))
+                projected = projection.tables["tasks"]?.first
+            }
+            rows[change.recordID] = projected
+        }
+        return result
+    }
     static func clearChildren(_ value: JSON) throws -> JSON {
         try TaskAssignmentTree.cleared(value, removing: false)
     }
@@ -1798,8 +1898,23 @@ enum TaskAssignment {
         var budget = TaskAssignmentTree.Budget(); return try mutations(change, existing: existing, budget: &budget)
     }
     static func mutations(_ change: Mutation, existing: Record?, budget: inout TaskAssignmentTree.Budget) throws -> [Mutation] {
-        guard change.table == "tasks", change.method == "PATCH", let existing,
-              let project = change.fields["project_id"], project != existing["project_id"] else { return [change] }
+        if scopedProject(change) != nil {
+            guard let existing, permitsScope(change, current: existing) else { throw staleMove }
+            return [change]
+        }
+        guard change.table == "tasks", change.method == "PATCH", let existing else { return [change] }
+        guard let project = change.fields["project_id"], !sameIdentity(project, existing["project_id"]) else {
+            guard change.teamTaskScope == nil, change.fields["assigned_to"] != nil else { return [change] }
+            var assignment = change
+            assignment.fields["project_id"] = existing["project_id"]
+            if var baseline = assignment.baseline {
+                baseline["project_id"] = baseline["project_id"] ?? existing["project_id"]
+                baseline["task_generation"] = baseline["task_generation"] ?? existing["task_generation"]
+                assignment.baseline = baseline
+            }
+            guard permitsScope(assignment, current: existing) else { throw staleMove }
+            return [assignment]
+        }
         var move = change
         if change.personalTaskMove == true {
             // The row-first server clears current assignments. Do not upload
@@ -1824,8 +1939,9 @@ enum TaskAssignment {
         if move.baseline != nil {
             for field in ["assigned_to", "subtasks", "section_id"] where move.fields[field] != nil && move.baseline?[field] == nil { move.baseline?[field] = existing[field] }
         }
-        if let person = change.fields["assigned_to"], !person.text.isEmpty, !project.text.isEmpty {
-            return [move, Mutation(table: "tasks", recordID: change.recordID, method: "PATCH", fields: ["assigned_to": person], baseline: ["assigned_to": .null])]
+        if let person = change.fields["assigned_to"], !person.text.isEmpty {
+            guard project != .null || sameIdentity(person, existing["user_id"]) else { throw AppFailure(message: "Inbox tasks can only be assigned to the task’s owner. Your task is unchanged.") }
+            return [move, Mutation(table: "tasks", recordID: change.recordID, method: "PATCH", fields: ["assigned_to": person, "project_id": project], baseline: ["assigned_to": .null, "project_id": project, "task_generation": existing["task_generation"]])]
         }
         return [move]
     }

@@ -32,8 +32,8 @@ final class CollaborationTests: XCTestCase {
         XCTAssertEqual(mutations.count, 2)
         XCTAssertEqual(mutations[0].fields["assigned_to"], .null)
         XCTAssertEqual(mutations[0].fields["subtasks"]?.list.first?.object["assigned_to"], .null)
-        XCTAssertEqual(mutations[1].fields, ["assigned_to": .string("new-person")])
-        XCTAssertEqual(mutations[1].baseline, ["assigned_to": .null])
+        XCTAssertEqual(mutations[1].fields, ["assigned_to": .string("new-person"), "project_id": .string("b")])
+        XCTAssertEqual(mutations[1].baseline, ["assigned_to": .null, "project_id": .string("b"), "task_generation": .null])
         change.fields = ["project_id": .null]
         XCTAssertEqual(try TaskAssignment.mutations(change, existing: old).count, 1)
         XCTAssertEqual(try TaskAssignment.mutations(change, existing: old)[0].fields["assigned_to"], .null)

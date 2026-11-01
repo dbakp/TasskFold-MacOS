@@ -452,9 +452,9 @@ private final class MoveHTTP: URLProtocol, @unchecked Sendable {
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func stopLoading() {}
     override func startLoading() { Self.handler?(request, self) }
-    func finish(_ raw: [String: JSON]) {
+    func finish(_ raw: [String: JSON], status: Int = 200) {
         let data = try! JSONEncoder().encode(raw)
-        client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": "application/json"])!, cacheStoragePolicy: .notAllowed)
         client?.urlProtocol(self, didLoad: data); client?.urlProtocolDidFinishLoading(self)
     }
 }
@@ -582,5 +582,58 @@ extension TeamTaskMoveTests {
         var boundary = cache.boundary.raw; boundary["token"] = .string(String(repeating: "b", count: 64))
         let updated = try TeamWorkspaceCache(boundary: TeamWorkspaceBoundary(boundary, account: draft.scope.account, origin: draft.scope.origin), previous: cache, pending: [], tasks: [draft.source])
         XCTAssertThrowsError(try admission.destinations(current: draft.source, workspace: draft.workspace, session: session, cache: updated, pending: [], enabled: true))
+    }
+}
+
+
+extension PersonalTaskMoveTests {
+    private func scopedAssignment() -> Mutation {
+        Mutation(table: "tasks", recordID: taskID, method: "PATCH", fields: ["project_id": .string(destination), "assigned_to": .string(account)], baseline: ["project_id": .string(destination), "assigned_to": .null, "task_generation": .null])
+    }
+    private func assignedReply() -> [String: JSON] {
+        ["id": .string(taskID), "user_id": .string(account), "project_id": .string(destination), "assigned_to": .string(account), "task_generation": .null]
+    }
+    @MainActor func testScopedAssignmentUsesOnlyItsGuardedEndpoint() async throws {
+        let change = scopedAssignment(), api = try backend(); var calls = 0
+        MoveHTTP.handler = { request, peer in
+            calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_assign_task_scoped")
+            XCTAssertEqual(try! self.capturedBody(request), ["_id": .string(self.taskID), "_base": .object(change.baseline!), "_changes": .object(change.fields)])
+            peer.finish(self.assignedReply())
+        }; defer { MoveHTTP.handler = nil }
+        let saved = try await api.send(change, expectedAccount: account)
+        XCTAssertEqual(saved?["assigned_to"], .string(account)); XCTAssertEqual(calls, 1)
+    }
+    @MainActor func testMissingAssignmentEndpointNeverFallsBackToGenericPatch() async throws {
+        for code in ["PGRST202", "PT503"] {
+            let api = try backend(); var calls = 0
+            MoveHTTP.handler = { request, peer in
+                calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_assign_task_scoped")
+                peer.finish(["code": .string(code), "message": .string("Private internal diagnostic")], status: code == "PT503" ? 503 : 404)
+            }; defer { MoveHTTP.handler = nil }
+            do { _ = try await api.send(scopedAssignment(), expectedAccount: account); XCTFail("Unsupported service must keep the choice unsent") }
+            catch { XCTAssertTrue(error.localizedDescription.contains("choice is kept for retry")); XCTAssertFalse(error.localizedDescription.contains("Private internal")) }
+            XCTAssertEqual(calls, 1)
+        }
+    }
+    @MainActor func testAssignmentConflictUsesTheExistingReviewPath() async throws {
+        let api = try backend(); var calls = 0
+        MoveHTTP.handler = { _, peer in calls += 1; peer.finish(["code": .string("PT409"), "message": .string("Moved")], status: 409) }; defer { MoveHTTP.handler = nil }
+        do { _ = try await api.send(scopedAssignment(), expectedAccount: account); XCTFail("Changed context needs review") }
+        catch { XCTAssertTrue(error is TeamTaskReviewRequired) }
+        XCTAssertEqual(calls, 1)
+    }
+    @MainActor func testAssignmentReplyCannotConfirmAnotherProjectGenerationOrPerson() async throws {
+        for field in ["project_id", "task_generation", "assigned_to"] {
+            let api = try backend(); var reply = assignedReply(); reply[field] = .string("a6110000-0000-4000-8000-000000000099")
+            MoveHTTP.handler = { _, peer in peer.finish(reply) }; defer { MoveHTTP.handler = nil }
+            do { _ = try await api.send(scopedAssignment(), expectedAccount: account); XCTFail("Wrong confirmed " + field) }
+            catch { XCTAssertTrue(error.localizedDescription.contains("did not confirm this assignment")) }
+        }
+    }
+    @MainActor func testOrdinaryAssignmentKeepsTheLegacyEndpointContract() async throws {
+        let change = Mutation(table: "tasks", recordID: taskID, method: "PATCH", fields: ["assigned_to": .string(account)], baseline: ["assigned_to": .null, "task_generation": .null])
+        let api = try backend(); var calls = 0
+        MoveHTTP.handler = { request, peer in calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_patch_task"); peer.finish(self.assignedReply()) }; defer { MoveHTTP.handler = nil }
+        _ = try await api.send(change, expectedAccount: account); XCTAssertEqual(calls, 1)
     }
 }

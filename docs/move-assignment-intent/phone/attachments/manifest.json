@@ -1,0 +1,53 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "BB50935E-2A13-4654-80C1-F15AD775E7AA.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment cold return_0_F08EF009-8DDB-4DE5-AA9C-DBE9148E753A.json",
+        "timestamp" : 1793565695.35
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "96F698E5-62E1-42A4-BC23-0B7B617152AB.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment redone_0_6021C584-0928-4EE8-99BD-192A67E70261.json",
+        "timestamp" : 1793565683.116
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "13FA4EED-F77A-49FF-9E54-6DB0C52644CE.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment undone_0_7D1BB11B-A7EF-4278-8A69-E5EB4BA5D8A6.json",
+        "timestamp" : 1793565677.796
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "12BA8E12-A19C-4F0B-A075-135D0CB24862.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment moved_0_A22316BE-E743-405B-9BB0-3252F552B7C6.json",
+        "timestamp" : 1793565672.399
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName" : "iPhone 18 Pro",
+        "exportedFileName" : "196F1222-E4A6-4323-84B3-4965F8699268.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment original_0_A92469CD-D9B1-408D-BA1E-FC62326FE6FF.json",
+        "timestamp" : 1793565657.771
+      }
+    ],
+    "testIdentifier" : "TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn"
+  }
+]

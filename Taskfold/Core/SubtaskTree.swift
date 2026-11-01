@@ -640,7 +640,8 @@ enum TaskSelectionPlan {
         for id in roots.keys.sorted() {
             guard let before = roots[id], let after = working[id] else { continue }
             if deleted.contains(id) { result.append(Mutation(table: "tasks", recordID: id, method: "DELETE", fields: [:], baseline: before.fields)); continue }
-            let fields = after.fields.filter { before.fields[$0.key] != $0.value }
+            var fields = after.fields.filter { before.fields[$0.key] != $0.value }
+            if let request = rootRequests[id], case .patch(let authored) = request.action { fields = TaskAssignment.preservingAssignmentIntent(fields, authored: authored) }
             if !fields.isEmpty {
                 var mutation = Mutation(table: "tasks", recordID: id, method: "PATCH", fields: fields, baseline: TaskCompletionRevision.editBaseline(for: fields, from: before))
                 if let identity = completionIDs[id] { mutation.id = identity }

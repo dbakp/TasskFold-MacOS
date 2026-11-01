@@ -6013,3 +6013,60 @@ extension TaskfoldMacUITests {
         try assignmentEquivalent(Data(contentsOf: cache), before)
     }
 }
+
+extension TaskfoldMacUITests {
+
+    @MainActor private func assignmentWaitForRoot(_ cache: URL, project: String, assignee: String?, app: XCUIApplication) throws {
+        let saved = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let snapshot = try? self.assignmentRead(cache), let root = ((snapshot["tables"] as? [String: Any])?["tasks"] as? [[String: Any]])?.first(where: { $0["id"] as? String == self.assignmentRootID }) else { return false }
+            return root["project_id"] as? String == project && (assignee == nil ? root["assigned_to"] is NSNull : root["assigned_to"] as? String == assignee)
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 12), .completed, app.debugDescription)
+        let text = try String(contentsOf: cache, encoding: .utf8)
+        for token in assignmentTokens { XCTAssertTrue(text.contains(token), "Missing exact original token: " + token) }
+    }
+
+    @MainActor func testProjectMoveExplicitAssigneeUndoRedoAndColdReturn() throws {
+        let app = XCUIApplication(); defer { app.terminate() }
+        let cache = try assignmentStart(app, unsupported: false)
+        try assignmentAttach(cache, name: "Explicit assignment original")
+        assignmentChooseDestination(app)
+        // The Mac autosaves the move before the separate assignee selection.
+        try assignmentWaitForRoot(cache, project: assignmentDestinationID, assignee: nil, app: app)
+        // The source-bound inspector pauses after a project change. Reopen the
+        // current task before making a separate destination assignment.
+        let taskRow = app.staticTexts["title-" + assignmentRootID].firstMatch
+        taskRow.click(); app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(app.staticTexts["No Task Selected"].waitForExistence(timeout: 5), app.debugDescription)
+        taskRow.click(); app.typeKey(.return, modifierFlags: [])
+        XCTAssertTrue(app.textFields["taskTitle"].waitForExistence(timeout: 8), app.debugDescription)
+        let assign = app.buttons["taskAssignee"]
+        let inspector = app.scrollViews.containing(.textField, identifier: "taskTitle").firstMatch
+        for _ in 0..<10 where !assign.isHittable { inspector.scroll(byDeltaX: 0, deltaY: -180) }
+        XCTAssertTrue(assign.isHittable, app.debugDescription); assign.click()
+        let selfChoice = app.buttons["assign-member-ui-testing"]
+        XCTAssertTrue(selfChoice.waitForExistence(timeout: 8), app.debugDescription); selfChoice.click()
+        try assignmentWaitForRoot(cache, project: assignmentDestinationID, assignee: "ui-testing", app: app)
+        try assignmentAttach(cache, name: "Explicit assignment moved")
+        // Give the list keyboard focus so its history receives Undo.
+        let row = app.staticTexts["title-" + assignmentRootID].firstMatch
+        row.click(); app.typeKey("z", modifierFlags: .command)
+        try assignmentWaitForRoot(cache, project: assignmentDestinationID, assignee: nil, app: app)
+        app.typeKey("z", modifierFlags: .command)
+        try assignmentWaitForRoot(cache, project: assignmentSourceID, assignee: "ui-testing", app: app)
+        try assignmentAttach(cache, name: "Explicit assignment undone")
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        try assignmentWaitForRoot(cache, project: assignmentDestinationID, assignee: nil, app: app)
+        app.typeKey("z", modifierFlags: [.command, .shift])
+        try assignmentWaitForRoot(cache, project: assignmentDestinationID, assignee: "ui-testing", app: app)
+        try assignmentAttach(cache, name: "Explicit assignment redone")
+        app.typeKey("q", modifierFlags: .command); XCTAssertTrue(app.wait(for: .notRunning, timeout: 8))
+        let saved = try Data(contentsOf: cache)
+        try launchHeadingWorkspace(app)
+        let today = app.staticTexts["Today"].firstMatch; XCTAssertTrue(today.waitForExistence(timeout: 10)); today.click()
+        XCTAssertTrue(app.staticTexts["title-" + assignmentRootID].waitForExistence(timeout: 12))
+        try assignmentWaitForRoot(cache, project: assignmentDestinationID, assignee: "ui-testing", app: app)
+        try assignmentEquivalent(Data(contentsOf: cache), saved)
+        try assignmentAttach(cache, name: "Explicit assignment cold return")
+    }
+}

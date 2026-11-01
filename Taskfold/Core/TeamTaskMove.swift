@@ -51,7 +51,9 @@ enum PersonalTaskMove {
         try TaskAssignmentTree.cleared(tree, removing: true)
     }
     static func projectedFields(_ change: Mutation, onto old: Record) throws -> [String: JSON] {
+        guard TaskAssignment.permitsScope(change, current: old) else { throw TaskAssignment.staleMove }
         var fields = change.fields
+        if TaskAssignment.scopedProject(change) != nil { fields.removeValue(forKey: "project_id") }
         if change.personalTaskMove == true, change.table == "tasks", change.method == "PATCH",
            let destination = fields["project_id"], destination != old["project_id"] {
             fields["assigned_to"] = .null

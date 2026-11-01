@@ -34,7 +34,7 @@ enum PinnedNotes {
     /// Keep completion revision baselines and merge only edited fields, like ordinary task edits.
     static func edit(_ record: Record, existing: Record?, baseline: Record?) -> Mutation? {
         let editable = record.fields.filter { $0.key != "completion_version" && (existing == nil || $0.key != "task_generation") }
-        let changed = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
+        let changed = TaskAssignment.preservingAssignmentIntent((baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable, authored: editable)
         guard !changed.isEmpty else { return nil }
         return Mutation(table: "tasks", recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed,
                         baseline: baseline.map { TaskCompletionRevision.editBaseline(for: changed, from: $0) })

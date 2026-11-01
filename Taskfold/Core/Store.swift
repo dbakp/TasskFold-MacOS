@@ -2438,13 +2438,6 @@ final class Store {
             let orderingCommands = preparedChanges.map { change in
                 var change = change
                 if change.organizationOrder != nil { change.id = UUID() }
-                if change.table == "tasks", change.method == "PATCH", !localMode, childTaskFieldEditingEnabled,
-                   let destination = change.fields["project_id"], let current = record("tasks", id: change.recordID),
-                   destination != current["project_id"], change.teamTaskScope == nil,
-                   change.teamCompletion == nil, change.teamTaskBatch == nil,
-                   nativeConversationTeamCache?.knownTasks.contains(change.recordID) != true {
-                    change.personalTaskMove = true
-                }
                 return change
             }
             // Normalization precedes all mutation; reuse its immutable lookup/catalog.
@@ -2456,8 +2449,7 @@ final class Store {
             let normalizationLabels = orderingCommands.contains { $0.table == "tasks" && $0.method != "DELETE" } ? labels : []
             let normalizationCache = nativeConversationTeamCache
             do {
-            var assignmentBudget = TaskAssignmentTree.Budget()
-            changes = try orderingCommands.flatMap { try TaskAssignment.mutations($0, existing: normalizationRecord($0.table, id: $0.recordID), budget: &assignmentBudget) }.map { change in
+            changes = try TaskAssignment.normalizedChanges(orderingCommands, existing: { normalizationRecord("tasks", id: $0) }, markMove: markPersonalTaskMove).map { change in
                 var change = change
                 if change.table == "tasks", change.method != "DELETE" {
                     change.fields = TaskPlanning.fields(change.fields, existing: normalizationRecord("tasks", id: change.recordID))
@@ -2659,7 +2651,8 @@ final class Store {
         }
         let record = table == "tasks" && applyReminderDefaults ? applyingReminderDefault(record, previous: baseline ?? existing) : record
         let editable = record.fields.filter { !(table == "projects" && $0.key == "ancestor_archived") && (table != "tasks" || $0.key != "completion_version" && (existing == nil || $0.key != "task_generation")) }
-        let changed = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
+        let difference = (baseline ?? existing).map { old in editable.filter { old.fields[$0.key] != $0.value } } ?? editable
+        let changed = table == "tasks" ? TaskAssignment.preservingAssignmentIntent(difference, authored: editable) : difference
         guard !changed.isEmpty else { return true }
         var changes = [Mutation(table: table, recordID: record.id, method: existing == nil ? "POST" : "PATCH", fields: changed, baseline: baseline.map { old in
             table == WorkflowTemplate.table ? old.fields : table == "tasks" ? TaskCompletionRevision.editBaseline(for: changed, from: old) : Dictionary(uniqueKeysWithValues: changed.keys.map { ($0, old[$0]) })
@@ -2786,7 +2779,7 @@ final class Store {
     func update(_ ids: [String], fields: [String: JSON]) {
         let changes = ids.compactMap { id -> Mutation? in
             guard let task = record("tasks", id: id) else { return nil }
-            let changed = fields.filter { task.fields[$0.key] != $0.value }
+            let changed = TaskAssignment.preservingAssignmentIntent(fields.filter { task.fields[$0.key] != $0.value }, authored: fields)
             return changed.isEmpty ? nil : Mutation(table: "tasks", recordID: id, method: "PATCH", fields: changed)
         }
         if !changes.isEmpty { commit(changes) }
@@ -2797,22 +2790,26 @@ final class Store {
         if !changes.isEmpty { commit(changes) }
     }
     func toggleChanges(_ task: Record) -> [Mutation] { TaskCompletion.toggle(task, tasks: tasks, account: userID) }
-    private func historyChanges(_ changes: [Mutation]) -> [Mutation] {
-        changes.map { original in
+    private func markPersonalTaskMove(_ input: Mutation, existing: Record?) -> Mutation {
+        var change = input
+        if TaskAssignment.scopedProject(change) != nil { return change }
+        if change.table == "tasks", change.method == "PATCH", !localMode, childTaskFieldEditingEnabled,
+           let destination = change.fields["project_id"], let existing,
+           destination != existing["project_id"], change.teamTaskScope == nil,
+           change.teamCompletion == nil, change.teamTaskBatch == nil,
+           nativeConversationTeamCache?.knownTasks.contains(change.recordID) != true { change.personalTaskMove = true }
+        return change
+    }
+    private func historyChanges(_ changes: [Mutation]) throws -> [Mutation] {
+        let actions = changes.map { original in
             var change = PersonalTaskMove.historyAction(TeamCompletion.historyAction(original,snapshot:snapshot))
             if change.table == "view_orders" { change.id = UUID(); change.orderRecovery = nil }
             if change.table == "tasks", change.method == "POST" {
                 return TaskGeneration.restoring(change, existing: record("tasks", id: change.recordID))
             }
-            guard change.table == "tasks", change.method == "PATCH", let base = change.baseline,
-                  let current = record("tasks", id: change.recordID) else { return change }
-            var next = change
-            next.fields = Dictionary(uniqueKeysWithValues: change.fields.map { key, value in
-                (key, TaskEdit.keepingLocal(field: key, base: base[key] ?? .null, desired: value, remote: current[key]))
-            })
-            next.baseline = nil // commit captures the actual state before applying the rebased inverse.
-            return next
+            return change
         }
+        return try TaskAssignment.replayingHistory(actions, existing: { record($0, id: $1) }, markMove: markPersonalTaskMove)
     }
     func captureHistoryRequest(_ direction: EditHistoryRequest.Direction = .undo) -> EditHistoryRequest? {
         guard (signedIn || localMode), !signingOut, !accountRemovalBlocked else { return nil }
@@ -2829,8 +2826,10 @@ final class Store {
             error = "This Undo belongs to an earlier change or workspace. Use the current Undo controls."; return false
         }
         guard let entry = undoStack.popLast() else { return false }
-        let changes = historyChanges(entry.undo), applied = EditHistory(changes: changes, snapshot: snapshot, id: entry.id)
-        if commit(changes, remember: false) { redoStack.append(applied.reversed); return true }
+        do {
+            let changes = try historyChanges(entry.undo), applied = EditHistory(changes: changes, snapshot: snapshot, id: entry.id)
+            if commit(changes, remember: false) { redoStack.append(applied.reversed); return true }
+        } catch { self.error = error.localizedDescription }
         undoStack.append(entry); return false
     }
     @discardableResult func redo(_ request: EditHistoryRequest? = nil) -> Bool {
@@ -2838,8 +2837,10 @@ final class Store {
             error = "This Redo belongs to an earlier change or workspace. Use the current Redo controls."; return false
         }
         guard let entry = redoStack.popLast() else { return false }
-        let changes = historyChanges(entry.redo), applied = EditHistory(changes: changes, snapshot: snapshot, id: entry.id)
-        if commit(changes, remember: false) { undoStack.append(applied); return true }
+        do {
+            let changes = try historyChanges(entry.redo), applied = EditHistory(changes: changes, snapshot: snapshot, id: entry.id)
+            if commit(changes, remember: false) { undoStack.append(applied); return true }
+        } catch { self.error = error.localizedDescription }
         redoStack.append(entry); return false
     }
     /// A denied queued change must not block the refresh that removes revoked shared work.
@@ -5649,8 +5650,8 @@ extension Store {
                 guard let choice = PinnedNotes.change(taskID: task.id, enabled: true, pins: snapshot.tables["view_orders"] ?? [], account: userID) else { throw TaskOrderRecovery.invalid }
                 let pin = try applyChoice(choice)
                 let inverse = EditHistory(changes: [pin], snapshot: beforePin).undo
-                for change in historyChanges(inverse) { _ = try applyChoice(change) }
-                for change in historyChanges([pin]) { _ = try applyChoice(change) }
+                for change in try historyChanges(inverse) { _ = try applyChoice(change) }
+                for change in try historyChanges([pin]) { _ = try applyChoice(change) }
                 try persist()
             }
             if let mode = TeamBatchRecoveryNativePeer.readOnlyMode {

@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "device": {
+    "architecture": "arm64",
+    "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "deviceName": "iPhone 18 Pro",
+    "modelName": "iPhone 18 Pro",
+    "osBuildNumber": "24A434",
+    "osVersion": "27.0",
+    "platform": "iOS Simulator"
+  },
+  "summarySHA256": "f2da47eb6340c409b6be8109b57086289c309b09665acc21d0583cfcde10d803",
+  "manifestSHA256": "5f9d4bfae0c21e8409ecb4fcc8e6b57c17416366b79d0bbdd2750a79e5347541",
+  "scope": "Synthetic local native project/assignee controls, actual Undo/Redo and cold return; historical child assignees remain cleared; no hosted delivery or speech claim",
+  "fullRootAndExactChildValuesVerified": true,
+  "fullSnapshotColdReturnVerified": true,
+  "snapshots": [
+    {
+      "name": "original",
+      "sha256": "3982fc1f0f7d954dd42d4687e3e0d12e35e695d69d935e06ae9a619ef7a1b851",
+      "bytes": 1273
+    },
+    {
+      "name": "moved",
+      "sha256": "72af0962c189e60c6488e8d5e83714e7e646836bfdf0d4f5804427eb4db73b38",
+      "bytes": 4054
+    },
+    {
+      "name": "undone",
+      "sha256": "8f09880f932bf89ceb557141d40f506652ee051679a41d77874cc4b8ccdd488a",
+      "bytes": 6211
+    },
+    {
+      "name": "redone",
+      "sha256": "398b9993f787990963323881e4cd55364fdf34509544954d879e541445e48374",
+      "bytes": 8368
+    },
+    {
+      "name": "cold return",
+      "sha256": "76d16ac82fbf58fe33e48c1558a4626a510c9e57445346dd2ab43cb0be50d047",
+      "bytes": 8368
+    }
+  ]
+}

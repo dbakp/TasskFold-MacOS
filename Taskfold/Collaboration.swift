@@ -197,7 +197,9 @@ struct ConflictReview: View {
                     }
                 }
                 Section {
-                    if goalConflict {
+                    if conflict.assignmentContextChanged {
+                        Text("This task moved or was replaced. Use synced to clear this saved assignment, then reopen the task to choose an assignee in its current project.").font(.callout).foregroundStyle(.secondary).accessibilityIdentifier("assignmentScopeChanged")
+                    } else if goalConflict {
                         Text("Keep my goals saves the targets, weekdays and time zone shown above. Use synced goals discards only this queued choice. Independent settings and later queued changes are retained.").font(.callout).foregroundStyle(.secondary)
                     } else if templateConflict {
                         Text("Keep my edit replaces the changed definition fields shown above. Use synced discards this queued edit. Later offline work is retained. A removed template can be saved under a new identity.").font(.callout).foregroundStyle(.secondary)
@@ -225,7 +227,7 @@ struct ConflictReview: View {
                 VStack(spacing: 10) {
                     Divider()
                     Button(goalConflict ? "Keep my goals" : templateConflict ? (deleting ? "Delete template" : missingTemplate ? "Save as new template" : "Keep my edit") : (deleting ? "Delete task" : "Keep my edit"), role: deleting ? .destructive : nil) { resolve(keepLocal: true) }
-                        .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit").disabled(!current || unsupportedTemplate || unsupportedGoals)
+                        .buttonStyle(.borderedProminent).accessibilityIdentifier("keepMyEdit").disabled(!current || unsupportedTemplate || unsupportedGoals || conflict.assignmentContextChanged)
                     Button(goalConflict ? "Use synced goals" : templateConflict ? (deleting ? "Keep template" : "Use synced") : (deleting ? "Keep task" : "Use synced")) { resolve(keepLocal: false) }
                         .buttonStyle(.bordered).accessibilityIdentifier("useSharedEdit").disabled(!current)
                     Button { dismiss() } label: { Text("Later").frame(minHeight: 44) }
