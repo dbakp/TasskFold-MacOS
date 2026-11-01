@@ -68,17 +68,24 @@ import CryptoKit
         return SHA256.hash(data: try encoder.encode(value)).map { String(format: "%02x", $0) }.joined()
     }
     static func stats(_ value: JSON, depth: Int = 1) -> (count: Int, depth: Int)? {
-        if value == .null { return (0,0) }
-        guard case .array(let rows) = value else { return nil }
-        var count = 0, deepest = 0
-        for row in rows {
-            guard case .object(let fields) = row, case .string? = fields["id"], depth <= 24 else { return nil }
-            count += 1; deepest = max(deepest, depth)
-            if let children = fields["subtasks"], children != .null {
-                guard let nested = stats(children, depth: depth + 1) else { return nil }; count += nested.count; deepest = max(deepest, nested.depth)
+        var seen = Set<String>()
+        func walk(_ value: JSON, depth: Int) -> (count: Int, depth: Int)? {
+            if value == .null { return (0, 0) }
+            guard case .array(let rows) = value else { return nil }
+            var count = 0, deepest = 0
+            for row in rows {
+                guard case .object(let fields) = row, case .string(let reference)? = fields["id"], depth <= 24,
+                      !reference.isEmpty, reference.utf8.count <= 128, reference.precomposedStringWithCanonicalMapping.utf8.count <= 128,
+                      seen.insert(reference.precomposedStringWithCanonicalMapping).inserted, seen.count <= 1000 else { return nil }
+                count += 1; deepest = max(deepest, depth)
+                if let children = fields["subtasks"], children != .null {
+                    guard let nested = walk(children, depth: depth + 1) else { return nil }
+                    count += nested.count; deepest = max(deepest, nested.depth)
+                }
             }
+            return (count, deepest)
         }
-        return (count,deepest)
+        return walk(value, depth: depth)
     }
     static func review(_ state: [String: JSON]) throws -> [String: JSON] {
         let root = Record(state["root"]!.object), tree = root["subtasks"], metrics = stats(tree)

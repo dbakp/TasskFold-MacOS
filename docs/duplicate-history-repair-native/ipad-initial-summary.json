@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName" : "iPad Pro 13-inch (M5)",
+        "modelName" : "iPad Pro 13-inch (M5)",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Taskfold · Built with macOS 26.6.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1793520384.465,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793520090.644,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Failed to get matching snapshot: No matches found for Elements matching predicate '\"childRepairExportSaved\" IN identifiers' from input {(\n    Button, label: 'Close',\n    Button, identifier: 'childNativeRepair', label: 'Review older subtasks',\n    Button, identifier: 'childNativeRepairRecovery', label: 'Open saved repairs',\n    Button, identifier: 'childNativeAdoption', label: 'Review subtask storage',\n    Button, identifier: 'childNativeAdoptionRecovery', label: 'Open saved upgrades',\n    Button, identifier: 'childNativeAdoptionPrivate', label: 'Preserve a synthetic private edit',\n    Button, identifier: 'childNativeAdoptionRemovePrivate', label: 'Remove only the synthetic private edit',\n    Button, identifier: 'childNativeEditor', label: 'Open subtask editor',\n    Button, identifier: 'childNativeCompletionRecovery', label: 'Open saved actions',\n    Button, identifier: 'childNativeQueueCompletion', label: 'Save an offline test completion',\n    Button, identifier: 'childNativeExerciseHistory', label: 'Exercise completion history',\n    Button, identifier: 'childNativeRecovery', label: 'Open saved changes',\n    Button, identifier: 'childNativeForeignEdit', label: 'Change test title on server',\n    Button, identifier: 'childNativeConnection', label: 'Go offline',\n    Button, identifier: 'childRepairTarget-ec990000-0000-4000-8000-000000000002', label: 'Native child workspace'\n)}",
+      "targetName" : "TaskfoldUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "TaskfoldUITests/testChildDuplicateHistoryNativeLargestText()",
+      "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testChildDuplicateHistoryNativeLargestText",
+      "testName" : "testChildDuplicateHistoryNativeLargestText()"
+    }
+  ],
+  "title" : "Test - Taskfold",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

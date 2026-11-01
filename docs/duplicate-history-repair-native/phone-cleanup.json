@@ -1,0 +1,16 @@
+{
+  "retainedScreenshots": 4,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-duplicate-history-native-phone-v5.xcresult",
+      "bytes": 6030411
+    },
+    {
+      "path": "/tmp/taskfold-duplicate-history-native-phone-v5-attachments",
+      "bytes": 1354557
+    }
+  ],
+  "deviceRestoredTo": "Shutdown",
+  "newSimulatorCreated": false,
+  "proof": "passed"
+}

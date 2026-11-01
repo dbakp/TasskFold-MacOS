@@ -1,0 +1,16 @@
+{
+  "retainedScreenshots": 4,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-duplicate-history-native-ipad-v5.xcresult",
+      "bytes": 9222666
+    },
+    {
+      "path": "/tmp/taskfold-duplicate-history-native-ipad-v5-attachments",
+      "bytes": 2204505
+    }
+  ],
+  "deviceRestoredTo": "Shutdown",
+  "newSimulatorCreated": false,
+  "proof": "passed"
+}

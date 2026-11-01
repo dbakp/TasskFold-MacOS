@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "scope": "native peer persistence; independent SQL authority acceptance remains separate",
+  "rootID": "ec990000-0000-4000-8000-000000000002",
+  "peerSHA256": "52d5dda941e2172652de81ea8bc870e0856dde4f0fccec59bacd6ec9a39a6ce8",
+  "historySHA256": "493b0d1cc526eafa3b6405e38be8d66b0f83aa881df0ef60f44ed9e0b779ad02",
+  "historyEvents": 3,
+  "retainedReferenceEvents": 2,
+  "retainedCompletionEvents": 1,
+  "coverageGapPreserved": true,
+  "freshIdentityHasNoCopiedHistory": true,
+  "keeperCompletionDatePreserved": true,
+  "exactArchivedHistoryPreserved": true,
+  "appliedWrites": 1,
+  "receipts": 1,
+  "archiveDigestVerified": true
+}

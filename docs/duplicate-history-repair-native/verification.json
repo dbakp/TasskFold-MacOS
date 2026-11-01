@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-01",
+  "status": "corrected native saved/cold journeys and independent persisted-data proofs accepted on iPhone and largest-text iPad",
+  "acceptedPhase": "v5 for both devices",
+  "phone": {
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "text": "normal",
+    "appearance": "dark",
+    "dataProof": "passed"
+  },
+  "ipad": {
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "text": "accessibility XXXL",
+    "appearance": "dark",
+    "dataProof": "passed"
+  },
+  "visualInspection": "Save and Export action text wraps in its own column; no icon/title overlap in the largest-text captures",
+  "macRuntime": "not run: most recent native availability check reported a locked Mac",
+  "macBuild": "passed current app/UI test compilation and strict signatures",
+  "iosBuild": "passed current app/test build and strict signatures",
+  "hostedMigrationDeployed": false,
+  "normalMigrationGatesEnabled": false,
+  "newSimulatorsCreated": 0,
+  "broaderOlderDataMapping": "open: indexed-copy reconciliation, other historical identities/lifecycles, opaque editable cache and shared custody",
+  "humanVoiceOverListening": "not claimed"
+}

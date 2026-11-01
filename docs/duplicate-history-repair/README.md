@@ -18,6 +18,6 @@ The client cases read each platform's actual database proof, preserve the choice
 
 ## Still open
 
-Native interaction/layout/speech acceptance for this new choice is pending; app builds alone do not close it. The old synthetic native repair peer refuses this new operation explicitly rather than pretending to validate server custody.
+The reserved native peer now exercises this choice through the real review, durable draft, save and recovery controls. Current native acceptance is recorded in [the native evidence](../duplicate-history-repair-native/README.md); its persisted-state verifier is independent of the UI diagnostic panel. Mac runtime and human VoiceOver listening acceptance remain open. Native peer results do not substitute for the separate SQL custody checks.
 
 This is a bounded duplicate-separation workflow. Arbitrary renames into a different historical identity, splitting historical lifecycles, reconciliation of conflicting indexed copies, general opaque editable-cache adoption, and shared attachment/discussion custody remain open. The broader older-data checkpoint stays unfinished. This migration is not deployed to a hosted service, normal-use migration gates stay off, and all user deferrals remain unchanged.

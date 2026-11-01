@@ -69,6 +69,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             root.merge(["title": .string("Plan the workshop"), "section_id": .null, "completed": .bool(false), "completed_at": .null, "completion_version": .number(0), "is_heading": .bool(false), "is_recurring": .bool(false)]) { _, new in new }
             state["root"] = .object(root)
         }
+        ChildRepairNativePeer.seedDuplicateHistory(&state)
         return state
     }
     static func save(_ state: [String: JSON]) throws {
@@ -544,6 +545,7 @@ struct ChildFieldNativeFixtureView: View {
                 let originalRoot = originals.first.flatMap { try? TaskfoldJSONDecoder().decode([String:JSON].self,from:Data($0.utf8))["root"] }
                 let originalHash = try originalRoot.map { try ChildAdoptionNativePeer.hash($0) } ?? "none"
                 nextProbe += " repairWrites=\(state["repairWrites"]?.integer ?? 0) repairApplied=\(repairs.entries.filter { $0.phase == .applied }.count) repairPending=\(repairs.entries.filter { $0.phase == .queued || $0.phase == .attempted }.count) repairOriginalRootHash=\(originalHash)"
+
             }
             if ChildTransferNativePeer.enabled, store.userID == ChildFieldNativeIdentity.account {
                 let transfers = try await store.childTaskTransferJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).load()

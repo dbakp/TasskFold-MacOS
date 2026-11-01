@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "scope": "current app and UI test products compiled and signed; Mac runtime not claimed",
+  "sourceMatchesBuiltHost": {
+    "Taskfold/ChildAdoptionNativeFixture.swift": true,
+    "Taskfold/ChildFieldNativeFixture.swift": true,
+    "Taskfold/ChildRepairNativeFixture.swift": true,
+    "Taskfold/Views/ChildTaskRepairView.swift": true,
+    "TaskfoldUITests/AudioCommentUITests.swift": true
+  },
+  "executableSHA256": "e62961a40578f2db4974e808b373b1a8011d9163ad51503d83dce7965244f360",
+  "debugDylibSHA256": "a34e20ece9bfbc93a0728ed18443239afbdfa6f941231693be1daf8b2505cb57"
+}

@@ -2313,6 +2313,57 @@ extension TaskfoldMacUITests {
         childDone(app); childProbe(app, "adoptionQueued=0 adoptionAttempted=0 adoptionApplied=0 adoptionClosed=1 adoptionWrites=0 adoptionRequests=2")
         XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
     }
+    @MainActor private func duplicateHistoryChoice(_ app: XCUIApplication) {
+        let menu = app.descendants(matching: .any).matching(identifier: "childRepairSeparate-1").firstMatch
+        childReveal(menu, app); XCTAssertTrue(menu.waitForExistence(timeout: 15), app.debugDescription)
+        completionReadyPress(menu, app)
+        let name = "Keep history with “Review the layout” (item 1)"
+        #if os(macOS)
+        let choice = app.menuItems[name].firstMatch
+        #else
+        let choice = app.buttons[name].firstMatch
+        #endif
+        XCTAssertTrue(choice.waitForExistence(timeout: 10), app.debugDescription); childPress(choice)
+        let summary = app.staticTexts["childRepairHistory-1"]; childReveal(summary, app)
+        XCTAssertTrue(summary.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(summary.label.contains("2 recorded events"), summary.label)
+        XCTAssertTrue(summary.label.contains("1 completion event"), summary.label)
+        let ready = app.staticTexts["childRepairReady"]; childReveal(ready, app); XCTAssertTrue(ready.exists)
+    }
+    @MainActor private func duplicateHistoryJourney(large: Bool) throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let mode = "--child-adoption-duplicate-history"
+        try childOpen(app, extra: mode, large: large)
+        childHomePress("childNativeRepair", app); duplicateHistoryChoice(app)
+        structureSnapshot(app, "Explicit keeper with retained events and original completion date")
+        let undo = app.buttons["Undo last choice"]; childReveal(undo, app); completionReadyPress(undo, app)
+        let menu = app.descendants(matching: .any).matching(identifier: "childRepairSeparate-1").firstMatch
+        childReveal(menu, app); XCTAssertTrue(menu.waitForExistence(timeout: 15), app.debugDescription)
+        duplicateHistoryChoice(app)
+        let draftCue = app.descendants(matching: .any).matching(identifier: "childRepairDraftSaved").firstMatch
+        childReveal(draftCue, app, towardTop: true); XCTAssertTrue(draftCue.waitForExistence(timeout: 15), app.debugDescription)
+        app.terminate(); try childOpen(app, reset: false, extra: mode, large: large)
+        childHomePress("childNativeRepair", app)
+        let summary = app.staticTexts["childRepairHistory-1"]; childReveal(summary, app)
+        XCTAssertTrue(summary.waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(summary.label.contains("2 recorded events")); XCTAssertTrue(summary.label.contains("1 completion event"))
+        structureSnapshot(app, "Durable history choice after cold return")
+        let save = app.buttons["childRepairSave"]; childReveal(save, app); XCTAssertTrue(save.isEnabled)
+        structureSnapshot(app, "Readable save action after cold return")
+        completionReadyPress(save, app)
+        childPress(app.buttons["Save repair"].firstMatch)
+        let saved = app.staticTexts["childRepairStatus"]; childReveal(saved, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Repair saved"), object: saved)], timeout: 15), .completed, app.debugDescription)
+        childPress(app.buttons["Close"].firstMatch)
+        app.terminate(); try childOpen(app, reset: false, extra: mode, large: large)
+        childHomePress("childNativeRepairRecovery", app)
+        let confirmed = app.staticTexts["childRepairStatus"]; childReveal(confirmed, app); XCTAssertEqual(confirmed.label, "Repair saved")
+        let export = app.buttons["childRepairExportSaved"]; childReveal(export, app)
+        XCTAssertTrue(export.waitForExistence(timeout: 15), app.debugDescription); XCTAssertTrue(export.isEnabled)
+        structureSnapshot(app, "Cold saved repair keeps the complete original available")
+    }
+    @MainActor func testChildDuplicateHistoryNativeReviewSaveColdConfirmation() throws { try duplicateHistoryJourney(large: false) }
+    @MainActor func testChildDuplicateHistoryNativeLargestText() throws { try duplicateHistoryJourney(large: true) }
     @MainActor private func repairReview(_ app: XCUIApplication) {
         childHomePress("childNativeRepair", app)
         let reference = app.buttons["childRepairReference-0"];childReveal(reference,app);XCTAssertTrue(reference.waitForExistence(timeout:15),app.debugDescription);completionReadyPress(reference,app)

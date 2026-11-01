@@ -55,7 +55,7 @@ struct ChildTaskRepairView: View {
                             Section("Before you repair") {
                                 Label("Your original stays safe", systemImage: "doc.badge.clock").font(.headline)
                                 Text("Review each change below. Saving keeps a complete original copy before changing the task.").fixedSize(horizontal: false, vertical: true)
-                                Button("Export original content", systemImage: "square.and.arrow.up") { if store.childTaskAdoptionReviewIsCurrent(review), let source = review.originalSource { export(source) } }.disabled(review.originalSource == nil || working).accessibilityIdentifier("childRepairExportBefore")
+                                Button { if store.childTaskAdoptionReviewIsCurrent(review), let source = review.originalSource { export(source) } } label: { ChildRepairActionLabel(title: "Export original content", symbol: "square.and.arrow.up") }.disabled(review.originalSource == nil || working).accessibilityIdentifier("childRepairExportBefore")
                             }
                             if loading { ProgressView("Checking your proposal…") }
                             if let outline { outlineSection(outline) }
@@ -78,7 +78,7 @@ struct ChildTaskRepairView: View {
                                             .accessibilityIdentifier("childRepairHistory-\(retained.ordinal)")
                                     }
                                     if current.metadata["custody_blocker"] != .null { Text("This task needs a separate history or storage review. Neither saved copy will be overwritten.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
-                                    Button { confirming = true } label: { Label("Save reviewed repair", systemImage: "checkmark.circle.fill").frame(minHeight: 44) }
+                                    Button { confirming = true } label: { ChildRepairActionLabel(title: "Save reviewed repair", symbol: "checkmark.circle.fill") }
                                         .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || working).accessibilityIdentifier("childRepairSave")
                                     if !store.childTaskRepairWritesAvailable { Text("This device’s workspace needs recovery before saving. You can still inspect or export the original; pending edits are kept.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                                 }
@@ -283,7 +283,7 @@ private struct ChildRepairSavedSection: View {
             Text(titleScope == store.childTaskFieldRecoveryScope ? liveTitle ?? store.childTaskRepairTitle(entry.command) : store.childTaskRepairTitle(entry.command)).fixedSize(horizontal: false, vertical: true)
             if entry.phase == .applied {
                 Label("Original copy kept", systemImage: "doc.badge.clock").foregroundStyle(.secondary)
-                Button("Export saved original", systemImage: "square.and.arrow.up", action: exportOriginal).disabled(exporting || !store.online).accessibilityIdentifier("childRepairExportSaved")
+                Button(action: exportOriginal) { ChildRepairActionLabel(title: "Export saved original", symbol: "square.and.arrow.up") }.disabled(exporting || !store.online).accessibilityIdentifier("childRepairExportSaved")
             } else if entry.phase == .queued || entry.phase == .attempted {
                 Button("Check status", systemImage: "arrow.clockwise") { Task { if await model.run(entry.command, operation: .check) { await store.sync() } } }.disabled(model.busy || !store.online).accessibilityIdentifier("childRepairCheck")
                 Button("Retry original repair") { Task { if await model.run(entry.command, operation: .send) { await store.sync() } } }.disabled(model.busy || !store.online || !store.permitsChildTaskRepair(entry.command, sending: true)).accessibilityIdentifier("childRepairRetry")
@@ -292,5 +292,21 @@ private struct ChildRepairSavedSection: View {
         }
         .task(id: store.childTaskFieldRecoveryScope) { liveTitle = nil; titleScope = nil; let captured = store.childTaskFieldRecoveryScope; if let value = try? await store.childTaskRepairLiveTitle(entry.command), captured == store.childTaskFieldRecoveryScope, !Task.isCancelled { liveTitle = value; titleScope = captured } }
         .confirmationDialog("Check and stop this repair?", isPresented: $stopping, titleVisibility: .visible) { Button("Check and stop", role: .destructive) { Task { if await model.run(entry.command, operation: .close) { await store.sync() } } } } message: { Text("An applied repair keeps its confirmation and original. An unapplied request is permanently stopped before you review a new one.") }
+    }
+}
+
+/// Explicit intrinsic icon width and a wrapping title keep these actions
+/// readable in a narrow sheet at accessibility text sizes.
+private struct ChildRepairActionLabel: View {
+    let title: LocalizedStringKey
+    let symbol: String
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Image(systemName: symbol).fixedSize().accessibilityHidden(true)
+            Text(title).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .contentShape(Rectangle())
     }
 }

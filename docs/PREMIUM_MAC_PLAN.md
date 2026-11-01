@@ -10229,3 +10229,8 @@ Each repository owns its implementation, focused client checks, real local SQL f
 ### 2026-11-01 · Explicit history keeper in older duplicate repair
 
 The repair review now offers a positional choice of which duplicate keeps prior recorded activity, plus retained-event/completion-event counts. The save proof covers the exact history set and current caller access. No history is copied, reassigned or redated; old gaps remain explicit. Independent database/client evidence and the signed app build are recorded in [duplicate-history-repair](duplicate-history-repair/README.md). Native layout/keyboard/speech acceptance is pending; broader migration and all agreed deferrals remain open.
+
+
+### 2026-11-01 · Native history-keeper acceptance and large-text repair actions
+
+The native iPhone and largest-text iPad journeys now cover keeper selection, Undo, durable choice across cold return, save, cold confirmation and original availability. An independent saved-data verifier checks one receipt/write, unchanged prior events/dates and the complete archived duplicate source. The largest-text captures exposed overlapping icons/text in the implicit Save/Export labels; all three repair actions now use an intrinsic-width icon and a wrapping title. See [native evidence](duplicate-history-repair-native/README.md). The current Mac app/test build is recorded separately; Mac runtime and human speech acceptance remain open after the locked-screen availability check. Wider migration and all agreed deferrals remain open.
