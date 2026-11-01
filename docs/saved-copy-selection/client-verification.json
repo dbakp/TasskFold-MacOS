@@ -1,0 +1,16 @@
+{
+  "platformRepository": "mac",
+  "date": "2026-11-01",
+  "command": "swift test --filter 'ChildTask(CopyReview|Repair|Adoption)'",
+  "tests": 75,
+  "failures": 0,
+  "newCopyChoiceTests": 5,
+  "passed": true,
+  "actualSQLFixtureArchiveDigestMatches": true,
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "c0e65dcf37247cec7e49aae90f37ba87c797177cbb07840088b14984f0e9599d",
+    "TaskfoldTests/ChildTaskRepairTests.swift": "f8171bb684ac84a95b0df2733e5899811e9622b2d3d1425dd7ed2e92da903419",
+    "TaskfoldTests/Fixtures/child-copy-choice-contract-v1.json": "1ae1f23f70845c71dfde6c1cdc6762ee9b0e95484d65b7c29d9131d99bcc0a5f"
+  },
+  "scope": "Core models, saved draft cold return, exact source fingerprint, rejected mixed/injected operations, real SQL archive/receipt decoding, wrong-choice/incomplete archive rejection and lost-reply status recovery; native UI acceptance recorded separately"
+}

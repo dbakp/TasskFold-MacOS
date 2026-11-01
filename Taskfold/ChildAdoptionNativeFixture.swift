@@ -65,6 +65,7 @@ import CryptoKit
     static var copyTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--child-adoption-saved-copies") }
     static func copyReview(_ state: [String: JSON]) throws -> [String: JSON] {
         var value = try review(state)
+        if state["adoptionApplied"] == .bool(true) { return value }
         value["state"] = .string("review"); value["issue"] = .string("projection_mismatch"); value["can_adopt"] = .bool(false)
         value["projection_revision"] = .number(1); value["structure_revision"] = .number(1)
         return value
@@ -72,7 +73,7 @@ import CryptoKit
     static func copies(_ state: [String: JSON], request: [String: JSON]) throws -> Data {
         let review = try copyReview(state), identity = review.filter { ChildTaskCopyReview.fields.contains($0.key) }
         guard ChildTaskStructureCommand.exact(.object(identity), .object(request)) else { throw ChildFieldNativeRefusal(code: "PT409") }
-        let root = state["root"]!.object, tree = root["subtasks"]!, digest = try hash(.object(state))
+        let root = state["root"]!.object, tree = root["subtasks"]!, digest = try hash(.object(["root": .object(root), "applied": state["adoptionApplied"] ?? .bool(false)]))
         func changed(_ notes: String) -> JSON {
             var rows = tree.list, row = rows[0].object; row["description"] = .string(notes); rows[0] = .object(row); return .array(rows)
         }

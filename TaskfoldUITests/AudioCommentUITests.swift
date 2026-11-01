@@ -2336,6 +2336,42 @@ extension TaskfoldMacUITests {
         childPress(app.buttons["Close"].firstMatch)
         app.terminate(); try childOpen(app, reset: false, extra: mode, large: true)
     }
+    @MainActor func testChildSavedCopyChoiceNativeDraftSaveAndColdConfirmation() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let mode = "--child-adoption-saved-copies"
+        try childOpen(app, extra: mode, large: false)
+        childHomePress("childNativeRepair", app)
+        let compare = app.buttons["childCopyReviewLoad"]; childReveal(compare, app); completionReadyPress(compare, app)
+        let group = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Stored subtasks")).firstMatch
+        childReveal(group, app); completionReadyPress(group, app)
+        let instructions = app.staticTexts["Stored subtask instructions"]; childReveal(instructions, app); XCTAssertTrue(instructions.exists)
+        let choose = app.buttons["childCopyChoose-records"]; childReveal(choose, app); XCTAssertTrue(choose.isEnabled)
+        structureSnapshot(app, "Explicit saved-copy selection")
+        completionReadyPress(choose, app)
+        let ready = app.staticTexts["childRepairReady"]; childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 15), app.debugDescription)
+        let undo = app.buttons["childRepairUndoChoice"]; childReveal(undo, app); completionReadyPress(undo, app)
+        childReveal(group, app, towardTop: true)
+        childReveal(choose, app); XCTAssertTrue(choose.isEnabled); completionReadyPress(choose, app)
+        childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Saved-copy choice preview keeps the original safe")
+        app.terminate(); try childOpen(app, reset: false, extra: mode, large: false)
+        childHomePress("childNativeRepair", app)
+        let draft = app.descendants(matching: .any).matching(identifier: "childRepairDraftSaved").firstMatch
+        childReveal(draft, app); XCTAssertTrue(draft.waitForExistence(timeout: 15), app.debugDescription)
+        childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Exact copy choice survives cold return")
+        let save = app.buttons["childRepairSave"]; childReveal(save, app); XCTAssertTrue(save.isEnabled); completionReadyPress(save, app)
+        childPress(app.buttons["Save repair"].firstMatch)
+        let status = app.staticTexts["childRepairStatus"]; childReveal(status, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Repair saved"), object: status)], timeout: 15), .completed, app.debugDescription)
+        childPress(app.buttons["Close"].firstMatch)
+        childProbe(app, "repairWrites=1 repairApplied=1 repairPending=0")
+        app.terminate(); try childOpen(app, reset: false, extra: mode, large: false)
+        childHomePress("childNativeRepairRecovery", app)
+        childReveal(status, app); XCTAssertEqual(status.label, "Repair saved")
+        let export = app.buttons["childRepairExportSaved"]; childReveal(export, app); XCTAssertTrue(export.isEnabled)
+        structureSnapshot(app, "Saved-copy original remains available after cold launch")
+    }
     @MainActor private func duplicateHistoryChoice(_ app: XCUIApplication) {
         let menu = app.descendants(matching: .any).matching(identifier: "childRepairSeparate-1").firstMatch
         childReveal(menu, app); XCTAssertTrue(menu.waitForExistence(timeout: 15), app.debugDescription)

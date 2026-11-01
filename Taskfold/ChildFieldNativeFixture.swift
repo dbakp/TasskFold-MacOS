@@ -51,7 +51,7 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             initialChildren[0] = .object(first)
         }
         if ChildAdoptionNativePeer.enabled, (ProcessInfo.processInfo.arguments.contains("--child-adoption-malformed") || ChildAdoptionNativePeer.exportTesting) { initialChildren[0] = .string("Keep this older text unchanged") }
-        if ChildRepairNativePeer.enabled { initialChildren = [.object(["id":.number(7),"title":.string("Plan the workshop"),"future":.object(["keep":.bool(true)])]), .string("Keep the workshop notes")] }
+        if ChildRepairNativePeer.enabled, !ChildAdoptionNativePeer.copyTesting { initialChildren = [.object(["id":.number(7),"title":.string("Plan the workshop"),"future":.object(["keep":.bool(true)])]), .string("Keep the workshop notes")] }
         var state: [String: JSON] = ["root": .object(["id": .string(ChildFieldNativeIdentity.rootID), "user_id": .string(ChildFieldNativeIdentity.account), "task_generation": .string(ChildFieldNativeIdentity.generation), "project_id": .null, "title": .string("Native child workspace"), "subtasks": .array(initialChildren)]), "receipts": .object([:]), "versions": .object(["concept": .number(1), "review": .number(1)]), "writes": .number(0), "requests": .number(0), "lost": .bool(false)]
         if opaqueTesting {
             var root = state["root"]!.object, rows = root["subtasks"]!.list, first = rows[0].object

@@ -1,0 +1,49 @@
+{
+  "passed": false,
+  "testCount": 1,
+  "failedTests": 1,
+  "scope": "First iPhone largest-text run; stopped before selection",
+  "observed": "The disclosure-group identifier propagated to child controls, hiding their specific identifiers from the UI-test query.",
+  "fix": "Scope the group identifier to its label, leaving the choice action independently identified.",
+  "persistenceProof": {
+    "passed": true,
+    "rootAndNestedOriginalUnchanged": true,
+    "originalUnknownFieldsPreserved": true,
+    "noFieldAdoptionOrRepairWrites": true,
+    "noNewReceiptsOrArchives": true,
+    "comparisonContentNotPersisted": true,
+    "peerSHA256": "f617f8de5e3295287fde3efdc9d97c4ea532e1470d23efa027496d8608348ddf",
+    "scope": "Synthetic file-backed native peer; database access and exact SQL exports verified separately"
+  },
+  "phase": {
+    "platform": "phone",
+    "sourceSHA256": {
+      "Taskfold/ChildAdoptionNativeFixture.swift": "6a43dbb03c5b027a83d402eabe042994db42e180b9f1e4a59770511cc6fd64a9",
+      "Taskfold/ChildFieldNativeFixture.swift": "f4f2182b1c2976a0e83ddad623b987b7a2d6d4a72fcff8f9979e6cd4e9c99556",
+      "Taskfold/ChildRepairNativeFixture.swift": "a16461663f66e31b4ffd98730150adc6588f1145fd2ea711e21301f69cbfd91b",
+      "Taskfold/Core/ChildTaskRepair.swift": "c0e65dcf37247cec7e49aae90f37ba87c797177cbb07840088b14984f0e9599d",
+      "Taskfold/Views/ChildTaskRepairView.swift": "3cde2479ad7135538d128f34136b567d4a2b71dc19422b2ff80f1617e58403ca",
+      "TaskfoldUITests/AudioCommentUITests.swift": "9367a2059750343dba2ff5e3ed113d5d7fd44383cd52f5ef7779846e464828b5"
+    },
+    "builtHostSHA256": {
+      "Taskfold/ChildAdoptionNativeFixture.swift": "6a43dbb03c5b027a83d402eabe042994db42e180b9f1e4a59770511cc6fd64a9",
+      "Taskfold/ChildFieldNativeFixture.swift": "f4f2182b1c2976a0e83ddad623b987b7a2d6d4a72fcff8f9979e6cd4e9c99556",
+      "Taskfold/ChildRepairNativeFixture.swift": "a16461663f66e31b4ffd98730150adc6588f1145fd2ea711e21301f69cbfd91b",
+      "Taskfold/Core/ChildTaskRepair.swift": "c0e65dcf37247cec7e49aae90f37ba87c797177cbb07840088b14984f0e9599d",
+      "Taskfold/Views/ChildTaskRepairView.swift": "3cde2479ad7135538d128f34136b567d4a2b71dc19422b2ff80f1617e58403ca",
+      "TaskfoldUITests/AudioCommentUITests.swift": "9367a2059750343dba2ff5e3ed113d5d7fd44383cd52f5ef7779846e464828b5"
+    },
+    "appSHA256": "4ed20131bfc4c8f8f6ab50f8e613cefd33fe753765b84785449b354a9ff2891f",
+    "debugDylibSHA256": "cc90b2f6fb62b80a92da62b85ff06df0ac529c8a9e77311d752c91bfc4f33c11",
+    "newSimulator": false,
+    "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "sourceMatchesBuiltHostAfterIsolation": {
+      "Taskfold/ChildAdoptionNativeFixture.swift": true,
+      "Taskfold/ChildFieldNativeFixture.swift": true,
+      "Taskfold/ChildRepairNativeFixture.swift": true,
+      "Taskfold/Core/ChildTaskRepair.swift": true,
+      "Taskfold/Views/ChildTaskRepairView.swift": true,
+      "TaskfoldUITests/AudioCommentUITests.swift": true
+    }
+  }
+}

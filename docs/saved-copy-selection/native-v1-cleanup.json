@@ -1,0 +1,15 @@
+{
+  "retainedSummary": true,
+  "syntheticDataUnchanged": true,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-copy-choice-native-phone-v1.xcresult",
+      "bytes": 82780324
+    },
+    {
+      "path": "/tmp/taskfold-copy-choice-native-phone-v1-attachments",
+      "bytes": 80664358
+    }
+  ],
+  "deviceRetainedForCorrectedRun": true
+}

@@ -1,0 +1,14 @@
+{
+  "retainedCompactEvidence": true,
+  "removed": [
+    {
+      "path": "/tmp/taskfold-copy-choice-native-phone-v2.xcresult",
+      "bytes": 166269154
+    },
+    {
+      "path": "/tmp/taskfold-copy-choice-native-phone-v2-attachments",
+      "bytes": 162527733
+    }
+  ],
+  "deviceRetainedForCorrectedRun": true
+}

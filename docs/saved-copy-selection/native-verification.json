@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "platform": "iPhone Simulator",
+  "test": "testChildSavedCopyChoiceNativeDraftSaveAndColdConfirmation",
+  "tests": 1,
+  "failures": 0,
+  "scope": "Normal text: compare, choose, Undo/reselect, cold draft, one save, cold confirmation and original-export control. Largest-text selection screenshot retained; full largest-text recovery and Mac runtime remain open.",
+  "nativePeer": "Synthetic, namespace-guarded file-backed peer; real SQL authorization/custody separately verified",
+  "captures": [],
+  "screenshotsInIOSRepositoryOnly": true,
+  "independentSavedDataProof": true
+}

@@ -1,6 +1,6 @@
 # Transactional saved-copy reconciliation backend
 
-This milestone implements the **server transaction**, not the app's copy-choice controls. Existing apps still offer comparison/export only. Normal repair/migration entry points remain disabled, the new `copy_reconciliation_enabled` database flag defaults to false, and nothing was deployed to a hosted project.
+This milestone implements the **server transaction**, not the app's copy-choice controls. Client copy selection and recovery have since been connected; see `../saved-copy-selection/` for their separate evidence and acceptance limits. Normal repair/migration entry points remain disabled, the new `copy_reconciliation_enabled` database flag defaults to false, and nothing was deployed to a hosted project.
 
 A caller can explicitly select the task list, saved snapshot or stored-record copy. The request contains the source name and current comparison fingerprint, not a replacement task tree. Before any live data changes, the server saves the complete original root, SQL-null marker, projection, record rows (including incarnations/revisions/field versions), authority and root/child history. The chosen copy is then staged into the existing records and applied through the caller's real task UPDATE policies. The original, records, mirror, activity, scope and receipt commit together or roll back together.
 
@@ -10,7 +10,7 @@ The initial apply path requires the same canonical/raw references, existing inca
 
 Still required:
 
-- Add the client change type and copy-selection controls; connect reviewed previews, durable drafts, send/check/close recovery and original export to the existing repair model. Validate the actual native flow before calling this an app feature.
+- Finish native Mac and wider copy-selection/recovery acceptance. The client integration and normal-text iPhone saved/cold journey are now implemented/verified separately; full largest-text recovery remains open.
 - Implement explicit identity/completion/recipient mapping for blocked cases and full older-data/opaque editable-cache migration.
 - Provide surviving workspace members' archive discovery/recovery, beyond retained data and the current actor's existing saved-command recovery. Retaining a team archive after editor deletion is not proof of that user flow.
 - Finish shared file/discussion custody, native Mac and wider account/window/privacy/speech/library checks, then hosted/full-stack migration acceptance. All prior user deferrals remain deferred.
@@ -39,6 +39,6 @@ node Scripts/Database/test-child-copy-choice.mjs
 TASKFOLD_COPY_CHOICE_REGRESSION_SQL="$PWD/supabase/migrations/20261101101059_reviewed_saved_copy_reconciliation.sql" node Scripts/Database/test-child-duplicate-history.mjs
 ```
 
-`contract.json` contains actual synthetic SQL preview/receipt/original replies for the forthcoming client integration, not a hand-written expected response. `earlier-failures.json` distinguishes the rejected wrapper/numeric-spelling versions from the final implementation. No new Swift/app build or native acceptance is claimed for this backend-only milestone.
+`contract.json` contains actual synthetic SQL preview/receipt/original replies for the client integration, not a hand-written expected response. `earlier-failures.json` distinguishes the rejected wrapper/numeric-spelling versions from the final implementation. No new Swift/app build or native acceptance is claimed for this backend-only milestone.
 
-Completed native build outputs and clean dependency caches were pruned after their prior source hashes, signed-product verification, screenshots and saved-data proofs were retained. Source hosts and dependency pins remain. A fresh build is required for the next client implementation; simulator/app data and real user data were not erased.
+Completed native build outputs and clean dependency caches were pruned after their prior source hashes, signed-product verification, screenshots and saved-data proofs were retained. Source hosts and dependency pins remain. Those pruned products required a fresh build for client integration. Current client build/retention status is recorded in `../saved-copy-selection/build-verification.json`; simulator/app data and real user data were not erased.

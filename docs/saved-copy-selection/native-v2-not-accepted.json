@@ -1,0 +1,39 @@
+{
+  "passed": false,
+  "failedTests": 1,
+  "scope": "Second iPhone largest-text test, stopped before save",
+  "observed": "Selection reached the proposal and the test tapped Undo; its fallback then collapsed an already-expanded group because the off-screen choice was not yet in the lazy list.",
+  "fix": "Remove the fallback toggle and run the complete journey at normal text size; retain the largest-text selection capture without claiming full largest-text recovery acceptance.",
+  "phase": {
+    "platform": "phone",
+    "sourceSHA256": {
+      "Taskfold/ChildAdoptionNativeFixture.swift": "6a43dbb03c5b027a83d402eabe042994db42e180b9f1e4a59770511cc6fd64a9",
+      "Taskfold/ChildFieldNativeFixture.swift": "f4f2182b1c2976a0e83ddad623b987b7a2d6d4a72fcff8f9979e6cd4e9c99556",
+      "Taskfold/ChildRepairNativeFixture.swift": "a16461663f66e31b4ffd98730150adc6588f1145fd2ea711e21301f69cbfd91b",
+      "Taskfold/Core/ChildTaskRepair.swift": "c0e65dcf37247cec7e49aae90f37ba87c797177cbb07840088b14984f0e9599d",
+      "Taskfold/Views/ChildTaskRepairView.swift": "f5ddf3996537e8648c4176ec318ccf8a9f5c4944d3d39b2b8393721ca3b5f09b",
+      "TaskfoldUITests/AudioCommentUITests.swift": "9367a2059750343dba2ff5e3ed113d5d7fd44383cd52f5ef7779846e464828b5"
+    },
+    "builtHostSHA256": {
+      "Taskfold/ChildAdoptionNativeFixture.swift": "6a43dbb03c5b027a83d402eabe042994db42e180b9f1e4a59770511cc6fd64a9",
+      "Taskfold/ChildFieldNativeFixture.swift": "f4f2182b1c2976a0e83ddad623b987b7a2d6d4a72fcff8f9979e6cd4e9c99556",
+      "Taskfold/ChildRepairNativeFixture.swift": "a16461663f66e31b4ffd98730150adc6588f1145fd2ea711e21301f69cbfd91b",
+      "Taskfold/Core/ChildTaskRepair.swift": "c0e65dcf37247cec7e49aae90f37ba87c797177cbb07840088b14984f0e9599d",
+      "Taskfold/Views/ChildTaskRepairView.swift": "f5ddf3996537e8648c4176ec318ccf8a9f5c4944d3d39b2b8393721ca3b5f09b",
+      "TaskfoldUITests/AudioCommentUITests.swift": "9367a2059750343dba2ff5e3ed113d5d7fd44383cd52f5ef7779846e464828b5"
+    },
+    "appSHA256": "d95624a7774b1079c2158b17ced5651310575c7c6bf82f0e90afd3af7b853591",
+    "debugDylibSHA256": "8c705963cdf86b941181023a466bc8a3820fc500a60d089370ddfd1c48562219",
+    "newSimulator": false,
+    "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+    "sourceMatchesBuiltHostAfterIsolation": {
+      "Taskfold/ChildAdoptionNativeFixture.swift": true,
+      "Taskfold/ChildFieldNativeFixture.swift": true,
+      "Taskfold/ChildRepairNativeFixture.swift": true,
+      "Taskfold/Core/ChildTaskRepair.swift": true,
+      "Taskfold/Views/ChildTaskRepairView.swift": true,
+      "TaskfoldUITests/AudioCommentUITests.swift": true
+    }
+  },
+  "retainedSelectionCaptures": 1
+}

@@ -336,3 +336,85 @@ extension ChildTaskRepairTests {
     }
 
 }
+
+extension ChildTaskRepairTests {
+    private func copyChoiceFixture() throws -> (ChildTaskAdoptionReview, ChildTaskRepairPreview, ChildTaskRepairCommand, ChildTaskRepairResult, Data) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "child-copy-choice-contract-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let fields = try ChildTaskRecordRead.separatingJSONFields(["root", "review", "choice", "preview", "receipt", "original"], data: Data(contentsOf: url), maximum: 100_000).values
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: XCTUnwrap(fields["choice"]))
+        let root = Record(try TaskfoldJSONDecoder().decode([String: JSON].self, from: XCTUnwrap(fields["root"])))
+        let context = try ChildTaskRecordContext(account: raw["account"]!.text, origin: origin, workspace: UUID(), session: UUID(), access: UUID(), snapshot: UUID(), root: root)
+        let review = try ChildTaskAdoptionReview(data: XCTUnwrap(fields["review"]), context: context, workspaceID: nil)
+        let changes = try raw["changes"]!.list.map { try ChildTaskRepairChange(raw: $0.object) }
+        let preview = try ChildTaskRepairPreview(data: XCTUnwrap(fields["preview"]), review: review, changes: changes)
+        let command = try ChildTaskRepairCommand(preview: preview, requestID: XCTUnwrap(UUID(uuidString: raw["request_id"]!.text)))
+        return (review, preview, command, try ChildTaskRepairResult(command: command, data: XCTUnwrap(fields["receipt"])), try XCTUnwrap(fields["original"]))
+    }
+    func testSavedCopyChoiceAcceptsActualSQLPreviewReceiptAndCompleteOriginal() throws {
+        let (_, preview, command, receipt, original) = try copyChoiceFixture()
+        XCTAssertTrue(preview.eligible); XCTAssertEqual(preview.changes.first?.kind, .chooseCopy)
+        XCTAssertEqual(preview.items.count, 2); XCTAssertTrue(preview.historyRetention.isEmpty)
+        XCTAssertEqual(command.body["changes"]!.list.first?.object["source"], .string("records"))
+        let bundle = try ChildTaskRepairOriginal(data: original, command: command, result: receipt)
+        let text = String(decoding: bundle.data, as: UTF8.self)
+        for field in ["root_history", "child_history", "copy_choice", "Snapshot notes", "Record notes"] { XCTAssertTrue(text.contains(field), field) }
+        XCTAssertEqual(try ChildTaskRepairCommand(data: TaskfoldJSONEncoder().encode(command)), command)
+        XCTAssertLessThan(try TaskfoldJSONEncoder().encode(command).count, 1500)
+    }
+    func testSavedCopyChoiceRefusesAmbiguousSourcesInjectedTreesAndMixedOperations() throws {
+        let good = try ChildTaskRepairChange.choosing("records", digest: String(repeating: "a", count: 64))
+        for source in ["task", "projection", "records"] { XCTAssertNoThrow(try ChildTaskRepairChange.choosing(source, digest: String(repeating: "0", count: 64))) }
+        for source in ["", "Records", "private", "task "] { XCTAssertThrowsError(try ChildTaskRepairChange.choosing(source, digest: String(repeating: "a", count: 64))) }
+        for digest in ["", String(repeating: "A", count: 64), String(repeating: "a", count: 63)] { XCTAssertThrowsError(try ChildTaskRepairChange.choosing("records", digest: digest)) }
+        for edit: ([String: JSON]) in [good.raw.merging(["path": .array([.number(0)])], uniquingKeysWith: { _, b in b }), good.raw.merging(["tree": .array([])], uniquingKeysWith: { _, b in b }), good.raw.filter { $0.key != "copy_digest" }] {
+            XCTAssertThrowsError(try ChildTaskRepairChange(raw: edit))
+        }
+        XCTAssertThrowsError(try ChildTaskRepairChange.validate([good, good]))
+        XCTAssertThrowsError(try ChildTaskRepairChange.validate([good, .init(.makeRootList, path: [])]))
+    }
+    @MainActor func testSavedCopyChoiceDraftColdReturnLostReplyAndCheckKeepOneBoundChoice() async throws {
+        let (review, preview, command, receipt, _) = try copyChoiceFixture(), io = RepairMemoryIO(), directory = try directory()
+        let scope = ChildTaskFieldClientScope(preview.context), service = RepairServiceDouble(receipt.raw), journal = try journal(command, io, directory)
+        let draft = try ChildTaskRepairDraft(review: review, changes: preview.changes, labels: ["Use stored subtasks"])
+        let first = model(scope, journal, service, current: { scope }); await first.load()
+        verifyTrue(await first.saveDraft(draft, rootID: command.rootID, expected: nil)); first.close()
+        let cold = model(scope, try self.journal(command, io, directory), service, current: { scope }); await cold.load()
+        XCTAssertEqual(cold.drafts, [draft]); XCTAssertTrue(service.calls.isEmpty)
+        verifyTrue(await cold.queue(command, review: preview, draftToken: draft.token)); XCTAssertTrue(cold.drafts.isEmpty)
+        service.loseReply = true; verifyFalse(await cold.run(command, operation: .send)); XCTAssertEqual(cold.entries.first?.phase, .attempted); cold.close()
+        service.loseReply = false
+        let recovery = model(scope, try self.journal(command, io, directory), service, current: { scope }, canSend: { _ in false }); await recovery.load()
+        verifyTrue(await recovery.run(command, operation: .check)); XCTAssertEqual(recovery.entries.first?.phase, .applied)
+        XCTAssertEqual(service.calls, [.send, .check]); XCTAssertEqual(recovery.entries.first?.command, command)
+    }
+    func testSavedCopyChoiceDraftFingerprintSurvivesAndChangedChoiceCannotConsumeIt() async throws {
+        let (review, preview, command, _, _) = try copyChoiceFixture(), io = RepairMemoryIO(), directory = try directory(), lease = CalendarReadLease()
+        let journal = try journal(command, io, directory)
+        let other = try ChildTaskRepairChange.choosing("task", digest: preview.changes[0].raw["copy_digest"]!.text)
+        let draft = try ChildTaskRepairDraft(review: review, changes: [other], labels: ["Use task list"])
+        try await journal.saveDraft(draft, rootID: command.rootID, expected: nil, lease: lease)
+        do { try await journal.enqueue(command, lease: lease, draftToken: draft.token); XCTFail("Changed source consumed the draft") } catch {}
+        let state = try await journal.load(); XCTAssertEqual(state.drafts, [draft]); XCTAssertTrue(state.entries.isEmpty)
+        XCTAssertEqual(state.drafts[0].changes[0].raw["copy_digest"], preview.changes[0].raw["copy_digest"])
+    }
+    func testSavedCopyOriginalRejectsWrongChoiceAndIncompleteArchiveEvenWithMatchingHash() throws {
+        let (_, _, command, receipt, original) = try copyChoiceFixture()
+        let parts = try ChildTaskRecordRead.separatingJSONField("original", data: original, maximum: 100_000, integerPaths: [], nullableIntegerPaths: [])
+        let before = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.value)
+        for kind in 0..<3 {
+            var archive = before
+            if kind == 0 { var choice = archive["copy_choice"]!.object; choice["source"] = .string("task"); archive["copy_choice"] = .object(choice) }
+            else if kind == 1 { archive["projection"] = .null }
+            else { archive.removeValue(forKey: "root_history") }
+            let data = try bytes(archive), hash = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+            var response = receipt.raw; response["archive_digest"] = .string(hash); response["archive_bytes"] = .number(Double(data.count))
+            let checked = try ChildTaskRepairResult(command: command, raw: response)
+            var envelope = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
+            envelope["archive_digest"] = .string(hash)
+            let stub = String(decoding: try bytes(envelope), as: UTF8.self)
+            let wire = stub.replacingOccurrences(of: "\"original\":null", with: "\"original\":" + String(decoding: data, as: UTF8.self))
+            XCTAssertThrowsError(try ChildTaskRepairOriginal(data: Data(wire.utf8), command: command, result: checked))
+        }
+    }
+
+}

@@ -5,7 +5,7 @@ import Observation
 /// Only explicit metadata operations enter durable storage; opaque source trees
 /// stay ephemeral and are never encoded as the app's floating-point JSON model.
 struct ChildTaskRepairChange: Codable, Equatable, Sendable {
-    enum Kind: String, Sendable { case separateDuplicate = "separate_duplicate", makeRootList = "make_root_list", assignReference = "assign_reference", makeChildrenList = "make_children_list", wrapItem = "wrap_item", moveItem = "move_item" }
+    enum Kind: String, Sendable { case chooseCopy = "choose_copy", separateDuplicate = "separate_duplicate", makeRootList = "make_root_list", assignReference = "assign_reference", makeChildrenList = "make_children_list", wrapItem = "wrap_item", moveItem = "move_item" }
     let raw: [String: JSON]
     var kind: Kind { Kind(rawValue: raw["kind"]!.text)! }
     var path: [Int] { raw["path"]!.list.map(\.integer) }
@@ -20,10 +20,14 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     init(raw: [String: JSON]) throws {
         guard let kind = Kind(rawValue: raw["kind"]?.text ?? "") else { throw ChildTaskRepairCommand.invalid }
         let extra: Set<String>
-        switch kind { case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
+        switch kind { case .chooseCopy: extra = ["source", "copy_digest"]; case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
         guard Set(raw.keys) == extra.union(["kind", "path"]) else { throw ChildTaskRepairCommand.invalid }
-        let path = try Self.positions(raw["path"], empty: kind == .makeRootList)
-        guard kind != .makeRootList || path.isEmpty else { throw ChildTaskRepairCommand.invalid }
+        let path = try Self.positions(raw["path"], empty: kind == .makeRootList || kind == .chooseCopy)
+        guard (kind != .makeRootList && kind != .chooseCopy) || path.isEmpty else { throw ChildTaskRepairCommand.invalid }
+        if kind == .chooseCopy {
+            guard case .string(let source)? = raw["source"], ["task", "projection", "records"].contains(source),
+                  ChildTaskAdoptionCommand.digest(raw["copy_digest"]) else { throw ChildTaskRepairCommand.invalid }
+        }
         if kind == .assignReference || kind == .wrapItem || kind == .separateDuplicate {
             guard case .string(let reference)? = raw["reference"], !reference.isEmpty, reference.utf8.count <= 128, reference.precomposedStringWithCanonicalMapping.utf8.count <= 128 else { throw ChildTaskRepairCommand.invalid }
         }
@@ -48,11 +52,14 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
         if let parent { raw["parent"] = .array(parent.map { .number(Double($0)) }) }; if let index { raw["index"] = .number(Double(index)) }
         try self.init(raw: raw)
     }
+    static func choosing(_ source: String, digest: String) throws -> Self {
+        try .init(raw: ["kind": .string(Kind.chooseCopy.rawValue), "path": .array([]), "source": .string(source), "copy_digest": .string(digest)])
+    }
     init(from decoder: Decoder) throws { try self.init(raw: [String: JSON](from: decoder)) }
     func encode(to encoder: Encoder) throws { try raw.encode(to: encoder) }
     static func == (a: Self, b: Self) -> Bool { ChildTaskStructureCommand.exact(.object(a.raw), .object(b.raw)) }
     static func validate(_ changes: [Self]) throws {
-        guard (1...64).contains(changes.count), try TaskfoldJSONEncoder().encode(changes).count <= 65_536 else { throw ChildTaskRepairCommand.invalid }
+        guard (1...64).contains(changes.count), !changes.contains(where: { $0.kind == .chooseCopy }) || changes.count == 1, try TaskfoldJSONEncoder().encode(changes).count <= 65_536 else { throw ChildTaskRepairCommand.invalid }
     }
     static let counterPaths: Set<[String]> = [["changes", "[]", "keep_path", "[]"], ["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]
 }
@@ -231,6 +238,7 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
     let data: Data
     var description: String { "Private saved repair original" }; var debugDescription: String { description }
     private struct ArrayMarker: Decodable { init(from d: Decoder) throws { _ = try d.unkeyedContainer() } }
+    private struct ObjectMarker: Decodable { enum Key: String, CodingKey { case unused }; init(from d: Decoder) throws { _ = try d.container(keyedBy: Key.self) } }
     private struct RootIdentity: Decodable {
         let id: String, task_generation: String?, project_id: String?
         enum CodingKeys: String, CodingKey { case id, task_generation, project_id }
@@ -242,13 +250,24 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
     }
     private struct Header: Decodable {
         let protocolVersion: Int, root: RootIdentity, subtasksSQLNull: Bool, reviewDigest: String, repairDigest: String
-        enum CodingKeys: String, CodingKey { case protocolVersion = "protocol", root, subtasksSQLNull = "subtasks_sql_null", projection, records, authority, childHistory = "child_history", reviewDigest = "review_digest", repairDigest = "repair_digest" }
+        let copyChoice: ChildTaskRepairChange?
+        enum CodingKeys: String, CodingKey { case protocolVersion = "protocol", root, subtasksSQLNull = "subtasks_sql_null", projection, records, authority, rootHistory = "root_history", copyChoice = "copy_choice", childHistory = "child_history", reviewDigest = "review_digest", repairDigest = "repair_digest" }
         init(from d: Decoder) throws {
-            try structureKeys(d, ["protocol", "root", "subtasks_sql_null", "projection", "records", "authority", "child_history", "review_digest", "repair_digest"])
-            let c = try d.container(keyedBy: CodingKeys.self); protocolVersion = try c.decode(Int.self, forKey: .protocolVersion); root = try c.decode(RootIdentity.self, forKey: .root)
+            let c = try d.container(keyedBy: CodingKeys.self)
+            let hasChoice = c.contains(.copyChoice)
+            try structureKeys(d, Set(["protocol", "root", "subtasks_sql_null", "projection", "records", "authority", "child_history", "review_digest", "repair_digest"]).union(hasChoice ? ["root_history", "copy_choice"] : []))
+            protocolVersion = try c.decode(Int.self, forKey: .protocolVersion); root = try c.decode(RootIdentity.self, forKey: .root)
             subtasksSQLNull = try c.decode(Bool.self, forKey: .subtasksSQLNull); reviewDigest = try c.decode(String.self, forKey: .reviewDigest); repairDigest = try c.decode(String.self, forKey: .repairDigest)
-            guard try c.decodeNil(forKey: .projection), try c.decodeNil(forKey: .authority) else { throw ChildTaskRepairCommand.invalid }
-            let records = try c.nestedUnkeyedContainer(forKey: .records); guard records.isAtEnd else { throw ChildTaskRepairCommand.invalid }
+            if hasChoice {
+                let choice = try c.decode(ChildTaskRepairChange.self, forKey: .copyChoice)
+                guard choice.kind == .chooseCopy else { throw ChildTaskRepairCommand.invalid }; copyChoice = choice
+                _ = try c.decode(ObjectMarker.self, forKey: .projection); _ = try c.decode(ObjectMarker.self, forKey: .authority)
+                _ = try c.decode(ArrayMarker.self, forKey: .records); _ = try c.decode(ArrayMarker.self, forKey: .rootHistory)
+            } else {
+                copyChoice = nil
+                guard try c.decodeNil(forKey: .projection), try c.decodeNil(forKey: .authority) else { throw ChildTaskRepairCommand.invalid }
+                let records = try c.nestedUnkeyedContainer(forKey: .records); guard records.isAtEnd else { throw ChildTaskRepairCommand.invalid }
+            }
             _ = try c.decode(ArrayMarker.self, forKey: .childHistory)
         }
     }
@@ -263,6 +282,10 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
         let header = try TaskfoldJSONDecoder().decode(Header.self, from: parts.value)
         guard header.protocolVersion == 1, header.root.id == command.rootID, header.root.task_generation == (try TeamProjectValue.optionalID(command.body["task_generation"])),
               header.root.project_id == (try TeamProjectValue.optionalID(command.body["project_id"])), header.reviewDigest == command.body["review_digest"]!.text, header.repairDigest == command.body["repair_digest"]!.text else { throw ChildTaskRepairCommand.invalid }
+        let choice = command.body["changes"]!.list.first?.object
+        if choice?["kind"] == .string(ChildTaskRepairChange.Kind.chooseCopy.rawValue) {
+            guard let archived = header.copyChoice, ChildTaskStructureCommand.exact(.object(archived.raw), .object(choice!)) else { throw ChildTaskRepairCommand.invalid }
+        } else { guard header.copyChoice == nil else { throw ChildTaskRepairCommand.invalid } }
         self.data = parts.value
     }
 }

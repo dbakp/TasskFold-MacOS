@@ -5,7 +5,7 @@ import CryptoKit
 /// Synthetic, file-backed native-control peer. It does not prove SQL custody,
 /// authorization or HTTP serialization; those have independent acceptance.
 @MainActor enum ChildRepairNativePeer {
-    static var enabled: Bool { ChildAdoptionNativePeer.enabled && (ProcessInfo.processInfo.arguments.contains("--child-adoption-repair") || duplicateTesting) }
+    static var enabled: Bool { ChildAdoptionNativePeer.enabled && (ProcessInfo.processInfo.arguments.contains("--child-adoption-repair") || duplicateTesting || ChildAdoptionNativePeer.copyTesting) }
     static var duplicateTesting: Bool { ProcessInfo.processInfo.arguments.contains("--child-adoption-duplicate-history") }
     static func seedDuplicateHistory(_ state: inout [String: JSON]) {
         guard duplicateTesting else { return }
@@ -43,6 +43,7 @@ import CryptoKit
         tree = .array(rows)
     }
     static func preview(_ body: [String: JSON], state: [String: JSON]) throws -> [String: JSON] {
+        if ChildAdoptionNativePeer.copyTesting { return try copyPreview(body, state: state) }
         let review = try ChildAdoptionNativePeer.review(state), root = Record(state["root"]!.object)
         guard body["review_digest"] == review["review_digest"], body["task_id"] == .string(root.id), body["account"] == review["account"], body["task_generation"] == root["task_generation"], body["project_id"] == root["project_id"], body["workspace_id"] == .null else { throw ChildFieldNativeRefusal(code:"PT409") }
         let changes = try body["changes"]!.list.map { try ChildTaskRepairChange(raw:$0.object) }; try ChildTaskRepairChange.validate(changes)
@@ -77,7 +78,7 @@ import CryptoKit
                     case .assignReference, .separateDuplicate: guard case .object(var row) = value else { throw ChildFieldNativeRefusal(code:"PT409") }; row["id"] = change.raw["reference"]; value = .object(row)
                     case .makeChildrenList: guard case .object(var row) = value, let children = row["subtasks"] else { throw ChildFieldNativeRefusal(code:"PT409") }; row["subtasks"] = .array([children]); value = .object(row)
                     case .wrapItem: value = .object(["id":change.raw["reference"]!,"title":change.raw["title"]!,"legacy_original":value])
-                    case .moveItem: throw CancellationError()
+                    case .moveItem, .chooseCopy: throw CancellationError()
                     }
                     after = kind(value)
                 }
@@ -98,6 +99,23 @@ import CryptoKit
         }
         reply["original_tree"] = root["subtasks"];reply["original_sql_null"] = .bool(false);reply["proposed_tree"] = tree;reply["steps"] = .array(steps)
         reply["proposal_valid"] = .bool(metrics != nil);reply["node_count"] = metrics.map { .number(Double($0.count)) } ?? .null;reply["remaining_issue"] = metrics == nil ? .string("identity"):.null;reply["custody_blocker"] = .null;reply["mutation_available"] = .bool(metrics != nil && state["adoptionApplied"] != .bool(true)); return reply
+    }
+    static func copyPreview(_ body: [String: JSON], state: [String: JSON]) throws -> [String: JSON] {
+        let identity = body.filter { ChildTaskCopyReview.fields.contains($0.key) }
+        let data = try ChildAdoptionNativePeer.copies(state, request: identity)
+        let copies = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        let changes = try body["changes"]!.list.map { try ChildTaskRepairChange(raw: $0.object) }
+        try ChildTaskRepairChange.validate(changes)
+        guard let choice = changes.first, choice.kind == .chooseCopy, choice.raw["copy_digest"] == copies["copy_digest"] else { throw ChildFieldNativeRefusal(code: "PT409") }
+        let field = choice.raw["source"] == .string("task") ? "task_tree" : choice.raw["source"] == .string("projection") ? "projection_tree" : "record_tree"
+        let tree = copies[field]!, metrics = ChildAdoptionNativePeer.stats(tree)!
+        var reply = body
+        reply.merge(["original_tree": state["root"]!.object["subtasks"]!, "original_sql_null": .bool(false), "proposed_tree": tree,
+            "repair_digest": .string(try ChildAdoptionNativePeer.hash(.object(["body": .object(body), "tree": tree]))),
+            "proposal_valid": .bool(true), "remaining_issue": .null, "custody_blocker": .null,
+            "mutation_available": .bool(state["adoptionApplied"] != .bool(true)), "node_count": .number(Double(metrics.count)),
+            "steps": .array([.object(["ordinal": .number(1), "kind": .string("choose_copy"), "path": .array([]), "before_kind": .string("array"), "after_kind": .string("array")])])], uniquingKeysWith: { _, b in b })
+        return reply
     }
     static func response(path: String, body: [String: JSON], state: inout [String: JSON]) throws -> (Data,Bool) {
         guard enabled, Store.shared.userID == ChildFieldNativeIdentity.account else { throw ChildFieldNativeRefusal(code:"42501") }
@@ -120,7 +138,13 @@ import CryptoKit
             let proposed = try preview(previewBody,state:state)
             guard proposed["mutation_available"] == .bool(true), proposed["repair_digest"] == raw["repair_digest"] else { throw ChildFieldNativeRefusal(code:"PT409") }
             if ProcessInfo.processInfo.arguments.contains("--child-repair-unapplied") { throw URLError(.networkConnectionLost) }
-            let original: [String:JSON] = ["protocol":.number(1),"root":state["root"]!,"subtasks_sql_null":.bool(false),"projection":.null,"records":.array([]),"authority":.null,"child_history":state["repairHistory"] ?? .array([]),"review_digest":raw["review_digest"]!,"repair_digest":raw["repair_digest"]!]
+            var original: [String:JSON] = ["protocol":.number(1),"root":state["root"]!,"subtasks_sql_null":.bool(false),"projection":.null,"records":.array([]),"authority":.null,"child_history":state["repairHistory"] ?? .array([]),"review_digest":raw["review_digest"]!,"repair_digest":raw["repair_digest"]!]
+            if ChildAdoptionNativePeer.copyTesting {
+                let comparison = try TaskfoldJSONDecoder().decode([String: JSON].self, from: ChildAdoptionNativePeer.copies(state, request: raw.filter { ChildTaskCopyReview.fields.contains($0.key) }))
+                let bundle = comparison["export_bundle"]!.object
+                for key in ["projection", "records", "authority"] { original[key] = bundle[key] }
+                original["copy_choice"] = raw["changes"]!.list.first; original["root_history"] = .array([])
+            }
             let data = try bytes(original);originalText = String(decoding:data,as:UTF8.self)
             result["archive_id"] = .string(UUID().uuidString.lowercased());result["archive_digest"] = .string(SHA256.hash(data:data).map{String(format:"%02x",$0)}.joined());result["archive_bytes"] = .number(Double(data.count));result["node_count"] = proposed["node_count"]
             var root = state["root"]!.object;root["subtasks"] = proposed["proposed_tree"];state["root"] = .object(root);state["adoptionApplied"] = .bool(true);state["repairWrites"] = .number(Double((state["repairWrites"]?.integer ?? 0)+1))
