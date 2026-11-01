@@ -1,0 +1,10 @@
+{
+  "platformRepository": "mac",
+  "command": "swift test --filter 'ChildTask(CopyReview|Repair|Adoption)'",
+  "tests": 70,
+  "failures": 0,
+  "newComparisonTests": 8,
+  "passed": true,
+  "fixtureOrigin": "Owned disposable PostgreSQL replies; ordinary and raw opaque-value responses",
+  "scope": "Core decoding, exact export, rejected malformed/context-bound responses, private HTTP route, size limit, session revocation and late reply; excludes native UI and write reconciliation"
+}

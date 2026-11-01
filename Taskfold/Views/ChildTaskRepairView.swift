@@ -11,6 +11,10 @@ struct ChildTaskRepairView: View {
     @State private var modelScope: ChildTaskFieldClientScope?
     @State private var review: ChildTaskAdoptionReview?
     @State private var proposal: ChildTaskRepairPreview?
+    @State private var savedCopies: ChildTaskCopyReview?
+    @State private var comparingCopies = false
+    @State private var copiesRequested = false
+    @State private var expandedCopyIDs: Set<String> = []
     @State private var outline: ChildTaskRepairOutline?
     @State private var changes: [ChildTaskRepairChange] = []
     @State private var labels: [String] = []
@@ -33,9 +37,10 @@ struct ChildTaskRepairView: View {
     private var scope: ChildTaskFieldClientScope? { store.childTaskFieldRecoveryScope }
     private var usable: Bool { phase == .active && modelScope == scope && scope != nil }
     private var active: ChildTaskRepairState.Entry? { guard usable else { return nil }; return model?.entries.first { $0.command.id == activeID || ($0.command.rootID == selected && ($0.phase == .queued || $0.phase == .attempted)) } }
-    private var working: Bool { loading || fetchingOriginal || model?.busy == true }
+    private var working: Bool { loading || fetchingOriginal || comparingCopies || model?.busy == true }
     private var dirty: Bool { !changes.isEmpty && active == nil }
     private var current: ChildTaskRepairPreview? { guard usable, let proposal, store.childTaskRepairReviewIsCurrent(proposal) else { return nil }; return proposal }
+    private var currentCopies: ChildTaskCopyReview? { guard usable, let savedCopies, store.childTaskCopiesAreCurrent(savedCopies) else { return nil }; return savedCopies }
     var body: some View {
         NavigationStack {
             List {
@@ -56,6 +61,20 @@ struct ChildTaskRepairView: View {
                                 Label("Your original stays safe", systemImage: "doc.badge.clock").font(.headline)
                                 Text("Review each change below. Saving keeps a complete original copy before changing the task.").fixedSize(horizontal: false, vertical: true)
                                 Button { if store.childTaskAdoptionReviewIsCurrent(review), let source = review.originalSource { export(source) } } label: { ChildRepairActionLabel(title: "Export original content", symbol: "square.and.arrow.up") }.disabled(review.originalSource == nil || working).accessibilityIdentifier("childRepairExportBefore")
+                            }
+                            if review.metadata["projection_revision"] != .null || ["projection_mismatch", "authority_mismatch"].contains(review.metadata["issue"]?.text ?? "") {
+                                Section("Saved copies") {
+                                    Text("Compare the saved task lists before choosing a repair. Reviewing them keeps every copy unchanged.").fixedSize(horizontal: false, vertical: true)
+                                    Button { Task { await compareCopies(review) } } label: { ChildRepairActionLabel(title: "Compare saved copies", symbol: "doc.on.doc") }
+                                        .disabled(working).accessibilityIdentifier("childCopyReviewLoad")
+                                    if comparingCopies { ProgressView("Reading saved copies…") }
+                                    if let copies = currentCopies {
+                                        ChildCopyComparison(copies: copies, expanded: $expandedCopyIDs)
+                                        Button { Task { await compareCopies(review, exportCurrent: true) } } label: { ChildRepairActionLabel(title: "Export readable copies", symbol: "square.and.arrow.up") }
+                                            .disabled(working).accessibilityIdentifier("childCopyReviewExport")
+                                        Text("The export keeps exact saved content, including fields that are shortened in this review. Copies needing an access review stay private and unchanged.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
                             }
                             if loading { ProgressView("Checking your proposal…") }
                             if let outline { outlineSection(outline) }
@@ -177,8 +196,8 @@ struct ChildTaskRepairView: View {
     private func restoreDraft() {
         draft = model?.drafts.first { $0.rootID == selected }; changes = draft?.changes ?? []; labels = draft?.labels ?? []; baseDigest = draft?.identity["review_digest"]?.text
     }
-    private func select(_ root: String?) { activeID = nil; selected = root; review = nil; proposal = nil; outline = nil; restoreDraft(); failure = nil; exportMessage = nil; if root != nil { Task { await refresh() } } }
-    private func hideSensitive() { ticket = UUID(); model?.close(); model = nil; modelScope = nil; draft = nil; changes = []; labels = []; baseDigest = nil; review = nil; proposal = nil; outline = nil; targets = []; document = nil; exporting = false; exportScope = nil; exportRoot = nil; loading = false; fetchingOriginal = false }
+    private func select(_ root: String?) { copiesRequested = false; expandedCopyIDs = []; activeID = nil; selected = root; review = nil; proposal = nil; savedCopies = nil; outline = nil; restoreDraft(); failure = nil; exportMessage = nil; if root != nil { Task { await refresh() } } }
+    private func hideSensitive() { copiesRequested = false; expandedCopyIDs = []; ticket = UUID(); model?.close(); model = nil; modelScope = nil; draft = nil; changes = []; labels = []; baseDigest = nil; review = nil; proposal = nil; savedCopies = nil; comparingCopies = false; outline = nil; targets = []; document = nil; exporting = false; exportScope = nil; exportRoot = nil; loading = false; fetchingOriginal = false }
     private func open() async {
         hideSensitive(); guard phase == .active, let captured = scope else { return }
         do { let m = try store.childTaskRepairModel(); model = m; modelScope = captured; await m.load(); guard usable, captured == scope, model === m, !Task.isCancelled else { return }; restoreDraft(); if selected == nil { await discover() } else if active == nil { await refresh() } }
@@ -190,7 +209,7 @@ struct ChildTaskRepairView: View {
         catch { guard captured == scope else { return }; failure = "Tasks couldn’t be listed. Their saved content is kept." }
     }
     private func refresh() async {
-        guard usable, let root = selected, store.childTaskRepairEnabled else { return }; let captured = scope, request = UUID(); ticket = request; loading = true; failure = nil
+        guard usable, let root = selected, store.childTaskRepairEnabled else { return }; let captured = scope, request = UUID(); ticket = request; loading = true; comparingCopies = false; failure = nil; savedCopies = nil
         defer { if ticket == request { loading = false } }
         do {
             let value = try await store.readChildTaskAdoption(root); guard usable, captured == scope, ticket == request, selected == root, !Task.isCancelled else { return }
@@ -198,6 +217,13 @@ struct ChildTaskRepairView: View {
             review = value
             if changes.isEmpty { guard let source = value.originalSource else { throw ChildTaskRepairOutline.unavailable }; outline = try await decodeOutline(source) }
             else { try await updateProposal(value, request: request) }
+            // Snapshot refreshes revoke the old read immediately. Restore only
+            // a newly authorized comparison, retaining the user's open groups.
+            if copiesRequested {
+                let copies = try await store.readChildTaskCopies(value)
+                guard usable, captured == scope, ticket == request, selected == root, store.childTaskCopiesAreCurrent(copies), !Task.isCancelled else { return }
+                savedCopies = copies
+            }
         } catch { guard captured == scope, ticket == request else { return }; failure = (error as? AppFailure)?.localizedDescription ?? "This review couldn’t be loaded. Your original is kept." }
     }
     nonisolated private func decodeOutline(_ data: Data) async throws -> ChildTaskRepairOutline { try Task.checkCancellation(); return try .init(data: data) }
@@ -259,6 +285,23 @@ struct ChildTaskRepairView: View {
         do { let command = try ChildTaskRepairCommand(preview: proposal); guard await model.queue(command, review: proposal, draftToken: draft?.token), usable, self.model === model else { return }; activeID = command.id; draft = nil; changes = []; labels = []; baseDigest = nil; if await model.run(command, operation: .send) { await store.sync() } }
         catch { failure = "The repair couldn’t be saved. The original is kept." }
     }
+    private func compareCopies(_ read: ChildTaskAdoptionReview, exportCurrent: Bool = false) async {
+        guard usable, !working, selected == read.context.root.id, store.childTaskAdoptionReviewIsCurrent(read) else { return }
+        let capturedDigest = currentCopies?.digest, request = UUID(); copiesRequested = true; ticket = request; comparingCopies = true; failure = nil
+        defer { if ticket == request { comparingCopies = false } }
+        do {
+            let value = try await store.readChildTaskCopies(read)
+            guard usable, ticket == request, selected == read.context.root.id, store.childTaskCopiesAreCurrent(value), !Task.isCancelled else { return }
+            savedCopies = value
+            if exportCurrent {
+                guard capturedDigest == value.digest else { failure = "These saved copies changed. Review the updated lists before exporting."; return }
+                export(value.exportBundle)
+            }
+        } catch {
+            guard usable, ticket == request else { return }; savedCopies = nil
+            failure = "Saved copies couldn’t be read with current access. Refresh the task review to try again; all content is unchanged."
+        }
+    }
     private func export(_ data: Data) { guard usable else { return }; document = WorkspaceDocument(data: data); exportScope = scope; exportRoot = selected; exportMessage = nil; exporting = true }
     private func exportSaved(_ entry: ChildTaskRepairState.Entry) async {
         guard usable, !working else { return }; let captured = scope, root = selected; fetchingOriginal = true
@@ -308,5 +351,44 @@ private struct ChildRepairActionLabel: View {
         }
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         .contentShape(Rectangle())
+    }
+}
+
+private struct ChildCopyComparison: View {
+    let copies: ChildTaskCopyReview
+    @Binding var expanded: Set<String>
+    var body: some View {
+        Group {
+            if copies.metadata["state"] == .string("aligned") {
+                Text("The readable lists contain the same tasks. Their saved storage state may still need a review.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            } else if copies.metadata["state"] == .string("different") {
+                Label("The saved lists differ", systemImage: "doc.on.doc").font(.headline)
+            }
+            ForEach(copies.copies) { copy in
+                DisclosureGroup(isExpanded: Binding(get: { expanded.contains(copy.id) }, set: { open in
+                    if open { expanded.insert(copy.id) } else { expanded.remove(copy.id) }
+                })) {
+                    if copy.state == "unavailable" { Text("This copy needs an access review before its content can be shown. It stays unchanged.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                    else if copy.state == "absent" { Text("No separate copy is saved here.").foregroundStyle(.secondary) }
+                    else if copy.state == "review" { Text("This copy has an older format. Its exact readable content is preserved in the export.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                    else {
+                        ForEach(copy.items) { item in
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(item.title).fontWeight(.medium).fixedSize(horizontal: false, vertical: true)
+                                if let completed = item.completed { Label(completed ? "Completed" : "Open", systemImage: completed ? "checkmark.circle" : "circle").font(.caption).foregroundStyle(.secondary) }
+                                if let notes = item.notes, !notes.isEmpty { Text(notes).fixedSize(horizontal: false, vertical: true) }
+                                if let due = item.due, !due.isEmpty { Text("Due \(due)").font(.caption).foregroundStyle(.secondary) }
+                                if let priority = item.priority { Text("Priority \(priority)").font(.caption).foregroundStyle(.secondary) }
+                            }.padding(.leading, CGFloat(min(item.depth - 1, 6) * 12)).padding(.vertical, 4)
+                        }
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(copy.title).fontWeight(.medium).fixedSize(horizontal: false, vertical: true)
+                        Text(copy.state == "unavailable" ? "Needs access review" : copy.state == "absent" ? "No saved copy" : copy.state == "review" ? "Needs format review" : copy.count == 1 ? "1 task" : "\(copy.count ?? 0) tasks").font(.caption).foregroundStyle(.secondary)
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }.accessibilityIdentifier("childCopyReview-" + copy.id)
+            }
+        }
     }
 }

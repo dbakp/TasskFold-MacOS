@@ -62,7 +62,38 @@ import CryptoKit
         result.replaceSubrange(range, with: Data("\"source_tree\":".utf8) + exportSource)
         return result
     }
-    static let paths: Set<String> = ["/rest/v1/rpc/taskfold_child_adoption_targets", "/rest/v1/rpc/taskfold_review_child_adoption", "/rest/v1/rpc/taskfold_adopt_child_records"]
+    static var copyTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--child-adoption-saved-copies") }
+    static func copyReview(_ state: [String: JSON]) throws -> [String: JSON] {
+        var value = try review(state)
+        value["state"] = .string("review"); value["issue"] = .string("projection_mismatch"); value["can_adopt"] = .bool(false)
+        value["projection_revision"] = .number(1); value["structure_revision"] = .number(1)
+        return value
+    }
+    static func copies(_ state: [String: JSON], request: [String: JSON]) throws -> Data {
+        let review = try copyReview(state), identity = review.filter { ChildTaskCopyReview.fields.contains($0.key) }
+        guard ChildTaskStructureCommand.exact(.object(identity), .object(request)) else { throw ChildFieldNativeRefusal(code: "PT409") }
+        let root = state["root"]!.object, tree = root["subtasks"]!, digest = try hash(.object(state))
+        func changed(_ notes: String) -> JSON {
+            var rows = tree.list, row = rows[0].object; row["description"] = .string(notes); rows[0] = .object(row); return .array(rows)
+        }
+        let projectionTree = changed("Saved snapshot instructions"), recordTree = changed("Stored subtask instructions")
+        func summary(_ id: String, _ tree: JSON) throws -> JSON {
+            let count = stats(tree)!
+            return .object(["id": .string(id), "state": .string("ready"), "issue": .null, "node_count": .number(Double(count.count)), "max_depth": .number(Double(count.depth)), "bytes": .number(Double(try TaskfoldJSONEncoder().encode(tree).count))])
+        }
+        let projection: JSON = .object(["task_id": identity["task_id"]!, "task_generation": identity["task_generation"]!, "source_tree": projectionTree])
+        func indexed(_ nodes: [JSON]) -> [JSON] {
+            nodes.flatMap { [.object(["task_id": identity["task_id"]!, "fields": $0])] + indexed($0.object["subtasks"]?.list ?? []) }
+        }
+        let records: JSON = .array(indexed(recordTree.list))
+        let authority: JSON = .object(["task_id": identity["task_id"]!, "task_generation": identity["task_generation"]!, "project_id": identity["project_id"]!, "root_kind": .string("array")])
+        var bundle = identity
+        bundle.merge(["kind": .string("taskfold_saved_child_copies"), "copy_digest": .string(digest), "root": .object(root), "subtasks_sql_null": .bool(false), "projection": projection, "records": records, "authority": authority, "omitted": .array([])], uniquingKeysWith: { _, b in b })
+        var result = identity
+        result.merge(["copy_digest": .string(digest), "state": .string("different"), "authoritative_source": .string("records"), "copies": .array(try [summary("task",tree), summary("projection",projectionTree), summary("records",recordTree)]), "task_tree": tree, "projection_tree": projectionTree, "record_tree": recordTree, "export_bundle": .object(bundle)], uniquingKeysWith: { _, b in b })
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]; return try encoder.encode(result)
+    }
+    static let paths: Set<String> = ["/rest/v1/rpc/taskfold_review_child_copies", "/rest/v1/rpc/taskfold_child_adoption_targets", "/rest/v1/rpc/taskfold_review_child_adoption", "/rest/v1/rpc/taskfold_adopt_child_records"]
     static func hash(_ value: JSON) throws -> String {
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         return SHA256.hash(data: try encoder.encode(value)).map { String(format: "%02x", $0) }.joined()
@@ -104,8 +135,13 @@ import CryptoKit
             let included = (body["_id"] == .null || body["_id"] == .string(root.id)) && (body["_after"] == .null || body["_after"]!.text < root.id)
             return (try TaskfoldJSONEncoder().encode(["protocol": JSON.number(1), "account": .string(ChildFieldNativeIdentity.account), "items": .array(included ? [.object(item)] : []), "next_after": .null]), false)
         }
+        if path.hasSuffix("taskfold_review_child_copies") {
+            guard copyTesting, case .object(let request)? = body["_body"] else { throw ChildFieldNativeRefusal(code: "42501") }
+            return (try copies(state, request: request), false)
+        }
         if path.hasSuffix("taskfold_review_child_adoption") {
             guard body["_id"] == .string(root.id), body["_generation"] == root["task_generation"] else { throw ChildFieldNativeRefusal(code:"PT409") }
+            if copyTesting { let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]; return (try encoder.encode(copyReview(state)), false) }
             if exportTesting { return (try exportReview(state),false) }
             return (ChildRepairNativePeer.enabled ? try ChildRepairNativePeer.bytes(review(state)) : try TaskfoldJSONEncoder().encode(review(state)),false)
         }

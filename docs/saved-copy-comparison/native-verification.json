@@ -1,0 +1,32 @@
+{
+  "acceptedScope": "iPhone Simulator native comparison at accessibility XXXL in dark appearance",
+  "tests": 1,
+  "failures": 0,
+  "sourcePhase": "phone-phase.json",
+  "summary": "phone-summary.json",
+  "savedDataProof": "phone-proof.json",
+  "checked": [
+    "Open comparison from repair review",
+    "Expand saved snapshot and stored subtasks independently",
+    "Read their different instructions",
+    "Collapse each group and reach enabled readable-copy export action",
+    "Close and cold-launch; verify unchanged original/nested data and no writes/receipts/archives"
+  ],
+  "productFixes": [
+    "Separate native list rows instead of one oversized comparison cell",
+    "Wrap copy headings and Compare/Export actions at largest text",
+    "On snapshot refresh, discard old data and fetch a newly authorized comparison while preserving open groups; clear superseded comparison spinner"
+  ],
+  "notClaimed": [
+    "Native Mac comparison acceptance",
+    "Native iPad comparison acceptance",
+    "Human VoiceOver speech for this comparison",
+    "New export file-picker delivery",
+    "Write reconciliation",
+    "Hosted deployment or full-stack migration parity"
+  ],
+  "earlierRuns": [
+    "native-v1-not-accepted.json",
+    "native-v2-not-accepted.json"
+  ]
+}

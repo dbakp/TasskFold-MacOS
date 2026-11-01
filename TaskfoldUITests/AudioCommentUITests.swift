@@ -2313,6 +2313,29 @@ extension TaskfoldMacUITests {
         childDone(app); childProbe(app, "adoptionQueued=0 adoptionAttempted=0 adoptionApplied=0 adoptionClosed=1 adoptionWrites=0 adoptionRequests=2")
         XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
     }
+    @MainActor func testChildSavedCopiesNativeComparison() throws {
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        let mode = "--child-adoption-saved-copies"
+        try childOpen(app, extra: mode, large: true)
+        childHomePress("childNativeRepair", app)
+        let compare = app.buttons["childCopyReviewLoad"]; childReveal(compare, app); completionReadyPress(compare, app)
+        let message = app.staticTexts["The saved lists differ"]; childReveal(message, app)
+        XCTAssertTrue(message.waitForExistence(timeout: 15), app.debugDescription)
+        structureSnapshot(app, "Saved-copy comparison at largest text")
+        for (id, title, note) in [("projection", "Saved snapshot", "Saved snapshot instructions"), ("records", "Stored subtasks", "Stored subtask instructions")] {
+            let group = app.descendants(matching: .any).matching(identifier: "childCopyReview-" + id).firstMatch
+            childReveal(group, app); XCTAssertTrue(group.waitForExistence(timeout: 10), app.debugDescription)
+            let button = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
+            childReveal(button, app); completionReadyPress(button, app)
+            let text = app.staticTexts[note]; childReveal(text, app); XCTAssertTrue(text.waitForExistence(timeout: 10), app.debugDescription)
+            structureSnapshot(app, title + " instructions remain separate")
+            childReveal(button, app, towardTop: true); completionReadyPress(button, app)
+        }
+        let export = app.buttons["childCopyReviewExport"]; childReveal(export, app); XCTAssertTrue(export.isEnabled)
+        structureSnapshot(app, "Readable exact-copy export action")
+        childPress(app.buttons["Close"].firstMatch)
+        app.terminate(); try childOpen(app, reset: false, extra: mode, large: true)
+    }
     @MainActor private func duplicateHistoryChoice(_ app: XCUIApplication) {
         let menu = app.descendants(matching: .any).matching(identifier: "childRepairSeparate-1").firstMatch
         childReveal(menu, app); XCTAssertTrue(menu.waitForExistence(timeout: 15), app.debugDescription)

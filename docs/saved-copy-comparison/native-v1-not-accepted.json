@@ -1,0 +1,10 @@
+{
+  "accepted": false,
+  "cause": "Synthetic launcher omitted comparison repair entry point; indexed mock rows also omitted its nested task. No product acceptance claimed. Corrected before v2.",
+  "summary": {
+    "totalTestCount": 1,
+    "passedTests": 0,
+    "failedTests": 1,
+    "skippedTests": 0
+  }
+}

@@ -627,3 +627,145 @@ struct ChildTaskRepairOutline: Sendable {
         try walk(root.nodes, path: []); rootKind = root.kind; self.items = items; rootCount = root.nodes.count
     }
 }
+
+/// Ephemeral comparison only. Raw copies and export bytes never enter Snapshot
+/// or a floating-point dictionary, and descriptions never disclose their content.
+struct ChildTaskCopyReview: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
+    static let maximumBytes = 14_300_000
+    static let fields: Set<String> = ["protocol", "account", "task_id", "task_generation", "project_id", "workspace_id", "review_digest"]
+    static var invalid: AppFailure { AppFailure(message: "These saved copies need a fresh review. All content is unchanged.") }
+    let context: ChildTaskRecordContext
+    let metadata: [String: JSON]
+    let copies: [Copy]
+    let exportBundle: Data
+    let omitted: Set<String>
+    var digest: String { metadata["copy_digest"]!.text }
+    var description: String { "Private saved-copy comparison" }
+    var debugDescription: String { description }
+    struct Item: Sendable, Identifiable {
+        let id: String, title: String, depth: Int
+        let notes: String?, completed: Bool?, due: String?, priority: Int?
+    }
+    struct Copy: Sendable, Identifiable {
+        let id: String, state: String, issue: String?
+        let count: Int?, depth: Int?, bytes: Int?
+        let tree: Data
+        let items: [Item]
+        var visible: Bool { state == "ready" || state == "review" }
+        var title: String { switch id { case "task": "Task list"; case "projection": "Saved snapshot"; default: "Stored subtasks" } }
+    }
+    static func body(_ review: ChildTaskAdoptionReview) -> [String: JSON] { review.metadata.filter { fields.contains($0.key) } }
+    private struct RowIdentity: Decodable { let task_id: String }
+    private struct Node: Decodable {
+        let id: String, title: String?, children: [Node]
+        let notes: String?, completed: Bool?, due: String?, priority: Int?
+        enum CodingKeys: String, CodingKey { case id, title, subtasks, description, completed, due_date, priority }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id); title = try? c.decode(String.self, forKey: .title)
+            notes = try? c.decode(String.self, forKey: .description)
+            completed = try? c.decode(Bool.self, forKey: .completed)
+            due = try? c.decode(String.self, forKey: .due_date)
+            let p = try? c.decode(Int.self, forKey: .priority); priority = p.flatMap { (1...4).contains($0) ? $0 : nil }
+            children = try c.decodeIfPresent([Node].self, forKey: .subtasks) ?? []
+        }
+    }
+    init(data: Data, review: ChildTaskAdoptionReview) throws {
+        let parts = try ChildTaskRecordRead.separatingJSONFields(["task_tree", "projection_tree", "record_tree", "export_bundle"], data: data, maximum: Self.maximumBytes,
+            integerPaths: [["protocol"], ["copies", "[]", "node_count"], ["copies", "[]", "max_depth"], ["copies", "[]", "bytes"]],
+            nullableIntegerPaths: [["copies", "[]", "node_count"], ["copies", "[]", "max_depth"], ["copies", "[]", "bytes"]])
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
+        guard Set(raw.keys) == Self.fields.union(["copy_digest", "state", "authoritative_source", "copies", "task_tree", "projection_tree", "record_tree", "export_bundle"]),
+              Self.body(review).allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }),
+              ChildTaskAdoptionCommand.digest(raw["copy_digest"]), ["single", "aligned", "different", "limited"].contains(raw["state"]?.text ?? ""),
+              ["task", "records", "unavailable"].contains(raw["authoritative_source"]?.text ?? ""),
+              case .array(let rows)? = raw["copies"], rows.count == 3, let original = review.originalSource,
+              let taskTree = parts.values["task_tree"], ChildTaskRepairPreview.sameJSONValue(taskTree, original),
+              let bundle = parts.values["export_bundle"], bundle.count <= 8_000_000 else { throw Self.invalid }
+        let names = ["task", "projection", "records"], treeNames = ["task_tree", "projection_tree", "record_tree"]
+        var copies: [Copy] = []
+        for (index,value) in rows.enumerated() {
+            guard case .object(let row) = value, Set(row.keys) == ["id", "state", "issue", "node_count", "max_depth", "bytes"],
+                  row["id"] == .string(names[index]), let state = row["state"]?.text, ["ready", "review", "unavailable", "absent"].contains(state),
+                  let tree = parts.values[treeNames[index]], tree.count <= 2_000_000 else { throw Self.invalid }
+            let visible = state == "ready" || state == "review"
+            guard index != 0 || visible else { throw Self.invalid }
+            var count: Int?, depth: Int?, byteCount: Int?, items: [Item] = []
+            if visible {
+                byteCount = try ChildTaskAdoptionReview.count(row["bytes"], maximum: 4_000_000)
+                guard byteCount! > 0 else { throw Self.invalid }
+                if state == "ready" {
+                    guard row["issue"] == .null else { throw Self.invalid }
+                    count = try ChildTaskAdoptionReview.count(row["node_count"], maximum: 1000)
+                    depth = try ChildTaskAdoptionReview.count(row["max_depth"], maximum: 24)
+                    let nodes = tree == Data("null".utf8) ? [] : try TaskfoldJSONDecoder().decode([Node].self, from: tree)
+                    var seen = Set<String>(), deepest = 0
+                    func walk(_ nodes: [Node], level: Int) throws {
+                        guard nodes.isEmpty || level <= 24 else { throw Self.invalid }
+                        for node in nodes {
+                            try Task.checkCancellation(); let key = node.id.precomposedStringWithCanonicalMapping
+                            guard !node.id.isEmpty, node.id.utf8.count <= 128, key.utf8.count <= 128, seen.insert(key).inserted, items.count < 1000 else { throw Self.invalid }
+                            deepest = max(deepest, level)
+                            let name = String(String.UnicodeScalarView((node.title ?? "").unicodeScalars.prefix(160)))
+                            items.append(.init(id: node.id, title: name.isEmpty ? "Untitled task" : name, depth: level,
+                                notes: node.notes.map { String(String.UnicodeScalarView($0.unicodeScalars.prefix(600))) }, completed: node.completed,
+                                due: node.due.map { String(String.UnicodeScalarView($0.unicodeScalars.prefix(64))) }, priority: node.priority))
+                            try walk(node.children, level: level + 1)
+                        }
+                    }
+                    try walk(nodes, level: 1)
+                    guard count == items.count, depth == deepest else { throw Self.invalid }
+                } else {
+                    guard row["node_count"] == .null, row["max_depth"] == .null,
+                          ChildTaskRepairPreview.issues.union(["record_shape"]).contains(row["issue"]?.text ?? "") else { throw Self.invalid }
+                    if row["issue"] == .string("record_shape") { guard names[index] == "records", tree == Data("null".utf8) else { throw Self.invalid } }
+                }
+            } else {
+                guard row["node_count"] == .null, row["max_depth"] == .null, row["bytes"] == .null,
+                      tree == Data("null".utf8), row["issue"] == (state == "absent" ? .null : .string("access_review")) else { throw Self.invalid }
+            }
+            copies.append(.init(id: names[index], state: state, issue: row["issue"] == .null ? nil : row["issue"]?.text, count: count, depth: depth, bytes: byteCount, tree: tree, items: items))
+        }
+        let exported = try ChildTaskRecordRead.separatingJSONFields(["root", "projection", "records", "authority"], data: bundle, maximum: 8_000_000, integerPaths: [["protocol"]], nullableIntegerPaths: [])
+        let header = try TaskfoldJSONDecoder().decode([String: JSON].self, from: exported.metadata)
+        guard Set(header.keys) == Self.fields.union(["kind", "copy_digest", "root", "subtasks_sql_null", "projection", "records", "authority", "omitted"]),
+              header["kind"] == .string("taskfold_saved_child_copies"), Self.fields.allSatisfy({ ChildTaskStructureCommand.exact(header[$0], raw[$0]) }),
+              header["copy_digest"] == raw["copy_digest"], case .bool(let sqlNull)? = header["subtasks_sql_null"],
+              case .array(let missing)? = header["omitted"], missing.count <= 3,
+              missing.allSatisfy({ if case .string(let s) = $0 { return ["projection", "records", "authority"].contains(s) }; return false }),
+              Set(missing.map(\.text)).count == missing.count, let root = exported.values["root"] else { throw Self.invalid }
+        let rootParts = try ChildTaskRecordRead.separatingJSONFields(["id", "task_generation", "project_id", "subtasks"], data: root, maximum: 8_000_000, integerPaths: [], nullableIntegerPaths: [])
+        for (key,expected) in [("id", raw["task_id"]!), ("task_generation", raw["task_generation"]!), ("project_id", raw["project_id"]!)] {
+            guard let bytes = rootParts.values[key], ChildTaskStructureCommand.exact(try TaskfoldJSONDecoder().decode(JSON.self, from: bytes), expected) else { throw Self.invalid }
+        }
+        guard let exportedTree = rootParts.values["subtasks"], ChildTaskRepairPreview.sameJSONValue(exportedTree, taskTree), !sqlNull || taskTree == Data("null".utf8) else { throw Self.invalid }
+        for (key,index) in [("projection",1),("records",2)] {
+            guard let content = exported.values[key] else { throw Self.invalid }
+            if !copies[index].visible { guard content == Data((key == "records" ? "[]" : "null").utf8) else { throw Self.invalid } }
+            else if key == "projection" {
+                let p = try ChildTaskRecordRead.separatingJSONFields(["task_id", "task_generation", "source_tree"], data: content, maximum: 4_000_000, integerPaths: [], nullableIntegerPaths: [])
+                for identity in ["task_id", "task_generation"] { guard let bytes = p.values[identity], ChildTaskStructureCommand.exact(try TaskfoldJSONDecoder().decode(JSON.self, from: bytes), raw[identity]) else { throw Self.invalid } }
+                guard let source = p.values["source_tree"], ChildTaskRepairPreview.sameJSONValue(source, copies[index].tree) else { throw Self.invalid }
+            } else {
+                guard content.first == 91 else { throw Self.invalid }
+                let identities = try TaskfoldJSONDecoder().decode([RowIdentity].self, from: content)
+                guard identities.count <= 1000, identities.allSatisfy({ $0.task_id == raw["task_id"]?.text }), copies[index].count == nil || copies[index].count == identities.count else { throw Self.invalid }
+            }
+        }
+        guard let authority = exported.values["authority"] else { throw Self.invalid }
+        if raw["authoritative_source"] == .string("records") {
+            let a = try TaskfoldJSONDecoder().decode([String: JSON].self, from: authority)
+            guard Set(a.keys) == ["task_id", "task_generation", "project_id", "root_kind"], ["task_id", "task_generation", "project_id"].allSatisfy({ ChildTaskStructureCommand.exact(a[$0], raw[$0]) }), ["array", "null"].contains(a["root_kind"]?.text ?? "") else { throw Self.invalid }
+        } else { guard authority == Data("null".utf8) else { throw Self.invalid } }
+        let omitted = Set(missing.map(\.text))
+        if raw["state"] == .string("limited") { guard !omitted.isEmpty else { throw Self.invalid } }
+        else { guard omitted.isEmpty else { throw Self.invalid } }
+        if raw["state"] == .string("single") { guard copies[1].state == "absent", copies[2].state == "absent" else { throw Self.invalid } }
+        if raw["state"] == .string("aligned") {
+            guard copies.allSatisfy({ $0.state == "ready" }),
+                  ChildTaskStructureCommand.exact(try TaskfoldJSONDecoder().decode(JSON.self, from: copies[0].tree), try TaskfoldJSONDecoder().decode(JSON.self, from: copies[1].tree)),
+                  ChildTaskStructureCommand.exact(try TaskfoldJSONDecoder().decode(JSON.self, from: copies[0].tree), try TaskfoldJSONDecoder().decode(JSON.self, from: copies[2].tree)) else { throw Self.invalid }
+        }
+        context = review.context; metadata = raw; self.copies = copies; exportBundle = bundle; self.omitted = omitted
+    }
+}

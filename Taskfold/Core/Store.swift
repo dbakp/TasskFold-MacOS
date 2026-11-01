@@ -809,6 +809,19 @@ final class Store {
         && preview.context.snapshot == snapshotRevision
         && !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == preview.context.root.id })
     }
+    func childTaskCopiesAreCurrent(_ value: ChildTaskCopyReview) -> Bool {
+        childTaskRepairEnabled && online && childTaskFieldRecoveryScope == ChildTaskFieldClientScope(value.context)
+        && value.context.snapshot == snapshotRevision
+        && !snapshot.pending.contains(where: { $0.table == "tasks" && $0.recordID == value.context.root.id })
+    }
+    func readChildTaskCopies(_ review: ChildTaskAdoptionReview) async throws -> ChildTaskCopyReview {
+        guard childTaskRepairEnabled, online, childTaskAdoptionReviewIsCurrent(review) else { throw ChildTaskCopyReview.invalid }
+        let value = try await backend.childTaskCopyReview(review)
+        try Task.checkCancellation()
+        guard childTaskRepairEnabled, childTaskAdoptionReviewIsCurrent(review), childTaskFieldRecoveryScope == ChildTaskFieldClientScope(value.context),
+              value.context.snapshot == snapshotRevision else { throw CancellationError() }
+        return value
+    }
     func readChildTaskRepair(_ review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange]) async throws -> ChildTaskRepairPreview {
         guard childTaskRepairEnabled, childTaskAdoptionReviewIsCurrent(review) else { throw ChildTaskRepairFailure(reason: .unavailable) }
         let preview = try await backend.childTaskRepairPreview(review, changes: changes)

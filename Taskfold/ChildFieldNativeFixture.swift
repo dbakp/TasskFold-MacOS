@@ -397,7 +397,7 @@ struct ChildFieldNativeFixtureView: View {
                             Task { do { try await store.childTaskStructureJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount(); await inspect() } catch { problem = error.localizedDescription } }
                         }.accessibilityIdentifier("childNativeLoseStructureJournal")
                     }
-                    if ChildRepairNativePeer.enabled { Button("Review older subtasks") { opening = "repair" }.accessibilityIdentifier("childNativeRepair"); Button("Open saved repairs") { opening = "repairRecovery" }.accessibilityIdentifier("childNativeRepairRecovery") }
+                    if ChildRepairNativePeer.enabled || ChildAdoptionNativePeer.copyTesting { Button("Review older subtasks") { opening = "repair" }.accessibilityIdentifier("childNativeRepair"); Button("Open saved repairs") { opening = "repairRecovery" }.accessibilityIdentifier("childNativeRepairRecovery") }
                     if ChildAdoptionNativePeer.enabled {
                         Button("Review subtask storage") { opening = "adoption" }.accessibilityIdentifier("childNativeAdoption")
                         Button("Open saved upgrades") { opening = "adoptionRecovery" }.accessibilityIdentifier("childNativeAdoptionRecovery")
