@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Saved-copy comparison accepted on iPhone; safe reconciliation next",
-  "latest": "Both apps now implement read-only comparison of conflicting saved subtask lists and exact readable-copy export. Each repository passes 58 database assertions and 70 client checks. The largest-text iPhone review opens both instruction copies separately; independent cold saved-data checks confirm unchanged originals. Native rows/headings now wrap and a regular sync revalidates the comparison while retaining open groups. Choosing/applying a copy, historical identity/lifecycle mapping, exact editable-cache support, shared-content custody and Mac acceptance remain open. Normal migration use stays disabled.",
+  "focus": "P2 · Transactional copy-apply backend verified; app selection/recovery next",
+  "latest": "The copy-apply backend passed 133 workflow and 332 existing repair/history checks per repository, including real prior completion history, permissions, replay and rollback. App copy-selection/recovery controls and ambiguous identity/completion mapping are still unfinished. Normal migration stays disabled. Removed 17.5 GB of verified completed old test results and retained compact summaries.",
   "next": [
-    "Implement an explicit reconciliation choice with unchanged originals, history custody and fresh access/concurrency checks. Complete other historical-identity/lifecycle mapping and exact editable-cache support.",
+    "Connect copy selection to app review, durable drafts and recovery, then verify native use. Complete ambiguous identity/lifecycle mapping and exact editable-cache support.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
     "Complete remaining Mac repair/hierarchy/inspector and cross-task-move acceptance, then the wider account/window/privacy/speech/large-library checks. Preserve separate deletion-recovery gaps and all agreed deferrals."
   ],
@@ -556,7 +556,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Guarded edits, Undo/Redo, grouped activity and mobile duplicate/history repair are implemented. Saved-copy comparison and exact export pass both repositories’ database/client checks; largest-text iPhone review and cold unchanged-data checks pass. Safe copy selection/application, Mac acceptance, other history identities, exact editable-cache support and file/discussion custody remain open. Normal use stays disabled.",
+              "detail": "The server can now archive all readable copies/history and apply choices when identity and completion state agree, with real update/read-policy checks and exact numeric spelling. App copy-choice controls, ambiguous history mapping, exact editable caches, shared archive recovery, Mac acceptance and file/discussion custody remain open. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -609,6 +609,14 @@
                 {
                   "state": "done",
                   "title": "Compare conflicting saved copies and export exact readable originals; accept iPhone review"
+                },
+                {
+                  "state": "done",
+                  "title": "Archive and apply a saved copy on the server when identity and completion history agree"
+                },
+                {
+                  "state": "build",
+                  "title": "Connect copy choices to app review, saved drafts and recovery controls"
                 },
                 {
                   "state": "build",
@@ -699,7 +707,12 @@
             "saved-copy-comparison/database-verification.json",
             "saved-copy-comparison/client-verification.json",
             "saved-copy-comparison/native-verification.json",
-            "saved-copy-comparison/build-verification.json"
+            "saved-copy-comparison/build-verification.json",
+            "copy-choice-reconciliation/README.md",
+            "copy-choice-reconciliation/workflow-verification.json",
+            "copy-choice-reconciliation/repair-regression-verification.json",
+            "copy-choice-reconciliation/completed-build-cleanup.json",
+            "copy-choice-reconciliation/older-results-cleanup.json"
           ],
           "focus": true
         },
@@ -809,6 +822,11 @@
     "completion-selection-root-client/verification.json": "aa0d66de6241ecfd910f6c15efee329ab88e6de5e0fed5d27ae74cdf8a78d4c8",
     "completion-selection-roots/README.md": "d5605a55e1aa7d01b1390c7c50c8f1beb330c3f0e7aebb4aa30f10df5e8d53a0",
     "completion-selection-roots/verification.json": "ca845522b8a90cad11dceebab32923dee268c7820dfe7422d5264a3e2baa9d90",
+    "copy-choice-reconciliation/README.md": "cd5004ef36ade60041dbf151d3753ca761144057b00dea514fcc9ee2e7ca44d6",
+    "copy-choice-reconciliation/completed-build-cleanup.json": "9c00a79cf72e6bdb486fc16108a427edf3aedae9decc09a916e9d3c3f591c010",
+    "copy-choice-reconciliation/older-results-cleanup.json": "61d0170032fb7f27d335af7e2d819513999fbca5fd69daa5d8e7f89dea4b684a",
+    "copy-choice-reconciliation/repair-regression-verification.json": "c379b7f905bae2a91bc8446beafbd172ad33d27fc1fc5e7c40ef7c7e0ed6be64",
+    "copy-choice-reconciliation/workflow-verification.json": "9e08993e3d975a84a78eb5eb443f42f8a1f3c5574a5d123418f3ec875013d6a1",
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",

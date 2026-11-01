@@ -1,0 +1,21 @@
+{
+  "removed": [
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/ModuleCache.noindex",
+      "bytes": 50868766
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Intermediates.noindex/Taskfold.build/Debug/Taskfold.build/Objects-normal",
+      "bytes": 269074452
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build",
+      "bytes": 396532831
+    }
+  ],
+  "reason": "All native checks for these builds are complete and their signed-product/source hashes, screenshots and saved-data proofs are retained. The next client implementation needs a new build; completed products and reproducible dependency caches were removed to restore the test storage floor.",
+  "currentAppAndTestRunnerRetained": false,
+  "sourcesAndTestEvidenceRetained": true,
+  "sourceHostsAndDependencyPinsRetained": true,
+  "cachedDependencyWorkingTreesVerifiedClean": true
+}

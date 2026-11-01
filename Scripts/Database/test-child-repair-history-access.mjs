@@ -11,11 +11,16 @@ const json=x=>lit(JSON.stringify(x))+'::jsonb';let pg;
 try {
  pg=await createPostgresFixture({advisors:true});await loadChildAuthorityDependencies(pg);
  for(const name of [childAuthorityMigration,...migrations.slice(0,-1)])await pg.raw(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
+ if(process.env.TASKFOLD_COPY_CHOICE_REGRESSION_SQL)await pg.raw('alter policy fixture_automation_task_update on public.tasks rename to "Users can update accessible tasks"');
  report.baselineAdvisors=await pg.advisors();
  // Keep server diagnostics in the owned fixture, with no credentials or real data.
  const migration=await pg.scalar(`create temp table diagnostic(value jsonb);do $m$declare c text;begin begin execute ${lit(candidate)};exception when others then get stacked diagnostics c=PG_EXCEPTION_CONTEXT;insert into diagnostic values(jsonb_build_object('code',sqlstate,'reason',sqlerrm,'context',c));end;end$m$;select coalesce((select value from diagnostic),'{}'::jsonb);drop table diagnostic;`);
  if(migration.code){report.migrationDiagnostic=migration;throw Object.assign(new Error(migration.reason),{code:migration.code});}
  if(process.env.TASKFOLD_DUPLICATE_HISTORY_SQL){const sql=await readFile(process.env.TASKFOLD_DUPLICATE_HISTORY_SQL,'utf8');report.duplicateCandidateSHA256=createHash('sha256').update(sql).digest('hex');await pg.raw(sql);}
+ if(process.env.TASKFOLD_COPY_CHOICE_REGRESSION_SQL){
+  for(const name of ['20261030204000_child_repair_bounded_originals.sql','20261101091417_reviewed_child_copy_comparison.sql'])await pg.raw(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
+  const sql=await readFile(process.env.TASKFOLD_COPY_CHOICE_REGRESSION_SQL,'utf8');report.copyChoiceCandidateSHA256=createHash('sha256').update(sql).digest('hex');await pg.raw(sql);
+ }
  const users=Object.fromEntries(['owner','outside'].map(k=>[k,{id:randomUUID(),session:randomUUID()}]));const owner=users.owner;
  for(const u of Object.values(users))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});insert into public.profiles(user_id) values(${lit(u.id)});`);
  const run=async(expr,who='owner')=>{const u=users[who],v=await pg.scalar(`begin;create temp table fixture_result(value jsonb,code text,reason text,context text) on commit drop;grant all on fixture_result to authenticated;set local request.jwt.claim.sub=${lit(u.id)};set local request.jwt.claims=${lit(JSON.stringify({sub:u.id,session_id:u.session}))};set local role authenticated;do $r$declare c text;begin begin insert into fixture_result values(to_jsonb(${expr}),null,null,null);exception when others then get stacked diagnostics c=PG_EXCEPTION_CONTEXT;insert into fixture_result values(null,sqlstate,sqlerrm,c);end;end$r$;select to_jsonb(r) from fixture_result r;commit;`);if(v.code){report.lastExpectedDiagnostic=v;throw Object.assign(new Error(v.reason),{code:v.code});}return v.value;};

@@ -1,0 +1,16 @@
+{
+  "notAccepted": [
+    {
+      "scope": "ordinary repair delegation",
+      "symptom": "The invoker wrapper could not execute the retired public helper.",
+      "fix": "Move retired invokers into the private schema and grant internal delegation; retain caller RLS and remove retired public routes."
+    },
+    {
+      "scope": "numeric spelling in selected record copy",
+      "observed": "1",
+      "expected": "1.00",
+      "fix": "Compare exact canonical text for record fields, changed versions, materialization and mirror; retain the original numeric spelling in the archive."
+    }
+  ],
+  "finalAcceptance": "See workflow-verification.json and repair-regression-verification.json; earlier iterations are not acceptance evidence."
+}

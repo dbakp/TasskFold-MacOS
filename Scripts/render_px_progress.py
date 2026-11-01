@@ -37,7 +37,7 @@ def validate(data):
             for item in group['items']:
                 assert item['state'] in STATES and item['title'].strip()
                 steps = item.get('steps', [])
-                assert isinstance(steps, list) and len(steps) <= 16
+                assert isinstance(steps, list) and len(steps) <= 24
                 for step in steps:
                     assert set(step) == {'state', 'title'} and step['state'] in STATES and step['title'].strip()
     hashes = {}
