@@ -25,12 +25,12 @@ TASKFOLD_MAPPING_CONTRACT_FIXTURE=TaskfoldTests/Fixtures/child-copy-mapping-cont
 Scripts/test_core.sh --filter 'ChildCopyMappingClientTests|ChildTaskRepairTests|ChildTaskCopyReviewTests|ChildTaskAdoptionTests'
 ```
 
-The new native fixture records include the real identity/incarnation/location shape needed to open the form. Its older mock preview/write handler now explicitly refuses mapped operations (`PT503`) rather than incorrectly certifying a mapping it does not simulate. That test peer still needs mapped transaction/archive simulation and an independent saved-data verifier, or an actual local SQL-backed endpoint, before complete native acceptance.
+The new native fixture records include the real identity/incarnation/location shape needed to open the form. Its older mock preview/write handler now explicitly refuses mapped operations (`PT503`) rather than incorrectly certifying a mapping it does not simulate. A separate DEBUG-only local SQL channel now connects the reserved host to the actual mapping transactions; see `../child-copy-mapping-native-channel/README.md`. Full native interaction and an independent saved-data verifier remain open.
 
 A Mac runtime attempt stopped at the locked screen before any form interaction. Its owned test process was closed. No native matching/search, keyboard/speech/largest-text, cold partial form, mapped save/recovery or exact native mapped-original readback is accepted by this milestone. The current app binaries have not been installed into the user's normal app.
 
 ## Remaining
 
-- Finish the native test endpoint/verifier and exercise both full app workflows, including search/cancel, explicit choices, edit/Undo/reset, partial/complete cold return, one save, lost reply/status recovery and exact original export/readback.
+- Use the local SQL test endpoint, finish the independent saved-data verifier and exercise both full app workflows, including search/cancel, explicit choices, edit/Undo/reset, partial/complete cold return, one save, lost reply/status recovery and exact original export/readback.
 - Verify account/access/window/privacy, keyboard, VoiceOver and large-text/library behavior. Mac runtime needs an unlocked desktop.
 - Resolve broader recipient/recurrence histories, exact editable caches, shared file/discussion/archive custody and genuine shared-account/hosted migration acceptance. Other Mac workflows and all existing user deferrals remain open.

@@ -5944,6 +5944,7 @@ extension Store {
         guard ChildFieldNativeIdentity.enabled,userID==ChildFieldNativeIdentity.account else {throw CancellationError()}
         dailyBackupsEnabled=false; disableNotifications()
         if ProcessInfo.processInfo.arguments.contains("--child-fields-native-reset") {
+            guard !ChildMappingSQLNativePeer.enabled else { throw CancellationError() }
             try ChildFieldNativePeer.save(ChildFieldNativePeer.initial())
             try await childTaskFieldJournal(account:ChildFieldNativeIdentity.account,origin:ChildFieldNativeIdentity.origin).removeAccount()
             try await childTaskCompletionJournal(account: ChildFieldNativeIdentity.account, origin: ChildFieldNativeIdentity.origin).removeAccount()

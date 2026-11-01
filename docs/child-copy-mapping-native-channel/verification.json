@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "passed": true,
+  "channelUnitTests": 3,
+  "sqlChannelChecks": [
+    "real scoped comparison through file channel",
+    "real mapped preview",
+    "lost reply occurs after actual committed save",
+    "status recovery and exact request replay with write gates closed",
+    "committed root published before response becomes visible",
+    "original canonical bytes survive channel unchanged",
+    "foreign scope and arbitrary SQL routes fail closed",
+    "stale channel nonce rejected",
+    "one receipt after replay and refused requests",
+    "one neutral reconciliation event from real transaction"
+  ],
+  "fixtureRemoved": true,
+  "sourceSHA256": {
+    "Taskfold/ChildFieldNativeFixture.swift": "fdc89c52682e69fa86d0399703fb02d2000e8e9ee27180cb6e0d282e779a3b69",
+    "Taskfold/Core/Store.swift": "b5eceb1c2cdb7e33d2bf70ea778698e586d5c42357fd32ce0acacc3afbead367",
+    "Scripts/Database/child-mapping-native-channel.mjs": "46dba48b7cf60a48d0b5e4817f6c2223df22a121e88e75d0b172984b6d12e789",
+    "Scripts/Database/run-child-mapping-native.mjs": "ea75c6b7224881cdc4a4ddf43147cedc9350bc5c9eb73a38b41d09a738b80f5a",
+    "Scripts/Database/test-child-mapping-native-channel.mjs": "2171f1ea999ac8aebbdb4f1a9e3d2a4ce26b2cb37f67b5324e0db1f9d78daee3"
+  },
+  "build": {
+    "phase": "mapping-sql-channel-final",
+    "appAndRunnerSignaturesVerified": true,
+    "sourceProof": {
+      "Taskfold/ChildFieldNativeFixture.swift": {
+        "sourceSHA256": "fdc89c52682e69fa86d0399703fb02d2000e8e9ee27180cb6e0d282e779a3b69",
+        "hostSHA256": "fdc89c52682e69fa86d0399703fb02d2000e8e9ee27180cb6e0d282e779a3b69",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/Store.swift": {
+        "sourceSHA256": "b5eceb1c2cdb7e33d2bf70ea778698e586d5c42357fd32ce0acacc3afbead367",
+        "hostSHA256": "3598a84d77d67fa2a7155660d0ca35f7ad2aadde5f3b85c5e275ee3ba7886bd2",
+        "matchesDocumentedIsolation": true
+      }
+    },
+    "appBinariesSHA256": {
+      "Contents/MacOS/Taskfold": "10c237a00660ce406645aae891541bbe53cc33d5f8599d2a40880571f915b290",
+      "Contents/MacOS/Taskfold.debug.dylib": "a722d1674bd9861f04fbd4ed1f3bdb8ae91f2314283c36bdb41c8732264887a8"
+    }
+  },
+  "nativeControlsAccepted": false,
+  "hostedChanges": false,
+  "scope": "owned local PostgreSQL and file channel; not native-control or hosted acceptance",
+  "remaining": "Native controls, saved-data verifier, search/cancel, cold partial/complete review, native recovery/export and wider acceptance. Mac is locked."
+}

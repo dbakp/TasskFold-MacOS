@@ -30,8 +30,46 @@ enum ChildFieldNativeIdentity {
 struct ChildFieldNativeRefusal: Error { let code: String }
 
 /// A synthetic file-backed HTTP peer, not a substitute for the PostgreSQL suite.
+/// Reserved DEBUG-only file channel into an owned local PostgreSQL fixture.
+/// It never opens a port, reads hosted credentials or substitutes normal HTTP.
+@MainActor enum ChildMappingSQLNativePeer {
+    static var enabled: Bool { ChildFieldNativeIdentity.enabled && ProcessInfo.processInfo.arguments.contains("--child-mapping-sql-native") }
+    private struct Configuration: Decodable { let `protocol`: Int; let nonce: UUID; let account: String; let root: String; let generation: String }
+    private struct Reply: Decodable { let `protocol`: Int; let id: String; let code: String?; let data: String; let lose: Bool }
+    private static func read(_ url: URL, limit: Int) throws -> Data {
+        let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        guard values.isRegularFile == true, values.isSymbolicLink != true, let size = values.fileSize, size <= limit else { throw URLError(.cannotDecodeContentData) }
+        let data = try Data(contentsOf: url)
+        guard data.count <= limit else { throw URLError(.dataLengthExceedsMaximum) }
+        return data
+    }
+    static func response(path: String, body: Data) async throws -> (Data, Bool) {
+        guard enabled, Store.shared.userID == ChildFieldNativeIdentity.account, body.count <= 600_000 else { throw CancellationError() }
+        let folder = ChildFieldNativePeer.folder
+        let configuration = try JSONDecoder().decode(Configuration.self, from: read(folder.appendingPathComponent("channel.json"), limit: 2_048))
+        guard configuration.protocol == 1, configuration.account == ChildFieldNativeIdentity.account,
+              configuration.root == ChildFieldNativeIdentity.rootID, configuration.generation == ChildFieldNativeIdentity.generation else { throw CancellationError() }
+        let id = UUID().uuidString.lowercased(), request = folder.appendingPathComponent(id + ".request"), reply = folder.appendingPathComponent(id + ".reply")
+        let envelope: [String: Any] = ["protocol": 1, "nonce": configuration.nonce.uuidString.lowercased(), "id": id, "path": path, "body": body.base64EncodedString()]
+        try JSONSerialization.data(withJSONObject: envelope, options: [.sortedKeys]).write(to: request, options: [.atomic])
+        defer { try? FileManager.default.removeItem(at: request); try? FileManager.default.removeItem(at: reply) }
+        for _ in 0..<300 {
+            try Task.checkCancellation()
+            if FileManager.default.fileExists(atPath: reply.path) {
+                let value = try JSONDecoder().decode(Reply.self, from: read(reply, limit: 14_000_000))
+                guard value.protocol == 1, value.id == id, Store.shared.userID == configuration.account else { throw CancellationError() }
+                if let code = value.code { throw ChildFieldNativeRefusal(code: code) }
+                guard let data = Data(base64Encoded: value.data), data.count <= 10_000_000 else { throw URLError(.cannotDecodeContentData) }
+                return (data, value.lose)
+            }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        throw URLError(.timedOut)
+    }
+}
+
 @MainActor enum ChildFieldNativePeer {
-    static var folder: URL { URL.applicationSupportDirectory.appendingPathComponent("Child field native peer", isDirectory: true) }
+    static var folder: URL { URL.applicationSupportDirectory.appendingPathComponent(ChildMappingSQLNativePeer.enabled ? "Child mapping SQL native peer" : "Child field native peer", isDirectory: true) }
     static var file: URL { folder.appendingPathComponent("server.json") }
     static var root: Record {
         get throws { Record(try state()["root"]!.object) }
@@ -73,13 +111,16 @@ struct ChildFieldNativeRefusal: Error { let code: String }
         return state
     }
     static func save(_ state: [String: JSON]) throws {
-        guard ChildFieldNativeIdentity.enabled else { throw CancellationError() }
+        guard ChildFieldNativeIdentity.enabled, !ChildMappingSQLNativePeer.enabled else { throw CancellationError() }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         try TaskfoldJSONEncoder().encode(state).write(to: file, options: .atomic)
     }
     static func state() throws -> [String: JSON] {
         guard ChildFieldNativeIdentity.enabled else { throw CancellationError() }
-        if !FileManager.default.fileExists(atPath: file.path) { try save(initial()) }
+        if !FileManager.default.fileExists(atPath: file.path) {
+            guard !ChildMappingSQLNativePeer.enabled else { throw URLError(.notConnectedToInternet) }
+            try save(initial())
+        }
         let bytes = try Data(contentsOf: file); guard bytes.count < 1_000_000 else { throw CancellationError() }
         return try TaskfoldJSONDecoder().decode([String: JSON].self, from: bytes)
     }
@@ -245,8 +286,11 @@ struct ChildFieldNativeRefusal: Error { let code: String }
             stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 4096)
             while stream.hasBytesAvailable {
                 let count = stream.read(&buffer, maxLength: buffer.count); if count <= 0 { break }
-                guard data.count + count <= 140_000 else { throw CancellationError() }; data.append(contentsOf: buffer.prefix(count))
+                guard data.count + count <= (ChildMappingSQLNativePeer.enabled ? 600_000 : 140_000) else { throw CancellationError() }; data.append(contentsOf: buffer.prefix(count))
             }
+        }
+        if ChildMappingSQLNativePeer.enabled {
+            return try await ChildMappingSQLNativePeer.response(path: request.url!.path, body: data)
         }
         let body = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
         var state = try state(); let root = Record(state["root"]!.object)
