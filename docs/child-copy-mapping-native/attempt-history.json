@@ -1,0 +1,62 @@
+{
+  "scope": "Historical iOS-only attempts before the accepted phone-v9 run; no failed attempt is counted as passed",
+  "attempts": [
+    {
+      "phase": "phone-v1",
+      "passedTests": 0,
+      "failedTests": 1,
+      "scope": "Prepared connection did not follow Xcode container rename",
+      "logSHA256": "62caee7095e7426afc12487055772f930f746ee637fa629cc658061ce0af92ad"
+    },
+    {
+      "phase": "phone-v2",
+      "passedTests": 0,
+      "failedTests": 1,
+      "scope": "Safe preflight refused prior nonempty synthetic state",
+      "logSHA256": "a277948b143ede2607adaa63714675626862d117118d9a7e8fe4284644422b47"
+    },
+    {
+      "phase": "phone-v3",
+      "passedTests": 0,
+      "failedTests": 1,
+      "scope": "Xcode renamed the container at first launch as well",
+      "logSHA256": "caf6201c6533b453991190113b2d988824ad3a989df1bea1efc8807ac96af163"
+    },
+    {
+      "phase": "phone-v4",
+      "passedTests": 0,
+      "failedTests": 1,
+      "scope": "Native discovery RPC missing from the test channel",
+      "logSHA256": "f4b9632a2011c378757ba8d9ded09a9cf4e8008c8caad43722ea1d964c423c13"
+    },
+    {
+      "phase": "phone-v5",
+      "passedTests": 0,
+      "failedTests": 1,
+      "scope": "Chooser search unavailable with row-owned sheet",
+      "logSHA256": "26beedd690756dad383cfd1fb0d46a6568ae1dcfd3236962cad4950ba3c5de8f"
+    },
+    {
+      "phase": "phone-v6",
+      "passedTests": 0,
+      "failedTests": 1,
+      "scope": "Native search replaced Cancel with Close while editing",
+      "logSHA256": "0a13f787177166a17e3530e19bb82ea89c7daff465184a3d8d776a138f157e3a"
+    },
+    {
+      "phase": "phone-v7",
+      "passedTests": 0,
+      "failedTests": 1,
+      "scope": "Generic scrolling helper used stale system-picker indexes",
+      "logSHA256": "88e414a11b60ac24ed56e81b7db3fbff128a6cec889a0af61a2cd1a45564dea6"
+    },
+    {
+      "phase": "phone-v8",
+      "passedTests": 0,
+      "failedTests": 1,
+      "scope": "Prepared subfolder did not open in the Simulator system picker",
+      "logSHA256": "aaca77dcb3ce3dca4dc8ab8927a80003a3b2b4b66ba8ae792ab5184c08bc6696"
+    }
+  ],
+  "retained": "Concise summaries and log hashes. Actual phone-v9 SQL/journal/file evidence and source correspondence are separate. Earlier synthetic app-side state is preserved."
+}

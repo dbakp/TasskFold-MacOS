@@ -2313,6 +2313,103 @@ extension TaskfoldMacUITests {
         childDone(app); childProbe(app, "adoptionQueued=0 adoptionAttempted=0 adoptionApplied=0 adoptionClosed=1 adoptionWrites=0 adoptionRequests=2")
         XCTAssertEqual(adoptionProbeValue("adoptionRootHash", app), original)
     }
+
+    @MainActor func testChildMappingSQLNativeSearchColdReviewSaveAndOriginal() throws {
+        #if os(macOS)
+        throw XCTSkip("Mac database-backed controls have a separate direct walkthrough")
+        #else
+        try childGuard()
+        let voiceWasOn = try ownerVoiceDisabled(); addTeardownBlock { @MainActor in self.ownerRestoreVoice(voiceWasOn) }
+        // Xcode may replace the app's data container before launching tests.
+        // Ask the host fixture to attach only after that installation is done.
+        let home = try audioTaskHome(), support = home.appendingPathComponent("Library/Application Support", isDirectory: true)
+        let channel = support.appendingPathComponent("Child mapping SQL native peer", isDirectory: true)
+        try FileManager.default.createDirectory(at: channel, withIntermediateDirectories: true)
+        XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: channel.path).isEmpty)
+        let formatter = DateFormatter(); formatter.calendar = Calendar(identifier: .gregorian); formatter.locale = Locale(identifier: "en_US_POSIX"); formatter.dateFormat = "yyyy-MM-dd"
+        let exportName = "Taskfold-original-" + formatter.string(from: Date()) + ".json"
+        XCTAssertFalse(FileManager.default.fileExists(atPath: home.appendingPathComponent("Documents/" + exportName).path))
+        try Data("Attach owned SQL fixture after installation".utf8).write(to: support.appendingPathComponent("child-mapping-native-ready.request"), options: .atomic)
+        let configured = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in FileManager.default.fileExists(atPath: channel.appendingPathComponent("channel.json").path) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [configured], timeout: 90), .completed, "Host fixture must attach to the installed synthetic container")
+        let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--child-fields-native", "--child-adoption-saved-copies", "--child-mapping-sql-native", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        func launchReview() {
+            app.launch(); app.activate()
+            XCTAssertTrue(app.buttons["childNativeRepair"].waitForExistence(timeout: 25), app.debugDescription)
+            childHomePress("childNativeRepair", app)
+        }
+        func button(_ id: String) -> XCUIElement { app.buttons[id].firstMatch }
+        func press(_ id: String, towardTop: Bool = false) { let control = button(id); childReveal(control, app, towardTop: towardTop); completionReadyPress(control, app) }
+        func match(_ key: String, search: String? = nil) {
+            press("childMappingIdentity-" + key, towardTop: key == "concept")
+            XCTAssertTrue(app.navigationBars["Choose history"].waitForExistence(timeout: 12), app.debugDescription)
+            if let search {
+                let field = app.searchFields.firstMatch; XCTAssertTrue(field.waitForExistence(timeout: 10)); childPress(field); field.typeText(search)
+            }
+            let history = button("childMappingHistory-" + key); childReveal(history, app); completionReadyPress(history, app)
+            press("childMappingLifecycle-" + key)
+            childPress(app.buttons["Keep recorded details"].firstMatch)
+        }
+        launchReview()
+        press("childCopyReviewLoad")
+        let projection = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Saved snapshot")).firstMatch
+        childReveal(projection, app); completionReadyPress(projection, app)
+        press("childCopyMap-projection")
+        press("childMappingIdentity-concept")
+        let search = app.searchFields.firstMatch; XCTAssertTrue(search.waitForExistence(timeout: 12)); childPress(search); search.typeText("no matching recorded task")
+        XCTAssertFalse(button("childMappingHistory-concept").exists)
+        // Native search replaces the chooser toolbar while editing on iOS 27.
+        let chooserBar = app.navigationBars["Choose history"]
+        if !chooserBar.buttons["Cancel"].exists, chooserBar.buttons["Close"].exists { childPress(chooserBar.buttons["Close"]) }
+        childPress(app.navigationBars["Choose history"].buttons["Cancel"])
+        let preview = button("childMappingPreview"); childReveal(preview, app); XCTAssertFalse(preview.isEnabled)
+        match("concept", search: "Prepare the review")
+        structureSnapshot(app, "Explicit searchable history choice saved as a partial review")
+        app.terminate(); launchReview()
+        let identity = button("childMappingIdentity-concept"); childReveal(identity, app)
+        XCTAssertEqual(identity.value as? String, "Prepare the review", app.debugDescription)
+        childReveal(preview, app); XCTAssertFalse(preview.isEnabled)
+        match("nested"); match("review")
+        press("childMappingPreview")
+        let ready = app.staticTexts["childRepairReady"]; childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 20), app.debugDescription)
+        press("childMappingEdit")
+        childReveal(identity, app); XCTAssertEqual(identity.value as? String, "Prepare the review")
+        press("childMappingPreview"); childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 20), app.debugDescription)
+        app.terminate(); launchReview()
+        childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 20), app.debugDescription)
+        structureSnapshot(app, "Complete mapped preview survives a cold launch without losing choices")
+        press("childRepairSave"); childPress(app.buttons["Save repair"].firstMatch)
+        let status = app.staticTexts["childRepairStatus"]; childReveal(status, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Awaiting confirmation"), object: status)], timeout: 20), .completed, app.debugDescription)
+        app.terminate(); app.launch(); app.activate(); childHomePress("childNativeRepairRecovery", app)
+        press("childRepairCheck"); childReveal(status, app)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Repair saved"), object: status)], timeout: 20), .completed, app.debugDescription)
+        app.terminate(); app.launch(); app.activate(); childHomePress("childNativeRepairRecovery", app)
+        childReveal(status, app); XCTAssertEqual(status.label, "Repair saved")
+        press("childRepairExportSaved")
+        let save = app.buttons["DOCPicker.actionButton"]; XCTAssertTrue(save.waitForExistence(timeout: 25), app.debugDescription)
+        let appFolder = app.collectionViews.staticTexts["Taskfold Team Editor Test"].firstMatch
+        if appFolder.waitForExistence(timeout: 3), appFolder.isHittable { childPress(appFolder) }
+        let provider = app.otherElements.matching(NSPredicate(format: "identifier BEGINSWITH %@", "DOC.browsingRoot Source: com.apple.FileProvider.LocalStorage,")).firstMatch
+        let namedRoot = app.otherElements["DOC.browsingRoot Source: com.apple.FileProvider.LocalStorage, Title: Taskfold Team Editor Test"]
+        let namedToolbar = app.buttons["Taskfold Team Editor Test, Actions Menu"]
+        XCTAssertTrue(provider.waitForExistence(timeout: 12), app.debugDescription)
+        XCTAssertTrue(namedRoot.exists || namedToolbar.exists, app.debugDescription)
+        structureSnapshot(app, "Mapped original export uses the isolated app’s observed local Documents")
+        childPress(save); XCTAssertTrue(save.waitForNonExistence(timeout: 15), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["Original exported."].waitForExistence(timeout: 15), app.debugDescription)
+        XCTAssertEqual(status.label, "Repair saved", app.debugDescription)
+        let exported = try audioTaskHome().appendingPathComponent("Documents/" + exportName)
+        let bytes = try Data(contentsOf: exported); XCTAssertTrue(bytes.count > 1000)
+        let currentChannel = try audioTaskHome().appendingPathComponent("Library/Application Support/Child mapping SQL native peer")
+        try JSONSerialization.data(withJSONObject: ["filename": exportName]).write(to: currentChannel.appendingPathComponent("native-export-result.json"), options: .atomic)
+        app.terminate(); launchReview()
+        XCTAssertEqual(try Data(contentsOf: exported), bytes)
+        structureSnapshot(app, "Mapped original file survives cold return for independent database readback")
+        #endif
+    }
+
     @MainActor func testChildSavedCopiesNativeComparison() throws {
         let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate() }
         let mode = "--child-adoption-saved-copies"

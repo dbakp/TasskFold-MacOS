@@ -1,6 +1,7 @@
 // Local synthetic test channel only. No listening ports or hosted credentials.
 import {readFile, writeFile, rename, lstat, readdir, unlink} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
+import {resolve,join} from 'node:path';
 import {literal as lit} from './postgres-fixture.mjs';
 export const identity={account:'ec990000-0000-4000-8000-000000000001',root:'ec990000-0000-4000-8000-000000000002',generation:'ec990000-0000-4000-8000-000000000003'};
 export async function atomicFile(path, data) {
@@ -19,6 +20,9 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
   const bytes=Buffer.from(request.body,'base64');if(bytes.toString('base64')!==request.body||bytes.length>600000)throw new Error('Invalid request bytes');
   const body=JSON.parse(bytes.toString('utf8'));let expression;
   switch(request.path){
+   case '/rest/v1/rpc/taskfold_child_adoption_targets':
+    if(Object.keys(body).sort().join(',')!=='_after,_id,_limit'||!Number.isInteger(body._limit)||body._limit<1||body._limit>100||body._id!==null&&body._id!==identity.root||body._after!==null&&!/^[a-f0-9-]{36}$/.test(body._after??''))throw new Error('Invalid discovery scope');
+    expression=`public.taskfold_child_adoption_targets(${body._after===null?'null':lit(body._after)},${body._limit},${body._id===null?'null':lit(body._id)})`;break;
    case '/rest/v1/rpc/taskfold_review_child_adoption':
     if(Object.keys(body).sort().join(',')!=='_generation,_id'||body._id!==identity.root||body._generation!==identity.generation)throw new Error('Invalid root');
     expression=`public.taskfold_review_child_adoption(${lit(body._id)},${lit(body._generation)})`;break;
@@ -44,10 +48,28 @@ export function createMappingSQLChannel(pg,{session,nonce,loseFirstSave=false,be
    const id=name.slice(0,-8),path=directory+'/'+name;
    try {
     const request=JSON.parse((await boundedFile(path,810000)).toString('utf8'));if(request.id!==id)throw new Error('Request filename mismatch');
-    const reply=await dispatch(request);await beforeReply();await atomicFile(directory+'/'+id+'.reply',JSON.stringify(reply));
+    const reply=await dispatch(request);await beforeReply(request,reply);await atomicFile(directory+'/'+id+'.reply',JSON.stringify(reply));
    } catch {await atomicFile(directory+'/'+id+'.reply',JSON.stringify({protocol:1,id,code:'PT503',data:'bnVsbA==',lose:false}));}
    await unlink(path);
   }
  }
  return {dispatch,drain};
+}
+
+// Xcode can rename a Simulator app container at installation/first launch.
+// Follow only the same unique fixture nonce inside that same Simulator.
+export async function relocatedSimulatorChannel(directory,nonce) {
+ if(!/\/CoreSimulator\/Devices\/[A-Fa-f0-9-]{36}\/data\/Containers\/Data\/Application\/[A-Fa-f0-9-]{36}\/Library\/Application Support\/Child mapping SQL native peer$/.test(directory))throw new Error('Container relocation is only for a named Simulator fixture');
+ const base=resolve(directory,'../../../..'),matches=[];
+ for(const name of await readdir(base)){
+  if(!/^[A-Fa-f0-9-]{36}$/.test(name))continue;
+  const candidate=join(base,name,'Library/Application Support/Child mapping SQL native peer');
+  try{
+   const info=await lstat(candidate);if(!info.isDirectory()||info.isSymbolicLink())continue;
+   const config=JSON.parse(await boundedFile(candidate+'/channel.json',2048));
+   if(config.protocol===1&&config.nonce===nonce&&config.account===identity.account&&config.root===identity.root&&config.generation===identity.generation)matches.push(candidate);
+  }catch(error){if(error.code!=='ENOENT')throw error;}
+ }
+ if(matches.length!==1)throw new Error('Owned relocated channel is missing or ambiguous');
+ return matches[0];
 }

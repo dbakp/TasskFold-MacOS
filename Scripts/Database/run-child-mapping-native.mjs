@@ -7,7 +7,7 @@ import {randomUUID,createHash} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
 import {createPostgresFixture,literal as lit} from './postgres-fixture.mjs';
 import {loadChildAuthorityDependencies,childAuthorityMigration} from './child-task-authority-schema.mjs';
-import {identity,atomicFile,boundedFile,createMappingSQLChannel} from './child-mapping-native-channel.mjs';
+import {identity,atomicFile,boundedFile,createMappingSQLChannel,relocatedSimulatorChannel} from './child-mapping-native-channel.mjs';
 const migrations=["20261030093035_child_record_reviewed_team_transfers.sql", "20261030102036_child_record_project_adoption_custody.sql", "20261030104147_personal_child_record_task_moves.sql", "20261030114138_cross_root_child_task_transfers.sql", "20261030134132_reviewed_child_record_adoption.sql", "20261030170753_child_adoption_metadata_discovery.sql", "20261030183133_child_task_repair_previews.sql", "20261030184402_child_task_repair_commits.sql", "20261030192638_child_repair_original_history_access.sql", "20261030204000_child_repair_bounded_originals.sql", "20261101062555_activity_operation_groups.sql", "20261101071304_reviewed_duplicate_history_preservation.sql"];
 const smoke=process.argv.includes('--smoke'),position=process.argv.indexOf('--directory');
 if(!smoke&&(position<0||!process.argv[position+1]))throw new Error('Use --smoke or --directory PATH');
@@ -28,11 +28,23 @@ try {
  const tree=[{id:'concept',title:'Prepare the review',description:'Original saved notes',completed:false,subtasks:[{id:'nested',title:'Collect supporting notes',completed:false}]},{id:'review',title:'Publish the summary',completed:false}];
  await pg.raw(`insert into public.tasks(id,user_id,task_generation,title,subtasks) values(${lit(identity.root)},${lit(identity.account)},${lit(identity.generation)},'Native history mapping workshop',${json(tree)});update public.tasks set is_heading=true where id=${lit(identity.root)};select taskfold_private.adopt_child_task_records(id,task_generation,subtasks) from public.tasks where id=${lit(identity.root)};select taskfold_private.promote_child_task_records(t.id,t.task_generation,t.project_id,p.revision,t.subtasks) from public.tasks t join taskfold_private.child_task_projections p on p.task_id=t.id where t.id=${lit(identity.root)}`);
  await pg.raw(`alter table taskfold_private.child_task_records disable trigger user;alter table taskfold_private.child_task_projections disable trigger user;update taskfold_private.child_task_records set fields=fields||'{"description":"Recorded task instructions"}' where task_id=${lit(identity.root)} and node_key='concept';update taskfold_private.child_task_projections set source_tree=jsonb_set(source_tree,'{0,description}','"Snapshot task instructions"') where task_id=${lit(identity.root)};alter table taskfold_private.child_task_records enable trigger user;alter table taskfold_private.child_task_projections enable trigger user`);
+ const trace=[];
+ const databaseState=()=>pg.scalar(`select jsonb_build_object(
+ 'root',(select to_jsonb(t) from public.tasks t where id=${lit(identity.root)}),
+ 'records',(select coalesce(jsonb_agg(to_jsonb(r) order by node_key),'[]') from taskfold_private.child_task_records r where task_id=${lit(identity.root)}),
+ 'root_history',(select coalesce(jsonb_agg(to_jsonb(h) order by sequence),'[]') from public.task_activity h where task_id=${lit(identity.root)}),
+ 'child_history',(select coalesce(jsonb_agg(to_jsonb(h) order by sequence),'[]') from public.task_node_activity h where task_id=${lit(identity.root)}),
+ 'repairs',(select coalesce(jsonb_agg(to_jsonb(r)),'[]') from taskfold_private.child_task_repairs r),
+ 'originals',(select coalesce(jsonb_agg(jsonb_build_object('row',to_jsonb(o)-'original','original_text',original::text)),'[]') from taskfold_private.child_task_repair_originals o),
+ 'mapping_scope_count',(select count(*) from taskfold_private.child_mapping_scope))`);
+ await atomicFile(directory+'/baseline.json',JSON.stringify(await databaseState()));
  const publish=async()=>{
   const root=await pg.scalar(`select to_jsonb(t) from public.tasks t where id=${lit(identity.root)}`),history=await pg.scalar(`select coalesce(jsonb_agg(to_jsonb(h) order by sequence),'[]') from public.task_node_activity h where task_id=${lit(identity.root)}`);
+  await atomicFile(directory+'/database-state.json',JSON.stringify(await databaseState()));
+  await atomicFile(directory+'/trace.json',JSON.stringify(trace));
   await atomicFile(directory+'/server.json',JSON.stringify({root,repairHistory:history,receipts:{},versions:{concept:1,review:1},writes:0,requests:0,lost:false}));
  };
- const channel=createMappingSQLChannel(pg,{session,nonce,loseFirstSave:smoke||process.argv.includes('--lose-first-save'),beforeReply:publish});
+ const channel=createMappingSQLChannel(pg,{session,nonce,loseFirstSave:smoke||process.argv.includes('--lose-first-save'),beforeReply:async(request,reply)=>{trace.push({request,reply});await publish();}});
  await publish();await atomicFile(directory+'/channel.json',JSON.stringify({protocol:1,nonce,...identity}));
  if(smoke){
   const call=async(path,body)=>{
@@ -40,6 +52,7 @@ try {
    await atomicFile(directory+'/'+id+'.request',JSON.stringify(request));await channel.drain(directory);
    const response=JSON.parse(await boundedFile(directory+'/'+id+'.reply',14000000));await unlink(directory+'/'+id+'.reply');assert.equal(response.id,id);return {...response,value:JSON.parse(Buffer.from(response.data,'base64'))};
   };
+  const targets=await call('taskfold_child_adoption_targets',{_after:null,_limit:1,_id:identity.root});assert.equal(targets.code,null);assert.equal(targets.value.items.length,1);assert.equal(targets.value.items[0].task_id,identity.root);report.checks.push('live native target discovery uses actual SQL');
   const review=(await call('taskfold_review_child_adoption',{_id:identity.root,_generation:identity.generation})).value;
   const body=Object.fromEntries(['protocol','account','task_id','task_generation','project_id','workspace_id','review_digest'].map(k=>[k,review[k]]));
   const copies=(await call('taskfold_review_child_copies',{_body:body})).value;
@@ -65,7 +78,15 @@ try {
  }else{
   console.log(JSON.stringify({ready:true,directory,account:identity.account,root:identity.root,stop:'Create a stop file here or send SIGTERM; owned database is removed.'}));
   const deadline=Date.now()+15*60*1000;
-  while(!stopping&&Date.now()<deadline){if((await readdir(directory)).includes('stop'))break;await channel.drain(directory);await delay(100);}
+  while(!stopping&&Date.now()<deadline){
+   try {if((await readdir(directory)).includes('stop'))break;await channel.drain(directory);}
+   catch(error){
+    if(error.code!=='ENOENT'||!process.argv.includes('--follow-simulator-container'))throw error;
+    directory=await relocatedSimulatorChannel(directory,nonce);
+    console.log(JSON.stringify({relocatedTo:directory,ownedNonceMatched:true}));
+   }
+   await delay(100);
+  }
   report.passed=true;
  }
 }catch(error){report.failure={message:error.message,code:error.code};process.exitCode=1;}

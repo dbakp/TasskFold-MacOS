@@ -10275,3 +10275,7 @@ Native interaction is unaccepted: the Mac was locked before any form action, and
 ### 2026-11-01 — Native mapping database connection
 
 The reserved DEBUG host now has an isolated file channel into this repository's actual local PostgreSQL mapping transactions. It preserves exact response bytes, refuses foreign/unsupported/stale requests, publishes committed state before replying and can deliberately lose the first committed save reply. Automatic SQL/channel and signed-build evidence is kept in `child-copy-mapping-native-channel/`. No normal-use flags or hosted data changed. Native controls remain unaccepted: the Mac is locked, and the independent saved-data/native search, cold review, recovery and export checks remain to be finished. No curated completion count advances for the test connection.
+
+### 2026-11-01 — Stable history chooser and accepted phone save/recovery/export
+
+Both native clients now keep the chooser on the stable repair screen, expose iPhone search, use adaptive candidate text and retain the saved confirmation during original export. The iOS-owned existing-history flow passes with real local SQL, cold partial/complete reviews, lost-reply status recovery and exact native file/journal readback. Current Mac app/runner build and sign; Mac interaction is still blocked by the locked desktop. Details and scope: `child-copy-mapping-native/README.md`. Mac/iPad, wider choices, privacy/accessibility and the larger migration/custody gaps remain open. Normal-use flags and curated completion bars are unchanged.

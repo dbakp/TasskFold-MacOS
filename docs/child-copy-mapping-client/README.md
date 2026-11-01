@@ -34,3 +34,5 @@ A Mac runtime attempt stopped at the locked screen before any form interaction. 
 - Use the local SQL test endpoint, finish the independent saved-data verifier and exercise both full app workflows, including search/cancel, explicit choices, edit/Undo/reset, partial/complete cold return, one save, lost reply/status recovery and exact original export/readback.
 - Verify account/access/window/privacy, keyboard, VoiceOver and large-text/library behavior. Mac runtime needs an unlocked desktop.
 - Resolve broader recipient/recurrence histories, exact editable caches, shared file/discussion/archive custody and genuine shared-account/hosted migration acceptance. Other Mac workflows and all existing user deferrals remain open.
+
+Latest follow-up: `../child-copy-mapping-native/README.md` records the accepted existing-history iPhone flow, exact file/journal readback and stable chooser/export fixes. Mac and broader cases remain open.

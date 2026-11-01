@@ -784,10 +784,16 @@ final class Store {
         let admission = childTaskActionAdmission(account: account, origin: origin)
         try TeamOrganizationValue.scope(account: account, origin: origin)
         let root = cacheURL.deletingLastPathComponent()
-        let directory = root.appendingPathComponent("Backups", isDirectory: true)
+        var directory = root.appendingPathComponent("Backups", isDirectory: true)
             .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
             .appendingPathComponent("Child repair requests", isDirectory: true)
             .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
+        #if DEBUG
+        // Keep local SQL acceptance separate from earlier synthetic journals.
+        if ChildMappingSQLNativePeer.enabled {
+            directory = ChildFieldNativePeer.folder.appendingPathComponent("Repair journal", isDirectory: true)
+        }
+        #endif
         let io = ReviewedTeamCommandFileIO<ChildTaskRepairState>(directory: directory, account: account, origin: origin, encryptionKey: {
             #if DEBUG
             if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }

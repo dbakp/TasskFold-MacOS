@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Real local mapping transactions connected; native acceptance remains",
-  "latest": "Both isolated clients now have a DEBUG-only connection to their own actual local database transactions for mapping review/save/recovery/original export. Automated channel and transaction checks plus signed builds are recorded separately from native interaction. The Mac is still locked, so native acceptance remains open. No normal-use flags or hosted data changed; no completion bar is advanced for test infrastructure.",
+  "focus": "P2 · Existing history on iPhone: review, recovery and export accepted",
+  "latest": "Fixed the history chooser’s unstable sheet and hidden search, kept saved confirmation visible during export and used adaptive candidate text. One actual iPhone/local-database flow now passes search/cancel, incomplete and complete cold reviews, editing, one save with a lost reply, original-request recovery and exact 9,809-byte native file readback. Both apps build/sign, each repo passes five channel checks and 11 SQL/channel checks, and the independent verifier rejects damaged/foreign evidence. Mac/iPad and broader cases remain open; normal use stays disabled.",
   "next": [
-    "Use the prepared local database connection to accept search/cancel, partial and complete cold return, editing choices, one save, lost reply/check and exact original export through app controls, with an independent saved-data verifier. Mac runtime needs an unlocked desktop.",
+    "Accept Mac/iPad history controls and the remaining new/retired identity, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Mac runtime needs an unlocked desktop. Verify other Files destinations; only local Documents is accepted.",
     "Resolve more complex recipient/recurrence histories and preserve exact opaque editable caches.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
@@ -559,7 +559,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "The server saves explicit mappings atomically and preserves original work history. Searchable client review and partial drafts are built. A DEBUG-only local SQL connection now exercises real save/recovery/export transactions, but full native controls and independent saved-data acceptance remain open. Exact editable caches, shared custody, other Mac and wider checks remain; normal use stays disabled.",
+              "detail": "Atomic mapped saves and earned-credit preservation have database/core proof. The existing-history iPhone flow now has actual SQL-backed search/cancel, partial/complete cold review, editing, lost-reply recovery and exact native export/readback. Mac/iPad, wider choices/accessibility, complex histories, exact editable caches and shared custody remain open; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -631,7 +631,7 @@
                 },
                 {
                   "state": "verify",
-                  "title": "Implement native history matching, partial drafts and original decoding; finish full app acceptance"
+                  "title": "Accept existing-history iPhone matching, cold recovery and exact export; finish Mac/iPad and wider cases"
                 },
                 {
                   "state": "build",
@@ -747,7 +747,11 @@
             "child-copy-mapping-client/database-contract-verification.json",
             "child-copy-mapping-client/build-verification.json",
             "child-copy-mapping-client/runtime-status.json",
-            "child-copy-mapping-native-channel/README.md"
+            "child-copy-mapping-native-channel/README.md",
+            "child-copy-mapping-native/README.md",
+            "child-copy-mapping-native/verification.json",
+            "child-copy-mapping-native/phone-saved-data-verification.json",
+            "child-copy-mapping-native/verifier-refusal-checks.json"
           ],
           "focus": true
         },
@@ -831,12 +835,16 @@
     "child-copy-mapping-apply/client-verification.json": "944a7f370d1573bec17473ae1d4999200839014a316cee4642c2bc44ee1754c9",
     "child-copy-mapping-apply/regressions.json": "d85136f84339c3cbc294f057e3ad89c76a548b2b2047f5f49d9e7df29061f8d9",
     "child-copy-mapping-apply/verification.json": "83f030f5c3357942f0bfb4779466b833e40b714a988a5cd104ee59305d55753c",
-    "child-copy-mapping-client/README.md": "992d1212e56d81ca4176ca88f335c17c1e65ab5602826577d8f24ddc045dea44",
+    "child-copy-mapping-client/README.md": "cc83359148cb69f18ab78438f29d396ac364a6228f58a0176d5feefd662a80e2",
     "child-copy-mapping-client/build-verification.json": "60d7e61c95de662b709aad3a1a48c3542ab26c10e023ba3fa030bcb4af901f54",
     "child-copy-mapping-client/client-verification.json": "7c4ce24974db06f63f79ce5b7563070c67f09ec74f238e99ad8803fa0fa82ba7",
     "child-copy-mapping-client/database-contract-verification.json": "2343397ea36320949b889235a1466108412299311e6d43cb110a76c3b4a649ce",
     "child-copy-mapping-client/runtime-status.json": "a0342db0f40c7884c03acec64f31e826acfe9879cf195b087845c56ed8668713",
-    "child-copy-mapping-native-channel/README.md": "49fab400ecc04f7fceaf21dcb25746ff24e384ddf89d5c8c6a0a396783695d72",
+    "child-copy-mapping-native-channel/README.md": "1acb275f0da1bea865b8fa3dfa35086865e9a9027fb53b6efa6de274224fd8f6",
+    "child-copy-mapping-native/README.md": "4fc3f85c6d92280156f12d2edd2ef747d6db93516042c4353877a745b73c7fa9",
+    "child-copy-mapping-native/phone-saved-data-verification.json": "a4aa9b3b92e7ed5094f024c28345f216c220adec0389bba6ff7ab70fbddd6bc6",
+    "child-copy-mapping-native/verification.json": "77ca63952eb51e3b1759711afca09e11048c9036f9f0de2bac2b81846eb935c4",
+    "child-copy-mapping-native/verifier-refusal-checks.json": "67a62312bbeabf09c175f2284732f8de015d63e67233e1d6e2f9574140f4a61d",
     "child-copy-mapping-plan/README.md": "151f1ef9664658bb9672161e7b9983933b4ab6c76e7cb5fc10a675367dec4ca7",
     "child-copy-mapping-plan/verification.json": "84f642fce6b2ba90e2bd779eb52060288a5b9fc3cf7757df23eb32fb2e1c609a",
     "child-list-completion/verification.json": "44bbe137ce3108669564a22ad74abd4d04c843f28ff4460dd66f5da89a31e0b7",
