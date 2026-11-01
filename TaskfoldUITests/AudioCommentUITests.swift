@@ -865,7 +865,7 @@ extension TaskfoldMacUITests {
     @MainActor private func childSavedText(_ value: String, _ app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR value == %@", value, value)).firstMatch
     }
-    @MainActor private func childReveal(_ value: XCUIElement, _ app: XCUIApplication, towardTop initialDirection: Bool = false, diagnosticText: Bool = false) {
+    @MainActor private func childReveal(_ value: XCUIElement, _ app: XCUIApplication, towardTop initialDirection: Bool = false, diagnosticText: Bool = false, requireHittable: Bool = true) {
         _ = value.waitForExistence(timeout: 2)
         func area() -> CGRect {
             let form = app.collectionViews.allElementsBoundByIndex.last(where: { $0.exists && $0.isHittable }) ?? ["reminderSpecForm", "teamRemindersForm", "childFieldEditorForm"].map { childField($0, app) }.first { $0.exists && $0.isHittable }
@@ -896,7 +896,7 @@ extension TaskfoldMacUITests {
             if diagnosticText {
                 return value.frame.height > viewport.height ? value.frame.intersection(viewport).height >= 24 : viewport.contains(value.frame)
             }
-            return value.isHittable && viewport.contains(value.frame)
+            return (!requireHittable || value.isHittable) && viewport.contains(value.frame)
             #else
             return value.isHittable
             #endif
@@ -2363,13 +2363,13 @@ extension TaskfoldMacUITests {
         let chooserBar = app.navigationBars["Choose history"]
         if !chooserBar.buttons["Cancel"].exists, chooserBar.buttons["Close"].exists { childPress(chooserBar.buttons["Close"]) }
         childPress(app.navigationBars["Choose history"].buttons["Cancel"])
-        let preview = button("childMappingPreview"); childReveal(preview, app); XCTAssertFalse(preview.isEnabled)
+        let preview = button("childMappingPreview"); childReveal(preview, app, requireHittable: false); XCTAssertFalse(preview.isEnabled)
         match("concept", search: "Prepare the review")
         structureSnapshot(app, "Explicit searchable history choice saved as a partial review")
         app.terminate(); launchReview()
         let identity = button("childMappingIdentity-concept"); childReveal(identity, app)
         XCTAssertEqual(identity.value as? String, "Prepare the review", app.debugDescription)
-        childReveal(preview, app); XCTAssertFalse(preview.isEnabled)
+        childReveal(preview, app, requireHittable: false); XCTAssertFalse(preview.isEnabled)
         match("nested"); match("review")
         press("childMappingPreview")
         let ready = app.staticTexts["childRepairReady"]; childReveal(ready, app); XCTAssertTrue(ready.waitForExistence(timeout: 20), app.debugDescription)

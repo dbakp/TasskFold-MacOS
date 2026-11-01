@@ -290,6 +290,15 @@ struct TaskHierarchyIndex {
         let path: [String]
         let parentTitles: [String]
         let id: String
+        /// Full authored object. The Record above is only a display/field projection
+        /// when the object contains keys a Swift dictionary cannot represent.
+        let sourceFields: JSON
+        let requiresIndependentWriter: Bool
+        init(source: Record, root: Record, path: [String], parentTitles: [String], id: String, sourceFields: JSON? = nil, requiresIndependentWriter: Bool = false) {
+            self.source = source; self.root = root; self.path = path; self.parentTitles = parentTitles; self.id = id
+            self.sourceFields = sourceFields ?? .object(source.fields)
+            self.requiresIndependentWriter = requiresIndependentWriter
+        }
         var isSubtask: Bool { !path.isEmpty }
         var isParent: Bool { !source["subtasks"].list.isEmpty }
         /// Only containment is inherited. A child's dates, labels, assignment,
@@ -332,6 +341,7 @@ struct TaskHierarchyIndex {
     static let maximumItems = 100_000
     static let maximumEdits = 1_000
     static let maximumReferenceBytes = 32 * 1_024 * 1_024
+    static let maximumPreservedProjectionBytes = 32 * 1_024 * 1_024
     private(set) var items: [Item] = []
     private(set) var excludedRootIDs = Set<String>()
     let workspace: WorkspaceBinding
@@ -348,7 +358,7 @@ struct TaskHierarchyIndex {
         self.workspace = workspace
         let projectGroups = Dictionary(grouping: projects, by: \.id)
         let hidden = ProjectOrganization.archivedIDs(in: projects)
-        var rootIDs = Set<String>(), referenceBytes = 0
+        var rootIDs = Set<String>(), referenceBytes = 0, preservedProjectionBytes = 0
         for root in roots {
             guard Self.validIdentity(root.id), !root.id.hasPrefix("subtask:"), rootIDs.insert(root.id).inserted else {
                 throw Self.failure("Task identities are unavailable. Refresh your tasks before filtering subtasks.")
@@ -358,27 +368,40 @@ struct TaskHierarchyIndex {
                 excludedRootIDs.insert(root.id); continue
             }
             var childIDs = Set<String>()
-            func visit(_ source: Record, path: [String], parents: [String], reference: String) throws {
+            func visit(_ source: Record, raw: JSON, independent: Bool, path: [String], parents: [String], reference: String) throws {
                 guard path.count <= SubtaskTree.readableDepth, items.count < Self.maximumItems, reference.utf8.count <= Self.maximumReferenceBytes - referenceBytes else {
                     throw Self.failure("This task hierarchy is too large or deeply nested to filter here. Your saved tasks are unchanged.")
                 }
                 referenceBytes += reference.utf8.count
-                let item = Item(source: source, root: root, path: path, parentTitles: parents, id: reference)
+                let item = Item(source: source, root: root, path: path, parentTitles: parents, id: reference, sourceFields: raw, requiresIndependentWriter: independent)
                 positions[item.id] = items.count; items.append(item)
                 let children = source["subtasks"]
                 guard children == .null || { if case .array = children { return true }; return false }() else {
                     throw Self.failure("A checklist uses an unsupported format. Open its parent task to review it.")
                 }
                 for child in children.list {
-                    guard case .object(let fields) = child, case .string(let id)? = fields["id"],
+                    let fields: [String: JSON], opaque: Bool
+                    switch child {
+                    case .object(let values): fields = values; opaque = false
+                    case .preserved(let value) where value.kind == .object:
+                        // Nested raw objects may repeat large subtrees. Bound the
+                        // total decoding work before materializing editor fields.
+                        guard value.data.count <= Self.maximumPreservedProjectionBytes - preservedProjectionBytes else {
+                            throw Self.failure("Some task details are too large to filter here. Open their parent task. Your saved tasks are unchanged.")
+                        }
+                        preservedProjectionBytes += value.data.count
+                        fields = try child.fieldEditingProjection(); opaque = true
+                    default: throw Self.failure("A checklist uses an unsupported format. Open its parent task to review it.")
+                    }
+                    guard case .string(let id)? = fields["id"],
                           Self.validIdentity(id),
                           case .string? = fields["title"], childIDs.insert(id).inserted else {
                         throw Self.failure("A checklist needs stable subtask identities. Open its parent task, save the subtask organizer, then try again.")
                     }
-                    try visit(Record(fields), path: path + [id], parents: parents + [source.title], reference: SubtaskTree.reference(parent: item.id, key: id))
+                    try visit(Record(fields), raw: child, independent: independent || opaque, path: path + [id], parents: parents + [source.title], reference: SubtaskTree.reference(parent: item.id, key: id))
                 }
             }
-            try visit(root, path: [], parents: [], reference: root.id)
+            try visit(root, raw: .object(root.fields), independent: false, path: [], parents: [], reference: root.id)
         }
     }
     func item(_ id: String) -> Item? { positions[id].map { items[$0] } }
@@ -415,9 +438,14 @@ struct TaskHierarchyIndex {
                     throw failure("Select the parent or its descendants for a branch edit, then try again.")
                 }
             }
+            // A display projection is never a whole-object replacement. These
+            // branches use independent record commands after a fresh read.
+            guard !now.requiresIndependentWriter, !saved.requiresIndependentWriter else {
+                throw failure("This subtask needs its independent editor before it can be changed. Its saved content is unchanged.")
+            }
             switch edit {
             case .delete:
-                guard now.source == saved.source else { throw failure("This subtask changed. Review its current content before deleting it.") }
+                guard AuthoredValueComparison.exactJSON(now.sourceFields, saved.sourceFields) else { throw failure("This subtask changed. Review its current content before deleting it.") }
             case .patch(_, let fields):
                 guard Set(fields.keys).isSubset(of: editable) else { throw failure("A subtask keeps its parent's project and section. Open the parent to move the whole task.") }
                 for (field, desired) in fields where now.source[field] != saved.source[field] && now.source[field] != desired {

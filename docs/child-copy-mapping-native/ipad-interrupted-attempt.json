@@ -1,0 +1,12 @@
+{
+  "reason": "Stopped the owned test to correct a read-only visibility assertion on the disabled Preview control. No native acceptance claimed.",
+  "stateUnchanged": {
+    "root": true,
+    "records": true,
+    "root_history": true,
+    "child_history": true,
+    "repairs": true,
+    "originals": true
+  },
+  "fixtureRemoved": true
+}

@@ -143,4 +143,63 @@ final class ExactChildFieldProjectionTests: XCTestCase {
         XCTAssertTrue(ChildTaskFieldDraftContinuation.retainedKeys(from: a, to: a).contains(before.key))
     }
 
+    private func hierarchy(_ f: Fixture) throws -> TaskHierarchyIndex {
+        let projects = f.root.string("project_id").isEmpty ? [] : [Record(["id": f.root["project_id"], "name": .string("Project")])]
+        return try TaskHierarchyIndex(roots: [f.root], projects: projects, workspace: .init(account: f.owner, generation: f.context.workspace))
+    }
+    func testFullSourceSurvivesColdCacheAndIndexedNestedRouting() throws {
+        let f = try fixture(1), index = try hierarchy(f)
+        let parent = try XCTUnwrap(index.items.first { $0.isSubtask && $0.source.id == f.key })
+        XCTAssertEqual(parent.source.title, "Keep all fields")
+        XCTAssertEqual(try bytes(parent.sourceFields), try bytes(f.root["subtasks"].list[0]))
+        let nested = try XCTUnwrap(index.items.first { $0.isSubtask && $0.path.count == 2 })
+        XCTAssertEqual(nested.parentTitles.last, parent.source.title)
+        XCTAssertTrue(parent.requiresIndependentWriter); XCTAssertTrue(nested.requiresIndependentWriter)
+        let opening = try ChildTaskFieldOpening(reference: parent.record.id, root: f.root, workspace: index.workspace)
+        XCTAssertEqual(try opening.key(in: read(f, version: 1)), f.key)
+        var snapshot = Snapshot(); snapshot.tables["tasks"] = [f.root]
+        let restored = try TaskfoldJSONDecoder().decode(Snapshot.self, from: bytes(snapshot))
+        let cold = try TaskHierarchyIndex(roots: restored.tables["tasks"]!, projects: [Record(["id": f.root["project_id"]])], workspace: index.workspace)
+        XCTAssertEqual(cold.items.map(\.id), index.items.map(\.id))
+        XCTAssertEqual(try bytes(cold.item(parent.id)!.sourceFields), try bytes(parent.sourceFields))
+    }
+    func testIndexedOpaqueChildCanUseFreshIndependentCompletionWithoutReplacingFields() throws {
+        let f = try fixture(1), index = try hierarchy(f), read = try read(f, version: 1)
+        let item = try XCTUnwrap(index.items.first { $0.source.id == f.key })
+        let intent = try ChildTaskListCompletionIntent(task: item.record, root: f.root, projects: [Record(["id": f.root["project_id"]])], scope: .init(f.context))
+        let key = try intent.key(in: read)
+        let command = try ChildTaskCompletionCommand(ChildTaskCompletionDraft(read: read, key: key, action: .complete))
+        XCTAssertEqual(command.body["node_key"], .string(f.key))
+        XCTAssertNil(command.body["subtasks"]); XCTAssertNil(command.body["fields"])
+        XCTAssertNil(try bytes(command).range(of: Data("9007199254740993".utf8)))
+        let rows = try ChildTaskListOutline.rows([f.root], expanded: [f.root.id, item.id], projects: [Record(["id": f.root["project_id"]])], workspace: index.workspace, includeCompleted: true)
+        XCTAssertEqual(rows.map(\.title), index.items.map { $0.record.title })
+    }
+    func testLegacyWholeObjectWritersCannotFlattenProjectedAncestorsOrChildren() throws {
+        let f = try fixture(1), index = try hierarchy(f), before = try bytes(f.root)
+        for item in index.items where item.isSubtask {
+            let selection = try XCTUnwrap(index.selection(item.id))
+            for edit in [TaskHierarchyIndex.Edit.patch(selection, ["title": .string("Changed")]), .delete(selection)] {
+                XCTAssertThrowsError(try TaskHierarchyIndex.changes([edit], accessibleRoots: [f.root], projects: [Record(["id": f.root["project_id"]])], workspace: index.workspace))
+            }
+        }
+        XCTAssertEqual(try bytes(f.root), before)
+        var normal = f.root
+        normal["subtasks"] = .array([.object(["id": .string("plain"), "title": .string("Plain"), "é": .string("Keep this unambiguous field")])])
+        let simple = try TaskHierarchyIndex(roots: [normal], projects: [Record(["id": normal["project_id"]])], workspace: index.workspace)
+        let item = try XCTUnwrap(simple.items.last); XCTAssertFalse(item.requiresIndependentWriter)
+        XCTAssertEqual(item.source["é"], .string("Keep this unambiguous field"))
+        let selection = try XCTUnwrap(simple.selection(item.id))
+        let changed = try TaskHierarchyIndex.changes([.patch(selection, ["title": .string("Edited")])], accessibleRoots: [normal], projects: [Record(["id": normal["project_id"]])], workspace: index.workspace)
+        XCTAssertEqual(changed.first?.fields["subtasks"]?.list.first?.object["é"], .string("Keep this unambiguous field"))
+    }
+
+    func testOversizedPreservedIndexProjectionRefusesWithoutChangingTheCache() throws {
+        let f = try fixture(1)
+        let raw = #"{"id":"large","title":"Large","é":0,"e\u0301":1,"padding":""# + String(repeating: "x", count: TaskHierarchyIndex.maximumPreservedProjectionBytes) + #""}"#
+        let source = try value(raw); var root = f.root; root["subtasks"] = .array([source])
+        XCTAssertThrowsError(try TaskHierarchyIndex(roots: [root], projects: [Record(["id": root["project_id"]])], workspace: .init(account: f.owner, generation: f.context.workspace)))
+        XCTAssertEqual(try bytes(root["subtasks"].list[0]), Data(raw.utf8))
+    }
+
 }

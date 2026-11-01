@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "scope": "Source-aware hierarchy indexing, cold cache, exact child path openings and independent completion; indexed legacy-writer refusal for opaque paths",
+  "core": {
+    "passedTests": 174,
+    "failedTests": 0,
+    "logSHA256": "6050b17d917044175ecd1313e42f0ee7fe8fb00028bba290b28dfaab4d7be344",
+    "filter": "ExactChildFieldProjectionTests|ChildTaskListCompletionTests|ChecklistRecoveryTests|Hierarchy|WidgetActionTests|TaskActivity"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "336aa889013b5d97ac32e53b29066269ff20bcfc6b1a107dffd562f934697c8b",
+    "TaskfoldTests/ExactChildFieldProjectionTests.swift": "4624b356645e1002ff6c9ad609e20a7a2aeab463bc83ea3d971f05c22fe18313",
+    "TaskfoldUITests/AudioCommentUITests.swift": "c4a7df9f17f47d5e5357e7666661ef63cad61ddf46194b63658c9b83dbadc502"
+  },
+  "build": {
+    "phase": "indexed-child-routing",
+    "appAndRunnerSignaturesVerified": true,
+    "sourceProof": {
+      "Taskfold/Core/SubtaskTree.swift": {
+        "sourceSHA256": "336aa889013b5d97ac32e53b29066269ff20bcfc6b1a107dffd562f934697c8b",
+        "hostSHA256": "336aa889013b5d97ac32e53b29066269ff20bcfc6b1a107dffd562f934697c8b",
+        "matchesDocumentedIsolation": true
+      },
+      "TaskfoldUITests/AudioCommentUITests.swift": {
+        "sourceSHA256": "c4a7df9f17f47d5e5357e7666661ef63cad61ddf46194b63658c9b83dbadc502",
+        "hostSHA256": "c4a7df9f17f47d5e5357e7666661ef63cad61ddf46194b63658c9b83dbadc502",
+        "matchesDocumentedIsolation": true
+      }
+    },
+    "appBinariesSHA256": {
+      "Contents/MacOS/Taskfold": "4c680f1b9be43eb1a6d8bb0a3f92273770af3e605f3e66f6e7e29d57e0ca78d6",
+      "Contents/MacOS/Taskfold.debug.dylib": "85f3fbb975f2cc87bb9014c7c4308f39ecc544a06eff44796e9f46f6bdadc941"
+    }
+  },
+  "opaqueIndexNativeRuntimeAccepted": false,
+  "hostedChanges": false,
+  "normalUseEnabled": false,
+  "remaining": "Full cache/migration integration and wider native, complex history, shared custody and account/privacy acceptance remain open."
+}

@@ -1,6 +1,6 @@
 # Native history matching, saved recovery and exact original export
 
-The iPhone Simulator now completes the real local-database workflow through native controls. Both apps also have a stable history chooser presentation, an always-visible iPhone search field, adaptive primary/secondary candidate text and a saved confirmation that stays selected while its original is exported. The chooser is owned by the repair screen instead of a reusable List section. Refresh, account/scope changes and privacy cleanup dismiss it before discarding its context.
+The iPhone and iPad Simulators now complete the real local-database workflow through native controls in the recorded scopes. Both apps also have a stable history chooser presentation, an always-visible iPhone search field, adaptive primary/secondary candidate text and a saved confirmation that stays selected while its original is exported. The chooser is owned by the repair screen instead of a reusable List section. Refresh, account/scope changes and privacy cleanup dismiss it before discarding its context.
 
 ## Accepted phone scope
 
@@ -34,8 +34,18 @@ node Scripts/verify_child_mapping_native.mjs \
 
 For a new native run, build the reserved host and run `testChildMappingSQLNativeSearchColdReviewSaveAndOriginal`. After installation the test creates an empty reserved channel and a `child-mapping-native-ready.request` marker in its Application Support. Start `Scripts/Database/run-child-mapping-native.mjs --directory <that-channel> --lose-first-save --follow-simulator-container`. Xcode can rename the container at first launch; the helper follows only its unique owned nonce within that same Simulator, refusing missing or ambiguous ownership. Keep it running across cold launches and retain the resulting snapshots before cleanup. The native test refuses an existing destination file or nonempty channel; preserve earlier synthetic evidence before another run.
 
+## Accepted iPad follow-up — 2026-11-01
+
+The same full existing-history flow passes on the existing iPad Pro 13-inch (M5), iOS 27.0, ordinary text and dark appearance. Search/no-match/Cancel, explicit recorded lifecycles, partial and complete cold reviews, edit/repreview, one save with a deliberately lost reply, original-request status recovery, retained confirmation and native local Documents export/readback all pass. Its actual 9,809-byte original has SHA-256 `3c98e93114217b93d284c8555cef45364c20ff4962114f4f3f623d4488a1c1ce`.
+
+`ipad-test-summary.json`, `ipad-verification.json`, `ipad-saved-data-verification.json`, `ipad-fixture/` and the four iPad screenshots retain the actual iOS-owned run, source/build provenance and independent file/journal/database proof. Both repositories own replayable copies. Three negative verifier checks also refuse an added export byte, damaged encrypted journal and foreign saved root. The verifier itself makes no platform-control claim; the native XCTest summary supplies the iPad evidence.
+
+The first tablet attempt was deliberately stopped to correct a test helper that required the intentionally disabled Preview control to be tappable. The corrected check requires visible geometry and asserts disabled state; enabled actions still require tappable controls. `ipad-interrupted-attempt.json` confirms the root, child records, prior histories, repair receipts and originals were unchanged, and its owned fixture was removed. The second run passed without manual input. Its owned database was removed and the tablet shut down.
+
+This remains the ordinary three-existing-uncompleted-task, personal-Inbox, recorded-lifecycle and local-Documents scope. Opaque indexed rows have separate core/build evidence only; new/retired identities, changed lifecycles/recipients/recurrence, shared accounts, wider accessibility/privacy/device/file destinations and Mac controls remain open. No normal-use flag or hosted data changed.
+
 ## Still open
 
-Mac controls remain unaccepted because the desktop is locked; the app/runner compile and sign. iPad, new and retired identities, changed lifecycles/recurrence/recipients, stale and lost-access choices, account/window/privacy, keyboard, VoiceOver, largest text and large libraries still require wider acceptance. Native navigation into an extra subfolder in this Simulator's system Files picker was unreliable; only the observed local Documents destination is accepted here. Other locations and providers remain unverified.
+Mac controls remain unaccepted; the last attempt stopped at the locked desktop, while app/runner builds and signatures pass. New and retired identities, changed lifecycles/recurrence/recipients, stale and lost-access choices, account/window/privacy, keyboard, VoiceOver, largest text and large libraries still require wider acceptance. Native navigation into an extra subfolder in this Simulator's system Files picker was unreliable; only the observed local Documents destination is accepted here. Other locations and providers remain unverified.
 
 Broader exact editable-cache, complex history and shared file/discussion custody work is still unfinished. Normal use stays disabled and all agreed rollout/configuration deferrals remain. This milestone does not increase curated completion bars.

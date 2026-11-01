@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Preserve exact subtask fields in editable private drafts",
-  "latest": "Closed a subtask-draft preservation gap: complete originals, unfamiliar Unicode keys and exact large numbers survive refresh and encrypted cold recovery. Each repo passes 328 focused checks, repeated preservation checks after extension separation, and final signed debug packages. This is core/build evidence; no new native acceptance is claimed. The earlier iPhone history flow remains accepted in its recorded scope. Full cache migration, Mac/iPad and wider acceptance, and shared custody remain open; normal use stays disabled.",
+  "focus": "P2 · Preserved child routing and accepted iPad history recovery",
+  "latest": "Hierarchy views now retain full preserved child objects while routing known fields to independent reads/actions; affected indexed whole-object writes refuse before mutation. Each repo passes 174 focused checks and signed app/runner builds. The real local-database existing-history flow now passes on iPad too: search/Cancel, cold partial/complete review, one lost-reply save, original-request recovery and exact 9,809-byte native file readback. Opaque-row native acceptance, remaining legacy transforms, broader cache/history migration, Mac/wider checks and shared custody remain open; normal use stays disabled.",
   "next": [
-    "Accept Mac/iPad history controls and the remaining new/retired identity, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Mac runtime needs an unlocked desktop. Verify other Files destinations; only local Documents is accepted.",
-    "Complete the broader exact root/cache/index migration and complex recipient/recurrence histories; child-field originals and encrypted drafts now have scoped preservation support.",
+    "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
+    "Fix remaining legacy transforms that can rewrite unfamiliar sibling data, then finish broader cache/editor integration and complex recipient/recurrence histories. Preserved child indexing and private originals now have scoped core/build support.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
@@ -559,7 +559,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Atomic history mappings and earned-credit preservation have database/core proof; existing-history review/save/lost-reply recovery/exact export has iPhone native proof. Independent child-field reads and private drafts now retain exact unfamiliar fields through refresh and cold recovery (core/build scope). Full root/cache/index migration, complex histories, Mac/iPad and wider native acceptance, and shared custody remain open; normal use stays disabled.",
+              "detail": "Atomic history mappings and earned-credit preservation have database/core proof; existing-history review/save/lost-reply recovery/exact export now has iPhone and iPad native proof in the recorded ordinary-data scope. Preserved child fields survive private drafts and indexed cold-cache reads/actions (core/build). Remaining legacy transforms, broader cache/editor integration, complex histories, Mac/wider native acceptance and shared custody remain open; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -631,11 +631,11 @@
                 },
                 {
                   "state": "verify",
-                  "title": "Accept existing-history iPhone matching, cold recovery and exact export; finish Mac/iPad and wider cases"
+                  "title": "Accept existing-history phone/iPad matching, cold recovery and exact export; finish Mac and wider cases"
                 },
                 {
                   "state": "done",
-                  "title": "Keep exact child-field originals through refresh and encrypted cold recovery (core)"
+                  "title": "Keep exact child-field originals through indexing, refresh and encrypted cold recovery (core)"
                 },
                 {
                   "state": "build",
@@ -822,7 +822,11 @@
     "duplicate-history-repair-native/README.md",
     "duplicate-history-repair-native/verification.json",
     "exact-child-field-storage/README.md",
-    "exact-child-field-storage/verification.json"
+    "exact-child-field-storage/verification.json",
+    "indexed-child-source/README.md",
+    "indexed-child-source/verification.json",
+    "child-copy-mapping-native/README.md",
+    "child-copy-mapping-native/ipad-verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
@@ -847,7 +851,8 @@
     "child-copy-mapping-client/database-contract-verification.json": "2343397ea36320949b889235a1466108412299311e6d43cb110a76c3b4a649ce",
     "child-copy-mapping-client/runtime-status.json": "a0342db0f40c7884c03acec64f31e826acfe9879cf195b087845c56ed8668713",
     "child-copy-mapping-native-channel/README.md": "1acb275f0da1bea865b8fa3dfa35086865e9a9027fb53b6efa6de274224fd8f6",
-    "child-copy-mapping-native/README.md": "4fc3f85c6d92280156f12d2edd2ef747d6db93516042c4353877a745b73c7fa9",
+    "child-copy-mapping-native/README.md": "cd216c064818819d6a807ed3cc70bc359c0b6b28b2379dd753e1839e46d63678",
+    "child-copy-mapping-native/ipad-verification.json": "169a6182d4b9f1272dba4bd0c110016343b0ad0a550b059e05c39efef4429627",
     "child-copy-mapping-native/phone-saved-data-verification.json": "a4aa9b3b92e7ed5094f024c28345f216c220adec0389bba6ff7ab70fbddd6bc6",
     "child-copy-mapping-native/verification.json": "77ca63952eb51e3b1759711afca09e11048c9036f9f0de2bac2b81846eb935c4",
     "child-copy-mapping-native/verifier-refusal-checks.json": "67a62312bbeabf09c175f2284732f8de015d63e67233e1d6e2f9574140f4a61d",
@@ -903,6 +908,8 @@
     "field-history/verification.json": "4b5168fb9ec05cee2e9ddc59127ca320232d9e6d2e4f5463e9939783092ed1e9",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
+    "indexed-child-source/README.md": "9efc906ff470b77409c434eaefc76b9c7c936eca7f9e7d5b6fd57d1aad67873b",
+    "indexed-child-source/verification.json": "15f58feda791fdf04961a6c69e1f2e532bd32df8f374b65fdd5112efa32cf50d",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",
