@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Shared activity grouping verified on mobile; older-data mapping next",
-  "latest": "Related changes now appear under collapsible activity summaries, using committed-action metadata rather than matching clocks. Their individual completion times and current-task links remain available. Normal iPhone and largest-text iPad saved/cold flows pass. Both repos pass independent client/database checks and signed app builds; Mac runtime, older-data mapping and shared-content custody remain open. Ordinary migration use stays disabled.",
+  "focus": "P2 · Explicit duplicate-history repair built; native review and broader mapping remain",
+  "latest": "Older duplicate references can now be separated with an explicit choice of which item keeps its recorded activity. A fresh identity receives no copied history; exact event sets and original dates are preserved, archived before writes, and bound to preview/save. Independent client/database acceptance and app builds are recorded separately. Native acceptance for this choice, broader older-data mapping and shared-content custody remain open; normal migration use stays disabled.",
   "next": [
-    "Carry older tasks and history into the new storage, preserving identities and recorded work. Keep remaining Mac acceptance and the agreed rollout/configuration deferrals explicit.",
+    "Verify the new duplicate/history choice natively, then finish indexed-copy reconciliation, other historical identity mapping and opaque editable-cache adoption. Keep the broader older-data checkpoint open.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
     "Complete the remaining cross-task-move Mac keyboard and wider account/window/privacy/speech/large-library checks. Preserve the separate deletion-recovery gaps and all agreed deferrals."
   ],
@@ -556,7 +556,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Combined completion, cross-task moves, field edits and hierarchy actions support guarded Undo/Redo. Activity records field names, list reorders and related action groups with individual times; saved/cold mobile journeys pass. Mac acceptance, older-data mapping and file/discussion custody remain open. Normal use stays disabled.",
+              "detail": "Guarded edits, Undo/Redo and grouped activity are implemented. Duplicate separation now keeps history with an explicitly chosen item, with source/event proofs and unchanged dates. Its native review, broader older-data mapping, indexed-copy reconciliation, opaque editable-cache support and file/discussion custody remain open. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -601,6 +601,10 @@
                 {
                   "state": "done",
                   "title": "Group shared/local action history and preserve individual completion times"
+                },
+                {
+                  "state": "verify",
+                  "title": "Separate duplicate references with an explicit history keeper"
                 },
                 {
                   "state": "build",
@@ -747,7 +751,9 @@
     "child-task-repair-ui/verification.json",
     "child-task-repair-preflight/verification.json",
     "preserving-json/verification.json",
-    "child-task-opaque-read/verification.json"
+    "child-task-opaque-read/verification.json",
+    "duplicate-history-repair/README.md",
+    "duplicate-history-repair/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
@@ -795,6 +801,8 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
+    "duplicate-history-repair/README.md": "a28c7e00055e1c40bc4f5d5133f46293236b7194fae0cfac56e9574312e378a8",
+    "duplicate-history-repair/verification.json": "0c050596879f082f6a1605ab1427249d899a2f4e81e73974e8a1a91774b0b830",
     "field-activity/README.md": "dbae120927eda8cc30301a51ba174c26f3f74790c76aa4a52cf6ce86d5af42b9",
     "field-activity/verification.json": "dce424a0940bacc8e3300e9496969e4d94a92722bea799f0592407ceadcff4b6",
     "field-history/README.md": "5b06f10129fc2515d2ff19280fceb406ac4bd50186f334d0501d2c7483547d87",

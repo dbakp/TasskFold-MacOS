@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "scope": "Current isolated Mac app build and strict development signing; no new native runtime acceptance",
+  "executableSHA256": "9f2702417bdfa6e873538c04506559afee8590c7e9f141216c09a774e08e6e5b",
+  "debugDylibSHA256": "3e6fa6bc1a51ba2b2ad0cb6ae4ebe052f6a9097e11af33497b0eae730007d364",
+  "sourceMatchesBuiltHost": {
+    "Taskfold/Core/ChildTaskRepair.swift": true,
+    "Taskfold/Views/ChildTaskRepairView.swift": true,
+    "Taskfold/ChildRepairNativeFixture.swift": true
+  }
+}

@@ -20,6 +20,9 @@ import CryptoKit
         let review = try ChildAdoptionNativePeer.review(state), root = Record(state["root"]!.object)
         guard body["review_digest"] == review["review_digest"], body["task_id"] == .string(root.id), body["account"] == review["account"], body["task_generation"] == root["task_generation"], body["project_id"] == root["project_id"], body["workspace_id"] == .null else { throw ChildFieldNativeRefusal(code:"PT409") }
         let changes = try body["changes"]!.list.map { try ChildTaskRepairChange(raw:$0.object) }; try ChildTaskRepairChange.validate(changes)
+        if changes.contains(where: { $0.kind == .separateDuplicate }) {
+            throw ChildFieldNativeRefusal(code: "PT503")
+        }
         var tree = root["subtasks"], steps: [JSON] = []
         for (offset,change) in changes.enumerated() {
             var before = "null", after = "null"
@@ -34,7 +37,7 @@ import CryptoKit
                     before = kind(value)
                     switch change.kind {
                     case .makeRootList: value = .array([value])
-                    case .assignReference: guard case .object(var row) = value else { throw ChildFieldNativeRefusal(code:"PT409") }; row["id"] = change.raw["reference"]; value = .object(row)
+                    case .assignReference, .separateDuplicate: guard case .object(var row) = value else { throw ChildFieldNativeRefusal(code:"PT409") }; row["id"] = change.raw["reference"]; value = .object(row)
                     case .makeChildrenList: guard case .object(var row) = value, let children = row["subtasks"] else { throw ChildFieldNativeRefusal(code:"PT409") }; row["subtasks"] = .array([children]); value = .object(row)
                     case .wrapItem: value = .object(["id":change.raw["reference"]!,"title":change.raw["title"]!,"legacy_original":value])
                     case .moveItem: throw CancellationError()

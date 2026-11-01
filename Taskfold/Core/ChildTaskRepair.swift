@@ -5,7 +5,7 @@ import Observation
 /// Only explicit metadata operations enter durable storage; opaque source trees
 /// stay ephemeral and are never encoded as the app's floating-point JSON model.
 struct ChildTaskRepairChange: Codable, Equatable, Sendable {
-    enum Kind: String, Sendable { case makeRootList = "make_root_list", assignReference = "assign_reference", makeChildrenList = "make_children_list", wrapItem = "wrap_item", moveItem = "move_item" }
+    enum Kind: String, Sendable { case separateDuplicate = "separate_duplicate", makeRootList = "make_root_list", assignReference = "assign_reference", makeChildrenList = "make_children_list", wrapItem = "wrap_item", moveItem = "move_item" }
     let raw: [String: JSON]
     var kind: Kind { Kind(rawValue: raw["kind"]!.text)! }
     var path: [Int] { raw["path"]!.list.map(\.integer) }
@@ -20,12 +20,16 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     init(raw: [String: JSON]) throws {
         guard let kind = Kind(rawValue: raw["kind"]?.text ?? "") else { throw ChildTaskRepairCommand.invalid }
         let extra: Set<String>
-        switch kind { case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
+        switch kind { case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
         guard Set(raw.keys) == extra.union(["kind", "path"]) else { throw ChildTaskRepairCommand.invalid }
         let path = try Self.positions(raw["path"], empty: kind == .makeRootList)
         guard kind != .makeRootList || path.isEmpty else { throw ChildTaskRepairCommand.invalid }
-        if kind == .assignReference || kind == .wrapItem {
+        if kind == .assignReference || kind == .wrapItem || kind == .separateDuplicate {
             guard case .string(let reference)? = raw["reference"], !reference.isEmpty, reference.utf8.count <= 128, reference.precomposedStringWithCanonicalMapping.utf8.count <= 128 else { throw ChildTaskRepairCommand.invalid }
+        }
+        if kind == .separateDuplicate {
+            let kept = try Self.positions(raw["keep_path"], empty: false)
+            guard kept != path else { throw ChildTaskRepairCommand.invalid }
         }
         if kind == .wrapItem {
             guard case .string(let title)? = raw["title"], !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, title.unicodeScalars.count <= 500, title.utf8.count <= 1000 else { throw ChildTaskRepairCommand.invalid }
@@ -37,8 +41,9 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
         }
         self.raw = raw
     }
-    init(_ kind: Kind, path: [Int], reference: String? = nil, title: String? = nil, parent: [Int]? = nil, index: Int? = nil) throws {
+    init(_ kind: Kind, path: [Int], reference: String? = nil, title: String? = nil, parent: [Int]? = nil, index: Int? = nil, keepPath: [Int]? = nil) throws {
         var raw: [String: JSON] = ["kind": .string(kind.rawValue), "path": .array(path.map { .number(Double($0)) })]
+        if let keepPath { raw["keep_path"] = .array(keepPath.map { .number(Double($0)) }) }
         if let reference { raw["reference"] = .string(reference) }; if let title { raw["title"] = .string(title) }
         if let parent { raw["parent"] = .array(parent.map { .number(Double($0)) }) }; if let index { raw["index"] = .number(Double(index)) }
         try self.init(raw: raw)
@@ -49,7 +54,7 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     static func validate(_ changes: [Self]) throws {
         guard (1...64).contains(changes.count), try TaskfoldJSONEncoder().encode(changes).count <= 65_536 else { throw ChildTaskRepairCommand.invalid }
     }
-    static let counterPaths: Set<[String]> = [["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]
+    static let counterPaths: Set<[String]> = [["changes", "[]", "keep_path", "[]"], ["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]
 }
 
 struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
@@ -61,6 +66,11 @@ struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStr
     let original: Data
     let proposed: Data
     let items: [ChildTaskAdoptionReview.Item]
+    struct HistoryRetention: Sendable, Identifiable {
+        let ordinal: Int, path: [Int], eventCount: Int, completedCount: Int
+        var id: Int { ordinal }
+    }
+    let historyRetention: [HistoryRetention]
     var eligible: Bool { metadata["mutation_available"] == .bool(true) }
     var valid: Bool { metadata["proposal_valid"] == .bool(true) }
     var description: String { "Private reviewed repair preview" }
@@ -85,14 +95,29 @@ struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStr
     init(data: Data, review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange]) throws {
         let expected = try Self.body(review: review, changes: changes)
         let parts = try ChildTaskRecordRead.separatingJSONFields(["original_tree", "proposed_tree"], data: data, maximum: Self.maximumBytes,
-            integerPaths: Set<[String]>([["protocol"], ["node_count"], ["steps", "[]", "ordinal"], ["steps", "[]", "path", "[]"]]).union(ChildTaskRepairChange.counterPaths), nullableIntegerPaths: [["node_count"]])
+            integerPaths: Set<[String]>([["history_retention", "[]", "ordinal"], ["history_retention", "[]", "event_count"], ["history_retention", "[]", "completed_count"], ["history_retention", "[]", "keep_path", "[]"], ["protocol"], ["node_count"], ["steps", "[]", "ordinal"], ["steps", "[]", "path", "[]"]]).union(ChildTaskRepairChange.counterPaths), nullableIntegerPaths: [["node_count"]])
         let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
-        guard Set(raw.keys) == Self.keys, expected.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }),
+        guard Set(raw.keys).subtracting(["history_retention"]) == Self.keys, expected.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }),
               ChildTaskAdoptionCommand.digest(raw["repair_digest"]), case .bool(let valid)? = raw["proposal_valid"], case .bool(let mayWrite)? = raw["mutation_available"],
               case .bool(let sqlNull)? = raw["original_sql_null"], case .array(let steps)? = raw["steps"], steps.count == changes.count,
               let original = parts.values["original_tree"], let proposed = parts.values["proposed_tree"], original.count <= 2_000_000, proposed.count <= 2_000_000,
               !sqlNull || original == Data("null".utf8), raw["custody_blocker"] == .null || ["indexed_custody", "history_custody"].contains(raw["custody_blocker"]?.text ?? ""),
               !mayWrite || valid && raw["custody_blocker"] == .null else { throw ChildTaskRepairCommand.invalid }
+        var retained: [HistoryRetention] = []
+        let separating = changes.enumerated().filter { $0.element.kind == .separateDuplicate }
+        if let retention = raw["history_retention"] {
+            guard case .array(let rows) = retention, rows.count == separating.count, !separating.isEmpty else { throw ChildTaskRepairCommand.invalid }
+            for (value, choice) in zip(rows, separating) {
+                guard case .object(let r) = value, Set(r.keys) == ["ordinal", "node_key", "keep_path", "event_count", "completed_count", "digest"],
+                      r["ordinal"] == .number(Double(choice.offset + 1)), ChildTaskStructureCommand.exact(r["keep_path"], choice.element.raw["keep_path"]),
+                      case .string(let key)? = r["node_key"], !key.isEmpty, key.utf8.count <= 128, key.utf8.elementsEqual(key.precomposedStringWithCanonicalMapping.utf8),
+                      ChildTaskAdoptionCommand.digest(r["digest"]) else { throw ChildTaskRepairCommand.invalid }
+                let count = try ChildTaskAdoptionReview.count(r["event_count"], maximum: 1_000_000)
+                let completed = try ChildTaskAdoptionReview.count(r["completed_count"], maximum: Double(count))
+                retained.append(.init(ordinal: choice.offset + 1, path: try ChildTaskRepairChange.positions(r["keep_path"], empty: false), eventCount: count, completedCount: completed))
+            }
+        } else if mayWrite && !separating.isEmpty { throw ChildTaskRepairCommand.invalid }
+        historyRetention = retained
         // Bind the complete original exactly, allowing harmless wire whitespace.
         guard Self.sameJSONValue(original, try Self.reviewSource(review)) else { throw ChildTaskRepairCommand.invalid }
         for (offset, step) in steps.enumerated() {
@@ -526,9 +551,13 @@ extension Backend: ChildTaskRepairService {}
 struct ChildTaskRepairOutline: Sendable {
     enum Kind: String, Sendable { case object, array, string, number, boolean, null }
     struct Item: Identifiable, Sendable {
-        let path: [Int], title: String, kind: Kind, referenceNeedsRepair: Bool, malformedChildren: Bool, siblings: Int
+        let path: [Int], title: String, kind: Kind, reference: String?, referenceNeedsRepair: Bool, malformedChildren: Bool, siblings: Int
         var id: String { path.map(String.init).joined(separator: ".") }
         var depth: Int { path.count }
+    }
+    func historyKeepers(for item: Item) -> [Item] {
+        guard item.referenceNeedsRepair, let key = item.reference else { return [] }
+        return items.filter { $0.path != item.path && $0.reference == key }
     }
     let rootKind: Kind
     let items: [Item]
@@ -591,7 +620,7 @@ struct ChildTaskRepairOutline: Sendable {
             guard path.count < 64 || nodes.isEmpty else { throw Self.unavailable }
             for (position,node) in nodes.enumerated() {
                 let key = valid(node.reference)
-                items.append(.init(path: path + [position], title: node.title, kind: node.kind, referenceNeedsRepair: node.kind == .object && (key == nil || (key.flatMap { references[$0] } ?? 0) > 1), malformedChildren: node.malformedChildren, siblings: nodes.count))
+                items.append(.init(path: path + [position], title: node.title, kind: node.kind, reference: key, referenceNeedsRepair: node.kind == .object && (key == nil || (key.flatMap { references[$0] } ?? 0) > 1), malformedChildren: node.malformedChildren, siblings: nodes.count))
                 try walk(node.children, path: path + [position])
             }
         }

@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-01",
+  "status": "explicit duplicate-history keeper implemented; native acceptance and broader migration remain open",
+  "focusedClientCases": 117,
+  "newDuplicateHistoryCases": 5,
+  "ownedSQLChecks": 332,
+  "migration": "20261101071304_reviewed_duplicate_history_preservation.sql",
+  "migrationDeployed": false,
+  "normalMigrationGatesEnabled": false,
+  "newRPCGrants": false,
+  "nativeInteraction": "pending; no installed native-flow acceptance claimed",
+  "widerOlderDataCheckpoint": "open: indexed copies, other identity/lifecycle mapping, opaque editable cache, shared content custody",
+  "retainedOriginalEvents": "ids, values and dates unchanged; no copied completion events",
+  "fixtureRemoved": true,
+  "newAdvisorFindings": false,
+  "appBuild": "passed"
+}

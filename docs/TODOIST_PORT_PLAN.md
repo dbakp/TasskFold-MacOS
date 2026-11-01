@@ -508,3 +508,8 @@ See `P1_PLAN.md` for the remaining P1 order. The first subtask-organizer foundat
 
 
 21 October assigned-by integration: both independently owned apps now implement recorded-current-assignment predicates and account-safe synchronization, including honest unknown states and pending assignment cycles. Exact contract, current evidence and remaining acceptance: [Assigned-by filters](ASSIGNED_BY_FILTERS.md). This supersedes historical missing-metadata notes above and does not close the full remaining-Px scope or user-deferred release/provider/remote-reminder work.
+
+
+### 2026-11-01 · Explicit duplicate/history custody
+
+Older duplicate references can be separated only with an explicit original-reference keeper and an exact history proof. Existing events/dates stay intact, a fresh identity receives no copied history, and prior originals remain archived. See [scope and evidence](duplicate-history-repair/README.md). Native acceptance for this choice and the broader older-data/indexed-copy/opaque-cache/shared-content work remain open; normal migration gates stay off.

@@ -72,6 +72,11 @@ struct ChildTaskRepairView: View {
                                         Label(current.items.count == 1 ? "1 task ready" : "\(current.items.count) tasks ready", systemImage: "checkmark.seal").font(.headline).accessibilityIdentifier("childRepairReady")
                                         ForEach(current.items) { item in Text(String(String.UnicodeScalarView((item.title?.isEmpty == false ? item.title! : "Untitled task").unicodeScalars.prefix(160)))).lineLimit(3).padding(.leading, CGFloat(min(item.depth - 1, 6) * 12)) }
                                     } else { Text("There’s another older item to review. Keep working through the list above; nothing has changed yet.").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childRepairMoreNeeded") }
+                                    ForEach(current.historyRetention) { retained in
+                                        Text("The chosen original item keeps \(retained.eventCount) recorded \(retained.eventCount == 1 ? "event" : "events"), including \(retained.completedCount) completion \(retained.completedCount == 1 ? "event" : "events"). Original dates stay unchanged.")
+                                            .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                            .accessibilityIdentifier("childRepairHistory-\(retained.ordinal)")
+                                    }
                                     if current.metadata["custody_blocker"] != .null { Text("This task needs a separate history or storage review. Neither saved copy will be overwritten.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                                     Button { confirming = true } label: { Label("Save reviewed repair", systemImage: "checkmark.circle.fill").frame(minHeight: 44) }
                                         .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || working).accessibilityIdentifier("childRepairSave")
@@ -149,6 +154,14 @@ struct ChildTaskRepairView: View {
                         Button("Keep as a task") { add(.wrapItem, path: item.path, title: item.title, label: "Keep “\(item.title)” as a task") }.accessibilityIdentifier("childRepairWrap-" + item.id)
                     } else {
                         if item.referenceNeedsRepair { Button("Repair this task") { add(.assignReference, path: item.path, label: "Repair “\(item.title)”") }.accessibilityIdentifier("childRepairReference-" + item.id) }
+                        if !outline.historyKeepers(for: item).isEmpty {
+                            Menu("Separate duplicate and keep history…") {
+                                ForEach(outline.historyKeepers(for: item)) { keeper in
+                                    Button("Keep history with “\(keeper.title)” (item \(keeper.path.map { String($0 + 1) }.joined(separator: ".")))") { separate(item, keeping: keeper) }
+                                }
+                            }.accessibilityIdentifier("childRepairSeparate-" + item.id)
+                            Text("This item gets a fresh identity. Prior activity stays with the item you choose, including its original completion dates. Nothing is copied or reassigned.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
                         if item.malformedChildren { Button("Repair subtask list") { add(.makeChildrenList, path: item.path, label: "Repair subtasks in “\(item.title)”") }.accessibilityIdentifier("childRepairChildren-" + item.id) }
                         if item.siblings > 1 || item.depth > 1 { Menu("Move") {
                             if item.path.last! > 0 { Button("Move earlier") { move(item, parent: Array(item.path.dropLast()), index: item.path.last! - 1) } }
@@ -197,6 +210,13 @@ struct ChildTaskRepairView: View {
         guard usable, !working, let read = review, store.childTaskAdoptionReviewIsCurrent(read) else { return }
         do { let change = try ChildTaskRepairChange(kind, path: path, reference: kind == .assignReference || kind == .wrapItem ? UUID().uuidString.lowercased() : nil, title: title); apply(change, label: label, read: read) }
         catch { failure = "This choice needs another review. Your original is kept." }
+    }
+    private func separate(_ item: ChildTaskRepairOutline.Item, keeping keeper: ChildTaskRepairOutline.Item) {
+        guard usable, !working, let read = review, store.childTaskAdoptionReviewIsCurrent(read) else { return }
+        do {
+            let change = try ChildTaskRepairChange(.separateDuplicate, path: item.path, reference: UUID().uuidString.lowercased(), keepPath: keeper.path)
+            apply(change, label: "Separate “\(item.title)”; keep prior activity with “\(keeper.title)” (item \(keeper.path.map { String($0 + 1) }.joined(separator: ".")))", read: read)
+        } catch { failure = "These duplicate items need another review. Your original is kept." }
     }
     private func move(_ item: ChildTaskRepairOutline.Item, parent: [Int], index: Int) {
         guard usable, !working, let read = review, store.childTaskAdoptionReviewIsCurrent(read) else { return }; do { apply(try .init(.moveItem, path: item.path, parent: parent, index: index), label: "Move “\(item.title)”", read: read) } catch { failure = "This move needs another review." }

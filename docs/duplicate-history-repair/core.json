@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "cases": 117,
+  "newDuplicateHistoryCases": 5,
+  "suite": "ChildDuplicateHistoryTests|ChildTaskRepairTests|ChildTaskAdoptionTests|TaskNodeActivityTests|ActivityOperationTests",
+  "actualOwnDatabaseFixture": true
+}

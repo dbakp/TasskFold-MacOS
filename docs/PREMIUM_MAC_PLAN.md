@@ -10224,3 +10224,8 @@ Each repository owns its implementation, focused client checks, real local SQL f
 - [ ] Remaining Mac keyboard/runtime, broader genuine-account/lifecycle/accessibility/library acceptance, older-data/history mapping, shared file/discussion custody and hosted migration. Ordinary subtask migration use remains disabled; prior user deferrals stay paused.
 
 [Exact scope and evidence](activity-groups/README.md).
+
+
+### 2026-11-01 · Explicit history keeper in older duplicate repair
+
+The repair review now offers a positional choice of which duplicate keeps prior recorded activity, plus retained-event/completion-event counts. The save proof covers the exact history set and current caller access. No history is copied, reassigned or redated; old gaps remain explicit. Independent database/client evidence and the signed app build are recorded in [duplicate-history-repair](duplicate-history-repair/README.md). Native layout/keyboard/speech acceptance is pending; broader migration and all agreed deferrals remain open.
