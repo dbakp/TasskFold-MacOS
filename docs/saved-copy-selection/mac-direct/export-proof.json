@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "writtenByNativeSavePanel": true,
+  "localDestination": "/tmp",
+  "exactArchivedBytes": true,
+  "bytes": 2459,
+  "sha256": "50cd130b15298d070b86a0bd5da8b79b391b514310fd4e32fd0d8823ecef07f9",
+  "oneRepairWrite": true,
+  "source": "Actual native export after saved confirmation cold launch",
+  "noCloudUpload": true
+}

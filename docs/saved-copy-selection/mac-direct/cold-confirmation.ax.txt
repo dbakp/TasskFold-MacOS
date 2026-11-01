@@ -1,0 +1,27 @@
+Window: "", App: Taskfold Team Editor Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Repair older subtasks, Secondary Actions: Cancel
+		3 scroll area
+			4 list Secondary Actions: Cancel
+				5 row (selectable) Review an older task
+				6 row (selectable) Repair older subtask formats one task at a time, with an original copy kept before saving.
+				7 row (selectable) Native child workspace
+				8 row (selectable)
+				9 row (selectable) Repair saved
+				10 row (selectable) Native child workspace
+				11 row (selectable) Original copy kept
+				12 row (selectable) Export saved original
+		13 button Close
+14 menu bar
+	15 Taskfold Workflow Test
+	16 File
+	17 Edit
+	18 View
+	19 Fixture
+	20 Account
+	21 Task
+	22 Window
+	23 Help
+
+The focused UI element is 4 list Secondary Actions: Cancel

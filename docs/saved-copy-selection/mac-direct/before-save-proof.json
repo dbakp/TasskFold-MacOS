@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "rootAndNestedOriginalUnchanged": true,
+  "originalUnknownFieldsPreserved": true,
+  "noFieldAdoptionOrRepairWrites": true,
+  "noNewReceiptsOrArchives": true,
+  "comparisonContentNotPersisted": true,
+  "peerSHA256": "11bb9266f0b89a59aa2ec397b978b5437c406a8ba02761ae5570a4ec9a5daa5f",
+  "scope": "Synthetic file-backed native peer; database access and exact SQL exports verified separately"
+}

@@ -10,10 +10,10 @@ The initial apply path requires the same canonical/raw references, existing inca
 
 Still required:
 
-- Finish native Mac and wider copy-selection/recovery acceptance. The client integration and normal-text iPhone saved/cold journey are now implemented/verified separately; full largest-text recovery remains open.
+- Finish full largest-text recovery and wider genuine-account/window/privacy/speech/library acceptance. Normal-text iPhone and direct Mac saved/cold recovery now pass separately, including actual native Mac original-file export/readback.
 - Implement explicit identity/completion/recipient mapping for blocked cases and full older-data/opaque editable-cache migration.
 - Provide surviving workspace members' archive discovery/recovery, beyond retained data and the current actor's existing saved-command recovery. Retaining a team archive after editor deletion is not proof of that user flow.
-- Finish shared file/discussion custody, native Mac and wider account/window/privacy/speech/library checks, then hosted/full-stack migration acceptance. All prior user deferrals remain deferred.
+- Finish shared file/discussion custody, other Mac workflows and wider account/window/privacy/speech/library checks, then hosted/full-stack migration acceptance. All prior user deferrals remain deferred.
 
 ## Authorization, custody and replay
 

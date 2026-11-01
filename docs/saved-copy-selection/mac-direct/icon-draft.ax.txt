@@ -1,0 +1,69 @@
+Window: "", App: Taskfold Team Editor Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Repair older subtasks, Secondary Actions: Cancel
+		3 scroll area Secondary Actions: Scroll Up, Scroll Down
+			4 list Secondary Actions: Cancel
+				5 row (selectable)
+				6 row (selectable) Review saved on this device. Your task is unchanged.
+				7 row (selectable)
+				8 row (selectable) Native child workspace
+				9 row (selectable) All tasks and saved repairs
+				10 row (selectable) Review saved on this device
+				11 row (selectable) Discard saved review
+				12 row (selectable) Before you repair
+				13 row (selectable) Your original stays safe
+				14 row (selectable) Review each change below. Saving keeps a complete original copy before changing the task.
+				15 row (selectable) Export original content
+				16 row (selectable) Saved copies
+				17 row (selectable) Compare the saved task lists before choosing a repair. Reviewing them keeps every copy unchanged.
+				18 row (selectable) Compare saved copies
+				19 row (selectable) The saved lists differ
+				20 row (selectable, collapsed) Description: Task list, 3 tasks, Secondary Actions: Expand
+					21 disclosure triangle 0
+				22 row (selectable, collapsed) Description: Saved snapshot, 3 tasks, Secondary Actions: Expand
+					23 disclosure triangle 0
+				24 row (selectable, expanded) Description: Stored subtasks, 3 tasks, Secondary Actions: Collapse
+					25 disclosure triangle 1
+				26 row (selectable) Prepare the review
+Open
+Stored subtask instructions
+Priority 4
+				27 row (selectable) Collect supporting notes
+Keep these nested instructions
+				28 row (selectable) Publish the summary
+Open
+Original saved notes
+Priority 4
+				29 row (selectable) Chosen for review
+				30 row (selectable) Export readable copies
+				31 row (selectable) The export keeps exact saved content, including fields that are shortened in this review. Copies needing an access review stay private and unchanged.
+				32 row (selectable) Your changes
+				33 row (selectable) Use stored subtasks
+				34 row (selectable) Undo last choice
+				35 row (selectable) Reset review
+				36 row (selectable) After repair
+				37 row (selectable) 3 tasks ready
+				38 row (selectable) Prepare the review
+				39 row (selectable) Collect supporting notes
+				40 row (selectable) Publish the summary
+				41 row (selectable) Save reviewed repair
+			42 scroll bar (settable, float) 0.6334913112164297
+				43 value indicator (settable, float) 0.6334913112164297
+				44 increment arrow button
+				45 decrement arrow button
+				46 increment page button
+				47 decrement page button
+		48 button Close
+49 menu bar
+	50 Taskfold Workflow Test
+	51 File
+	52 Edit
+	53 View
+	54 Fixture
+	55 Account
+	56 Task
+	57 Window
+	58 Help
+
+The focused UI element is 4 list Secondary Actions: Cancel

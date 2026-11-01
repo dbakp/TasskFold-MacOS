@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "oneAppliedRepair": true,
+  "selectedStoredCopyExact": true,
+  "allThreeOriginalCopiesRetained": true,
+  "originalHashAndLengthVerified": true,
+  "nestedAndUnknownFieldsPreserved": true,
+  "noUnrelatedWrites": true,
+  "peerSHA256": "fc06c1e5ff57821987de13e0b928774ed41617c5ec57a9e784e04087c9e8345a",
+  "scope": "Synthetic file-backed native controls and persistence; real SQL authorization/atomicity and historical custody verified separately"
+}

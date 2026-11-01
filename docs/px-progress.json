@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Saved-copy selection and recovery accepted on iPhone; broader migration remains",
-  "latest": "Both apps now connect copy selection to durable reviews, safe save/status recovery and complete original export. Each repository passed 75 client tests, plus 133 database workflow and 332 repair/history regression checks. The iPhone compare → choose → Undo/reselect → cold draft → save → cold confirmation journey and independent saved-data proof passed. Mac runtime and broader migration remain open; normal use stays disabled. Old completed results were pruned, recovering 17.5 GB.",
+  "focus": "P2 · Mac and iPhone saved-copy recovery verified; broader migration remains",
+  "latest": "Direct Mac checks now pass comparison, selection, Undo/reselect, cold saved review, one save and cold confirmation. The native Mac original export matches the archive byte for byte. Existing iPhone and database/client evidence is retained; those suites were not rerun for this native check. Fixed a missing copy-action icon and rebuilt both apps. Broader migration, other Mac workflows and full largest-text recovery remain open; normal use stays disabled.",
   "next": [
     "Handle ambiguous identities/completion/recipient histories and preserve exact opaque editable caches. The current selected-copy path requires matching historical identities and completion state.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
-    "Complete remaining Mac repair/hierarchy/inspector and cross-task-move acceptance, then the wider account/window/privacy/speech/large-library checks. Preserve separate deletion-recovery gaps and all agreed deferrals."
+    "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
   "stages": [
     {
@@ -556,7 +556,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Both apps now support explicit copy selection, a durable review, save/status recovery and complete original export. Same-identity server transactions and the iPhone saved/cold journey are verified. Ambiguous history mapping, exact editable caches, shared archive discovery, Mac runtime and file/discussion custody remain open. Normal use stays disabled.",
+              "detail": "Both apps support explicit copy selection, durable reviews, save/status recovery and complete original export. Same-identity server transactions, iPhone saved/cold use and direct Mac recovery/native original-file readback are verified. Ambiguous history mapping, exact editable caches, shared archive discovery, other Mac workflows and file/discussion custody remain open. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -588,7 +588,7 @@
                 },
                 {
                   "state": "verify",
-                  "title": "Finish Mac repair/hierarchy keyboard and inspector-refresh acceptance"
+                  "title": "Finish Mac format-repair/hierarchy keyboard and inspector-refresh acceptance"
                 },
                 {
                   "state": "done",
@@ -616,7 +616,7 @@
                 },
                 {
                   "state": "done",
-                  "title": "Choose a saved copy with durable review/recovery; verify iPhone saved/cold use"
+                  "title": "Choose a saved copy with durable review/recovery; verify Mac and iPhone cold use"
                 },
                 {
                   "state": "build",
@@ -717,7 +717,10 @@
             "saved-copy-selection/client-verification.json",
             "saved-copy-selection/native-verification.json",
             "saved-copy-selection/phone-proof.json",
-            "saved-copy-selection/build-verification.json"
+            "saved-copy-selection/build-verification.json",
+            "saved-copy-selection/mac-direct-summary.json",
+            "saved-copy-selection/icon-build-verification.json",
+            "saved-copy-selection/symbol-verification.json"
           ],
           "focus": true
         },
@@ -827,7 +830,7 @@
     "completion-selection-root-client/verification.json": "aa0d66de6241ecfd910f6c15efee329ab88e6de5e0fed5d27ae74cdf8a78d4c8",
     "completion-selection-roots/README.md": "d5605a55e1aa7d01b1390c7c50c8f1beb330c3f0e7aebb4aa30f10df5e8d53a0",
     "completion-selection-roots/verification.json": "ca845522b8a90cad11dceebab32923dee268c7820dfe7422d5264a3e2baa9d90",
-    "copy-choice-reconciliation/README.md": "c7c5cb7d9effb1f8f20853cf729001e084d57348c966bb0e37ed5977b04d82f9",
+    "copy-choice-reconciliation/README.md": "fb76aa8f3af486c5a06542831f89ce249ca94f97654f687fbfb4cbc87b8674a3",
     "copy-choice-reconciliation/completed-build-cleanup.json": "9c00a79cf72e6bdb486fc16108a427edf3aedae9decc09a916e9d3c3f591c010",
     "copy-choice-reconciliation/older-results-cleanup.json": "61d0170032fb7f27d335af7e2d819513999fbca5fd69daa5d8e7f89dea4b684a",
     "copy-choice-reconciliation/repair-regression-verification.json": "c379b7f905bae2a91bc8446beafbd172ad33d27fc1fc5e7c40ef7c7e0ed6be64",
@@ -865,11 +868,14 @@
     "saved-copy-comparison/client-verification.json": "d0fa3a559d8d4171d826abe59caa0f60117eb15bc35164f68dbb63bbdc4735c3",
     "saved-copy-comparison/database-verification.json": "c14364308507ad2e62bca2a26d6f985f997e3d619866822111a5650baeaacf47",
     "saved-copy-comparison/native-verification.json": "2e48ab1d979b1539fa2570625c895e9890877f090ae1d26418bbb36eae03b63c",
-    "saved-copy-selection/README.md": "9bee8feae789337d6bcae4738311e00eb2b95b65653b4bccbe049cf8419711ab",
+    "saved-copy-selection/README.md": "fc80674e2de60ed4d35b0671b172983c96d16dda3090576eae50c8b1619627e6",
     "saved-copy-selection/build-verification.json": "2925a6210b31909aa2c165cf3bfc1601bbcaec4544e3cae7db8d5963b157458a",
     "saved-copy-selection/client-verification.json": "9540079c5aed980fc9c1921fe9918ceb0452242c65a55e115d044f1299ddd014",
+    "saved-copy-selection/icon-build-verification.json": "9a6fbd034adc8e76b2c7d2d7e0b2d2b88f2ef9e864e1f31fe144cb4cf4175d95",
+    "saved-copy-selection/mac-direct-summary.json": "b69894319c5e349914ce20fdb026c21fd9e39edf0ddc380ed88c8f8095443678",
     "saved-copy-selection/native-verification.json": "7dd47d9cc228762914d2827f12de190b568d4f414a0b16d638b84604848b465c",
     "saved-copy-selection/phone-proof.json": "ff630c3b283eec760c05b9b2e26ae10fb2f222cff853a0f81b216171967c7d89",
+    "saved-copy-selection/symbol-verification.json": "8cbae5b8d86418540ba082924cb86d86aad0aec83f53a9793282540e38cbddc1",
     "transfer-redo/README.md": "566c6d5c8827e2da94797158156107ef355553eb6906a3e7a46ddf19bd76b2ac",
     "transfer-redo/verification.json": "9f0d45307cfa830c3af3934e43556f3ee217066994a6d542eca773381d45f6b0"
   }

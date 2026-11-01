@@ -1,0 +1,20 @@
+The following is a diff from the previous accessibility tree for Window: "" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 47-53
++				73 row (selectable)
++				74 row (selectable) Review saved on this device. Your task is unchanged.
++				75 row (selectable) Review saved on this device
++				76 row (selectable) Discard saved review
++				77 row (selectable) Chosen for review
++				78 row (selectable) Your changes
++				79 row (selectable) Use stored subtasks
++				80 row (selectable) Undo last choice
++				81 row (selectable) Reset review
++				82 row (selectable) After repair
++				83 row (selectable) 3 tasks ready
++				84 row (selectable) Prepare the review
++				85 row (selectable) Collect supporting notes
++				86 row (selectable) Publish the summary
++				87 row (selectable) Save reviewed repair
+~			64 scroll bar (settable, float) 0.7300509337860781
+~				65 value indicator (settable, float) 0.7300509337860781
+The focused UI element is 36 list Secondary Actions: Cancel

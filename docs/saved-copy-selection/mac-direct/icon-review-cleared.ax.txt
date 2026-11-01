@@ -1,0 +1,44 @@
+Window: "", App: Taskfold Team Editor Test.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text Value: Repair older subtasks, Secondary Actions: Cancel
+		3 scroll area Secondary Actions: Scroll Up, Scroll Down
+			4 list Secondary Actions: Cancel
+				5 row (selectable)
+				6 row (selectable) Saved review removed. Your task is unchanged.
+				7 row (selectable)
+				8 row (selectable) Native child workspace
+				9 row (selectable) All tasks and saved repairs
+				10 row (selectable) Before you repair
+				11 row (selectable) Your original stays safe
+				12 row (selectable) Review each change below. Saving keeps a complete original copy before changing the task.
+				13 row (selectable) Export original content
+				14 row (selectable) Saved copies
+				15 row (selectable) Compare the saved task lists before choosing a repair. Reviewing them keeps every copy unchanged.
+				16 row (selectable) Compare saved copies
+				17 row (selectable) Original structure
+				18 row (selectable) Description: Move “Prepare the review”, Value: Prepare the review
+				19 row (selectable) Description: Move “Collect supporting notes”, Value: Collect supporting notes
+				20 row (selectable) Description: Move “Publish the summary”, Value: Publish the summary
+				21 row (selectable) Long titles are shortened in this review. Export keeps the full original.
+				22 row (selectable)
+				23 row (selectable) Refresh review
+			24 scroll bar (settable, float) 0
+				25 value indicator (settable, float) 0
+				26 increment arrow button
+				27 decrement arrow button
+				28 increment page button
+				29 decrement page button
+		30 button Close
+31 menu bar
+	32 Taskfold Workflow Test
+	33 File
+	34 Edit
+	35 View
+	36 Fixture
+	37 Account
+	38 Task
+	39 Window
+	40 Help
+
+The focused UI element is 4 list Secondary Actions: Cancel

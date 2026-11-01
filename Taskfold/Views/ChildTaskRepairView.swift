@@ -402,7 +402,7 @@ private struct ChildCopyComparison: View {
                         if selectedSource == copy.id {
                             Label("Chosen for review", systemImage: "checkmark.circle").fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("childCopyChosen-" + copy.id)
                         } else {
-                            Button { choose(copy) } label: { ChildRepairActionLabel(title: "Use this copy", symbol: "doc.badge.checkmark") }
+                            Button { choose(copy) } label: { ChildRepairActionLabel(title: "Use this copy", symbol: "checkmark.circle") }
                                 .disabled(!canChoose).accessibilityLabel("Use \(copy.title.lowercased())")
                                 .accessibilityIdentifier("childCopyChoose-" + copy.id)
                         }
