@@ -8,7 +8,7 @@ The total raw-object projection budget is 32 MiB across the index, charged befor
 
 ## Evidence and limits
 
-Each repository's verification file records 174 focused passing checks and its own current app/runner build and signature/source proof. Four added cases cover cold full-source/nested routing, independent completion without full-field replacement, indexed legacy-write refusal with ordinary-format compatibility, and an actual oversized raw object that must be refused unchanged. This is core/build evidence, not native acceptance of opaque indexed rows.
+At the indexed-child-routing milestone, each repository's verification file records 174 focused passing checks and its own then-current app/runner build and signature/source proof. Four added cases cover cold full-source/nested routing, independent completion without full-field replacement, indexed legacy-write refusal with ordinary-format compatibility, and an actual oversized raw object that must be refused unchanged. This is core/build evidence, not native acceptance of opaque indexed rows.
 
 The native history-mapping test also distinguishes observing a disabled Preview control from requiring a tappable control. Its original tablet run was deliberately stopped after the helper repeatedly tried to make the intentionally disabled control tappable. The database's root, records, histories, repair receipts and originals were independently confirmed unchanged. The corrected existing-history iPad run and its separate ordinary-data scope are recorded under `../child-copy-mapping-native/`; it does not certify opaque indexed rows.
 

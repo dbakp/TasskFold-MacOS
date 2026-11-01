@@ -21,7 +21,7 @@ This is a local PostgreSQL fixture under its authenticated actor/session, not ho
 - `phone-test-summary.json`: one native test passed, no failures or skips.
 - `phone-saved-data-verification.json` and `phone-fixture/`: actual synthetic database/journal/trace/file readback. Both repositories own their verifier and a copy of the recorded iOS-only evidence; this does not claim Mac runtime acceptance.
 - `verifier-refusal-checks.json`: an extra exported byte, a damaged encrypted journal and a foreign saved root are rejected, with any earlier successful report invalidated first.
-- `verification.json`: current source/isolation correspondence, app/runner builds and strict signatures, five channel/refusal tests and 11 actual SQL/channel checks independently per repository. The extra SQL case exercises the target-discovery RPC used before native review.
+- `verification.json`: recorded source/isolation correspondence, app/runner builds and strict signatures, five channel/refusal tests and 11 actual SQL/channel checks independently per repository. The extra SQL case exercises the target-discovery RPC used before native review.
 
 Reproduce the saved-data proof without a database or sibling checkout:
 

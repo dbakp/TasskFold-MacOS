@@ -150,8 +150,11 @@ enum SubtaskTree {
         return (items.filter { $0.record.completed }.count, items.count)
     }
     static func changing(_ value: JSON, id: String, fields: [String: JSON]) -> JSON {
-        .array(value.list.map { value in
-            var row = value.object
+        guard case .array(let values) = value else { return value }
+        return .array(values.map { value in
+            // An unrelated legacy/opaque sibling must never turn into an empty
+            // object when another row is edited. Independent writers own it.
+            guard case .object(var row) = value else { return value }
             if row["id"]?.text == id { row.merge(fields) { _, new in new } }
             else if case .array? = row["subtasks"] { row["subtasks"] = changing(row["subtasks"]!, id: id, fields: fields) }
             return .object(row)
@@ -197,7 +200,10 @@ enum SubtaskTree {
             guard index > 0 else { throw Failure(message: "Move this subtask below another subtask before indenting it.") }
             let height = (outline(item.record["subtasks"]).map(\.depth).max().map { $0 + 1 }) ?? 0
             guard baseDepth + item.depth + height + 1 < maximumDepth else { throw Failure(message: "Subtasks can be nested up to 10 levels.") }
-            var previous = rows[index - 1].object
+            guard case .object(var previous) = rows[index - 1],
+                  case .string? = previous["title"], hasListContainer(previous["subtasks"] ?? .null) else {
+                throw Failure(message: "Review the preceding subtask's format before nesting here. Its saved content is unchanged.")
+            }
             previous["subtasks"] = .array((previous["subtasks"]?.list ?? []) + [rows[index]])
             rows[index - 1] = .object(previous); rows.remove(at: index)
             return replacing(value, parent: item.parent, rows: rows)
@@ -441,7 +447,7 @@ struct TaskHierarchyIndex {
             // A display projection is never a whole-object replacement. These
             // branches use independent record commands after a fresh read.
             guard !now.requiresIndependentWriter, !saved.requiresIndependentWriter else {
-                throw failure("This subtask needs its independent editor before it can be changed. Its saved content is unchanged.")
+                throw failure("This subtask needs review before it can be changed here. Your saved content is unchanged.")
             }
             switch edit {
             case .delete:

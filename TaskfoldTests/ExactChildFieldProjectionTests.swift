@@ -202,4 +202,23 @@ final class ExactChildFieldProjectionTests: XCTestCase {
         XCTAssertEqual(try bytes(root["subtasks"].list[0]), Data(raw.utf8))
     }
 
+    func testLegacySiblingEditsNeverConvertPreservedOrUnsupportedValuesToEmptyObjects() throws {
+        let original = try value(opaque)
+        let plain = JSON.object(["id": .string("plain"), "title": .string("Plain")])
+        let source = JSON.array([original, .string("Legacy text"), .number(2), plain])
+        let result = SubtaskTree.changing(source, id: "plain", fields: ["title": .string("Edited")])
+        for index in 0..<3 { XCTAssertEqual(try bytes(result.list[index]), try bytes(source.list[index])) }
+        XCTAssertEqual(result.list[3].object["title"], .string("Edited"))
+        XCTAssertEqual(try bytes(SubtaskTree.changing(original, id: "child", fields: ["title": .string("Must not replace")])) , try bytes(original))
+    }
+    func testLegacyIndentCannotReplaceAnOpaqueParentOrAnUnknownChildContainer() throws {
+        let original = try value(opaque), plain = JSON.object(["id": .string("plain"), "title": .string("Plain")])
+        let unsupported = JSON.object(["id": .string("parent"), "title": .string("Parent"), "subtasks": .string("Future checklist")])
+        for parent in [original, unsupported] {
+            let source = JSON.array([parent, plain]), before = try bytes(source)
+            XCTAssertThrowsError(try SubtaskTree.moving(source, id: "plain", direction: .indent))
+            XCTAssertEqual(try bytes(source), before)
+        }
+    }
+
 }
