@@ -435,23 +435,31 @@ struct TaskInspectorForm: View {
                     return true
                 })
                 ForEach(Array(draft["subtasks"].list.enumerated()), id: \.offset) { index, value in
-                    let title = SubtaskTree.inlineTitle(value)
-                    let completed = value.object["completed"]?.flag == true
+                    let preview = SubtaskTree.inlinePresentation(value)
+                    let title = preview.title
+                    let completed = preview.completed
                     let accessibleTitle = title.isEmpty ? "untitled subtask" : title
                     HStack {
-                        if TaskKind.mayComplete(Record(value.object)) {
+                        if TaskKind.mayComplete(preview) {
                         Button { var list = draft["subtasks"].list; var item = value.object; item["completed"] = .bool(!(item["completed"]?.flag ?? false)); list[index] = .object(item); draft["subtasks"] = .array(list) } label: {
-                            Image(systemName: value.object["completed"]?.flag == true ? "checkmark.circle.fill" : "circle").foregroundStyle(value.object["completed"]?.flag == true ? Color.taskfold : .secondary)
+                            Image(systemName: completed ? "checkmark.circle.fill" : "circle").foregroundStyle(completed ? Color.taskfold : .secondary)
                         }.buttonStyle(.borderless)
                             .accessibilityLabel((completed ? "Reopen " : "Complete ") + accessibleTitle)
                             .accessibilityValue(completed ? "Completed" : "Not completed")
                             .accessibilityIdentifier("subtaskCompletion-\(index)")
                         } else {
-                            Image(systemName: TaskKind(Record(value.object)) == .heading ? "textformat" : "questionmark.square")
-                                .foregroundStyle(.secondary).accessibilityLabel(TaskKind(Record(value.object)) == .heading ? "Heading, stays open" : "Task type unavailable")
+                            Image(systemName: TaskKind(preview) == .heading ? "textformat" : "questionmark.square")
+                                .foregroundStyle(.secondary).accessibilityLabel(TaskKind(preview) == .heading ? "Heading, stays open" : "Task type unavailable")
                         }
+                        if SubtaskTree.inlineEditable(value) {
                         TextField("Subtask", text: Binding(get: { SubtaskTree.inlineTitle(draft["subtasks"].list[index]) }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"), axis: .vertical)
                             .labelsHidden().textFieldStyle(.plain)
+                        } else {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(title.isEmpty ? "Subtask needs review" : title).accessibilityIdentifier("subtaskReadOnly-\(index)")
+                                Text("Review before editing").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
                         Button {
                             saveNow()
                             workspace.expandedTasks.insert(taskID)

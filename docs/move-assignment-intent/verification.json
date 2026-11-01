@@ -6,7 +6,8 @@
     "tests": 131,
     "failures": 0,
     "skipped": 0,
-    "logSHA256": "e59e6fe0c28595873a601f1dd92b28af0d20d356a063b89650f789fa1e728d86"
+    "logSHA256": "e59e6fe0c28595873a601f1dd92b28af0d20d356a063b89650f789fa1e728d86",
+    "scope": "Prior assignment-intent regression phase; the current preserved-display regression is recorded separately in ../inline-subtask-preview/verification.json."
   },
   "database": {
     "assertions": 101,
@@ -50,12 +51,11 @@
       "verifierReportSHA256": "0bfbf472471a04bd1e19f8aebf5c241268d5a9a216d1b48acd94e876c9413ddf"
     },
     "mac": {
-      "passed": false,
-      "accepted": false,
+      "passed": true,
+      "accepted": true,
       "originRepository": "TasskFold-MacOS",
-      "buildAndSignaturesPassed": true,
-      "scope": "Extended root assignee/Undo/Redo flow remains unaccepted; earlier separate project-change preservation/refusal acceptance remains historical proof.",
-      "attempts": [
+      "currentEvidence": "../inline-subtask-preview/mac/saved-data-verification.json",
+      "previousAttempts": [
         {
           "attempt": "v1",
           "result": "Failed",
@@ -76,10 +76,105 @@
           "summarySHA256": "188c4cd3fdea1e166ba39a0ed44348c54a2045da008a0ea3ca0d33c8e9694bb5",
           "logSHA256": "1988e5aeb91717ea40759d7b194ec3eb51e824292ffc568bcd1dc4d58bbd8dab"
         }
-      ]
+      ],
+      "resolvedBy": "Explicitly dismiss the project menu; observe the hidden inspector after clearing selection; reopen current details."
     }
   },
   "sourceProof": {
+    "Taskfold/Core/Models.swift": {
+      "sourceSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+      "hostSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "05d91a665d1d86bf89328e5939dfdeffe542175db5394f9f8f1812649b692267",
+      "hostSHA256": "1e44494046480891ad721352a0c653f18e522dd68c30f4feeb6ea8d8375e331c",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Backend.swift": {
+      "sourceSHA256": "30c00a1725672cb0791284070965d271dbe0ec8f76158e5a000f422f6ada4d9f",
+      "hostSHA256": "b721a94d8a760abc8167b0d77bc9188f7138df18894d6b694f8c8be2b3060937",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/TeamTaskMove.swift": {
+      "sourceSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+      "hostSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/SubtaskTree.swift": {
+      "sourceSHA256": "d4568e57da77b8e151b887c3b1fd473e3c1d4d74df76dc58b24e3e5abb6971ad",
+      "hostSHA256": "d4568e57da77b8e151b887c3b1fd473e3c1d4d74df76dc58b24e3e5abb6971ad",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/PreservingJSON.swift": {
+      "sourceSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+      "hostSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "sourceSHA256": "0c63556e80323a361deaccaf638c9ba3306185def7eb0ef0184beb6357f243ba",
+      "hostSHA256": "0c63556e80323a361deaccaf638c9ba3306185def7eb0ef0184beb6357f243ba",
+      "matchesDocumentedIsolation": true
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "sourceSHA256": "7342db18e8e0db29cc76e979538ac1bebd7905b0316f11a9052acc5233be34b9",
+      "hostSHA256": "7342db18e8e0db29cc76e979538ac1bebd7905b0316f11a9052acc5233be34b9",
+      "matchesDocumentedIsolation": true
+    }
+  },
+  "newIntentTestsSHA256": "ba8ebb43b36707562bf1c901c31eabf8cbed776775ca9934c61b4c0734cf3a36",
+  "macFirstAttempt": {
+    "passed": false,
+    "reason": "The source-bound inspector pauses after a project change. The test attempted another edit without reopening the current task.",
+    "correctedTestFlow": "Clear selection, reopen current details, then choose the destination assignee. No source/generation guard was relaxed."
+  },
+  "build": {
+    "repository": "TasskFold-MacOS",
+    "phase": "inline-preview",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "22eff49a0e9b28dc5043af50f4574095e7add4c43d75325c9de658c42e201062",
+    "appBinariesSHA256": {
+      "Taskfold": "36d025b3d36676c2a7d4bc302f17e8e694e0c2f7b970d495fadeb7fc3fcd46e9",
+      "Taskfold.debug.dylib": "baf523e98b1ab337f706fe69aa352bea993d70ca94cbf9f4bee1b25a5b019a9d"
+    }
+  },
+  "nativeBuildOrigins": {
+    "mac": {
+      "repository": "TasskFold-MacOS",
+      "phase": "inline-preview",
+      "appAndRunnerSignaturesVerified": true,
+      "logSHA256": "22eff49a0e9b28dc5043af50f4574095e7add4c43d75325c9de658c42e201062",
+      "appBinariesSHA256": {
+        "Taskfold": "36d025b3d36676c2a7d4bc302f17e8e694e0c2f7b970d495fadeb7fc3fcd46e9",
+        "Taskfold.debug.dylib": "baf523e98b1ab337f706fe69aa352bea993d70ca94cbf9f4bee1b25a5b019a9d"
+      }
+    },
+    "ios": {
+      "repository": "TaskFold-iOS",
+      "phase": "inline-preview",
+      "appAndRunnerSignaturesVerified": true,
+      "logSHA256": "c5b37fbeca9b10676400c1e7836e7c80b54a554f9a54c19818d8446d22bbffcd",
+      "appBinariesSHA256": {
+        "Taskfold": "a941dd32aafae136b214ceb13c0677d2cceaef285954912d4e31381863c7c795",
+        "Taskfold.debug.dylib": "1236bac4edfe68f2789cc278ae55dc02c09d2a229e59496befa183918cf133fb"
+      }
+    }
+  },
+  "independentVerifierSHA256": "02be4e54edc77f8690bc250703099d0dab89b00a0992da582e24c182d69f2004",
+  "wireTestsSHA256": "98d67e8e92d721aab32d87ec5840838cc013e12b0261c328564b4e01bd7a55e9",
+  "scope": "Root project/assignee history now has current local native Mac/iPhone/iPad proof in inline-subtask-preview, including exact source/saved/cold values. Earlier Core and SQL runs retain their original phases. Hosted delivery, wider accessibility and child-recipient/recurrence/custody work remain open.",
+  "latestNativeEvidence": "../inline-subtask-preview/verification.json",
+  "historicalBuild": {
+    "repository": "TasskFold-MacOS",
+    "phase": "move-assignment-v3",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "700927d7af0d10a7b9b4fd49cc9479d1d0d627ee9b4852922ea50dd47016da7d",
+    "appBinariesSHA256": {
+      "Taskfold": "f6a70e466e912584113f9bf0fbe59b8275c59a11f3a4dd491d0aa6c0d712dc40",
+      "Taskfold.debug.dylib": "a8684a9fc1f1814945df57bca8c5b879c43dfd6c916855b8865ce38f6a672438"
+    }
+  },
+  "historicalSourceProof": {
     "Taskfold/Collaboration.swift": {
       "sourceSHA256": "c59d8af53a42dd693ea73f0b1a79c723064224a193b6dad052166a606239add3",
       "hostSHA256": "c59d8af53a42dd693ea73f0b1a79c723064224a193b6dad052166a606239add3",
@@ -125,46 +220,5 @@
       "hostSHA256": "48fce526e7173528c2e291a9927a1f76caf8986a8a6cbcd61a9fca8ac5e451e1",
       "matchesDocumentedIsolation": true
     }
-  },
-  "newIntentTestsSHA256": "ba8ebb43b36707562bf1c901c31eabf8cbed776775ca9934c61b4c0734cf3a36",
-  "macFirstAttempt": {
-    "passed": false,
-    "reason": "The source-bound inspector pauses after a project change. The test attempted another edit without reopening the current task.",
-    "correctedTestFlow": "Clear selection, reopen current details, then choose the destination assignee. No source/generation guard was relaxed."
-  },
-  "build": {
-    "repository": "TasskFold-MacOS",
-    "phase": "move-assignment-v3",
-    "appAndRunnerSignaturesVerified": true,
-    "logSHA256": "700927d7af0d10a7b9b4fd49cc9479d1d0d627ee9b4852922ea50dd47016da7d",
-    "appBinariesSHA256": {
-      "Taskfold": "f6a70e466e912584113f9bf0fbe59b8275c59a11f3a4dd491d0aa6c0d712dc40",
-      "Taskfold.debug.dylib": "a8684a9fc1f1814945df57bca8c5b879c43dfd6c916855b8865ce38f6a672438"
-    }
-  },
-  "nativeBuildOrigins": {
-    "mac": {
-      "repository": "TasskFold-MacOS",
-      "phase": "move-assignment-v3",
-      "appAndRunnerSignaturesVerified": true,
-      "logSHA256": "700927d7af0d10a7b9b4fd49cc9479d1d0d627ee9b4852922ea50dd47016da7d",
-      "appBinariesSHA256": {
-        "Taskfold": "f6a70e466e912584113f9bf0fbe59b8275c59a11f3a4dd491d0aa6c0d712dc40",
-        "Taskfold.debug.dylib": "a8684a9fc1f1814945df57bca8c5b879c43dfd6c916855b8865ce38f6a672438"
-      }
-    },
-    "ios": {
-      "repository": "TaskFold-iOS",
-      "phase": "move-assignment-v2",
-      "appAndRunnerSignaturesVerified": true,
-      "logSHA256": "a3f45e2790f6ab3ac12127e5eb2d533a4ffe5e0c50a48427c2922efe7a411ed3",
-      "appBinariesSHA256": {
-        "Taskfold": "b174b0fd37c052b096cd24d4daaac4422ebe8d131d0b58d83c0f737ac684cd7b",
-        "Taskfold.debug.dylib": "0599192accee6736146786ae13208df47a20344d7893f3d930eb88b9475a192f"
-      }
-    }
-  },
-  "independentVerifierSHA256": "02be4e54edc77f8690bc250703099d0dab89b00a0992da582e24c182d69f2004",
-  "wireTestsSHA256": "98d67e8e92d721aab32d87ec5840838cc013e12b0261c328564b4e01bd7a55e9",
-  "scope": "Core/local database guard and local mobile native root assignee history. Extended Mac native history, hosted delivery and broader child-recipient/recurrence/custody integration remain open."
+  }
 }

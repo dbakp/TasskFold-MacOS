@@ -6030,14 +6030,28 @@ extension TaskfoldMacUITests {
         let app = XCUIApplication(); defer { app.terminate() }
         let cache = try assignmentStart(app, unsupported: false)
         try assignmentAttach(cache, name: "Explicit assignment original")
+        let beforePreview = try Data(contentsOf: cache)
+        let preview = app.staticTexts["subtaskReadOnly-0"]
+        let previewInspector = app.scrollViews.containing(.textField, identifier: "taskTitle").firstMatch
+        for _ in 0..<12 where !preview.isHittable { previewInspector.scroll(byDeltaX: 0, deltaY: -180) }
+        XCTAssertTrue(preview.isHittable, app.debugDescription)
+        XCTAssertEqual(preview.value as? String ?? preview.label, "Preserve every detail")
+        let previewShot = XCTAttachment(screenshot: preview.screenshot()); previewShot.name = "Exact preserved subtask title is readable"; previewShot.lifetime = .keepAlways; add(previewShot)
+        XCTAssertEqual(try Data(contentsOf: cache), beforePreview, "Reading the preview must not rewrite its source")
+        let readOnlyCompletion = app.buttons["subtaskCompletion-0"]
+        XCTAssertEqual(readOnlyCompletion.label, "Complete Preserve every detail")
+        XCTAssertFalse(readOnlyCompletion.isEnabled, "Previewing preserved metadata must not enable the replacement writer")
+        let returnPicker = app.popUpButtons["taskProjectPicker"]
+        for _ in 0..<12 where !returnPicker.isHittable { previewInspector.scroll(byDeltaX: 0, deltaY: 180) }
         assignmentChooseDestination(app)
         // The Mac autosaves the move before the separate assignee selection.
         try assignmentWaitForRoot(cache, project: assignmentDestinationID, assignee: nil, app: app)
-        // The source-bound inspector pauses after a project change. Reopen the
-        // current task before making a separate destination assignment.
+        // Accessibility menu selection leaves the popup open. Close it before
+        // routing Escape to the list, then reopen the new source-bound editor.
+        app.typeKey(.escape, modifierFlags: [])
         let taskRow = app.staticTexts["title-" + assignmentRootID].firstMatch
         taskRow.click(); app.typeKey(.escape, modifierFlags: [])
-        XCTAssertTrue(app.staticTexts["No Task Selected"].waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(app.scrollViews["inspector"].waitForNonExistence(timeout: 5), app.debugDescription)
         taskRow.click(); app.typeKey(.return, modifierFlags: [])
         XCTAssertTrue(app.textFields["taskTitle"].waitForExistence(timeout: 8), app.debugDescription)
         let assign = app.buttons["taskAssignee"]

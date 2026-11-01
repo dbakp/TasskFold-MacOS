@@ -1,0 +1,62 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "07C1D75E-5512-46B0-A26E-9924496ACA98.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment cold return_0_456D3FC4-D6F3-4B59-AA99-862334459CC7.json",
+        "timestamp" : 1793567820.678
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "7F867635-F9E5-48B1-B923-59AF14871C69.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment redone_0_E5AB744A-606B-4D53-A809-A0D19EF4E278.json",
+        "timestamp" : 1793567813.078
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "CB6C2C5A-9B20-4178-A912-1BA94836528B.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment undone_0_25256C69-AF68-4FEB-94C8-0FA9DA54E1AD.json",
+        "timestamp" : 1793567810.195
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "06A9514F-A1F8-4561-868C-8F9A41DB8A64.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment moved_0_FD4DFD62-F534-4D69-9048-7C4AA648D95E.json",
+        "timestamp" : 1793567805.858
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "466DFC9B-E801-4903-B277-2B267B155E3F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Exact preserved subtask title is readable_0_278634A3-8EDE-4793-9FC6-AF2212B31C29.png",
+        "timestamp" : 1793567784.858
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "00006000-000C59161EC3801E",
+        "deviceName" : "My Mac",
+        "exportedFileName" : "3D716052-AFF0-42D3-AC68-34C5F74FB980.json",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Explicit assignment original_0_56A220D3-FB4C-47DA-AAB3-0567F4F7DA24.json",
+        "timestamp" : 1793567778.609
+      }
+    ],
+    "testIdentifier" : "TaskfoldMacUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn()",
+    "testIdentifierURL" : "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldMacUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn"
+  }
+]

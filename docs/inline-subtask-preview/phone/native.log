@@ -1,0 +1,208 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-prepared-undo-signed-ios-build -destination "platform=iOS Simulator,id=F2ACCCB5-E5B3-426F-B962-955A113D4EF4" -parallel-testing-enabled NO -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 180 -maximum-test-execution-time-allowance 240 -resultBundlePath /tmp/taskfold-assignment-history-native-phone-v2.xcresult "-only-testing:TaskfoldUITests/TaskfoldUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn" test-without-building
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/tmp/taskfold-assignment-history-native-phone-v2.xcresult
+
+2026-11-01 22:07:01.130470+0100 TaskfoldUITests-Runner[26885:40731412] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-01 22:07:08.358.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-11-01 22:07:08.359.
+Test Suite 'TaskfoldUITests' started at 2026-11-01 22:07:08.359.
+Test Case '-[TaskfoldUITests.TaskfoldUITests testProjectMoveExplicitAssigneeUndoRedoAndColdReturn]' started.
+    t =     0.01s Start Test at 2026-11-01 22:07:08.368
+    t =     0.50s Set Up
+    t =     0.51s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =     0.52s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-11-01 22:07:09.374 xcodebuild[26549:40727753] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 22:07:09.374 xcodebuild[26549:40727753] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[26885]: Class UIAccessibilityLoaderWebShared is implemented in both /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1045e4398) and /private/var/run/com.apple.security.cryptexd/mnt/com.apple.iPhoneOS.SimulatorRuntime-v24.1.434.0.XJm8r8/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x105554310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     4.86s         Setting up automation session
+    t =    10.02s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    13.37s Checking existence of `"Today" Button`
+    t =    13.67s Waiting 12.0s for "Today" Button to exist
+    t =    14.75s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" Button`
+    t =    14.75s         Checking existence of `"Today" Button`
+    t =    15.88s Terminate com.dbakp.taskfold.workflowteststeameditbridge:26955
+    t =    16.90s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    16.90s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-11-01 22:07:25.269 xcodebuild[26549:40727753] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 22:07:25.270 xcodebuild[26549:40727753] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    17.13s         Setting up automation session
+    t =    22.01s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.59s Checking existence of `"Today" Button`
+    t =    25.94s Tap "Today" Button
+    t =    25.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    25.98s     Find the "Today" Button
+    t =    26.04s     Check for interrupting elements affecting "Today" Button
+    t =    26.74s     Synthesize event
+    t =    27.29s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    28.89s Waiting 12.0s for "taskDetails-a5110000-0000-4000-8000-000000000001" Button to exist
+    t =    29.96s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-a5110000-0000-4000-8000-000000000001" Button`
+    t =    29.96s         Checking existence of `"taskDetails-a5110000-0000-4000-8000-000000000001" Button`
+    t =    30.08s Tap "taskDetails-a5110000-0000-4000-8000-000000000001" Button
+    t =    30.08s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    30.08s     Find the "taskDetails-a5110000-0000-4000-8000-000000000001" Button
+    t =    30.12s     Check for interrupting elements affecting "taskDetails-a5110000-0000-4000-8000-000000000001" Button
+    t =    30.17s     Synthesize event
+    t =    30.48s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    31.67s Waiting 8.0s for "taskTitle" TextField to exist
+    t =    32.76s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    32.76s         Checking existence of `"taskTitle" TextField`
+    t =    32.95s Added attachment named 'Explicit assignment original'
+    t =    32.95s Checking existence of `"subtaskReadOnly-0" StaticText`
+    t =    33.03s Get number of matches for: Elements matching predicate '"taskEditorForm" IN identifiers'
+    t =    33.11s Swipe up "taskEditorForm" CollectionView
+    t =    33.11s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    33.12s     Find the "taskEditorForm" CollectionView
+    t =    33.20s     Check for interrupting elements affecting "taskEditorForm" CollectionView
+    t =    33.28s     Synthesize event
+    t =    33.74s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    35.93s Checking existence of `"subtaskReadOnly-0" StaticText`
+    t =    36.04s Find the "subtaskReadOnly-0" StaticText
+    t =    36.14s Find the "subtaskReadOnly-0" StaticText
+    t =    36.24s Find the "subtaskReadOnly-0" StaticText
+    t =    36.34s Checking existence of `"subtaskReadOnly-0" StaticText`
+    t =    36.43s Find the "subtaskReadOnly-0" StaticText
+    t =    36.65s Added attachment named 'Exact preserved subtask title is readable'
+    t =    36.66s Find the "subtaskCompletion-0" Button
+    t =    36.75s Find the "subtaskCompletion-0" Button
+    t =    36.84s Find the "taskProjectPicker" Any
+    t =    37.14s Find the "taskProjectPicker" Button
+    t =    37.45s Find the "taskProjectPicker" Button
+    t =    37.75s Find the "taskProjectPicker" Button
+    t =    38.05s Find the "taskProjectPicker" Button
+    t =    38.35s Find the "taskProjectPicker" Button
+    t =    38.67s Find the "taskProjectPicker" Button
+    t =    38.97s Find the "taskProjectPicker" Button
+    t =    39.26s Find the "taskProjectPicker" Button
+    t =    39.54s Find the "taskProjectPicker" Button
+    t =    39.84s Find the "taskProjectPicker" Button
+    t =    40.15s Find the "taskProjectPicker" Button
+    t =    40.51s Checking existence of `"taskProjectPicker" Any`
+    t =    40.81s Find the "taskProjectPicker" Any
+    t =    41.10s Find the "taskProjectPicker" Button
+    t =    41.39s Tap "taskProjectPicker" Button
+    t =    41.39s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    41.40s     Find the "taskProjectPicker" Button
+    t =    41.67s     Check for interrupting elements affecting "taskProjectPicker" Button
+    t =    41.78s     Synthesize event
+    t =    42.09s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    42.25s Waiting 8.0s for "Assignment destination" Button to exist
+    t =    43.33s     Checking `Expect predicate `existsNoRetry == 1` for object "Assignment destination" Button`
+    t =    43.34s         Checking existence of `"Assignment destination" Button`
+    t =    43.41s Tap "Assignment destination" Button
+    t =    43.41s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    43.51s     Find the "Assignment destination" Button
+    t =    43.56s     Check for interrupting elements affecting "Assignment destination" Button
+    t =    43.66s     Synthesize event
+    t =    43.97s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.49s Checking existence of `"taskAssignee" Button`
+    t =    45.57s Find the "taskAssignee" Button
+    t =    45.66s Find the "taskAssignee" Button
+    t =    45.75s Tap "taskAssignee" Button
+    t =    45.75s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    45.76s     Find the "taskAssignee" Button
+    t =    45.85s     Check for interrupting elements affecting "taskAssignee" Button
+    t =    45.92s     Synthesize event
+    t =    46.23s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    46.77s Waiting 8.0s for "assignee-ui-testing" Button to exist
+    t =    47.84s     Checking `Expect predicate `existsNoRetry == 1` for object "assignee-ui-testing" Button`
+    t =    47.84s         Checking existence of `"assignee-ui-testing" Button`
+    t =    47.91s Tap "assignee-ui-testing" Button
+    t =    47.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    47.92s     Find the "assignee-ui-testing" Button
+    t =    47.97s     Check for interrupting elements affecting "assignee-ui-testing" Button
+    t =    48.02s     Synthesize event
+    t =    48.32s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.69s Tap "saveTask" Button
+    t =    48.69s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    48.70s     Find the "saveTask" Button
+    t =    48.79s     Check for interrupting elements affecting "saveTask" Button
+    t =    48.88s     Synthesize event
+    t =    49.18s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    49.29s Waiting 10.0s for "saveTask" Button to not exist
+    t =    50.34s     Checking `Expect predicate `existsNoRetry == 0` for object "saveTask" Button`
+    t =    50.34s         Checking existence of `"saveTask" Button`
+    t =    51.94s Added attachment named 'Explicit assignment moved'
+    t =    51.94s Tap "Task options" Button
+    t =    51.94s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    51.98s     Find the "Task options" Button
+    t =    52.11s     Check for interrupting elements affecting "Task options" Button
+    t =    52.41s     Synthesize event
+    t =    53.12s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    53.91s Tap "Undo & redo" Button
+    t =    53.91s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    53.93s     Find the "Undo & redo" Button
+    t =    54.04s     Check for interrupting elements affecting "Undo & redo" Button
+    t =    54.12s     Synthesize event
+    t =    54.44s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    55.63s Tap "Undo" Button
+    t =    55.63s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    55.64s     Find the "Undo" Button
+    t =    55.70s     Check for interrupting elements affecting "Undo" Button
+    t =    55.78s     Synthesize event
+    t =    56.14s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    58.31s Added attachment named 'Explicit assignment undone'
+    t =    58.31s Tap "Task options" Button
+    t =    58.31s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    58.32s     Find the "Task options" Button
+    t =    58.41s     Check for interrupting elements affecting "Task options" Button
+    t =    58.48s     Synthesize event
+    t =    58.80s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    59.66s Tap "Undo & redo" Button
+    t =    59.66s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    59.67s     Find the "Undo & redo" Button
+    t =    59.74s     Check for interrupting elements affecting "Undo & redo" Button
+    t =    59.79s     Synthesize event
+    t =    60.13s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    61.24s Tap "Redo" Button
+    t =    61.24s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    61.24s     Find the "Redo" Button
+    t =    61.30s     Check for interrupting elements affecting "Redo" Button
+    t =    61.37s     Synthesize event
+    t =    61.67s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    63.82s Added attachment named 'Explicit assignment redone'
+    t =    63.82s Terminate com.dbakp.taskfold.workflowteststeameditbridge:27018
+    t =    64.84s Open com.dbakp.taskfold.workflowteststeameditbridge
+    t =    64.84s     Launch com.dbakp.taskfold.workflowteststeameditbridge
+2026-11-01 22:08:13.215 xcodebuild[26549:40727753] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 22:08:13.215 xcodebuild[26549:40727753] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    67.58s         Setting up automation session
+    t =    73.48s         Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    76.91s Checking existence of `"Today" Button`
+    t =    77.40s Tap "Today" Button
+    t =    77.40s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    77.43s     Find the "Today" Button
+    t =    77.45s     Check for interrupting elements affecting "Today" Button
+    t =    77.63s     Synthesize event
+    t =    77.98s     Wait for com.dbakp.taskfold.workflowteststeameditbridge to idle
+    t =    79.79s Waiting 12.0s for "taskDetails-a5110000-0000-4000-8000-000000000001" Button to exist
+    t =    80.85s     Checking `Expect predicate `existsNoRetry == 1` for object "taskDetails-a5110000-0000-4000-8000-000000000001" Button`
+    t =    80.85s         Checking existence of `"taskDetails-a5110000-0000-4000-8000-000000000001" Button`
+    t =    82.06s Added attachment named 'Explicit assignment cold return'
+    t =    82.06s Terminate com.dbakp.taskfold.workflowteststeameditbridge:27218
+    t =    83.12s Tear Down
+Test Case '-[TaskfoldUITests.TaskfoldUITests testProjectMoveExplicitAssigneeUndoRedoAndColdReturn]' passed (83.352 seconds).
+Test Suite 'TaskfoldUITests' passed at 2026-11-01 22:08:31.721.
+	 Executed 1 test, with 0 failures (0 unexpected) in 83.352 (83.362) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-11-01 22:08:31.729.
+	 Executed 1 test, with 0 failures (0 unexpected) in 83.352 (83.370) seconds
+Test Suite 'Selected tests' passed at 2026-11-01 22:08:31.729.
+	 Executed 1 test, with 0 failures (0 unexpected) in 83.352 (83.371) seconds
+2026-11-01 22:08:32.325 xcodebuild[26549:40727753] [MT] IDETestOperationsObserverDebug: 132.719 elapsed -- Testing started completed.
+2026-11-01 22:08:32.325 xcodebuild[26549:40727753] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-01 22:08:32.325 xcodebuild[26549:40727753] [MT] IDETestOperationsObserverDebug: 132.719 sec, +132.719 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-assignment-history-native-phone-v2.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

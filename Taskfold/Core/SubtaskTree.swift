@@ -8,7 +8,12 @@ enum SubtaskTree {
     }
     static func hasListContainer(_ value: JSON) -> Bool { if value == .null { return true }; if case .array = value { return true }; return false }
     static func inlineEditable(_ value: JSON) -> Bool { if case .object(let fields) = value, case .string? = fields["title"] { return true }; return false }
-    static func inlineTitle(_ value: JSON) -> String { if case .string(let text) = value { return text }; return value.object["title"]?.text ?? "" }
+    /// This read-only projection never authorizes replacing an opaque child.
+    static func inlinePresentation(_ value: JSON) -> Record {
+        if case .string(let text) = value { return Record(["title": .string(text)]) }
+        return Record((try? value.readingASCIIFields(["title", "completed", "is_heading"])) ?? [:])
+    }
+    static func inlineTitle(_ value: JSON) -> String { inlinePresentation(value).title }
     static func childKey(_ value: JSON, index: Int) -> String { value.object["id"]?.text.isEmpty == false ? value.object["id"]!.text : "@\(index)" }
     /// Legacy positional paths remain readable, but neither duplicated references
     /// nor unknown/text-only nodes may become an arbitrary editable child.

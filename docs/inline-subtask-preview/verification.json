@@ -1,0 +1,235 @@
+{
+  "date": "2026-11-01",
+  "repository": "TasskFold-MacOS",
+  "sourceBaselineCommit": "3d187994947394da60c581d005f0db062d7f2bc1",
+  "core": {
+    "tests": 115,
+    "failures": 0,
+    "skipped": 0,
+    "logSHA256": "b73693262b31a8c1acbd8aaf01b88b9b0910603af37d22e85d29b5d84f36e904"
+  },
+  "native": {
+    "mac": {
+      "passed": true,
+      "accepted": true,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "00006000-000C59161EC3801E",
+        "deviceName": "My Mac",
+        "modelName": "MacBook Pro",
+        "osBuildNumber": "25G83",
+        "osVersion": "26.6.2",
+        "platform": "macOS"
+      },
+      "originRepository": "TasskFold-MacOS",
+      "savedDataVerifierSHA256": "f973bcfdd918d8b658f1a1b7782a65b2c736cf9651bec31bfc92052b0127988b",
+      "visibleTitleAndDisabledControlAsserted": true,
+      "previewSourceBytesUntouchedAsserted": true
+    },
+    "phone": {
+      "passed": true,
+      "accepted": true,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+        "deviceName": "iPhone 18 Pro",
+        "modelName": "iPhone 18 Pro",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "originRepository": "TaskFold-iOS",
+      "savedDataVerifierSHA256": "71b5a4fa32f5a555e52e10e861b86edd457f47213b6a26196b117839e1ec0dd9",
+      "visibleTitleAndDisabledControlAsserted": true,
+      "previewSourceBytesUntouchedAsserted": true
+    },
+    "ipad": {
+      "passed": true,
+      "accepted": true,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+        "deviceName": "iPad Pro 13-inch (M5)",
+        "modelName": "iPad Pro 13-inch (M5)",
+        "osBuildNumber": "24A434",
+        "osVersion": "27.0",
+        "platform": "iOS Simulator"
+      },
+      "originRepository": "TaskFold-iOS",
+      "savedDataVerifierSHA256": "45793f372f8dab3ff2b79c720736cc6d51174544cf819c0692de81e080bd1897",
+      "visibleTitleAndDisabledControlAsserted": true,
+      "previewSourceBytesUntouchedAsserted": true
+    }
+  },
+  "schemaChanged": false,
+  "hostedChanges": false,
+  "normalUseGatesChanged": false,
+  "inlineWritePermissionExpanded": false,
+  "knownFieldsRead": [
+    "title",
+    "completed",
+    "is_heading"
+  ],
+  "build": {
+    "repository": "TasskFold-MacOS",
+    "phase": "inline-preview",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "22eff49a0e9b28dc5043af50f4574095e7add4c43d75325c9de658c42e201062",
+    "appBinariesSHA256": {
+      "Taskfold": "36d025b3d36676c2a7d4bc302f17e8e694e0c2f7b970d495fadeb7fc3fcd46e9",
+      "Taskfold.debug.dylib": "baf523e98b1ab337f706fe69aa352bea993d70ca94cbf9f4bee1b25a5b019a9d"
+    }
+  },
+  "nativeBuildOrigins": {
+    "mac": {
+      "repository": "TasskFold-MacOS",
+      "phase": "inline-preview",
+      "appAndRunnerSignaturesVerified": true,
+      "logSHA256": "22eff49a0e9b28dc5043af50f4574095e7add4c43d75325c9de658c42e201062",
+      "appBinariesSHA256": {
+        "Taskfold": "36d025b3d36676c2a7d4bc302f17e8e694e0c2f7b970d495fadeb7fc3fcd46e9",
+        "Taskfold.debug.dylib": "baf523e98b1ab337f706fe69aa352bea993d70ca94cbf9f4bee1b25a5b019a9d"
+      }
+    },
+    "ios": {
+      "repository": "TaskFold-iOS",
+      "phase": "inline-preview",
+      "appAndRunnerSignaturesVerified": true,
+      "logSHA256": "c5b37fbeca9b10676400c1e7836e7c80b54a554f9a54c19818d8446d22bbffcd",
+      "appBinariesSHA256": {
+        "Taskfold": "a941dd32aafae136b214ceb13c0677d2cceaef285954912d4e31381863c7c795",
+        "Taskfold.debug.dylib": "1236bac4edfe68f2789cc278ae55dc02c09d2a229e59496befa183918cf133fb"
+      }
+    }
+  },
+  "sourceProof": {
+    "Taskfold/Core/Models.swift": {
+      "sourceSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+      "hostSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "sourceSHA256": "05d91a665d1d86bf89328e5939dfdeffe542175db5394f9f8f1812649b692267",
+      "hostSHA256": "1e44494046480891ad721352a0c653f18e522dd68c30f4feeb6ea8d8375e331c",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Backend.swift": {
+      "sourceSHA256": "30c00a1725672cb0791284070965d271dbe0ec8f76158e5a000f422f6ada4d9f",
+      "hostSHA256": "b721a94d8a760abc8167b0d77bc9188f7138df18894d6b694f8c8be2b3060937",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/TeamTaskMove.swift": {
+      "sourceSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+      "hostSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/SubtaskTree.swift": {
+      "sourceSHA256": "d4568e57da77b8e151b887c3b1fd473e3c1d4d74df76dc58b24e3e5abb6971ad",
+      "hostSHA256": "d4568e57da77b8e151b887c3b1fd473e3c1d4d74df76dc58b24e3e5abb6971ad",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/PreservingJSON.swift": {
+      "sourceSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+      "hostSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "sourceSHA256": "0c63556e80323a361deaccaf638c9ba3306185def7eb0ef0184beb6357f243ba",
+      "hostSHA256": "0c63556e80323a361deaccaf638c9ba3306185def7eb0ef0184beb6357f243ba",
+      "matchesDocumentedIsolation": true
+    },
+    "TaskfoldUITests/TaskfoldMacUITests.swift": {
+      "sourceSHA256": "7342db18e8e0db29cc76e979538ac1bebd7905b0316f11a9052acc5233be34b9",
+      "hostSHA256": "7342db18e8e0db29cc76e979538ac1bebd7905b0316f11a9052acc5233be34b9",
+      "matchesDocumentedIsolation": true
+    }
+  },
+  "nativeSourceOrigins": {
+    "mac": {
+      "Taskfold/Core/Models.swift": {
+        "sourceSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+        "hostSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/Store.swift": {
+        "sourceSHA256": "05d91a665d1d86bf89328e5939dfdeffe542175db5394f9f8f1812649b692267",
+        "hostSHA256": "1e44494046480891ad721352a0c653f18e522dd68c30f4feeb6ea8d8375e331c",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/Backend.swift": {
+        "sourceSHA256": "30c00a1725672cb0791284070965d271dbe0ec8f76158e5a000f422f6ada4d9f",
+        "hostSHA256": "b721a94d8a760abc8167b0d77bc9188f7138df18894d6b694f8c8be2b3060937",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/TeamTaskMove.swift": {
+        "sourceSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+        "hostSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/SubtaskTree.swift": {
+        "sourceSHA256": "d4568e57da77b8e151b887c3b1fd473e3c1d4d74df76dc58b24e3e5abb6971ad",
+        "hostSHA256": "d4568e57da77b8e151b887c3b1fd473e3c1d4d74df76dc58b24e3e5abb6971ad",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/PreservingJSON.swift": {
+        "sourceSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+        "hostSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Views/TaskInspector.swift": {
+        "sourceSHA256": "0c63556e80323a361deaccaf638c9ba3306185def7eb0ef0184beb6357f243ba",
+        "hostSHA256": "0c63556e80323a361deaccaf638c9ba3306185def7eb0ef0184beb6357f243ba",
+        "matchesDocumentedIsolation": true
+      },
+      "TaskfoldUITests/TaskfoldMacUITests.swift": {
+        "sourceSHA256": "7342db18e8e0db29cc76e979538ac1bebd7905b0316f11a9052acc5233be34b9",
+        "hostSHA256": "7342db18e8e0db29cc76e979538ac1bebd7905b0316f11a9052acc5233be34b9",
+        "matchesDocumentedIsolation": true
+      }
+    },
+    "ios": {
+      "Taskfold/Core/Models.swift": {
+        "sourceSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+        "hostSHA256": "a4da8a72252ec377c4851890d085e0445755173866ee572b2a7ac704723e088f",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/Store.swift": {
+        "sourceSHA256": "6b0a94f4bdc4dcced5282d5ceb2e2e55ca7c3b2c2c247b2febc74dc29f0442d1",
+        "hostSHA256": "5456bffa00285ad8fd40c96bdef4b3dfbf1afd58c88fc4ca76cef73f7e80e22d",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/Backend.swift": {
+        "sourceSHA256": "87bd6e528bfb542e27f54f060062efaddf8ca8a0aae8b49ad3d95b123616f146",
+        "hostSHA256": "a7cc973f26df978d8b8a8685b996d1c5eac789ff266d1da795039d7785da2281",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/TeamTaskMove.swift": {
+        "sourceSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+        "hostSHA256": "1830e9932fd8af333807e3f291e6b544caa0a9b495b957f4a24c0987774e045e",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/SubtaskTree.swift": {
+        "sourceSHA256": "d4568e57da77b8e151b887c3b1fd473e3c1d4d74df76dc58b24e3e5abb6971ad",
+        "hostSHA256": "d4568e57da77b8e151b887c3b1fd473e3c1d4d74df76dc58b24e3e5abb6971ad",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Core/PreservingJSON.swift": {
+        "sourceSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+        "hostSHA256": "f29aa14b033e09ae8ca63f2c7831613dcc15e8f0547d08ec10b3257c68fc2f52",
+        "matchesDocumentedIsolation": true
+      },
+      "Taskfold/Views/TaskEditor.swift": {
+        "sourceSHA256": "8d08423f60413dcc4942d60534c41c89a153a8758fb1c971dec1814c8b7dd035",
+        "hostSHA256": "8d08423f60413dcc4942d60534c41c89a153a8758fb1c971dec1814c8b7dd035",
+        "matchesDocumentedIsolation": true
+      },
+      "TaskfoldUITests/TaskfoldUITests.swift": {
+        "sourceSHA256": "647a459f6a2f943a70d872c4c7884ccbcd7f6ae7d20250284d4a11575b035d64",
+        "hostSHA256": "647a459f6a2f943a70d872c4c7884ccbcd7f6ae7d20250284d4a11575b035d64",
+        "matchesDocumentedIsolation": true
+      }
+    }
+  },
+  "testsSHA256": "8a53f01167b375d719292ff3dce7ebd97830e8bd626caa3c6463a9d3cb8f867b",
+  "scope": "Synthetic local read-only title/control visibility and byte-preserving preview, then root project/assignee Undo/Redo and cold return on Mac/iPhone/iPad. No cloud, speech or universal accessibility claim."
+}

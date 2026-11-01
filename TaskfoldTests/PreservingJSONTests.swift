@@ -158,3 +158,47 @@ final class PreservingJSONTests: XCTestCase {
     }
 
 }
+
+extension PreservingJSONTests {
+    func testInlinePreviewReadsTitleAndStatusWithoutFlatteningExactMetadata() throws {
+        let raw = #"{"title":"Review the exact design","completed":true,"is_heading":false,"é":9007199254740993,"e\u0301":17,"future":{"large":1e1000,"subtasks":{"unknown":"Keep every detail"}}}"#
+        let value = try decode(raw), before = try encode(value)
+        let preview = SubtaskTree.inlinePresentation(value)
+        XCTAssertEqual(preview.title, "Review the exact design"); XCTAssertTrue(preview.completed)
+        XCTAssertEqual(TaskKind(preview), .task)
+        XCTAssertEqual(Set(preview.fields.keys), ["title", "completed", "is_heading"])
+        XCTAssertFalse(SubtaskTree.inlineEditable(value), "Reading known fields must not authorize a full-object replacement")
+        XCTAssertEqual(SubtaskTree.inlineTitle(value), preview.title)
+        XCTAssertEqual(try encode(value), before); XCTAssertEqual(before, Data(raw.utf8))
+    }
+    func testInlinePreviewRetainsHeadingAndUnknownTypeSemantics() throws {
+        for (kind, expected) in [("true", TaskKind.heading), (#""future-kind""#, TaskKind.unsupported)] {
+            let value = try decode("{\"title\":\"Keep the context\",\"is_heading\":" + kind + ",\"é\":1,\"e\\u0301\":2}")
+            let preview = SubtaskTree.inlinePresentation(value)
+            XCTAssertEqual(TaskKind(preview), expected); XCTAssertFalse(TaskKind.mayComplete(preview))
+            XCTAssertEqual(preview.title, "Keep the context"); XCTAssertFalse(SubtaskTree.inlineEditable(value))
+        }
+    }
+    func testSelectedDisplayFieldsExcludeUnknownAndNonASCIIFields() throws {
+        let value = try decode(#"{"title":"Visible","completed":false,"é":1,"e\u0301":2,"future":[1e1000,9007199254740993]}"#)
+        let selected = try value.readingASCIIFields(["title", "completed"])
+        XCTAssertEqual(selected, ["title": .string("Visible"), "completed": .bool(false)])
+        XCTAssertThrowsError(try value.readingASCIIFields(["é"]))
+        XCTAssertThrowsError(try JSON.array([]).readingASCIIFields(["title"]))
+        XCTAssertEqual(SubtaskTree.inlinePresentation(.number(7)).title, "")
+    }
+    func testAmbiguousDisplayFieldNamesRefuseInsteadOfChoosingOneTitle() throws {
+        let raw = #"{"title":"First","ti\u0074le":"Second","é":1,"e\u0301":2}"#
+        XCTAssertThrowsError(try decode(raw), "Ambiguous known fields must be rejected at the decoding boundary")
+        let value = try decode(#"{"title":7,"é":1,"e\u0301":2}"#)
+        XCTAssertEqual(SubtaskTree.inlinePresentation(value).title, "")
+        XCTAssertFalse(SubtaskTree.inlineEditable(value))
+    }
+    func testInlineReadOnlyPreviewSurvivesColdDecodeWithOriginalBytes() throws {
+        let raw = #"{"title":"Cold preview","completed":true,"é":9007199254740993,"e\u0301":17,"subtasks":null}"#
+        let value = try decode(raw), cold = try decode(String(decoding: encode(value), as: UTF8.self))
+        XCTAssertEqual(SubtaskTree.inlinePresentation(cold), SubtaskTree.inlinePresentation(value))
+        XCTAssertFalse(SubtaskTree.inlineEditable(cold)); XCTAssertEqual(try encode(cold), Data(raw.utf8))
+        XCTAssertEqual(SubtaskTree.inlineTitle(.string("Legacy text")), "Legacy text")
+    }
+}

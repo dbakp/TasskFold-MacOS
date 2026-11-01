@@ -343,14 +343,20 @@ private struct PreservingJSONSyntax {
 /// A projection is only for field-level editors/patches. It must never replace
 /// the source object: Swift cannot represent its distinct canonically-equal keys.
 extension JSON {
-    func fieldEditingProjection() throws -> [String: JSON] {
+    func fieldEditingProjection() throws -> [String: JSON] { try asciiProjection(only: nil) }
+    /// Read selected display fields without decoding or replacing unrelated values.
+    func readingASCIIFields(_ names: Set<String>) throws -> [String: JSON] {
+        guard names.allSatisfy(Self.asciiField) else { throw PreservedJSONFailure.ambiguousMetadata }
+        return try asciiProjection(only: names)
+    }
+    private func asciiProjection(only names: Set<String>?) throws -> [String: JSON] {
         switch self {
-        case .object(let fields): return fields.filter { $0.key.utf8.allSatisfy { $0 < 128 } }
+        case .object(let fields): return fields.filter { $0.key.utf8.allSatisfy { $0 < 128 } && (names?.contains($0.key) ?? true) }
         case .preserved(let source) where source.kind == .object:
             var syntax = PreservingJSONSyntax(data: source.data, detectOpaque: false)
             let members = try syntax.objectMembers()
             var fields: [String: JSON] = [:]
-            for member in members where member.key.utf8.allSatisfy({ $0 < 128 }) {
+            for member in members where member.key.utf8.allSatisfy({ $0 < 128 }) && (names?.contains(member.key) ?? true) {
                 fields[member.key] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(syntax.bytes[member.value]))
             }
             return fields

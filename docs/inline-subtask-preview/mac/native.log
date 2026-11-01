@@ -1,0 +1,319 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /tmp/taskfold-owner-review-mac-host/Taskfold.xcodeproj -scheme Taskfold -configuration Debug -derivedDataPath /tmp/taskfold-workflow-native-mac-build -destination platform=macOS -parallel-testing-enabled NO -collect-test-diagnostics never -test-timeouts-enabled YES -default-test-execution-time-allowance 180 -maximum-test-execution-time-allowance 240 -resultBundlePath /tmp/taskfold-assignment-history-native-mac-v4.xcresult "-only-testing:TaskfoldUITests/TaskfoldMacUITests/testProjectMoveExplicitAssigneeUndoRedoAndColdReturn" test-without-building
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  AppAuth: https://github.com/openid/AppAuth-iOS.git @ 3.0.0
+
+Writing result bundle at path:
+	/tmp/taskfold-assignment-history-native-mac-v4.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006000-000C59161EC3801E, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00006000-000C59161EC3801E, name:My Mac }
+2026-11-01 22:16:03.908102+0100 TaskfoldUITests-Runner[29958:40767264] [Default] Running tests...
+Test Suite 'Selected tests' started at 2026-11-01 22:16:04.204.
+Test Suite 'TaskfoldUITests.xctest' started at 2026-11-01 22:16:04.205.
+Test Suite 'TaskfoldMacUITests' started at 2026-11-01 22:16:04.205.
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testProjectMoveExplicitAssigneeUndoRedoAndColdReturn]' started.
+    t =     0.00s Start Test at 2026-11-01 22:16:04.206
+    t =     0.73s Set Up
+    t =     0.79s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     0.79s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-11-01 22:16:05.588 xcodebuild[29931:40766833] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 22:16:05.589 xcodebuild[29931:40766833] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.38s         Wait for accessibility to load
+    t =     3.62s         Setting up automation session
+    t =     3.68s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     3.78s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.78s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =     3.79s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     5.12s Waiting 15.0s for "openTemplates" Button to exist
+    t =     6.16s     Checking `Expect predicate `existsNoRetry == 1` for object "openTemplates" Button`
+    t =     6.16s         Checking existence of `"openTemplates" Button`
+    t =     6.68s Waiting 10.0s for "Today" StaticText to exist
+    t =     7.72s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =     7.73s         Checking existence of `"Today" StaticText`
+    t =     7.74s Click "Today" StaticText
+    t =     7.74s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     7.75s     Find the "Today" StaticText
+    t =     7.76s     Check for interrupting elements affecting "Today" StaticText
+    t =     7.83s     Synthesize event
+    t =     8.38s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     8.38s Waiting 12.0s for "title-a5110000-0000-4000-8000-000000000001" StaticText to exist
+    t =     9.42s     Checking `Expect predicate `existsNoRetry == 1` for object "title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =     9.42s         Checking existence of `"title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =     9.57s Click "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     9.57s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =     9.58s     Find the "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     9.71s     Check for interrupting elements affecting "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =     9.82s     Synthesize event
+    t =    11.03s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.33s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =    11.33s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    11.34s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    11.83s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    11.83s     Synthesize event
+2026-11-01 22:16:16.219822+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:16.234391+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    13.05s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    13.07s Waiting 8.0s for "taskTitle" TextField to exist
+    t =    14.13s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    14.13s         Checking existence of `"taskTitle" TextField`
+<unknown>:0: warning: -[TaskfoldUITests.TaskfoldMacUITests testProjectMoveExplicitAssigneeUndoRedoAndColdReturn] : [Internal] Thread running at User-interactive quality-of-service class waiting on a lower QoS thread running at Default quality-of-service class. Investigate ways to avoid priority inversions
+    t =    14.40s Added attachment named 'Explicit assignment original'
+    t =    14.40s Find the "subtaskReadOnly-0" StaticText
+    t =    16.75s Scroll ScrollView (First Match) by dx: 0.00, dy: -180.00
+    t =    16.75s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    16.76s     Find the ScrollView (First Match)
+    t =    16.88s     Check for interrupting elements affecting "inspector" ScrollView
+    t =    16.90s     Synthesize event
+2026-11-01 22:16:21.100877+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    17.20s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.24s Find the "subtaskReadOnly-0" StaticText
+    t =    17.60s Scroll "inspector" ScrollView by dx: 0.00, dy: -180.00
+    t =    17.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    17.60s     Find the "inspector" ScrollView
+    t =    17.69s     Check for interrupting elements affecting "inspector" ScrollView
+    t =    17.74s     Synthesize event
+2026-11-01 22:16:21.942664+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    18.12s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    18.12s Find the "subtaskReadOnly-0" StaticText
+    t =    18.34s Find the "subtaskReadOnly-0" StaticText
+    t =    18.50s Find the "subtaskReadOnly-0" StaticText
+    t =    18.65s Find the "subtaskReadOnly-0" StaticText
+    t =    18.80s Find the "subtaskReadOnly-0" StaticText
+    t =    19.01s Find the "subtaskReadOnly-0" StaticText
+    t =    19.17s Find the "subtaskReadOnly-0" StaticText
+    t =    19.39s Find the "subtaskReadOnly-0" StaticText
+    t =    19.57s Find the "subtaskReadOnly-0" StaticText
+    t =    19.75s Find the "subtaskReadOnly-0" StaticText
+    t =    19.91s Find the "subtaskReadOnly-0" StaticText
+    t =    20.07s Find the "subtaskReadOnly-0" StaticText
+    t =    20.22s Checking existence of `"subtaskReadOnly-0" StaticText`
+    t =    20.41s Find the "subtaskReadOnly-0" StaticText
+2026-11-01 22:16:24.777789+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Found 1 displays containing rect (1451.0, 1007.0, 127.5, 16.0): [1]
+    t =    20.65s Added attachment named 'Exact preserved subtask title is readable'
+    t =    20.65s Find the "subtaskCompletion-0" Button
+    t =    20.81s Find the "subtaskCompletion-0" Button
+    t =    20.97s Find the "taskProjectPicker" PopUpButton
+    t =    21.12s Find the "taskProjectPicker" PopUpButton
+    t =    21.29s Find the "taskProjectPicker" PopUpButton
+    t =    21.48s Find the "taskProjectPicker" PopUpButton
+    t =    21.64s Find the "taskProjectPicker" PopUpButton
+    t =    21.82s Find the "taskProjectPicker" PopUpButton
+    t =    21.99s Find the "taskProjectPicker" PopUpButton
+    t =    22.16s Find the "taskProjectPicker" PopUpButton
+    t =    22.34s Find the "taskProjectPicker" PopUpButton
+    t =    22.53s Find the "taskProjectPicker" PopUpButton
+    t =    22.69s Find the "taskProjectPicker" PopUpButton
+    t =    22.86s Find the "taskProjectPicker" PopUpButton
+    t =    23.02s Checking existence of `ScrollView (First Match)`
+    t =    23.09s Find the "taskProjectPicker" PopUpButton
+    t =    23.26s Find the "taskProjectPicker" PopUpButton
+    t =    23.44s Find the "taskProjectPicker" PopUpButton
+    t =    23.61s Find the "taskProjectPicker" PopUpButton
+    t =    23.78s Find the "taskProjectPicker" PopUpButton
+    t =    23.94s Find the "taskProjectPicker" PopUpButton
+    t =    24.10s Find the "taskProjectPicker" PopUpButton
+    t =    24.28s Find the "taskProjectPicker" PopUpButton
+    t =    24.43s Find the "taskProjectPicker" PopUpButton
+    t =    24.58s Find the "taskProjectPicker" PopUpButton
+    t =    24.75s Find the "taskProjectPicker" PopUpButton
+    t =    24.91s Find the "taskProjectPicker" PopUpButton
+    t =    25.08s Find the "taskProjectPicker" PopUpButton
+    t =    25.25s Click "taskProjectPicker" PopUpButton
+    t =    25.25s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.25s     Find the "taskProjectPicker" PopUpButton
+    t =    25.40s     Check for interrupting elements affecting "taskProjectPicker" PopUpButton
+    t =    25.45s     Synthesize event
+2026-11-01 22:16:29.668367+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    25.97s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    25.97s Waiting 8.0s for "Assignment destination" MenuItem to exist
+    t =    27.01s     Checking `Expect predicate `existsNoRetry == 1` for object "Assignment destination" MenuItem`
+    t =    27.01s         Checking existence of `"Assignment destination" MenuItem`
+    t =    27.18s Click "Assignment destination" MenuItem
+    t =    27.18s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.19s     Find the "Assignment destination" MenuItem
+    t =    27.34s     Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    27.35s     Synthesize event
+2026-11-01 22:16:31.554356+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    27.38s         Checking existence of `"menuAction:" MenuItem`
+    t =    27.48s         Hover menu item 'Assignment destination'
+    t =    27.48s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.49s             Find the "menuAction:" MenuItem
+    t =    27.60s             Check for interrupting elements affecting "menuAction:" MenuItem
+    t =    27.60s             Synthesize event
+2026-11-01 22:16:31.808603+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    27.84s             Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    27.85s         Find the "menuAction:" MenuItem
+    t =    28.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.97s Type '⎋' key (XCUIKeyboardKeyEscape) with no modifiers
+    t =    29.97s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    29.98s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    30.13s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    30.13s     Synthesize event
+2026-11-01 22:16:34.335054+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:34.336918+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    30.21s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.23s Click "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    30.23s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.24s     Find the "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    30.35s     Check for interrupting elements affecting "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    30.38s     Synthesize event
+2026-11-01 22:16:34.588068+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    30.93s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.95s Type '⎋' key (XCUIKeyboardKeyEscape) with no modifiers
+    t =    30.95s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    30.97s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    31.04s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    31.04s     Synthesize event
+2026-11-01 22:16:35.249201+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:35.251012+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    31.18s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    31.23s Waiting 5.0s for "inspector" ScrollView to not exist
+    t =    32.32s     Checking `Expect predicate `existsNoRetry == 0` for object "inspector" ScrollView`
+    t =    32.32s         Checking existence of `"inspector" ScrollView`
+    t =    32.50s Click "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    32.50s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    32.51s     Find the "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    32.63s     Check for interrupting elements affecting "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    32.68s     Synthesize event
+2026-11-01 22:16:36.888024+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    33.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.61s Type '↩' key (XCUIKeyboardKeyReturn) with no modifiers
+    t =    33.61s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    33.63s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    33.79s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    33.79s     Synthesize event
+2026-11-01 22:16:37.996847+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:38.008707+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    34.39s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    34.68s Waiting 8.0s for "taskTitle" TextField to exist
+    t =    35.73s     Checking `Expect predicate `existsNoRetry == 1` for object "taskTitle" TextField`
+    t =    35.73s         Checking existence of `"taskTitle" TextField`
+    t =    35.91s Find the "taskAssignee" Button
+    t =    36.07s Find the "taskAssignee" Button
+    t =    36.24s Find the "taskAssignee" Button
+    t =    36.40s Find the "taskAssignee" Button
+    t =    36.56s Find the "taskAssignee" Button
+    t =    36.73s Find the "taskAssignee" Button
+    t =    36.89s Find the "taskAssignee" Button
+    t =    37.08s Find the "taskAssignee" Button
+    t =    37.27s Find the "taskAssignee" Button
+    t =    37.45s Find the "taskAssignee" Button
+    t =    37.62s Find the "taskAssignee" Button
+    t =    37.81s Click "taskAssignee" Button
+    t =    37.81s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    37.81s     Find the "taskAssignee" Button
+    t =    37.96s     Check for interrupting elements affecting "taskAssignee" Button
+    t =    37.99s     Synthesize event
+2026-11-01 22:16:42.197584+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    38.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    38.60s Waiting 8.0s for "assign-member-ui-testing" Button to exist
+    t =    39.63s     Checking `Expect predicate `existsNoRetry == 1` for object "assign-member-ui-testing" Button`
+    t =    39.64s         Checking existence of `"assign-member-ui-testing" Button`
+    t =    39.83s Click "assign-member-ui-testing" Button
+    t =    39.83s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    39.83s     Find the "assign-member-ui-testing" Button
+    t =    39.98s     Check for interrupting elements affecting "assign-member-ui-testing" Button
+    t =    40.00s     Synthesize event
+2026-11-01 22:16:44.215540+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    40.60s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    41.65s Added attachment named 'Explicit assignment moved'
+    t =    41.66s Click "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    41.66s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    41.67s     Find the "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    41.85s     Check for interrupting elements affecting "title-a5110000-0000-4000-8000-000000000001" StaticText
+    t =    41.98s     Synthesize event
+2026-11-01 22:16:46.188022+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    42.68s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    42.70s Type 'z' key with modifiers '⌘' (0x10)
+    t =    42.70s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    42.72s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    42.86s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    42.86s     Synthesize event
+2026-11-01 22:16:47.070863+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:47.071780+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    43.36s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    44.42s Type 'z' key with modifiers '⌘' (0x10)
+    t =    44.42s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    44.43s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    44.57s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    44.57s     Synthesize event
+2026-11-01 22:16:48.782766+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:48.788672+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    44.94s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    45.99s Added attachment named 'Explicit assignment undone'
+    t =    45.99s Type 'z' key with modifiers '⌘⇧' (0x12)
+    t =    45.99s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    46.00s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    46.10s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    46.10s     Synthesize event
+2026-11-01 22:16:50.310281+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:50.311954+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    46.37s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    47.41s Type 'z' key with modifiers '⌘⇧' (0x12)
+    t =    47.41s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    47.42s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    47.56s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    47.56s     Synthesize event
+2026-11-01 22:16:51.772298+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:51.781149+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    47.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    48.87s Added attachment named 'Explicit assignment redone'
+    t =    48.87s Type 'q' key with modifiers '⌘' (0x10)
+    t =    48.87s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    48.88s     Find the Target Application 'com.dbakp.taskfold.mac.workflowteststeameditbridge'
+    t =    49.00s     Check for interrupting elements affecting "Taskfold Workflow Test" Application
+    t =    49.00s     Synthesize event
+2026-11-01 22:16:53.213778+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+2026-11-01 22:16:53.215969+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    49.28s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    49.28s Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to become Not Running
+    t =    49.28s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    49.29s     Launch com.dbakp.taskfold.mac.workflowteststeameditbridge
+2026-11-01 22:16:53.514 xcodebuild[29931:40766833] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-01 22:16:53.515 xcodebuild[29931:40766833] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    50.53s         Wait for accessibility to load
+    t =    50.68s         Setting up automation session
+    t =    50.71s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    50.76s Open com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    50.77s     Activate com.dbakp.taskfold.mac.workflowteststeameditbridge
+    t =    50.78s         Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    52.11s Waiting 10.0s for "Today" StaticText to exist
+    t =    53.12s     Checking `Expect predicate `existsNoRetry == 1` for object "Today" StaticText`
+    t =    53.12s         Checking existence of `"Today" StaticText`
+    t =    53.14s Click "Today" StaticText
+    t =    53.14s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    53.15s     Find the "Today" StaticText
+    t =    53.16s     Check for interrupting elements affecting "Today" StaticText
+    t =    53.34s     Synthesize event
+2026-11-01 22:16:57.551948+0100 TaskfoldUITests-Runner[29958:40767264] [DisplayManager] Could not find any displays containing rect (inf, inf, 0.0, 0.0)
+    t =    53.84s     Wait for com.dbakp.taskfold.mac.workflowteststeameditbridge to idle
+    t =    53.85s Waiting 12.0s for "title-a5110000-0000-4000-8000-000000000001" StaticText to exist
+    t =    54.86s     Checking `Expect predicate `existsNoRetry == 1` for object "title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =    54.86s         Checking existence of `"title-a5110000-0000-4000-8000-000000000001" StaticText`
+    t =    56.47s Added attachment named 'Explicit assignment cold return'
+    t =    56.48s Terminate com.dbakp.taskfold.mac.workflowteststeameditbridge:30152
+    t =    57.54s Tear Down
+    t =    60.50s Checking for reports corresponding to termination of 1 app(s).
+Test Case '-[TaskfoldUITests.TaskfoldMacUITests testProjectMoveExplicitAssigneeUndoRedoAndColdReturn]' passed (60.524 seconds).
+Test Suite 'TaskfoldMacUITests' passed at 2026-11-01 22:17:04.731.
+	 Executed 1 test, with 0 failures (0 unexpected) in 60.524 (60.526) seconds
+Test Suite 'TaskfoldUITests.xctest' passed at 2026-11-01 22:17:04.732.
+	 Executed 1 test, with 0 failures (0 unexpected) in 60.524 (60.527) seconds
+Test Suite 'Selected tests' passed at 2026-11-01 22:17:04.732.
+	 Executed 1 test, with 0 failures (0 unexpected) in 60.524 (60.528) seconds
+2026-11-01 22:17:05.029 xcodebuild[29931:40766833] [MT] IDETestOperationsObserverDebug: 62.572 elapsed -- Testing started completed.
+2026-11-01 22:17:05.029 xcodebuild[29931:40766833] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-01 22:17:05.029 xcodebuild[29931:40766833] [MT] IDETestOperationsObserverDebug: 62.572 sec, +62.572 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/taskfold-assignment-history-native-mac-v4.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
