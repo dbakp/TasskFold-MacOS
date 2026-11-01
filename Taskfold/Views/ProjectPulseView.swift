@@ -107,6 +107,9 @@ struct ProjectPulseView: View {
                     } else { Label("Some activity could not be read. Refresh before relying on these counts.", systemImage: "exclamationmark.arrow.triangle.2.circlepath").fixedSize(horizontal: false, vertical: true) }
                     if reading.historyIncomplete || (rootStart.map { $0 > reading.start } ?? true) { Label("Some history is unavailable. These are the recorded changes we can verify.", systemImage: "clock.badge.exclamationmark").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryPartial") }
                     Text("Recorded history starts \(recordedFrom.formatted(date: .abbreviated, time: .shortened)). Earlier work has no recorded timeline. Offline changes appear when received; a completion’s chosen time is retained.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseHistoryCoverage")
+                    if let start = childHistory.orderRecordedFrom, start <= now {
+                        Text("Subtask order changes start \(start.formatted(date: .abbreviated, time: .shortened)).").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseOrderHistoryCoverage")
+                    }
                     if let start = childHistory.fieldRecordedFrom, start <= now {
                         Text("Title, notes and other edit details start \(start.formatted(date: .abbreviated, time: .shortened)).").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pulseFieldHistoryCoverage")
                     }

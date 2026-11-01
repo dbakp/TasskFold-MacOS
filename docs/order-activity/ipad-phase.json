@@ -1,0 +1,25 @@
+{
+  "platform": "ipad",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "f5c559468662236fc83c2a4e55fa06e0c0630b27c4e4a55cfea8918930f15184",
+    "Taskfold/Core/TaskActivity.swift": "8e0ca0d8fec3aabff3a7f203afd158200156a308a1ffcf2c11dc7799c0bfa4ae",
+    "Taskfold/Views/ProjectPulseView.swift": "ec8bf9846b98277597ce406d8ec073994fba4f2476f8ab12b883ec5f46b2dd36",
+    "TaskfoldUITests/TaskfoldUITests.swift": "f4abf497ad7dca6a160c478c6ebbc69f0e8e785b56b6d625b665709b7d18a056"
+  },
+  "builtHostSHA256": {
+    "Taskfold/Core/Store.swift": "9d2be362ebe703922b9fbc1e1a0c81db4097a282432a74f62e9a5f9c51ef7a9d",
+    "Taskfold/Core/TaskActivity.swift": "8e0ca0d8fec3aabff3a7f203afd158200156a308a1ffcf2c11dc7799c0bfa4ae",
+    "Taskfold/Views/ProjectPulseView.swift": "ec8bf9846b98277597ce406d8ec073994fba4f2476f8ab12b883ec5f46b2dd36",
+    "TaskfoldUITests/TaskfoldUITests.swift": "f4abf497ad7dca6a160c478c6ebbc69f0e8e785b56b6d625b665709b7d18a056"
+  },
+  "appSHA256": "06063fcd524317c9a25d023e5f5b550e8b00dc7765a927a9a8e417fb2d2020a7",
+  "debugDylibSHA256": "642405a391d09fbcafd571fbafe2adc174bf1c7130b1212f363d8ed54e3a6012",
+  "newSimulator": false,
+  "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Core/TaskActivity.swift": true,
+    "Taskfold/Views/ProjectPulseView.swift": true,
+    "TaskfoldUITests/TaskfoldUITests.swift": true
+  }
+}

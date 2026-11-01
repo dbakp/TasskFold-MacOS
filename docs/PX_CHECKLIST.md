@@ -1441,3 +1441,14 @@ Each repository owns its implementation, focused client checks, real local SQL f
 - [ ] Older-data/history mapping, shared file/discussion custody, hosted deployment and genuine shared-account acceptance. Ordinary migration use stays disabled.
 
 [Exact scope and evidence](field-activity/README.md). This completes field-edit activity, not the full shared-history or migration checkpoint. Existing user deferrals remain paused.
+
+
+## 1 November · subtask ordering activity
+
+- [x] Record one entry per changed sibling list, comparing only surviving siblings under the same stable parent. Insertions, removals and reparenting do not manufacture reorder entries.
+- [x] Preserve private text, older event formats, completion credit and guarded parent links; record ordering coverage separately. Each owned client passes 126 focused checks, including its actual server fixture.
+- [x] Each repo independently passes 99 local database checks: owner/team commands, Undo, exact retry, unchanged-slot refusal, rollback and access/privacy boundaries; no added advisor findings, owned fixtures removed.
+- [x] iPhone and largest-text/dark iPad retain the single entry, actor, current-parent link, coverage and exact saved order after cold return.
+- [ ] Shared-operation grouping, wider timing/lifecycle, remaining Mac acceptance, older-data/history mapping and shared file/discussion custody. Broader migration use stays disabled; hosted deployment and existing user deferrals are unchanged.
+
+[Current scope and evidence](order-activity/README.md). This completes ordering activity, not the whole shared-history or migration requirement.

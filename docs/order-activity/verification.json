@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-01",
+  "status": "ordering activity implemented; mobile accepted; broader shared history open",
+  "clientChecks": 126,
+  "ownedSQLChecks": 99,
+  "migration": "20261101041509_child_order_activity.sql",
+  "migrationDeployed": false,
+  "normalMigrationGatesEnabled": false,
+  "native": {
+    "phone": "saved/cold display and persisted state passed",
+    "ipad": "largest-text/dark saved/cold display and persisted state passed"
+  },
+  "macRuntime": {
+    "status": "open",
+    "reason": "Current-source launch attempted; computer use reports the Mac locked. Exact isolated process closed afterward."
+  },
+  "remaining": [
+    "Shared-operation grouping and timing/lifecycle",
+    "Prior Mac keyboard and inspector checks",
+    "Older-data/history mapping",
+    "Shared file/discussion custody",
+    "Hosted and genuine shared-account migration acceptance"
+  ],
+  "builds": "Both current apps build; development signatures verify. Mac app-only build; mobile test target current."
+}

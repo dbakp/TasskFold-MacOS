@@ -1,6 +1,6 @@
 # Remaining product backlog
 
-## Current status — 31 October 2026
+## Current status — 1 November 2026
 
 - [x] Guarded Redo for combined parent/subtask completions: Mac, iPhone and iPad pass Complete → Undo → Redo → Undo and cold return; mobile peers confirm exactly four distinct operations. Both repos pass 53 focused checks; the iPhone local-history limit/regression also passes. [Scope and evidence](completion-redo/README.md).
 
@@ -8,7 +8,8 @@
 - [x] Encrypted repair-review choices survive Close and relaunch, resume against the exact original, and hand off atomically into the queued repair. Native Mac/iPhone/iPad scope and independent Core results are in [saved repair reviews](child-repair-drafts/README.md).
 - [x] Guarded field-edit, cross-task move and hierarchy Undo/Redo implemented; scoped mobile acceptance recorded. Mac keyboard acceptance remains open.
 - [x] Subtask field-edit activity with private field-name captions and separate coverage, including saved/cold mobile display. [Evidence](field-activity/README.md).
-- [ ] Ordering/shared-history grouping, indexed/history mapping and shared attachment/discussion custody.
+- [x] Subtask ordering activity: one entry per changed sibling list, with saved/cold mobile display. [Evidence](order-activity/README.md).
+- [ ] Shared-history grouping, indexed/history mapping and shared attachment/discussion custody.
 - [ ] Wider real-account, protected-storage, window/background/concurrency, spoken and large-library acceptance.
 
 The wider migration remains unfinished and gated. No hosted schema or ordinary-use flags changed. Explicit rollout/provider/distribution/audio/device deferrals remain paused. The entries below preserve earlier staged scopes; newer evidence here supersedes their remaining lists.
@@ -7241,3 +7242,14 @@ Each repository owns its implementation, focused client checks, real local SQL f
 - [ ] Older-data/history mapping, shared file/discussion custody, hosted deployment and genuine shared-account acceptance. Ordinary migration use stays disabled.
 
 [Exact scope and evidence](field-activity/README.md). This completes field-edit activity, not the full shared-history or migration checkpoint. Existing user deferrals remain paused.
+
+
+## 1 November · subtask ordering activity
+
+- [x] Record one entry per changed sibling list, comparing only surviving siblings under the same stable parent. Insertions, removals and reparenting do not manufacture reorder entries.
+- [x] Preserve private text, older event formats, completion credit and guarded parent links; record ordering coverage separately. Each owned client passes 126 focused checks, including its actual server fixture.
+- [x] Each repo independently passes 99 local database checks: owner/team commands, Undo, exact retry, unchanged-slot refusal, rollback and access/privacy boundaries; no added advisor findings, owned fixtures removed.
+- [x] iPhone and largest-text/dark iPad retain the single entry, actor, current-parent link, coverage and exact saved order after cold return.
+- [ ] Shared-operation grouping, wider timing/lifecycle, remaining Mac acceptance, older-data/history mapping and shared file/discussion custody. Broader migration use stays disabled; hosted deployment and existing user deferrals are unchanged.
+
+[Current scope and evidence](order-activity/README.md). This completes ordering activity, not the whole shared-history or migration requirement.
