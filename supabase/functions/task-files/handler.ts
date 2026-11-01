@@ -377,7 +377,9 @@ export function createTaskFilesHandler(
           ]);
           if (
             typeof reply.object_name !== "string" ||
-            !/^team-task-files\/v1\/[a-f0-9-]{36}$/.test(reply.object_name) ||
+            !/^team-task-files\/v1\/[a-f0-9-]{36}(\/[a-f0-9-]{36})?$/.test(
+              reply.object_name,
+            ) ||
             !id(reply.object_name.split("/").at(-1)) || !sha(reply.sha256) ||
             !count(reply.byte_count) || !types.includes(String(reply.mime))
           ) throw new Failure(503, "retry");
@@ -421,7 +423,7 @@ export function createTaskFilesHandler(
       if (data.length !== i.byte_count || await hash(data) !== i.sha256) {
         throw new Failure(400, "invalid");
       }
-      const reserved = await rpc("reserve", i),
+      const reserved = await rpc("reserve_fenced", i),
         r = terminal(reserved, String(i.operation_id));
       if (r.state !== "reserved") return json({ receipt: r });
       if (JSON.stringify(r.target) !== JSON.stringify(i.target)) {
@@ -430,28 +432,92 @@ export function createTaskFilesHandler(
           throw new Failure(503, "retry");
         }
       }
-      const path = "team-task-files/v1/" + i.operation_id;
-      if (reserved.object_name !== path) throw new Failure(503, "retry");
-      const uploaded = await fetchResponse(
-        "/storage/v1/object/task-attachments/" + path,
-        {
-          method: "POST",
-          headers: {
-            ...serviceHeaders,
-            "Content-Type": String(i.type),
-            "x-upsert": "false",
-          },
-          body: data,
-        },
+      const path = String(reserved.object_name);
+      if (
+        reserved.writer_protocol !== 1 ||
+        !path.startsWith("team-task-files/v1/" + i.operation_id + "/") ||
+        !id(path.split("/").at(-1)) || path.split("/").length !== 4
+      ) throw new Failure(503, "retry");
+      const admitted = await rpc("upload_begin", {
+        operation_id: i.operation_id,
+      });
+      if (
+        !["upload", "verify", "upload_unresolved"].includes(
+          String(admitted.status),
+        )
+      ) return json({ receipt: terminal(admitted, String(i.operation_id)) });
+      exact(
+        admitted,
+        admitted.status === "verify"
+          ? [
+            "protocol",
+            "writer_protocol",
+            "operation_id",
+            "object_name",
+            "status",
+          ]
+          : [
+            "protocol",
+            "writer_protocol",
+            "operation_id",
+            "object_name",
+            "status",
+            "ticket_id",
+          ],
       );
-      const accepted = uploaded.ok || uploaded.status === 400 ||
-        uploaded.status === 409;
-      void uploaded.body?.cancel().catch(() => {});
-      if (!accepted) throw new Failure(503, "retry");
+      if (
+        admitted.protocol !== 1 || admitted.writer_protocol !== 1 ||
+        admitted.operation_id !== i.operation_id ||
+        admitted.object_name !== path ||
+        admitted.status !== "verify" && !id(admitted.ticket_id)
+      ) throw new Failure(503, "retry");
+      let settled = admitted.status === "verify";
+      if (admitted.status === "upload") {
+        const uploaded = await fetchResponse(
+          "/storage/v1/object/task-attachments/" + path,
+          {
+            method: "POST",
+            headers: {
+              ...serviceHeaders,
+              "Content-Type": String(i.type),
+              "x-upsert": "false",
+            },
+            body: data,
+          },
+        );
+        const accepted = uploaded.ok || uploaded.status === 400 ||
+          uploaded.status === 409;
+        const terminalAck = uploaded.ok || uploaded.status === 409;
+        void uploaded.body?.cancel().catch(() => {});
+        if (!accepted) throw new Failure(503, "retry");
+        if (terminalAck) {
+          const ack = await rpc("upload_settle", {
+            operation_id: i.operation_id,
+            ticket_id: admitted.ticket_id,
+          });
+          exact(ack, ["protocol", "settled"]);
+          if (ack.protocol !== 1 || ack.settled !== true) {
+            throw new Failure(503, "retry");
+          }
+          settled = true;
+        }
+      }
       const verified = await stored(path);
       if (
         verified.length !== i.byte_count || await hash(verified) !== i.sha256
       ) throw new Failure(409, "review");
+      if (!settled) {
+        const recovered = await rpc("upload_reconcile", {
+          operation_id: i.operation_id,
+          ticket_id: admitted.ticket_id,
+          stored_sha256: await hash(verified),
+          stored_bytes: verified.length,
+        });
+        exact(recovered, ["protocol", "settled"]);
+        if (recovered.protocol !== 1 || recovered.settled !== true) {
+          throw new Failure(503, "retry");
+        }
+      }
       const result = await rpc("finalize", {
         intent: i,
         stored_sha256: await hash(verified),
@@ -473,3 +539,15 @@ export function createTaskFilesHandler(
     }
   };
 }
+
+// Shared bounded primitives for the service-only cleanup worker; no HTTP route.
+export {
+  bounded as boundTaskFileWork,
+  count as taskFileSize,
+  exact as taskFileFields,
+  hash as taskFileDigest,
+  id as taskFileIdentity,
+  read as readTaskFileBytes,
+  row as taskFileObject,
+  sha as taskFileSHA,
+};

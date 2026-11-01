@@ -54,7 +54,7 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
       "=",
       "",
     ) + ".signature";
-  const path = "team-task-files/v1/" + operation,
+  const path = "team-task-files/v1/" + operation + "/" + crypto.randomUUID(),
     calls: { path: string; method: string; body: unknown; headers: Headers }[] =
       [];
   let published = false;
@@ -89,14 +89,28 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
       equal(b._actor, account);
       equal(b._session, session);
       if (state.rpc) return await state.rpc(String(b._action), b._body as Row);
-      if (b._action === "reserve") {
+      if (b._action === "reserve_fenced") {
         return response(
           published ? { status: "published", receipt: receipt() } : {
             status: "reserved",
+            writer_protocol: 1,
             object_name: path,
             receipt: receipt("reserved"),
           },
         );
+      }
+      if (b._action === "upload_begin") {
+        return response({
+          protocol: 1,
+          writer_protocol: 1,
+          operation_id: operation,
+          object_name: path,
+          status: "upload",
+          ticket_id: objectID,
+        });
+      }
+      if (b._action === "upload_settle" || b._action === "upload_reconcile") {
+        return response({ protocol: 1, settled: true });
       }
       if (b._action === "finalize") {
         published = true;
@@ -171,7 +185,15 @@ Deno.test("publish verifies stored bytes and returns only the metadata receipt",
   const f = fixture(), r = await f.handler(f.request());
   equal(r.status, 200);
   equal(await r.json(), { receipt: f.receipt() });
-  equal(f.calls.map((c) => c.method), ["GET", "POST", "POST", "GET", "POST"]);
+  equal(f.calls.map((c) => c.method), [
+    "GET",
+    "POST",
+    "POST",
+    "POST",
+    "POST",
+    "GET",
+    "POST",
+  ]);
   equal(r.headers.get("cache-control"), "private, no-store");
 });
 Deno.test("lost publication reply resolves without uploading or appending again", async () => {
@@ -440,3 +462,127 @@ for (
     },
   );
 }
+
+for (const mode of ["verify", "upload_unresolved"]) {
+  Deno.test(
+    mode + " verifies existing bytes without a second upload POST",
+    async () => {
+      const f = fixture();
+      f.state.rpc = (action) => {
+        if (action === "reserve_fenced") {
+          return response({
+            status: "reserved",
+            writer_protocol: 1,
+            object_name: f.path,
+            receipt: {
+              protocol: 1,
+              account: f.account,
+              operation_id: f.operation,
+              target: f.target,
+              state: "reserved",
+              attachment: null,
+            },
+          });
+        }
+        if (action === "upload_begin") {
+          return response({
+            protocol: 1,
+            writer_protocol: 1,
+            operation_id: f.operation,
+            object_name: f.path,
+            status: mode,
+            ...(mode === "verify" ? {} : { ticket_id: f.objectID }),
+          });
+        }
+        if (action === "upload_reconcile") {
+          return response({ protocol: 1, settled: true });
+        }
+        return response({
+          status: "published",
+          receipt: {
+            protocol: 1,
+            account: f.account,
+            operation_id: f.operation,
+            target: f.target,
+            state: "published",
+            attachment: {
+              id: f.operation,
+              storage_object_id: f.objectID,
+              name: f.intent.name,
+              size: 5,
+              type: "text/plain",
+              sha256: digest,
+              uploadedAt: "2026-11-02T00:00:00Z",
+            },
+          },
+        });
+      };
+      equal((await f.handler(f.request())).status, 200);
+      equal(
+        f.calls.some((x) =>
+          x.method === "POST" && x.path.startsWith("/storage/")
+        ),
+        false,
+      );
+      equal(
+        f.calls.some((x) => (x.body as Row)?._action === "upload_reconcile"),
+        mode === "upload_unresolved",
+      );
+    },
+  );
+}
+Deno.test("unresolved writer with missing bytes does not settle or retry POST", async () => {
+  const f = fixture();
+  f.state.rpc = (action) =>
+    action === "reserve_fenced"
+      ? response({
+        status: "reserved",
+        writer_protocol: 1,
+        object_name: f.path,
+        receipt: {
+          protocol: 1,
+          account: f.account,
+          operation_id: f.operation,
+          target: f.target,
+          state: "reserved",
+          attachment: null,
+        },
+      })
+      : response({
+        protocol: 1,
+        writer_protocol: 1,
+        operation_id: f.operation,
+        object_name: f.path,
+        status: "upload_unresolved",
+        ticket_id: f.objectID,
+      });
+  f.state.stored = () => response({ code: "NoSuchKey" }, 404);
+  equal((await f.handler(f.request())).status, 503);
+  equal(
+    f.calls.some((x) => x.method === "POST" && x.path.startsWith("/storage/")),
+    false,
+  );
+  equal(
+    f.calls.some((x) =>
+      ["upload_settle", "upload_reconcile", "finalize"].includes(
+        String((x.body as Row)?._action),
+      )
+    ),
+    false,
+  );
+});
+Deno.test("upload timeout retains unresolved ticket and never finalizes", async () => {
+  const f = fixture();
+  f.state.upload = () => {
+    throw Error("lost transport");
+  };
+  equal((await f.handler(f.request())).status, 503);
+  equal(
+    f.calls.some((x) =>
+      ["upload_settle", "upload_reconcile", "finalize"].includes(
+        String((x.body as Row)?._action),
+      )
+    ),
+    false,
+  );
+});

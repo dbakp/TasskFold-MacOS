@@ -30,7 +30,7 @@ Deno.test("actual SQL publication receipt survives a lost-reply gateway retry", 
       }
       const body = await request.json();
       if (
-        body._action !== "reserve" || body._actor !== receipt.account ||
+        body._action !== "reserve_fenced" || body._actor !== receipt.account ||
         body._session !== session ||
         JSON.stringify(body._body) !== JSON.stringify(captured.intent)
       ) throw new Error("Wrong authenticated SQL contract");

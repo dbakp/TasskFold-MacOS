@@ -1,0 +1,26 @@
+{
+  "reviewed": "2026-11-02",
+  "platform": "mac",
+  "databaseChecks": 118,
+  "serviceTests": 52,
+  "typecheck": true,
+  "lint": true,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "providerBytesTested": false,
+  "nativeSourceChanged": false,
+  "nativeAcceptanceRerun": false,
+  "ownedDatabaseRemoved": true,
+  "newAdvisorFindings": 0,
+  "sourceSHA256": {
+    "supabase/migrations/20261101232206_task_file_upload_cleanup.sql": "16dbc20d3d95c48bf43e24d175a51eef237001fd78d18aefafa5e13099c71496",
+    "supabase/functions/task-files/handler.ts": "3622a2f2c270b566951f4c3dffde63529a81b9b30f4e18c57bd7011ed88da2e5",
+    "supabase/functions/task-files/handler_test.ts": "79189c8c0d5eae5ed7caf5d8d4030584dbccce4bb4c23305b22b1f30ff125824",
+    "supabase/functions/task-files/sql_contract_test.ts": "f159907d1ff7b6e8dd5b38af417e89083d9979a1ef2e9981b386bc27c046fa32",
+    "supabase/functions/task-file-maintenance/handler.ts": "caf7c72e2b372fd490c2266c12b5c9afa7a5d10755552e5c62b4ad6b7f542955",
+    "supabase/functions/task-file-maintenance/index.ts": "ad525524e06c4ac272b62b1205827ff68b6fff8ada630af86787963f2a5ff0d1",
+    "supabase/functions/task-file-maintenance/handler_test.ts": "0e9ed97e8828e6e2136251cefe049c5589d4c0502d4ed61909b5ddcd3fad63db",
+    "Scripts/Database/test-task-file-upload.mjs": "ce0261419a77b8dadf5ce735fac47eb6f0020c8a636faed89cf5842d3daa2eb6",
+    "Scripts/Database/task-file-cleanup-cases.mjs": "770f72a2f8b47e708f71e9d8f7221d6bf00efadebed849e739177e922a59c4d8"
+  }
+}
