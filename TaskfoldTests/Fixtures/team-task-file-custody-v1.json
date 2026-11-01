@@ -1,0 +1,170 @@
+{
+  "origin": "https://custody-fixture.invalid",
+  "review": {
+    "task": {
+      "id": "a78d75dc-d472-4127-83fa-be041c71b32b",
+      "title": "Task with private files",
+      "labels": [],
+      "user_id": "0af7b6c8-7aa6-4804-a717-9e3fdbaec98b",
+      "comments": [
+        {
+          "id": "bcd667f7-68d9-4861-a598-2e32a21396f1",
+          "text": "Legacy comment",
+          "attachment": {
+            "id": "9d5ee7b7-9d21-4af2-89b4-879ed218b36b",
+            "name": "Synthetic design.pdf",
+            "storage_object_id": "3871d3fa-4159-4c28-80f5-5930a7a0387c"
+          }
+        }
+      ],
+      "due_date": null,
+      "due_time": null,
+      "priority": 4,
+      "subtasks": [
+        {
+          "id": "child",
+          "title": "Keep child",
+          "future": {
+            "keep": "exact"
+          },
+          "subtasks": null,
+          "attachments": [
+            {
+              "id": "5034aca1-fe07-48a5-a0e6-343ae8eb28ff",
+              "name": "Synthetic design.pdf",
+              "storage_object_id": "4d39bc93-f84b-433a-9151-3fc3331b20f5"
+            }
+          ]
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": null,
+      "created_at": "2026-11-01T21:50:27.985283+00:00",
+      "is_heading": null,
+      "project_id": "092685d6-7d21-4f18-9392-0c92af9f818d",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "3cdec7a6-2e47-447d-80d7-23def901d235",
+          "name": "Synthetic design.pdf",
+          "storage_object_id": "54b2ef47-8e9e-43a8-adf5-abd887d8c529"
+        }
+      ],
+      "description": null,
+      "completed_at": null,
+      "is_recurring": false,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {},
+      "task_generation": "2015c475-7c79-4a26-99e9-9f15f2d068a5",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": null,
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "0af7b6c8-7aa6-4804-a717-9e3fdbaec98b",
+    "task_id": "a78d75dc-d472-4127-83fa-be041c71b32b",
+    "team_id": "bafbdcae-8ac7-47a2-a928-151cea6bf158",
+    "expires_at": "2026-11-01T22:20:29Z",
+    "source_name": "Private file project",
+    "review_token": "efb720993f9b7f17d3e1fddcdcf7699ab8edd2c2963067c4a00d2bff564c141b",
+    "related_request": null,
+    "task_generation": "2015c475-7c79-4a26-99e9-9f15f2d068a5",
+    "destination_name": "Private file project",
+    "discussion_count": 0,
+    "source_project_id": "092685d6-7d21-4f18-9392-0c92af9f818d",
+    "file_custody_count": 3,
+    "subtask_undo_count": 0,
+    "cleared_assignments": 0,
+    "file_custody_policy": "task_bound_v1",
+    "subtask_undo_policy": "kept_private",
+    "move_review_protocol": 1,
+    "restored_assignments": 0,
+    "destination_project_id": "7058f4e3-1b67-4ed2-ac19-53bc283e0a5d",
+    "destination_visibility": "private"
+  },
+  "reply": {
+    "task": {
+      "id": "a78d75dc-d472-4127-83fa-be041c71b32b",
+      "title": "Task with private files",
+      "labels": [],
+      "user_id": "0af7b6c8-7aa6-4804-a717-9e3fdbaec98b",
+      "comments": [
+        {
+          "id": "bcd667f7-68d9-4861-a598-2e32a21396f1",
+          "text": "Legacy comment",
+          "attachment": {
+            "id": "9d5ee7b7-9d21-4af2-89b4-879ed218b36b",
+            "name": "Synthetic design.pdf",
+            "storage_object_id": "3871d3fa-4159-4c28-80f5-5930a7a0387c"
+          }
+        }
+      ],
+      "due_date": null,
+      "due_time": null,
+      "priority": 4,
+      "subtasks": [
+        {
+          "id": "child",
+          "title": "Keep child",
+          "future": {
+            "keep": "exact"
+          },
+          "subtasks": null,
+          "attachments": [
+            {
+              "id": "5034aca1-fe07-48a5-a0e6-343ae8eb28ff",
+              "name": "Synthetic design.pdf",
+              "storage_object_id": "4d39bc93-f84b-433a-9151-3fc3331b20f5"
+            }
+          ]
+        }
+      ],
+      "completed": false,
+      "reminders": [],
+      "time_zone": null,
+      "created_at": "2026-11-01T21:50:27.985283+00:00",
+      "is_heading": null,
+      "project_id": "7058f4e3-1b67-4ed2-ac19-53bc283e0a5d",
+      "section_id": null,
+      "assigned_to": null,
+      "attachments": [
+        {
+          "id": "3cdec7a6-2e47-447d-80d7-23def901d235",
+          "name": "Synthetic design.pdf",
+          "storage_object_id": "54b2ef47-8e9e-43a8-adf5-abd887d8c529"
+        }
+      ],
+      "description": null,
+      "completed_at": null,
+      "is_recurring": false,
+      "scheduled_at": null,
+      "deadline_date": null,
+      "reminder_specs": [],
+      "source_metadata": {},
+      "task_generation": "2015c475-7c79-4a26-99e9-9f15f2d068a5",
+      "duration_minutes": null,
+      "completion_version": 0,
+      "recurrence_pattern": null,
+      "recurrence_end_date": null,
+      "notification_sent_at": null,
+      "recurrence_parent_id": null
+    },
+    "account": "0af7b6c8-7aa6-4804-a717-9e3fdbaec98b",
+    "task_id": "a78d75dc-d472-4127-83fa-be041c71b32b",
+    "team_id": "bafbdcae-8ac7-47a2-a928-151cea6bf158",
+    "protocol": 1,
+    "replayed": false,
+    "operation": "move",
+    "request_id": "ac46a032-c812-4c55-aad0-5e61afee1644",
+    "related_request": null,
+    "task_generation": "2015c475-7c79-4a26-99e9-9f15f2d068a5",
+    "source_project_id": "092685d6-7d21-4f18-9392-0c92af9f818d",
+    "destination_project_id": "7058f4e3-1b67-4ed2-ac19-53bc283e0a5d"
+  }
+}

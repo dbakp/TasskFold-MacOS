@@ -637,3 +637,51 @@ extension PersonalTaskMoveTests {
         _ = try await api.send(change, expectedAccount: account); XCTAssertEqual(calls, 1)
     }
 }
+
+extension TeamTaskMoveTests {
+    private func taskFileReview(_ policy: JSON?, _ count: JSON?) throws -> TeamTaskMoveReview {
+        let (command, _, _) = try fixture()
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-task-moves-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let root = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        var raw = root["samples"]!.list[0].object["review"]!.object
+        raw["file_custody_policy"] = policy; raw["file_custody_count"] = count
+        return try TeamTaskMoveReview(raw, scope: command.scope)
+    }
+    func testOlderReviewMakesNoTaskFileCustodyClaim() throws {
+        XCTAssertNil(try taskFileReview(nil, nil).taskBoundFileCount)
+    }
+    func testTaskFileReviewAcceptsBoundedCountsWithoutAddingClientAssertions() throws {
+        for count in [0, 1, 256] {
+            let review = try taskFileReview(.string("task_bound_v1"), .number(Double(count)))
+            XCTAssertEqual(review.taskBoundFileCount, count)
+            let command = try TeamTaskMoveCommand(review: review, now: review.expires.addingTimeInterval(-1))
+            XCTAssertNil(command.body["file_custody_policy"]); XCTAssertNil(command.body["file_custody_count"])
+            XCTAssertFalse(String(describing: review).contains(review.task.title))
+        }
+    }
+    func testTaskFileReviewRejectsUnpairedUnknownAndMalformedCustody() throws {
+        let pairs: [(JSON?, JSON?)] = [(nil, .number(1)), (.string("task_bound_v1"), nil), (.string("share_all"), .number(1)), (.null, .number(0))]
+        for pair in pairs {
+            XCTAssertThrowsError(try taskFileReview(pair.0, pair.1))
+        }
+        for count in [JSON.number(-1), .number(257), .number(1.5), .string("1"), .null, .number(.infinity), .number(.nan)] {
+            XCTAssertThrowsError(try taskFileReview(.string("task_bound_v1"), count))
+        }
+    }
+    func testActualSQLTaskBoundFileReviewAndReceiptStayMetadataOnly() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-task-file-custody-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let fixture = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let raw = fixture["review"]!.object, reply = fixture["reply"]!.object
+        let scope = try TeamTaskMoveScope(account: raw["account"]!.text, origin: fixture["origin"]!.text,
+            team: raw["team_id"]!.text, task: raw["task_id"]!.text, generation: raw["task_generation"]!.text,
+            source: raw["source_project_id"]!.text, destination: raw["destination_project_id"]!.text)
+        let review = try TeamTaskMoveReview(raw, scope: scope)
+        XCTAssertEqual(review.taskBoundFileCount, 3)
+        let command = try TeamTaskMoveCommand(review: review, requestID: XCTUnwrap(UUID(uuidString: reply["request_id"]!.text)), now: review.expires.addingTimeInterval(-1))
+        let receipt = try command.confirmed(reply)
+        XCTAssertEqual(receipt.task?.string("project_id"), scope.destination)
+        XCTAssertEqual(receipt.task?["attachments"], review.task["attachments"])
+        XCTAssertNil(command.body["file_custody_policy"]); XCTAssertNil(command.body["file_custody_count"])
+        XCTAssertNil(command.body["task"])
+    }
+}

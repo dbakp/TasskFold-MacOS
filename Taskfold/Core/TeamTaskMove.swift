@@ -149,6 +149,7 @@ struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomD
     let expires: Date, task: Record, visibility: TeamProjectVisibility
     let clearedAssignments: Int, restoredAssignments: Int, discussionCount: Int
     let keepsSubtaskUndoPrivate: Bool, privateSubtaskUndoCount: Int
+    let taskBoundFileCount: Int?
     var description: String { "Private task move review" }; var debugDescription: String { description }
     init(_ raw: [String: JSON], scope: TeamTaskMoveScope) throws {
         guard raw["move_review_protocol"] == .number(1), raw["account"] == .string(scope.account),
@@ -168,6 +169,11 @@ struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomD
         clearedAssignments = try Self.count(raw["cleared_assignments"], limit: 1001)
         restoredAssignments = try Self.count(raw["restored_assignments"], limit: 1001)
         discussionCount = try Self.count(raw["discussion_count"], limit: 500)
+        if raw["file_custody_policy"] == nil, raw["file_custody_count"] == nil { taskBoundFileCount = nil }
+        else {
+            guard raw["file_custody_policy"] == .string("task_bound_v1") else { throw TeamTaskMoveCommand.invalid }
+            taskBoundFileCount = try Self.count(raw["file_custody_count"], limit: 256)
+        }
         if raw["subtask_undo_policy"] == nil, raw["subtask_undo_count"] == nil {
             keepsSubtaskUndoPrivate = false; privateSubtaskUndoCount = 0
         } else {

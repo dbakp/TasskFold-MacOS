@@ -69,6 +69,11 @@ struct TeamTaskMoveView: View {
                             Section("What moves with it") {
                                 Text("Notes, checklist, dates, reminders and the saved discussion stay with the task.")
                                 LabeledContent("Discussion comments", value: String(review.discussionCount))
+                                if let count = review.taskBoundFileCount, count > 0 {
+                                    LabeledContent("Stored files", value: String(count)).accessibilityIdentifier("teamMoveStoredFiles")
+                                    Text("Stored files follow the task’s project access. Previously shared links and downloaded copies are not revoked.")
+                                        .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("teamMoveFileCustody")
+                                }
                                 if review.keepsSubtaskUndoPrivate, review.privateSubtaskUndoCount > 0 {
                                     Text("Your saved copies of deleted subtasks stay private in their original projects.")
                                         .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("teamMovePrivateSubtaskUndo")
