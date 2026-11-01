@@ -4,10 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Mac and iPhone saved-copy recovery verified; broader migration remains",
-  "latest": "Direct Mac checks now pass comparison, selection, Undo/reselect, cold saved review, one save and cold confirmation. The native Mac original export matches the archive byte for byte. Existing iPhone and database/client evidence is retained; those suites were not rerun for this native check. Fixed a missing copy-action icon and rebuilt both apps. Broader migration, other Mac workflows and full largest-text recovery remain open; normal use stays disabled.",
+  "focus": "P2 · Older-task identity/history mapping; saving and native review remain",
+  "latest": "The private mapping planner now passes 65 database checks in each repo: explicit history matching/new identities, chosen or recorded completion state, stale/duplicate reference rejection and exact notes/dates/numbers. Planning leaves saved work/history unchanged. This is a backend prerequisite, not a working migration flow; atomic save, neutral history and native review remain. Existing Mac/iPhone saved-copy recovery evidence is retained. Normal use stays disabled.",
   "next": [
-    "Handle ambiguous identities/completion/recipient histories and preserve exact opaque editable caches. The current selected-copy path requires matching historical identities and completion state.",
+    "Connect explicit identity/lifecycle choices to a fresh authorized snapshot, complete originals and atomic save with neutral reconciliation history; then add durable native review/recovery. Current ordinary copy selection still requires matching histories.",
+    "Resolve ambiguous recurrence lineage and preserve exact opaque editable caches before completing older-data migration.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
@@ -556,7 +557,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Both apps support explicit copy selection, durable reviews, save/status recovery and complete original export. Same-identity server transactions, iPhone saved/cold use and direct Mac recovery/native original-file readback are verified. Ambiguous history mapping, exact editable caches, shared archive discovery, other Mac workflows and file/discussion custody remain open. Normal use stays disabled.",
+              "detail": "Mac and iPhone saved-copy recovery is verified when history agrees. A private read-only identity/lifecycle mapping planner now passes independent database checks; mapped saving, neutral history and native mapping review remain unfinished. Exact editable caches, shared archives/file/discussion custody and wider acceptance remain open. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -617,6 +618,10 @@
                 {
                   "state": "done",
                   "title": "Choose a saved copy with durable review/recovery; verify Mac and iPhone cold use"
+                },
+                {
+                  "state": "done",
+                  "title": "Validate explicit older-task identity/lifecycle choices without changing saved work (private database planner only)"
                 },
                 {
                   "state": "build",
@@ -720,7 +725,9 @@
             "saved-copy-selection/build-verification.json",
             "saved-copy-selection/mac-direct-summary.json",
             "saved-copy-selection/icon-build-verification.json",
-            "saved-copy-selection/symbol-verification.json"
+            "saved-copy-selection/symbol-verification.json",
+            "child-copy-mapping-plan/README.md",
+            "child-copy-mapping-plan/verification.json"
           ],
           "focus": true
         },
@@ -800,6 +807,8 @@
     "child-bulk-list-completion/verification.json": "02faef41d645b895990ec194507da81396d352a430a6c30f92fb48fbb6929026",
     "child-completion-batches/verification.json": "2ec6ab0db18232207cd897ca24d63fa0769d0a32af9f64dadd0b99afdf072fcb",
     "child-completion-group-recovery/verification.json": "c07a89832e98cedb3cbff59a496d56970b79a83eb776aded0abe38ab42fec5ab",
+    "child-copy-mapping-plan/README.md": "952ea684393cc8c4e8b8d643daf3a7cf7954cdddc55d37a058d505edf13b501a",
+    "child-copy-mapping-plan/verification.json": "84f642fce6b2ba90e2bd779eb52060288a5b9fc3cf7757df23eb32fb2e1c609a",
     "child-list-completion/verification.json": "44bbe137ce3108669564a22ad74abd4d04c843f28ff4460dd66f5da89a31e0b7",
     "child-mixed-selection-preflight/README.md": "ec9eec0fb95bfa9080058a8ef73c66deb196b2e165e90ebdb40c772fb7a28c10",
     "child-mixed-selection-preflight/verification.json": "6bc57dcccf9543673b4508c0285e47ecbe6097b5d05b3c025ce6c60018b3abc8",
