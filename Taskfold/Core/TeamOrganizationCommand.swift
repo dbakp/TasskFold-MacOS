@@ -188,8 +188,12 @@ struct TeamOrganizationAdministration {
 protocol ReviewedTeamCommand: Codable, Equatable, Sendable {
     var account: String { get }; var origin: String { get }
     static var storagePrefix: String { get }; static var invalid: AppFailure { get }; static var maximumStoredBytes: Int { get }
+    static var encodingOptions: JSONEncoder.OutputFormatting { get }
 }
-extension ReviewedTeamCommand { static var maximumStoredBytes: Int { 20_000 } }
+extension ReviewedTeamCommand {
+    static var maximumStoredBytes: Int { 20_000 }
+    static var encodingOptions: JSONEncoder.OutputFormatting { [] }
+}
 extension TeamOrganizationCommand: ReviewedTeamCommand { static let storagePrefix = "team-command-v1." }
 typealias TeamOrganizationCommandVault = ReviewedTeamCommandVault<TeamOrganizationCommand>
 actor ReviewedTeamCommandVault<Command: ReviewedTeamCommand> {
@@ -225,7 +229,21 @@ actor ReviewedTeamCommandVault<Command: ReviewedTeamCommand> {
                 if let old = try read(account: command.account, origin: command.origin) {
                     guard old == command else { throw AppFailure(message: "Finish or review your saved team request first.") }; return
                 }
-                let data = try TaskfoldJSONEncoder().encode(Envelope(command: command))
+                let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = Command.encodingOptions
+                let data = try encoder.encode(Envelope(command: command))
+                guard data.count <= Command.maximumStoredBytes else { throw Command.invalid }
+                try lease.check(); try io.write(data, key: key(command.account, origin: command.origin))
+            }
+        }
+    }
+    /// Atomic state transition: no remove/write gap and no stale-window overwrite.
+    func replace(_ expected: Command, with command: Command, lease: CalendarReadLease) throws {
+        guard command.account == expected.account, command.origin == expected.origin else { throw Command.invalid }
+        try lock.withExclusive(account: command.account, check: { try lease.check() }) {
+            try guarded(account: command.account) {
+                guard try read(account: command.account, origin: command.origin) == expected else { throw CancellationError() }
+                let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = Command.encodingOptions
+                let data = try encoder.encode(Envelope(command: command))
                 guard data.count <= Command.maximumStoredBytes else { throw Command.invalid }
                 try lease.check(); try io.write(data, key: key(command.account, origin: command.origin))
             }

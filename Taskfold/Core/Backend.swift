@@ -1752,3 +1752,49 @@ extension Backend: AudioCommentReadingTransport {
         return try AudioCommentRemoteRemoval(data: data, expected: comment)
     }
 }
+
+
+extension Backend: TaskFileUploadTransport {
+    func taskFileReply(_ journal: TaskFileUploadJournal, action: String, incarnation: UUID) async throws -> Data {
+        guard ["publish", "resolve", "cancel"].contains(action), journal.phase == .attempted else { throw TaskFileUploadJournal.invalid }
+        try checkAudioPublicationOwner(journal.account, origin: journal.origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioPublicationOwner(journal.account, origin: journal.origin, incarnation: incarnation)
+        let payload: Record = action == "publish" ? Record(["intent": .object(journal.intent.fields), "bytes_base64": .string(journal.bytes.base64EncodedString())]) : Record(["operation_id": .string(journal.id)])
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = TaskFileUploadJournal.encodingOptions
+        let body = try encoder.encode(payload)
+        guard body.count <= TaskFileUploadJournal.maximumStoredBytes else { throw TaskFileUploadJournal.invalid }
+        let result = try await fileRequest(body, action: action, account: journal.account, origin: journal.origin, incarnation: incarnation, maximum: 64000)
+        return result
+    }
+    private func fileRequest(_ body: Data, action: String, account: String, origin: String, incarnation: UUID, maximum: Int) async throws -> Data {
+        try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
+        guard let session, let url = URL(string: origin + "/functions/v1/task-files?action=" + action) else { throw TaskFileUploadJournal.invalid }
+        var request = URLRequest(url: url); request.httpMethod = "POST"; request.httpBody = body; request.timeoutInterval = 30
+        request.cachePolicy = .reloadIgnoringLocalCacheData; request.httpShouldHandleCookies = false
+        request.setValue(config["Key"], forHTTPHeaderField: "apikey"); request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
+        let (bytes, incoming) = try await http.bytes(for: request, delegate: LocationHandoffRedirectRefusal.shared)
+        var data = Data()
+        do {
+            for try await byte in bytes {
+                try Task.checkCancellation(); guard data.count < maximum else { throw TaskFileUploadJournal.invalid }
+                if data.count % 4096 == 0 { try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation) }
+                data.append(byte)
+            }
+            try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
+        } catch { bytes.task.cancel(); throw error }
+        guard let response = incoming as? HTTPURLResponse, response.url == url, (200..<300).contains(response.statusCode) else { throw TaskFileUploadJournal.invalid }
+        return data
+    }
+    func downloadTaskFile(_ attachment: Record, target: Record, account: String, origin: String, incarnation: UUID) async throws -> Data {
+        guard TaskFileUploadJournal.validID(attachment.string("storage_object_id")), TaskFileUploadJournal.types.contains(attachment.string("type")),
+              case .number(let size) = attachment["size"], size.isFinite, size.rounded() == size, size > 0, size <= Double(TaskFileUploadJournal.maximumBytes),
+              attachment.string("sha256").count == 64, TaskFileUploadJournal.validID(target.string("task_id")), TaskFileUploadJournal.validID(target.string("task_generation")) else { throw TaskFileUploadJournal.invalid }
+        try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
+        let body = try TaskfoldJSONEncoder().encode(Record(["object_id": attachment["storage_object_id"], "task_id": target["task_id"], "task_generation": target["task_generation"]]))
+        let bytes = try await fileRequest(body, action: "download", account: account, origin: origin, incarnation: incarnation, maximum: TaskFileUploadJournal.maximumBytes)
+        guard bytes.count == Int(size), TaskFileUploadJournal.digest(bytes) == attachment.string("sha256") else { throw TaskFileUploadJournal.invalid }
+        return bytes
+    }
+}

@@ -82,6 +82,7 @@ struct TaskInspectorForm: View {
     @State private var teamDraftCaptured = false
     private var isTeamTask: Bool { teamDraft != nil }
     private var quickExclusions: Set<String> { isTeamTask ? SubtaskTree.childQuickEntryExclusions.union(["assigned_to", "labels"]) : Workspace.subtaskPath(taskID) != nil ? SubtaskTree.childQuickEntryExclusions : [] }
+    @State private var taskFiles: TaskFileUploadRequest?
     @State private var teamMove: TeamTaskMoveRequest?
     @State private var teamDeletion: TeamTaskDeletionRequest?
     @State private var teamRepeat: TeamTaskRecurrenceRequest?
@@ -211,6 +212,7 @@ struct TaskInspectorForm: View {
             Button("Keep editing", role: .cancel) {}
         }
         .interactiveDismissDisabled(isCreating && !creationFinished)
+        .sheet(item: $taskFiles) { TaskFileUploadView(request: $0) }
         .sheet(item: $teamMove) { TeamTaskMoveView(request: $0) }
         .sheet(item: $teamDeletion) { TeamTaskDeletionReview(request: $0) }
         .sheet(item: $teamRepeat) { TeamTaskRecurrenceEditor(request: $0) }
@@ -474,9 +476,12 @@ struct TaskInspectorForm: View {
             }
             }
             Section("Attachments") {
+                if isTeamTask && (store.taskFileUploadsEnabled || draft["attachments"].list.contains(where: { !$0.object["storage_object_id", default: .null].text.isEmpty })) {
+                    Button("Shared files…", systemImage: "paperclip") { taskFiles = store.fileUploadRequest(taskID: taskID) }.accessibilityIdentifier("openTaskFiles")
+                }
                 ForEach(Array(draft["attachments"].list.enumerated()), id: \.offset) { index, value in
                     HStack {
-                        Button { openAttachment(Record(value.object)) } label: { Label(value.object["name"]?.text ?? "Attachment", systemImage: "paperclip") }.buttonStyle(.link)
+                        Button { if !value.object["storage_object_id", default: .null].text.isEmpty { taskFiles = store.fileUploadRequest(taskID: taskID) } else { openAttachment(Record(value.object)) } } label: { Label(value.object["name"]?.text ?? "Attachment", systemImage: "paperclip") }.buttonStyle(.link)
                         Spacer()
                         Button { var list = draft["attachments"].list; list.remove(at: index); draft["attachments"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).disabled(isTeamTask).accessibilityLabel("Remove attachment")
                     }
