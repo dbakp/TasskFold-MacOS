@@ -682,7 +682,7 @@ struct TemplateRunView: View {
                 }
                 #endif
                 let changes = try existing ?? definition.instantiate(account: account, name: title, targetProject: target, start: start, labels: labels, run: run)
-                let history = localHistory ? try LocalActivityCreation.Preparation(changes: changes, snapshot: historySnapshot, source: historyRevision, account: account, labels: labels, cache: historyCache) : nil
+                let history = localHistory ? try LocalActivityCreation.Preparation(changes: changes, snapshot: historySnapshot, source: historyRevision, account: account, labels: labels, cache: historyCache, groupedHistory: true) : nil
                 return (changes: changes, history: history)
             }
             preparation = Task { @MainActor in

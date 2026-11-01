@@ -1,0 +1,31 @@
+{
+  "platform": "phone",
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "162e2500700d5a5fa811b156fbda13ebab6a9213d529b423a87ec771b5e42e7c",
+    "Taskfold/Core/TaskActivity.swift": "8a291c8659da2e4984a6e036e1efb480e17784e4a5567d52ba1e074571084512",
+    "Taskfold/TeamTemplateNativeFixture.swift": "427306686a5246e9e12e9e94fdd31142b7afddd0f2694e72391b4d1c25d2d5bf",
+    "Taskfold/Views/ProjectPulseView.swift": "d6c5384f149090023b782efb21902e31eee5c73092570ebdc85c84da135d4369",
+    "Taskfold/Views/WorkflowViews.swift": "a36707353c376608eaab7aced008461449097a0618670784cbd3bf0a37e744f9",
+    "TaskfoldUITests/TaskfoldUITests.swift": "38d90b4af75debbedf5cfae1052a4c05769c7b438dcb4aef45051cf64a566e73"
+  },
+  "builtHostSHA256": {
+    "Taskfold/Core/Store.swift": "c0cad7d52f393d9e88832bde3d980eff7be9e88b4b2fd74877e719c369d4af54",
+    "Taskfold/Core/TaskActivity.swift": "8a291c8659da2e4984a6e036e1efb480e17784e4a5567d52ba1e074571084512",
+    "Taskfold/TeamTemplateNativeFixture.swift": "427306686a5246e9e12e9e94fdd31142b7afddd0f2694e72391b4d1c25d2d5bf",
+    "Taskfold/Views/ProjectPulseView.swift": "d6c5384f149090023b782efb21902e31eee5c73092570ebdc85c84da135d4369",
+    "Taskfold/Views/WorkflowViews.swift": "a36707353c376608eaab7aced008461449097a0618670784cbd3bf0a37e744f9",
+    "TaskfoldUITests/TaskfoldUITests.swift": "38d90b4af75debbedf5cfae1052a4c05769c7b438dcb4aef45051cf64a566e73"
+  },
+  "appSHA256": "74f109e0e54ca94f9e53260b83988ae89c02d0f6c0b19be9bb616d49f649c36d",
+  "debugDylibSHA256": "840b97d563e79c392aa19ccc2b7ce7b4feb2a422baea51fe7c9e07630eeb9d1d",
+  "newSimulator": false,
+  "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "sourceMatchesBuiltHostAfterIsolation": {
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Core/TaskActivity.swift": true,
+    "Taskfold/TeamTemplateNativeFixture.swift": true,
+    "Taskfold/Views/ProjectPulseView.swift": true,
+    "Taskfold/Views/WorkflowViews.swift": true,
+    "TaskfoldUITests/TaskfoldUITests.swift": true
+  }
+}

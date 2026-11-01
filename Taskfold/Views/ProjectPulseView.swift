@@ -22,6 +22,7 @@ struct ProjectPulseView: View {
     @State private var projectID = ""
     @State private var limit = 30
     @State private var onlyMine = false
+    @State private var groupLimits: [String: Int] = [:]
     @State private var peopleError: String?
     @State private var loadingPeople = false
     @State private var peopleRequest = UUID()
@@ -128,10 +129,34 @@ struct ProjectPulseView: View {
                     let events = reading.timeline.filter { !onlyMine || $0.actor?.lowercased() == store.userID.lowercased() }
                     if events.isEmpty { Text(onlyMine ? "No recorded changes by you in this project yet." : "No recorded activity for this project yet.").foregroundStyle(.secondary).accessibilityIdentifier("pulseActivityEmpty") }
                     else {
+                        let groups = WorkActivityGroup.reading(events)
                         LazyVStack(alignment: .leading, spacing: 20) {
-                            ForEach(Array(events.prefix(limit))) { event in activityRow(event) }
+                            ForEach(Array(groups.prefix(limit))) { group in
+                                if group.events.count > 1 {
+                                    DisclosureGroup {
+                                        VStack(alignment: .leading, spacing: 20) {
+                                            let shown = groupLimits[group.id] ?? 30
+                                            ForEach(Array(group.events.prefix(shown))) { event in activityRow(event) }
+                                            if shown < group.events.count {
+                                                Button("Show more changes") { groupLimits[group.id] = shown + 30 }
+                                                    .frame(minHeight: 44).accessibilityIdentifier("pulseMoreChanges-" + group.id)
+                                            }
+                                        }.padding(.top, 10)
+                                            .accessibilityElement(children: .contain).accessibilityIdentifier("pulseActivityGroupDetails-" + group.id)
+                                    } label: {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(group.title).foregroundStyle(Color.primary).font(.subheadline.weight(.semibold)).fixedSize(horizontal: false, vertical: true)
+                                            Text("\(group.events.count) recorded changes").font(.footnote).foregroundStyle(Color.secondary)
+                                            if let event = group.events.first {
+                                                Label(activityContext(event).actor, systemImage: "person.crop.circle").font(.footnote).foregroundStyle(Color.secondary)
+                                                Text("Recorded " + event.recordedAt.formatted(date: .abbreviated, time: .shortened)).font(.footnote).foregroundStyle(Color.secondary).fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                    }.accessibilityIdentifier("pulseActivityGroup-" + group.id)
+                                } else if let event = group.events.first { activityRow(event) }
+                            }
                         }
-                        if limit < events.count { Button { limit += 30 } label: { Text("Show more activity").frame(maxWidth: .infinity, minHeight: 44) }.accessibilityIdentifier("pulseMoreActivity") }
+                        if limit < groups.count { Button { limit += 30 } label: { Text("Show more activity").frame(maxWidth: .infinity, minHeight: 44) }.accessibilityIdentifier("pulseMoreActivity") }
                     }
                 } else {
                     Text(store.localMode ? "Activity will be recorded when you change a task on this device." : "Sync your workspace to load recorded history.")

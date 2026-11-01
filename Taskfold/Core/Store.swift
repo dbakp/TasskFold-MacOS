@@ -2606,7 +2606,10 @@ final class Store {
             workflowPresentationDeferred = false; deferringPresentation = false
             refreshSnapshotPresentation(from: old)
         }
-        do { try persist(backgroundWidgets: projectsFreshCreation && widgetReceipt == nil && sharedCaptureReceipt == nil, preparedEncoding: retainCapturedChanges ? admittedHistory?.encodedCache : nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
+        let groupedHistoryChanged = localMode && changes.first.map {
+            ActivityOperation.attachLocal(id: $0.id, account: userID, after: ActivityOperation.counts(old), to: &snapshot)
+        } == true
+        do { try persist(backgroundWidgets: projectsFreshCreation && widgetReceipt == nil && sharedCaptureReceipt == nil, preparedEncoding: retainCapturedChanges && !groupedHistoryChanged ? admittedHistory?.encodedCache : nil) } catch { snapshot = old; self.error = "Your change could not be saved: \(error.localizedDescription)"; return false }
         workflowSaveSucceeded = true
         if remember, let history { undoStack.append(history); if undoStack.count > 30 { undoStack.removeFirst() }; redoStack = [] }
         Task { await reschedule(); await sync() }
@@ -4090,6 +4093,19 @@ extension Store {
                 TaskNodeActivity.recordLocal(reorder, before: edited, after: reordered, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-30))
             }
 
+        }
+        if ProcessInfo.processInfo.arguments.contains("--project-pulse-group-details") {
+            var selected: [Record] = []
+            for (id, title) in [("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa93", "Prepare the study"), ("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa94", "Send the summary")] {
+                var task = Record.task(user: userID, project: project)
+                task["id"] = .string(id); task["title"] = .string(title)
+                let creation = Mutation(table: "tasks", recordID: id, method: "POST", fields: task.fields)
+                snapshot.apply(creation)
+                TaskActivity.recordLocal(creation, before: nil, after: task, snapshot: &snapshot, account: userID, now: now.addingTimeInterval(-86400))
+                selected.append(task)
+            }
+            let changes = selected.flatMap { TaskCompletion.toggle($0, tasks: tasks, at: now.addingTimeInterval(-30), account: userID) }
+            _ = commit(changes)
         }
         if ProcessInfo.processInfo.arguments.contains("--project-pulse-no-history") {
             snapshot.tables[TaskActivity.table] = []; snapshot.tables[TaskActivity.epochTable] = []

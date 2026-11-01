@@ -264,6 +264,7 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
     var before: [String: JSON]
     var after: [String: JSON]
     var rootContext: TaskRootActivityContext?
+    let operation: ActivityOperation?
     var workBefore: Bool { !before.isEmpty && (rootContext.map { $0.readable && $0.beforeType == .task } ?? true) }
     var workAfter: Bool { !after.isEmpty && (rootContext.map { $0.readable && $0.afterType == .task } ?? true) }
     init?(row: Record, parseInstant:(String)->Date? = TaskPlanning.instant, validDay:(String)->Bool = {Dates.parse($0) != nil}) {
@@ -283,6 +284,7 @@ struct TaskActivity: Equatable, Identifiable, Sendable {
             guard let context = TaskRootActivityContext(document: row["root_context"], beforeExists: !before.isEmpty, afterExists: !after.isEmpty) else { return nil }
             rootContext = context
         }
+        operation = ActivityOperation(row["operation_context"])
         id = row.id.lowercased(); self.sequence = sequence; owner = row.string("user_id"); taskID = row.string("task_id").lowercased()
         actor = row["actor_id"] == .null ? nil : row.string("actor_id")
         recordedAt = recorded; effectiveAt = effective; completionVersion = version; kinds = values.compactMap { Kind(rawValue: $0.text) }
@@ -417,6 +419,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
         }
     }
     let transfer: Transfer?
+    let operation: ActivityOperation?
     /// Only field names leave the edit. Values remain in the current task.
     static let editFields: Set<String> = ["assigned_to", "description", "duration_minutes", "labels", "priority", "reminder_specs", "title"]
     let changedFields: [String]
@@ -504,6 +507,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
                   (kinds == [.created] && context.destination.root == row.string("task_id").lowercased() && context.destination.generation == generation && context.destination.key.utf8.elementsEqual(row.string("node_key").utf8) && (after["project_id"] == .null ? nil : after["project_id"]?.text.lowercased()) == context.destination.project) else { return nil }
             transfer = context
         }
+        operation = ActivityOperation(row["operation_context"])
         id = row.id.lowercased(); self.sequence = sequence; owner = row.string("user_id")
         rootID = row.string("task_id").lowercased(); self.generation = generation; nodeKey = row.string("node_key")
         self.beforePath = beforePath; self.afterPath = afterPath; actor = row["actor_id"] == .null ? nil : row.string("actor_id")
@@ -1255,6 +1259,64 @@ struct ChildWorkHistory: Sendable {
     }
 }
 
+/// Display-only provenance. It never grants access or changes completion credit.
+struct ActivityOperation: Equatable, Hashable, Sendable {
+    enum Origin: String, Sendable { case local_commit, server_transaction }
+    let id: UUID
+    let origin: Origin
+    init(id: UUID, origin: Origin) { self.id = id; self.origin = origin }
+    init?(_ value: JSON) {
+        guard case .object(let fields) = value, Set(fields.keys) == ["version", "id", "origin"], fields["version"] == .number(1),
+              case .string(let rawID)? = fields["id"], let id = UUID(uuidString: rawID),
+              case .string(let rawOrigin)? = fields["origin"], let origin = Origin(rawValue: rawOrigin) else { return nil }
+        self.id = id; self.origin = origin
+    }
+    var document: JSON { .object(["version": .number(1), "id": .string(id.uuidString.lowercased()), "origin": .string(origin.rawValue)]) }
+    /// The Store owns these append boundaries. Never scan or rewrite old history.
+    @discardableResult static func attachLocal(id: UUID, account: String, after counts: [String: Int], to snapshot: inout Snapshot) -> Bool {
+        let document = Self(id: id, origin: .local_commit).document
+        var changed = false
+        for table in [TaskActivity.table, TaskNodeActivity.table] {
+            guard let count = counts[table], count >= 0, let rows = snapshot.tables[table], count <= rows.count else { continue }
+            for index in count..<rows.count where rows[index].string("actor_id") == account && rows[index].string("user_id") == account {
+                if rows[index]["operation_context"] != document {
+                    snapshot.tables[table]![index]["operation_context"] = document; changed = true
+                }
+            }
+        }
+        return changed
+    }
+    static func counts(_ snapshot: Snapshot) -> [String: Int] {
+        [TaskActivity.table: snapshot.tables[TaskActivity.table]?.count ?? 0, TaskNodeActivity.table: snapshot.tables[TaskNodeActivity.table]?.count ?? 0]
+    }
+}
+
+/// Groups only recorded provenance, within the already filtered workspace/project.
+/// Missing, unknown or malformed provenance leaves the underlying event intact.
+struct WorkActivityGroup: Identifiable {
+    let id: String
+    let events: [WorkActivity]
+    var title: String {
+        if events.allSatisfy({ $0.kinds == ["completed"] }) { return "Completed together" }
+        if events.allSatisfy({ $0.kinds == ["reopened"] }) { return "Reopened together" }
+        return "Changes recorded together"
+    }
+    static func reading(_ source: [WorkActivity]) -> [Self] {
+        var buckets: [String: [WorkActivity]] = [:]
+        for event in source {
+            let key: String
+            if let operation = event.operation, let actor = event.actor, !actor.isEmpty {
+                let parts = [operation.origin.rawValue, operation.id.uuidString.lowercased(), actor.lowercased()]
+                let bytes = try! TaskfoldJSONEncoder().encode(parts)
+                key = "operation-" + SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+            } else { key = "event-" + event.id }
+            buckets[key, default: []].append(event)
+        }
+        return buckets.map { key, values in Self(id: key, events: values.sorted(by: WorkActivity.newestFirst)) }
+            .sorted { WorkActivity.newestFirst($0.events[0], $1.events[0]) }
+    }
+}
+
 /// Display identity includes its feed. Sequences are comparable only within a feed.
 enum WorkActivity: Identifiable, Equatable {
     case root(TaskActivity), child(TaskNodeActivity)
@@ -1264,6 +1326,7 @@ enum WorkActivity: Identifiable, Equatable {
     var effectiveAt: Date { switch self { case .root(let e): return e.effectiveAt; case .child(let e): return e.effectiveAt } }
     var sequence: Int64 { switch self { case .root(let e): return e.sequence; case .child(let e): return e.sequence } }
     var actor: String? { switch self { case .root(let e): return e.actor; case .child(let e): return e.actor } }
+    var operation: ActivityOperation? { switch self { case .root(let e): return e.operation; case .child(let e): return e.operation } }
     var before: [String: JSON] { switch self { case .root(let e): return e.before; case .child(let e): return e.before } }
     var after: [String: JSON] { switch self { case .root(let e): return e.after; case .child(let e): return e.after } }
     var kinds: [String] {
@@ -1473,7 +1536,7 @@ enum LocalActivityCreation {
         private let freshCreation: FreshWorkflowCreation
         private let requiresHeadingAuthoring: Bool
         private static let owned = [TaskActivity.table, TaskActivity.epochTable, TaskNodeActivity.table, TaskNodeActivity.epochTable, TaskAssignmentProvenance.table]
-        init?(changes: [Mutation], snapshot: Snapshot, source: UUID, account: String, labels: [Record], cache: TeamWorkspaceCache?, at date: Date = Date(), checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
+        init?(changes: [Mutation], snapshot: Snapshot, source: UUID, account: String, labels: [Record], cache: TeamWorkspaceCache?, groupedHistory: Bool = false, at date: Date = Date(), checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
             try checkCancellation()
             guard WorkflowUndo.creationRun(changes) != nil else { return nil }
             let calendar = Calendar.current
@@ -1503,6 +1566,9 @@ enum LocalActivityCreation {
                 if change.table == "tasks" { entries.append(Entry(change: change, after: after, recordedAt: date)) }
             }
             guard LocalActivityCreation.record(entries, snapshot: &working, account: account) else { return nil }
+            if groupedHistory, let id = changes.first?.id {
+                ActivityOperation.attachLocal(id: id, account: account, after: ActivityOperation.counts(snapshot), to: &working)
+            }
             try checkCancellation()
             self.source = source; self.account = account; self.entries = entries
             self.freshCreation = freshCreation; self.requiresHeadingAuthoring = requiresHeadingAuthoring

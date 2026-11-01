@@ -1,0 +1,21 @@
+{
+  "scope": "Terminal superseded grouped-activity test outputs; compact findings and captures retained",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-group-activity-native-phone-v1.xcresult",
+      "logicalBytes": 14426607
+    },
+    {
+      "path": "/tmp/taskfold-group-activity-native-phone-v1-attachments",
+      "logicalBytes": 13795698
+    },
+    {
+      "path": "/tmp/taskfold-group-activity-native-phone-v2.xcresult",
+      "logicalBytes": 14232729
+    },
+    {
+      "path": "/tmp/taskfold-group-activity-native-phone-v2-attachments",
+      "logicalBytes": 12898468
+    }
+  ]
+}

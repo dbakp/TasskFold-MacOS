@@ -488,7 +488,7 @@ import CryptoKit
                 }
                 defer { heartbeat.cancel() }
                 prepared = try await Task.detached(priority: .userInitiated) {
-                    try LocalActivityCreation.Preparation(changes: changes, snapshot: snapshot, source: source, account: account, labels: labels, cache: cache)
+                    try LocalActivityCreation.Preparation(changes: changes, snapshot: snapshot, source: source, account: account, labels: labels, cache: cache, groupedHistory: true)
                 }.value
             }
             let preparationElapsed = started.duration(to: clock.now)

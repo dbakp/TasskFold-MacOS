@@ -1,0 +1,12 @@
+{
+  "Taskfold/Core/TaskActivity.swift": "8a291c8659da2e4984a6e036e1efb480e17784e4a5567d52ba1e074571084512",
+  "Taskfold/Core/Store.swift": "29b4dcb2f1869f8e3b660719df5a33640c4d3b08d882e6702d62b902dbb6d524",
+  "Taskfold/Views/ProjectPulseView.swift": "d6c5384f149090023b782efb21902e31eee5c73092570ebdc85c84da135d4369",
+  "Taskfold/Views/WorkflowViews.swift": "a15c643185ce6cfc40acc873c9f5dbf252f3d837781fe7e87e400c1833c9bd08",
+  "Taskfold/TeamTemplateNativeFixture.swift": "0b2479fc891b13287329f3ea42efcf390a3a5ff974f155850c40b18de4d25b9e",
+  "TaskfoldTests/ActivityOperationTests.swift": "fd10fc132773fc7d8d14368fd874481b215cb9bbc306a990384a248761e68572",
+  "TaskfoldTests/Fixtures/activity-operation-groups.json": "d3f83139df222512a27a32710b46a6996be83f99fbf012ad7cbf0611b080db0e",
+  "Scripts/Database/test-activity-groups.mjs": "38f87ff43bc50640bb415689913cd36a0688bf648fda90b292d2281c2e454f38",
+  "Scripts/verify_activity_groups_snapshot.py": "efadece5980af6246ce403e7bcbccc1f32763f8ff110ca3680c0b0120700164e",
+  "supabase/migrations/20261101062555_activity_operation_groups.sql": "b098318aee63ac5c85ba5bb505b5a4bd15cc812a39955632d7d1d5155baf25df"
+}

@@ -1,0 +1,30 @@
+{
+  "ownedSimulatorFinalState": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "state": "Shutdown"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "state": "Shutdown"
+    }
+  ],
+  "removed": [
+    {
+      "path": "/tmp/taskfold-group-activity-native-phone-v3.xcresult",
+      "logicalBytes": 3143348
+    },
+    {
+      "path": "/tmp/taskfold-group-activity-native-phone-v3-attachments",
+      "logicalBytes": 1346584
+    },
+    {
+      "path": "/tmp/taskfold-group-activity-native-ipad-v3.xcresult",
+      "logicalBytes": 4291831
+    },
+    {
+      "path": "/tmp/taskfold-group-activity-native-ipad-v3-attachments",
+      "logicalBytes": 2185644
+    }
+  ]
+}

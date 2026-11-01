@@ -1,0 +1,16 @@
+{
+  "initial": "Failed before opening the group: global task-label query matched an older ungrouped creation entry",
+  "observed": "Captured disclosure was collapsed; no product collapse failure claimed",
+  "fix": "Scope target links to the group detail container; check that container is hidden when collapsed. Use semantic primary/secondary text colors instead of tinted secondary text.",
+  "coreOrSQLChangedForRetake": false,
+  "finalAcceptance": "Final v3 results are recorded separately; the two superseded phone phases remain failures.",
+  "second": "Native expansion produced both completion members. iOS propagated the parent disclosure identifier onto the content, so the custom-content identifier lookup failed.",
+  "testOnlyCorrection": "Restrict the detail query to native Other elements under the observed disclosure identifier (or the explicit content identifier where honored).",
+  "appSourceUnchangedBetweenSecondAndFinal": {
+    "Taskfold/Core/Store.swift": true,
+    "Taskfold/Core/TaskActivity.swift": true,
+    "Taskfold/TeamTemplateNativeFixture.swift": true,
+    "Taskfold/Views/ProjectPulseView.swift": true,
+    "Taskfold/Views/WorkflowViews.swift": true
+  }
+}

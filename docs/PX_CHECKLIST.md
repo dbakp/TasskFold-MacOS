@@ -1452,3 +1452,14 @@ Each repository owns its implementation, focused client checks, real local SQL f
 - [ ] Shared-operation grouping, wider timing/lifecycle, remaining Mac acceptance, older-data/history mapping and shared file/discussion custody. Broader migration use stays disabled; hosted deployment and existing user deferrals are unchanged.
 
 [Current scope and evidence](order-activity/README.md). This completes ordering activity, not the whole shared-history or migration requirement.
+
+
+## 1 November · activity grouped by committed action
+
+- [x] Correlate actual shared database transactions and local Store commits explicitly. Keep older/unknown records separate, and preserve individual event times, completion credit, actors and current-task guards.
+- [x] Add readable native disclosure summaries with bounded detail paging. Preserve prepared-workflow encoding and safely fall back when metadata changes after preparation.
+- [x] Each repo passes 135 focused client checks and 67 actual local database checks, including root/child completion, whole-action Undo, retry, late rollback, timezone changes and access boundaries.
+- [x] iPhone and largest-text/dark iPad expand the correct two details and retain grouping after cold return; exact persisted completion/group metadata passes. Initial test lookup failures remain separate from final accepted runs.
+- [ ] Remaining Mac keyboard/runtime, broader genuine-account/lifecycle/accessibility/library acceptance, older-data/history mapping, shared file/discussion custody and hosted migration. Ordinary subtask migration use remains disabled; prior user deferrals stay paused.
+
+[Exact scope and evidence](activity-groups/README.md).

@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-01",
+  "status": "shared/local activity grouping implemented; mobile accepted; broader migration open",
+  "focusedClientCases": 135,
+  "ownedSQLChecks": 67,
+  "migration": "20261101062555_activity_operation_groups.sql",
+  "migrationDeployed": false,
+  "normalMigrationGatesEnabled": false,
+  "newRPCGrants": false,
+  "native": {
+    "phone": "final v3 saved/cold expansion and persisted metadata passed",
+    "ipad": "final v3 largest-text/dark saved/cold expansion and persisted metadata passed"
+  },
+  "mac": {
+    "build": "passed, app-only and strict signature",
+    "runtime": "open; computer use reports Mac locked. No isolated Mac app was launched for this check."
+  },
+  "remaining": [
+    "Older-data/history mapping",
+    "Shared file/discussion custody",
+    "Remaining Mac keyboard/runtime and broader genuine acceptance",
+    "Hosted migration"
+  ]
+}

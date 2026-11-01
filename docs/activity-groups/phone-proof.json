@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "groupedEntries": 2,
+  "groups": 1,
+  "origin": "local_commit",
+  "chosenInstantsPreserved": true,
+  "exactCurrentCompletionPreserved": true,
+  "privateTextAbsentFromLedger": true,
+  "noPendingNetworkMutations": true,
+  "snapshotSHA256": "9566628db433cf8b20288d765de1be5113225ab8cdaa156dcff4fff20c786a13"
+}
