@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Existing history on iPhone: review, recovery and export accepted",
-  "latest": "Fixed the history chooser’s unstable sheet and hidden search, kept saved confirmation visible during export and used adaptive candidate text. One actual iPhone/local-database flow now passes search/cancel, incomplete and complete cold reviews, editing, one save with a lost reply, original-request recovery and exact 9,809-byte native file readback. Both apps build/sign, each repo passes five channel checks and 11 SQL/channel checks, and the independent verifier rejects damaged/foreign evidence. Mac/iPad and broader cases remain open; normal use stays disabled.",
+  "focus": "P2 · Preserve exact subtask fields in editable private drafts",
+  "latest": "Closed a subtask-draft preservation gap: complete originals, unfamiliar Unicode keys and exact large numbers survive refresh and encrypted cold recovery. Each repo passes 328 focused checks, repeated preservation checks after extension separation, and final signed debug packages. This is core/build evidence; no new native acceptance is claimed. The earlier iPhone history flow remains accepted in its recorded scope. Full cache migration, Mac/iPad and wider acceptance, and shared custody remain open; normal use stays disabled.",
   "next": [
     "Accept Mac/iPad history controls and the remaining new/retired identity, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Mac runtime needs an unlocked desktop. Verify other Files destinations; only local Documents is accepted.",
-    "Resolve more complex recipient/recurrence histories and preserve exact opaque editable caches.",
+    "Complete the broader exact root/cache/index migration and complex recipient/recurrence histories; child-field originals and encrypted drafts now have scoped preservation support.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
@@ -559,7 +559,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Atomic mapped saves and earned-credit preservation have database/core proof. The existing-history iPhone flow now has actual SQL-backed search/cancel, partial/complete cold review, editing, lost-reply recovery and exact native export/readback. Mac/iPad, wider choices/accessibility, complex histories, exact editable caches and shared custody remain open; normal use stays disabled.",
+              "detail": "Atomic history mappings and earned-credit preservation have database/core proof; existing-history review/save/lost-reply recovery/exact export has iPhone native proof. Independent child-field reads and private drafts now retain exact unfamiliar fields through refresh and cold recovery (core/build scope). Full root/cache/index migration, complex histories, Mac/iPad and wider native acceptance, and shared custody remain open; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -632,6 +632,10 @@
                 {
                   "state": "verify",
                   "title": "Accept existing-history iPhone matching, cold recovery and exact export; finish Mac/iPad and wider cases"
+                },
+                {
+                  "state": "done",
+                  "title": "Keep exact child-field originals through refresh and encrypted cold recovery (core)"
                 },
                 {
                   "state": "build",
@@ -816,7 +820,9 @@
     "duplicate-history-repair/README.md",
     "duplicate-history-repair/verification.json",
     "duplicate-history-repair-native/README.md",
-    "duplicate-history-repair-native/verification.json"
+    "duplicate-history-repair-native/verification.json",
+    "exact-child-field-storage/README.md",
+    "exact-child-field-storage/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
@@ -889,6 +895,8 @@
     "duplicate-history-repair-native/verification.json": "95c758f713b374d01ffa31b95744dba3e20ef7231aa71add535b0f543723ee66",
     "duplicate-history-repair/README.md": "bbdac8ce08eb7bbf9173b5ebfb74516d385ec32bb355cfb8643d828c71f90ba9",
     "duplicate-history-repair/verification.json": "c61d5927c2b4c778fe82b8b79c6a853713c4fdc64da95c6cbd6cd033f893d899",
+    "exact-child-field-storage/README.md": "a3fc98bb8f1b35bcf778f85c1c3950a5b0f97aab5dad89a7fc0a0eb580fb6b2d",
+    "exact-child-field-storage/verification.json": "68481e288b979f7becc06339786ad4af3d3957104be153058f3e44fd324a5cf4",
     "field-activity/README.md": "dbae120927eda8cc30301a51ba174c26f3f74790c76aa4a52cf6ce86d5af42b9",
     "field-activity/verification.json": "dce424a0940bacc8e3300e9496969e4d94a92722bea799f0592407ceadcff4b6",
     "field-history/README.md": "5b06f10129fc2515d2ff19280fceb406ac4bd50186f334d0501d2c7483547d87",

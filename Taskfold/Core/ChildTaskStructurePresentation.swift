@@ -244,7 +244,7 @@ enum ChildTaskFieldDraftContinuation {
         return Set(previous.nodes.keys.filter { key in
             guard let old = previous.nodes[key], let new = current.nodes[key] else { return false }
             return old.incarnation == new.incarnation && old.revision == new.revision &&
-                AuthoredValueComparison.exactJSON(.object(old.fields), .object(new.fields))
+                AuthoredValueComparison.exactJSON(old.sourceFields, new.sourceFields)
         })
     }
 }

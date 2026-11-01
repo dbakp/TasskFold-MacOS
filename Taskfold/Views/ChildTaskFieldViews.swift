@@ -699,7 +699,7 @@ struct ChildTaskFieldEditorView: View {
         addingLabel = labelInputs[key] ?? ""; labelMessage = nil; failure = nil
         draftIdentity = .object(["root": .string(read.context.root.id), "generation": read.context.root["task_generation"], "project": read.context.root["project_id"], "node": .string(node.key), "incarnation": .string(node.incarnation), "revision": .number(node.revision)])
         do {
-            draftSession = try draftSessions[key] ?? store.beginEditorSession(Record(node.fields))
+            draftSession = try draftSessions[key] ?? store.beginEditorSession(Record(node.fields), exactOriginalFields: node.sourceFields)
             draftSessions[key] = draftSession
         } catch { failure = error.localizedDescription }
     }
@@ -709,7 +709,7 @@ struct ChildTaskFieldEditorView: View {
         guard let read, let node = read.nodes[selectedKey] else { return }
         if draftSession?.closed == true {
             guard reopen, ChildTaskFieldClientScope(read.context) == scope else { return }
-            do { draftSession = try store.beginEditorSession(Record(node.fields)); draftSessions[selectedKey] = draftSession }
+            do { draftSession = try store.beginEditorSession(Record(node.fields), exactOriginalFields: node.sourceFields); draftSessions[selectedKey] = draftSession }
             catch { failure = error.localizedDescription; return }
         }
         guard let session = draftSession else { return }

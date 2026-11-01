@@ -263,6 +263,20 @@ private struct PreservingJSONSyntax {
     mutating func literal(_ value: [UInt8]) throws {
         guard offset + value.count <= bytes.count, Array(bytes[offset..<offset+value.count]) == value else { throw PreservedJSONFailure.syntax }; offset += value.count
     }
+    struct ObjectMember { let key: String; let keyRange: Range<Int>; let value: Range<Int> }
+    mutating func objectMembers() throws -> [ObjectMember] {
+        space(); guard take(123) else { throw PreservedJSONFailure.syntax }
+        var members: [ObjectMember] = [], keys = Set<Data>()
+        if take(125) { space(); guard offset == bytes.count else { throw PreservedJSONFailure.syntax }; return members }
+        repeat {
+            space(); let keyRange = try string(), key = try decodedString(keyRange)
+            guard keys.insert(Data(key.utf8)).inserted, take(58) else { throw PreservedJSONFailure.syntax }
+            space(); let start = offset; _ = try value(path: [], depth: 1)
+            members.append(ObjectMember(key: key, keyRange: keyRange, value: start..<offset))
+            if take(125) { space(); guard offset == bytes.count else { throw PreservedJSONFailure.syntax }; return members }
+            guard take(44) else { throw PreservedJSONFailure.syntax }
+        } while true
+    }
     mutating func number() throws -> Range<Int> {
         let start = offset
         if offset < bytes.count && bytes[offset] == 45 { offset += 1 }
@@ -323,3 +337,66 @@ private struct PreservingJSONSyntax {
         return (negative ? "-" : "") + String(decoding: digits[first..<last], as: UTF8.self) + "e" + String(increased.partialValue)
     }
 }
+
+// Extensions use the codec without the app task model.
+#if !TASKFOLD_SHARE_EXTENSION && !TASKFOLD_WIDGET_EXTENSION
+/// A projection is only for field-level editors/patches. It must never replace
+/// the source object: Swift cannot represent its distinct canonically-equal keys.
+extension JSON {
+    func fieldEditingProjection() throws -> [String: JSON] {
+        switch self {
+        case .object(let fields): return fields.filter { $0.key.utf8.allSatisfy { $0 < 128 } }
+        case .preserved(let source) where source.kind == .object:
+            var syntax = PreservingJSONSyntax(data: source.data, detectOpaque: false)
+            let members = try syntax.objectMembers()
+            var fields: [String: JSON] = [:]
+            for member in members where member.key.utf8.allSatisfy({ $0 < 128 }) {
+                fields[member.key] = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(syntax.bytes[member.value]))
+            }
+            return fields
+        default: throw PreservedJSONFailure.ambiguousMetadata
+        }
+    }
+    /// Update only unambiguous ASCII field names. Untouched member tokens,
+    /// including distinct Unicode keys, numbers and nested values, stay exact.
+    func editingASCIIFields(_ changes: [String: JSON], removing: Set<String> = []) throws -> JSON {
+        guard Set(changes.keys).isDisjoint(with: removing), changes.keys.allSatisfy(Self.asciiField), removing.allSatisfy(Self.asciiField) else { throw PreservedJSONFailure.ambiguousMetadata }
+        switch self { case .object: break; case .preserved(let source) where source.kind == .object: break; default: throw PreservedJSONFailure.ambiguousMetadata }
+        if changes.isEmpty && removing.isEmpty { return self }
+        if case .object(var fields) = self, fields.keys.allSatisfy({ $0.utf8.allSatisfy { $0 < 128 } }) {
+            for key in removing { fields.removeValue(forKey: key) }
+            for (key, value) in changes { fields[key] = value }
+            return .object(fields)
+        }
+        let sourceData: Data
+        if case .preserved(let source) = self { sourceData = source.data }
+        else { sourceData = try TaskfoldJSONEncoder().encode(self) }
+        var syntax = PreservingJSONSyntax(data: sourceData, detectOpaque: false)
+        let members = try syntax.objectMembers(), encoder = TaskfoldJSONEncoder()
+        var parts: [Data] = [], handled = Set<String>(), changed = false
+        for member in members {
+            // Non-ASCII names never enter a String-key dictionary lookup.
+            let ascii = member.key.utf8.allSatisfy { $0 < 128 }
+            if ascii && removing.contains(member.key) { changed = true; continue }
+            if ascii, let value = changes[member.key] {
+                handled.insert(member.key)
+                let original = try TaskfoldJSONDecoder().decode(JSON.self, from: Data(syntax.bytes[member.value]))
+                if AuthoredValueComparison.exactJSON(original, value) {
+                    parts.append(Data(syntax.bytes[member.keyRange.lowerBound..<member.value.upperBound]))
+                } else {
+                    var data = Data(syntax.bytes[member.keyRange.lowerBound..<member.value.lowerBound]); data.append(try encoder.encode(value)); parts.append(data); changed = true
+                }
+            } else { parts.append(Data(syntax.bytes[member.keyRange.lowerBound..<member.value.upperBound])) }
+        }
+        for key in changes.keys.filter({ !handled.contains($0) }).sorted() {
+            var data = try encoder.encode(key); data.append(58); data.append(try encoder.encode(changes[key]!)); parts.append(data); changed = true
+        }
+        guard changed else { return self }
+        var data = Data([123])
+        for (offset, part) in parts.enumerated() { if offset > 0 { data.append(44) }; data.append(part) }
+        data.append(125)
+        return try TaskfoldJSONDecoder().decode(JSON.self, from: data)
+    }
+    private static func asciiField(_ value: String) -> Bool { !value.isEmpty && value.utf8.count <= 200 && value.utf8.allSatisfy { $0 < 128 } }
+}
+#endif

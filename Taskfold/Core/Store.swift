@@ -1209,9 +1209,12 @@ final class Store {
         let draft = try captureTeamTaskCreation(source)
         return TaskEditorOpening(task: source, admission: TaskEditorAdmission(workspace: draft.workspace, record: source, root: nil, kind: .new, teamDraft: draft))
     }
-    func beginEditorSession(_ original: Record) throws -> TaskEditorSession {
+    func beginEditorSession(_ original: Record, exactOriginalFields: JSON? = nil) throws -> TaskEditorSession {
         guard !accountRemovalBlocked,signedIn || localMode else {throw CancellationError()}
-        let session=TaskEditorSession(vault:backupVault,origin:localMode ? nil:try backend.accountRemovalOrigin,original:original,labels:labels)
+        if let exactOriginalFields {
+            guard AuthoredValueComparison.exactJSON(.object(try exactOriginalFields.fieldEditingProjection()), .object(original.fields)) else { throw CancellationError() }
+        }
+        let session=TaskEditorSession(vault:backupVault,origin:localMode ? nil:try backend.accountRemovalOrigin,original:original,labels:labels,exactOriginalFields:exactOriginalFields)
         editorSessions=editorSessions.filter{!$0.value.closed}
         editorSessions[session.id]=session
         return session

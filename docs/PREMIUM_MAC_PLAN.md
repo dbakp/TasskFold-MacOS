@@ -10279,3 +10279,7 @@ The reserved DEBUG host now has an isolated file channel into this repository's 
 ### 2026-11-01 — Stable history chooser and accepted phone save/recovery/export
 
 Both native clients now keep the chooser on the stable repair screen, expose iPhone search, use adaptive candidate text and retain the saved confirmation during original export. The iOS-owned existing-history flow passes with real local SQL, cold partial/complete reviews, lost-reply status recovery and exact native file/journal readback. Current Mac app/runner build and sign; Mac interaction is still blocked by the locked desktop. Details and scope: `child-copy-mapping-native/README.md`. Mac/iPad, wider choices, privacy/accessibility and the larger migration/custody gaps remain open. Normal-use flags and curated completion bars are unchanged.
+
+### 2026-11-01 — Exact child-field originals in private editor recovery
+
+Independent reads preserve full child-field objects while projecting only unambiguous editor fields. Tree reconstruction and encrypted recovery retain unknown Unicode keys and exact numbers; the editor session freezes its original across refreshed reads and validates recovery pairing. Focused core and signed-build scope is recorded in `exact-child-field-storage/`. No new native runtime acceptance is claimed. Full root/cache/index migration, complex histories, broader Mac/iPad acceptance and shared custody remain open; normal-use flags and curated bars stay unchanged.

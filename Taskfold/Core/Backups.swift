@@ -829,6 +829,12 @@ struct TaskEditorRecovery: Codable, Equatable, Sendable {
     }
     func validate() throws {
         guard version==1, revision>0, revision<=9_007_199_254_740_991, !account.isEmpty, account.count<=200, !draft.id.isEmpty, original.id==draft.id, createdAt.timeIntervalSince1970.isFinite else {throw BackupFailure(message:"This saved edit needs a supported Taskfold version. Its original is kept.")}
+        if let source = extras["original_child_fields"] {
+            guard let projection = try? source.fieldEditingProjection(),
+                  AuthoredValueComparison.exactJSON(.object(projection), .object(original.fields)) else {
+                throw BackupFailure(message: "This saved edit does not match its original task fields. Its original is kept.")
+            }
+        }
         if let origin {
             guard let url=URLComponents(string:origin),url.scheme=="https",url.host?.isEmpty==false,url.user==nil,url.password==nil,url.path.isEmpty,url.query==nil,url.fragment==nil else {throw BackupFailure(message:"This saved edit has an invalid workspace address.")}
         }
@@ -979,6 +985,7 @@ extension BackupVault {
     let origin: String?
     let original: Record
     let labels: [Record]
+    private let exactOriginalFields: JSON?
     private(set) var latest: TaskEditorRecovery?
     private(set) var savedRevision: UInt64 = 0
     private(set) var failure: String?
@@ -987,12 +994,15 @@ extension BackupVault {
     private var captureFailed = false
     private var revision: UInt64 = 0
     private let createdAt = Date()
-    init(vault: BackupVault, origin: String?, original: Record, labels: [Record]) {
-        self.vault=vault;account=vault.account;self.origin=origin;self.original=original;self.labels=labels
+    init(vault: BackupVault, origin: String?, original: Record, labels: [Record], exactOriginalFields: JSON? = nil) {
+        self.vault=vault;account=vault.account;self.origin=origin;self.original=original;self.labels=labels;self.exactOriginalFields=exactOriginalFields
     }
     var preserved: Bool {!captureFailed && latest != nil && savedRevision == latest?.revision}
     func capture(_ draft: Record, extras: [String:JSON]) {
         guard !closed else {return}
+        var extras = extras
+        // Bind the full original to this session, including across refreshed reads.
+        if let exactOriginalFields { extras["original_child_fields"] = exactOriginalFields }
         // Semantic equality is only a fast negative check: Swift Strings compare
         // canonically equivalent Unicode as equal. A different authored spelling
         // must still advance the revision and fence an earlier async checkpoint.
