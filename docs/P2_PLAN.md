@@ -7265,3 +7265,14 @@ Each repository owns its implementation, focused client checks, real local SQL f
 - [ ] Remaining Mac keyboard/runtime, broader genuine-account/lifecycle/accessibility/library acceptance, older-data/history mapping, shared file/discussion custody and hosted migration. Ordinary subtask migration use remains disabled; prior user deferrals stay paused.
 
 [Exact scope and evidence](activity-groups/README.md).
+
+
+## 1 November · mapped saved-copy transactions and neutral history
+
+- [x] Apply explicit identity/lifecycle choices through authorized, fingerprint-bound backend transactions, preserving all originals and existing incarnations, with fresh identities only when chosen.
+- [x] Record neutral reconciliation boundaries and preserve earned completion credit; do not manufacture credit from restored state. Later completion/reopen and same-version/different-epoch cases are covered.
+- [x] Preserve current supported child-history epoch metadata through backup validation; keep unknown/future fields and invalid dates rejected.
+- [ ] Typed native mapping choices, durable reviews, complete mapped-original decoding/export, save/recovery and cold/account/privacy/accessibility acceptance.
+- [ ] More complex recipient/recurrence histories, exact editable caches, shared file/discussion/archive custody and genuine shared-account/hosted migration acceptance. Other Mac/wider checks and user deferrals remain open.
+
+[Database/core evidence and limits](child-copy-mapping-apply/README.md). This is not a native mapping workflow or full migration acceptance; all normal-use gates remain disabled, with no hosted deployment.

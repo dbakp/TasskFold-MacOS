@@ -21,12 +21,10 @@ node Scripts/Database/test-child-copy-mapping-plan.mjs
 
 The test uses the actual database decoder, records and activity-shape validator. It is not native UI, HTTP authorization, atomic saving, productivity-credit or hosted migration acceptance. App binaries and previous native workflows were not rebuilt or rerun for this database-only addition.
 
-## Required integration, still unfinished
+## Integration follow-up
 
-1. Derive the complete current records, historical references, eligible recipients and fresh review seed inside the caller-authorized transaction. These helper inputs are trusted internal data, **not client claims**. Bind the complete choice to account/session, task generation, project, exact readable copies and current history/access fingerprint.
-2. Archive every original and the exact choices before applying anything. Retain bound incarnations; create fresh incarnations only for new identities; retire current records without deleting prior events. Preserve quotas, locking, replay/status/close recovery and full rollback through caller SELECT/UPDATE policies. Keep ordinary edit bridges closed.
-3. Add neutral reconciliation audit semantics. Restored completion state must not manufacture completed/reopened/created work credit or redate earlier credit. Reset boundaries need explicit handling in future completion/Undo/history calculations; merely changing the proposed completion token does not implement that policy.
-4. Add durable native mapping review, preview, explicit save, Undo/reset, original export and cold/lost-reply recovery. Accept both app workflows and wider account/accessibility/privacy cases.
-5. Resolve ambiguous recurrence lineage, exact editable-cache preservation and shared file/discussion/archive custody. Finish genuine shared-account and hosted migration acceptance before normal use.
+The subsequent [reviewed mapping transaction and core-history milestone](../child-copy-mapping-apply/README.md) implements the authorized snapshot-bound save, complete originals, neutral audit and completion-credit boundaries. Its own evidence and limits are recorded separately. The pure planner and its original 65-assertion evidence are unchanged.
+
+Native mapped review/drafts, original decoding/export, recovery and acceptance remain unfinished. Ambiguous recurrence/recipient decisions, exact editable caches and shared file/discussion/archive custody also remain open. Neither the planner nor transaction checks prove full older-data migration or enable normal use.
 
 The migration is committed for later deployment only. No hosted project, normal-use flag or public app route changes in this milestone. All user-deferred release/provider/device work remains deferred.

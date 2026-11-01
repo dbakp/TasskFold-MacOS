@@ -118,6 +118,8 @@ struct WorkspaceBackup: Codable, Sendable {
                         guard TaskActivity(row: row) != nil else { throw BackupFailure(message: "The activity archive contains an invalid event.") }
                     } else if table == TaskNodeActivity.table {
                         guard let event = TaskNodeActivity(row: row), nodeSequences.insert(event.sequence).inserted else { throw BackupFailure(message: "The child activity archive contains an invalid or duplicate event.") }
+                    } else if table == TaskNodeActivity.epochTable {
+                        guard TaskNodeActivity.validEpoch(rows) else { throw BackupFailure(message: "The child activity recording start is invalid.") }
                     } else {
                         guard rows.count == 1, row.id == "current", Set(row.fields.keys) == ["id", "recorded_from"], TaskPlanning.instant(row.string("recorded_from")) != nil else { throw BackupFailure(message: "The activity recording start is invalid.") }
                     }

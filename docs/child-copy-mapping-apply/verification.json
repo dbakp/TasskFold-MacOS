@@ -1,0 +1,178 @@
+{
+  "date": "2026-11-01",
+  "repository": "macOS",
+  "passed": true,
+  "assertions": 77,
+  "checks": {
+    "mapping rollout defaults disabled": true,
+    "mapped preview makes no writes": true,
+    "mapping send cannot bypass rollout": true,
+    "closed mapping gate retains every source": true,
+    "explicit mapped preview eligible": true,
+    "changed completion retains chosen old timestamp": true,
+    "changed completion resets old cohort": true,
+    "unchanged recorded completion does not reset": true,
+    "mapped send applied": true,
+    "mapped source matches actual mirror": true,
+    "mapped source matches independent records": true,
+    "existing incarnations remain exact": true,
+    "new identity receives a fresh incarnation": true,
+    "one neutral event instead of manufactured completions": true,
+    "neutral event uses transaction time": true,
+    "neutral subjects reset changed and new lifecycle only": true,
+    "earlier child event bytes remain exact": true,
+    "earlier root event bytes remain exact": true,
+    "all task originals retained": true,
+    "all record originals retained": true,
+    "original child history retained": true,
+    "exact mapping consent archived": true,
+    "neutral context binds archived request": true,
+    "neutral context archived exactly": true,
+    "mapping scope consumed and deleted": true,
+    "lost response recovers applied receipt": true,
+    "mapped send replay identified": true,
+    "mapped replay has no side effects": true,
+    "same request cannot change consent": true,
+    "explicitly retired record removed only from current tree": true,
+    "retired original record remains archived": true,
+    "retired historical events remain exact": true,
+    "recorded lifecycle differing from root resets its cohort": true,
+    "recorded timestamp retained against root disagreement": true,
+    "mapped mirror honors actual caller UPDATE RLS": true,
+    "denied UPDATE rolls back records originals receipt and history": true,
+    "denied UPDATE leaves no scope": true,
+    "mapped preview rechecks history SELECT RLS": true,
+    "mapped send rechecks history SELECT RLS": true,
+    "history access loss preserves all copies": true,
+    "mapped review is fingerprint-bound": true,
+    "stale mapping has no partial writes": true,
+    "stale mapping may be closed": true,
+    "closed mapping cannot apply": true,
+    "mapped high revision fails after archive staging": true,
+    "staging failure rolls back archive and lifecycle changes": true,
+    "mapped stale incarnation cannot bind history": true,
+    "new identity cannot borrow retired or completed history": true,
+    "eligible recipients derive from current database access": true,
+    "mapping rejects duplicate current target": true,
+    "viewer may review mapping but not save": true,
+    "viewer cannot apply mapped history": true,
+    "shared editor can preview mapping": true,
+    "shared editor applies mapped history through caller bridge": true,
+    "shared original belongs to workspace": true,
+    "shared scopes removed after success": true,
+    "same-version different completion epoch resets history boundary": true,
+    "stored old epoch cannot authorize the proposed reconciliation": true,
+    "audit insertion failure rolls back the mapped transaction": true,
+    "audit failure retains records originals receipt and history": true,
+    "audit failure retains no transaction scope": true,
+    "equal root mirror still records and consumes the reviewed reconciliation": true,
+    "equal-root mapping does not change root bytes": true,
+    "mapped apply preserves exact numbers and distinct Unicode metadata": true,
+    "mapped original retains exact divergent source bytes": true,
+    "valid mapped request exceeds old metadata limit": true,
+    "bounded larger mapping is applied atomically": true,
+    "larger mapping has all explicit new records": true,
+    "larger mapping replay preserves full fingerprint": true,
+    "disabled rollout still permits receipt recovery": true,
+    "disabled rollout still permits original recovery": true,
+    "anon has no mapping scope table privilege": true,
+    "authenticated has no mapping scope table privilege": true,
+    "service_role has no mapping scope table privilege": true,
+    "v4 context rejects unknown fields": true,
+    "old event wire fields unchanged": true,
+    "no new advisor findings": true
+  },
+  "sourceSHA256": {
+    "supabase/migrations/20261101124928_atomic_child_copy_mapping.sql": "cc84badc25526576ded6013b758b329010ed894312b5173df5cfd36e8f3dd430",
+    "Scripts/Database/test-child-copy-mapping-apply.mjs": "bd1bbbd92e1f2fd62ca408536302eadcf5daf9dfb367e117933ef50b4bece69d",
+    "Scripts/Database/test-child-copy-mapping-regressions.mjs": "fe6365c44de574ff8f8e34b6435aaa1a4a8d9d40de7412efd2c2403cc7c2ed02",
+    "Taskfold/Core/TaskActivity.swift": "f8603b4e70321a08594d7971816eae228fadfd2c7bc65f60d2c009cab9a50f62",
+    "Taskfold/Core/Backups.swift": "39135008565fd516caf80bb543245e6247a916b5e9e96e178ae7a2f2cf75d3d2",
+    "TaskfoldTests/ChildCopyReconciliationHistoryTests.swift": "8ef7ae22810f6e58afcad3debb783a0f48a123aac1ceac2b75b6e92074ec9aa8",
+    "TaskfoldTests/Fixtures/child-copy-reconciliation-v1.json": "3b0695531e3a271639e910134cedf76c80896fd7501efd5b4c926c2de1bfadc5"
+  },
+  "candidateChainSHA256": "f1e57d06047246f3274972ff5741194e81f49a4a5d4442cac48394e0380182ec",
+  "fixtureRemoved": true,
+  "deployed": false,
+  "scope": "Real owned PostgreSQL mapped-choice transactions and neutral history, with actual caller UPDATE/history SELECT policy and rollback; no native UI or hosted acceptance",
+  "baselineAdvisorFindings": [
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_Users can update accessible tasks"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+    }
+  ],
+  "finalAdvisorFindings": [
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_select"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_delete"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_fixture_automation_task_insert"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_projects_fixture_project_access"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_sections_fixture_section_access"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_project_collaborators_fixture_collaborator_read"
+    },
+    {
+      "name": "auth_rls_initplan",
+      "level": "WARN",
+      "cache_key": "auth_rls_init_plan_public_tasks_Users can update accessible tasks"
+    }
+  ],
+  "remaining": [
+    "Native mapping review, durable drafts and complete mapped-original decoding/export",
+    "Native save/recovery/cold/account/privacy/accessibility acceptance",
+    "More complex recipient/recurrence history decisions, exact editable caches, shared file/discussion/archive custody",
+    "Genuine shared-account and hosted migration acceptance; ordinary rollout remains disabled"
+  ]
+}

@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Older-task identity/history mapping; saving and native review remain",
-  "latest": "The private mapping planner now passes 65 database checks in each repo: explicit history matching/new identities, chosen or recorded completion state, stale/duplicate reference rejection and exact notes/dates/numbers. Planning leaves saved work/history unchanged. This is a backend prerequisite, not a working migration flow; atomic save, neutral history and native review remain. Existing Mac/iPhone saved-copy recovery evidence is retained. Normal use stays disabled.",
+  "focus": "P2 · Mapped saving and honest history verified; native mapping review remains",
+  "latest": "Explicit identity/lifecycle choices now have an atomic backend save with complete originals and neutral history. Core readers preserve earned work credit without crediting restored completed state; a real child-history backup-metadata bug is also fixed. Native mapped controls/drafts/original export and broader migration remain unfinished. Normal use stays disabled; existing native saved-copy evidence keeps its original scope.",
   "next": [
-    "Connect explicit identity/lifecycle choices to a fresh authorized snapshot, complete originals and atomic save with neutral reconciliation history; then add durable native review/recovery. Current ordinary copy selection still requires matching histories.",
-    "Resolve ambiguous recurrence lineage and preserve exact opaque editable caches before completing older-data migration.",
+    "Build native identity/lifecycle mapping review, durable choices, mapped-original decoding/export, explicit save and cold/lost-reply recovery. Backend support alone does not complete migration.",
+    "Resolve more complex recipient/recurrence histories and preserve exact opaque editable caches.",
     "Keep shared files and discussions with their workspace, then complete hosted and genuine shared-account migration acceptance before normal use.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
@@ -71,7 +71,7 @@
             {
               "state": "done",
               "title": "Backup and restore",
-              "detail": "Portable/encrypted restore, relationships, Cancel/retry and recorded external-provider transfer."
+              "detail": "Portable/encrypted restore, relationships, Cancel/retry and recorded external-provider transfer. Current child-history recording metadata also passes core backup round-trip."
             },
             {
               "state": "done",
@@ -86,7 +86,9 @@
           ],
           "sources": [
             "P0_PROGRESS.md",
-            "p0-requirements-audit.json"
+            "p0-requirements-audit.json",
+            "child-copy-mapping-apply/README.md",
+            "child-copy-mapping-apply/client-verification.json"
           ],
           "focus": false
         },
@@ -557,7 +559,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Mac and iPhone saved-copy recovery is verified when history agrees. A private read-only identity/lifecycle mapping planner now passes independent database checks; mapped saving, neutral history and native mapping review remain unfinished. Exact editable caches, shared archives/file/discussion custody and wider acceptance remain open. Normal use stays disabled.",
+              "detail": "Mapped choices now save atomically on the server, retaining all originals, identities and honest historical credit; core history/backup checks pass. Native mapping controls, durable reviews and mapped-original decoding/export are still to build. Exact editable caches, shared archive/file/discussion custody, other Mac workflows and wider acceptance remain open. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -622,6 +624,10 @@
                 {
                   "state": "done",
                   "title": "Validate explicit older-task identity/lifecycle choices without changing saved work (private database planner only)"
+                },
+                {
+                  "state": "done",
+                  "title": "Save explicit history mappings atomically and preserve earned work credit (database/core)"
                 },
                 {
                   "state": "build",
@@ -727,7 +733,11 @@
             "saved-copy-selection/icon-build-verification.json",
             "saved-copy-selection/symbol-verification.json",
             "child-copy-mapping-plan/README.md",
-            "child-copy-mapping-plan/verification.json"
+            "child-copy-mapping-plan/verification.json",
+            "child-copy-mapping-apply/README.md",
+            "child-copy-mapping-apply/verification.json",
+            "child-copy-mapping-apply/client-verification.json",
+            "child-copy-mapping-apply/regressions.json"
           ],
           "focus": true
         },
@@ -798,7 +808,7 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "622a6371f30f1c01700f9e0d360ec04c8c9a218892b06cccfa4776dc8fadc95a",
+    "P2_PLAN.md": "8a59bd43749769c5139c201dfce8f5bab752430183217d9687aec58ad60f3bbc",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -807,7 +817,11 @@
     "child-bulk-list-completion/verification.json": "02faef41d645b895990ec194507da81396d352a430a6c30f92fb48fbb6929026",
     "child-completion-batches/verification.json": "2ec6ab0db18232207cd897ca24d63fa0769d0a32af9f64dadd0b99afdf072fcb",
     "child-completion-group-recovery/verification.json": "c07a89832e98cedb3cbff59a496d56970b79a83eb776aded0abe38ab42fec5ab",
-    "child-copy-mapping-plan/README.md": "952ea684393cc8c4e8b8d643daf3a7cf7954cdddc55d37a058d505edf13b501a",
+    "child-copy-mapping-apply/README.md": "8aaa551844c53db378b98d6a825bdab44001d93ef9d0a3399dc065142e4fece2",
+    "child-copy-mapping-apply/client-verification.json": "944a7f370d1573bec17473ae1d4999200839014a316cee4642c2bc44ee1754c9",
+    "child-copy-mapping-apply/regressions.json": "d85136f84339c3cbc294f057e3ad89c76a548b2b2047f5f49d9e7df29061f8d9",
+    "child-copy-mapping-apply/verification.json": "65bceff849ec7d380dd5fb0b4b9ceccdd7cea1f1ca1dcd1379749d7013c2adb0",
+    "child-copy-mapping-plan/README.md": "9f6b4d371983d0e024033b3d65b9d6e06da8d3fbd43d4d87c9b28570d12f8bdb",
     "child-copy-mapping-plan/verification.json": "84f642fce6b2ba90e2bd779eb52060288a5b9fc3cf7757df23eb32fb2e1c609a",
     "child-list-completion/verification.json": "44bbe137ce3108669564a22ad74abd4d04c843f28ff4460dd66f5da89a31e0b7",
     "child-mixed-selection-preflight/README.md": "ec9eec0fb95bfa9080058a8ef73c66deb196b2e165e90ebdb40c772fb7a28c10",

@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-01",
+  "repository": "macOS",
+  "passed": true,
+  "tests": 144,
+  "failures": 0,
+  "newReconciliationTests": 10,
+  "command": "Scripts/test_core.sh --filter 'ChildCopyReconciliationHistoryTests|TaskNodeActivityTests|TaskOrderActivityTests|ChildTaskTransferHistoryTests|BackupTests'",
+  "sourceSHA256": {
+    "Taskfold/Core/TaskActivity.swift": "f8603b4e70321a08594d7971816eae228fadfd2c7bc65f60d2c009cab9a50f62",
+    "Taskfold/Core/Backups.swift": "39135008565fd516caf80bb543245e6247a916b5e9e96e178ae7a2f2cf75d3d2",
+    "TaskfoldTests/ChildCopyReconciliationHistoryTests.swift": "8ef7ae22810f6e58afcad3debb783a0f48a123aac1ceac2b75b6e92074ec9aa8",
+    "TaskfoldTests/Fixtures/child-copy-reconciliation-v1.json": "3b0695531e3a271639e910134cedf76c80896fd7501efd5b4c926c2de1bfadc5"
+  },
+  "fixtureFromActualOwnedSQL": true,
+  "scope": "Core history credit/caption/current-root reading and archive validation; no app binary/native UI/HTTP or hosted claim"
+}

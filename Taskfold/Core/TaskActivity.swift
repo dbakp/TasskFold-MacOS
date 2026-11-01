@@ -366,7 +366,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
     static let epochTable = "task_node_activity_epoch"
     static let legacyGeneration = "00000000-0000-0000-0000-000000000000"
     enum Kind: String, CaseIterable, Sendable {
-        case created, completed, reopened, completion_time, moved, rescheduled, deleted, scope_changed, type_changed, coverage_gap, edited, reordered
+        case created, completed, reopened, completion_time, moved, rescheduled, deleted, scope_changed, type_changed, coverage_gap, edited, reordered, reconciled
     }
     let id: String
     let sequence: Int64
@@ -435,14 +435,44 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
             guard Set(before).count == before.count, Set(before) == Set(after), before != after else { return nil }
         }
     }
+    /// A reviewed recovery boundary is audit metadata, never new work credit.
+    /// The versioned server column is shared with ordering to keep exact older
+    /// archived event representations unchanged.
+    struct Reconciliation: Equatable, Sendable {
+        struct Subject: Equatable, Sendable {
+            let key: String
+            let retired: Bool
+        }
+        let request: String, archive: String
+        let subjects: [Subject]
+        init?(_ value: JSON) {
+            guard case .object(let fields) = value,
+                  Set(fields.keys) == ["version", "request_id", "archive_id", "subjects"], fields["version"] == .number(1),
+                  case .string(let request)? = fields["request_id"], UUID(uuidString: request)?.uuidString.lowercased() == request,
+                  case .string(let archive)? = fields["archive_id"], UUID(uuidString: archive)?.uuidString.lowercased() == archive,
+                  case .array(let raw)? = fields["subjects"], raw.count <= 12_000,
+                  let bytes = try? TaskfoldJSONEncoder().encode(value), bytes.count <= 4_000_000 else { return nil }
+            var subjects: [Subject] = [], seen = Set<String>()
+            for value in raw {
+                guard case .object(let subject) = value, Set(subject.keys) == ["node_key", "reset_completion", "retired"],
+                      case .string(let key)? = subject["node_key"], ChecklistRecovery.validIdentity(key),
+                      key.utf8.elementsEqual(key.precomposedStringWithCanonicalMapping.utf8),
+                      subject["reset_completion"] == .bool(true), case .bool(let retired)? = subject["retired"],
+                      seen.insert(key).inserted else { return nil }
+                subjects.append(Subject(key: key, retired: retired))
+            }
+            self.request = request; self.archive = archive; self.subjects = subjects
+        }
+    }
+    let reconciliation: Reconciliation?
     let ordering: Ordering?
     var isOrdering: Bool { ordering != nil }
     var isGap: Bool { kinds == [.coverage_gap] }
     var path: [String] { afterPath.isEmpty ? beforePath : afterPath }
-    var subject: String { (isOrdering ? "order:" : "") + [rootID, generation ?? "unknown", nodeKey].joined(separator: ":") }
+    var subject: String { (reconciliation != nil ? "reconcile:" : isOrdering ? "order:" : "") + [rootID, generation ?? "unknown", nodeKey].joined(separator: ":") }
     init?(row: Record) { self.init(row: row, parseInstant: TaskPlanning.instant, validDay: { Dates.parse($0) != nil }) }
     init?(row: Record, parseInstant: (String) -> Date?, validDay: (String) -> Bool) {
-        guard [JSON.number(1), .number(2), .number(3)].contains(row["format_version"]), UUID(uuidString: row.id) != nil,
+        guard [JSON.number(1), .number(2), .number(3), .number(4)].contains(row["format_version"]), UUID(uuidString: row.id) != nil,
               let sequence = TaskActivity.integer(row["sequence"]), sequence > 0,
               TaskActivity.validID(row.string("user_id")), TaskActivity.validID(row.string("task_id")),
               row["actor_id"] == .null || TaskActivity.validID(row.string("actor_id")),
@@ -466,19 +496,28 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
             guard row["changed_fields"] == .null || row["changed_fields"] == .array([]) else { return nil }
             changedFields = []
         }
-        if row["format_version"] == .number(3) {
+        if row["format_version"] == .number(4) {
+            guard let value = Reconciliation(row["order_context"]), kinds == [.reconciled] else { return nil }
+            reconciliation = value; ordering = nil
+        } else if row["format_version"] == .number(3) {
+            reconciliation = nil
             guard let value = Ordering(row["order_context"]), kinds == [.reordered] else { return nil }
             ordering = value
         } else {
             guard row["order_context"] == .null else { return nil }
-            ordering = nil
+            ordering = nil; reconciliation = nil
         }
+        guard row["format_version"] == .number(4) || !kinds.contains(.reconciled) else { return nil }
         func type(_ key: String) -> String? { row[key] == .null ? nil : row.string(key) }
         let typeBefore = type("type_before"), typeAfter = type("type_after")
         guard [typeBefore, typeAfter].allSatisfy({ $0 == nil || ["task", "heading"].contains($0!) }) else { return nil }
         let generation = row["task_generation"] == .null ? nil : UUID(uuidString: row.string("task_generation"))?.uuidString.lowercased()
         guard row["task_generation"] == .null || generation != nil else { return nil }
-        if let ordering {
+        if reconciliation != nil {
+            guard generation != nil, row["node_key"] == .string(""), beforePath.isEmpty, afterPath.isEmpty,
+                  !before.isEmpty, !after.isEmpty, !workBefore, !workAfter, typeBefore == nil, typeAfter == nil,
+                  revision == 0, recorded == effective, row["transfer_context"] == .null else { return nil }
+        } else if let ordering {
             guard generation != nil, !before.isEmpty, !after.isEmpty,
                   beforePath.last == afterPath.last, row.string("node_key") == (beforePath.last ?? ""),
                   !ordering.before.contains(row.string("node_key")),
@@ -543,7 +582,7 @@ struct TaskNodeActivity: Equatable, Identifiable, Sendable {
               !root.string("project_id").isEmpty || root.string("user_id").lowercased() == account.lowercased(),
               let index = try? TaskHierarchyIndex(roots: [root], projects: projects, workspace: WorkspaceBinding(account: account, generation: UUID())),
               !index.items.isEmpty else { return nil }
-        if isOrdering, nodeKey.isEmpty { return root }
+        if isOrdering || reconciliation != nil, nodeKey.isEmpty { return root }
         return index.items.first(where: { $0.isSubtask && $0.path.last == nodeKey })?.record
     }
     private struct Node {
@@ -1349,7 +1388,7 @@ enum WorkActivity: Identifiable, Equatable {
     }
     var title: String { kinds.map { key in
         if let kind = TaskActivity.Kind(rawValue: key) { return kind.title }
-        switch key { case "reordered": return "Order changed"; case "edited": return "Edited"; case "scope_changed": return "Work scope changed"; case "type_changed": return "Type changed"; default: return "Some history unavailable" }
+        switch key { case "reconciled": return "Saved copies reconciled"; case "reordered": return "Order changed"; case "edited": return "Edited"; case "scope_changed": return "Work scope changed"; case "type_changed": return "Type changed"; default: return "Some history unavailable" }
     }.joined(separator: " · ") }
     var isChild: Bool { if case .child = self { return true }; return false }
     func involves(project: String) -> Bool { before["project_id"]?.text.lowercased() == project.lowercased() || after["project_id"]?.text.lowercased() == project.lowercased() }
@@ -1431,6 +1470,19 @@ struct ChildWorkReading {
         var handoffs: [String: (event: TaskNodeActivity, credit: InsightsReading.Credit)] = [:]
         for e in events {
             if e.isOrdering { continue }
+            if let reconciliation = e.reconciliation, let generation = e.generation {
+                for item in reconciliation.subjects {
+                    let subject = [e.rootID, generation, item.key].joined(separator: ":")
+                    // Keep observed older work at its original date/actor/project.
+                    // A restored state has no earned credit. Later Undo/reopen
+                    // applies only to the new lifecycle, never this archive.
+                    if let credit = active.removeValue(forKey: subject) { archived.append(credit) }
+                    latest.removeValue(forKey: subject); deleted.remove(subject)
+                    lifecycle[subject] = "reconciled:" + e.id; roots[subject] = e.rootID
+                    handoffs = handoffs.filter { $0.value.event.transfer?.source.identity != subject && $0.value.event.transfer?.destination.identity != subject }
+                }
+                continue
+            }
             if e.isGap {
                 handoffs = handoffs.filter { $0.value.event.transfer?.source.root != e.rootID && $0.value.event.transfer?.destination.root != e.rootID }
                 for subject in roots.keys.filter({ roots[$0] == e.rootID }) { active.removeValue(forKey: subject); latest.removeValue(forKey: subject); deleted.remove(subject); lifecycle[subject] = "after-gap:" + e.id }
