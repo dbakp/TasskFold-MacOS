@@ -26,7 +26,7 @@ The original no-op project field was reproduced as insufficient on the old gener
 - This proves root assignee intent/history in the recorded scope. It does not restore historical child recipients after a project move, close recurrence/lifecycle histories, or finish broader legacy/cache/editor migration and shared file/discussion custody.
 - Native accessibility speech, stale/conflict screen interaction, largest text, multiple windows/accounts and large-library behavior are separate acceptance scopes.
 
-The first Mac native attempt confirmed the move but then tried to assign through the old source-bound inspector. That editor intentionally pauses after its project changes. A second attempt tried clearing selection and reopening current details, but stopped before cleared selection was verified. That test remains work in progress; it does not relax the editor’s project, generation or workspace guards.
+The first Mac native attempt confirmed the move but then tried to assign through the old source-bound inspector. That editor intentionally pauses after its project changes. A second attempt tried clearing selection and reopening current details, but stopped before cleared selection was verified. At that stage the test was still work in progress; neither attempt relaxed the editor’s project, generation or workspace guards. The current follow-up below supersedes that unfinished acceptance status.
 
 ## Current follow-up
 
