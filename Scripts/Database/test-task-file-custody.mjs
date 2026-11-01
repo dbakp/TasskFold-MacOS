@@ -12,6 +12,7 @@ try {
  // Only the owned fixture adds these inspected Storage metadata columns. The candidate never alters Storage tables.
  await pg.raw('alter table storage.objects add column metadata jsonb,add column version text');
  report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);
+ if(process.env.TASKFOLD_TASK_FILE_UPLOAD_SQL){const upload=await readFile(process.env.TASKFOLD_TASK_FILE_UPLOAD_SQL,'utf8');await pg.raw(upload);report.taskFileUploadSHA256=createHash('sha256').update(upload).digest('hex');}
  const users=Object.fromEntries(['owner','source','destination','viewer','uploader','outside'].map(k=>[k,{id:randomUUID(),session:randomUUID()}]));
  for(const u of Object.values(users))await pg.raw(`insert into auth.users(id,email,email_confirmed_at) values(${lit(u.id)},${lit(u.id+'@example.invalid')},now());insert into auth.sessions(id,user_id) values(${lit(u.session)},${lit(u.id)});insert into public.profiles(user_id) values(${lit(u.id)});`);
  const owner=users.owner,team=randomUUID(),p=randomUUID(),dest=randomUUID();

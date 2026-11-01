@@ -1,0 +1,40 @@
+{
+  "intent": {
+    "operation_id": "21031385-53e2-4e5d-b657-3b414af3535b",
+    "target": {
+      "team_id": "d5019f47-4134-4294-b682-48070ddf511f",
+      "project_id": "90e9b494-491b-4b3b-93d2-2fb3c01ce7db",
+      "task_id": "a70e09c5-e31f-42da-adaf-0aeaf9810a7d",
+      "task_generation": "0ded5bdc-990d-4b59-adeb-b3ed3c194a69"
+    },
+    "name": "Workshop notes.txt",
+    "type": "text/plain",
+    "byte_count": 5,
+    "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+  },
+  "published": {
+    "status": "published",
+    "receipt": {
+      "state": "published",
+      "target": {
+        "task_id": "a70e09c5-e31f-42da-adaf-0aeaf9810a7d",
+        "team_id": "d5019f47-4134-4294-b682-48070ddf511f",
+        "project_id": "90e9b494-491b-4b3b-93d2-2fb3c01ce7db",
+        "task_generation": "0ded5bdc-990d-4b59-adeb-b3ed3c194a69"
+      },
+      "account": "190ace7e-9663-4093-bfec-6acef6263d4e",
+      "protocol": 1,
+      "attachment": {
+        "id": "21031385-53e2-4e5d-b657-3b414af3535b",
+        "name": "Workshop notes.txt",
+        "size": 5,
+        "type": "text/plain",
+        "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        "uploadedAt": "2026-11-01T22:14:49.301467+00:00",
+        "storage_object_id": "5ba8614c-4c23-4041-83b0-968d4fb3c71b"
+      },
+      "operation_id": "21031385-53e2-4e5d-b657-3b414af3535b"
+    }
+  },
+  "sourceSHA256": "b2bbfd638392b497e61f973844832e8d69dade539bba86877887b2277cb4c705"
+}
