@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "passed": true,
+  "assertions": 77,
+  "fixtureRemoved": true,
+  "candidateChainSHA256": "f1e57d06047246f3274972ff5741194e81f49a4a5d4442cac48394e0380182ec",
+  "testSHA256": "317daf84720c7774b62cc82149bc8441c599737020aa3abb78082fc5ee12fc9e",
+  "fixtureSHA256": "aa9d3ef1132831765d6895619278cedf441d788fb70ddb8f54520bfa099189ae",
+  "capturedUnderAuthenticatedFixtureRole": true,
+  "deployed": false,
+  "scope": "Same 77 mapped transaction checks plus an extra read-only PostgreSQL JSON wire capture; no hosted or real-account HTTP claim"
+}

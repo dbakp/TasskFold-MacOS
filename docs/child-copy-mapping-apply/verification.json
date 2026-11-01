@@ -84,7 +84,7 @@
   },
   "sourceSHA256": {
     "supabase/migrations/20261101124928_atomic_child_copy_mapping.sql": "cc84badc25526576ded6013b758b329010ed894312b5173df5cfd36e8f3dd430",
-    "Scripts/Database/test-child-copy-mapping-apply.mjs": "bd1bbbd92e1f2fd62ca408536302eadcf5daf9dfb367e117933ef50b4bece69d",
+    "Scripts/Database/test-child-copy-mapping-apply.mjs": "317daf84720c7774b62cc82149bc8441c599737020aa3abb78082fc5ee12fc9e",
     "Scripts/Database/test-child-copy-mapping-regressions.mjs": "fe6365c44de574ff8f8e34b6435aaa1a4a8d9d40de7412efd2c2403cc7c2ed02",
     "Taskfold/Core/TaskActivity.swift": "f8603b4e70321a08594d7971816eae228fadfd2c7bc65f60d2c009cab9a50f62",
     "Taskfold/Core/Backups.swift": "39135008565fd516caf80bb543245e6247a916b5e9e96e178ae7a2f2cf75d3d2",
@@ -174,5 +174,6 @@
     "Native save/recovery/cold/account/privacy/accessibility acceptance",
     "More complex recipient/recurrence history decisions, exact editable caches, shared file/discussion/archive custody",
     "Genuine shared-account and hosted migration acceptance; ordinary rollout remains disabled"
-  ]
+  ],
+  "verificationNote": "The unchanged SQL chain and 77 assertions were rerun while adding a read-only canonical client wire capture."
 }

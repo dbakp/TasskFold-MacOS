@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "passed": true,
+  "tests": 85,
+  "failures": 0,
+  "newClientTests": 10,
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskRepair.swift": "f1e2e897a86efb24b44adfc35a13b9cdc9d471457c8adfd9d2bd4e636b2736b2",
+    "Taskfold/Core/Backend.swift": "d06913f84dfcae31a482e9cdd77d3fd714a66d92555f19f06ced2b162d60dadc",
+    "Taskfold/Views/ChildTaskRepairView.swift": "835c985783d6b44020bbad95649ac07f86a1e59e484a42867b639b66249054aa",
+    "Taskfold/ChildAdoptionNativeFixture.swift": "36803e2d1902cf0e3ff1a535046d8bba574e2a953355a28dbde65531a3bad436",
+    "Taskfold/ChildRepairNativeFixture.swift": "4036b61f8f410d0805ff65193a76e89d8d6fcdf513ca1cce761690a57ffe03d1",
+    "TaskfoldTests/ChildCopyMappingClientTests.swift": "603ef4891c219616d9453ed07fb3ad1aa7fcc2ad28aca0194f38beacba0e7282",
+    "TaskfoldTests/ChildTaskRepairTests.swift": "cc00fbe983eae4098f34687783f120d523c7d6e089dfad5f20dc5040c81b06ce",
+    "TaskfoldTests/Fixtures/child-copy-mapping-contract-v1.json": "aa9d3ef1132831765d6895619278cedf441d788fb70ddb8f54520bfa099189ae",
+    "Scripts/Database/test-child-copy-mapping-apply.mjs": "317daf84720c7774b62cc82149bc8441c599737020aa3abb78082fc5ee12fc9e"
+  },
+  "actualPostgreSQLWireFixture": true,
+  "scope": "Typed mapping/catalog, partial and complete draft/journal cold state, explicit consent, summary/original rejection, larger metadata and lost-reply check. Native UI interaction is unaccepted."
+}

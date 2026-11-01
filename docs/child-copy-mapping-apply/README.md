@@ -1,6 +1,6 @@
 # Reviewed history mapping: transactions and reading
 
-The existing saved-copy API now supports an explicit identity/lifecycle mapping when choosing a complete saved copy. This is a server and core-history milestone. **Native mapping controls, durable mapped reviews and original decoding are still unfinished.** The current app flow continues to support only copies whose identities and lifecycle agree. No hosted deployment or normal-use enablement occurred.
+The existing saved-copy API now supports an explicit identity/lifecycle mapping when choosing a complete saved copy. This is a server and core-history milestone. Native controls, durable partial/complete reviews and mapped-original decoding are now implemented and core/build verified in the [client milestone](../child-copy-mapping-client/README.md). Full native mapping acceptance remains unfinished. No hosted deployment or normal-use enablement occurred.
 
 ## Saving a reviewed mapping
 
@@ -38,7 +38,7 @@ These are database and core-model tests, not native app, HTTP delivery, genuine-
 
 ## Still required
 
-- Typed native identity/lifecycle choices, explicit recipient/recurrence decisions, durable drafts, preview/save confirmation and exact complete mapped-original decoding/export.
+- Accept the newly implemented native identity/lifecycle choices, durable drafts, preview/save and complete mapped-original export through real app controls; finish independent recipient/recurrence decisions.
 - Native Undo/reset, lost-reply recovery, cold return and account/window/privacy/accessibility acceptance in both apps. More complex ambiguous recurrence/recipient histories remain to resolve.
 - Exact editable caches, shared files/discussions and archive discovery/custody, plus genuine shared-account and hosted migration acceptance. Remaining Mac workflows and wider library tests are separate.
 

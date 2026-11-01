@@ -418,3 +418,28 @@ extension ChildTaskRepairTests {
     }
 
 }
+
+extension ChildTaskRepairTests {
+    @MainActor func testMappedPartialDraftColdReturnCannotQueueUntilReviewedThenRecoversLostReply() async throws {
+        let f = try ChildCopyMappingClientTests().contract(origin: origin), io = RepairMemoryIO(), directory = try directory()
+        let scope = ChildTaskFieldClientScope(f.preview.context), service = RepairServiceDouble(f.receipt.raw)
+        let partial = try ChildTaskRepairDraft(review: f.review, changes: [], labels: [], mappingReview: ChildCopyMappingClientTests().partial(f))
+        let first = model(scope, try journal(f.command, io, directory), service, current: { scope }); await first.load()
+        verifyTrue(await first.saveDraft(partial, rootID: f.command.rootID, expected: nil)); first.close()
+        let cold = model(scope, try journal(f.command, io, directory), service, current: { scope }); await cold.load()
+        XCTAssertEqual(cold.drafts, [partial]); verifyFalse(await cold.queue(f.command, review: f.preview, draftToken: partial.token))
+        let complete = try ChildTaskRepairDraft(review: f.review, changes: f.preview.changes, labels: ["Use reviewed histories"])
+        verifyTrue(await cold.saveDraft(complete, rootID: f.command.rootID, expected: partial.token))
+        let editing = try ChildTaskRepairDraft(review: f.review, changes: [], labels: [], mappingReview: ChildCopyMappingDraft(source: "projection", digest: f.copies.digest, mapping: f.preview.changes[0].raw["mapping"]!.object))
+        verifyTrue(await cold.saveDraft(editing, rootID: f.command.rootID, expected: complete.token)); cold.close()
+        let reopened = model(scope, try journal(f.command, io, directory), service, current: { scope }); await reopened.load()
+        XCTAssertEqual(reopened.drafts, [editing]); XCTAssertEqual(reopened.drafts[0].mappingReview?.mapping.nodes.count, 3)
+        let reviewed = try ChildTaskRepairDraft(review: f.review, changes: f.preview.changes, labels: ["Use reviewed histories"])
+        verifyTrue(await reopened.saveDraft(reviewed, rootID: f.command.rootID, expected: editing.token))
+        verifyTrue(await reopened.queue(f.command, review: f.preview, draftToken: reviewed.token))
+        service.loseReply = true; verifyFalse(await reopened.run(f.command, operation: .send)); reopened.close(); service.loseReply = false
+        let recovered = model(scope, try journal(f.command, io, directory), service, current: { scope }, canSend: { _ in false }); await recovered.load()
+        verifyTrue(await recovered.run(f.command, operation: .check)); XCTAssertEqual(recovered.entries.first?.phase, .applied)
+        XCTAssertEqual(service.calls, [.send, .check]); XCTAssertEqual(recovered.entries.first?.command, f.command)
+    }
+}

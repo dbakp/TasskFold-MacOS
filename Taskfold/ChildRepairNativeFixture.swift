@@ -107,6 +107,7 @@ import CryptoKit
         let changes = try body["changes"]!.list.map { try ChildTaskRepairChange(raw: $0.object) }
         try ChildTaskRepairChange.validate(changes)
         guard let choice = changes.first, choice.kind == .chooseCopy, choice.raw["copy_digest"] == copies["copy_digest"] else { throw ChildFieldNativeRefusal(code: "PT409") }
+        if choice.raw["mapping"] != nil { throw ChildFieldNativeRefusal(code: "PT503") }
         let field = choice.raw["source"] == .string("task") ? "task_tree" : choice.raw["source"] == .string("projection") ? "projection_tree" : "record_tree"
         let tree = copies[field]!, metrics = ChildAdoptionNativePeer.stats(tree)!
         var reply = body

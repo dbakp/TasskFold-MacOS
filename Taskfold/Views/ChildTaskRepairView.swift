@@ -20,6 +20,7 @@ struct ChildTaskRepairView: View {
     @State private var labels: [String] = []
     @State private var baseDigest: String?
     @State private var draft: ChildTaskRepairDraft?
+    @State private var mappingCatalog: ChildCopyMappingCatalog?
     @State private var targets: [ChildTaskAdoptionTarget] = []
     @State private var next: String?
     @State private var ticket = UUID()
@@ -70,24 +71,40 @@ struct ChildTaskRepairView: View {
                                         .disabled(working).accessibilityIdentifier("childCopyReviewLoad")
                                     if comparingCopies { ProgressView("Reading saved copies…") }
                                     if let copies = currentCopies {
-                                        ChildCopyComparison(copies: copies, expanded: $expandedCopyIDs, selectedSource: choosingCopy && changes.first?.raw["copy_digest"] == .string(copies.digest) ? changes.first?.raw["source"]?.text : nil, canChoose: changes.isEmpty && !working) { copy in chooseCopy(copy, from: copies, review: review) }
+                                        ChildCopyComparison(copies: copies, expanded: $expandedCopyIDs, selectedSource: choosingCopy && changes.first?.raw["copy_digest"] == .string(copies.digest) ? changes.first?.raw["source"]?.text : nil, canChoose: changes.isEmpty && draft?.mappingReview == nil && !working, choose: { copy in chooseCopy(copy, from: copies, review: review) }, reviewHistory: { copy in beginMapping(copy, copies: copies, read: review) })
                                         Button { Task { await compareCopies(review, exportCurrent: true) } } label: { ChildRepairActionLabel(title: "Export readable copies", symbol: "square.and.arrow.up") }
                                             .disabled(working).accessibilityIdentifier("childCopyReviewExport")
                                         Text("The export keeps exact saved content, including fields that are shortened in this review. Copies needing an access review stay private and unchanged.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                                     }
                                 }
                             }
+                            if let partial = draft?.mappingReview, let catalog = mappingCatalog, currentCopies?.digest == partial.digest, catalog.digest == partial.digest {
+                                ChildMappingEditor(catalog: catalog, draft: partial, enabled: !working, assignee: { id in
+                                    if id == store.userID { return "You" }
+                                    return store.assigneeName(Record(["assigned_to": id.map(JSON.string) ?? .null, "project_id": review.metadata["project_id"] ?? .null]))
+                                }, update: { value in saveMapping(value) }, preview: { finishMapping(catalog, partial) })
+                            }
                             if loading { ProgressView("Checking your proposal…") }
-                            if !choosingCopy, let outline { outlineSection(outline) }
+                            if !choosingCopy, draft?.mappingReview == nil, let outline { outlineSection(outline) }
                             if !changes.isEmpty {
                                 Section("Your changes") {
                                     ForEach(Array(labels.enumerated()), id: \.offset) { row in Label(row.element, systemImage: "checkmark.circle").fixedSize(horizontal: false, vertical: true) }
+                                    if changes.count == 1, changes[0].raw["mapping"] != nil {
+                                        Button("Edit history choices", systemImage: "pencil") { editMapping() }.disabled(working || currentCopies == nil).accessibilityIdentifier("childMappingEdit")
+                                    }
                                     Button("Undo last choice", systemImage: "arrow.uturn.backward") { Task { await undoChoice() } }.disabled(working).accessibilityIdentifier("childRepairUndoChoice")
                                     Button("Reset review") { discarding = true }.disabled(working)
                                 }
                             }
                             if let current {
                                 Section("After repair") {
+                                    if current.metadata["custody_blocker"] == .string("history_custody"), changes.count == 1, changes[0].kind == .chooseCopy, changes[0].raw["mapping"] == nil {
+                                        Button("Review task histories", systemImage: "clock.arrow.circlepath") { editMapping() }.disabled(working || currentCopies == nil).accessibilityIdentifier("childMappingResolve")
+                                    }
+                                    if let summary = current.mappingSummary {
+                                        Text("\(summary.newCount) new histories · \(summary.retiredCount) recorded histories retired").fixedSize(horizontal: false, vertical: true)
+                                        Text("Earlier earned work stays in history. Recovered completed tasks won’t add to work totals.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                    }
                                     if current.valid {
                                         Label(current.items.count == 1 ? "1 task ready" : "\(current.items.count) tasks ready", systemImage: "checkmark.seal").font(.headline).accessibilityIdentifier("childRepairReady")
                                         ForEach(current.items) { item in Text(String(String.UnicodeScalarView((item.title?.isEmpty == false ? item.title! : "Untitled task").unicodeScalars.prefix(160)))).lineLimit(3).padding(.leading, CGFloat(min(item.depth - 1, 6) * 12)) }
@@ -195,10 +212,10 @@ struct ChildTaskRepairView: View {
         }
     }
     private func restoreDraft() {
-        draft = model?.drafts.first { $0.rootID == selected }; changes = draft?.changes ?? []; labels = draft?.labels ?? []; baseDigest = draft?.identity["review_digest"]?.text
+        draft = model?.drafts.first { $0.rootID == selected }; changes = draft?.changes ?? []; labels = draft?.labels ?? []; baseDigest = draft?.identity["review_digest"]?.text; if draft?.mappingReview != nil || changes.first?.raw["mapping"] != nil { copiesRequested = true }
     }
-    private func select(_ root: String?) { copiesRequested = false; expandedCopyIDs = []; activeID = nil; selected = root; review = nil; proposal = nil; savedCopies = nil; outline = nil; restoreDraft(); failure = nil; exportMessage = nil; if root != nil { Task { await refresh() } } }
-    private func hideSensitive() { copiesRequested = false; expandedCopyIDs = []; ticket = UUID(); model?.close(); model = nil; modelScope = nil; draft = nil; changes = []; labels = []; baseDigest = nil; review = nil; proposal = nil; savedCopies = nil; comparingCopies = false; outline = nil; targets = []; document = nil; exporting = false; exportScope = nil; exportRoot = nil; loading = false; fetchingOriginal = false }
+    private func select(_ root: String?) { mappingCatalog = nil; copiesRequested = false; expandedCopyIDs = []; activeID = nil; selected = root; review = nil; proposal = nil; savedCopies = nil; outline = nil; restoreDraft(); failure = nil; exportMessage = nil; if root != nil { Task { await refresh() } } }
+    private func hideSensitive() { mappingCatalog = nil; copiesRequested = false; expandedCopyIDs = []; ticket = UUID(); model?.close(); model = nil; modelScope = nil; draft = nil; changes = []; labels = []; baseDigest = nil; review = nil; proposal = nil; savedCopies = nil; comparingCopies = false; outline = nil; targets = []; document = nil; exporting = false; exportScope = nil; exportRoot = nil; loading = false; fetchingOriginal = false }
     private func open() async {
         hideSensitive(); guard phase == .active, let captured = scope else { return }
         do { let m = try store.childTaskRepairModel(); model = m; modelScope = captured; await m.load(); guard usable, captured == scope, model === m, !Task.isCancelled else { return }; restoreDraft(); if selected == nil { await discover() } else if active == nil { await refresh() } }
@@ -210,21 +227,26 @@ struct ChildTaskRepairView: View {
         catch { guard captured == scope else { return }; failure = "Tasks couldn’t be listed. Their saved content is kept." }
     }
     private func refresh() async {
-        guard usable, let root = selected, store.childTaskRepairEnabled else { return }; let captured = scope, request = UUID(); ticket = request; loading = true; comparingCopies = false; failure = nil; savedCopies = nil; proposal = nil; outline = nil
+        guard usable, let root = selected, store.childTaskRepairEnabled else { return }; let captured = scope, request = UUID(); ticket = request; loading = true; comparingCopies = false; failure = nil; savedCopies = nil; proposal = nil; outline = nil; mappingCatalog = nil
         defer { if ticket == request { loading = false } }
         do {
             let value = try await store.readChildTaskAdoption(root); guard usable, captured == scope, ticket == request, selected == root, !Task.isCancelled else { return }
             if let draft, !draft.matches(value) { failure = "The task changed since these choices were made. Your saved review is kept. Discard it to review the current content."; review = nil; proposal = nil; outline = nil; return }
             review = value
             if changes.isEmpty { guard let source = value.originalSource else { throw ChildTaskRepairOutline.unavailable }; outline = try await decodeOutline(source) }
-            else { try await updateProposal(value, request: request) }
             // Snapshot refreshes revoke the old read immediately. Restore only
             // a newly authorized comparison, retaining the user's open groups.
             if copiesRequested {
                 let copies = try await store.readChildTaskCopies(value)
                 guard usable, captured == scope, ticket == request, selected == root, store.childTaskCopiesAreCurrent(copies), !Task.isCancelled else { return }
                 savedCopies = copies
+                if let partial = draft?.mappingReview {
+                    let catalog = try await decodeMapping(copies, source: partial.source)
+                    guard usable, captured == scope, ticket == request else { return }
+                    try catalog.validate(partial, complete: false); mappingCatalog = catalog
+                }
             }
+            if !changes.isEmpty { try await updateProposal(value, request: request) }
         } catch { guard captured == scope, ticket == request else { return }; failure = (error as? AppFailure)?.localizedDescription ?? "This review couldn’t be loaded. Your original is kept." }
     }
     nonisolated private func decodeOutline(_ data: Data) async throws -> ChildTaskRepairOutline { try Task.checkCancellation(); return try .init(data: data) }
@@ -234,11 +256,59 @@ struct ChildTaskRepairView: View {
         let tree = try await decodeOutline(value.proposed); guard usable, ticket == request, !Task.isCancelled else { throw CancellationError() }; proposal = value; outline = tree
     }
     private func chooseCopy(_ copy: ChildTaskCopyReview.Copy, from copies: ChildTaskCopyReview, review read: ChildTaskAdoptionReview) {
-        guard usable, !working, changes.isEmpty, copy.state == "ready", !copies.omitted.contains(copy.id),
+        guard usable, !working, changes.isEmpty, draft?.mappingReview == nil, copy.state == "ready", !copies.omitted.contains(copy.id),
               store.childTaskCopiesAreCurrent(copies), currentCopies?.digest == copies.digest,
               store.childTaskAdoptionReviewIsCurrent(read) else { return }
         do { apply(try .choosing(copy.id, digest: copies.digest), label: "Use \(copy.title.lowercased())", read: read) }
         catch { failure = "These saved copies need another comparison. All originals are kept." }
+    }
+    nonisolated private func decodeMapping(_ copies: ChildTaskCopyReview, source: String) async throws -> ChildCopyMappingCatalog { try Task.checkCancellation(); return try .init(copies: copies, source: source) }
+    private func beginMapping(_ copy: ChildTaskCopyReview.Copy, copies: ChildTaskCopyReview, read: ChildTaskAdoptionReview) {
+        guard usable, !working, changes.isEmpty, draft?.mappingReview == nil, currentCopies?.digest == copies.digest else { return }
+        let request = UUID(); ticket = request; loading = true
+        Task {
+            defer { if ticket == request { loading = false } }
+            do {
+                let catalog = try await decodeMapping(copies, source: copy.id)
+                guard usable, ticket == request, store.childTaskAdoptionReviewIsCurrent(read), currentCopies?.digest == copies.digest else { return }
+                let partial = try ChildCopyMappingDraft(source: copy.id, digest: copies.digest, mapping: ["version": .number(1), "nodes": .array([]), "retire": .array([])])
+                if await persistMapping(partial, read: read) { mappingCatalog = catalog }
+            } catch { guard usable, ticket == request else { return }; failure = "History choices need a fresh comparison. All originals are kept." }
+        }
+    }
+    private func persistMapping(_ partial: ChildCopyMappingDraft, read: ChildTaskAdoptionReview) async -> Bool {
+        guard usable, let model, let root = selected, changes.isEmpty || changes.count == 1 && changes[0].kind == .chooseCopy && changes[0].raw["source"] == .string(partial.source) && changes[0].raw["copy_digest"] == .string(partial.digest), store.childTaskAdoptionReviewIsCurrent(read), currentCopies?.digest == partial.digest else { return false }
+        do {
+            let saved = try ChildTaskRepairDraft(review: read, changes: [], labels: [], mappingReview: partial)
+            guard await model.saveDraft(saved, rootID: root, expected: draft?.token), usable, self.model === model, selected == root else { return false }
+            draft = saved; changes = []; labels = []; baseDigest = saved.identity["review_digest"]?.text; proposal = nil; return true
+        } catch { failure = "Your last saved history choices are kept. This change couldn’t be saved."; return false }
+    }
+    private func saveMapping(_ partial: ChildCopyMappingDraft) {
+        guard usable, !working, let read = review, let catalog = mappingCatalog else { return }
+        do { try catalog.validate(partial, complete: false) } catch { failure = "Choose each history only once. Your saved choices are kept."; return }
+        let request = UUID(); ticket = request; loading = true
+        Task { defer { if ticket == request { loading = false } }; _ = await persistMapping(partial, read: read) }
+    }
+    private func editMapping() {
+        guard usable, !working, let read = review, let copies = currentCopies, let choice = changes.first, choice.kind == .chooseCopy else { return }
+        let request = UUID(); ticket = request; loading = true
+        Task {
+            defer { if ticket == request { loading = false } }
+            do {
+                let partial = try ChildCopyMappingDraft(source: choice.raw["source"]!.text, digest: choice.raw["copy_digest"]!.text, mapping: choice.raw["mapping"]?.object ?? ["version": .number(1), "nodes": .array([]), "retire": .array([])])
+                let catalog = try await decodeMapping(copies, source: partial.source); try catalog.validate(partial, complete: false)
+                guard usable, ticket == request else { return }; if await persistMapping(partial, read: read) { mappingCatalog = catalog }
+            } catch { guard usable, ticket == request else { return }; failure = "These choices need a fresh comparison. Your saved review and originals are kept." }
+        }
+    }
+    private func finishMapping(_ catalog: ChildCopyMappingCatalog, _ partial: ChildCopyMappingDraft) {
+        guard usable, !working, let read = review, currentCopies?.digest == partial.digest else { return }
+        do {
+            try catalog.validate(partial, complete: true)
+            let complete = try ChildCopyMapping(raw: partial.mapping.raw)
+            apply(try .choosing(partial.source, digest: partial.digest, mapping: complete), label: "Use reviewed task histories", read: read)
+        } catch { failure = "Choose every task’s history and review each task retiring from this list." }
     }
     private func add(_ kind: ChildTaskRepairChange.Kind, path: [Int], title: String? = nil, label: String) {
         guard usable, !working, let read = review, store.childTaskAdoptionReviewIsCurrent(read) else { return }
@@ -302,6 +372,10 @@ struct ChildTaskRepairView: View {
             let value = try await store.readChildTaskCopies(read)
             guard usable, ticket == request, selected == read.context.root.id, store.childTaskCopiesAreCurrent(value), !Task.isCancelled else { return }
             savedCopies = value
+            if let partial = draft?.mappingReview {
+                let catalog = try await decodeMapping(value, source: partial.source)
+                guard usable, ticket == request else { return }; try catalog.validate(partial, complete: false); mappingCatalog = catalog
+            }
             if choosingCopy {
                 if changes.first?.raw["copy_digest"] == .string(value.digest) { try await updateProposal(read, request: request) }
                 else { failure = "These saved copies changed after your choice. Undo the choice or reset this review, then compare and choose again. Your saved choice and all originals are kept." }
@@ -354,12 +428,14 @@ private struct ChildRepairSavedSection: View {
 /// Explicit intrinsic icon width and a wrapping title keep these actions
 /// readable in a narrow sheet at accessibility text sizes.
 private struct ChildRepairActionLabel: View {
-    let title: LocalizedStringKey
+    let title: Text
     let symbol: String
+    init(title: LocalizedStringKey, symbol: String) { self.title = Text(title); self.symbol = symbol }
+    init(text: Text, symbol: String) { title = text; self.symbol = symbol }
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             Image(systemName: symbol).fixedSize().accessibilityHidden(true)
-            Text(title).fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
+            title.fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -373,6 +449,7 @@ private struct ChildCopyComparison: View {
     let selectedSource: String?
     let canChoose: Bool
     let choose: (ChildTaskCopyReview.Copy) -> Void
+    let reviewHistory: (ChildTaskCopyReview.Copy) -> Void
     var body: some View {
         Group {
             if copies.metadata["state"] == .string("aligned") {
@@ -405,6 +482,8 @@ private struct ChildCopyComparison: View {
                             Button { choose(copy) } label: { ChildRepairActionLabel(title: "Use this copy", symbol: "checkmark.circle") }
                                 .disabled(!canChoose).accessibilityLabel("Use \(copy.title.lowercased())")
                                 .accessibilityIdentifier("childCopyChoose-" + copy.id)
+                            Button { reviewHistory(copy) } label: { ChildRepairActionLabel(title: "Review task histories", symbol: "clock.arrow.circlepath") }
+                                .disabled(!canChoose || !copies.omitted.isEmpty).accessibilityIdentifier("childCopyMap-" + copy.id)
                         }
                     }
                 } label: {
@@ -416,5 +495,142 @@ private struct ChildCopyComparison: View {
                 }
             }
         }
+    }
+}
+
+private struct ChildMappingEditor: View {
+    @State private var selecting: ChildCopyMappingCatalog.Item?
+    @State private var query = ""
+    let catalog: ChildCopyMappingCatalog
+    let draft: ChildCopyMappingDraft
+    let enabled: Bool
+    let assignee: (String?) -> String
+    let update: (ChildCopyMappingDraft) -> Void
+    let preview: () -> Void
+    private func choice(_ id: String) -> [String: JSON]? { draft.mapping.nodes.first { $0["source_key"] == .string(id) } }
+    private var complete: Bool { (try? catalog.validate(draft, complete: true)) != nil }
+    private func submit(nodes: [[String: JSON]], retired: [[String: JSON]]) {
+        guard let value = try? ChildCopyMappingDraft(source: draft.source, digest: draft.digest, mapping: ["version": .number(1), "nodes": .array(nodes.map(JSON.object)), "retire": .array(retired.map(JSON.object))]) else { return }
+        update(value)
+    }
+    private func select(_ target: String, for item: ChildCopyMappingCatalog.Item) {
+        guard target != self.target(item) else { return }
+        var nodes = draft.mapping.nodes.filter { $0["source_key"] != .string(item.id) }, retired = draft.mapping.retired
+        if target == "new" {
+            nodes.append(["source_key": .string(item.id), "history_key": .null, "incarnation": .null, "lifecycle": .string("selected"), "new_reference": .string(UUID().uuidString.lowercased())])
+        } else if let stored = catalog.stored.first(where: { "stored:" + $0.id == target }) {
+            nodes.append(["source_key": .string(item.id), "history_key": .string(stored.id), "incarnation": .string(stored.incarnation), "lifecycle": .null])
+            retired.removeAll { $0["node_key"] == .string(stored.id) }
+        }
+        submit(nodes: nodes, retired: retired)
+    }
+    private func lifecycle(_ value: String, for item: ChildCopyMappingCatalog.Item) {
+        let nodes = draft.mapping.nodes.map { node -> [String: JSON] in
+            guard node["source_key"] == .string(item.id) else { return node }; var updated = node; updated["lifecycle"] = value.isEmpty ? .null : .string(value); return updated
+        }
+        submit(nodes: nodes, retired: draft.mapping.retired)
+    }
+    private func target(_ item: ChildCopyMappingCatalog.Item) -> String {
+        guard let n = choice(item.id) else { return "" }; return n["history_key"] == .null ? "new" : "stored:" + n["history_key"]!.text
+    }
+    private func historyTitle(_ item: ChildCopyMappingCatalog.Item) -> Text {
+        let selected = target(item)
+        if selected == "new" { return item.heading == true ? Text("New heading history") : Text("New task history") }
+        if let stored = catalog.stored.first(where: { "stored:" + $0.id == selected }) { return Text(verbatim: stored.fields.title) }
+        return Text("Choose history…")
+    }
+    private func details(_ item: ChildCopyMappingCatalog.Item) -> String {
+        var text = item.status + " · " + assignee(item.assignee)
+        if let date = item.completedAt.flatMap(TaskPlanning.instant) { text += " · " + date.formatted(date: .abbreviated, time: .shortened) }
+        if item.recurrence != nil { text += " · Recurring task" }; return text
+    }
+    var body: some View {
+        Section("Match task histories") {
+            Text("Choose an existing history for each task, or treat it as a new task. Nothing is saved to your task list until you review and confirm the proposal.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            ForEach(catalog.selected) { item in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(item.title).fontWeight(.medium).fixedSize(horizontal: false, vertical: true)
+                    Text(item.location).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Selected copy: " + details(item)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        query = ""; selecting = item
+                    } label: {
+                        ChildRepairActionLabel(text: historyTitle(item), symbol: "clock.arrow.circlepath")
+                    }.accessibilityLabel("Choose history for “\(item.title)”").accessibilityValue(historyTitle(item)).accessibilityIdentifier("childMappingIdentity-" + item.id)
+                    if let n = choice(item.id), n["history_key"] != .null, let stored = catalog.stored.first(where: { $0.id == n["history_key"]?.text }) {
+                        Text("Recorded: " + details(stored.fields)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        Picker("Completion, type and assignee for “\(item.title)”", selection: Binding(get: { choice(item.id)?["lifecycle"]?.text ?? "" }, set: { lifecycle($0, for: item) })) {
+                            Text("Choose details…").tag("")
+                            Text("Keep recorded details").tag("recorded")
+                            Text("Use selected copy’s details").tag("selected")
+                        }.pickerStyle(.menu).accessibilityIdentifier("childMappingLifecycle-" + item.id)
+                    }
+                }.padding(.vertical, 4).disabled(!enabled)
+            }
+            Text("Details include completion, task type, assignee and any recurring-task relationship. Unresolved recurring-task conflicts will stop for a separate review.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }.sheet(item: $selecting) { item in
+            ChildMappingHistoryPicker(catalog: catalog, draft: draft, item: item, query: $query, details: details, select: { target in
+                select(target, for: item); selecting = nil
+            }, cancel: { selecting = nil })
+            #if os(macOS)
+            .frame(minWidth: 480, minHeight: 420)
+            #endif
+        }
+        Section("Histories leaving this list") {
+            ForEach(catalog.stored.filter { stored in !draft.mapping.nodes.contains { $0["history_key"] == .string(stored.id) } }) { stored in
+                Toggle(isOn: Binding(get: { draft.mapping.retired.contains { $0["node_key"] == .string(stored.id) } }, set: { selected in
+                    var retired = draft.mapping.retired.filter { $0["node_key"] != .string(stored.id) }
+                    if selected { retired.append(["node_key": .string(stored.id), "incarnation": .string(stored.incarnation)]) }
+                    submit(nodes: draft.mapping.nodes, retired: retired)
+                })) {
+                    VStack(alignment: .leading, spacing: 3) { Text(stored.fields.title).fixedSize(horizontal: false, vertical: true); Text("Retire from this list; keep its original and prior activity").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                }.disabled(!enabled).accessibilityIdentifier("childMappingRetire-" + stored.id)
+            }
+            Button("Preview reviewed histories", action: preview).disabled(!enabled || !complete).accessibilityIdentifier("childMappingPreview")
+            if !complete { Text("Choose every task’s history and details, and confirm each unused history above.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+        }
+    }
+}
+
+private struct ChildMappingHistoryPicker: View {
+    let catalog: ChildCopyMappingCatalog
+    let draft: ChildCopyMappingDraft
+    let item: ChildCopyMappingCatalog.Item
+    @Binding var query: String
+    let details: (ChildCopyMappingCatalog.Item) -> String
+    let select: (String) -> Void
+    let cancel: () -> Void
+    private var candidates: [ChildCopyMappingCatalog.Stored] {
+        let used = Set(draft.mapping.nodes.filter { $0["source_key"] != .string(item.id) }.compactMap { row -> String? in
+            guard case .string(let key)? = row["history_key"] else { return nil }; return key
+        })
+        return catalog.stored.filter { stored in
+            guard !used.contains(stored.id) else { return false }
+            if query.isEmpty { return true }
+            let text = stored.fields.title + " " + stored.fields.location + " " + details(stored.fields)
+            return text.localizedCaseInsensitiveContains(query)
+        }
+    }
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text(item.title).font(.headline).fixedSize(horizontal: false, vertical: true)
+                    Text("Choose the recorded history that belongs to this task, or give it a new history.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Button(item.heading == true ? "Treat as a new heading" : "Treat as a new task") { select("new") }.accessibilityIdentifier("childMappingNewHistory")
+                    Button("Leave unresolved") { select("") }
+                }
+                Section("Existing histories") { ForEach(candidates) { stored in historyRow(stored) } }
+            }.searchable(text: $query, prompt: "Find a recorded task").navigationTitle("Choose history")
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: cancel) } }
+        }
+    }
+    private func historyRow(_ stored: ChildCopyMappingCatalog.Stored) -> some View {
+        Button { select("stored:" + stored.id) } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(stored.fields.title).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                Text(stored.fields.location + " · " + details(stored.fields)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }.accessibilityIdentifier("childMappingHistory-" + stored.id)
     }
 }

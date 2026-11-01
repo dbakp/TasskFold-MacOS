@@ -7272,7 +7272,17 @@ Each repository owns its implementation, focused client checks, real local SQL f
 - [x] Apply explicit identity/lifecycle choices through authorized, fingerprint-bound backend transactions, preserving all originals and existing incarnations, with fresh identities only when chosen.
 - [x] Record neutral reconciliation boundaries and preserve earned completion credit; do not manufacture credit from restored state. Later completion/reopen and same-version/different-epoch cases are covered.
 - [x] Preserve current supported child-history epoch metadata through backup validation; keep unknown/future fields and invalid dates rejected.
-- [ ] Typed native mapping choices, durable reviews, complete mapped-original decoding/export, save/recovery and cold/account/privacy/accessibility acceptance.
+- [ ] Accept native mapping choices, durable reviews, mapped-original export, save/recovery and cold/account/privacy/accessibility behavior; source/core implementation is now verified.
 - [ ] More complex recipient/recurrence histories, exact editable caches, shared file/discussion/archive custody and genuine shared-account/hosted migration acceptance. Other Mac/wider checks and user deferrals remain open.
 
 [Database/core evidence and limits](child-copy-mapping-apply/README.md). This is not a native mapping workflow or full migration acceptance; all normal-use gates remain disabled, with no hosted deployment.
+
+
+## 1 November · native history choices and durable recovery models
+
+- [x] Implement searchable history selection, explicit lifecycle/retirement, saved partial choices, edit-back-to-form, complete mapped previews/requests and exact mapped-original decoding in both independently owned clients.
+- [x] Verify 85 focused client tests per repo using each repo’s actual PostgreSQL contract; rerun the same 77 SQL assertions while capturing it. Current app/runner builds and signatures pass in both repos.
+- [ ] Full native matching/search/cancel, keyboard/speech/large text, cold drafts, mapped save/status recovery and exact native original readback. The Mac runtime attempt stopped at the locked screen. The old native peer now supplies full identity/location metadata but explicitly refuses mapped writes until its endpoint/verifier is implemented.
+- [ ] Broader recipient/recurrence histories, exact editable caches, shared custody, genuine shared-account/hosted acceptance and other Mac/wider checks. All normal-use flags and existing user deferrals remain unchanged.
+
+[Evidence and exact acceptance limits](child-copy-mapping-client/README.md). The native implementation is built, not fully accepted.

@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-01",
+  "accepted": false,
+  "MacObservation": "Computer-use tool reported the Mac locked before any control interaction",
+  "ownedTestAppClosed": true,
+  "verifiedOwnedPIDs": [],
+  "mappedNativePeerAcceptance": false,
+  "reason": "Native peer supplies identity/location records but intentionally rejects mapped preview/write until accurate simulation and saved-data verification exist",
+  "scope": "Mac runtime observation only; iPhone/iPad simulator interaction was not attempted in this milestone",
+  "simulatorRuntimeAttempted": false
+}

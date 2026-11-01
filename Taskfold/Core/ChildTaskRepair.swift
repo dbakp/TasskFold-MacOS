@@ -2,6 +2,150 @@ import Foundation
 import CryptoKit
 import Observation
 
+/// Choices contain identities and lifecycle consent only. Source trees/notes
+/// remain on their exact, ephemeral comparison/export path.
+struct ChildCopyMapping: Codable, Equatable, Sendable {
+    let raw: [String: JSON]
+    var nodes: [[String: JSON]] { raw["nodes"]!.list.map(\.object) }
+    var retired: [[String: JSON]] { raw["retire"]!.list.map(\.object) }
+    static func == (a: Self, b: Self) -> Bool { ChildTaskStructureCommand.exact(.object(a.raw), .object(b.raw)) }
+    static func key(_ value: JSON?) -> String? {
+        guard case .string(let key)? = value, !key.isEmpty, key.utf8.count <= 128,
+              key.utf8.elementsEqual(key.precomposedStringWithCanonicalMapping.utf8) else { return nil }; return key
+    }
+    init(raw: [String: JSON], incomplete: Bool = false) throws {
+        guard Set(raw.keys) == ["version", "nodes", "retire"], raw["version"] == .number(1),
+              case .array(let nodes)? = raw["nodes"], nodes.count <= 1000,
+              case .array(let retired)? = raw["retire"], retired.count <= 1000,
+              try TaskfoldJSONEncoder().encode(raw).count <= 512_000 else { throw ChildTaskRepairCommand.invalid }
+        var sources = Set<String>(), targets = Set<String>(), removed = Set<String>()
+        for value in nodes {
+            guard case .object(let n) = value, let source = Self.key(n["source_key"]), sources.insert(source).inserted else { throw ChildTaskRepairCommand.invalid }
+            if n["history_key"] == .null {
+                guard Set(n.keys) == ["source_key", "history_key", "incarnation", "lifecycle", "new_reference"], n["incarnation"] == .null, n["lifecycle"] == .string("selected"),
+                      case .string(let reference)? = n["new_reference"], !reference.isEmpty, reference.utf8.count <= 128,
+                      reference.precomposedStringWithCanonicalMapping.utf8.count <= 128,
+                      targets.insert(reference.precomposedStringWithCanonicalMapping).inserted else { throw ChildTaskRepairCommand.invalid }
+            } else {
+                guard Set(n.keys) == ["source_key", "history_key", "incarnation", "lifecycle"], let key = Self.key(n["history_key"]), targets.insert(key).inserted,
+                      (try? TeamOrganizationValue.id(n["incarnation"])) != nil,
+                      [JSON.string("selected"), .string("recorded")].contains(n["lifecycle"] ?? .null) || incomplete && n["lifecycle"] == .null else { throw ChildTaskRepairCommand.invalid }
+            }
+        }
+        for value in retired {
+            guard case .object(let n) = value, Set(n.keys) == ["node_key", "incarnation"], let key = Self.key(n["node_key"]),
+                  (try? TeamOrganizationValue.id(n["incarnation"])) != nil, !targets.contains(key), removed.insert(key).inserted else { throw ChildTaskRepairCommand.invalid }
+        }
+        self.raw = raw
+    }
+    init(from decoder: Decoder) throws { try self.init(raw: [String: JSON](from: decoder)) }
+    func encode(to encoder: Encoder) throws { try raw.encode(to: encoder) }
+}
+
+struct ChildCopyMappingDraft: Codable, Equatable, Sendable {
+    let source: String, digest: String, mapping: ChildCopyMapping
+    init(source: String, digest: String, mapping: [String: JSON]) throws {
+        guard ["task", "projection", "records"].contains(source), ChildTaskAdoptionCommand.digest(.string(digest)) else { throw ChildTaskRepairCommand.invalid }
+        self.source = source; self.digest = digest; self.mapping = try .init(raw: mapping, incomplete: true)
+    }
+    enum CodingKeys: String, CodingKey { case source, digest, mapping }
+    init(from decoder: Decoder) throws {
+        try structureKeys(decoder, ["source", "digest", "mapping"])
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        try self.init(source: c.decode(String.self, forKey: .source), digest: c.decode(String.self, forKey: .digest), mapping: c.decode([String: JSON].self, forKey: .mapping))
+    }
+}
+
+struct ChildCopyMappingCatalog: Sendable {
+    struct Item: Sendable, Identifiable {
+        let id: String, title: String
+        var location = ""
+        let completed: Bool?, completedAt: String?, heading: Bool?
+        let assignee: String?, recurrence: String?
+        enum Keys: String, CodingKey { case id, title, completed, completed_at, is_heading, assigned_to, recurrence_parent_id }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: Keys.self)
+            id = try c.decode(String.self, forKey: .id).precomposedStringWithCanonicalMapping
+            title = String((try c.decodeIfPresent(String.self, forKey: .title) ?? "Untitled item").prefix(200))
+            completed = try c.decodeIfPresent(Bool.self, forKey: .completed); completedAt = try c.decodeIfPresent(String.self, forKey: .completed_at)
+            heading = try c.decodeIfPresent(Bool.self, forKey: .is_heading); assignee = try c.decodeIfPresent(String.self, forKey: .assigned_to); recurrence = try c.decodeIfPresent(String.self, forKey: .recurrence_parent_id)
+        }
+        var status: String { heading == true ? "Heading" : completed == true ? "Completed" : "Open" }
+    }
+    struct Stored: Decodable, Sendable, Identifiable {
+        let node_key: String, incarnation: String, identity_path: [String], sibling_order: Int
+        var fields: Item
+        var id: String { node_key }
+    }
+    private struct Node: Decodable { let fields: Item, children: [Node]
+        enum CodingKeys: String, CodingKey { case subtasks }
+        init(from decoder: Decoder) throws { fields = try Item(from: decoder); children = try decoder.container(keyedBy: CodingKeys.self).decodeIfPresent([Node].self, forKey: .subtasks) ?? [] }
+    }
+    private struct Bundle: Decodable { let records: [Stored] }
+    let source: String, digest: String, selected: [Item], stored: [Stored]
+    init(copies: ChildTaskCopyReview, source: String) throws {
+        guard copies.omitted.isEmpty, let copy = copies.copies.first(where: { $0.id == source && $0.state == "ready" }) else { throw ChildTaskRepairCommand.invalid }
+        var items: [Item] = []
+        func walk(_ nodes: [Node], depth: Int, parent: String = "", position: String = "") throws {
+            guard depth <= 24 else { throw ChildTaskRepairCommand.invalid }
+            for (offset, n) in nodes.enumerated() {
+                guard items.count < 1000, ChildCopyMapping.key(.string(n.fields.id)) != nil else { throw ChildTaskRepairCommand.invalid }
+                var item = n.fields; let place = position.isEmpty ? String(offset + 1) : position + "." + String(offset + 1)
+                item.location = place + (parent.isEmpty ? "" : " · " + parent); items.append(item)
+                try walk(n.children, depth: depth + 1, parent: n.fields.title, position: place)
+            }
+        }
+        if copy.tree != Data("null".utf8) { try walk(TaskfoldJSONDecoder().decode([Node].self, from: copy.tree), depth: 1) }
+        var stored = try TaskfoldJSONDecoder().decode(Bundle.self, from: copies.exportBundle).records
+        guard stored.count <= 1000, Set(items.map(\.id)).count == items.count, Set(stored.map(\.id)).count == stored.count,
+              stored.allSatisfy({ ChildCopyMapping.key(.string($0.id)) != nil && $0.fields.id == $0.id && UUID(uuidString: $0.incarnation) != nil }) else { throw ChildTaskRepairCommand.invalid }
+        let names = Dictionary(uniqueKeysWithValues: stored.map { ($0.id, $0.fields.title) })
+        for index in stored.indices {
+            let parents = stored[index].identity_path.dropLast().compactMap { names[$0.precomposedStringWithCanonicalMapping] }
+            stored[index].fields.location = "Item \(stored[index].sibling_order + 1)" + (parents.isEmpty ? "" : " · " + String(parents.joined(separator: " / ").suffix(200)))
+        }
+        self.source = source; digest = copies.digest; selected = items; self.stored = stored
+    }
+    func validate(_ draft: ChildCopyMappingDraft, complete: Bool) throws {
+        guard draft.source == source, draft.digest == digest else { throw ChildTaskRepairCommand.invalid }
+        let mapping = try ChildCopyMapping(raw: draft.mapping.raw, incomplete: !complete)
+        let selectedKeys = Set(selected.map(\.id)); var used = Set<String>()
+        for n in mapping.nodes {
+            guard selectedKeys.contains(n["source_key"]!.text) else { throw ChildTaskRepairCommand.invalid }
+            if n["history_key"] != .null {
+                guard stored.contains(where: { $0.id == n["history_key"]!.text && $0.incarnation == n["incarnation"]!.text }) else { throw ChildTaskRepairCommand.invalid }; used.insert(n["history_key"]!.text)
+            } else { guard !stored.contains(where: { $0.id == n["new_reference"]!.text.precomposedStringWithCanonicalMapping }) else { throw ChildTaskRepairCommand.invalid } }
+        }
+        for n in mapping.retired { guard stored.contains(where: { $0.id == n["node_key"]!.text && $0.incarnation == n["incarnation"]!.text }) else { throw ChildTaskRepairCommand.invalid }; used.insert(n["node_key"]!.text) }
+        if complete { guard mapping.nodes.count == selected.count, used == Set(stored.map(\.id)) else { throw ChildTaskRepairCommand.invalid } }
+    }
+}
+extension ChildCopyMappingCatalog.Item: Decodable {}
+
+struct ChildCopyMappingSummary: Sendable {
+    let newCount: Int, resetCount: Int, retiredCount: Int
+    init(value: JSON, mapping: ChildCopyMapping) throws {
+        guard case .object(let r) = value, Set(r.keys) == ["protocol", "nodes", "retired", "new_identity_count", "reset_completion_count", "subjects"], r["protocol"] == .number(1),
+              case .array(let rows)? = r["nodes"], rows.count == mapping.nodes.count,
+              r["retired"] == .array(mapping.retired.map { $0["node_key"]! }) else { throw ChildTaskRepairCommand.invalid }
+        var fresh = 0, reset = 0, resetKeys = Set<String>()
+        for (value, choice) in zip(rows, mapping.nodes) {
+            guard case .object(let row) = value, Set(row.keys) == ["source_key", "history_key", "target_key", "incarnation", "lifecycle", "new_identity", "reset_completion"],
+                  ["source_key", "history_key", "incarnation", "lifecycle"].allSatisfy({ ChildTaskStructureCommand.exact(row[$0], choice[$0]) }),
+                  case .bool(let resets)? = row["reset_completion"] else { throw ChildTaskRepairCommand.invalid }
+            let isNew = choice["history_key"] == .null
+            let target = isNew ? choice["new_reference"]!.text.precomposedStringWithCanonicalMapping : choice["history_key"]!.text
+            guard row["new_identity"] == .bool(isNew), row["target_key"] == .string(target), !isNew || resets else { throw ChildTaskRepairCommand.invalid }
+            if isNew { fresh += 1 }; if resets { reset += 1; resetKeys.insert(target) }
+        }
+        guard r["new_identity_count"] == .number(Double(fresh)), r["reset_completion_count"] == .number(Double(reset)),
+              let subjects = r["subjects"], let context = TaskNodeActivity.Reconciliation(.object(["version": .number(1), "request_id": .string("11111111-1111-1111-1111-111111111111"), "archive_id": .string("22222222-2222-2222-2222-222222222222"), "subjects": subjects])),
+              Set(context.subjects.filter { !$0.retired }.map(\.key)) == resetKeys,
+              Set(mapping.retired.map { $0["node_key"]!.text }).isSubset(of: Set(context.subjects.filter(\.retired).map(\.key))) else { throw ChildTaskRepairCommand.invalid }
+        newCount = fresh; resetCount = reset; retiredCount = mapping.retired.count
+    }
+}
+
 /// Only explicit metadata operations enter durable storage; opaque source trees
 /// stay ephemeral and are never encoded as the app's floating-point JSON model.
 struct ChildTaskRepairChange: Codable, Equatable, Sendable {
@@ -20,10 +164,11 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
     init(raw: [String: JSON]) throws {
         guard let kind = Kind(rawValue: raw["kind"]?.text ?? "") else { throw ChildTaskRepairCommand.invalid }
         let extra: Set<String>
-        switch kind { case .chooseCopy: extra = ["source", "copy_digest"]; case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
+        switch kind { case .chooseCopy: extra = raw["mapping"] == nil ? ["source", "copy_digest"] : ["source", "copy_digest", "mapping"]; case .makeRootList, .makeChildrenList: extra = []; case .assignReference: extra = ["reference"]; case .separateDuplicate: extra = ["reference", "keep_path"]; case .wrapItem: extra = ["reference", "title"]; case .moveItem: extra = ["parent", "index"] }
         guard Set(raw.keys) == extra.union(["kind", "path"]) else { throw ChildTaskRepairCommand.invalid }
         let path = try Self.positions(raw["path"], empty: kind == .makeRootList || kind == .chooseCopy)
         guard (kind != .makeRootList && kind != .chooseCopy) || path.isEmpty else { throw ChildTaskRepairCommand.invalid }
+        if let mapping = raw["mapping"] { guard case .object(let value) = mapping else { throw ChildTaskRepairCommand.invalid }; _ = try ChildCopyMapping(raw: value) }
         if kind == .chooseCopy {
             guard case .string(let source)? = raw["source"], ["task", "projection", "records"].contains(source),
                   ChildTaskAdoptionCommand.digest(raw["copy_digest"]) else { throw ChildTaskRepairCommand.invalid }
@@ -52,20 +197,21 @@ struct ChildTaskRepairChange: Codable, Equatable, Sendable {
         if let parent { raw["parent"] = .array(parent.map { .number(Double($0)) }) }; if let index { raw["index"] = .number(Double(index)) }
         try self.init(raw: raw)
     }
-    static func choosing(_ source: String, digest: String) throws -> Self {
-        try .init(raw: ["kind": .string(Kind.chooseCopy.rawValue), "path": .array([]), "source": .string(source), "copy_digest": .string(digest)])
+    static func choosing(_ source: String, digest: String, mapping: ChildCopyMapping? = nil) throws -> Self {
+        var raw: [String: JSON] = ["kind": .string(Kind.chooseCopy.rawValue), "path": .array([]), "source": .string(source), "copy_digest": .string(digest)]
+        if let mapping { raw["mapping"] = .object(mapping.raw) }; return try .init(raw: raw)
     }
     init(from decoder: Decoder) throws { try self.init(raw: [String: JSON](from: decoder)) }
     func encode(to encoder: Encoder) throws { try raw.encode(to: encoder) }
     static func == (a: Self, b: Self) -> Bool { ChildTaskStructureCommand.exact(.object(a.raw), .object(b.raw)) }
     static func validate(_ changes: [Self]) throws {
-        guard (1...64).contains(changes.count), !changes.contains(where: { $0.kind == .chooseCopy }) || changes.count == 1, try TaskfoldJSONEncoder().encode(changes).count <= 65_536 else { throw ChildTaskRepairCommand.invalid }
+        guard (1...64).contains(changes.count), !changes.contains(where: { $0.kind == .chooseCopy }) || changes.count == 1, try TaskfoldJSONEncoder().encode(changes).count <= (changes.count == 1 && changes[0].raw["mapping"] != nil ? 550_000 : 65_536) else { throw ChildTaskRepairCommand.invalid }
     }
-    static let counterPaths: Set<[String]> = [["changes", "[]", "keep_path", "[]"], ["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]
+    static let counterPaths: Set<[String]> = [["changes", "[]", "mapping", "version"], ["changes", "[]", "keep_path", "[]"], ["changes", "[]", "path", "[]"], ["changes", "[]", "parent", "[]"], ["changes", "[]", "index"]]
 }
 
 struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStringConvertible {
-    static let maximumBytes = 4_300_000
+    static let maximumBytes = 10_000_000
     let context: ChildTaskRecordContext
     let workspaceID: String?
     let changes: [ChildTaskRepairChange]
@@ -78,6 +224,7 @@ struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStr
         var id: Int { ordinal }
     }
     let historyRetention: [HistoryRetention]
+    let mappingSummary: ChildCopyMappingSummary?
     var eligible: Bool { metadata["mutation_available"] == .bool(true) }
     var valid: Bool { metadata["proposal_valid"] == .bool(true) }
     var description: String { "Private reviewed repair preview" }
@@ -102,14 +249,20 @@ struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStr
     init(data: Data, review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange]) throws {
         let expected = try Self.body(review: review, changes: changes)
         let parts = try ChildTaskRecordRead.separatingJSONFields(["original_tree", "proposed_tree"], data: data, maximum: Self.maximumBytes,
-            integerPaths: Set<[String]>([["history_retention", "[]", "ordinal"], ["history_retention", "[]", "event_count"], ["history_retention", "[]", "completed_count"], ["history_retention", "[]", "keep_path", "[]"], ["protocol"], ["node_count"], ["steps", "[]", "ordinal"], ["steps", "[]", "path", "[]"]]).union(ChildTaskRepairChange.counterPaths), nullableIntegerPaths: [["node_count"]])
+            integerPaths: Set<[String]>([["mapping_plan", "protocol"], ["mapping_plan", "new_identity_count"], ["mapping_plan", "reset_completion_count"], ["history_retention", "[]", "ordinal"], ["history_retention", "[]", "event_count"], ["history_retention", "[]", "completed_count"], ["history_retention", "[]", "keep_path", "[]"], ["protocol"], ["node_count"], ["steps", "[]", "ordinal"], ["steps", "[]", "path", "[]"]]).union(ChildTaskRepairChange.counterPaths), nullableIntegerPaths: [["node_count"]])
         let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: parts.metadata)
-        guard Set(raw.keys).subtracting(["history_retention"]) == Self.keys, expected.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }),
+        guard Set(raw.keys).subtracting(["history_retention", "mapping_plan"]) == Self.keys, expected.allSatisfy({ ChildTaskStructureCommand.exact(raw[$0.key], $0.value) }),
               ChildTaskAdoptionCommand.digest(raw["repair_digest"]), case .bool(let valid)? = raw["proposal_valid"], case .bool(let mayWrite)? = raw["mutation_available"],
               case .bool(let sqlNull)? = raw["original_sql_null"], case .array(let steps)? = raw["steps"], steps.count == changes.count,
               let original = parts.values["original_tree"], let proposed = parts.values["proposed_tree"], original.count <= 2_000_000, proposed.count <= 2_000_000,
               !sqlNull || original == Data("null".utf8), raw["custody_blocker"] == .null || ["indexed_custody", "history_custody"].contains(raw["custody_blocker"]?.text ?? ""),
               !mayWrite || valid && raw["custody_blocker"] == .null else { throw ChildTaskRepairCommand.invalid }
+        if let mapping = changes.first?.raw["mapping"] {
+            guard changes.count == 1, let value = raw["mapping_plan"] else { throw ChildTaskRepairCommand.invalid }
+            mappingSummary = try .init(value: value, mapping: ChildCopyMapping(raw: mapping.object))
+        } else {
+            guard raw["mapping_plan"] == nil, data.count <= 4_300_000 else { throw ChildTaskRepairCommand.invalid }; mappingSummary = nil
+        }
         var retained: [HistoryRetention] = []
         let separating = changes.enumerated().filter { $0.element.kind == .separateDuplicate }
         if let retention = raw["history_retention"] {
@@ -172,7 +325,7 @@ struct ChildTaskRepairPreview: Sendable, CustomStringConvertible, CustomDebugStr
 
 struct ChildTaskRepairCommand: ReviewedTeamCommand, CustomStringConvertible, CustomDebugStringConvertible {
     static let storagePrefix = "child-repair-command-v1."
-    static let maximumStoredBytes = 120_000
+    static let maximumStoredBytes = 700_000
     static var invalid: AppFailure { AppFailure(message: "Review this repair against the current task. Your original work is kept.") }
     static let keys: Set<String> = ["protocol", "account", "request_id", "task_id", "task_generation", "project_id", "workspace_id", "review_digest", "repair_digest", "changes"]
     let account: String, origin: String, body: [String: JSON], nodeCount: Int
@@ -187,7 +340,7 @@ struct ChildTaskRepairCommand: ReviewedTeamCommand, CustomStringConvertible, Cus
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard origin.utf8.count <= 2048, Set(body.keys) == Self.keys, body["protocol"] == .number(1), body["account"] == .string(account),
               ChildTaskAdoptionCommand.digest(body["review_digest"]), ChildTaskAdoptionCommand.digest(body["repair_digest"]), (0...1000).contains(nodeCount),
-              case .array(let values)? = body["changes"], try TaskfoldJSONEncoder().encode(body).count <= 70_000 else { throw Self.invalid }
+              case .array(let values)? = body["changes"], try TaskfoldJSONEncoder().encode(body).count <= (values.count == 1 && values[0].object["mapping"] != nil ? 600_000 : 70_000) else { throw Self.invalid }
         _ = try TeamOrganizationValue.id(body["request_id"]); _ = try TeamOrganizationValue.id(body["task_id"])
         for key in ["task_generation", "project_id", "workspace_id"] { _ = try TeamProjectValue.optionalID(body[key]) }
         let changes = try values.map { value -> ChildTaskRepairChange in guard case .object(let r) = value else { throw Self.invalid }; return try .init(raw: r) }
@@ -251,11 +404,15 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
     private struct Header: Decodable {
         let protocolVersion: Int, root: RootIdentity, subtasksSQLNull: Bool, reviewDigest: String, repairDigest: String
         let copyChoice: ChildTaskRepairChange?
-        enum CodingKeys: String, CodingKey { case protocolVersion = "protocol", root, subtasksSQLNull = "subtasks_sql_null", projection, records, authority, rootHistory = "root_history", copyChoice = "copy_choice", childHistory = "child_history", reviewDigest = "review_digest", repairDigest = "repair_digest" }
+        let mappingContext: TaskNodeActivity.Reconciliation?
+        enum CodingKeys: String, CodingKey { case protocolVersion = "protocol", root, subtasksSQLNull = "subtasks_sql_null", projection, records, authority, rootHistory = "root_history", copyChoice = "copy_choice", mappingContext = "mapping_context", childHistory = "child_history", reviewDigest = "review_digest", repairDigest = "repair_digest" }
         init(from d: Decoder) throws {
             let c = try d.container(keyedBy: CodingKeys.self)
             let hasChoice = c.contains(.copyChoice)
-            try structureKeys(d, Set(["protocol", "root", "subtasks_sql_null", "projection", "records", "authority", "child_history", "review_digest", "repair_digest"]).union(hasChoice ? ["root_history", "copy_choice"] : []))
+            let mapped = try hasChoice && c.decode(ChildTaskRepairChange.self, forKey: .copyChoice).raw["mapping"] != nil
+            if mapped { guard let context = TaskNodeActivity.Reconciliation(try c.decode(JSON.self, forKey: .mappingContext)) else { throw ChildTaskRepairCommand.invalid }; mappingContext = context }
+            else { mappingContext = nil }
+            try structureKeys(d, Set(["protocol", "root", "subtasks_sql_null", "projection", "records", "authority", "child_history", "review_digest", "repair_digest"]).union(hasChoice ? ["root_history", "copy_choice"] : []).union(mapped ? ["mapping_context"] : []))
             protocolVersion = try c.decode(Int.self, forKey: .protocolVersion); root = try c.decode(RootIdentity.self, forKey: .root)
             subtasksSQLNull = try c.decode(Bool.self, forKey: .subtasksSQLNull); reviewDigest = try c.decode(String.self, forKey: .reviewDigest); repairDigest = try c.decode(String.self, forKey: .repairDigest)
             if hasChoice {
@@ -282,6 +439,7 @@ struct ChildTaskRepairOriginal: Sendable, CustomStringConvertible, CustomDebugSt
         let header = try TaskfoldJSONDecoder().decode(Header.self, from: parts.value)
         guard header.protocolVersion == 1, header.root.id == command.rootID, header.root.task_generation == (try TeamProjectValue.optionalID(command.body["task_generation"])),
               header.root.project_id == (try TeamProjectValue.optionalID(command.body["project_id"])), header.reviewDigest == command.body["review_digest"]!.text, header.repairDigest == command.body["repair_digest"]!.text else { throw ChildTaskRepairCommand.invalid }
+        if let context = header.mappingContext { guard context.request == command.id, context.archive == result.raw["archive_id"]?.text else { throw ChildTaskRepairCommand.invalid } }
         let choice = command.body["changes"]!.list.first?.object
         if choice?["kind"] == .string(ChildTaskRepairChange.Kind.chooseCopy.rawValue) {
             guard let archived = header.copyChoice, ChildTaskStructureCommand.exact(.object(archived.raw), .object(choice!)) else { throw ChildTaskRepairCommand.invalid }
@@ -311,34 +469,38 @@ struct ChildTaskRepairDraft: Codable, Equatable, Sendable, CustomStringConvertib
     let account: String, origin: String
     let identity: [String: JSON]
     let changes: [ChildTaskRepairChange], labels: [String]
+    let mappingReview: ChildCopyMappingDraft?
     let token: UUID
     var rootID: String { identity["task_id"]!.text }
     var description: String { "Private saved repair review" }
     var debugDescription: String { description }
     static let identityKeys: Set<String> = ["task_id", "task_generation", "project_id", "workspace_id", "review_digest"]
-    init(account: String, origin: String, identity: [String: JSON], changes: [ChildTaskRepairChange], labels: [String], token: UUID = UUID()) throws {
+    init(account: String, origin: String, identity: [String: JSON], changes: [ChildTaskRepairChange], labels: [String], token: UUID = UUID(), mappingReview: ChildCopyMappingDraft? = nil) throws {
         try TeamOrganizationValue.scope(account: account, origin: origin)
         guard Set(identity.keys) == Self.identityKeys, ChildTaskAdoptionCommand.digest(identity["review_digest"]),
               labels.count == changes.count, labels.allSatisfy({ !$0.isEmpty && $0.utf8.count <= 2048 }) else { throw ChildTaskRepairCommand.invalid }
         _ = try TeamOrganizationValue.id(identity["task_id"])
         for key in ["task_generation", "project_id", "workspace_id"] { _ = try TeamProjectValue.optionalID(identity[key]) }
-        try ChildTaskRepairChange.validate(changes)
+        if mappingReview != nil { guard changes.isEmpty && labels.isEmpty else { throw ChildTaskRepairCommand.invalid } } else { try ChildTaskRepairChange.validate(changes) }
+        self.mappingReview = mappingReview
         self.account = account; self.origin = origin; self.identity = identity; self.changes = changes; self.labels = labels; self.token = token
     }
-    init(review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange], labels: [String]) throws {
-        try self.init(account: review.context.account, origin: review.context.origin, identity: review.metadata.filter { Self.identityKeys.contains($0.key) }, changes: changes, labels: labels)
+    init(review: ChildTaskAdoptionReview, changes: [ChildTaskRepairChange], labels: [String], mappingReview: ChildCopyMappingDraft? = nil) throws {
+        try self.init(account: review.context.account, origin: review.context.origin, identity: review.metadata.filter { Self.identityKeys.contains($0.key) }, changes: changes, labels: labels, mappingReview: mappingReview)
     }
     func matches(_ review: ChildTaskAdoptionReview) -> Bool {
         account == review.context.account && origin == review.context.origin && Self.identityKeys.allSatisfy { ChildTaskStructureCommand.exact(identity[$0], review.metadata[$0]) }
     }
-    private enum CodingKeys: String, CodingKey { case account, origin, identity, changes, labels, token }
+    private enum CodingKeys: String, CodingKey { case account, origin, identity, changes, labels, token, mappingReview }
     init(from decoder: Decoder) throws {
-        try structureKeys(decoder, ["account", "origin", "identity", "changes", "labels", "token"])
+        let keys: Set<String> = ["account", "origin", "identity", "changes", "labels", "token"]
+        let fields = try decoder.container(keyedBy: CodingKeys.self)
+        try structureKeys(decoder, keys.union(fields.contains(.mappingReview) ? ["mappingReview"] : []))
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), identity: c.decode([String: JSON].self, forKey: .identity), changes: c.decode([ChildTaskRepairChange].self, forKey: .changes), labels: c.decode([String].self, forKey: .labels), token: c.decode(UUID.self, forKey: .token))
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), identity: c.decode([String: JSON].self, forKey: .identity), changes: c.decode([ChildTaskRepairChange].self, forKey: .changes), labels: c.decode([String].self, forKey: .labels), token: c.decode(UUID.self, forKey: .token), mappingReview: c.decodeIfPresent(ChildCopyMappingDraft.self, forKey: .mappingReview))
     }
     static func == (a: Self, b: Self) -> Bool {
-        a.account == b.account && a.origin == b.origin && a.token == b.token && a.changes == b.changes && a.labels == b.labels && ChildTaskStructureCommand.exact(.object(a.identity), .object(b.identity))
+        a.account == b.account && a.origin == b.origin && a.token == b.token && a.mappingReview == b.mappingReview && a.changes == b.changes && a.labels == b.labels && ChildTaskStructureCommand.exact(.object(a.identity), .object(b.identity))
     }
 }
 
@@ -384,7 +546,7 @@ struct ChildTaskRepairState: ReviewedTeamFileCommand {
         self.account = account; self.origin = origin; self.entries = entries; self.drafts = drafts
     }
     init(data: Data) throws {
-        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 } + ChildTaskRepairChange.counterPaths.map { ["drafts", "[]"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
+        try ChildTaskRecordRead.validateUniqueJSON(data, maximum: Self.maximumStoredBytes, integerPaths: Set<[String]>([["drafts", "[]", "mappingReview", "mapping", "version"], ["version"], ["entries", "[]", "command", "nodeCount"], ["entries", "[]", "command", "body", "protocol"], ["entries", "[]", "result", "raw", "protocol"], ["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]]).union(Set(ChildTaskRepairChange.counterPaths.map { ["entries", "[]", "command", "body"] + $0 } + ChildTaskRepairChange.counterPaths.map { ["drafts", "[]"] + $0 })), nullableIntegerPaths: [["entries", "[]", "result", "raw", "node_count"], ["entries", "[]", "result", "raw", "archive_bytes"]])
         self = try TaskfoldJSONDecoder().decode(Self.self, from: data)
     }
     private enum CodingKeys: String, CodingKey { case version, account, origin, entries, drafts }

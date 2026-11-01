@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-01",
+  "repository": "mac",
+  "passed": true,
+  "phase": "mapping-client-final-sources",
+  "appAndRunnerSignatureVerified": true,
+  "sourceProof": {
+    "Taskfold/Core/ChildTaskRepair.swift": {
+      "sourceSHA256": "f1e2e897a86efb24b44adfc35a13b9cdc9d471457c8adfd9d2bd4e636b2736b2",
+      "hostSHA256": "f1e2e897a86efb24b44adfc35a13b9cdc9d471457c8adfd9d2bd4e636b2736b2",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Backend.swift": {
+      "sourceSHA256": "d06913f84dfcae31a482e9cdd77d3fd714a66d92555f19f06ced2b162d60dadc",
+      "hostSHA256": "72ea600b3a06dbe70fef5ae62cb873d0aa14d0c831845f8eb73c07c4327422e2",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Views/ChildTaskRepairView.swift": {
+      "sourceSHA256": "835c985783d6b44020bbad95649ac07f86a1e59e484a42867b639b66249054aa",
+      "hostSHA256": "835c985783d6b44020bbad95649ac07f86a1e59e484a42867b639b66249054aa",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/ChildAdoptionNativeFixture.swift": {
+      "sourceSHA256": "36803e2d1902cf0e3ff1a535046d8bba574e2a953355a28dbde65531a3bad436",
+      "hostSHA256": "36803e2d1902cf0e3ff1a535046d8bba574e2a953355a28dbde65531a3bad436",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/ChildRepairNativeFixture.swift": {
+      "sourceSHA256": "4036b61f8f410d0805ff65193a76e89d8d6fcdf513ca1cce761690a57ffe03d1",
+      "hostSHA256": "4036b61f8f410d0805ff65193a76e89d8d6fcdf513ca1cce761690a57ffe03d1",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/TaskActivity.swift": {
+      "sourceSHA256": "f8603b4e70321a08594d7971816eae228fadfd2c7bc65f60d2c009cab9a50f62",
+      "hostSHA256": "f8603b4e70321a08594d7971816eae228fadfd2c7bc65f60d2c009cab9a50f62",
+      "matchesDocumentedIsolation": true
+    },
+    "Taskfold/Core/Backups.swift": {
+      "sourceSHA256": "39135008565fd516caf80bb543245e6247a916b5e9e96e178ae7a2f2cf75d3d2",
+      "hostSHA256": "9ae8beb9a96db1c460c606489b9a8e8da40b4e480978a34bd27590d533aa39f5",
+      "matchesDocumentedIsolation": true
+    }
+  },
+  "appBinariesSHA256": {
+    "Contents/MacOS/Taskfold": "4f2d8f4fcb5a47c53322df75b71de9fa3fbd6ecc4c20814d0bffba710b047df3",
+    "Contents/MacOS/Taskfold.debug.dylib": "d450eb748bcd860bed31d17799437dc7d50b7920567f5676e0cab6f818c3bede"
+  },
+  "nativeRuntimeAccepted": false,
+  "scope": "Current source/isolation correspondence, app/runner compilation and signing only; no distribution or interaction claim"
+}

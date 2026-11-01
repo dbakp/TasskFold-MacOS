@@ -1,6 +1,6 @@
 # Explicit older-task identity and lifecycle planning
 
-The private database helper `plan_child_copy_mapping` now plans an explicit match between a selected saved copy and existing child-record identities. It does not save anything, authorize access, expose an RPC, add history events or enable migration. The existing app copy-selection flow still requires matching histories.
+The private database helper `plan_child_copy_mapping` now plans an explicit match between a selected saved copy and existing child-record identities. It does not save anything, authorize access, expose an RPC, add history events or enable migration. The subsequent client implementation adds explicit mapping review; its native acceptance is still open.
 
 Every selected item must either bind an existing record's exact incarnation or name an unused new reference. Every stored identity must be carried forward or explicitly retired from the proposed current tree. Retirement here is a decision in a read-only plan; it does not delete a task, event or original. No automatic identity matching or winner selection is performed.
 
@@ -25,6 +25,6 @@ The test uses the actual database decoder, records and activity-shape validator.
 
 The subsequent [reviewed mapping transaction and core-history milestone](../child-copy-mapping-apply/README.md) implements the authorized snapshot-bound save, complete originals, neutral audit and completion-credit boundaries. Its own evidence and limits are recorded separately. The pure planner and its original 65-assertion evidence are unchanged.
 
-Native mapped review/drafts, original decoding/export, recovery and acceptance remain unfinished. Ambiguous recurrence/recipient decisions, exact editable caches and shared file/discussion/archive custody also remain open. Neither the planner nor transaction checks prove full older-data migration or enable normal use.
+Native mapped review/drafts and original decoding are now implemented and core/build verified; [native recovery/export acceptance remains open](../child-copy-mapping-client/README.md). Ambiguous recurrence/recipient decisions, exact editable caches and shared file/discussion/archive custody also remain open. Neither the planner nor transaction checks prove full older-data migration or enable normal use.
 
 The migration is committed for later deployment only. No hosted project, normal-use flag or public app route changes in this milestone. All user-deferred release/provider/device work remains deferred.

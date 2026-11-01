@@ -83,10 +83,20 @@ import CryptoKit
             return .object(["id": .string(id), "state": .string("ready"), "issue": .null, "node_count": .number(Double(count.count)), "max_depth": .number(Double(count.depth)), "bytes": .number(Double(try TaskfoldJSONEncoder().encode(tree).count))])
         }
         let projection: JSON = .object(["task_id": identity["task_id"]!, "task_generation": identity["task_generation"]!, "source_tree": projectionTree])
-        func indexed(_ nodes: [JSON]) -> [JSON] {
-            nodes.flatMap { [.object(["task_id": identity["task_id"]!, "fields": $0])] + indexed($0.object["subtasks"]?.list ?? []) }
+        func indexed(_ nodes: [JSON], path: [String] = []) throws -> [JSON] {
+            try nodes.enumerated().flatMap { position, value -> [JSON] in
+                let raw = value.object, key = raw["id"]!.text.precomposedStringWithCanonicalMapping
+                let digest = try hash(.array([identity["task_id"]!, identity["task_generation"]!, .string(key)]))
+                let hex = Array(digest.prefix(32)); let uuid = [String(hex[0..<8]), String(hex[8..<12]), String(hex[12..<16]), String(hex[16..<20]), String(hex[20..<32])].joined(separator: "-")
+                let location = path + [raw["id"]!.text]
+                let record: JSON = .object(["task_id": identity["task_id"]!, "node_key": .string(key), "incarnation": .string(uuid), "revision": .number(1),
+                    "parent_key": path.last.map { .string($0.precomposedStringWithCanonicalMapping) } ?? .null,
+                    "sibling_order": .number(Double(position)), "identity_path": .array(location.map(JSON.string)),
+                    "fields": .object(raw.filter { $0.key != "subtasks" }), "children_kind": .string(raw["subtasks"] == nil ? "absent" : raw["subtasks"] == .null ? "null" : "array"), "field_versions": .object([:])])
+                return [record] + (try indexed(raw["subtasks"]?.list ?? [], path: location))
+            }
         }
-        let records: JSON = .array(indexed(recordTree.list))
+        let records: JSON = .array(try indexed(recordTree.list))
         let authority: JSON = .object(["task_id": identity["task_id"]!, "task_generation": identity["task_generation"]!, "project_id": identity["project_id"]!, "root_kind": .string("array")])
         var bundle = identity
         bundle.merge(["kind": .string("taskfold_saved_child_copies"), "copy_digest": .string(digest), "root": .object(root), "subtasks_sql_null": .bool(false), "projection": projection, "records": records, "authority": authority, "omitted": .array([])], uniquingKeysWith: { _, b in b })
