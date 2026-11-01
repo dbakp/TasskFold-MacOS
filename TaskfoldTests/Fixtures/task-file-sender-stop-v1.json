@@ -1,0 +1,27 @@
+{
+  "wire": {
+    "intent": {
+      "operation_id": "48b1281a-ac64-411b-a92c-048af61bf38a",
+      "target": {
+        "team_id": "92e68189-9115-4d5c-b6f2-db81aca04df0",
+        "project_id": "0b2daf21-e6f6-47a2-bf7d-bcd47a01adcd",
+        "task_id": "81c453e1-2b29-4951-936e-8e0aab2bad56",
+        "task_generation": "02aad377-3220-4727-862c-2f673a0c1ee7"
+      },
+      "name": "Workshop notes.txt",
+      "type": "text/plain",
+      "byte_count": 5,
+      "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    },
+    "reply": {
+      "receipt": {
+        "state": "cancelled",
+        "account": "a227a53a-5d1c-401c-8fba-acdea1099581",
+        "protocol": 1,
+        "operation_id": "48b1281a-ac64-411b-a92c-048af61bf38a",
+        "sender_stop_protocol": 1
+      }
+    }
+  },
+  "sourceSHA256": "30e9316ed6137df9b4702cbfa31ee8bfa8c94d3fdb35d528422f7724bdbac17d"
+}

@@ -388,3 +388,55 @@ Deno.test("live request budget returns a bounded retry delay", async () => {
   equal(r.headers.get("retry-after"), "10");
   equal(f.calls.length, 2);
 });
+
+const senderStop = (f: ReturnType<typeof fixture>) => ({
+  protocol: 1,
+  sender_stop_protocol: 1,
+  account: f.account,
+  operation_id: f.operation,
+  state: "cancelled",
+});
+Deno.test("unknown sender cancellation returns only a durable operation stop", async () => {
+  const f = fixture({ enabled: false });
+  f.state.rpc = () => response({ status: "cancelled", receipt: senderStop(f) });
+  const result = await f.handler(
+    f.request("cancel", { operation_id: f.operation }),
+  );
+  equal(result.status, 200);
+  equal(await result.json(), { receipt: senderStop(f) });
+  equal(f.calls.length, 2);
+});
+Deno.test("a stopped operation never starts provider work on publish retry", async () => {
+  const f = fixture();
+  f.state.rpc = () => response({ status: "cancelled", receipt: senderStop(f) });
+  const result = await f.handler(f.request());
+  equal(result.status, 200);
+  equal(await result.json(), { receipt: senderStop(f) });
+  equal(f.calls.length, 2);
+});
+for (
+  const changed of [
+    { sender_stop_protocol: 2 },
+    { account: crypto.randomUUID() },
+    { operation_id: crypto.randomUUID() },
+    { state: "published" },
+  ]
+) {
+  Deno.test(
+    "sender stop must bind version actor operation and terminal state " +
+      Object.keys(changed)[0],
+    async () => {
+      const f = fixture();
+      f.state.rpc = () =>
+        response({
+          status: "cancelled",
+          receipt: { ...senderStop(f), ...changed },
+        });
+      equal(
+        (await f.handler(f.request("cancel", { operation_id: f.operation })))
+          .status,
+        503,
+      );
+    },
+  );
+}

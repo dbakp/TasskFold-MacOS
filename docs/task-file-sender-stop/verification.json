@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "baselineCommit": "60c7d7dce61165d10f0465ad54a5d01f1ddcbad3",
+  "database": {
+    "checks": 83,
+    "containerRemoved": true,
+    "additionalAdvisorFindings": 0,
+    "genuineRevokedEditor": true,
+    "realConcurrentCancelReserve": true,
+    "reportSHA256": "f7f2c76f2ba9babae65ecba53c419ada5fc5101e327b599a61a25eebad19c669"
+  },
+  "core": {
+    "tests": 61,
+    "failures": 0,
+    "newStopTests": 3,
+    "logSHA256": "5d69aa05d610f67c4c0d4d14f24af2822eee084ed07b9c4ebafc9d69be029abd"
+  },
+  "gateway": {
+    "tests": 35,
+    "failures": 0,
+    "typecheckedByDenoTest": true,
+    "ownActualSQLStopFixture": true,
+    "logSHA256": "b6d1a1deb77abb76f2ac7b5ee25a6572d45f294528453ce6a5eab7b3b8454376",
+    "lintSHA256": "ff3955886a906e95785d1e49cc4d95e0db9f13b5f5312a5fa2895fe30443bab0"
+  },
+  "build": {
+    "phase": "file-sender-stop",
+    "appAndRunnerSignaturesVerified": true,
+    "logSHA256": "365158ac0d6a8f0eb3a35cecd952d9c959436b9307c30d37e90a64ada0e8fcf6",
+    "compiledClientSourceMatchesAfterIsolation": true,
+    "compiledClientSHA256": "799e2534d568bc2e19bfe358ebc0e191b0e4716310036c5228f48ea71f13d11e",
+    "appBinariesSHA256": {
+      "Taskfold": "6bf939c41c90b118c4a70fc7813a98ea51227b50acdc675ddd83fe478f913ebd",
+      "Taskfold.debug.dylib": "660bf5e2558738ac6f609dfab3b1a8f2fa6a54babf8a42b55970401bee1eada5"
+    }
+  },
+  "sourcesSHA256": {
+    "supabase/migrations/20261101225002_task_file_sender_stop.sql": "30e9316ed6137df9b4702cbfa31ee8bfa8c94d3fdb35d528422f7724bdbac17d",
+    "Scripts/Database/test-task-file-upload.mjs": "6dde25706746d19643d428e2381fbfc072ce1b89c9200e0348c23bd451be3441",
+    "Taskfold/Core/TaskFileUpload.swift": "799e2534d568bc2e19bfe358ebc0e191b0e4716310036c5228f48ea71f13d11e",
+    "TaskfoldTests/TaskFileUploadTests.swift": "0dcc2a0b6b077fafc0138b6399c347816cf9a38139932ab56a28470a4e8302c7",
+    "TaskfoldTests/Fixtures/task-file-sender-stop-v1.json": "d776cfe730376c74e731adaeed47fd1184590e623743333d2e27b9d59b2ce323",
+    "supabase/functions/task-files/handler.ts": "fbfc8ce6a06c76142bc18e34421cd22efbbf3ca02ff2366fe44a5384ceee4609",
+    "supabase/functions/task-files/handler_test.ts": "a23b0383d0bb8a652a8e192242439da30af55b7b2ebc5d003648b53c2e3fa6cf",
+    "supabase/functions/task-files/sql_contract_test.ts": "c256079ef3ff655dccda8b039f08d798ec24cb53ca9c2ebbc78e47abdfa465cb"
+  },
+  "hostedChanges": false,
+  "normalUseEnabled": false,
+  "providerCleanupProved": false,
+  "providerBytesChanged": false,
+  "nativeInteractionAccepted": false
+}

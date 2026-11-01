@@ -19,7 +19,7 @@ Both isolated current-source apps and runners build and pass strict signatures. 
 ## Still required before enabling
 
 - Complete read-only/viewer entrypoints and native Mac/iPhone/iPad interaction, actual picker/export, background/cold/account/window/access behavior, keyboard/VoiceOver/largest text and durable recovery observation.
-- Sender-only closure for an attempted operation that never reserved remotely or whose task/access disappeared: the current server can return unavailable. This client correctly retains its original bytes and offers private export, but one pending journal can then block choosing another file until a genuine terminal proof is available. Do not clear it on a 404 or invent a replacement operation.
+- Sender-only closure now has a local SQL/service/client candidate covering missing reservations, deleted tasks and revoked access. See [current evidence](../task-file-sender-stop/README.md). Actual provider and native interaction acceptance remain open.
 - Real provider upload/readback/download, collision/timeout/reinstall behavior, permission loss and deployment configuration checks.
 - Fenced provider cleanup and quota release; attachment removal/recovery, legacy migration, independent child/media files and genuine shared-account acceptance.
 - Existing Px work and user rollout deferrals remain unchanged. Normal-use gates stay disabled; this is a built native candidate, not completed shared-file acceptance.

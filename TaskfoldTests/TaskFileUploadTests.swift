@@ -12,11 +12,13 @@ private func publication(_ journal: TaskFileUploadJournal, state: String = "publ
 @MainActor private final class FilePeer: TaskFileUploadTransport {
     var calls: [(String, TaskFileUploadJournal)] = []
     var applied: [String: Data] = [:]
-    var lose = false, malformed = false, hold = false
+    var lose = false, malformed = false, hold = false, unreserved = false
     var beforeSend: ((TaskFileUploadJournal) async throws -> Void)?
     var continuation: CheckedContinuation<Void, Never>?
     func taskFileReply(_ journal: TaskFileUploadJournal, action: String, incarnation: UUID) async throws -> Data {
         try await beforeSend?(journal); calls.append((action, journal))
+        if unreserved, action == "publish" { throw URLError(.notConnectedToInternet) }
+        if unreserved, action == "cancel" { return try TaskfoldJSONEncoder().encode(Record(["receipt": .object(["protocol": .number(1), "sender_stop_protocol": .number(1), "account": .string(journal.account), "operation_id": .string(journal.id), "state": .string("cancelled")])])) }
         let response: Data
         if let saved = applied[journal.id] { response = saved }
         else if action == "publish" { response = try publication(journal); applied[journal.id] = response }
@@ -69,6 +71,31 @@ final class TaskFileUploadTests: XCTestCase {
             XCTAssertEqual(try TaskfoldJSONDecoder().decode(TaskFileUploadJournal.self, from: TaskfoldJSONEncoder().encode(value)), value)
             XCTAssertFalse(String(reflecting: value).contains(value.name)); XCTAssertFalse(String(describing: value).contains(fileAccount))
         }
+    }
+    func testActualOwnSQLUnknownSenderStopClosesAndColdRestoresOriginal() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "task-file-sender-stop-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let fixture = try TaskfoldJSONDecoder().decode(Record.self, from: Data(contentsOf: url)), wire = Record(fixture["wire"].object), intent = Record(wire["intent"].object), reply = Record(wire["reply"].object)
+        let proof = Record(reply["receipt"].object)
+        let value = try TaskFileUploadJournal(account: proof.string("account"), origin: fileOrigin, target: Record(intent["target"].object), bytes: Data("hello".utf8), name: intent.string("name"), type: intent.string("type"), operation: UUID(uuidString: intent.string("operation_id"))!).markingAttempted()
+        let stopped = try value.receiving(TaskfoldJSONEncoder().encode(reply)); XCTAssertEqual(stopped.phase, .cancelled); XCTAssertEqual(stopped.bytes, value.bytes); XCTAssertTrue(stopped.resolved)
+        XCTAssertEqual(try TaskfoldJSONDecoder().decode(TaskFileUploadJournal.self, from: TaskfoldJSONEncoder().encode(stopped)), stopped)
+        XCTAssertThrowsError(try stopped.receiving(publication(value)))
+    }
+    func testMinimalSenderStopRejectsForeignUnknownAndPublishingClaims() throws {
+        let value = try journal().markingAttempted()
+        let original: [String:JSON] = ["protocol": .number(1), "sender_stop_protocol": .number(1), "account": .string(value.account), "operation_id": .string(value.id), "state": .string("cancelled")]
+        for (key, replacement) in [("sender_stop_protocol",JSON.number(2)),("account",.string(UUID().uuidString.lowercased())),("operation_id",.string(UUID().uuidString.lowercased())),("state",.string("published")),("attachment",.null)] {
+            var fields = original; fields[key] = replacement
+            XCTAssertThrowsError(try value.receiving(TaskfoldJSONEncoder().encode(Record(["receipt":.object(fields)]))))
+        }
+    }
+    @MainActor func testUnreservedAttemptCanStopAndReleaseOnlyAfterRealProof() async throws {
+        let root = try root(), peer = FilePeer(); peer.unreserved = true
+        let model = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault(root), service: peer, incarnation: UUID(), current: { true })
+        await model.load(); await model.choose(Data("hello".utf8), name: "hello.txt", type: "text/plain"); await model.act("publish"); XCTAssertEqual(model.pending?.phase, .attempted)
+        await model.finish(); XCTAssertNotNil(model.pending)
+        await model.act("cancel"); XCTAssertEqual(model.pending?.phase, .cancelled); XCTAssertEqual(model.pending?.bytes, Data("hello".utf8)); XCTAssertTrue(peer.applied.isEmpty)
+        await model.finish(); XCTAssertNil(model.pending); XCTAssertEqual(peer.calls.map(\.0),["publish","cancel"])
     }
     func testDescriptorBoundsAndUnsafeFileNamesReject() throws {
         for name in ["", ".", "..", "../secret", "folder\\secret", "bad\nname", String(repeating: "a", count: 241)] { XCTAssertThrowsError(try journal(name: name)) }

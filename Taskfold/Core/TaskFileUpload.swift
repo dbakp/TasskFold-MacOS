@@ -43,6 +43,12 @@ struct TaskFileUploadJournal: ReviewedTeamFileCommand, CustomStringConvertible, 
         else { guard !resolved else { throw Self.invalid } }
     }
     private func validated(_ r: Record) throws -> Phase {
+        if r.fields["sender_stop_protocol"] != nil {
+            guard Set(r.fields.keys) == ["protocol", "sender_stop_protocol", "account", "operation_id", "state"],
+                  r["protocol"] == .number(1), r["sender_stop_protocol"] == .number(1), r["account"] == .string(account),
+                  r["operation_id"] == intent["operation_id"], r["state"] == .string("cancelled") else { throw Self.invalid }
+            return .cancelled
+        }
         guard Set(r.fields.keys) == ["protocol", "account", "operation_id", "target", "state", "attachment"],
               r["protocol"] == .number(1), r["account"] == .string(account), r["operation_id"] == intent["operation_id"], r["target"] == intent["target"],
               case .string(let state) = r["state"], ["reserved", "published", "cancelled", "expired"].contains(state), let phase = Phase(rawValue: state == "reserved" ? "attempted" : state) else { throw Self.invalid }

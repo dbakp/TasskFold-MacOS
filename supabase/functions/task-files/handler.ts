@@ -139,6 +139,21 @@ function intent(value: unknown) {
 }
 function receipt(value: unknown, account: string, operation: string) {
   const r = row(value);
+  if (r.sender_stop_protocol !== undefined) {
+    exact(r, [
+      "protocol",
+      "sender_stop_protocol",
+      "account",
+      "operation_id",
+      "state",
+    ]);
+    if (
+      r.protocol !== 1 || r.sender_stop_protocol !== 1 ||
+      r.account !== account || r.operation_id !== operation ||
+      r.state !== "cancelled"
+    ) throw new Failure(503, "retry");
+    return r;
+  }
   exact(r, [
     "protocol",
     "account",
