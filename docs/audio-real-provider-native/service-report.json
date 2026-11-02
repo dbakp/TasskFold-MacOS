@@ -1,0 +1,144 @@
+{
+  "platform": "service",
+  "checks": {
+    "production handler publishes using real Storage": true,
+    "gateway download succeeds": true,
+    "native proxy preserves verified checksum header": true,
+    "real provider bytes match": true,
+    "current author removes": true,
+    "one immutable publication identity": true,
+    "actor is current editor rather than task creator": true,
+    "recording retired by actual removal": true,
+    "provider received one media upload": true,
+    "task remains byte-exact": true,
+    "maintenance request succeeds": true,
+    "actual fenced cleanup releases ledger quota": true,
+    "removed bytes absent from real provider": true
+  },
+  "genuineAuth": false,
+  "actualLocalStorage": true,
+  "fullSchemaParity": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "serviceReceipt": {
+    "receipt": {
+      "audio": {
+        "sha256": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+        "version": 1,
+        "mime_type": "audio/mp4",
+        "byte_count": 59439,
+        "duration_ms": 1000
+      },
+      "state": "published",
+      "target": {
+        "task_id": "ec240000-0000-4000-8000-000000000002",
+        "project_id": "ec240000-0000-4000-8000-000000000003",
+        "task_generation": "ec240000-0000-4000-8000-000000000071"
+      },
+      "account": "ec240000-0000-4000-8000-000000000001",
+      "caption": "Native provider preflight",
+      "asset_id": "d2292115-ae61-416d-b251-a1251c1e230c",
+      "protocol": 1,
+      "author_id": "ec240000-0000-4000-8000-000000000001",
+      "comment_id": "aaa866e1-3eff-4007-bd90-3043ffc65f7d",
+      "expires_at": "2026-11-03T17:08:40.003511+00:00",
+      "reserved_at": "2026-11-02T17:08:40.003511+00:00",
+      "operation_id": "5a9876e7-8b2d-4e41-a975-6f083ee07c31",
+      "published_at": "2026-11-02T17:08:40.371613+00:00"
+    }
+  },
+  "maintenance": {
+    "protocol": 1,
+    "claimed": 1,
+    "recovered": 0,
+    "probe_unresolved": 0,
+    "blocked_uploads": 0,
+    "purged": 1,
+    "unresolved": 0
+  },
+  "terminal": {
+    "state": "purged",
+    "sha256": "15643d5b5fe691ee298c1ccc522f7bce0081069c51de4fd97fc071aeefc029eb",
+    "caption": null,
+    "task_id": "ec240000-0000-4000-8000-000000000002",
+    "asset_id": "d2292115-ae61-416d-b251-a1251c1e230c",
+    "author_id": "ec240000-0000-4000-8000-000000000001",
+    "byte_count": 59439,
+    "comment_id": "aaa866e1-3eff-4007-bd90-3043ffc65f7d",
+    "created_at": "2026-11-02T17:08:40.003511+00:00",
+    "expires_at": "2026-11-03T17:08:40.003511+00:00",
+    "project_id": "ec240000-0000-4000-8000-000000000003",
+    "object_name": "audio-comments/v1/ec240000-0000-4000-8000-000000000002/ec240000-0000-4000-8000-000000000071/d2292115-ae61-416d-b251-a1251c1e230c.m4a",
+    "operation_id": "5a9876e7-8b2d-4e41-a975-6f083ee07c31",
+    "published_at": "2026-11-02T17:08:40.371613+00:00",
+    "request_hash": "\\x85757cb1593274dbe10b6cde7401a916cdd4ab97c508246f1650670ae71d43a5",
+    "cleanup_after": "2026-11-02T17:08:39.93389+00:00",
+    "last_cleanup_at": "2026-11-02T17:08:41.20102+00:00",
+    "task_generation": "ec240000-0000-4000-8000-000000000071",
+    "audio_descriptor": null
+  },
+  "checkCount": 13,
+  "gatewayRequests": [
+    {
+      "action": "publish",
+      "bodySHA256": "b1ce4d190a215ed3c301f44348c4c891a6245e8222c869c4a7eedf732427dca7",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 816
+    },
+    {
+      "action": "download",
+      "bodySHA256": "a147139ed21f3701281ed1724d3569c7873d3cd7edbb0c40cea5f7eebfde81b7",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 59439
+    },
+    {
+      "action": "remove",
+      "bodySHA256": "a147139ed21f3701281ed1724d3569c7873d3cd7edbb0c40cea5f7eebfde81b7",
+      "responseStatus": 200,
+      "deliveredStatus": 200,
+      "responseBytes": 187
+    }
+  ],
+  "workspace": {
+    "boundary": 0,
+    "auth": 0,
+    "tables": {},
+    "rejected": 0,
+    "errors": []
+  },
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    }
+  ],
+  "gatewayErrors": [],
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "cleanupErrors": []
+}

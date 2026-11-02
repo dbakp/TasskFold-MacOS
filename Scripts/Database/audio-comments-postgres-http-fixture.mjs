@@ -7,7 +7,7 @@ import { once } from "node:events";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { literal as lit } from "./postgres-fixture.mjs";
-export async function createAudioHttpFixture(pg, actor, session) {
+export async function createAudioHttpFixture(pg, actor, session, options = {}) {
   let child;
   const token = "test." +
     Buffer.from(JSON.stringify({ sub: actor, session_id: session })).toString(
@@ -49,6 +49,36 @@ export async function createAudioHttpFixture(pg, actor, session) {
         chunks.push(c);
       }
       const bytes = Buffer.concat(chunks);
+      if (options.storage && req.url.startsWith("/storage/v1/object/")) {
+        if (req.method === "POST") state.uploads++;
+        const response = await options.storage.request(
+          req.url.slice("/storage/v1".length),
+          {
+            method: req.method,
+            headers: {
+              "Content-Type": req.headers["content-type"] ??
+                "application/octet-stream",
+              "x-upsert": req.headers["x-upsert"] ?? "false",
+            },
+            ...(bytes.length ? { body: bytes } : {}),
+          },
+        );
+        const result = Buffer.from(await response.arrayBuffer());
+        state.providerResults ??= [];
+        state.providerResults.push({
+          method: req.method,
+          status: response.status,
+          ...(response.ok
+            ? {}
+            : { error: result.toString("utf8").slice(0, 500) }),
+        });
+        res.writeHead(response.status, {
+          "Content-Type": response.headers.get("content-type") ??
+            "application/octet-stream",
+        });
+        res.end(result);
+        return;
+      }
       if (req.url.startsWith("/rest/v1/rpc/")) {
         assert.equal(req.method, "POST");
         const b = JSON.parse(bytes.toString());
@@ -197,7 +227,7 @@ export async function createAudioHttpFixture(pg, actor, session) {
         }
       });
     });
-    const call = async (action, body) =>
+    const call = (action, body) =>
       fetch("http://127.0.0.1:" + port + "/?action=" + action, {
         method: "POST",
         headers: {

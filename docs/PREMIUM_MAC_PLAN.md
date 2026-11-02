@@ -10407,3 +10407,14 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [ ] Finish full native publish/remove/status recovery and Store-refresh acceptance, Mac/iPad/wider account/window/background/accessibility/privacy cases, genuine provider/Auth/full-schema work and separately reviewed generation/whole-project transfers.
 
 [Evidence, attempt qualification and exact limits](team-audio-client/README.md). The previous interrupted iPad dialog/cache recheck remains separate; no broad retry against its unchanged runtime condition. No hosted deployment or ordinary-use enablement. Curated bars and substep totals remain unchanged.
+
+
+### 2 November 2026 · Real audio Storage delivery and native mobile recovery
+
+- [x] Fix first upload and fenced cleanup for the real Storage API’s exact HTTP 400 / NoSuchKey / string-404 wrapper. Preserve direct HTTP 404 compatibility; reject bucket/generic/malformed/oversized responses and never resurrect a missing published recording. Each repo passes 52 typechecked service tests (six new cases).
+- [x] Independently verify real local gateway/PostgreSQL/Storage delivery, checksum headers, exact bytes, author removal and quota release in the Mac service fixture (13 checks).
+- [x] Accept actual iPhone and iPad native publish → deliberately lost final reply → cold metadata Check → checksum/codec-verified playback → removal → normal Store sync and conversation refresh. Each run passes 29 assertions, keeps the same frozen intent/private original/task rows, uploads once, and confirms fenced provider cleanup. Auth/native HTTPS/PostgREST routing and recording/playback drivers remain synthetic.
+- [x] Fix Check also opening Resume in the native Form, with explicit button style and 44-point targets; assert that metadata checking opens no sending dialog. Preserve strict client integrity checks through the local test proxy and follow Xcode’s relocated owned container during cleanup.
+- [ ] Finish Mac UI, genuine Auth/full-schema/hosted integration, wider account/window/background/accessibility/privacy and ambiguous provider-failure recovery, actual hardware capture/playback, generation restoration and whole-project transfers.
+
+[Evidence, exact scope and attempt qualifications](audio-real-provider-native/README.md). Both current app/runner builds and strict signatures pass; ordinary-use gates stay off and nothing is deployed. The older interrupted iPad file-dialog/cache scope remains separate. The dashboard splits native verification from generation implementation; curated bars stay at 74 checkpoints.

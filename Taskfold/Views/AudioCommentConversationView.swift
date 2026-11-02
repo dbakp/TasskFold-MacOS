@@ -29,6 +29,7 @@ import SwiftUI
     private func makeController() throws -> AudioCommentConversationController {
         #if DEBUG
         if let fixture { return try fixture.makeController() }
+        if AudioTeamNativeProvider.enabled { return try store.audioConversation(scope: request.scope, player: AudioCommentNativeFixture.taskEditorPlayer()) }
         #endif
         return try store.audioConversation(scope:request.scope,player:DeviceAudioCommentPlaying())
     }
@@ -216,7 +217,7 @@ import SwiftUI
                 let value:AudioCommentConversationController
                 #if DEBUG
                 if let fixture {value=try fixture.makeController()}
-                else {value=try store.audioConversation(scope:audioRequest.scope,player:DeviceAudioCommentPlaying())}
+                else {value=try store.audioConversation(scope:audioRequest.scope,player:AudioTeamNativeProvider.enabled ? AudioCommentNativeFixture.taskEditorPlayer() : DeviceAudioCommentPlaying())}
                 #else
                 value=try store.audioConversation(scope:audioRequest.scope,player:DeviceAudioCommentPlaying())
                 #endif

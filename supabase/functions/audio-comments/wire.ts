@@ -267,3 +267,15 @@ export function position(value: unknown): Row {
   ) throw Error("position");
   return row;
 }
+
+// The pinned Storage API wraps a missing object in HTTP 400. A generic
+// provider error, numeric status or bucket absence cannot establish this proof.
+export function wrappedObjectAbsence(status: number, value: unknown): boolean {
+  if (status !== 400) return false;
+  try {
+    const row = object(value);
+    return row.code === "NoSuchKey" && row.statusCode === "404";
+  } catch {
+    return false;
+  }
+}

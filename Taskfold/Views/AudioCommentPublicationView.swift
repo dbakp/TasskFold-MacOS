@@ -40,13 +40,13 @@ import SwiftUI
                         if flow.journal != nil {
                             Label("Awaiting confirmation", systemImage: "clock.arrow.circlepath").foregroundStyle(.secondary)
                             Text("Check its status without uploading audio. Your local recording stays here.").font(.caption).foregroundStyle(.secondary)
-                            Button("Check publication", systemImage: "arrow.clockwise") { start(checking: true) }
+                            Button("Check publication", systemImage: "arrow.clockwise") { start(checking: true) }.frame(minHeight: 44)
                                 .disabled(busy).accessibilityIdentifier("audioPublicationRetry")
                             Button("Resume original send…",systemImage:"paperplane") {confirming=true}.frame(minHeight:44)
                                 .disabled(busy).accessibilityIdentifier("audioPublicationResume")
                         } else {
                             Text("Publish the reviewed recording and caption to its original task. Anyone with access to that task may be able to listen.").font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                            Button("Publish recording…", systemImage: "paperplane") { confirming = true }
+                            Button("Publish recording…", systemImage: "paperplane") { confirming = true }.frame(minHeight: 44)
                                 .disabled(busy || notice != nil).accessibilityIdentifier("audioPublicationReview")
                         }
                     }
@@ -57,11 +57,12 @@ import SwiftUI
                     Text(notice).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("audioPublicationNotice").accessibilityFocused($statusFocused)
                     if flow?.journal == nil, !busy {
-                        Button("Reload publication status", systemImage: "arrow.clockwise") { Task { await restore() } }
+                        Button("Reload publication status", systemImage: "arrow.clockwise") { Task { await restore() } }.frame(minHeight: 44)
                             .accessibilityIdentifier("audioPublicationReload")
                     }
                 }
             }
+            .buttonStyle(.borderless)
             .task(id: identity) { await restore() }
             .alert(flow?.journal == nil ? "Publish this recording?" : "Resume the original send?",isPresented:$confirming) {
                 Button(flow?.journal == nil ? "Publish recording" : "Resume original send") {start(checking:false)}.disabled(!admitted || busy).accessibilityIdentifier("audioPublicationConfirm")

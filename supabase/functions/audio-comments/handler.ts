@@ -15,6 +15,7 @@ import {
   type Row,
   target,
   verifyAudio,
+  wrappedObjectAbsence,
 } from "./wire.ts";
 type Config = {
   url: string;
@@ -377,6 +378,16 @@ export function createAudioCommentsHandler(
             headers: { ...serviceHeaders, "Accept-Encoding": "identity" },
           },
         );
+        if (missing && result.status === 400) {
+          try {
+            const failure = JSON.parse(
+              new TextDecoder().decode(await bytes(result.body, 4096, signal)),
+            );
+            if (wrappedObjectAbsence(result.status, failure)) return null;
+          } catch {
+            /* Unknown/oversized provider failures remain retryable. */
+          }
+        }
         if (missing && result.status === 404) {
           void result.body?.cancel().catch(() => {});
           return null;

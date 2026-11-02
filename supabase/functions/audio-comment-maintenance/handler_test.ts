@@ -18,6 +18,8 @@ function fixture() {
     items: [item],
     deleteOK: true,
     missing: true,
+    absenceStatus: null as number | null,
+    absenceBody: null as unknown,
     confirm: true,
     deletes: 0,
     confirms: 0,
@@ -40,7 +42,10 @@ function fixture() {
       return new Response(null, { status: state.deleteOK ? 200 : 500 });
     }
     if (r.method === "GET") {
-      return new Response(null, { status: state.missing ? 404 : 200 });
+      return new Response(
+        state.absenceBody === null ? null : JSON.stringify(state.absenceBody),
+        { status: state.absenceStatus ?? (state.missing ? 404 : 200) },
+      );
     }
     const b = await r.json();
     if (b._action === "probe") return Response.json({ protocol: 1, items: [] });
@@ -341,4 +346,34 @@ Deno.test("expired scheduled proof is rejected before SQL admission", async () =
   const f = await scheduledFixture();
   equal((await f.run(f.proof.replace(/^[0-9]+/, "1"))).status, 401);
   equal(f.state.calls, 0);
+});
+
+Deno.test("worker confirms cleanup for exact wrapped NoSuchKey absence", async () => {
+  const f = fixture();
+  f.state.absenceStatus = 400;
+  f.state.absenceBody = {
+    code: "NoSuchKey",
+    statusCode: "404",
+    error: "not_found",
+  };
+  const result = await f.handler(f.request());
+  equal(result.status, 200);
+  equal((await result.json()).purged, 1);
+  equal(f.state.confirms, 1);
+});
+Deno.test("worker preserves quota for bucket, malformed and oversized absence errors", async () => {
+  for (
+    const body of [{ code: "NoSuchBucket", statusCode: "404" }, {
+      code: "NoSuchKey",
+      statusCode: 404,
+    }, { message: "x".repeat(5000), code: "NoSuchKey", statusCode: "404" }]
+  ) {
+    const f = fixture();
+    f.state.absenceStatus = 400;
+    f.state.absenceBody = body;
+    const result = await f.handler(f.request());
+    equal(result.status, 200);
+    equal((await result.json()).purged, 0);
+    equal(f.state.confirms, 0);
+  }
 });

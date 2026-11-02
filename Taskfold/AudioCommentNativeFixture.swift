@@ -611,3 +611,110 @@ struct AudioCommentNativeFixtureView: View {
 }
 
 #endif
+
+#if DEBUG
+/// Reserved, disposable native host only. Production Backend/Store/controllers
+/// are unchanged; this maps their exact HTTPS requests to owned loopback services.
+@MainActor enum AudioTeamNativeProvider {
+    static var enabled: Bool { AudioCommentNativeFixture.teamControlsTesting && ProcessInfo.processInfo.arguments.contains("--audio-team-native-service") }
+    static let generation = "ec240000-0000-4000-8000-000000000071"
+    static var configurationURL: URL { URL.documentsDirectory.appendingPathComponent("taskfold-audio-team-native.json") }
+    static func configuration() throws -> (url: URL, token: String) {
+        guard enabled else { throw CancellationError() }
+        let data = try Data(contentsOf: configurationURL)
+        guard data.count <= 32768, let fields = try JSONSerialization.jsonObject(with: data) as? [String: String],
+              Set(fields.keys) == ["schema", "account", "url", "token"], fields["schema"] == "1", fields["account"] == TeamEditorNativeFixture.account,
+              let url = fields["url"].flatMap(URL.init(string:)), url.scheme == "http", url.host == "127.0.0.1", url.port.map({ (1...65535).contains($0) }) == true,
+              url.path.isEmpty || url.path == "/", url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
+              let token = fields["token"], token.utf8.count <= 16384, token.split(separator: ".").count == 3, !token.contains(where: { $0.isWhitespace }) else { throw CancellationError() }
+        return (url, token)
+    }
+    static func reply(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        let config = try configuration()
+        guard let source = request.url, source.scheme == "https", source.host == "synthetic.example", source.user == nil, source.password == nil, source.fragment == nil,
+              request.value(forHTTPHeaderField: "Authorization") == "Bearer " + config.token, request.value(forHTTPHeaderField: "apikey") == "synthetic-public",
+              let original = URLComponents(url: source, resolvingAgainstBaseURL: false), var parts = URLComponents(url: config.url, resolvingAgainstBaseURL: false) else { throw CancellationError() }
+        if source.path == "/functions/v1/audio-comments" {
+            guard request.httpMethod == "POST", original.queryItems?.count == 1, let action = original.queryItems?.first, action.name == "action",
+                  ["publish", "resolve", "page", "list", "download", "remove"].contains(action.value ?? "") else { throw CancellationError() }
+        } else {
+            guard (request.httpMethod == "GET" && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")) || (request.httpMethod == "POST" && source.path == "/rest/v1/rpc/taskfold_workspace_boundary") else { throw CancellationError() }
+        }
+        parts.path = source.path; parts.percentEncodedQuery = original.percentEncodedQuery
+        guard let target = parts.url else { throw CancellationError() }
+        var body = request.httpBody ?? Data()
+        if request.httpBody == nil, let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 65536)
+            while stream.hasBytesAvailable {
+                try Task.checkCancellation(); let count = stream.read(&buffer, maxLength: buffer.count)
+                guard count >= 0 else { throw CancellationError() }; if count == 0 { break }
+                body.append(contentsOf: buffer.prefix(count)); guard body.count <= 12000000 else { throw CancellationError() }
+            }
+        }
+        guard body.count <= 12000000 else { throw CancellationError() }
+        var forwarded = URLRequest(url: target); forwarded.httpMethod = request.httpMethod; forwarded.timeoutInterval = 30
+        if request.httpMethod == "POST" { forwarded.httpBody = body; forwarded.setValue("application/json", forHTTPHeaderField: "Content-Type") }
+        forwarded.setValue("Bearer " + config.token, forHTTPHeaderField: "Authorization"); forwarded.setValue("synthetic-public", forHTTPHeaderField: "apikey")
+        let settings = URLSessionConfiguration.ephemeral; settings.protocolClasses = []; settings.httpCookieStorage = nil; settings.urlCache = nil
+        let session = URLSession(configuration: settings); defer { session.invalidateAndCancel() }
+        let (bytes, response) = try await session.bytes(for: forwarded, delegate: AudioTeamNativeRedirectRefusal.shared)
+        guard let response = response as? HTTPURLResponse, response.url == target else { throw CancellationError() }
+        var result = Data()
+        for try await byte in bytes { try Task.checkCancellation(); guard result.count < 12000000 else { throw CancellationError() }; result.append(byte) }
+        let headers = response.allHeaderFields.reduce(into: [String: String]()) { if let key = $1.key as? String, let value = $1.value as? String { $0[key] = value } }
+        guard let delivered = HTTPURLResponse(url: source, statusCode: response.statusCode, httpVersion: nil, headerFields: headers) else { throw CancellationError() }
+        return (result, delivered)
+    }
+}
+private final class AudioTeamNativeRedirectRefusal: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    static let shared = AudioTeamNativeRedirectRefusal()
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+}
+final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
+    private let lock = NSLock(); private var worker: Task<Void, Never>?; private var stopped = false
+    override class func canInit(with request: URLRequest) -> Bool { request.url?.scheme == "https" && request.url?.host == "synthetic.example" }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        let value = Task { @MainActor in
+            do {
+                let (data, response) = try await AudioTeamNativeProvider.reply(self.request); try Task.checkCancellation()
+                self.client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+                self.client?.urlProtocol(self, didLoad: data); self.client?.urlProtocolDidFinishLoading(self)
+            } catch { if !Task.isCancelled { self.client?.urlProtocol(self, didFailWithError: error) } }
+        }
+        lock.lock(); worker = value; let cancel = stopped; lock.unlock(); if cancel { value.cancel() }
+    }
+    override func stopLoading() { lock.lock(); stopped = true; let value = worker; lock.unlock(); value?.cancel() }
+}
+@MainActor struct AudioTeamNativeFixtureScreen: View {
+    @Environment(Store.self) private var store
+    @State private var draft: AudioCommentDraftRequest?
+    @State private var library: AudioCommentLibraryRequest?
+    @State private var conversation: AudioCommentConversationRequest?
+    @State private var ready = false
+    var body: some View {
+        NavigationStack {
+            Form {
+                Text(ready ? "Ready" : "Refreshing actual local workspace…").accessibilityIdentifier("audioTeamNativeReady")
+                Text(store.record("tasks", id: TeamEditorNativeFixture.taskID)?.string("description") ?? "Missing task").accessibilityIdentifier("audioTeamNativeDescription")
+                Text(store.audioConversationRevision.uuidString).accessibilityIdentifier("audioTeamNativeEpoch")
+                Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("audioTeamNativePending")
+                Button("Record private note") { draft = store.audioDraftRequest(taskID: TeamEditorNativeFixture.taskID) }.disabled(!ready || store.audioDraftScope(taskID: TeamEditorNativeFixture.taskID) == nil).accessibilityIdentifier("audioTeamNativeRecord")
+                Button("Saved recordings") { if let scope = store.audioLibraryScope() { library = .init(scope: scope) } }.disabled(!ready).accessibilityIdentifier("audioTeamNativeLibrary")
+                Button("Audio comments") { conversation = store.audioConversationRequest(taskID: TeamEditorNativeFixture.taskID) }.disabled(!ready).accessibilityIdentifier("audioTeamNativeConversation")
+            }.navigationTitle("Shared recording test")
+        }
+        .task {
+            guard AudioTeamNativeProvider.enabled else { return }
+            let deadline = Date().addingTimeInterval(25)
+            while store.syncing && Date() < deadline && !Task.isCancelled { try? await Task.sleep(for: .milliseconds(100)) }
+            guard !Task.isCancelled, !store.syncing else { return }
+            let started = Date(); await store.sync()
+            ready = (store.lastSync ?? .distantPast) >= started && store.audioDraftScope(taskID: TeamEditorNativeFixture.taskID)?.target.generation.uuidString.lowercased() == AudioTeamNativeProvider.generation
+        }
+        .sheet(item: $draft) { TaskAudioDraftView(request: $0, taskID: TeamEditorNativeFixture.taskID) }
+        .sheet(item: $library) { PrivateAudioLibraryView(request: $0) }
+        .sheet(item: $conversation) { AudioCommentConversationView(request: $0) }
+    }
+}
+#endif

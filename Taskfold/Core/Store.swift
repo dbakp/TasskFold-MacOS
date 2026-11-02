@@ -2879,7 +2879,7 @@ final class Store {
         #if DEBUG
         if ChildFieldNativeIdentity.enabled { try? childFieldNativeRefresh(); return }
         if PersonalHeadingNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") { return }
-        if (TeamEditorNativeFixture.enabled && !TaskFileNativeProviderFixture.workspaceTesting && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
+        if (TeamEditorNativeFixture.enabled && !TaskFileNativeProviderFixture.workspaceTesting && !AudioTeamNativeProvider.enabled && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
         #endif
         guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}
         consumeWidgetCompletions()
@@ -4920,8 +4920,8 @@ extension Store {
         if ProjectAdoptionNativeFixture.enabled { return ProjectAdoptionNativeFixture.backend() }
         if TeamTemplateNativeFixture.enabled { return TeamTemplateNativeFixture.backend() }
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = TaskFileNativeProviderFixture.enabled ? [TaskFileNativeProviderProtocol.self, TeamEditorNoNetwork.self] : [TeamEditorNoNetwork.self]
-        let token = (try? TaskFileNativeProviderFixture.configuration().token) ?? "synthetic-auth"
+        configuration.protocolClasses = AudioTeamNativeProvider.enabled ? [AudioTeamNativeProtocol.self] : TaskFileNativeProviderFixture.enabled ? [TaskFileNativeProviderProtocol.self, TeamEditorNoNetwork.self] : [TeamEditorNoNetwork.self]
+        let token = (try? AudioTeamNativeProvider.configuration().token) ?? (try? TaskFileNativeProviderFixture.configuration().token) ?? "synthetic-auth"
         let data = try! JSONSerialization.data(withJSONObject: ["access_token": token, "refresh_token": "synthetic-refresh", "expires_in": 3600, "user": ["id": account]])
         let session = try! Foundation.JSONDecoder().decode(Session.self, from: data)
         return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
@@ -5133,6 +5133,7 @@ extension Store {
                 tasks = [row]; projects = []; labels = []
                 try PersonalHeadingNativePeer.reset(row)
             }
+            if AudioTeamNativeProvider.enabled { row["task_generation"] = .string(AudioTeamNativeProvider.generation); tasks = [row] }
             snapshot = Snapshot(tables: ["tasks": tasks, "projects": projects, "labels": labels])
             if WorkflowUndoNativePeer.enabled { snapshot.tables[WorkflowTemplate.table] = [WorkflowUndoNativePeer.template] }
             if TeamTaskMoveNativePeer.enabled {

@@ -7,6 +7,7 @@ import {
   path,
   type Row,
   verifyAudio,
+  wrappedObjectAbsence,
 } from "./wire.ts";
 const equal = (a: unknown, b: unknown) => {
   if (JSON.stringify(a) !== JSON.stringify(b)) {
@@ -69,6 +70,8 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
   const state = {
     stored: null as Uint8Array | null,
     uploads: 0,
+    absenceStatus: 404,
+    absenceBody: null as unknown,
     finalizes: 0,
     reads: 0,
     calls: [] as string[],
@@ -202,7 +205,10 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
       ? new Response(state.stored.slice(), {
         headers: { "Content-Type": "audio/mp4" },
       })
-      : new Response(null, { status: 404 });
+      : new Response(
+        state.absenceBody === null ? null : JSON.stringify(state.absenceBody),
+        { status: state.absenceStatus },
+      );
   };
   const handler = createAudioCommentsHandler({
     url: "https://gateway.example.invalid",
@@ -685,4 +691,64 @@ Deno.test("owner status retains live authentication and metadata rate limits", a
   );
   equal(r.status, 429);
   equal(limited.state.ownerCalls, 0);
+});
+
+Deno.test("wrapped object absence is precise and does not admit bucket/provider errors", () => {
+  equal(
+    wrappedObjectAbsence(400, { code: "NoSuchKey", statusCode: "404" }),
+    true,
+  );
+  for (
+    const body of [
+      null,
+      [],
+      {},
+      { code: "NoSuchBucket", statusCode: "404" },
+      { code: "NoSuchKey", statusCode: 404 },
+      { code: "NoSuchKey", statusCode: "500" },
+      { error: "not_found", statusCode: "404" },
+    ]
+  ) equal(wrappedObjectAbsence(400, body), false);
+  for (const status of [401, 403, 404, 500, 503]) {
+    equal(
+      wrappedObjectAbsence(status, { code: "NoSuchKey", statusCode: "404" }),
+      false,
+    );
+  }
+});
+Deno.test("first upload accepts the exact real Storage missing-object wrapper", async () => {
+  const f = fixture();
+  f.state.absenceStatus = 400;
+  f.state.absenceBody = {
+    code: "NoSuchKey",
+    statusCode: "404",
+    error: "not_found",
+    message: "Object not found",
+  };
+  equal((await f.publish()).status, 200);
+  equal(f.state.uploads, 1);
+});
+Deno.test("unknown or oversized Storage errors cannot authorize first upload", async () => {
+  for (
+    const body of [{ code: "NoSuchBucket", statusCode: "404" }, {
+      code: "NoSuchKey",
+      statusCode: 404,
+    }, { message: "x".repeat(5000), code: "NoSuchKey", statusCode: "404" }]
+  ) {
+    const f = fixture();
+    f.state.absenceStatus = 400;
+    f.state.absenceBody = body;
+    equal((await f.publish()).status, 503);
+    equal(f.state.uploads, 0);
+  }
+});
+
+Deno.test("wrapped absence cannot resurrect an already published recording", async () => {
+  const f = fixture();
+  equal((await f.publish()).status, 200);
+  f.state.stored = null;
+  f.state.absenceStatus = 400;
+  f.state.absenceBody = { code: "NoSuchKey", statusCode: "404" };
+  equal((await f.publish()).status, 503);
+  equal(f.state.uploads, 1);
 });

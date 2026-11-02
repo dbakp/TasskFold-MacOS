@@ -6,6 +6,7 @@ import {
   maximumAudioBytes,
   object,
   type Row,
+  wrappedObjectAbsence,
 } from "../audio-comments/wire.ts";
 type Config = {
   url: string;
@@ -332,7 +333,13 @@ export function createAudioMaintenanceHandler(
               headers: { ...headers, "Accept-Encoding": "identity" },
             },
           );
-          const missing = absence.status === 404;
+          let missing = absence.status === 404;
+          if (absence.status === 400) {
+            const failure = JSON.parse(
+              new TextDecoder().decode(await readBytes(absence, 4096)),
+            );
+            missing = wrappedObjectAbsence(absence.status, failure);
+          }
           void absence.body?.cancel().catch(() => {});
           if (!missing) throw Error();
           const result = await rpc("confirm", {

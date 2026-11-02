@@ -1,0 +1,86 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "f36d8871c463a2786cc5d447a0803b00c666bf53",
+  "serviceTests": 52,
+  "newServiceTests": 6,
+  "reports": {
+    "service": {
+      "checks": 13,
+      "reportSHA256": "9817451dad6bb131b192e1e5472b0ce04504dc5877fc67115bb667a88e82c870"
+    }
+  },
+  "sourceSHA256": {
+    "supabase/functions/audio-comments/wire.ts": "f32b8fcdfe7172ea84008c8c2ddde7a9d3d322a52593d1cdcd76c342fe6e8a4d",
+    "supabase/functions/audio-comments/handler.ts": "d1edddd03b36ce34f884ab26eeff847587636a3ec903adaa69d910671713006a",
+    "supabase/functions/audio-comments/handler_test.ts": "b4d54c069576596e5e4b10bd69d4ae432fbe086d18ad899655be4320cecd084a",
+    "supabase/functions/audio-comment-maintenance/handler.ts": "e8a02a14521bdd2a4fb598eae0c084392ea2799fb4e3b134f9f579f800383d5c",
+    "supabase/functions/audio-comment-maintenance/handler_test.ts": "30eb0ed6b8d9e6132eee8064c73eb2e3320b6b02cb1bdeb41dd7923f49c287d4",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "1b0050ca8dc3b69cbafedfd80cd24052ac9af4d2ee4ca12a1cd45824bc4f1ed5",
+    "Scripts/Database/audio-team-native-http.mjs": "61afb73a9547096a577d7bc562b6bc8adfd8165f5c225e0379558a602f892910",
+    "Scripts/Database/test-audio-team-native-provider.mjs": "4a019695e600e6085a89028cb1e432b055b4c4850ec5bba6576a4684e4cc9f68",
+    "Scripts/Database/storage-provider-fixture.mjs": "fc13de3a9941ad6e1da80987020d922dc7179e8119c9b368d49c530cf5dbc1a9",
+    "Scripts/Database/task-file-provider-schema.mjs": "fd833ccc010e72d054a7c385b70ac07a25019e9e987e6fb77cce52a76ee2e2d5",
+    "Scripts/Database/audio-project-custody-schema.mjs": "47237d46b444c5dadbc6d6e915fcdcafa4a6d4ea6d9f391134ad161ea62a9ca0",
+    "Scripts/Database/task-file-workspace-fixture.mjs": "ab871a79df91821fd367295db5e4327616aab4a38bf5a64bb0ca3108644157cf",
+    "Taskfold/AudioCommentNativeFixture.swift": "9f9b2e759b9c415fe5492e0023632a3c8fd53ef0092789ed7a7e63a9ed0861de",
+    "Taskfold/Core/Store.swift": "7692845acfec17396be354f20edcf8071a79d9dc7374eefdf0895aa64279ad96",
+    "Taskfold/Core/Backend.swift": "1c8ef6005d7061284496b3a52dcd38ea160983de4dfa2262eee13209f488bb2c",
+    "Taskfold/Views/AudioCommentConversationView.swift": "2a8a67f23af154f2b3ca7ecce5cbc240521e98577e550c960b386ebad734c125",
+    "Taskfold/Views/AudioCommentPublicationView.swift": "94a141c326ea60b90b87396d4ae607f68c057a6f94f8429a86db4c17a78b14cd",
+    "Taskfold/Info.plist": "52c9b320d133bbea6a6f9def5a03c10eafefd7cdd0af2cf52662f193f51d5820",
+    "Taskfold/Views/TaskInspector.swift": "061b15e1648a3f5dd8e3d0ab634d7636b8ed8eb3a2ec70a86fa89ecf6991b2dc"
+  },
+  "compiledHostSource": {
+    "Taskfold/AudioCommentNativeFixture.swift": {
+      "repositorySHA256": "9f9b2e759b9c415fe5492e0023632a3c8fd53ef0092789ed7a7e63a9ed0861de",
+      "compiledHostSHA256": "9f9b2e759b9c415fe5492e0023632a3c8fd53ef0092789ed7a7e63a9ed0861de",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "repositorySHA256": "7692845acfec17396be354f20edcf8071a79d9dc7374eefdf0895aa64279ad96",
+      "compiledHostSHA256": "e916e6eecdde7890dee148d57961f609f3c0493f3981dc9e700e398b6dc3ea14",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/Backend.swift": {
+      "repositorySHA256": "1c8ef6005d7061284496b3a52dcd38ea160983de4dfa2262eee13209f488bb2c",
+      "compiledHostSHA256": "7c4e974dffc9a63e82fb49a15d3d6586d2e76871160ada9bee131999af0e4e74",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/AudioCommentConversationView.swift": {
+      "repositorySHA256": "2a8a67f23af154f2b3ca7ecce5cbc240521e98577e550c960b386ebad734c125",
+      "compiledHostSHA256": "2a8a67f23af154f2b3ca7ecce5cbc240521e98577e550c960b386ebad734c125",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/AudioCommentPublicationView.swift": {
+      "repositorySHA256": "94a141c326ea60b90b87396d4ae607f68c057a6f94f8429a86db4c17a78b14cd",
+      "compiledHostSHA256": "94a141c326ea60b90b87396d4ae607f68c057a6f94f8429a86db4c17a78b14cd",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "repositorySHA256": "061b15e1648a3f5dd8e3d0ab634d7636b8ed8eb3a2ec70a86fa89ecf6991b2dc",
+      "compiledHostSHA256": "061b15e1648a3f5dd8e3d0ab634d7636b8ed8eb3a2ec70a86fa89ecf6991b2dc",
+      "matchesAfterIsolation": true
+    }
+  },
+  "currentProducts": {
+    "Taskfold.app": {
+      "executableSHA256": "9344b0114f70d4ad67f37c347b243a46ed394c07d64b73779cd10ea6eed8fb11",
+      "strictSignatureVerified": true,
+      "debugCodeSHA256": "1b1adaae8df8da7c78d6e8aada31ea054669f54ffaa92ae611e94d3f0292d707"
+    },
+    "TaskfoldUITests-Runner.app": {
+      "executableSHA256": "6dbbff2e71106e7153b5b702c4b371f0cbfdf70b9025e8fe3a3cea08922e4e16",
+      "strictSignatureVerified": true
+    }
+  },
+  "ordinaryTeamClientGate": false,
+  "deployed": false,
+  "actualLocalStorage": true,
+  "genuineAuth": false,
+  "fullSchemaParity": false,
+  "nativeMacAcceptance": false,
+  "broaderProviderFaultAccountWindowAndHardwareAcceptance": false,
+  "generationRestorationOrWholeProjectTransfers": false,
+  "curatedBarCheckpointTotalsUnchanged": true
+}
