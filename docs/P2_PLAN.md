@@ -7362,3 +7362,13 @@ Both apps now refresh through the owning Store after every durable published fil
 - [ ] Genuine Auth/PostgREST/full-schema acceptance, new-account migration and queued-edit sync, actual account/window/background transitions, Mac runtime, speech/largest text and broader file/audio/legacy migration remain open.
 
 The cache audit corrected signed-in shared-file tests that had read an unrelated local cache. Recording fixtures intentionally use that local cache; their original checks keep their recorded scope. Every caller now names its expected workspace without a default or fallback. Test positive controls rejected an over-broad UUID correction. See [evidence, attempt history and scope](task-file-workspace-sync/README.md). No hosted deployment, scheduler or normal-use enablement. Curated dashboard totals remain unchanged.
+
+
+### 2 November 2026 · Team audio publication and removal authority
+
+- [x] Add separately disabled team publication with current actor/session, task generation, team/project state and role checks; preserve personal publication semantics and the existing service-only Storage boundary.
+- [x] Add current-author/current-manager retirement without creator shortcuts, preserving sender-history reconciliation after access loss and leaving byte deletion/quota release to fenced cleanup.
+- [x] Serialize admission with explicit revocation, insertion of a viewer grant over implicit editor access, and team/project access management. Each repo passes 66 local SQL/gateway checks and 51 personal-publication recovery regressions, with no added advisor findings and all owned fixtures removed.
+- [ ] Implement reviewed media custody for moves/Undo/generation restoration, native team controls/Store recovery and genuine provider/Auth/full-schema acceptance. Existing live-media move/replacement guards stay closed; no silent retargeting.
+
+[Evidence and exact remaining scope](team-audio-authority/README.md). No app source/build, hosted deployment, scheduler or normal-use gate change. The iPad dialog/cache recheck remains separately open. Curated bar totals remain unchanged.
