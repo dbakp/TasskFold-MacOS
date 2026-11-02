@@ -1,0 +1,61 @@
+{
+  "reviewed": "2026-11-02",
+  "ownedAppsClosed": true,
+  "ownedMacFixtureRunning": false,
+  "ownedSimulators": [
+    {
+      "device": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+      "restoredState": "Shutdown"
+    },
+    {
+      "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+      "restoredState": "Shutdown"
+    }
+  ],
+  "otherDevicesUntouched": true,
+  "unrelatedContainersOrCachesTouched": false,
+  "reusedBuildProductsRetained": true,
+  "prunedOwnedRawResultsAndDuplicateExports": [
+    {
+      "path": "/tmp/taskfold-file-dialogs-ios-v1.xcresult",
+      "logicalBytes": 65543060
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-ios-v2.xcresult",
+      "logicalBytes": 229247522
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-ios-v3.xcresult",
+      "logicalBytes": 2316434
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-ipad-v3.xcresult",
+      "logicalBytes": 88419368
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-ios-v5.xcresult",
+      "logicalBytes": 2153818
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-ipad-v5.xcresult",
+      "logicalBytes": 2345546
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-phone-attachments",
+      "logicalBytes": 902958
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-ipad-v3-attachments",
+      "logicalBytes": 29892192
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-ios-v5-attachments",
+      "logicalBytes": 905185
+    },
+    {
+      "path": "/tmp/taskfold-file-dialogs-ipad-v5-attachments",
+      "logicalBytes": 984310
+    }
+  ],
+  "evidenceRetainedBeforePruning": true
+}

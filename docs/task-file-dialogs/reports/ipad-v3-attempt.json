@@ -1,0 +1,17 @@
+{
+  "result": "Failed",
+  "totalTestCount": 3,
+  "passedTests": 1,
+  "failedTests": 2,
+  "skippedTests": 0,
+  "failures": [
+    {
+      "test": "testSharedFileNativeCopyCancelSaveAndColdReadback()",
+      "firstLine": "XCTAssertTrue failed - Attributes: Application, 0x1082f3200, pid: 9197, label: 'Taskfold Team Editor Test'"
+    },
+    {
+      "test": "testTaskFileNativeSelectionCancelAndPrivateCopy()",
+      "firstLine": "XCTAssertTrue failed - Attributes: Application, 0x108306bc0, pid: 9818, label: 'Taskfold Team Editor Test'"
+    }
+  ]
+}

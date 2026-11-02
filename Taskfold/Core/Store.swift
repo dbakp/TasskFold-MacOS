@@ -5150,7 +5150,7 @@ extension Store {
                 let requests = backupVault.directory.appendingPathComponent("Team template requests", isDirectory: true)
                 if FileManager.default.fileExists(atPath: requests.path) { try FileManager.default.removeItem(at: requests) }
             }
-            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: TaskFileViewerFixture.enabled), previous: nil, pending: [], tasks: tasks)
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: TaskFileViewerFixture.enabled && !TaskFileViewerFixture.selectionTesting), previous: nil, pending: [], tasks: tasks)
             try persist()
             try seedTeamCompletionRecoveryFixture()
         } catch { self.error = error.localizedDescription }

@@ -9,7 +9,12 @@ struct TaskFileUploadRequest: Identifiable {
     var library: Bool { target.fields.isEmpty }
 }
 extension Store {
-    var taskFileUploadsEnabled: Bool { Bundle.main.object(forInfoDictionaryKey: "TaskfoldTaskFilesEnabled") as? Bool == true }
+    var taskFileUploadsEnabled: Bool {
+        #if DEBUG
+        if TaskFileViewerFixture.selectionTesting { return true }
+        #endif
+        return Bundle.main.object(forInfoDictionaryKey: "TaskfoldTaskFilesEnabled") as? Bool == true
+    }
     private func fileUploadDirectory(account: String, origin: String) -> URL {
         cacheURL.deletingLastPathComponent().appendingPathComponent("Backups", isDirectory: true)
             .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
@@ -94,6 +99,11 @@ struct TaskFileUploadRecoveryButton: View {
     }
 }
 
+private struct TaskFileCopyAttempt: Equatable {
+    let id = UUID()
+    let source: String, shared: Bool, name: String
+}
+
 struct TaskFileUploadView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -105,11 +115,16 @@ struct TaskFileUploadView: View {
     @State private var filename = "Attachment"
     @State private var localMessage: String?
     @State private var downloading = false
+    @State private var copyAttempt: TaskFileCopyAttempt?
+    @State private var copyStatus: String?
+    @AccessibilityFocusState private var copyFocused: String?
     @AccessibilityFocusState private var statusFocused: Bool
     private var available: Bool { store.fileUploadCurrent(request) }
     var body: some View {
+        let completingCopy = copyAttempt
         NavigationStack {
             Form {
+                if available, let copyStatus { Section { Text(copyStatus).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("fileCopyStatus") } }
                 if available, request.readOnly {
                     if store.fileUploadReadable(request) {
                         Text("View-only access. Save a copy of a shared file below.").foregroundStyle(.secondary).accessibilityIdentifier("fileReadOnlyNotice")
@@ -125,7 +140,7 @@ struct TaskFileUploadView: View {
                             Text(pending.name).textSelection(.enabled)
                             Text(ByteCountFormatter.string(fromByteCount: Int64(pending.bytes.count), countStyle: .file)).foregroundStyle(.secondary)
                             Text(status(pending)).accessibilityIdentifier("fileUploadState")
-                            Button("Save local copy…", systemImage: "square.and.arrow.down") { export(pending.bytes, name: pending.name) }.disabled(model.busy || downloading)
+                            Button("Save local copy…", systemImage: "square.and.arrow.down") { export(pending.bytes, name: pending.name, source: "local", shared: false) }.disabled(model.busy || downloading || copyAttempt != nil).accessibilityFocused($copyFocused, equals: "local").accessibilityIdentifier("fileUploadSaveLocalCopy")
                             if !pending.resolved {
                                 if model.sameTarget {
                                     Button(pending.phase == .queued ? "Share file" : "Retry upload", systemImage: "arrow.up.doc") { Task { await model.act("publish"); if available { await store.sync() } } }
@@ -144,20 +159,20 @@ struct TaskFileUploadView: View {
                     } else if !request.library {
                         Section {
                             if store.taskFileUploadsEnabled {
-                                Button("Choose a file…", systemImage: "doc.badge.plus") { importing = true }.disabled(!model.loaded || model.busy || !store.fileUploadMayPublish(request)).accessibilityIdentifier("fileUploadChoose")
+                                Button("Choose a file…", systemImage: "doc.badge.plus") { copyStatus = nil; localMessage = nil; importing = true }.accessibilityFocused($copyFocused, equals: "choose").disabled(!model.loaded || model.busy || !store.fileUploadMayPublish(request)).accessibilityIdentifier("fileUploadChoose")
                                 Text("Share a file up to 5 MB with people who can access this project.").font(.footnote).foregroundStyle(.secondary)
                             } else { Text("New file sharing is paused. You can still save existing shared files.").foregroundStyle(.secondary) }
                         }
                     } else { ContentUnavailableView("No saved upload", systemImage: "checkmark.circle") }
                     if model.busy || downloading { ProgressView(downloading ? "Preparing file…" : "Saving upload status…").accessibilityIdentifier("fileUploadProgress") }
                     if let message = localMessage ?? model.message { Section { Text(message).fixedSize(horizontal: false, vertical: true).accessibilityFocused($statusFocused).accessibilityIdentifier("fileUploadMessage") } }
-                } else if !available { ContentUnavailableView("Workspace changed", systemImage: "lock", description: Text("Reopen saved file recovery from the original account.")) }
+                } else if !available { ContentUnavailableView("Workspace changed", systemImage: "lock", description: Text(request.readOnly ? "Reopen this task in the original account." : "Reopen saved file recovery from the original account.")) }
                 else if let localMessage { Text(localMessage) } else { ProgressView("Opening saved upload…") }
                     if store.fileUploadReadable(request) {
                         Section("Shared files") {
                             if store.fileUploadAttachments(request).isEmpty { Text("No shared files yet.").foregroundStyle(.secondary).accessibilityIdentifier("fileReadEmpty") }
                             ForEach(store.fileUploadAttachments(request)) { attachment in
-                                Button { download(attachment) } label: { Label(attachment.string("name"), systemImage: "arrow.down.doc") }.disabled(model?.busy == true || downloading).accessibilityLabel("Save a copy of " + attachment.string("name")).accessibilityIdentifier("downloadSharedFile-" + attachment.id)
+                                Button { download(attachment) } label: { Label(attachment.string("name"), systemImage: "arrow.down.doc") }.disabled(model?.busy == true || downloading || copyAttempt != nil).accessibilityFocused($copyFocused, equals: attachment.id).accessibilityLabel("Save a copy of " + attachment.string("name")).accessibilityIdentifier("downloadSharedFile-" + attachment.id)
                             }
                         }
                     }
@@ -176,15 +191,19 @@ struct TaskFileUploadView: View {
             #endif
         }
         .task { guard !request.readOnly else { return }; do { let value = try store.fileUploadModel(request); model = value; await value.load() } catch { localMessage = "Your saved upload couldn’t be opened. Nothing was sent." } }
-        .onDisappear { model?.close(); document = nil }
-        .onChange(of: available) { _, value in if !value { importing = false; exporting = false; document = nil; model?.close() } }
-        .onChange(of: store.fileUploadReadable(request)) { _, readable in if !readable { exporting = false; document = nil } }
+        .onDisappear { model?.close(); invalidateCopy() }
+        .onChange(of: available) { _, value in if !value { importing = false; invalidateCopy(); model?.close() } }
+        .onChange(of: store.fileUploadReadable(request)) { _, readable in if !readable, copyAttempt?.shared == true { invalidateCopy() } }
+        .onChange(of: copyStatus) { _, message in
+            if available, let message { AccessibilityNotification.Announcement(message).post() }
+        }
         .onChange(of: localMessage) { _, _ in statusFocused = true }
         .onChange(of: model?.message) { _, _ in statusFocused = true }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.item]) { result in
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.item], allowsMultipleSelection: false, onCompletion: { result in
             guard available, !request.readOnly, store.fileUploadMayPublish(request), let model else { return }
             switch result {
-            case .success(let url):
+            case .success(let urls):
+                guard urls.count == 1, let url = urls.first else { localMessage = "Choose one file. Your saved upload is unchanged."; return }
                 Task {
                     do {
                         let bytes = try await Task.detached(priority: .userInitiated) {
@@ -198,31 +217,92 @@ struct TaskFileUploadView: View {
                         await model.choose(bytes, name: url.lastPathComponent, type: TaskFileUploadJournal.types.contains(proposed) ? proposed : "application/octet-stream")
                     } catch { if available { localMessage = "The file couldn’t be read. Choose an available file up to 5 MB." } }
                 }
-            case .failure(let error): if (error as NSError).code != NSUserCancelledError { localMessage = "No file was selected. Your saved upload is unchanged." }
+            case .failure(let error): if (error as NSError).code == NSUserCancelledError { copyFocused = "choose" } else { localMessage = "No file was selected. Your saved upload is unchanged." }
             }
-        }
-        .fileExporter(isPresented: $exporting, document: document, contentType: .data, defaultFilename: filename) { result in
-            document = nil
-            if available, case .failure(let error) = result, (error as NSError).code != NSUserCancelledError { localMessage = "The copy couldn’t be saved. Your original file is kept." }
+        }, onCancellation: {
+            if available { copyFocused = "choose" }
+        })
+        .fileExporter(isPresented: $exporting, document: document, contentTypes: [.data], defaultFilename: filename, onCompletion: { result in
+            finishCopy(result, attempt: completingCopy)
+        }, onCancellation: {
+            finishCopy(nil, attempt: completingCopy)
+        })
+        #if DEBUG
+        .fileDialogDefaultDirectory(TaskFileViewerFixture.dialogDirectory(importing: importing))
+        .fileDialogCustomizationID("taskfold.shared-files.native-fixture")
+        #endif
+    }
+    private func finishCopy(_ result: Result<URL, Error>?, attempt: TaskFileCopyAttempt?) {
+        guard let attempt, copyAttempt?.id == attempt.id else { return }
+        document = nil; copyAttempt = nil
+        guard available, !attempt.shared || store.fileUploadReadable(request) else { return }
+        copyFocused = attempt.source
+        guard let result else { copyStatus = "Copy cancelled. Your file is unchanged."; return }
+        switch result {
+        case .success(let url):
+            copyStatus = "Copy saved."
+            #if DEBUG
+            TaskFileViewerFixture.recordCopy(url, request: request, name: attempt.name, shared: attempt.shared)
+            #endif
+        case .failure(let error):
+            copyStatus = (error as NSError).code == NSUserCancelledError ? "Copy cancelled. Your file is unchanged." : "The copy couldn’t be saved. Your original file is kept."
         }
     }
+    private func invalidateCopy() {
+        exporting = false; document = nil; copyAttempt = nil; copyStatus = nil; copyFocused = nil
+    }
+
     private func status(_ value: TaskFileUploadJournal) -> String {
         switch value.phase { case .queued: return "Saved on this device"; case .attempted: return "Result not yet confirmed"; case .published: return "Shared successfully"; case .cancelled: return "Upload stopped"; case .expired: return "Upload expired" }
     }
-    private func export(_ data: Data, name: String) {
-        guard available else { return }; document = .init(data: data); filename = URL(fileURLWithPath: name).lastPathComponent; exporting = true
+    private func export(_ data: Data, name: String, source: String, shared: Bool) {
+        guard available, copyAttempt == nil, !shared || store.fileUploadReadable(request) else { return }
+        filename = URL(fileURLWithPath: name).lastPathComponent
+        copyAttempt = .init(source: source, shared: shared, name: filename); copyStatus = nil; localMessage = nil
+        document = .init(data: data); exporting = true
     }
     private func download(_ attachment: Record) {
-        guard available, !downloading else { return }; downloading = true
-        Task { defer { downloading = false }; do { let bytes = try await store.downloadFile(attachment, request: request); guard available else { return }; export(bytes, name: attachment.string("name")) } catch { if available { localMessage = "The file couldn’t be opened. Refresh the task and try again." } } }
+        guard available, !downloading, copyAttempt == nil else { return }; copyStatus = nil; localMessage = nil; downloading = true
+        Task { defer { downloading = false }; do { let bytes = try await store.downloadFile(attachment, request: request); guard available else { return }; export(bytes, name: attachment.string("name"), source: attachment.id, shared: true) } catch { if available { localMessage = "The file couldn’t be opened. Refresh the task and try again." } } }
     }
 }
 
 #if DEBUG
 @MainActor enum TaskFileViewerFixture {
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--file-viewer-testing") }
+    static var copyTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--file-copy-testing") }
+    static var selectionTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--file-selection-testing") }
+    static let sampleName = "Taskfold-file-upload-sample.txt"
+    static let copyName = "Taskfold-shared-file-copy-proof.txt"
+    static var documents: URL { URL.documentsDirectory }
+    static var copyDirectory: URL { documents.appendingPathComponent("Taskfold-file-copy-destination", isDirectory: true) }
+    static var receipt: URL { documents.appendingPathComponent("Taskfold-file-copy-receipt.json") }
+    static func dialogDirectory(importing: Bool) -> URL? {
+        guard copyTesting || selectionTesting else { return nil }
+        return importing ? documents : copyDirectory
+    }
+    private static var dialogsPrepared = false
+    static func prepareFileDialogs() throws {
+        guard !dialogsPrepared, copyTesting || selectionTesting else { return }
+        try FileManager.default.createDirectory(at: copyDirectory.appendingPathComponent("Taskfold-copy-marker", isDirectory: true), withIntermediateDirectories: true)
+        let source = documents.appendingPathComponent(sampleName)
+        if !FileManager.default.fileExists(atPath: source.path) { try Data("hello".utf8).write(to: source, options: .atomic) }
+        if ProcessInfo.processInfo.arguments.contains("--team-editor-reset") {
+            for path in [copyDirectory.appendingPathComponent(copyName), copyDirectory.appendingPathComponent(sampleName)] where FileManager.default.fileExists(atPath: path.path) {
+                guard try Data(contentsOf: path) == Data("hello".utf8) else { throw TaskFileUploadJournal.invalid }
+                try FileManager.default.removeItem(at: path)
+            }
+            if FileManager.default.fileExists(atPath: receipt.path) { try FileManager.default.removeItem(at: receipt) }
+        }
+        dialogsPrepared = true
+    }
+    static func recordCopy(_ url: URL, request: TaskFileUploadRequest, name: String, shared: Bool) {
+        guard copyTesting || selectionTesting else { return }
+        let value = ["url": url.absoluteString, "account": request.account, "name": name, "source": shared ? "shared" : "local"]
+        if let data = try? JSONSerialization.data(withJSONObject: value, options: .sortedKeys) { try? data.write(to: receipt, options: .atomic) }
+    }
     static let generation = "ec240000-0000-4000-8000-000000000071"
-    static let attachment = Record(["id": .string("ec240000-0000-4000-8000-000000000072"), "storage_object_id": .string("ec240000-0000-4000-8000-000000000073"), "name": .string("Workshop notes.txt"), "size": .number(5), "type": .string("text/plain"), "sha256": .string(TaskFileUploadJournal.digest(Data("hello".utf8)))])
+    static var attachment: Record { Record(["id": .string("ec240000-0000-4000-8000-000000000072"), "storage_object_id": .string("ec240000-0000-4000-8000-000000000073"), "name": .string(copyTesting ? copyName : "Workshop notes.txt"), "size": .number(5), "type": .string("text/plain"), "sha256": .string(TaskFileUploadJournal.digest(Data("hello".utf8)))]) }
 }
 extension Store {
     func withdrawFileViewerFixture() {
@@ -237,6 +317,7 @@ extension Store {
 }
 struct TaskFileViewerFixtureScreen: View {
     @Environment(Store.self) private var store
+    @State private var files: TaskFileUploadRequest?
     @State private var opening: TaskEditorOpening?
     @State private var proof = ""
     var body: some View {
@@ -245,6 +326,9 @@ struct TaskFileViewerFixtureScreen: View {
                 if let source = store.record("tasks", id: TeamEditorNativeFixture.taskID) {
                     Text(source.title).accessibilityIdentifier("fileViewerSavedTitle")
                     Text("Project role: " + (store.nativeConversationTeamCache?.boundary.projects[source.string("project_id")]?.role ?? "unavailable")).accessibilityIdentifier("fileViewerRole")
+                    if TaskFileViewerFixture.selectionTesting {
+                        Button("Open file capture") { files = store.fileUploadRequest(taskID: source.id) }.accessibilityIdentifier("fileSelectionOpen")
+                    }
                     Button("Open task details") {
                         opening = TaskEditorOpening(task: source, admission: store.editorAdmission(source))
                     }.accessibilityIdentifier("fileViewerOpenDetails")
@@ -263,6 +347,8 @@ struct TaskFileViewerFixtureScreen: View {
                 Text(proof).accessibilityIdentifier("fileViewerDownloadProof")
                 Text("Queued changes: \(store.snapshot.pending.count)").accessibilityIdentifier("fileViewerQueued")
             }.navigationTitle("Shared file viewer")
+            .task { do { try TaskFileViewerFixture.prepareFileDialogs() } catch { proof = "File fixture needs review" } }
+            .sheet(item: $files) { TaskFileUploadView(request: $0) }
             .sheet(item: $opening) { opening in
                 #if os(macOS)
                 TaskInspectorForm(taskID: opening.task.id, admission: opening.admission).frame(minWidth: 560, minHeight: 500)
