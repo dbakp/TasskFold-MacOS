@@ -1414,6 +1414,69 @@ final class Store {
         }
         return checked[0]
     }
+    var pendingAudioRestoreSelectionRecovery: TeamAudioRestoreSelection? {
+        guard teamAudioDeletionReviewEnabled, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              workspaceCacheReadable, let head = snapshot.pending.first,
+              let selection = try? TeamAudioRestoreSelection(head), let batch = head.teamTaskBatch,
+              batch.account == userID, batch.origin == (try? backend.accountRemovalOrigin) else { return nil }
+        return selection
+    }
+    func audioRestoreSelectionRecoveryIsCurrent(_ selection: TeamAudioRestoreSelection, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        workspace.matches(account: userID, generation: workspaceGeneration) && session == backend.reminderSessionIncarnation &&
+        pendingAudioRestoreSelectionRecovery == selection && online && !syncing
+    }
+    func audioRestoreSelectionReview(_ selection: TeamAudioRestoreSelection, workspace: WorkspaceBinding, session: UUID) async throws -> TeamAudioRestoreSelectionReview {
+        guard audioRestoreSelectionRecoveryIsCurrent(selection, workspace: workspace, session: session) else { throw CancellationError() }
+        var reviews: [TeamAudioLifecycleReview] = []
+        for start in stride(from: 0, to: selection.scopes.count, by: 4) {
+            let scopes = Array(selection.scopes[start..<min(start + 4, selection.scopes.count)]), client = backend
+            let values = try await withThrowingTaskGroup(of: TeamAudioLifecycleReview.self) { group in
+                for scope in scopes { group.addTask { try await client.teamAudioLifecycleReview(scope) } }
+                var values: [TeamAudioLifecycleReview] = []
+                for try await review in group { values.append(review) }
+                return values
+            }
+            try Task.checkCancellation()
+            guard audioRestoreSelectionRecoveryIsCurrent(selection, workspace: workspace, session: session) else { throw CancellationError() }
+            reviews.append(contentsOf: values)
+        }
+        return try TeamAudioRestoreSelectionReview(selection: selection, reviews: reviews)
+    }
+    func replaceExpiredAudioRestoreSelection(_ receipt: TeamAudioRestoreSelectionReceipt, review: TeamAudioRestoreSelectionReview, workspace: WorkspaceBinding, session: UUID) throws {
+        guard audioRestoreSelectionRecoveryIsCurrent(receipt.selection, workspace: workspace, session: session) else { throw CancellationError() }
+        let previous = snapshot
+        do {
+            try snapshot.replaceExpiredAudioRestoreSelection(receipt: receipt, review: review)
+            #if DEBUG
+            if audioSelectionFixtureFailNextSave, AudioTeamNativeProvider.enabled,
+               ProcessInfo.processInfo.arguments.contains("--audio-selection-recovery-testing") {
+                audioSelectionFixtureFailNextSave = false; savedFilterFixtureFailNextPersist = true
+            }
+            #endif
+            try persist()
+        } catch { snapshot = previous; throw error }
+        notice = "Recovery saved for \(receipt.selection.scopes.count) tasks. Checking its result…"
+        Task { await sync() }
+    }
+    func confirmRecordedAudioRestoreSelection(_ receipt: TeamAudioRestoreSelectionReceipt, workspace: WorkspaceBinding, session: UUID) async throws {
+        guard receipt.state == .recorded, audioRestoreSelectionRecoveryIsCurrent(receipt.selection, workspace: workspace, session: session) else { throw CancellationError() }
+        let saved = try await backend.send(receipt.selection.original, expectedAccount: userID)
+        guard audioRestoreSelectionRecoveryIsCurrent(receipt.selection, workspace: workspace, session: session) else { throw CancellationError() }
+        let previous = snapshot
+        do {
+            guard snapshot.acknowledge(receipt.selection.original, saved: saved) else { throw TeamAudioRestoreSelection.unavailable }
+            try persist()
+        } catch { snapshot = previous; throw error }
+        notice = "Saved selection Undo confirmed."
+        Task { await sync() }
+    }
+    #if DEBUG
+    @ObservationIgnored private var audioSelectionFixtureFailNextSave = false
+    func fixtureAudioSelectionRecoveryFailNextSave() {
+        guard AudioTeamNativeProvider.enabled, ProcessInfo.processInfo.arguments.contains("--audio-selection-recovery-testing") else { return }
+        audioSelectionFixtureFailNextSave = true
+    }
+    #endif
     var pendingAudioRestoreRecovery: TeamAudioRestoreRecoveryCommand? {
         guard teamAudioDeletionReviewEnabled, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
               workspaceCacheReadable, let head = snapshot.pending.first,

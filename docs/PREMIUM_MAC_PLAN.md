@@ -10477,3 +10477,9 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Own the same terminal group closure/fencing contract independently. The local mixed three-task/two-project flow preserves unexpired audio and never revives purged audio; 186 service checks pass, including actual competing-request waits, access/pause/session refusal, strict source binding, sparse-record restoration and private ledger permissions.
 - [x] Build the Core receipt/transport and pure queue-replacement boundary without changing any normal-use gate.
 - [ ] Store save/readback/rollback, native Mac selection consent/confirmation, cold/lifecycle/accessibility and genuine integration remain unaccepted. See [scope and evidence](audio-selection-recovery/README.md).
+
+### 2 November 2026 · Native recording selection review
+
+- [x] Own production Store context-bound review, replacement persistence/rollback, recorded acknowledgement and stable single/selection presentation independently. Normal-use gates remain Off.
+- [x] Record iPhone-owned local-service acceptance of Later, cold consent reset, failed actual persist after closure, retry and lost-reply cold replay: 59 assertions pass. Available audio bytes and all task fields/generations remain exact; purged audio never returns.
+- [ ] The current Mac app and runner build and pass strict signatures; Mac runtime is unaccepted. Group recorded confirmation, warm history rebinding, wider contexts/accessibility and genuine integration remain open. See [scope](audio-selection-native/README.md).
