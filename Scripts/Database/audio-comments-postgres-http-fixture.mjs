@@ -50,6 +50,10 @@ export async function createAudioHttpFixture(pg, actor, session, options = {}) {
       }
       const bytes = Buffer.concat(chunks);
       if (options.storage && req.url.startsWith("/storage/v1/object/")) {
+        if (req.method === "GET" && state.failNextProviderRead) {
+          state.failNextProviderRead = false;
+          return json({ code: "synthetic_read_unavailable" }, 503);
+        }
         if (req.method === "POST") state.uploads++;
         const response = await options.storage.request(
           req.url.slice("/storage/v1".length),
@@ -72,6 +76,20 @@ export async function createAudioHttpFixture(pg, actor, session, options = {}) {
             ? {}
             : { error: result.toString("utf8").slice(0, 500) }),
         });
+        if (
+          response.ok && req.method === "POST" && state.loseProviderUploadReply
+        ) {
+          state.loseProviderUploadReply = false;
+          state.failNextProviderRead = true;
+          return json({ code: "synthetic_reply_lost_after_upload" }, 503);
+        }
+        if (
+          response.ok && req.method === "DELETE" &&
+          state.loseProviderDeleteReply
+        ) {
+          state.loseProviderDeleteReply = false;
+          return json({ code: "synthetic_reply_lost_after_delete" }, 503);
+        }
         res.writeHead(response.status, {
           "Content-Type": response.headers.get("content-type") ??
             "application/octet-stream",
@@ -114,6 +132,15 @@ export async function createAudioHttpFixture(pg, actor, session, options = {}) {
         if (r.code) {
           state.errors.push(r.code);
           return json({ private: "fixture SQL" }, 400);
+        }
+        const lost = b._action === "finalize" && state.loseFinalizeReply
+          ? "loseFinalizeReply"
+          : b._action === "confirm" && state.loseConfirmReply
+          ? "loseConfirmReply"
+          : null;
+        if (lost) {
+          state[lost] = false;
+          return json({ code: "synthetic_reply_lost_after_commit" }, 503);
         }
         return json(r.value);
       }

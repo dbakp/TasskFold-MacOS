@@ -7405,3 +7405,11 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [ ] Finish Mac UI, genuine Auth/full-schema/hosted integration, wider account/window/background/accessibility/privacy and ambiguous provider-failure recovery, actual hardware capture/playback, generation restoration and whole-project transfers.
 
 [Evidence, exact scope and attempt qualifications](audio-real-provider-native/README.md). Both current app/runner builds and strict signatures pass; ordinary-use gates stay off and nothing is deployed. The older interrupted iPad file-dialog/cache scope remains separate. The dashboard splits native verification from generation implementation; curated bars stay at 74 checkpoints.
+
+### 2 November 2026 · Interrupted recording service recovery
+
+- [x] Independently pass 42 real local Storage/SQL/gateway assertions per repo: upload and finalize replies lost after commit, exact retry/status recovery without duplicate media, lost DELETE acknowledgement, fresh cleanup claims and stale-token refusal, lost terminal confirmation, abandoned-upload byte reconciliation and confirmed quota release.
+- [x] Preserve all three immutable operations and task content; close all owned services without errors. Add only synthetic fixture fault controls and tests; no production logic/schema or app build changed.
+- [ ] Finish unknown/corrupt-object and wider account/window/background/privacy/accessibility recovery, Mac runtime, genuine Auth/full-schema/hosted integration, generation restoration and whole-project transfers. Ordinary-use gates remain off.
+
+[Scope, exact proof and attempt qualification](audio-provider-recovery/README.md). Existing mobile native evidence remains separate; curated bars remain 74 checkpoints.
