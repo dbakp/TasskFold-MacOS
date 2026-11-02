@@ -1414,6 +1414,41 @@ final class Store {
         }
         return checked[0]
     }
+    var pendingAudioRestoreRecovery: TeamAudioRestoreRecoveryCommand? {
+        guard teamAudioDeletionReviewEnabled, signedIn, !localMode, !signingOut, !accountRemovalBlocked,
+              workspaceCacheReadable, let head = snapshot.pending.first,
+              let command = try? TeamAudioRestoreRecoveryCommand(head), command.scope.account == userID,
+              command.scope.origin == (try? backend.accountRemovalOrigin) else { return nil }
+        return command
+    }
+    func audioRestoreRecoveryIsCurrent(_ command: TeamAudioRestoreRecoveryCommand, workspace: WorkspaceBinding, session: UUID) -> Bool {
+        workspace.matches(account: userID, generation: workspaceGeneration) && session == backend.reminderSessionIncarnation &&
+        pendingAudioRestoreRecovery == command && online && !syncing
+    }
+    func replaceExpiredAudioRestore(_ receipt: TeamAudioRestoreRecoveryReceipt, review: TeamAudioLifecycleReview, workspace: WorkspaceBinding, session: UUID) throws {
+        guard audioRestoreRecoveryIsCurrent(receipt.command, workspace: workspace, session: session) else { throw CancellationError() }
+        let previous = snapshot
+        do {
+            try snapshot.replaceExpiredAudioRestore(receipt: receipt, review: review)
+            try persist()
+        } catch { snapshot = previous; throw error }
+        notice = "Task-only recovery saved. Checking its result…"
+        Task { await sync() }
+    }
+    func confirmRecordedAudioRestore(_ receipt: TeamAudioRestoreRecoveryReceipt, workspace: WorkspaceBinding, session: UUID) async throws {
+        guard receipt.state == .recorded, audioRestoreRecoveryIsCurrent(receipt.command, workspace: workspace, session: session) else { throw CancellationError() }
+        // Replay the unchanged certified intent; never invent a current task row
+        // from the metadata-only recorded proof or re-upload private media.
+        let saved = try await backend.send(receipt.command.original, expectedAccount: userID)
+        guard audioRestoreRecoveryIsCurrent(receipt.command, workspace: workspace, session: session) else { throw CancellationError() }
+        let previous = snapshot
+        do {
+            guard snapshot.acknowledge(receipt.command.original, saved: saved) else { throw TeamAudioRestoreRecoveryCommand.unavailable }
+            try persist()
+        } catch { snapshot = previous; throw error }
+        notice = "Saved Undo confirmed."
+        Task { await sync() }
+    }
     func captureTeamTaskDeletionSelection(_ records: [Record]) throws -> TeamTaskDeletionSelection {
         guard (2...100).contains(records.count), Set(records.map(\.id)).count == records.count,
               records.allSatisfy({ nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil }) else {
@@ -3964,11 +3999,20 @@ final class Store {
     private func refreshScheduledReminders() async {
         ReminderCategory.register(minutes: reminderSnoozeMinutes)
         refreshCalendarContext()
+        #if DEBUG
+        traceTeamAudioNativeSync("Reminder registration")
+        #endif
         await refreshRemoteReminderRegistration()
         let generation = accountGeneration
+        #if DEBUG
+        traceTeamAudioNativeSync("Notification settings")
+        #endif
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         guard generation == accountGeneration else { return }
         systemTimeSensitiveAllowed = settings.timeSensitiveSetting == .enabled
+        #if DEBUG
+        traceTeamAudioNativeSync("Time reminder reconciliation")
+        #endif
         await reconcileTimeSnoozes(generation: generation)
         guard generation == accountGeneration else { return }
         let state = reminderState()

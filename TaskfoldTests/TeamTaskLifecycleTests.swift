@@ -380,3 +380,146 @@ extension TeamTaskLifecycleTests {
         catch { XCTAssertTrue(error.localizedDescription.lowercased().contains("too large"), error.localizedDescription) }
     }
 }
+
+extension TeamTaskLifecycleTests {
+    private func recoveryFixture(state: String = "closed", action: TeamAudioRestoreRecoveryCommand.Action = .inspect) throws -> (TeamAudioRestoreRecoveryCommand, TeamAudioRestoreRecoveryReceipt, TeamAudioLifecycleReview) {
+        let (original, scope, source) = try audioReview("restore")
+        let retained = try TeamAudioLifecycleReview(source, scope: scope).applying(to: original)
+        let command = try TeamAudioRestoreRecoveryCommand(retained)
+        var raw = scope.body; raw.removeValue(forKey: "phase")
+        raw["protocol"] = .number(1); raw["account"] = .string(scope.account); raw["request_id"] = .string(retained.id.uuidString.lowercased()); raw["state"] = .string(state)
+        let receipt = try TeamAudioRestoreRecoveryReceipt(raw, command: command, action: action)
+        var expired = source; expired["policy"] = .string("expired_recordings_omitted_v1"); expired["retain_until"] = .string("2020-01-01T00:00:00Z")
+        return (command, receipt, try TeamAudioLifecycleReview(expired, scope: scope))
+    }
+    func testRestoreRecoveryFreezesExactOriginalIncludingPolicy() throws {
+        let (command, _, _) = try recoveryFixture()
+        let durable = try TaskfoldJSONDecoder().decode(Mutation.self, from: TaskfoldJSONEncoder().encode(command.original))
+        XCTAssertEqual(try TeamAudioRestoreRecoveryCommand(durable), command)
+        XCTAssertEqual(command.body, try durable.teamTaskScope!.lifecycleBody(for: durable))
+        var invalid = durable; invalid.teamTaskScope?.audioRestoration = nil
+        XCTAssertThrowsError(try TeamAudioRestoreRecoveryCommand(invalid))
+        invalid = durable; invalid.teamTaskScope?.audioRestoration = try .init(policy: .omitExpired, count: 1)
+        XCTAssertThrowsError(try TeamAudioRestoreRecoveryCommand(invalid))
+        invalid = durable; invalid.insertOnly = false
+        XCTAssertThrowsError(try TeamAudioRestoreRecoveryCommand(invalid))
+    }
+    func testUnrecordedObservationNeverAuthorizesDifferentDecision() throws {
+        for state in ["unrecorded", "recorded"] {
+            let (_, receipt, review) = try recoveryFixture(state: state)
+            XCTAssertThrowsError(try receipt.replacingWithTaskOnlyRecovery(review: review))
+        }
+        XCTAssertThrowsError(try recoveryFixture(state: "unrecorded", action: .close))
+        XCTAssertNoThrow(try recoveryFixture(state: "recorded", action: .close))
+    }
+    func testTerminalClosureUsesFreshIdentityAndKeepsSavedTaskExact() throws {
+        let (command, receipt, review) = try recoveryFixture()
+        let next = try receipt.replacingWithTaskOnlyRecovery(review: review)
+        XCTAssertNotEqual(next.id, command.original.id)
+        XCTAssertEqual(next.fields, command.original.fields)
+        XCTAssertEqual(next.baseline, command.original.baseline)
+        XCTAssertEqual(next.teamTaskScope?.restoreRequest, command.original.teamTaskScope?.restoreRequest)
+        XCTAssertEqual(next.teamTaskScope?.audioRestoration?.policy, .omitExpired)
+        XCTAssertEqual(command.original.teamTaskScope?.audioRestoration?.policy, .retain)
+        XCTAssertThrowsError(try receipt.replacingWithTaskOnlyRecovery(review: review, requestID: command.original.id))
+        XCTAssertThrowsError(try receipt.replacingWithTaskOnlyRecovery(review: review, requestID: UUID(uuidString: "00000000-0000-0000-0000-000000000000")!))
+    }
+    func testTaskOnlyQueueReplacementPreservesLaterEditsAndTables() throws {
+        let (command, receipt, review) = try recoveryFixture()
+        let later = Mutation(table: "tasks", recordID: command.original.recordID, method: "PATCH", fields: ["title": .string("Later saved title")])
+        var snapshot = Snapshot(tables: ["tasks": [Record(command.original.fields)]], pending: [command.original, later])
+        let before = snapshot, nextID = UUID()
+        try snapshot.replaceExpiredAudioRestore(receipt: receipt, review: review, requestID: nextID)
+        XCTAssertEqual(snapshot.tables, before.tables)
+        XCTAssertEqual(snapshot.pending[1], later)
+        XCTAssertEqual(snapshot.pending[0].fields, before.pending[0].fields)
+        XCTAssertEqual(snapshot.pending[0].id, nextID)
+        let cold = try TaskfoldJSONDecoder().decode(Snapshot.self, from: TaskfoldJSONEncoder().encode(snapshot))
+        XCTAssertEqual(cold.pending, snapshot.pending)
+    }
+    func testQueueReplacementRefusesChangedHeadAndCollidingIdentityAtomically() throws {
+        let (command, receipt, review) = try recoveryFixture()
+        let unrelated = Mutation(table: "tasks", recordID: UUID().uuidString.lowercased(), method: "DELETE", fields: [:])
+        var snapshot = Snapshot(pending: [command.original, unrelated])
+        let before = snapshot.pending
+        XCTAssertThrowsError(try snapshot.replaceExpiredAudioRestore(receipt: receipt, review: review, requestID: unrelated.id))
+        XCTAssertEqual(snapshot.pending, before)
+        snapshot.pending.swapAt(0, 1); let reordered = snapshot.pending
+        XCTAssertThrowsError(try snapshot.replaceExpiredAudioRestore(receipt: receipt, review: review))
+        XCTAssertEqual(snapshot.pending, reordered)
+    }
+    func testTaskOnlyReplacementRequiresUnexpiredCurrentCleanupProof() throws {
+        let (command, receipt, review) = try recoveryFixture()
+        XCTAssertThrowsError(try receipt.replacingWithTaskOnlyRecovery(review: review, now: review.expiresAt))
+        let (_, _, raw) = try audioReview("restore")
+        XCTAssertThrowsError(try receipt.replacingWithTaskOnlyRecovery(review: TeamAudioLifecycleReview(raw, scope: command.scope)))
+        var other = command.original; let authority = try XCTUnwrap(other.teamTaskScope)
+        other.teamTaskScope = TeamTaskEditScope(account: authority.account, origin: "https://other.example", team: authority.team, project: authority.project,
+            restoreRequest: authority.restoreRequest, parentGeneration: authority.parentGeneration, audioRestoration: authority.audioRestoration)
+        let otherScope = try TeamAudioLifecycleScope(other)
+        var changed = raw; changed["policy"] = .string("expired_recordings_omitted_v1"); changed["retain_until"] = .string("2020-01-01T00:00:00Z")
+        XCTAssertThrowsError(try receipt.replacingWithTaskOnlyRecovery(review: TeamAudioLifecycleReview(changed, scope: otherScope)))
+        changed["cleanup_pending"] = .bool(true)
+        XCTAssertThrowsError(try receipt.replacingWithTaskOnlyRecovery(review: TeamAudioLifecycleReview(changed, scope: command.scope)))
+    }
+    func testRestoreRecoveryDecodesOwningSQLAndRejectsBorrowedProof() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "audio-restore-recovery-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let wire = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let phases = wire["phases"]!.object
+        XCTAssertEqual(Set(phases.keys), ["unrecorded", "recorded", "closed"])
+        for (name, value) in phases {
+            let entry = value.object, body = entry["command"]!.object, raw = entry["reply"]!.object
+            let authority = TeamTaskEditScope(account: wire["account"]!.text, origin: wire["origin"]!.text, team: body["team_id"]!.text, project: body["project_id"]!.text,
+                restoreRequest: UUID(uuidString: body["restore_from"]!.text), taskTypesProtocol: 1, taskTypeLifecycleProtocol: 1,
+                audioRestoration: try .init(count: 1))
+            var original = Mutation(table: "tasks", recordID: body["task_id"]!.text, method: "POST", fields: body["record"]!.object, insertOnly: true, teamTaskScope: authority)
+            original.id = UUID(uuidString: body["request_id"]!.text)!
+            let command = try TeamAudioRestoreRecoveryCommand(original)
+            XCTAssertEqual(command.body, body)
+            let action = TeamAudioRestoreRecoveryCommand.Action(rawValue: entry["action"]!.text)!
+            XCTAssertEqual(try TeamAudioRestoreRecoveryReceipt(raw, command: command, action: action).state.rawValue, name)
+            for key in ["account", "team_id", "project_id", "task_id", "task_generation", "request_id", "restore_from", "state"] {
+                var changed = raw; changed[key] = .string(UUID().uuidString.lowercased())
+                XCTAssertThrowsError(try TeamAudioRestoreRecoveryReceipt(changed, command: command, action: action), key)
+            }
+            var extra = raw; extra["task"] = .object(original.fields)
+            XCTAssertThrowsError(try TeamAudioRestoreRecoveryReceipt(extra, command: command, action: action))
+        }
+    }
+    @MainActor func testRestoreRecoveryTransportKeepsExactOriginalAndBoundedMetadata() async throws {
+        let (command, _, _) = try recoveryFixture(state: "unrecorded")
+        let api = try backend(command.scope.account)
+        var calls = 0
+        TeamLifeHTTP.handler = { request, peer in
+            calls += 1
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_audio_restore_recovery")
+            XCTAssertEqual(request.httpMethod, "POST")
+            let body = try! TaskfoldJSONDecoder().decode([String: JSON].self, from: request.httpBody!)
+            XCTAssertEqual(body["_action"], .string("inspect")); XCTAssertEqual(body["_body"], .object(command.body))
+            XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalCacheData)
+            var raw = command.scope.body; raw.removeValue(forKey: "phase")
+            raw["protocol"] = .number(1); raw["account"] = .string(command.scope.account); raw["request_id"] = .string(command.original.id.uuidString.lowercased()); raw["state"] = .string("unrecorded")
+            peer.finish(try! TaskfoldJSONEncoder().encode(raw))
+        }
+        defer { TeamLifeHTTP.handler = nil }
+        let received = try await api.teamAudioRestoreRecovery(command, action: .inspect)
+        XCTAssertEqual(received.state, .unrecorded)
+        XCTAssertEqual(calls, 1)
+    }
+    @MainActor func testClosedOriginalUndoDoesNotBecomeGenericConflictOrRetry() async throws {
+        let (command, _, _) = try recoveryFixture()
+        let api = try backend(command.scope.account)
+        TeamLifeHTTP.handler = { _, peer in peer.finish(Data(#"{"code":"PT412","message":"private provider detail"}"#.utf8), status: 412) }
+        defer { TeamLifeHTTP.handler = nil }
+        do { _ = try await api.send(command.original); XCTFail("Closed intent must remain refused") }
+        catch { XCTAssertTrue(error is TeamAudioRestoreClosed); XCTAssertFalse(error.localizedDescription.contains("private provider detail")) }
+    }
+    @MainActor func testRestoreReconciliationAccessFailureCannotBecomeClosure() async throws {
+        let (command, _, _) = try recoveryFixture()
+        let api = try backend(command.scope.account)
+        TeamLifeHTTP.handler = { _, peer in peer.finish(Data(#"{"code":"42501","message":"private provider detail"}"#.utf8), status: 403) }
+        defer { TeamLifeHTTP.handler = nil }
+        do { _ = try await api.teamAudioRestoreRecovery(command, action: .close); XCTFail("Access loss must not authorize replacement") }
+        catch { XCTAssertFalse(error.localizedDescription.contains("private provider detail")); XCTAssertTrue(error.localizedDescription.contains("original request are kept")) }
+    }
+}

@@ -97,6 +97,7 @@ try {
   await pg.raw(
     await migrationSQL("20261102181442_audio_lifecycle_native_review.sql"),
   );
+  await pg.raw(await migrationSQL("20261102194929_recording_restore_recovery_fence.sql"));
   await loadTaskFileWorkspaceFixture(pg);
   const users = {
     actor: { id: account, session: randomUUID() },

@@ -216,6 +216,7 @@ struct SyncFooter: View {
             .animation(Transitions.Ease.smoothOut, value: symbol)
             .animation(Transitions.Ease.smoothOut, value: status)
             .help(store.notice ?? (store.localMode ? "Tasks are stored only on this Mac." : "Changes sync to your Taskfold account."))
+            TeamAudioRestoreRecoveryButton().buttonStyle(.link).font(.caption).padding(.horizontal, 14).padding(.bottom, 8)
         }
         .background(.bar)
         .sheet(isPresented: $reviewing) { if let conflict = store.syncConflict { ConflictReview(conflict: conflict) } }

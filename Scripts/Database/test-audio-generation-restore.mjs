@@ -50,6 +50,9 @@ try {
   );
   const nativeReviewSQL = process.env.TASKFOLD_AUDIO_LIFECYCLE_REVIEW_SQL;
   if (nativeReviewSQL) await pg.raw(await readFile(nativeReviewSQL, "utf8"));
+  const fenceSQL = process.env.TASKFOLD_AUDIO_RESTORE_FENCE_SQL;
+  if (fenceSQL) await pg.raw(await readFile(fenceSQL, "utf8"));
+  const recoveryWire = { account, origin: "https://backend.example", phases: {} };
   const nativeWire = { account, origin: "https://backend.example", phases: {} };
   await loadTaskFileWorkspaceFixture(pg);
   const users = {
@@ -120,6 +123,12 @@ try {
         beforeSQL ? "rollback" : "commit"
       };`,
     );
+  };
+  const recovery = async (action, command, label, who = "actor", before = "") => {
+    const result = await run(`public.taskfold_audio_restore_recovery(${lit(action)},${j(command)})`, who, before);
+    if (label && result.code) throw Error(JSON.stringify({ phase: label, ...result }));
+    if (label && result.code == null) recoveryWire.phases[label] = { action, command, reply: result.value };
+    return result;
   };
   const ok = async (action, b) => {
     const r = await run(
@@ -356,6 +365,13 @@ try {
         completion_version: 0,
       },
     };
+  if (fenceSQL) {
+    const before = await root(), ledger = await pg.scalar("select count(*)::int from taskfold_private.team_task_edits");
+    check("unrecorded Undo is metadata only", (await recovery("inspect", restore, "unrecorded")).value.state, "unrecorded");
+    check("metadata status does not create a task", await root(), before);
+    check("metadata status writes no edit receipt", await pg.scalar("select count(*)::int from taskfold_private.team_task_edits"), ledger);
+    check("unexpired recovery cannot close original Undo", (await recovery("close", restore)).code, "PT409");
+  }
   const noAck = { ...restore };
   delete noAck.audio_restoration_ack;
   await refused("restore needs matching explicit review", "restore", noAck);
@@ -437,7 +453,21 @@ try {
   await pg.raw(
     "drop trigger fixture_audio_restore_failure on taskfold_private.team_task_edits;drop function taskfold_private.fixture_audio_restore_failure()",
   );
-  await ok("restore", restore);
+  if (fenceSQL) {
+    const u = users.actor;
+    const held = await pg.hold(`set local role authenticated;set local request.jwt.claim.sub=${lit(u.id)};set local request.jwt.claims=${lit(JSON.stringify({ sub: u.id, session_id: u.session }))};select public.taskfold_team_task_lifecycle('restore',${j(restore)})`);
+    const app = "restore-close-wait", closing = recovery("close", restore, null, "actor", `set local application_name=${lit(app)}`);
+    try { const blocked = await pg.waitForLock(app, held.pid); check("closure waits for in-flight original Undo", blocked.blockers.includes(held.pid)); }
+    finally { await held.release("commit"); }
+    check("in-flight applied Undo cannot become closed", (await closing).value.state, "recorded");
+  } else await ok("restore", restore);
+  if (fenceSQL) {
+    check("lost successful Undo reply is recorded", (await recovery("inspect", restore, "recorded")).value.state, "recorded");
+    check("close never cancels an applied Undo", (await recovery("close", restore)).value.state, "recorded");
+    check("recorded status stores no closure", await pg.scalar("select count(*)::int from taskfold_private.audio_restore_closures"), 0);
+    check("changed recorded body cannot borrow outcome", (await recovery("inspect", { ...restore, record: { ...restore.record, title: "Changed frozen body" } })).code, "PT409");
+    check("other actor cannot inspect original outcome", (await recovery("inspect", restore, null, "creator")).code, "PT409");
+  }
   check("restoration preserves exact task content", await root(), {
     ...original,
     task_generation: renewed,
@@ -638,6 +668,10 @@ try {
       true,
     );
   }
+  if (fenceSQL) {
+    check("expired unrecorded Undo is not mistaken for applied", (await recovery("inspect", expiryRestore)).value.state, "unrecorded");
+    check("cleanup pending cannot close original Undo", (await recovery("close", expiryRestore)).code, "PT409");
+  }
   const expiredClean = await http.maintain();
   check(
     "expired recording cleanup uses existing fenced worker",
@@ -691,8 +725,35 @@ try {
       false,
     );
   }
+  if (fenceSQL) {
+    const noReview = { ...expiryRestore }; delete noReview.audio_restoration_ack;
+    check("closure needs original recording policy", (await recovery("close", noReview)).code, "22023");
+    check("closure refuses altered task contents", (await recovery("close", { ...expiryRestore, record: { ...expiryRestore.record, title: "Different restore" } })).code, "PT409");
+    check("closure refuses altered original count", (await recovery("close", { ...expiryRestore, audio_restoration_ack: { ...ack, count: 2 } })).code, "PT409");
+    check("closure refuses missing original deletion", (await recovery("close", { ...expiryRestore, restore_from: randomUUID() })).code, "PT409");
+    check("closure refuses viewer", (await recovery("close", expiryRestore, null, "actor", `update taskfold_private.team_project_grants set role='viewer' where project_id=${lit(project)} and user_id=${lit(account)}`)).code, "42501");
+    check("closure refuses revoked session", (await recovery("close", expiryRestore, null, "actor", `delete from auth.sessions where id=${lit(users.actor.session)}`)).code, "28000");
+    check("closure refuses paused feature", (await recovery("close", expiryRestore, null, "actor", "update taskfold_private.audio_comment_config set restoration_enabled=false")).code, "PT503");
+    const u = users.actor;
+    const held = await pg.hold(`set local role authenticated;set local request.jwt.claim.sub=${lit(u.id)};set local request.jwt.claims=${lit(JSON.stringify({ sub: u.id, session_id: u.session }))};select public.taskfold_audio_restore_recovery('close',${j(expiryRestore)})`);
+    const app = "late-restore-wait", late = run(`public.taskfold_team_task_lifecycle('restore',${j(expiryRestore)})`, "actor", `set local application_name=${lit(app)}`);
+    try { const blocked = await pg.waitForLock(app, held.pid); check("late original waits for terminal closure commit", blocked.blockers.includes(held.pid)); }
+    finally { await held.release("commit"); }
+    check("in-flight original stays refused after closure commit", (await late).code, "PT412");
+    const closed = await recovery("inspect", expiryRestore, "closed");
+    check("confirmed expired Undo closes exact original", closed.value.state, "closed");
+    check("closure returns no task or media content", Object.keys(closed.value).sort(), ["protocol", "account", "team_id", "project_id", "task_id", "task_generation", "request_id", "restore_from", "state"].sort());
+    check("closure keeps task absent", await root(), null);
+    check("closure is idempotent after lost acknowledgement", (await recovery("close", expiryRestore)).value, closed.value);
+    check("closed status survives later inspection", (await recovery("inspect", expiryRestore)).value, closed.value);
+    check("closed identity cannot change its payload", (await recovery("inspect", { ...expiryRestore, record: { ...expiryRestore.record, description: "Changed after close" } })).code, "PT409");
+    await refused("late original restore cannot apply after closure", "restore", expiryRestore, "PT412");
+    for (const role of ["anon", "authenticated", "service_role"]) check("restore closures private to " + role, await pg.scalar(`select to_jsonb(has_table_privilege(${lit(role)},'taskfold_private.audio_restore_closures','select,insert,update,delete'))`), false);
+    for (const role of ["anon", "service_role"]) check("restore reconciliation unavailable to " + role, await pg.scalar(`select to_jsonb(has_function_privilege(${lit(role)},'public.taskfold_audio_restore_recovery(text,jsonb)','execute'))`), false);
+  }
   const omitted = {
     ...expiryRestore,
+    ...(fenceSQL ? { request_id: randomUUID() } : {}),
     audio_restoration_ack: {
       policy: "expired_recordings_omitted_v1",
       count: 1,
@@ -848,6 +909,7 @@ try {
       );
     }
   }
+  if (fenceSQL && process.env.TASKFOLD_AUDIO_RESTORE_RECOVERY_WIRE_OUT) await writeFile(process.env.TASKFOLD_AUDIO_RESTORE_RECOVERY_WIRE_OUT, JSON.stringify(recoveryWire, null, 2) + "\n");
   const findings = await pg.advisors();
   check(
     "no added advisor findings",

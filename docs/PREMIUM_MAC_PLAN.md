@@ -10445,3 +10445,13 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [ ] Finish iPad startup/flow acceptance and Mac runtime; build expired-recording task-only recovery review. Genuine Auth/full-schema/hosted integration, mixed file/audio restoration, wider lifecycle/accessibility/privacy, legacy/personal migration and whole-project transfers remain open.
 
 [Evidence, current platform results and attempt qualifications](audio-lifecycle-native/README.md). Both normal-use restoration switches stay off. No deployment or real data change. Existing iPad file-picker/cache gaps remain separate. Two verified obsolete compiler caches were pruned; test helpers reuse current per-platform caches behind the 20 GiB floor. Curated bars remain 74 checkpoints; retention/Undo and expired-media review are tracked separately.
+
+
+### 2 November 2026 · Explicit expired-recording task recovery
+
+- [x] Add a separately gated single-task recovery review from sync attention and Backups & restore: inspect the original queued Undo, confirm a recorded outcome, keep the original retry before expiry, wait for cleanup, and require explicit task-only consent after expiry.
+- [x] Add exact-intent terminal closure before changing a queued recording decision. An applied Undo cannot become closed; a delayed old request cannot apply after closure. Only terminal closure authorizes a fresh request with explicit omission; task contents, generation, queue order and later edits stay intact. Local save failure restores the previous snapshot.
+- [x] Independently pass 119 real local SQL/Storage assertions per repo, including observed lock waits for both in-flight race orders, no new advisor findings and complete fixture cleanup. Both apps pass 185 Core tests, including ten new recovery/queue/transport cases.
+- [ ] Accept the new recovery screen and Store handoff at native runtime and through accessibility/privacy/lifecycle checks. Add complete-selection closure and recovery; do not recover individual members of a batch. Mac runtime, iPad reminder scheduling, mixed file/audio/discussion expiry, personal/legacy migration, genuine Auth/full-schema/hosted work and whole-project transfers remain open.
+
+[Exact scope, attempt qualifications and proof](audio-expired-recovery/README.md). No deployment or ordinary-use activation. Existing iPhone normal recording Undo proof does not establish this new flow; DEBUG reminder-stage tracing adds diagnosis without changing scheduling behavior. Curated checkpoint bars remain unchanged.

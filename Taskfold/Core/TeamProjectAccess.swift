@@ -401,3 +401,61 @@ struct TeamAudioLifecycleReview: Equatable, Sendable {
         return result
     }
 }
+
+/// An already-queued recording Undo stays immutable until the service proves
+/// application or permanently closes that exact intent. An absent row is not proof.
+struct TeamAudioRestoreRecoveryCommand: Equatable, Sendable {
+    enum Action: String, Sendable { case inspect, close }
+    let original: Mutation
+    let scope: TeamAudioLifecycleScope
+    let body: [String: JSON]
+    static var unavailable: AppFailure { AppFailure(message: "This recording Undo needs a fresh status check. Its saved task and original request are kept.") }
+    init(_ change: Mutation) throws {
+        let scope = try TeamAudioLifecycleScope(change)
+        guard scope.phase == "restore", change.teamTaskBatch == nil, change.teamCompletion == nil,
+              change.insertOnly == true, change.teamTaskScope?.audioRestoration?.policy == .retain,
+              let authority = change.teamTaskScope else { throw Self.unavailable }
+        original = change; self.scope = scope; body = try authority.lifecycleBody(for: change)
+    }
+}
+
+struct TeamAudioRestoreRecoveryReceipt: Equatable, Sendable {
+    enum State: String, Sendable { case recorded, unrecorded, closed }
+    let command: TeamAudioRestoreRecoveryCommand
+    let state: State
+    init(_ raw: [String: JSON], command: TeamAudioRestoreRecoveryCommand, action: TeamAudioRestoreRecoveryCommand.Action) throws {
+        let scope = command.scope
+        let expected: [String: JSON] = ["protocol": .number(1), "account": .string(scope.account), "team_id": .string(scope.team),
+            "project_id": .string(scope.project), "task_id": .string(scope.task), "task_generation": .string(scope.generation),
+            "request_id": .string(command.original.id.uuidString.lowercased()), "restore_from": scope.restores.map { .string($0.uuidString.lowercased()) } ?? .null]
+        guard Set(raw.keys) == Set(expected.keys).union(["state"]), expected.allSatisfy({ raw[$0.key] == $0.value }),
+              case .string(let name)? = raw["state"], let state = State(rawValue: name), action != .close || state != .unrecorded else {
+            throw TeamAudioRestoreRecoveryCommand.unavailable
+        }
+        self.command = command; self.state = state
+    }
+    /// Explicit consent is supplied by the review UI. Only a terminal closure,
+    /// never an unrecorded observation, authorizes a different queued decision.
+    func replacingWithTaskOnlyRecovery(review: TeamAudioLifecycleReview, requestID: UUID = UUID(), now: Date = Date()) throws -> Mutation {
+        guard state == .closed, review.scope == command.scope, review.policy == .omitExpired,
+              requestID != command.original.id, TeamProjectValue.id(requestID.uuidString.lowercased()) else { throw TeamAudioRestoreRecoveryCommand.unavailable }
+        var result = try review.applying(to: command.original, now: now)
+        result.id = requestID
+        _ = try result.teamTaskScope!.lifecycleBody(for: result)
+        return result
+    }
+}
+
+struct TeamAudioRestoreClosed: LocalizedError {
+    var errorDescription: String? { "This recording Undo was closed after review. Its saved task is kept; open recovery to continue." }
+}
+
+extension Snapshot {
+    /// Rewrite only after terminal non-application proof, retaining task contents,
+    /// current generation, queue order and every later saved intent.
+    mutating func replaceExpiredAudioRestore(receipt: TeamAudioRestoreRecoveryReceipt, review: TeamAudioLifecycleReview, requestID: UUID = UUID(), now: Date = Date()) throws {
+        guard pending.first == receipt.command.original, !pending.contains(where: { $0.id == requestID }) else { throw TeamAudioRestoreRecoveryCommand.unavailable }
+        let replacement = try receipt.replacingWithTaskOnlyRecovery(review: review, requestID: requestID, now: now)
+        pending[0] = replacement
+    }
+}

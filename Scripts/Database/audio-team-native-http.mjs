@@ -25,6 +25,7 @@ export async function createAudioTeamNativeHttp(pg, storage, user) {
         [
           "/rest/v1/rpc/taskfold_team_audio_lifecycle_review",
           "/rest/v1/rpc/taskfold_team_task_lifecycle",
+          "/rest/v1/rpc/taskfold_audio_restore_recovery",
         ].includes(url.pathname)
       ) {
         assert.equal(req.method, "POST");
@@ -42,11 +43,13 @@ export async function createAudioTeamNativeHttp(pg, storage, user) {
           Object.keys(body).sort(),
           preview ? ["_body"] : ["_action", "_body"],
         );
-        if (!preview) assert(["delete", "restore"].includes(body._action));
+        const recovery = url.pathname.endsWith("_restore_recovery");
+        if (!preview) assert((recovery ? ["inspect", "close"] : ["delete", "restore"]).includes(body._action));
         const expression = preview
           ? `public.taskfold_team_audio_lifecycle_review(${
             lit(JSON.stringify(body._body))
           }::jsonb)`
+          : recovery ? `public.taskfold_audio_restore_recovery(${lit(body._action)},${lit(JSON.stringify(body._body))}::jsonb)`
           : `public.taskfold_team_task_lifecycle(${lit(body._action)},${
             lit(JSON.stringify(body._body))
           }::jsonb)`;
@@ -58,7 +61,7 @@ export async function createAudioTeamNativeHttp(pg, storage, user) {
           };select ${expression};commit;`,
         );
         requests.push({
-          action: preview ? "lifecycle_review" : "task_" + body._action,
+          action: preview ? "lifecycle_review" : recovery ? "restore_recovery_" + body._action : "task_" + body._action,
           responseStatus: 200,
           deliveredStatus: 200,
           bodySHA256: createHash("sha256").update(bytes).digest("hex"),

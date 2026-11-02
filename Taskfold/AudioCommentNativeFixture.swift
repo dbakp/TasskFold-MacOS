@@ -638,7 +638,7 @@ struct AudioCommentNativeFixtureView: View {
             guard request.httpMethod == "POST", original.queryItems?.count == 1, let action = original.queryItems?.first, action.name == "action",
                   ["publish", "resolve", "page", "list", "download", "remove"].contains(action.value ?? "") else { throw CancellationError() }
         } else {
-            guard (request.httpMethod == "GET" && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")) || (request.httpMethod == "POST" && ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_team_task_lifecycle"].contains(source.path)) else { throw CancellationError() }
+            guard (request.httpMethod == "GET" && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")) || (request.httpMethod == "POST" && ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_audio_restore_recovery"].contains(source.path)) else { throw CancellationError() }
         }
         parts.path = source.path; parts.percentEncodedQuery = original.percentEncodedQuery
         guard let target = parts.url else { throw CancellationError() }
@@ -708,6 +708,7 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
                     Text(store.record("tasks", id: TeamEditorNativeFixture.taskID)?.string("task_generation") ?? "Task removed").accessibilityIdentifier("audioTeamNativeGeneration")
                     Text("\(store.syncing ? "Syncing" : "Idle") · \(store.snapshot.pending.count) queued · \(store.record("tasks", id: TeamEditorNativeFixture.taskID)?.string("task_generation") ?? "Task removed")").accessibilityIdentifier("audioTeamNativeLifecycleStatus")
                     Button("Undo task deletion") { if !store.undo() { deletionError = store.error } }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("audioTeamNativeUndo")
+                    TeamAudioRestoreRecoveryButton()
                     Button("Review task deletion") {
                         do {
                             guard let task = store.record("tasks", id: TeamEditorNativeFixture.taskID) else { throw TeamTaskEditorDraft.unavailable }

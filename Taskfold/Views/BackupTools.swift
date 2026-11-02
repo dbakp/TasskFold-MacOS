@@ -195,6 +195,7 @@ struct BackupTools: View {
                 export(backup)
             }.accessibilityIdentifier("backupExport").disabled(store.workspaceNeedsRepair)
             TaskFileUploadRecoveryButton()
+            TeamAudioRestoreRecoveryButton()
             Button("Restore from file", systemImage: "arrow.counterclockwise", action: chooseRestoreFile).accessibilityIdentifier("backupImport")
             Toggle("Daily recovery copies", isOn: Binding(get: { daily }, set: { daily = $0 })).accessibilityIdentifier("dailyBackups").disabled(store.workspaceNeedsRepair)
             if let warning = store.backupWarning { Text(warning).font(.callout).foregroundStyle(.secondary) }

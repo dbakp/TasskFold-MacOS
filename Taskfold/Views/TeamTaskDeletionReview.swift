@@ -352,3 +352,146 @@ struct TeamTaskCompletionReview: View {
         #endif
     }
 }
+
+/// Available from sync attention and Backups & restore. Opening never changes
+/// the queued intent; an explicit task-only choice requires a terminal closure.
+struct TeamAudioRestoreRecoveryButton: View {
+    @Environment(Store.self) private var store
+    @State private var command: TeamAudioRestoreRecoveryCommand?
+    var body: some View {
+        if let pending = store.pendingAudioRestoreRecovery {
+            Button("Review recording Undo", systemImage: "arrow.uturn.backward.circle") { command = pending }
+                .accessibilityIdentifier("reviewAudioRestoreRecovery")
+                .sheet(isPresented: Binding(get: { command != nil }, set: { if !$0 { command = nil } })) {
+                    if let command { TeamAudioRestoreRecoveryView(command: command) }
+                }
+        }
+    }
+}
+
+struct TeamAudioRestoreRecoveryView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var phase
+    let command: TeamAudioRestoreRecoveryCommand
+    @State private var receipt: TeamAudioRestoreRecoveryReceipt?
+    @State private var review: TeamAudioLifecycleReview?
+    @State private var opening: WorkspaceBinding?
+    @State private var session: UUID?
+    @State private var loaded: String?
+    @State private var reload = UUID()
+    @State private var consent = false
+    @State private var busy = false
+    @State private var submitting = false
+    @State private var message: String?
+    private var lifecycle: String { "\(store.userID)|\(store.workspaceGeneration)|\(store.backend.reminderSessionIncarnation)|\((try? store.backend.accountRemovalOrigin) ?? "")|\(phase)" }
+    private var current: Bool {
+        guard let opening, let session else { return false }
+        return phase == .active && loaded == lifecycle && store.audioRestoreRecoveryIsCurrent(command, workspace: opening, session: session)
+    }
+    private var canRestoreTaskOnly: Bool {
+        current && !busy && consent && review?.policy == .omitExpired && (try? review?.acknowledgement()) != nil
+    }
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Label("Your saved task is kept", systemImage: "doc.text").font(.headline)
+                    if phase == .active, store.pendingAudioRestoreRecovery == command {
+                        Text(command.original.fields["title"]?.text ?? "Shared task").fixedSize(horizontal: false, vertical: true)
+                    }
+                    Text("Check the original Undo before choosing how to recover. No recording is uploaded again.").foregroundStyle(.secondary)
+                }
+                if busy { Section { ProgressView("Checking saved recovery…") }.accessibilityIdentifier("audioRestoreRecoveryLoading") }
+                if let receipt, current {
+                    if receipt.state == .recorded {
+                        Section {
+                            Label("Undo already applied", systemImage: "checkmark.icloud")
+                            Text("The service has the original Undo. Confirm it to refresh this device without creating another restoration.").foregroundStyle(.secondary)
+                            Button("Confirm saved Undo") { Task { await confirmRecorded(receipt) } }.disabled(busy).accessibilityIdentifier("confirmRecordedAudioRestore")
+                        }
+                    } else if let review {
+                        Section("Recording recovery") {
+                            if review.policy == .omitExpired {
+                                Label("\(review.count) \(review.count == 1 ? "recording has" : "recordings have") expired", systemImage: "waveform")
+                                if review.cleanupPending {
+                                    Text("Cloud cleanup is still being confirmed. Keep the original request and check again before recovering without these recordings.").foregroundStyle(.secondary)
+                                } else {
+                                    Text("The recordings can no longer be recovered. The task can be restored without them; its saved title, notes and checklist are kept. This choice does not recreate the audio.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                    Toggle("Restore the task without \(review.count) expired \(review.count == 1 ? "recording" : "recordings")", isOn: $consent).disabled(busy).accessibilityIdentifier("audioRestoreOmissionConsent")
+                                    Button("Restore task without recordings") { Task { await restoreTaskOnly() } }
+                                        .disabled(!canRestoreTaskOnly).accessibilityIdentifier("confirmTaskOnlyAudioRestore")
+                                }
+                            } else {
+                                Label("Original recording recovery is available", systemImage: "waveform")
+                                Text("Retry the original saved Undo to recover its recordings. Its saved identity and policy stay unchanged.").foregroundStyle(.secondary)
+                                Button("Retry original Undo") { guard current, !busy else { return }; Task { await store.sync() }; dismiss() }
+                                    .disabled(busy || receipt.state == .closed).accessibilityIdentifier("retryOriginalAudioRestore")
+                            }
+                        }
+                    }
+                }
+                if let message { Section { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioRestoreRecoveryMessage") } }
+                if !busy {
+                    Section { Button("Check recovery again") { reload = UUID() }.accessibilityIdentifier("refreshAudioRestoreRecovery") }
+                }
+            }.formStyle(.grouped).privacySensitive().navigationTitle("Recording Undo")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Later") { dismiss() }.disabled(submitting).accessibilityIdentifier("cancelAudioRestoreRecovery") } }
+        }
+        .interactiveDismissDisabled(submitting)
+        .task(id: "\(lifecycle)|\(reload)") { await load() }
+        #if os(macOS)
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 430, idealHeight: 580)
+        #endif
+    }
+    @MainActor private func load() async {
+        receipt = nil; review = nil; consent = false; loaded = nil; message = nil
+        let expected = lifecycle, attempt = reload
+        guard phase == .active else { return }
+        let workspace = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
+        guard store.audioRestoreRecoveryIsCurrent(command, workspace: workspace, session: session) else { busy = false; message = "This recovery is no longer current. Close it and review the saved task again."; return }
+        busy = true
+        defer { if !Task.isCancelled, lifecycle == expected, reload == attempt { busy = false } }
+        do {
+            let outcome = try await store.backend.teamAudioRestoreRecovery(command, action: .inspect)
+            try Task.checkCancellation()
+            guard expected == lifecycle, attempt == reload, store.audioRestoreRecoveryIsCurrent(command, workspace: workspace, session: session) else { return }
+            let metadata = outcome.state == .recorded ? nil : try await store.backend.teamAudioLifecycleReview(command.scope)
+            try Task.checkCancellation()
+            guard expected == lifecycle, attempt == reload, store.audioRestoreRecoveryIsCurrent(command, workspace: workspace, session: session) else { return }
+            receipt = outcome; review = metadata; opening = workspace; self.session = session; loaded = expected; busy = false
+            if let expiry = metadata?.expiresAt {
+                try await Task.sleep(for: .seconds(max(0, expiry.timeIntervalSinceNow)))
+                guard expected == lifecycle, attempt == reload else { return }
+                review = nil; consent = false; loaded = nil; message = "This recording review expired. Check recovery again before continuing."
+            }
+        } catch is CancellationError { }
+        catch { guard expected == lifecycle, attempt == reload else { return }; message = error.localizedDescription }
+    }
+    @MainActor private func confirmRecorded(_ receipt: TeamAudioRestoreRecoveryReceipt) async {
+        guard current, !busy, let opening, let session else { return }
+        let expected = lifecycle; busy = true; submitting = true
+        defer { submitting = false; if expected == lifecycle { busy = false } }
+        do { try await store.confirmRecordedAudioRestore(receipt, workspace: opening, session: session); guard expected == lifecycle else { return }; dismiss() }
+        catch { guard expected == lifecycle else { return }; message = error.localizedDescription }
+    }
+    @MainActor private func restoreTaskOnly() async {
+        guard canRestoreTaskOnly, let review, let opening, let session else { return }
+        let expected = lifecycle; busy = true; submitting = true
+        defer { submitting = false; if expected == lifecycle { busy = false } }
+        do {
+            let closed = try await store.backend.teamAudioRestoreRecovery(command, action: .close)
+            guard expected == lifecycle, phase == .active, store.audioRestoreRecoveryIsCurrent(command, workspace: opening, session: session) else { throw CancellationError() }
+            if closed.state == .recorded {
+                receipt = closed; self.review = nil; consent = false
+                message = "The original Undo finished while you were reviewing. Confirm its saved result instead."; return
+            }
+            try store.replaceExpiredAudioRestore(closed, review: review, workspace: opening, session: session)
+            dismiss()
+        } catch is CancellationError { }
+        catch { guard expected == lifecycle else { return }; message = error.localizedDescription; consent = false }
+    }
+}
