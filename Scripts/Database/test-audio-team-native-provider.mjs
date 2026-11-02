@@ -22,7 +22,7 @@ import { homedir } from "node:os";
 const exec = promisify(execFile);
 const [platform, output] = process.argv.slice(2);
 assert(
-  ["service", "ios", "ipad"].includes(platform) &&
+  ["service", "ios", "ipad", "ios-expired"].includes(platform) &&
     output?.startsWith("/tmp/taskfold-") && output.endsWith(".json"),
 );
 const account = "ec240000-0000-4000-8000-000000000001",
@@ -31,7 +31,8 @@ const account = "ec240000-0000-4000-8000-000000000001",
   project = "ec240000-0000-4000-8000-000000000003",
   team = "ec240000-0000-4000-8000-000000000004",
   generation = "ec240000-0000-4000-8000-000000000071";
-const device = platform === "ios"
+const expiredRecovery = platform === "ios-expired";
+const device = platform.startsWith("ios")
     ? "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
     : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
   bundle = "com.dbakp.taskfold.workflowteststeameditbridge",
@@ -149,7 +150,7 @@ try {
       "update taskfold_private.audio_comment_config set restoration_enabled=true",
     );
   }
-  http = await createAudioTeamNativeHttp(pg, storage, users.actor);
+  http = await createAudioTeamNativeHttp(pg, storage, users.actor, { expiredRecovery });
   if (platform === "service") {
     http.faults.losePublicationReply = false;
     const serviceCall = (action, body) =>
@@ -317,7 +318,7 @@ try {
     await writeFile(configPath, configText, { mode: 0o600, flag: "wx" });
     const result = output.replace(/\.json$/, ".xcresult"),
       log = output.replace(/\.json$/, ".log"),
-      test = "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
+      test = expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
     const command = [
       "-project",
       "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
@@ -395,18 +396,18 @@ try {
       restoredGeneration !== generation,
     );
     check(
-      "native actual deletion and Undo reached SQL once each",
+      expiredRecovery ? "native deletion and task-only cold replay reach SQL" : "native actual deletion and Undo reached SQL once each",
       ["delete", "restore"].map((a) =>
         http.requests.filter((x) => x.action === "task_" + a).length
       ),
-      [1, 1],
+      expiredRecovery ? [1, 2] : [1, 1],
     );
     check(
-      "native lifecycle retains frozen recording acknowledgement",
+      expiredRecovery ? "native lifecycle carries separately explicit retention and omission policies" : "native lifecycle retains frozen recording acknowledgement",
       http.requests.filter((x) =>
         x.action === "task_delete" || x.action === "task_restore"
       ).every((x) =>
-        x.ack?.policy === "published_restore_v1" && x.ack?.count === 1 &&
+        x.ack?.policy === (expiredRecovery && x.action === "task_restore" ? "expired_recordings_omitted_v1" : "published_restore_v1") && x.ack?.count === 1 &&
         x.ack?.retention_days === 30 && Object.keys(x.ack).length === 3
       ),
     );
@@ -451,13 +452,30 @@ try {
         x.action === "resolve" && x.responseStatus === 200
       ),
     );
-    check(
+    if (expiredRecovery) {
+      const closed = http.requests.filter((x) => x.action === "restore_recovery_close"), restored = http.requests.filter((x) => x.action === "task_restore");
+      check("Cancel and cold return do not close original Undo", closed.length, 1);
+      check("actual original Undo was closed before task-only restoration", closed[0].state, "closed");
+      check("expired retention uses real cleanup", http.faults.expiryProof.actualRetentionExpired && http.faults.expiryProof.actualFencedCleanup.purged === 1);
+      check("committed task-only reply is lost exactly once", restored.map((x) => x.deliveredStatus), [503, 200]);
+      check("cold task-only retry keeps frozen request values", restored[0].command, restored[1].command);
+      check("task-only choice uses a different request from closed Undo", restored[0].requestID !== closed[0].requestID);
+      check("original retained-recording retry is refused after expiry", http.requests.some((x) => x.action === "task_restore_refused" && x.code === "PT409" && x.ack?.policy === "published_restore_v1"));
+      check("task-only recovery never downloads or resends expired media", http.requests.filter((x) => ["download", "remove"].includes(x.action)), []);
+      const closureCount = await pg.scalar("select count(*)::int from taskfold_private.audio_restore_closures");
+      check("one durable terminal closure", closureCount, 1);
+      const originalOps = await pg.scalar("select count(*)::int from taskfold_private.team_task_edits where operation='restore'");
+      check("one actual task restoration despite lost reply", originalOps, 1);
+      const list = await http.audio.call("list", { task_id: task, task_generation: restoredGeneration, project_id: project });
+      check("task-only restored list is authorized", list.status, 200);
+      check("restored task has no expired published recordings", (await list.json()).items, []);
+    } else check(
       "native playback downloaded through gateway",
       http.requests.some((x) =>
         x.action === "download" && x.responseStatus === 200
       ),
     );
-    check(
+    if (!expiredRecovery) check(
       "native removal reached gateway",
       http.requests.some((x) =>
         x.action === "remove" && x.responseStatus === 200
@@ -474,7 +492,7 @@ try {
     publication.author_id,
     account,
   );
-  check("recording retired by actual removal", publication.state, "retired");
+  check("recording retired by actual removal or expired cleanup", publication.state, expiredRecovery ? "purged" : "retired");
   check("provider received one media upload", http.audio.state.uploads, 1);
   check(
     "task content remains exact apart from certified generation renewal",
@@ -524,6 +542,7 @@ try {
     report.workspace = http.workspace.counts;
     report.provider = http.audio.state.providerResults;
     report.gatewayErrors = http.audio.state.errors;
+    if (expiredRecovery) report.expiryFaults = http.faults;
   }
   report.checkCount = Object.keys(report.checks).length;
   const errors = [];

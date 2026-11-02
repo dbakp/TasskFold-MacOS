@@ -523,3 +523,15 @@ extension TeamTaskLifecycleTests {
         catch { XCTAssertFalse(error.localizedDescription.contains("private provider detail")); XCTAssertTrue(error.localizedDescription.contains("original request are kept")) }
     }
 }
+
+extension TeamTaskLifecycleTests {
+    func testRetainedRecordingReviewExpiresAtActualRetentionBoundary() throws {
+        let now = Date(), (change, scope, source) = try audioReview("restore", now: Date())
+        var raw = source; raw["retain_until"] = .string(ISO8601DateFormatter().string(from: now.addingTimeInterval(10)))
+        let review = try TeamAudioLifecycleReview(raw, scope: scope, now: now)
+        XCTAssertNoThrow(try review.applying(to: change, now: now))
+        XCTAssertGreaterThan(review.expiresAt, now.addingTimeInterval(11))
+        XCTAssertThrowsError(try review.acknowledgement(now: now.addingTimeInterval(11)))
+        XCTAssertThrowsError(try review.applying(to: change, now: now.addingTimeInterval(11)))
+    }
+}

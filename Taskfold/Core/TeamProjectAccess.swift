@@ -391,6 +391,9 @@ struct TeamAudioLifecycleReview: Equatable, Sendable {
         guard enabled, expiresAt > now, !cleanupPending else { throw Self.unavailable }
         guard count > 0 else { return nil }
         guard let policy else { throw Self.unavailable }
+        if scope.phase == "restore", policy == .retain {
+            guard let retainUntil, retainUntil > now else { throw Self.unavailable }
+        }
         return try TeamAudioRestorationAcknowledgement(policy: policy, count: count)
     }
     func applying(to change: Mutation, now: Date = Date()) throws -> Mutation {

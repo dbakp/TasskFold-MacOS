@@ -718,7 +718,7 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
                     }.disabled(!ready).accessibilityIdentifier("audioTeamNativeDeletion")
                     if let deletionError { Text(deletionError).accessibilityIdentifier("audioTeamNativeDeletionError") }
                 }
-            }.navigationTitle("Shared recording test")
+            }.accessibilityIdentifier("audioTeamNativeForm").navigationTitle("Shared recording test")
         }
         .task {
             guard AudioTeamNativeProvider.enabled else { return }
