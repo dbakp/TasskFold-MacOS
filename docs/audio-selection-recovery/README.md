@@ -42,3 +42,5 @@ bash Scripts/test_core.sh --jobs 2 --filter 'TeamTaskLifecycleTests|TeamTaskType
 ```
 
 To regenerate that repository's wire fixture during the service run, additionally set `TASKFOLD_AUDIO_SELECTION_RECOVERY_WIRE_OUT=TaskfoldTests/Fixtures/audio-selection-recovery-v1.json`. Heavy runs are sequential and enforce the default 20 GiB floor; no Simulator, native app instance, new device, Docker reset or real task is involved.
+
+Final Mac port audit removed a duplicate sanitized error handler and repeated route-list entries introduced while transferring the shared implementation. The independently owned transport now has one handler and one route membership at each dispatch site. All 200 focused Mac Core tests pass again against this final source; the service migration and its 186-check proof are unchanged.
