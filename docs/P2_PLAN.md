@@ -7369,6 +7369,17 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Add separately disabled team publication with current actor/session, task generation, team/project state and role checks; preserve personal publication semantics and the existing service-only Storage boundary.
 - [x] Add current-author/current-manager retirement without creator shortcuts, preserving sender-history reconciliation after access loss and leaving byte deletion/quota release to fenced cleanup.
 - [x] Serialize admission with explicit revocation, insertion of a viewer grant over implicit editor access, and team/project access management. Each repo passes 66 local SQL/gateway checks and 51 personal-publication recovery regressions, with no added advisor findings and all owned fixtures removed.
-- [ ] Implement reviewed media custody for moves/Undo/generation restoration, native team controls/Store recovery and genuine provider/Auth/full-schema acceptance. Existing live-media move/replacement guards stay closed; no silent retargeting.
+- [x] Implement locally verified same-generation project moves and Undo (see the following milestone).
+- [ ] Finish generation restoration, native team controls/Store recovery and genuine provider/Auth/full-schema acceptance; other live-media transitions stay guarded.
 
 [Evidence and exact remaining scope](team-audio-authority/README.md). No app source/build, hosted deployment, scheduler or normal-use gate change. The iPad dialog/cache recheck remains separately open. Curated bar totals remain unchanged.
+
+
+### 2 November 2026 · Reviewed recording project moves and Undo
+
+- [x] Add private current-audience custody for new team publications, retaining immutable original sender receipts and Storage paths. Require an inventory-bound acknowledgement for reviewed same-team moves with unchanged task generation.
+- [x] Verify current-project reader access, atomic recording/companion-file moves and Undo, lost-reply replay, and withholding bytes when a move happens during download. Preserve old move hashes and pre-upgrade Undo for tasks without recordings.
+- [x] Refuse pending/unbound/busy/changed media, generation replacement and unreviewed whole-project realm changes. Retain custody after provider metadata loss so current managers can retire safely.
+- [ ] Accept native recording-bearing move interactions/accessibility, implement native team publishing/removal and Store recovery, then reviewed generation restoration and whole-project transfers. Genuine provider/Auth/full-schema and wider recovery acceptance remain open.
+
+[Evidence and exact remaining scope](reviewed-audio-custody/README.md). Local verification and current build results are recorded independently per repository. No hosted deployment, scheduler or ordinary-use gate change. The iPad dialog/cache recheck remains separately open. The dashboard adds one explicit completed substep; its curated checkpoint bars do not change.

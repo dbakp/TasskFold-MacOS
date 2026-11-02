@@ -74,6 +74,11 @@ struct TeamTaskMoveView: View {
                                     Text("Stored files follow the task’s project access. Previously shared links and downloaded copies are not revoked.")
                                         .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("teamMoveFileCustody")
                                 }
+                                if let count = review.taskBoundAudioCount, count > 0 {
+                                    LabeledContent("Recordings", value: String(count)).accessibilityIdentifier("teamMoveAudioCount")
+                                    Text("People with access to the destination can play these recordings. Previously downloaded copies are not revoked.")
+                                        .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("teamMoveAudioCustody")
+                                }
                                 if review.keepsSubtaskUndoPrivate, review.privateSubtaskUndoCount > 0 {
                                     Text("Your saved copies of deleted subtasks stay private in their original projects.")
                                         .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("teamMovePrivateSubtaskUndo")

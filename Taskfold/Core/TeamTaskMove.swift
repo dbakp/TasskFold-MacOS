@@ -150,6 +150,7 @@ struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomD
     let clearedAssignments: Int, restoredAssignments: Int, discussionCount: Int
     let keepsSubtaskUndoPrivate: Bool, privateSubtaskUndoCount: Int
     let taskBoundFileCount: Int?
+    let taskBoundAudioCount: Int?
     var description: String { "Private task move review" }; var debugDescription: String { description }
     init(_ raw: [String: JSON], scope: TeamTaskMoveScope) throws {
         guard raw["move_review_protocol"] == .number(1), raw["account"] == .string(scope.account),
@@ -173,6 +174,11 @@ struct TeamTaskMoveReview: Equatable, Sendable, CustomStringConvertible, CustomD
         else {
             guard raw["file_custody_policy"] == .string("task_bound_v1") else { throw TeamTaskMoveCommand.invalid }
             taskBoundFileCount = try Self.count(raw["file_custody_count"], limit: 256)
+        }
+        if raw["audio_custody_policy"] == nil, raw["audio_custody_count"] == nil { taskBoundAudioCount = nil }
+        else {
+            guard raw["audio_custody_policy"] == .string("published_same_generation_v1") else { throw TeamTaskMoveCommand.invalid }
+            taskBoundAudioCount = try Self.count(raw["audio_custody_count"], limit: 20)
         }
         if raw["subtask_undo_policy"] == nil, raw["subtask_undo_count"] == nil {
             keepsSubtaskUndoPrivate = false; privateSubtaskUndoCount = 0
@@ -201,11 +207,19 @@ struct TeamTaskMoveCommand: ReviewedTeamCommand, CustomStringConvertible, Custom
         guard review.expires > now, review.expires <= now.addingTimeInterval(31 * 60) else { throw Self.invalid }
         var body = review.scope.body
         body["request_id"] = .string(requestID.uuidString.lowercased()); body["review_token"] = .string(review.token); body["expires_at"] = .string(review.expiresText)
+        if let count = review.taskBoundAudioCount, count > 0 {
+            body["audio_custody_ack"] = .object(["policy": .string("published_same_generation_v1"), "count": .number(Double(count))])
+        }
         try self.init(account: review.scope.account, origin: review.scope.origin, body: body)
     }
     init(account: String, origin: String, body: [String: JSON]) throws {
         scope = try TeamTaskMoveScope(account: account, origin: origin, team: TeamOrganizationValue.id(body["team_id"]), task: TeamOrganizationValue.id(body["task_id"]), generation: TeamOrganizationValue.id(body["task_generation"]), source: TeamOrganizationValue.id(body["source_project_id"]), destination: TeamOrganizationValue.id(body["destination_project_id"]), undoes: body["undoes"].map { try TeamOrganizationValue.id($0) })
-        guard Set(body.keys) == Set(scope.body.keys).union(["request_id", "review_token", "expires_at"]),
+        let extra: Set<String> = body["audio_custody_ack"] == nil ? [] : ["audio_custody_ack"]
+        if let value = body["audio_custody_ack"] {
+            guard case .object(let fields) = value, Set(fields.keys) == ["policy", "count"], fields["policy"] == .string("published_same_generation_v1"),
+                  case .number(let count)? = fields["count"], count.isFinite, count >= 1, count <= 20, count.rounded(.down) == count else { throw Self.invalid }
+        }
+        guard Set(body.keys) == Set(scope.body.keys).union(["request_id", "review_token", "expires_at"]).union(extra),
               case .string(let token)? = body["review_token"], TeamTaskMoveReview.validToken(token),
               case .string(let expires)? = body["expires_at"], TeamTaskMoveReview.validDate(expires),
               try TaskfoldJSONEncoder().encode(body).count <= 16_384 else { throw Self.invalid }

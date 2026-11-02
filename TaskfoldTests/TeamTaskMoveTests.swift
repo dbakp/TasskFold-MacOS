@@ -685,3 +685,71 @@ extension TeamTaskMoveTests {
         XCTAssertNil(command.body["task"])
     }
 }
+
+extension TeamTaskMoveTests {
+    private func taskAudioReview(_ policy: JSON?, _ count: JSON?) throws -> TeamTaskMoveReview {
+        let (command, _, _) = try fixture()
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-task-moves-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let root = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        var raw = root["samples"]!.list[0].object["review"]!.object
+        raw["audio_custody_policy"] = policy; raw["audio_custody_count"] = count
+        return try TeamTaskMoveReview(raw, scope: command.scope)
+    }
+    func testAudioReviewKeepsOlderAndEmptyMovesCompatible() throws {
+        for review in [try taskAudioReview(nil, nil), try taskAudioReview(.string("published_same_generation_v1"), .number(0))] {
+            let command = try TeamTaskMoveCommand(review: review, now: review.expires.addingTimeInterval(-1))
+            XCTAssertNil(command.body["audio_custody_ack"])
+        }
+    }
+    func testAudioReviewCreatesDurableBoundedAcknowledgement() throws {
+        for count in [1, 20] {
+            let review = try taskAudioReview(.string("published_same_generation_v1"), .number(Double(count)))
+            XCTAssertEqual(review.taskBoundAudioCount, count)
+            let command = try TeamTaskMoveCommand(review: review, now: review.expires.addingTimeInterval(-1))
+            XCTAssertEqual(command.body["audio_custody_ack"], .object(["policy": .string("published_same_generation_v1"), "count": .number(Double(count))]))
+            let data = try TaskfoldJSONEncoder().encode(command)
+            let restored = try TaskfoldJSONDecoder().decode(TeamTaskMoveCommand.self, from: data)
+            XCTAssertEqual(restored.body, command.body)
+            XCTAssertFalse(String(describing: restored).contains(review.task.title))
+        }
+    }
+    func testAudioReviewRejectsPartialUnknownAndMalformedPolicy() throws {
+        let pairs: [(JSON?, JSON?)] = [(nil, .number(1)), (.string("published_same_generation_v1"), nil), (.string("move_all"), .number(1)), (.null, .number(0))]
+        for pair in pairs {
+            XCTAssertThrowsError(try taskAudioReview(pair.0, pair.1))
+        }
+        for value in [JSON.number(-1), .number(21), .number(1.5), .string("1"), .null, .number(.infinity), .number(.nan)] {
+            XCTAssertThrowsError(try taskAudioReview(.string("published_same_generation_v1"), value))
+        }
+    }
+    func testStoredAudioAcknowledgementRejectsAmbiguousOrForgedFields() throws {
+        let (original, _, _) = try fixture()
+        let bad: [JSON] = [.null, .string("reviewed"), .object(["policy": .string("move_all"), "count": .number(1)]), .object(["policy": .string("published_same_generation_v1"), "count": .number(0)]), .object(["policy": .string("published_same_generation_v1"), "count": .number(21)]), .object(["policy": .string("published_same_generation_v1"), "count": .number(1), "asset": .string("hidden")])]
+        for value in bad {
+            var body = original.body; body["audio_custody_ack"] = value
+            XCTAssertThrowsError(try TeamTaskMoveCommand(account: original.account, origin: original.origin, body: body))
+        }
+    }
+    func testActualSQLAudioReviewReceiptAndLiveTargetStayDistinct() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-task-audio-custody-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let sample = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let raw = sample["review"]!.object
+        let scope = try TeamTaskMoveScope(account: raw["account"]!.text, origin: sample["origin"]!.text,
+            team: raw["team_id"]!.text, task: raw["task_id"]!.text, generation: raw["task_generation"]!.text,
+            source: raw["source_project_id"]!.text, destination: raw["destination_project_id"]!.text)
+        let review = try TeamTaskMoveReview(raw, scope: scope)
+        let body = sample["command"]!.object
+        let command = try TeamTaskMoveCommand(review: review, requestID: XCTUnwrap(UUID(uuidString: body["request_id"]!.text)), now: review.expires.addingTimeInterval(-1))
+        XCTAssertEqual(command.body, body)
+        XCTAssertEqual(try command.confirmed(sample["reply"]!.object).task?.string("project_id"), scope.destination)
+        let publication = try AudioCommentPublication(record: Record(sample["intent"]!.object))
+        _ = try AudioCommentPublishedReceipt(record: Record(sample["senderReceipt"]!.object), publication: publication)
+        let live = Record(sample["liveRead"]!.object)
+        let reader = try XCTUnwrap(UUID(uuidString: live.string("account")))
+        let remote = try AudioCommentRemote(record: live, account: reader, target: AudioCommentTarget(record: Record(live["target"].object)))
+        XCTAssertEqual(remote.publication.operation, publication.operation)
+        XCTAssertEqual(remote.publication.descriptor, publication.descriptor)
+        XCTAssertNotEqual(remote.publication.target, publication.target)
+        XCTAssertThrowsError(try AudioCommentPublishedReceipt(record: live, publication: publication), "Reader metadata cannot replace the immutable sender receipt")
+    }
+}

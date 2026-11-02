@@ -1,0 +1,73 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "3ef643f2ce8262a213d79fa831057b5ca81a334f",
+  "checks": {
+    "localSQLAndGateway": 63,
+    "core": 38,
+    "fileCustodyRegression": 59,
+    "addedAdvisorFindings": 0
+  },
+  "sourceSHA256": {
+    "supabase/migrations/20261102150524_reviewed_audio_project_custody.sql": "e1d3fa7a489556b7693a98792314a88caeced8923d0e0b9e05ba3168f0be3eda",
+    "Scripts/Database/audio-project-custody-schema.mjs": "47237d46b444c5dadbc6d6e915fcdcafa4a6d4ea6d9f391134ad161ea62a9ca0",
+    "Scripts/Database/test-audio-project-custody.mjs": "b51176c622d40f828da33a47dc2f9912d43cc1115941dc22bc22156b8212d259",
+    "Scripts/Database/test-task-file-custody.mjs": "ff6a1b6ef52ba24833759091cfa550eb55f6c451b1f8849acb00d2d5c8081759",
+    "Taskfold/Core/TeamTaskMove.swift": "29a1ed08a745b84eb46602d257d2a657c616f3ad1881d1c6c9284d92c709c7af",
+    "Taskfold/Views/TeamTaskMoveView.swift": "07749d18e433278024851c7229aa8babda181f53a70e9e0f61d6853f81670d2d",
+    "TaskfoldTests/TeamTaskMoveTests.swift": "9093938fc41d0021938e6a0c7bcd9bf5b20a407213f84fb4f19fcfaf578d9a6b",
+    "TaskfoldTests/Fixtures/team-task-audio-custody-v1.json": "759fab9836bada6f9736a13903857676f68d5c717b03f1dd4230a691032f09c8",
+    "supabase/functions/audio-comments/handler.ts": "38f731c8335a4255e18dc9dc3d721a1ce13dfa66067ecbbad4097383933a5556",
+    "supabase/functions/audio-comments/wire.ts": "3f03fc0183263c9a57ae5a5b19081c2d4e45e24352a911425615e36b8c13e09c"
+  },
+  "fileRegressionInput": {
+    "parts": [
+      "20261028134424_audio_comment_publication_ledger.sql",
+      "20261028145414_audio_comment_gateway_boundary.sql",
+      "20261028151901_audio_comment_cleanup_fencing.sql",
+      "20261028153218_audio_comment_upload_recovery.sql",
+      "20261028185429_audio_comment_keyset_pages.sql",
+      "20261028191118_audio_comment_shared_reads.sql",
+      "20261028212632_audio_owner_publication_status.sql",
+      "20261102143104_team_audio_write_authority.sql",
+      "20261102150524_reviewed_audio_project_custody.sql"
+    ],
+    "prefix": "Only missing minimal-fixture bucket metadata/RLS and object unique identity",
+    "sha256": "5fa8dcb551031b11d5ac45f428b6f82ed611d0eb6c3c6ad774484a86849e7602",
+    "reportField": "taskFileUploadSHA256 is the historical injection hook"
+  },
+  "reportsSHA256": {
+    "service-report.json": "8eeb1c335e774096ac8df94adfc33a32a90dadb087829949caf3f51adaa61e07",
+    "file-regression-report.json": "f72292ba707ff804ee32c3bb4288f884c4c96eaceb0377734542def4586c185e"
+  },
+  "compiledHostSource": {
+    "Taskfold/Core/TeamTaskMove.swift": {
+      "repositorySHA256": "29a1ed08a745b84eb46602d257d2a657c616f3ad1881d1c6c9284d92c709c7af",
+      "isolatedHostSHA256": "29a1ed08a745b84eb46602d257d2a657c616f3ad1881d1c6c9284d92c709c7af",
+      "matchesAfterNamespaceIsolation": true
+    },
+    "Taskfold/Views/TeamTaskMoveView.swift": {
+      "repositorySHA256": "07749d18e433278024851c7229aa8babda181f53a70e9e0f61d6853f81670d2d",
+      "isolatedHostSHA256": "07749d18e433278024851c7229aa8babda181f53a70e9e0f61d6853f81670d2d",
+      "matchesAfterNamespaceIsolation": true
+    }
+  },
+  "currentProducts": {
+    "Taskfold.app": {
+      "executableSHA256": "22c86b60a4b478b6a597ea58cf7ab275fff5384f1219a35e5fa557990c1e5e03",
+      "strictSignatureVerified": true,
+      "debugCodeSHA256": "0e6fe4ab4fa8dde2008cb44f39f44021f497d5a72daf6a8b79071a26bbda53b1"
+    },
+    "TaskfoldUITests-Runner.app": {
+      "executableSHA256": "6dbbff2e71106e7153b5b702c4b371f0cbfdf70b9025e8fe3a3cea08922e4e16",
+      "strictSignatureVerified": true
+    }
+  },
+  "allOwnedFixturesRemoved": true,
+  "nativeInteractionAcceptance": false,
+  "genuineAuthOrStorage": false,
+  "fullSchemaMigrationAcceptance": false,
+  "generationRestorationOrWholeProjectTransfer": false,
+  "deployed": false,
+  "normalUseEnabled": false
+}

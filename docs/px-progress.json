@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Team audio publishing and removal authority",
-  "latest": "The local service candidate now admits current team editors and author/manager removal, with access-change and management races checked. Each repo passes 66 authority checks and 51 personal-recording recovery regressions. Native team controls, reviewed media transfers and real-provider acceptance remain open. No deployment or ordinary-use enablement.",
+  "focus": "P2 · Reviewed audio project moves and Undo",
+  "latest": "Reviewed same-team, same-generation recording moves and Undo now preserve immutable sender receipts while current project access follows the task. Each repo passes 63 local SQL/gateway checks and 38 focused Core tests. Native controls, generation restoration and real-provider acceptance remain open; no deployment or ordinary-use enablement.",
   "next": [
-    "Finish reviewed audio custody for task moves/Undo and generation restoration, then native team publishing/removal controls and Store recovery. Real provider delivery, cleanup/quota release and genuine sign-in/full-schema acceptance remain required before exposure.",
+    "Implement native team publishing/removal controls and Store recovery, accept recording-bearing move reviews, then add separately reviewed generation restoration and whole-project transfers. Real provider delivery, cleanup/quota and genuine sign-in/full-schema acceptance remain required before exposure.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,15 +655,19 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Team publishing and author/manager removal now have scoped local service proof. Native controls, reviewed media custody and real-provider integration still need implementation/acceptance; ordinary-use entry points stay disabled.",
+              "detail": "Current-role publishing/removal and reviewed same-generation project moves/Undo have local service proof, preserving original receipts. Native team controls, generation restoration and real-provider integration still need implementation/acceptance; ordinary-use entry points stay disabled.",
               "steps": [
                 {
                   "state": "done",
                   "title": "Current-role publishing/removal: local service verified"
                 },
                 {
+                  "state": "done",
+                  "title": "Reviewed same-generation project move/Undo: local service verified"
+                },
+                {
                   "state": "build",
-                  "title": "Reviewed media transfers and native controls"
+                  "title": "Native controls and generation restoration"
                 },
                 {
                   "state": "verify",
@@ -791,7 +795,9 @@
             "task-file-workspace-sync/README.md",
             "task-file-workspace-sync/oracle-audit.json",
             "team-audio-authority/README.md",
-            "team-audio-authority/verification.json"
+            "team-audio-authority/verification.json",
+            "reviewed-audio-custody/README.md",
+            "reviewed-audio-custody/verification.json"
           ],
           "focus": true
         },
@@ -889,13 +895,15 @@
     "task-file-workspace-sync/oracle-audit.json",
     "task-file-workspace-sync/verification.json",
     "team-audio-authority/README.md",
-    "team-audio-authority/verification.json"
+    "team-audio-authority/verification.json",
+    "reviewed-audio-custody/README.md",
+    "reviewed-audio-custody/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "ba49ec2abb6ba0162971313bf845f3d2d5b2a6963bda04483bf8fbe555821607",
+    "P2_PLAN.md": "f5f50294f1c62cdac5946d55622ade3a5518fb24cf7e43c95531d3485ade8426",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -998,6 +1006,8 @@
     "preserving-json/verification.json": "32245580dd9fdd9cc710c036398ed1c8a26e3ba2e156fb8bf721808db242f3b1",
     "removal-coordination/README.md": "15f6a0a9996464c0ba2ba0ad70a8c409adb7aa5e49530913edeb513bd7381991",
     "removal-coordination/verification.json": "23bdbadae3aa8effbe7e92fc91394f1ecd00882a6db1e58cb2f321868b0676a2",
+    "reviewed-audio-custody/README.md": "2240c134bc24eae87ed5b9e0b4fa489b0d0019b822885eda1d94d074641adae4",
+    "reviewed-audio-custody/verification.json": "c11f1dc1ceae90b6581295116c4a86139576460e6c5c1ec097294328b2de6707",
     "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",
     "reviewed-child-adoption-native/verification.json": "0b1d67d06dd2b65172d4b8ebb4c3e3677df460d7b1a0f26a9b907a987b7ab5fd",
     "reviewed-child-adoption/verification.json": "488443346a14f4df5aa1cc16cdb53aadbf5f3334d4a1940b99088ad3ccef462c",

@@ -1,0 +1,16 @@
+{
+  "acceptedReports": "service-report.json (Mac v8)",
+  "qualification": "Development retries are not additional product checkpoints or distinct accepted cases.",
+  "correctedFixtureIssues": [
+    "Scalar no-row lookup and JWT SET parsing in early SQL fixture.",
+    "Captured live-reader receipt must be parsed for its actual destination reader; it cannot stand in for original owner history.",
+    "Mac dependency loader names its independently owned migration timestamps."
+  ],
+  "preservedAssertions": [
+    "No silent legacy binding",
+    "Immutable sender receipts",
+    "Exact live reader/account boundary",
+    "Empty-audio hash compatibility and actual pre-migration Undo"
+  ],
+  "newNativeRuntimeAccepted": false
+}
