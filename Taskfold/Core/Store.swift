@@ -4950,6 +4950,10 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
     override func startLoading() {
         let request = self.request
         Task { @MainActor in
+            if TaskFileViewerFixture.enabled, request.url?.absoluteString == "https://synthetic.example/functions/v1/task-files?action=download", request.httpMethod == "POST" {
+                client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: ["Content-Type": "text/plain"])!, cacheStoragePolicy: .notAllowed)
+                client?.urlProtocol(self, didLoad: Data("hello".utf8)); client?.urlProtocolDidFinishLoading(self); return
+            }
             if ChildFieldNativeIdentity.enabled {
                 do {
                     let (data, lose) = try await ChildFieldNativePeer.response(request)
@@ -5074,6 +5078,10 @@ extension Store {
                 row["scheduled_at"] = .string(ISO8601DateFormatter().string(from: calendar.date(from: DateComponents(year: 2026, month: 10, day: 25, hour: 9))!))
                 row["subtasks"] = SubtaskTree.changing(row["subtasks"], id: TeamEditorNativeFixture.childID, fields: ["completed": .bool(true)])
             }
+            if TaskFileViewerFixture.enabled {
+                row["task_generation"] = .string(TaskFileViewerFixture.generation)
+                row["attachments"] = .array([.object(TaskFileViewerFixture.attachment.fields)])
+            }
             tasks[0] = row
             if ProcessInfo.processInfo.arguments.contains("--team-batch-testing") {
                 var next = Record.task(user: row.string("user_id"), project: TeamEditorNativeFixture.projectID)
@@ -5142,7 +5150,7 @@ extension Store {
                 let requests = backupVault.directory.appendingPathComponent("Team template requests", isDirectory: true)
                 if FileManager.default.fileExists(atPath: requests.path) { try FileManager.default.removeItem(at: requests) }
             }
-            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(), previous: nil, pending: [], tasks: tasks)
+            snapshot.teamWorkspace = try TeamWorkspaceCache(boundary: TeamEditorNativeFixture.boundary(viewer: TaskFileViewerFixture.enabled), previous: nil, pending: [], tasks: tasks)
             try persist()
             try seedTeamCompletionRecoveryFixture()
         } catch { self.error = error.localizedDescription }

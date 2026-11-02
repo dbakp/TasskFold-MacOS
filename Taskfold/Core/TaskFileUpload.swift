@@ -154,3 +154,21 @@ typealias TaskFileUploadVault = ReviewedTeamCommandVault<TaskFileUploadJournal>
         catch { if available { message = "Recovery changed in another window. Reopen it before clearing." } }
     }
 }
+
+/// Read authority comes from the current verified workspace, never a creator
+/// UUID, historical custody, editor admission or an upload-recovery receipt.
+enum TaskFileReadAdmission {
+    static func target(account: String, origin: String, task: Record, projects: [Record], cache: TeamWorkspaceCache?, teamsEnabled: Bool) throws -> Record {
+        guard teamsEnabled, TeamProjectValue.id(account), TeamProjectValue.id(task.id), TeamProjectValue.id(task.string("task_generation")),
+              let cache, cache.boundary.belongs(account: account, origin: origin),
+              cache.boundary.raw["native_team_reads_enabled"] == .bool(true),
+              projects.filter({ $0.id == task.string("project_id") }).count == 1,
+              let permission = cache.boundary.projects[task.string("project_id")], let team = permission.team,
+              cache.knownTeams[permission.id] == team, cache.knownTasks.contains(task.id),
+              ["manager", "editor", "viewer"].contains(permission.role) else { throw TaskFileUploadJournal.invalid }
+        return Record(["team_id": .string(team), "project_id": .string(permission.id), "task_id": .string(task.id), "task_generation": task["task_generation"]])
+    }
+    static func matches(_ target: Record, source: Record) -> Bool {
+        source.id == target.string("task_id") && source["task_generation"] == target["task_generation"] && source["project_id"] == target["project_id"]
+    }
+}

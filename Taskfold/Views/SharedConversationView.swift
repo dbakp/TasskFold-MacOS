@@ -28,6 +28,7 @@ struct SharedConversationView: View {
     @Environment(\.dismiss) private var dismiss
     let request: ConversationRequest
     var openTask: ((Record) -> Void)? = nil
+    @State private var taskFiles: TaskFileUploadRequest?
     @State private var composer: ConversationComposerRequest?
     @State private var removing: SharedComment?
     @State private var loading = false
@@ -48,6 +49,9 @@ struct SharedConversationView: View {
                         if let task {
                             Text(task.title).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("conversationTaskTitle")
                             Text(store.record("projects", id: request.project)?.name ?? "Project").font(.subheadline).foregroundStyle(.secondary)
+                            if let files = store.fileUploadReadRequest(source: task, workspace: request.workspace), !store.fileUploadAttachments(files).isEmpty {
+                                Button("Shared files…", systemImage: "paperclip") { taskFiles = files }.accessibilityIdentifier("conversationSharedFiles")
+                            }
                             ConversationStatus()
                             if !writable { Text("This conversation is read-only right now. You can keep unsent text as a private draft.").font(.footnote).foregroundStyle(.secondary) }
                             let comments = store.conversationComments(task)
@@ -85,6 +89,7 @@ struct SharedConversationView: View {
                 #endif
                 if let openTask, task != nil { ToolbarItem { Button { guard active, let current=self.task else { return }; dismiss(); openTask(current) } label: { Image(systemName: "arrow.up.forward.app") }.accessibilityLabel("Open task").accessibilityIdentifier("conversationOpenTask") } }
             }
+            .sheet(item: $taskFiles) { TaskFileUploadView(request: $0) }
             .sheet(item: $composer) { ConversationComposer(request: $0) }
             .confirmationDialog("Remove this comment for everyone?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }), titleVisibility: .visible) {
                 Button("Remove comment", role: .destructive) {

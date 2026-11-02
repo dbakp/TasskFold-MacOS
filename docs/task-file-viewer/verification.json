@@ -1,0 +1,42 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "core": {
+    "tests": 66,
+    "failures": 0,
+    "newReadAdmissionTests": 5,
+    "logSHA256": "f45e1c09d1aceaecc3dd82ae239833d007fcdc4e4dabda0e5b02a2a76ce46550"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/TaskFileUpload.swift": "7a87804ca69f21c7d13b050b4374c126158fdc6b68169f520bf066137e1f5f92",
+    "Taskfold/Core/Store.swift": "5d0923164077344454e70e5763cfd0463afdc873b1f42d89de4e5c3bedf3c47e",
+    "Taskfold/Views/TaskFileUploadView.swift": "a05bc6bc48480c480df3380b45691ca2036d9c82c4612fa55e6d6b2e28f170c4",
+    "Taskfold/Views/SharedConversationView.swift": "f2254beeef4c1bba6747b628b038cf3c1032a67f3e30322cab1fbb7b89b9d241",
+    "Taskfold/Views/TaskInspector.swift": "5600f9f5b4fdc6b9472fd4ab5634993286bc4261a13ca4a854671885f04d25bd",
+    "TaskfoldTests/TaskFileUploadTests.swift": "89ad72971ba2828a5a116fbe99ba903948a73d7becf1f9ed9db7ea91ee4b0d8d",
+    "TaskfoldUITests/AudioCommentUITests.swift": "5d5806113bae5da2ec65615f23c6a31c978222eb817302ae1c61af03a4d84e86"
+  },
+  "deployed": false,
+  "normalUseEnabled": false,
+  "providerBytesTested": false,
+  "nativeAcceptance": {
+    "automatedRunner": "timed out enabling automation before app launch",
+    "manualFallback": "Mac locked; no direct UI observation accepted",
+    "accepted": false,
+    "syntheticAppClosed": true
+  },
+  "build": {
+    "phase": "file-viewer-final",
+    "appAndRunnerSignaturesVerified": true,
+    "compiledSourcesMatchAfterIsolation": true,
+    "logSHA256": "e869d1102116ec848193d21b590d81e52a7e57d30c7e05a99d7de0cb00b14035",
+    "binarySHA256": {
+      "Taskfold.app": "f7a355fb5a39bd469179ee2ea01672ed02427d1c8cca0ea866fabe5ef42f64cc",
+      "TaskfoldUITests-Runner.app": "6dbbff2e71106e7153b5b702c4b371f0cbfdf70b9025e8fe3a3cea08922e4e16"
+    },
+    "appDebugDylibSHA256": "8ee1256f34ac88e54d2c809df06c3a1fb0c5ce6d14ab890226c389df8380eef6",
+    "testBinarySHA256": "54f83f33c6eb6ba3d675d9689a515b2ae5e5b95905c45aa9e389180f57a6b3ed"
+  },
+  "cleanupSHA256": "8197da1ac56f938f67a3a7fc3ce11648d50daead55e63a402a93f08348da86a3",
+  "attemptsSHA256": "b50278ea703d13ac368c48a2149b799d4b7f19f17d31719b0b685bf4a3f24698"
+}

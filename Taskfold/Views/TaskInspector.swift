@@ -162,6 +162,12 @@ struct TaskInspectorForm: View {
               store.editorMayWrite(source:sourceRoot,proposed:draft,teamDraft:teamDraft) else {return false}
         return true
     }
+    private var readOnlyFiles: TaskFileUploadRequest? {
+        guard !isCreating, Workspace.subtaskPath(taskID) == nil else { return nil }
+        if let admission { return store.fileUploadReadRequest(source: admission.source.record, workspace: admission.workspace) }
+        guard let sourceRoot, let workspaceBinding else { return nil }
+        return store.fileUploadReadRequest(source: sourceRoot, workspace: workspaceBinding)
+    }
     private var recoveryExtras: [String:JSON] {
         ["new_subtask":.string(subtask),"unsubmitted_comment":.string(comment),"pin":notePin.map(JSON.bool) ?? .null,"declined":.array(declined.sorted().map(JSON.string)),"reference_choices":.object(referenceChoices.mapValues(JSON.string)),"source_identity":sourceContext?.identity ?? .null]
     }
@@ -180,8 +186,9 @@ struct TaskInspectorForm: View {
             if editorAvailable {editingBody}
             else {
                 ScrollView {VStack(alignment:.leading,spacing:16) {
-                    Label("Editing paused",systemImage:"lock.shield").font(.title2.weight(.semibold))
-                    Text(isCreating ? "This project or workspace changed. Your task has not been added." : "This task or workspace changed. Reopen its current details before editing again.")
+                    Label(readOnlyFiles == nil ? "Editing paused" : "View-only access",systemImage:"lock.shield").font(.title2.weight(.semibold))
+                    Text(readOnlyFiles != nil ? "You can save shared files. Editing is currently unavailable." : isCreating ? "This project or workspace changed. Your task has not been added." : "This task or workspace changed. Reopen its current details before editing again.")
+                    if let request = readOnlyFiles { Button("Shared files…", systemImage: "paperclip") { taskFiles = request }.accessibilityIdentifier("openReadOnlyTaskFiles") }
                     if let session=recoverySession,session.latest != nil {
                         Text(session.preserved ? "Your unsent edit is saved privately with its original workspace. Open that workspace’s Backups & restore → Unsent task edits.":"Preserving your unsent edit…").accessibilityIdentifier("editorRecoveryStatus")
                         if let failure=session.failure {Text(failure).foregroundStyle(.red);Button("Retry preserving edit") {_=session.flush()}}
@@ -1181,7 +1188,7 @@ struct TeamEditorNativeFixtureView: View {
     @State private var draftsPresented = false
     @State private var storageStatus = ""
     var body: some View {
-        if AudioCommentNativeFixture.taskEditorTesting { AudioTaskEditorFixtureScreen() } else {
+        if TaskFileViewerFixture.enabled { TaskFileViewerFixtureScreen() } else if AudioCommentNativeFixture.taskEditorTesting { AudioTaskEditorFixtureScreen() } else {
 
         if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing") {
             NavigationStack {

@@ -2809,3 +2809,38 @@ extension TaskfoldMacUITests {
         #endif
     }
 }
+
+
+extension TaskfoldMacUITests {
+    @MainActor func testSharedFileViewerReadOnlyAndRevokedAccess() throws {
+        try audioGuard()
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--file-viewer-testing", "--team-editor-reset", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        defer { app.terminate() }
+        app.launch(); app.activate()
+        let verify = app.buttons["fileViewerVerifyDownload"]
+        XCTAssertTrue(verify.waitForExistence(timeout: 20), app.debugDescription)
+        XCTAssertEqual(app.staticTexts["fileViewerRole"].label, "Project role: viewer")
+        audioPress(verify)
+        XCTAssertTrue(app.staticTexts["Verified bytes; saved tasks unchanged"].waitForExistence(timeout: 12), app.debugDescription)
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "--team-editor-reset" }
+        app.launch(); app.activate()
+        let details = app.buttons["fileViewerOpenDetails"]
+        XCTAssertTrue(details.waitForExistence(timeout: 20)); XCTAssertEqual(app.staticTexts["fileViewerRole"].label, "Project role: viewer"); audioPress(details)
+        let files = app.buttons["openReadOnlyTaskFiles"]
+        XCTAssertTrue(files.waitForExistence(timeout: 10), app.debugDescription); audioPress(files)
+        XCTAssertTrue(app.staticTexts["fileReadOnlyNotice"].waitForExistence(timeout: 10), app.debugDescription)
+        let download = app.buttons["downloadSharedFile-ec240000-0000-4000-8000-000000000072"]
+        XCTAssertTrue(download.exists && download.isEnabled, app.debugDescription)
+        XCTAssertFalse(app.buttons["fileUploadChoose"].exists)
+        XCTAssertFalse(app.buttons["fileUploadPublish"].exists)
+        XCTAssertFalse(app.buttons["fileUploadClear"].exists)
+        XCTAssertFalse(app.staticTexts["fileUploadState"].exists)
+        let picture = XCTAttachment(screenshot: app.screenshot()); picture.name = "Shared files with view-only access"; picture.lifetime = .keepAlways; add(picture)
+        audioPress(app.buttons["fileViewerWithdrawAccess"])
+        XCTAssertTrue(app.staticTexts["Shared files unavailable"].waitForExistence(timeout: 8), app.debugDescription)
+        XCTAssertFalse(download.exists)
+        XCTAssertFalse(app.buttons["fileUploadChoose"].exists)
+    }
+}

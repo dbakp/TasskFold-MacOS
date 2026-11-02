@@ -244,3 +244,61 @@ final class TaskFileUploadTests: XCTestCase {
         }
     }
 }
+
+extension TaskFileUploadTests {
+    private func readingTask() -> Record {
+        Record(["id": fileTarget["task_id"], "task_generation": fileTarget["task_generation"], "project_id": fileTarget["project_id"], "user_id": .string(UUID().uuidString.lowercased()), "title": .string("Shared workshop notes")])
+    }
+    private func readingCache(task: Record, role: String = "viewer", paused: Bool = false, archived: Bool = false, keepTask: Bool = true) throws -> TeamWorkspaceCache {
+        let team = fileTarget.string("team_id"), project = fileTarget.string("project_id")
+        let boundary = try TeamWorkspaceBoundary(["workspace_boundary_protocol": .number(1), "account": .string(fileAccount), "native_team_reads_enabled": .bool(true), "setup_paused": .bool(paused), "token": .string(String(repeating: "a", count: 64)),
+            "teams": .array([.object(["id": .string(team), "state": .string("active"), "revision": .number(1), "access_revision": .number(1)])]),
+            "projects": .array([.object(["id": .string(project), "team_id": .string(team), "role": .string(role), "archived": .bool(archived), "can_send_tasks": .bool(false)])])], account: fileAccount, origin: fileOrigin)
+        return try TeamWorkspaceCache(boundary: boundary, previous: nil, pending: [], tasks: keepTask ? [task] : [])
+    }
+    private func admittedFile(_ task: Record, cache: TeamWorkspaceCache?, account: String = fileAccount, origin: String = fileOrigin, projects: [Record]? = nil, enabled: Bool = true) throws -> Record {
+        try TaskFileReadAdmission.target(account: account, origin: origin, task: task, projects: projects ?? [Record(["id": fileTarget["project_id"]])], cache: cache, teamsEnabled: enabled)
+    }
+    func testViewerCanReadWithoutCreatorOwnershipOrWritePermission() throws {
+        let task = readingTask(), cache = try readingCache(task: task)
+        XCTAssertNotEqual(task.string("user_id"), fileAccount)
+        XCTAssertFalse(try XCTUnwrap(cache.boundary.projects[task.string("project_id")]).canSend)
+        XCTAssertEqual(try admittedFile(task, cache: cache), fileTarget)
+    }
+    func testPausedAndArchivedAccessStillPermitsExistingFileReads() throws {
+        let task = readingTask()
+        for role in ["viewer", "editor", "manager"] {
+            XCTAssertEqual(try admittedFile(task, cache: readingCache(task: task, role: role, paused: true, archived: true)), fileTarget)
+        }
+    }
+    func testFileReadsRequireLiveBoundaryNotHistoricalCustodyOrCreator() throws {
+        let task = readingTask(), cache = try readingCache(task: task)
+        XCTAssertThrowsError(try admittedFile(task, cache: nil))
+        XCTAssertThrowsError(try admittedFile(task, cache: cache, enabled: false))
+        XCTAssertThrowsError(try admittedFile(task, cache: cache, account: UUID().uuidString.lowercased()))
+        XCTAssertThrowsError(try admittedFile(task, cache: cache, origin: "https://another.example"))
+        XCTAssertThrowsError(try admittedFile(task, cache: readingCache(task: task, keepTask: false)))
+        var raw = cache.boundary.raw; raw["projects"] = .array([])
+        let revoked = try TeamWorkspaceBoundary(raw, account: fileAccount, origin: fileOrigin)
+        let history = try TeamWorkspaceCache(boundary: revoked, previous: cache, pending: [], tasks: [])
+        XCTAssertTrue(history.knownTasks.contains(task.id)); XCTAssertThrowsError(try admittedFile(task, cache: history))
+    }
+    func testFileReadsRejectMissingDuplicateAndMovedProjects() throws {
+        let task = readingTask(), cache = try readingCache(task: task), project = Record(["id": fileTarget["project_id"]])
+        XCTAssertThrowsError(try admittedFile(task, cache: cache, projects: []))
+        XCTAssertThrowsError(try admittedFile(task, cache: cache, projects: [project, project]))
+        var moved = task; moved["project_id"] = .string(UUID().uuidString.lowercased())
+        XCTAssertThrowsError(try admittedFile(moved, cache: cache)); XCTAssertFalse(TaskFileReadAdmission.matches(fileTarget, source: moved))
+    }
+    func testReadTargetCannotFollowReusedIdentityOrEmbeddedTask() throws {
+        let task = readingTask(), cache = try readingCache(task: task)
+        XCTAssertTrue(TaskFileReadAdmission.matches(fileTarget, source: task))
+        var replaced = task; replaced["task_generation"] = .string(UUID().uuidString.lowercased())
+        XCTAssertFalse(TaskFileReadAdmission.matches(fileTarget, source: replaced))
+        XCTAssertNotEqual(try admittedFile(replaced, cache: cache), fileTarget)
+        for key in ["id", "task_generation"] {
+            var invalid = task; invalid[key] = .string(key == "id" ? task.id + "/child" : "")
+            XCTAssertThrowsError(try admittedFile(invalid, cache: cache))
+        }
+    }
+}

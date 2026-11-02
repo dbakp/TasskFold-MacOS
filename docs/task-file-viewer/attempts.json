@@ -1,0 +1,14 @@
+{
+  "reviewed": "2026-11-02",
+  "mac": {
+    "automated": "runner timed out enabling automation before Taskfold launch",
+    "directFallback": "Mac locked; isolated app closed; no Mac UI acceptance"
+  },
+  "ios": {
+    "initial": "shared test scheme missing in reused host; no runtime test accepted",
+    "v2": "test account was editor because iOS fixture seed used a different expression; read-only entry assertion failed",
+    "v3": "phone and iPad passed with explicit viewer role before and after cold launch; 1 native case each, no failure or skip"
+  },
+  "testsOrGatesWeakened": false,
+  "normalAppDataUsed": false
+}
