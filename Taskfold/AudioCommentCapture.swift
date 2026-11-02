@@ -1093,6 +1093,7 @@ struct AudioCommentConversationRequest: Identifiable {
     private let player: any AudioCommentPlaying
     @ObservationIgnored var currentScope: () -> AudioCommentLiveScope? = { nil }
     @ObservationIgnored var removalAuthority: (AudioCommentRemote) -> Bool = { _ in false }
+    @ObservationIgnored var removalConfirmed: @MainActor () async -> Void = {}
     @ObservationIgnored var sessionIsCurrent: () -> Bool = { false }
     private(set) var entries: [AudioCommentRemote] = []
     private(set) var hasMore = false
@@ -1158,6 +1159,7 @@ struct AudioCommentConversationRequest: Identifiable {
             let removed = try await transport.removeAudio(value, origin: origin, incarnation: incarnation)
             guard accepts(generation), removed.comment == value.id, removed.operation == value.publication.operation else { throw CancellationError() }
             entries.removeAll { $0.id == value.id }; notice = "Audio comment removed. Private saved recordings are unchanged."
+            await removalConfirmed()
         } catch { if accepts(generation), !clearDeniedAccess(error) { notice = "Removal couldn’t be confirmed. Refresh before trying again; private saved recordings are unchanged." } }
     }
 }
@@ -1166,12 +1168,28 @@ struct AudioCommentConversationRequest: Identifiable {
 @MainActor extension Store {
     var audioDraftsEnabled: Bool {
         #if DEBUG
-        if AudioCommentNativeFixture.taskEditorTesting { return true }
+        if AudioCommentNativeFixture.taskEditorTesting || AudioCommentNativeFixture.teamControlsTesting { return true }
         #endif
         return Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioDraftsEnabled") as? Bool == true
     }
     var audioPublishingEnabled: Bool {
-        audioDraftsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioPublishingEnabled") as? Bool == true
+        #if DEBUG
+        if AudioCommentNativeFixture.teamControlsTesting { return true }
+        #endif
+        return audioDraftsEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioPublishingEnabled") as? Bool == true
+    }
+    var teamAudioPublishingEnabled: Bool {
+        #if DEBUG
+        if AudioCommentNativeFixture.teamControlsTesting { return true }
+        #endif
+        return audioPublishingEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamsEnabled") as? Bool == true
+            && Bundle.main.object(forInfoDictionaryKey: "TaskfoldTeamAudioPublishingEnabled") as? Bool == true
+    }
+    private func audioChangeConfirmed(scope: AudioCommentLibraryScope, incarnation: UUID) async {
+        guard let current = audioPendingScope(), current.matches(scope), backend.reminderSessionIncarnation == incarnation else { return }
+        await sync()
+        guard let refreshed = audioPendingScope(), refreshed.matches(scope), backend.reminderSessionIncarnation == incarnation else { return }
+        audioConversationRevision = UUID()
     }
     func audioPublishingScope(_ target: AudioCommentTarget) -> AudioCommentLiveScope? {
         guard audioPublishingEnabled, !localMode, signedIn, !workspaceNeedsRepair,
@@ -1185,7 +1203,9 @@ struct AudioCommentConversationRequest: Identifiable {
               library.scope.matches(.init(workspace: scope.workspace, origin: scope.origin)), library.publicationSourceIsCurrent(source) else { throw AudioCommentFailure.changed }
         let root = try audioDraftDirectory(for: scope, taskID: scope.target.task.uuidString.lowercased())
         let disk = try AudioCommentPublicationDisk(root: root, account: account, origin: origin), incarnation = backend.reminderSessionIncarnation
-        return AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: scope.target, retainAudioOnConfirmation: true, isCurrent: { [weak self, weak library] in
+        return AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: scope.target, retainAudioOnConfirmation: true, publicationConfirmed: { [weak self] in
+            await self?.audioChangeConfirmed(scope: .init(workspace: scope.workspace, origin: scope.origin), incarnation: incarnation)
+        }, isCurrent: { [weak self, weak library] in
             guard let self, let library, library.publicationSourceIsCurrent(source), self.backend.reminderSessionIncarnation == incarnation,
                   let current = self.audioPublishingScope(scope.target) else { return false }; return scope.matches(current)
         })
@@ -1212,7 +1232,10 @@ struct AudioCommentConversationRequest: Identifiable {
         controller.sessionIsCurrent = { [weak self] in self?.backend.reminderSessionIncarnation == incarnation && self?.backend.audioPublicationSessionMatches(scope.workspace.account) == true }
         controller.removalAuthority = { [weak self] comment in
             guard let self, let current=self.audioReadScope(scope.target), scope.matches(current) else { return false }
-            return AudioCommentReadAdmission.mayRemove(author:comment.author,account:self.userID,target:scope.target,projects:self.rows("projects"),cache:self.nativeConversationTeamCache)
+            return AudioCommentReadAdmission.mayRemove(author:comment.author,account:self.userID,target:scope.target,projects:self.rows("projects"),cache:self.nativeConversationTeamCache,origin:scope.origin,teamWritesEnabled:self.teamAudioPublishingEnabled)
+        }
+        controller.removalConfirmed = { [weak self] in
+            await self?.audioChangeConfirmed(scope: .init(workspace: scope.workspace, origin: scope.origin), incarnation: incarnation)
         }
         return controller
     }
@@ -1232,7 +1255,9 @@ struct AudioCommentConversationRequest: Identifiable {
         guard let scope=audioPendingScope(),library.selectedIsCurrent(journal),scope.matches(library.scope),
               journal.origin==library.storage.origin,journal.publication.account==library.storage.account else {throw AudioCommentFailure.changed}
         let incarnation=backend.reminderSessionIncarnation
-        return AudioCommentPublicationFlow(storage:library.storage,transport:backend,incarnation:incarnation,target:journal.publication.target,retainAudioOnConfirmation:true,allowsPublishing:false,isCurrent:{[weak self,weak library] in
+        return AudioCommentPublicationFlow(storage:library.storage,transport:backend,incarnation:incarnation,target:journal.publication.target,retainAudioOnConfirmation:true,allowsPublishing:false,publicationConfirmed:{[weak self] in
+            await self?.audioChangeConfirmed(scope:scope,incarnation:incarnation)
+        },isCurrent:{[weak self,weak library] in
             guard let self,let library,library.selectedIsCurrent(journal),self.backend.reminderSessionIncarnation==incarnation,let current=self.audioPendingScope() else {return false}
             return scope.matches(current)
         })
@@ -1241,7 +1266,9 @@ struct AudioCommentConversationRequest: Identifiable {
         guard let scope = audioPublishingScope(journal.publication.target), library.selectedIsCurrent(journal),
               library.scope.matches(.init(workspace: scope.workspace, origin: scope.origin)), journal.origin == library.storage.origin, journal.publication.account == library.storage.account else { throw AudioCommentFailure.changed }
         let incarnation = backend.reminderSessionIncarnation
-        return AudioCommentPublicationFlow(storage: library.storage, transport: backend, incarnation: incarnation, target: scope.target, retainAudioOnConfirmation: true, isCurrent: { [weak self, weak library] in
+        return AudioCommentPublicationFlow(storage: library.storage, transport: backend, incarnation: incarnation, target: scope.target, retainAudioOnConfirmation: true, publicationConfirmed: { [weak self] in
+            await self?.audioChangeConfirmed(scope: .init(workspace: scope.workspace, origin: scope.origin), incarnation: incarnation)
+        }, isCurrent: { [weak self, weak library] in
             guard let self, let library, library.selectedIsCurrent(journal), self.backend.reminderSessionIncarnation == incarnation,
                   let current = self.audioPublishingScope(scope.target) else { return false }; return scope.matches(current)
         })
@@ -1266,6 +1293,14 @@ struct AudioCommentConversationRequest: Identifiable {
         return (task.title, location)
     }
     func audioDraftScope(taskID: String) -> AudioCommentLiveScope? {
+        if let current = record("tasks", id: taskID),
+           nativeConversationTeamCache?.knownTasks.contains(taskID) == true || nativeConversationTeamCache?.knownTeams[current.string("project_id")] != nil {
+            guard teamAudioPublishingEnabled, teamOrganizationReadable, !workspaceNeedsRepair,
+                  backend.audioPublicationSessionMatches(userID), let origin = try? backend.accountRemovalOrigin,
+                  (try? captureTeamTaskEditor(current)) != nil,
+                  let target = try? AudioCommentWriteAdmission.target(account: userID, origin: origin, task: current, projects: rows("projects"), cache: nativeConversationTeamCache, enabled: teamAudioPublishingEnabled) else { return nil }
+            return .init(workspace: .init(account: userID, generation: workspaceGeneration), target: target, origin: origin)
+        }
         guard audioDraftsEnabled, let current = record("tasks", id: taskID),
               editorMayWrite(source: current, proposed: current),
               let target = try? AudioCommentTaskAdmission.target(account: userID, task: current, projects: snapshot.tables["projects"] ?? []) else { return nil }

@@ -508,14 +508,14 @@ extension AudioCommentPublishingTests {
         XCTAssertThrowsError(try AudioCommentPublicationStatus(data:JSONEncoder().encode(Record(extra)),publication:publication,allowPending:true))
     }
     @MainActor func testStatusOnlyFlowCannotPublishAndUnconfirmedPreservesJournalBytes() async throws {
-        let file=try disk(),input=try source(),journal=try file.prepare(input),before=try journal.encoded(),transport=StatusTransport()
+        let file=try disk(),input=try source(),journal=try file.prepare(input),before=try publicationFileBytes(),transport=StatusTransport()
         transport.answer={_,_ in .unconfirmed}
         let flow=AudioCommentPublicationFlow(storage:.init(disk:file),transport:transport,incarnation:UUID(),target:input.target,allowsPublishing:false,isCurrent:{true})
         try await flow.checkPublication(journal)
         XCTAssertEqual(flow.state,.unconfirmed);XCTAssertEqual(transport.calls.count,1);XCTAssertFalse(transport.calls[0].1)
         do {try await flow.publish(input);XCTFail()}catch{}
         do {try await flow.retry(journal);XCTFail()}catch{}
-        XCTAssertEqual(transport.publishes,0);XCTAssertEqual(try file.journals().first?.encoded(),before)
+        XCTAssertEqual(transport.publishes,0);XCTAssertEqual(try publicationFileBytes(),before)
     }
     @MainActor func testExplicitOwnerClosePersistsAndColdCheckIsLocalOnly() async throws {
         let file=try disk(),input=try source(),journal=try file.prepare(input),transport=StatusTransport()
@@ -575,5 +575,68 @@ extension AudioCommentPublishingTests {
         for _ in 0..<500 {if gate.ready {break};try await Task.sleep(for:.milliseconds(10))};XCTAssertTrue(gate.ready)
         try await backend.clearSession();gate.release(try JSONEncoder().encode(pendingStatus(publication)))
         do {_=try await operation.value;XCTFail()}catch{}
+    }
+}
+
+extension AudioCommentPublishingTests {
+    private func publicationFileBytes() throws -> [String: Data] {
+        let items = try XCTUnwrap(FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil))
+        var result: [String: Data] = [:]
+        for case let url as URL in items where url.pathExtension == "bin" { result[url.path] = try Data(contentsOf: url) }
+        XCTAssertFalse(result.isEmpty)
+        return result
+    }
+    @MainActor func testConfirmationHandoffRunsAfterDurableReceiptAndRetainsOriginal() async throws {
+        let file = try disk(), input = try source(), transport = Transport(); var callbacks = 0
+        transport.response = { try .init(record: self.record($0.publication), publication: $0.publication) }
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: input.target, retainAudioOnConfirmation: true, publicationConfirmed: {
+            callbacks += 1
+            let saved = try? file.journals().first
+            XCTAssertNotNil(saved?.receipt); XCTAssertEqual(saved?.clip?.data, input.clip.data)
+        }, isCurrent: { true })
+        try await flow.publish(input)
+        XCTAssertEqual(callbacks, 1); XCTAssertEqual(flow.state, .published)
+        try await flow.publish(input)
+        XCTAssertEqual(callbacks, 1); XCTAssertEqual(transport.requests.count, 1)
+    }
+    @MainActor func testStatusConfirmationHandoffIsDurableAndColdCheckDoesNotRepeatIt() async throws {
+        let file = try disk(), input = try source(), journal = try file.prepare(input), transport = StatusTransport(); var callbacks = 0
+        transport.answer = { publication, _ in .published(try .init(record: self.record(publication), publication: publication)) }
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: input.target, allowsPublishing: false, publicationConfirmed: {
+            callbacks += 1; XCTAssertNotNil(try? file.journals().first?.receipt)
+        }, isCurrent: { true })
+        try await flow.checkPublication(journal)
+        XCTAssertEqual(callbacks, 1); XCTAssertEqual(transport.publishes, 0)
+        let cold = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: input.target, allowsPublishing: false, publicationConfirmed: { callbacks += 1 }, isCurrent: { true })
+        try await cold.checkPublication(journal)
+        XCTAssertEqual(callbacks, 1); XCTAssertEqual(transport.calls.count, 1)
+    }
+    @MainActor func testUnconfirmedAndClosedStatusDoNotTriggerPublicationHandoff() async throws {
+        let file = try disk(), input = try source(), journal = try file.prepare(input), transport = StatusTransport(); var callbacks = 0
+        transport.answer = { _, _ in .unconfirmed }
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: input.target, allowsPublishing: false, publicationConfirmed: { callbacks += 1 }, isCurrent: { true })
+        try await flow.checkPublication(journal)
+        transport.answer = { publication, _ in .closed(try self.closedProof(publication)) }
+        try await flow.checkPublication(journal, closing: true)
+        XCTAssertEqual(callbacks, 0); XCTAssertEqual(flow.state, .closed)
+        XCTAssertEqual(try file.journals().first?.clip?.data, input.clip.data)
+    }
+    @MainActor func testLatePublicationCannotHandOffToChangedWorkspace() async throws {
+        let file = try disk(), input = try source(), transport = Transport(); var current = true, callbacks = 0
+        transport.response = { pending in current = false; return try .init(record: self.record(pending.publication), publication: pending.publication) }
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: input.target, publicationConfirmed: { callbacks += 1 }, isCurrent: { current })
+        do { try await flow.publish(input); XCTFail() } catch {}
+        XCTAssertEqual(callbacks, 0); XCTAssertNil(try file.journals().first?.receipt)
+        XCTAssertEqual(try file.journals().first?.clip?.data, input.clip.data)
+    }
+    @MainActor func testFailedReceiptPersistenceCannotTriggerHandoff() async throws {
+        var file = try disk(); let input = try source(), transport = Transport(); var callbacks = 0
+        let pending = try file.prepare(input)
+        file.fault = { if case .beforeRename = $0 { throw AudioCommentStorageFailure.full } }
+        transport.response = { try .init(record: self.record($0.publication), publication: $0.publication) }
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: input.target, publicationConfirmed: { callbacks += 1 }, isCurrent: { true })
+        do { try await flow.retry(pending); XCTFail() } catch {}
+        XCTAssertEqual(callbacks, 0); XCTAssertNil(try file.journals().first?.receipt)
+        XCTAssertEqual(try file.journals().first?.clip?.data, input.clip.data)
     }
 }

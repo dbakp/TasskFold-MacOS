@@ -8,6 +8,7 @@ import Darwin
     static var ownerReviewTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-owner-review-testing") }
     static var conversationTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-conversation-testing") }
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-comment-testing") }
+    static var teamControlsTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--team-audio-controls-testing") }
     static var taskEditorTesting: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--audio-task-editor-testing") }
     static func taskEditorRecorder() -> any AudioCommentRecording { AudioCommentFixtureRecording() }
     static func taskEditorPlayer() -> any AudioCommentPlaying { AudioCommentFixturePlaying() }
@@ -213,7 +214,7 @@ struct AudioCommentNativeFixtureView: View {
     private var finishing: Task<Void, Never>?
     var elapsed: TimeInterval { started.map { min(120, max(0, Date().timeIntervalSince($0))) } ?? 0 }
     func start(isCurrent: @escaping @MainActor () -> Bool, receive: @escaping @MainActor (AudioCommentRecordingEvent) -> Void) async throws {
-        guard AudioCommentNativeFixture.enabled || AudioCommentNativeFixture.taskEditorTesting else { throw CancellationError() }
+        guard AudioCommentNativeFixture.enabled || AudioCommentNativeFixture.taskEditorTesting || AudioCommentNativeFixture.teamControlsTesting else { throw CancellationError() }
         guard isCurrent() else { throw CancellationError() }
         if ProcessInfo.processInfo.arguments.contains("--audio-comment-denied") { throw AudioCommentFailure(message: "Microphone access is off. This is a synthetic refusal; your saved draft is unchanged.") }
         let token = UUID(); self.token = token; current = isCurrent; self.receive = receive
@@ -238,7 +239,7 @@ struct AudioCommentNativeFixtureView: View {
 @MainActor private final class AudioCommentFixturePlaying: AudioCommentPlaying {
     private var task: Task<Void, Never>?
     func play(_ clip: AudioCommentClip, isCurrent: @escaping @MainActor () -> Bool, ended: @escaping @MainActor () -> Void) throws {
-        guard AudioCommentNativeFixture.enabled || AudioCommentNativeFixture.taskEditorTesting else { throw CancellationError() }
+        guard AudioCommentNativeFixture.enabled || AudioCommentNativeFixture.taskEditorTesting || AudioCommentNativeFixture.teamControlsTesting else { throw CancellationError() }
         guard isCurrent() else { throw CancellationError() }
         stop(); task = Task { do { try await Task.sleep(for: .seconds(ProcessInfo.processInfo.arguments.contains("--audio-library-testing") ? 10 : 2)) } catch { return }; if isCurrent() { ended() } }
     }

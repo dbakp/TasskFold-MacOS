@@ -10396,3 +10396,14 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [ ] Accept native recording-bearing move interactions/accessibility, implement native team publishing/removal and Store recovery, then reviewed generation restoration and whole-project transfers. Genuine provider/Auth/full-schema and wider recovery acceptance remain open.
 
 [Evidence and exact remaining scope](reviewed-audio-custody/README.md). Local verification and current build results are recorded independently per repository. No hosted deployment, scheduler or ordinary-use gate change. The iPad dialog/cache recheck remains separately open. The dashboard adds one explicit completed substep; its curated checkpoint bars do not change.
+
+
+### 2 November 2026 · Native team recording admission and confirmation handoff
+
+- [x] Wire existing private recording/publishing controls to current team editor/manager admission independently of task creator identity, using a separately disabled client gate. Keep private clip ownership and personal admission unchanged.
+- [x] Admit existing conversation removal only for a current author/manager; preserve viewer, archive, paused, account/backend and current-boundary restrictions.
+- [x] Hand durable publication/status/removal confirmations to the owning Store before refreshing loaded conversations. Retain uncertain originals and prevent cached/failed/late replies from inventing successful changes. Each repo passes 213 focused Core tests and 284 controller checks with synthetic media drivers.
+- [x] Record the separately owned iPhone capture/Save/cold-byte/access-loss proof; Mac runtime stays unaccepted.
+- [ ] Finish full native publish/remove/status recovery and Store-refresh acceptance, Mac/iPad/wider account/window/background/accessibility/privacy cases, genuine provider/Auth/full-schema work and separately reviewed generation/whole-project transfers.
+
+[Evidence, attempt qualification and exact limits](team-audio-client/README.md). The previous interrupted iPad dialog/cache recheck remains separate; no broad retry against its unchanged runtime condition. No hosted deployment or ordinary-use enablement. Curated bars and substep totals remain unchanged.

@@ -1544,6 +1544,8 @@ extension AudioControllerProof {
         let unbound = try AudioCommentConversationController(scope: scope, incarnation: UUID(), transport: transport, player: player)
         await unbound.refresh(); checks["remoteConversationRequiresExplicitLiveBinding"] = transport.lists == 0 && unbound.entries.isEmpty; unbound.close()
         let value = try make(); await value.refresh()
+        var removalHandoffs = 0
+        value.removalConfirmed = { removalHandoffs += 1 }
         value.removalAuthority = { _ in false }; await value.remove(remote)
         checks["remoteReadOnlyReviewCannotSendRemoval"] = transport.removals == 0 && !value.mayRemove(remote)
         value.removalAuthority = { _ in true }
@@ -1558,8 +1560,10 @@ extension AudioControllerProof {
         checks["remoteBackgroundHookClearsPrivateRowsAndStopsPlayback"] = value.entries.isEmpty && value.playing == nil && !value.isCurrent
         value.setActive(true); await value.refresh(); transport.failRemoval = true; await value.remove(remote)
         checks["remoteUncertainRemovalRetainsRowAndOffersRefresh"] = value.entries == [remote] && value.notice?.contains("couldn’t be confirmed") == true
+        checks["uncertainRemovalDoesNotHandOff"] = removalHandoffs == 0
         transport.failRemoval = false; await value.remove(remote)
         checks["remoteExactAcknowledgementRemovesVisibleComment"] = value.entries.isEmpty && value.notice?.contains("removed") == true
+        checks["confirmedRemovalHandsOffAfterVisibleAcknowledgement"] = removalHandoffs == 1
         let removedCalls = transport.removals; await value.remove(remote)
         checks["remoteRemovedOrForeignSelectionCannotSendAgain"] = transport.removals == removedCalls
         transport.rows = [remote]; transport.holdList = true

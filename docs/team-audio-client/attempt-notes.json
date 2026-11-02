@@ -1,0 +1,9 @@
+{
+  "firstCoreIOSRun": {
+    "passed": 207,
+    "failed": 1,
+    "qualification": "Compared separate fresh property-list serializations; corrected to actual journal-file byte snapshots. Five handoff tests were added before the accepted 213-test run."
+  },
+  "controllerSourceQualification": "Only Store code excluded by AUDIO_COMMENT_CONTROLLER_TESTING changed after the controller run; exact tested prefix and linked Core are checked in verification.json.",
+  "nativeAcceptanceLimit": "No full native shared-service publishing/removal or runtime Store-refresh claim."
+}

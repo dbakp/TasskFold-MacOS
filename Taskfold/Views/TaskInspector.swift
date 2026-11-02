@@ -500,7 +500,7 @@ struct TaskInspectorForm: View {
                     Text("Share comments and mention teammates here. Earlier task comments stay below.").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            if store.audioDraftsEnabled, Workspace.subtaskPath(taskID) == nil, !isTeamTask {
+            if store.audioDraftsEnabled, Workspace.subtaskPath(taskID) == nil, !isTeamTask || store.teamAudioPublishingEnabled {
                 Section("Audio drafts") {
                     Button("Open private recordings", systemImage: "waveform") {
                         guard editorAvailable, draft.string("project_id") == current?.string("project_id") else { return }

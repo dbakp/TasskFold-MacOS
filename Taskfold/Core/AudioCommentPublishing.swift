@@ -307,11 +307,12 @@ extension AudioCommentPublishingTransport {
     private let target: AudioCommentTarget
     private let retainAudioOnConfirmation: Bool
     private let allowsPublishing: Bool
+    private let publicationConfirmed: @MainActor () async -> Void
     private var attempt = UUID()
     var contextIsCurrent: Bool { current() }
     func invalidate() { attempt = UUID(); journal = nil; state = .ready }
     private func check(_ token: UUID) throws { guard token == attempt, current(), !Task.isCancelled else { throw CancellationError() } }
-    init(storage: AudioCommentPublicationStorage, transport: any AudioCommentPublishingTransport, incarnation: UUID, target: AudioCommentTarget, retainAudioOnConfirmation: Bool = false, allowsPublishing: Bool = true, isCurrent: @escaping @MainActor () -> Bool) { self.storage = storage; self.transport = transport; self.incarnation = incarnation; self.target = target; self.retainAudioOnConfirmation = retainAudioOnConfirmation; self.allowsPublishing=allowsPublishing; current = isCurrent }
+    init(storage: AudioCommentPublicationStorage, transport: any AudioCommentPublishingTransport, incarnation: UUID, target: AudioCommentTarget, retainAudioOnConfirmation: Bool = false, allowsPublishing: Bool = true, publicationConfirmed: @escaping @MainActor () async -> Void = {}, isCurrent: @escaping @MainActor () -> Bool) { self.storage = storage; self.transport = transport; self.incarnation = incarnation; self.target = target; self.retainAudioOnConfirmation = retainAudioOnConfirmation; self.allowsPublishing=allowsPublishing; self.publicationConfirmed=publicationConfirmed; current = isCurrent }
     /// Local review only: reopening a recording never starts a network request.
     func restore(_ source: AudioCommentSavedDraft) async throws {
         guard source.target == target, source.owner.account == storage.account.uuidString.lowercased(), current(), !Task.isCancelled, state != .saving, state != .sending else { throw CancellationError() }
@@ -363,6 +364,7 @@ extension AudioCommentPublishingTransport {
             case .published(let receipt):
                 let saved=try await storage.confirm(live,receipt:receipt,retainingAudio:true)
                 try check(token);journal=saved;state = .published
+                await publicationConfirmed(); try check(token)
             case .closed(let proof):
                 let saved=try await storage.settleClosed(live,proof:proof)
                 try check(token);journal=saved;state = .closed
@@ -387,6 +389,7 @@ extension AudioCommentPublishingTransport {
         let committed = try await storage.confirm(prepared, receipt: receipt, retainingAudio: retainAudioOnConfirmation)
         try check(token)
         journal = committed; state = .published
+        await publicationConfirmed(); try check(token)
     }
 }
 
@@ -505,12 +508,36 @@ enum AudioCommentReadAdmission {
         }
         return try .init(task:id,generation:generation,project:projectID)
     }
-    static func mayRemove(author: UUID?, account: String, target: AudioCommentTarget, projects: [Record], cache: TeamWorkspaceCache?) -> Bool {
-        // Team audio is read-only until its independent publication/removal
-        // protocol is accepted. A creator UUID or manager label is no shortcut.
-        if let project=target.project?.uuidString.lowercased(), cache?.knownTeams[project] != nil { return false }
+    static func mayRemove(author: UUID?, account: String, target: AudioCommentTarget, projects: [Record], cache: TeamWorkspaceCache?, origin: String? = nil, teamWritesEnabled: Bool = false) -> Bool {
+        if let project = target.project?.uuidString.lowercased(), cache?.knownTeams[project] != nil || projects.contains(where: { $0.id == project && $0["team_id"] != .null && $0["team_id"] != .string("") }) {
+            guard projects.filter({ $0.id == project }).count == 1, !ProjectOrganization.archived(project, in: projects),
+                  let row = projects.first(where: { $0.id == project }), row["is_archived"] == .null || row["is_archived"] == .bool(false),
+                  let origin, AudioCommentWriteAdmission.teamWritable(account: account, origin: origin, project: project, cache: cache, enabled: teamWritesEnabled) else { return false }
+            return author?.uuidString.lowercased() == account || cache?.boundary.projects[project]?.role == "manager"
+        }
         return author?.uuidString.lowercased()==account || target.project.map { id in projects.filter { $0.id==id.uuidString.lowercased() && $0.string("user_id")==account }.count==1 } == true
     }
 }
 
 struct AudioCommentReadAccessUnavailable: LocalizedError { var errorDescription: String? { "This audio conversation is no longer available. Refresh access before reopening it." } }
+
+
+/// Presentation permission only; every gateway operation rechecks live authority.
+/// Team authorship never grants access or changes the private recording owner.
+enum AudioCommentWriteAdmission {
+    static func teamWritable(account: String, origin: String, project: String, cache: TeamWorkspaceCache?, enabled: Bool) -> Bool {
+        guard enabled, let cache, cache.boundary.belongs(account: account, origin: origin),
+              cache.boundary.raw["native_team_reads_enabled"] == .bool(true), cache.boundary.raw["setup_paused"] == .bool(false),
+              let team = cache.knownTeams[project], let permission = cache.boundary.projects[project], permission.team == team,
+              permission.canSend, !permission.archived, ["editor", "manager"].contains(permission.role),
+              cache.boundary.raw["teams"]?.list.contains(where: { $0.object["id"] == .string(team) && $0.object["state"] == .string("active") }) == true else { return false }
+        return true
+    }
+    static func target(account: String, origin: String, task: Record, projects: [Record], cache: TeamWorkspaceCache?, enabled: Bool) throws -> AudioCommentTarget {
+        let target = try AudioCommentReadAdmission.target(account: account, origin: origin, task: task, projects: projects, cache: cache, teamsEnabled: enabled)
+        guard let project = target.project?.uuidString.lowercased(), teamWritable(account: account, origin: origin, project: project, cache: cache, enabled: enabled),
+              let row = projects.first(where: { $0.id == project }), row["is_archived"] == .null || row["is_archived"] == .bool(false),
+              !ProjectOrganization.archived(project, in: projects) else { throw AudioCommentFailure.changed }
+        return target
+    }
+}

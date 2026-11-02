@@ -144,3 +144,69 @@ extension AudioCommentTaskAdmissionTests {
     }
 
 }
+
+extension AudioCommentTaskAdmissionTests {
+    private func teamAudioFixture(role: String = "editor", archived: Bool = false, paused: Bool = false, teamState: String = "active") throws -> (Record, Record, TeamWorkspaceCache, String, String) {
+        let (task, original, old, account, origin) = try readFixture()
+        var raw = old.boundary.raw, project = original
+        project["is_archived"] = .bool(archived)
+        raw["setup_paused"] = .bool(paused)
+        raw["teams"] = .array(raw["teams"]!.list.map { value in var row = value.object; row["state"] = .string(teamState); return .object(row) })
+        raw["projects"] = .array(raw["projects"]!.list.map { value in
+            var row = value.object
+            if row["id"] == .string(project.id) {
+                row["role"] = .string(role); row["archived"] = .bool(archived)
+                row["can_send_tasks"] = .bool(role != "viewer" && !archived && !paused && teamState == "active")
+            }
+            return .object(row)
+        })
+        let boundary = try TeamWorkspaceBoundary(raw, account: account, origin: origin)
+        return (task, project, try TeamWorkspaceCache(boundary: boundary, previous: nil, pending: [], tasks: [task]), account, origin)
+    }
+    func testTeamRecordingWritersUseCurrentRoleInsteadOfTaskCreator() throws {
+        for role in ["editor", "manager"] {
+            let (task, project, cache, account, origin) = try teamAudioFixture(role: role)
+            XCTAssertNotEqual(task.string("user_id"), account)
+            let target = try AudioCommentWriteAdmission.target(account: account, origin: origin, task: task, projects: [project], cache: cache, enabled: true)
+            XCTAssertEqual(target.project?.uuidString.lowercased(), project.id)
+            XCTAssertThrowsError(try AudioCommentTaskAdmission.target(account: account, task: task, projects: [project]), "Private personal admission remains unchanged")
+        }
+    }
+    func testTeamRecordingGateAndCurrentBoundaryAreRequired() throws {
+        let (task, project, cache, account, origin) = try teamAudioFixture()
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: origin, task: task, projects: [project], cache: cache, enabled: false))
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: origin, task: task, projects: [project], cache: nil, enabled: true))
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: "https://other.example.invalid", task: task, projects: [project], cache: cache, enabled: true))
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: UUID().uuidString.lowercased(), origin: origin, task: task, projects: [project], cache: cache, enabled: true))
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: origin, task: task, projects: [project, project], cache: cache, enabled: true))
+    }
+    func testTeamViewerAndPausedArchivedWorkspacesCannotPublishOrRemove() throws {
+        for fixture in [try teamAudioFixture(role: "viewer"), try teamAudioFixture(archived: true), try teamAudioFixture(paused: true), try teamAudioFixture(teamState: "archived")] {
+            let (task, project, cache, account, origin) = fixture
+            let target = try AudioCommentReadAdmission.target(account: account, origin: origin, task: task, projects: [project], cache: cache, teamsEnabled: true)
+            XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: origin, task: task, projects: [project], cache: cache, enabled: true))
+            XCTAssertFalse(AudioCommentReadAdmission.mayRemove(author: UUID(uuidString: account), account: account, target: target, projects: [project], cache: cache, origin: origin, teamWritesEnabled: true))
+        }
+    }
+    func testTeamRemovalRequiresCurrentAuthorOrManagerAndIndependentGate() throws {
+        for role in ["editor", "manager"] {
+            let (task, project, cache, account, origin) = try teamAudioFixture(role: role)
+            let target = try AudioCommentWriteAdmission.target(account: account, origin: origin, task: task, projects: [project], cache: cache, enabled: true)
+            XCTAssertTrue(AudioCommentReadAdmission.mayRemove(author: UUID(uuidString: account), account: account, target: target, projects: [project], cache: cache, origin: origin, teamWritesEnabled: true))
+            XCTAssertEqual(AudioCommentReadAdmission.mayRemove(author: UUID(), account: account, target: target, projects: [project], cache: cache, origin: origin, teamWritesEnabled: true), role == "manager")
+            XCTAssertFalse(AudioCommentReadAdmission.mayRemove(author: UUID(uuidString: account), account: account, target: target, projects: [project], cache: cache))
+            XCTAssertFalse(AudioCommentReadAdmission.mayRemove(author: UUID(uuidString: account), account: account, target: target, projects: [project], cache: cache, origin: "https://other.example.invalid", teamWritesEnabled: true))
+        }
+    }
+    func testTeamRecordingCannotUseHeadingUnboundTaskOrPersonalFallback() throws {
+        let (original, project, cache, account, origin) = try teamAudioFixture()
+        var heading = original; heading["is_heading"] = .bool(true)
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: origin, task: heading, projects: [project], cache: cache, enabled: true))
+        var missing = original; missing["id"] = .string(UUID().uuidString.lowercased())
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: origin, task: missing, projects: [project], cache: cache, enabled: true))
+        var personal = original; personal["project_id"] = .null; personal["user_id"] = .string(account)
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: origin, task: personal, projects: [], cache: cache, enabled: true))
+        var archived = project; archived["is_archived"] = .bool(true)
+        XCTAssertThrowsError(try AudioCommentWriteAdmission.target(account: account, origin: origin, task: original, projects: [archived], cache: cache, enabled: true))
+    }
+}

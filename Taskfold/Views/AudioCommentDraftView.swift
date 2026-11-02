@@ -359,13 +359,13 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
     }
     private func recorder() -> any AudioCommentRecording {
         #if DEBUG
-        if AudioCommentNativeFixture.taskEditorTesting { return AudioCommentNativeFixture.taskEditorRecorder() }
+        if AudioCommentNativeFixture.taskEditorTesting || AudioCommentNativeFixture.teamControlsTesting { return AudioCommentNativeFixture.taskEditorRecorder() }
         #endif
         return DeviceAudioCommentRecording()
     }
     private func player() -> any AudioCommentPlaying {
         #if DEBUG
-        if AudioCommentNativeFixture.taskEditorTesting { return AudioCommentNativeFixture.taskEditorPlayer() }
+        if AudioCommentNativeFixture.taskEditorTesting || AudioCommentNativeFixture.teamControlsTesting { return AudioCommentNativeFixture.taskEditorPlayer() }
         #endif
         return DeviceAudioCommentPlaying()
     }
@@ -437,7 +437,7 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
     }
     private func player() -> any AudioCommentPlaying {
         #if DEBUG
-        if AudioCommentNativeFixture.taskEditorTesting { return AudioCommentNativeFixture.taskEditorPlayer() }
+        if AudioCommentNativeFixture.taskEditorTesting || AudioCommentNativeFixture.teamControlsTesting { return AudioCommentNativeFixture.taskEditorPlayer() }
         #endif
         return DeviceAudioCommentPlaying()
     }

@@ -63,7 +63,7 @@ import SwiftUI
         #if os(macOS)
         .frame(minWidth: 520, minHeight: 480)
         #endif
-        .task(id: String(describing: allowed) + sessionID.uuidString + reload.uuidString) {
+        .task(id: String(describing: allowed) + sessionID.uuidString + reload.uuidString + store.audioConversationRevision.uuidString) {
             close(); failure = nil
             guard allowed else { return }
             do {
@@ -164,7 +164,7 @@ import SwiftUI
     }
     private var loadKey: String {
         [String(audioAllowed),request.workspace.account,request.workspace.generation.uuidString,request.taskID,request.generation,request.project,
-         audioRequest?.scope.origin ?? "",session.uuidString,refresh.uuidString].joined(separator:"|")
+         audioRequest?.scope.origin ?? "",session.uuidString,refresh.uuidString,store.audioConversationRevision.uuidString].joined(separator:"|")
     }
     private var entries: [ConversationTimelineEntry] {
         ConversationTimelineEntry.merge(text:comments,audio:live?.entries ?? [],account:request.workspace.account,taskID:request.taskID,generation:request.generation,project:request.project)
