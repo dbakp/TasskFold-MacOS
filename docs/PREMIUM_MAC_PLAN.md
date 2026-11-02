@@ -10471,3 +10471,9 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Preserve independently owned fixture support and Core selection admission/review models. All selection members need fresh matching metadata; no partial review changes an existing queue or gains closure authority.
 - [x] Record the owning iPhone local-service proof: original retained Undo applied with reply lost; Later/reopen/confirm uses unchanged intent, exactly one restoration, zero closure rows and a dismissed recovery sheet. 42 checks pass. This is iOS warm-confirmation evidence, not Mac runtime proof.
 - [ ] Whole-group service closure/race fencing, persistence and native selection UI remain; native Mac/iPad, ordinary entry contexts, genuine integration and wider accessibility/lifecycle remain open. Normal-use switches remain Off. See [evidence](audio-recorded-native/README.md).
+
+### 2 November 2026 · Whole-selection recording recovery boundary
+
+- [x] Own the same terminal group closure/fencing contract independently. The local mixed three-task/two-project flow preserves unexpired audio and never revives purged audio; 186 service checks pass, including actual competing-request waits, access/pause/session refusal, strict source binding, sparse-record restoration and private ledger permissions.
+- [x] Build the Core receipt/transport and pure queue-replacement boundary without changing any normal-use gate.
+- [ ] Store save/readback/rollback, native Mac selection consent/confirmation, cold/lifecycle/accessibility and genuine integration remain unaccepted. See [scope and evidence](audio-selection-recovery/README.md).

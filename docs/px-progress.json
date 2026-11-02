@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Recording selection recovery",
-  "latest": "The iPhone now confirms an already-applied Undo after a lost reply: Later preserves it, confirmation retries unchanged, one restoration is recorded and the sheet closes. All 42 checks pass. Both apps now have whole-selection review admission; its server, persistence and screen integration remain unfinished. Normal use stays disabled.",
+  "latest": "Whole-selection recording Undo now has a locally verified terminal close and delayed-retry fence in both repos. Mixed recovery keeps retained audio and excludes purged audio. Strict receipts, bounded transport and an atomic queue-replacement model are built; Store persistence and native selection screens remain. Normal use stays disabled.",
   "next": [
-    "Implement whole-selection terminal closure and race fencing, then strict receipts, persistence and explicit native recovery. Single-task iPhone recorded confirmation and expired cold retry have scoped local proof; local save-failure, normal entry/lifecycle, Mac/iPad, mixed media and genuine integration remain open. Keep the separate iPad scheduling wait scoped.",
+    "Connect whole-selection recovery to Store context/save/readback/rollback, then explicit native consent, recorded confirmation and cold retry. Single-task iPhone recorded confirmation and expired cold retry keep their scoped local proof. Local save-failure, normal entry/lifecycle, Mac/iPad, mixed media, whole-project transfers and genuine integration remain open.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "iPhone normal Undo, expired task-only cold retry and already-recorded warm confirmation pass in the local fixture. Both Core models now require complete fresh selection review; whole-group service, persistence and UI remain. Mac/iPad, wider lifecycle, whole-project transfers and genuine integration remain; ordinary use stays disabled.",
+              "detail": "Both repos verify whole-selection closure and competing retries against the local service. Strict receipts and replacement models preserve all members and later edits; Store persistence and native selection UI remain. Prior single-task iPhone proof is separate. Mac/iPad, mixed media, whole-project transfers and genuine integration remain; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -690,8 +690,12 @@
                   "title": "Single-task recovery: iPhone expired cold retry and recorded confirmation verified"
                 },
                 {
+                  "state": "done",
+                  "title": "Whole-selection closure and competing retries: local service verified"
+                },
+                {
                   "state": "build",
-                  "title": "Selection review models built; group closure, persistence and UI remain"
+                  "title": "Selection receipt/replacement built; Store and native UI remain"
                 },
                 {
                   "state": "build",
@@ -949,7 +953,7 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "2585097ac7c5bca41158a07b57dfe47c08397edb066c6ff64ed3fb569be30199",
+    "P2_PLAN.md": "71012a78a2e9374f7bdc91f874ea4c85f4301f731a92976abf1dd1792e43958c",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",

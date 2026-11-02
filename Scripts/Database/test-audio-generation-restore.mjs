@@ -52,6 +52,9 @@ try {
   if (nativeReviewSQL) await pg.raw(await readFile(nativeReviewSQL, "utf8"));
   const fenceSQL = process.env.TASKFOLD_AUDIO_RESTORE_FENCE_SQL;
   if (fenceSQL) await pg.raw(await readFile(fenceSQL, "utf8"));
+  const selectionSQL = process.env.TASKFOLD_AUDIO_SELECTION_RECOVERY_SQL;
+  if (selectionSQL) { assert(nativeReviewSQL && fenceSQL); await pg.raw(await readFile(selectionSQL, "utf8")); }
+  const selectionWire = { account, origin: "https://backend.example", phases: {} };
   const recoveryWire = { account, origin: "https://backend.example", phases: {} };
   const nativeWire = { account, origin: "https://backend.example", phases: {} };
   await loadTaskFileWorkspaceFixture(pg);
@@ -128,6 +131,11 @@ try {
     const result = await run(`public.taskfold_audio_restore_recovery(${lit(action)},${j(command)})`, who, before);
     if (label && result.code) throw Error(JSON.stringify({ phase: label, ...result }));
     if (label && result.code == null) recoveryWire.phases[label] = { action, command, reply: result.value };
+    return result;
+  };
+  const selectionRecovery = async (action, command, label, who = "actor", before = "") => {
+    const result = await run(`public.taskfold_audio_selection_restore_recovery(${lit(action)},${j(command)})`, who, before);
+    if (label) { assert.equal(result.code, null, JSON.stringify(result)); selectionWire.phases[label] = { action, command, reply: result.value }; }
     return result;
   };
   const ok = async (action, b) => {
@@ -862,6 +870,16 @@ try {
         };
       }),
     };
+    if (selectionSQL) {
+      check("whole selection initially unrecorded", (await selectionRecovery("inspect", restored, "unrecorded")).value.state, "unrecorded");
+      check("whole selection keeps available original Undo", (await selectionRecovery("close", restored)).code, "PT409");
+      const u = users.actor, held = await pg.hold(`set local role authenticated;set local request.jwt.claim.sub=${lit(u.id)};set local request.jwt.claims=${lit(JSON.stringify({ sub:u.id, session_id:u.session }))};select public.taskfold_team_task_batch('restore',${j(restored)})`);
+      const app = "selection-recorded-wait", closing = selectionRecovery("close", restored, null, "actor", `set local application_name=${lit(app)}`);
+      try { const blocked = await pg.waitForLock(app, held.pid); check("whole closure waits for in-flight batch Undo", blocked.blockers.includes(held.pid)); }
+      finally { await held.release("commit"); }
+      check("applied whole Undo wins closure race", (await closing).value.state, "recorded");
+      check("recorded selection creates no closure", await pg.scalar("select count(*)::int from taskfold_private.audio_selection_restore_closures"), 0);
+    }
     const result = await run(
       `public.taskfold_team_task_batch('restore',${j(restored)})`,
     );
@@ -891,6 +909,13 @@ try {
       ),
       0,
     );
+    if (selectionSQL) {
+      check("whole applied Undo inspect returns receipt", (await selectionRecovery("inspect", restored, "recorded")).value.state, "recorded");
+      check("whole applied Undo stays recorded", (await selectionRecovery("close", restored)).value.state, "recorded");
+      check("whole recorded receipt binds exact original", (await selectionRecovery("inspect", { ...restored, items: restored.items.map((x,n) => n ? x : {...x, record:{...x.record,title:"Borrowed proof"}}) })).code, "PT409");
+      check("whole recorded receipt is actor-bound", (await selectionRecovery("inspect", restored, null, "creator")).code, "PT409");
+      await selectionCases({ restored, another, batchIntent });
+    }
     for (const role of ["anon", "service_role"]) {
       check(
         "native preview unavailable to " + role,
@@ -908,6 +933,112 @@ try {
         JSON.stringify(nativeWire, null, 2) + "\n",
       );
     }
+  }
+  if (selectionSQL && process.env.TASKFOLD_AUDIO_SELECTION_RECOVERY_WIRE_OUT) await writeFile(process.env.TASKFOLD_AUDIO_SELECTION_RECOVERY_WIRE_OUT, JSON.stringify(selectionWire, null, 2) + "\n");
+  async function selectionCases({ restored, another, batchIntent }) {
+    const batchCall = (action, body, before = "") => run(`public.taskfold_team_task_batch(${lit(action)},${j(body)})`, "actor", before);
+    const row = (id) => pg.scalar(`select to_jsonb(t) from public.tasks t where id=${lit(id)}`);
+    const peerRow = await row(another), third = randomUUID(), otherProject = randomUUID();
+    const peerIntent = { ...i, operation_id: randomUUID(), comment_id: randomUUID(), asset_id: randomUUID(),
+      target: { task_id: another, task_generation: peerRow.task_generation, project_id: project }, caption: "Keep the second recording" };
+    check("mixed recovery publishes second member recording", (await http.call("publish", { intent: peerIntent, audio_base64: media.toString("base64") })).status, 200);
+    await pg.raw(`insert into public.projects(id,user_id,name) values(${lit(otherProject)},${lit(creator)},'Second recovery project');
+      insert into taskfold_private.team_content_projects(project_id,team_id,visibility) values(${lit(otherProject)},${lit(team)},'private');
+      insert into taskfold_private.team_project_grants(project_id,team_id,user_id,role) values(${lit(otherProject)},${lit(team)},${lit(account)},'editor');
+      insert into public.tasks(id,user_id,project_id,title) values(${lit(third)},${lit(creator)},${lit(otherProject)},'Task without recordings')`);
+    const originals = await Promise.all([row(task), row(another), row(third)]);
+    const deleted = { team_id: team, request_id: randomUUID(), items: originals.map((record) => ({
+      team_id: team, project_id: record.project_id, task_id: record.id, task_generation: record.task_generation,
+      request_id: randomUUID(), task_type_lifecycle_protocol: 1, record,
+      ...(record.id === third ? {} : { audio_restoration_ack: ack })
+    })).sort((a,b) => a.task_id.localeCompare(b.task_id)) };
+    const removal = await batchCall("delete", deleted); assert.equal(removal.code, null, JSON.stringify(removal));
+    const original = { team_id: team, request_id: randomUUID(), restores: deleted.request_id,
+      items: deleted.items.map((member) => { const g=randomUUID(); return { ...member, request_id: randomUUID(), restore_from: member.request_id,
+        task_generation: g, record: { ...member.record, task_generation: g, completion_version: 0 } }; }) };
+    const scope = original.items.map((x) => x.task_id);
+    const taskCount = () => pg.scalar(`select count(*)::int from public.tasks where id=any(array[${scope.map(lit).join(",")}]::uuid[])`);
+    check("three-member original begins unrecorded", (await selectionRecovery("inspect", original)).value.state, "unrecorded");
+    check("three-member close requires expiration", (await selectionRecovery("close", original)).code, "PT409");
+    const expiredSource = original.items.find((x) => x.task_id === task).restore_from;
+    await pg.raw(`update taskfold_private.audio_task_deletions set expires_at=clock_timestamp()-interval '1 second' where team_id=${lit(team)} and request_id=${lit(expiredSource)};
+      update taskfold_private.audio_comment_publications set cleanup_after=clock_timestamp()-interval '1 second' where operation_id=${lit(batchIntent.operation_id)}`);
+    check("one expired member blocks retained whole Undo", (await batchCall("restore", original)).code, "PT409");
+    check("failed mixed Undo leaves every task absent", await taskCount(), 0);
+    check("failed mixed Undo leaves no batch receipt", await pg.scalar(`select count(*)::int from taskfold_private.team_task_batches where team_id=${lit(team)} and request_id=${lit(original.request_id)}`), 0);
+    check("whole closure waits for actual expired cleanup", (await selectionRecovery("close", original)).code, "PT409");
+    check("unrecorded observation grants no closure", await pg.scalar("select count(*)::int from taskfold_private.audio_selection_restore_closures"), 0);
+    const maintained=await http.maintain(); const maintenance=await maintained.json(); assert.equal(maintained.status,200,JSON.stringify(maintenance));
+    check("mixed recovery expired member actually purged", await pg.scalar(`select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${lit(batchIntent.operation_id)}`), "purged");
+    check("mixed recovery retained member remains retired", await pg.scalar(`select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${lit(peerIntent.operation_id)}`), "retired");
+    const defaults={completed:false,completion_version:0,priority:4,labels:[],subtasks:[],reminders:[],attachments:[],comments:[],is_recurring:false,reminder_specs:[],source_metadata:{}};
+    const sparse={...original,items:original.items.map((x)=>({...x,record:Object.fromEntries(Object.entries(x.record).filter(([key,value])=>JSON.stringify(defaults[key])!==JSON.stringify(value)))}))};
+    const sparseStatus=await selectionRecovery("inspect",sparse);assert.equal(sparseStatus.code,null,JSON.stringify(sparseStatus));
+    check("whole status normalizes the batch writer defaults",sparseStatus.value.state,"unrecorded");
+    const unchanged = JSON.stringify(original);
+    const invalid = [
+      ["whole close refuses missing member", { ...original, items: original.items.slice(0,2) }, "PT409"],
+      ["whole close refuses duplicate member", { ...original, items: [original.items[0],original.items[0]] }, "22023"],
+      ["whole close refuses single member", { ...original, items: [original.items[0]] }, "22023"],
+      ["whole close refuses missing source", { ...original, restores: randomUUID() }, "PT409"],
+      ["whole close refuses changed content", { ...original, items: original.items.map((x,n) => n ? x : {...x, record:{...x.record,title:"Changed recovery"}}) }, "PT409"],
+      ["whole close refuses changed original policy", { ...original, items: original.items.map((x) => x.audio_restoration_ack ? {...x,audio_restoration_ack:{...ack, policy:"expired_recordings_omitted_v1"}} : x) }, "PT409"],
+      ["whole close refuses changed original count", { ...original, items: original.items.map((x) => x.audio_restoration_ack ? {...x,audio_restoration_ack:{...ack,count:2}} : x) }, "PT409"],
+      ["whole close refuses added metadata", { ...original, extra:"private" }, "22023"]
+    ];
+    for (const [name,command,code] of invalid) check(name,(await selectionRecovery("close",command)).code,code);
+    for (const [name,before,code] of [
+      ["whole close requires all project grants", `update taskfold_private.team_project_grants set role='viewer' where project_id=${lit(otherProject)} and user_id=${lit(account)}`, "42501"],
+      ["whole close refuses archived member project", `update public.projects set is_archived=true where id=${lit(otherProject)}`, "PT409"],
+      ["whole close requires live session", `delete from auth.sessions where id=${lit(users.actor.session)}`, "28000"],
+      ["whole close respects recovery pause", "update taskfold_private.audio_comment_config set restoration_enabled=false", "PT503"]
+    ]) check(name,(await selectionRecovery("close",original,null,"actor",before)).code,code);
+    check("whole close refuses different actor", (await selectionRecovery("close",original,null,"creator")).code, "PT409");
+    check("single close cannot detach batch member", (await recovery("close", original.items.find((x) => x.task_id === task))).code,"PT409");
+    const u=users.actor, held=await pg.hold(`set local role authenticated;set local request.jwt.claim.sub=${lit(u.id)};set local request.jwt.claims=${lit(JSON.stringify({ sub:u.id,session_id:u.session }))};select public.taskfold_audio_selection_restore_recovery('close',${j(original)})`);
+    const app="selection-late-wait", late=batchCall("restore",original,`set local application_name=${lit(app)}`);
+    const freshRaceCommand={...original,request_id:randomUUID(),items:original.items.map((x)=>({...x,request_id:randomUUID()}))};
+    const freshApp="selection-fresh-wait", freshRace=batchCall("restore",freshRaceCommand,`set local application_name=${lit(freshApp)}`);
+    try {
+      const blocked=await pg.waitForLock(app,held.pid);check("late batch waits for whole closure commit",blocked.blockers.includes(held.pid));
+      const freshBlocked=await pg.waitForLock(freshApp,held.pid);check("fresh batch serializes on original group before tasks",freshBlocked.event,"transactionid");
+    }
+    finally { await held.release("commit"); }
+    check("late batch cannot apply after whole closure",(await late).code,"PT412");
+    check("fresh retained batch cannot bypass expired policy",(await freshRace).code,"PT409");
+    check("competing fresh batch leaves no partial receipt",await pg.scalar(`select count(*)::int from taskfold_private.team_task_batches where team_id=${lit(team)} and request_id=${lit(freshRaceCommand.request_id)}`),0);
+    const closed=await selectionRecovery("inspect",original,"closed");
+    check("whole closure settles complete original",closed.value.state,"closed");
+    check("whole closure receipt is bounded metadata",Object.keys(closed.value).sort(),["protocol","account","team_id","request_id","restores","items","state"].sort());
+    check("whole closure receipt binds every member",closed.value.items,original.items.map((x) => Object.fromEntries(["task_id","project_id","task_generation","request_id"].map((k)=>[k,x[k]]))));
+    check("whole closure replay preserves receipt",(await selectionRecovery("close",original)).value,closed.value);
+    check("whole closure creates one terminal row",await pg.scalar("select count(*)::int from taskfold_private.audio_selection_restore_closures"),1);
+    check("whole closure retains all saved tasks absent",await taskCount(),0);
+    check("whole closure preserves caller request",JSON.stringify(original),unchanged);
+    check("whole closure cannot bind changed payload",(await selectionRecovery("inspect",{...original,items:original.items.map((x,n)=>n?x:{...x,record:{...x.record,description:"Changed after close"}})})).code,"PT409");
+    const freshHeader={...original,request_id:randomUUID()};
+    check("new batch header cannot reuse closed member identities",(await batchCall("restore",freshHeader)).code,"PT412");
+    check("single writer cannot reuse closed member identity",(await run(`public.taskfold_team_task_lifecycle('restore',${j(original.items[0])})`)).code,"PT412");
+    const replacement={...original,request_id:randomUUID(),items:original.items.map((x)=>({...x,request_id:randomUUID(),...(x.task_id===task?{audio_restoration_ack:{...ack,policy:"expired_recordings_omitted_v1"}}:{})}))};
+    const sparseReplacement={...replacement,items:replacement.items.map((x)=>({...x,record:Object.fromEntries(Object.entries(x.record).filter(([key,value])=>JSON.stringify(defaults[key])!==JSON.stringify(value)))}))};
+    const result=await batchCall("restore",sparseReplacement);assert.equal(result.code,null,JSON.stringify(result));
+    check("explicit replacement recovers complete mixed selection",await taskCount(),3);
+    check("replacement keeps task contents generations and other policies",replacement.items.map((x)=>({...x,request_id:original.items.find((y)=>y.task_id===x.task_id).request_id,...(x.task_id===task?{audio_restoration_ack:ack}:{})})),original.items);
+    check("fresh whole replacement retries idempotently",(await batchCall("restore",sparseReplacement)).value.replayed,true);
+    check("old whole Undo stays closed after replacement",(await selectionRecovery("inspect",original)).value,closed.value);
+    check("old whole Undo remains fenced after replacement",(await batchCall("restore",original)).code,"PT412");
+    for (const member of replacement.items) check("mixed restoration preserves task "+member.task_id,await row(member.task_id),member.record);
+    // Gateway target must use the certified restored audience generation.
+    const liveTarget={...peerIntent.target,task_generation:replacement.items.find((x)=>x.task_id===another).task_generation};
+    const current=await http.call("list",liveTarget);const currentPage=await current.json();
+    check("mixed restoration retains one recording for unexpired member",currentPage.items?.length,1);
+    check("mixed restoration retains original recording identity",currentPage.items?.[0]?.operation_id,peerIntent.operation_id);
+    const empty=await http.call("list",{task_id:task,project_id:project,task_generation:replacement.items.find((x)=>x.task_id===task).task_generation});
+    check("mixed restoration never resurrects expired audio",(await empty.json()).items,[]);
+    check("mixed restoration clears all transaction scopes",await pg.scalar("select count(*)::int from taskfold_private.audio_task_restore_scope"),0);
+    for (const role of ["anon","authenticated","service_role"]) check("selection closure rows private to "+role,await pg.scalar(`select to_jsonb(has_table_privilege(${lit(role)},'taskfold_private.audio_selection_restore_closures','select,insert,update,delete'))`),false);
+    for (const role of ["anon","service_role"]) check("selection recovery endpoint unavailable to "+role,await pg.scalar(`select to_jsonb(has_function_privilege(${lit(role)},'public.taskfold_audio_selection_restore_recovery(text,jsonb)','execute'))`),false);
+    check("selection closure ledger contains no task or media payload",await pg.scalar("select jsonb_agg(column_name order by ordinal_position) from information_schema.columns where table_schema='taskfold_private' and table_name='audio_selection_restore_closures'"),["team_id","request_id","actor_id","restore_from","member_nonces","fingerprint","created_at"]);
   }
   if (fenceSQL && process.env.TASKFOLD_AUDIO_RESTORE_RECOVERY_WIRE_OUT) await writeFile(process.env.TASKFOLD_AUDIO_RESTORE_RECOVERY_WIRE_OUT, JSON.stringify(recoveryWire, null, 2) + "\n");
   const findings = await pg.advisors();

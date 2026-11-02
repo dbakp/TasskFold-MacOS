@@ -7,7 +7,20 @@ private final class BatchHTTP:URLProtocol,@unchecked Sendable {
     override class func canInit(with request:URLRequest)->Bool{true}
     override class func canonicalRequest(for request:URLRequest)->URLRequest{request}
     override func stopLoading(){}
-    override func startLoading(){Self.handler?(request,self)}
+    override func startLoading() {
+        var captured = request
+        if captured.httpBody == nil, let stream = captured.httpBodyStream {
+            stream.open(); defer { stream.close() }
+            var data = Data(), buffer = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                guard count > 0 else { break }
+                data.append(contentsOf: buffer.prefix(count))
+            }
+            captured.httpBody = data
+        }
+        Self.handler?(captured, self)
+    }
     func finish(_ data:Data,status:Int=200){client?.urlProtocol(self,didReceive:HTTPURLResponse(url:request.url!,statusCode:status,httpVersion:nil,headerFields:["Content-Type":"application/json","Content-Length":String(data.count)])!,cacheStoragePolicy:.notAllowed);client?.urlProtocol(self,didLoad:data);client?.urlProtocolDidFinishLoading(self)}
 }
 private final class BatchReplyGate:@unchecked Sendable {
@@ -476,5 +489,179 @@ extension TeamTaskBatchTests {
         XCTAssertEqual(review.recordingCount, 1)
         XCTAssertEqual(review.members.count, batch.items.count)
         XCTAssertEqual(review.selection.original, selection.original)
+    }
+}
+
+extension TeamTaskBatchTests {
+    private func selectionOutcome(_ phase: String = "closed") throws -> (TeamAudioRestoreSelection, [String: JSON]) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "audio-selection-recovery-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let wire = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let entry = wire["phases"]!.object[phase]!.object, body = entry["command"]!.object
+        let items = try body["items"]!.list.map { value -> Mutation in
+            let item = value.object
+            let ack: TeamAudioRestorationAcknowledgement?
+            if case .number(let count)? = item["audio_restoration_ack"]?.object["count"] { ack = try .init(count: Int(count)) } else { ack = nil }
+            let scope = TeamTaskEditScope(account: wire["account"]!.text, origin: wire["origin"]!.text, team: body["team_id"]!.text,
+                project: item["project_id"]!.text, restoreRequest: UUID(uuidString: item["restore_from"]!.text),
+                taskTypesProtocol: 1, taskTypeLifecycleProtocol: 1, audioRestoration: ack)
+            return Mutation(id: UUID(uuidString: item["request_id"]!.text)!, table: "tasks", recordID: item["task_id"]!.text,
+                method: "POST", fields: item["record"]!.object, insertOnly: true, teamTaskScope: scope)
+        }
+        let batch = TeamTaskBatch(account: wire["account"]!.text, origin: wire["origin"]!.text, team: body["team_id"]!.text,
+            operation: .restore, restores: UUID(uuidString: body["restores"]!.text), items: items)
+        let selection = try TeamAudioRestoreSelection(TeamTaskBatch.header(batch, id: UUID(uuidString: body["request_id"]!.text)!))
+        XCTAssertEqual(selection.body, body)
+        return (selection, entry["reply"]!.object)
+    }
+    private func selectionRecoveryReview(_ selection: TeamAudioRestoreSelection, now: Date, pending: Bool = false, allRetained: Bool = false) throws -> TeamAudioRestoreSelectionReview {
+        let reviews = try zip(selection.scopes, selection.original.teamTaskBatch!.items).map { scope, item in
+            let expired = !allRetained && scope.task == "ec240000-0000-4000-8000-000000000002"
+            return try recordingReview(scope, count: item.teamTaskScope?.audioRestoration?.count ?? 0, now: now, expired: expired, pending: pending && expired)
+        }
+        return try TeamAudioRestoreSelectionReview(selection: selection, reviews: reviews, now: now)
+    }
+    @MainActor private func selectionBackend(_ selection: TeamAudioRestoreSelection) throws -> Backend {
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [BatchHTTP.self]
+        let account = selection.original.teamTaskBatch!.account
+        let session = try TaskfoldJSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
+        return Backend(configuration: ["URL": batchOrigin, "Key": "synthetic-public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
+    }
+    func testSelectionRecoveryDecodesOwningSQLAndRejectsPartialOrBorrowedProof() throws {
+        for phase in ["unrecorded", "recorded", "closed"] {
+            let (selection, raw) = try selectionOutcome(phase)
+            XCTAssertEqual(try TeamAudioRestoreSelectionReceipt(raw, selection: selection, action: .inspect).state.rawValue, phase)
+            for key in ["account", "team_id", "request_id", "restores", "state"] {
+                var changed = raw; changed[key] = .string(UUID().uuidString.lowercased())
+                XCTAssertThrowsError(try TeamAudioRestoreSelectionReceipt(changed, selection: selection, action: .inspect), key)
+            }
+            for key in ["task_id", "project_id", "task_generation", "request_id"] {
+                var changed = raw, items = raw["items"]!.list, member = items[0].object
+                member[key] = .string(UUID().uuidString.lowercased()); items[0] = .object(member); changed["items"] = .array(items)
+                XCTAssertThrowsError(try TeamAudioRestoreSelectionReceipt(changed, selection: selection, action: .inspect), key)
+            }
+            for items in [Array(raw["items"]!.list.dropLast()), Array(raw["items"]!.list.reversed())] {
+                var changed = raw; changed["items"] = .array(items)
+                XCTAssertThrowsError(try TeamAudioRestoreSelectionReceipt(changed, selection: selection, action: .inspect))
+            }
+            var extra = raw; extra["task"] = .object(selection.original.teamTaskBatch!.items[0].fields)
+            XCTAssertThrowsError(try TeamAudioRestoreSelectionReceipt(extra, selection: selection, action: .inspect))
+            if phase == "unrecorded" { XCTAssertThrowsError(try TeamAudioRestoreSelectionReceipt(raw, selection: selection, action: .close)) }
+        }
+    }
+    func testClosedSelectionReplacementPreservesEveryTaskAndGeneration() throws {
+        let (selection, raw) = try selectionOutcome(), now = Date(timeIntervalSince1970: 1_900_000_000)
+        let receipt = try TeamAudioRestoreSelectionReceipt(raw, selection: selection, action: .close)
+        let review = try selectionRecoveryReview(selection, now: now)
+        let replacement = try receipt.replacingWithReviewedRecovery(review: review, now: now), old = selection.original.teamTaskBatch!, batch = replacement.teamTaskBatch!
+        XCTAssertNotEqual(replacement.id, selection.original.id)
+        XCTAssertEqual(batch.restores, old.restores)
+        for (before, after) in zip(old.items, batch.items) {
+            XCTAssertEqual(before.fields, after.fields); XCTAssertEqual(before.recordID, after.recordID)
+            XCTAssertNotEqual(before.id, after.id); XCTAssertEqual(before.teamTaskScope?.restoreRequest, after.teamTaskScope?.restoreRequest)
+            let expired = before.recordID == "ec240000-0000-4000-8000-000000000002"
+            XCTAssertEqual(after.teamTaskScope?.audioRestoration?.policy, expired ? .omitExpired : before.teamTaskScope?.audioRestoration?.policy)
+        }
+        XCTAssertEqual(try TaskfoldJSONDecoder().decode(Mutation.self, from: TaskfoldJSONEncoder().encode(replacement)), replacement)
+        for phase in ["recorded", "unrecorded"] {
+            let (other, outcome) = try selectionOutcome(phase)
+            let observed = try TeamAudioRestoreSelectionReceipt(outcome, selection: other, action: .inspect)
+            XCTAssertThrowsError(try observed.replacingWithReviewedRecovery(review: selectionRecoveryReview(other, now: now), now: now))
+        }
+    }
+    func testSelectionReplacementRejectsStaleCleanupAndReusedIdentities() throws {
+        let (selection, raw) = try selectionOutcome(), now = Date(timeIntervalSince1970: 1_900_000_000)
+        let receipt = try TeamAudioRestoreSelectionReceipt(raw, selection: selection, action: .close), review = try selectionRecoveryReview(selection, now: now)
+        XCTAssertThrowsError(try receipt.replacingWithReviewedRecovery(review: selectionRecoveryReview(selection, now: now, pending: true), now: now))
+        XCTAssertThrowsError(try receipt.replacingWithReviewedRecovery(review: selectionRecoveryReview(selection, now: now, allRetained: true), now: now))
+        XCTAssertThrowsError(try receipt.replacingWithReviewedRecovery(review: review, now: now.addingTimeInterval(120)))
+        for id in [selection.original.id, selection.original.teamTaskBatch!.items[0].id, selection.original.teamTaskBatch!.restores!, selection.original.teamTaskBatch!.items[0].teamTaskScope!.restoreRequest!] {
+            XCTAssertThrowsError(try receipt.replacingWithReviewedRecovery(review: review, requestID: id, now: now))
+        }
+        XCTAssertThrowsError(try receipt.replacingWithReviewedRecovery(review: review, memberRequests: [:], now: now))
+        let reused = UUID(), nonces = Dictionary(uniqueKeysWithValues: selection.scopes.map { ($0.task, reused) })
+        XCTAssertThrowsError(try receipt.replacingWithReviewedRecovery(review: review, memberRequests: nonces, now: now))
+    }
+    func testSelectionSnapshotReplacementIsAtomicAndKeepsTailAndTables() throws {
+        let (selection, raw) = try selectionOutcome(), now = Date(timeIntervalSince1970: 1_900_000_000)
+        let receipt = try TeamAudioRestoreSelectionReceipt(raw, selection: selection, action: .close), review = try selectionRecoveryReview(selection, now: now)
+        let tail = Mutation(table: "projects", recordID: UUID().uuidString.lowercased(), method: "PATCH", fields: ["name": .string("Keep later edit")])
+        var snapshot = Snapshot(tables: ["tasks": selection.original.teamTaskBatch!.items.map { Record($0.fields) }], pending: [selection.original, tail])
+        let original = snapshot
+        var collisions = Dictionary(uniqueKeysWithValues: selection.scopes.map { ($0.task, UUID()) }); collisions[selection.scopes[0].task] = tail.id
+        XCTAssertThrowsError(try snapshot.replaceExpiredAudioRestoreSelection(receipt: receipt, review: review, memberRequests: collisions, now: now))
+        XCTAssertEqual(snapshot, original)
+        try snapshot.replaceExpiredAudioRestoreSelection(receipt: receipt, review: review, now: now)
+        XCTAssertEqual(snapshot.tables, original.tables); XCTAssertEqual(Array(snapshot.pending.dropFirst()), [tail])
+        let replaced = snapshot
+        XCTAssertThrowsError(try snapshot.replaceExpiredAudioRestoreSelection(receipt: receipt, review: review, now: now))
+        XCTAssertEqual(snapshot, replaced)
+    }
+    @MainActor func testSelectionRecoveryTransportSendsFrozenBodyWithoutCookiesOrCache() async throws {
+        let (selection, raw) = try selectionOutcome(), api = try selectionBackend(selection)
+        var calls = 0
+        BatchHTTP.handler = { request, peer in
+            calls += 1; XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_audio_selection_restore_recovery")
+            XCTAssertEqual(request.httpMethod, "POST"); XCTAssertFalse(request.httpShouldHandleCookies)
+            XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalCacheData); XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-store")
+            guard let bytes = request.httpBody, let body = try? TaskfoldJSONDecoder().decode([String: JSON].self, from: bytes) else {
+                XCTFail("The full frozen JSON request must be present")
+                peer.finish(Data("{}".utf8), status: 400); return
+            }
+            XCTAssertEqual(body, ["_action": .string("close"), "_body": .object(selection.body)])
+            peer.finish(try! TaskfoldJSONEncoder().encode(raw))
+        }; defer { BatchHTTP.handler = nil }
+        let confirmed = try await api.teamAudioRestoreSelectionRecovery(selection, action: .close)
+        XCTAssertEqual(confirmed.state, .closed)
+        XCTAssertEqual(calls, 1)
+    }
+    @MainActor func testSelectionRecoveryTransportHidesPrivateFailuresAndRequiresAuthorization() async throws {
+        let (selection, _) = try selectionOutcome(), api = try selectionBackend(selection)
+        defer { BatchHTTP.handler = nil }
+        for (code, status) in [("42501", 403), ("PT503", 503), ("28000", 400)] {
+            BatchHTTP.handler = { _, peer in peer.finish(Data("{\"code\":\"\(code)\",\"message\":\"private provider detail\"}".utf8), status: status) }
+            do { _ = try await api.teamAudioRestoreSelectionRecovery(selection, action: .close); XCTFail("No receipt on refusal") }
+            catch {
+                XCTAssertFalse(error.localizedDescription.contains("private provider detail"))
+                if code == "28000" { XCTAssertTrue(error is AccountSessionAuthorizationRequired) }
+                else { XCTAssertTrue(error.localizedDescription.contains("original request are kept")) }
+            }
+        }
+    }
+    @MainActor func testSelectionRecoveryTransportRejectsOversizedMetadata() async throws {
+        let (selection, _) = try selectionOutcome(), api = try selectionBackend(selection)
+        BatchHTTP.handler = { _, peer in peer.finish(Data(repeating: 32, count: 32769)) }; defer { BatchHTTP.handler = nil }
+        do { _ = try await api.teamAudioRestoreSelectionRecovery(selection, action: .inspect); XCTFail("Response must stay bounded") }
+        catch { XCTAssertTrue(error.localizedDescription.lowercased().contains("too large"), error.localizedDescription) }
+    }
+    @MainActor func testSelectionRecoveryLateSameAccountNewSessionCannotSupplyReceipt() async throws {
+        let (selection, raw) = try selectionOutcome(), api = try selectionBackend(selection), gate = BatchReplyGate(), started = expectation(description: "Selection response held")
+        BatchHTTP.handler = { _, peer in gate.hold(peer); started.fulfill() }; defer { BatchHTTP.handler = nil }
+        let pending = Task { @MainActor in try await api.teamAudioRestoreSelectionRecovery(selection, action: .inspect) }
+        await fulfillment(of: [started], timeout: 3)
+        var session = try XCTUnwrap(api.session); session.access_token = "new-synthetic-session"; try await api.accept(session)
+        gate.release(try TaskfoldJSONEncoder().encode(raw))
+        do { _ = try await pending.value; XCTFail("Old session cannot grant replacement authority") }
+        catch { XCTAssertTrue(error is CancellationError) }
+    }
+    @MainActor func testSelectionRecoveryMetadataFitsMaximumSupportedSelection() async throws {
+        let seed = try recordingSelection(), source = seed.original.teamTaskBatch!
+        let items = (0..<100).map { _ -> Mutation in
+            var item = source.items[0]; item.id = UUID(); item.recordID = UUID().uuidString.lowercased()
+            item.fields["id"] = .string(item.recordID); item.fields["task_generation"] = .string(UUID().uuidString.lowercased())
+            item.teamTaskScope!.restoreRequest = UUID()
+            return item
+        }.sorted { $0.recordID < $1.recordID }
+        let batch = TeamTaskBatch(account: source.account, origin: source.origin, team: source.team, operation: .restore, restores: source.restores, items: items)
+        let selection = try TeamAudioRestoreSelection(TeamTaskBatch.header(batch)), api = try selectionBackend(selection)
+        let members = selection.body["items"]!.list.map { item -> JSON in
+            .object(Dictionary(uniqueKeysWithValues: ["task_id", "project_id", "task_generation", "request_id"].map { ($0, item.object[$0]!) }))
+        }
+        let raw: [String: JSON] = ["protocol": .number(1), "account": .string(batch.account), "team_id": .string(batch.team),
+            "request_id": selection.body["request_id"]!, "restores": selection.body["restores"]!, "items": .array(members), "state": .string("closed")]
+        let bytes = try TaskfoldJSONEncoder().encode(raw)
+        XCTAssertLessThan(bytes.count, 32768)
+        BatchHTTP.handler = { _, peer in peer.finish(bytes) }; defer { BatchHTTP.handler = nil }
+        let receipt = try await api.teamAudioRestoreSelectionRecovery(selection, action: .close)
+        XCTAssertEqual(receipt.state, .closed); XCTAssertEqual(receipt.selection.scopes.count, 100)
     }
 }

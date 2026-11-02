@@ -1,0 +1,35 @@
+[
+  {
+    "attempt": "ios-service-prototype",
+    "checksBeforeStop": 182,
+    "error": null,
+    "cleanupErrors": [],
+    "reportSHA256": "b3e459696f4f48465020da05a9d443f62dc56c3f468a265bcf55e4b5f8b931dc",
+    "finalAcceptance": false
+  },
+  {
+    "attempt": "ios-service-pre-default-normalization",
+    "checksBeforeStop": 185,
+    "error": null,
+    "cleanupErrors": [],
+    "reportSHA256": "682825d594c42a68a1d088a3206fcc44091dadc21e243a83a0c56779c111a779",
+    "finalAcceptance": false
+  },
+  {
+    "attempt": "ios-service-sparse-case-failure",
+    "checksBeforeStop": 135,
+    "error": {
+      "message": "Cannot read properties of null (reading 'state')"
+    },
+    "cleanupErrors": [],
+    "reportSHA256": "f2da0e696c4a43ef8eeb6af9362c18407812c802e906bb88b312a9f2d3d3fab7",
+    "finalAcceptance": false
+  },
+  {
+    "attempt": "ios-core-v1",
+    "outcome": "test harness force-unwrapped an absent httpBody; URLProtocol supplied httpBodyStream",
+    "exitCode": 1,
+    "logSHA256": "12f0d059f79f176f06baf6102e84e52713e60ea0e90fc54d3706a3bf00832244",
+    "finalAcceptance": false
+  }
+]

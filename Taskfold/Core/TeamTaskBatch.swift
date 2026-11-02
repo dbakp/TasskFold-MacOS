@@ -940,6 +940,7 @@ extension TeamTaskBatch.Review {
 /// A complete, frozen selection for recording recovery. This admission does not
 /// authorize rewriting the outbox: the service must close the whole intent first.
 struct TeamAudioRestoreSelection: Equatable, Sendable {
+    enum Action: String, Sendable { case inspect, close }
     let original: Mutation
     let body: [String: JSON]
     let scopes: [TeamAudioLifecycleScope]
@@ -987,5 +988,59 @@ struct TeamAudioRestoreSelectionReview: Equatable, Sendable {
         }
         self.selection = selection; members = ordered; recordingCount = count
         omittedRecordingCount = omitted; waitingForCleanup = waiting; validUntil = deadline
+    }
+}
+
+/// A whole-selection service outcome, bound to the complete frozen command.
+/// An unrecorded observation cannot authorize a replacement or partial recovery.
+struct TeamAudioRestoreSelectionReceipt: Equatable, Sendable {
+    enum State: String, Sendable { case recorded, unrecorded, closed }
+    let selection: TeamAudioRestoreSelection
+    let state: State
+    init(_ raw: [String: JSON], selection: TeamAudioRestoreSelection, action: TeamAudioRestoreSelection.Action) throws {
+        guard let batch = selection.original.teamTaskBatch else { throw TeamAudioRestoreSelection.unavailable }
+        let members = selection.body["items"]!.list.map { item -> JSON in
+            .object(Dictionary(uniqueKeysWithValues: ["task_id", "project_id", "task_generation", "request_id"].map { ($0, item.object[$0]!) }))
+        }
+        let expected: [String: JSON] = ["protocol": .number(1), "account": .string(batch.account), "team_id": .string(batch.team),
+            "request_id": selection.body["request_id"]!, "restores": selection.body["restores"]!, "items": .array(members)]
+        guard Set(raw.keys) == Set(expected.keys).union(["state"]), expected.allSatisfy({ raw[$0.key] == $0.value }),
+              case .string(let name)? = raw["state"], let state = State(rawValue: name), action != .close || state != .unrecorded else {
+            throw TeamAudioRestoreSelection.unavailable
+        }
+        self.selection = selection; self.state = state
+    }
+    /// Called only after explicit omission consent. Keep every task's chosen
+    /// generation, contents and deletion certificate; renew all request identities.
+    func replacingWithReviewedRecovery(review: TeamAudioRestoreSelectionReview, requestID: UUID = UUID(), memberRequests: [String: UUID]? = nil, now: Date = Date()) throws -> Mutation {
+        guard state == .closed, review.selection == selection else { throw TeamAudioRestoreSelection.unavailable }
+        let fresh = try TeamAudioRestoreSelectionReview(selection: selection, reviews: review.members, now: now)
+        guard fresh.requiresOmissionConsent, !fresh.waitingForCleanup, var batch = selection.original.teamTaskBatch else { throw TeamAudioRestoreSelection.unavailable }
+        let requests = memberRequests ?? Dictionary(uniqueKeysWithValues: batch.items.map { ($0.recordID, UUID()) })
+        let oldIDs = Set([selection.original.id] + batch.items.map(\.id) + batch.items.compactMap { $0.teamTaskScope?.restoreRequest } + [batch.restores!])
+        let newIDs = Set([requestID] + Array(requests.values))
+        guard Set(requests.keys) == Set(batch.items.map(\.recordID)), newIDs.count == batch.items.count + 1,
+              oldIDs.isDisjoint(with: newIDs) else { throw TeamAudioRestoreSelection.unavailable }
+        batch.items = try zip(batch.items, fresh.members).map { item, member in
+            var changed = try member.applying(to: item, now: now)
+            changed.id = requests[item.recordID]!
+            return changed
+        }
+        let result = TeamTaskBatch.header(batch, id: requestID)
+        _ = try batch.body(for: result)
+        return result
+    }
+}
+
+extension Snapshot {
+    /// Replace one complete head only. Validate every fresh nonce before assigning
+    /// anything; local task tables and every later saved intent remain unchanged.
+    mutating func replaceExpiredAudioRestoreSelection(receipt: TeamAudioRestoreSelectionReceipt, review: TeamAudioRestoreSelectionReview, requestID: UUID = UUID(), memberRequests: [String: UUID]? = nil, now: Date = Date()) throws {
+        guard pending.first == receipt.selection.original else { throw TeamAudioRestoreSelection.unavailable }
+        let replacement = try receipt.replacingWithReviewedRecovery(review: review, requestID: requestID, memberRequests: memberRequests, now: now)
+        let newIDs = Set([replacement.id] + replacement.teamTaskBatch!.items.map(\.id))
+        let pendingIDs = Set(pending.flatMap { [$0.id] + ($0.teamTaskBatch?.items.map(\.id) ?? []) })
+        guard pendingIDs.isDisjoint(with: newIDs) else { throw TeamAudioRestoreSelection.unavailable }
+        pending[0] = replacement
     }
 }
