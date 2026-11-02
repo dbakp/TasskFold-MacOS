@@ -22,7 +22,7 @@ import { homedir } from "node:os";
 const exec = promisify(execFile);
 const [platform, output] = process.argv.slice(2);
 assert(
-  ["service", "ios", "ipad", "ios-expired", "ios-recorded", "ios-selection"].includes(platform) &&
+  ["service", "ios", "ipad", "ios-expired", "ios-recorded", "ios-selection", "ios-selection-warm", "ios-selection-recorded"].includes(platform) &&
     output?.startsWith("/tmp/taskfold-") && output.endsWith(".json"),
 );
 const account = "ec240000-0000-4000-8000-000000000001",
@@ -33,7 +33,8 @@ const account = "ec240000-0000-4000-8000-000000000001",
   generation = "ec240000-0000-4000-8000-000000000071";
 const expiredRecovery = platform === "ios-expired";
 const recordedRecovery = platform === "ios-recorded";
-const selectionRecovery = platform === "ios-selection", selectionPeer = "ec240000-0000-4000-8000-000000000005", selectionEmpty = "ec240000-0000-4000-8000-000000000006";
+const warmSelectionRecovery = platform === "ios-selection-warm", recordedSelectionRecovery = platform === "ios-selection-recorded";
+const selectionRecovery = ["ios-selection", "ios-selection-warm", "ios-selection-recorded"].includes(platform), selectionPeer = "ec240000-0000-4000-8000-000000000005", selectionEmpty = "ec240000-0000-4000-8000-000000000006";
 let selectionOriginals, selectionIntents, selectionMedia;
 const device = platform.startsWith("ios")
     ? "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
@@ -159,7 +160,7 @@ try {
       "update taskfold_private.audio_comment_config set restoration_enabled=true",
     );
   }
-  http = await createAudioTeamNativeHttp(pg, storage, users.actor, { expiredRecovery, recordedRecovery, selectionRecovery });
+  http = await createAudioTeamNativeHttp(pg, storage, users.actor, { expiredRecovery, recordedRecovery, selectionRecovery, warmSelectionRecovery, recordedSelectionRecovery });
   if (selectionRecovery) {
     selectionMedia=await readFile(new URL("../../TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a",import.meta.url));
     selectionIntents=[];
@@ -336,7 +337,7 @@ try {
     await writeFile(configPath, configText, { mode: 0o600, flag: "wx" });
     const result = output.replace(/\.json$/, ".xcresult"),
       log = output.replace(/\.json$/, ".log"),
-      test = selectionRecovery ? "testTeamRecordingNativeSelectionRecovery" : expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : recordedRecovery ? "testTeamRecordingNativeRecordedRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
+      test = warmSelectionRecovery ? "testTeamRecordingNativeSelectionWarmHistory" : recordedSelectionRecovery ? "testTeamRecordingNativeSelectionRecordedRecovery" : selectionRecovery ? "testTeamRecordingNativeSelectionRecovery" : expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : recordedRecovery ? "testTeamRecordingNativeRecordedRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
     const command = [
       "-project",
       "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
@@ -402,38 +403,68 @@ try {
       check("selection cache contains every restored member", cache.tables.tasks.length, 3);
       check("selection cache has no queued edit after cold retry", cache.pending, []);
       const mutations = http.requests.filter((x) => x.action === "selection_restore"), closures = http.requests.filter((x) => x.action === "selection_recovery_close");
-      check("selection committed reply is lost once and replayed", mutations.map((x) => x.deliveredStatus), [503, 200]);
-      check("selection cold retry preserves complete frozen body", mutations[0].command, mutations[1].command);
-      check("selection first and repeated closure both terminal", closures.map((x) => x.state), ["closed", "closed"]);
-      check("local save failure never changes original closure request", closures[0].command, closures[1].command);
-      check("original retained selection is refused before replacement", http.requests.some((x) => x.action === "selection_restore_refused" && x.code === "PT409"));
-      check("one whole selection closure persists", await pg.scalar("select count(*)::int from taskfold_private.audio_selection_restore_closures"), 1);
-      check("selection confirmation has exactly one restored group", await pg.scalar("select count(*)::int from taskfold_private.team_task_batches where operation='restore'"), 1);
-      check("selection restores every task exactly once", await pg.scalar("select count(*)::int from taskfold_private.team_task_edits where operation='restore'"), 3);
-      const originalBody=closures[0].command._body, replacement=mutations[0].command._body;
+      if (recordedSelectionRecovery) {
+        check("recorded selection reply lost then failed save and acknowledgement retry", mutations.map((x)=>x.deliveredStatus), [503,200,200]);
+        check("recorded selection failed save preserves original intent", mutations[0].command, mutations[1].command);
+        check("recorded selection acknowledgement repeats unchanged intent", mutations[0].command, mutations[2].command);
+        check("recorded selection never attempts closure", closures, []);
+        check("recorded selection has no closure ledger row", await pg.scalar("select count(*)::int from taskfold_private.audio_selection_restore_closures"),0);
+      } else {
+        check("selection committed reply and retry history match mode", mutations.map((x)=>x.deliveredStatus), warmSelectionRecovery ? [200,200] : [503,200]);
+        if (!warmSelectionRecovery) check("selection cold retry preserves complete frozen body", mutations[0].command, mutations[1].command);
+        check("selection first and repeated closure both terminal", closures.map((x)=>x.state),["closed","closed"]);
+        check("local save failure never changes original closure request", closures[0].command,closures[1].command);
+        check("original retained selection is refused before replacement",http.requests.some((x)=>x.action==="selection_restore_refused"&&x.code==="PT409"));
+        check("one whole selection closure persists",await pg.scalar("select count(*)::int from taskfold_private.audio_selection_restore_closures"),1);
+      }
+      check("selection restores expected groups", await pg.scalar("select count(*)::int from taskfold_private.team_task_batches where operation='restore'"), warmSelectionRecovery ? 2 : 1);
+      check("selection restores expected members", await pg.scalar("select count(*)::int from taskfold_private.team_task_edits where operation='restore'"), warmSelectionRecovery ? 6 : 3);
+      const originalBody=recordedSelectionRecovery ? mutations[0].command._body : closures[0].command._body, replacement=mutations[0].command._body;
+      const finalRestore=mutations.at(-1).command._body;
+      if (warmSelectionRecovery) {
+        const deletions=http.requests.filter((x)=>x.action==="selection_delete");
+        check("warm native Redo applies a second complete deletion",deletions.map((x)=>x.deliveredStatus),[200,200]);
+        check("warm final Undo uses the Redo deletion group",finalRestore.restores,deletions[1].command._body.request_id);
+        for (const member of deletions[1].command._body.items) {
+          check("warm Redo keeps only available recording acknowledgement "+member.task_id,member.audio_restoration_ack,member.task_id===selectionPeer ? {policy:"published_restore_v1",count:1,retention_days:30} : undefined);
+          const restored=finalRestore.items.find((x)=>x.task_id===member.task_id);
+          check("warm Undo uses each new Redo deletion certificate "+member.task_id,restored.restore_from,member.request_id);
+          check("warm Undo renews generation "+member.task_id,restored.task_generation!==replacement.items.find((x)=>x.task_id===member.task_id).task_generation);
+        }
+      }
+      if (!recordedSelectionRecovery) {
       check("selection renews header request after closure", replacement.request_id !== originalBody.request_id);
       check("selection retains original deletion group", replacement.restores, originalBody.restores);
       for (const member of replacement.items) {
-        const previous=originalBody.items.find((x)=>x.task_id===member.task_id), baseline=selectionOriginals.find((x)=>x.id===member.task_id);
+        const previous=originalBody.items.find((x)=>x.task_id===member.task_id);
         check("selection renews member request "+member.task_id,member.request_id!==previous.request_id);
         check("selection keeps saved fields and chosen generation "+member.task_id,member.record,previous.record);
         check("selection keeps deletion certificate "+member.task_id,member.restore_from,previous.restore_from);
         const expectedPolicy=member.task_id===task?{policy:"expired_recordings_omitted_v1",count:1,retention_days:30}:previous.audio_restoration_ack;
         check("selection records reviewed member policy "+member.task_id,member.audio_restoration_ack,expectedPolicy);
+      }
+      }
+      for (const member of finalRestore.items) {
+        const baseline=selectionOriginals.find((x)=>x.id===member.task_id);
         const saved=await pg.scalar(`select to_jsonb(t) from public.tasks t where id=${lit(member.task_id)}`);
         check("selection keeps actual SQL fields "+member.task_id,saved,{...baseline,task_generation:member.task_generation});
         check("selection cold cache equals actual SQL "+member.task_id,cache.tables.tasks.find((x)=>x.id===member.task_id),saved);
         const list=await http.audio.call("list",{task_id:member.task_id,task_generation:member.task_generation,project_id:project});
         check("selection recipient can read current generation "+member.task_id,list.status,200);
         const page=await list.json();
-        check("selection keeps only available audio "+member.task_id,page.items.length,member.task_id===selectionPeer?1:0);
+        check("selection keeps only available audio "+member.task_id,page.items.length,(member.task_id===selectionPeer || (recordedSelectionRecovery && member.task_id===task))?1:0);
       }
       const download=await http.audio.call("download",{comment_id:selectionIntents[1].comment_id});
       check("selection retained recording remains downloadable",download.status,200);
       check("selection retained provider bytes stay exact",Buffer.from(await download.arrayBuffer()),selectionMedia);
+      if (recordedSelectionRecovery) {
+        const rootDownload=await http.audio.call("download",{comment_id:selectionIntents[0].comment_id});
+        check("recorded selection root audio remains downloadable",rootDownload.status,200);
+        check("recorded selection root bytes stay exact",Buffer.from(await rootDownload.arrayBuffer()),selectionMedia);
+      }
       check("selection recovery uploads no replacement media",http.audio.state.uploads,2);
       check("selection publishes exactly the two immutable identities",await pg.scalar("select count(*)::int from taskfold_private.audio_comment_publications"),2);
-      check("selection expired recording stays physically purged",await pg.scalar(`select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${lit(selectionIntents[0].operation_id)}`),"purged");
+      check(recordedSelectionRecovery ? "recorded selection keeps original root publication" : "selection expired recording stays physically purged",await pg.scalar(`select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${lit(selectionIntents[0].operation_id)}`),recordedSelectionRecovery ? "published" : "purged");
       check("selection retains unexpired publication",await pg.scalar(`select to_jsonb(state) from taskfold_private.audio_comment_publications where operation_id=${lit(selectionIntents[1].operation_id)}`),"published");
       check("selection rollback and retry consume every restore scope",await pg.scalar("select count(*)::int from taskfold_private.audio_task_restore_scope"),0);
       check("selection workspace adapter has no errors",http.workspace.counts.errors,[]);

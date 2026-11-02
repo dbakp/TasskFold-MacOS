@@ -653,7 +653,7 @@ struct TeamAudioRestoreSelectionRecoveryView: View {
             guard visible == visibility, phase == .active, opening.matches(account: store.userID, generation: store.workspaceGeneration),
                   session == store.backend.reminderSessionIncarnation, selection.original.teamTaskBatch?.origin == (try? store.backend.accountRemovalOrigin) else { return }
             finishPresentation()
-        } catch { guard expected == lifecycle, visible == visibility else { return }; message = error.localizedDescription }
+        } catch { guard expected == lifecycle, visible == visibility else { return }; message = "The confirmation could not be saved. Your selection is kept. " + error.localizedDescription }
     }
     @MainActor private func recoverSelection() async {
         guard canRecover, let review, let opening, let session else { return }

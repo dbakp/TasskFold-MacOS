@@ -14,8 +14,8 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
   const workspace = taskFileWorkspaceAdapter(pg, { actor: user }, {
     actor: audio.nativeToken,
   });
-  assert(Object.keys(options).every((key) => ["expiredRecovery", "recordedRecovery", "selectionRecovery"].includes(key)));
-  const faults = { losePublicationReply: options.selectionRecovery !== true, expireAfterDeletion: options.expiredRecovery === true || options.selectionRecovery === true, loseOmissionReply: options.expiredRecovery === true || options.selectionRecovery === true, loseRetainedReply: options.recordedRecovery === true };
+  assert(Object.keys(options).every((key) => ["expiredRecovery", "recordedRecovery", "selectionRecovery", "warmSelectionRecovery", "recordedSelectionRecovery"].includes(key)));
+  const faults = { losePublicationReply: options.selectionRecovery !== true, expireAfterDeletion: (options.expiredRecovery === true || options.selectionRecovery === true) && options.recordedSelectionRecovery !== true, loseOmissionReply: (options.expiredRecovery === true || options.selectionRecovery === true) && options.warmSelectionRecovery !== true, loseRetainedReply: options.recordedRecovery === true || options.recordedSelectionRecovery === true };
   const requests = [];
   const server = createServer(async (req, res) => {
     try {

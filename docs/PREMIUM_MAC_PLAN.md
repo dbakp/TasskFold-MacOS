@@ -10489,3 +10489,9 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Own exact single/selection recovery history rebinding, preserving logical menu identity and unrelated actions. Save the replacement before assigning either history stack.
 - [x] Verify 204 owning Core tests and current native app/runner build/signatures.
 - [ ] Actual warm native Redo/Undo and save-failure history, group recorded-result confirmation and Mac runtime remain unaccepted. No normal-use activation. See [scope](audio-history-rebinding/README.md).
+
+### 3 November 2026 · Native selection-history proof
+
+- [x] Own the recorded-acknowledgement failure copy and guarded debug support; current app/runner build and pass strict signatures.
+- [x] Record owning iPhone acceptance: 69 live-history checks and 46 recorded-confirmation checks, including actual failed saves and unchanged recovery history. This does not establish Mac runtime.
+- [ ] Accept actual Mac history/selection controls, ordinary app entry and wider accessibility/context/genuine integration. No normal-use activation. See [scope](audio-selection-history-native/README.md).

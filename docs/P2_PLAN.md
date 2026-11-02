@@ -7480,3 +7480,11 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Independently verify each owning Core implementation: 204 focused tests pass, including four history regressions. Build/sign both current app and runner products.
 - [ ] Accept the actual warm native Redo/delete/Undo cycle and history save failure, then group recorded confirmation. Other native/genuine integration and normal-use gates remain open.
 - Evidence: [history rebinding scope](audio-history-rebinding/README.md). Curated checkpoint totals remain unchanged.
+
+### 3 November 2026 · Live selection history and recorded acknowledgement
+
+- [x] Accept actual iPhone recovery → Redo deletion → Undo restoration without resetting history. A real failed persist preserves the complete queue/history; final cold rows equal SQL, available recording bytes stay exact and expired media stays purged. 69 checks pass.
+- [x] Accept the recorded group screen: Later, unchanged acknowledgement, actual failed save, retry and cold return. 46 checks pass with exactly one restored group/three members, no closure and no duplicate upload. The full failure message is reachable by native scrolling.
+- [x] Keep guarded probes DEBUG-only, add clear acknowledgement-save failure copy, and build/sign app and runner independently in both repos.
+- [ ] Later queued dependencies, normal app entry, Mac/iPad, wider context/accessibility, mixed media, whole-project transfer and genuine integration remain. Normal gates stay Off.
+- Evidence: [native history and confirmation](audio-selection-history-native/README.md). Curated checkpoint/substep totals are unchanged.

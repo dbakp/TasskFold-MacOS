@@ -21,3 +21,5 @@ Still required: the actual warm native recovery → Redo deletion → Undo resto
 ## Build attempts
 
 The first isolated iOS build stopped because two existing native screen files were absent from its test copy. A repair script then stopped on an absent optional isolation receipt; the second build started without that repair and failed on the same missing inputs. No app code was changed to accommodate the test copy. The two files were restored from each owning repository using the existing identifier substitutions, and the refresh helper now includes them. Final build results are recorded separately in verification.json; these failed attempts do not count as acceptance.
+
+Follow-up: [iPhone live history and recorded selection confirmation](../audio-selection-history-native/README.md) now have their own scoped native proof. The checks and remaining lists above describe this earlier milestone; later queued edits, normal entry, other platforms and genuine integration remain open.

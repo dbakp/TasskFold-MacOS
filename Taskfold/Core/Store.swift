@@ -1469,6 +1469,12 @@ final class Store {
         let previous = snapshot
         do {
             guard snapshot.acknowledge(receipt.selection.original, saved: saved) else { throw TeamAudioRestoreSelection.unavailable }
+            #if DEBUG
+            if audioSelectionFixtureFailNextSave, AudioTeamNativeProvider.enabled,
+               ProcessInfo.processInfo.arguments.contains("--audio-selection-recovery-testing") {
+                audioSelectionFixtureFailNextSave = false; savedFilterFixtureFailNextPersist = true
+            }
+            #endif
             try persist()
         } catch { snapshot = previous; throw error }
         notice = "Saved selection Undo confirmed."

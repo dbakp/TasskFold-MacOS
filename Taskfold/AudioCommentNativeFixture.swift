@@ -1,6 +1,7 @@
 #if DEBUG
 import SwiftUI
 import AVFoundation
+import CryptoKit
 import Observation
 import Darwin
 
@@ -694,6 +695,13 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
     @State private var ready = false
     @State private var deletion: TeamTaskDeletionRequest?
     @State private var deletionError: String?
+    private var historyFingerprint: String {
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let actions = [store.undoStack.map(\.undo), store.undoStack.map(\.redo), store.redoStack.map(\.undo), store.redoStack.map(\.redo)]
+        let identities = store.undoStack.map { $0.id.uuidString }.joined(separator: ",") + "/" + store.redoStack.map { $0.id.uuidString }.joined(separator: ",")
+        guard let bytes = try? encoder.encode(actions) else { return "Unreadable history" }
+        return SHA256.hash(data: Data(identities.utf8) + bytes).map { String(format: "%02x", $0) }.joined()
+    }
     var body: some View {
         NavigationStack {
             Form {
@@ -710,6 +718,8 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
                     Button("Undo task deletion") { if !store.undo() { deletionError = store.error } }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("audioTeamNativeUndo")
                     TeamAudioRestoreRecoveryButton()
                     if ProcessInfo.processInfo.arguments.contains("--audio-selection-recovery-testing") {
+                        Text("Saved edit history").accessibilityIdentifier("audioTeamNativeHistoryFingerprint").accessibilityValue(historyFingerprint)
+                        Button("Redo task deletion") { if !store.redo() { deletionError = store.error } }.disabled(store.redoStack.isEmpty).accessibilityIdentifier("audioTeamNativeRedo")
                         Button("Review selection deletion") {
                             do {
                                 let tasks = store.tasks.filter { $0.string("project_id") == TeamEditorNativeFixture.projectID }
