@@ -1447,6 +1447,9 @@ final class Store {
         let previous = snapshot
         do {
             try snapshot.replaceExpiredAudioRestoreSelection(receipt: receipt, review: review)
+            guard let replacement = snapshot.pending.first else { throw TeamAudioLifecycleReview.unavailable }
+            let history = try TeamAudioRestoreHistoryRebinding(original: receipt.selection.original, replacement: replacement)
+            let nextUndo = try undoStack.map(history.applying), nextRedo = try redoStack.map(history.applying)
             #if DEBUG
             if audioSelectionFixtureFailNextSave, AudioTeamNativeProvider.enabled,
                ProcessInfo.processInfo.arguments.contains("--audio-selection-recovery-testing") {
@@ -1454,6 +1457,7 @@ final class Store {
             }
             #endif
             try persist()
+            undoStack = nextUndo; redoStack = nextRedo
         } catch { snapshot = previous; throw error }
         notice = "Recovery saved for \(receipt.selection.scopes.count) tasks. Checking its result…"
         Task { await sync() }
@@ -1493,7 +1497,11 @@ final class Store {
         let previous = snapshot
         do {
             try snapshot.replaceExpiredAudioRestore(receipt: receipt, review: review)
+            guard let replacement = snapshot.pending.first else { throw TeamAudioLifecycleReview.unavailable }
+            let history = try TeamAudioRestoreHistoryRebinding(original: receipt.command.original, replacement: replacement)
+            let nextUndo = try undoStack.map(history.applying), nextRedo = try redoStack.map(history.applying)
             try persist()
+            undoStack = nextUndo; redoStack = nextRedo
         } catch { snapshot = previous; throw error }
         notice = "Task-only recovery saved. Checking its result…"
         Task { await sync() }

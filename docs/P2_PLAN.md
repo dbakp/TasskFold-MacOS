@@ -7473,3 +7473,10 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Accept the isolated iPhone expired-selection flow: Later, cold consent reset, actual persist failure after closure, successful retry, lost committed reply and unchanged cold replay. All 59 owning service/native checks and one UI case pass with no skips. Every restored field/generation and available recording byte matches; expired audio stays purged.
 - [ ] Accept the recorded group outcome and rebind/verify warm Undo/Redo histories after changed recording acknowledgements. Finish wider queued dependencies, ordinary app entry, Mac/iPad, accessibility/privacy/lifecycle, mixed media, whole-project transfers and genuine integration. Normal use remains Off.
 - Evidence: [native selection recovery](audio-selection-native/README.md). Current Core/service model sources retain their prior 200/186 owning checks; the new Store/view paths have actual app/native proof.
+
+### 3 November 2026 · Recording recovery preserves warm history
+
+- [x] Rebind the exact original restore and its unique inverse after reviewed omission, for single tasks and selections. Keep logical history identity and unrelated actions; assign planned stacks only after persistence succeeds.
+- [x] Independently verify each owning Core implementation: 204 focused tests pass, including four history regressions. Build/sign both current app and runner products.
+- [ ] Accept the actual warm native Redo/delete/Undo cycle and history save failure, then group recorded confirmation. Other native/genuine integration and normal-use gates remain open.
+- Evidence: [history rebinding scope](audio-history-rebinding/README.md). Curated checkpoint totals remain unchanged.

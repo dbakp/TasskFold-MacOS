@@ -665,3 +665,70 @@ extension TeamTaskBatchTests {
         XCTAssertEqual(receipt.state, .closed); XCTAssertEqual(receipt.selection.scopes.count, 100)
     }
 }
+
+extension TeamTaskBatchTests {
+    private func historyRecoveryPair() throws -> (Mutation, Mutation) {
+        let (selection, raw) = try selectionOutcome(), now = Date(timeIntervalSince1970: 1_900_000_000)
+        let receipt = try TeamAudioRestoreSelectionReceipt(raw, selection: selection, action: .close)
+        return (selection.original, try receipt.replacingWithReviewedRecovery(review: selectionRecoveryReview(selection, now: now), now: now))
+    }
+    func testRecoveredSelectionRebindsBothHistoryDirectionsWithoutChangingIdentity() throws {
+        let (original, replacement) = try historyRecoveryPair()
+        let rebind = try TeamAudioRestoreHistoryRebinding(original: original, replacement: replacement)
+        for reverse in [false, true] {
+            let initial = EditHistory(changes: [original], snapshot: Snapshot())
+            let entry = reverse ? initial.reversed : initial
+            let result = try rebind.applying(to: entry)
+            XCTAssertEqual(result.id, entry.id)
+            XCTAssertEqual(reverse ? result.undo : result.redo, [replacement])
+            let deletion = try XCTUnwrap((reverse ? result.redo : result.undo).first?.teamTaskBatch)
+            XCTAssertEqual(deletion.operation, .delete)
+            for (source, inverse) in zip(replacement.teamTaskBatch!.items, deletion.items) {
+                XCTAssertEqual(inverse.baseline, source.fields)
+                XCTAssertNil(inverse.teamTaskScope?.restoreRequest)
+                if source.teamTaskScope?.audioRestoration?.policy == .omitExpired {
+                    XCTAssertNil(inverse.teamTaskScope?.audioRestoration)
+                } else { XCTAssertEqual(inverse.teamTaskScope?.audioRestoration, source.teamTaskScope?.audioRestoration) }
+            }
+            // Exercise the same fresh-command and inverse construction used by Store.redo/undo.
+            let next = TeamTaskBatch.historyAction((reverse ? result.redo : result.undo)[0])
+            let back = try XCTUnwrap(EditHistory(changes: [next], snapshot: Snapshot()).undo.first)
+            XCTAssertNoThrow(try back.teamTaskBatch!.body(for: back))
+            for item in back.teamTaskBatch!.items where item.recordID == replacement.teamTaskBatch!.items.first(where: { $0.teamTaskScope?.audioRestoration?.policy == .omitExpired })!.recordID {
+                XCTAssertNil(item.teamTaskScope?.audioRestoration)
+            }
+        }
+    }
+    func testRecoveredHistoryPreservesUnrelatedActionsAndRejectsAmbiguousPairs() throws {
+        let (original, replacement) = try historyRecoveryPair()
+        let rebind = try TeamAudioRestoreHistoryRebinding(original: original, replacement: replacement)
+        let unrelated = Mutation(table: "tasks", recordID: UUID().uuidString.lowercased(), method: "POST", fields: ["title": .string("Other task")])
+        let untouched = EditHistory(changes: [unrelated], snapshot: Snapshot())
+        let same = try rebind.applying(to: untouched)
+        XCTAssertEqual(same.id, untouched.id); XCTAssertEqual(same.undo, untouched.undo); XCTAssertEqual(same.redo, untouched.redo)
+        var entry = EditHistory(changes: [original], snapshot: Snapshot())
+        entry.redo.insert(unrelated, at: 0); entry.undo.append(unrelated)
+        let changed = try rebind.applying(to: entry)
+        XCTAssertEqual(changed.redo, [unrelated, replacement]); XCTAssertEqual(changed.undo.last, unrelated)
+        var duplicate = entry; duplicate.redo.append(original)
+        XCTAssertThrowsError(try rebind.applying(to: duplicate))
+        var missing = entry; missing.undo = [unrelated]
+        XCTAssertThrowsError(try rebind.applying(to: missing))
+        var ambiguous = entry; ambiguous.undo.append(entry.undo[0])
+        XCTAssertThrowsError(try rebind.applying(to: ambiguous))
+        // Failure leaves the caller's value unchanged; Store assigns planned stacks only after durable save.
+        XCTAssertEqual(entry.redo, [unrelated, original])
+    }
+    func testHistoryRecoveryRejectsChangesBeyondReviewedOmission() throws {
+        let (original, replacement) = try historyRecoveryPair()
+        var altered = replacement
+        altered.teamTaskBatch!.items[0].fields["title"] = .string("Unreviewed edit")
+        XCTAssertThrowsError(try TeamAudioRestoreHistoryRebinding(original: original, replacement: altered))
+        XCTAssertThrowsError(try TeamAudioRestoreHistoryRebinding(original: original, replacement: original))
+        var unchangedPolicy = replacement
+        unchangedPolicy.teamTaskBatch!.items = zip(original.teamTaskBatch!.items, replacement.teamTaskBatch!.items).map { before, after in
+            var item = after; item.teamTaskScope?.audioRestoration = before.teamTaskScope?.audioRestoration; return item
+        }
+        XCTAssertThrowsError(try TeamAudioRestoreHistoryRebinding(original: original, replacement: unchangedPolicy))
+    }
+}

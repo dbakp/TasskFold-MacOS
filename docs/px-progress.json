@@ -1,13 +1,13 @@
 {
   "schema": 1,
-  "updated": "2026-11-02",
+  "updated": "2026-11-03",
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Recording selection recovery",
-  "latest": "The iPhone selection-recovery flow now passes Later, cold consent reset, failed-save rollback after closure and unchanged cold retry after a lost reply. All 59 owning checks pass; available audio and task fields remain exact. Both apps have the Store/review implementation. Recorded selection confirmation, warm history, other platforms and genuine integration remain; ordinary use stays disabled.",
+  "latest": "Recovered recording decisions now rebind their exact Undo/Redo pair, preserving logical history identity and unrelated actions. The Core regression suite passes independently in each app; native warm-history acceptance is still open. The prior iPhone save-failure/cold-retry proof remains scoped to its recorded build. Group recorded confirmation, other platforms and genuine integration remain; ordinary use stays disabled.",
   "next": [
-    "Verify the group recorded-result screen and rebind/accept warm Undo/Redo after changed recording acknowledgements. Continue wider queued dependencies, ordinary Backups/sync-attention presentation, Mac/iPad and account/background/privacy/accessibility. Whole-project transfers, mixed media and genuine integration remain.",
+    "Accept the warm native Redo/delete/Undo cycle after recording recovery, then the group recorded-result screen. Continue wider queued dependencies, ordinary Backups/sync-attention presentation, Mac/iPad and account/background/privacy/accessibility. Whole-project transfers, mixed media and genuine integration remain.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "iPhone whole-selection Store/review recovery passes Later, cold consent reset, write-failure rollback and lost-reply cold retry in the local fixture. All members and available audio stay exact. Group recorded confirmation, warm history rebinding, Mac/iPad, main entry, mixed media, whole-project transfers and genuine integration remain. Normal use stays disabled.",
+              "detail": "iPhone selection recovery has scoped save-failure/cold-retry proof. Exact single/selection history rebinding is implemented with independent Core checks; the actual warm native Redo/Undo cycle still needs acceptance. Group recorded confirmation, Mac/iPad, main entry, mixed media, whole-project transfers and genuine integration remain. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -843,7 +843,9 @@
             "audio-expired-recovery/README.md",
             "audio-expired-recovery/verification.json",
             "audio-expired-native/README.md",
-            "audio-expired-native/verification.json"
+            "audio-expired-native/verification.json",
+            "audio-history-rebinding/README.md",
+            "audio-history-rebinding/verification.json"
           ],
           "focus": true
         },
@@ -953,7 +955,7 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "6014883953025785c038a171839f7eedaad191b0b5d0d85b0a46d025831f43c8",
+    "P2_PLAN.md": "03fcc29c3b22cae49b4e9d6e9aa5eccaf30ad86b117b6fac5fddb8cd2c32128b",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -970,6 +972,8 @@
     "audio-expired-recovery/verification.json": "cc6190b30a6cd17efd61c9b8456b29496930d42b1bd6cbff980b3baf4caaad6e",
     "audio-generation-restore/README.md": "e7da0408570595b31776ecf3e0c6a568769cb62f8b8b3ddb6b0238241fb9f4f2",
     "audio-generation-restore/verification.json": "d4c6066fcf7738ee756878e50c9339a6bdcec89c02c7e38ef0842e1c0e2d5c57",
+    "audio-history-rebinding/README.md": "2ccd7a9bb414be7d2de48d5d96ff2e3632b8f617049da8647e17c0b206690ac0",
+    "audio-history-rebinding/verification.json": "d9521c74fa98278a9a31e4fa301600a1612eaf86dd8162d33f89015bd8bc3cfc",
     "audio-lifecycle-native/README.md": "2b183fd5cb44c5e33930d4d32c399479bb02e42f28c34aa7ae6cd424401c4626",
     "audio-lifecycle-native/verification.json": "0bf743a4d5738e854bace8d282dc06527b3e8acfc5b9b39d9e5b1a2667994f8e",
     "audio-provider-recovery/README.md": "09aa4b4b276abb8729d0fbdea3ad0cde8ce871e1e5c0d5c7ba2b08a7b5ed8e4f",

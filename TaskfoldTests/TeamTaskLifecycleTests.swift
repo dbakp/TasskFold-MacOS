@@ -535,3 +535,18 @@ extension TeamTaskLifecycleTests {
         XCTAssertThrowsError(try review.applying(to: change, now: now.addingTimeInterval(11)))
     }
 }
+
+extension TeamTaskLifecycleTests {
+    func testSingleRecordingRecoveryRebindsWarmRedoWithoutExpiredAudioAcknowledgement() throws {
+        let (command, receipt, review) = try recoveryFixture()
+        let replacement = try receipt.replacingWithTaskOnlyRecovery(review: review)
+        let original = command.original
+        let entry = EditHistory(changes: [original], snapshot: Snapshot()).reversed
+        let changed = try TeamAudioRestoreHistoryRebinding(original: original, replacement: replacement).applying(to: entry)
+        XCTAssertEqual(changed.id, entry.id); XCTAssertEqual(changed.undo, [replacement])
+        XCTAssertEqual(changed.redo.count, 1); XCTAssertEqual(changed.redo[0].method, "DELETE")
+        XCTAssertEqual(changed.redo[0].baseline, original.fields)
+        XCTAssertNil(changed.redo[0].teamTaskScope?.audioRestoration)
+        XCTAssertEqual(changed.redo[0].teamTaskScope?.restoreRequest, original.teamTaskScope?.restoreRequest)
+    }
+}

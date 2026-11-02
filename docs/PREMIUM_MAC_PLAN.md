@@ -10483,3 +10483,9 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Own production Store context-bound review, replacement persistence/rollback, recorded acknowledgement and stable single/selection presentation independently. Normal-use gates remain Off.
 - [x] Record iPhone-owned local-service acceptance of Later, cold consent reset, failed actual persist after closure, retry and lost-reply cold replay: 59 assertions pass. Available audio bytes and all task fields/generations remain exact; purged audio never returns.
 - [ ] The current Mac app and runner build and pass strict signatures; Mac runtime is unaccepted. Group recorded confirmation, warm history rebinding, wider contexts/accessibility and genuine integration remain open. See [scope](audio-selection-native/README.md).
+
+### 3 November 2026 · Preserve recovered recording history
+
+- [x] Own exact single/selection recovery history rebinding, preserving logical menu identity and unrelated actions. Save the replacement before assigning either history stack.
+- [x] Verify 204 owning Core tests and current native app/runner build/signatures.
+- [ ] Actual warm native Redo/Undo and save-failure history, group recorded-result confirmation and Mac runtime remain unaccepted. No normal-use activation. See [scope](audio-history-rebinding/README.md).

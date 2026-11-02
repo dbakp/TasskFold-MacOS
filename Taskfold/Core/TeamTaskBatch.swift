@@ -1044,3 +1044,77 @@ extension Snapshot {
         pending[0] = replacement
     }
 }
+
+/// Rebind only the exact recovered action and its matching inverse template.
+/// Logical history identity and unrelated actions remain in their original order.
+struct TeamAudioRestoreHistoryRebinding: Sendable {
+    let original: Mutation
+    let replacement: Mutation
+    private let originalInverse: Mutation
+    private let replacementInverse: Mutation
+    init(original: Mutation, replacement: Mutation) throws {
+        var normalized = replacement
+        var omitted = false
+        if let before = original.teamTaskBatch, var after = replacement.teamTaskBatch {
+            _ = try TeamAudioRestoreSelection(original)
+            _ = try after.body(for: replacement)
+            guard after.operation == .restore, after.items.count == before.items.count,
+                  replacement.id != original.id else { throw TeamAudioLifecycleReview.unavailable }
+            for index in before.items.indices {
+                var member = after.items[index]
+                guard member.id != before.items[index].id else { throw TeamAudioLifecycleReview.unavailable }
+                omitted = try Self.normalizePolicy(original: before.items[index], replacement: &member) || omitted
+                member.id = before.items[index].id; after.items[index] = member
+            }
+            normalized.teamTaskBatch = after; normalized.recordID = original.recordID; normalized.id = original.id
+        } else {
+            _ = try TeamAudioRestoreRecoveryCommand(original)
+            guard replacement.id != original.id, replacement.teamTaskBatch == nil else { throw TeamAudioLifecycleReview.unavailable }
+            _ = try replacement.teamTaskScope?.lifecycleBody(for: replacement)
+            omitted = try Self.normalizePolicy(original: original, replacement: &normalized)
+            normalized.id = original.id
+        }
+        guard omitted, normalized == original else { throw TeamAudioLifecycleReview.unavailable }
+        let oldInverse = EditHistory(changes: [original], snapshot: Snapshot()).undo
+        let newInverse = EditHistory(changes: [replacement], snapshot: Snapshot()).undo
+        guard oldInverse.count == 1, newInverse.count == 1 else { throw TeamAudioLifecycleReview.unavailable }
+        self.original = original; self.replacement = replacement
+        originalInverse = oldInverse[0]; replacementInverse = newInverse[0]
+    }
+    private static func normalizePolicy(original: Mutation, replacement: inout Mutation) throws -> Bool {
+        let before = original.teamTaskScope?.audioRestoration, after = replacement.teamTaskScope?.audioRestoration
+        if before == after { return false }
+        guard let before, let after, before.policy == .retain, after.policy == .omitExpired,
+              before.count == after.count, before.retentionDays == after.retentionDays else { throw TeamAudioLifecycleReview.unavailable }
+        replacement.teamTaskScope?.audioRestoration = before
+        return true
+    }
+    private static func template(_ mutation: Mutation) -> Mutation {
+        var result = mutation
+        let placeholder = UUID(uuidString: "00000000-0000-4000-8000-000000000001")!
+        result.id = placeholder
+        if var batch = result.teamTaskBatch {
+            result.recordID = placeholder.uuidString.lowercased()
+            for index in batch.items.indices { batch.items[index].id = placeholder }
+            result.teamTaskBatch = batch
+        }
+        return result
+    }
+    func applying(to entry: EditHistory) throws -> EditHistory {
+        let forward = entry.redo.indices.filter { entry.redo[$0] == original }
+        let backward = entry.undo.indices.filter { entry.undo[$0] == original }
+        guard !forward.isEmpty || !backward.isEmpty else { return entry }
+        guard forward.count + backward.count == 1 else { throw TeamAudioLifecycleReview.unavailable }
+        var result = entry
+        if let index = forward.first {
+            let matching = entry.undo.indices.filter { Self.template(entry.undo[$0]) == Self.template(originalInverse) }
+            guard matching.count == 1 else { throw TeamAudioLifecycleReview.unavailable }
+            result.redo[index] = replacement; result.undo[matching[0]] = replacementInverse
+        } else {
+            let matching = entry.redo.indices.filter { Self.template(entry.redo[$0]) == Self.template(originalInverse) }
+            guard matching.count == 1 else { throw TeamAudioLifecycleReview.unavailable }
+            result.undo[backward[0]] = replacement; result.redo[matching[0]] = replacementInverse
+        }
+        return result
+    }
+}

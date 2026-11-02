@@ -1,0 +1,40 @@
+{
+  "reviewed": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "0669fda788035c1d26cf29e29a14d3b34d228b4b",
+  "ownCoreTests": 204,
+  "ownCoreFailures": 0,
+  "newHistoryCases": 4,
+  "coreLog": "/tmp/taskfold-audio-history-core-mac-v1.log",
+  "coreLogSHA256": "56c220af806ebd29b4f9cced1c98178cb0e69393cbee86d66a762c5cfc8759ef",
+  "ownSourceSHA256": {
+    "Taskfold/Core/TeamTaskBatch.swift": "52f28a92644e36d207d5585128036b332476cba7610ae4b1c1fcc0d2a220f3d6",
+    "Taskfold/Core/Store.swift": "8010c12d1f8ae68eb64462ff35572937c279f4fd0186d080d96821dfffd05a53",
+    "TaskfoldTests/TeamTaskBatchTests.swift": "fa8827cfee5e2df108918dd652061929e92fca315876716082374a5f6dffa9a8",
+    "TaskfoldTests/TeamTaskLifecycleTests.swift": "027175df0f11c72a5cfccf827c83833c1dd4ce55cfe2bc00090835d1ba040644"
+  },
+  "logicalHistoryIdentityPreserved": true,
+  "unrelatedHistoryPreserved": true,
+  "bothDirectionsChecked": true,
+  "singleAndSelectionChecked": true,
+  "nativeBuildStatus": "passed",
+  "nativeWarmHistoryAccepted": false,
+  "nativeSaveFailureHistoryAccepted": false,
+  "groupRecordedConfirmationAccepted": false,
+  "serviceMigrationChanged": false,
+  "normalUseEnabled": false,
+  "deployed": false,
+  "curatedCheckpoints": 74,
+  "substeps": 34,
+  "nativeBuildPhase": "audio-history-rebind-mac-v1",
+  "nativeBuildLogSHA256": "cca1c6c465d22ac823a3c88ccdb2cc1d029dcb83fba94694fe54c680db6fc23b",
+  "nativeBuildDriverSHA256": "534f8ff39beff3c8827744ca4485729fe6eb8ff4b17558fb94fb9401d138315f",
+  "appAndRunnerSignaturesPassed": true,
+  "storeAndBatchHostSourcesMatch": true,
+  "isolatedBuildAttempts": [
+    {
+      "phase": "audio-history-rebind-mac-v1",
+      "outcome": "passed; missing owning view inputs restored before this build"
+    }
+  ]
+}
