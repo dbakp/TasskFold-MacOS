@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Native file publication and recovery",
-  "latest": "iPhone and iPad each pass native lost-reply publication and Stop through the real local file service, SQL and Storage, with cold recovery and explicit clearing. Stopped-upload copy now correctly says it was not shared. Each repo passes 73 focused Core and 56 provider checks. Ordinary sync, genuine hosted Auth, Mac runtime and wider account/window/accessibility acceptance remain open. No normal-use enablement; curated totals are unchanged.",
+  "focus": "P2 · Shared-file refresh and pending edits",
+  "latest": "Fixed two file-refresh gaps: Stop discovering a published upload now refreshes through Store, and queued older attachment edits keep remote file additions visible. Shared files also offers explicit refresh. Each repo passes 179 focused Core checks. Ordinary full sync, real account/window changes, hosted Auth and Mac runtime remain open; normal use stays disabled and curated totals are unchanged.",
   "next": [
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
@@ -559,7 +559,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Scoped history and preserved-child previews have proof. Mobile file selection, copy, refresh, publication/Stop and cold recovery pass against real local Storage in isolated scope. Broader history/migration, ordinary sync, actual windows/account changes, Mac runtime and hosted Auth/S3 remain. Server candidates are undeployed; normal use stays disabled.",
+              "detail": "Scoped history and preserved-child previews have proof. Mobile file publication/Stop and cold recovery pass in isolated local-provider scope. Refresh handoff and queued attachment projection are implemented; ordinary full sync, broader history/migration, real windows/account changes, Mac runtime and hosted Auth/S3 remain. Server candidates are undeployed; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -770,7 +770,9 @@
             "task-file-refresh/verification.json",
             "task-file-provider/verification.json",
             "task-file-native-provider/README.md",
-            "task-file-native-provider/verification.json"
+            "task-file-native-provider/verification.json",
+            "task-file-handoff/README.md",
+            "task-file-handoff/verification.json"
           ],
           "focus": true
         },
@@ -861,13 +863,15 @@
     "task-file-refresh/verification.json",
     "task-file-provider/verification.json",
     "task-file-native-provider/README.md",
-    "task-file-native-provider/verification.json"
+    "task-file-native-provider/verification.json",
+    "task-file-handoff/README.md",
+    "task-file-handoff/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "338b246a8e73e7a02f9109933839495731d049a11b41e780f0d13206ff0d7505",
+    "P2_PLAN.md": "3396498e5e167c0a580e44f8b6caf15c8de6b10a4b6e4002ea076db91d537d39",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -990,6 +994,8 @@
     "task-file-client/verification.json": "11cfb240b700e3bc8950708066d553853ca5a272e83b89990c60947bedde95dc",
     "task-file-custody/verification.json": "2d8b4b3c3a0628ee62101f49e34e2338f13086f6cdcb5be1449ae90ed8fc8d7f",
     "task-file-dialogs/verification.json": "124651895876bebb8c86c54bbf79356554c2d0d0704bce2aed7cd750f69c3456",
+    "task-file-handoff/README.md": "5556f5d36b1997eb817db72339dee2c096b6ff48e360340c1b476e9293363ae6",
+    "task-file-handoff/verification.json": "0da3013d3829e75a336bd8592b89c23bb606c6e460f1870010a7e709b67ebb08",
     "task-file-native-provider/README.md": "69a3a1d517db0030e979932d61a03a0749aa8c1cf2725d45cdaa7ac8a8556a59",
     "task-file-native-provider/verification.json": "4af1118467b445fdef5555b6e52d683762ae888eb85ef8ebe796db25da567a44",
     "task-file-provider/verification.json": "42a0e298e30eb528500d8a50af68576bed8d78f4e66674d5990b7f94587f6fdf",

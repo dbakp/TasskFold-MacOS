@@ -107,10 +107,11 @@ typealias TaskFileUploadVault = ReviewedTeamCommandVault<TaskFileUploadJournal>
     @ObservationIgnored private let current: () -> Bool
     @ObservationIgnored private let publishAllowed: () -> Bool
     @ObservationIgnored private let incarnation: UUID
+    @ObservationIgnored private let publicationConfirmed: () async -> Void
     @ObservationIgnored private var lease = CalendarReadLease()
     @ObservationIgnored private var closed = false
-    init(account: String, origin: String, target: Record, vault: TaskFileUploadVault, service: any TaskFileUploadTransport, incarnation: UUID, current: @escaping () -> Bool, publishAllowed: @escaping () -> Bool = { true }) {
-        self.account = account; self.origin = origin; self.target = target; self.vault = vault; self.service = service; self.incarnation = incarnation; self.current = current; self.publishAllowed = publishAllowed
+    init(account: String, origin: String, target: Record, vault: TaskFileUploadVault, service: any TaskFileUploadTransport, incarnation: UUID, current: @escaping () -> Bool, publishAllowed: @escaping () -> Bool = { true }, publicationConfirmed: @escaping () async -> Void = {}) {
+        self.account = account; self.origin = origin; self.target = target; self.vault = vault; self.service = service; self.incarnation = incarnation; self.current = current; self.publishAllowed = publishAllowed; self.publicationConfirmed = publicationConfirmed
     }
     var available: Bool { !closed && current() }
     var sameTarget: Bool { pending?.matchesTarget(target) == true }
@@ -148,6 +149,10 @@ typealias TaskFileUploadVault = ReviewedTeamCommandVault<TaskFileUploadJournal>
             try check(); updatingRecovery = true
             try await vault.replace(attempted, with: received, lease: lease); try check()
             pending = received; message = received.phase == .published ? "File shared" : received.resolved ? "Upload stopped. Your local copy is kept." : "This upload is still pending. Its original file is saved."
+            // Refresh through the owning Store only after the validated receipt is
+            // durable. Stop can return an already-published result too. A refresh
+            // cannot replace the journal or invent a local attachment from a receipt.
+            if received.phase == .published { await publicationConfirmed() }
         } catch {
             if available {
                 needsRefresh = updatingRecovery

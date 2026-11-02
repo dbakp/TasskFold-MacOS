@@ -1,0 +1,18 @@
+{
+  "reviewed": "2026-11-02",
+  "removed": [
+    {
+      "name": "taskfold-file-handoff-phone-publish.xcresult",
+      "allocatedBytesBefore": 1277952
+    },
+    {
+      "name": "taskfold-file-handoff-viewer-ipad.xcresult",
+      "allocatedBytesBefore": 720896
+    },
+    {
+      "name": "taskfold-file-handoff-viewer-attachments",
+      "allocatedBytesBefore": 212992
+    }
+  ],
+  "scope": "Only completed owned result bundles and duplicate screenshot exports; concise reports, screenshot, logs and sources retained. Owned apps closed, simulators restored. No real app data, Docker volumes, other projects or build products removed."
+}

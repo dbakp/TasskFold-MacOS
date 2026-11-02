@@ -1,0 +1,67 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "core": {
+    "tests": 179,
+    "failures": 0,
+    "newTests": 3,
+    "filters": "TaskFileUploadTests|TeamWorkspaceTests|TaskEditTests|TaskGenerationTests|TeamTemplateCommandTests|TeamOrganizationCommandTests",
+    "logSHA256": "f974ffc13d9e541ae306f2a11fa4e3a0b858dc87435d109ef54ba81d8b1742c9",
+    "testSourceSHA256": "74e10abaf4a613d96a3471f020c073d4933b9f64d81249db87bbd369a1dc2d66"
+  },
+  "sourceProof": {
+    "Taskfold/Core/Models.swift": {
+      "repositorySHA256": "ee40af7527bad4e3a0afb5449d19c309916adee169f81b8fbc90ecf827f0f921",
+      "compiledHostSHA256": "ee40af7527bad4e3a0afb5449d19c309916adee169f81b8fbc90ecf827f0f921",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Core/TaskFileUpload.swift": {
+      "repositorySHA256": "4765c6cf1b3d3021ab1f6d2347be6c4d9ed0052095e0188211b53abc19151c2f",
+      "compiledHostSHA256": "4765c6cf1b3d3021ab1f6d2347be6c4d9ed0052095e0188211b53abc19151c2f",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/TaskFileUploadView.swift": {
+      "repositorySHA256": "5a4fea0758dd7b8827d05bd5355723079e10e1d9bae899b5be9f14b901dd01bf",
+      "compiledHostSHA256": "5a4fea0758dd7b8827d05bd5355723079e10e1d9bae899b5be9f14b901dd01bf",
+      "matchesAfterIsolation": true
+    }
+  },
+  "build": {
+    "phase": "file-handoff-v1",
+    "appAndRunnerStrictSignaturesVerified": true,
+    "logSHA256": "9dbcbe0766a751c9d097e4a7e5b9548756698c1ea6b7e5075e2237b7543bb66f",
+    "appDebugDylibSHA256": "54135035ddbe3d2aa77f615d50e448dc0aee97a580117b177ae84f69cacb26e8",
+    "testBinarySHA256": "670843459d119a3b2e4c98bd1a56ed7d6aed84636dd98d71f0181b3fe2a136a1"
+  },
+  "native": {
+    "phonePublicationRecovery": {
+      "tests": 1,
+      "failures": 0,
+      "skips": 0,
+      "realLocalSqlAndStorage": true
+    },
+    "ipadReadOnlyFiles": {
+      "tests": 1,
+      "failures": 0,
+      "skips": 0
+    },
+    "normalWorkspaceSyncAccepted": false,
+    "macRuntimeAccepted": false,
+    "ordinaryAccountsOrActualWindowsAccepted": false,
+    "speechOrLargestTextAccepted": false
+  },
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "serviceOrSchemaChanged": false,
+  "providerRegressionNotRepeated": "No backend/schema/fixture changes; prior own 56-provider and 61-service checks retain their recorded scope.",
+  "retainedEvidenceSHA256": {
+    "viewer-ipad-summary.json": "032421a751ba5abde980601700e1dae59e547062d7c5b2ec84e773a6776b7411",
+    "core.log": "f974ffc13d9e541ae306f2a11fa4e3a0b858dc87435d109ef54ba81d8b1742c9",
+    "phone-publish.json": "046a75814ab40d0931fc029771be6785895edfb108a8da8fff209b8137b7bf0e",
+    "viewer-ipad-cleanup.json": "9e7006af9313ca4b8f31b8dea023a3b68e8b593ff744ac8ccb548f1b9fa0c9ee",
+    "README.md": "5556f5d36b1997eb817db72339dee2c096b6ff48e360340c1b476e9293363ae6",
+    "cleanup.json": "2ea41c89ce7fcea76abce3cd43d010ab1da8269ff830572d6ed62d051f9d81fa",
+    "ipad-read-only-refresh.png": "7cb70a293687402b7a8fa394dcce6a00b3a1246666a0fe9b4d71594227885898",
+    "progress-validation.json": "f85c1fb6699c3cb8507ee96a62066765c8ab42942179e43a7123784c985405b8"
+  }
+}

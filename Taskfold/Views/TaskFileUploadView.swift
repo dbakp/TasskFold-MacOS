@@ -73,7 +73,11 @@ extension Store {
         service = backend
         #endif
         return TaskFileUploadModel(account: account, origin: request.origin, target: request.target, vault: vault, service: service, incarnation: request.session,
-            current: { [weak self] in self?.fileUploadCurrent(request) == true }, publishAllowed: { [weak self] in self?.fileUploadMayPublish(request) == true })
+            current: { [weak self] in self?.fileUploadCurrent(request) == true }, publishAllowed: { [weak self] in self?.fileUploadMayPublish(request) == true },
+            publicationConfirmed: { [weak self] in
+                guard let self, self.fileUploadCurrent(request) else { return }
+                await self.sync()
+            })
     }
     func fileUploadAttachments(_ request: TaskFileUploadRequest) -> [Record] {
         guard fileUploadReadable(request), let task = record("tasks", id: request.target.string("task_id")) else { return [] }
@@ -161,11 +165,11 @@ struct TaskFileUploadView: View {
                             Button("Save local copy…", systemImage: "square.and.arrow.down") { export(pending.bytes, name: pending.name, source: "local", shared: false) }.disabled(model.busy || downloading || copyAttempt != nil).accessibilityFocused($copyFocused, equals: "local").accessibilityIdentifier("fileUploadSaveLocalCopy")
                             if !pending.resolved {
                                 if model.sameTarget {
-                                    Button(pending.phase == .queued ? "Share file" : "Retry upload", systemImage: "arrow.up.doc") { Task { await model.act("publish"); if available { await store.sync() } } }
+                                    Button(pending.phase == .queued ? "Share file" : "Retry upload", systemImage: "arrow.up.doc") { Task { await model.act("publish") } }
                                         .disabled(model.busy || !model.canPublish || downloading).accessibilityIdentifier("fileUploadPublish")
                                 } else { Text("Open the original task to retry this saved upload.").foregroundStyle(.secondary) }
                                 if pending.phase == .attempted {
-                                    Button("Check status", systemImage: "arrow.clockwise") { Task { await model.act("resolve"); if available { await store.sync() } } }.disabled(model.busy || model.needsRefresh || downloading).accessibilityIdentifier("fileUploadCheck")
+                                    Button("Check status", systemImage: "arrow.clockwise") { Task { await model.act("resolve") } }.disabled(model.busy || model.needsRefresh || downloading).accessibilityIdentifier("fileUploadCheck")
                                 }
                                 Button(pending.phase == .queued ? "Remove unsent copy" : "Stop upload", role: .destructive) { Task { await model.act("cancel") } }.disabled(model.busy || model.needsRefresh || downloading).accessibilityIdentifier("fileUploadStop")
                                 Text("Your original file stays encrypted on this device until the result is confirmed. Closing this sheet keeps recovery available in Account.").font(.footnote).foregroundStyle(.secondary)
@@ -188,6 +192,8 @@ struct TaskFileUploadView: View {
                 else if let localMessage { Text(localMessage) } else { ProgressView("Opening saved upload…") }
                     if store.fileUploadReadable(request) {
                         Section("Shared files") {
+                            Button("Refresh shared files", systemImage: "arrow.clockwise") { Task { guard available, store.fileUploadReadable(request) else { return }; await store.sync() } }
+                                .disabled(store.syncing || model?.busy == true || downloading).accessibilityIdentifier("fileReadRefresh")
                             if store.fileUploadAttachments(request).isEmpty { Text("No shared files yet.").foregroundStyle(.secondary).accessibilityIdentifier("fileReadEmpty") }
                             ForEach(store.fileUploadAttachments(request)) { attachment in
                                 Button { download(attachment) } label: { Label(attachment.string("name"), systemImage: "arrow.down.doc") }.disabled(model?.busy == true || downloading || copyAttempt != nil).accessibilityFocused($copyFocused, equals: attachment.id).accessibilityLabel("Save a copy of " + attachment.string("name")).accessibilityIdentifier("downloadSharedFile-" + attachment.id)

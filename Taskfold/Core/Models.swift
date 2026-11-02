@@ -674,9 +674,14 @@ struct Snapshot: Codable, Equatable, Sendable {
         else if let i = rows.firstIndex(where: { $0.id == change.recordID }) {
             if change.method == "POST", change.insertOnly == true { return }
             guard var projected = try? PersonalTaskMove.projectedFields(change, onto: rows[i]) else { return }
-            if change.table == "tasks", change.method == "PATCH", let base = change.baseline?["subtasks"], let desired = projected["subtasks"] {
-                // Keep the queued intent intact while retaining already observed child edits locally.
-                projected["subtasks"] = TaskEdit.keepingLocal(field: "subtasks", base: base, desired: desired, remote: rows[i]["subtasks"])
+            if change.table == "tasks", change.method == "PATCH" {
+                // Read projection preserves remote additions beside the queued delta.
+                // The original request/baseline remains unchanged for guarded delivery.
+                for field in ["subtasks", "attachments"] {
+                    if let base = change.baseline?[field], let desired = projected[field] {
+                        projected[field] = TaskEdit.keepingLocal(field: field, base: base, desired: desired, remote: rows[i][field])
+                    }
+                }
             }
             rows[i] = change.table == "tasks" ? TaskCompletionRevision.applying(projected, to: rows[i]) : Record(rows[i].fields.merging(projected) { _, new in new })
         } else {

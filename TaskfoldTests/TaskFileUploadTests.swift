@@ -375,4 +375,58 @@ extension TaskFileUploadTests {
             XCTAssertThrowsError(try admittedFile(invalid, cache: cache))
         }
     }
+    @MainActor func testPublicationRefreshRunsAfterDurableReceiptForEveryAction() async throws {
+        for action in ["publish", "resolve", "cancel"] {
+            let root = try root(), vault = vault(root), peer = FilePeer(); var refreshes = 0
+            let model = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { true }, publicationConfirmed: {
+                refreshes += 1
+                let saved = try? await vault.pending(account: fileAccount, origin: fileOrigin)
+                XCTAssertEqual(saved?.phase, .published); XCTAssertEqual(saved?.bytes, Data("original".utf8))
+            })
+            await model.load(); await model.choose(Data("original".utf8), name: "Original.txt", type: "text/plain")
+            if action != "publish" { peer.lose = true; await model.act("publish"); XCTAssertEqual(refreshes, 0) }
+            await model.act(action)
+            XCTAssertEqual(model.pending?.phase, .published); XCTAssertEqual(refreshes, 1)
+            await model.act("resolve"); XCTAssertEqual(refreshes, 1)
+            await model.load(); XCTAssertEqual(refreshes, 1, "Local refresh must remain network-free")
+            XCTAssertNotNil(model.pending?.receipt)
+        }
+    }
+    @MainActor func testUnconfirmedStoppedOrForeignReplyNeverRefreshesWorkspace() async throws {
+        for variant in ["cancelled", "malformed", "scope-changed", "write-failed"] {
+            let root = try root(), fault = FileFaultIO(io(root)), vault = vault(root, io: fault), peer = FilePeer()
+            var current = true, refreshes = 0
+            let model = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { current }, publicationConfirmed: { refreshes += 1 })
+            await model.load(); await model.choose(Data("original".utf8), name: "Original.txt", type: "text/plain")
+            if variant == "cancelled" {
+                peer.unreserved = true; await model.act("publish"); await model.act("cancel")
+                XCTAssertEqual(model.pending?.phase, .cancelled)
+            } else {
+                peer.malformed = variant == "malformed"
+                peer.beforeSend = { _ in if variant == "scope-changed" { current = false }; if variant == "write-failed" { fault.failWrite(true) } }
+                await model.act("publish")
+            }
+            XCTAssertEqual(refreshes, 0)
+            XCTAssertEqual(model.pending?.bytes, Data("original".utf8))
+        }
+    }
+    func testTaskRefreshKeepsRemotePublicationBesideQueuedAttachmentEdits() throws {
+        let original = JSON.object(["id": .string("old"), "name": .string("Old.txt")])
+        let local = JSON.object(["id": .string("local"), "name": .string("Local.txt")])
+        let value = try journal(), reply = try TaskfoldJSONDecoder().decode(Record.self, from: publication(value))
+        let shared = reply["receipt"].object["attachment"]!
+        var task = Record.task(user: fileAccount); task["attachments"] = .array([original])
+        let change = Mutation(table: "tasks", recordID: task.id, method: "PATCH", fields: ["title": .string("Unsent title"), "attachments": .array([local])], baseline: task.fields)
+        var snapshot = Snapshot(tables: ["tasks": [task]], pending: [change])
+        snapshot.apply(change)
+        var remote = task; remote["attachments"] = .array([original, shared])
+        snapshot.mergeRemote(["tasks": [remote]])
+        let merged = try XCTUnwrap(snapshot.tables["tasks"]?.first)
+        XCTAssertEqual(merged.string("title"), "Unsent title")
+        XCTAssertEqual(merged["attachments"], .array([shared, local]))
+        XCTAssertEqual(snapshot.pending, [change], "The original queue and server guards must not be rebased by a read")
+        let cold = try TaskfoldJSONDecoder().decode(Snapshot.self, from: TaskfoldJSONEncoder().encode(snapshot))
+        XCTAssertEqual(cold, snapshot)
+    }
+
 }
