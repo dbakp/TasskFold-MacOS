@@ -22,7 +22,7 @@ import { homedir } from "node:os";
 const exec = promisify(execFile);
 const [platform, output] = process.argv.slice(2);
 assert(
-  ["service", "ios", "ipad", "ios-expired"].includes(platform) &&
+  ["service", "ios", "ipad", "ios-expired", "ios-recorded"].includes(platform) &&
     output?.startsWith("/tmp/taskfold-") && output.endsWith(".json"),
 );
 const account = "ec240000-0000-4000-8000-000000000001",
@@ -32,6 +32,7 @@ const account = "ec240000-0000-4000-8000-000000000001",
   team = "ec240000-0000-4000-8000-000000000004",
   generation = "ec240000-0000-4000-8000-000000000071";
 const expiredRecovery = platform === "ios-expired";
+const recordedRecovery = platform === "ios-recorded";
 const device = platform.startsWith("ios")
     ? "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
     : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
@@ -150,7 +151,7 @@ try {
       "update taskfold_private.audio_comment_config set restoration_enabled=true",
     );
   }
-  http = await createAudioTeamNativeHttp(pg, storage, users.actor, { expiredRecovery });
+  http = await createAudioTeamNativeHttp(pg, storage, users.actor, { expiredRecovery, recordedRecovery });
   if (platform === "service") {
     http.faults.losePublicationReply = false;
     const serviceCall = (action, body) =>
@@ -318,7 +319,7 @@ try {
     await writeFile(configPath, configText, { mode: 0o600, flag: "wx" });
     const result = output.replace(/\.json$/, ".xcresult"),
       log = output.replace(/\.json$/, ".log"),
-      test = expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
+      test = expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : recordedRecovery ? "testTeamRecordingNativeRecordedRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
     const command = [
       "-project",
       "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
@@ -396,11 +397,11 @@ try {
       restoredGeneration !== generation,
     );
     check(
-      expiredRecovery ? "native deletion and task-only cold replay reach SQL" : "native actual deletion and Undo reached SQL once each",
+      expiredRecovery || recordedRecovery ? "native deletion and restoration replay reach SQL" : "native actual deletion and Undo reached SQL once each",
       ["delete", "restore"].map((a) =>
         http.requests.filter((x) => x.action === "task_" + a).length
       ),
-      expiredRecovery ? [1, 2] : [1, 1],
+      expiredRecovery || recordedRecovery ? [1, 2] : [1, 1],
     );
     check(
       expiredRecovery ? "native lifecycle carries separately explicit retention and omission policies" : "native lifecycle retains frozen recording acknowledgement",
@@ -452,6 +453,15 @@ try {
         x.action === "resolve" && x.responseStatus === 200
       ),
     );
+    if (recordedRecovery) {
+      const restores = http.requests.filter((x) => x.action === "task_restore"), inspections = http.requests.filter((x) => x.action === "restore_recovery_inspect");
+      check("applied original Undo loses exactly one reply", restores.map((x) => x.deliveredStatus), [503, 200]);
+      check("recorded confirmation uses the exact original intent", restores[0].command, restores[1].command);
+      check("recorded review and reopening observe actual receipt", inspections.map((x) => x.state), ["recorded", "recorded"]);
+      check("recorded confirmation never closes original", http.requests.filter((x) => x.action === "restore_recovery_close"), []);
+      check("recorded confirmation creates no closure ledger row", await pg.scalar("select count(*)::int from taskfold_private.audio_restore_closures"), 0);
+      check("recorded confirmation applies one restoration only", await pg.scalar("select count(*)::int from taskfold_private.team_task_edits where operation='restore'"), 1);
+    }
     if (expiredRecovery) {
       const closed = http.requests.filter((x) => x.action === "restore_recovery_close"), restored = http.requests.filter((x) => x.action === "task_restore");
       check("Cancel and cold return do not close original Undo", closed.length, 1);
@@ -542,7 +552,7 @@ try {
     report.workspace = http.workspace.counts;
     report.provider = http.audio.state.providerResults;
     report.gatewayErrors = http.audio.state.errors;
-    if (expiredRecovery) report.expiryFaults = http.faults;
+    if (expiredRecovery || recordedRecovery) report.recoveryFaults = http.faults;
   }
   report.checkCount = Object.keys(report.checks).length;
   const errors = [];

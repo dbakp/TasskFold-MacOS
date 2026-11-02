@@ -384,3 +384,97 @@ extension TeamTaskBatchTests {
         XCTAssertEqual(Set(TeamTaskBulkLabels.suggestions(records:rows)),["Design","design"])
     }
 }
+
+extension TeamTaskBatchTests {
+    private func recordingSelection() throws -> TeamAudioRestoreSelection {
+        let (_, source, _) = try fixture("restore")
+        var batch = source
+        for index in batch.items.indices {
+            batch.items[index].teamTaskScope!.audioRestoration = try TeamAudioRestorationAcknowledgement(count: index + 1)
+        }
+        return try TeamAudioRestoreSelection(TeamTaskBatch.header(batch))
+    }
+    private func recordingReview(_ scope: TeamAudioLifecycleScope, count: Int, now: Date,
+                                 expired: Bool = false, pending: Bool = false, enabled: Bool = true,
+                                 retainedSeconds: TimeInterval = 120) throws -> TeamAudioLifecycleReview {
+        let formatter = ISO8601DateFormatter()
+        var raw = scope.body
+        raw.merge(["protocol": .number(1), "account": .string(scope.account), "enabled": .bool(enabled),
+            "recording_count": .number(Double(count)), "policy": count == 0 ? .null : .string(expired ? "expired_recordings_omitted_v1" : "published_restore_v1"),
+            "retain_until": count == 0 ? .null : .string(formatter.string(from: now.addingTimeInterval(expired ? -60 : retainedSeconds))),
+            "cleanup_pending": .bool(pending), "expires_at": .string(formatter.string(from: now.addingTimeInterval(300)))]) { _, new in new }
+        return try TeamAudioLifecycleReview(raw, scope: scope, now: now)
+    }
+    private func recordingReviews(_ selection: TeamAudioRestoreSelection, now: Date) throws -> [TeamAudioLifecycleReview] {
+        try selection.scopes.enumerated().map { try recordingReview($0.element, count: $0.offset + 1, now: now, expired: $0.offset == 0) }
+    }
+    func testRecordingSelectionFreezesWholeOriginalWithoutRewritingQueue() throws {
+        let selection = try recordingSelection()
+        let durable = try JSONDecoder().decode(Mutation.self, from: JSONEncoder().encode(selection.original))
+        XCTAssertEqual(try TeamAudioRestoreSelection(durable), selection)
+        var saved = Snapshot(); saved.pending = [selection.original]
+        let before = saved, now = Date(timeIntervalSince1970: 1_900_000_000)
+        let review = try TeamAudioRestoreSelectionReview(selection: selection, reviews: Array(recordingReviews(selection, now: now).reversed()), now: now)
+        XCTAssertEqual(review.members.map(\.scope), selection.scopes)
+        XCTAssertEqual(review.recordingCount, selection.original.teamTaskBatch!.items.count * (selection.original.teamTaskBatch!.items.count + 1) / 2)
+        XCTAssertEqual(review.omittedRecordingCount, 1)
+        XCTAssertTrue(review.requiresOmissionConsent)
+        XCTAssertFalse(review.waitingForCleanup)
+        XCTAssertEqual(review.validUntil, now.addingTimeInterval(120))
+        XCTAssertEqual(saved, before)
+    }
+    func testRecordingSelectionRefusesDeletionSingleMemberAndChangedPolicy() throws {
+        let (deletion, _, _) = try fixture("delete")
+        XCTAssertThrowsError(try TeamAudioRestoreSelection(deletion))
+        let selection = try recordingSelection()
+        var batch = selection.original.teamTaskBatch!
+        batch.items = Array(batch.items.prefix(1))
+        XCTAssertThrowsError(try TeamAudioRestoreSelection(TeamTaskBatch.header(batch)))
+        batch = selection.original.teamTaskBatch!
+        batch.items[0].teamTaskScope!.audioRestoration = try TeamAudioRestorationAcknowledgement(policy: .omitExpired, count: 1)
+        XCTAssertThrowsError(try TeamAudioRestoreSelection(TeamTaskBatch.header(batch)))
+        batch = selection.original.teamTaskBatch!
+        batch.items[0].insertOnly = nil
+        XCTAssertThrowsError(try TeamAudioRestoreSelection(TeamTaskBatch.header(batch)))
+        batch = selection.original.teamTaskBatch!
+        for index in batch.items.indices { batch.items[index].teamTaskScope!.audioRestoration = nil }
+        XCTAssertThrowsError(try TeamAudioRestoreSelection(TeamTaskBatch.header(batch)))
+    }
+    func testRecordingSelectionRequiresEveryMemberExactlyOnce() throws {
+        let selection = try recordingSelection(), now = Date(timeIntervalSince1970: 1_900_000_000)
+        let reviews = try recordingReviews(selection, now: now)
+        for invalid in [Array(reviews.dropLast()), reviews + [reviews[0]], Array(repeating: reviews[0], count: reviews.count)] {
+            XCTAssertThrowsError(try TeamAudioRestoreSelectionReview(selection: selection, reviews: invalid, now: now))
+        }
+        var other = selection.original.teamTaskBatch!
+        other.items[0].fields["task_generation"] = .string(UUID().uuidString.lowercased())
+        let scope = try TeamAudioLifecycleScope(other.items[0])
+        var borrowed = reviews; borrowed[0] = try recordingReview(scope, count: 1, now: now, expired: true)
+        XCTAssertThrowsError(try TeamAudioRestoreSelectionReview(selection: selection, reviews: borrowed, now: now))
+    }
+    func testRecordingSelectionRefusesChangedCountAccessAndExpiredReview() throws {
+        let selection = try recordingSelection(), now = Date(timeIntervalSince1970: 1_900_000_000)
+        let reviews = try recordingReviews(selection, now: now)
+        for replacement in [try recordingReview(selection.scopes[0], count: 2, now: now, expired: true),
+                            try recordingReview(selection.scopes[0], count: 1, now: now, expired: true, enabled: false)] {
+            var changed = reviews; changed[0] = replacement
+            XCTAssertThrowsError(try TeamAudioRestoreSelectionReview(selection: selection, reviews: changed, now: now))
+        }
+        XCTAssertThrowsError(try TeamAudioRestoreSelectionReview(selection: selection, reviews: reviews, now: now.addingTimeInterval(300)))
+        XCTAssertThrowsError(try TeamAudioRestoreSelectionReview(selection: selection, reviews: reviews, now: now.addingTimeInterval(120)))
+    }
+    func testRecordingSelectionWaitsForCleanupAndIncludesMembersWithoutAudio() throws {
+        let source = try recordingSelection(), now = Date(timeIntervalSince1970: 1_900_000_000)
+        var batch = source.original.teamTaskBatch!
+        for index in batch.items.indices.dropFirst() { batch.items[index].teamTaskScope!.audioRestoration = nil }
+        let selection = try TeamAudioRestoreSelection(TeamTaskBatch.header(batch))
+        let reviews = try selection.scopes.enumerated().map {
+            try recordingReview($0.element, count: $0.offset == 0 ? 1 : 0, now: now, expired: $0.offset == 0, pending: $0.offset == 0)
+        }
+        let review = try TeamAudioRestoreSelectionReview(selection: selection, reviews: reviews, now: now)
+        XCTAssertTrue(review.waitingForCleanup)
+        XCTAssertEqual(review.recordingCount, 1)
+        XCTAssertEqual(review.members.count, batch.items.count)
+        XCTAssertEqual(review.selection.original, selection.original)
+    }
+}

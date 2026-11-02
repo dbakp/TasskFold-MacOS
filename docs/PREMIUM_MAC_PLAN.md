@@ -10465,3 +10465,9 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [ ] Finish Mac/iPad runtime, the already-recorded outcome screen, local save-failure and wider window/account/background/privacy/speech/largest-text cases. Normal Backups navigation and other main-app presentation contexts remain separate from the debug-root flow. Complete-selection recovery, mixed media/discussion expiry, personal/legacy migration, whole-project transfers and genuine Auth/full-schema/hosted acceptance remain open.
 
 [Exact platform scope, actual screenshots and attempt history](audio-expired-native/README.md). iOS owns the native case; Mac receives the shared fix and its own code/build checks without inheriting runtime acceptance. No new server migration, deployment or normal-use activation. No unchanged broad iPad run. Curated bar totals and substep counts remain unchanged.
+
+### 2 November 2026 · Recorded Undo and complete-selection preparation
+
+- [x] Preserve independently owned fixture support and Core selection admission/review models. All selection members need fresh matching metadata; no partial review changes an existing queue or gains closure authority.
+- [x] Record the owning iPhone local-service proof: original retained Undo applied with reply lost; Later/reopen/confirm uses unchanged intent, exactly one restoration, zero closure rows and a dismissed recovery sheet. 42 checks pass. This is iOS warm-confirmation evidence, not Mac runtime proof.
+- [ ] Whole-group service closure/race fencing, persistence and native selection UI remain; native Mac/iPad, ordinary entry contexts, genuine integration and wider accessibility/lifecycle remain open. Normal-use switches remain Off. See [evidence](audio-recorded-native/README.md).

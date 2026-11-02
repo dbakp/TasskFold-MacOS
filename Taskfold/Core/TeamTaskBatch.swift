@@ -936,3 +936,56 @@ extension TeamTaskBatch.Review {
         return cache.retainingRecoveryAccess(in: next, from: snapshot)
     }
 }
+
+/// A complete, frozen selection for recording recovery. This admission does not
+/// authorize rewriting the outbox: the service must close the whole intent first.
+struct TeamAudioRestoreSelection: Equatable, Sendable {
+    let original: Mutation
+    let body: [String: JSON]
+    let scopes: [TeamAudioLifecycleScope]
+    static var unavailable: AppFailure { AppFailure(message: "Review this recording selection together. Its saved tasks and original request are kept.") }
+    init(_ original: Mutation) throws {
+        guard let batch = original.teamTaskBatch, batch.operation == .restore,
+              (2...100).contains(batch.items.count), batch.restores != nil,
+              batch.items.contains(where: { $0.teamTaskScope?.audioRestoration != nil }),
+              batch.items.allSatisfy({ $0.insertOnly == true &&
+                  ($0.teamTaskScope?.audioRestoration == nil || $0.teamTaskScope?.audioRestoration?.policy == .retain) }) else { throw Self.unavailable }
+        let body = try batch.body(for: original)
+        let scopes = try batch.items.map(TeamAudioLifecycleScope.init)
+        guard scopes.allSatisfy({ $0.phase == "restore" }) else { throw Self.unavailable }
+        self.original = original; self.body = body; self.scopes = scopes
+    }
+}
+
+/// Ephemeral metadata for every member, including tasks without recordings.
+/// Missing, duplicate, borrowed or expired reviews cannot become partial consent.
+/// No replacement mutation or terminal service proof is created by this type.
+struct TeamAudioRestoreSelectionReview: Equatable, Sendable {
+    let selection: TeamAudioRestoreSelection
+    let members: [TeamAudioLifecycleReview]
+    let recordingCount: Int
+    let omittedRecordingCount: Int
+    let waitingForCleanup: Bool
+    let validUntil: Date
+    var requiresOmissionConsent: Bool { omittedRecordingCount > 0 }
+    init(selection: TeamAudioRestoreSelection, reviews: [TeamAudioLifecycleReview], now: Date = Date()) throws {
+        guard reviews.count == selection.scopes.count, Set(reviews.map { $0.scope.task }).count == reviews.count,
+              let items = selection.original.teamTaskBatch?.items else { throw TeamAudioRestoreSelection.unavailable }
+        var ordered: [TeamAudioLifecycleReview] = [], count = 0, omitted = 0, waiting = false
+        var deadline = Date.distantFuture
+        for (scope, item) in zip(selection.scopes, items) {
+            guard let review = reviews.first(where: { $0.scope == scope }), review.enabled, review.expiresAt > now,
+                  review.count == (item.teamTaskScope?.audioRestoration?.count ?? 0) else { throw TeamAudioRestoreSelection.unavailable }
+            deadline = min(deadline, review.expiresAt)
+            if review.policy == .retain {
+                guard let retention = review.retainUntil, retention > now else { throw TeamAudioRestoreSelection.unavailable }
+                deadline = min(deadline, retention)
+            }
+            ordered.append(review); count += review.count
+            if review.policy == .omitExpired { omitted += review.count }
+            waiting = waiting || review.cleanupPending
+        }
+        self.selection = selection; members = ordered; recordingCount = count
+        omittedRecordingCount = omitted; waitingForCleanup = waiting; validUntil = deadline
+    }
+}

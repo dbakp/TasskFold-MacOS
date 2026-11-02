@@ -14,8 +14,8 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
   const workspace = taskFileWorkspaceAdapter(pg, { actor: user }, {
     actor: audio.nativeToken,
   });
-  assert(Object.keys(options).every((key) => key === "expiredRecovery"));
-  const faults = { losePublicationReply: true, expireAfterDeletion: options.expiredRecovery === true, loseOmissionReply: options.expiredRecovery === true };
+  assert(Object.keys(options).every((key) => ["expiredRecovery", "recordedRecovery"].includes(key)));
+  const faults = { losePublicationReply: true, expireAfterDeletion: options.expiredRecovery === true, loseOmissionReply: options.expiredRecovery === true, loseRetainedReply: options.recordedRecovery === true };
   const requests = [];
   const server = createServer(async (req, res) => {
     try {
@@ -76,8 +76,11 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
           assert.equal(maintenance.status, 200); assert.equal(result.purged, 1);
           faults.expiryProof = { actualRetentionExpired: true, actualFencedCleanup: result };
         }
-        const lost = !preview && !recovery && body._action === "restore" && body._body.audio_restoration_ack?.policy === "expired_recordings_omitted_v1" && faults.loseOmissionReply;
-        if (lost) faults.loseOmissionReply = false;
+        const omitted = body._body.audio_restoration_ack?.policy === "expired_recordings_omitted_v1";
+        const retained = body._body.audio_restoration_ack?.policy === "published_restore_v1";
+        const lost = !preview && !recovery && body._action === "restore" && ((omitted && faults.loseOmissionReply) || (retained && faults.loseRetainedReply));
+        if (lost && omitted) faults.loseOmissionReply = false;
+        if (lost && retained) faults.loseRetainedReply = false;
         requests.push({
           action: preview ? "lifecycle_review" : recovery ? "restore_recovery_" + body._action : "task_" + body._action,
           responseStatus: 200,
