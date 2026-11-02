@@ -1,0 +1,48 @@
+{
+  "checks": {
+    "restoration defaults disabled": true,
+    "real provider publication succeeds": true,
+    "old client must review recording retention": true,
+    "wrong recording count cannot delete": true,
+    "busy recording prevents deletion": true,
+    "existing native guard blocks uncertified deletion": true,
+    "certified deletion removes only root": true,
+    "deleted recording is retired": true,
+    "deleted metadata cleared from public receipt ledger": true,
+    "private deletion inventory retains exact caption": true,
+    "retention and cleanup share exact deadline": true,
+    "deleted generation cannot read recording": true,
+    "retained recording not claimed for early cleanup": true,
+    "retained bytes still consume quota": true,
+    "delete acknowledgement replay preserves one inventory": true,
+    "restore needs matching explicit review": true
+  },
+  "maintenance": [],
+  "actualLocalStorage": true,
+  "genuineAuth": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "error": {
+    "message": "changed stored object refuses restoration\n+ actual - expected\n\n+ '22P02'\n- 'PT409'"
+  },
+  "checkCount": 16,
+  "cleanupErrors": [],
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true
+}

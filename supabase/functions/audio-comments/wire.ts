@@ -71,7 +71,11 @@ export function publication(value: unknown) {
 export function path(row: Row) {
   const t = target(row.target);
   if (!identity(row.asset_id)) throw Error("asset");
-  return `audio-comments/v1/${t.task_id}/${t.task_generation}/${row.asset_id}.m4a`;
+  const generation = Object.hasOwn(row, "storage_task_generation")
+    ? row.storage_task_generation
+    : t.task_generation;
+  if (!identity(generation)) throw Error("storage generation");
+  return `audio-comments/v1/${t.task_id}/${generation}/${row.asset_id}.m4a`;
 }
 const date = (value: unknown) =>
   typeof value === "string" && value.length <= 40 &&
@@ -95,6 +99,9 @@ export function receipt(value: unknown, actor: string, expected?: Row) {
     "published_at",
     "bucket",
     "object_name",
+    ...(Object.hasOwn(row, "storage_task_generation")
+      ? ["storage_task_generation"]
+      : []),
   ]);
   if (
     row.protocol !== 1 || row.account !== actor ||
@@ -116,7 +123,11 @@ export function receipt(value: unknown, actor: string, expected?: Row) {
     caption: row.caption,
     audio: row.audio,
   });
-  if (expected && key(native) !== key(expected)) {
+  if (
+    expected &&
+    (Object.hasOwn(row, "storage_task_generation") ||
+      key(native) !== key(expected))
+  ) {
     throw Error("mismatched receipt");
   }
   return row;
@@ -133,7 +144,7 @@ export function key(value: unknown): string {
 export function publicReceipt(row: Row) {
   return Object.fromEntries(
     Object.entries(row).filter(([key]) =>
-      !["bucket", "object_name"].includes(key)
+      !["bucket", "object_name", "storage_task_generation"].includes(key)
     ),
   );
 }

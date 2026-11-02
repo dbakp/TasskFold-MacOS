@@ -21,3 +21,5 @@ node Scripts/Database/test-audio-provider-recovery.mjs /tmp/taskfold-audio-recov
 ```
 
 The runner requires the default 20 GiB storage floor and removes only its own services. Verification records exact source/report hashes and attempt qualifications. Earlier unchanged app builds and 52 service unit tests were not rerun for this test-only milestone.
+
+Follow-up: the [certified generation-restoration service](../audio-generation-restore/README.md) now has separate local proof. Native review, wider lifecycle and whole-project transfers remain open. Earlier remaining lists describe their original stage.

@@ -10,7 +10,10 @@ import {
 import { createAudioHttpFixture } from "./audio-comments-postgres-http-fixture.mjs";
 const output = process.argv[2];
 assert(output?.startsWith("/tmp/taskfold-"));
-const candidate = await migrationSQL(audioProjectCustodyMigration);
+const candidate = await migrationSQL(audioProjectCustodyMigration) +
+  (process.env.TASKFOLD_AUDIO_GENERATION_SQL
+    ? "\n" + await readFile(process.env.TASKFOLD_AUDIO_GENERATION_SQL, "utf8")
+    : "");
 const report = {
   checks: {},
   candidateSHA256: createHash("sha256").update(candidate).digest("hex"),

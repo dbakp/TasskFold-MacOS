@@ -752,3 +752,68 @@ Deno.test("wrapped absence cannot resurrect an already published recording", asy
   equal((await f.publish()).status, 503);
   equal(f.state.uploads, 1);
 });
+
+Deno.test("restored recording downloads original generation and strips internal address", async () => {
+  const f = fixture();
+  equal((await f.publish()).status, 200);
+  const original = (f.row.target as Row).task_generation;
+  f.row.target = { ...(f.row.target as Row), task_generation: id() };
+  f.row.storage_task_generation = original;
+  const list = await f.handler(f.request("list", f.row.target));
+  equal(list.status, 200);
+  const listed = (await list.json()).items[0];
+  equal(listed.target, f.row.target);
+  equal(Object.hasOwn(listed, "storage_task_generation"), false);
+  equal(Object.hasOwn(listed, "object_name"), false);
+  const result = await f.handler(
+    f.request("download", { comment_id: f.intent.comment_id }),
+  );
+  equal(result.status, 200);
+  equal(
+    await digest(new Uint8Array(await result.arrayBuffer())),
+    descriptor.sha256,
+  );
+  equal(f.state.uploads, 1);
+});
+Deno.test("invalid restored Storage generation refuses before reading bytes", async () => {
+  for (
+    const invalid of [
+      null,
+      42,
+      "../other",
+      "00000000-0000-0000-0000-000000000000",
+    ]
+  ) {
+    const f = fixture();
+    equal((await f.publish()).status, 200);
+    f.row.storage_task_generation = invalid;
+    equal(
+      (await f.handler(
+        f.request("download", { comment_id: f.intent.comment_id }),
+      )).status,
+      503,
+    );
+  }
+});
+Deno.test("publication cannot adopt an internal restored Storage address", async () => {
+  const f = fixture();
+  const alternate: Row = { ...f.row, storage_task_generation: id() };
+  alternate.object_name = path(alternate);
+  f.state.reserveResult = alternate;
+  equal((await f.publish()).status, 503);
+  equal(f.state.uploads, 0);
+});
+Deno.test("restored recording still withholds bytes after current access changes", async () => {
+  const f = fixture();
+  equal((await f.publish()).status, 200);
+  f.row.storage_task_generation = (f.row.target as Row).task_generation;
+  f.row.target = { ...(f.row.target as Row), task_generation: id() };
+  f.state.revoked = true;
+  equal(
+    (await f.handler(
+      f.request("download", { comment_id: f.intent.comment_id }),
+    )).status,
+    404,
+  );
+  equal(f.state.reads, 2);
+});

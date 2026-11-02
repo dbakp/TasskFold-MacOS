@@ -10426,3 +10426,12 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [ ] Finish unknown/corrupt-object and wider account/window/background/privacy/accessibility recovery, Mac runtime, genuine Auth/full-schema/hosted integration, generation restoration and whole-project transfers. Ordinary-use gates remain off.
 
 [Scope, exact proof and attempt qualification](audio-provider-recovery/README.md). Existing mobile native evidence remains separate; curated bars remain 74 checkpoints.
+
+### 2 November 2026 · Certified recording generation restoration
+
+- [x] Build a separately disabled team deletion/Undo service: acknowledged 30-day retention, private deletion inventory, current-role/new-generation renewal and exact original recording identities/paths. Two successive Delete/Undo cycles pass against real local Storage/SQL.
+- [x] Expire private caption snapshots and use existing fenced cleanup/quota release. Allow explicit task-only recovery after expired recordings are confirmed purged; refuse silent omission.
+- [x] Pass 65 provider/SQL checks and 56 typed service tests per repo. New recipient metadata uses live generation while original sender receipts remain unchanged; internal storage generation never reaches the public contract. No new advisor findings.
+- [ ] Build and accept native retention/Undo/expired-media review, mixed file/recording restoration, personal/legacy migration, wider lifecycle/privacy/accessibility and whole-project transfers. Genuine Auth/full-schema/hosted work remains open.
+
+[Exact scope, hashes and attempt qualifications](audio-generation-restore/README.md). New service/client switches stay off. No native app build or runtime acceptance is claimed; no Swift or native API field changed. Curated progress bars remain 74 checkpoints.

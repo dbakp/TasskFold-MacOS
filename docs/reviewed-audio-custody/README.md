@@ -26,3 +26,5 @@ Current isolated app/runner builds and strict signatures are checked separately.
 - The previously interrupted iPad dialog/cache reacceptance stays open; do not repeat the broad suite against its unchanged runtime condition.
 
 No hosted migration, service deployment, scheduler or release enablement occurs here. The user's remote-reminder, old-client rollout-safety and distribution deferrals remain unchanged.
+
+Follow-up: the [certified generation-restoration service](../audio-generation-restore/README.md) now has separate local proof. Native review, wider lifecycle and whole-project transfers remain open. Earlier remaining lists describe their original stage.

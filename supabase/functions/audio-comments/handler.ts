@@ -135,13 +135,29 @@ function actorFromToken(token: string) {
 const sameMedia = (a: Row, b: Row) =>
   key(
     Object.fromEntries(
-      ["operation_id", "comment_id", "asset_id", "target", "caption", "audio"]
+      [
+        "operation_id",
+        "comment_id",
+        "asset_id",
+        "target",
+        "storage_task_generation",
+        "caption",
+        "audio",
+      ]
         .map((k) => [k, a[k]]),
     ),
   ) ===
     key(
       Object.fromEntries(
-        ["operation_id", "comment_id", "asset_id", "target", "caption", "audio"]
+        [
+          "operation_id",
+          "comment_id",
+          "asset_id",
+          "target",
+          "storage_task_generation",
+          "caption",
+          "audio",
+        ]
           .map((k) => [k, b[k]]),
       ),
     );

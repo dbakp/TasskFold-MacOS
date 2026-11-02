@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Interrupted recording recovery",
-  "latest": "Both repos pass interrupted upload, publication and cleanup recovery against real local Storage/SQL: no duplicate media, stale cleanup workers refused, quota released only after confirmed cleanup. Mobile native delivery has earlier scoped proof. Mac UI, genuine sign-in and wider recovery remain open; ordinary-use gates stay off.",
+  "focus": "P2 · Recording deletion and Undo",
+  "latest": "A disabled recording-restoration service now preserves original bytes and identities through certified task Delete/Undo, with 30-day retention and explicit task-only recovery after expired-media cleanup. Both repos pass local provider/service checks. Native review controls, Mac runtime, genuine sign-in and wider lifecycle remain open.",
   "next": [
-    "Continue unknown/corrupt-upload and account/access/window/background recovery plus Mac runtime/accessibility; then reviewed generation restoration and whole-project transfers. Genuine Auth/full-schema/hosted acceptance remains required before exposure.",
+    "Build typed recording-retention acknowledgements and premium Delete/Undo/expired-media review in both apps; accept mixed files/recordings and native lifecycle. Then whole-project transfers and wider account/access/privacy recovery. Genuine Auth/full-schema/hosted acceptance remains required before exposure.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Current-role publishing/removal, moves/Undo and mobile native delivery have local proof. Interrupted provider replies now recover without duplicate media or premature quota release. Mac UI, genuine sign-in, wider lifecycle and generation restoration remain open; ordinary use stays disabled.",
+              "detail": "Current-role publishing/removal, same-generation moves, mobile delivery and interrupted-provider recovery have local proof. Certified generation restoration now has service proof. Native retention/Undo review, whole-project transfers, genuine sign-in and wider lifecycle remain; ordinary use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -674,8 +674,16 @@
                   "title": "Interrupted uploads and cleanup: local service verified"
                 },
                 {
+                  "state": "done",
+                  "title": "Certified generation restore: local service verified"
+                },
+                {
                   "state": "build",
-                  "title": "Generation restoration and whole-project transfers"
+                  "title": "Native retention, Undo and expired-media review"
+                },
+                {
+                  "state": "build",
+                  "title": "Whole-project recording transfers"
                 },
                 {
                   "state": "verify",
@@ -811,7 +819,9 @@
             "audio-real-provider-native/README.md",
             "audio-real-provider-native/verification.json",
             "audio-provider-recovery/README.md",
-            "audio-provider-recovery/verification.json"
+            "audio-provider-recovery/verification.json",
+            "audio-generation-restore/README.md",
+            "audio-generation-restore/verification.json"
           ],
           "focus": true
         },
@@ -921,7 +931,7 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "28019b0afc879d0ffcab3158ffd71f9154f48060e90660ad650908c6ff809a0e",
+    "P2_PLAN.md": "b6ddaa23696db538d0458688c1ce24a58a21566d4936fac36753f1a6394e637f",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -932,7 +942,9 @@
     "assignment-tree-native/verification.json": "38eb04f04873935d32fa6cd878d46ccb6e40348d97634cb47f11c6dd6564d2df",
     "assignment-tree-preservation/README.md": "3e122f1f8409f577877f09c56749f6866dbb8b12dff1ec13b1ff4fb59db42c2d",
     "assignment-tree-preservation/verification.json": "fd496b987e0387a5e8d9ee3a3624e6f141d24cab66840ed3977170a6e0770889",
-    "audio-provider-recovery/README.md": "7063dd0141cca6fcd41828c70b77dc63b99fcf9c3718107e4e4f64861fe58e19",
+    "audio-generation-restore/README.md": "e7da0408570595b31776ecf3e0c6a568769cb62f8b8b3ddb6b0238241fb9f4f2",
+    "audio-generation-restore/verification.json": "d4c6066fcf7738ee756878e50c9339a6bdcec89c02c7e38ef0842e1c0e2d5c57",
+    "audio-provider-recovery/README.md": "09aa4b4b276abb8729d0fbdea3ad0cde8ce871e1e5c0d5c7ba2b08a7b5ed8e4f",
     "audio-provider-recovery/verification.json": "828589a57e7a3fcd4918e9688d52c8765103f62d84d6429959727929539c6a57",
     "audio-real-provider-native/README.md": "d8edaeca7ea80e55252f4d7b422b53d26865b6d0e07ab10132535e8884ca0726",
     "audio-real-provider-native/verification.json": "30cb9faeeebd7381b625547e89e790f86790dc755812430a4345d21165087a92",
@@ -1028,7 +1040,7 @@
     "preserving-json/verification.json": "32245580dd9fdd9cc710c036398ed1c8a26e3ba2e156fb8bf721808db242f3b1",
     "removal-coordination/README.md": "15f6a0a9996464c0ba2ba0ad70a8c409adb7aa5e49530913edeb513bd7381991",
     "removal-coordination/verification.json": "23bdbadae3aa8effbe7e92fc91394f1ecd00882a6db1e58cb2f321868b0676a2",
-    "reviewed-audio-custody/README.md": "2240c134bc24eae87ed5b9e0b4fa489b0d0019b822885eda1d94d074641adae4",
+    "reviewed-audio-custody/README.md": "b6dda9d6d208b94ff1d948cfe5876437ca16d53084a380c2303db6a14554e2a6",
     "reviewed-audio-custody/verification.json": "c11f1dc1ceae90b6581295116c4a86139576460e6c5c1ec097294328b2de6707",
     "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",
     "reviewed-child-adoption-native/verification.json": "0b1d67d06dd2b65172d4b8ebb4c3e3677df460d7b1a0f26a9b907a987b7ab5fd",

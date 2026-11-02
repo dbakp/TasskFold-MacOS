@@ -1,0 +1,37 @@
+{
+  "checks": {
+    "restoration defaults disabled": true,
+    "real provider publication succeeds": true,
+    "old client must review recording retention": true,
+    "wrong recording count cannot delete": true,
+    "busy recording prevents deletion": true
+  },
+  "maintenance": [],
+  "actualLocalStorage": true,
+  "genuineAuth": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "error": {
+    "message": "uncertified deletion remains closed\n+ actual - expected\n\n+ 'PT503'\n- 'PT409'\n     ^"
+  },
+  "checkCount": 5,
+  "cleanupErrors": [],
+  "provider": [
+    {
+      "method": "GET",
+      "status": 400,
+      "error": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+    },
+    {
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true
+}
