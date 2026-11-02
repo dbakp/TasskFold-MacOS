@@ -1,0 +1,8 @@
+{
+  "initialNetwork": "Internal Docker network did not expose a loopback port. Replaced only the owned fixture network with a dedicated bridge and loopback-only ports.",
+  "interruptedStartup": "Two old-runtime runs exited with unsettled top-level work. Verified owned containers/networks were removed explicitly. Provider reads now have referenced deadlines and bounded bodies; Node 22+ is enforced before any containers start.",
+  "observedProductFailure": "32 checks passed before cleanup failed to release quota after real API deletion. Real absence was HTTP 400, code NoSuchKey, statusCode string 404. Both owned resources were removed afterward.",
+  "macDependencySetup": "Initial copied test used iOS migration timestamps; missing local file stopped before acceptance. Mac now resolves its explicit own dependency filenames. No production migration was changed.",
+  "final": "Each independent repository passes 56 real-provider checks, 61 service tests and lint.",
+  "noGatesOrAssertionsWeakened": true
+}

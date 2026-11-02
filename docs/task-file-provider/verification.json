@@ -1,0 +1,53 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "providerChecks": 56,
+  "providerFailures": 0,
+  "realLocalStorageAPI": true,
+  "fileBackend": "ephemeral memory",
+  "maximumRoundTripBytes": 5242880,
+  "storageImage": "supabase/storage-api@sha256:0194c53a03977e8ca0194636a27172158b39e3ae7a5e12da1dca5717086dd849",
+  "runtime": "Node 24.19.0",
+  "serviceTests": 61,
+  "newServiceTests": 9,
+  "serviceFailures": 0,
+  "lintPassed": true,
+  "nativeOrCoreRebuiltOrRerun": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "fullSupabaseMigrationHistoryParityAccepted": false,
+  "genuineHostedAuthAccepted": false,
+  "cloudS3Accepted": false,
+  "nativeAuthenticatedPublicationAccepted": false,
+  "sourceSHA256": {
+    "Scripts/Database/storage-provider-fixture.mjs": "fc13de3a9941ad6e1da80987020d922dc7179e8119c9b368d49c530cf5dbc1a9",
+    "Scripts/Database/task-files-provider-http.ts": "78682f7f24c2ca03803595f9491feb3639638331396f0dbba4d4ad22d407d8a3",
+    "Scripts/Database/task-files-provider-http-fixture.mjs": "6a5ece45277f880ba651722bc5cd2243a46232d53f6a2263e7d0b8759a619fca",
+    "Scripts/Database/test-task-file-provider.mjs": "a4138fe7635d9a26369b6105cb1e5808fd8bf929e2290f088db2053eb8aa3ca6",
+    "Scripts/Database/postgres-fixture.mjs": "34b670d084b200848fa7f72fbd191424eb30c1ba64989bcbfc639bac2127568d",
+    "supabase/functions/task-files/handler.ts": "3622a2f2c270b566951f4c3dffde63529a81b9b30f4e18c57bd7011ed88da2e5",
+    "supabase/functions/task-file-maintenance/handler.ts": "f51738a71212789b7bb07f3b8171a2b60ba883b88a6686ae36e0a5ad8f1413db",
+    "supabase/functions/task-file-maintenance/handler_test.ts": "f8e56633ba6ed2f192ac5b1e23f26b3aa871909479f3d825d51db39b5df3a18d"
+  },
+  "migrationSHA256": {
+    "20261030093035_child_record_reviewed_team_transfers.sql": "6715c30856cec9634676c2337ac81c1ad67a7eefcc1be57948be7d865b621f1b",
+    "20261101225002_task_file_sender_stop.sql": "30e9316ed6137df9b4702cbfa31ee8bfa8c94d3fdb35d528422f7724bdbac17d",
+    "20261101220633_task_file_upload_admission.sql": "b2bbfd638392b497e61f973844832e8d69dade539bba86877887b2277cb4c705",
+    "20261101232206_task_file_upload_cleanup.sql": "16dbc20d3d95c48bf43e24d175a51eef237001fd78d18aefafa5e13099c71496",
+    "20261101212844_task_bound_file_custody.sql": "c713005f967a4ba9a290d00942543c79f583fb2e8aaa83b37c6f31a828f8fca1"
+  },
+  "providerReportSHA256": "56da8ce54edbb9fb24e7c067f1878d635d7c10b04789e8e77a1bd974c338cffd",
+  "rawProviderLogSHA256": "78920a44e182301b9ccf1b50ad41899bb2553e05057847d5f5d6a14d0d26ab67",
+  "serviceLogSHA256": "5c194928e3ce54bc5cccc03ebc765f14fcae69e561e959a67dfac8e2df97be6c",
+  "advisorsComparison": "No additional findings against own real-Storage schema baseline; full-stack/hosted advisors remain separate",
+  "cleanup": {
+    "httpClosed": true,
+    "storageRemoved": true,
+    "databaseRemoved": true,
+    "networkRemoved": true,
+    "persistentVolumesCreated": false,
+    "existingContainersTouched": false
+  },
+  "scope": "Actual handler and SQL, synthetic Auth/RPC HTTP adapter, real pinned Storage API/schema/policies/bytes; no cloud deployment",
+  "serviceLogNormalization": "ANSI escapes and trailing whitespace stripped"
+}

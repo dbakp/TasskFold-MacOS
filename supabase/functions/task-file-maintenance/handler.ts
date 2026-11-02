@@ -143,14 +143,20 @@ export function createTaskFileMaintenanceHandler(
             item.object_name,
           "GET",
         );
-        if (response.status === 404) {
+        if (response.status === 404 || response.status === 400) {
           // Reject arbitrary proxy/tenant/bucket errors; SQL also checks metadata.
           const failure = row(
             JSON.parse(
               new TextDecoder().decode(await read(response.body, 4096, signal)),
             ),
           );
-          if (failure.code !== "NoSuchKey") throw Error("unverified absence");
+          // Storage v1.87 also wraps NoSuchKey in HTTP 400, carrying the
+          // underlying 404 as a string. Neither a generic 400 nor another
+          // provider error establishes absence. SQL still checks metadata.
+          if (
+            failure.code !== "NoSuchKey" ||
+            response.status === 400 && failure.statusCode !== "404"
+          ) throw Error("unverified absence");
           return false;
         }
         if (response.status !== 200) throw Error("storage");

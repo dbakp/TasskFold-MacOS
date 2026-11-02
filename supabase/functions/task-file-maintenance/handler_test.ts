@@ -28,6 +28,8 @@ function fixture(
     confirm?: boolean;
     badPath?: boolean;
     bad404?: boolean;
+    absenceStatus?: number;
+    absenceBody?: Record<string, unknown>;
     hang?: boolean;
   } = {},
 ) {
@@ -84,8 +86,9 @@ function fixture(
       );
       if (options.absent || deleted && !options.stillPresent) {
         return response(
-          { code: options.bad404 ? "NoSuchBucket" : "NoSuchKey" },
-          404,
+          options.absenceBody ??
+            { code: options.bad404 ? "NoSuchBucket" : "NoSuchKey" },
+          options.absenceStatus ?? 404,
         );
       }
       return new Response(options.wrongBytes ? "wrong" : bytes);
@@ -178,4 +181,68 @@ Deno.test("worker disabled by default", async () => {
     (await h(new Request("https://worker.invalid", { method: "POST" })))
       .status === 503,
   );
+});
+
+const wrappedAbsence = {
+  statusCode: "404",
+  error: "not_found",
+  message: "Object not found",
+  code: "NoSuchKey",
+};
+for (const absent of [false, true]) {
+  Deno.test(
+    "real Storage wrapped NoSuchKey confirms only a closed claim: " + absent,
+    async () => {
+      const f = fixture({
+        absent,
+        absenceStatus: 400,
+        absenceBody: wrappedAbsence,
+      });
+      const r = await f.run(), b = await r.json();
+      assert(b.purged === 1);
+      assert(f.calls.some((x) => x.body?._action === "confirm"));
+      assert(f.calls.some((x) => x.method === "DELETE") === !absent);
+    },
+  );
+}
+for (
+  const [name, status, body] of [
+    ["missing underlying status", 400, { code: "NoSuchKey" }],
+    ["wrong underlying status", 400, { code: "NoSuchKey", statusCode: "400" }],
+    ["missing bucket", 400, { code: "NoSuchBucket", statusCode: "404" }],
+    ["forbidden", 403, wrappedAbsence],
+    ["provider failure", 500, wrappedAbsence],
+  ] as const
+) {
+  Deno.test(name + " is never object absence", async () => {
+    const f = fixture({
+      absent: true,
+      absenceStatus: status,
+      absenceBody: body,
+    });
+    const b = await (await f.run()).json();
+    assert(b.purged === 0 && b.unresolved === 1);
+    assert(!f.calls.some((x) => x.body?._action === "confirm"));
+  });
+}
+Deno.test("wrapped provider absence never settles an open writer", async () => {
+  const f = fixture({
+    probe: true,
+    absent: true,
+    absenceStatus: 400,
+    absenceBody: wrappedAbsence,
+  });
+  const b = await (await f.run()).json();
+  assert(b.recovered === 0 && b.unresolved === 1);
+  assert(!f.calls.some((x) => x.body?._action === "reconcile"));
+});
+Deno.test("wrapped provider absence cannot override SQL refusal", async () => {
+  const f = fixture({
+    absent: true,
+    absenceStatus: 400,
+    absenceBody: wrappedAbsence,
+    confirm: false,
+  });
+  const b = await (await f.run()).json();
+  assert(b.purged === 0 && b.unresolved === 1);
 });

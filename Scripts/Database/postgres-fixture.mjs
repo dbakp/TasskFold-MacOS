@@ -268,6 +268,9 @@ export async function createPostgresFixture(
       waitForLock,
       close,
       serverVersion,
+      // Explicit identity for owned provider fixtures; callers must verify this
+      // label before connecting or removing a container.
+      containerIdentity: Object.freeze({ name, label }),
       // Optional read-only CLI advisors on this exact owned fixture. Explicit
       // opt-in publishes an ephemeral loopback-only port; no user data.
       advisors: async () => {
