@@ -66,6 +66,14 @@ final class TaskFileUploadTests: XCTestCase {
         let confirmed = try saved.markingAttempted().receiving(TaskfoldJSONEncoder().encode(Record(["receipt": published["receipt"]])))
         XCTAssertEqual(confirmed.phase, .published); XCTAssertEqual(confirmed.bytes, saved.bytes); XCTAssertEqual(try TaskfoldJSONDecoder().decode(TaskFileUploadJournal.self, from: TaskfoldJSONEncoder().encode(confirmed)), confirmed)
     }
+    func testActualNativeProviderReplyConfirmsAColdOriginal() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "task-file-native-provider-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let wire = try TaskfoldJSONDecoder().decode(Record.self, from: Data(contentsOf: url)), intent = Record(wire["intent"].object)
+        let source = try TaskFileUploadJournal(account: wire.string("account"), origin: wire.string("origin"), target: Record(intent["target"].object), bytes: Data("Native provider original".utf8), name: intent.string("name"), type: intent.string("type"), operation: XCTUnwrap(UUID(uuidString: intent.string("operation_id")))).markingAttempted()
+        let cold = try TaskfoldJSONDecoder().decode(TaskFileUploadJournal.self, from: TaskfoldJSONEncoder().encode(source))
+        let confirmed = try cold.receiving(TaskfoldJSONEncoder().encode(Record(wire["reply"].object)))
+        XCTAssertEqual(confirmed.phase, .published); XCTAssertEqual(confirmed.bytes, source.bytes)
+    }
     func testQueuedAndAttemptedJournalsRoundTripWithoutExposingDescriptions() throws {
         let queued = try journal()
         for value in [queued, try queued.markingAttempted()] {

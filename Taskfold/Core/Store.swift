@@ -4919,8 +4919,10 @@ extension Store {
         if ProjectAdoptionNativeFixture.enabled { return ProjectAdoptionNativeFixture.backend() }
         if TeamTemplateNativeFixture.enabled { return TeamTemplateNativeFixture.backend() }
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [TeamEditorNoNetwork.self]
-        let session = try! Foundation.JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(account)\"}}".utf8))
+        configuration.protocolClasses = TaskFileNativeProviderFixture.enabled ? [TaskFileNativeProviderProtocol.self, TeamEditorNoNetwork.self] : [TeamEditorNoNetwork.self]
+        let token = (try? TaskFileNativeProviderFixture.configuration().token) ?? "synthetic-auth"
+        let data = try! JSONSerialization.data(withJSONObject: ["access_token": token, "refresh_token": "synthetic-refresh", "expires_in": 3600, "user": ["id": account]])
+        let session = try! Foundation.JSONDecoder().decode(Session.self, from: data)
         return Backend(configuration: ["URL": "https://synthetic.example", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: session, persistSession: { _ in })
     }
     static func boundary(viewer: Bool = false) throws -> TeamWorkspaceBoundary {

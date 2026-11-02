@@ -1,16 +1,10 @@
 import assert from "node:assert/strict";
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
-import { createPostgresFixture, literal as lit } from "./postgres-fixture.mjs";
-import {
-  createStorageProvider,
-  storageImage,
-} from "./storage-provider-fixture.mjs";
+import { literal as lit } from "./postgres-fixture.mjs";
+import { storageImage } from "./storage-provider-fixture.mjs";
 import { createTaskFileProviderHttp } from "./task-files-provider-http-fixture.mjs";
-import {
-  childAuthorityMigration,
-  loadChildAuthorityDependencies,
-} from "./child-task-authority-schema.mjs";
+import { createTaskFileProviderDatabase } from "./task-file-provider-schema.mjs";
 if (Number(process.versions.node.split(".")[0]) < 22) {
   throw Error(
     "This provider fixture requires Node.js 22 or newer before starting any containers.",
@@ -30,65 +24,13 @@ const check = (name, a, b = true) => {
   console.log("passed:", name);
 };
 try {
-  pg = await createPostgresFixture({ advisors: true });
-  const raw = pg.raw;
-  pg.raw = async (sql) => {
-    // Replace only the two explicitly minimal bootstrap stubs. All production
-    // migrations execute unchanged against Storage's actual schema and policies.
-    if (sql.startsWith("-- Minimal owned local schema.")) {
-      const stub =
-        "create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,owner uuid,owner_id text);";
-      assert(sql.includes(stub));
-      const [before, after] = sql.split(stub);
-      await raw(before);
-      storage = await createStorageProvider(pg);
-      await raw(after);
-      return "";
-    }
-    const buckets =
-      "create table storage.buckets(id text primary key,public boolean not null);insert into storage.buckets values('avatars',true),('task-attachments',false);";
-    if (sql.startsWith(buckets)) {
-      for (
-        const [id, publicBucket] of [["avatars", true], [
-          "task-attachments",
-          false,
-        ]]
-      ) {
-        const response = await storage.request("/bucket", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, name: id, public: publicBucket }),
-        });
-        assert.equal(response.status, 200, await response.text());
-      }
-      return raw(sql.slice(buckets.length));
-    }
-    return raw(sql);
-  };
-  await loadChildAuthorityDependencies(pg);
+  ({ pg, storage } = await createTaskFileProviderDatabase());
   check(
     "real Storage schema owns metadata",
     await pg.scalar(
       "select to_jsonb(exists(select 1 from information_schema.columns where table_schema='storage' and table_name='objects' and column_name='version'))",
     ),
   );
-  for (
-    const file of [
-      childAuthorityMigration,
-      "20261030093035_child_record_reviewed_team_transfers.sql",
-      "20261101212844_task_bound_file_custody.sql",
-      "20261101220633_task_file_upload_admission.sql",
-      "20261101225002_task_file_sender_stop.sql",
-      "20261101232206_task_file_upload_cleanup.sql",
-    ]
-  ) {
-    await pg.raw(
-      await readFile(
-        new URL("../../supabase/migrations/" + file, import.meta.url),
-        "utf8",
-      ),
-    );
-  }
   check(
     "actual provider starts empty",
     await pg.scalar("select count(*) from storage.objects"),

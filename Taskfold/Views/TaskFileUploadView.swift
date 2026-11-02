@@ -66,7 +66,13 @@ extension Store {
         let directory = fileUploadDirectory(account: request.account, origin: request.origin), root = cacheURL.deletingLastPathComponent(), account = request.account
         let io = ReviewedTeamCommandFileIO<TaskFileUploadJournal>(directory: directory, account: account, origin: request.origin, encryptionKey: { try BackupVault.deviceKey(account: account) })
         let vault = TaskFileUploadVault(io: io, coordinationDirectory: URL.applicationSupportDirectory.appendingPathComponent("TeamCommandLocks", isDirectory: true), removalDirectory: root)
-        return TaskFileUploadModel(account: account, origin: request.origin, target: request.target, vault: vault, service: backend, incarnation: request.session,
+        let service: any TaskFileUploadTransport
+        #if DEBUG
+        service = TaskFileNativeProviderFixture.enabled ? TaskFileNativeProviderTransport(backend) : backend
+        #else
+        service = backend
+        #endif
+        return TaskFileUploadModel(account: account, origin: request.origin, target: request.target, vault: vault, service: service, incarnation: request.session,
             current: { [weak self] in self?.fileUploadCurrent(request) == true }, publishAllowed: { [weak self] in self?.fileUploadMayPublish(request) == true })
     }
     func fileUploadAttachments(_ request: TaskFileUploadRequest) -> [Record] {
@@ -165,7 +171,7 @@ struct TaskFileUploadView: View {
                                 Text("Your original file stays encrypted on this device until the result is confirmed. Closing this sheet keeps recovery available in Account.").font(.footnote).foregroundStyle(.secondary)
                             } else {
                                 Button("Clear recovery copy", role: .destructive) { Task { await model.finish() } }.disabled(model.busy || model.needsRefresh || downloading).accessibilityIdentifier("fileUploadClear")
-                                Text("Clears only this device’s recovery copy. The shared file stays with its task.").font(.footnote).foregroundStyle(.secondary)
+                                Text(pending.phase == .published ? "Clears only this device’s recovery copy. The shared file stays with its task." : "Clears only this device’s recovery copy. This upload wasn’t shared.").font(.footnote).foregroundStyle(.secondary)
                             }
                         }
                     } else if !request.library {
@@ -356,6 +362,19 @@ struct TaskFileViewerFixtureScreen: View {
                     if TaskFileViewerFixture.selectionTesting {
                         Button("Open file capture") { files = store.fileUploadRequest(taskID: source.id) }.accessibilityIdentifier("fileSelectionOpen")
                     }
+                    if TaskFileNativeProviderFixture.enabled {
+                        Button("Prepare publication proof") {
+                            Task {
+                                do {
+                                    guard let request = store.fileUploadRequest(taskID: source.id) else { return }
+                                    let model = try store.fileUploadModel(request); await model.load()
+                                    if model.pending == nil { await model.choose(Data("Native provider original".utf8), name: "Native provider proof.txt", type: "text/plain") }
+                                    model.close(); files = request
+                                } catch { proof = "Provider fixture needs review" }
+                            }
+                        }.accessibilityIdentifier("fileProviderOpen")
+                        TaskFileUploadRecoveryButton()
+                    }
                     if TaskFileViewerFixture.refreshTesting {
                         Button("Prepare saved recovery proof") {
                             Task {
@@ -397,5 +416,99 @@ struct TaskFileViewerFixtureScreen: View {
             }
         }
     }
+}
+#endif
+
+#if DEBUG
+/// Exact isolated host only. Disposable user token, never a service key.
+@MainActor enum TaskFileNativeProviderFixture {
+    static var enabled: Bool { TaskFileViewerFixture.selectionTesting && ProcessInfo.processInfo.arguments.contains("--file-provider-native-testing") }
+    static var auditURL: URL { URL.documentsDirectory.appendingPathComponent("taskfold-file-provider-native-audit.json") }
+    static func observe(_ value: [String: Any]) {
+        guard enabled else { return }
+        var values = ((try? Data(contentsOf: auditURL)).flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [[String: Any]]) ?? []
+        values.append(value); values = Array(values.suffix(16))
+        if let data = try? JSONSerialization.data(withJSONObject: values, options: [.sortedKeys]) { try? data.write(to: auditURL, options: .atomic) }
+    }
+    static var configurationURL: URL { URL.documentsDirectory.appendingPathComponent("taskfold-file-provider-native.json") }
+    static func configuration() throws -> (url: URL, token: String) {
+        guard enabled else { throw CancellationError() }
+        let data = try Data(contentsOf: configurationURL)
+        guard data.count <= 32768, let value = try JSONSerialization.jsonObject(with: data) as? [String: String],
+              Set(value.keys) == ["schema", "account", "url", "token"], value["schema"] == "1", value["account"] == TeamEditorNativeFixture.account,
+              let url = value["url"].flatMap(URL.init(string:)), url.scheme == "http", url.host == "127.0.0.1", url.port.map({ $0 > 0 && $0 <= 65535 }) == true,
+              url.path.isEmpty || url.path == "/", url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
+              let token = value["token"], token.utf8.count <= 16384, token.split(separator: ".").count == 3, !token.contains(where: { $0.isWhitespace }) else { throw CancellationError() }
+        return (url, token)
+    }
+    static func reply(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        let config = try configuration()
+        guard request.httpMethod == "POST", request.url?.scheme == "https", request.url?.host == "synthetic.example",
+              request.url?.path == "/functions/v1/task-files", let parts = URLComponents(url: request.url!, resolvingAgainstBaseURL: false),
+              parts.queryItems?.count == 1, let action = parts.queryItems?.first, action.name == "action", ["publish", "resolve", "cancel", "download"].contains(action.value ?? ""),
+              request.value(forHTTPHeaderField: "Authorization") == "Bearer " + config.token else { throw CancellationError() }
+        var body = request.httpBody ?? Data()
+        if request.httpBody == nil, let stream = request.httpBodyStream {
+            stream.open(); defer { stream.close() }; var chunk = [UInt8](repeating: 0, count: 262144)
+            while stream.hasBytesAvailable {
+                try Task.checkCancellation(); let count = stream.read(&chunk, maxLength: chunk.count)
+                guard count >= 0 else { throw CancellationError() }; if count == 0 { break }
+                body.append(contentsOf: chunk.prefix(count)); guard body.count <= TaskFileUploadJournal.maximumStoredBytes else { throw CancellationError() }
+            }
+        }
+        guard body.count <= TaskFileUploadJournal.maximumStoredBytes else { throw CancellationError() }
+        let target = config.url.appending(queryItems: [.init(name: "action", value: action.value)])
+        var forwarded = URLRequest(url: target); forwarded.httpMethod = "POST"; forwarded.httpBody = body; forwarded.timeoutInterval = 30
+        forwarded.setValue("application/json", forHTTPHeaderField: "Content-Type"); forwarded.setValue("Bearer " + config.token, forHTTPHeaderField: "Authorization")
+        let settings = URLSessionConfiguration.ephemeral; settings.protocolClasses = []; settings.httpCookieStorage = nil; settings.urlCache = nil
+        let session = URLSession(configuration: settings); defer { session.invalidateAndCancel() }
+        let (bytes, response) = try await session.bytes(for: forwarded, delegate: TaskFileNativeRedirectRefusal.shared)
+        guard let response = response as? HTTPURLResponse, response.url == target else { throw CancellationError() }
+        var result = Data(); let maximum = action.value == "download" ? TaskFileUploadJournal.maximumBytes : 64000
+        for try await byte in bytes { try Task.checkCancellation(); guard result.count < maximum else { throw CancellationError() }; result.append(byte) }
+        let headers = response.allHeaderFields.reduce(into: [String: String]()) { if let key = $1.key as? String, let value = $1.value as? String { $0[key] = value } }
+        guard let delivered = HTTPURLResponse(url: request.url!, statusCode: response.statusCode, httpVersion: nil, headerFields: headers) else { throw CancellationError() }
+        return (result, delivered)
+    }
+}
+@MainActor private final class TaskFileNativeProviderTransport: TaskFileUploadTransport {
+    let backend: Backend
+    init(_ backend: Backend) { self.backend = backend }
+    func taskFileReply(_ journal: TaskFileUploadJournal, action: String, incarnation: UUID) async throws -> Data {
+        do {
+            let data = try await backend.taskFileReply(journal, action: action, incarnation: incarnation)
+            var value: [String: Any] = ["action": action, "transportReturned": true, "response": String(decoding: data, as: UTF8.self)]
+            do { value["validatedPhase"] = try journal.receiving(data).phase.rawValue }
+            catch { value["receiptRejected"] = true }
+            TaskFileNativeProviderFixture.observe(value); return data
+        } catch {
+            let error = error as NSError
+            TaskFileNativeProviderFixture.observe(["action": action, "transportReturned": false, "domain": error.domain, "code": error.code])
+            throw error
+        }
+    }
+}
+private final class TaskFileNativeRedirectRefusal: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    static let shared = TaskFileNativeRedirectRefusal()
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+}
+final class TaskFileNativeProviderProtocol: URLProtocol, @unchecked Sendable {
+    private let workerLock = NSLock()
+    private var worker: Task<Void, Never>?
+    private var stopped = false
+    override class func canInit(with request: URLRequest) -> Bool { request.url?.scheme == "https" && request.url?.host == "synthetic.example" && request.url?.path == "/functions/v1/task-files" }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() {
+        let value = Task { @MainActor in
+            do {
+                let (data, response) = try await TaskFileNativeProviderFixture.reply(self.request)
+                try Task.checkCancellation()
+                self.client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+                self.client?.urlProtocol(self, didLoad: data); self.client?.urlProtocolDidFinishLoading(self)
+            } catch { if !Task.isCancelled { self.client?.urlProtocol(self, didFailWithError: error) } }
+        }
+        workerLock.lock(); worker = value; let cancel = stopped; workerLock.unlock(); if cancel { value.cancel() }
+    }
+    override func stopLoading() { workerLock.lock(); stopped = true; let value = worker; workerLock.unlock(); value?.cancel() }
 }
 #endif

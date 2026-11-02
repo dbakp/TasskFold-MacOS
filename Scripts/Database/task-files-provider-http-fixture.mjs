@@ -233,7 +233,14 @@ export async function createTaskFileProviderHttp(pg, storage, users) {
         json: () => JSON.parse(bytes.toString("utf8")),
       };
     };
-    return { call, faults, counts, tokens, close };
+    return {
+      call,
+      faults,
+      counts,
+      tokens,
+      close,
+      url: "http://127.0.0.1:" + port,
+    };
   } catch (error) {
     await close();
     throw error;

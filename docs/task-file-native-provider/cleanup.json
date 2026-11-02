@@ -1,0 +1,63 @@
+{
+  "reviewed": "2026-11-02",
+  "scope": "Only this completed batch’s owned result bundles and duplicate screenshot exports. Concise reports, four terminal screenshots, wire fixture, source tests and small diagnostic logs are retained. No app data, source, products, other projects or Docker volumes removed.",
+  "removed": [
+    {
+      "name": "taskfold-native-provider-ios-publish-v2.xcresult",
+      "allocatedBytesBefore": 75599872
+    },
+    {
+      "name": "taskfold-native-provider-ios-publish-v3.xcresult",
+      "allocatedBytesBefore": 213409792
+    },
+    {
+      "name": "taskfold-native-provider-ios-publish-v4.xcresult",
+      "allocatedBytesBefore": 212746240
+    },
+    {
+      "name": "taskfold-native-provider-ios-publish-v5.xcresult",
+      "allocatedBytesBefore": 1269760
+    },
+    {
+      "name": "taskfold-native-provider-ios-stop-v1.xcresult",
+      "allocatedBytesBefore": 1277952
+    },
+    {
+      "name": "taskfold-native-provider-ipad-publish-v1.xcresult",
+      "allocatedBytesBefore": 1490944
+    },
+    {
+      "name": "taskfold-native-provider-ipad-stop-v1.xcresult",
+      "allocatedBytesBefore": 1495040
+    },
+    {
+      "name": "taskfold-native-provider-ipad-stop-final.xcresult",
+      "allocatedBytesBefore": 1490944
+    },
+    {
+      "name": "taskfold-native-provider-viewer-regression-ios.xcresult",
+      "allocatedBytesBefore": 630784
+    },
+    {
+      "name": "taskfold-native-provider-ios-publish-attachments",
+      "allocatedBytesBefore": 557056
+    },
+    {
+      "name": "taskfold-native-provider-ios-stop-attachments",
+      "allocatedBytesBefore": 561152
+    },
+    {
+      "name": "taskfold-native-provider-ipad-publish-attachments",
+      "allocatedBytesBefore": 757760
+    },
+    {
+      "name": "taskfold-native-provider-ipad-stop-attachments",
+      "allocatedBytesBefore": 761856
+    },
+    {
+      "name": "taskfold-native-provider-ipad-stop-final-attachments",
+      "allocatedBytesBefore": 761856
+    }
+  ],
+  "allocatedBytesReclaimed": 512811008
+}

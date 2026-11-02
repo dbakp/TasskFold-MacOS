@@ -1,0 +1,38 @@
+{
+  "reviewed": "2026-11-02",
+  "initialBuild": "The existing redirect delegate was private to another file; the bridge now owns a test-only redirect refusal without widening production visibility.",
+  "driverStart": "Initial log stream was not open before spawn; fixed before any native case was accepted. The entire first fixture was removed.",
+  "initialNative": "The real upload committed, but an empty loopback root was normalized to slash, causing the strict bridge response-URL check to cancel. The failed native cases are not accepted; the actual captured receipt passes cold decoding.",
+  "collector": "Two finished failing runs left only xcodebuild result collection running. Their exact processes were stopped after logged teardown, with native logs, wire and diagnostics retained. No running UI case was restarted because of an observation timeout.",
+  "fixtureCleanup": "Xcode changed the installed data-container path. Cleanup now re-identifies the exact reserved bundle from container metadata and removes its disposable user configuration and audit.",
+  "encryptedSyntheticOriginalsPreservedBeforeScopedReset": [
+    {
+      "failedRun": "ios-publish-v2",
+      "reason": "Disposed synthetic backend; preserve and reset only its known generated private test sample",
+      "account": "ec240000-0000-4000-8000-000000000001",
+      "sampleName": "Native provider proof.txt",
+      "sha256": "21c33b15468a04f6b36d32c8b25cb03fe2e1c1d5bcd91a22154735468d77b0ab",
+      "realAppDataTouched": false
+    },
+    {
+      "failedRun": "ios-publish-v3",
+      "sampleName": "Native provider proof.txt",
+      "account": "ec240000-0000-4000-8000-000000000001",
+      "sha256": "30bd8391f9515fffe639b8a80165e452b89a2813179cc49c130c758ce59b6711",
+      "realDataTouched": false
+    },
+    {
+      "failedRun": "ios-publish-v4",
+      "sampleName": "Native provider proof.txt",
+      "account": "ec240000-0000-4000-8000-000000000001",
+      "sha256": "1273e286df3d07594f250739ee9441363aa71de748b0b41085f2c5a8d29a3a0b",
+      "realDataTouched": false
+    }
+  ],
+  "rootFix": "Explicit slash in the loopback address; production response URL equality and all account/lease/journal guards are preserved.",
+  "acceptedFlows": "Publish/uncertain result/Check status and Stop/cold/private clear on both iPhone and iPad, with actual SQL and provider verification.",
+  "finalCopyPolish": "Stopped/expired uploads now say they were not shared instead of implying a shared file remains on the task. Final iPad Stop verification is recorded separately.",
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "driverFinalLintPolish": "An unexpected audit-read error is recorded during cleanup without preventing removal of the disposable app configuration. Success paths are unchanged; final lint and formatting pass."
+}
