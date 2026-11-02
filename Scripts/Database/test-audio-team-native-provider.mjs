@@ -91,6 +91,12 @@ try {
       audioProjectCustodyMigration,
     ]
   ) await pg.raw(await migrationSQL(file));
+  await pg.raw(
+    await migrationSQL("20261102175200_reviewed_audio_generation_restore.sql"),
+  );
+  await pg.raw(
+    await migrationSQL("20261102181442_audio_lifecycle_native_review.sql"),
+  );
   await loadTaskFileWorkspaceFixture(pg);
   const users = {
     actor: { id: account, session: randomUUID() },
@@ -137,6 +143,11 @@ try {
   const original = await pg.scalar(
     `select to_jsonb(t) from public.tasks t where id=${lit(task)}`,
   );
+  if (platform !== "service") {
+    await pg.raw(
+      "update taskfold_private.audio_comment_config set restoration_enabled=true",
+    );
+  }
   http = await createAudioTeamNativeHttp(pg, storage, users.actor);
   if (platform === "service") {
     http.faults.losePublicationReply = false;
@@ -224,6 +235,9 @@ try {
         "Taskfold/AudioCommentNativeFixture.swift",
         "Taskfold/AudioCommentCapture.swift",
         "Taskfold/Core/Store.swift",
+        "Taskfold/Core/TeamProjectAccess.swift",
+        "Taskfold/Core/Backend.swift",
+        "Taskfold/Views/TeamTaskDeletionReview.swift",
         "Taskfold/Core/AudioCommentPublishing.swift",
         "Taskfold/Views/TaskEditor.swift",
         "Taskfold/Views/AudioCommentConversationView.swift",
@@ -365,11 +379,37 @@ try {
       ),
     );
     const row = cache.tables.tasks.find((x) => x.id === task);
-    check(
-      "native signed-in cache contains actual generation",
-      row.task_generation,
-      generation,
+    const restoredGeneration = await pg.scalar(
+      `select to_jsonb(task_generation) from public.tasks where id=${
+        lit(task)
+      }`,
     );
+    check(
+      "native signed-in cache contains actual restored generation",
+      row.task_generation,
+      restoredGeneration,
+    );
+    check(
+      "native Undo uses a fresh task generation",
+      restoredGeneration !== generation,
+    );
+    check(
+      "native actual deletion and Undo reached SQL once each",
+      ["delete", "restore"].map((a) =>
+        http.requests.filter((x) => x.action === "task_" + a).length
+      ),
+      [1, 1],
+    );
+    check(
+      "native lifecycle retains frozen recording acknowledgement",
+      http.requests.filter((x) =>
+        x.action === "task_delete" || x.action === "task_restore"
+      ).every((x) =>
+        x.ack?.policy === "published_restore_v1" && x.ack?.count === 1 &&
+        x.ack?.retention_days === 30 && Object.keys(x.ack).length === 3
+      ),
+    );
+
     check(
       "native cache read actual SQL content",
       row.description,
@@ -385,6 +425,12 @@ try {
       http.workspace.counts.boundary >= 6,
     );
     check("workspace adapter has no errors", http.workspace.counts.errors, []);
+    check(
+      "native deletion review reads actual recording count",
+      http.requests.some((x) =>
+        x.action === "lifecycle_review" && x.recordingCount === 1
+      ),
+    );
     check(
       "lost committed publication reply injected once",
       http.requests.filter((x) =>
@@ -430,11 +476,18 @@ try {
   check("recording retired by actual removal", publication.state, "retired");
   check("provider received one media upload", http.audio.state.uploads, 1);
   check(
-    "task remains byte-exact",
+    "task content remains exact apart from certified generation renewal",
     await pg.scalar(
       `select to_jsonb(t) from public.tasks t where id=${lit(task)}`,
     ),
-    original,
+    platform === "service" ? original : {
+      ...original,
+      task_generation: await pg.scalar(
+        `select to_jsonb(task_generation) from public.tasks where id=${
+          lit(task)
+        }`,
+      ),
+    },
   );
   await pg.raw(
     "update taskfold_private.audio_comment_publications set cleanup_after=clock_timestamp()-interval '1 second' where state='retired'",

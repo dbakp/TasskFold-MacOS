@@ -48,6 +48,9 @@ try {
   await pg.raw(
     await migrationSQL("20261102175200_reviewed_audio_generation_restore.sql"),
   );
+  const nativeReviewSQL = process.env.TASKFOLD_AUDIO_LIFECYCLE_REVIEW_SQL;
+  if (nativeReviewSQL) await pg.raw(await readFile(nativeReviewSQL, "utf8"));
+  const nativeWire = { account, origin: "https://backend.example", phases: {} };
   await loadTaskFileWorkspaceFixture(pg);
   const users = {
     actor: { id: account, session: randomUUID() },
@@ -140,6 +143,23 @@ try {
     );
     if (r.code !== code) report.lastUnexpected = r;
     check(name, r.code, code);
+  };
+  const nativePreviewBody = (command) => ({
+    team_id: team,
+    project_id: project,
+    task_id: command.task_id,
+    task_generation: command.task_generation,
+    phase: command.restore_from ? "restore" : "delete",
+    restore_from: command.restore_from ?? null,
+  });
+  const nativePreview = async (command, label) => {
+    const request = nativePreviewBody(command),
+      r = await run(
+        `public.taskfold_team_audio_lifecycle_review(${j(request)})`,
+      );
+    assert.equal(r.code, null, JSON.stringify(r));
+    if (label) nativeWire.phases[label] = { command, request, reply: r.value };
+    return r.value;
   };
   const root = () =>
     pg.scalar(
@@ -236,6 +256,44 @@ try {
     directDelete,
     "PT503",
   );
+  if (nativeReviewSQL) {
+    const before = await root(),
+      preview = await nativePreview(deletion, "delete");
+    check(
+      "native deletion summary counts current recordings",
+      preview.recording_count,
+      1,
+    );
+    check(
+      "native deletion summary declares exact retention policy",
+      preview.policy,
+      "published_restore_v1",
+    );
+    check(
+      "native summary does not reveal caption or provider path",
+      JSON.stringify(preview).includes(i.caption) ||
+        JSON.stringify(preview).includes(immutable.object_name),
+      false,
+    );
+    check("native summary does not mutate task", await root(), before);
+    check(
+      "native summary creates no deletion certificate",
+      await pg.scalar(
+        "select count(*)::int from taskfold_private.audio_task_deletions",
+      ),
+      0,
+    );
+    const wrong = {
+      ...nativePreviewBody(deletion),
+      task_generation: randomUUID(),
+    };
+    check(
+      "native preview refuses stale task generation",
+      (await run(`public.taskfold_team_audio_lifecycle_review(${j(wrong)})`))
+        .code,
+      "PT409",
+    );
+  }
   const acceptedDelete = { ...deletion, audio_restoration_ack: ack };
   await ok("delete", acceptedDelete);
   check("certified deletion removes only root", await root(), null);
@@ -301,6 +359,20 @@ try {
   const noAck = { ...restore };
   delete noAck.audio_restoration_ack;
   await refused("restore needs matching explicit review", "restore", noAck);
+  if (nativeReviewSQL) {
+    const preview = await nativePreview(restore, "restore");
+    check(
+      "native restore preview retains original recording count",
+      preview.recording_count,
+      1,
+    );
+    check(
+      "native restore preview exposes exact retention deadline",
+      preview.retain_until,
+      archived.expires_at,
+    );
+  }
+
   // Observe an actually changed provider row inside a transaction, then roll
   // that synthetic mutation back. Real Storage also changes updated_at; setting
   // only the old version back must never count as an unchanged object.
@@ -320,6 +392,17 @@ try {
       lit(account)
     } and project_id=${lit(project)}`,
   );
+  if (nativeReviewSQL) {
+    check(
+      "native recording review rejects revoked editor",
+      (await run(
+        `public.taskfold_team_audio_lifecycle_review(${
+          j(nativePreviewBody(restore))
+        })`,
+      )).code,
+      "42501",
+    );
+  }
   await refused(
     "revoked editor cannot restore recordings",
     "restore",
@@ -542,6 +625,19 @@ try {
       retention_days: 30,
     },
   });
+  if (nativeReviewSQL) {
+    const preview = await nativePreview(expiryRestore, "expiredWaiting");
+    check(
+      "native expired preview requires explicit omission",
+      preview.policy,
+      "expired_recordings_omitted_v1",
+    );
+    check(
+      "native expired preview reports unconfirmed cleanup",
+      preview.cleanup_pending,
+      true,
+    );
+  }
   const expiredClean = await http.maintain();
   check(
     "expired recording cleanup uses existing fenced worker",
@@ -587,6 +683,14 @@ try {
       );
     }
   }
+  if (nativeReviewSQL) {
+    const preview = await nativePreview(expiryRestore, "expiredReady");
+    check(
+      "native expired summary unblocks only after confirmed purge",
+      preview.cleanup_pending,
+      false,
+    );
+  }
   const omitted = {
     ...expiryRestore,
     audio_restoration_ack: {
@@ -618,6 +722,132 @@ try {
     0,
   );
   check("expired omission uploads no replacement bytes", http.state.uploads, 2);
+  if (nativeReviewSQL) {
+    const empty = {
+      ...acceptedDelete,
+      task_generation: expiryGeneration,
+      request_id: randomUUID(),
+      record: await root(),
+    };
+    check(
+      "native empty summary produces no recording policy",
+      (await nativePreview(empty)).policy,
+      null,
+    );
+    const another = randomUUID();
+    await pg.raw(
+      `insert into public.tasks(id,user_id,project_id,title) values(${
+        lit(another)
+      },${lit(creator)},${lit(project)},'Unrecorded selection member')`,
+    );
+    const other = await pg.scalar(
+      `select to_jsonb(t) from public.tasks t where id=${lit(another)}`,
+    );
+    const batchIntent = {
+      ...i,
+      operation_id: randomUUID(),
+      comment_id: randomUUID(),
+      asset_id: randomUUID(),
+      target: { ...i.target, task_generation: expiryGeneration },
+    };
+    check(
+      "batch proof publishes one new immutable recording",
+      (await http.call("publish", {
+        intent: batchIntent,
+        audio_base64: media.toString("base64"),
+      })).status,
+      200,
+    );
+    const first = { ...empty, audio_restoration_ack: ack },
+      second = {
+        team_id: team,
+        project_id: project,
+        task_id: another,
+        task_generation: other.task_generation,
+        task_type_lifecycle_protocol: 1,
+        request_id: randomUUID(),
+        record: other,
+      };
+    const envelope = {
+      team_id: team,
+      request_id: randomUUID(),
+      items: [first, second].sort((a, b) => a.task_id.localeCompare(b.task_id)),
+    };
+    const deleted = await run(
+      `public.taskfold_team_task_batch('delete',${j(envelope)})`,
+    );
+    assert.equal(deleted.code, null, JSON.stringify(deleted));
+    check(
+      "reviewed mixed selection deletes atomically",
+      await pg.scalar(
+        `select count(*)::int from public.tasks where id in(${lit(task)},${
+          lit(another)
+        })`,
+      ),
+      0,
+    );
+    const restored = {
+      team_id: team,
+      request_id: randomUUID(),
+      restores: envelope.request_id,
+      items: envelope.items.map((item) => {
+        const g = randomUUID();
+        return {
+          ...item,
+          request_id: randomUUID(),
+          restore_from: item.request_id,
+          task_generation: g,
+          record: { ...item.record, task_generation: g, completion_version: 0 },
+        };
+      }),
+    };
+    const result = await run(
+      `public.taskfold_team_task_batch('restore',${j(restored)})`,
+    );
+    assert.equal(result.code, null, JSON.stringify(result));
+    check(
+      "batch Undo restores both acknowledged and empty members",
+      await pg.scalar(
+        `select count(*)::int from public.tasks where id in(${lit(task)},${
+          lit(another)
+        })`,
+      ),
+      2,
+    );
+    check(
+      "batch Undo preserves the recorded member audience",
+      await pg.scalar(
+        `select to_jsonb(c.task_generation) from taskfold_private.audio_comment_custody c where operation_id=${
+          lit(batchIntent.operation_id)
+        }`,
+      ),
+      restored.items.find((x) => x.task_id === task).task_generation,
+    );
+    check(
+      "batch lifecycle consumes all private restore scopes",
+      await pg.scalar(
+        "select count(*)::int from taskfold_private.audio_task_restore_scope",
+      ),
+      0,
+    );
+    for (const role of ["anon", "service_role"]) {
+      check(
+        "native preview unavailable to " + role,
+        await pg.scalar(
+          `select to_jsonb(has_function_privilege(${
+            lit(role)
+          },'public.taskfold_team_audio_lifecycle_review(jsonb)','execute'))`,
+        ),
+        false,
+      );
+    }
+    if (process.env.TASKFOLD_AUDIO_LIFECYCLE_WIRE_OUT) {
+      await writeFile(
+        process.env.TASKFOLD_AUDIO_LIFECYCLE_WIRE_OUT,
+        JSON.stringify(nativeWire, null, 2) + "\n",
+      );
+    }
+  }
   const findings = await pg.advisors();
   check(
     "no added advisor findings",

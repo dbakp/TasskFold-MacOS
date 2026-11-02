@@ -576,9 +576,9 @@ final class Workspace {
             do {
                 guard requested.count == ids.count, !ids.contains(where: { Self.subtaskPath($0) != nil }) else { throw TeamTaskBatch.invalid }
                 let captured = try store.captureTeamTaskDeletionSelection(requested)
-                teamTaskDeletion = TeamTaskDeletionRequest(selection: captured, current: { [weak self] in self.map { captured.drafts[0].workspace.matches(account: $0.store.userID, generation: $0.store.workspaceGeneration) } ?? false }, perform: { [weak self] in
+                teamTaskDeletion = TeamTaskDeletionRequest(selection: captured, current: { [weak self] in self.map { captured.drafts[0].workspace.matches(account: $0.store.userID, generation: $0.store.workspaceGeneration) } ?? false }, perform: { [weak self] audioReviews in
                     guard let self else { return false }; var saved = false
-                    self.run("Delete Shared Tasks") { saved = self.store.deleteTeamTaskSelection(captured) }
+                    self.run("Delete Shared Tasks") { saved = self.store.deleteTeamTaskSelection(captured, audioReviews: audioReviews) }
                     return saved
                 }, completed: { [weak self] in
                     guard let self else { return }
@@ -593,10 +593,10 @@ final class Workspace {
            (store.nativeConversationTeamCache?.knownTasks.contains(id) == true || store.nativeConversationTeamCache?.knownTeams[task.string("project_id")] != nil) {
             do {
                 let captured = try store.captureTeamTaskEditor(task)
-                teamTaskDeletion = TeamTaskDeletionRequest(draft: captured, current: { [weak self] in self.map { captured.workspace.matches(account: $0.store.userID, generation: $0.store.workspaceGeneration) } ?? false }, perform: { [weak self] requestID in
+                teamTaskDeletion = TeamTaskDeletionRequest(draft: captured, current: { [weak self] in self.map { captured.workspace.matches(account: $0.store.userID, generation: $0.store.workspaceGeneration) } ?? false }, perform: { [weak self] requestID, audioReviews in
                     guard let self else { return false }
                     var saved = false
-                    self.run("Delete Shared Task") { saved = self.store.deleteTeamTaskEditor(captured, requestID: requestID) }
+                    self.run("Delete Shared Task") { saved = self.store.deleteTeamTaskEditor(captured, requestID: requestID, audioReviews: audioReviews) }
                     return saved
                 }, completed: { [weak self] in
                     guard let self else { return }

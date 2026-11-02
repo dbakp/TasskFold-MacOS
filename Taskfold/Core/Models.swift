@@ -1350,6 +1350,7 @@ struct EditHistory: Sendable {
             } else {
                 redo.append(change)
                 inverse.append(Mutation(table: change.table, recordID: change.recordID, method: "DELETE", fields: [:], baseline: change.table == "tasks" ? change.fields : nil, teamTaskScope: change.teamTaskScope))
+                if inverse.last?.teamTaskScope?.audioRestoration?.policy == .omitExpired { inverse[inverse.count - 1].teamTaskScope?.audioRestoration = nil }
             }
             if var scope = change.teamTaskScope, change.method == "DELETE", !inverse.isEmpty {
                 scope.restoreRequest = change.id

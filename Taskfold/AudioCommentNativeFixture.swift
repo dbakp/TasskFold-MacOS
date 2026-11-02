@@ -638,7 +638,7 @@ struct AudioCommentNativeFixtureView: View {
             guard request.httpMethod == "POST", original.queryItems?.count == 1, let action = original.queryItems?.first, action.name == "action",
                   ["publish", "resolve", "page", "list", "download", "remove"].contains(action.value ?? "") else { throw CancellationError() }
         } else {
-            guard (request.httpMethod == "GET" && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")) || (request.httpMethod == "POST" && source.path == "/rest/v1/rpc/taskfold_workspace_boundary") else { throw CancellationError() }
+            guard (request.httpMethod == "GET" && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")) || (request.httpMethod == "POST" && ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_team_task_lifecycle"].contains(source.path)) else { throw CancellationError() }
         }
         parts.path = source.path; parts.percentEncodedQuery = original.percentEncodedQuery
         guard let target = parts.url else { throw CancellationError() }
@@ -692,21 +692,36 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
     @State private var library: AudioCommentLibraryRequest?
     @State private var conversation: AudioCommentConversationRequest?
     @State private var ready = false
+    @State private var deletion: TeamTaskDeletionRequest?
+    @State private var deletionError: String?
     var body: some View {
         NavigationStack {
             Form {
-                Text(ready ? "Ready" : "Refreshing actual local workspace…").accessibilityIdentifier("audioTeamNativeReady")
+                Text(ready ? "Ready" : "Refreshing actual local workspace… \(store.teamAudioNativeSyncPhase)").accessibilityIdentifier("audioTeamNativeReady")
                 Text(store.record("tasks", id: TeamEditorNativeFixture.taskID)?.string("description") ?? "Missing task").accessibilityIdentifier("audioTeamNativeDescription")
                 Text(store.audioConversationRevision.uuidString).accessibilityIdentifier("audioTeamNativeEpoch")
                 Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("audioTeamNativePending")
                 Button("Record private note") { draft = store.audioDraftRequest(taskID: TeamEditorNativeFixture.taskID) }.disabled(!ready || store.audioDraftScope(taskID: TeamEditorNativeFixture.taskID) == nil).accessibilityIdentifier("audioTeamNativeRecord")
                 Button("Saved recordings") { if let scope = store.audioLibraryScope() { library = .init(scope: scope) } }.disabled(!ready).accessibilityIdentifier("audioTeamNativeLibrary")
                 Button("Audio comments") { conversation = store.audioConversationRequest(taskID: TeamEditorNativeFixture.taskID) }.disabled(!ready).accessibilityIdentifier("audioTeamNativeConversation")
+                if ProcessInfo.processInfo.arguments.contains("--audio-lifecycle-review-testing") {
+                    Text(store.record("tasks", id: TeamEditorNativeFixture.taskID)?.string("task_generation") ?? "Task removed").accessibilityIdentifier("audioTeamNativeGeneration")
+                    Text("\(store.syncing ? "Syncing" : "Idle") · \(store.snapshot.pending.count) queued · \(store.record("tasks", id: TeamEditorNativeFixture.taskID)?.string("task_generation") ?? "Task removed")").accessibilityIdentifier("audioTeamNativeLifecycleStatus")
+                    Button("Undo task deletion") { if !store.undo() { deletionError = store.error } }.disabled(store.undoStack.isEmpty).accessibilityIdentifier("audioTeamNativeUndo")
+                    Button("Review task deletion") {
+                        do {
+                            guard let task = store.record("tasks", id: TeamEditorNativeFixture.taskID) else { throw TeamTaskEditorDraft.unavailable }
+                            let captured = try store.captureTeamTaskEditor(task)
+                            deletion = TeamTaskDeletionRequest(draft: captured, current: { captured.workspace.matches(account: store.userID, generation: store.workspaceGeneration) }, perform: { id, reviews in store.deleteTeamTaskEditor(captured, requestID: id, audioReviews: reviews) }, completed: { deletion = nil })
+                        } catch { deletionError = error.localizedDescription }
+                    }.disabled(!ready).accessibilityIdentifier("audioTeamNativeDeletion")
+                    if let deletionError { Text(deletionError).accessibilityIdentifier("audioTeamNativeDeletionError") }
+                }
             }.navigationTitle("Shared recording test")
         }
         .task {
             guard AudioTeamNativeProvider.enabled else { return }
-            let deadline = Date().addingTimeInterval(25)
+            let deadline = Date().addingTimeInterval(90)
             while store.syncing && Date() < deadline && !Task.isCancelled { try? await Task.sleep(for: .milliseconds(100)) }
             guard !Task.isCancelled, !store.syncing else { return }
             let started = Date(); await store.sync()
@@ -715,6 +730,7 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
         .sheet(item: $draft) { TaskAudioDraftView(request: $0, taskID: TeamEditorNativeFixture.taskID) }
         .sheet(item: $library) { PrivateAudioLibraryView(request: $0) }
         .sheet(item: $conversation) { AudioCommentConversationView(request: $0) }
+        .sheet(item: $deletion) { TeamTaskDeletionReview(request: $0) }
     }
 }
 #endif

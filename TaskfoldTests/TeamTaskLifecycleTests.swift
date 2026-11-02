@@ -219,3 +219,164 @@ extension TeamTaskTypeLifecycleTests {
         XCTAssertTrue(try restored.body(for: undo)["items"]!.list.allSatisfy { $0.object["task_type_lifecycle_protocol"] == .number(1) })
     }
 }
+
+extension TeamTaskLifecycleTests {
+    private func audioReview(_ phase: String = "delete", count: Double = 1, now: Date = Date()) throws -> (Mutation, TeamAudioLifecycleScope, [String: JSON]) {
+        let (change, _, _) = try fixture(phase)
+        let scope = try TeamAudioLifecycleScope(change)
+        var raw = scope.body
+        raw.merge(["protocol": .number(1), "account": .string(scope.account), "enabled": .bool(true), "recording_count": .number(count),
+                   "policy": count == 0 ? .null : .string("published_restore_v1"), "retain_until": phase == "delete" || count == 0 ? .null : .string(ISO8601DateFormatter().string(from: now.addingTimeInterval(30 * 86400))),
+                   "cleanup_pending": .bool(false), "expires_at": .string(ISO8601DateFormatter().string(from: now.addingTimeInterval(240)))]) { _, new in new }
+        return (change, scope, raw)
+    }
+    func testRecordingPolicySurvivesDurableMutationAndUndo() throws {
+        let (change, scope, raw) = try audioReview()
+        let reviewed = try TeamAudioLifecycleReview(raw, scope: scope).applying(to: change)
+        let saved = try TaskfoldJSONDecoder().decode(Mutation.self, from: TaskfoldJSONEncoder().encode(reviewed))
+        XCTAssertEqual(saved, reviewed)
+        let body = try XCTUnwrap(saved.teamTaskScope).lifecycleBody(for: saved)
+        XCTAssertEqual(body["audio_restoration_ack"]?.object["count"], .number(1))
+        let snapshot = Snapshot(tables: ["tasks": [Record(try XCTUnwrap(change.baseline))]])
+        let history = EditHistory(changes: [saved], snapshot: snapshot)
+        let undo = try XCTUnwrap(history.undo.first)
+        XCTAssertEqual(undo.teamTaskScope?.audioRestoration, saved.teamTaskScope?.audioRestoration)
+        XCTAssertEqual(try XCTUnwrap(undo.teamTaskScope).lifecycleBody(for: undo)["audio_restoration_ack"], body["audio_restoration_ack"])
+    }
+    func testLegacyLifecycleHasNoRecordingPolicy() throws {
+        let (change, authority, _) = try fixture("delete")
+        XCTAssertNil(authority.audioRestoration)
+        XCTAssertNil(try authority.lifecycleBody(for: change)["audio_restoration_ack"])
+    }
+    func testRecordingPolicyRejectsInvalidCountsAndStoredRetention() throws {
+        for count in [-1, 0, 21, Int.max] { XCTAssertThrowsError(try TeamAudioRestorationAcknowledgement(count: count)) }
+        let invalid = try TaskfoldJSONDecoder().decode(TeamAudioRestorationAcknowledgement.self, from: Data(#"{"policy":"published_restore_v1","count":1,"retentionDays":31}"#.utf8))
+        XCTAssertThrowsError(try invalid.body(action: "delete"))
+        XCTAssertThrowsError(try TeamAudioRestorationAcknowledgement(policy: .omitExpired, count: 1).body(action: "delete"))
+        XCTAssertThrowsError(try TeamAudioRestorationAcknowledgement(count: 1).body(action: "create"))
+    }
+    func testRecordingSummaryRejectsOtherAccountsTargetsAndUnknownFields() throws {
+        let (_, scope, raw) = try audioReview()
+        for key in ["account", "team_id", "project_id", "task_id", "task_generation", "phase", "restore_from"] {
+            var bad = raw; bad[key] = .string(UUID().uuidString.lowercased())
+            XCTAssertThrowsError(try TeamAudioLifecycleReview(bad, scope: scope), key)
+        }
+        for key in ["caption", "object_name", "storage_task_generation"] {
+            var bad = raw; bad[key] = .string("must not arrive")
+            XCTAssertThrowsError(try TeamAudioLifecycleReview(bad, scope: scope), key)
+        }
+    }
+    func testRecordingSummaryRejectsMalformedCountsAndPolicies() throws {
+        let (_, scope, raw) = try audioReview()
+        for count in [-1.0, 0.5, 21, .infinity] {
+            var bad = raw; bad["recording_count"] = .number(count)
+            XCTAssertThrowsError(try TeamAudioLifecycleReview(bad, scope: scope))
+        }
+        var bad = raw; bad["policy"] = .string("unknown_policy")
+        XCTAssertThrowsError(try TeamAudioLifecycleReview(bad, scope: scope))
+        bad = raw; bad["retain_until"] = .string("2026-01-01T00:00:00Z")
+        XCTAssertThrowsError(try TeamAudioLifecycleReview(bad, scope: scope))
+    }
+    func testRecordingReviewRequiresCurrentServerAvailabilityAndUnexpiredConsent() throws {
+        let (_, scope, raw) = try audioReview()
+        var disabled = raw; disabled["enabled"] = .bool(false)
+        XCTAssertThrowsError(try TeamAudioLifecycleReview(disabled, scope: scope).acknowledgement())
+        let review = try TeamAudioLifecycleReview(raw, scope: scope)
+        XCTAssertThrowsError(try review.acknowledgement(now: review.expiresAt))
+        var old = raw; old["expires_at"] = .string("2020-01-01T00:00:00Z")
+        XCTAssertThrowsError(try TeamAudioLifecycleReview(old, scope: scope))
+    }
+    func testNoRecordingsProducesNoSyntheticAcknowledgement() throws {
+        let (change, scope, raw) = try audioReview(count: 0)
+        let review = try TeamAudioLifecycleReview(raw, scope: scope)
+        XCTAssertNil(try review.acknowledgement())
+        XCTAssertEqual(try review.applying(to: change), change)
+    }
+    func testExpiredRecordingOmissionWaitsForConfirmedCleanup() throws {
+        let (change, scope, raw) = try audioReview("restore")
+        var expired = raw; expired["policy"] = .string("expired_recordings_omitted_v1")
+        expired["retain_until"] = .string("2020-01-01T00:00:00Z"); expired["cleanup_pending"] = .bool(true)
+        XCTAssertThrowsError(try TeamAudioLifecycleReview(expired, scope: scope).acknowledgement())
+        expired["cleanup_pending"] = .bool(false)
+        let reviewed = try TeamAudioLifecycleReview(expired, scope: scope).applying(to: change)
+        XCTAssertEqual(reviewed.teamTaskScope?.audioRestoration?.policy, .omitExpired)
+        let history = EditHistory(changes: [reviewed], snapshot: Snapshot())
+        XCTAssertNil(history.undo.first?.teamTaskScope?.audioRestoration)
+    }
+    func testRecordingReviewCannotBeAppliedToDifferentGenerationOrOrigin() throws {
+        let (change, scope, raw) = try audioReview()
+        let review = try TeamAudioLifecycleReview(raw, scope: scope)
+        var changed = change; changed.baseline?["task_generation"] = .string(UUID().uuidString.lowercased())
+        XCTAssertThrowsError(try review.applying(to: changed))
+        let authority = try XCTUnwrap(change.teamTaskScope)
+        changed = change; changed.teamTaskScope = TeamTaskEditScope(account: authority.account, origin: "https://other.example", team: authority.team, project: authority.project)
+        XCTAssertThrowsError(try review.applying(to: changed))
+    }
+    @MainActor func testRecordingReviewTransportIsBoundedAndUsesOnlyMetadataRPC() async throws {
+        let (_, scope, raw) = try audioReview()
+        let api = try backend(scope.account)
+        var calls = 0
+        TeamLifeHTTP.handler = { request, protocolInstance in
+            calls += 1
+            XCTAssertEqual(request.url?.path, "/rest/v1/rpc/taskfold_team_audio_lifecycle_review")
+            XCTAssertEqual(request.httpMethod, "POST")
+            XCTAssertEqual(request.cachePolicy, .reloadIgnoringLocalCacheData)
+            let body = try! TaskfoldJSONDecoder().decode([String: JSON].self, from: request.httpBody!)
+            XCTAssertEqual(body, ["_body": .object(scope.body)])
+            protocolInstance.finish(try! TaskfoldJSONEncoder().encode(raw))
+        }
+        defer { TeamLifeHTTP.handler = nil }
+        let value = try await api.teamAudioLifecycleReview(scope)
+        XCTAssertEqual(value.count, 1)
+        XCTAssertEqual(calls, 1)
+    }
+}
+
+extension TeamTaskLifecycleTests {
+    func testRecordingReviewsDecodeActualOwningSQLWire() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "audio-lifecycle-review-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let wire = try TaskfoldJSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        let phases = try XCTUnwrap(wire["phases"]?.object)
+        XCTAssertEqual(Set(phases.keys), ["delete", "restore", "expiredWaiting", "expiredReady"])
+        for (name, value) in phases {
+            let entry = value.object, body = try XCTUnwrap(entry["command"]?.object), reply = try XCTUnwrap(entry["reply"]?.object)
+            let restoring = body["restore_from"] != nil
+            let authority = TeamTaskEditScope(account: wire["account"]!.text, origin: wire["origin"]!.text, team: body["team_id"]!.text, project: body["project_id"]!.text,
+                restoreRequest: restoring ? UUID(uuidString: body["restore_from"]!.text) : nil,
+                taskTypesProtocol: 1, taskTypeLifecycleProtocol: 1)
+            let change = Mutation(table: "tasks", recordID: body["task_id"]!.text, method: restoring ? "POST" : "DELETE",
+                fields: restoring ? body["record"]!.object : [:], baseline: restoring ? nil : body["record"]!.object,
+                insertOnly: restoring ? true : nil, teamTaskScope: authority)
+            let scope = try TeamAudioLifecycleScope(change)
+            XCTAssertEqual(scope.body, entry["request"]?.object, name)
+            let now = try TeamOrganizationValue.date(reply["expires_at"]).addingTimeInterval(-60)
+            let review = try TeamAudioLifecycleReview(reply, scope: scope, now: now)
+            XCTAssertEqual(review.count, 1, name)
+            if name == "expiredWaiting" { XCTAssertThrowsError(try review.acknowledgement(now: now)) }
+            else { XCTAssertEqual(try review.acknowledgement(now: now)?.policy, name == "expiredReady" ? .omitExpired : .retain) }
+        }
+    }
+}
+
+extension TeamTaskLifecycleTests {
+    @MainActor func testRecordingReviewAccessFailureDoesNotInventASavedEdit() async throws {
+        let (_, scope, _) = try audioReview()
+        let api = try backend(scope.account)
+        TeamLifeHTTP.handler = { _, p in p.finish(Data(#"{"code":"42501","message":"synthetic private detail"}"#.utf8), status: 403) }
+        defer { TeamLifeHTTP.handler = nil }
+        do { _ = try await api.teamAudioLifecycleReview(scope); XCTFail("Access failure must not become a review") }
+        catch {
+            XCTAssertTrue(error.localizedDescription.contains("Nothing has been removed"), error.localizedDescription)
+            XCTAssertFalse(error.localizedDescription.contains("saved edit"))
+            XCTAssertFalse(error.localizedDescription.contains("synthetic private detail"))
+        }
+    }
+    @MainActor func testRecordingReviewRefusesOversizedTransportBeforeDecoding() async throws {
+        let (_, scope, _) = try audioReview()
+        let api = try backend(scope.account)
+        TeamLifeHTTP.handler = { _, p in p.finish(Data(repeating: 32, count: 5000)) }
+        defer { TeamLifeHTTP.handler = nil }
+        do { _ = try await api.teamAudioLifecycleReview(scope); XCTFail("Metadata response must stay bounded") }
+        catch { XCTAssertTrue(error.localizedDescription.lowercased().contains("too large"), error.localizedDescription) }
+    }
+}

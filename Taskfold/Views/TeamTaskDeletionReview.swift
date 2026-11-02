@@ -5,16 +5,16 @@ struct TeamTaskDeletionRequest: Identifiable {
     let drafts: [TeamTaskEditorDraft]
     let selection: TeamTaskDeletionSelection?
     let current: () -> Bool
-    let perform: (UUID) -> Bool
+    let perform: (UUID, [String: TeamAudioLifecycleReview]) -> Bool
     let completed: () -> Void
     var draft: TeamTaskEditorDraft { drafts[0] }
-    init(draft: TeamTaskEditorDraft, current: @escaping () -> Bool, perform: @escaping (UUID) -> Bool, completed: @escaping () -> Void) {
+    init(draft: TeamTaskEditorDraft, current: @escaping () -> Bool, perform: @escaping (UUID, [String: TeamAudioLifecycleReview]) -> Bool, completed: @escaping () -> Void) {
         id = UUID(); drafts = [draft]; selection = nil
         self.current = current; self.perform = perform; self.completed = completed
     }
-    init(selection: TeamTaskDeletionSelection, current: @escaping () -> Bool, perform: @escaping () -> Bool, completed: @escaping () -> Void) {
+    init(selection: TeamTaskDeletionSelection, current: @escaping () -> Bool, perform: @escaping ([String: TeamAudioLifecycleReview]) -> Bool, completed: @escaping () -> Void) {
         id = selection.requestID; drafts = selection.drafts; self.selection = selection
-        self.current = current; self.perform = { _ in perform() }; self.completed = completed
+        self.current = current; self.perform = { _, reviews in perform(reviews) }; self.completed = completed
     }
 }
 
@@ -24,6 +24,42 @@ struct TeamTaskDeletionReview: View {
     let request: TeamTaskDeletionRequest
     @State private var message: String?
     @State private var finished = false
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var audioReviews: [String: TeamAudioLifecycleReview] = [:]
+    @State private var audioConsent = false
+    @State private var audioLoading = false
+    @State private var audioError: String?
+    @State private var audioRefresh = UUID()
+    @State private var audioLifecycle: String?
+    private var lifecycle: String { "\(store.userID)|\(store.workspaceGeneration)|\(store.backend.reminderSessionIncarnation)|\((try? store.backend.accountRemovalOrigin) ?? "")|\(scenePhase)" }
+    private var audioCount: Int { audioReviews.values.reduce(0) { $0 + $1.count } }
+    private var audioReady: Bool {
+        !store.teamAudioDeletionReviewEnabled || scenePhase == .active && audioLifecycle == lifecycle &&
+        !audioLoading && audioError == nil && Set(audioReviews.keys) == Set(request.drafts.map(\.source.id)) &&
+        audioReviews.values.allSatisfy { (try? $0.acknowledgement()) != nil || $0.enabled && $0.count == 0 && $0.expiresAt > Date() } &&
+        (audioCount == 0 || audioConsent)
+    }
+    @MainActor private func loadAudioReview() async {
+        audioReviews = [:]; audioConsent = false; audioError = nil; audioLifecycle = nil; audioLoading = false
+        guard store.teamAudioDeletionReviewEnabled, scenePhase == .active, !finished, refusal == nil else { return }
+        let opened = lifecycle, attempt = audioRefresh; audioLoading = true
+        defer { if !Task.isCancelled, lifecycle == opened, audioRefresh == attempt { audioLoading = false } }
+        do {
+            let change: Mutation
+            if let selection = request.selection { change = try store.reviewedTeamTaskDeletionSelection(selection) }
+            else { change = try store.reviewedTeamTaskDeletion(request.draft, requestID: request.id) }
+            let values = try await store.teamAudioDeletionReviews(for: change)
+            try Task.checkCancellation()
+            guard lifecycle == opened, audioRefresh == attempt, refusal == nil else { return }
+            audioReviews = values; audioLifecycle = opened; audioLoading = false
+            if let expiry = values.values.map(\.expiresAt).min() {
+                try await Task.sleep(for: .seconds(max(0, expiry.timeIntervalSinceNow)))
+                guard lifecycle == opened, audioRefresh == attempt, !finished else { return }
+                audioReviews = [:]; audioConsent = false; audioError = "This recording review expired. Refresh before deleting."
+            }
+        } catch is CancellationError { }
+        catch { if !Task.isCancelled, lifecycle == opened, audioRefresh == attempt { audioError = error.localizedDescription } }
+    }
     private var refusal: String? {
         guard !finished, request.current() else { return "This review is no longer current. Close it and review the tasks again before deleting." }
         do {
@@ -63,20 +99,35 @@ struct TeamTaskDeletionReview: View {
                     Text("The shared conversation is preserved for Undo. Restoring requires current project access.").font(.footnote).foregroundStyle(.secondary)
                 }
                 }
+                if store.teamAudioDeletionReviewEnabled, blocked == nil {
+                    Section("Recording recovery") {
+                        if audioLoading { ProgressView("Checking recordings…").accessibilityIdentifier("teamDeletionAudioLoading") }
+                        else if let audioError {
+                            Text(audioError).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("teamDeletionAudioError")
+                            Button("Refresh recording review") { audioRefresh = UUID() }.buttonStyle(.borderless).frame(minHeight: 44).accessibilityIdentifier("refreshTeamDeletionAudio")
+                        } else if audioReviews.count == request.drafts.count {
+                            Label(audioCount == 0 ? "No shared recordings" : audioCount == 1 ? "1 recording kept for Undo" : "\(audioCount) recordings kept for Undo", systemImage: "waveform")
+                            if audioCount > 0 {
+                                Text("Recordings become hidden from the project. You can restore them with Undo for 30 days, with current project access. After that, they are removed from cloud storage.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                Toggle("I understand the 30-day recording recovery period", isOn: $audioConsent).accessibilityIdentifier("teamDeletionAudioConsent")
+                            }
+                        }
+                    }
+                }
                 if let blocked { Section { Label("Deletion paused", systemImage: "lock.shield"); Text(blocked).foregroundStyle(.secondary) }.accessibilityIdentifier("teamDeletionPaused") }
                 if let message { Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("teamDeletionError") } }
                 Section {
                     Button(role: .destructive) {
-                        guard !finished, refusal == nil else { return }
-                        if request.perform(request.id) {
+                        guard !finished, refusal == nil, audioReady else { return }
+                        if request.perform(request.id, audioReviews) {
                             finished = true; request.completed(); dismiss()
                         } else {
                             message = store.error ?? "The tasks could not be deleted. Their saved contents are unchanged; try again."
                             store.error = nil
                         }
                     } label: {
-                        Label(request.selection == nil ? "Delete task for everyone" : "Delete \(request.drafts.count) tasks for everyone", systemImage: "trash").foregroundStyle(blocked == nil ? Color.red : Color.secondary)
-                    }.disabled(blocked != nil).accessibilityIdentifier("confirmTeamTaskDeletion")
+                        Label(request.selection == nil ? "Delete task for everyone" : "Delete \(request.drafts.count) tasks for everyone", systemImage: "trash").foregroundStyle(blocked == nil && audioReady ? Color.red : Color.secondary)
+                    }.disabled(blocked != nil || !audioReady).accessibilityIdentifier("confirmTeamTaskDeletion")
                 }
                 #if DEBUG
                 if TeamEditorNativeFixture.enabled, ProcessInfo.processInfo.arguments.contains("--team-delete-testing") {
@@ -94,6 +145,8 @@ struct TeamTaskDeletionReview: View {
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelTeamTaskDeletion") } }
         }
+        .task(id: "\(lifecycle)|\(audioRefresh)") { await loadAudioReview() }
+        .privacySensitive()
         #if os(macOS)
         .frame(minWidth: 460, idealWidth: 520, minHeight: 430, idealHeight: 580)
         #endif

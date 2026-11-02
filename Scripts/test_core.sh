@@ -1,6 +1,6 @@
-#!/bin/zsh
-# Keep test products outside synced Documents folders to avoid signing resource forks.
-# Usage: Scripts/test_core.sh [-c release] [additional swift test arguments]
+#!/bin/bash
+# Own reusable Core products stay outside synced Documents and apart from other platforms.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-exec swift test --scratch-path "${TASKFOLD_CORE_BUILD:-$HOME/Library/Caches/TaskfoldBuild/core}" "$@"
+python3 Scripts/check_test_storage.py --path /tmp
+exec swift test --scratch-path "${TASKFOLD_CORE_BUILD:-$HOME/Library/Caches/TaskfoldBuild/core-mac}" "$@"

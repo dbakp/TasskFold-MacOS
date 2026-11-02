@@ -119,6 +119,7 @@ struct TeamTaskBatch: Codable, Equatable, Sendable {
                 return TaskGeneration.restoring(mutation,existing:nil)
             }
             scope.restoreRequest=nil
+            if scope.audioRestoration?.policy == .omitExpired { scope.audioRestoration = nil }
             return Mutation(table:"tasks",recordID:item.recordID,method:"DELETE",fields:[:],baseline:item.fields,teamTaskScope:scope)
         }
         let value=Self(account:account,origin:origin,team:team,operation:operation == .edit ? .edit : operation == .delete ? .restore:.delete,

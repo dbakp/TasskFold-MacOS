@@ -1359,6 +1359,61 @@ final class Store {
         do { return commit([try reviewedTeamTaskPlanningSelection(selection)]) }
         catch { self.error = error.localizedDescription; return false }
     }
+    #if DEBUG
+    var teamAudioNativeSyncPhase = "Not started"
+    private func traceTeamAudioNativeSync(_ phase: String) {
+        guard AudioTeamNativeProvider.enabled else { return }
+        teamAudioNativeSyncPhase = phase
+    }
+    #endif
+    var teamAudioDeletionReviewEnabled: Bool {
+        #if DEBUG
+        if AudioTeamNativeProvider.enabled, ProcessInfo.processInfo.arguments.contains("--audio-lifecycle-review-testing") { return nativeTeamEditorEnabled }
+        #endif
+        return nativeTeamEditorEnabled && Bundle.main.object(forInfoDictionaryKey: "TaskfoldAudioRestorationEnabled") as? Bool == true
+    }
+    private func teamAudioDeletionMembers(_ change: Mutation) throws -> [Mutation] {
+        if let batch = change.teamTaskBatch {
+            guard batch.operation == .delete else { throw TeamTaskBatch.invalid }
+            _ = try batch.body(for: change); return batch.items
+        }
+        guard try change.teamTaskScope?.lifecycleAction(for: change) == "delete" else { throw TeamTaskEditScope.invalid }
+        return [change]
+    }
+    func teamAudioDeletionReviews(for change: Mutation) async throws -> [String: TeamAudioLifecycleReview] {
+        guard teamAudioDeletionReviewEnabled, workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked else { throw TeamAudioLifecycleReview.unavailable }
+        let workspace = WorkspaceBinding(account: userID, generation: workspaceGeneration), session = backend.reminderSessionIncarnation
+        let members = try teamAudioDeletionMembers(change), scopes = try members.map(TeamAudioLifecycleScope.init)
+        guard scopes.allSatisfy({ $0.account == userID && $0.origin == (try? backend.accountRemovalOrigin) }) else { throw TeamAudioLifecycleReview.unavailable }
+        var result: [String: TeamAudioLifecycleReview] = [:]
+        // Four bounded read requests keep large selection reviews responsive.
+        for start in stride(from: 0, to: scopes.count, by: 4) {
+            let chunk = Array(scopes[start..<min(start + 4, scopes.count)]), client = backend
+            let values = try await withThrowingTaskGroup(of: TeamAudioLifecycleReview.self) { group in
+                for scope in chunk { group.addTask { try await client.teamAudioLifecycleReview(scope) } }
+                var values: [TeamAudioLifecycleReview] = []
+                for try await review in group { values.append(review) }
+                return values
+            }
+            try Task.checkCancellation()
+            guard workspace.matches(account: userID, generation: workspaceGeneration), session == backend.reminderSessionIncarnation,
+                  workspaceCacheReadable, signedIn, !localMode, !signingOut, !accountRemovalBlocked else { throw CancellationError() }
+            for review in values { _ = try review.acknowledgement(); result[review.scope.task] = review }
+        }
+        return result
+    }
+    private func applyingTeamAudioDeletionReviews(_ reviews: [String: TeamAudioLifecycleReview], to change: Mutation) throws -> Mutation {
+        guard teamAudioDeletionReviewEnabled else {
+            guard reviews.isEmpty else { throw TeamAudioLifecycleReview.unavailable }; return change
+        }
+        let members = try teamAudioDeletionMembers(change)
+        guard Set(reviews.keys) == Set(members.map(\.recordID)) else { throw TeamAudioLifecycleReview.unavailable }
+        let checked = try members.map { member in try reviews[member.recordID]!.applying(to: member) }
+        if var batch = change.teamTaskBatch {
+            batch.items = checked; var result = change; result.teamTaskBatch = batch; _ = try batch.body(for: result); return result
+        }
+        return checked[0]
+    }
     func captureTeamTaskDeletionSelection(_ records: [Record]) throws -> TeamTaskDeletionSelection {
         guard (2...100).contains(records.count), Set(records.map(\.id)).count == records.count,
               records.allSatisfy({ nativeConversationTeamCache?.knownTeams[$0.string("project_id")] != nil }) else {
@@ -1375,8 +1430,8 @@ final class Store {
         let current = Dictionary(uniqueKeysWithValues: selection.drafts.compactMap { draft in record("tasks", id: draft.source.id).map { (draft.source.id, $0) } })
         return try selection.mutation(current: current, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled)
     }
-    @discardableResult func deleteTeamTaskSelection(_ selection: TeamTaskDeletionSelection) -> Bool {
-        do { return commit([try reviewedTeamTaskDeletionSelection(selection)]) }
+    @discardableResult func deleteTeamTaskSelection(_ selection: TeamTaskDeletionSelection, audioReviews: [String: TeamAudioLifecycleReview] = [:]) -> Bool {
+        do { return commit([try applyingTeamAudioDeletionReviews(audioReviews, to: reviewedTeamTaskDeletionSelection(selection))]) }
         catch { self.error = error.localizedDescription; return false }
     }
     /// Both review and commit use the original admission; no fresh authority or
@@ -1386,8 +1441,8 @@ final class Store {
               let cache = nativeConversationTeamCache, draft.scope.origin == (try backend.accountRemovalOrigin) else { throw TeamTaskEditorDraft.unavailable }
         return try draft.deletion(current: record("tasks", id: draft.source.id), workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, cache: cache, enabled: nativeTeamEditorEnabled, requestID: requestID)
     }
-    @discardableResult func deleteTeamTaskEditor(_ draft: TeamTaskEditorDraft, requestID: UUID) -> Bool {
-        do { return commit([try reviewedTeamTaskDeletion(draft, requestID: requestID)]) }
+    @discardableResult func deleteTeamTaskEditor(_ draft: TeamTaskEditorDraft, requestID: UUID, audioReviews: [String: TeamAudioLifecycleReview] = [:]) -> Bool {
+        do { return commit([try applyingTeamAudioDeletionReviews(audioReviews, to: reviewedTeamTaskDeletion(draft, requestID: requestID))]) }
         catch { self.error = error.localizedDescription; return false }
     }
     func flushEditorSessions() -> Bool {
@@ -2903,6 +2958,9 @@ final class Store {
         }
         var workflowUndoRefused = false
         do {
+            #if DEBUG
+            traceTeamAudioNativeSync("Boundary")
+            #endif
             let boundary:TeamWorkspaceBoundary?
             let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil || PersonalTaskTypes.requiresService($0) || WorkflowUndo.matches($0)}
             do {boundary=try await backend.workspaceBoundary(account:account)}
@@ -2952,6 +3010,9 @@ final class Store {
                     notice = "Task reopened. The next occurrence was kept."
                 }
             }
+            #if DEBUG
+            traceTeamAudioNativeSync("Workspace read")
+            #endif
             let read=try await backend.workspaceRead(account:account,initial:boundary,allowLegacy:allowLegacy)
             guard generation==accountGeneration else {return}
             if let boundary=read.boundary {
@@ -2983,13 +3044,22 @@ final class Store {
                 }
             } else {snapshot.mergeRemote(read.tables);try persist()}
             lastSync=Date();migrateOrganization()
+            #if DEBUG
+            traceTeamAudioNativeSync("Conversation read")
+            #endif
             await syncConversations()
+            #if DEBUG
+            traceTeamAudioNativeSync("Profile read")
+            #endif
             if !avatarMetadataLoaded {
                 do { try await backend.refreshUser(); if generation == accountGeneration { avatarMetadataLoaded = true } }
                 catch { /* Optional avatar refresh must not interrupt task synchronization. */ }
             }
             guard generation == accountGeneration else { return }
             googleAvatarURL = backend.session?.user.googleAvatarURL
+            #if DEBUG
+            traceTeamAudioNativeSync("Reminder scheduling")
+            #endif
             await reschedule()
         } catch {
             if !(error is TeamTaskReviewRequired), let mutation = sending, await recoverUnavailableProject(mutation, generation: generation, account: account) { return }

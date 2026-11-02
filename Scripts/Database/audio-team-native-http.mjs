@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { once } from "node:events";
 import { createHash } from "node:crypto";
 import { createAudioHttpFixture } from "./audio-comments-postgres-http-fixture.mjs";
+import { literal as lit } from "./postgres-fixture.mjs";
 import { taskFileWorkspaceAdapter } from "./task-file-workspace-fixture.mjs";
 export async function createAudioTeamNativeHttp(pg, storage, user) {
   const audio = await createAudioHttpFixture(pg, user.id, user.session, {
@@ -20,6 +21,61 @@ export async function createAudioTeamNativeHttp(pg, storage, user) {
       assert.equal(req.headers.authorization, "Bearer " + audio.nativeToken);
       assert.equal(req.headers.apikey, "synthetic-public");
       const url = new URL(req.url, "http://127.0.0.1");
+      if (
+        [
+          "/rest/v1/rpc/taskfold_team_audio_lifecycle_review",
+          "/rest/v1/rpc/taskfold_team_task_lifecycle",
+        ].includes(url.pathname)
+      ) {
+        assert.equal(req.method, "POST");
+        const chunks = [];
+        let size = 0;
+        for await (const part of req) {
+          size += part.length;
+          assert(size <= 129000);
+          chunks.push(part);
+        }
+        const bytes = Buffer.concat(chunks),
+          body = JSON.parse(bytes.toString());
+        const preview = url.pathname.endsWith("_review");
+        assert.deepEqual(
+          Object.keys(body).sort(),
+          preview ? ["_body"] : ["_action", "_body"],
+        );
+        if (!preview) assert(["delete", "restore"].includes(body._action));
+        const expression = preview
+          ? `public.taskfold_team_audio_lifecycle_review(${
+            lit(JSON.stringify(body._body))
+          }::jsonb)`
+          : `public.taskfold_team_task_lifecycle(${lit(body._action)},${
+            lit(JSON.stringify(body._body))
+          }::jsonb)`;
+        const value = await pg.scalar(
+          `begin;set local role authenticated;set local request.jwt.claim.sub=${
+            lit(user.id)
+          };set local request.jwt.claims=${
+            lit(JSON.stringify({ sub: user.id, session_id: user.session }))
+          };select ${expression};commit;`,
+        );
+        requests.push({
+          action: preview ? "lifecycle_review" : "task_" + body._action,
+          responseStatus: 200,
+          deliveredStatus: 200,
+          bodySHA256: createHash("sha256").update(bytes).digest("hex"),
+          ...(preview ? { recordingCount: value.recording_count } : {
+            generation: value.task_generation,
+            requestID: value.request_id,
+            ack: body._body.audio_restoration_ack,
+          }),
+        });
+        res.writeHead(200, {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+          "X-Content-Type-Options": "nosniff",
+        });
+        res.end(JSON.stringify(value));
+        return;
+      }
       if (url.pathname !== "/functions/v1/audio-comments") {
         assert(
           url.pathname.startsWith("/rest/v1/") ||

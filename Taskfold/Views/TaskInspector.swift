@@ -724,10 +724,10 @@ struct TaskInspectorForm: View {
     private func openTeamDeletion() {
         guard !isCreating, Workspace.subtaskPath(taskID) == nil, editorAvailable, teamDeletionClean, let captured = teamDraft, taskID == captured.source.id else { return }
         saveTask?.cancel()
-        teamDeletion = TeamTaskDeletionRequest(draft: captured, current: { editorAvailable && teamDeletionClean }, perform: { requestID in
+        teamDeletion = TeamTaskDeletionRequest(draft: captured, current: { editorAvailable && teamDeletionClean }, perform: { requestID, audioReviews in
             guard editorAvailable, teamDeletionClean else { return false }
             var saved = false
-            workspace.run("Delete Shared Task") { saved = store.deleteTeamTaskEditor(captured, requestID: requestID) }
+            workspace.run("Delete Shared Task") { saved = store.deleteTeamTaskEditor(captured, requestID: requestID, audioReviews: audioReviews) }
             return saved
         }, completed: {
             _ = recoverySession?.finish(); teamDeletion = nil

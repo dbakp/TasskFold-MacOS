@@ -7422,3 +7422,13 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [ ] Build and accept native retention/Undo/expired-media review, mixed file/recording restoration, personal/legacy migration, wider lifecycle/privacy/accessibility and whole-project transfers. Genuine Auth/full-schema/hosted work remains open.
 
 [Exact scope, hashes and attempt qualifications](audio-generation-restore/README.md). New service/client switches stay off. No native app build or runtime acceptance is claimed; no Swift or native API field changed. Curated progress bars remain 74 checkpoints.
+
+
+### 2 November 2026 · Native recording retention and task Undo
+
+- [x] Add independently owned, gated Delete-review controls: exact current recording counts, explicit 30-day recovery consent, Cancel/reset, bounded metadata refresh and lifecycle/expiry invalidation. Freeze typed acknowledgements in existing mutation and Undo history; revalidate the original task admission.
+- [x] Independently pass 85 local SQL/Storage checks per repo, including metadata privacy/current-role guards and atomic mixed recorded/empty-task batch deletion/restoration. Strict response/scope/policy/size and durable history checks are covered in Core.
+- [x] Accept the iPhone production Delete review and real Store Delete/Undo through the isolated local service: consent, Cancel/reopen, generation renewal, playback of original bytes, removal and cleanup; 36 service/native checks. Both current app/runner builds and strict signatures pass. Mac does not inherit mobile runtime acceptance.
+- [ ] Finish iPad startup/flow acceptance and Mac runtime; build expired-recording task-only recovery review. Genuine Auth/full-schema/hosted integration, mixed file/audio restoration, wider lifecycle/accessibility/privacy, legacy/personal migration and whole-project transfers remain open.
+
+[Evidence, current platform results and attempt qualifications](audio-lifecycle-native/README.md). Both normal-use restoration switches stay off. No deployment or real data change. Existing iPad file-picker/cache gaps remain separate. Two verified obsolete compiler caches were pruned; test helpers reuse current per-platform caches behind the 20 GiB floor. Curated bars remain 74 checkpoints; retention/Undo and expired-media review are tracked separately.

@@ -152,6 +152,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
     var checklistRestoreRequest: UUID? = nil
     var taskTypesProtocol: Int? = nil
     var taskTypeLifecycleProtocol: Int? = nil
+    var audioRestoration: TeamAudioRestorationAcknowledgement? = nil
 
     static let fields: Set<String> = ["title", "description", "priority", "due_date", "due_time", "completed", "completed_at", "deadline_date", "duration_minutes", "time_zone", "scheduled_at", "assigned_to", "section_id", "labels", "reminder_specs", "subtasks", "is_recurring", "recurrence_pattern", "recurrence_end_date", "is_heading"]
     static var invalid: AppFailure { AppFailure(message: "This saved team edit needs review. Your changes remain on this device.") }
@@ -180,7 +181,7 @@ struct TeamTaskEditScope: Codable, Equatable, Sendable {
         return captured
     }
     func body(for change: Mutation) throws -> [String: JSON] {
-        guard [account, team, project, change.recordID].allSatisfy(TeamProjectValue.id),
+        guard audioRestoration == nil, [account, team, project, change.recordID].allSatisfy(TeamProjectValue.id),
               change.table == "tasks", change.method == "PATCH", change.organizationOrder == nil, change.orderRecovery == nil,
               !change.fields.isEmpty, Set(change.fields.keys).isSubset(of: Self.fields),
               let base = change.baseline, base["project_id"] == .string(project),
@@ -271,6 +272,7 @@ extension TeamTaskEditScope {
         var body: [String: JSON] = ["team_id":.string(team),"project_id":.string(project),"task_id":.string(change.recordID),
             "request_id":.string(change.id.uuidString.lowercased()),"task_generation":.string(generation),"record":.object(record)]
         if typed { body["task_type_lifecycle_protocol"] = .number(1) }
+        if let audioRestoration { body["audio_restoration_ack"] = .object(try audioRestoration.body(action: action)) }
         if action == "restore", let restoreRequest { body["restore_from"] = .string(restoreRequest.uuidString.lowercased()) }
         if action == "create", let parent = record["recurrence_parent_id"], parent != .null {
             guard case .string(let parentID) = parent, TeamProjectValue.id(parentID), let parentGeneration,
@@ -301,5 +303,101 @@ extension TeamTaskEditScope {
                   TaskKind.permits(Mutation(table: "tasks", recordID: change.recordID, method: "POST", fields: row), existing: nil) else { throw Self.invalid }
         }
         return Record(row)
+    }
+}
+
+/// A reviewed lifecycle policy travels inside the original durable mutation.
+/// Sync retries never replace it with a fresh count or a different decision.
+struct TeamAudioRestorationAcknowledgement: Codable, Equatable, Sendable {
+    enum Policy: String, Codable, Sendable {
+        case retain = "published_restore_v1"
+        case omitExpired = "expired_recordings_omitted_v1"
+    }
+    let policy: Policy
+    let count: Int
+    let retentionDays: Int
+    init(policy: Policy = .retain, count: Int) throws {
+        guard (1...20).contains(count) else { throw TeamTaskEditScope.invalid }
+        self.policy = policy; self.count = count; retentionDays = 30
+    }
+    func body(action: String) throws -> [String: JSON] {
+        guard (1...20).contains(count), retentionDays == 30,
+              action == "restore" || action == "delete" && policy == .retain else { throw TeamTaskEditScope.invalid }
+        return ["policy": .string(policy.rawValue), "count": .number(Double(count)), "retention_days": .number(30)]
+    }
+}
+
+struct TeamAudioLifecycleScope: Equatable, Sendable {
+    let account: String
+    let origin: String
+    let team: String
+    let project: String
+    let task: String
+    let generation: String
+    let phase: String
+    let restores: UUID?
+    init(_ change: Mutation) throws {
+        guard let scope = change.teamTaskScope else { throw TeamTaskEditScope.invalid }
+        let phase = try scope.lifecycleAction(for: change)
+        guard phase == "delete" || phase == "restore",
+              let row = phase == "delete" ? change.baseline : change.fields,
+              row["id"] == .string(change.recordID), row["project_id"] == .string(scope.project),
+              case .string(let generation)? = row["task_generation"],
+              [scope.account, scope.team, scope.project, change.recordID, generation].allSatisfy(TeamProjectValue.id),
+              !scope.origin.isEmpty, scope.origin.utf8.count <= 2048 else { throw TeamTaskEditScope.invalid }
+        _ = try scope.lifecycleBody(for: change)
+        account = scope.account; origin = scope.origin; team = scope.team; project = scope.project
+        task = change.recordID; self.generation = generation; self.phase = phase
+        restores = phase == "restore" ? scope.restoreRequest : nil
+    }
+    var body: [String: JSON] {
+        ["team_id": .string(team), "project_id": .string(project), "task_id": .string(task),
+         "task_generation": .string(generation), "phase": .string(phase),
+         "restore_from": restores.map { .string($0.uuidString.lowercased()) } ?? .null]
+    }
+}
+
+struct TeamAudioLifecycleReview: Equatable, Sendable {
+    let scope: TeamAudioLifecycleScope
+    let enabled: Bool
+    let count: Int
+    let policy: TeamAudioRestorationAcknowledgement.Policy?
+    let retainUntil: Date?
+    let cleanupPending: Bool
+    let expiresAt: Date
+    static var unavailable: AppFailure { AppFailure(message: "Recording recovery needs a fresh review. Your saved tasks are unchanged.") }
+    init(_ raw: [String: JSON], scope: TeamAudioLifecycleScope, now: Date = Date()) throws {
+        guard Set(raw.keys) == Set(scope.body.keys).union(["protocol", "account", "enabled", "recording_count", "policy", "retain_until", "cleanup_pending", "expires_at"]),
+              raw["protocol"] == .number(1), raw["account"] == .string(scope.account),
+              scope.body.allSatisfy({ raw[$0.key] == $0.value }),
+              case .bool(let enabled)? = raw["enabled"], case .bool(let pending)? = raw["cleanup_pending"],
+              case .number(let number)? = raw["recording_count"], number.isFinite, number.rounded(.down) == number, (0...20).contains(number) else { throw Self.unavailable }
+        let count = Int(number), expires = try TeamOrganizationValue.date(raw["expires_at"])
+        guard expires > now, expires.timeIntervalSince(now) <= 301 else { throw Self.unavailable }
+        let policy: TeamAudioRestorationAcknowledgement.Policy?
+        if raw["policy"] == .null { policy = nil }
+        else { guard case .string(let name)? = raw["policy"], let value = TeamAudioRestorationAcknowledgement.Policy(rawValue: name) else { throw Self.unavailable }; policy = value }
+        let retention = raw["retain_until"] == .null ? nil : try TeamOrganizationValue.date(raw["retain_until"])
+        if count == 0 { guard policy == nil, retention == nil, !pending else { throw Self.unavailable } }
+        else if scope.phase == "delete" { guard policy == .retain, retention == nil, !pending else { throw Self.unavailable } }
+        else {
+            guard let retention, policy != nil, policy == .omitExpired ? retention <= now : retention > now,
+                  policy == .omitExpired || !pending else { throw Self.unavailable }
+        }
+        self.scope = scope; self.enabled = enabled; self.count = count; self.policy = policy
+        retainUntil = retention; cleanupPending = pending; expiresAt = expires
+    }
+    func acknowledgement(now: Date = Date()) throws -> TeamAudioRestorationAcknowledgement? {
+        guard enabled, expiresAt > now, !cleanupPending else { throw Self.unavailable }
+        guard count > 0 else { return nil }
+        guard let policy else { throw Self.unavailable }
+        return try TeamAudioRestorationAcknowledgement(policy: policy, count: count)
+    }
+    func applying(to change: Mutation, now: Date = Date()) throws -> Mutation {
+        guard try TeamAudioLifecycleScope(change) == scope, var authority = change.teamTaskScope else { throw Self.unavailable }
+        authority.audioRestoration = try acknowledgement(now: now)
+        var result = change; result.teamTaskScope = authority
+        _ = try authority.lifecycleBody(for: result)
+        return result
     }
 }

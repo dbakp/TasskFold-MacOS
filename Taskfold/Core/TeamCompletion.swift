@@ -44,7 +44,7 @@ struct TeamCompletion: Codable, Equatable, Sendable {
         guard header.teamCompletion == self,header.table == "tasks",header.method == "TEAM_COMPLETE",header.recordID == source.id,header.fields.isEmpty,header.baseline == source.fields,
               header.teamTaskScope == nil,header.teamTaskBatch == nil,header.organizationOrder == nil,header.orderRecovery == nil,
               [scope.account,scope.team,scope.project,source.id,source.string("user_id"),source.string("task_generation"),seriesID,seriesGeneration,seriesProject,nextGeneration].allSatisfy(TeamProjectValue.id),
-              scope.restoreRequest == nil,scope.checklistRestoreRequest == nil,
+              scope.audioRestoration == nil,scope.restoreRequest == nil,scope.checklistRestoreRequest == nil,
               source["project_id"] == .string(scope.project),source["completed"] == .bool(false),
               case .number(let version)=source["completion_version"],version.isFinite,version>=0,version<9_007_199_254_740_991,version.rounded(.down)==version,
               TimeZone(identifier:inputZone) != nil,TaskPlanning.instant(completedAt) != nil,

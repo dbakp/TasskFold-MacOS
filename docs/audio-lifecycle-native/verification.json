@@ -1,0 +1,76 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "5fcc5b402efa3173a9994557e1faf80c57f9c72e",
+  "sourceSHA256": {
+    "Scripts/Database/audio-team-native-http.mjs": "d1dfe38a07bebbffc42158ee602fb770675c5b71fe6469f0e5c0193dd483c21f",
+    "Scripts/Database/test-audio-generation-restore.mjs": "5015eeaa2a84fe8e98a6dfa523fc29d20b8b21673c2eedc11f3be833d54c527c",
+    "Scripts/Database/test-audio-team-native-provider.mjs": "cf47da1ee357f4c270c5950f995c846a494167c43c63c37c8b19a15fcb4014df",
+    "Scripts/test_core.sh": "1c1482ac5ce3621bb30c1d87faeca84ee4f53dc37ab29ee36d79cf2373961ca0",
+    "Taskfold/AudioCommentNativeFixture.swift": "c9d882b69064813b2fb37922c7fb37208447eb33b40925c128675393b2b2f3cf",
+    "Taskfold/Core/Backend.swift": "4bc6081c6e948ab63d4e1e860f681c5a4a5bc6db87208cd182163d6261eca82b",
+    "Taskfold/Core/Models.swift": "db9fe3fcf63af529af8ffd08249876bc870b0ed7971545df15f8742189b746b9",
+    "Taskfold/Core/Store.swift": "f3b1f31f58d80910134cf2e830c03ed4bc072113ccd90e18dabe78c502fc97a8",
+    "Taskfold/Core/TeamCompletion.swift": "abece9369b25fd4fcbab02a56f193e2a2204d53279650b9c08089f07ff99e6cb",
+    "Taskfold/Core/TeamProjectAccess.swift": "ac96000f974faccfaba8c7eda64fa81e8eb98a751d0a2a4779207ecfdc366e23",
+    "Taskfold/Core/TeamTaskBatch.swift": "6ab4a2fb0d7fc68dd89f032ab3c804b67abb425304a65e0d4effc820a6a5c1da",
+    "Taskfold/Info.plist": "1ab818c267cfcf8e6feabe71b0fe22a14a0a5ab23c6cecd74363ac4b73b783e8",
+    "Taskfold/Views/TaskInspector.swift": "17ed291a6b7bd6386aa3ebe023613715a3002f3f61e6b0e54954e159d1626f7f",
+    "Taskfold/Views/TeamTaskDeletionReview.swift": "16ed09294d8bf80af6c75c8e54b8be8574c2f4406912ae99f189d21f745a54f5",
+    "Taskfold/Workspace.swift": "b44f94b6a543d06b816174664d20b194e5a6efeb5c6f18baf839d4bb9eae381b",
+    "TaskfoldTests/Fixtures/audio-lifecycle-review-v1.json": "9e180410372998b0ae04cee5164a99b5179ae07cff36d538351ede2ff56d5062",
+    "TaskfoldTests/TeamTaskLifecycleTests.swift": "03e6ded55186af4953e647413cf201ff98fd52d82dbd936af7cc9218af0c009e",
+    "supabase/migrations/20261102181442_audio_lifecycle_native_review.sql": "d4a0e7792a9e409606e459c34aa45c5da2ecfe8edb9dea8de73a676b8cd1679e"
+  },
+  "ownLocalServiceChecks": 85,
+  "ownCoreTests": 175,
+  "ownFocusedLifecycleTests": 31,
+  "newCoreTests": 13,
+  "currentAppAndRunnerBuildAndStrictSigning": true,
+  "buildPhase": "audio-lifecycle-native-v4",
+  "buildDriverSHA256": "7fde2a60a42595a5330a1155c2790d83012ec1cf34038807768c2c97fb03b9fd",
+  "ownServiceReportSHA256": "e98c54a1252dc4df01dbec74b617a7d0c819138394bcf6413aae8306b7c28317",
+  "coreLogSHA256": "a5774f328827bb0afa181b67e0285cd971fedb1677ade0a4e92d33836a00902f",
+  "nativeRuntime": {
+    "iphone": {
+      "ownerRepository": "TaskFold-iOS",
+      "acceptedLocalFixture": true,
+      "serviceNativeChecks": 36,
+      "productionDeleteReviewAndStoreUndo": true,
+      "originalRecordingPlayedAfterRestoration": true,
+      "syntheticAuthRoutingAndMediaDrivers": true,
+      "reportSHA256": "987818b87ecbd2fa1dbdf5e6a04eff56ed56b0f2062f791f12609fd31eae4f0f",
+      "qualification": "Phone v3 accepted. Current v4 changes only DEBUG sync-stage diagnostics and bounded initial-sync test waiting."
+    },
+    "ipad": {
+      "accepted": false,
+      "phase": "Initial reminder scheduling, before audio operations",
+      "audioRequests": 0,
+      "attempts": 2,
+      "fixtureCleanupComplete": true,
+      "reportSHA256": "0238ec03070401f33b44f2b74059ed544d89dbfbaed45190f94fecc3bcf9ace6"
+    },
+    "mac": {
+      "accepted": false,
+      "qualification": "Build/Core evidence only; no runtime acceptance inherited from iOS."
+    }
+  },
+  "expiredMediaReviewUIImplemented": false,
+  "genuineAuth": false,
+  "fullSchemaParity": false,
+  "deployed": false,
+  "normalUseEnabled": false,
+  "clientRestorationGate": false,
+  "serviceRestorationGateDefault": false,
+  "dashboard": {
+    "curatedCheckpoints": 74,
+    "substeps": 31,
+    "barTotalsUnchanged": true,
+    "viewportThemeAndStateChecksPassed": true
+  },
+  "storage": {
+    "obsoleteAllocatedBytesRemoved": 1339109376,
+    "currentCachesAndProductsKept": true,
+    "realDataAndSimulatorsErased": false
+  }
+}
