@@ -30,10 +30,11 @@ private func publication(_ journal: TaskFileUploadJournal, state: String = "publ
 }
 private final class FileFaultIO: CalendarSecureItemIO, @unchecked Sendable {
     let base: ReviewedTeamCommandFileIO<TaskFileUploadJournal>
-    private let lock = NSLock(); private var failing = false
+    private let lock = NSLock(); private var failing = false, unreadable = false
     init(_ base: ReviewedTeamCommandFileIO<TaskFileUploadJournal>) { self.base = base }
     func failWrite(_ value: Bool) { lock.lock(); failing = value; lock.unlock() }
-    func read(key: String) throws -> Data? { try base.read(key: key) }
+    func failRead(_ value: Bool) { lock.lock(); unreadable = value; lock.unlock() }
+    func read(key: String) throws -> Data? { lock.lock(); let fail = unreadable; lock.unlock(); if fail { throw URLError(.cannotOpenFile) }; return try base.read(key: key) }
     func write(_ data: Data, key: String) throws { lock.lock(); let fail = failing; lock.unlock(); if fail { throw URLError(.cannotWriteToFile) }; try base.write(data, key: key) }
     func remove(key: String) throws { try base.remove(key: key) }
 }
@@ -199,6 +200,71 @@ final class TaskFileUploadTests: XCTestCase {
         let root = try root(), peer = FilePeer(), model = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault(root), service: peer, incarnation: UUID(), current: { true }); peer.malformed = true
         await model.load(); await model.choose(Data("hello".utf8), name: "hello.txt", type: "text/plain"); await model.act("publish"); await model.finish(); XCTAssertEqual(model.pending?.phase, .attempted)
         peer.malformed = false; await model.act("resolve"); XCTAssertEqual(model.pending?.phase, .published); XCTAssertNotNil(model.pending?.bytes); await model.finish(); XCTAssertNil(model.pending); XCTAssertEqual(peer.applied.count, 1)
+    }
+    @MainActor func testStaleWindowRequiresExplicitRefreshBeforeActingOnReplacement() async throws {
+        let root = try root(), peer = FilePeer(), vault = vault(root)
+        func model() -> TaskFileUploadModel { .init(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { true }) }
+        let old = model(), other = model()
+        await old.load(); await old.choose(Data("first".utf8), name: "First.txt", type: "text/plain")
+        let first = try XCTUnwrap(old.pending)
+        await other.load(); await other.act("cancel"); await other.choose(Data("second".utf8), name: "Second.txt", type: "text/plain")
+        let replacement = try XCTUnwrap(other.pending)
+        await old.act("publish")
+        XCTAssertTrue(old.needsRefresh); XCTAssertFalse(old.canPublish); XCTAssertEqual(old.pending, first); XCTAssertTrue(peer.calls.isEmpty)
+        await old.act("cancel"); await old.act("resolve"); await old.finish()
+        let durable = try await vault.pending(account: fileAccount, origin: fileOrigin); XCTAssertEqual(durable, replacement)
+        await old.load(); XCTAssertFalse(old.needsRefresh); XCTAssertNil(old.message); XCTAssertEqual(old.pending, replacement); XCTAssertTrue(peer.calls.isEmpty)
+        await old.act("publish"); XCTAssertEqual(old.pending?.phase, .published); XCTAssertEqual(peer.calls.map { $0.1.id }, [replacement.id])
+    }
+    @MainActor func testLateReplyCannotOverwriteAnotherWindowsConfirmationAndRefreshRecoversIt() async throws {
+        let root = try root(), peer = FilePeer(), vault = vault(root); peer.hold = true
+        let first = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { true })
+        await first.load(); await first.choose(Data("hello".utf8), name: "Hello.txt", type: "text/plain")
+        let sending = Task { await first.act("publish") }
+        for _ in 0..<1000 { if peer.continuation != nil { break }; await Task.yield() }
+        XCTAssertNotNil(peer.continuation)
+        peer.hold = false
+        let second = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { true })
+        await second.load(); await second.act("resolve"); XCTAssertEqual(second.pending?.phase, .published)
+        peer.continuation?.resume(); await sending.value
+        XCTAssertTrue(first.needsRefresh); XCTAssertEqual(first.pending?.phase, .attempted)
+        await first.act("cancel"); XCTAssertEqual(peer.calls.map(\.0), ["publish", "resolve"])
+        await first.load(); XCTAssertEqual(first.pending, second.pending); XCTAssertFalse(first.needsRefresh); XCTAssertNil(first.message)
+        await first.finish(); let cleared = try await vault.pending(account: fileAccount, origin: fileOrigin); XCTAssertNil(cleared); XCTAssertEqual(peer.applied.count, 1)
+    }
+    @MainActor func testFailedRefreshKeepsDisplayedOriginalAndBlocksWritesUntilReadSucceeds() async throws {
+        let root = try root(), fault = FileFaultIO(io(root)), vault = vault(root, io: fault), peer = FilePeer()
+        let model = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { true })
+        await model.load(); await model.choose(Data("hello".utf8), name: "Hello.txt", type: "text/plain"); let original = model.pending
+        fault.failRead(true); await model.load()
+        XCTAssertTrue(model.needsRefresh); XCTAssertEqual(model.pending, original); XCTAssertTrue(model.loaded); XCTAssertFalse(model.canPublish)
+        await model.act("publish"); await model.act("cancel"); await model.finish(); XCTAssertTrue(peer.calls.isEmpty); XCTAssertEqual(model.pending, original)
+        fault.failRead(false); await model.load(); XCTAssertFalse(model.needsRefresh); XCTAssertNil(model.message); XCTAssertEqual(model.pending, original); XCTAssertTrue(model.canPublish)
+    }
+    @MainActor func testInitialUnreadableRecoveryCannotBeReplacedAndSuccessfulRefreshDoesNotSend() async throws {
+        let root = try root(), fault = FileFaultIO(io(root)), vault = vault(root, io: fault), peer = FilePeer(), source = try journal()
+        try await vault.begin(source, lease: .init()); fault.failRead(true)
+        let model = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { true })
+        await model.load(); XCTAssertFalse(model.loaded); XCTAssertTrue(model.needsRefresh)
+        await model.choose(Data("replacement".utf8), name: "Other.txt", type: "text/plain"); XCTAssertNil(model.pending)
+        fault.failRead(false); await model.load(); XCTAssertEqual(model.pending, source); XCTAssertNil(model.message); XCTAssertFalse(model.needsRefresh); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testRefreshObservesClearedRecoveryWithoutResurrectingOrSending() async throws {
+        let root = try root(), peer = FilePeer(), vault = vault(root)
+        let first = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { true })
+        let second = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault, service: peer, incarnation: UUID(), current: { true })
+        await first.load(); await first.choose(Data("hello".utf8), name: "Hello.txt", type: "text/plain")
+        await second.load(); await second.act("cancel"); await first.load()
+        XCTAssertNil(first.pending); XCTAssertNil(first.message); XCTAssertFalse(first.needsRefresh); XCTAssertTrue(peer.calls.isEmpty)
+    }
+    @MainActor func testRefreshAfterLostNetworkReplyDoesNotPublishOrResolveAutomatically() async throws {
+        let root = try root(), peer = FilePeer(); peer.lose = true
+        let model = TaskFileUploadModel(account: fileAccount, origin: fileOrigin, target: fileTarget, vault: vault(root), service: peer, incarnation: UUID(), current: { true })
+        await model.load(); await model.choose(Data("hello".utf8), name: "Hello.txt", type: "text/plain"); await model.act("publish")
+        let attempted = model.pending
+        XCTAssertFalse(model.needsRefresh); XCTAssertNotNil(model.message)
+        await model.load(); XCTAssertEqual(model.pending, attempted); XCTAssertNil(model.message); XCTAssertEqual(peer.calls.map(\.0), ["publish"])
+        await model.act("resolve"); XCTAssertEqual(model.pending?.phase, .published); XCTAssertEqual(peer.applied.count, 1)
     }
     @MainActor func testActualBackendSendsFrozenBytesAndOnlyOperationForRecovery() async throws {
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [FileHTTP.self]

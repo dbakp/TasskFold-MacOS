@@ -1,0 +1,64 @@
+{
+  "reviewed": "2026-11-02",
+  "repository": "TasskFold-MacOS",
+  "core": {
+    "tests": 72,
+    "failures": 0,
+    "newTests": 6,
+    "logSHA256": "bb73409f0bc6e9368d488f10d395c1cc4cc9d1809e04e4d660d4880c80b839b9",
+    "testSourceSHA256": "93156c70bad574d4694e4ecbd60d2c4e6350a76a69eff5756305c6c1d850e6f9"
+  },
+  "sourceProof": {
+    "Taskfold/Core/TaskFileUpload.swift": {
+      "repositorySHA256": "38c337fdcd36773b579d4b4964279eddd1391b2befbb9e6895de556b2dc32f21",
+      "compiledHostSHA256": "38c337fdcd36773b579d4b4964279eddd1391b2befbb9e6895de556b2dc32f21",
+      "matchesAfterIsolation": true
+    },
+    "Taskfold/Views/TaskFileUploadView.swift": {
+      "repositorySHA256": "3557b059d780d8b8b87a14905842c347a157fd2d4979fcc235e553d76cf5ae26",
+      "compiledHostSHA256": "3557b059d780d8b8b87a14905842c347a157fd2d4979fcc235e553d76cf5ae26",
+      "matchesAfterIsolation": true
+    }
+  },
+  "build": {
+    "phase": "file-refresh-final",
+    "appAndRunnerStrictSignaturesVerified": true,
+    "logSHA256": "08debf269d1e0d9baf372185232f84a0dfc80edb97b8f19013e094ebdede6e7f",
+    "appDebugDylibSHA256": "79208e7e5cb10fa2e2ae0c87ebd504fff25ede0a39bdadd191ec3b46201cee63",
+    "testBinarySHA256": "ad12e9c2ba3c81aa6da2963c42c7d6bd7fd3303bbf5969d8876721159ad1c836"
+  },
+  "nativeAcceptance": {
+    "phone": {
+      "tests": 1,
+      "failures": 0,
+      "skips": 0,
+      "logSHA256": "f43aee927809d6dee96232c86b320f56457f86fe1e575e34c6903665e3b47663",
+      "usesSecondModelNotActualMultipleWindows": true
+    },
+    "ipad": {
+      "tests": 1,
+      "failures": 0,
+      "skips": 0,
+      "logSHA256": "4bec9d7f5c5218cffd3b8ff355ab0b2b8de1c6fdb22a0112303042708a1ebf7a",
+      "usesSecondModelNotActualMultipleWindows": true
+    },
+    "mac": {
+      "accepted": false,
+      "scope": "Current app/runner compilation and signatures only; native dialog/runtime remains open"
+    }
+  },
+  "deployed": false,
+  "normalUseEnabled": false,
+  "realProviderAccepted": false,
+  "actualMultiWindowAccepted": false,
+  "voiceOverAccepted": false,
+  "largestTextAccepted": false,
+  "screenshotsSHA256": {
+    "ipad-cold-recovery.png": "a243ef0e0fc19e27cd9ee14b89ec0eda97e5fccb25bb57b724e56f26f7c1e593",
+    "ipad-needs-refresh.png": "65db9e9ff92752386cdf5249cb5ff9b6a41793d0a601098f31c9cda986e36427",
+    "phone-cold-recovery.png": "c5bba42c3ac0d77841f3fac8b693f8693be6de908d5eb853dea082c8807eb2a5",
+    "phone-needs-refresh.png": "f31a8f8abed2eb04b99c4bda8a9f6175d883048063e2ba5abd84730a074b3072"
+  },
+  "cleanupSHA256": "cee62c2b9d08e8250a36cdf4fd81d81feaaa13b9cc53737dc76af7bfe8851f98",
+  "attemptsSHA256": "0bf9b87b24b0b6171724edaf1446e1cc39c3f7fbd9879550bb04e19b82dff778"
+}

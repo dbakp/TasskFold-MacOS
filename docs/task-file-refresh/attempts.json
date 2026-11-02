@@ -1,0 +1,8 @@
+{
+  "initialBuild": "New native test declaration lacked a newline; compiler stopped before any test ran. Declaration formatting corrected.",
+  "currentBuild": "file-refresh-v2",
+  "phone": "One native stale-recovery/refresh/cold case passed; no failure or skip.",
+  "testScope": "Two models on the same isolated encrypted vault, not actual multiple windows or hosted provider delivery.",
+  "normalUseChanged": false,
+  "ipad": "One native stale-recovery/refresh/cold case passed; no failure or skip."
+}

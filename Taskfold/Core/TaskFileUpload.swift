@@ -100,6 +100,7 @@ typealias TaskFileUploadVault = ReviewedTeamCommandVault<TaskFileUploadJournal>
     private(set) var loaded = false
     private(set) var busy = false
     private(set) var message: String?
+    private(set) var needsRefresh = false
     let account: String, origin: String, target: Record
     @ObservationIgnored private let vault: TaskFileUploadVault
     @ObservationIgnored private let service: any TaskFileUploadTransport
@@ -113,23 +114,24 @@ typealias TaskFileUploadVault = ReviewedTeamCommandVault<TaskFileUploadJournal>
     }
     var available: Bool { !closed && current() }
     var sameTarget: Bool { pending?.matchesTarget(target) == true }
-    var canPublish: Bool { available && sameTarget && publishAllowed() }
-    func close() { closed = true; lease.cancel(); pending = nil; loaded = false; message = nil }
+    var canPublish: Bool { available && !needsRefresh && sameTarget && publishAllowed() }
+    func close() { closed = true; lease.cancel(); pending = nil; loaded = false; message = nil; needsRefresh = false }
     private func check() throws { try lease.check(); guard available, !Task.isCancelled else { throw CancellationError() } }
     func load() async {
         guard !busy else { return }; busy = true; defer { busy = false }
-        do { try check(); let saved = try await vault.pending(account: account, origin: origin); try check(); pending = saved; loaded = true }
-        catch { if available { message = "Your saved upload couldn’t be opened. Nothing new was sent." } }
+        do { try check(); let saved = try await vault.pending(account: account, origin: origin); try check(); pending = saved; loaded = true; needsRefresh = false; message = nil }
+        catch { if available { needsRefresh = true; message = pending == nil ? "Your saved upload couldn’t be opened. Nothing new was sent." : "Saved recovery couldn’t be refreshed. Your current local copy is kept." } }
     }
     func choose(_ data: Data, name: String, type: String) async {
-        guard !busy, loaded, pending == nil else { return }; busy = true; defer { busy = false }
+        guard !busy, loaded, !needsRefresh, pending == nil else { return }; busy = true; defer { busy = false }
         do { try check(); let value = try TaskFileUploadJournal(account: account, origin: origin, target: target, bytes: data, name: name, type: type); try await vault.begin(value, lease: lease); try check(); pending = value; message = nil }
         catch { if available { message = "The file couldn’t be saved for upload. Choose a supported file up to 5 MB, or reopen saved recovery." } }
     }
     func act(_ action: String) async {
-        guard !busy, loaded, let expected = pending, !expected.resolved, ["publish", "resolve", "cancel"].contains(action), action != "publish" || canPublish,
+        guard !busy, loaded, !needsRefresh, let expected = pending, !expected.resolved, ["publish", "resolve", "cancel"].contains(action), action != "publish" || canPublish,
               action != "resolve" || expected.phase == .attempted else { return }
         busy = true; defer { busy = false }
+        var updatingRecovery = true
         do {
             try check()
             if action == "cancel", expected.phase == .queued {
@@ -138,20 +140,25 @@ typealias TaskFileUploadVault = ReviewedTeamCommandVault<TaskFileUploadJournal>
             let attempted = try expected.markingAttempted()
             try await vault.replace(expected, with: attempted, lease: lease)
             try check(); pending = attempted
+            updatingRecovery = false
             let data = try await service.taskFileReply(attempted, action: action, incarnation: incarnation)
             let received = try attempted.receiving(data)
             // Scope/lease changes intentionally leave the attempted original for
             // authenticated recovery rather than accepting a late UI reply.
-            try check(); try await vault.replace(attempted, with: received, lease: lease); try check()
+            try check(); updatingRecovery = true
+            try await vault.replace(attempted, with: received, lease: lease); try check()
             pending = received; message = received.phase == .published ? "File shared" : received.resolved ? "Upload stopped. Your local copy is kept." : "This upload is still pending. Its original file is saved."
         } catch {
-            if available { message = "The result couldn’t be confirmed. Your file is saved. Check its status or retry the same upload." }
+            if available {
+                needsRefresh = updatingRecovery
+                message = updatingRecovery ? "Saved recovery changed or couldn’t be updated. Refresh saved upload before continuing. Your current local copy is kept." : "The result couldn’t be confirmed. Your file is saved. Check its status or retry the same upload."
+            }
         }
     }
     func finish() async {
-        guard !busy, let expected = pending, expected.resolved else { return }; busy = true; defer { busy = false }
+        guard !busy, !needsRefresh, let expected = pending, expected.resolved else { return }; busy = true; defer { busy = false }
         do { try check(); try await vault.clear(expected, lease: lease); try check(); pending = nil; message = "Recovery copy cleared. Shared files are unchanged." }
-        catch { if available { message = "Recovery changed in another window. Reopen it before clearing." } }
+        catch { if available { needsRefresh = true; message = "Recovery changed or couldn’t be cleared. Refresh saved upload before continuing." } }
     }
 }
 

@@ -130,6 +130,18 @@ struct TaskFileUploadView: View {
                         Text("View-only access. Save a copy of a shared file below.").foregroundStyle(.secondary).accessibilityIdentifier("fileReadOnlyNotice")
                     } else { ContentUnavailableView("Shared files unavailable", systemImage: "lock", description: Text("Refresh project access and reopen this task.")) }
                 } else if available, let model {
+                    if model.loaded {
+                        Section {
+                            if model.needsRefresh {
+                                Text("Saved upload needs refreshing").accessibilityIdentifier("fileUploadRefreshNeeded")
+                                Text("Another window may have changed recovery. Refresh before sharing, stopping or clearing it. You can still save your displayed original as a private copy.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            }
+                            Button("Refresh saved upload", systemImage: "arrow.clockwise") {
+                                copyStatus = nil; localMessage = nil
+                                Task { await model.load() }
+                            }.disabled(model.busy || downloading || copyAttempt != nil).accessibilityIdentifier("fileUploadRefresh")
+                        }
+                    }
                     if !model.loaded {
                         Section {
                             Text(model.busy ? "Opening saved upload…" : "Saved upload needs review")
@@ -147,19 +159,19 @@ struct TaskFileUploadView: View {
                                         .disabled(model.busy || !model.canPublish || downloading).accessibilityIdentifier("fileUploadPublish")
                                 } else { Text("Open the original task to retry this saved upload.").foregroundStyle(.secondary) }
                                 if pending.phase == .attempted {
-                                    Button("Check status", systemImage: "arrow.clockwise") { Task { await model.act("resolve"); if available { await store.sync() } } }.disabled(model.busy || downloading).accessibilityIdentifier("fileUploadCheck")
+                                    Button("Check status", systemImage: "arrow.clockwise") { Task { await model.act("resolve"); if available { await store.sync() } } }.disabled(model.busy || model.needsRefresh || downloading).accessibilityIdentifier("fileUploadCheck")
                                 }
-                                Button(pending.phase == .queued ? "Remove unsent copy" : "Stop upload", role: .destructive) { Task { await model.act("cancel") } }.disabled(model.busy || downloading).accessibilityIdentifier("fileUploadStop")
+                                Button(pending.phase == .queued ? "Remove unsent copy" : "Stop upload", role: .destructive) { Task { await model.act("cancel") } }.disabled(model.busy || model.needsRefresh || downloading).accessibilityIdentifier("fileUploadStop")
                                 Text("Your original file stays encrypted on this device until the result is confirmed. Closing this sheet keeps recovery available in Account.").font(.footnote).foregroundStyle(.secondary)
                             } else {
-                                Button("Clear recovery copy", role: .destructive) { Task { await model.finish() } }.disabled(model.busy || downloading).accessibilityIdentifier("fileUploadClear")
+                                Button("Clear recovery copy", role: .destructive) { Task { await model.finish() } }.disabled(model.busy || model.needsRefresh || downloading).accessibilityIdentifier("fileUploadClear")
                                 Text("Clears only this device’s recovery copy. The shared file stays with its task.").font(.footnote).foregroundStyle(.secondary)
                             }
                         }
                     } else if !request.library {
                         Section {
                             if store.taskFileUploadsEnabled {
-                                Button("Choose a file…", systemImage: "doc.badge.plus") { copyStatus = nil; localMessage = nil; importing = true }.accessibilityFocused($copyFocused, equals: "choose").disabled(!model.loaded || model.busy || !store.fileUploadMayPublish(request)).accessibilityIdentifier("fileUploadChoose")
+                                Button("Choose a file…", systemImage: "doc.badge.plus") { copyStatus = nil; localMessage = nil; importing = true }.accessibilityFocused($copyFocused, equals: "choose").disabled(!model.loaded || model.busy || model.needsRefresh || !store.fileUploadMayPublish(request)).accessibilityIdentifier("fileUploadChoose")
                                 Text("Share a file up to 5 MB with people who can access this project.").font(.footnote).foregroundStyle(.secondary)
                             } else { Text("New file sharing is paused. You can still save existing shared files.").foregroundStyle(.secondary) }
                         }
@@ -180,10 +192,24 @@ struct TaskFileUploadView: View {
                 if available, request.readOnly, let localMessage { Text(localMessage).fixedSize(horizontal: false, vertical: true).accessibilityFocused($statusFocused).accessibilityIdentifier("fileUploadMessage") }
 
             }
+            .accessibilityIdentifier("taskFileForm")
             .formStyle(.grouped).navigationTitle(request.library ? "Saved upload" : "Shared files")
             .toolbar {
                 #if DEBUG
-                if TaskFileViewerFixture.enabled { ToolbarItem { Button("Withdraw test access") { store.withdrawFileViewerFixture() }.accessibilityIdentifier("fileViewerWithdrawAccess") } }
+                if TaskFileViewerFixture.enabled && !TaskFileViewerFixture.refreshTesting { ToolbarItem { Button("Withdraw test access") { store.withdrawFileViewerFixture() }.accessibilityIdentifier("fileViewerWithdrawAccess") } }
+                if TaskFileViewerFixture.refreshTesting, let model {
+                    ToolbarItem { Button("Change recovery") {
+                        Task {
+                            do {
+                                let other = try store.fileUploadModel(request); await other.load()
+                                guard other.pending?.phase == .queued, other.pending?.name == "Original recovery.txt" else { return }
+                                await other.act("cancel")
+                                await other.choose(Data("replacement recovery".utf8), name: "Updated recovery.txt", type: "text/plain")
+                                other.close()
+                            } catch { }
+                        }
+                    }.disabled(model.busy).accessibilityIdentifier("fileRefreshExternalChange") }
+                }
                 #endif
                 ToolbarItem(placement: .cancellationAction) { Button("Close") { model?.close(); dismiss() }.accessibilityIdentifier("fileUploadDismiss") } }
             #if os(macOS)
@@ -272,6 +298,7 @@ struct TaskFileUploadView: View {
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--file-viewer-testing") }
     static var copyTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--file-copy-testing") }
     static var selectionTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--file-selection-testing") }
+    static var refreshTesting: Bool { selectionTesting && ProcessInfo.processInfo.arguments.contains("--file-recovery-refresh-testing") }
     static let sampleName = "Taskfold-file-upload-sample.txt"
     static let copyName = "Taskfold-shared-file-copy-proof.txt"
     static var documents: URL { URL.documentsDirectory }
@@ -328,6 +355,18 @@ struct TaskFileViewerFixtureScreen: View {
                     Text("Project role: " + (store.nativeConversationTeamCache?.boundary.projects[source.string("project_id")]?.role ?? "unavailable")).accessibilityIdentifier("fileViewerRole")
                     if TaskFileViewerFixture.selectionTesting {
                         Button("Open file capture") { files = store.fileUploadRequest(taskID: source.id) }.accessibilityIdentifier("fileSelectionOpen")
+                    }
+                    if TaskFileViewerFixture.refreshTesting {
+                        Button("Prepare saved recovery proof") {
+                            Task {
+                                do {
+                                    guard let request = store.fileUploadRequest(taskID: source.id) else { return }
+                                    let model = try store.fileUploadModel(request); await model.load()
+                                    if model.pending == nil { await model.choose(Data("original recovery".utf8), name: "Original recovery.txt", type: "text/plain") }
+                                    model.close(); files = request
+                                } catch { proof = "Recovery fixture needs review" }
+                            }
+                        }.accessibilityIdentifier("fileRefreshOpen")
                     }
                     Button("Open task details") {
                         opening = TaskEditorOpening(task: source, admission: store.editorAdmission(source))
