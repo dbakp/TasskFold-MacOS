@@ -13,3 +13,8 @@ The native test uses the actual file sheet/model and encrypted journal. A second
 Reproduce after the storage-floor check with the own Swift package filter `TaskFileUploadTests|TeamTemplateCommandTests|TeamOrganizationCommandTests`. For isolated native acceptance use `testTaskFileNativeStaleRecoveryRefreshAndColdReturn` on the owned phone/tablet products; normal publication stays disabled. Preserve concise evidence before pruning obsolete test results.
 
 The phone and iPad stale-state screenshots were visually checked: the refresh explanation, preserved original name/size and private-copy action are readable. Native tests assert the stale mutation controls are disabled; screenshots alone are not treated as proof of their behavior.
+
+
+### 2 November 2026 · Account-cache oracle correction
+
+An audit found that the iOS `audioTaskRows` helper compared an unrelated generic `ui-testing.json` fixture cache while the active TeamEditor account uses its UUID cache filename. Earlier assertions made through that helper do not establish active-task preservation. Independent UI, exact-byte and encrypted-vault proofs keep their original scope. The helper now selects the explicit account cache without fallback; corrected phone/iPad reacceptance is tracked in [the current audit](../task-file-workspace-sync/oracle-audit.json).

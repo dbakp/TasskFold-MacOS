@@ -1,0 +1,104 @@
+{
+  "reviewed": "2026-11-02",
+  "scope": "Only these exact task-owned completed/interrupted results and duplicate attachment exports. Structured reports, original outcome logs in compressed form, inspected screenshots and source/signing digests retained. Current reusable hosts/products, both devices, all Docker data and the tiny preserved encrypted original archive are kept.",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-cache-reaccept-phone-v4.xcresult",
+      "allocatedBytes": 237285376
+    },
+    {
+      "path": "/tmp/taskfold-cache-reaccept-phone-v5.xcresult",
+      "allocatedBytes": 185962496
+    },
+    {
+      "path": "/tmp/taskfold-cache-reaccept-phone-v6.xcresult",
+      "allocatedBytes": 103407616
+    },
+    {
+      "path": "/tmp/taskfold-cache-reaccept-phone-v7.xcresult",
+      "allocatedBytes": 95711232
+    },
+    {
+      "path": "/tmp/taskfold-cache-reaccept-phone-v8.xcresult",
+      "allocatedBytes": 95137792
+    },
+    {
+      "path": "/tmp/taskfold-cache-reaccept-phone-v10.xcresult",
+      "allocatedBytes": 13783040
+    },
+    {
+      "path": "/tmp/taskfold-cache-reaccept-ipad-v10.xcresult",
+      "allocatedBytes": 1290240
+    },
+    {
+      "path": "/tmp/taskfold-workspace-native-phone-v1.xcresult",
+      "allocatedBytes": 62173184
+    },
+    {
+      "path": "/tmp/taskfold-workspace-native-phone-v2.xcresult",
+      "allocatedBytes": 1695744
+    },
+    {
+      "path": "/tmp/taskfold-workspace-native-ipad-v2.xcresult",
+      "allocatedBytes": 1945600
+    },
+    {
+      "path": "/tmp/taskfold-workspace-native-phone-publish-v4.xcresult",
+      "allocatedBytes": 1765376
+    },
+    {
+      "path": "/tmp/taskfold-workspace-native-ipad-publish-v4b.xcresult",
+      "allocatedBytes": 1998848
+    },
+    {
+      "path": "/tmp/taskfold-workspace-native-phone-stop-v3.xcresult",
+      "allocatedBytes": 1273856
+    },
+    {
+      "path": "/tmp/taskfold-workspace-native-ipad-stop-v3.xcresult",
+      "allocatedBytes": 1515520
+    },
+    {
+      "path": "/tmp/taskfold-workspace-phone-failed-v3-attachments",
+      "allocatedBytes": 4407296
+    },
+    {
+      "path": "/tmp/taskfold-workspace-phone-stop-v3-attachments",
+      "allocatedBytes": 401408
+    },
+    {
+      "path": "/tmp/taskfold-workspace-phone-publish-v4-screenshots",
+      "allocatedBytes": 405504
+    },
+    {
+      "path": "/tmp/taskfold-workspace-ipad-publish-v4b-screenshots",
+      "allocatedBytes": 618496
+    },
+    {
+      "path": "/tmp/taskfold-workspace-ipad-stop-v3-screenshots",
+      "allocatedBytes": 618496
+    },
+    {
+      "path": "/tmp/taskfold-cache-phone-v6-failure",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-cache-phone-v6-attachments",
+      "allocatedBytes": 92254208
+    },
+    {
+      "path": "/tmp/taskfold-cache-phone-v7-attachments",
+      "allocatedBytes": 92241920
+    },
+    {
+      "path": "/tmp/taskfold-cache-phone-v10-screenshots",
+      "allocatedBytes": 3588096
+    }
+  ],
+  "allocatedBytesReclaimed": 999485440,
+  "freeBytesAfter": 33582694400,
+  "ownSimulatorsRestored": true,
+  "remainingTaskfoldAppProcesses": 0,
+  "oldV3ResultReclaimedEarlierNotCountedHere": 65552384,
+  "goalStillActive": true
+}

@@ -13,3 +13,8 @@ Actual ordinary workspace sync after publication is still unaccepted: the isolat
 The current signed phone build passes the real local provider publication/lost-reply/Check status/cold/explicit-clear recheck (one native case plus twelve independent driver assertions). The original bytes and single server attachment agree, maintenance preserves the publication, and the driver removes all owned resources and disposable configuration and restores the phone Simulator. This does not establish ordinary workspace sync.
 
 The current iPad read-only viewer/cold/verified-download/access-withdrawal/Close case also passes without queued task changes. Its retained screenshot shows the explicit Refresh shared files control, readable notice and file row in the existing sheet styling. This establishes the observed layout and existing read-only journey, not the refresh action’s full workspace transport.
+
+
+### 2 November 2026 · Account-cache oracle correction
+
+An audit found that the iOS `audioTaskRows` helper compared an unrelated generic `ui-testing.json` fixture cache while the active TeamEditor account uses its UUID cache filename. Earlier assertions made through that helper do not establish active-task preservation. Independent UI, exact-byte and encrypted-vault proofs keep their original scope. The helper now selects the explicit account cache without fallback; corrected phone/iPad reacceptance is tracked in [the current audit](../task-file-workspace-sync/oracle-audit.json).

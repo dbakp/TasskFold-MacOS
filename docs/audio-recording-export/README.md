@@ -99,3 +99,8 @@ genuine microphone/speaker/TCC/interruption tests, and shared/private server med
 delivery. The user's genuine audio test stays deferred. App Store signing and
 other previously tabled rollout work remain tabled. This advances recording
 backup custody without claiming audio comments or the overall Px goal complete.
+
+
+### 2 November 2026 · Explicit fixture cache identity
+
+Source review confirms these recording fixtures call startLocal, so their active cache is ui-testing.json and their original task-preservation comparisons used the correct local workspace. Shared-file fixtures stay signed in and use the account UUID cache instead. The test helper now requires each caller to name the expected identity. Recording move/delete positive controls rejected an overly broad UUID-default change during this audit. Rechecks are tracked in the [current audit](../task-file-workspace-sync/oracle-audit.json).

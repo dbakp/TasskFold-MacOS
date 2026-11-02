@@ -43,8 +43,26 @@ Deno.serve(
     port: 0,
     onListen: ({ port }) => console.log(JSON.stringify({ ready: port })),
   },
-  (request) =>
-    new URL(request.url).pathname === "/maintenance"
-      ? maintenance(request)
-      : handler(request),
+  (request) => {
+    const path = new URL(request.url).pathname;
+    if (
+      input.workspace === true &&
+      (path.startsWith("/rest/v1/") || path === "/auth/v1/user")
+    ) {
+      return fetch(
+        new Request(
+          "http://127.0.0.1:" + input.port + "/native" + path +
+            new URL(request.url).search,
+          {
+            method: request.method,
+            headers: request.headers,
+            body: request.body,
+            signal: request.signal,
+            redirect: "error",
+          },
+        ),
+      );
+    }
+    return path === "/maintenance" ? maintenance(request) : handler(request);
+  },
 );

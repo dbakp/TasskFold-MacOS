@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Shared-file refresh and pending edits",
-  "latest": "Fixed two file-refresh gaps: Stop discovering a published upload now refreshes through Store, and queued older attachment edits keep remote file additions visible. Shared files also offers explicit refresh. Each repo passes 179 focused Core checks. Ordinary full sync, real account/window changes, hosted Auth and Mac runtime remain open; normal use stays disabled and curated totals are unchanged.",
+  "focus": "P2 · Normal file sync verified; iPad rechecks open",
+  "latest": "Normal file sync now passes on iPhone and iPad, including lost-reply recovery, Stop and cold return against the local service. Seven phone recording/file workflows now check the correct saved workspace. Additional iPad checks remain open after a Simulator issue. Genuine sign-in/full-schema and Mac runtime acceptance remain open. No deployment or ordinary-use enablement; curated totals are unchanged.",
   "next": [
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
-    "Accept ordinary task refresh after file publication, genuine account and window changes, background recovery, Mac file runtime and accessibility. Scoped mobile publishing/Stop and cold recovery now pass against real local Storage; full migration history, hosted Auth/S3 and broader file/audio/legacy work remain.",
+    "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
   "stages": [
@@ -549,7 +549,7 @@
             {
               "state": "verify",
               "title": "Audio comments: full app and recovery integration",
-              "detail": "Many screen and data checks pass. Normal entry points remain disabled until recovery and access/storage checks are complete."
+              "detail": "Seven phone recording/file flows now use explicit saved-workspace identities. Earlier local iPad recording evidence retains its correct scope; current iPad picker/cache rechecks remain unaccepted after Simulator waits. Shared publishing, Mac runtime and wider recovery/access/storage checks remain; normal entry points stay disabled."
             },
             {
               "state": "verify",
@@ -772,7 +772,9 @@
             "task-file-native-provider/README.md",
             "task-file-native-provider/verification.json",
             "task-file-handoff/README.md",
-            "task-file-handoff/verification.json"
+            "task-file-handoff/verification.json",
+            "task-file-workspace-sync/README.md",
+            "task-file-workspace-sync/oracle-audit.json"
           ],
           "focus": true
         },
@@ -865,13 +867,16 @@
     "task-file-native-provider/README.md",
     "task-file-native-provider/verification.json",
     "task-file-handoff/README.md",
-    "task-file-handoff/verification.json"
+    "task-file-handoff/verification.json",
+    "task-file-workspace-sync/README.md",
+    "task-file-workspace-sync/oracle-audit.json",
+    "task-file-workspace-sync/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "3396498e5e167c0a580e44f8b6caf15c8de6b10a4b6e4002ea076db91d537d39",
+    "P2_PLAN.md": "4bc7430eaffce812e10e16cf6086893ad89949c9a22ec46c97151aeac02651a8",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -994,15 +999,18 @@
     "task-file-client/verification.json": "11cfb240b700e3bc8950708066d553853ca5a272e83b89990c60947bedde95dc",
     "task-file-custody/verification.json": "2d8b4b3c3a0628ee62101f49e34e2338f13086f6cdcb5be1449ae90ed8fc8d7f",
     "task-file-dialogs/verification.json": "124651895876bebb8c86c54bbf79356554c2d0d0704bce2aed7cd750f69c3456",
-    "task-file-handoff/README.md": "5556f5d36b1997eb817db72339dee2c096b6ff48e360340c1b476e9293363ae6",
+    "task-file-handoff/README.md": "0dd84b39367be45cd5f22a4f6d7a61d85582f1c68d96cfd19656048cf0de6619",
     "task-file-handoff/verification.json": "0da3013d3829e75a336bd8592b89c23bb606c6e460f1870010a7e709b67ebb08",
-    "task-file-native-provider/README.md": "69a3a1d517db0030e979932d61a03a0749aa8c1cf2725d45cdaa7ac8a8556a59",
+    "task-file-native-provider/README.md": "c16bc60350e9966256f14d168944db7afca884318f4cf9e8f161b7f462afc4fe",
     "task-file-native-provider/verification.json": "4af1118467b445fdef5555b6e52d683762ae888eb85ef8ebe796db25da567a44",
     "task-file-provider/verification.json": "42a0e298e30eb528500d8a50af68576bed8d78f4e66674d5990b7f94587f6fdf",
     "task-file-refresh/verification.json": "0c6fd6b2c7dbeeca8be903f00099c2170f77cc1401f2d3d4ce9fb26f74aec09b",
     "task-file-sender-stop/verification.json": "76ab1a41fd6124e7cbe09c9b39ab254c4ae173f94326f5d3873be37e6ab1b3ce",
     "task-file-upload/verification.json": "2899a10ed359753a2a7dc932986757241d4d84b067794b2dcc8183ed0ce564e7",
     "task-file-viewer/verification.json": "0611959d11e3039666985463e190bb018e71206766dfaf4ce1f585cc0a143f8f",
+    "task-file-workspace-sync/README.md": "f972df69827d10adaf8205cf7f3098450461ccb3fcde55ef082b74383989bd5c",
+    "task-file-workspace-sync/oracle-audit.json": "6809c719fc359ff0a33c2cf3f3d807ec7626f3237842f5bed6990e6a274c3178",
+    "task-file-workspace-sync/verification.json": "61c9fd3a1d07534cf1fdf2ee7c7a6bcbc5218cf0a801b10620bbe323362e6eed",
     "transfer-redo/README.md": "566c6d5c8827e2da94797158156107ef355553eb6906a3e7a46ddf19bd76b2ac",
     "transfer-redo/verification.json": "9f0d45307cfa830c3af3934e43556f3ee217066994a6d542eca773381d45f6b0"
   }

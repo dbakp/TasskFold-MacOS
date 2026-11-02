@@ -1,0 +1,13 @@
+{
+  "reviewed": "2026-11-02",
+  "scope": "Cold normal workspace refresh after publication/Stop. Phone sheet readable; iPad modal readable and vertically scrollable. These screenshots do not establish speech, largest text, multiple windows or Mac runtime acceptance.",
+  "files": {
+    "phone-import-cold.png": "f184b3b4493251e8afd8067d7331dcc59d4eda539ff325be9b81dc01b4868bd6",
+    "phone-publish.png": "ba455e2bfbc106d55ea2993c5913badaf479dec9ddf7da92792f0c53adb96bfe",
+    "phone-stop.png": "c27b134dc3b84ad109a347c5583b6d2133cb8c2f49742a222829888e0dea1139",
+    "ipad-stop.png": "99e0dae49588c85fc1e1fe095bb0b67bd0515e605113386ff05d873ea9ffbf74",
+    "ipad-publish.png": "79f803f991837dfeb7cbca7e8531e721793af1039850fecd0ea651fb100a2460",
+    "phone-export-cold.png": "287b0ec844b4c71b2ba2d491768a506937134be62c2d694bcfae6f94f0bdba5b"
+  },
+  "recordingScope": "Phone cold separate recording copy after real import review/Cancel/Save; exporter delivery separately accepted. Screenshot does not replace byte/cache assertions."
+}

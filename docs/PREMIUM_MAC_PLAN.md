@@ -10363,3 +10363,15 @@ The real native file sheet now publishes and recovers against actual local handl
 ### 2 November 2026 · Shared-file refresh and pending-edit preservation
 
 Both apps now refresh through the owning Store after every durable published file receipt, including Stop discovering a committed upload. The shared-file list also offers an explicit refresh. A regression exposed an older queued attachment edit hiding remote additions during reads; the display projection now preserves them beside the local delta, without changing the original request or server guards. Each repo passes 179 focused Core tests, with three new cases. Ordinary full-sync/native account/window/Mac/accessibility acceptance and broader media/migration remain open. No normal-use enablement or hosted deployment; curated totals are unchanged. See [scope and evidence](task-file-handoff/README.md).
+
+
+### 2 November 2026 · Normal workspace sync after shared-file publication
+
+- [x] Exercise the ordinary Store.sync/read/merge/persist pipeline against actual local SQL, authenticated-role RLS and Storage in the exact isolated DEBUG fixture. The additional flag leaves normal-use gates unchanged.
+- [x] Verify publication after a lost final acknowledgement and Stop before publication independently on iPhone and iPad. Each cold return performs a fresh SQL read. Published attachment identities match SQL, unpublished Stop leaves the task unchanged, exact original downloads match, and provider cleanup is confirmed.
+- [x] Independently pass 25 workspace read/boundary checks and 56 existing provider regressions in each repo. Both current app/runner products build and pass strict signing checks.
+- [x] Reaccept seven named phone recording/file cases against explicit workspace identities: five unchanged v5 methods, export v6 and import v10. Real Files review/cancellation/copy, exact bytes, task preservation and cold checks remain; failed mixed runs retain their outcomes.
+- [ ] Finish current iPad dialog/cache reacceptance. The affected-five run was interrupted before any completed case after repeated 60-second system-animation waits; refreshing only its owned pointer helper did not resolve them. Its app is closed and simulator restored. Do not repeat this broad run against the unchanged runtime condition. Original local recording evidence retains its correct scope; four separate normal-sync mobile flows remain accepted.
+- [ ] Genuine Auth/PostgREST/full-schema acceptance, new-account migration and queued-edit sync, actual account/window/background transitions, Mac runtime, speech/largest text and broader file/audio/legacy migration remain open.
+
+The cache audit corrected signed-in shared-file tests that had read an unrelated local cache. Recording fixtures intentionally use that local cache; their original checks keep their recorded scope. Every caller now names its expected workspace without a default or fallback. Test positive controls rejected an over-broad UUID correction. See [evidence, attempt history and scope](task-file-workspace-sync/README.md). No hosted deployment, scheduler or normal-use enablement. Curated dashboard totals remain unchanged.

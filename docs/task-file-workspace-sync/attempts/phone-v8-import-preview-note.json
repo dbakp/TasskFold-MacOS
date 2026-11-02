@@ -1,0 +1,6 @@
+{
+  "reviewed": "2026-11-02",
+  "accepted": false,
+  "finding": "Exact filename cell exists; decorative preview image frame is visibly within the Files content. XCTest image.isHittable is false, so no tap/selection occurs. Next source uses a coordinate tap at that exact image center after ownership and bounds guards; no file/data/review assertion is removed.",
+  "sourcePhase": "workspace-sync-v8"
+}

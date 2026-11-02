@@ -102,3 +102,8 @@ private server publication/access and genuine recording/playback/TCC/spoken chec
 remain open. The user's media, provider, rollout and distribution deferrals are
 unchanged. This connects the app candidate; it does not complete audio comments
 or the whole Px objective.
+
+
+### 2 November 2026 · Explicit fixture cache identity
+
+Source review confirms these recording fixtures call startLocal, so their active cache is ui-testing.json and their original task-preservation comparisons used the correct local workspace. Shared-file fixtures stay signed in and use the account UUID cache instead. The test helper now requires each caller to name the expected identity. Recording move/delete positive controls rejected an overly broad UUID-default change during this audit. Rechecks are tracked in the [current audit](../task-file-workspace-sync/oracle-audit.json).

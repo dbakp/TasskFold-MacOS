@@ -1,0 +1,57 @@
+{
+  "device": "phone",
+  "acceptedCases": {
+    "testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn": {
+      "sourcePhase": "workspace-sync-v5",
+      "result": "Passed",
+      "durationSeconds": 230.50622701644897
+    },
+    "testTaskEditorInboxAndProjectRecordingsPersistOutsideTaskData": {
+      "sourcePhase": "workspace-sync-v5",
+      "result": "Passed",
+      "durationSeconds": 276.7000799179077
+    },
+    "testSharedFileNativeCopyCancelSaveAndColdReadback": {
+      "sourcePhase": "workspace-sync-v5",
+      "result": "Passed",
+      "durationSeconds": 53.31483209133148
+    },
+    "testTaskFileNativeSelectionCancelAndPrivateCopy": {
+      "sourcePhase": "workspace-sync-v5",
+      "result": "Passed",
+      "durationSeconds": 57.54125702381134
+    },
+    "testTaskFileNativeStaleRecoveryRefreshAndColdReturn": {
+      "sourcePhase": "workspace-sync-v5",
+      "result": "Passed",
+      "durationSeconds": 35.942306995391846
+    },
+    "testRecordingBackupCancelSaveReadbackAndColdReturn": {
+      "sourcePhase": "workspace-sync-v6",
+      "result": "Passed"
+    },
+    "testRecordingBackupImportReviewCancelSaveAndColdReturn": {
+      "sourcePhase": "workspace-sync-v10",
+      "result": "Passed"
+    }
+  },
+  "mixedRunSummary": {
+    "passed": 5,
+    "failed": 2,
+    "skipped": 0,
+    "wholeRunAccepted": false
+  },
+  "navigatorOnlyRerun": true,
+  "implicitCacheFallback": false,
+  "exportRerunWholeRunAccepted": false,
+  "unchangedMethodsSHA256": {
+    "testRecordingBackupCancelSaveReadbackAndColdReturn": "7ca4bcedb70f212198463ff8264feacb2ba3198a7638c6c217be4fb559b6d5a8",
+    "testPrivateRecordingLibrarySurvivesTaskMoveRemovalAndColdReturn": "8052689a4566853c29744639296a38577d332e19a242d2d430103a8805a0c784",
+    "testTaskEditorInboxAndProjectRecordingsPersistOutsideTaskData": "478bd57900b3f469f8bb5aacd221cabc30467ecac9812b573610678386b49ac6",
+    "testSharedFileNativeCopyCancelSaveAndColdReadback": "ec452171ca299c71e1b681aea639493c9b8a43dbea45c2708831983e2f05a0d4",
+    "testTaskFileNativeSelectionCancelAndPrivateCopy": "8ff0069c4239c0a366328878e6e10fc01366db164b8ab75e2040facdd83855c3",
+    "testTaskFileNativeStaleRecoveryRefreshAndColdReturn": "89cfbd3bed650b1b4c0c99a0547e5a1e115768f2d77bdecd9d94deaa9ed3ce81"
+  },
+  "explicitCacheHelperSHA256": "5e467271a5389708d36664c1ae50c770b622e2364e6f4e7dfbdad257887bfbda",
+  "uniqueOwnedContainerVerified": true
+}

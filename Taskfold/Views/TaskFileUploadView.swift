@@ -368,6 +368,10 @@ struct TaskFileViewerFixtureScreen: View {
                     if TaskFileViewerFixture.selectionTesting {
                         Button("Open file capture") { files = store.fileUploadRequest(taskID: source.id) }.accessibilityIdentifier("fileSelectionOpen")
                     }
+                    if TaskFileNativeProviderFixture.workspaceTesting {
+                        Button("Refresh actual workspace") { Task { await store.sync() } }.disabled(store.syncing).accessibilityIdentifier("fileWorkspaceSync")
+                        Text(store.syncing ? "Syncing workspace" : store.lastSync == nil ? "Workspace not synced" : "Workspace synced").accessibilityIdentifier("fileWorkspaceState")
+                    }
                     if TaskFileNativeProviderFixture.enabled {
                         Button("Prepare publication proof") {
                             Task {
@@ -403,7 +407,7 @@ struct TaskFileViewerFixtureScreen: View {
                                       let attachment = store.fileUploadAttachments(request).first else { throw CancellationError() }
                                 let before = store.snapshot
                                 let bytes = try await store.downloadFile(attachment, request: request)
-                                proof = bytes == Data("hello".utf8) && before.tables == store.snapshot.tables && before.pending == store.snapshot.pending ? "Verified bytes; saved tasks unchanged" : "Unexpected change"
+                                proof = bytes == Data((TaskFileNativeProviderFixture.workspaceTesting ? "Native provider original" : "hello").utf8) && before.tables == store.snapshot.tables && before.pending == store.snapshot.pending ? "Verified bytes; saved tasks unchanged" : "Unexpected change"
                             } catch { proof = "Read refused" }
                         }
                     }.accessibilityIdentifier("fileViewerVerifyDownload")
@@ -429,6 +433,7 @@ struct TaskFileViewerFixtureScreen: View {
 /// Exact isolated host only. Disposable user token, never a service key.
 @MainActor enum TaskFileNativeProviderFixture {
     static var enabled: Bool { TaskFileViewerFixture.selectionTesting && ProcessInfo.processInfo.arguments.contains("--file-provider-native-testing") }
+    static var workspaceTesting: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--file-workspace-sync-testing") }
     static var auditURL: URL { URL.documentsDirectory.appendingPathComponent("taskfold-file-provider-native-audit.json") }
     static func observe(_ value: [String: Any]) {
         guard enabled else { return }
@@ -449,10 +454,24 @@ struct TaskFileViewerFixtureScreen: View {
     }
     static func reply(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let config = try configuration()
-        guard request.httpMethod == "POST", request.url?.scheme == "https", request.url?.host == "synthetic.example",
-              request.url?.path == "/functions/v1/task-files", let parts = URLComponents(url: request.url!, resolvingAgainstBaseURL: false),
-              parts.queryItems?.count == 1, let action = parts.queryItems?.first, action.name == "action", ["publish", "resolve", "cancel", "download"].contains(action.value ?? ""),
+        guard let source = request.url, source.scheme == "https", source.host == "synthetic.example",
+              source.user == nil, source.password == nil, source.fragment == nil,
               request.value(forHTTPHeaderField: "Authorization") == "Bearer " + config.token else { throw CancellationError() }
+        let workspace = workspaceTesting && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")
+        let target: URL, action: String?
+        if workspace {
+            guard request.httpMethod == "GET" || (request.httpMethod == "POST" && source.path == "/rest/v1/rpc/taskfold_workspace_boundary"),
+                  request.value(forHTTPHeaderField: "apikey") == "synthetic-public",
+                  var parts = URLComponents(url: config.url, resolvingAgainstBaseURL: false),
+                  let original = URLComponents(url: source, resolvingAgainstBaseURL: false) else { throw CancellationError() }
+            parts.path = source.path; parts.percentEncodedQuery = original.percentEncodedQuery
+            guard let url = parts.url else { throw CancellationError() }; target = url; action = nil
+        } else {
+            guard request.httpMethod == "POST", source.path == "/functions/v1/task-files",
+                  let parts = URLComponents(url: source, resolvingAgainstBaseURL: false), parts.queryItems?.count == 1,
+                  let item = parts.queryItems?.first, item.name == "action", ["publish", "resolve", "cancel", "download"].contains(item.value ?? "") else { throw CancellationError() }
+            action = item.value; target = config.url.appending(queryItems: [.init(name: "action", value: item.value)])
+        }
         var body = request.httpBody ?? Data()
         if request.httpBody == nil, let stream = request.httpBodyStream {
             stream.open(); defer { stream.close() }; var chunk = [UInt8](repeating: 0, count: 262144)
@@ -463,17 +482,18 @@ struct TaskFileViewerFixtureScreen: View {
             }
         }
         guard body.count <= TaskFileUploadJournal.maximumStoredBytes else { throw CancellationError() }
-        let target = config.url.appending(queryItems: [.init(name: "action", value: action.value)])
-        var forwarded = URLRequest(url: target); forwarded.httpMethod = "POST"; forwarded.httpBody = body; forwarded.timeoutInterval = 30
-        forwarded.setValue("application/json", forHTTPHeaderField: "Content-Type"); forwarded.setValue("Bearer " + config.token, forHTTPHeaderField: "Authorization")
+        var forwarded = URLRequest(url: target); forwarded.httpMethod = request.httpMethod; forwarded.timeoutInterval = 30
+        if request.httpMethod == "POST" { forwarded.httpBody = body; forwarded.setValue("application/json", forHTTPHeaderField: "Content-Type") }
+        forwarded.setValue("Bearer " + config.token, forHTTPHeaderField: "Authorization")
+        if workspace { forwarded.setValue("synthetic-public", forHTTPHeaderField: "apikey") }
         let settings = URLSessionConfiguration.ephemeral; settings.protocolClasses = []; settings.httpCookieStorage = nil; settings.urlCache = nil
         let session = URLSession(configuration: settings); defer { session.invalidateAndCancel() }
         let (bytes, response) = try await session.bytes(for: forwarded, delegate: TaskFileNativeRedirectRefusal.shared)
         guard let response = response as? HTTPURLResponse, response.url == target else { throw CancellationError() }
-        var result = Data(); let maximum = action.value == "download" ? TaskFileUploadJournal.maximumBytes : 64000
+        var result = Data(); let maximum = workspace ? 4_194_304 : action == "download" ? TaskFileUploadJournal.maximumBytes : 64000
         for try await byte in bytes { try Task.checkCancellation(); guard result.count < maximum else { throw CancellationError() }; result.append(byte) }
         let headers = response.allHeaderFields.reduce(into: [String: String]()) { if let key = $1.key as? String, let value = $1.value as? String { $0[key] = value } }
-        guard let delivered = HTTPURLResponse(url: request.url!, statusCode: response.statusCode, httpVersion: nil, headerFields: headers) else { throw CancellationError() }
+        guard let delivered = HTTPURLResponse(url: source, statusCode: response.statusCode, httpVersion: nil, headerFields: headers) else { throw CancellationError() }
         return (result, delivered)
     }
 }
@@ -502,7 +522,10 @@ final class TaskFileNativeProviderProtocol: URLProtocol, @unchecked Sendable {
     private let workerLock = NSLock()
     private var worker: Task<Void, Never>?
     private var stopped = false
-    override class func canInit(with request: URLRequest) -> Bool { request.url?.scheme == "https" && request.url?.host == "synthetic.example" && request.url?.path == "/functions/v1/task-files" }
+    override class func canInit(with request: URLRequest) -> Bool {
+        guard let url = request.url, url.scheme == "https", url.host == "synthetic.example" else { return false }
+        return url.path == "/functions/v1/task-files" || (ProcessInfo.processInfo.arguments.contains("--file-workspace-sync-testing") && (url.path.hasPrefix("/rest/v1/") || url.path == "/auth/v1/user"))
+    }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         let value = Task { @MainActor in

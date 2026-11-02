@@ -1,0 +1,97 @@
+{
+  "platform": "ipad",
+  "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "bundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+  "initialState": "Shutdown",
+  "cases": [
+    "testRecordingBackupImportReviewCancelSaveAndColdReturn",
+    "testRecordingBackupCancelSaveReadbackAndColdReturn",
+    "testSharedFileNativeCopyCancelSaveAndColdReadback",
+    "testTaskFileNativeSelectionCancelAndPrivateCopy",
+    "testTaskFileNativeStaleRecoveryRefreshAndColdReturn"
+  ],
+  "cacheAccounts": {
+    "testRecordingBackupImportReviewCancelSaveAndColdReturn": "ui-testing",
+    "testRecordingBackupCancelSaveReadbackAndColdReturn": "ui-testing",
+    "testSharedFileNativeCopyCancelSaveAndColdReadback": "ec240000-0000-4000-8000-000000000001",
+    "testTaskFileNativeSelectionCancelAndPrivateCopy": "ec240000-0000-4000-8000-000000000001",
+    "testTaskFileNativeStaleRecoveryRefreshAndColdReturn": "ec240000-0000-4000-8000-000000000001"
+  },
+  "implicitCacheFallback": false,
+  "testSourceSHA256": "b82ad362dc5e902cc01a3dc0be07a6ddf60c3e27774065c4844ddd07e6b25af7",
+  "command": [
+    "xcodebuild",
+    "-project",
+    "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
+    "-scheme",
+    "Taskfold",
+    "-configuration",
+    "Debug",
+    "-derivedDataPath",
+    "/tmp/taskfold-prepared-undo-signed-ios-build",
+    "-destination",
+    "platform=iOS Simulator,id=3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+    "-parallel-testing-enabled",
+    "NO",
+    "-collect-test-diagnostics",
+    "never",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testRecordingBackupImportReviewCancelSaveAndColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testRecordingBackupCancelSaveReadbackAndColdReturn",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testSharedFileNativeCopyCancelSaveAndColdReadback",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testTaskFileNativeSelectionCancelAndPrivateCopy",
+    "-only-testing:TaskfoldUITests/TaskfoldUITests/testTaskFileNativeStaleRecoveryRefreshAndColdReturn",
+    "-resultBundlePath",
+    "/tmp/taskfold-cache-reaccept-ipad-v10.xcresult",
+    "test-without-building"
+  ],
+  "xcodeExitCode": 75,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+          "deviceName": "iPad Pro 13-inch (M5)",
+          "modelName": "iPad Pro 13-inch (M5)",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 1,
+        "passedTests": 0,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 1,
+    "finishTime": 1793629300.635,
+    "passedTests": 0,
+    "result": "Failed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793628609.209,
+    "statistics": [],
+    "testFailures": [
+      {
+        "failureText": "Testing was canceled",
+        "targetName": "TaskfoldUITests",
+        "testIdentifier": 1,
+        "testIdentifierString": "TaskfoldUITests/testRecordingBackupCancelSaveReadbackAndColdReturn()",
+        "testIdentifierURL": "test://com.apple.xcode/Taskfold/TaskfoldUITests/TaskfoldUITests/testRecordingBackupCancelSaveReadbackAndColdReturn",
+        "testName": "testRecordingBackupCancelSaveReadbackAndColdReturn()"
+      }
+    ],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "error": "",
+  "ownedSimulatorRestored": true,
+  "logSHA256": "75aa6868dcb824072a3f200d444d876c5e40a410ea8f974e511ff2444a10ac80"
+}

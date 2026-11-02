@@ -23,3 +23,8 @@ Core upload/journal code is unchanged from the preceding 66-check run; that resu
 Run `python3 Scripts/check_test_storage.py --path /tmp` first (20 GiB floor). Reuse the isolated current-source app/runner products and owned iPhone/iPad simulators, serializing heavy jobs. Execute `testSharedFileNativeCopyCancelSaveAndColdReadback`, `testTaskFileNativeSelectionCancelAndPrivateCopy` and the existing `testSharedFileViewerReadOnlyAndRevokedAccess`. Guard the test scheme, actual compiled test source and signatures before launching; a build-only result is not a native pass. Retain concise reports/screenshots and close the isolated apps afterward.
 
 Only local, synthetic files are accepted here. The importer test never presses Share; the service response used for shared-copy content is injected. Save uses the actual system LocalStorage provider, and the test reads back the returned file URL and bytes independently. Spoken focus and largest text are not accepted by these standard-text, dark-appearance runs.
+
+
+### 2 November 2026 · Account-cache oracle correction
+
+An audit found that the iOS `audioTaskRows` helper compared an unrelated generic `ui-testing.json` fixture cache while the active TeamEditor account uses its UUID cache filename. Earlier assertions made through that helper do not establish active-task preservation. Independent UI, exact-byte and encrypted-vault proofs keep their original scope. The helper now selects the explicit account cache without fallback; corrected phone/iPad reacceptance is tracked in [the current audit](../task-file-workspace-sync/oracle-audit.json).

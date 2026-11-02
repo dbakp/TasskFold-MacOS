@@ -1,0 +1,10 @@
+{
+  "reviewed": "2026-11-02",
+  "device": "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
+  "verifiedOwnedPointerPID": 55855,
+  "verifiedOwnedLaunchdPID": 55679,
+  "action": "SIGTERM only the owned simulator pointer helper after repeated inaccessible-remote-window and 60-second animation waits. No app/test restart, build replacement or data reset.",
+  "appTestOrOtherDevicesRestarted": false,
+  "termDidNotExit": true,
+  "followup": "SIGKILL only the same re-verified isolated pointer helper. It owns no app/test data. App/test and other devices remain untouched."
+}

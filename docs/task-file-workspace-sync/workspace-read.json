@@ -1,0 +1,69 @@
+{
+  "checks": {
+    "actual SQL workspace boundary succeeds": true,
+    "actual project role is editor": true,
+    "actual authenticated table read: projects": true,
+    "actual authenticated table read: sections": true,
+    "actual authenticated table read: labels": true,
+    "actual authenticated table read: tasks": true,
+    "RLS hides the creator private task": true,
+    "actual authenticated table read: profiles": true,
+    "fixture profile read is account scoped": true,
+    "actual authenticated table read: project_collaborators": true,
+    "actual authenticated table read: saved_views": true,
+    "actual authenticated table read: favorites": true,
+    "actual authenticated table read: view_preferences": true,
+    "actual authenticated table read: view_orders": true,
+    "actual authenticated table read: project_templates": true,
+    "actual authenticated table read: reminder_preferences": true,
+    "actual authenticated table read: focus_sessions": true,
+    "actual authenticated table read: task_activity_epoch": true,
+    "actual authenticated table read: task_activity": true,
+    "outsider task read remains empty under actual RLS": true,
+    "invalid token cannot read": true,
+    "expired SQL session cannot read cached role": true,
+    "expired SQL session cannot obtain boundary": true,
+    "withdrawn grant hides actual task": true,
+    "withdrawn grant removes boundary project": true
+  },
+  "genuineAuth": false,
+  "fullSchemaParity": false,
+  "hostedChanges": false,
+  "workspaceCounts": {
+    "boundary": 3,
+    "auth": 0,
+    "tables": {
+      "projects": 1,
+      "sections": 1,
+      "labels": 1,
+      "tasks": 4,
+      "profiles": 1,
+      "project_collaborators": 1,
+      "saved_views": 1,
+      "favorites": 1,
+      "view_preferences": 1,
+      "view_orders": 1,
+      "project_templates": 1,
+      "reminder_preferences": 1,
+      "focus_sessions": 1,
+      "task_activity_epoch": 1,
+      "task_activity": 1
+    },
+    "rejected": 3,
+    "errors": [
+      {
+        "code": "ERR_ASSERTION"
+      },
+      {
+        "code": "28000"
+      },
+      {
+        "code": "28000"
+      }
+    ]
+  },
+  "checkCount": 25,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true
+}

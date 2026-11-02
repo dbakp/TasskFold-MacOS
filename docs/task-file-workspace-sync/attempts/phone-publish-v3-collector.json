@@ -1,0 +1,15 @@
+{
+  "action": "Stopped only owned Xcode collection after the UI case had failed and logged teardown; no running test case restarted",
+  "pid": 17339,
+  "parent": 16750,
+  "elapsed": "07:32",
+  "state": "S",
+  "resultPath": "/tmp/taskfold-workspace-native-phone-publish-v3.xcresult",
+  "terminalUILog": true,
+  "actualWaitingChild": {
+    "pid": 17637,
+    "kind": "simctl diagnose after terminal failed UI case",
+    "configuredTimeoutSeconds": 600
+  },
+  "diagnoseChildStopped": true
+}

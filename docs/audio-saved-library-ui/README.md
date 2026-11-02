@@ -91,3 +91,8 @@ permissions/interruption acceptance remain open. Mac native interaction and
 spoken accessibility acceptance are separate from its successful build/signature
 and controller checks. No release-distribution or feature-complete audio/Px claim
 is made. The user's microphone/speaker permission test remains deferred.
+
+
+### 2 November 2026 · Explicit fixture cache identity
+
+Source review confirms these recording fixtures call startLocal, so their active cache is ui-testing.json and their original task-preservation comparisons used the correct local workspace. Shared-file fixtures stay signed in and use the account UUID cache instead. The test helper now requires each caller to name the expected identity. Recording move/delete positive controls rejected an overly broad UUID-default change during this audit. Rechecks are tracked in the [current audit](../task-file-workspace-sync/oracle-audit.json).

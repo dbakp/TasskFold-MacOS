@@ -79,3 +79,8 @@ driver adds navigation through the observed On My iPad sidebar control. The
 passed phone driver is retained separately as `phone-driver.swift.gz` with its
 binding; no product source changed between the final phone and iPad runs.
 Development signing is not release/distribution acceptance.
+
+
+### 2 November 2026 · Explicit fixture cache identity
+
+Source review confirms these recording fixtures call startLocal, so their active cache is ui-testing.json and their original task-preservation comparisons used the correct local workspace. Shared-file fixtures stay signed in and use the account UUID cache instead. The test helper now requires each caller to name the expected identity. Recording move/delete positive controls rejected an overly broad UUID-default change during this audit. Rechecks are tracked in the [current audit](../task-file-workspace-sync/oracle-audit.json).

@@ -1,0 +1,57 @@
+{
+  "platform": "ios",
+  "mode": "workspace",
+  "checks": {
+    "exact isolated app identifier": true,
+    "actual task generation matches native scope": true
+  },
+  "nativeAuthenticatedLocalProvider": true,
+  "genuineHostedAuth": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "xcodeExitCode": 65,
+  "error": {
+    "message": "native UI case succeeds\n\n65 !== 0\n",
+    "code": "ERR_ASSERTION"
+  },
+  "transportCounts": {
+    "uploads": 0,
+    "downloads": 0,
+    "deletes": 0,
+    "rpc": 0,
+    "auth": 0,
+    "providerErrors": []
+  },
+  "workspaceCounts": {
+    "boundary": 4,
+    "auth": 1,
+    "tables": {
+      "projects": 2,
+      "sections": 2,
+      "labels": 2,
+      "tasks": 2,
+      "profiles": 2,
+      "project_collaborators": 2,
+      "saved_views": 2,
+      "favorites": 2,
+      "view_preferences": 2,
+      "view_orders": 2,
+      "project_templates": 2,
+      "reminder_preferences": 2,
+      "focus_sessions": 2,
+      "task_activity_epoch": 2,
+      "task_activity": 2,
+      "task_assignment_provenance": 2,
+      "task_node_activity_epoch": 4,
+      "task_node_activity": 2
+    },
+    "rejected": 0,
+    "errors": []
+  },
+  "serverOperations": [],
+  "disposableUserConfigurationRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "ownedSimulatorRestored": true
+}

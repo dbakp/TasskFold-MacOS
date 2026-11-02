@@ -1,0 +1,5 @@
+{
+  "reviewed": "2026-11-02",
+  "accepted": false,
+  "finding": "Full filename now below navigation/search; tapping its static-text label still does not close Files. Actual failed state and pre-tap screenshot retained. V8 activates the image inside the exact observed filename cell; review/cancel/save/bytes/cache assertions remain."
+}

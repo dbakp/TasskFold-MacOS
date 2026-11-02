@@ -1,0 +1,223 @@
+{
+  "platform": "ios",
+  "mode": "workspace",
+  "checks": {
+    "exact isolated app identifier": true,
+    "actual task generation matches native scope": true,
+    "native UI case succeeds": true,
+    "one native case accepted without skip": true,
+    "one durable server upload exists": true,
+    "native operation reached actual SQL session": true,
+    "native original hash matches independently": true,
+    "native retries do not duplicate provider POST": true,
+    "native status recovery confirms publication": true,
+    "actual task has one published attachment": true,
+    "independent provider bytes match native original": true,
+    "maintenance preserves committed native publication": true,
+    "saved workspace contains only the RLS-visible task": true,
+    "saved workspace attachment equals actual SQL publication": true,
+    "saved workspace preserves the server description": true,
+    "saved workspace has no invented queued edits": true,
+    "saved workspace carries the actual account boundary": true,
+    "actual boundary read brackets workspace refresh": true,
+    "native Store reads actual table: projects": true,
+    "native Store reads actual table: sections": true,
+    "native Store reads actual table: labels": true,
+    "native Store reads actual table: tasks": true,
+    "native Store reads actual table: profiles": true,
+    "native Store reads actual table: project_collaborators": true,
+    "native Store reads actual table: saved_views": true,
+    "native Store reads actual table: favorites": true,
+    "native Store reads actual table: view_preferences": true,
+    "native Store reads actual table: view_orders": true,
+    "native Store reads actual table: project_templates": true,
+    "native Store reads actual table: reminder_preferences": true,
+    "native Store reads actual table: focus_sessions": true,
+    "native Store reads actual table: task_activity_epoch": true,
+    "native Store reads actual table: task_activity": true
+  },
+  "nativeAuthenticatedLocalProvider": true,
+  "genuineHostedAuth": false,
+  "normalUseEnabled": false,
+  "hostedChanges": false,
+  "xcodeExitCode": 0,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold · Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793601938.895,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793601853.466,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "clientWorkspaceProof": {
+    "taskIDs": [
+      "ec240000-0000-4000-8000-000000000002"
+    ],
+    "attachments": [
+      {
+        "storage_object_id": "59448986-c282-4089-bf83-8364f2bbb073",
+        "size": 24,
+        "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+        "name": "Native provider proof.txt",
+        "type": "text/plain",
+        "uploadedAt": "2026-11-02T06:44:48.493814+00:00",
+        "id": "4bc0c450-c132-457e-83ec-16fa058bdbaf"
+      }
+    ],
+    "pendingCount": 0
+  },
+  "workspaceCounts": {
+    "boundary": 12,
+    "auth": 2,
+    "tables": {
+      "projects": 6,
+      "sections": 6,
+      "labels": 6,
+      "tasks": 6,
+      "profiles": 6,
+      "project_collaborators": 6,
+      "saved_views": 6,
+      "favorites": 6,
+      "view_preferences": 6,
+      "view_orders": 6,
+      "project_templates": 6,
+      "reminder_preferences": 6,
+      "focus_sessions": 6,
+      "task_activity_epoch": 6,
+      "task_activity": 6,
+      "task_assignment_provenance": 6,
+      "task_node_activity_epoch": 12,
+      "task_node_activity": 6
+    },
+    "rejected": 0,
+    "errors": []
+  },
+  "normalStoreSyncInIsolatedFixture": true,
+  "transportCounts": {
+    "uploads": 1,
+    "downloads": 2,
+    "deletes": 0,
+    "rpc": 10,
+    "auth": 4,
+    "providerErrors": []
+  },
+  "checkCount": 33,
+  "storageImage": "supabase/storage-api@sha256:0194c53a03977e8ca0194636a27172158b39e3ae7a5e12da1dca5717086dd849",
+  "serverOperations": [
+    {
+      "state": "published",
+      "intent": {
+        "name": "Native provider proof.txt",
+        "type": "text/plain",
+        "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+        "target": {
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "ec240000-0000-4000-8000-000000000071"
+        },
+        "byte_count": 24,
+        "operation_id": "4bc0c450-c132-457e-83ec-16fa058bdbaf"
+      },
+      "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+      "task_id": "ec240000-0000-4000-8000-000000000002",
+      "team_id": "ec240000-0000-4000-8000-000000000004",
+      "actor_id": "ec240000-0000-4000-8000-000000000001",
+      "object_id": "59448986-c282-4089-bf83-8364f2bbb073",
+      "attachment": {
+        "id": "4bc0c450-c132-457e-83ec-16fa058bdbaf",
+        "name": "Native provider proof.txt",
+        "size": 24,
+        "type": "text/plain",
+        "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+        "uploadedAt": "2026-11-02T06:44:48.493814+00:00",
+        "storage_object_id": "59448986-c282-4089-bf83-8364f2bbb073"
+      },
+      "byte_count": 24,
+      "created_at": "2026-11-02T06:44:48.080067+00:00",
+      "expires_at": "2026-11-02T06:59:48.080067+00:00",
+      "generation": "ec240000-0000-4000-8000-000000000071",
+      "project_id": "ec240000-0000-4000-8000-000000000003",
+      "intent_hash": "33755c584bf85ebb3cc85c8def66588bd32bf755f8f078948f2a5096d8cdd7a7",
+      "object_name": "team-task-files/v1/4bc0c450-c132-457e-83ec-16fa058bdbaf/a1d70a5a-b2e2-46d6-9af9-66c4de87bded",
+      "object_nonce": "a1d70a5a-b2e2-46d6-9af9-66c4de87bded",
+      "operation_id": "4bc0c450-c132-457e-83ec-16fa058bdbaf",
+      "writer_protocol": 1,
+      "provider_cleanup_confirmed_at": null
+    }
+  ],
+  "serviceStatusObservation": {
+    "status": 200,
+    "reply": {
+      "receipt": {
+        "state": "published",
+        "target": {
+          "task_id": "ec240000-0000-4000-8000-000000000002",
+          "team_id": "ec240000-0000-4000-8000-000000000004",
+          "project_id": "ec240000-0000-4000-8000-000000000003",
+          "task_generation": "ec240000-0000-4000-8000-000000000071"
+        },
+        "account": "ec240000-0000-4000-8000-000000000001",
+        "protocol": 1,
+        "attachment": {
+          "id": "4bc0c450-c132-457e-83ec-16fa058bdbaf",
+          "name": "Native provider proof.txt",
+          "size": 24,
+          "type": "text/plain",
+          "sha256": "f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9",
+          "uploadedAt": "2026-11-02T06:44:48.493814+00:00",
+          "storage_object_id": "59448986-c282-4089-bf83-8364f2bbb073"
+        },
+        "operation_id": "4bc0c450-c132-457e-83ec-16fa058bdbaf"
+      }
+    }
+  },
+  "nativeTransportAudit": [
+    {
+      "action": "publish",
+      "code": 1,
+      "domain": "Taskfold.AppFailure",
+      "transportReturned": false
+    },
+    {
+      "action": "resolve",
+      "response": "{\"receipt\":{\"state\":\"published\",\"target\":{\"task_id\":\"ec240000-0000-4000-8000-000000000002\",\"team_id\":\"ec240000-0000-4000-8000-000000000004\",\"project_id\":\"ec240000-0000-4000-8000-000000000003\",\"task_generation\":\"ec240000-0000-4000-8000-000000000071\"},\"account\":\"ec240000-0000-4000-8000-000000000001\",\"protocol\":1,\"attachment\":{\"id\":\"4bc0c450-c132-457e-83ec-16fa058bdbaf\",\"name\":\"Native provider proof.txt\",\"size\":24,\"type\":\"text/plain\",\"sha256\":\"f25d6efc76a3dc560b99c29e8a1b8fef23b17f13510feb1a15420bab7a3f3ff9\",\"uploadedAt\":\"2026-11-02T06:44:48.493814+00:00\",\"storage_object_id\":\"59448986-c282-4089-bf83-8364f2bbb073\"},\"operation_id\":\"4bc0c450-c132-457e-83ec-16fa058bdbaf\"}}",
+      "transportReturned": true,
+      "validatedPhase": "published"
+    }
+  ],
+  "disposableUserConfigurationRemoved": true,
+  "httpClosed": true,
+  "storageRemoved": true,
+  "databaseRemoved": true,
+  "ownedSimulatorRestored": true
+}

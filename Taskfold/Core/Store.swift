@@ -2878,7 +2878,7 @@ final class Store {
         #if DEBUG
         if ChildFieldNativeIdentity.enabled { try? childFieldNativeRefresh(); return }
         if PersonalHeadingNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") { return }
-        if (TeamEditorNativeFixture.enabled && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
+        if (TeamEditorNativeFixture.enabled && !TaskFileNativeProviderFixture.workspaceTesting && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
         #endif
         guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}
         consumeWidgetCompletions()

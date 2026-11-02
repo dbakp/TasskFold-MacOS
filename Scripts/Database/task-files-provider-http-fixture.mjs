@@ -3,7 +3,12 @@ import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { fileURLToPath } from "node:url";
 import { literal as lit } from "./postgres-fixture.mjs";
-export async function createTaskFileProviderHttp(pg, storage, users) {
+export async function createTaskFileProviderHttp(
+  pg,
+  storage,
+  users,
+  workspaceFactory = null,
+) {
   const faults = {
     loseUpload: false,
     failFinalize: false,
@@ -31,8 +36,13 @@ export async function createTaskFileProviderHttp(pg, storage, users) {
       }),
     ]),
   );
+  const workspace = workspaceFactory?.(pg, users, tokens);
   const server = createServer(async (req, res) => {
     try {
+      if (workspace && req.url.startsWith("/native/")) {
+        await workspace.reply(req, res);
+        return;
+      }
       if (req.headers.apikey !== storage.service) throw Error("service key");
       if (req.url === "/auth/v1/user") {
         counts.auth++;
@@ -176,7 +186,11 @@ export async function createTaskFileProviderHttp(pg, storage, users) {
       diagnostics = (diagnostics + c).slice(-3000);
     });
     child.stdin.end(
-      JSON.stringify({ port: server.address().port, service: storage.service }),
+      JSON.stringify({
+        port: server.address().port,
+        service: storage.service,
+        workspace: workspace != null,
+      }),
     );
     const port = await new Promise((resolve, reject) => {
       let data = "";
@@ -240,6 +254,7 @@ export async function createTaskFileProviderHttp(pg, storage, users) {
       tokens,
       close,
       url: "http://127.0.0.1:" + port,
+      workspaceCounts: workspace?.counts,
     };
   } catch (error) {
     await close();
