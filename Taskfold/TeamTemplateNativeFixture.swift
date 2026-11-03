@@ -673,7 +673,7 @@ enum FullSchemaNativeFixture {
         let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:root.appendingPathComponent("config.json")))
         guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
               let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
-              ["initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify"].contains(phase),
+              ["initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
               (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-") && !phase.hasPrefix("field-review-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
         return c
     }
@@ -683,7 +683,7 @@ enum FullSchemaNativeFixture {
         return SymmetricKey(data:SHA256.hash(data:Data((c.nonce.uuidString+account).utf8)))
     }
     @MainActor static func backend()->Backend {
-        FullSchemaNativeNetwork.offline = !["initial","child-queue","structure-queue","field-review-queue","structure-review-queue"].contains(phase)
+        FullSchemaNativeNetwork.offline = !["initial","child-queue","structure-queue","field-review-queue","structure-review-queue","adoption-queue"].contains(phase)
         let c=try? configuration()
         let saved=(try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
         let session=saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil
@@ -719,7 +719,7 @@ enum FullSchemaNativeNetwork {
     static func armDrop(){lock.withLock{drop=true;drops=0}}
     static var dropped:Int {lock.withLock{drops}}
     static func consumeDrop(_ request:URLRequest,_ response:HTTPURLResponse)->Bool {
-        let expected=FullSchemaNativeFixture.phase.hasPrefix("structure-") ? "/rest/v1/rpc/taskfold_edit_child_structure":FullSchemaNativeFixture.phase.hasPrefix("child-") ? "/rest/v1/rpc/taskfold_edit_child_task":"/rest/v1/rpc/taskfold_patch_task"
+        let expected=FullSchemaNativeFixture.phase.hasPrefix("adoption-") ? "/rest/v1/rpc/taskfold_adopt_child_records":FullSchemaNativeFixture.phase.hasPrefix("structure-") ? "/rest/v1/rpc/taskfold_edit_child_structure":FullSchemaNativeFixture.phase.hasPrefix("child-") ? "/rest/v1/rpc/taskfold_edit_child_task":"/rest/v1/rpc/taskfold_patch_task"
         guard request.url?.path==expected,request.httpMethod=="POST",(200..<300).contains(response.statusCode) else{return false}
         return lock.withLock{guard drop else{return false};drop=false;drops+=1;disconnected=true;return true}
     }

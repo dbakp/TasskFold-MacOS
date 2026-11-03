@@ -5,14 +5,14 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Durable offline recovery",
-  "latest": "Field review now waits for an existing workspace sync before comparing current values, with a genuine held-response regression in both apps. Both actual apps verify competing same-child field edits and hierarchy reorders through stale-request refusal, cold recovery, genuine closure proof, offline reviewed replacement and cold confirmation/cache return. Only selected description changes replace remote values; unselected priority, nested content and other remote work survive. Full legacy migration/media and wider cases remain.",
+  "latest": "Both actual apps now migrate a valid legacy hierarchy through their normal reviewed public migration path, with no administrative promotion shortcut. Preserved unsent edits block migration intact; a lost committed reply recovers the original proof after restart. Nested completion metadata, authored identities, opaque data and the remote title survive. Wider historical/media/shared cases remain.",
   "next": [
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
     "Continue wider catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
-    "Extend the genuine full-schema native Store proof into full adoption/legacy migration and further conflict/access races and shared-account/window/background/access-loss directions. Root-description, child-field and whole-branch hierarchy offline/cold exact retry now pass on iPhone and Mac, with cold hierarchy Undo/Redo plus scoped field/hierarchy conflict review; do not repeat it unchanged. Protected Keychain/TLS, file/audio handler integration and pg_net placement review remains.",
+    "Extend the genuine full-schema native Store proof into wider legacy/history/cache migration and further conflict/access races and shared-account/window/background/access-loss directions. Root-description, child-field and whole-branch hierarchy offline/cold exact retry now pass on iPhone and Mac, with cold hierarchy Undo/Redo plus scoped field/hierarchy conflict review; do not repeat it unchanged. Protected Keychain/TLS, file/audio handler integration and pg_net placement review remains.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
   "stages": [
@@ -667,7 +667,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Complete own schema and genuine local APIs now extend into actual iPhone/Mac Store root-edit queues: offline save, committed lost reply, exact cold retry, remote sibling/title preservation and final offline cache pass. Independent child-field and hierarchy journals now pass offline/cold lost-reply recovery, with whole-branch Undo/Redo. Scoped field/hierarchy conflicts now preserve originals, closure proofs and reviewed replacements. Complete adoption/history/media migration, protected storage/TLS and wider lifecycle/accessibility remain. Normal use stays disabled.",
+              "detail": "Complete own schema and genuine local APIs now extend into actual iPhone/Mac Store root-edit queues: offline save, committed lost reply, exact cold retry, remote sibling/title preservation and final offline cache pass. Independent child-field and hierarchy journals now pass offline/cold lost-reply recovery, with whole-branch Undo/Redo. Scoped field/hierarchy conflicts now preserve originals, closure proofs and reviewed replacements. Reviewed valid legacy adoption now passes through actual apps without administrative promotion, including preserved-edit refusal and cold proof recovery. Wider history/media migration, protected storage/TLS and wider lifecycle/accessibility remain. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -747,7 +747,7 @@
                 },
                 {
                   "state": "build",
-                  "title": "Carry older tasks and history into the new storage"
+                  "title": "Carry older tasks/history into new storage: genuine valid-tree migration and cold recovery now pass; wider identities/history remain"
                 },
                 {
                   "state": "build",
@@ -1039,7 +1039,10 @@
             "genuine-conflict-review/verification.json",
             "genuine-conflict-review/field.json",
             "genuine-conflict-review/structure.json",
-            "genuine-conflict-review/attempts.json"
+            "genuine-conflict-review/attempts.json",
+            "genuine-native-adoption/README.md",
+            "genuine-native-adoption/verification.json",
+            "genuine-native-adoption/native.json"
           ],
           "focus": true
         },
@@ -1149,7 +1152,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "a4da6d935637796a40ec25f42998d96794d0cf616352691016a436017d0a6f93",
+    "P2_PLAN.md": "b09ee5e9de6a24f2f6a9c1170ee6b0175d3f0e9b3710e1c057df5370b7a42bba",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1282,6 +1285,9 @@
     "genuine-conflict-review/field.json": "11ffe231ec27a05a416dbc12743f93e9e6a2e5af5f360d1f9020934052a3adc4",
     "genuine-conflict-review/structure.json": "256fff2568ac6ccfd1436bdf62c1b4b3df2d3ccd47c7d4077fbe922d943aea9f",
     "genuine-conflict-review/verification.json": "59fba38d9ea323ad2eb8b025521507777fb677ba92692e7ee8c19b48df73bf16",
+    "genuine-native-adoption/README.md": "e3e8f020e74ee1575878c7aef8789edba0c59b133e71c8f74d3e3337f0d55524",
+    "genuine-native-adoption/native.json": "0ab58e5cb82b6c7af06ffd166f1996cac7cd8d7ba477d9c8d3d6ee9bc593f95c",
+    "genuine-native-adoption/verification.json": "a972343501f104de4790a5081eee5c93af3576f8e4211521ce86f7bf9cb7a345",
     "genuine-store-sync/README.md": "539d1f672860d3ed3ec6ce0bf7b3f86b076c819feea72b56651cb4cd02c0a1f1",
     "genuine-store-sync/attempts.json": "b071d4c956f5e6d8d5f7324e6ad35f657fabacf082bc3ac231361058bc025301",
     "genuine-store-sync/native.json": "2b57caee2dda6224b3c4a935aa63aaa5899fdf07dabc9fec7e0d1658f7c24edf",

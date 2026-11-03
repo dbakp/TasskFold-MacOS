@@ -10,7 +10,7 @@ import {join,resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFullSchemaRuntime} from './full-schema-runtime.mjs';
 const exec=promisify(execFile),[platform,output,mode='root']=process.argv.slice(2);
-assert(['root','child','structure','field-conflict','structure-conflict'].includes(mode));
+assert(['root','child','structure','field-conflict','structure-conflict','adoption'].includes(mode));
 assert(['ios','mac'].includes(platform));assert(/^\/tmp\/taskfold-[^/]+\.json$/.test(output));
 try{await stat(output);throw Error('Preserve previous result')}catch(e){if(e.code!=='ENOENT')throw e}
 const repo=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
@@ -48,7 +48,7 @@ try{
  await command('codesign','--verify','--deep','--strict',product);
  const host=platform==='ios'?'/tmp/taskfold-owner-review-ios-host':'/tmp/taskfold-owner-review-mac-host';
  const mapping={'com.dbakp.taskfold.task':'com.dbakp.taskfold.workflowteststeameditbridge.task','com.taskfold.ios.session':'com.taskfold.workflowteststeameditbridge.session','com.taskfold.recovery.v1':'com.taskfold.workflowteststeameditbridge.recovery','group.com.dbakp.taskfold':'group.com.dbakp.taskfold.workflowteststeameditbridge'};
- const paths=['Taskfold/Core/Store.swift','Taskfold/Core/Backend.swift','Taskfold/Core/Models.swift','Taskfold/Core/TeamWorkspace.swift','Taskfold/TeamTemplateNativeFixture.swift','Taskfold/Core/ChildTaskFieldCommands.swift','Taskfold/Core/ChildTaskCompletionCommands.swift','Taskfold/Core/ChildTaskStructureCommands.swift','Taskfold/Core/ChildTaskStructureRecovery.swift','Taskfold/Core/ChildTaskStructurePresentation.swift','Taskfold/Core/ChildTaskStructureDraft.swift','Taskfold/Core/SubtaskTree.swift','Taskfold/Views/ChildTaskFieldViews.swift',platform==='ios'?'Taskfold/Views/TaskEditor.swift':'Taskfold/Views/TaskInspector.swift'];
+ const paths=['Taskfold/Core/Store.swift','Taskfold/Core/Backend.swift','Taskfold/Core/Models.swift','Taskfold/Core/TeamWorkspace.swift','Taskfold/TeamTemplateNativeFixture.swift','Taskfold/Core/ChildTaskFieldCommands.swift','Taskfold/Core/ChildTaskCompletionCommands.swift','Taskfold/Core/ChildTaskStructureCommands.swift','Taskfold/Core/ChildTaskStructureRecovery.swift','Taskfold/Core/ChildTaskStructurePresentation.swift','Taskfold/Core/ChildTaskStructureDraft.swift','Taskfold/Core/SubtaskTree.swift','Taskfold/Views/ChildTaskFieldViews.swift','Taskfold/Core/ChildTaskAdoption.swift','Taskfold/Core/Backups.swift','Taskfold/Views/ChildTaskAdoptionViews.swift',platform==='ios'?'Taskfold/Views/TaskEditor.swift':'Taskfold/Views/TaskInspector.swift'];
  const executable=join(product,platform==='ios'?'':'Contents/MacOS','Taskfold.debug.dylib');const compiled=await stat(executable);report.sourceSHA256={};
  for(const path of paths){const source=await readFile(join(repo,path),'utf8');let expected=source;for(const [from,to] of Object.entries(mapping))expected=expected.replaceAll(from,to);assert.equal(await readFile(join(host,path),'utf8'),expected,'Prepared host does not match '+path);assert(compiled.mtimeMs>=(await stat(join(host,path))).mtimeMs,'Build does not include the current prepared source');report.sourceSHA256[path]=createHash('sha256').update(source).digest('hex')}
  report.binarySHA256=createHash('sha256').update(await readFile(executable)).digest('hex');
@@ -67,15 +67,42 @@ try{
  assert.equal((await api('/projects',{method:'POST',body:{id:project,user_id:account,name:'Native Store workshop'}})).status,201);
  const children=[{id:child,title:'Original child',subtasks:[],future:{keep:[null,false,'exact']}},{id:sibling,title:'Original sibling',subtasks:[]}];
  if(mode.startsWith('structure'))children[0].subtasks=[{id:randomUUID(),title:'Nested branch content',subtasks:[],future:{keep:[false,null,'nested exact']}}];
+ if(mode==='adoption')children[0].subtasks=[{id:randomUUID(),title:'Completed legacy child',completed:true,completed_at:'2026-10-01T09:00:00Z',subtasks:[],future:{keep:[false,null,'original completion metadata']}}];
  const taskResponse=await api('/tasks',{method:'POST',headers:{Prefer:'return=representation'},body:{id:task,user_id:account,project_id:project,title:'Original task title',description:'Original server description',subtasks:children}});assert.equal(taskResponse.status,201);const source=taskResponse.value[0];report.genuineLocalAuthREST=true;
+ if(mode==='adoption'){
+  await runtime.raw('update taskfold_private.child_task_record_config set reads_enabled=true,edits_enabled=true,completions_enabled=true,structure_reads_enabled=true,structure_edits_enabled=true,adoption_enabled=true');
+  check('legacy root has no pre-established record authority',await runtime.raw(`select count(*) from taskfold_private.child_task_record_authority where task_id=${lit(task)}`)==='0');
+ }else{
  const promotion=await runtime.raw(`update taskfold_private.child_task_record_config set reads_enabled=true,edits_enabled=true;select taskfold_private.adopt_child_task_records(id,task_generation,subtasks) from public.tasks where id=${lit(task)};select taskfold_private.promote_child_task_records(t.id,t.task_generation,t.project_id,p.revision,t.subtasks) from public.tasks t join taskfold_private.child_task_projections p on p.task_id=t.id where t.id=${lit(task)}`);
  check('synthetic root is explicitly record-authoritative',promotion.split('\n').at(-1)==='records');
  if(mode.startsWith('structure'))await runtime.raw('update taskfold_private.child_task_record_config set completions_enabled=true,structure_reads_enabled=true,structure_edits_enabled=true');
+ }
  root=join(home,'Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge');await mkdir(root,{recursive:true,mode:0o700});
- for(const file of ['config.json','session.json','initial.json','queue.json','loss.json','replay.json','verify.json','child-queue.json','child-loss.json','child-replay.json','child-verify.json','structure-queue.json','structure-loss.json','structure-replay.json','structure-verify.json','structure-undo.json','structure-undo-verify.json','structure-redo.json','structure-redo-verify.json',...['field','structure'].flatMap(f=>['queue','refuse','save','send','verify'].map(p=>f+'-review-'+p+'.json'))])await rm(join(root,file),{force:true});
+ for(const file of ['config.json','session.json','initial.json','queue.json','loss.json','replay.json','verify.json','child-queue.json','child-loss.json','child-replay.json','child-verify.json','structure-queue.json','structure-loss.json','structure-replay.json','structure-verify.json','structure-undo.json','structure-undo-verify.json','structure-redo.json','structure-redo-verify.json','adoption-queue.json','adoption-loss.json','adoption-replay.json','adoption-verify.json',...['field','structure'].flatMap(f=>['queue','refuse','save','send','verify'].map(p=>f+'-review-'+p+'.json'))])await rm(join(root,file),{force:true});
  config={version:1,nonce,account,task,sibling,child,origin:new URL(runtime.urls.rest).origin,key:runtime.anon,email:'native-store-'+nonce+'@example.invalid',password,queuedFingerprint:null};
  await writeFile(join(root,'config.json'),JSON.stringify(config),{mode:0o600});cache=join(home,'Library/Application Support/Taskfold',account+'.json');
- if(mode.endsWith('-conflict')){
+ if(mode==='adoption'){
+  const baseline=(await api('/tasks?id=eq.'+task+'&select=*')).value[0].subtasks;
+  const queued=await phase('adoption-queue');report.actualAppBackendStore=true;
+  check('migration refuses and exactly preserves a synthetic unsent editor draft',queued.preservedEditRefusedAndKept===true);
+  check('review saves one original migration without changing server authority',queued.history.phase==='queued'&&queued.pending===0&&await runtime.raw(`select count(*) from taskfold_private.child_task_record_authority where task_id=${lit(task)}`)==='0');
+  check('queued migration preserves the original legacy tree',isDeepStrictEqual((await api('/tasks?id=eq.'+task+'&select=*')).value[0].subtasks,baseline));
+  config.queuedFingerprint=queued.originalFingerprint;await writeFile(join(root,'config.json'),JSON.stringify(config),{mode:0o600});
+  assert.equal((await api('/tasks?id=eq.'+task,{method:'PATCH',body:{title:'Changed remotely while closed'}})).status,204);
+  const activity=await api('/task_activity?select=*');assert.equal(activity.status,200);
+  const loss=await phase('adoption-loss');
+  check('lost migration reply retains exact original review and attempted state',loss.history.phase==='attempted'&&!loss.history.result&&loss.droppedReplies===1&&loss.originalFingerprint===queued.originalFingerprint&&isDeepStrictEqual(loss.history.command,queued.history.command));
+  check('actual app migration committed record authority before the reply was lost',await runtime.raw(`select count(*) from taskfold_private.child_task_record_authority where task_id=${lit(task)} and task_generation=${lit(source.task_generation)}::uuid`)==='1');
+  const replay=await phase('adoption-replay'),verified=await phase('adoption-verify');
+  check('cold original migration retry recovers the real replay proof',replay.history.phase==='applied'&&replay.history.result.raw.state==='applied'&&replay.history.result.raw.replayed===true&&replay.history.result.raw.request_id===queued.history.command.body.request_id&&replay.history.result.raw.node_count===3);
+  check('migration proof and original request survive offline cold reopening',verified.originalFingerprint===queued.originalFingerprint&&isDeepStrictEqual(verified.history,replay.history));
+  const disk=await json(cache),saved=disk.tables.tasks.find(x=>x.id===task),server=(await api('/tasks?id=eq.'+task+'&select=*')).value[0];
+  check('migration preserves exact nested completion and opaque content in server and cache',isDeepStrictEqual(saved.subtasks,baseline)&&isDeepStrictEqual(server.subtasks,baseline)&&saved.title==='Changed remotely while closed'&&saved.description===source.description&&saved.task_generation===source.task_generation&&disk.pending.length===0);
+  check('migration preserves existing activity rows',isDeepStrictEqual((await api('/task_activity?select=*')).value,activity.value));
+  const read=await api('/rpc/taskfold_read_child_tasks',{method:'POST',body:{_id:task,_generation:source.task_generation}});assert.equal(read.status,200);
+  check('genuine client records have three unique original authored keys',read.value.records.length===3&&new Set(read.value.records.map(x=>x.node_key)).size===3&&read.value.records.some(x=>x.fields.completed===true&&x.fields.completed_at==='2026-10-01T09:00:00Z'));
+  check('retry creates exactly one applied migration receipt',await runtime.raw(`select count(*) from taskfold_private.child_task_adoptions where task_id=${lit(task)} and state='applied'`)==='1');
+ }else if(mode.endsWith('-conflict')){
   const hierarchy=mode==='structure-conflict',family=hierarchy?'structure':'field',prefix=family+'-review-';
   const baseline=(await api('/tasks?id=eq.'+task+'&select=*')).value[0].subtasks;
   const queued=await phase(prefix+'queue');report.actualAppBackendStore=true;

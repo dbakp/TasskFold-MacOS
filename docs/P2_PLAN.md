@@ -7633,3 +7633,14 @@ Both owning apps now reuse sorted/outlined project display data in a source/acce
 - [ ] Continue full adoption/legacy/history/media migration, changed identities/access/window/background races and remaining native comparison/keyboard/speech cases. Protected Keychain/TLS and pg_net placement remain separate.
 
 [Evidence and limits](genuine-conflict-review/README.md). Programmatic production-controller acceptance; no hosted deployment or ordinary gate change.
+
+
+### 3 November 2026 · Genuine native reviewed legacy migration
+
+- [x] Exercise actual app discovery/review, adoption model and encrypted journal against the public local migration endpoint, starting with no record authority and no administrative adoption/promotion bypass.
+- [x] Refuse migration while retaining an exact encrypted unsent editor draft; close only that synthetic draft and queue the original reviewed request without changing server authority.
+- [x] Cold send, lose a real committed reply, cold retry the exact original request/digest and recover its applied replay proof. Cold reopen offline with exact cache/receipt and one migration ledger entry. Each app: 16 checks across four separate processes.
+- [x] Preserve the full nested/completed source tree, timestamp, authored identities, opaque data, generation, root description and remote title; read migrated records through the actual client. Existing activity rows stay unchanged; no claim of nonempty older activity coverage.
+- [ ] Finish broader legacy identities/history/cache directions, files/audio and shared-workspace/access/window/large-library cases. Native migration-screen interaction, protected Keychain/TLS and pg_net placement remain separate.
+
+[Evidence and limits](genuine-native-adoption/README.md). Ordinary gates and hosted services are unchanged. Current reusable products/devices are retained, with the 20 GiB storage floor enforced.

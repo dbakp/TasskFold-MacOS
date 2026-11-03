@@ -704,6 +704,7 @@ final class Store {
             .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
         let io = ReviewedTeamCommandFileIO<ChildTaskAdoptionState>(directory: directory, account: account, origin: origin, encryptionKey: {
             #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
             if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
             #endif
             return try BackupVault.deviceKey(account: account)
@@ -1184,6 +1185,7 @@ final class Store {
             .appending(path: WorkspaceBackup.stableID("vault", account), directoryHint: .isDirectory)
         return BackupVault(directory: folder, account: account, key: {
             #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
             if ChildFieldNativeIdentity.enabled {return try ChildFieldNativeIdentity.key(account)}
             #endif
             return try BackupVault.deviceKey(account: account)
@@ -7048,7 +7050,56 @@ extension Store {
         try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
     }
 
+
+    private func runFullSchemaAdoptionPhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        dailyBackupsEnabled=false;var preservedGuard=false
+        if phase=="adoption-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Migration sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskAdoption(c.task)
+            guard read.eligible,read.metadata["state"] == .string("ready"),read.preview.count==3 else {throw AppFailure(message:"Genuine legacy hierarchy is not ready for review")}
+            let command=try ChildTaskAdoptionCommand(review:read),model=try childTaskAdoptionModel();defer{model.close()}
+            guard let root=record("tasks",id:c.task) else {throw AppFailure(message:"Missing actual legacy task cache")}
+            var draft=root;draft["description"] = .string("Synthetic preserved unsent edit")
+            let edit=try TaskEditorRecovery(account:c.account,origin:backend.accountRemovalOrigin,original:root,draft:draft),vault=backupVault
+            try vault.saveEditorDraft(edit);let bytes=try Data(contentsOf:vault.editorFile(edit.id))
+            guard !(await model.queue(command,review:read)),model.entries.isEmpty,try vault.editorDraft(edit.id,origin:backend.accountRemovalOrigin)==edit,try Data(contentsOf:vault.editorFile(edit.id))==bytes else {throw AppFailure(message:"Migration did not preserve and refuse an unsent editor draft")}
+            preservedGuard=true;try vault.closeEditorDraft(edit.id)
+            guard await model.queue(command,review:read),model.entries.first?.phase == .queued else {throw AppFailure(message:model.message ?? "Reviewed migration was not durably queued")}
+            FullSchemaNativeNetwork.offline=true;online=false
+        }else {guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Migration session was not reopened")};online=false}
+        let journal=try childTaskAdoptionJournal(account:c.account,origin:backend.accountRemovalOrigin),original=try await journal.load()
+        guard original.entries.count==1,let first=original.entries.first else {throw AppFailure(message:"Expected one original migration request")}
+        if phase != "adoption-queue" {guard try fullSchemaReviewFingerprint(first.command)==c.queuedFingerprint else {throw AppFailure(message:"Cold migration request differs from its original review")}}
+        var message="Reviewed migration reopened offline"
+        if phase=="adoption-loss" || phase=="adoption-replay" {
+            guard first.phase == (phase=="adoption-loss" ? .queued:.attempted) else {throw AppFailure(message:"Unexpected migration phase before retry")}
+            if phase=="adoption-loss" {FullSchemaNativeNetwork.armDrop()}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskAdoptionModel();defer{model.close()};await model.load()
+            let sent=await model.run(first.command,operation:.send);message=model.message ?? ""
+            if phase=="adoption-loss" {
+                FullSchemaNativeNetwork.offline=true;online=false
+                guard !sent,FullSchemaNativeNetwork.dropped==1,model.entries.first?.phase == .attempted,model.entries.first?.result==nil else {throw AppFailure(message:"Lost migration reply did not retain the original attempted request. "+message)}
+            }else {
+                guard sent,model.entries.first?.result?.applied==true,model.entries.first?.result?.raw["replayed"] == .bool(true) else {throw AppFailure(message:"Original migration retry did not recover its real confirmation. "+message)}
+                try await fullSchemaSyncSettled()
+                let current=try await readChildTaskRecords(c.task)
+                guard current.nodes.count==3 else {throw AppFailure(message:"Migrated hierarchy is not readable through the actual record client")}
+            }
+        }
+        let disk=try await childTaskAdoptionJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard disk.entries.count==1,let saved=disk.entries.first,saved.command==first.command,snapshot.pending.isEmpty else {throw AppFailure(message:"Migration changed the original request or entered the root queue")}
+        if phase=="adoption-replay" || phase=="adoption-verify" {guard saved.result?.applied==true,saved.result?.raw["replayed"] == .bool(true),record("tasks",id:c.task)?.title=="Changed remotely while closed" else {throw AppFailure(message:"Migration confirmation or remote title did not survive cold recovery")}}
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Migration Store and disk differ")}
+        let history=try TaskfoldJSONDecoder().decode(JSON.self,from:TaskfoldJSONEncoder().encode(saved))
+        let report:[String:JSON]=["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"originalFingerprint":.string(try fullSchemaReviewFingerprint(saved.command)),"history":history,"preservedEditRefusedAndKept":.bool(preservedGuard),"pending":.number(Double(snapshot.pending.count)),"droppedReplies":.number(Double(FullSchemaNativeNetwork.dropped)),"diskMatchesStore":.bool(true),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+
     func runFullSchemaNativePhase() async throws {
+        if FullSchemaNativeFixture.phase.hasPrefix("adoption-") {try await runFullSchemaAdoptionPhase();return}
         if FullSchemaNativeFixture.phase.hasPrefix("field-review-") {try await runFullSchemaFieldReviewPhase();return}
         if FullSchemaNativeFixture.phase.hasPrefix("structure-review-") {try await runFullSchemaStructureReviewPhase();return}
         if FullSchemaNativeFixture.phase.hasPrefix("structure-") {try await runFullSchemaStructurePhase();return}
