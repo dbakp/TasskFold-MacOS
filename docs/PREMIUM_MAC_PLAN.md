@@ -10511,3 +10511,5 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 ### 3 November: Mac selection-recovery runner
 
 A Mac-specific checkbox/window/cache journey and actual local-provider runner now build and sign. Native runtime is pending: Xcode reports “Authentication cancelled. System authentication is running” before app launch; all owned services/configuration were removed. The existing iPad now accepts the separate cold recovery journey (63 checks), which does not establish Mac acceptance. [Evidence](audio-selection-platform-native/README.md).
+
+The iPad follow-up now accepts recovered real Redo/second Undo (73 checks) and already-applied selection confirmation (50 checks), including exact history through failed saves. This is counterpart evidence only. Native computer use confirms the Mac remains locked; the Mac runner has not been repeated and runtime is still unaccepted.

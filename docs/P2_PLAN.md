@@ -7508,3 +7508,7 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 ## iPad cold selection recovery; Mac runtime pending
 
 The iPad passes 63 local service/native checks and one UI case, covering Later, cold return, actual save failure after closure, fresh consent, lost committed reply and exact cold retry. Mac app/runner build and strict signatures pass, but system authentication stops its new native case before app launch; runtime remains unaccepted. No production app/schema/gate changes. [Scope and evidence](audio-selection-platform-native/README.md).
+
+## iPad recovered history and recorded confirmation
+
+Two further iPad UI cases pass without skips: 73 local service/native checks for real Redo/second Undo after recovery, and 50 for confirming an already-applied selection through an actual local acknowledgement-save failure. Whole queue/history and exact SQL/media results are verified separately. Mac is locked and its runtime remains unaccepted. Production app/schema/gates are unchanged. [Evidence](audio-selection-platform-native/README.md).

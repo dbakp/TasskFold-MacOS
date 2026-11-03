@@ -20,4 +20,14 @@ An earlier harness-only preflight found the iOS Info.plist layout was wrong for 
 
 ## Remaining
 
-Mac runtime, iPad ordinary Settings/main-screen entry and other recovery outcomes; broader queued/history/account/window/background/privacy/accessibility cases; normal sign-in/bootstrap and full-schema/hosted integration; mixed-media migration and whole-project recording transfers. Normal-use gates stay closed. The 74 curated checkpoints and 35 substeps do not change from this platform evidence.
+Mac runtime and iPad ordinary Settings/main-screen entry with queued follow-ups; broader queued/history/account/window/background/privacy/accessibility cases; normal sign-in/bootstrap and full-schema/hosted integration; mixed-media migration and whole-project recording transfers. Normal-use gates stay closed. The 74 curated checkpoints and 35 substeps do not change from this platform evidence.
+
+## iPad history and already-applied confirmation follow-up
+
+Two further owning iOS runner modes, `ipad-selection-warm` and `ipad-selection-recorded`, use the same existing Simulator, app/runner and independent local service fixture. No production Swift or migration changes were needed. Each mode passes one native UI case without skips: 73 service/native checks for warm history and 50 for already-applied confirmation.
+
+The warm case keeps every Undo/Redo action and logical history ID unchanged when a recovery save fails after server closure. Successful recovery rebinds the existing history to the reviewed policy and new request identities. Real Store Redo deletes the entire selection again, retaining only the available recording acknowledgement, and a second Undo restores all three tasks into fresh generations. Final rows equal actual SQL and survive cold return. SQL proves two restoration groups/six member receipts; the available recording remains byte-exact and the expired object stays purged. No replacement media upload occurs.
+
+The recorded case applies the original restore but loses its reply. Review reports that Undo already applied and offers unchanged confirmation without omission consent or a replacement command. Later keeps the original queue and complete history. An actual acknowledgement-save failure keeps both intact; retry sends the exact original whole-selection request for the third time and acknowledges the existing result. SQL proves one restoration group/three member receipts and no closure. Both original recordings remain available with exact downloaded bytes. Final cache and SQL agree after cold return.
+
+Both cases compare private paths/bytes where present; no new private-capture positive control is inferred. Screenshots were inspected in the tested iPad dark appearance/normal text size. This does not establish spoken accessibility or largest text. All owned configuration, local service resources and app processes close, and the Simulator returns to Shutdown. Mac remains unaccepted: native computer use independently confirms the Mac is locked, in addition to the previous authentication-cancelled test launch.
