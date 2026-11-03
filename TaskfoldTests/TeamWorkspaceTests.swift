@@ -983,3 +983,65 @@ extension TeamWorkspaceTests {
         XCTAssertFalse(TeamTaskTypes.authoringAvailable(scope: draft.scope, cache: revoked, enabled: true))
     }
 }
+
+extension TeamWorkspaceTests {
+    @MainActor func testPresentationReadCacheReusesUnchangedFilteredRowsWithoutAliasing() throws {
+        let source = try snapshot(), b = try boundary()
+        let mask = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: source.tables["tasks"]!)
+        let cache = WorkspacePresentationReadCache()
+        let context = WorkspacePresentationReadCache.Context(source: UUID(), access: UUID(), account: b.account, origin: b.origin)
+        var builds = 0
+        func build() -> [String: [Record]] { builds += 1; return mask.presentation(source) }
+        var first = cache.tables(for: context, build: build)
+        XCTAssertEqual(cache.tables(for: context, build: build), mask.presentation(source))
+        XCTAssertEqual(builds, 1)
+        first["tasks"]?.removeAll()
+        XCTAssertEqual(cache.tables(for: context, build: build)["tasks"]?.count, 2)
+        XCTAssertEqual(builds, 1)
+        XCTAssertEqual(source.tables["tasks"]?.count, 2)
+        cache.clear()
+        XCTAssertEqual(cache.tables(for: context, build: build), mask.presentation(source))
+        XCTAssertEqual(builds, 2)
+    }
+    @MainActor func testPresentationReadCacheDropsEverySourceAccessAndAccountContext() {
+        let cache = WorkspacePresentationReadCache()
+        let source = UUID(), access = UUID()
+        let contexts = [
+            WorkspacePresentationReadCache.Context(source: source, access: access, account: "account-a", origin: origin),
+            .init(source: UUID(), access: access, account: "account-a", origin: origin),
+            .init(source: source, access: UUID(), account: "account-a", origin: origin),
+            .init(source: source, access: access, account: "account-b", origin: origin),
+            .init(source: source, access: access, account: "account-a", origin: "https://other.example"),
+            .init(source: source, access: access, account: "account-a", origin: nil)
+        ]
+        for (index, context) in contexts.enumerated() {
+            let next = cache.tables(for: context) { index == 0 ? ["tasks": [Record(["title": .string("Previous private content")])]] : [:] }
+            XCTAssertEqual(next.isEmpty, index != 0)
+        }
+    }
+    @MainActor func testPresentationReadCacheAppliesAccessLossWithoutChangingSavedSnapshot() throws {
+        let original = try snapshot(), b = try boundary(), left = try boundary("left")
+        let allowed = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: original.tables["tasks"]!)
+        let lost = try TeamWorkspaceCache(boundary: left, previous: allowed, pending: [], tasks: original.tables["tasks"]!)
+        let cache = WorkspacePresentationReadCache(), source = UUID()
+        let before = cache.tables(for: .init(source: source, access: UUID(), account: b.account, origin: origin)) { allowed.presentation(original) }
+        let after = cache.tables(for: .init(source: source, access: UUID(), account: b.account, origin: origin)) { lost.presentation(original) }
+        XCTAssertEqual(before["tasks"]?.count, 2)
+        XCTAssertEqual(after["tasks"]?.count, 1)
+        XCTAssertFalse(after["tasks"]!.contains { $0.title == "Team secret review" })
+        XCTAssertEqual(original.tables["tasks"]?.count, 2)
+        XCTAssertEqual(after, lost.presentation(original))
+    }
+    @MainActor func testPresentationReadCacheSeesEditedRowsWithTheSameAccessBoundary() throws {
+        let original = try snapshot(), b = try boundary()
+        let mask = try TeamWorkspaceCache(boundary: b, previous: nil, pending: [], tasks: original.tables["tasks"]!)
+        var changed = original
+        changed.tables["tasks"]![0]["title"] = .string("Updated design review")
+        let cache = WorkspacePresentationReadCache(), access = UUID()
+        _ = cache.tables(for: .init(source: UUID(), access: access, account: b.account, origin: origin)) { mask.presentation(original) }
+        let result = cache.tables(for: .init(source: UUID(), access: access, account: b.account, origin: origin)) { mask.presentation(changed) }
+        XCTAssertEqual(result["tasks"]?.first?.title, "Updated design review")
+        XCTAssertEqual(original.tables["tasks"]?.first?.title, "Team secret review")
+        XCTAssertEqual(result, mask.presentation(changed))
+    }
+}

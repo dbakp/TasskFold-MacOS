@@ -1,0 +1,68 @@
+{
+  "reviewed": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "fb364a40cfec2d28299f73407c9491ed33e797fa",
+  "ownCoreTests": 86,
+  "ownCoreFailures": 0,
+  "ownAppRunnerBuildAndStrictSignatures": true,
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "ce2b6c9ea08a18cfa43e39d1e66b869753124d87d9166529a56b8a301dbd7041",
+    "Taskfold/Core/TeamWorkspace.swift": "3bfaeda40c49150da13ccf31e2fa9829cb390cec8f20b5e77d531539741f763c",
+    "Taskfold/TeamTemplateNativeFixture.swift": "8381f63d1607940bd7c70c996fab0646353a56836aebc2006eb004fef92416f6",
+    "Taskfold/Views/TaskInspector.swift": "b0d0782824d66c4be9ecd5fac45769acb283ccacbaaf58b4fd54f85b5496adbf",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "373dcd9d16510129c94d78ee6b09233677260e8c15b907f1fcd6b3baf8e8b998"
+  },
+  "nativeEvidenceOwner": "TaskFold-iOS",
+  "nativeTestsAfter": 1,
+  "nativeFailuresAfter": 0,
+  "nativeSkipsAfter": 0,
+  "nativeRuntimeWarningsAfter": [],
+  "actualStoreInvalidationChecks": 8,
+  "actualProductionTaskScreenOpened": true,
+  "actualProductionListScreenshotInspected": true,
+  "nativeMacRuntimeAccepted": false,
+  "nativeIPadRuntimeAccepted": false,
+  "audibleVoiceOverAccepted": false,
+  "genuineAuthOrProvider": false,
+  "releaseHardwarePerformanceClaim": false,
+  "syntheticShape": {
+    "roots": 240,
+    "checklistChildren": 720,
+    "assignedRoots": 240,
+    "projects": 1,
+    "collaborators": 1
+  },
+  "timingScope": "Three consecutive warm 100-row Store lookup batches per version, Debug iPhone Simulator; same shape with freshly generated IDs/times; other host activity not controlled; not UI frame/save timing",
+  "beforeMilliseconds": [
+    551.2540340423584,
+    555.6179285049438,
+    550.8719682693481
+  ],
+  "afterMilliseconds": [
+    3.381967544555664,
+    3.3010244369506836,
+    3.303050994873047
+  ],
+  "beforeMedianMilliseconds": 551.2540340423584,
+  "afterMedianMilliseconds": 3.303050994873047,
+  "deployed": false,
+  "rolloutFlagsChanged": false,
+  "ownHostSourceBindings": {
+    "Taskfold/Core/Store.swift": {
+      "hostSHA256": "47d735c221d639b6a56d63ad788cd7f07bd63f732ef59653245d824a47ba454f",
+      "matchesOwningSourceWithIsolationTransforms": true
+    },
+    "Taskfold/Core/TeamWorkspace.swift": {
+      "hostSHA256": "3bfaeda40c49150da13ccf31e2fa9829cb390cec8f20b5e77d531539741f763c",
+      "matchesOwningSourceWithIsolationTransforms": true
+    },
+    "Taskfold/TeamTemplateNativeFixture.swift": {
+      "hostSHA256": "8381f63d1607940bd7c70c996fab0646353a56836aebc2006eb004fef92416f6",
+      "matchesOwningSourceWithIsolationTransforms": true
+    },
+    "Taskfold/Views/TaskInspector.swift": {
+      "hostSHA256": "b0d0782824d66c4be9ecd5fac45769acb283ccacbaaf58b4fd54f85b5496adbf",
+      "matchesOwningSourceWithIsolationTransforms": true
+    }
+  }
+}

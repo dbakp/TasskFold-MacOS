@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "Next · Large-workflow responsiveness",
-  "latest": "Removed recordings stay private through a separately reviewed project move, including removed-only histories, cleanup and exact recovery. Both repos pass 233 service checks, 91 client tests and app/runner builds. The iPhone review/cancel passes at largest text; screenshot review also fixed a clipped action label. Ordinary use and wider integration remain open.",
+  "focus": "P2 · Large-workflow responsiveness",
+  "latest": "Both apps reuse access-filtered row reads without changing saves or layout. The iPhone warm-read median fell from 551.3 to 3.3 ms in the synthetic diagnostic; eight Store invalidation/observation checks and the production list pass. Both repos pass 86 workspace tests and app builds. Broader workflow/rendering work remains.",
   "next": [
-    "Prioritize remaining large-workflow save pauses and rendering. Start from the latest 29 October evidence (170.61 ms median synchronous commit in the synthetic flat workload), investigate production rows and child/assignment-heavy workloads, and preserve durable saves and Undo. Do not repeat accepted flat-workload optimizations.",
+    "Continue large-workflow responsiveness from measured production paths: richer child/assignment workflow creation and persistence, actual large-list scrolling/rendering, Mac/iPad and wider contexts. The access-filtered row-read reuse and its actual Store invalidation/Observation checks are accepted in scoped iPhone coverage; do not repeat unchanged flat-workload optimizations.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
@@ -448,14 +448,18 @@
             {
               "state": "build",
               "title": "Reduce remaining large-workflow save pauses",
-              "detail": "Production rendering and richer assignment/child workloads still need implementation and validation."
+              "detail": "Both apps reuse current access-filtered rows. The iPhone diagnostic warm-read median is 551.3 → 3.3 ms, with actual Store invalidation/Observation and production-list proof; both own builds/Core pass. Richer workflow saves, full rendering/scrolling, assignment-heavy catalogs and wider platforms remain."
             }
           ],
           "sources": [
             "PX_CHECKLIST.md",
-            "P2_PLAN.md"
+            "P2_PLAN.md",
+            "workspace-read-reuse/README.md",
+            "workspace-read-reuse/verification.json",
+            "workspace-read-reuse/iphone-before.json",
+            "workspace-read-reuse/iphone-after.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-voice",
@@ -907,7 +911,7 @@
             "project-private-history/phone-verification.json",
             "project-private-history/initial-interaction-verification.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-watch",
@@ -1210,6 +1214,10 @@
     "team-audio-client/README.md": "0e7cff648181223d539bc75f615b9deda9c8d418be230a0a4e8ab2383f63deef",
     "team-audio-client/verification.json": "83eb182b51e8023548cd9f2d535caef107e460ccf3bf85456fc409dd375315e9",
     "transfer-redo/README.md": "566c6d5c8827e2da94797158156107ef355553eb6906a3e7a46ddf19bd76b2ac",
-    "transfer-redo/verification.json": "9f0d45307cfa830c3af3934e43556f3ee217066994a6d542eca773381d45f6b0"
+    "transfer-redo/verification.json": "9f0d45307cfa830c3af3934e43556f3ee217066994a6d542eca773381d45f6b0",
+    "workspace-read-reuse/README.md": "f3d85846dba1f28e9f4d155d87b2d8f33f371364c8122015fb20549b4463e409",
+    "workspace-read-reuse/iphone-after.json": "196c36c39aad694b2db60f3fabb8998a39e0398ca6c744a1eef47cedad0c05b8",
+    "workspace-read-reuse/iphone-before.json": "e072093f1a93298596e0fdda0909f8dcec59bae2b6b06635756de27af4b2d0bd",
+    "workspace-read-reuse/verification.json": "16f6c6c8923ff2e3d128346747a8178974bbbd47f941f08fc26fcc61a36bab53"
   }
 }

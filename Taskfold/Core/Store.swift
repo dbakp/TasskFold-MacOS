@@ -1,4 +1,5 @@
 import SwiftUI
+import Observation
 import Security
 import Network
 import UserNotifications
@@ -109,6 +110,7 @@ final class Store {
     var snapshot = Snapshot() {
         didSet {
             snapshotRevision = UUID()
+            presentationReadCache.clear()
             guard !workflowPresentationDeferred else { return }
             refreshSnapshotPresentation(from: oldValue)
         }
@@ -119,6 +121,8 @@ final class Store {
     }
     private var teamAccessMask:TeamWorkspaceCache? {
         didSet {
+            presentationAccessEpoch = UUID()
+            presentationReadCache.clear()
             if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
             if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}
             publishWidgetSnapshot(scheduleCapacityRefresh:false)
@@ -133,7 +137,20 @@ final class Store {
         guard !localMode,TeamProjectValue.id(userID),let origin=try? backend.accountRemovalOrigin else {return nil}
         return TeamAccessFenceDisk(disk:AccountRemovalDisk(directory:cacheURL.deletingLastPathComponent(),account:userID),origin:origin)
     }
-    private var presentedTables:[String:[Record]] {workspaceCacheReadable ? (activeTeamMask?.presentation(snapshot) ?? snapshot.tables):[:]}
+    @ObservationIgnored private let presentationReadCache = WorkspacePresentationReadCache()
+    @ObservationIgnored private var presentationAccessEpoch = UUID()
+    private var presentedTables: [String: [Record]] {
+        guard workspaceCacheReadable else { return [:] }
+        guard let mask = activeTeamMask else {
+            presentationReadCache.clear()
+            return snapshot.tables
+        }
+        // Read even on a hit so SwiftUI keeps observing the actual snapshot.
+        let source = snapshot
+        let context = WorkspacePresentationReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+            account: userID, origin: try? backend.accountRemovalOrigin)
+        return presentationReadCache.tables(for: context) { mask.presentation(source) }
+    }
     var presentationSnapshot:Snapshot {var visible=snapshot;visible.tables=presentedTables;return visible}
     @ObservationIgnored private let taskCache = TaskCache()
     private(set) var taskRevision = 0
@@ -1122,7 +1139,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {presentationReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
@@ -6320,3 +6337,102 @@ extension Store {
         }
     }
 }
+
+#if DEBUG
+extension Store {
+    func prepareWorkspaceReadFixture() throws {
+        guard WorkspaceReadNativeFixture.enabled else { throw CancellationError() }
+        dailyBackupsEnabled = false
+        var tasks: [Record] = []
+        for index in 0..<240 {
+            var task = Record.task(user: TeamEditorNativeFixture.account, project: TeamEditorNativeFixture.projectID)
+            task["id"] = .string(String(format: "ec250000-0000-4000-8000-%012d", index + 1))
+            task["title"] = .string(String(format: "Workshop task %03d", index + 1))
+            task["assigned_to"] = .string(TeamEditorNativeFixture.recipientID)
+            task["description"] = .string("Review the design notes and prepare the next iteration.")
+            task["subtasks"] = .array((0..<3).map { child in .object([
+                "id": .string(UUID().uuidString.lowercased()), "title": .string("Design step \(child + 1)"),
+                "completed": .bool(false), "subtasks": .array([])
+            ]) })
+            tasks.append(task)
+        }
+        let project = Record(["id": .string(TeamEditorNativeFixture.projectID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Read performance workshop")])
+        let person = Record(["id": .string(UUID().uuidString.lowercased()), "project_id": .string(project.id), "user_id": .string(TeamEditorNativeFixture.recipientID), "display_name": .string("Riley Chen"), "status": .string("accepted")])
+        let boundary = try TeamEditorNativeFixture.boundary()
+        let mask = try TeamWorkspaceCache(boundary: boundary, previous: nil, pending: [], tasks: tasks)
+        snapshot = Snapshot(tables: ["tasks": tasks, "projects": [project], "project_collaborators": [person]])
+        snapshot.teamWorkspace = mask
+        teamAccessMask = mask
+        workspaceCacheReadable = true
+        try persist()
+    }
+    func measureWorkspaceReadFixture() throws {
+        guard WorkspaceReadNativeFixture.enabled else { throw CancellationError() }
+        let source = snapshot
+        let tasks = rows("tasks")
+        guard tasks.count == 240 else { throw AppFailure(message: "Synthetic workspace is incomplete") }
+        var measurements: [Double] = []
+        var matches = 0
+        for _ in 0..<3 {
+            let start = Date.timeIntervalSinceReferenceDate
+            for task in tasks.prefix(100) {
+                if record("tasks", id: task.id) == task,
+                   record("projects", id: task.string("project_id"))?.name == "Read performance workshop",
+                   assigneeName(task) == "Riley Chen" { matches += 1 }
+            }
+            measurements.append((Date.timeIntervalSinceReferenceDate - start) * 1000)
+        }
+        guard snapshot == source, matches == 300 else { throw AppFailure(message: "Read fixture changed its source") }
+        let invalidations = try verifyWorkspaceReadInvalidationFixture()
+        let report: [String: JSON] = ["invalidationChecks": .number(Double(invalidations)), "protocol": .number(1), "roots": .number(240), "children": .number(720),
+            "iterations": .number(100), "matchedReads": .number(Double(matches)),
+            "readMilliseconds": .array(measurements.map(JSON.number)), "snapshotUnchanged": .bool(true)]
+        let folder = URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try TaskfoldJSONEncoder().encode(report).write(to: folder.appendingPathComponent("report.json"), options: .atomic)
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func verifyWorkspaceReadInvalidationFixture() throws -> Int {
+        guard WorkspaceReadNativeFixture.enabled, let originalMask = teamAccessMask else { throw CancellationError() }
+        let original = snapshot, readable = workspaceCacheReadable
+        defer { snapshot = original; teamAccessMask = originalMask; workspaceCacheReadable = readable }
+        guard rows("tasks").count == 240 else { throw AppFailure(message: "Expected readable fixture") }
+        _ = rows("projects") // Warm the cache before registering a fresh observer.
+        let observed = WorkspaceReadObservationProbe()
+        withObservationTracking { _ = rows("projects") } onChange: { observed.markChanged() }
+        snapshot.tables["projects"]![0]["name"] = .string("Updated project name")
+        guard observed.changed, rows("projects").first?.name == "Updated project name" else { throw AppFailure(message: "Cached presentation lost observation") }
+        snapshot.tables["tasks"]![0]["title"] = .string("Updated workshop title")
+        guard rows("tasks").first?.title == "Updated workshop title" else { throw AppFailure(message: "Stale source presentation") }
+        var raw = originalMask.boundary.raw
+        raw["projects"] = .array([])
+        let lostBoundary = try TeamWorkspaceBoundary(raw, account: userID, origin: backend.accountRemovalOrigin)
+        teamAccessMask = try TeamWorkspaceCache(boundary: lostBoundary, previous: originalMask, pending: snapshot.pending, tasks: snapshot.tables["tasks"]!)
+        guard rows("tasks").isEmpty, rows("projects").isEmpty, snapshot.tables["tasks"]?.count == 240 else { throw AppFailure(message: "Stale access presentation") }
+        teamAccessMask = originalMask
+        guard rows("tasks").count == 240, rows("tasks").first?.title == "Updated workshop title" else { throw AppFailure(message: "Restored access presentation missing") }
+        workspaceCacheReadable = false
+        guard rows("tasks").isEmpty, rows("projects").isEmpty else { throw AppFailure(message: "Unreadable cache exposed rows") }
+        workspaceCacheReadable = true
+        guard rows("tasks").count == 240 else { throw AppFailure(message: "Readable cache did not recover") }
+        teamAccessMask = nil
+        guard rows("tasks") == snapshot.tables["tasks"] else { throw AppFailure(message: "Unmasked presentation differs") }
+        snapshot = original; teamAccessMask = originalMask
+        guard rows("tasks").first?.title == "Workshop task 001", snapshot == original else { throw AppFailure(message: "Original source did not return") }
+        return 8
+    }
+}
+#endif
+
+#if DEBUG
+private final class WorkspaceReadObservationProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    func markChanged() { lock.lock(); defer { lock.unlock() }; value = true }
+    var changed: Bool { lock.lock(); defer { lock.unlock() }; return value }
+}
+#endif

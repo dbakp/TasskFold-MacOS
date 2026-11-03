@@ -551,3 +551,31 @@ import CryptoKit
     private func support(_ value: Int) { update { $0.support = value }; Task { await store.sync() } }
 }
 #endif
+
+#if DEBUG
+@MainActor enum WorkspaceReadNativeFixture {
+    static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-performance") }
+}
+@MainActor struct WorkspaceReadNativeFixtureView: View {
+    @Environment(Store.self) private var store
+    @State private var status = "Preparing"
+    var body: some View {
+        NavigationStack {
+            Form {
+                Text(status).accessibilityIdentifier("workspaceReadStatus")
+                Button("Measure row reads") {
+                    do { try store.measureWorkspaceReadFixture(); status = "Reads verified" }
+                    catch { status = error.localizedDescription }
+                }.accessibilityIdentifier("measureWorkspaceReads").disabled(status == "Preparing")
+                #if os(iOS)
+                NavigationLink("Open production list") { TaskScreen(scope: .project(TeamEditorNativeFixture.projectID)) }
+                    .accessibilityIdentifier("openProductionReadList")
+                #endif
+            }.navigationTitle("Workspace reads")
+        }.task {
+            do { try store.prepareWorkspaceReadFixture(); status = "Ready" }
+            catch { status = error.localizedDescription }
+        }
+    }
+}
+#endif

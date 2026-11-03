@@ -10589,3 +10589,11 @@ The project-transfer review now has typed recording counts and a specific custod
 [Current build/native evidence and exact limits](project-private-history/README.md). This entry does not claim Mac native runtime or genuine provider acceptance.
 
 - [x] Both own app/runner builds and strict signatures pass. Counterpart iPhone removed-only review/reset/cancel passes at Accessibility XXXL; screenshot inspection caught and then verified the shorter wrapping primary action. The original Mac build was deliberately interrupted for that UI fix and is excluded from acceptance.
+
+### 3 November 2026 · Reuse current access-filtered row reads
+
+- [x] Own a source/access/account/backend-bound in-memory presentation, synchronously discarded on source/mask/readability changes. Keep ordinary unmasked reads direct and snapshot Observation active on cache hits; writes, permissions, Undo and persisted contracts stay unchanged.
+- [x] Pass 86 owning workspace tests and independent app/runner build/signature checks. Counterpart iPhone passes the production list and eight actual Store invalidation/Observation checks. Three warm-read batches have median 551.25 → 3.30 ms; this is scoped Debug Simulator evidence, not Mac/Release/frame-rate/save acceptance.
+- [ ] Finish richer workflow saves, large-list rendering/scrolling, larger assignment catalogs, Mac/iPad runtime and wider accessibility/account/lifecycle acceptance.
+
+[Exact evidence and timing limits](workspace-read-reuse/README.md). The save-pause checkpoint and full Px goal remain open.

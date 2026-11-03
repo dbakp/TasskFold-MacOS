@@ -485,3 +485,29 @@ extension TeamWorkspaceCache {
         var result = next; result.teamWorkspace = refreshed; return result
     }
 }
+
+/// Reuses one immutable presentation only within an exact source/access epoch.
+/// Store clears it synchronously on snapshot, mask and readability changes.
+/// It never caches permissions or authorizes an edit, send or persistence write.
+@MainActor final class WorkspacePresentationReadCache {
+    struct Context: Equatable {
+        let source: UUID
+        let access: UUID
+        let account: String
+        let origin: String?
+    }
+    private var context: Context?
+    private var value: [String: [Record]] = [:]
+    func tables(for context: Context, build: () -> [String: [Record]]) -> [String: [Record]] {
+        if self.context == context { return value }
+        let next = build()
+        value = next
+        self.context = context
+        return next
+    }
+    func clear() {
+        guard context != nil else { return }
+        context = nil
+        value = [:]
+    }
+}
