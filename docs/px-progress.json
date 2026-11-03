@@ -4,10 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Everyday Taskfold builds",
-  "latest": "Delivery order reset: assemble an ordinary daily-use build from completed personal-workflow features, then deliver organization and planning improvements in small updates. Advanced migration/shared-media matrices move later without being dropped. Data-loss/account-boundary checks remain prerequisites for features being enabled. No readiness percentages or completed checkpoints changed.",
+  "focus": "Now · Installable everyday builds",
+  "latest": "Ordinary Mac 1.2.0 (3) now builds with widgets/sharing and a verified development ZIP; startup/install awaits unlock. Ordinary iOS 1.4.0 (19) Simulator build passes; physical build needs Xcode account/profile setup. Daily profiles omit unsupported push/Time Sensitive capabilities without changing release settings or advanced gates. Live catalog confirms core services, with scoped assignment/cloud workflow Undo still missing. No task edits or Taskfold backend changes.",
   "next": [
-    "FIRST: inventory ordinary enabled features versus isolated candidates, then prepare identifiable daily-use Mac/iOS development builds on the existing personal storage path. Accept capture, organize, plan, complete/Undo, relaunch, affected sync and backup/recovery. App Store work stays deferred; development installation must be verified.",
+    "FIRST: inspect/install the packaged ordinary Mac build after unlock; finish physical iPhone development signing when the Xcode account is available. The Simulator build is already compiled. Preserve the local safety copy and accept only the affected ordinary startup/use/sync paths.",
+    "NEXT DAILY-USE GAP: prepare focused scoped-assignment and cloud workflow Undo service updates from the observed missing live endpoints. Core deployed editing/templates/goals/ordering/Focus remain available. Preserve deferred rollout gates; avoid a wholesale advanced migration to deliver personal workflows.",
     "NEXT FEATURE UPDATE: finish coherent ordinary-user organization and repeatable workflows: archive/subprojects, templates, multiline capture, nested editing, ordering and filters. Fix observed friction and validate changed workflows; preserve completed acceptance instead of rerunning unchanged matrices.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -1050,7 +1051,7 @@
             "legacy-adoption-boundaries/verification.json",
             "legacy-adoption-boundaries/local-service.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-watch",
@@ -1158,13 +1159,15 @@
     "mac-hierarchy-keyboard/README.md",
     "mac-hierarchy-keyboard/verification.json",
     "repair-keyboard-controls/README.md",
-    "repair-keyboard-controls/verification.json"
+    "repair-keyboard-controls/verification.json",
+    "daily-use-build/README.md",
+    "daily-use-build/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "19568ce9f942bc4dd261f70c03857b6d3886f8a8072420ccb97b73a49b35fae6",
+    "P2_PLAN.md": "99ed2057ad59e892b1f55c8d1d86a0c7076b21eb6c90f359435bf6efe595dd93",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1274,6 +1277,8 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
+    "daily-use-build/README.md": "6de2a94668df657b255fa0f71ba518c27478e8dbd2136ce587367e2359184706",
+    "daily-use-build/verification.json": "2bf3b81a0e8d48a91fff23cc012eae0979061c6f6e13381639caa8a2cd7fc941",
     "duplicate-history-repair-native/README.md": "c7063d22e97e3fd4c0813cff33f132bbf866c4f1e4b7ec32eb7326359ee61761",
     "duplicate-history-repair-native/verification.json": "95c758f713b374d01ffa31b95744dba3e20ef7231aa71add535b0f543723ee66",
     "duplicate-history-repair/README.md": "bbdac8ce08eb7bbf9173b5ebfb74516d385ec32bb355cfb8643d828c71f90ba9",

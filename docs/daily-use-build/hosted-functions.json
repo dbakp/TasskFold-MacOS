@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-03",
+  "project": "zqxflydiyfjeedqvyova",
+  "readOnly": true,
+  "scope": "Catalog metadata only; no user records read, service functions invoked, or hosted changes made",
+  "rows": [
+    {
+      "name": "taskfold_assign_task_scoped",
+      "installed": false,
+      "authenticated_execute": false
+    },
+    {
+      "name": "taskfold_delete_task",
+      "installed": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "taskfold_edit_template",
+      "installed": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "taskfold_patch_task",
+      "installed": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "taskfold_set_automatic_reminder",
+      "installed": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "taskfold_set_productivity_goals",
+      "installed": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "taskfold_set_reminder_snooze",
+      "installed": true,
+      "authenticated_execute": true
+    },
+    {
+      "name": "taskfold_undo_private_workflow",
+      "installed": false,
+      "authenticated_execute": false
+    },
+    {
+      "name": "taskfold_workspace_boundary",
+      "installed": false,
+      "authenticated_execute": false
+    }
+  ]
+}

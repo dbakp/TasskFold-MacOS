@@ -90,5 +90,43 @@ class ContinuityReleaseTests(unittest.TestCase):
             release.verify_app(self.app, self.policy)
 
 
+    def verify_project_text(self, text):
+        from unittest.mock import patch
+        root = Path(self.temp.name) / 'project-case'
+        project = root / 'Taskfold.xcodeproj'
+        project.mkdir(parents=True, exist_ok=True)
+        (project / 'project.pbxproj').write_text(text)
+        with patch.object(release, 'ROOT', root):
+            return release.verify_project(self.policy)
+
+    def companion_configurations(self, version=None):
+        version = version or self.policy['minimumVersion']
+        return '\n'.join(
+            f'{identifier} = {{ isa = XCBuildConfiguration; name = {name}; buildSettings = {{ '
+            f'PRODUCT_BUNDLE_IDENTIFIER = example.companion; MARKETING_VERSION = {version}; '
+            f'CURRENT_PROJECT_VERSION = {self.policy["minimumBuild"]}; }}; }};'
+            for identifier, name in [('A' * 24, 'Debug'), ('B' * 24, 'Release')])
+
+    def test_matching_companion_versions_do_not_invalidate_core_targets(self):
+        text = (release.ROOT / 'Taskfold.xcodeproj/project.pbxproj').read_text()
+        result = self.verify_project_text(text + '\n' + self.companion_configurations())
+        self.assertEqual(result['build'], str(self.policy['minimumBuild']))
+
+    def test_extra_target_cannot_hide_missing_share_configuration(self):
+        import re
+        text = (release.ROOT / 'Taskfold.xcodeproj/project.pbxproj').read_text()
+        identity = re.escape(self.policy['shareBundleID'])
+        text, count = re.subn(r'(PRODUCT_BUNDLE_IDENTIFIER\s*=\s*"?)' + identity + r'("?\s*;)', r'\1example.orphan\2', text, count=1)
+        self.assertEqual(count, 1)
+        with self.assertRaisesRegex(ValueError, 'differ or are missing'):
+            self.verify_project_text(text)
+
+    def test_mismatched_companion_version_is_rejected(self):
+        text = (release.ROOT / 'Taskfold.xcodeproj/project.pbxproj').read_text()
+        with self.assertRaisesRegex(ValueError, 'differ or are missing'):
+            self.verify_project_text(text + '\n' + self.companion_configurations('99.0.0'))
+
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-03",
+  "project": "zqxflydiyfjeedqvyova",
+  "readOnly": true,
+  "scope": "Catalog metadata only; no user records read, service functions invoked, or hosted changes made",
+  "rows": [
+    {
+      "inventory": {
+        "functions": [],
+        "node_history_present": false
+      }
+    }
+  ]
+}

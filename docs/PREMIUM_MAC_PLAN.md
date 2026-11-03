@@ -10795,3 +10795,14 @@ The user wants to use Taskfold now and install improvements incrementally. The f
 **Near-term scope boundary:** do not enable an unfinished migration on real tasks to make features appear available. Preserve current storage for the daily-use build and finish the new storage path as its own later update. Do not enable old-client-sensitive shared edits while the separately deferred upgrade coordination remains unresolved. Remote reminders, old-client rollout safety and full distribution verification remain explicitly deferred.
 
 No completion-date estimate is asserted by this reordering. The next externally reviewable milestone is the daily-use build and its concrete enabled-feature inventory, not another broad verification-only milestone. Reuse products/devices, observe the 20 GiB storage floor and close isolated sessions after testing.
+
+
+### 3 November 2026 · Ordinary daily-use candidates
+
+- [x] Add independently owned daily development build commands/profiles, keeping normal project/release settings and advanced feature gates unchanged. Retain widgets/sharing and ordinary local reminder code; omit unsupported push/Time Sensitive entitlements only in the opt-in daily build.
+- [x] Build/sign normal Mac 1.2.0 (3) and verify the actual ZIP app/widget/share payload. Preserve a private local app-file safety copy; the installed older app is intact.
+- [x] Build ordinary iOS 1.4.0 (19) for the host Simulator architecture. The physical candidate is blocked by Xcode account/profile setup; do not call the Simulator build device-installable.
+- [x] Inspect live backend catalog metadata only. Core edit/delete, template edits, goals, preferences, ordering and Focus functions are present. Scoped assignment and cloud workflow Undo/boundary functions are absent; child activity tables are also absent. No hosted mutations or user-record reads.
+- [ ] Mac startup/installation after unlock; physical iPhone account/signing/installation. Then prioritize the focused cloud service gaps and daily-user friction before more broad advanced acceptance.
+
+[Build receipts, inventory and scope](daily-use-build/README.md). No App Store submission, new Simulator, real-task edits or ordinary candidate-gate activation.

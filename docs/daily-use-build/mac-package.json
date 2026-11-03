@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "platform": "mac",
+  "bundle": "com.dbakp.taskfold.mac",
+  "version": "1.2.0",
+  "build": "3",
+  "app": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+  "sourceFingerprint": "5e5a9303b6d17dc8013cac4f32442769213c950e99aa44c15291152de1ae90e6",
+  "sourceRevision": "c247ba57a730b2a3ef3db86074abbb0e56ca0c1c",
+  "simulatorOnly": false,
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false,
+  "developmentProfile": {
+    "expires": "2026-11-10T18:38:42Z",
+    "appID": "3UZ4C73FM2.com.dbakp.taskfold.mac"
+  },
+  "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-3-mac-development.zip",
+  "archiveSHA256": "f6752d6eb9c451c865982d2bc0e6f46514aa63887b69b337842734106a1c66b7",
+  "sourceWasDirty": true,
+  "archivePayloadVerified": true
+}

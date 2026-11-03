@@ -36,8 +36,19 @@ def verify_project(release_policy):
     text = (ROOT / 'Taskfold.xcodeproj/project.pbxproj').read_text()
     versions = [value.strip(chr(34)) for value in re.findall(r'\bMARKETING_VERSION\s*=\s*([^;\s]+)\s*;', text)]
     builds = [value.strip(chr(34)) for value in re.findall(r'\bCURRENT_PROJECT_VERSION\s*=\s*([^;\s]+)\s*;', text)]
-    # App, widget and share-extension Debug/Release declare the same candidate version.
-    if len(versions) != 6 or len(builds) != 6 or len(set(versions)) != 1 or len(set(builds)) != 1:
+    # Validate required identities/configurations, not a fixed total that rejects
+    # optional companions (or lets them hide a missing required configuration).
+    required = {release_policy[key] for key in ('appBundleID', 'widgetBundleID', 'shareBundleID')}
+    seen = {identity: [] for identity in required}
+    configurations = re.findall(r'isa\s*=\s*XCBuildConfiguration;\s*name\s*=\s*(Debug|Release);\s*buildSettings\s*=\s*\{(.*?)\};\s*\};', text, re.S)
+    for name, settings in configurations:
+        identity = re.search(r'\bPRODUCT_BUNDLE_IDENTIFIER\s*=\s*([^;\s]+)\s*;', settings)
+        if identity and identity.group(1).strip(chr(34)) in required:
+            identity = identity.group(1).strip(chr(34))
+            if not re.search(r'\bMARKETING_VERSION\s*=', settings) or not re.search(r'\bCURRENT_PROJECT_VERSION\s*=', settings):
+                raise ValueError('App/extensions project release versions differ or are missing')
+            seen[identity].append(name)
+    if any(sorted(names) != ['Debug', 'Release'] for names in seen.values()) or not versions or len(versions) != len(builds) or len(set(versions)) != 1 or len(set(builds)) != 1:
         raise ValueError('App/extensions project release versions differ or are missing')
     validate_version(versions[0], builds[0], release_policy)
     generator = ROOT / 'Scripts/generate_project.py'

@@ -13,7 +13,7 @@ Scripts/              # Project generation, tests, packaging and publishing
 supabase/             # Backend migrations and isolation fixtures
 ```
 
-After adding Swift files or resources, run `python3 Scripts/generate_project.py`. The generated project contains only repository-local inputs. No iOS checkout or dependency download is required.
+After adding Swift files or resources, run `python3 Scripts/generate_project.py`. The generated project contains only repository-local inputs. No iOS checkout is required. Xcode resolves the pinned AppAuth package.
 
 ## Run
 
@@ -231,3 +231,8 @@ Both native repos independently own the canonical queue and APNs provider worker
 Inactive native reminder registration now owns fresh-token callbacks, secure unlink persistence and account/session fencing. Remote delivery remains unavailable; local reminders continue. [Behavior and remaining gates](docs/REMOTE_REMINDER_DELIVERY.md#inactive-native-registration-lifecycle--6-october).
 
 The unreleased P0 candidate pair is Mac 1.2.0 (3) / iOS 1.4.0 (19). Each repository owns its release metadata checks; older active writers must be upgraded or retired. See [compatibility and release checks](docs/CONTINUITY_RELEASE_POLICY.md). These candidate versions do not announce completed acceptance or distribution.
+
+
+## Incremental daily-use builds
+
+Use `python3 Scripts/build_daily.py --help` for the ordinary development build. It retains widgets and sharing, leaves normal release settings and advanced feature gates unchanged, and omits the two optional notification capabilities unavailable to the current Personal Team. See [daily build status, enabled-feature inventory and update commands](docs/daily-use-build/README.md). The Mac package is verified; startup/install and physical iPhone signing still have the recorded prerequisites.

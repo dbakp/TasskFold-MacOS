@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-03",
+  "purpose": "Retire stale fixture runners/launch metadata after converting reused products to ordinary daily app identities; future fixture tests require a fresh isolated build",
+  "removed": [
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Taskfold_macosx27.0-arm64.xctestrun",
+      "allocatedBytes": 8192
+    },
+    {
+      "path": "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/TaskfoldUITests-Runner.app",
+      "allocatedBytes": 4571136
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Taskfold_Taskfold_iphonesimulator27.0.xctestrun",
+      "allocatedBytes": 4096
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Taskfold_iphonesimulator27.0-arm64.xctestrun",
+      "allocatedBytes": 8192
+    },
+    {
+      "path": "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/TaskfoldUITests-Runner.app",
+      "allocatedBytes": 23957504
+    }
+  ],
+  "ordinaryAppsAndExtensionsPreserved": true,
+  "userDataRemoved": false,
+  "freeBytes": 24314900480
+}

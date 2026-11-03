@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-03",
+  "project": "zqxflydiyfjeedqvyova",
+  "readOnly": true,
+  "scope": "Catalog metadata only; no user records read, service functions invoked, or hosted changes made",
+  "rows": [
+    {
+      "table_name": "profiles",
+      "rls_enabled": true
+    },
+    {
+      "table_name": "project_templates",
+      "rls_enabled": true
+    },
+    {
+      "table_name": "projects",
+      "rls_enabled": true
+    },
+    {
+      "table_name": "task_activity",
+      "rls_enabled": true
+    },
+    {
+      "table_name": "task_activity_epoch",
+      "rls_enabled": true
+    },
+    {
+      "table_name": "task_comments",
+      "rls_enabled": true
+    },
+    {
+      "table_name": "tasks",
+      "rls_enabled": true
+    }
+  ]
+}

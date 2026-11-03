@@ -1,0 +1,47 @@
+# Daily-use development builds
+
+The immediate delivery is an ordinary personal-workflow app on the existing storage path. Independent-child migration, teams, advanced shared files/audio and their acceptance remain later work.
+
+## Current candidates — 3 November 2026
+
+- Mac **1.2.0 (3)**: ordinary app identity, Apple Development signed app, widgets and share extension. The actual ZIP payload passes the existing development-artifact verifier. The current profile expires **10 November 2026**. Startup/installation is awaiting the Mac unlock; the installed 1.1.0 app remains intact. A private local app-file safety copy was made before the attempted launch, without exporting Keychain items.
+- iOS **1.4.0 (19)**: ordinary Simulator app builds with widgets and sharing. This unsigned Simulator product cannot be installed on an iPhone. The physical build stops at Xcode account/profile setup. The daily command now applies the configured team to all extensions as well. Physical signing/installation remains unverified.
+
+No test launch arguments or candidate feature gates were enabled. No hosted changes, new simulators, real-task edits, installation or publication were performed. Build receipts bind the app input fingerprint.
+
+## What the ordinary client exposes
+
+| Experience | Client/configuration inventory | Service inventory |
+| --- | --- | --- |
+| Capture, task edits/completion/deletion, planning and recurring dates | Existing personal path available | Guarded task edit/delete functions present |
+| Archive/subprojects, manual ordering and filters | Existing personal path available | Project archive/parent columns and ordering function present |
+| Templates and multiline capture | Ordinary personal screens available | Template table and guarded edit function present; newer cloud workflow Undo is missing |
+| Notes, widgets and Focus | Ordinary personal screens available; packaged extensions verified | Focus session function present |
+| Insights and goals | Ordinary screens available; historical coverage stays explicit | Root activity/epoch and goals function present; new child-activity tables absent |
+| Scoped assignments | Client support exists | Scoped assignment endpoint missing; prioritize its focused service update |
+| Google/Microsoft calendars and inbound email | Configuration remains pending | User-provided registrations/provider remain deferred |
+| New storage, team authoring and shared audio/files | Ordinary client gates remain off | Advanced service activation is not implied by isolated acceptance |
+
+This is source/configuration plus read-only live-catalog evidence, **not** a new real-account end-to-end acceptance. Catalog presence does not establish every authorization path. `hosted-*.json` contains metadata only; no user records were inspected or changed. The ordinary client's existing legacy-sync fallback checks that both team endpoints are absent before using legacy sync.
+
+## Rebuild and update
+
+Each owning repo has its own `Scripts/build_daily.py` and `Taskfold/Taskfold-Daily.entitlements`. The command copies only project metadata into the selected build cache and uses this checkout's sources/resources. Absolute scheme references keep the cached scheme bound to that project. It never edits the ordinary project, Info.plist or release entitlements.
+
+The daily profile omits remote push and Time Sensitive notification entitlements unsupported by the current Personal Team. Ordinary local reminder code, widget App Group, share extension and existing sandbox/file/calendar permissions stay included. Normal release entitlements are unchanged.
+
+Mac: `python3 Scripts/build_daily.py --allow-provisioning`
+
+iOS Simulator: `python3 Scripts/build_daily.py --simulator`
+
+iPhone, after configuring Xcode Accounts and the registered device: `python3 Scripts/build_daily.py --device DEVICE_ID --allow-provisioning`
+
+Use `--build-number N` for a new daily update, applying the number to app/extensions together. The built app and extensions must still pass the continuity metadata floor. Use `--derived-data PATH` to reuse a current cache and `--team TEAM_ID` to select an existing team explicitly. Otherwise the sole configured project team is applied to app/extensions. Device/Simulator receipts are separate, so a failed physical build cannot erase a successful Simulator receipt. The commands enforce the storage floor, build one platform/job at a time and only the host Simulator architecture. They do not install, launch, create accounts, publish or submit an App Store release.
+
+The Mac ZIP is in this chat's output/daily-use-mac directory, with a byte-bound build receipt. Quit the old app before replacing its application bundle; retain the local-file safety copy while validating startup. A development profile needs renewal when it expires.
+
+## Next product work
+
+Finish Mac startup/installation when unlocked and physical iPhone signing when the account is available. Then prioritize scoped assignment and cloud workflow Undo service availability, followed by real daily-use friction in organization/templates/planning. Keep the full advanced Px backlog; do not restart broad unchanged acceptance matrices as the immediate focus.
+
+The delivery check originally assumed exactly three versioned targets and rejected the iOS Watch companion. It now requires both configurations for each core bundle identity and consistent versions across optional companions. Each repo passes 12 focused checks, including matching companions, missing required configurations and mismatched companion versions; the ordinary projects and actual built app/widget/share metadata pass. This does not establish distribution or Watch runtime acceptance.
