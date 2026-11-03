@@ -10626,3 +10626,11 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Complete Mac/iPad runtime, audible/accessibility/account transitions, actual scrolling/rendering and broader workflow/catalog/editor scaling.
 
 [Evidence and measurement limits](workflow-definition-preview/README.md). No Mac runtime or FPS improvement is claimed.
+
+### 3 November 2026 · Reviewed residual-file repair
+
+- [x] Independently own disabled operator repair, canonical/narrow-legacy manifest, signed review/confirmation, exact identity/version rechecks, Storage API removal and honest completion. Status-only client proofs gain no deletion authority.
+- [x] Pass own 33 handler/proof tests and 43 actual isolated PostgreSQL/Storage checks, including partial multi-bucket failure, preserved outsider bytes, replacement refusal and100+1 batching. Advisors add no new finding; all owned runtime resources are removed.
+- [ ] Complete hosted activation/acceptance, expired pre-proof policy and wider provider/failure directions. Native protected-session/runtime remains tied to deferred signing.
+
+[Evidence and operational limits](account-removal-residual-repair/README.md). Native UI is unchanged; no new native runtime pass is claimed.

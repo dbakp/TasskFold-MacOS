@@ -1,0 +1,22 @@
+# Reviewed residual account-file repair
+
+Reviewed 3 November 2026. This repo independently owns a disabled administrator repair candidate, read-only service-role manifest RPC and operator documentation. The shared backend has not been changed. There is no scheduler, new client permission or native UI change.
+
+The repair is limited to accounts already absent from Auth. An operator secret independent of the normal status proof protects a preview of up to 100 canonical/narrow-legacy objects. A 15-minute HMAC review binds origin, account and the exact manifest. Explicit account confirmation, fresh Auth/identity/fingerprint checks and Storage API removal precede the original absence check. Only confirmed absence returns complete. Another batch needs a new review. Private keys, proofs, API credentials and review tokens are not in this evidence.
+
+## Independently accepted here
+
+- 33 Deno tests pass: 13 new repair tests plus 20 unchanged deletion/status-proof regressions. Formatting and lint pass. They check disabled/unauthorized/client refusal, Auth presence, request/manifest bounds, signature/expiry/target/confirmation, source changes before DELETE, deadlines, partial/unconfirmed results, fresh bucket checks and unreviewed remainder.
+- 43 owning integration checks pass using the actual repair and original status handlers, real PostgreSQL/pgcrypto and a pinned actual Storage API with an ephemeral file backend. Actual client roles cannot execute the RPCs; an existing Auth account is refused. Canonical ownership wins over a misleading prefix, while the narrow ownerless legacy case works.
+- The operator preview changes no files. Adding a new object and replacing its version invalidate prior review without DELETE. A real partial failure removes the first approved bucket's bytes, leaves a later bucket readable, and cannot report complete. A fresh review finishes cleanup. Another account's same-prefix file bytes and an unsupported ownerless-bucket file remain unchanged; the outsider's Auth row remains.
+- The original status-only proof cannot repair files. It confirms absence after operator repair, without acquiring destructive authority. This tests a current proof-bearing recovery path; it does not invent evidence for expired pre-proof legacy commands.
+- Actual 101-object batching approves/removes only 100, reports pending, leaves the unreviewed last object, rejects replay of the old review and completes only after renewed review. All labeled Storage/database containers and their ephemeral network are removed.
+- Official read-only advisors ran before/after with no changed finding or repair-specific notice. The sole existing notice is the deliberately minimal public.is_project_owner bootstrap stub's mutable search_path; the new private implementation and invoker wrapper have empty search paths and client execute grants revoked. [Advisor explanation](https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable).
+
+The initial iOS fixture attempts failed at private-schema privilege introspection and PostgreSQL boolean-to-JSON adaptation. The private lookup refusal was correct protection; explicit privilege/intended denial tests and to_jsonb wrappers corrected the fixture. Final reports are complete acceptance; the failed reports are retained and not counted. Mac independently runs its owning sources; this is server-tooling acceptance in the Mac repo, not a native Mac Keychain/UI pass.
+
+## Limits and next work
+
+Auth absence is modeled through disposable SQL, not a genuine Auth Admin HTTP removal. The provider is a local file backend, not hosted/versioned S3. Concurrent privileged writers must be quiescent: Storage's delete-by-path operation does not atomically consume the reviewed metadata fingerprint. Existing ordinary authenticated upload fences still apply. Hosted deployment/verification, broader failures, expired pre-proof policy and Mac protected-session/runtime remain open. User-deferred signing/distribution/remote reminders/older-client rollout/provider/device work remains deferred.
+
+See the [operator contract](../../supabase/functions/account-removal-repair/README.md), [own verification](verification.json) and [provider evidence](provider.json). Existing native source and app release inputs are unchanged; a new app build was not run for server-only tooling. This batch does not complete P0 or the full Px objective.

@@ -78,6 +78,8 @@ def summary(title, items, focus=False):
 
 
 def render(data, links=False):
+    focused_stage = next((stage['id'] for stage in data['stages']
+                          if any(group.get('focus', False) for group in stage['groups'])), 'p2')
     out = [f'<header class="px-head"><h1>{escape(data["title"])}</h1><span class="text-small text-muted">Reviewed <time datetime="{data["updated"]}">{date.fromisoformat(data["updated"]).strftime("%d %b %Y")}</time></span></header>']
     out.append(f'<div class="px-intro">{escape(data["headline"])}</div>')
     out.append('<div class="px-legend" aria-label="Milestone states">')
@@ -87,7 +89,7 @@ def render(data, links=False):
     out.append(f'<details id="px-latest" data-remember><summary class="cursor-interaction">Latest · {escape(data["focus"])}</summary><div>{escape(data["latest"])}</div></details>')
     for stage in data['stages']:
         all_items = [item for group in stage['groups'] for item in group['items']]
-        opened = ' open' if stage['id'] == 'p2' else ''
+        opened = ' open' if stage['id'] == focused_stage else ''
         out.append(f'<details class="px-stage" id="px-{stage["id"]}" data-remember{opened}><summary class="cursor-interaction">{summary(stage["title"], all_items)}</summary><div class="text-small text-muted px-intro">{escape(stage["summary"])}</div>')
         for group in stage['groups']:
             out.append(f'<details class="px-group" id="{group["id"]}" data-remember><summary class="cursor-interaction">{summary(group["title"], group["items"], group.get("focus", False))}</summary><ul class="px-items">')

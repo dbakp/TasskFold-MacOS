@@ -1,6 +1,6 @@
 # Restore working account removal
 
-Current status (22 October 2026): protocol-2 service and matching migration are deployed. Both apps save a private status proof before deletion. Real iPhone Simulator recovery after deliberate expiry/pruning of its exact synthetic receipt passes on ordinary relaunch. This closes the deleted-account/lost-reply late-expiry gap for proof-bearing commands. Mac runtime/profile, already-expired pre-proof legacy commands, residual-file repair and wider fault/concurrency variants remain open. Earlier candidate/gap sections below are historical; the final status-proof milestone supersedes them only within this scope.
+Current status (3 November 2026): the deployed protocol-2 proof service is unchanged. Both owning repos now verify a disabled, review-bound administrator residual-file repair candidate against actual isolated Storage bytes (43 checks each), plus 33 handler/proof tests each. Hosted activation/verification, expired pre-proof policy, genuine Mac protected-session/runtime and wider fault/concurrency directions remain open. [Current repair evidence](account-removal-residual-repair/README.md). Earlier candidate/gap sections below remain historical within their recorded scope.
 
 
 ## Coordinated private recovery — 31 October 2026
@@ -180,3 +180,7 @@ the private proof and erased local copies, with the same original authorization
 and no reauthentication. This deliberately manipulates the test receipt; it is
 not seven elapsed days or a claim that cron pruned it. Current-scope evidence and
 remaining acceptance are in `p0-account-removal-status-proof-evidence.json`.
+
+## Reviewed residual-file repair candidate — 3 November
+
+An administrator-only preview/confirmation path now handles indexed owned files left after Auth is absent and ordinary receipts have expired. It preserves the status proof's non-destructive authority, rechecks reviewed identities/versions, deletes through Storage's API, and requires renewed review for remaining batches. Both independently owned copies pass 33 handler/proof tests and 43 actual local-provider integration checks, including a real partial multi-bucket failure and 100+1 batching. The candidate is disabled and undeployed. Expired pre-proof legacy commands remain unresolved; no device-copy deletion is assumed. [Scope, initial fixture failures, advisor baseline and remaining work](account-removal-residual-repair/README.md).

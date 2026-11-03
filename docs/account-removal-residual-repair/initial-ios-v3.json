@@ -1,0 +1,84 @@
+{
+  "checks": {
+    "provider metadata identifies actual canonical owner": true,
+    "ownerless legacy file is real provider metadata": true,
+    "anon has no public repair RPC": true,
+    "anon has no private repair RPC": true,
+    "anon actual invocation denied": true,
+    "authenticated has no public repair RPC": true,
+    "authenticated has no private repair RPC": true,
+    "authenticated actual invocation denied": true,
+    "existing Auth rejected by actual RPC": true,
+    "handler refuses still-existing account": true,
+    "no deletion on existing account": true,
+    "review lists exactly canonical and narrow legacy files": true,
+    "preview removes nothing": true
+  },
+  "hostedChanges": false,
+  "providerBytesTested": false,
+  "realAuthAdminClaimed": false,
+  "deployed": false,
+  "20261022193804_account_removal_service.sql": "93dd54c808919926a6546ba59d696086234b91b80cc728136e8fcd4d6fc5474c",
+  "20261022203333_account_removal_status_proofs.sql": "e96fa9f54e7ab8969a8e5c77b82dcad49791a1fd8ec99b875a4476c468113a39",
+  "baselineAdvisors": {
+    "ran": true,
+    "source": "supabase db advisors --type all",
+    "result": [
+      {
+        "name": "function_search_path_mutable",
+        "title": "Function Search Path Mutable",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects functions where the search_path parameter is not set.",
+        "detail": "Function `public.is_project_owner` has a role mutable search_path",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+        "metadata": {
+          "name": "is_project_owner",
+          "type": "function",
+          "schema": "public"
+        },
+        "cache_key": "function_search_path_mutable_public_is_project_owner_8f50cf28f66c9989c028839a0b8123dc"
+      }
+    ]
+  },
+  "20261103105727_account_removal_residual_repair.sql": "999c04e2da68c19f7042a93a22adec1ea31edd7318c52750270cdb2b40d7afe9",
+  "error": "status proof cannot repair residual files\n\n503 !== 401\n",
+  "rpcTrace": [
+    {
+      "rpc": "taskfold_account_removal_repair_manifest",
+      "code": "28000",
+      "valueType": "object"
+    },
+    {
+      "rpc": "taskfold_account_removal_proof_key",
+      "code": null,
+      "valueType": "object"
+    },
+    {
+      "rpc": "taskfold_account_removal_repair_manifest",
+      "code": null,
+      "valueType": "object"
+    },
+    {
+      "rpc": "taskfold_account_removal_proof_key",
+      "code": null,
+      "valueType": "object"
+    },
+    {
+      "rpc": "taskfold_account_removal_status",
+      "code": null,
+      "valueType": "object"
+    },
+    {
+      "rpc": "taskfold_account_removal_absent",
+      "code": "42804",
+      "valueType": "object"
+    }
+  ],
+  "adapterFailures": [],
+  "storageRemoved": true,
+  "databaseRemoved": true
+}

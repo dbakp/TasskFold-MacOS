@@ -33,7 +33,8 @@
     "test:audio-comment-ledger": "node test-audio-comment-ledger.mjs",
     "test:audio-comment-gateway": "node test-audio-comment-gateway.mjs",
     "test:audio-maintenance-scheduler": "node test-audio-maintenance-scheduler.mjs",
-    "test:audio-native-publication": "node test-audio-native-publication.mjs"
+    "test:audio-native-publication": "node test-audio-native-publication.mjs",
+    "test:account-removal-repair": "node test-account-removal-repair.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"
