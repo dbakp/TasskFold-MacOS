@@ -1,5 +1,20 @@
 # Taskfold macOS polish plan
 
+## Delivery order — 3 November 2026
+
+The immediate goal is a useful personal app that can receive incremental development updates. Completion of the entire Px backlog is not the installation gate.
+
+1. **Daily-use build:** launch and install the normal Mac candidate, then sign/install the iPhone app when Xcode Accounts is configured. Verify startup, preserved data, capture, editing/completion and sync on the changed delivery path.
+2. **Organization and repeatable work:** close ordinary-user gaps in archiving/subprojects, templates, multiline capture, nested editing, ordering and filters. Reuse implemented work; do not rebuild accepted features to satisfy a new checklist.
+3. **Daily experience:** improve planning, notes, Focus, widgets and performance from observed friction. Package one coherent improvement at a time with a short change list and remaining limitations.
+4. **Connected features:** calendars, email and location delivery follow when their recorded configuration/device prerequisites are available. An unavailable provider must not hold unrelated personal features.
+5. **Advanced workloads and release:** independent child migration, team/shared media and wider acceptance remain planned after the personal app is usable. Remote reminders, old-client rollout safety and distribution verification retain the user's explicit deferral.
+
+For each update, implement one visible workflow, run focused regression checks plus affected data/account safety checks, package, commit and push both owning repositories where applicable. Do not reopen unchanged acceptance matrices or make optional advanced features a prerequisite for personal use. A blocked test is recorded once; independent product work continues. Data loss, cross-account exposure and broken ordinary saving/sync remain blockers for the affected build.
+
+**Current evidence:** the Mac package and ordinary iOS Simulator build exist; neither establishes successful normal installation. Mac startup is blocked by a locked screen, and physical iPhone signing by Xcode's missing account/profiles. The Mac development profile expires 10 November and needs renewal. Live metadata confirms the assignment guard can be inserted at one existing anchor while retaining invoker security, generation checks and existing permissions. The endpoint is still absent: this is compatibility preflight, not a deployed or end-to-end accepted fix. Cloud workflow Undo also remains unavailable. Assignment/shared features do not need to hold unrelated personal workflows.
+
+
 ## 1 November 2026 · Native assignment-clearing safeguards
 
 The actual project picker now passes local save/autosave, safe refusal and cold return on iPhone, iPad and Mac. The Mac inspector reveals the complete refusal message automatically; the native check verifies its full viewport bounds. Exported snapshots independently prove only expected root/child assignment changes, exact metadata preservation and untouched refusal bytes; eight adversarial verifier checks pass in each independently owned repository. Both app/runner builds/signatures pass. Spoken output, genuine cloud delivery, complex recipient/history semantics and broader migration acceptance remain open. [Native evidence](assignment-tree-native/README.md).

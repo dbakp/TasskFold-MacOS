@@ -1,5 +1,20 @@
 # Remaining product backlog
 
+## Delivery order — 3 November 2026
+
+The immediate goal is a useful personal app that can receive incremental development updates. Completion of the entire Px backlog is not the installation gate.
+
+1. **Daily-use build:** launch and install the normal Mac candidate, then sign/install the iPhone app when Xcode Accounts is configured. Verify startup, preserved data, capture, editing/completion and sync on the changed delivery path.
+2. **Organization and repeatable work:** close ordinary-user gaps in archiving/subprojects, templates, multiline capture, nested editing, ordering and filters. Reuse implemented work; do not rebuild accepted features to satisfy a new checklist.
+3. **Daily experience:** improve planning, notes, Focus, widgets and performance from observed friction. Package one coherent improvement at a time with a short change list and remaining limitations.
+4. **Connected features:** calendars, email and location delivery follow when their recorded configuration/device prerequisites are available. An unavailable provider must not hold unrelated personal features.
+5. **Advanced workloads and release:** independent child migration, team/shared media and wider acceptance remain planned after the personal app is usable. Remote reminders, old-client rollout safety and distribution verification retain the user's explicit deferral.
+
+For each update, implement one visible workflow, run focused regression checks plus affected data/account safety checks, package, commit and push both owning repositories where applicable. Do not reopen unchanged acceptance matrices or make optional advanced features a prerequisite for personal use. A blocked test is recorded once; independent product work continues. Data loss, cross-account exposure and broken ordinary saving/sync remain blockers for the affected build.
+
+**Current evidence:** the Mac package and ordinary iOS Simulator build exist; neither establishes successful normal installation. Mac startup is blocked by a locked screen, and physical iPhone signing by Xcode's missing account/profiles. The Mac development profile expires 10 November and needs renewal. Live metadata confirms the assignment guard can be inserted at one existing anchor while retaining invoker security, generation checks and existing permissions. The endpoint is still absent: this is compatibility preflight, not a deployed or end-to-end accepted fix. Cloud workflow Undo also remains unavailable. Assignment/shared features do not need to hold unrelated personal workflows.
+
+
 ## Current status — 1 November 2026
 
 - [x] Guarded Redo for combined parent/subtask completions: Mac, iPhone and iPad pass Complete → Undo → Redo → Undo and cold return; mobile peers confirm exactly four distinct operations. Both repos pass 53 focused checks; the iPhone local-history limit/regression also passes. [Scope and evidence](completion-redo/README.md).

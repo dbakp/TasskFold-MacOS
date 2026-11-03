@@ -45,3 +45,7 @@ The Mac ZIP is in this chat's output/daily-use-mac directory, with a byte-bound 
 Finish Mac startup/installation when unlocked and physical iPhone signing when the account is available. Then prioritize scoped assignment and cloud workflow Undo service availability, followed by real daily-use friction in organization/templates/planning. Keep the full advanced Px backlog; do not restart broad unchanged acceptance matrices as the immediate focus.
 
 The delivery check originally assumed exactly three versioned targets and rejected the iOS Watch companion. It now requires both configurations for each core bundle identity and consistent versions across optional companions. Each repo passes 12 focused checks, including matching companions, missing required configurations and mismatched companion versions; the ordinary projects and actual built app/widget/share metadata pass. This does not establish distribution or Watch runtime acceptance.
+
+## Assignment service preflight — 3 November
+
+Read-only inspection confirms exactly one merge anchor in the live guarded task editor, with task-generation protection, invoker security and authenticated-only execution. The scoped endpoint/guard remain absent. See `hosted-assignment-preflight.json`. No real tasks or hosted definitions were changed. This is readiness evidence for a narrow update, not a deployment or acceptance result. Unrelated personal workflows can proceed.

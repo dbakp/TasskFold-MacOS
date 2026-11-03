@@ -1,0 +1,20 @@
+{
+  "checkedOn": "2026-11-03",
+  "project": "zqxflydiyfjeedqvyova",
+  "readOnly": true,
+  "deployed": false,
+  "userRowsRead": false,
+  "identity": "taskfold_patch_task(uuid,jsonb,jsonb)",
+  "securityDefiner": false,
+  "owner": "postgres",
+  "searchPath": "",
+  "definitionMD5": "83d5f48c06902d43648e941acbacf7c3",
+  "mergeAnchorCount": 1,
+  "generationGuardPresent": true,
+  "authenticatedExecute": true,
+  "anonExecute": false,
+  "scopedGuardPresent": false,
+  "scopedEndpointPresent": false,
+  "candidate": "supabase/migrations/20261101201038_scoped_task_assignment_guard.sql",
+  "limitation": "Catalog/function inspection only. Does not establish live behavior, all table policies or deployment safety. No hosted mutation performed."
+}
