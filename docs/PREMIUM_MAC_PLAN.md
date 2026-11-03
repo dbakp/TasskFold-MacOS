@@ -10724,3 +10724,15 @@ The native row styling is retained while full definition validation moves onto a
 - [ ] Continue competing actions/conflicts, stale/revoked/shared-account/window/background cases, insertion/deletion/archived Undo and full adoption/migration/media. Real organizer/keyboard/speech acceptance, protected Keychain/TLS and pg_net placement remain separate.
 
 [Evidence and exact limits](genuine-structure-recovery/README.md). No hosted deployment or ordinary gate change.
+
+
+### 3 November 2026 · Genuine native conflict review
+
+- [x] Fix field-review refresh racing a current sync: reuse the busy-aware record preflight and prove it waits for an actual held workspace response before comparison.
+- [x] Refuse stale same-child field and competing hierarchy actions against genuine local services while preserving original attempted requests and remote work.
+- [x] Cold reopen, close originals through the real metadata endpoints, retain closure proofs and save fresh reviewed requests offline without sending.
+- [x] Apply only the selected description while retaining remote priority; capture the current hierarchy version for the reviewed branch move. Cold confirm and reopen offline with exact original/new histories and Store/cache preservation. Each app: 18 field + 18 hierarchy checks, ten separate processes.
+- [x] Build/sign current app/runners; close owned apps/services and restore the initial iPhone Simulator state.
+- [ ] Continue full adoption/legacy/history/media migration, changed identities/access/window/background races and remaining native comparison/keyboard/speech cases. Protected Keychain/TLS and pg_net placement remain separate.
+
+[Evidence and limits](genuine-conflict-review/README.md). Programmatic production-controller acceptance; no hosted deployment or ordinary gate change.

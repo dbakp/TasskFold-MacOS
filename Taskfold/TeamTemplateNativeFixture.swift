@@ -673,8 +673,8 @@ enum FullSchemaNativeFixture {
         let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:root.appendingPathComponent("config.json")))
         guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
               let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
-              ["initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify"].contains(phase),
-              (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
+              ["initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify"].contains(phase),
+              (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-") && !phase.hasPrefix("field-review-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
         return c
     }
     static func journalKey(_ account:String)throws->SymmetricKey {
@@ -683,7 +683,7 @@ enum FullSchemaNativeFixture {
         return SymmetricKey(data:SHA256.hash(data:Data((c.nonce.uuidString+account).utf8)))
     }
     @MainActor static func backend()->Backend {
-        FullSchemaNativeNetwork.offline = phase != "initial" && phase != "child-queue" && phase != "structure-queue"
+        FullSchemaNativeNetwork.offline = !["initial","child-queue","structure-queue","field-review-queue","structure-review-queue"].contains(phase)
         let c=try? configuration()
         let saved=(try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
         let session=saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil
@@ -702,6 +702,20 @@ enum FullSchemaNativeNetwork {
     private static let lock=NSLock()
     private static var disconnected=true,drop=false,drops=0
     static var offline:Bool {get{lock.withLock{disconnected}}set{lock.withLock{disconnected=newValue}}}
+
+    private static var holdRead=false,heldRead=false,readJoins=0
+    static func armWorkspaceRead(){lock.withLock{holdRead=true;heldRead=false;readJoins=0}}
+    static func releaseWorkspaceRead(){lock.withLock{holdRead=false}}
+    static var workspaceReadIsHeld:Bool {lock.withLock{heldRead}}
+    static var joinedReads:Int {lock.withLock{readJoins}}
+    static func recordReadJoin(){lock.withLock{readJoins+=1}}
+    static func waitForWorkspaceRead(_ request:URLRequest) async throws {
+        guard request.httpMethod=="GET",request.url?.path=="/rest/v1/tasks" else{return}
+        let shouldHold=lock.withLock{guard holdRead else{return false};heldRead=true;return true}
+        guard shouldHold else{return};defer{lock.withLock{heldRead=false}}
+        while lock.withLock({holdRead}) {try Task.checkCancellation();try await Task.sleep(for:.milliseconds(10))}
+    }
+
     static func armDrop(){lock.withLock{drop=true;drops=0}}
     static var dropped:Int {lock.withLock{drops}}
     static func consumeDrop(_ request:URLRequest,_ response:HTTPURLResponse)->Bool {
@@ -728,6 +742,7 @@ private final class FullSchemaNativeProtocol:URLProtocol,@unchecked Sendable {
                 var forwarded=request;forwarded.url=try target.url.unwrapFullSchema();forwarded.setValue(nil,forHTTPHeaderField:"Host")
                 let (data,response)=try await Self.forwarding.data(for:forwarded)
                 guard !Task.isCancelled,let http=response as? HTTPURLResponse else{throw CancellationError()}
+                try await FullSchemaNativeNetwork.waitForWorkspaceRead(request)
                 if FullSchemaNativeNetwork.consumeDrop(request,http){client?.urlProtocol(self,didFailWithError:URLError(.networkConnectionLost));return}
                 let deliveredResponse=HTTPURLResponse(url:original,statusCode:http.statusCode,httpVersion:"HTTP/1.1",headerFields:http.allHeaderFields.reduce(into:[String:String]()){if let key=$1.key as? String{$0[key]=String(describing:$1.value)}})!
                 client?.urlProtocol(self,didReceive:deliveredResponse,cacheStoragePolicy:.notAllowed);client?.urlProtocol(self,didLoad:data);client?.urlProtocolDidFinishLoading(self)

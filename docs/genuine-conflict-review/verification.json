@@ -1,0 +1,18 @@
+{
+  "accepted": true,
+  "actualAppChecks": {
+    "field": 18,
+    "structure": 18
+  },
+  "coldAppProcesses": 10,
+  "fieldReviewUsesBusyAwarePreflight": true,
+  "heldRealWorkspaceResponseRegression": true,
+  "currentOwnSourceMatchesAcceptedApp": true,
+  "strictSignaturesVerified": true,
+  "buildLogSHA256": "b9981c2cc8f117074f28347bbbdf41c953a82245ee2a5688b55ee758371ffb7f",
+  "driverSHA256": "9c7c0943c692e73a9eb3271bf020e497a89ff458c92cfee18194b9ca9d75f584",
+  "hostedChanges": false,
+  "normalUseGateChanges": false,
+  "genuineTLSOrKeychainAcceptance": false,
+  "nativeViewInteractionOrSpeechAcceptance": false
+}

@@ -1091,7 +1091,7 @@ private struct ChildFieldConflictReview: View {
         loading = true; comparison = nil; chosen = []; saved = false; failure = nil
         defer { loading = false }
         do {
-            await store.sync(); guard available, !Task.isCancelled else { return }
+            try await store.synchronizeChildTaskRecordReads(); guard available, !Task.isCancelled else { return }
             let read = try await store.readChildTaskRecords(command.body["task_id"]!.text)
             guard available, !Task.isCancelled else { return }
             comparison = try ChildTaskFieldComparison(original: command, read: read)

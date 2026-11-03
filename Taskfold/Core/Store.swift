@@ -662,7 +662,7 @@ final class Store {
     }
     /// Join an existing sync before asking for current task data. A second
     /// caller must not mistake sync()'s busy early return for fresh cache data.
-    func synchronizeChildTaskStructureReads() async throws {
+    func synchronizeChildTaskRecordReads() async throws {
         guard let captured = childTaskFieldRecoveryScope, online else { throw ChildTaskRecordFailure.unavailable }
         let deadline = ContinuousClock.now.advanced(by: .seconds(25))
         func waitForSync() async throws {
@@ -674,12 +674,16 @@ final class Store {
             }
         }
         let joinedExistingSync = syncing
+        #if DEBUG
+        if joinedExistingSync,FullSchemaNativeFixture.enabled {FullSchemaNativeNetwork.recordReadJoin()}
+        #endif
         try await waitForSync(); try Task.checkCancellation()
         guard childTaskFieldRecoveryScope == captured else { throw CancellationError() }
         if !joinedExistingSync { await sync() }
         try await waitForSync(); try Task.checkCancellation()
         guard childTaskFieldRecoveryScope == captured else { throw CancellationError() }
     }
+    func synchronizeChildTaskStructureReads() async throws {try await synchronizeChildTaskRecordReads()}
     func readCurrentChildTaskStructure(_ root: String) async throws -> ChildTaskStructureRead {
         try await synchronizeChildTaskStructureReads()
         return try await readChildTaskStructure(root)
@@ -6915,7 +6919,138 @@ extension Store {
         try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
     }
 
+
+    private func fullSchemaReviewFingerprint<T:Encodable>(_ value:T)throws->String {
+        var object=try JSONSerialization.jsonObject(with:TaskfoldJSONEncoder().encode(value))
+        // Baseline field names are a Set. Canonicalize only that metadata;
+        // authored request arrays and baseline values retain their exact order.
+        if var entry=object as? [String:Any],var before=entry["before"] as? [String:Any],let fields=before["fields"] as? [String] {
+            before["fields"]=fields.sorted();entry["before"]=before;object=entry
+        }
+        return SHA256.hash(data:try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])).map{String(format:"%02x",$0)}.joined()
+    }
+    private func runFullSchemaFieldReviewPhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        guard let child=c.child else {throw AppFailure(message:"Missing isolated field identity")}
+        dailyBackupsEnabled=false
+        if phase=="field-review-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Review sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskRecords(c.task)
+            let command=try ChildTaskFieldCommand(read:read,key:child,changes:["description":.string("Reviewed local description"),"priority":.number(2)])
+            let before=try ChildTaskFieldBaseline(read:read,command:command)
+            FullSchemaNativeNetwork.offline=true;online=false
+            let model=try childTaskFieldRecoveryModel();defer{model.close()}
+            guard await model.save(command,before:before) != nil else {throw AppFailure(message:model.message ?? "Review draft was not saved")}
+        }else {guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Review session was not reopened")};online=false}
+        let journal=try childTaskFieldJournal(account:c.account,origin:backend.accountRemovalOrigin),original=try await journal.load()
+        guard let first=original.entries.first,first.before != nil else {throw AppFailure(message:"Missing original field review request")}
+        func fingerprint(_ e:ChildTaskFieldJournalState.Entry)throws->String {try fullSchemaReviewFingerprint(ChildTaskFieldJournalState.Entry(command:e.command,phase:.queued,receipt:nil,before:e.before))}
+        if phase != "field-review-queue" {guard try fingerprint(first)==c.queuedFingerprint else {throw AppFailure(message:"Original field request or baseline changed")}}
+        var message="Saved field review reopened offline"
+        if phase=="field-review-refuse" {
+            guard original.entries.count==1,first.phase == .queued else {throw AppFailure(message:"Expected queued stale field request")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskFieldRecoveryModel();defer{model.close()};await model.load()
+            guard !(await model.send(first.command)),model.entries.first?.phase == .attempted,model.message==ChildTaskFieldWriteFailure(reason:.review).localizedDescription else {throw AppFailure(message:model.message ?? "Stale field request was not refused for review")}
+            message=model.message ?? ""
+        }
+        if phase=="field-review-save" {
+            guard original.entries.count==1,first.phase == .attempted else {throw AppFailure(message:"Expected original attempted field request")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskFieldRecoveryModel();defer{model.close()};await model.load();await model.closeOriginal(first.command)
+            guard model.entries.first?.phase == .closed else {throw AppFailure(message:model.message ?? "Original field request was not closed")}
+            FullSchemaNativeNetwork.armWorkspaceRead();defer{FullSchemaNativeNetwork.releaseWorkspaceRead()}
+            let existing=Task {await self.sync()}
+            let deadline=ContinuousClock.now.advanced(by:.seconds(10))
+            while !FullSchemaNativeNetwork.workspaceReadIsHeld {guard ContinuousClock.now<deadline else {throw AppFailure(message:"Actual background workspace read was not held")};try await Task.sleep(for:.milliseconds(10))}
+            guard syncing else {throw AppFailure(message:"Expected an actual ongoing workspace sync")}
+            var readFinished=false
+            let waiter=Task {try await self.synchronizeChildTaskRecordReads();readFinished=true}
+            while FullSchemaNativeNetwork.joinedReads==0 {guard ContinuousClock.now<deadline else {throw AppFailure(message:"Review did not join the existing sync")};try await Task.sleep(for:.milliseconds(10))}
+            guard !readFinished,syncing,FullSchemaNativeNetwork.workspaceReadIsHeld else {throw AppFailure(message:"Review returned before the held workspace read finished")}
+            FullSchemaNativeNetwork.releaseWorkspaceRead();try await waiter.value;await existing.value
+            guard readFinished else {throw AppFailure(message:"Review did not finish after the workspace read")}
+            let read=try await readChildTaskRecords(c.task),comparison=try ChildTaskFieldComparison(original:first.command,read:read)
+            guard comparison.current.string("description")=="Remote description",comparison.current["priority"] == .number(1),comparison.groups.filter({$0.differs && $0.warning==nil}).count==2 else {throw AppFailure(message:"Review did not expose both current remote values")}
+            FullSchemaNativeNetwork.offline=true;online=false
+            guard let replacement=await model.saveReplacement(comparison,choosing:["description"]),replacement.id != first.command.id,Set(replacement.body["changes"]!.object.keys)==["description"] else {throw AppFailure(message:model.message ?? "Selected field review was not saved")}
+            message=model.message ?? ""
+        }
+        if phase=="field-review-send" {
+            guard original.entries.count==2,first.phase == .closed,let next=original.entries.last,next.phase == .queued else {throw AppFailure(message:"Expected closed field original and queued replacement")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskFieldRecoveryModel();defer{model.close()};await model.load()
+            guard await model.send(next.command),model.entries.last?.phase == .confirmed else {throw AppFailure(message:model.message ?? "Reviewed field replacement was not confirmed")}
+            message=model.message ?? ""
+        }
+        let disk=try await childTaskFieldJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard let retained=disk.entries.first,try fingerprint(retained)==fingerprint(first),snapshot.pending.isEmpty else {throw AppFailure(message:"Field review changed original work or entered the root queue")}
+        if ["field-review-save","field-review-send","field-review-verify"].contains(phase) {guard disk.entries.count==2,retained.phase == .closed,retained.resolution?.closed==true else {throw AppFailure(message:"Field closure proof was not retained")}}
+        if phase=="field-review-send" || phase=="field-review-verify" {
+            guard disk.entries.last?.phase == .confirmed,let task=record("tasks",id:c.task),let node=task["subtasks"].list.first(where:{$0.object["id"]?.text==child}),node.object["description"]?.text=="Reviewed local description",node.object["priority"] == .number(1) else {throw AppFailure(message:"Reviewed description overwrote an unselected remote field")}
+        }
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Field review Store and disk differ")}
+        let history=try disk.entries.map{try TaskfoldJSONDecoder().decode(JSON.self,from:TaskfoldJSONEncoder().encode($0))}
+        let report:[String:JSON]=["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"originalFingerprint":.string(try fingerprint(retained)),"joinedExistingRead":.bool(FullSchemaNativeNetwork.joinedReads>0),"history":.array(history),"pending":.number(Double(snapshot.pending.count)),"diskMatchesStore":.bool(true),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+    private func runFullSchemaStructureReviewPhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        guard let child=c.child else {throw AppFailure(message:"Missing isolated hierarchy identity")}
+        dailyBackupsEnabled=false
+        if phase=="structure-review-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Hierarchy review sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskStructure(c.task),command=try ChildTaskStructureCommand(move:child,parent:c.sibling,index:0,read:read)
+            FullSchemaNativeNetwork.offline=true;online=false
+            let model=try childTaskStructurePresentation();defer{model.close()}
+            guard await model.queue(command,read:read) else {throw AppFailure(message:model.message ?? "Hierarchy review was not saved")}
+        }else {guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Hierarchy review session was not reopened")};online=false}
+        let journal=try childTaskStructureJournal(account:c.account,origin:backend.accountRemovalOrigin),original=try await journal.load()
+        guard let first=original.entries.first else {throw AppFailure(message:"Missing original hierarchy review action")}
+        if phase != "structure-review-queue" {guard try fullSchemaReviewFingerprint(first.command)==c.queuedFingerprint else {throw AppFailure(message:"Original hierarchy review action changed")}}
+        var message="Saved hierarchy review reopened offline"
+        if phase=="structure-review-refuse" {
+            guard original.entries.count==1,first.phase == .queued else {throw AppFailure(message:"Expected queued stale hierarchy action")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskStructurePresentation();defer{model.close()};await model.load()
+            guard !(await model.send(first.command)),model.entries.first?.phase == .attempted,model.message==ChildTaskStructureFailure(reason:.review).localizedDescription else {throw AppFailure(message:model.message ?? "Stale hierarchy action was not refused for review")}
+            message=model.message ?? ""
+        }
+        if phase=="structure-review-save" {
+            guard original.entries.count==1,first.phase == .attempted else {throw AppFailure(message:"Expected original attempted hierarchy action")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskStructurePresentation();defer{model.close()};await model.load();await model.stop(first.command)
+            guard let closed=model.entries.first,closed.phase == .closed else {throw AppFailure(message:model.message ?? "Original hierarchy action was not closed")}
+            try await synchronizeChildTaskStructureReads()
+            let read=try await readChildTaskStructure(c.task),replacement=try ChildTaskStructureReview.fresh(first.command,read:read,parent:c.sibling,index:0)
+            FullSchemaNativeNetwork.offline=true;online=false
+            guard await model.replace(closed,with:replacement,read:read) else {throw AppFailure(message:model.message ?? "Fresh hierarchy review was not saved")}
+            message=model.message ?? ""
+        }
+        if phase=="structure-review-send" {
+            guard original.entries.count==2,first.phase == .closed,let next=original.entries.last,next.phase == .queued else {throw AppFailure(message:"Expected closed hierarchy original and queued replacement")}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskStructurePresentation();defer{model.close()};await model.load()
+            guard await model.send(next.command),model.entries.last?.phase == .confirmed else {throw AppFailure(message:model.message ?? "Reviewed hierarchy action was not confirmed")}
+            message=model.message ?? "";try await fullSchemaSyncSettled()
+        }
+        let disk=try await childTaskStructureJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard let retained=disk.entries.first,retained.command==first.command,snapshot.pending.isEmpty else {throw AppFailure(message:"Hierarchy review changed original action or entered the root queue")}
+        if ["structure-review-save","structure-review-send","structure-review-verify"].contains(phase) {guard disk.entries.count==2,retained.phase == .closed,retained.resolution?.closed==true else {throw AppFailure(message:"Hierarchy closure proof was not retained")}}
+        if phase=="structure-review-send" || phase=="structure-review-verify" {
+            guard disk.entries.last?.phase == .confirmed,let task=record("tasks",id:c.task),task["subtasks"].list.count==1,task["subtasks"].list.first?.object["id"]?.text==c.sibling,task["subtasks"].list.first?.object["subtasks"]?.list.first?.object["id"]?.text==child else {throw AppFailure(message:"Reviewed branch hierarchy was lost")}
+        }
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Hierarchy review Store and disk differ")}
+        let history=try disk.entries.map{try TaskfoldJSONDecoder().decode(JSON.self,from:TaskfoldJSONEncoder().encode($0))}
+        let report:[String:JSON]=["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"originalFingerprint":.string(try fullSchemaReviewFingerprint(retained.command)),"history":.array(history),"pending":.number(Double(snapshot.pending.count)),"diskMatchesStore":.bool(true),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+
     func runFullSchemaNativePhase() async throws {
+        if FullSchemaNativeFixture.phase.hasPrefix("field-review-") {try await runFullSchemaFieldReviewPhase();return}
+        if FullSchemaNativeFixture.phase.hasPrefix("structure-review-") {try await runFullSchemaStructureReviewPhase();return}
         if FullSchemaNativeFixture.phase.hasPrefix("structure-") {try await runFullSchemaStructurePhase();return}
         guard FullSchemaNativeFixture.enabled else{throw CancellationError()}
         if FullSchemaNativeFixture.phase.hasPrefix("child-") {try await runFullSchemaChildFieldPhase();return}

@@ -21,3 +21,5 @@ The existing reserved DEBUG transport forwards actual local service responses an
 ## Reproduce
 
 Build/sign the reserved DEBUG app with current owning sources, then run `node Scripts/Database/test-native-store-sync.mjs mac /tmp/taskfold-native-structure-<unique>.json structure` from this repo. The original root and child-field driver modes remain. Source freshness/signatures, the 20 GiB storage floor, scoped process cleanup and service ownership checks apply. The test app and disposable services are closed, credentials/configuration removed and the iPhone Simulator's initial state restored. Reports contain synthetic data only.
+
+Later scoped field/hierarchy conflict refusal and reviewed replacements are recorded in [the follow-up](../genuine-conflict-review/README.md). The earlier lost-reply/history evidence above retains its original scope.
