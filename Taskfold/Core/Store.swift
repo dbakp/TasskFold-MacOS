@@ -625,6 +625,7 @@ final class Store {
             .appendingPathComponent("Child hierarchy requests", isDirectory: true)
         let io = try ChildTaskStructureJournalFileIO(directory: directory, account: account, origin: origin, encryptionKey: {
             #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
             if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
             #endif
             return try BackupVault.deviceKey(account: account)
@@ -642,6 +643,7 @@ final class Store {
             .appendingPathComponent(account).appendingPathComponent(CalendarOAuthConfiguration.digest(origin))
         let io = ReviewedTeamCommandFileIO<ChildTaskStructureDraftState>(directory: directory, account: account, origin: origin, encryptionKey: {
             #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
             if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
             #endif
             return try BackupVault.deviceKey(account: account)
@@ -6849,7 +6851,72 @@ extension Store {
         try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
     }
 
+
+    private func runFullSchemaStructurePhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        guard let child=c.child else {throw AppFailure(message:"Missing isolated branch identity")}
+        dailyBackupsEnabled=false
+        if phase=="structure-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Genuine hierarchy sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskStructure(c.task)
+            let command=try ChildTaskStructureCommand(move:child,parent:c.sibling,index:0,read:read)
+            FullSchemaNativeNetwork.offline=true;online=false
+            let model=try childTaskStructurePresentation();defer{model.close()}
+            guard await model.queue(command,read:read) else {throw AppFailure(message:model.message ?? "Hierarchy action was not saved offline")}
+        }else {
+            guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Genuine hierarchy session was not reopened")}
+            online=false
+        }
+        let journal=try childTaskStructureJournal(account:c.account,origin:backend.accountRemovalOrigin)
+        let original=try await journal.load()
+        guard let first=original.entries.first else {throw AppFailure(message:"Missing durable hierarchy action")}
+        func fingerprint(_ command:ChildTaskStructureCommand)throws->String {
+            let object=try JSONSerialization.jsonObject(with:TaskfoldJSONEncoder().encode(command))
+            return SHA256.hash(data:try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])).map{String(format:"%02x",$0)}.joined()
+        }
+        if phase != "structure-queue" {guard try fingerprint(first.command)==c.queuedFingerprint else {throw AppFailure(message:"The cold hierarchy action differs from its original")}}
+        var message=first.phase == .confirmed ? "Confirmed action reopened offline":"Saved offline"
+        if phase=="structure-loss" || phase=="structure-replay" {
+            guard original.entries.count==1,first.phase == (phase=="structure-loss" ? .queued:.attempted) else {throw AppFailure(message:"Unexpected hierarchy state before sending")}
+            if phase=="structure-loss" {FullSchemaNativeNetwork.armDrop()}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskStructurePresentation();defer{model.close()};await model.load()
+            let sent=await model.send(first.command);message=model.message ?? ""
+            if phase=="structure-loss" {
+                FullSchemaNativeNetwork.offline=true;online=false
+                guard !sent,FullSchemaNativeNetwork.dropped==1,model.entries.first?.phase == .attempted else {throw AppFailure(message:"Hierarchy lost reply did not preserve attempted recovery. "+message)}
+            }else {
+                guard sent,model.entries.first?.phase == .confirmed else {throw AppFailure(message:"Exact hierarchy retry was not confirmed. "+message)}
+                try await fullSchemaSyncSettled()
+            }
+        }
+        if phase=="structure-undo" || phase=="structure-redo" {
+            guard original.entries.allSatisfy({$0.phase == .confirmed}),original.entries.count == (phase=="structure-undo" ? 1:2),let previous=original.entries.last else {throw AppFailure(message:"Unexpected hierarchy history before reversal")}
+            FullSchemaNativeNetwork.offline=false;online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskStructure(c.task),model=try childTaskStructurePresentation();defer{model.close()};await model.load()
+            guard let inverse=await model.queueInverse(previous,read:read),await model.send(inverse) else {throw AppFailure(message:model.message ?? "Hierarchy reversal was not confirmed")}
+            message=model.message ?? "";try await fullSchemaSyncSettled()
+        }
+        let disk=try await childTaskStructureJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard let saved=disk.entries.first,try fingerprint(saved.command)==fingerprint(first.command),snapshot.pending.isEmpty else {throw AppFailure(message:"Original hierarchy action changed or entered the root queue")}
+        if phase=="structure-queue" {guard disk.entries.count==1,saved.phase == .queued else {throw AppFailure(message:"Hierarchy action was not queued")}}
+        if ["structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify"].contains(phase) {
+            let count=phase.contains("redo") ? 3:phase.contains("undo") ? 2:1
+            guard disk.entries.count==count,disk.entries.allSatisfy({$0.phase == .confirmed}),saved.receipt?.raw["replayed"] == .bool(true),
+                  let task=record("tasks",id:c.task),task.title=="Changed remotely while closed" else {throw AppFailure(message:"Confirmed hierarchy history or remote title was not preserved")}
+            let roots=task["subtasks"].list
+            if count==2 {guard roots.count==2,roots[0].object["id"]?.text==child,roots[1].object["id"]?.text==c.sibling else {throw AppFailure(message:"Undo did not restore the original branch order")}}
+            else {guard roots.count==1,roots[0].object["id"]?.text==c.sibling,roots[0].object["subtasks"]?.list.first?.object["id"]?.text==child else {throw AppFailure(message:"Hierarchy move was duplicated or lost")}}
+        }
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Hierarchy Store and disk differ")}
+        let reports=disk.entries.map{entry in JSON.object(["command":.object(entry.command.body),"phase":.string(entry.phase.rawValue),"receipt":entry.receipt.map{.object($0.raw)} ?? .null,"redoOf":entry.redoOf.map(JSON.string) ?? .null])}
+        let report:[String:JSON] = ["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"account":.string(userID),"task":.string(c.task),"pending":.number(Double(snapshot.pending.count)),"commandFingerprint":.string(try fingerprint(saved.command)),"journalPhase":.string(saved.phase.rawValue),"history":.array(reports),"diskMatchesStore":.bool(true),"droppedReplies":.number(Double(FullSchemaNativeNetwork.dropped)),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+
     func runFullSchemaNativePhase() async throws {
+        if FullSchemaNativeFixture.phase.hasPrefix("structure-") {try await runFullSchemaStructurePhase();return}
         guard FullSchemaNativeFixture.enabled else{throw CancellationError()}
         if FullSchemaNativeFixture.phase.hasPrefix("child-") {try await runFullSchemaChildFieldPhase();return}
         let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase

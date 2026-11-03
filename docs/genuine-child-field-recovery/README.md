@@ -20,3 +20,5 @@ Read/write switches are enabled only in the isolated build. Trusted promotion an
 ## Reproduce
 
 Build/sign the reserved DEBUG host with current owning sources, then run `node Scripts/Database/test-native-store-sync.mjs mac /tmp/taskfold-native-child-field-<unique>.json child` from this repo. The default mode remains the original root-queue test. The driver checks source freshness and signatures, enforces the 20 GiB storage floor, reuses the existing product/device, closes its app/services and restores the iPhone Simulator's original state. Reports contain only synthetic data; disposable credentials/configuration are removed.
+
+Later scoped hierarchy recovery and cold branch Undo/Redo are recorded in [the follow-up](../genuine-structure-recovery/README.md); the field-only evidence above retains its original scope.

@@ -10713,3 +10713,14 @@ The native row styling is retained while full definition validation moves onto a
 - [ ] Continue same-child conflicts, independent structure journals, full adoption/migration/media and wider account/window/background/access/privacy/accessibility cases. Protected Keychain/TLS and pg_net placement remain separate.
 
 [Accepted flow and exact limits](genuine-child-field-recovery/README.md). Programmatic data-engine proof; no hosted deployment or ordinary gate change.
+
+
+### 3 November 2026 · Genuine hierarchy recovery and branch history
+
+- [x] Save a whole-branch move offline through the actual Store-created hierarchy presentation and encrypted journal against genuine local Auth/REST.
+- [x] Cold reopen, lose an actual committed reply, retry the original action and retain the replay receipt/cache through another offline restart.
+- [x] Use actual queueInverse/send for cold Undo and Redo; verify exact restored/moved trees, three unique original nodes, preserved nested/opaque/remote fields and only one revision advance per confirmed action. Each app: 26 checks across eight separate processes.
+- [x] Build/sign current app/runners; close owned apps/services and restore the initial iPhone Simulator state.
+- [ ] Continue competing actions/conflicts, stale/revoked/shared-account/window/background cases, insertion/deletion/archived Undo and full adoption/migration/media. Real organizer/keyboard/speech acceptance, protected Keychain/TLS and pg_net placement remain separate.
+
+[Evidence and exact limits](genuine-structure-recovery/README.md). No hosted deployment or ordinary gate change.
