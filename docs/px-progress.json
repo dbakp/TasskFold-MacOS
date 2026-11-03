@@ -5,7 +5,7 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Durable offline recovery",
-  "latest": "Both actual apps now migrate a valid legacy hierarchy through their normal reviewed public migration path, with no administrative promotion shortcut. Preserved unsent edits block migration intact; a lost committed reply recovers the original proof after restart. Nested completion metadata, authored identities, opaque data and the remote title survive. Wider historical/media/shared cases remain.",
+  "latest": "Legacy migration now has genuine local boundary proof in both repos: duplicate/canonically colliding/missing IDs and unsupported shapes refuse adoption while retaining the exact original JSON/task. Changed review digests require fresh review; closing an old request blocks late sends. Mac keyboard checks still await an unlocked desktop. Wider migration/history/media remain open.",
   "next": [
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
     "Continue wider catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.",
@@ -667,7 +667,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Complete own schema and genuine local APIs now extend into actual iPhone/Mac Store root-edit queues: offline save, committed lost reply, exact cold retry, remote sibling/title preservation and final offline cache pass. Independent child-field and hierarchy journals now pass offline/cold lost-reply recovery, with whole-branch Undo/Redo. Scoped field/hierarchy conflicts now preserve originals, closure proofs and reviewed replacements. Reviewed valid legacy adoption now passes through actual apps without administrative promotion, including preserved-edit refusal and cold proof recovery. Wider history/media migration, protected storage/TLS and wider lifecycle/accessibility remain. Normal use stays disabled.",
+              "detail": "Complete own schema and genuine local APIs now extend into actual iPhone/Mac Store root-edit queues: offline save, committed lost reply, exact cold retry, remote sibling/title preservation and final offline cache pass. Independent child-field and hierarchy journals now pass offline/cold lost-reply recovery, with whole-branch Undo/Redo. Scoped field/hierarchy conflicts now preserve originals, closure proofs and reviewed replacements. Reviewed valid legacy adoption now passes through actual apps without administrative promotion, including preserved-edit refusal and cold proof recovery. Wider history/media migration, protected storage/TLS and wider lifecycle/accessibility remain. Normal use stays disabled. Malformed legacy sources and stale/closed migration requests now have scoped genuine API refusal/preservation proof.",
               "steps": [
                 {
                   "state": "done",
@@ -747,7 +747,7 @@
                 },
                 {
                   "state": "build",
-                  "title": "Carry older tasks/history into new storage: genuine valid-tree migration and cold recovery now pass; wider identities/history remain"
+                  "title": "Carry older tasks/history into new storage: native valid-tree recovery and genuine malformed/stale/closed-request API boundaries pass; wider identities/history remain"
                 },
                 {
                   "state": "build",
@@ -1042,7 +1042,10 @@
             "genuine-conflict-review/attempts.json",
             "genuine-native-adoption/README.md",
             "genuine-native-adoption/verification.json",
-            "genuine-native-adoption/native.json"
+            "genuine-native-adoption/native.json",
+            "legacy-adoption-boundaries/README.md",
+            "legacy-adoption-boundaries/verification.json",
+            "legacy-adoption-boundaries/local-service.json"
           ],
           "focus": true
         },
@@ -1152,7 +1155,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "b09ee5e9de6a24f2f6a9c1170ee6b0175d3f0e9b3710e1c057df5370b7a42bba",
+    "P2_PLAN.md": "c30e3dbbf3607338620f145e38d9a56cc354c7c3ad36106adc5ad12fc36d5af7",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1301,6 +1304,9 @@
     "indexed-child-source/verification.json": "15f58feda791fdf04961a6c69e1f2e532bd32df8f374b65fdd5112efa32cf50d",
     "inline-subtask-preview/README.md": "0045d66e6bcb9457195c54661c58bf977cd27176ec6042c1058db8be32abe36f",
     "inline-subtask-preview/verification.json": "dc4170af492a2c674331b47768f6429ee1b21783ac22e05e735ea66a6ea6c175",
+    "legacy-adoption-boundaries/README.md": "ce2e5f860901bba2dbff0c5ef15f7260c6127e73d28bd92e58f017de76bdaa3b",
+    "legacy-adoption-boundaries/local-service.json": "51bbbb6a5f377995fb18de8d41ee3e4dafb28a563e536a2567023d4ac51fb271",
+    "legacy-adoption-boundaries/verification.json": "08488a17b55143ee21dbf199ff7f616327cf151edc6a431ac30de4cbfe253e19",
     "legacy-child-preservation/README.md": "c759db19d0718950ce19956d9dcec05a9272f9d1e7e7f77e84f1c213dbd989e0",
     "legacy-child-preservation/verification.json": "acefbc2ad99f12bc9f8c6193354c9ef0fb341fc197226e911fc188c3d9da320f",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",

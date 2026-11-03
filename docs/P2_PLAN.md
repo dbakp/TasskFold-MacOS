@@ -7644,3 +7644,14 @@ Both owning apps now reuse sorted/outlined project display data in a source/acce
 - [ ] Finish broader legacy identities/history/cache directions, files/audio and shared-workspace/access/window/large-library cases. Native migration-screen interaction, protected Keychain/TLS and pg_net placement remain separate.
 
 [Evidence and limits](genuine-native-adoption/README.md). Ordinary gates and hosted services are unchanged. Current reusable products/devices are retained, with the 20 GiB storage floor enforced.
+
+
+### 3 November 2026 · Genuine legacy migration boundaries
+
+- [x] Pass 59 actual local Auth/REST checks independently against each complete owning schema.
+- [x] Refuse duplicate/canonically colliding/missing IDs and unsupported root shapes while retaining original review JSON, complete task rows and generations, with no record authority.
+- [x] Refuse changed review digests, close the old request with real proof and keep a late Send closed. Accept only a fresh review/identity against the current tree; preserve both receipts and current source.
+- [x] Refuse outsider source review/request reuse, retain owner data and close all owned services with cron launching Off. No app rebuild or new Simulator/device.
+- [ ] Native Mac keyboard checks await unlock. Full invalid-source repair/mapping, larger history/identity/media/shared contexts and hosted rollout remain separate.
+
+[Evidence and limits](legacy-adoption-boundaries/README.md). API/database acceptance only; no app source or ordinary gate change.
