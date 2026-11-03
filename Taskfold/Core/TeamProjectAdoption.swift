@@ -59,6 +59,19 @@ struct TeamProjectAdoptionDecision: Equatable, Sendable, Identifiable {
         try self.init(project: TeamOrganizationValue.id(raw["project_id"]), user: TeamOrganizationValue.id(raw["user_id"]), choice: choice)
     }
 }
+/// Counts only: publication identities, captions and provider keys stay server-side.
+struct TeamProjectRecordingInventory: Equatable, Sendable {
+    let published: Int, pending: Int, retained: Int, unavailable: Int
+    var count: Int { published + pending + retained }
+    init(_ raw: JSON) throws {
+        guard case .object(let fields) = raw, Set(fields.keys) == ["protocol", "published", "pending", "retained", "unavailable"], fields["protocol"] == .number(1) else { throw TeamProjectAdoptionValue.invalid }
+        published = try TeamProjectAdoptionValue.count(fields["published"], limit: 10000)
+        pending = try TeamProjectAdoptionValue.count(fields["pending"], limit: 10000)
+        retained = try TeamProjectAdoptionValue.count(fields["retained"], limit: 10000)
+        unavailable = try TeamProjectAdoptionValue.count(fields["unavailable"], limit: 10000)
+        guard count <= 10000, unavailable <= count else { throw TeamProjectAdoptionValue.invalid }
+    }
+}
 struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertible {
     struct Project: Equatable, Sendable, Identifiable {
         let id: String, root: String, parent: String?, depth: Int, name: String?, archived: Bool, inherited: Bool
@@ -73,6 +86,8 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
     let supportsConnectionPause: Bool, connectionPauseSupported: Bool
     let supportsChildHistory: Bool
     let supportsChildRecordCustody: Bool, privateSubtaskUndoCount: Int
+    let recordingInventory: TeamProjectRecordingInventory?
+    var needsRecordingCustody: Bool { (recordingInventory?.count ?? 0) > 0 }
     var hasConnections: Bool { ["email_routes", "webhooks", "queued_webhook_events"].contains { (contents[$0]?.integer ?? 0) > 0 } }
     var inflightUpdates: Int { contents["inflight_webhook_events"]?.integer ?? 0 }
     func expectedConnectionEffects() throws -> TeamProjectConnectionEffects {
@@ -144,6 +159,7 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
         }
         var eligibility: [String: Bool] = [:]
         for person in collaborators { if let id = person.decisionID { guard eligibility[id] == nil || eligibility[id] == person.eligible else { throw TeamProjectAdoptionValue.invalid }; eligibility[id] = person.eligible } }
+        recordingInventory = try contents["recording_custody"].map(TeamProjectRecordingInventory.init)
         self.contents = contents
     }
     func inheritsArchiveAfter(_ project: Project) -> Bool {
@@ -168,7 +184,7 @@ struct TeamProjectAdoptionReview: Equatable, Sendable, CustomStringConvertible {
     let needsFileCustody: Bool, needsIntegrationPause: Bool
     let connectionPolicy: TeamProjectConnectionPolicy?, connectionEffects: TeamProjectConnectionEffects?
     var description: String { "Private project transfer review" }
-    var canCommit: Bool { (inspection.commitSupported || (connectionPolicy == .pause && inspection.connectionPauseSupported)) && !needsFileCustody && !needsIntegrationPause && (!inspection.hasConnections || connectionPolicy == .pause) && inspection.inflightUpdates == 0 }
+    var canCommit: Bool { (inspection.commitSupported || (connectionPolicy == .pause && inspection.connectionPauseSupported)) && !needsFileCustody && !needsIntegrationPause && !inspection.needsRecordingCustody && (!inspection.hasConnections || connectionPolicy == .pause) && inspection.inflightUpdates == 0 }
     init(_ raw: [String: JSON], inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy? = nil) throws {
         _ = try inspection.reviewBody(decisions, connectionPolicy: connectionPolicy)
         guard try TeamProjectAdoptionInspection(raw, scope: inspection.scope) == inspection,

@@ -156,6 +156,15 @@ struct TeamProjectAdoptionView: View {
             }
             LabeledContent("Discussion comments", value: String(i.contents["counts"]?.object["task_comments"]?.integer ?? 0))
             LabeledContent("Attachments, including subtasks", value: String(i.contents["attachments"]?.integer ?? 0))
+            if let recordings = i.recordingInventory, recordings.count > 0 {
+                LabeledContent("Published recordings", value: String(recordings.published)).accessibilityIdentifier("projectTransferPublishedRecordings")
+                if recordings.pending > 0 { LabeledContent("Unfinished recordings", value: String(recordings.pending)) }
+                if recordings.retained > 0 { LabeledContent("Removed recordings awaiting cleanup", value: String(recordings.retained)) }
+                if recordings.unavailable > 0 { LabeledContent("Recordings needing attention", value: String(recordings.unavailable)) }
+                Text("Recording access needs a transfer review. Your projects and recordings stay where they are.")
+                    .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("projectTransferRecordingCustody")
+            }
             if i.supportsChildRecordCustody {
                 Text("Saved copies of deleted subtasks stay private. Previous subtask Undo actions cannot restore work into the team; refresh any pending subtask edits after the transfer.")
                     .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -237,10 +246,11 @@ struct TeamProjectAdoptionView: View {
                 Text("You become a manager of these projects. Team administrators retain management access.").font(.footnote).foregroundStyle(.secondary)
             }
             Section {
+                if r.inspection.needsRecordingCustody { Label("Review recording access before transferring these projects.", systemImage: "waveform").foregroundStyle(.secondary) }
                 if r.needsFileCustody { Label("Some files need a custody review before this branch can transfer.", systemImage: "paperclip.badge.ellipsis").foregroundStyle(.secondary) }
                 if r.needsIntegrationPause { Label("Personal email or webhook connections need a pause or destination review first.", systemImage: "link.badge.plus").foregroundStyle(.secondary) }
                 if r.inspection.inflightUpdates > 0 { Text("An outgoing update is still finishing. Wait a minute, then refresh the project review.").foregroundStyle(.secondary) }
-                if !r.canCommit && r.inspection.inflightUpdates == 0 && !r.needsFileCustody && !r.needsIntegrationPause { Text("Project transfers have not been enabled for this service yet.").foregroundStyle(.secondary) }
+                if !r.canCommit && r.inspection.inflightUpdates == 0 && !r.needsFileCustody && !r.needsIntegrationPause && !r.inspection.needsRecordingCustody { Text("Project transfers have not been enabled for this service yet.").foregroundStyle(.secondary) }
                 Text("These projects will belong to the team. Returning them to personal ownership is a separate transfer; there is no automatic Undo.").font(.callout).fixedSize(horizontal: false, vertical: true)
                 Button("Transfer \(r.inspection.projects.count == 1 ? "project" : "\(r.inspection.projects.count) projects") to team", systemImage: "folder.badge.arrow.forward") { Task { await confirm(r) } }.buttonStyle(.borderedProminent).disabled(preparing || model?.busy == true || !r.canCommit || r.expires <= Date()).accessibilityIdentifier("confirmProjectTransfer")
                 Button("Back to access choices") { review = nil }

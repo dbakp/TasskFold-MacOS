@@ -102,6 +102,53 @@ final class TeamProjectAdoptionTests: XCTestCase {
         c["subtask_undo_policy"] = .string("kept_private_no_restore"); c["private_subtask_undo_count"] = .number(0); review["contents"] = .object(c)
         XCTAssertThrowsError(try TeamProjectAdoptionReview(review, inspection: i, decisions: decisions))
     }
+    func testRecordingInventoryCannotEnableTransferBeforeCustodyCommit() throws {
+        let (wire, legacy, _, _) = try fixture()
+        var inspectionRaw = wire["inspect"]!.object, reviewRaw = wire["review"]!.object
+        var contents = inspectionRaw["contents"]!.object
+        contents["recording_custody"] = .object(["protocol": .number(1), "published": .number(2), "pending": .number(1), "retained": .number(1), "unavailable": .number(1)])
+        inspectionRaw["contents"] = .object(contents); reviewRaw["contents"] = .object(contents)
+        let inspection = try TeamProjectAdoptionInspection(inspectionRaw, scope: legacy.scope)
+        let decisions = try wire["decisions"]!.list.map { try TeamProjectAdoptionDecision($0.object) }
+        let review = try TeamProjectAdoptionReview(reviewRaw, inspection: inspection, decisions: decisions)
+        XCTAssertFalse(review.canCommit, "Even an enabled service flag cannot imply recording custody approval")
+        XCTAssertThrowsError(try TeamProjectAdoptionCommand(review: review, now: review.expires.addingTimeInterval(-60)))
+    }
+    func testMalformedRecordingInventoryNeverBecomesTransferConsent() throws {
+        let (wire, legacy, _, _) = try fixture()
+        let summary: [String: JSON] = ["protocol": .number(1), "published": .number(1), "pending": .number(0), "retained": .number(0), "unavailable": .number(0)]
+        var invalid: [JSON] = [.null, .string("1"), .object([:])]
+        for (key, value) in [("protocol", JSON.number(2)), ("published", .number(-1)), ("pending", .number(0.5)), ("retained", .bool(true)), ("unavailable", .number(2)), ("published", .number(10001)), ("inventory_hash", .string(String(repeating: "a", count: 64)))] {
+            var bad = summary; bad[key] = value; invalid.append(.object(bad))
+        }
+        var missing = summary; missing.removeValue(forKey: "pending"); invalid.append(.object(missing))
+        var excessive = summary; excessive["published"] = .number(10000); excessive["pending"] = .number(1); invalid.append(.object(excessive))
+        for bad in invalid {
+            var raw = wire["inspect"]!.object, contents = raw["contents"]!.object
+            contents["recording_custody"] = bad; raw["contents"] = .object(contents)
+            XCTAssertThrowsError(try TeamProjectAdoptionInspection(raw, scope: legacy.scope))
+        }
+    }
+    func testRecordingInventoryCannotChangeBetweenInspectionAndReview() throws {
+        let (wire, legacy, _, _) = try fixture()
+        var raw = wire["inspect"]!.object, contents = raw["contents"]!.object
+        contents["recording_custody"] = .object(["protocol": .number(1), "published": .number(1), "pending": .number(0), "retained": .number(0), "unavailable": .number(0)])
+        raw["contents"] = .object(contents)
+        let inspection = try TeamProjectAdoptionInspection(raw, scope: legacy.scope)
+        let decisions = try wire["decisions"]!.list.map { try TeamProjectAdoptionDecision($0.object) }
+        XCTAssertThrowsError(try TeamProjectAdoptionReview(wire["review"]!.object, inspection: inspection, decisions: decisions))
+    }
+    func testActualSQLRecordingInventoryKeepsPrivateDetailsOnServer() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-recordings-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let wire = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)), body = wire["body"]!.object
+        XCTAssertEqual(wire["syntheticOnly"], .bool(true)); XCTAssertEqual(wire["containerRemoved"], .bool(true))
+        let scope = try TeamProjectAdoptionScope(account: wire["account"]!.text, origin: wire["origin"]!.text, team: body["team_id"]!.text, roots: body["roots"]!.list.map(\.text), visibility: .private)
+        let inspection = try TeamProjectAdoptionInspection(wire["inspect"]!.object, scope: scope)
+        XCTAssertEqual(inspection.contents["recording_custody"]?.object["published"], .number(2))
+        let review = try TeamProjectAdoptionReview(wire["review"]!.object, inspection: inspection, decisions: [])
+        XCTAssertFalse(review.canCommit)
+        XCTAssertThrowsError(try TeamProjectAdoptionCommand(review: review, now: review.expires.addingTimeInterval(-60)))
+    }
     private func fixture(connections: Bool = false) throws -> ([String: JSON], TeamProjectAdoptionInspection, TeamProjectAdoptionReview, TeamProjectAdoptionCommand) {
         let url = try XCTUnwrap(Bundle.module.url(forResource: connections ? "team-project-adoption-connections-v1" : "team-project-adoption-v1", withExtension: "json", subdirectory: "Fixtures"))
         let raw = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url)), b = raw["body"]!.object

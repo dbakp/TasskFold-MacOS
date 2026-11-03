@@ -7512,3 +7512,7 @@ The iPad passes 63 local service/native checks and one UI case, covering Later, 
 ## iPad recovered history and recorded confirmation
 
 Two further iPad UI cases pass without skips: 73 local service/native checks for real Redo/second Undo after recovery, and 50 for confirming an already-applied selection through an actual local acknowledgement-save failure. Whole queue/history and exact SQL/media results are verified separately. Mac is locked and its runtime remains unaccepted. Production app/schema/gates are unchanged. [Evidence](audio-selection-platform-native/README.md).
+
+## Whole-project recording transfer: signed inventory foundation
+
+Both owning services now bind a bounded recording/provider metadata inventory to the existing signed project inspection and expose counts only. Client validation and native review explanations are built; direct commits remain refused until explicit consent and atomic recording custody are implemented. Each repo passes 34 SQL and 69 project-transfer Core checks; app/runner builds and strict signatures pass. This does not complete or enable recording-bearing project transfers. [Scope and evidence](project-recording-inventory/README.md).

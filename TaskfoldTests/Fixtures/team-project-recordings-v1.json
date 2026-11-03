@@ -1,0 +1,256 @@
+{
+  "syntheticOnly": true,
+  "account": "84ba4af1-8ef2-40fb-ba73-307404ebced9",
+  "origin": "https://synthetic.example",
+  "body": {
+    "team_id": "7c09cebb-8345-4b9f-9976-6a6c4c16a065",
+    "roots": [
+      "0e8194bc-ce16-4946-aa8d-8bcc802e03dd"
+    ],
+    "visibility": "private",
+    "folder_id": null,
+    "parent_id": null
+  },
+  "inspect": {
+    "roots": [
+      "0e8194bc-ce16-4946-aa8d-8bcc802e03dd"
+    ],
+    "account": "84ba4af1-8ef2-40fb-ba73-307404ebced9",
+    "team_id": "7c09cebb-8345-4b9f-9976-6a6c4c16a065",
+    "contents": {
+      "counts": {
+        "tasks": 4,
+        "projects": 2,
+        "sections": 0,
+        "task_activity": 4,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 0,
+        "task_assignment_provenance": 4
+      },
+      "webhooks": 0,
+      "attachments": 0,
+      "email_routes": 0,
+      "inline_files": 0,
+      "content_bytes": 13532,
+      "external_files": 0,
+      "provider_files": 0,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 1,
+        "protocol": 1,
+        "retained": 1,
+        "published": 2,
+        "unavailable": 1
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1
+    },
+    "projects": [
+      {
+        "id": "0e8194bc-ce16-4946-aa8d-8bcc802e03dd",
+        "name": "Recording review",
+        "depth": 1,
+        "root_id": "0e8194bc-ce16-4946-aa8d-8bcc802e03dd",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      },
+      {
+        "id": "91d3fffe-9b11-4a4c-adaf-02430aa3b5ac",
+        "name": "Recording review",
+        "depth": 2,
+        "root_id": "0e8194bc-ce16-4946-aa8d-8bcc802e03dd",
+        "parent_id": "0e8194bc-ce16-4946-aa8d-8bcc802e03dd",
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Recording custody workshop",
+    "visibility": "private",
+    "collaborators": [],
+    "automatic_undo": false,
+    "commit_supported": false,
+    "inspection_token": "71bab2a322f457c376fb9ab6692d972a366a3ac7c9d2e2d1dedfbbaf64f3eccf",
+    "sends_invitations": false,
+    "team_member_count": 1,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "connection_pause_supported": false,
+    "child_record_custody_protocol": 1
+  },
+  "review": {
+    "roots": [
+      "0e8194bc-ce16-4946-aa8d-8bcc802e03dd"
+    ],
+    "account": "84ba4af1-8ef2-40fb-ba73-307404ebced9",
+    "team_id": "7c09cebb-8345-4b9f-9976-6a6c4c16a065",
+    "contents": {
+      "counts": {
+        "tasks": 4,
+        "projects": 2,
+        "sections": 0,
+        "task_activity": 4,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 0,
+        "task_assignment_provenance": 4
+      },
+      "webhooks": 0,
+      "attachments": 0,
+      "email_routes": 0,
+      "inline_files": 0,
+      "content_bytes": 13532,
+      "external_files": 0,
+      "provider_files": 0,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 1,
+        "protocol": 1,
+        "retained": 1,
+        "published": 2,
+        "unavailable": 1
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1
+    },
+    "projects": [
+      {
+        "id": "0e8194bc-ce16-4946-aa8d-8bcc802e03dd",
+        "name": "Recording review",
+        "depth": 1,
+        "root_id": "0e8194bc-ce16-4946-aa8d-8bcc802e03dd",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      },
+      {
+        "id": "91d3fffe-9b11-4a4c-adaf-02430aa3b5ac",
+        "name": "Recording review",
+        "depth": 2,
+        "root_id": "0e8194bc-ce16-4946-aa8d-8bcc802e03dd",
+        "parent_id": "0e8194bc-ce16-4946-aa8d-8bcc802e03dd",
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "decisions": [],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Recording custody workshop",
+    "expires_at": "2026-11-03T01:29:49.790502Z",
+    "visibility": "private",
+    "review_token": "28bbc720db79667963fea7c5511ad4c97fbb23d930b5add633e69450a69f99c1",
+    "collaborators": [],
+    "automatic_undo": false,
+    "commit_supported": false,
+    "inspection_token": "71bab2a322f457c376fb9ab6692d972a366a3ac7c9d2e2d1dedfbbaf64f3eccf",
+    "connection_policy": null,
+    "sends_invitations": false,
+    "team_member_count": 1,
+    "connection_effects": null,
+    "invitations_closed": 0,
+    "assignments_cleared": 0,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "requires_provider_custody": false,
+    "connection_pause_supported": false,
+    "requires_integration_pause": false,
+    "child_record_custody_protocol": 1
+  },
+  "decisions": [],
+  "emptyInspect": {
+    "roots": [
+      "7adf91b0-a492-41f9-aef9-ed679690f6c5"
+    ],
+    "account": "84ba4af1-8ef2-40fb-ba73-307404ebced9",
+    "team_id": "7c09cebb-8345-4b9f-9976-6a6c4c16a065",
+    "contents": {
+      "counts": {
+        "tasks": 0,
+        "projects": 1,
+        "sections": 0,
+        "task_activity": 0,
+        "task_comments": 0,
+        "task_mentions": 0,
+        "task_node_activity": 0,
+        "project_collaborators": 0,
+        "task_assignment_provenance": 0
+      },
+      "webhooks": 0,
+      "attachments": 0,
+      "email_routes": 0,
+      "inline_files": 0,
+      "content_bytes": 251,
+      "external_files": 0,
+      "provider_files": 0,
+      "global_webhooks": 0,
+      "project_webhooks": 0,
+      "recording_custody": {
+        "pending": 0,
+        "protocol": 1,
+        "retained": 0,
+        "published": 0,
+        "unavailable": 0
+      },
+      "subtask_undo_policy": "kept_private_no_restore",
+      "queued_webhook_events": 0,
+      "inflight_webhook_events": 0,
+      "pending_project_webhooks": 0,
+      "private_subtask_undo_count": 0,
+      "child_record_custody_protocol": 1
+    },
+    "projects": [
+      {
+        "id": "7adf91b0-a492-41f9-aef9-ed679690f6c5",
+        "name": "Recording review",
+        "depth": 1,
+        "root_id": "7adf91b0-a492-41f9-aef9-ed679690f6c5",
+        "parent_id": null,
+        "is_archived": false,
+        "source_ancestor_archived": false
+      }
+    ],
+    "folder_id": null,
+    "parent_id": null,
+    "team_name": "Recording custody workshop",
+    "visibility": "private",
+    "collaborators": [],
+    "automatic_undo": false,
+    "commit_supported": true,
+    "inspection_token": "e8264682bb1abdd1baf393d9aaf925d6194d0a42162c1d5b2c10deeac18a8e87",
+    "sends_invitations": false,
+    "team_member_count": 1,
+    "creates_memberships": false,
+    "destination_archived": false,
+    "child_history_protocol": 1,
+    "history_custody_protocol": 1,
+    "connection_pause_protocol": 1,
+    "project_adoption_protocol": 1,
+    "connection_pause_supported": false,
+    "child_record_custody_protocol": 1
+  },
+  "containerRemoved": true
+}

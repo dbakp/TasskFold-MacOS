@@ -10513,3 +10513,7 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 A Mac-specific checkbox/window/cache journey and actual local-provider runner now build and sign. Native runtime is pending: Xcode reports “Authentication cancelled. System authentication is running” before app launch; all owned services/configuration were removed. The existing iPad now accepts the separate cold recovery journey (63 checks), which does not establish Mac acceptance. [Evidence](audio-selection-platform-native/README.md).
 
 The iPad follow-up now accepts recovered real Redo/second Undo (73 checks) and already-applied selection confirmation (50 checks), including exact history through failed saves. This is counterpart evidence only. Native computer use confirms the Mac remains locked; the Mac runner has not been repeated and runtime is still unaccepted.
+
+### 3 November: recording counts in project review
+
+The project-transfer review now has typed recording counts and a specific custody explanation. Its independent SQL inventory/signature/guard checks pass (34), as do the project-transfer Core suites (69) and owning app/test build/signatures. New view rows have no native runtime/speech/largest-text acceptance; the Mac was last confirmed locked. Recording consent and atomic whole-project custody remain to implement. [Evidence](project-recording-inventory/README.md).
