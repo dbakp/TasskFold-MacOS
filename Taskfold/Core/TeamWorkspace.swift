@@ -511,3 +511,27 @@ extension TeamWorkspaceCache {
         value = [:]
     }
 }
+
+/// Only derived display strings are retained. Choices and authority still use
+/// the existing current project-member reader. One source/access context only.
+@MainActor final class AssigneeDisplayReadCache {
+    typealias Context = WorkspacePresentationReadCache.Context
+    private var context: Context?
+    private var names: [String: [String: String]] = [:]
+    func name(for assignee: String, project: String, context: Context, members: () -> [Record]) -> String? {
+        if self.context != context {
+            names = [:]
+            self.context = context
+        }
+        if let catalog = names[project] { return catalog[assignee] }
+        // Preserve first-match behavior even if a future reader emits duplicates.
+        let catalog = Dictionary(members().map { ($0.id, $0.string("display_name")) }, uniquingKeysWith: { first, _ in first })
+        names[project] = catalog
+        return catalog[assignee]
+    }
+    func clear() {
+        guard context != nil else { return }
+        context = nil
+        names = [:]
+    }
+}

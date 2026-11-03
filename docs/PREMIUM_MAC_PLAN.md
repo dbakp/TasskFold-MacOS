@@ -10597,3 +10597,12 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Finish richer workflow saves, large-list rendering/scrolling, larger assignment catalogs, Mac/iPad runtime and wider accessibility/account/lifecycle acceptance.
 
 [Exact evidence and timing limits](workspace-read-reuse/README.md). The save-pause checkpoint and full Px goal remain open.
+
+### 3 November 2026 · Assignment display names in large catalogs
+
+- [x] Own a display-string index per project/source/access/account/backend. Preserve presented-table Observation on hits and synchronous invalidation on source/mask/readability changes. Member pickers, sorting and permission/writer readers remain fresh.
+- [x] Pass 91 owning workspace tests, including five new cache/compatibility cases, and independent app/runner build/signature checks. Counterpart iPhone passes 16 actual Store checks and the production list on byte-identical 240-root/720-child/400-collaborator tables.
+- [x] Observe a warm100-row median of 463.95 → 2.05 ms in Debug iPhone Simulator. First observed name lookup remains separately recorded; this is not Mac/Release/frame-rate/save acceptance.
+- [ ] Finish richer creation/save and scrolling/rendering, multiple-project scaling, Mac/iPad and wider native/accessibility/account/lifecycle acceptance.
+
+[Exact evidence and limits](assignment-display-reads/README.md). The save-pause checkpoint and full Px objective remain open.

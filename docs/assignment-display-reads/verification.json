@@ -1,0 +1,71 @@
+{
+  "reviewed": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "8b53fac6eec5a3e6eb9237e50f13e5fd7f91db25",
+  "ownCoreTests": 91,
+  "newCoreTests": 5,
+  "ownCoreFailures": 0,
+  "ownAppRunnerBuildAndStrictSignatures": true,
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "f5947d4db285ea07973d301063da484112fe780738d7718924b3dda7663b600c",
+    "Taskfold/Core/TeamWorkspace.swift": "c64f9a279acfea8dd3eb75cbf47ab0fd08298ab95e44d0cf0cc163a77c95396b",
+    "Taskfold/TeamTemplateNativeFixture.swift": "63b09cbcc7e5175b8a8f0b55def188a98d8475f8bcc62e14c267f963bf9057a6",
+    "TaskfoldTests/TeamWorkspaceTests.swift": "4544c7b76c071eeebf940bd21715108241a9e59c0f6d3de4750ee2af6bfb1e69"
+  },
+  "ownHostBindings": {
+    "Taskfold/Core/Store.swift": {
+      "hostSHA256": "0295fe381c2c996c8efcb0956f0a39e9d8884e3d173312fe9274aec885994f1f",
+      "matchesOwningSourceWithIsolationTransforms": true
+    },
+    "Taskfold/Core/TeamWorkspace.swift": {
+      "hostSHA256": "c64f9a279acfea8dd3eb75cbf47ab0fd08298ab95e44d0cf0cc163a77c95396b",
+      "matchesOwningSourceWithIsolationTransforms": true
+    },
+    "Taskfold/TeamTemplateNativeFixture.swift": {
+      "hostSHA256": "63b09cbcc7e5175b8a8f0b55def188a98d8475f8bcc62e14c267f963bf9057a6",
+      "matchesOwningSourceWithIsolationTransforms": true
+    }
+  },
+  "nativeEvidenceOwner": "TaskFold-iOS",
+  "nativeTestsEachVersion": 1,
+  "nativeFailuresEachVersion": 0,
+  "nativeSkipsEachVersion": 0,
+  "nativeRuntimeWarningsAfter": [],
+  "actualStoreChecksEachVersion": 16,
+  "unchangedMemberPickerAndPermissionReaders": true,
+  "actualProductionTaskScreenOpened": true,
+  "actualProductionListScreenshotInspected": true,
+  "nativeMacRuntimeAccepted": false,
+  "nativeIPadRuntimeAccepted": false,
+  "audibleVoiceOverAccepted": false,
+  "genuineAuthOrProvider": false,
+  "releaseHardwarePerformanceClaim": false,
+  "syntheticShape": {
+    "roots": 240,
+    "checklistChildren": 720,
+    "assignedRoots": 240,
+    "projects": 1,
+    "collaborators": 400
+  },
+  "byteIdenticalFixtureTables": true,
+  "fixtureTableSHA256": "fa64406469a71dee1c58baf39d4daee391cf75ace87942da8e5008a00c25e63d",
+  "timingScope": "Three consecutive warm100-row Store lookup combinations per version, Debug iPhone Simulator; other host activity not controlled; not UI frame/save timing",
+  "beforeMilliseconds": [
+    463.9540910720825,
+    467.5559997558594,
+    454.1890621185303
+  ],
+  "afterMilliseconds": [
+    2.2280216217041016,
+    2.0530223846435547,
+    2.032041549682617
+  ],
+  "beforeMedianMilliseconds": 463.9540910720825,
+  "afterMedianMilliseconds": 2.0530223846435547,
+  "beforeFirstObservedNameReadMilliseconds": 4.626989364624023,
+  "afterFirstObservedNameReadMilliseconds": 4.89199161529541,
+  "deployed": false,
+  "rolloutFlagsChanged": false,
+  "obsoleteBuildCacheBytesReclaimed": 991719424,
+  "currentProductsAndAppDataPreserved": true
+}

@@ -555,6 +555,7 @@ import CryptoKit
 #if DEBUG
 @MainActor enum WorkspaceReadNativeFixture {
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-performance") }
+    static var largeCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-catalog") }
 }
 @MainActor struct WorkspaceReadNativeFixtureView: View {
     @Environment(Store.self) private var store

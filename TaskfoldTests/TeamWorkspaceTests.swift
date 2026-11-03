@@ -1045,3 +1045,74 @@ extension TeamWorkspaceTests {
         XCTAssertEqual(result, mask.presentation(changed))
     }
 }
+
+extension TeamWorkspaceTests {
+    @MainActor func testAssigneeDisplayReadsReuseEachProjectCatalogAndUnknownNames() {
+        let cache = AssigneeDisplayReadCache()
+        let context = AssigneeDisplayReadCache.Context(source: UUID(), access: UUID(), account: "account", origin: origin)
+        let people = (0..<400).map { Record(["id": .string("person-\($0)"), "display_name": .string("Person \($0)")]) }
+        var builds = 0
+        for index in 0..<400 {
+            XCTAssertEqual(cache.name(for: "person-\(index)", project: "project-a", context: context) { builds += 1; return people }, "Person \(index)")
+        }
+        XCTAssertEqual(builds, 1)
+        XCTAssertNil(cache.name(for: "unknown", project: "project-a", context: context) { XCTFail("Unchanged catalog rebuilt"); return [] })
+        XCTAssertEqual(cache.name(for: "person-0", project: "project-b", context: context) { builds += 1; return people }, "Person 0")
+        XCTAssertEqual(builds, 2)
+    }
+    @MainActor func testAssigneeDisplayContextChangesCannotReuseAnotherSourceOrAccountName() {
+        let cache = AssigneeDisplayReadCache(), source = UUID(), access = UUID()
+        let contexts = [
+            AssigneeDisplayReadCache.Context(source: source, access: access, account: "a", origin: origin),
+            .init(source: UUID(), access: access, account: "a", origin: origin),
+            .init(source: source, access: UUID(), account: "a", origin: origin),
+            .init(source: source, access: access, account: "b", origin: origin),
+            .init(source: source, access: access, account: "a", origin: "https://other.example"),
+            .init(source: source, access: access, account: "a", origin: nil)
+        ]
+        for (index, context) in contexts.enumerated() {
+            let value = cache.name(for: "person", project: "project", context: context) {
+                index == 0 ? [Record(["id": .string("person"), "display_name": .string("Previous private name")])] : []
+            }
+            XCTAssertEqual(value, index == 0 ? "Previous private name" : nil)
+        }
+    }
+    @MainActor func testAssigneeDisplayClearDiscardsPositiveAndNegativeCatalogs() {
+        let cache = AssigneeDisplayReadCache()
+        let context = AssigneeDisplayReadCache.Context(source: UUID(), access: UUID(), account: "a", origin: origin)
+        XCTAssertNil(cache.name(for: "person", project: "project", context: context) { [] })
+        XCTAssertNil(cache.name(for: "person", project: "project", context: context) { XCTFail("Negative catalog rebuilt without a change"); return [] })
+        cache.clear()
+        XCTAssertEqual(cache.name(for: "person", project: "project", context: context) { [Record(["id": .string("person"), "display_name": .string("Updated")])] }, "Updated")
+        cache.clear()
+        XCTAssertNil(cache.name(for: "person", project: "project", context: context) { [] })
+    }
+    @MainActor func testAssigneeDisplayPreservesFirstMatchEmptyNamesAndExactText() {
+        let cache = AssigneeDisplayReadCache()
+        let context = AssigneeDisplayReadCache.Context(source: UUID(), access: UUID(), account: "a", origin: origin)
+        let text = "  Cafe\u{301} 🎨  "
+        let rows = [Record(["id": .string("empty"), "display_name": .string("")]), Record(["id": .string("empty"), "display_name": .string("Later")]), Record(["id": .string("unicode"), "display_name": .string(text)])]
+        XCTAssertEqual(cache.name(for: "empty", project: "project", context: context) { rows }, "")
+        let name = cache.name(for: "unicode", project: "project", context: context) { XCTFail("Repeated read rebuilt catalog"); return [] }
+        XCTAssertTrue(name!.utf8.elementsEqual(text.utf8))
+    }
+    @MainActor func testAssigneeDisplayUsesExistingMembershipAndFallbackSemantics() {
+        let owner = "owner", me = "current", project = Record(["id": .string("project"), "user_id": .string(owner)])
+        let collaborators = [
+            Record(["user_id": .string(me), "status": .string("accepted"), "display_name": .string("Old self")]),
+            Record(["user_id": .string("email"), "status": .string("accepted"), "display_name": .string(""), "invited_email": .string("synthetic@example.invalid")]),
+            Record(["user_id": .string("generic"), "status": .string("accepted")]),
+            Record(["user_id": .string("waiting"), "status": .string("pending"), "display_name": .string("Not accepted")])
+        ]
+        let members = TaskAssignment.members(project: project, collaborators: collaborators, currentUser: me, profile: Record(["display_name": .string("Current profile")]))
+        let cache = AssigneeDisplayReadCache()
+        let context = AssigneeDisplayReadCache.Context(source: UUID(), access: UUID(), account: me, origin: origin)
+        for id in [owner, me, "email", "generic", "waiting", "missing"] {
+            XCTAssertEqual(cache.name(for: id, project: project.id, context: context) { members }, members.first { $0.id == id }?.string("display_name"))
+        }
+        XCTAssertEqual(cache.name(for: me, project: project.id, context: context) { [] }, "Current profile")
+        XCTAssertEqual(cache.name(for: "email", project: project.id, context: context) { [] }, "synthetic@example.invalid")
+        XCTAssertEqual(cache.name(for: "generic", project: project.id, context: context) { [] }, "Project collaborator")
+        XCTAssertNil(cache.name(for: "waiting", project: project.id, context: context) { [] })
+    }
+}

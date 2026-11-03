@@ -1,0 +1,76 @@
+{
+  "syntheticOnly": true,
+  "nativeActualStoreAndTaskScreen": true,
+  "genuineAuthOrProvider": false,
+  "releaseOrHardwarePerformanceClaim": false,
+  "deployed": false,
+  "xcodeExitCode": 0,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793697331.746,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793697272.862,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "measurements": {
+    "invalidationChecks": 16,
+    "firstNameReadMilliseconds": 4.89199161529541,
+    "collaborators": 400,
+    "tableSHA256": "fa64406469a71dee1c58baf39d4daee391cf75ace87942da8e5008a00c25e63d",
+    "snapshotUnchanged": true,
+    "children": 720,
+    "catalog": true,
+    "roots": 240,
+    "iterations": 100,
+    "readMilliseconds": [
+      2.2280216217041016,
+      2.0530223846435547,
+      2.032041549682617
+    ],
+    "matchedReads": 300,
+    "protocol": 1
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/Store.swift": "e88e8f1e0b84898a8ed1f1a030bfd3a2691e3851407c0b3f0c660a3b4b4f1d77",
+    "Taskfold/TeamTemplateNativeFixture.swift": "35dffa7c03e4c6d6ec3ee554b0ad124f2c16363098f7e61dc1390b4919d3a8f7",
+    "Taskfold/Views/TaskEditor.swift": "15f701dfafd45cc5e15b8565ee0df4aecdae2ca97516b9e06e6012a4f52fb691",
+    "TaskfoldUITests/TeamTaskCreationUITests.swift": "03836e916307f691bcba8b24a4fdee2405e343f115823ab5da6ccce0d0dd9f7a",
+    "Taskfold/Core/TeamWorkspace.swift": "c64f9a279acfea8dd3eb75cbf47ab0fd08298ab95e44d0cf0cc163a77c95396b"
+  },
+  "codeSHA256": {
+    "Taskfold": "b222414da36b5eed8b2e8e44cea83663f9941b547f41f9651383cbeb966258a6",
+    "Taskfold.debug.dylib": "af8090aa64994bff6e058c241b90471f302152dae782b6e58ed1450118d4f58b"
+  },
+  "accepted": true,
+  "ownedSimulatorRestored": true
+}

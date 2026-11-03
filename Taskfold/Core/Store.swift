@@ -111,6 +111,7 @@ final class Store {
         didSet {
             snapshotRevision = UUID()
             presentationReadCache.clear()
+            assigneeDisplayCache.clear()
             guard !workflowPresentationDeferred else { return }
             refreshSnapshotPresentation(from: oldValue)
         }
@@ -123,6 +124,7 @@ final class Store {
         didSet {
             presentationAccessEpoch = UUID()
             presentationReadCache.clear()
+            assigneeDisplayCache.clear()
             if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
             if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}
             publishWidgetSnapshot(scheduleCapacityRefresh:false)
@@ -138,6 +140,7 @@ final class Store {
         return TeamAccessFenceDisk(disk:AccountRemovalDisk(directory:cacheURL.deletingLastPathComponent(),account:userID),origin:origin)
     }
     @ObservationIgnored private let presentationReadCache = WorkspacePresentationReadCache()
+    @ObservationIgnored private let assigneeDisplayCache = AssigneeDisplayReadCache()
     @ObservationIgnored private var presentationAccessEpoch = UUID()
     private var presentedTables: [String: [Record]] {
         guard workspaceCacheReadable else { return [:] }
@@ -1139,7 +1142,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {presentationReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {presentationReadCache.clear();assigneeDisplayCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
@@ -1932,7 +1935,12 @@ final class Store {
     func assigneeName(_ task: Record) -> String {
         let id = task.string("assigned_to")
         guard !id.isEmpty else { return "Unassigned" }
-        return projectMembers(task.string("project_id")).first { $0.id == id }?.string("display_name") ?? "Assigned collaborator"
+        // Keep snapshot, mask and readability dependencies active on memo hits.
+        _ = presentedTables
+        let project = task.string("project_id")
+        let context = AssigneeDisplayReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+            account: userID, origin: try? backend.accountRemovalOrigin)
+        return assigneeDisplayCache.name(for: id, project: project, context: context) { projectMembers(project) } ?? "Assigned collaborator"
     }
     @discardableResult
     func refreshProjectMembers(_ projectID: String) async throws -> [Record] {
@@ -6354,13 +6362,30 @@ extension Store {
                 "id": .string(UUID().uuidString.lowercased()), "title": .string("Design step \(child + 1)"),
                 "completed": .bool(false), "subtasks": .array([])
             ]) })
+            if WorkspaceReadNativeFixture.largeCatalog {
+                task["task_generation"] = .string(String(format: "ec250002-0000-4000-8000-%012d", index + 1))
+                task["created_at"] = .string("2026-11-03T08:00:00.000Z")
+                task["subtasks"] = .array((0..<3).map { child in .object([
+                    "id": .string(String(format: "ec250003-0000-4000-8000-%012d", index * 3 + child + 1)),
+                    "title": .string("Design step \(child + 1)"), "completed": .bool(false), "subtasks": .array([])
+                ]) })
+            }
             tasks.append(task)
         }
         let project = Record(["id": .string(TeamEditorNativeFixture.projectID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Read performance workshop")])
         let person = Record(["id": .string(UUID().uuidString.lowercased()), "project_id": .string(project.id), "user_id": .string(TeamEditorNativeFixture.recipientID), "display_name": .string("Riley Chen"), "status": .string("accepted")])
+        var people = [person]
+        if WorkspaceReadNativeFixture.largeCatalog {
+            people = (0..<400).map { index in
+                let id = String(format: "ec250001-0000-4000-8000-%012d", index + 1)
+                return Record(["id": .string(id), "project_id": .string(project.id),
+                    "user_id": .string(index == 0 ? TeamEditorNativeFixture.recipientID : id),
+                    "display_name": .string(index == 0 ? "Riley Chen" : String(format: "Workshop person %03d", index + 1)), "status": .string("accepted")])
+            }
+        }
         let boundary = try TeamEditorNativeFixture.boundary()
         let mask = try TeamWorkspaceCache(boundary: boundary, previous: nil, pending: [], tasks: tasks)
-        snapshot = Snapshot(tables: ["tasks": tasks, "projects": [project], "project_collaborators": [person]])
+        snapshot = Snapshot(tables: ["tasks": tasks, "projects": [project], "project_collaborators": people])
         snapshot.teamWorkspace = mask
         teamAccessMask = mask
         workspaceCacheReadable = true
@@ -6373,6 +6398,12 @@ extension Store {
         guard tasks.count == 240 else { throw AppFailure(message: "Synthetic workspace is incomplete") }
         var measurements: [Double] = []
         var matches = 0
+        var firstNameReadMilliseconds: Double = 0
+        if WorkspaceReadNativeFixture.largeCatalog {
+            let start = Date.timeIntervalSinceReferenceDate
+            guard assigneeName(tasks[0]) == "Riley Chen" else { throw AppFailure(message: "Missing initial assignee") }
+            firstNameReadMilliseconds = (Date.timeIntervalSinceReferenceDate - start) * 1000
+        }
         for _ in 0..<3 {
             let start = Date.timeIntervalSinceReferenceDate
             for task in tasks.prefix(100) {
@@ -6383,8 +6414,13 @@ extension Store {
             measurements.append((Date.timeIntervalSinceReferenceDate - start) * 1000)
         }
         guard snapshot == source, matches == 300 else { throw AppFailure(message: "Read fixture changed its source") }
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = .sortedKeys
+        let tablesHash = CalendarOAuthConfiguration.digest(String(decoding: try encoder.encode(source.tables), as: UTF8.self))
         let invalidations = try verifyWorkspaceReadInvalidationFixture()
-        let report: [String: JSON] = ["invalidationChecks": .number(Double(invalidations)), "protocol": .number(1), "roots": .number(240), "children": .number(720),
+        let report: [String: JSON] = ["catalog": .bool(WorkspaceReadNativeFixture.largeCatalog),
+            "collaborators": .number(WorkspaceReadNativeFixture.largeCatalog ? 400 : 1),
+            "tableSHA256": .string(tablesHash), "firstNameReadMilliseconds": .number(firstNameReadMilliseconds),
+            "invalidationChecks": .number(Double(invalidations)), "protocol": .number(1), "roots": .number(240), "children": .number(720),
             "iterations": .number(100), "matchedReads": .number(Double(matches)),
             "readMilliseconds": .array(measurements.map(JSON.number)), "snapshotUnchanged": .bool(true)]
         let folder = URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance", isDirectory: true)
@@ -6408,22 +6444,42 @@ extension Store {
         guard observed.changed, rows("projects").first?.name == "Updated project name" else { throw AppFailure(message: "Cached presentation lost observation") }
         snapshot.tables["tasks"]![0]["title"] = .string("Updated workshop title")
         guard rows("tasks").first?.title == "Updated workshop title" else { throw AppFailure(message: "Stale source presentation") }
+        let task = snapshot.tables["tasks"]![0]
+        var nameChecks = 0
+        if WorkspaceReadNativeFixture.largeCatalog {
+            _ = assigneeName(task)
+            let nameObserved = WorkspaceReadObservationProbe()
+            withObservationTracking { _ = assigneeName(task) } onChange: { nameObserved.markChanged() }
+            snapshot.tables["project_collaborators"]![0]["display_name"] = .string("Updated Riley")
+            guard nameObserved.changed, assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Assignee name lost observation or source update") }
+            nameChecks += 1
+            var scoped = snapshot.tables["project_collaborators"]![0]; scoped["display_name"] = .string("Scoped Riley")
+            snapshot.tables["project_members:" + TeamEditorNativeFixture.projectID] = [scoped]
+            guard assigneeName(task) == "Scoped Riley" else { throw AppFailure(message: "Scoped member catalog ignored") }; nameChecks += 1
+            snapshot.tables.removeValue(forKey: "project_members:" + TeamEditorNativeFixture.projectID)
+            guard assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Removed member catalog retained") }; nameChecks += 1
+        }
         var raw = originalMask.boundary.raw
         raw["projects"] = .array([])
         let lostBoundary = try TeamWorkspaceBoundary(raw, account: userID, origin: backend.accountRemovalOrigin)
         teamAccessMask = try TeamWorkspaceCache(boundary: lostBoundary, previous: originalMask, pending: snapshot.pending, tasks: snapshot.tables["tasks"]!)
         guard rows("tasks").isEmpty, rows("projects").isEmpty, snapshot.tables["tasks"]?.count == 240 else { throw AppFailure(message: "Stale access presentation") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Assigned collaborator" else { throw AppFailure(message: "Revoked assignee name exposed") }; nameChecks += 1 }
         teamAccessMask = originalMask
         guard rows("tasks").count == 240, rows("tasks").first?.title == "Updated workshop title" else { throw AppFailure(message: "Restored access presentation missing") }
         workspaceCacheReadable = false
         guard rows("tasks").isEmpty, rows("projects").isEmpty else { throw AppFailure(message: "Unreadable cache exposed rows") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Assigned collaborator" else { throw AppFailure(message: "Unreadable assignee name exposed") }; nameChecks += 1 }
         workspaceCacheReadable = true
         guard rows("tasks").count == 240 else { throw AppFailure(message: "Readable cache did not recover") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Readable assignee name missing") }; nameChecks += 1 }
         teamAccessMask = nil
         guard rows("tasks") == snapshot.tables["tasks"] else { throw AppFailure(message: "Unmasked presentation differs") }
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Updated Riley" else { throw AppFailure(message: "Unmasked assignee name missing") }; nameChecks += 1 }
         snapshot = original; teamAccessMask = originalMask
         guard rows("tasks").first?.title == "Workshop task 001", snapshot == original else { throw AppFailure(message: "Original source did not return") }
-        return 8
+        if WorkspaceReadNativeFixture.largeCatalog { guard assigneeName(task) == "Riley Chen" else { throw AppFailure(message: "Restored original assignee name missing") }; nameChecks += 1 }
+        return 8 + nameChecks
     }
 }
 #endif
