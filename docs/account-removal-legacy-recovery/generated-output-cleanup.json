@@ -1,0 +1,24 @@
+{
+  "obsoleteTerminalTestResultsRemoved": [
+    {
+      "name": "taskfold-recovery-certificate-phone-v1.xcresult",
+      "logicalBytes": 69389601
+    },
+    {
+      "name": "taskfold-recovery-certificate-phone-v2.xcresult",
+      "logicalBytes": 35391877
+    },
+    {
+      "name": "taskfold-recovery-certificate-phone-v3.xcresult",
+      "logicalBytes": 79300063
+    },
+    {
+      "name": "taskfold-recovery-certificate-phone-v4.xcresult",
+      "logicalBytes": 107120587
+    }
+  ],
+  "totalLogicalBytes": 291202128,
+  "kept": "Current accepted completion result, current refusal diagnostic result, full text logs, compact JSON evidence and review screenshot",
+  "realAppDataRemoved": false,
+  "simulatorsRemoved": false
+}

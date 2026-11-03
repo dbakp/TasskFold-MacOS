@@ -29,7 +29,8 @@ struct TaskfoldMacApp: App {
 
     @ViewBuilder private var mainContent: some View {
         #if DEBUG
-        if ChildFieldNativeIdentity.enabled {
+        if AccountRemovalNativeFixture.recoveryTesting { AccountRemovalRecoveryFixtureView() }
+        else if ChildFieldNativeIdentity.enabled {
             if ChildFieldNativeIdentity.mainListTesting { ChildFieldMainListNativeFixtureView() }
             else { ChildFieldNativeFixtureView() }
         }

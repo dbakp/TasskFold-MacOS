@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-03",
+  "owningRepository": "TasskFold-MacOS",
+  "implementationPresent": true,
+  "fullyAcceptedOrActivated": false,
+  "deployed": false,
+  "nativeRecoveryDefaultEnabled": false,
+  "operatorDefaultEnabled": false,
+  "checks": {
+    "date": "2026-11-03",
+    "platform": "mac",
+    "core": {
+      "passed": 78,
+      "failed": 0,
+      "logSHA256": "1ced1e2672914e1bd063b22fb345f7fc5634e7ee8401e9c83fface6564d9c3df"
+    },
+    "deno": {
+      "passed": 40,
+      "failed": 0,
+      "logSHA256": "762e0eaa5c818e1cfe625dc77e935e8d087933f4c22073740eb5eadf2870dbd1"
+    },
+    "provider": {
+      "passed": 57,
+      "realStorageBytes": true,
+      "hosted": false,
+      "authAdminHTTP": false,
+      "removed": true
+    }
+  },
+  "build": {
+    "fullAppAndRunner": true,
+    "strictSignaturesVerified": true,
+    "distributionClaim": false,
+    "driverSHA256": "36c9de863c04c13c7e08272c6e5e03d72d9a6f8c845b3e8a7fd13454f1b490a2"
+  },
+  "iphone": {
+    "completionAndColdCaseAccepted": true,
+    "evidence": "iphone-completion.json",
+    "endpointSynthetic": true,
+    "largestTextRefusalCaseAccepted": false,
+    "lastFailure": "System Files selection/view controls did not reach the intended callback",
+    "wholeNativeRunAccepted": false
+  },
+  "macNativeProtectedSessionAccepted": false,
+  "hostedIssuerVerifierAccepted": false,
+  "sourceSHA256": {
+    "Taskfold/Core/AccountRemoval.swift": "101c711cdf404509e4d91c75b8d26b7d5e8048393e236aa50ac214e50aa676ca",
+    "Taskfold/Core/Backend.swift": "20442c99ad6e3e1e3cfa73f35df5b6c1d4c5641d2bf95a6addfa439167c8e97d",
+    "Taskfold/Core/Store.swift": "b7f59109ab30d6d3324bbe6684d402ad8399747bab53cbd8ed91f2224fd10e02",
+    "Taskfold/AccountRemovalNativeFixture.swift": "c7f8958987cb1627ac20cf95346fa52ca75eca3436d3427a2810925743c5e3b3",
+    "Taskfold/TaskfoldMacApp.swift": "2d799b8d19361478319c5564e2114868425f83af17ae6c67d20069fd0497919e",
+    "Taskfold/Views/SettingsView.swift": "76d6980cb4c61284231d9a74ccf8a99c208f6abef723389d7a7f1475afd24dc5",
+    "supabase/functions/delete-account/handler.ts": "27f6583ab3142cb6c4f2cbdd1516c6b38ae7c4aa4962415016b94cf320eec49d",
+    "supabase/functions/delete-account/recovery.ts": "bc72c23b3688d47165c005a8b2b9f3727507ed97918211493a6beef7f48e91a3",
+    "supabase/functions/account-removal-repair/handler.ts": "3766d12cf005747c38b01607a72dbf502178794a637a499840f66b6b76ba7d16",
+    "Scripts/Database/test-account-removal-repair.mjs": "a58f38fcc2f8e1128e2e43a3a0f238d7a55baef6d65554cba2ad1dcc342c478c"
+  }
+}

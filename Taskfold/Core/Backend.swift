@@ -1213,6 +1213,12 @@ final class Backend: NSObject {
         if command.confirmed { return }
         guard command.statusProof != nil else { throw AppFailure(message: "Prepare account removal securely before continuing.") }
         let receipt = try await accountRemovalRequest(command, preparing: false)
+        if command.hasRecoveryCertificate {
+            let binding = try AccountRemovalRecoveryRequest(command: command)
+            guard receipt["account"] == .string(binding.account), receipt["command"] == .string(binding.command.uuidString.lowercased()), receipt["authorization_hash"] == .string(binding.authorizationHash) else {
+                throw AppFailure(message: "The server did not verify this recovery file for the unfinished removal. Your saved work has been kept.")
+            }
+        }
         guard receipt["deleted"] == .bool(true) else {
             throw AppFailure(message: "The server did not confirm account removal. Your local work is still on this device. Try again.")
         }
@@ -1228,7 +1234,10 @@ final class Backend: NSObject {
         outgoing.setValue(config["Key"], forHTTPHeaderField: "apikey")
         outgoing.setValue("Bearer " + command.authorization, forHTTPHeaderField: "Authorization")
         outgoing.setValue("2", forHTTPHeaderField: "X-Taskfold-Account-Removal")
-        if !preparing { outgoing.setValue(command.statusProof, forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof") }
+        if !preparing {
+            outgoing.setValue(command.statusProof, forHTTPHeaderField: "X-Taskfold-Account-Removal-Proof")
+            outgoing.setValue(command.id.uuidString.lowercased(), forHTTPHeaderField: "X-Taskfold-Account-Removal-Command")
+        }
         outgoing.setValue("application/json", forHTTPHeaderField: "Content-Type")
         outgoing.setValue("no-store", forHTTPHeaderField: "Cache-Control")
         let (bytes, response) = try await http.bytes(for: outgoing, delegate: LocationHandoffRedirectRefusal.shared)

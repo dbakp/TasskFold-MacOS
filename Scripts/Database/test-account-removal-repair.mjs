@@ -280,6 +280,23 @@ try {
   };
   const preview = () =>
     request("/repair", { action: "preview", account: current });
+  const recoveryRequest = {
+    format: "taskfold-account-removal-recovery-request",
+    version: 1,
+    origin: "https://repair.fixture",
+    account: current,
+    command: randomUUID(),
+    authorization_hash: createHash("sha256").update("expired-original-token")
+      .digest("hex"),
+  };
+  const certify = () =>
+    request("/repair", {
+      action: "certify",
+      account: current,
+      confirmation: current,
+      request: recoveryRequest,
+    });
+  check("certificate refuses existing Auth", (await certify()).status, 409);
   check(
     "handler refuses still-existing account",
     (await preview()).status,
@@ -290,6 +307,11 @@ try {
   assert.equal(typeof proof, "string");
   // Simulates the already-removed Auth precondition, not an Auth Admin HTTP pass.
   await pg.raw(`delete from auth.users where id=${lit(current)}`);
+  check(
+    "certificate refuses actual residual files",
+    (await certify()).status,
+    409,
+  );
   const plan = await preview();
   check(
     "review lists exactly canonical and narrow legacy files",
@@ -351,6 +373,54 @@ try {
     (await clientStatus()).body,
     { deleted: true },
   );
+  const certificate = await certify();
+  check(
+    "operator issues certificate only after actual absence",
+    certificate.status,
+    200,
+  );
+  check(
+    "issued file contains exact nonsecret request",
+    certificate.body.request,
+    recoveryRequest,
+  );
+  const certificateStatus = (headers = {}) =>
+    request("/status", {}, {
+      Authorization: "Bearer expired-original-token",
+      "X-Taskfold-Account-Removal": "2",
+      "X-Taskfold-Account-Removal-Proof": certificate.body.proof,
+      "X-Taskfold-Account-Removal-Command": recoveryRequest.command,
+      ...headers,
+    });
+  const beforeCertificate = deleteCalls;
+  check(
+    "issued certificate confirms bound absence",
+    (await certificateStatus()).body,
+    {
+      deleted: true,
+      account: current,
+      command: recoveryRequest.command,
+      authorization_hash: recoveryRequest.authorization_hash,
+    },
+  );
+  check(
+    "certificate refuses another original bearer",
+    (await certificateStatus({ Authorization: "Bearer other-original-token" }))
+      .status,
+    401,
+  );
+  check(
+    "certificate refuses another command",
+    (await certificateStatus({
+      "X-Taskfold-Account-Removal-Command": randomUUID(),
+    })).status,
+    401,
+  );
+  check(
+    "certificate checks perform no Storage deletion",
+    deleteCalls,
+    beforeCertificate,
+  );
   check(
     "metadata for deleted account absent",
     await pg.scalar(
@@ -397,6 +467,17 @@ try {
   // A second plan cannot silently treat a same-path replacement as the reviewed object.
   const a = await upload("avatars", current + "/replacement.txt", current);
   assert(a.length);
+  const beforeRecheck = deleteCalls;
+  check(
+    "issued certificate rechecks newly present provider file",
+    (await certificateStatus()).status,
+    409,
+  );
+  check(
+    "presence refusal performs no Storage deletion",
+    deleteCalls,
+    beforeRecheck,
+  );
   const replacement = await preview();
   assert.equal(
     (await storage.request("/object/avatars/" + current + "/replacement.txt", {
@@ -459,6 +540,28 @@ try {
     "fresh final review completes101objects",
     (await apply(next)).body.complete,
     true,
+  );
+  check(
+    "certificate still verifies after reviewed repair",
+    (await certificateStatus()).status,
+    200,
+  );
+  await pg.raw(
+    `insert into auth.users(id,email) values(${
+      lit(current)
+    },'recreated@example.invalid')`,
+  );
+  const beforeRecreated = deleteCalls;
+  check(
+    "issued certificate refuses recreated Auth",
+    (await certificateStatus()).status,
+    409,
+  );
+  check("recreated Auth check is nondestructive", deleteCalls, beforeRecreated);
+  check(
+    "recreated Auth remains",
+    await pg.scalar(`select count(*) from auth.users where id=${lit(current)}`),
+    1,
   );
   report.finalAdvisors = await pg.advisors();
   check("RPC adapter reports no private failures", failures, []);

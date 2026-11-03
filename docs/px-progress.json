@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P0 · Reviewed residual-file repair",
-  "latest": "Both repos implement a disabled administrator repair candidate for leftover files after Auth removal. Each passes 33 handler/proof tests and 43 checks with actual isolated Storage bytes, partial failure, replacement refusal, outsider preservation and 100+1 batching. Hosted verification and expired pre-proof recovery remain open.",
+  "focus": "P0 · Older account-removal recovery",
+  "latest": "Both repos implement reviewed recovery of older account-removal commands. Each passes 78 selected client, 40 handler/proof and 57 real local database/Storage checks; both apps build/sign. iPhone file review, completion and cold preservation pass. Largest-text picker/refusal acceptance and hosted activation remain open; controls stay disabled.",
   "next": [
-    "Finish account-deletion recovery: validate/activate the reviewed residual-file repair on disposable hosted files when appropriate; resolve expired pre-proof attempts without guessing or silently erasing local copies. Mac protected-session/runtime depends on deferred signing. Preserve the paused rollout gates and all other deferrals.",
+    "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
     "Continue actual large-list scrolling/rendering, multiple-project/catalog/editor scaling, richer assignments and wider Mac/iPad/accessibility/cloud contexts. Filtered reads, assignment display, rich task construction and per-view background definition loading now have scoped acceptance; do not repeat unchanged accepted cases.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
@@ -110,9 +110,9 @@
               "detail": "The full Mac app builds and signs, but its isolated runtime attempt stopped at the first protected-session Keychain write. Genuine Mac profile/Auth/Storage acceptance remains open."
             },
             {
-              "state": "build",
+              "state": "verify",
               "title": "Finish recovery of older attempts and leftover files",
-              "detail": "Current-client journal coordination is accepted. Both repos now verify disabled reviewed administrator file repair with real isolated Storage bytes, stale-plan refusal, partial failure and bounded batches. Hosted verification, expired pre-proof policy and broader fault directions remain; local data is kept without valid confirmation.",
+              "detail": "Current-client coordination and disabled reviewed residual-file repair are accepted in recorded scope. Reviewed legacy recovery now has passing local issuer/verifier/Storage checks and iPhone completion/cold-return proof; both app builds/signatures pass. Largest-text picker/refusal, hosted activation, Mac runtime and wider fault directions remain. No valid bound confirmation means no device-copy erasure.",
               "steps": [
                 {
                   "state": "done",
@@ -127,8 +127,8 @@
                   "title": "Verify and activate repair on disposable hosted files; finish wider provider/failure directions"
                 },
                 {
-                  "state": "build",
-                  "title": "Resolve expired pre-proof legacy attempts without assuming deletion or erasing local copies"
+                  "state": "verify",
+                  "title": "Accept reviewed legacy recovery: iPhone completion/cold return and local service pass; largest-text and hosted checks remain"
                 }
               ]
             }
@@ -140,7 +140,12 @@
             "removal-coordination/verification.json",
             "account-removal-residual-repair/README.md",
             "account-removal-residual-repair/verification.json",
-            "account-removal-residual-repair/provider.json"
+            "account-removal-residual-repair/provider.json",
+            "account-removal-legacy-recovery/README.md",
+            "account-removal-legacy-recovery/checks.json",
+            "account-removal-legacy-recovery/provider.json",
+            "account-removal-legacy-recovery/verification.json",
+            "account-removal-legacy-recovery/iphone-completion.json"
           ],
           "focus": true
         },
@@ -1070,11 +1075,16 @@
     "audio-real-provider-native/verification.json"
   ],
   "source_hashes": {
-    "ACCOUNT_REMOVAL.md": "ae7b1b4468eae9ef80748ee4a8d1927a8e6e3f38acfabc4d3da2738fd0022ad4",
-    "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
+    "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
+    "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
     "P2_PLAN.md": "36130fcc01f59c9db9729c395aba1860ad28812828c3d75f039eb13aa21b9d57",
-    "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
+    "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
+    "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
+    "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
+    "account-removal-legacy-recovery/iphone-completion.json": "e58e9e8635b7ce6eb4fb1dfba1dd20d10a1f64c580a13733204d6204412bf286",
+    "account-removal-legacy-recovery/provider.json": "9ceb58284351aaccbacfa0395d4e03143051e46a0f79550671416020b0416108",
+    "account-removal-legacy-recovery/verification.json": "b01b29a1e83472bc2b937f11757009324dd063e56db23efbf83825f83e69c0c6",
     "account-removal-residual-repair/README.md": "ad60de06d9c2be747547889ec85b72a2f1b7df904b544e9168dd2e6d29e10ccf",
     "account-removal-residual-repair/provider.json": "b4afd113db7de7f37d999dbe9869854a6750de7012b31dfa8acf96bf192a2ed5",
     "account-removal-residual-repair/verification.json": "fd6d31874641b0d3fec2a441a902a73627a845fd5dd4b03e7b77bdf6e82fd81a",

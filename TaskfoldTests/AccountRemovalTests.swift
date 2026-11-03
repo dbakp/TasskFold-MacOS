@@ -175,3 +175,63 @@ extension AccountRemovalTests {
         let pending = try await vault.pending(); XCTAssertEqual(pending, [original])
     }
 }
+
+func removalRecoveryFixture(_ command: AccountRemovalCommand) throws -> (AccountRemovalRecoveryRequest, Data) {
+    let request = try AccountRemovalRecoveryRequest(command: command)
+    let payload: JSON = .object(["v":.number(1),"scope":.string("account-removal-recovery"),"origin":.string(request.origin),"account":.string(request.account),"command":.string(request.command.uuidString.lowercased()),"authorization_hash":.string(request.authorizationHash),"kid":.string("f086cafe-0000-4000-8000-000000000001"),"issued":.number(1_790_000_000)])
+    let encoded = try TaskfoldJSONEncoder().encode(payload).base64EncodedString().replacingOccurrences(of:"+",with:"-").replacingOccurrences(of:"/",with:"_").replacingOccurrences(of:"=",with:"")
+    let data = try TaskfoldJSONEncoder().encode(JSON.object(["format":.string("taskfold-account-removal-recovery"),"version":.number(1),"request":request.document,"proof":.string(encoded+"."+String(repeating:"a",count:43))]))
+    return (request, data)
+}
+
+extension AccountRemovalTests {
+    func testRecoveryRequestContainsOnlyBoundNonCredentialMetadata() throws {
+        var old = try command(token:"original-private-password-like-token"); old.version = 1
+        old.statusProof = proof
+        let request = try AccountRemovalRecoveryRequest(command: old), data = try request.encoded()
+        let object = try TaskfoldJSONDecoder().decode(JSON.self,from:data).object
+        XCTAssertEqual(Set(object.keys),["format","version","origin","account","command","authorization_hash"])
+        XCTAssertFalse(String(decoding:data,as:UTF8.self).contains(old.authorization))
+        XCTAssertFalse(String(decoding:data,as:UTF8.self).contains(proof))
+        XCTAssertEqual(request.authorizationHash,SHA256.hash(data:Data(old.authorization.utf8)).map{String(format:"%02x",$0)}.joined())
+        XCTAssertEqual(try AccountRemovalRecoveryRequest(document:.object(object)),request)
+        XCTAssertTrue(request.matches(old)); XCTAssertFalse(request.matches(try command(token:"renewed")))
+        old.confirmed = true; XCTAssertThrowsError(try AccountRemovalRecoveryRequest(command:old))
+    }
+    func testRecoveryFileIsBoundToExactPendingCommandAndPurpose() throws {
+        let original = try command(), (request,data) = try removalRecoveryFixture(original)
+        let file = try AccountRemovalRecoveryFile(data:data,expected:request)
+        XCTAssertTrue(try original.prepared(with:file.proof).hasRecoveryCertificate)
+        XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:data,expected:AccountRemovalRecoveryRequest(command:command(other))))
+        XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:data,expected:AccountRemovalRecoveryRequest(command:command(token:"new"))))
+        var outer = try TaskfoldJSONDecoder().decode(JSON.self,from:data).object
+        for (key,value) in [("version",JSON.number(2)),("proof",JSON.string(proof)),("extra",JSON.string("unknown"))] {
+            var changed = outer;changed[key]=value
+            XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:TaskfoldJSONEncoder().encode(JSON.object(changed)),expected:request))
+        }
+        outer["request"] = .object([:]); XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:TaskfoldJSONEncoder().encode(JSON.object(outer)),expected:request))
+    }
+    func testRecoveryFileBoundsAndCancelKeepExistingFilesUntouched() throws {
+        let directory = try root(), url = directory.appendingPathComponent("recovery.json")
+        let data = Data(repeating:65,count:AccountRemovalRecoveryFile.maximumBytes+1);try data.write(to:url)
+        XCTAssertThrowsError(try AccountRemovalRecoveryReadOperation().read(url));XCTAssertEqual(try Data(contentsOf:url),data)
+        let cancelled = AccountRemovalRecoveryReadOperation();cancelled.cancel()
+        XCTAssertThrowsError(try cancelled.read(url)){XCTAssertEqual(($0 as NSError).code,CocoaError.userCancelled.rawValue)}
+        let (request,valid) = try removalRecoveryFixture(command());try valid.write(to:url)
+        XCTAssertEqual(try AccountRemovalRecoveryReadOperation().read(url),valid)
+        XCTAssertThrowsError(try AccountRemovalRecoveryFile(data:data,expected:request))
+    }
+    func testRecoveryCertificatePreparationIsDurableAndStaleSafe() async throws {
+        let io = RemovalMemoryIO(), vault = AccountRemovalVault(io:io)
+        let a = try await vault.begin(command()), b = try await vault.begin(command(other))
+        let (request,data) = try removalRecoveryFixture(a), file = try AccountRemovalRecoveryFile(data:data,expected:request)
+        io.setFailure(true)
+        do{_ = try await vault.prepare(a,proof:file.proof);XCTFail("Failed certificate write accepted")}catch{}
+        let unchanged = try await vault.pending();XCTAssertEqual(unchanged,[a,b])
+        io.setFailure(false)
+        let updated = try await vault.prepare(a,proof:file.proof)
+        let retained = try await AccountRemovalVault(io:io).pending();XCTAssertEqual(retained,[updated,b]);XCTAssertTrue(updated.hasRecoveryCertificate)
+        do{_ = try await vault.prepare(a,proof:file.proof);XCTFail("Stale import replaced a changed journal entry")}catch{}
+        XCTAssertFalse(updated.confirmed)
+    }
+}

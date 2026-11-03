@@ -1021,3 +1021,40 @@ extension AccountTransportTests {
         }
     }
 }
+
+extension AccountTransportTests {
+    @MainActor func testImportedRecoveryUsesOriginalAuthorizationAndBoundAcknowledgement() async throws {
+        let original = try AccountRemovalCommand(account:owner,origin:"https://native-scope.test",authorization:"old")
+        let (request,data) = try removalRecoveryFixture(original), file = try AccountRemovalRecoveryFile(data:data,expected:request)
+        let prepared = try original.prepared(with:file.proof), api = backend(try signed(other,token:"B"))
+        var calls = 0
+        ScopedHTTP.handler = { outgoing, transport in
+            calls += 1;XCTAssertEqual(outgoing.url?.path,"/functions/v1/delete-account")
+            XCTAssertEqual(outgoing.value(forHTTPHeaderField:"Authorization"),"Bearer old")
+            XCTAssertEqual(outgoing.value(forHTTPHeaderField:"X-Taskfold-Account-Removal-Command"),original.id.uuidString.lowercased())
+            transport.finish(200,try! TaskfoldJSONEncoder().encode(JSON.object(["deleted":.bool(true),"account":.string(request.account),"command":.string(request.command.uuidString.lowercased()),"authorization_hash":.string(request.authorizationHash)])))
+        }
+        defer{ScopedHTTP.handler=nil}
+        try await api.performAccountRemoval(prepared);XCTAssertEqual(calls,1);XCTAssertEqual(api.session?.user.id,other)
+    }
+    @MainActor func testImportedRecoveryRefusesGenericOrForeignSuccessAndExplicit401() async throws {
+        let original = try AccountRemovalCommand(account:owner,origin:"https://native-scope.test",authorization:"old")
+        let (request,data) = try removalRecoveryFixture(original), file = try AccountRemovalRecoveryFile(data:data,expected:request)
+        let prepared = try original.prepared(with:file.proof), api = backend(try signed(owner))
+        for mode in ["generic","account","command","hash","refused"] {
+            var calls = 0
+            ScopedHTTP.handler = { outgoing, transport in
+                calls += 1;XCTAssertEqual(outgoing.url?.path,"/functions/v1/delete-account")
+                var body:[String:JSON]=["deleted":.bool(true),"account":.string(request.account),"command":.string(request.command.uuidString.lowercased()),"authorization_hash":.string(request.authorizationHash)]
+                if mode == "generic" {body=["deleted":.bool(true)]}
+                if mode == "account" {body["account"] = .string(self.other)}
+                if mode == "command" {body["command"] = .string(UUID().uuidString.lowercased())}
+                if mode == "hash" {body["authorization_hash"] = .string(String(repeating:"0",count:64))}
+                transport.finish(mode == "refused" ? 401 : 200,try! TaskfoldJSONEncoder().encode(JSON.object(body)))
+            }
+            do{try await api.performAccountRemoval(prepared);XCTFail("Unbound recovery was accepted: "+mode)}catch{}
+            XCTAssertEqual(calls,1);XCTAssertEqual(api.session?.user.id,owner)
+        }
+        ScopedHTTP.handler=nil
+    }
+}

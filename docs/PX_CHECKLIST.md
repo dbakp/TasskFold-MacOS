@@ -18,7 +18,7 @@ exact evidence. Each repository owns its app, widgets, tests and release inputs.
 - [x] Backup/restore and critical VoiceOver journeys in recorded native scopes.
 - [x] Deployed account-removal service and genuine iPhone deletion/retry proof.
 - [ ] Remaining account-removal recovery variants and Mac private-Keychain/runtime
-  verification. Newer protocol recovery proof does not accept every older attempt.
+  verification. Reviewed legacy recovery is now implemented; actual iPhone completion/cold return and local issuer/verifier/Storage checks pass. Largest-text system-picker and hosted activation remain open; new controls stay disabled. See `account-removal-legacy-recovery/README.md`.
 
 ## P1 — agreed implementation and acceptance batch
 

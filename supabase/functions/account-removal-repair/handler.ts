@@ -1,3 +1,7 @@
+import {
+  issueRecoveryProof,
+  recoveryRequest,
+} from "../delete-account/recovery.ts";
 /** Disabled-by-default operator repair. A client status proof is never authority here. */
 type Config = {
   url: string;
@@ -165,15 +169,18 @@ export function createRemovalRepairHandler(
       ) throw Error("configuration");
       const origin = url.origin;
       const input = object(await read(request.body, 4096, abort.signal));
-      const applying = input.action === "repair";
+      const applying = input.action === "repair",
+        certifying = input.action === "certify";
       exact(
         input,
         applying
           ? ["action", "account", "review", "confirmation"]
+          : certifying
+          ? ["action", "account", "request", "confirmation"]
           : ["action", "account"],
       );
       if (
-        !applying && input.action !== "preview" ||
+        !applying && !certifying && input.action !== "preview" ||
         typeof input.account !== "string" || !uuid.test(input.account)
       ) throw new Refusal("invalid", 400);
       const account = input.account;
@@ -229,6 +236,34 @@ export function createRemovalRepairHandler(
         });
       const current = async () =>
         manifest(await rpc("repair_manifest"), account);
+      if (certifying) {
+        if (input.confirmation !== account) {
+          throw new Refusal("review_required", 409);
+        }
+        let recovery;
+        try {
+          recovery = recoveryRequest(input.request, origin, account);
+        } catch {
+          throw new Refusal("invalid", 400);
+        }
+        // Issuance reads only. A live account or residual file never yields a certificate.
+        await current();
+        if (await rpc("absent") !== true) {
+          throw new Refusal("removal_unconfirmed", 409);
+        }
+        const proof = await issueRecoveryProof(
+          recovery,
+          now(),
+          (id) =>
+            api("/rest/v1/rpc/taskfold_account_removal_proof_key", { _id: id }),
+        );
+        return json({
+          format: "taskfold-account-removal-recovery",
+          version: 1,
+          request: recovery,
+          proof,
+        });
+      }
       if (applying) {
         if (
           input.confirmation !== account || typeof input.review !== "string" ||

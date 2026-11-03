@@ -1,4 +1,5 @@
 import { issueProof, verifyProof } from "./proof.ts";
+import { verifyRecoveryProof } from "./recovery.ts";
 type Config = { url: string; serviceKey: string };
 type Dependencies = {
   send?: (request: Request) => Promise<Response>;
@@ -208,6 +209,33 @@ export function createHandler(config: Config, dependencies: Dependencies = {}) {
           (id) => rpc("proof_key", { _id: id }),
         );
         if (!proofAccount) {
+          const recovery = await verifyRecoveryProof(
+            proofHeader,
+            origin,
+            now(),
+            (id) => rpc("proof_key", { _id: id }),
+          );
+          if (recovery) {
+            if (
+              recovery.authorization_hash !== await digest(token) ||
+              request.headers.get("X-Taskfold-Account-Removal-Command") !==
+                recovery.command
+            ) {
+              throw new Refusal(
+                401,
+                "Recovery details do not match this removal request.",
+              );
+            }
+            // A certificate never consults a destructive receipt or Auth login.
+            // Recheck absence on every use, even after issuance or a lost reply.
+            if (await rpc("absent", { _account: recovery.account }) !== true) {
+              throw new Refusal(
+                409,
+                "Server removal is not confirmed. Your device copies have been kept.",
+              );
+            }
+            return json({ deleted: true, ...recovery });
+          }
           throw new Refusal(
             401,
             "Account removal needs a valid recovery proof.",

@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import Darwin
 
 /// Device-private recovery only. Never put this authorization in Snapshot,
@@ -24,6 +25,7 @@ struct AccountRemovalCommand: Codable, Equatable, Sendable {
         if let statusProof, !Self.validProof(statusProof) { return false }
         return version == 1 || !confirmed || statusProof != nil
     }
+    var hasRecoveryCertificate: Bool { AccountRemovalRecoveryFile.isRecoveryProof(statusProof) }
     static func validProof(_ value: String) -> Bool {
         value.utf8.count <= 2048 && value.range(of: #"^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{43}\z"#, options: .regularExpression) != nil
     }
@@ -182,4 +184,105 @@ struct AccountRemovalDisk: Sendable {
             for file in [cache,teamAccessFence] where FileManager.default.fileExists(atPath:file.path) {try FileManager.default.removeItem(at:file)}
         }
     }
+}
+
+/// A support request is deliberately separate from private bearer/proof storage.
+/// It identifies one pending command without exporting credentials or task data.
+struct AccountRemovalRecoveryRequest: Equatable, Sendable, Identifiable {
+    static let format = "taskfold-account-removal-recovery-request"
+    let account: String
+    let origin: String
+    let command: UUID
+    let authorizationHash: String
+    var id: UUID { command }
+    init(command: AccountRemovalCommand) throws {
+        guard command.valid, !command.confirmed else { throw Self.invalid }
+        self.account = command.account; origin = command.origin; self.command = command.id
+        authorizationHash = SHA256.hash(data: Data(command.authorization.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+    init(document: JSON) throws {
+        let row = document.object
+        guard Set(row.keys) == ["format","version","account","origin","command","authorization_hash"],
+              row["format"] == .string(Self.format), row["version"] == .number(1),
+              case .string(let account)? = row["account"], let a = UUID(uuidString: account), a.uuidString.lowercased() == account,
+              case .string(let command)? = row["command"], let id = UUID(uuidString: command), id.uuidString.lowercased() == command,
+              case .string(let origin)? = row["origin"], let url = URL(string: origin), url.scheme == "https", url.host != nil,
+              url.user == nil, url.password == nil, url.query == nil, url.fragment == nil, url.path.isEmpty || url.path == "/",
+              case .string(let hash)? = row["authorization_hash"], hash.range(of: #"^[0-9a-f]{64}\z"#, options: .regularExpression) != nil else { throw Self.invalid }
+        self.account = account; self.origin = origin; self.command = id; authorizationHash = hash
+    }
+    var document: JSON { .object(["format": .string(Self.format), "version": .number(1), "account": .string(account), "origin": .string(origin), "command": .string(command.uuidString.lowercased()), "authorization_hash": .string(authorizationHash)]) }
+    func encoded() throws -> Data {
+        let bytes = try TaskfoldJSONEncoder().encode(document)
+        guard bytes.count <= AccountRemovalRecoveryFile.maximumBytes else { throw Self.invalid }; return bytes
+    }
+    func matches(_ command: AccountRemovalCommand) -> Bool { (try? Self(command: command)) == self }
+    static var invalid: AppFailure { AppFailure(message: "This recovery file does not match the unfinished removal. Your saved work has been kept.") }
+}
+
+/// Import is a review, never confirmation. Only the original server can validate
+/// its signature and current absence; the existing private vault retains it.
+struct AccountRemovalRecoveryFile: Sendable {
+    static let maximumBytes = 8192
+    let request: AccountRemovalRecoveryRequest
+    let proof: String
+    init(data: Data, expected: AccountRemovalRecoveryRequest) throws {
+        guard data.count <= Self.maximumBytes else { throw AccountRemovalRecoveryRequest.invalid }
+        let value = try TaskfoldJSONDecoder().decode(JSON.self, from: data).object
+        guard Set(value.keys) == ["format","version","request","proof"], value["format"] == .string("taskfold-account-removal-recovery"), value["version"] == .number(1),
+              let raw = value["request"], let proof = value["proof"]?.text, AccountRemovalCommand.validProof(proof) else { throw AccountRemovalRecoveryRequest.invalid }
+        let request = try AccountRemovalRecoveryRequest(document: raw)
+        guard request == expected, let payload = Self.payload(proof),
+              Set(payload.keys) == ["v","scope","origin","account","command","authorization_hash","kid","issued"],
+              payload["v"] == .number(1), payload["scope"] == .string("account-removal-recovery"),
+              payload["origin"] == .string(request.origin), payload["account"] == .string(request.account),
+              payload["command"] == .string(request.command.uuidString.lowercased()), payload["authorization_hash"] == .string(request.authorizationHash),
+              let kid = payload["kid"]?.text, let key = UUID(uuidString: kid), key.uuidString.lowercased() == kid,
+              case .number(let issued)? = payload["issued"], issued.isFinite, issued > 0, issued.rounded() == issued else { throw AccountRemovalRecoveryRequest.invalid }
+        self.request = request; self.proof = proof
+    }
+    private static func payload(_ proof: String) -> [String: JSON]? {
+        guard AccountRemovalCommand.validProof(proof), let component = proof.split(separator: ".").first else { return nil }
+        let encoded = String(component), base64 = encoded.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        guard let bytes = Data(base64Encoded: base64 + String(repeating: "=", count: (4 - base64.count % 4) % 4)),
+              bytes.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "") == encoded else { return nil }
+        return (try? TaskfoldJSONDecoder().decode(JSON.self, from: bytes))?.object
+    }
+    static func isRecoveryProof(_ proof: String?) -> Bool { proof.flatMap(payload)?["scope"] == .string("account-removal-recovery") }
+}
+
+/// Same coordinated/cancellable provider read contract as other recovery files,
+/// with an independent 8 KB cap and no task/back-up decoding.
+final class AccountRemovalRecoveryReadOperation: @unchecked Sendable {
+    private let coordinator = NSFileCoordinator(), lock = NSLock()
+    private var cancelled = false
+    func cancel() { lock.lock(); cancelled = true; lock.unlock(); coordinator.cancel() }
+    private func check() throws { lock.lock(); let stopped = cancelled; lock.unlock(); if stopped { throw CocoaError(.userCancelled) } }
+    func read(_ url: URL) throws -> Data {
+        try check()
+        let access = url.startAccessingSecurityScopedResource(); defer { if access { url.stopAccessingSecurityScopedResource() } }
+        var error: NSError?, result: Result<Data, Error>?
+        coordinator.coordinate(readingItemAt: url, options: [], error: &error) { readable in
+            result = Result {
+                try self.check()
+                guard try readable.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true else { throw AccountRemovalRecoveryRequest.invalid }
+                let handle = try FileHandle(forReadingFrom: readable); defer { try? handle.close() }
+                var data = Data()
+                while data.count <= AccountRemovalRecoveryFile.maximumBytes {
+                    try self.check()
+                    guard let chunk = try handle.read(upToCount: AccountRemovalRecoveryFile.maximumBytes + 1 - data.count), !chunk.isEmpty else { break }
+                    data.append(chunk)
+                }
+                guard data.count <= AccountRemovalRecoveryFile.maximumBytes else { throw AccountRemovalRecoveryRequest.invalid }
+                return data
+            }
+        }
+        try check(); if error != nil { throw AppFailure(message: "The recovery file is not available. Download it and try again. Your saved work has been kept.") }
+        guard let result else { throw AccountRemovalRecoveryRequest.invalid }; return try result.get()
+    }
+}
+
+struct AccountRemovalRecoveryScope: Equatable, Sendable {
+    let workspace: WorkspaceBinding
+    let session: UUID
 }

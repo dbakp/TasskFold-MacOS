@@ -390,3 +390,130 @@ struct AccountMenu: View {
     }
     private func show(_ tab: SettingsTab) { workspace.settingsTab = tab; openSettings() }
 }
+
+private struct AccountRemovalRecoveryRequestDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.json] }
+    let data: Data
+    init(_ request: AccountRemovalRecoveryRequest) throws { data = try request.encoded() }
+    init(configuration: ReadConfiguration) throws {
+        guard let data = configuration.file.regularFileContents, data.count <= AccountRemovalRecoveryFile.maximumBytes else { throw AccountRemovalRecoveryRequest.invalid }; self.data = data
+    }
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
+}
+
+struct AccountRemovalRecoveryOptionsView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var scope: AccountRemovalRecoveryScope?
+    @State private var requests: [AccountRemovalRecoveryRequest] = []
+    @State private var selected: UUID?
+    @State private var document: AccountRemovalRecoveryRequestDocument?
+    @State private var exporting = false
+    @State private var importing = false
+    @State private var importFor: AccountRemovalRecoveryRequest?
+    @State private var reviewed: AccountRemovalRecoveryFile?
+    @State private var message: String?
+    @State private var work: Task<Void, Never>?
+    @State private var applying = false
+    @State private var loading = true
+    private var choice: AccountRemovalRecoveryRequest? { requests.first { $0.id == selected } }
+    var body: some View {
+        WorkflowShell(title: "Recover account removal") {
+            Group {
+                if applying {
+                    ProgressView("Checking removal with the original server…").padding().accessibilityIdentifier("accountRecoveryChecking")
+                } else if let scope, scope != store.accountRemovalRecoveryScope {
+                    ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Reopen recovery options to continue. Your saved work has been kept."))
+                } else {
+                    Form {
+                        Section {
+                            Text("If signing in or retrying cannot finish an older removal, you can request a recovery file.")
+                            Text("Your saved work stays on this device until the original server confirms removal.").foregroundStyle(.secondary)
+                        }
+                        if requests.count > 1 {
+                            Picker("Saved removal", selection: $selected) {
+                                ForEach(requests) { request in Text("Account ••••" + request.account.suffix(4)).tag(Optional(request.id)) }
+                            }.disabled(work != nil || importing).onChange(of: selected) { _, _ in reviewed = nil; message = nil }
+                        }
+                        if let choice {
+                            Section("Request help") {
+                                LabeledContent("Original server", value: URL(string: choice.origin)?.host ?? choice.origin)
+                                Button("Save recovery request…") {
+                                    do { document = try AccountRemovalRecoveryRequestDocument(choice); exporting = true; message = nil }
+                                    catch { message = error.localizedDescription }
+                                }.accessibilityIdentifier("saveRemovalRecoveryRequest").disabled(work != nil)
+                                Text("Send this request to your Taskfold administrator through your usual support channel. It contains no passwords or task content.").font(.footnote).foregroundStyle(.secondary)
+                            }
+                            Section("Use a recovery file") {
+                                Button("Import recovery file…") { importFor = choice; importing = true; message = nil }.accessibilityIdentifier("importRemovalRecoveryFile").disabled(work != nil)
+                                if let reviewed {
+                                    Label("Recovery file matches this saved request", systemImage: "checkmark.shield").accessibilityIdentifier("removalRecoveryReviewed")
+                                    Text("Taskfold will verify the file and check removal again with the original server before clearing this account’s remaining copies on this device.").font(.callout).foregroundStyle(.secondary)
+                                    Button("Verify and finish", role: .destructive) { finish(reviewed) }.accessibilityIdentifier("verifyRemovalRecovery").disabled(work != nil)
+                                }
+                                if work != nil { ProgressView("Opening recovery file…") }
+                            }
+                        } else if loading { ProgressView("Loading saved requests…") }
+                        else if scope != nil {
+                            ContentUnavailableView("No saved removal to recover", systemImage: "checkmark.shield", description: Text("Retry may already have finished it. You can close this window."))
+                        }
+                        if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("removalRecoveryMessage") }
+                    }.formStyle(.grouped)
+                }
+            }
+        }
+        .task {
+            let captured = store.accountRemovalRecoveryScope; scope = captured
+            defer { loading = false }
+            do {
+                let loaded = try await store.accountRemovalRecoveryRequests(scope: captured)
+                guard !Task.isCancelled, captured == store.accountRemovalRecoveryScope else { return }
+                requests = loaded; selected = loaded.first?.id
+            } catch is CancellationError { }
+            catch { message = error.localizedDescription }
+        }
+        .fileExporter(isPresented: $exporting, document: document, contentType: .json, defaultFilename: "Taskfold recovery request") { result in
+            if case .failure(let error) = result, (error as NSError).code != CocoaError.userCancelled.rawValue { message = error.localizedDescription }
+        }
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.json], allowsMultipleSelection: false) { result in
+            switch result {
+            case .success(let urls): if let url = urls.first, let expected = importFor { read(url, expected: expected) }
+            case .failure(let error): if (error as NSError).code != CocoaError.userCancelled.rawValue { message = error.localizedDescription }
+            }
+        }
+        .onChange(of: store.accountRemovalRecoveryScope) { _, _ in
+            if !applying { work?.cancel() }
+            reviewed = nil; importFor = nil; document = nil; requests = []; importing = false; exporting = false
+        }
+        .onDisappear {
+            // A full-screen system picker can cover this view without closing recovery.
+            // Keep its exact request until the picker returns; scope changes still invalidate it.
+            if !importing && !exporting { work?.cancel(); reviewed = nil; document = nil; importFor = nil }
+        }
+    }
+    private func read(_ url: URL, expected: AccountRemovalRecoveryRequest) {
+        guard let scope, scope == store.accountRemovalRecoveryScope, work == nil else { return }
+        let operation = AccountRemovalRecoveryReadOperation()
+        let worker = Task.detached(priority: .userInitiated) { try operation.read(url) }
+        work = Task { @MainActor in
+            defer { work = nil }
+            do {
+                let data = try await withTaskCancellationHandler(operation: { try await worker.value }, onCancel: { operation.cancel(); worker.cancel() })
+                try Task.checkCancellation()
+                guard scope == store.accountRemovalRecoveryScope, expected.id == selected else { return }
+                reviewed = try AccountRemovalRecoveryFile(data: data, expected: expected)
+            } catch is CancellationError { }
+            catch { if (error as NSError).code != CocoaError.userCancelled.rawValue { message = error.localizedDescription }; reviewed = nil }
+        }
+    }
+    private func finish(_ file: AccountRemovalRecoveryFile) {
+        guard let scope, scope == store.accountRemovalRecoveryScope, work == nil else { return }
+        applying = true; message = nil
+        work = Task { @MainActor in
+            defer { applying = false; work = nil }
+            do { try await store.applyAccountRemovalRecovery(file, scope: scope); dismiss() }
+            catch is CancellationError { }
+            catch { message = error.localizedDescription }
+        }
+    }
+}

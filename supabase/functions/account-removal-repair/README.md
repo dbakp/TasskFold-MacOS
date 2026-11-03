@@ -4,8 +4,9 @@ This is administrator tooling for Storage objects left after an Auth account is
 already absent, including after its ordinary seven-day removal receipt expires.
 It never deletes Auth, authorizes normal native deletion, accepts a client's
 status proof as authority, or guesses that an expired pre-proof legacy command
-completed. Native screens and their existing proof/receipt contract are
-unchanged.
+completed. A separate absence-only recovery certificate can bind an older
+private native command to a fresh server absence check; it cannot authorize
+deletion.
 
 The candidate is **not deployed**. Each app repository independently owns these
 sources and the matching CLI-generated migration
@@ -79,6 +80,42 @@ against a concurrent privileged replacement after the final check: operator
 quiescence is required. Versioned S3/hosted recovery and genuine Auth Admin
 behavior remain separate acceptance work.
 
+## Certify an older private command
+
+The native recovery entry remains disabled by default until hosted acceptance.
+Once enabled with `TaskfoldAccountRemovalRecoveryEnabled`, the user saves a
+small JSON recovery request from the pending-removal banner. It includes the
+original server, account UUID, command UUID and SHA-256 of the original private
+bearer. It includes no bearer, password, status proof or task content. Treat
+these identifiers as private support data; possession of a request is not proof
+of the requester's identity.
+
+After the normal support identity review and any required residual-file repair,
+the operator submits `action: "certify"`, `account`, the entire nested
+`request`, and `confirmation` equal to that account UUID, using the separate
+operator secret. The handler refuses issuance while Auth or owned files remain.
+This operation reads only and returns a versioned recovery JSON file signed with
+a retained global status-proof key under the distinct `account-removal-recovery`
+purpose. Keep old inactive signing keys for recovery; revoked keys refuse it.
+
+The user imports that file, reviews its match and explicitly chooses **Verify
+and finish**. Local JSON checks do not authenticate its signature. The app first
+persists the exact proof in the existing private command vault; only then does
+it contact the original server with the original bearer and command UUID. The
+server validates the signature, origin and both command bindings, and checks
+Auth/file absence again. Recreated accounts or newly present files refuse
+confirmation. The certificate branch never starts deletion, removes files,
+renews sign-in or substitutes the current account's credentials. Only a bound
+server acknowledgement enters the existing account-specific device cleanup.
+Unavailable/revoked/wrong files preserve remaining copies and allow a later
+reviewed replacement. Files are capped at 8 KiB and read with cancellable file
+coordination; ordinary backup import is not a recovery-certificate route.
+
+This certificate has no time expiry, like the existing status-only proof, but
+requires a retained non-revoked signing key and a fresh absence check every
+time. Do not put the operator secret, signing key, original bearer or proof into
+an exported request, client configuration, diagnostic report or chat.
+
 ## Checks and evidence
 
 From this owning repository:
@@ -86,7 +123,7 @@ From this owning repository:
 ```
 deno fmt --check supabase/functions/account-removal-repair Scripts/Database/account-removal-repair-http.ts Scripts/Database/test-account-removal-repair.mjs
 deno lint supabase/functions/account-removal-repair Scripts/Database/account-removal-repair-http.ts
-deno test supabase/functions/account-removal-repair/handler_test.ts supabase/functions/delete-account/handler_test.ts supabase/functions/delete-account/proof_test.ts
+deno test supabase/functions/account-removal-repair/handler_test.ts supabase/functions/delete-account/handler_test.ts supabase/functions/delete-account/proof_test.ts supabase/functions/delete-account/recovery_test.ts
 node Scripts/Database/test-account-removal-repair.mjs
 ```
 

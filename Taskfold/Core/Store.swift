@@ -1,4 +1,5 @@
 import SwiftUI
+import CryptoKit
 import Observation
 import Security
 import Network
@@ -2449,6 +2450,9 @@ final class Store {
                 try await backend.performAccountRemoval(command)
             }
             catch is AccountRemovalAuthorizationRequired {
+                // Imported recovery is absence-only. Never turn a refused file
+                // into a fresh destructive authorization using a current login.
+                guard !command.hasRecoveryCertificate else { throw AppFailure(message: "This recovery file could not be verified. Ask your administrator for an updated file. Your remaining device copies have been kept.") }
                 guard backend.session?.user.id == command.account else { throw AccountRemovalAuthorizationRequired() }
                 let session = backend.reminderSessionIncarnation
                 let fresh = try await backend.accountRemovalCommand(forceRefresh: backend.session?.access_token == command.authorization)
@@ -4910,6 +4914,7 @@ extension Store {
 struct AccountRemovalRecoveryBanner: View {
     @Environment(Store.self) private var store
     @Environment(\.dynamicTypeSize) private var textSize
+    @State private var recovering = false
     var body: some View {
         if let status = store.accountRemovalStatus {
             let layout = textSize.isAccessibilitySize
@@ -4928,11 +4933,15 @@ struct AccountRemovalRecoveryBanner: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(status)
                 .accessibilityIdentifier("accountRemovalStatus")
+                if store.accountRemovalRecoveryEnabled {
+                    Button("Recovery options…") { recovering = true }.frame(minWidth:44,minHeight:44).disabled(store.accountRemovalBusy).accessibilityIdentifier("accountRemovalRecoveryOptions")
+                }
                 Button("Retry") { Task { await store.resumeAccountRemovals() } }
                     .frame(minWidth: 44, minHeight: 44)
                     .disabled(store.accountRemovalBusy)
                     .accessibilityIdentifier("retryAccountRemoval")
             }.padding().background(.regularMaterial)
+                .sheet(isPresented: $recovering) { AccountRemovalRecoveryOptionsView() }
         }
     }
 }
@@ -6495,5 +6504,151 @@ private final class WorkspaceReadObservationProbe: @unchecked Sendable {
     private var value = false
     func markChanged() { lock.lock(); defer { lock.unlock() }; value = true }
     var changed: Bool { lock.lock(); defer { lock.unlock() }; return value }
+}
+#endif
+
+extension Store {
+    var accountRemovalRecoveryEnabled: Bool {
+        #if DEBUG
+        if ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? ""), ProcessInfo.processInfo.arguments.contains("--account-removal-recovery-testing") { return true }
+        #endif
+        return Bundle.main.object(forInfoDictionaryKey: "TaskfoldAccountRemovalRecoveryEnabled") as? Bool ?? false
+    }
+    var accountRemovalRecoveryScope: AccountRemovalRecoveryScope {
+        .init(workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation)
+    }
+    func accountRemovalRecoveryRequests(scope: AccountRemovalRecoveryScope) async throws -> [AccountRemovalRecoveryRequest] {
+        guard accountRemovalRecoveryEnabled, !accountRemovalBusy, scope == accountRemovalRecoveryScope else { throw CancellationError() }
+        let pending = try await accountRemovalVault.pending()
+        guard scope == accountRemovalRecoveryScope, !accountRemovalBusy else { throw CancellationError() }
+        return try pending.filter { !$0.confirmed }.map { try AccountRemovalRecoveryRequest(command: $0) }.sorted { $0.account < $1.account }
+    }
+    func applyAccountRemovalRecovery(_ file: AccountRemovalRecoveryFile, scope: AccountRemovalRecoveryScope) async throws {
+        try Task.checkCancellation()
+        guard accountRemovalRecoveryEnabled, !accountRemovalBusy, scope == accountRemovalRecoveryScope,
+              file.request.origin == (try backend.accountRemovalOrigin) else { throw CancellationError() }
+        removalRecoveryRunning = true
+        defer { removalRecoveryRunning = false; publishWidgetSnapshot(); Task { await reschedule() } }
+        do {
+            guard let original = try await accountRemovalVault.command(account: file.request.account, origin: file.request.origin), file.request.matches(original) else { throw AccountRemovalRecoveryRequest.invalid }
+            try Task.checkCancellation()
+            guard scope == accountRemovalRecoveryScope else { throw CancellationError() }
+            // A failed secure write cannot lead to a server request or local erase.
+            let prepared = try await accountRemovalVault.prepare(original, proof: file.proof)
+            try Task.checkCancellation()
+            guard scope == accountRemovalRecoveryScope else { throw CancellationError() }
+            if removalPendingAccounts.contains(prepared.account) { accountRemovalStatus = "Finishing account removal…" }
+            else { markRemovalPending(prepared.account) }
+            try await finishAccountRemoval(prepared)
+            if !(try await accountRemovalVault.pending()).isEmpty {
+                accountRemovalStatus = "Another account removal still needs attention. Its remaining device copies have been kept."
+            }
+        } catch {
+            accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+            throw error
+        }
+    }
+}
+
+#if DEBUG
+extension Store {
+    func seedAccountRecoveryUIFixture() async throws -> String {
+        guard AccountRemovalNativeFixture.recoveryTesting else { throw CancellationError() }
+        let root = AccountRemovalNativeFixture.root, marker = root.appendingPathComponent("recovery-baseline.json")
+        if FileManager.default.fileExists(atPath: marker.path), !ProcessInfo.processInfo.arguments.contains("--account-removal-proof-reset") {
+            let baseline = try TaskfoldJSONDecoder().decode([String:JSON].self,from:Data(contentsOf:marker))
+            accountRemovalStatus = "Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+            return baseline["file"]!.text
+        }
+        let a = AccountRemovalNativeFixture.owner, b = AccountRemovalNativeFixture.other
+        let old = try await accountRemovalVault.pending()
+        guard old.allSatisfy({$0.account == a || $0.account == b}) else { throw CancellationError() }
+        try CalendarKeychainIO(service:accountRemovalService).remove(key:"unfinished-removals-v1")
+        try FileManager.default.createDirectory(at:root,withIntermediateDirectories:true)
+        try await backend.accept(AccountRemovalNativeFixture.session(a));localMode=false;signedIn=true;workspaceCacheReadable=true;accountGeneration=UUID()
+        dailyBackupsEnabled=false;disableNotifications();disableFocusAlerts()
+        var taskA=Record.task(user:a);taskA["title"] = .string("Keep older account work until verified")
+        snapshot=Snapshot(tables:["tasks":[taskA]]);try persist()
+        let aCache=cacheURL, aVault=backupVault;_ = try aVault.save(snapshot,kind:"Synthetic recovery proof")
+        var taskB=Record.task(user:b);taskB["title"] = .string("Keep current account work")
+        var bSnapshot=Snapshot(tables:["tasks":[taskB]]);bSnapshot.pending=[Mutation(table:"tasks",recordID:taskB.id,method:"POST",fields:taskB.fields)]
+        let bCache=aCache.deletingLastPathComponent().appendingPathComponent(b+".json")
+        try TaskfoldJSONEncoder().encode(bSnapshot).write(to:bCache,options:.atomic)
+        let bVault=BackupVault(directory:aVault.directory.deletingLastPathComponent().appendingPathComponent(WorkspaceBackup.stableID("vault",b)),account:b,key:{try BackupVault.deviceKey(account:b)})
+        let bEntry=try bVault.save(bSnapshot,kind:"Synthetic current account proof"), bBackup=bVault.file(bEntry)
+        var first=try AccountRemovalCommand(account:a,origin:backend.accountRemovalOrigin,authorization:"synthetic-A");first.version=1
+        var second=try AccountRemovalCommand(account:b,origin:backend.accountRemovalOrigin,authorization:"synthetic-B");second.version=1
+        _ = try await accountRemovalVault.begin(first);_ = try await accountRemovalVault.begin(second)
+        markRemovalPending(a);markRemovalPending(b)
+        if !ProcessInfo.processInfo.arguments.contains("--account-recovery-current-owner") {
+            try await backend.accept(AccountRemovalNativeFixture.session(b));accountGeneration=UUID();snapshot=bSnapshot
+        }
+        try persist()
+        accountRemovalStatus="Account removal needs attention. Your remaining device copies are kept until cleanup can finish."
+        let request=try AccountRemovalRecoveryRequest(command:first)
+        let payload:JSON = .object(["v":.number(1),"scope":.string("account-removal-recovery"),"origin":.string(request.origin),"account":.string(a),"command":.string(first.id.uuidString.lowercased()),"authorization_hash":.string(request.authorizationHash),"kid":.string("f086cafe-0000-4000-8000-000000000001"),"issued":.number(floor(Date().timeIntervalSince1970))])
+        let encoded=try TaskfoldJSONEncoder().encode(payload).base64EncodedString().replacingOccurrences(of:"+",with:"-").replacingOccurrences(of:"/",with:"_").replacingOccurrences(of:"=",with:"")
+        var requestDocument=request.document
+        if ProcessInfo.processInfo.arguments.contains("--account-recovery-invalid-file") { var invalid=requestDocument.object;invalid["command"] = .string(UUID().uuidString.lowercased());requestDocument = .object(invalid) }
+        let packet:JSON = .object(["format":.string("taskfold-account-removal-recovery"),"version":.number(1),"request":requestDocument,"proof":.string(encoded+"."+String(repeating:"a",count:43))])
+        let fileName="Taskfold-recovery-"+first.id.uuidString.lowercased()+".json"
+        let documents=URL.documentsDirectory;try FileManager.default.createDirectory(at:documents,withIntermediateDirectories:true)
+        try TaskfoldJSONEncoder().encode(packet).write(to:documents.appendingPathComponent(fileName),options:.atomic)
+        try request.encoded().write(to:root.appendingPathComponent("recovery-request.json"),options:.atomic)
+        func digest(_ url:URL)throws->String {SHA256.hash(data:try Data(contentsOf:url)).map{String(format:"%02x",$0)}.joined()}
+        func jsonDigest(_ url:URL)throws->String {
+            let object=try JSONSerialization.jsonObject(with:Data(contentsOf:url))
+            let canonical=try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])
+            return SHA256.hash(data:canonical).map{String(format:"%02x",$0)}.joined()
+        }
+        let baseline:[String:JSON] = ["file":.string(fileName),"aCacheSHA":.string(try digest(aCache)),"bCacheSHA":.string(try digest(bCache)),"aCacheJSONSHA":.string(try jsonDigest(aCache)),"bCacheJSONSHA":.string(try jsonDigest(bCache)),"bBackup":.string(bBackup.path),"bBackupSHA":.string(try digest(bBackup)),"bCommand":.string(second.id.uuidString.lowercased()),"active":.string(userID)]
+        try TaskfoldJSONEncoder().encode(baseline).write(to:marker,options:.atomic)
+        return fileName
+    }
+    func inspectAccountRecoveryUIFixture(completed:Bool) async throws {
+        guard AccountRemovalNativeFixture.recoveryTesting else {throw CancellationError()}
+        let root=AccountRemovalNativeFixture.root, baseline=try TaskfoldJSONDecoder().decode([String:JSON].self,from:Data(contentsOf:root.appendingPathComponent("recovery-baseline.json")))
+        let a=AccountRemovalNativeFixture.owner,b=AccountRemovalNativeFixture.other, pending=try await accountRemovalVault.pending()
+        let aCache=AccountRemovalNativeFixture.dataRoot.appendingPathComponent(a+".json"),bCache=AccountRemovalNativeFixture.dataRoot.appendingPathComponent(b+".json")
+        func digest(_ url:URL)throws->String {SHA256.hash(data:try Data(contentsOf:url)).map{String(format:"%02x",$0)}.joined()}
+        func jsonDigest(_ url:URL)throws->String {
+            let object=try JSONSerialization.jsonObject(with:Data(contentsOf:url))
+            let canonical=try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])
+            return SHA256.hash(data:canonical).map{String(format:"%02x",$0)}.joined()
+        }
+        var checks:[String:Bool]=[:]
+        let current=baseline["active"]!.text
+        checks["currentSessionPreserved"]=backend.session?.user.id==current && signedIn
+        checks["privateSessionPreserved"]=(try AccountRemovalNativeFixture.persistedSession())?.user.id==current
+        let cold = !ProcessInfo.processInfo.arguments.contains("--account-removal-proof-reset")
+        let currentBytesUnchanged = try digest(current == a ? aCache : bCache)==baseline[current == a ? "aCacheSHA":"bCacheSHA"]?.text
+        let otherBytesUnchanged = try digest(bCache)==baseline["bCacheSHA"]?.text
+        checks["currentCacheFullJSONPreserved"] = try jsonDigest(current == a ? aCache : bCache)==baseline[current == a ? "aCacheJSONSHA":"bCacheJSONSHA"]?.text
+        checks["otherCacheFullJSONPreserved"] = try jsonDigest(bCache)==baseline["bCacheJSONSHA"]?.text
+        if !cold { checks["sameProcessCacheBytesPreserved"] = currentBytesUnchanged && otherBytesUnchanged }
+        let backup=URL(fileURLWithPath:baseline["bBackup"]!.text)
+        guard backup.path.hasPrefix(AccountRemovalNativeFixture.dataRoot.path+"/") else {throw CancellationError()}
+        checks["otherEncryptedBackupExact"]=try digest(backup)==baseline["bBackupSHA"]?.text
+        checks["otherBackupKeyPresent"]=AccountRemovalNativeFixture.backupKeyStatus(b)==errSecSuccess
+        let other=pending.first{$0.account==b}
+        checks["otherCommandExact"]=other?.id.uuidString.lowercased()==baseline["bCommand"]?.text && other?.authorization=="synthetic-B" && other?.statusProof==nil && other?.version==1 && other?.confirmed==false
+        checks["pendingWarningVisible"]=accountRemovalStatus != nil
+        if completed {
+            checks["legacyCommandFinished"] = !pending.contains{$0.account==a}
+            checks["targetCacheRemoved"] = !FileManager.default.fileExists(atPath:aCache.path)
+            checks["targetRemovalFenceSaved"] = AccountRemovalDisk(directory:aCache.deletingLastPathComponent(),account:a).removed
+            checks["targetBackupKeyRemoved"] = AccountRemovalNativeFixture.backupKeyStatus(a)==errSecItemNotFound
+        } else {
+            checks["targetCacheExact"] = try digest(aCache)==baseline["aCacheSHA"]?.text
+            checks["targetCommandKept"] = pending.contains{$0.account==a && !$0.confirmed}
+            checks["targetNotFenced"] = !AccountRemovalDisk(directory:aCache.deletingLastPathComponent(),account:a).removed
+            checks["targetBackupKeyKept"] = AccountRemovalNativeFixture.backupKeyStatus(a)==errSecSuccess
+        }
+        checks["noRefreshOrNewDeletionAuthorization"]=AccountRemovalProofHTTP.refreshCount==0
+        let accepted=checks.values.allSatisfy({$0})
+        let report:JSON = .object(["accepted":.bool(accepted),"completed":.bool(completed),"checks":.object(checks.mapValues(JSON.bool)),"serverCalls":.number(Double(AccountRemovalProofHTTP.count)),"coldReload":.bool(cold),"currentCacheBytesUnchanged":.bool(currentBytesUnchanged),"otherCacheBytesUnchanged":.bool(otherBytesUnchanged)])
+        try TaskfoldJSONEncoder().encode(report).write(to:root.appendingPathComponent(completed ? "recovery-completed.json":"recovery-preserved.json"),options:.atomic)
+        guard accepted else {throw AppFailure(message:"Recovery fixture failed: "+checks.filter{!$0.value}.keys.sorted().joined(separator:", "))}
+    }
 }
 #endif

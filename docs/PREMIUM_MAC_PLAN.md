@@ -10634,3 +10634,14 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Complete hosted activation/acceptance, expired pre-proof policy and wider provider/failure directions. Native protected-session/runtime remains tied to deferred signing.
 
 [Evidence and operational limits](account-removal-residual-repair/README.md). Native UI is unchanged; no new native runtime pass is claimed.
+
+
+### 3 November 2026 · Reviewed legacy account-removal recovery
+
+- [x] Independently own non-secret request export, coordinated bounded recovery-file import, explicit review and server-bound absence-only verification. Preserve the private command journal and other accounts; never renew deletion authorization after certificate refusal.
+- [x] Pass own 78 selected Core, 40 Deno and 57 actual local PostgreSQL/Storage checks, including certificates before/after residual repair and refusal after a file or Auth reappears. Owned provider resources are removed; advisors are unchanged.
+- [x] Build and strictly verify signatures for the independently owned full Mac app and test runner. Correct the initial iOS-only Watch reference in Mac cleanup; no protected-session runtime pass is inferred.
+- [x] Record counterpart iPhone review/cleanup/cold return with exact same-process cache/ciphertext checks and complete JSON preservation after relaunch.
+- [ ] Accept largest-text system-picker/refusal flows, genuine Mac protected-session/runtime and hosted issuer/verifier activation.
+
+[Current recovery scope](account-removal-legacy-recovery/README.md). Native entry and service remain disabled by default.

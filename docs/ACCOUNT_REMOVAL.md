@@ -1,6 +1,6 @@
 # Restore working account removal
 
-Current status (3 November 2026): the deployed protocol-2 proof service is unchanged. Both owning repos now verify a disabled, review-bound administrator residual-file repair candidate against actual isolated Storage bytes (43 checks each), plus 33 handler/proof tests each. Hosted activation/verification, expired pre-proof policy, genuine Mac protected-session/runtime and wider fault/concurrency directions remain open. [Current repair evidence](account-removal-residual-repair/README.md). Earlier candidate/gap sections below remain historical within their recorded scope.
+Current status (3 November 2026): the deployed protocol-2 proof service is unchanged. Both repos now implement reviewed recovery-request export/import and an absence-only recovery certificate for expired pre-proof commands. Each passes 78 selected Core tests, 40 handler/proof tests and 57 actual local database/Storage checks. The iPhone review/completion/cold-return case passes with a synthetic endpoint; largest-text refusal/picker and hosted activation remain open. Both full apps build/sign; the new native entry and operator service stay disabled. Genuine Mac protected-session/runtime remains tied to deferred signing. [Current recovery scope](account-removal-legacy-recovery/README.md). Earlier candidate/gap sections below are historical within their recorded scope.
 
 
 ## Coordinated private recovery — 31 October 2026
@@ -184,3 +184,8 @@ remaining acceptance are in `p0-account-removal-status-proof-evidence.json`.
 ## Reviewed residual-file repair candidate — 3 November
 
 An administrator-only preview/confirmation path now handles indexed owned files left after Auth is absent and ordinary receipts have expired. It preserves the status proof's non-destructive authority, rechecks reviewed identities/versions, deletes through Storage's API, and requires renewed review for remaining batches. Both independently owned copies pass 33 handler/proof tests and 43 actual local-provider integration checks, including a real partial multi-bucket failure and 100+1 batching. The candidate is disabled and undeployed. Expired pre-proof legacy commands remain unresolved; no device-copy deletion is assumed. [Scope, initial fixture failures, advisor baseline and remaining work](account-removal-residual-repair/README.md).
+
+
+## Reviewed legacy recovery candidate — 3 November
+
+Both apps now support a private-command-bound request, reviewed recovery-file import and fresh server absence check before existing account-specific cleanup. A separate operator issues certificates only when Auth and owned files are absent. This introduces no deletion authority and no automatic renewal on certificate refusal. The candidate remains disabled until separate hosted acceptance. [Current evidence and limits](account-removal-legacy-recovery/README.md).

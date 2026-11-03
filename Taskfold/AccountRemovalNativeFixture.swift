@@ -11,8 +11,9 @@ enum AccountRemovalNativeFixture {
     static let other = "f084cafe-1031-4111-8111-000000000002"
     static var enabled: Bool {
         ["com.dbakp.taskfold.workflowtestsremoval", "com.dbakp.taskfold.mac.workflowtestsremoval", "com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") &&
-            ProcessInfo.processInfo.arguments.contains("--account-removal-proof")
+            (ProcessInfo.processInfo.arguments.contains("--account-removal-proof") || recoveryTesting)
     }
+    static var recoveryTesting: Bool { ["com.dbakp.taskfold.workflowteststeameditbridge","com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--account-removal-recovery-testing") }
     static var coordination: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--account-removal-coordination") }
     static var vaultService: String { (Bundle.main.bundleIdentifier ?? "isolated") + ".account-removal-native-proof" }
     static var sessionService: String { (Bundle.main.bundleIdentifier ?? "isolated") + ".removal-proof-session" }
@@ -44,7 +45,7 @@ enum AccountRemovalNativeFixture {
             UserDefaults.standard.removeObject(forKey: "accountRemoval.pending." + account)
         }
         let configuration = URLSessionConfiguration.ephemeral; configuration.protocolClasses = [AccountRemovalProofHTTP.self]
-        return Backend(configuration: ["URL": "https://removal-native.test", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: try! session(owner), persistSession: { session in
+        return Backend(configuration: ["URL": "https://removal-native.test", "Key": "synthetic-public"], http: URLSession(configuration: configuration), session: recoveryTesting && !ProcessInfo.processInfo.arguments.contains("--account-removal-proof-reset") ? (try? persistedSession()) : try! session(owner), persistSession: { session in
             try await SessionPersistence.perform {
                 let io = CalendarKeychainIO(service: sessionService)
                 if let session { try io.write(TaskfoldJSONEncoder().encode(session), key: "session") }
@@ -65,6 +66,22 @@ final class AccountRemovalProofHTTP: URLProtocol, @unchecked Sendable {
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func stopLoading() {}
     override func startLoading() {
+        if AccountRemovalNativeFixture.recoveryTesting {
+            if request.url?.path == "/auth/v1/token" {
+                Self.lock.lock(); Self.refreshes += 1; Self.lock.unlock(); reply(401); return
+            }
+            guard request.url?.host == "removal-native.test", request.url?.path == "/functions/v1/delete-account", request.value(forHTTPHeaderField:"Authorization") == "Bearer synthetic-A" else {
+                client?.urlProtocol(self,didFailWithError:URLError(.notConnectedToInternet)); return
+            }
+            Self.lock.lock(); Self.requests += 1; Self.lock.unlock()
+            guard let data=try? Data(contentsOf:AccountRemovalNativeFixture.root.appendingPathComponent("recovery-request.json")), let expected=try? TaskfoldJSONDecoder().decode(JSON.self,from:data).object,
+                  request.value(forHTTPHeaderField:"X-Taskfold-Account-Removal-Command")==expected["command"]?.text,
+                  request.value(forHTTPHeaderField:"X-Taskfold-Account-Removal-Proof") != nil else {reply(401);return}
+            if ProcessInfo.processInfo.arguments.contains("--account-recovery-refuse") {reply(401);return}
+            if ProcessInfo.processInfo.arguments.contains("--account-recovery-generic-success") {reply(200);return}
+            let body:JSON = .object(["deleted":.bool(true),"account":expected["account"]!,"command":expected["command"]!,"authorization_hash":expected["authorization_hash"]!])
+            reply(200,body:try! TaskfoldJSONEncoder().encode(body));return
+        }
         if AccountRemovalNativeFixture.enabled, AccountRemovalNativeFixture.expiring, request.url?.host == "removal-native.test",
            request.url?.path == "/auth/v1/token", request.url?.query == "grant_type=refresh_token" {
             Self.lock.lock(); Self.refreshes += 1; Self.lock.unlock()
@@ -140,5 +157,32 @@ enum AccountRemovalLiveReplyFault {
         try TaskfoldJSONEncoder().encode(trace).write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
         if discard { throw URLError(.networkConnectionLost) }
     }
+}
+#endif
+
+#if DEBUG
+struct AccountRemovalRecoveryFixtureView: View {
+    @Environment(Store.self) private var store
+    @State private var ready=false
+    @State private var message="Preparing recovery fixture"
+    @State private var file=""
+    var body:some View {
+        NavigationStack {
+            Form {
+                Text(ready ? "Recovery fixture ready" : message).accessibilityIdentifier("nativeAccountRecoveryReady")
+                Text(file).accessibilityIdentifier("nativeAccountRecoveryFile")
+                Button("Inspect completed recovery") { inspect(true) }.accessibilityIdentifier("checkAccountRecoveryCompleted").disabled(!ready)
+                Button("Inspect preserved work") { inspect(false) }.accessibilityIdentifier("checkAccountRecoveryPreserved").disabled(!ready)
+                Text(message).accessibilityIdentifier("nativeAccountRecoveryResult")
+            }.navigationTitle("Recovery test")
+        }.task {
+            do {file=try await store.seedAccountRecoveryUIFixture();ready=true;message="Ready"}
+            catch {message=error.localizedDescription}
+        }
+    }
+    private func inspect(_ complete:Bool){message="Inspecting saved state";Task{@MainActor in
+        do{try await store.inspectAccountRecoveryUIFixture(completed:complete);message="Saved state accepted"}
+        catch{message=error.localizedDescription}
+    }}
 }
 #endif
