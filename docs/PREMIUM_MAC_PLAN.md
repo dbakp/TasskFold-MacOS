@@ -10526,3 +10526,11 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Accept native consent/recovery and genuine Auth/provider/full-schema behavior; combined connection-pause/recording signatures are locally verified. Pending/retained/legacy/mixed media and other realm transfers remain.
 
 [Exact accepted scope and remaining work](project-recording-transfer/README.md). Whole-project transfer completion remains To build.
+
+### 3 November 2026 · Publication audience approval foundation
+
+- [x] Reproduce old personal approval publishing after team adoption; implement separate signed audience review and current-context checks before reservation, upload admission and final publication. Preserve immutable original receipts and exact Check/Close.
+- [x] Verify 112 local SQL/gateway checks (76 prior transfer controls plus 36 audience checks), 43 gateway tests and 66 client tests in each repo. App/runner builds and strict signatures pass. Routine team usage counters preserve approval; actual access changes invalidate it.
+- [ ] Wire the native explicit review and durable approval sidecar/cold retry. Never fetch a new audience approval silently during retry. Finish changed/expired review and old pending Check/Close decisions, then native/accessibility/lifecycle and genuine integration acceptance.
+
+[Exact audience proof and remaining work](audio-publication-audience/README.md). Ordinary audio/project-transfer gates stay disabled; whole-project transfers remain unfinished.

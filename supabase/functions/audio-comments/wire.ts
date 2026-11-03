@@ -68,6 +68,30 @@ export function publication(value: unknown) {
   descriptor(row.audio);
   return row;
 }
+// Audience approval stays outside immutable v1 publication/sender receipts.
+export function publicationApproval(value: unknown) {
+  const row = object(value);
+  exact(row, [
+    "protocol",
+    "account",
+    "target",
+    "audience",
+    "expires_at",
+    "token",
+  ]);
+  const audience = object(row.audience);
+  exact(audience, ["kind", "team_id", "visibility"]);
+  if (
+    row.protocol !== 1 || !identity(row.account) || !date(row.expires_at) ||
+    typeof row.token !== "string" || !/^[a-f0-9]{64}$/.test(row.token) ||
+    !(audience.kind === "personal" && audience.team_id === null &&
+        audience.visibility === "personal" ||
+      audience.kind === "team" && identity(audience.team_id) &&
+        ["private", "team"].includes(String(audience.visibility)))
+  ) throw Error("approval");
+  target(row.target);
+  return row;
+}
 export function path(row: Row) {
   const t = target(row.target);
   if (!identity(row.asset_id)) throw Error("asset");

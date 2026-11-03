@@ -640,3 +640,59 @@ extension AudioCommentPublishingTests {
         XCTAssertEqual(try file.journals().first?.clip?.data, input.clip.data)
     }
 }
+
+extension AudioCommentPublishingTests {
+    func audienceFixture() throws -> (Record, AudioCommentPublication, Record) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "audio-publication-audience-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let root = try TaskfoldJSONDecoder().decode(Record.self, from: Data(contentsOf: url))
+        return (root, try AudioCommentPublication(record: Record(root["intent"].object)), Record(root["teamApproval"].object))
+    }
+    func approvalClock(_ record: Record) throws -> Date {
+        let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return try XCTUnwrap(formatter.date(from: record.string("expires_at"))).addingTimeInterval(-600)
+    }
+    func testActualSQLAudienceApprovalPreservesImmutableReceiptAndBindsIntent() throws {
+        let (wire, intent, record) = try audienceFixture(), now = try approvalClock(record)
+        let approval = try AudioCommentPublicationApproval(record: record, publication: intent, now: now)
+        if case .team(_, let isPrivate) = approval.audience { XCTAssertFalse(isPrivate) } else { XCTFail() }
+        XCTAssertTrue(approval.permits(intent, now: now)); XCTAssertEqual(approval.record, record)
+        let receipt = try AudioCommentPublishedReceipt(record: Record(wire["receipt"].object), publication: intent)
+        XCTAssertTrue(receipt.publication.sameIntent(as: intent)); XCTAssertFalse(receipt.record.fields.keys.contains("approval"))
+        let changed = try AudioCommentPublication(account: intent.account, target: intent.target, caption: "Edited after approval", descriptor: intent.descriptor, operation: intent.operation, comment: intent.comment, asset: intent.asset)
+        XCTAssertFalse(approval.permits(changed, now: now)); XCTAssertFalse(approval.permits(intent, now: approval.expires))
+    }
+    func testAudienceApprovalRejectsMalformedOrWrongContext() throws {
+        let (_, intent, record) = try audienceFixture(), now = try approvalClock(record)
+        var mutations: [Record] = []
+        var extra = record.fields; extra["caption"] = .string("Untrusted"); mutations.append(Record(extra))
+        for (key, value) in [("protocol", JSON.number(2)), ("account", .string(UUID().uuidString.lowercased())), ("target", .object([:])), ("token", .string(String(repeating: "G", count: 64))), ("expires_at", .string("infinity")), ("audience", .object(["kind": .string("personal"), "team_id": .null, "visibility": .string("team")]))] {
+            var bad = record.fields; bad[key] = value; mutations.append(Record(bad))
+        }
+        for bad in mutations { XCTAssertThrowsError(try AudioCommentPublicationApproval(record: bad, publication: intent, now: now)) }
+        XCTAssertThrowsError(try AudioCommentPublicationApproval(record: record, publication: intent, now: now.addingTimeInterval(601)))
+        XCTAssertThrowsError(try AudioCommentPublicationApproval(record: record, publication: intent, now: now.addingTimeInterval(-61)))
+    }
+    @MainActor func testBackendAudienceReviewTransmitsNoMediaAndApprovedSendPreservesIntent() async throws {
+        let backend = try backend(), source = try source(), publication = try AudioCommentPublication(account: account, target: source.target, caption: source.caption, descriptor: source.clip.descriptor)
+        let expires = Date().addingTimeInterval(600), formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let record = Record(["protocol": .number(1), "account": .string(account.uuidString.lowercased()), "target": .object(publication.target.record.fields), "audience": .object(["kind": .string("personal"), "team_id": .null, "visibility": .string("personal")]), "expires_at": .string(formatter.string(from: expires)), "token": .string(String(repeating: "a", count: 64))])
+        var bodies: [Record] = []; var actions: [String] = []
+        PublicationHTTP.handler = { request, http in
+            var bytes = request.httpBody ?? Data()
+            if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var buffer = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable { let n = stream.read(&buffer, maxLength: buffer.count); if n <= 0 { break }; bytes.append(buffer, count: n) } }
+            do {
+                let body = try TaskfoldJSONDecoder().decode(Record.self, from: bytes); bodies.append(body)
+                let action = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first?.value ?? ""; actions.append(action)
+                let result = action == "review" ? Record(["approval": .object(record.fields)]) : Record(["receipt": .object(self.record(publication).fields)])
+                http.finish(try TaskfoldJSONEncoder().encode(result))
+            } catch { XCTFail(String(describing: error)); http.finish(Data(), status: 500) }
+        }; defer { PublicationHTTP.handler = nil }
+        let approval = try await backend.reviewAudioPublication(publication, origin: origin, incarnation: backend.reminderSessionIncarnation)
+        _ = try await backend.publishAudio(.init(publication: publication, clip: source.clip), approval: approval, origin: origin, incarnation: backend.reminderSessionIncarnation)
+        XCTAssertEqual(actions, ["review", "publish"]); XCTAssertEqual(Set(bodies[0].fields.keys), ["intent"])
+        XCTAssertEqual(bodies[1]["intent"], bodies[0]["intent"]); XCTAssertEqual(bodies[1]["approval"], .object(record.fields)); XCTAssertEqual(Data(base64Encoded: bodies[1].string("audio_base64")), source.clip.data)
+        let changed = try AudioCommentPublication(account: account, target: source.target, caption: "Changed", descriptor: source.clip.descriptor)
+        do { _ = try await backend.publishAudio(.init(publication: changed, clip: source.clip), approval: approval, origin: origin, incarnation: backend.reminderSessionIncarnation); XCTFail() } catch {}
+        XCTAssertEqual(actions.count, 2)
+    }
+}

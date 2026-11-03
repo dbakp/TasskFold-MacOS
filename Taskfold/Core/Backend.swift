@@ -1667,7 +1667,24 @@ extension Backend: AudioCommentPublishingTransport {
               try AudioCommentPublicationJournal.canonicalOrigin(baseURL)==origin else {throw CancellationError()}
         try Task.checkCancellation()
     }
+    func reviewAudioPublication(_ publication: AudioCommentPublication, origin: String, incarnation: UUID) async throws -> AudioCommentPublicationApproval {
+        let owner = publication.account.uuidString.lowercased()
+        try checkAudioPublicationOwner(owner, origin: origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioPublicationOwner(owner, origin: origin, incarnation: incarnation)
+        let body = try TaskfoldJSONEncoder().encode(Record(["intent": .object(publication.record.fields)]))
+        let data = try await audioPublicationReply(body, action: "review", owner: owner, origin: origin, incarnation: incarnation)
+        let envelope = try TaskfoldJSONDecoder().decode(Record.self, from: data)
+        guard Set(envelope.fields.keys) == ["approval"], case .object(let approval) = envelope["approval"] else { throw AudioCommentFailure.changed }
+        return try .init(record: Record(approval), publication: publication)
+    }
+    func publishAudio(_ pending: AudioCommentPending, approval: AudioCommentPublicationApproval, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
+        guard approval.permits(pending.publication) else { throw AudioCommentFailure.changed }
+        return try await publishingAudio(pending, approval: approval, origin: origin, incarnation: incarnation)
+    }
     func publishAudio(_ pending:AudioCommentPending,origin:String,incarnation:UUID) async throws -> AudioCommentPublishedReceipt {
+        try await publishingAudio(pending, approval: nil, origin: origin, incarnation: incarnation)
+    }
+    private func publishingAudio(_ pending: AudioCommentPending, approval: AudioCommentPublicationApproval?, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
         let owner=pending.publication.account.uuidString.lowercased()
         try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
         try await refreshIfNeeded();try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
@@ -1676,7 +1693,9 @@ extension Backend: AudioCommentPublishingTransport {
               abs(decoded.descriptor.milliseconds-pending.publication.descriptor.milliseconds)<=1000 else {throw AudioCommentFailure.invalid}
         let encoding=Task.detached(priority:.utility) {() throws -> Data in
             try Task.checkCancellation();let encoder=TaskfoldJSONEncoder();encoder.outputFormatting=[.sortedKeys,.withoutEscapingSlashes]
-            let data=try encoder.encode(Record(["intent":.object(pending.publication.record.fields),"audio_base64":.string(pending.clip.data.base64EncodedString())]))
+            var fields: [String: JSON] = ["intent": .object(pending.publication.record.fields), "audio_base64": .string(pending.clip.data.base64EncodedString())]
+            if let approval { guard approval.permits(pending.publication) else { throw AudioCommentFailure.changed }; fields["approval"] = .object(approval.record.fields) }
+            let data = try encoder.encode(Record(fields))
             try Task.checkCancellation();return data
         }
         let body=try await withTaskCancellationHandler(operation:{try await encoding.value},onCancel:{encoding.cancel()})
@@ -1706,7 +1725,7 @@ extension Backend: AudioCommentPublishingTransport {
     }
     private func audioPublicationReply(_ body:Data,action:String,owner:String,origin:String,incarnation:UUID) async throws -> Data {
         try checkAudioPublicationOwner(owner,origin:origin,incarnation:incarnation)
-        guard ["publish","resolve"].contains(action),let url=URL(string:origin+"/functions/v1/audio-comments?action="+action),let session else {throw AudioCommentFailure.changed}
+        guard ["publish","resolve","review"].contains(action),let url=URL(string:origin+"/functions/v1/audio-comments?action="+action),let session else {throw AudioCommentFailure.changed}
         var request=URLRequest(url:url);request.httpMethod="POST";request.timeoutInterval=25
         request.cachePolicy = .reloadIgnoringLocalCacheData;request.httpShouldHandleCookies=false
         request.setValue(config["Key"],forHTTPHeaderField:"apikey");request.setValue("Bearer "+session.access_token,forHTTPHeaderField:"Authorization")

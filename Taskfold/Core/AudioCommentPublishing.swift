@@ -3,6 +3,39 @@ import CryptoKit
 import Observation
 import Darwin
 
+/// Reviewed audience authority is kept separate from immutable publication v1.
+/// Parsing proves shape and exact local intent binding; only the server verifies
+/// the signature against current access immediately before reserve/finalize.
+struct AudioCommentPublicationApproval: Sendable {
+    enum Audience: Equatable, Sendable { case personal; case team(UUID, isPrivate: Bool) }
+    let publication: AudioCommentPublication
+    let audience: Audience
+    let expires: Date
+    let record: Record
+    init(record: Record, publication: AudioCommentPublication, now: Date = Date()) throws {
+        guard Set(record.fields.keys) == ["protocol", "account", "target", "audience", "expires_at", "token"],
+              record["protocol"] == .number(1), record["account"] == .string(publication.account.uuidString.lowercased()),
+              record["target"] == .object(publication.target.record.fields), case .object(let scope) = record["audience"],
+              Set(scope.keys) == ["kind", "team_id", "visibility"], case .string(let token) = record["token"], token.utf8.count == 64,
+              token.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }),
+              case .string(let stamp) = record["expires_at"], stamp.utf8.count <= 40 else { throw AudioCommentFailure.changed }
+        switch scope["kind"] {
+        case .string("personal"):
+            guard scope["team_id"] == .null, scope["visibility"] == .string("personal") else { throw AudioCommentFailure.changed }
+            audience = .personal
+        case .string("team"):
+            guard case .string(let id) = scope["team_id"], let team = UUID(uuidString: id), team != AudioCommentTarget.zero,
+                  id == team.uuidString.lowercased(), [JSON.string("team"), .string("private")].contains(scope["visibility"] ?? .null) else { throw AudioCommentFailure.changed }
+            audience = .team(team, isPrivate: scope["visibility"] == .string("private"))
+        default: throw AudioCommentFailure.changed
+        }
+        let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let expires = formatter.date(from: stamp), expires > now, expires <= now.addingTimeInterval(11 * 60) else { throw AudioCommentFailure.changed }
+        self.publication = publication; self.expires = expires; self.record = record
+    }
+    func permits(_ value: AudioCommentPublication, now: Date = Date()) -> Bool { expires > now && publication.sameIntent(as: value) }
+}
+
 struct AudioCommentPublishedReceipt: Sendable {
     let publication: AudioCommentPublication
     let record: Record
@@ -286,10 +319,14 @@ actor AudioCommentPublicationStorage {
 }
 
 @MainActor protocol AudioCommentPublishingTransport: AnyObject {
+    func reviewAudioPublication(_ publication: AudioCommentPublication, origin: String, incarnation: UUID) async throws -> AudioCommentPublicationApproval
+    func publishAudio(_ pending: AudioCommentPending, approval: AudioCommentPublicationApproval, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt
     func publishAudio(_ pending: AudioCommentPending, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt
     func checkAudioPublication(_ publication:AudioCommentPublication,closing:Bool,origin:String,incarnation:UUID) async throws -> AudioCommentPublicationStatus
 }
 extension AudioCommentPublishingTransport {
+    func reviewAudioPublication(_ publication: AudioCommentPublication, origin: String, incarnation: UUID) async throws -> AudioCommentPublicationApproval { throw AudioCommentFailure.changed }
+    func publishAudio(_ pending: AudioCommentPending, approval: AudioCommentPublicationApproval, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt { throw AudioCommentFailure.changed }
     // Older/custom transports must refuse; status must never fall back to upload.
     func checkAudioPublication(_ publication:AudioCommentPublication,closing:Bool,origin:String,incarnation:UUID) async throws -> AudioCommentPublicationStatus {throw AudioCommentFailure.changed}
 }

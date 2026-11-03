@@ -67,7 +67,17 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
     bucket: "taskfold-audio-v1",
     object_name: path(intent),
   };
+  const approval: Row = {
+    protocol: 1,
+    account,
+    target: intent.target,
+    audience: { kind: "personal", team_id: null, visibility: "personal" },
+    expires_at: new Date(Date.now() + 600000).toISOString(),
+    token: "a".repeat(64),
+  };
   const state = {
+    reviewResult: undefined as Row | undefined,
+    commandActions: [] as string[],
     stored: null as Uint8Array | null,
     uploads: 0,
     absenceStatus: 404,
@@ -134,7 +144,12 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
       const body = await request.json();
       equal(body._actor, account);
       equal(body._session, session);
+      state.commandActions.push(body._action);
       switch (body._action) {
+        case "review_publication":
+          equal(body._body, { intent });
+          return response(state.reviewResult ?? approval);
+
         case "upload_begin":
           return response({
             protocol: 1,
@@ -144,6 +159,8 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
           });
         case "upload_settle":
           return response({ protocol: 1, settled: true });
+        case "reserve_approved":
+          equal(body._body, { intent, approval });
         case "reserve":
           state.reserves++;
           if (state.closeOnFresh && state.reserves > 1) {
@@ -157,6 +174,8 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
             ...row,
             ...state.wrongReceipt ? { comment_id: id() } : {},
           });
+        case "finalize_approved":
+          equal(body._body.approval, approval);
         case "finalize":
           state.finalizes++;
           if (state.finalizeResult) return response(state.finalizeResult);
@@ -230,7 +249,17 @@ function fixture(options: { enabled?: boolean; timeout?: number } = {}) {
     );
   const publish = () =>
     handler(request("publish", { intent, audio_base64: base64(audio) }));
-  return { handler, request, publish, intent, row, state, token, account };
+  return {
+    handler,
+    request,
+    publish,
+    intent,
+    row,
+    state,
+    token,
+    account,
+    approval,
+  };
 }
 Deno.test("publication reads stored bytes, then finalizes; retry preserves IDs and never overwrites", async () => {
   const f = fixture();
@@ -816,4 +845,53 @@ Deno.test("restored recording still withholds bytes after current access changes
     404,
   );
   equal(f.state.reads, 2);
+});
+
+Deno.test("audience review is metadata only and uses the metadata budget", async () => {
+  const f = fixture();
+  const r = await f.handler(f.request("review", { intent: f.intent }));
+  equal(r.status, 200);
+  equal((await r.json()).approval, f.approval);
+  equal(f.state.uploads, 0);
+  equal(f.state.reserves, 0);
+  equal(f.state.admitActions, ["list"]);
+  equal(f.state.commandActions, ["review_publication"]);
+});
+Deno.test("approved publish passes the same approval through reserve and finalize", async () => {
+  const f = fixture();
+  const r = await f.handler(
+    f.request("publish", {
+      intent: f.intent,
+      approval: f.approval,
+      audio_base64: base64(audio),
+    }),
+  );
+  equal(r.status, 200);
+  await r.json();
+  equal(f.state.uploads, 1);
+  equal(f.state.commandActions.includes("reserve_approved"), true);
+  equal(f.state.commandActions.includes("finalize_approved"), true);
+  equal(f.state.commandActions.includes("reserve"), false);
+});
+Deno.test("malformed audience approval refuses before reserve or provider access", async () => {
+  const f = fixture();
+  const r = await f.handler(
+    f.request("publish", {
+      intent: f.intent,
+      approval: { ...f.approval, token: "invalid" },
+      audio_base64: base64(audio),
+    }),
+  );
+  equal(r.status, 400);
+  await r.json();
+  equal(f.state.uploads, 0);
+  equal(f.state.commandActions, []);
+});
+Deno.test("malformed server review is never returned as approval", async () => {
+  const f = fixture();
+  f.state.reviewResult = { ...f.approval, account: id() };
+  const r = await f.handler(f.request("review", { intent: f.intent }));
+  equal(r.status, 503);
+  await r.json();
+  equal(f.state.uploads, 0);
 });

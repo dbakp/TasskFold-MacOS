@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Whole-project recording custody",
-  "latest": "Published personal-project recordings now have explicit transfer consent, atomic custody and exact receipt recovery in the local candidate. Each repo passes 76 service checks and 75 client tests; builds and signatures pass. Fresh approval for older private drafts and native acceptance remain; normal use stays disabled.",
+  "latest": "A recording approved before a project joins a team now needs fresh audience approval in the local candidate. Both repos pass the service/client checks and builds. Native review and saved approval retry remain to build; normal use stays disabled.",
   "next": [
-    "Bind older unpublished recording drafts to their approved audience and verify fresh consent after project adoption. Then accept native consent/recovery and genuine integration; combined connection/recording policy is locally verified. Whole-project transfers remain unfinished and disabled.",
+    "Wire explicit native recording audience review and persist its exact approval beside the frozen request. Cold retry must never silently approve a changed audience. Accept expiry, changed access and exact Check/Close, then native and genuine integration. Keep whole-project transfer completion open.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Published-recording personal-to-team adoption now passes local service/client checks with explicit consent and atomic custody. Fresh audience approval for unpublished drafts, native acceptance and genuine integration remain. Whole-project transfers stay unfinished; normal use remains disabled.",
+              "detail": "Signed publication approval now blocks old personal intents after team adoption in local service/client checks. Native explicit review and durable approval retry remain to build, alongside native transfer acceptance and genuine integration. Normal use remains disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -708,6 +708,10 @@
                 {
                   "state": "verify",
                   "title": "Published project recordings: local consent, custody and receipt verified; private-draft and native checks remain"
+                },
+                {
+                  "state": "done",
+                  "title": "Publication approval stays bound to its reviewed audience: local service/client verified"
                 },
                 {
                   "state": "build",
@@ -870,7 +874,10 @@
             "project-recording-inventory/verification.json",
             "project-recording-transfer/README.md",
             "project-recording-transfer/verification.json",
-            "project-recording-transfer/database-verification.json"
+            "project-recording-transfer/database-verification.json",
+            "audio-publication-audience/README.md",
+            "audio-publication-audience/verification.json",
+            "audio-publication-audience/database-verification.json"
           ],
           "focus": true
         },
@@ -980,7 +987,7 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "2d7185c6d45a6c952deb2752e89e8fd538928ebb4bdd901597b704777d26d72b",
+    "P2_PLAN.md": "5563b2165e515b5b532abfd56ec747a8a9e359da1e75e788e5eca2a35428c2e6",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -1003,6 +1010,9 @@
     "audio-lifecycle-native/verification.json": "0bf743a4d5738e854bace8d282dc06527b3e8acfc5b9b39d9e5b1a2667994f8e",
     "audio-provider-recovery/README.md": "09aa4b4b276abb8729d0fbdea3ad0cde8ce871e1e5c0d5c7ba2b08a7b5ed8e4f",
     "audio-provider-recovery/verification.json": "828589a57e7a3fcd4918e9688d52c8765103f62d84d6429959727929539c6a57",
+    "audio-publication-audience/README.md": "3229c62714f82fff549c5646f6ac82e095b26d575c660d7a9267bb9a1f0f55f4",
+    "audio-publication-audience/database-verification.json": "ecab9991a3659075bff82aff70db356524580a7546e7cc90cac441a93b494d32",
+    "audio-publication-audience/verification.json": "d5e8f2791f775e7f1c0e63e9801dc2b73ab066ebcd549ccb272d3e7a7611605a",
     "audio-queued-settings-recovery/README.md": "6453142bf51a5d190567f9f4f25994a6d8be98371c4323f1ea4b74a5a29213b2",
     "audio-queued-settings-recovery/verification.json": "071095333454a31fd2b099deed70322757644d48498621623722c9d6c5992e39",
     "audio-real-provider-native/README.md": "d8edaeca7ea80e55252f4d7b422b53d26865b6d0e07ab10132535e8884ca0726",
@@ -1105,7 +1115,7 @@
     "preserving-json/verification.json": "32245580dd9fdd9cc710c036398ed1c8a26e3ba2e156fb8bf721808db242f3b1",
     "project-recording-inventory/README.md": "2db5f9884b77dd997df2488073487f65c910dff5be00ad0755c915fdb5d470bf",
     "project-recording-inventory/verification.json": "c6f022949539647a7ab01548da32baecad0c44de2277226c4b2826c80805bc57",
-    "project-recording-transfer/README.md": "fcbb6000e24126e6ab71904a63cd2eec989e05a225deedb4a8e6e4728408a074",
+    "project-recording-transfer/README.md": "6dd5f2a95774906b072074041a7ff4da3fd010c9b7fb6f90e6a2cdb241aa7e33",
     "project-recording-transfer/database-verification.json": "60fc26847b6d973597cc892ff272b98d586d863b802de391bcceb9bd390e2f4e",
     "project-recording-transfer/verification.json": "09f44acd38f16ff605702a4936e08b8239dffd2f126d2318325a44a8c97cd301",
     "removal-coordination/README.md": "15f6a0a9996464c0ba2ba0ad70a8c409adb7aa5e49530913edeb513bd7381991",

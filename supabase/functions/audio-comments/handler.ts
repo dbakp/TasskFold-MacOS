@@ -10,6 +10,7 @@ import {
   path,
   position,
   publication,
+  publicationApproval,
   publicReceipt,
   receipt,
   type Row,
@@ -201,9 +202,10 @@ export function createAudioCommentsHandler(
       if (request.method !== "POST") throw new Failure(405, "method");
       if (
         !action ||
-        !["publish", "list", "page", "download", "remove", "resolve"].includes(
-          action,
-        ) ||
+        !["publish", "review", "list", "page", "download", "remove", "resolve"]
+          .includes(
+            action,
+          ) ||
         [...url.searchParams.keys()].some((k) => k !== "action") ||
         url.searchParams.getAll("action").length !== 1
       ) throw new Failure(400, "invalid");
@@ -315,7 +317,7 @@ export function createAudioCommentsHandler(
         // it stays available while publishing/Storage is disabled.
         _action: action === "resolve"
           ? "remove"
-          : (action === "page" ? "list" : action),
+          : (["page", "review"].includes(action) ? "list" : action),
       });
       if (admitted.allowed !== true) {
         if (
@@ -386,6 +388,24 @@ export function createAudioCommentsHandler(
           result.state === "closed" ? { closed: result } : { pending: result },
         );
       }
+      if (action === "review") {
+        let intent: Row;
+        try {
+          exact(body, ["intent"]);
+          intent = publication(body.intent);
+          if (intent.account !== actor.account) throw Error("owner");
+        } catch {
+          throw new Failure(400, "invalid");
+        }
+        const result = await command("review_publication", { intent });
+        if (result.status) refused(result);
+        const approval = publicationApproval(result);
+        if (
+          approval.account !== actor.account ||
+          key(approval.target) !== key(intent.target)
+        ) throw new Failure(503, "retry");
+        return json({ approval });
+      }
       const getStored = async (row: Row, missing: boolean) => {
         const result = await fetchResponse(
           "/storage/v1/object/" + bucket + "/" + path(row),
@@ -429,9 +449,16 @@ export function createAudioCommentsHandler(
         }
       };
       if (action === "publish") {
-        let intent: Row, audio: Uint8Array;
+        let intent: Row, audio: Uint8Array, approval: Row | undefined;
         try {
-          exact(body, ["intent", "audio_base64"]);
+          exact(body, [
+            "intent",
+            "audio_base64",
+            ...(Object.hasOwn(body, "approval") ? ["approval"] : []),
+          ]);
+          if (Object.hasOwn(body, "approval")) {
+            approval = publicationApproval(body.approval);
+          }
           intent = publication(body.intent);
           if (intent.account !== actor.account) throw Error();
           audio = audio64(body.audio_base64);
@@ -441,7 +468,12 @@ export function createAudioCommentsHandler(
           if (signal.aborted) throw new Failure(503, "retry");
           throw new Failure(400, "invalid");
         }
-        const reserved = await command("reserve", intent);
+        const reserve = () =>
+          command(
+            approval ? "reserve_approved" : "reserve",
+            approval ? { intent, approval } : intent,
+          );
+        const reserved = await reserve();
         const reservedClosed = closedPublication(reserved, intent);
         if (reservedClosed) return reservedClosed;
         if (reserved.status) refused(reserved);
@@ -449,7 +481,7 @@ export function createAudioCommentsHandler(
           stored = await getStored(current, true);
         if (stored === null) {
           if (current.state === "published") throw new Failure(503, "retry"); // Never resurrect a missing acknowledged object.
-          const fresh = await command("reserve", intent);
+          const fresh = await reserve();
           const freshClosed = closedPublication(fresh, intent);
           if (freshClosed) return freshClosed;
           if (fresh.status) refused(fresh);
@@ -501,11 +533,15 @@ export function createAudioCommentsHandler(
         }
         if (!stored) throw new Failure(503, "retry");
         const observed = await verifyAudio(stored, intent.audio);
-        const finalized = await command("finalize", {
-          intent,
-          stored_sha256: observed.sha256,
-          stored_bytes: observed.byteCount,
-        });
+        const finalized = await command(
+          approval ? "finalize_approved" : "finalize",
+          {
+            ...(approval ? { approval } : {}),
+            intent,
+            stored_sha256: observed.sha256,
+            stored_bytes: observed.byteCount,
+          },
+        );
         const finalizedClosed = closedPublication(finalized, intent);
         if (finalizedClosed) return finalizedClosed;
         if (finalized.status) refused(finalized);

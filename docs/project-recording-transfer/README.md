@@ -40,3 +40,7 @@ bash Scripts/test_core.sh --jobs 2 --filter 'TeamProjectAdoptionTests|TeamProjec
 ```
 
 Run resource-heavy checks sequentially and reuse existing build products. The database command needs Docker and uses synthetic data only. Use its --export-fixture option only when deliberately refreshing that repository's captured contract.
+
+## Audience follow-up
+
+The [publication audience foundation](../audio-publication-audience/README.md) now reproduces the old-private-intent gap and verifies signed audience checks in the local service and typed client transport. Native explicit approval and durable retry remain to implement; the whole-project feature is still unfinished and disabled.
