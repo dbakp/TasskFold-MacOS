@@ -29,7 +29,7 @@ Failed exploratory runs do not count as acceptance. The largest-text form expose
 
 - [ ] Separate native Mac/iPad consent, cancellation and cold-retry acceptance.
 - [ ] Wider lifecycle/account/window/privacy, audible VoiceOver and display-mode acceptance; an accessibility-tree check is not spoken-output verification.
-- [ ] Pending-only native presentation, combined connection/unfinished contexts, retained/legacy/other mixed media policies, other realm directions and genuine integration before ordinary use.
+- [ ] Pending-only native presentation, combined connection/unfinished contexts, legacy/foreign-custody/other mixed media policies, other realm directions and genuine integration before ordinary use. The later [private-history checkpoint](../project-private-history/README.md) adds local service/client retained-history policy and bounded removed-only native review; it does not close the wider native gaps.
 
 All previous user deferrals remain. No hosted service or release configuration changed.
 

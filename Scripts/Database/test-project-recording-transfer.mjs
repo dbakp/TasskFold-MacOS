@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {loadUnfinishedTransfer,checkUnfinishedTransfer} from './project-unfinished-recordings-checks.mjs';
-const unfinished=process.argv.includes('--unfinished');let unfinishedWire;
+import {loadPrivateHistory,checkPrivateHistory} from './project-private-history-checks.mjs';
+const privateHistory=process.argv.includes('--private-history');
+const unfinished=process.argv.includes('--unfinished')||privateHistory;let unfinishedWire,privateHistoryWire;
 import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -31,7 +33,7 @@ try{
  const prepare=async(b,policy=false)=>{const inspect=await rpc('inspect',b),decisions=inspect.collaborators.filter(x=>x.status==='accepted').map(x=>({project_id:x.project_id,user_id:x.user_id,role:null}));const review=await rpc('review',{...b,inspection_token:inspect.inspection_token,decisions,...(policy?{recording_policy:'published_recordings_v1'}:{})});return {inspect,decisions,review}};
  const command=(b,r)=>({...b,inspection_token:r.inspection_token,decisions:r.decisions.map(({project_id,user_id,role})=>({project_id,user_id,role})),review_token:r.review_token,expires_at:r.expires_at,request_id:randomUUID(),...(r.recording_policy?{recording_policy:r.recording_policy}:{})});
  const pre=await project(),preBody=scope(pre),preReview=await prepare(preBody),preCommand=command(preBody,preReview.review);await rpc('adopt',preCommand);
- report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);if(unfinished){await loadUnfinishedTransfer(pg,report);await pg.raw('update taskfold_private.audio_comment_config set audience_review_enabled=true');}
+ report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);if(unfinished){await loadUnfinishedTransfer(pg,report);if(privateHistory)await loadPrivateHistory(pg,report);await pg.raw('update taskfold_private.audio_comment_config set audience_review_enabled=true');}
  check('ordinary recording transfer gate starts disabled',await pg.scalar('select to_jsonb(project_transfer_enabled) from taskfold_private.audio_comment_config'),false);
  check('old receipt survives extended schema',(await rpc('adopt',preCommand)).replayed,true);
  const p=await project(),child=await project(p),body=scope(p),roots=[await task(p),await task(child)];
@@ -88,6 +90,7 @@ try{
  const combinedReceipt=await rpc('adopt',combinedCommand);check('combined policies commit together',combinedReceipt.applied);check('combined receipt preserves recording count',combinedReceipt.recording_count,1);check('combined receipt preserves reviewed connection effects',combinedReceipt.connection_effects,combinedReview.connection_effects);check('combined commit pauses route',await pg.scalar(`select to_jsonb(state) from taskfold_private.email_routes where id=${lit(route)}`),'paused');check('combined commit registers recording custody',await pg.scalar(`select count(*)::int from taskfold_private.audio_comment_custody where operation_id=${lit(combinedIntent.operation_id)}`),1);
  check('combined exact command replays',(await rpc('adopt',combinedCommand)),{...combinedReceipt,replayed:true});
  if(unfinished)unfinishedWire=await checkUnfinishedTransfer({pg,http,oldHTTP,newHTTP,owner,users,team,project,task,scope,rpc,command,identity,media,descriptor,check,expect});
+ if(privateHistory)privateHistoryWire=await checkPrivateHistory({pg,http,newHTTP,owner,team,project,task,scope,rpc,command,media,descriptor,check,expect});
  for(const fn of ['project_recording_transfer_supported(jsonb)','lock_project_adoption_audio(uuid[])','authorize_project_adoption_audio(uuid,uuid[])','finish_project_adoption_audio(uuid,uuid[],integer)'])for(const role of ['anon','authenticated','service_role'])check('private transfer helper stays unavailable '+role+' '+fn,await pg.scalar(`select to_jsonb(has_function_privilege(${lit(role)},${lit('taskfold_private.'+fn)},'execute'))`),false);
  wire={syntheticOnly:true,account:owner.id,origin:'https://synthetic.example',body,inspect:reviewed.inspect,decisions:reviewed.decisions,review:reviewed.review,command:c,receipt,replayed:replay};
  report.advisors=await pg.advisors();const prior=new Set(report.baselineAdvisors.result.map(x=>x.cache_key));check('no new advisor findings',report.advisors.result.filter(x=>!prior.has(x.cache_key)),[]);
@@ -95,3 +98,5 @@ try{
 if(process.argv[3]==='--export-fixture'){assert(wire&&report.containerRemoved);await writeFile(new URL('../../TaskfoldTests/Fixtures/team-project-recording-transfer-v1.json',import.meta.url),JSON.stringify({...wire,containerRemoved:true},null,2)+'\n')}
 if(process.argv.includes('--export-unfinished-fixture')){assert(unfinishedWire&&report.containerRemoved);await writeFile(new URL('../../TaskfoldTests/Fixtures/team-project-unfinished-recordings-v1.json',import.meta.url),JSON.stringify({...unfinishedWire,containerRemoved:true},null,2)+'\n')}
 console.log(JSON.stringify({checks:report.checkCount,containerRemoved:report.containerRemoved}));
+
+if(process.argv.includes('--export-private-history-fixture')){assert(privateHistoryWire&&report.containerRemoved);await writeFile(new URL('../../TaskfoldTests/Fixtures/team-project-private-history-v1.json',import.meta.url),JSON.stringify({...privateHistoryWire,containerRemoved:true},null,2)+'\n')}

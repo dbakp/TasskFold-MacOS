@@ -52,7 +52,7 @@ import SwiftUI
                 guard old == b else { throw TeamProjectAdoptionValue.invalid }
                 var r = p["receipt"]!.object; r["request_id"] = .string(q); r["replayed"] = .bool(true); return (r,200)
             }
-            guard !s.applied, !s.revoked, let r = s.lastReview, b["review_token"] == r["review_token"], b["expires_at"] == r["expires_at"], (b["connection_policy"] ?? .null) == (r["connection_policy"] ?? .null), (b["recording_policy"] ?? .null) == (r["recording_policy"] ?? .null), (b["unfinished_recording_count"] ?? .null) == (r["unfinished_recording_count"] ?? .null), (r["recording_policy"] != .string(TeamProjectRecordingPolicy.stopUnfinished.rawValue) || b["recording_count"] == r["recording_count"]), b["inspection_token"] == r["inspection_token"], try TeamProjectAdoptionValue.date(b["expires_at"]) > Date(),
+            guard !s.applied, !s.revoked, let r = s.lastReview, b["review_token"] == r["review_token"], b["expires_at"] == r["expires_at"], (b["connection_policy"] ?? .null) == (r["connection_policy"] ?? .null), (b["recording_policy"] ?? .null) == (r["recording_policy"] ?? .null), (b["unfinished_recording_count"] ?? .null) == (r["unfinished_recording_count"] ?? .null), (![TeamProjectRecordingPolicy.stopUnfinished.rawValue, TeamProjectRecordingPolicy.privateHistory.rawValue].contains(r["recording_policy"]?.text ?? "") || b["recording_count"] == r["recording_count"]), (b["retained_recording_count"] ?? .null) == (r["retained_recording_count"] ?? .null), b["inspection_token"] == r["inspection_token"], try TeamProjectAdoptionValue.date(b["expires_at"]) > Date(),
                   p["body"]!.object.allSatisfy({ b[$0.key] == $0.value }), b["decisions"] == .array(r["decisions"]!.list.map { .object($0.object.filter { $0.key != "effective_role" }) }) else { throw TeamProjectAdoptionValue.invalid }
             s.applied = true; s.commands[q] = b; try write(s)
             if ProcessInfo.processInfo.arguments.contains("--project-adoption-drop-reply") { return (["code": .string("synthetic_confirmation_lost")],503) }
@@ -73,7 +73,7 @@ import SwiftUI
               b == (try inspected.reviewBody(choices, connectionPolicy: policy, recordingPolicy: recordingPolicy)) else { throw TeamProjectAdoptionValue.invalid }
         var r = p["review"]!.object
         if recordingPolicy == nil {
-            r.removeValue(forKey: "recording_policy"); r.removeValue(forKey: "recording_count"); r.removeValue(forKey: "unfinished_recording_count")
+            r.removeValue(forKey: "recording_policy"); r.removeValue(forKey: "recording_count"); r.removeValue(forKey: "unfinished_recording_count"); r.removeValue(forKey: "retained_recording_count")
         } else { guard r["recording_policy"] == .string(recordingPolicy!.rawValue) else { throw TeamProjectAdoptionValue.invalid } }
         if policy == nil { r["connection_policy"] = .null;r["connection_effects"] = .null;r["requires_integration_pause"] = .bool(inspected.hasConnections) }
         else { guard r["connection_policy"] == .string("pause") else { throw TeamProjectAdoptionValue.invalid } }
@@ -136,6 +136,7 @@ struct ProjectAdoptionNativeFixtureView: View {
             List {
                 if ready {
                     Section { NavigationLink("Open team projects") { TeamProjectManagementView(teamID: ProjectAdoptionNativeFixture.team) }.accessibilityIdentifier("openProjectTransferTeam") }
+                    if ProjectAdoptionNativeFixture.packet["native_recording_scenario"] == .string("private-history") { Text("Removed recordings stay private").accessibilityIdentifier("projectTransferPrivateHistoryScenario") }
                     if ProjectAdoptionNativeFixture.packet["native_recording_scenario"] == .string("mixed") { Text("Published and unfinished recording scenario").accessibilityIdentifier("projectTransferRecordingScenario") }
                     if ProjectAdoptionNativeFixture.packet["command"]?.object["connection_policy"] == .string("pause") { Text("Personal connection scenario").accessibilityIdentifier("projectTransferConnectionsScenario") }
                     SavedProjectTransferLink()

@@ -10579,3 +10579,13 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Native Mac/iPad, audible VoiceOver/wider display/lifecycle/account cases, pending-only/combined connection flows, retained/legacy/other mixed policies, other realms and genuine native integration remain. Ordinary gates are unchanged and disabled.
 
 [Exact scope, source identities and failed-attempt qualifications](project-recording-native/README.md). Unchanged local service/Core suites were not repeated for this view/harness change; counterpart proof is not Mac runtime acceptance.
+
+### 3 November 2026 · Keep removed recordings private in project adoption
+
+- [x] Own a separate default-off history policy and explicit removed-private consent, with published/unfinished/removed counts bound to review, saved commands and exact receipts. Support mixed and removed-only history without republishing removed audio or changing private copies/cleanup.
+- [x] Pass 233 final owning SQL/HTTP checks and 91 focused client tests. Forced failure rolls custody, stopped sends, history fences and paused connections back together. Old stop-only connection policy still works; cleaned-up operations cannot reopen. Private fences contain only operation ID/time.
+- [ ] Complete legacy/foreign-custody/other mixed histories and realm directions, integrated native service/Storage, Mac/iPad and wider accessibility/lifecycle acceptance. Ordinary gates stay disabled; no hosted changes.
+
+[Current build/native evidence and exact limits](project-private-history/README.md). This entry does not claim Mac native runtime or genuine provider acceptance.
+
+- [x] Both own app/runner builds and strict signatures pass. Counterpart iPhone removed-only review/reset/cancel passes at Accessibility XXXL; screenshot inspection caught and then verified the shorter wrapping primary action. The original Mac build was deliberately interrupted for that UI fix and is excluded from acceptance.

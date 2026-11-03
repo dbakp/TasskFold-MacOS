@@ -647,3 +647,101 @@ extension TeamProjectAdoptionTests {
         XCTAssertEqual(result, review); XCTAssertEqual(calls, 1)
     }
 }
+
+extension TeamProjectAdoptionTests {
+    private func privateHistoryFixture(_ variant: String? = nil) throws -> ([String: JSON], TeamProjectAdoptionInspection, TeamProjectAdoptionReview, TeamProjectAdoptionCommand) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-private-history-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let captured = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        XCTAssertEqual(captured["syntheticOnly"], .bool(true)); XCTAssertEqual(captured["containerRemoved"], .bool(true))
+        var raw = variant.map { captured[$0]!.object } ?? captured
+        raw["account"] = captured["account"]; raw["origin"] = captured["origin"]
+        let b = raw["body"]!.object
+        let scope = try TeamProjectAdoptionScope(account: raw["account"]!.text, origin: raw["origin"]!.text, team: b["team_id"]!.text, roots: b["roots"]!.list.map(\.text), visibility: .team)
+        let i = try TeamProjectAdoptionInspection(raw["inspect"]!.object, scope: scope)
+        let decisions = try raw["decisions"]!.list.map { try TeamProjectAdoptionDecision($0.object) }
+        let policy = try XCTUnwrap(TeamProjectRecordingPolicy(rawValue: raw["review"]!.object["recording_policy"]!.text))
+        let connection = raw["review"]!.object["connection_policy"].flatMap { TeamProjectConnectionPolicy(rawValue: $0.text) }
+        let review = try TeamProjectAdoptionReview(raw["review"]!.object, inspection: i, decisions: decisions, connectionPolicy: connection, recordingPolicy: policy)
+        let c = try TeamProjectAdoptionCommand(review: review, requestID: UUID(uuidString: raw["command"]!.object["request_id"]!.text)!, now: review.expires.addingTimeInterval(-60))
+        return (raw, i, review, c)
+    }
+    func testActualSQLPrivateHistoryBindsAllCountsAndConnectionPause() throws {
+        let (raw, i, review, c) = try privateHistoryFixture()
+        XCTAssertTrue(i.recordingPrivateHistoryTransferSupported); XCTAssertFalse(i.recordingTransferSupported); XCTAssertFalse(i.recordingUnfinishedTransferSupported)
+        XCTAssertEqual(i.supportedRecordingPolicy, .privateHistory); XCTAssertTrue(review.canCommit)
+        XCTAssertEqual(c.recordingCount, 1); XCTAssertEqual(c.unfinishedRecordingCount, 1); XCTAssertEqual(c.retainedRecordingCount, 2)
+        XCTAssertEqual(c.connectionPolicy, .pause); XCTAssertEqual(c.connectionEffects?.values["email_routes_paused"], 1)
+        XCTAssertEqual(c.body, raw["command"]!.object)
+        XCTAssertFalse(try c.confirmed(raw["receipt"]!.object).replayed)
+        XCTAssertTrue(try c.confirmed(raw["replayed"]!.object).replayed)
+        XCTAssertEqual(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(c)), c)
+    }
+    func testActualSQLRemovedOnlyDoesNotInventMovingOrStoppedRecordings() throws {
+        let (raw, i, review, c) = try privateHistoryFixture("removedOnly")
+        XCTAssertTrue(review.canCommit); XCTAssertEqual(i.supportedRecordingPolicy, .privateHistory)
+        XCTAssertEqual(c.recordingCount, 0); XCTAssertEqual(c.unfinishedRecordingCount, 0); XCTAssertEqual(c.retainedRecordingCount, 1)
+        XCTAssertEqual(c.body, raw["command"]!.object); XCTAssertNotNil(try c.confirmed(raw["receipt"]!.object))
+    }
+    func testActualSQLCombinedStopAndConnectionPreservesExistingWire() throws {
+        let (raw, i, review, c) = try privateHistoryFixture("combinedUnfinished")
+        XCTAssertTrue(review.canCommit); XCTAssertEqual(i.supportedRecordingPolicy, .stopUnfinished)
+        XCTAssertEqual(c.connectionPolicy, .pause); XCTAssertEqual(c.recordingCount, 0); XCTAssertEqual(c.unfinishedRecordingCount, 1); XCTAssertNil(c.retainedRecordingCount)
+        XCTAssertNil(c.body["retained_recording_count"]); XCTAssertEqual(c.body, raw["command"]!.object)
+        XCTAssertNotNil(try c.confirmed(raw["receipt"]!.object))
+        var extra = raw["receipt"]!.object; extra["retained_recording_count"] = .number(0)
+        XCTAssertThrowsError(try c.confirmed(extra))
+    }
+    func testRemovedHistoryRequiresItsOwnExplicitChoice() throws {
+        let (raw, i, review, _) = try privateHistoryFixture()
+        for policy in [TeamProjectRecordingPolicy.published, .stopUnfinished] { XCTAssertThrowsError(try i.reviewBody(review.decisions, connectionPolicy: .pause, recordingPolicy: policy)) }
+        var response = raw["review"]!.object
+        for key in ["recording_policy", "recording_count", "unfinished_recording_count", "retained_recording_count"] { response.removeValue(forKey: key) }
+        let omitted = try TeamProjectAdoptionReview(response, inspection: i, decisions: review.decisions, connectionPolicy: .pause)
+        XCTAssertFalse(omitted.canCommit)
+        XCTAssertThrowsError(try TeamProjectAdoptionCommand(review: omitted, now: review.expires.addingTimeInterval(-60)))
+    }
+    func testPrivateHistorySavedMetadataAndBodyCountsCannotDiverge() throws {
+        let (_, _, _, c) = try privateHistoryFixture()
+        let encoded = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(c))
+        for value in [JSON.null, .number(0), .number(1), .number(10001), .number(1.5), .bool(true)] {
+            var changed = encoded; changed["retainedRecordingCount"] = value
+            XCTAssertThrowsError(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(changed)))
+        }
+        var changed = encoded; changed.removeValue(forKey: "retainedRecordingCount")
+        XCTAssertThrowsError(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(changed)))
+        for key in ["recording_count", "unfinished_recording_count", "retained_recording_count"] {
+            changed = encoded; var body = changed["body"]!.object; body.removeValue(forKey: key); changed["body"] = .object(body)
+            XCTAssertThrowsError(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(changed)))
+        }
+    }
+    func testPrivateHistoryReceiptMustConfirmExactRetentionChoice() throws {
+        let (raw, _, _, c) = try privateHistoryFixture()
+        for value in [JSON.null, .number(0), .number(1), .number(3), .number(2.5), .bool(true)] {
+            var changed = raw["receipt"]!.object; changed["retained_recording_count"] = value
+            XCTAssertThrowsError(try c.confirmed(changed))
+        }
+        var changed = raw["receipt"]!.object; changed["recording_policy"] = .string(TeamProjectRecordingPolicy.stopUnfinished.rawValue)
+        XCTAssertThrowsError(try c.confirmed(changed))
+    }
+    func testPrivateHistoryCapabilityRejectsInvalidInventoryAndProtocol() throws {
+        let (raw, i, _, _) = try privateHistoryFixture()
+        for key in ["retained", "unavailable"] {
+            var response = raw["inspect"]!.object, contents = response["contents"]!.object, inventory = contents["recording_custody"]!.object
+            inventory[key] = .number(key == "retained" ? 0 : 1); contents["recording_custody"] = .object(inventory); response["contents"] = .object(contents)
+            XCTAssertThrowsError(try TeamProjectAdoptionInspection(response, scope: i.scope))
+        }
+        var response = raw["inspect"]!.object, contents = response["contents"]!.object
+        contents["recording_private_history_transfer"] = .object(["protocol": .number(2), "supported": .bool(true)])
+        response["contents"] = .object(contents); XCTAssertThrowsError(try TeamProjectAdoptionInspection(response, scope: i.scope))
+    }
+    @MainActor func testPrivateHistoryAndConnectionConsentSurviveColdExactRetry() async throws {
+        let (raw, _, review, c) = try privateHistoryFixture(), io = AdoptionIO(), peer = AdoptionPeer(raw["receipt"]!.object)
+        peer.lose = true
+        let first = TeamProjectAdoptionModel(account: c.account, origin: c.origin, vault: TeamProjectAdoptionVault(io: io), service: peer, current: { true })
+        await first.send(c, canAuthor: { true }, now: review.expires.addingTimeInterval(-60)); XCTAssertEqual(first.pending, c); first.close()
+        let cold = TeamProjectAdoptionModel(account: c.account, origin: c.origin, vault: TeamProjectAdoptionVault(io: io), service: peer, current: { true })
+        await cold.load(); XCTAssertEqual(cold.pending?.retainedRecordingCount, 2); XCTAssertEqual(cold.pending?.connectionPolicy, .pause)
+        await cold.retry(); XCTAssertNil(cold.pending); XCTAssertEqual(cold.receipt?.command, c); XCTAssertEqual(peer.calls, [c, c])
+        XCTAssertFalse(io.encoded.contains("Synthetic private removed history")); XCTAssertFalse(io.encoded.contains("audio_base64"))
+    }
+}
