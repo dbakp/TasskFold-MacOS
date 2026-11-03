@@ -6,6 +6,7 @@
   "genuineTLSOrKeychainAcceptance": false,
   "hostedChanges": false,
   "checks": {
+    "synthetic root is explicitly record-authoritative": true,
     "actual Store phase initial": true,
     "real account cache has the genuine task": true,
     "actual Store phase queue": true,
@@ -18,73 +19,74 @@
     "actual Store phase verify": true,
     "queue is cleared only after retry confirmation": true,
     "actual cache preserves local and remote edits": true,
-    "opaque data and generation preserved": true
+    "opaque data and generation preserved": true,
+    "record authority survives actual Store sync": true
   },
   "phases": {
     "initial": {
-      "actualStoreSync": true,
-      "nonce": "9017f09c-9a8e-4f86-9d1e-b76a43729437",
-      "pending": 0,
+      "diskMatchesStore": true,
+      "account": "80b8dd95-db49-47c8-9bf3-f0eb9ee06e46",
+      "nonce": "360f840f-38ae-4f62-bd38-3621010b9a54",
       "phase": "initial",
-      "accepted": true,
       "droppedReplies": 0,
       "pendingFingerprint": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "notice": "",
-      "diskMatchesStore": true,
-      "account": "d6ef5901-a6e7-4a32-8484-9ce0b5f20056",
-      "task": "982f0fa3-ca6a-4ee2-abe9-01f8573841e9"
+      "pending": 0,
+      "actualStoreSync": true,
+      "task": "213e3c91-4cee-4a1b-ad95-444324575542",
+      "accepted": true,
+      "notice": ""
     },
     "queue": {
-      "diskMatchesStore": true,
-      "nonce": "9017f09c-9a8e-4f86-9d1e-b76a43729437",
-      "notice": "",
-      "phase": "queue",
-      "account": "d6ef5901-a6e7-4a32-8484-9ce0b5f20056",
-      "task": "982f0fa3-ca6a-4ee2-abe9-01f8573841e9",
+      "task": "213e3c91-4cee-4a1b-ad95-444324575542",
+      "nonce": "360f840f-38ae-4f62-bd38-3621010b9a54",
+      "pending": 1,
+      "account": "80b8dd95-db49-47c8-9bf3-f0eb9ee06e46",
       "accepted": true,
-      "pendingFingerprint": "076f66764a68087f7fb65512ff27c46ef0ea1197986552e9b04f2c3363b205d2",
+      "phase": "queue",
       "actualStoreSync": false,
+      "notice": "",
+      "pendingFingerprint": "35741aa18e3d7f72d3fb2af348601ce1ee35fd76e79d55c5bd9aa07fa64b6d55",
       "droppedReplies": 0,
-      "pending": 1
+      "diskMatchesStore": true
     },
     "loss": {
-      "actualStoreSync": true,
-      "task": "982f0fa3-ca6a-4ee2-abe9-01f8573841e9",
       "phase": "loss",
-      "pendingFingerprint": "076f66764a68087f7fb65512ff27c46ef0ea1197986552e9b04f2c3363b205d2",
+      "pending": 1,
       "notice": "The connection was interrupted. Your saved changes are still on this device. Try syncing again.",
+      "nonce": "360f840f-38ae-4f62-bd38-3621010b9a54",
       "accepted": true,
       "droppedReplies": 1,
-      "account": "d6ef5901-a6e7-4a32-8484-9ce0b5f20056",
+      "task": "213e3c91-4cee-4a1b-ad95-444324575542",
+      "actualStoreSync": true,
+      "pendingFingerprint": "35741aa18e3d7f72d3fb2af348601ce1ee35fd76e79d55c5bd9aa07fa64b6d55",
       "diskMatchesStore": true,
-      "pending": 1,
-      "nonce": "9017f09c-9a8e-4f86-9d1e-b76a43729437"
+      "account": "80b8dd95-db49-47c8-9bf3-f0eb9ee06e46"
     },
     "replay": {
-      "task": "982f0fa3-ca6a-4ee2-abe9-01f8573841e9",
-      "pending": 0,
-      "actualStoreSync": true,
-      "diskMatchesStore": true,
-      "phase": "replay",
-      "pendingFingerprint": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "account": "d6ef5901-a6e7-4a32-8484-9ce0b5f20056",
+      "account": "80b8dd95-db49-47c8-9bf3-f0eb9ee06e46",
       "accepted": true,
-      "nonce": "9017f09c-9a8e-4f86-9d1e-b76a43729437",
+      "phase": "replay",
+      "pending": 0,
+      "pendingFingerprint": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "diskMatchesStore": true,
       "notice": "",
-      "droppedReplies": 0
+      "task": "213e3c91-4cee-4a1b-ad95-444324575542",
+      "droppedReplies": 0,
+      "actualStoreSync": true,
+      "nonce": "360f840f-38ae-4f62-bd38-3621010b9a54"
     },
     "verify": {
-      "accepted": true,
-      "phase": "verify",
+      "actualStoreSync": false,
+      "account": "80b8dd95-db49-47c8-9bf3-f0eb9ee06e46",
       "diskMatchesStore": true,
-      "pending": 0,
-      "nonce": "9017f09c-9a8e-4f86-9d1e-b76a43729437",
-      "pendingFingerprint": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "droppedReplies": 0,
+      "accepted": true,
       "notice": "",
-      "task": "982f0fa3-ca6a-4ee2-abe9-01f8573841e9",
-      "account": "d6ef5901-a6e7-4a32-8484-9ce0b5f20056",
-      "actualStoreSync": false
+      "phase": "verify",
+      "nonce": "360f840f-38ae-4f62-bd38-3621010b9a54",
+      "pendingFingerprint": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "pending": 0,
+      "droppedReplies": 0,
+      "task": "213e3c91-4cee-4a1b-ad95-444324575542"
     }
   },
   "sourceSHA256": {
@@ -906,8 +908,8 @@
       "sha256": "999c04e2da68c19f7042a93a22adec1ea31edd7318c52750270cdb2b40d7afe9"
     }
   ],
-  "cacheSHA256": "411c670b4402e38b6d05eef2c373a128e80309320378ac510099241b2e3bfa68",
-  "checkCount": 13,
+  "cacheSHA256": "0b860c44490110695908b09c0a97530c07821b366ce7b2cb3886753bf640445e",
+  "checkCount": 15,
   "accepted": true,
   "appClosed": true,
   "servicesRemoved": true

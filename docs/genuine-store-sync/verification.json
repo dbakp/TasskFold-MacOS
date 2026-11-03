@@ -1,6 +1,6 @@
 {
   "currentOwnSourceMatchesAcceptedApp": true,
-  "actualAppChecks": 13,
+  "actualAppChecks": 15,
   "phases": [
     "initial",
     "queue",
@@ -15,5 +15,6 @@
   "hostedChanges": false,
   "genuineTLSOrKeychainAcceptance": false,
   "nativeViewInteractionOrSpeechAcceptance": false,
-  "driverSHA256": "efd40e19b766687842079e36133c34bab64691778498d33e50fe353bcffde41a"
+  "driverSHA256": "50c572a8653f9f55dbeea722b48cce2f0d81c2282feb56ea6a17ad2430d605d9",
+  "recordPromotionAndRetainedAuthorityDirectlyVerified": true
 }

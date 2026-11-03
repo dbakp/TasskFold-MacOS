@@ -7584,7 +7584,7 @@ Both owning apps now reuse sorted/outlined project display data in a source/acce
 
 - [x] Run real Auth sign-in and the actual Store queue/read/merge/persist pipeline in both independently built app processes against the complete owning local schema.
 - [x] Save a root description offline, cold reopen its unchanged request, drop an actual successful server reply, cold retry and confirm before clearing the queue.
-- [x] Preserve remote task-title and separate child-record sibling edits, opaque JSON and task generation; cold reopen the final cache offline. Each app: 13 driver checks across five process launches.
+- [x] Preserve remote task-title and separate child-record sibling edits, opaque JSON and task generation; cold reopen the final cache offline. Each app: 15 driver checks across five process launches, including direct promotion and retained record-authority assertions.
 - [x] Close the owned test apps/services and restore the iPhone Simulator state. Both current Debug app/runners build and pass strict signatures.
 - [ ] Finish durable independent child journals, app adoption/legacy/media migration, protected Keychain/TLS and wider native/account/window/background/access/privacy/accessibility contexts. The 15 complete-schema advisor warnings remain open.
 

@@ -4,7 +4,7 @@ Reviewed 3 November 2026. The actual independently built app process runs the pr
 
 ## Verified flow
 
-Each app independently passes 13 driver checks across five terminated/relaunched app processes:
+Each app independently passes 15 driver checks across five terminated/relaunched app processes:
 
 1. **Initial:** Sign in to the real disposable Auth account; finish actual new-account Store sync and persist its genuine task/profile in the account UUID cache.
 2. **Queue:** Reopen offline, save a description through Store.save, and verify exactly one mutation and matching Store/disk state. The actual server must remain unchanged.
@@ -12,7 +12,7 @@ Each app independently passes 13 driver checks across five terminated/relaunched
 4. **Replay:** Reopen the same persisted request, retry, and clear it only after confirmation. Read/merge/persist the local description plus the remote title and sibling edit.
 5. **Verify:** Reopen offline again; require the final cache and empty queue without reconstructing them from a new server read. Preserve the task generation and opaque nested JSON.
 
-The root has explicitly adopted/promoted child records in this isolated server. Its remote sibling edit exercises the real separate-record RPC; the app's queued change is a root description, not a durable independent child-field journal. Every phase checks actual Store memory against its actual account cache. Pending payload fingerprints and driver deep comparisons bind cold retry to the original request. Reports bind app source and binary hashes; all current-source, build and signature checks are retained.
+The driver directly verifies that the synthetic root promotion returns record authority, then verifies the original generation still owns that authority after the complete Store flow. Its remote sibling edit exercises the real separate-record RPC; the app's queued change is a root description, not a durable independent child-field journal. Every phase checks actual Store memory against its actual account cache. Pending payload fingerprints and driver deep comparisons bind cold retry to the original request. Reports bind app source and binary hashes; all current-source, build and signature checks are retained.
 
 ## Isolation and limits
 

@@ -63,7 +63,8 @@ try{
  assert.equal((await api('/projects',{method:'POST',body:{id:project,user_id:account,name:'Native Store workshop'}})).status,201);
  const children=[{id:child,title:'Original child',subtasks:[],future:{keep:[null,false,'exact']}},{id:sibling,title:'Original sibling',subtasks:[]}];
  const taskResponse=await api('/tasks',{method:'POST',headers:{Prefer:'return=representation'},body:{id:task,user_id:account,project_id:project,title:'Original task title',description:'Original server description',subtasks:children}});assert.equal(taskResponse.status,201);const source=taskResponse.value[0];report.genuineLocalAuthREST=true;
- await runtime.raw(`update taskfold_private.child_task_record_config set reads_enabled=true,edits_enabled=true;select taskfold_private.adopt_child_task_records(id,task_generation,subtasks) from public.tasks where id=${lit(task)};select taskfold_private.promote_child_task_records(t.id,t.task_generation,t.project_id,p.revision,t.subtasks) from public.tasks t join taskfold_private.child_task_projections p on p.task_id=t.id where t.id=${lit(task)}`);
+ const promotion=await runtime.raw(`update taskfold_private.child_task_record_config set reads_enabled=true,edits_enabled=true;select taskfold_private.adopt_child_task_records(id,task_generation,subtasks) from public.tasks where id=${lit(task)};select taskfold_private.promote_child_task_records(t.id,t.task_generation,t.project_id,p.revision,t.subtasks) from public.tasks t join taskfold_private.child_task_projections p on p.task_id=t.id where t.id=${lit(task)}`);
+ check('synthetic root is explicitly record-authoritative',promotion.split('\n').at(-1)==='records');
  root=join(home,'Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge');await mkdir(root,{recursive:true,mode:0o700});
  for(const file of ['config.json','session.json','initial.json','queue.json','loss.json','replay.json','verify.json'])await rm(join(root,file),{force:true});
  config={version:1,nonce,account,task,sibling,origin:new URL(runtime.urls.rest).origin,key:runtime.anon,email:'native-store-'+nonce+'@example.invalid',password,queuedFingerprint:null};
@@ -82,6 +83,7 @@ try{
  check('queue is cleared only after retry confirmation',final.pending.length===0);
  check('actual cache preserves local and remote edits',saved.description===server.description&&saved.title===server.title&&isDeepStrictEqual(saved.subtasks,server.subtasks));
  check('opaque data and generation preserved',JSON.stringify(server.subtasks[0].future)===JSON.stringify(children[0].future)&&server.task_generation===source.task_generation);
+ check('record authority survives actual Store sync',await runtime.raw(`select count(*) from taskfold_private.child_task_record_authority where task_id=${lit(task)} and task_generation=${lit(source.task_generation)}::uuid`)==='1');
  report.cacheSHA256=createHash('sha256').update(await readFile(cache)).digest('hex');report.checkCount=Object.keys(report.checks).length;report.accepted=true;
 }catch(error){report.error={message:error.message,code:error.code};process.exitCode=1}
 finally{
