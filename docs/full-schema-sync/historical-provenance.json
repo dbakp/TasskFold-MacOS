@@ -1,0 +1,134 @@
+{
+  "source": "User-owned taskfold-web-reference checkout; existing historical migrations copied without modification",
+  "sourceHead": "c2ac3878b9b142488e1d586c36fdcc16e454bc35",
+  "importedFiles": [
+    {
+      "file": "20251118212653_67743dd3-a019-467d-a926-84ca4a11b94a.sql",
+      "sha256": "a86f09cd48f2cec33b42e5a799b6607a0c616b9c0e3d1a130a4d383e4f4b7955"
+    },
+    {
+      "file": "20251118212713_dea496e4-7982-44a1-92ab-678947c6070c.sql",
+      "sha256": "770e37a55b339e0d11c4fdfe586a755186644c09d5f4ebdb7282aede1ab0265e"
+    },
+    {
+      "file": "20251118213316_e9b17409-b96a-4dd2-bfed-bfd82f396f3d.sql",
+      "sha256": "ce4179b650998b2d8c4a8660252f7cbd431a3dd0fd19e183e3751ec40b681bd8"
+    },
+    {
+      "file": "20251118213326_b76e20ab-c4ef-4af8-846d-2b90a04c3b74.sql",
+      "sha256": "09c902d08abfe6a54edc4d974cfaf9ef7a390fbe2df74a87a9ed61067fa5dc79"
+    },
+    {
+      "file": "20251118213436_bc4a66bb-3389-440b-9972-828e2470201c.sql",
+      "sha256": "ac2460b0471482bb2cfd35501c277d3edd3ac95e6e01bbc64ab915799046569f"
+    },
+    {
+      "file": "20251118223636_800d6c0a-e880-44bf-939f-d7be6a433216.sql",
+      "sha256": "275d52c776d59391bb831b2f551b51908912a82ccda471d5d69daf3c318b1c2d"
+    },
+    {
+      "file": "20251124212256_5431e487-ed6e-417b-a3d2-d166c4847a29.sql",
+      "sha256": "a539ba65391d1a7495343ac1393d39659cbba2093f7603dc4d693cf373cb5911"
+    },
+    {
+      "file": "20251124221857_6152345e-9b2a-40d9-ae5b-94fd8a09299f.sql",
+      "sha256": "82d130ae79f3b675d9a8522da365912e910bf4a3395461c9d1021776daa1f6ea"
+    },
+    {
+      "file": "20251124223214_6c43e42f-8d53-4396-ba71-f72d9f8e2a0c.sql",
+      "sha256": "ee0eea02bef540b61a38af65106d7749646a06c2c22d94f4edd61f9ffd3ae997"
+    },
+    {
+      "file": "20251127192132_19bf2192-c1cd-456e-a6dd-87cf6d754921.sql",
+      "sha256": "2b1ab7a9df0c7939ca7a5788642e416e5d3319b159ab8c6f0c6c18007526718f"
+    },
+    {
+      "file": "20251128191201_1a45dba1-d8de-40f3-b759-341e5ef71326.sql",
+      "sha256": "7ada45a8d0f47729661fe36e3991d2f2068f2101cb5dad66a22ac5457b252367"
+    },
+    {
+      "file": "20251128193512_d0fcb106-811b-444f-8a47-74e79d13d61f.sql",
+      "sha256": "1c40432360aafe9f217d434b47d43d76ba00260ab50a32460aef45b719d3659c"
+    },
+    {
+      "file": "20251128195757_568dc67f-9a9b-48d7-8c4c-696459837bff.sql",
+      "sha256": "f09d06a941e8ae032f75e6b5ff640c7d85158c331c5886e83513e4d134a46e0d"
+    },
+    {
+      "file": "20251128200733_0c384174-efe4-4b99-a2b1-5805ff652b94.sql",
+      "sha256": "3d69eef2a1d117fb43352680ba7cf1f69b5fcf7c07caaf408f6269ba6986475d"
+    },
+    {
+      "file": "20251128200954_7650c7fb-5df8-4a29-959d-c0aba4f3a479.sql",
+      "sha256": "e99622f886dd4f9f5c1887d6d1657093fcdc008a84d20c519b582ba0203aa4ee"
+    },
+    {
+      "file": "20251128201256_7d3d1709-5ce7-431b-88d1-118f617b2de7.sql",
+      "sha256": "4f7d4a1eac51a4c208ef435a19dbc635a9813fdcdceb0a86bf9b99fef219f10b"
+    },
+    {
+      "file": "20251128202147_6b4972ea-ed2a-4782-ae35-642f21547bde.sql",
+      "sha256": "3b1e307b4594107f2f44084428d372c31412e65900f7feb501e29a90441e0f82"
+    },
+    {
+      "file": "20251128202521_805c82ba-ea96-4232-b385-2341259f66c4.sql",
+      "sha256": "9af87718af740c85924934518a44dd0125db6897e58cb0f1c8c3e33f00c1ba34"
+    },
+    {
+      "file": "20251130222030_0a6ea91e-9762-4e6b-bd1e-5b800217b8ac.sql",
+      "sha256": "3fd1b890fd328e473e08a266928ee070bb17706678708019f48ae83e483afe55"
+    },
+    {
+      "file": "20251201185822_ee7ac5c9-984d-4faf-b2fb-f87b1a4cfbeb.sql",
+      "sha256": "3695a714a42740fd6e434185043422ad835171fd6986727c693a64e04de7e301"
+    },
+    {
+      "file": "20251201190440_681401f2-c7fa-4a68-82ac-87472aa08836.sql",
+      "sha256": "c27b1965c617681dda1794027a29255149a93976267d76901a4572bd0872dce4"
+    },
+    {
+      "file": "20251201201605_80c82006-c8ad-4ec9-8eb3-c12a2f958699.sql",
+      "sha256": "8f38055dc7b7f9b3fe0bc54a69bbb124aea19b3a55f3b8385ea5f92f59a73981"
+    },
+    {
+      "file": "20251201202321_e18ce16b-e8e8-41c6-b9b2-f5bf6285ee6b.sql",
+      "sha256": "244735c219e153316737344cb3b6844269fbd3637271791e9a7d85bf9ec0bd07"
+    },
+    {
+      "file": "20251201210213_d58ad0d1-3695-4306-b5dd-f47a30a7f8ea.sql",
+      "sha256": "eda1ba0a88d3c1911362d663a0ed36e2df0b8e937da42419b3b6d04b1cf5e08b"
+    },
+    {
+      "file": "20251202204721_6a7dda46-b134-48c8-b735-5ba5cdc22024.sql",
+      "sha256": "20a5db40520108a95f39702e7f2b45d4d8ea68cdde02f2565c91938cbaf9468c"
+    },
+    {
+      "file": "20251202205026_775782e8-0444-4400-aae7-444a10030c18.sql",
+      "sha256": "2896b9d8ea77f6f14ec9285fd6830fad5a8336294af192c963a79cc97953e0e2"
+    },
+    {
+      "file": "20251202205047_45691107-4f1c-4dac-9b03-7eb4a49cb126.sql",
+      "sha256": "edda178b6d7922f02947ffb9a446409303aef34ef2a9869bd060003e6cc02432"
+    },
+    {
+      "file": "20251203213111_60af1675-17d7-4bcf-b057-6b69fa23e9c1.sql",
+      "sha256": "68b82f776d37c93041bf043b6c118798c9151dda4fb5462b159f69a7c7335a92"
+    }
+  ],
+  "runtimeOrBuildDependencyOnSource": false,
+  "hostedChanges": false,
+  "replayRepairs": [
+    {
+      "file": "20260911123547_collaboration_foundation.sql",
+      "originalSHA256": "b211145226d750e02e89557ea5cd497c5e91df716ce8b5b7c298ad248f909e45",
+      "repairedSHA256": "3f37737fd34de859cb6f7f54f08aac9b6900dd3ed49ac010ca83c12f29b6af23",
+      "change": "Drop the pre-existing owner-insert policy before the intended owner-only replacement; no deployed policy change or hosted execution."
+    },
+    {
+      "file": "20261102175200_reviewed_audio_generation_restore.sql",
+      "originalSHA256": "2f2254c2f8bc498c668120797c141a18dcb513b61f46a66f10a1bc59a5427474",
+      "repairedSHA256": "a4cde59f4f9f477227b2ef5ae343191a1932a6a55dbc4719df770fea08553fa8",
+      "change": "Patch the retained recovery implementation when the scheduler wrapper exists; retain strict anchor checks and existing wrapper ACL."
+    }
+  ]
+}

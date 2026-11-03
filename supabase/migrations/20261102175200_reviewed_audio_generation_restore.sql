@@ -134,7 +134,9 @@ $guard$||anchor);execute d;
  d:=replace(d,anchor,'');d:=replace(d,'Finish or stop pending recordings before moving this task','Finish or stop pending recordings before continuing');d:=replace(d,'Recordings are busy. Review this move again','Recordings are busy. Review this action again');execute d;
  -- Only obsolete private caption snapshots are pruned. Existing fenced workers
  -- still own actual object deletion and quota release after the retention date.
- d:=pg_get_functiondef('taskfold_private.audio_maintenance(text,jsonb)'::regprocedure);
+ -- The scheduler wraps the recovery worker; patch its retained implementation.
+ d:=pg_get_functiondef(coalesce(to_regprocedure('taskfold_private.audio_maintenance_recovery_v4(text,jsonb)'),
+  'taskfold_private.audio_maintenance(text,jsonb)'::regprocedure));
  anchor:=' if action=''probe'' then';if strpos(d,anchor)=0 then raise exception 'Current upload recovery required';end if;
  execute replace(d,anchor,' update taskfold_private.audio_task_deletions set inventory=null where expires_at<=clock_timestamp() and inventory is not null;'||anchor);
 end$patch$;

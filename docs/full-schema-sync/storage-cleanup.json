@@ -1,0 +1,12 @@
+[
+  {
+    "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TaskFold-iOS/.build",
+    "KiB": 603232,
+    "kind": "obsolete ignored Swift build cache; active Core cache is under Library/Caches/TaskfoldBuild"
+  },
+  {
+    "path": "/Users/davidbakposada/.codex/workspaces/taskfold-acceptance/TasskFold-MacOS/.build",
+    "KiB": 555220,
+    "kind": "obsolete ignored Swift build cache; active Core cache is under Library/Caches/TaskfoldBuild"
+  }
+]

@@ -1,0 +1,95 @@
+{
+  "failedAttempts": [
+    {
+      "attempt": "iOS v1",
+      "accepted": false,
+      "error": {
+        "message": "Full-schema SQL failed: ERROR:  42501: \"supabase_auth_admin\" is a reserved role, only superusers can modify it",
+        "code": "42501"
+      },
+      "lastFailure": null,
+      "sourceReportSHA256": "6b4d6e453c58e6f700b4e4a9608acfb56a298c54b9ef3139a527a334abb5b3d6"
+    },
+    {
+      "attempt": "iOS v2",
+      "accepted": false,
+      "error": {
+        "message": "Missing loopback-only service port"
+      },
+      "lastFailure": null,
+      "sourceReportSHA256": "a0293fa3f4ac66acc962eede558b8738a447dab93cda10bf9f98ad8e4de18c25"
+    },
+    {
+      "attempt": "iOS v3",
+      "accepted": false,
+      "error": {
+        "message": "Full-schema SQL failed: ERROR:  42710: policy \"projects_insert_owner\" for table \"projects\" already exists",
+        "code": "42710",
+        "migration": "20260911123547_collaboration_foundation.sql"
+      },
+      "lastFailure": null,
+      "sourceReportSHA256": "862b3d5e662640099641645205fd4529a00ca314b676bc9c597b218eabf3e4fd"
+    },
+    {
+      "attempt": "iOS v4",
+      "accepted": false,
+      "error": {
+        "message": "Full-schema SQL failed: ERROR:  25P01: LOCK TABLE can only be used in transaction blocks",
+        "code": "25P01",
+        "migration": "20261026113556_task_node_activity_custody.sql"
+      },
+      "lastFailure": null,
+      "sourceReportSHA256": "ba487070a98679b99ab85945bd40ae41b1436f4e42599acbe0a86782c598b7bf"
+    },
+    {
+      "attempt": "iOS v5",
+      "accepted": false,
+      "error": {
+        "message": "Full-schema SQL failed: ERROR:  P0001: Current upload recovery required",
+        "code": "P0001",
+        "migration": "20261102175200_reviewed_audio_generation_restore.sql"
+      },
+      "lastFailure": null,
+      "sourceReportSHA256": "0405840c4b951eb664edb0e1674fc02dafbd55ea758058d75beae50da10d1d11"
+    },
+    {
+      "attempt": "iOS v7",
+      "accepted": false,
+      "error": {
+        "message": "actual workspace table reminder_snoozes\n\nfalse !== true\n",
+        "code": "ERR_ASSERTION"
+      },
+      "lastFailure": {
+        "name": "actual workspace table reminder_snoozes",
+        "status": 404,
+        "code": "PGRST205",
+        "message": "Could not find the table 'public.reminder_snoozes' in the schema cache"
+      },
+      "sourceReportSHA256": "2a70ffd7f5d3665a871aa8adb92f6d3cfc87b6a3ab536689b3b5c7696716800d"
+    },
+    {
+      "attempt": "iOS v8",
+      "accepted": false,
+      "error": {
+        "message": "genuine authenticated child read\n\nfalse !== true\n",
+        "code": "ERR_ASSERTION"
+      },
+      "lastFailure": {
+        "name": "genuine authenticated child read",
+        "status": 409,
+        "code": "PT409",
+        "message": "Review this child hierarchy before opening separate records"
+      },
+      "sourceReportSHA256": "cacf97ee985380bb7c4f3b394fee2f33787a64062ccf99d79b856147affa0cca"
+    }
+  ],
+  "firstCompleteReplayAndBasicAuthRead": "iOS v6",
+  "expandedAccepted": "iOS v9; Mac v1",
+  "qualifications": [
+    "Reserved-role bootstrap fixed with platform administrator only; application requests use real Auth-issued sessions.",
+    "Internal network accessed through a transparent loopback gateway.",
+    "psql now runs migration scripts in transactions as required by their LOCK statements.",
+    "Workspace table names corrected to the current Backend contract.",
+    "New roots correctly refuse separate reads before explicit trusted adoption; no automatic backfill was introduced."
+  ]
+}

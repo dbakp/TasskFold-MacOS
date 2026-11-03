@@ -10669,3 +10669,15 @@ Parent selection now uses a native searchable sheet with ancestor paths, selecte
 The native row styling is retained while full definition validation moves onto a serial background actor. A bounded display-only cache reuses unchanged sources within one workspace/session. Changed or cancelled requests cannot publish stale captions. Workspace loss has an explicit unavailable message, and the source picker safely represents unavailable retained choices. Use/Edit/Export keep live validation. Mac independently passes 185 selected Core checks (four existing opt-in skips). iPhone production scrolling, controlled live-source refresh, unreadable/return and cold reopening pass with unrelated saved work intact; this does not establish native Mac interaction or spoken accessibility acceptance.
 
 [Evidence and limits](template-library-summaries/README.md). Wider Px work remains open.
+
+
+### 3 November 2026 · Complete schema and genuine local subtask APIs
+
+- [x] Own the missing historical migrations in each repo; replay every owning migration on pinned actual Supabase PostgreSQL/Auth/PostgREST/Storage with cron launching Off and no hosted changes.
+- [x] Fix the duplicate owner-insert policy transition and recording-restoration patch target behind the scheduler wrapper.
+- [x] Pass 72 genuine local API checks per repo, including all workspace tables, explicit synthetic root adoption/promotion, queued child field request/retry, opaque/sibling preservation and actual session/RLS isolation.
+- [x] Pass 65 separate existing recording-generation/provider regressions per repo.
+- [ ] Connect actual native Backend/Store sign-in, durable queue/cache/merge/cold recovery; finish app adoption and wider migration/media/platform contexts.
+- [ ] Resolve/review the complete-schema advisor's 14 legacy RLS performance warnings and nonrelocatable pg_net public placement before rollout.
+
+[Evidence and exact limits](full-schema-sync/README.md). API-request replay is not native Store persistence acceptance. No app gate or hosted service was enabled.

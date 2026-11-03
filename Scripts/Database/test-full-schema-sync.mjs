@@ -1,0 +1,76 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {writeFile} from 'node:fs/promises';
+import {createFullSchemaRuntime} from './full-schema-runtime.mjs';
+const output=process.argv[2];assert(/^\/tmp\/taskfold-[^/]+\.json$/.test(output));
+const report={genuineLocalAuth:false,genuineLocalPostgREST:false,hostedChanges:false,normalUseEnabled:false,nativeStoreVerified:false,checks:{}};
+let runtime;
+const check=(name,value)=>{assert.equal(value,true,name);report.checks[name]=true;console.log('passed',name)};
+const ok=(name,response,status=200)=>{if(response.status!==status)report.lastFailure={name,status:response.status,code:response.value?.code,message:response.value?.message};check(name,response.status===status);return response.value};
+const claims=token=>JSON.parse(Buffer.from(token.split('.')[1],'base64url'));
+const lit=v=>"'"+String(v).replaceAll("'","''")+"'";
+try{
+ runtime=await createFullSchemaRuntime({onMigration:name=>console.log('replayed',name)});
+ report.migrations=runtime.migrations;report.images=runtime.images;
+ const auth=ok('real signup',await runtime.request('auth','/signup',{method:'POST',body:{email:'schema-proof@example.invalid',password:'Synthetic-local-only-42!'}}));
+ check('real signup returns a session',!!auth.access_token&&!!claims(auth.access_token).session_id);report.genuineLocalAuth=true;
+ const account=auth.user.id,authorization=auth.access_token;
+ const request=(path,options={})=>runtime.request('rest',path,{authorization,...options});
+ for(const table of ['projects','sections','labels','tasks','profiles','project_collaborators','saved_views','favorites','view_preferences','view_orders','project_templates','reminder_preferences','focus_sessions','task_activity_epoch','task_activity']){
+  const rows=ok('actual workspace table '+table,await request('/'+table+'?select=*&limit=500'));
+  check('workspace table is an array '+table,Array.isArray(rows));
+ }
+ report.genuineLocalPostgREST=true;
+ const profile=ok('new account profile',await request('/profiles?select=*'));
+ check('genuine signup created exactly its own profile',profile.length===1&&profile[0].user_id===account&&profile[0].id===account);
+ check('scheduler remains disabled',await runtime.raw("show cron.launch_active_jobs")==='off');
+ check('no outbound jobs queued',await runtime.raw('select count(*) from net.http_request_queue')==='0');
+ check('scheduler wrapper is retained',await runtime.raw("select position('admit_audio_maintenance_schedule' in pg_get_functiondef('taskfold_private.audio_maintenance(text,jsonb)'::regprocedure))>0") === 't');
+ check('recovery implementation receives expiry pruning',await runtime.raw("select position('update taskfold_private.audio_task_deletions' in pg_get_functiondef('taskfold_private.audio_maintenance_recovery_v4(text,jsonb)'::regprocedure))>0") === 't');
+ check('retained implementation is not directly executable by service role',await runtime.raw("select has_function_privilege('service_role','taskfold_private.audio_maintenance_recovery_v4(text,jsonb)','execute')") === 'f');
+ const projectID=randomUUID(),taskID=randomUUID(),childID=randomUUID(),siblingID=randomUUID();
+ const project=ok('ordinary project creation',await request('/projects',{method:'POST',headers:{Prefer:'return=representation'},body:{id:projectID,user_id:account,name:'Full schema workshop'}}),201);
+ check('project owner remains the authenticated account',project[0].user_id===account);
+ const children=[{id:childID,title:'Review the layout',subtasks:[],future:{keep:[null,false,'exact']}},{id:siblingID,title:'Approve contrast',subtasks:[]}];
+ const root=ok('ordinary task creation',await request('/tasks',{method:'POST',headers:{Prefer:'return=representation'},body:{id:taskID,user_id:account,project_id:projectID,title:'Design review',description:'Original note',subtasks:children}}),201)[0];
+ check('new task has a generation',typeof root.task_generation==='string');
+ const readBody={_id:taskID,_generation:root.task_generation};
+ ok('child reads stay disabled by default',await request('/rpc/taskfold_read_child_tasks',{method:'POST',body:readBody}),503);
+ await runtime.raw('update taskfold_private.child_task_record_config set reads_enabled=true,edits_enabled=true');
+ ok('unreviewed root is held for adoption',await request('/rpc/taskfold_read_child_tasks',{method:'POST',body:readBody}),409);
+ check('explicit exact-tree adoption',await runtime.raw(`select taskfold_private.adopt_child_task_records(id,task_generation,subtasks) from public.tasks where id=${lit(taskID)}`)==='ready');
+ check('explicit synthetic root promotion',await runtime.raw(`select taskfold_private.promote_child_task_records(t.id,t.task_generation,t.project_id,p.revision,t.subtasks) from public.tasks t join taskfold_private.child_task_projections p on p.task_id=t.id where t.id=${lit(taskID)}`)==='records');
+ report.syntheticTrustedAdoptionAndPromotion=true;
+
+ const read=ok('genuine authenticated child read',await request('/rpc/taskfold_read_child_tasks',{method:'POST',body:readBody}));
+ const node=read.records.find(x=>x.node_key===childID),sibling=read.records.find(x=>x.node_key===siblingID);
+ check('real child records retain opaque fields',node?.fields.future.keep[2]==='exact'&&read.records.length===2);
+ const body=(record,changes)=>({protocol:1,account,request_id:randomUUID(),task_id:taskID,task_generation:root.task_generation,project_id:projectID,node_key:record.node_key,incarnation:record.incarnation,revision:record.revision,changes});
+ const queued=body(node,{description:'Prepared while offline'}),original=JSON.stringify(queued);
+ const remote=body(sibling,{title:'Remote contrast review'});
+ ok('different child changes remotely',await request('/rpc/taskfold_edit_child_task',{method:'POST',body:{_body:remote}}));
+ const saved=ok('queued child edit preserves remote sibling',await request('/rpc/taskfold_edit_child_task',{method:'POST',body:{_body:queued}}));
+ check('first queued response is not a replay',saved.replayed===false);
+ const retried=ok('retry uses the exact original child request',await request('/rpc/taskfold_edit_child_task',{method:'POST',body:{_body:queued}}));
+ check('lost-reply style retry is certified as replay',retried.replayed===true&&retried.request_id===saved.request_id);
+ check('queued request was not rewritten',JSON.stringify(queued)===original);
+ const current=ok('read task after queued edit',await request('/tasks?id=eq.'+taskID+'&select=*'))[0];
+ check('queued edit and remote sibling both survive',current.subtasks[0].description==='Prepared while offline'&&current.subtasks[1].title==='Remote contrast review');
+ check('opaque child data survives',JSON.stringify(current.subtasks[0].future)===JSON.stringify(children[0].future));
+ check('root content is unchanged by child edits',current.title===root.title&&current.description===root.description&&current.task_generation===root.task_generation);
+ const other=ok('real second signup',await runtime.request('auth','/signup',{method:'POST',body:{email:'schema-outsider@example.invalid',password:'Synthetic-local-only-43!',data:{role:'service_role'}}}));
+ check('user metadata cannot grant an API role',claims(other.access_token).role==='authenticated');
+ const hidden=ok('outsider task read',await request('/tasks?select=*',{authorization:other.access_token}));check('real RLS hides the private task',hidden.length===0);
+ ok('outsider child read refused',await request('/rpc/taskfold_read_child_tasks',{method:'POST',body:readBody,authorization:other.access_token}),403);
+ ok('invalid JWT is refused',await request('/tasks?select=*',{authorization:authorization.slice(0,-8)+'invalidx'}),401);
+ ok('actual Auth logout',await runtime.request('auth','/logout?scope=global',{method:'POST',authorization}),204);
+ const afterLogout=await request('/rpc/taskfold_read_child_tasks',{method:'POST',body:readBody});check('live session guard rejects the logged-out JWT',[401,403].includes(afterLogout.status));
+ const signed=ok('real password sign-in',await runtime.request('auth','/token?grant_type=password',{method:'POST',body:{email:'schema-proof@example.invalid',password:'Synthetic-local-only-42!'}}));
+ check('sign-in replaces the session identity',claims(signed.access_token).session_id!==claims(authorization).session_id);
+ const returned=ok('child read after fresh sign-in',await request('/rpc/taskfold_read_child_tasks',{method:'POST',body:readBody,authorization:signed.access_token}));check('saved queued child edit survives sign-in',returned.records.find(x=>x.node_key===childID)?.fields.description==='Prepared while offline');
+ await runtime.raw('update taskfold_private.child_task_record_config set reads_enabled=false,edits_enabled=false');
+ check('local child feature flags restored',await runtime.raw('select not reads_enabled and not edits_enabled from taskfold_private.child_task_record_config')==='t');
+ report.advisors=await runtime.advisors();
+ report.checkCount=Object.keys(report.checks).length;report.accepted=true;
+}catch(error){report.cleanedUp=error.cleanedUp;report.error={message:error.message,code:error.code,migration:error.migration,cleanupFailed:error.cleanupFailed};process.exitCode=1}
+finally{if(runtime)report.cleanedUp=await runtime.close();await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({accepted:report.accepted,error:report.error,lastFailure:report.lastFailure,checkCount:report.checkCount,cleanedUp:report.cleanedUp}))}

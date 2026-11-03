@@ -7566,3 +7566,15 @@ Both owning apps now reuse sorted/outlined project display data in a source/acce
 - [ ] Complete wider Mac/iPad interaction, account/accessibility/cloud contexts and remaining editor/rendering acceptance.
 
 [Evidence and limits](template-library-summaries/README.md). Timings compare bounded Debug summary work, not frame-rate or whole-app responsiveness.
+
+
+### 3 November 2026 · Complete schema and genuine local subtask APIs
+
+- [x] Own the missing historical migrations in each repo; replay every owning migration on pinned actual Supabase PostgreSQL/Auth/PostgREST/Storage with cron launching Off and no hosted changes.
+- [x] Fix the duplicate owner-insert policy transition and recording-restoration patch target behind the scheduler wrapper.
+- [x] Pass 72 genuine local API checks per repo, including all workspace tables, explicit synthetic root adoption/promotion, queued child field request/retry, opaque/sibling preservation and actual session/RLS isolation.
+- [x] Pass 65 separate existing recording-generation/provider regressions per repo.
+- [ ] Connect actual native Backend/Store sign-in, durable queue/cache/merge/cold recovery; finish app adoption and wider migration/media/platform contexts.
+- [ ] Resolve/review the complete-schema advisor's 14 legacy RLS performance warnings and nonrelocatable pg_net public placement before rollout.
+
+[Evidence and exact limits](full-schema-sync/README.md). API-request replay is not native Store persistence acceptance. No app gate or hosted service was enabled.

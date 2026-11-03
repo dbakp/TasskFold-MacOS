@@ -4,15 +4,15 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Template-library scrolling",
-  "latest": "Both apps now prepare template-library captions away from the main thread and reuse a bounded workspace/session-scoped cache. Both apps and runners build/sign, and each passes 185 selected Core tests (four existing opt-in skips); the iPhone production library passes scrolling, live-source refresh, unreadable/return and cold reopening with other saved work intact. Wider platform/account/accessibility checks and remaining P2 work stay open.",
+  "focus": "P2 · Subtask sync integration",
+  "latest": "Both repos now replay their complete database history with genuine local Auth/REST: 72 API checks each, plus 65 recording regressions. Two migration integration bugs are fixed. Real native Store queue/cache recovery and 15 full-schema advisor warnings remain; no hosted rollout or normal-use activation.",
   "next": [
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
     "Continue wider catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
-    "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
+    "Connect genuine local Auth/PostgREST and the complete schema to native Backend/Store sign-in, durable offline queues/merge/cache and cold recovery. Finish app adoption, 15 full-schema advisor warnings, shared audio/file handlers and larger history/migration cases. Existing iPad dialog/cache and wider account/window/Mac/accessibility gaps remain; do not repeat unchanged accepted API cases.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
   "stages": [
@@ -545,7 +545,7 @@
             "template-library-summaries/iphone-after.json",
             "template-library-summaries/build-verification.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-voice",
@@ -651,7 +651,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Scoped history and preserved-child previews have proof. Mobile file publication/Stop and cold recovery pass in isolated local-provider scope. Refresh handoff and queued attachment projection are implemented; ordinary full sync, broader history/migration, real windows/account changes, Mac runtime and hosted Auth/S3 remain. Server candidates are undeployed; normal use stays disabled.",
+              "detail": "Complete own migration replay and genuine local Auth/REST now verify reviewed synthetic root adoption, child field edits/retry, opaque data and session/RLS isolation. Native durable Store queue/cache integration, full app adoption, remaining histories, Mac/platform/lifecycle cases and hosted media remain. Advisor warnings are recorded; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -736,6 +736,10 @@
                 {
                   "state": "build",
                   "title": "Keep shared files and discussions with the right workspace"
+                },
+                {
+                  "state": "done",
+                  "title": "Replay complete own schema with genuine local Auth/REST; verify reviewed synthetic root edits/retry, session isolation and recording regressions"
                 },
                 {
                   "state": "verify",
@@ -995,9 +999,14 @@
             "project-private-history/verification.json",
             "project-private-history/local-service.json",
             "project-private-history/phone-verification.json",
-            "project-private-history/initial-interaction-verification.json"
+            "project-private-history/initial-interaction-verification.json",
+            "full-schema-sync/README.md",
+            "full-schema-sync/verification.json",
+            "full-schema-sync/full-schema.json",
+            "full-schema-sync/recording-regression.json",
+            "full-schema-sync/historical-provenance.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-watch",
@@ -1105,7 +1114,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "38997b4aa3cb0d1d1fddbce701e76a68aa1e897bd6a76f2ee61c696d21be8fe8",
+    "P2_PLAN.md": "28cad1d76e4809d024ee97bc5309bf272bf8ed947aa5ee631fb2144c62360f58",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1225,6 +1234,11 @@
     "field-activity/verification.json": "dce424a0940bacc8e3300e9496969e4d94a92722bea799f0592407ceadcff4b6",
     "field-history/README.md": "5b06f10129fc2515d2ff19280fceb406ac4bd50186f334d0501d2c7483547d87",
     "field-history/verification.json": "4b5168fb9ec05cee2e9ddc59127ca320232d9e6d2e4f5463e9939783092ed1e9",
+    "full-schema-sync/README.md": "a6c1b27f9d1d78550bb722849da08533ff0f37281404a45f09e3222c51c61ec9",
+    "full-schema-sync/full-schema.json": "cca29b765fa47d52704398755ab2e9511fad6eb203e2e5fcbce5ccfb868a8174",
+    "full-schema-sync/historical-provenance.json": "a2e9f7f02800a4233a9bcbf6a78638176e5593a144a4c0d8ed631a20332b5a45",
+    "full-schema-sync/recording-regression.json": "55558a01a67e8d4c8aff61de6f0cdea1496c3c67ddabacf81271cba9640afb27",
+    "full-schema-sync/verification.json": "39a268977eae9750543c45e12b70ba5e24a969c06c53cbbb44a8f3a8fa0e30db",
     "hierarchy-history/README.md": "64f7cb4cb6a8b432a175fbf6e11d80394783dc39928345c25471af9b678e9858",
     "hierarchy-history/verification.json": "b9ea727fda525dc272386ff7902eed598d7f3f4f5260943b1b0f7f30d1ec71cf",
     "indexed-child-source/README.md": "17dbc3ab03caca89cba0cd58913841825bdac4adbd8be66e50859276e53ec592",
