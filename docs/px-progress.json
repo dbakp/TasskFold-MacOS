@@ -5,7 +5,7 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Durable offline recovery",
-  "latest": "Legacy migration now has genuine local boundary proof in both repos: duplicate/canonically colliding/missing IDs and unsupported shapes refuse adoption while retaining the exact original JSON/task. Changed review digests require fresh review; closing an old request blocks late sends. Mac keyboard checks still await an unlocked desktop. Wider migration/history/media remain open.",
+  "latest": "Mac cross-task move keyboard acceptance now passes: Move → Undo → Redo → Undo refreshed the list and open inspector; a full quit/relaunch retained exact source/nested content and an empty destination. Four distinct receipts/four writes; initial stale review safely refused until refreshed. Broader format-repair/hierarchy, migration/history/media and account-deletion gaps remain.",
   "next": [
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
     "Continue wider catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.",
@@ -13,7 +13,7 @@
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Extend the genuine full-schema native Store proof into wider legacy/history/cache migration and further conflict/access races and shared-account/window/background/access-loss directions. Root-description, child-field and whole-branch hierarchy offline/cold exact retry now pass on iPhone and Mac, with cold hierarchy Undo/Redo plus scoped field/hierarchy conflict review; do not repeat it unchanged. Protected Keychain/TLS, file/audio handler integration and pg_net placement review remains.",
-    "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
+    "Complete remaining Mac format-repair/hierarchy keyboard and inspector acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
   "stages": [
     {
@@ -686,8 +686,8 @@
                   "title": "Redo a combined task/subtask selection through normal history controls"
                 },
                 {
-                  "state": "verify",
-                  "title": "Redo cross-task subtask moves; finish the Mac keyboard check"
+                  "state": "done",
+                  "title": "Redo cross-task subtask moves; accept Mac keyboard history and cold persistence"
                 },
                 {
                   "state": "done",
@@ -1149,13 +1149,15 @@
     "team-audio-client/README.md",
     "team-audio-client/verification.json",
     "audio-real-provider-native/README.md",
-    "audio-real-provider-native/verification.json"
+    "audio-real-provider-native/verification.json",
+    "mac-transfer-keyboard/README.md",
+    "mac-transfer-keyboard/verification.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "c30e3dbbf3607338620f145e38d9a56cc354c7c3ad36106adc5ad12fc36d5af7",
+    "P2_PLAN.md": "1e53e8e7197504af6f488bc2247bc1dc5534cec58b460f1aed9b5a5ae0028343",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1309,6 +1311,8 @@
     "legacy-adoption-boundaries/verification.json": "08488a17b55143ee21dbf199ff7f616327cf151edc6a431ac30de4cbfe253e19",
     "legacy-child-preservation/README.md": "c759db19d0718950ce19956d9dcec05a9272f9d1e7e7f77e84f1c213dbd989e0",
     "legacy-child-preservation/verification.json": "acefbc2ad99f12bc9f8c6193354c9ef0fb341fc197226e911fc188c3d9da320f",
+    "mac-transfer-keyboard/README.md": "c616adc8ff2f748d03a915c84704869d4aa68b4f3da89ffb53c3a25e83c47906",
+    "mac-transfer-keyboard/verification.json": "9fbafaa53559350bc8a2697aa618845258098f7b65919d59acee97c8914d3a6e",
     "mixed-task-completion-native/README.md": "52c52727095f0ca262435ade76f79742552e6011b4fcaf73da1f93f8cc9e449d",
     "mixed-task-completion-native/verification.json": "e94f3ce96eba46de16f86d30d567751faa8079c57118dd1a6665101f1ea5de8f",
     "mixed-task-completion/README.md": "d130e338d04eab65f27aa0033e3e5a5c5e8df73b7c1bfa6e6e74fd8a1bd27b73",

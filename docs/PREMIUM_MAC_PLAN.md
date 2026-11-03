@@ -10758,3 +10758,13 @@ The native row styling is retained while full definition validation moves onto a
 - [ ] Native Mac keyboard checks await unlock. Full invalid-source repair/mapping, larger history/identity/media/shared contexts and hosted rollout remain separate.
 
 [Evidence and limits](legacy-adoption-boundaries/README.md). API/database acceptance only; no app source or ordinary gate change.
+
+
+### 3 November 2026 · Mac cross-task keyboard history
+
+- [x] Move a nested branch through actual Mac controls, then keyboard Undo → Redo → Undo with live list/inspector refresh.
+- [x] Quit and relaunch without reset; preserve exact source/nested content, original sibling/order and empty destination. Exactly four distinct applied receipts/four writes; actual Store cache agrees.
+- [x] Refuse the initial stale review without a write; explicit refresh allows a current move. Reuse the existing signed app and close it afterward; no build/device/service allocation.
+- [ ] Broader Mac format-repair/hierarchy keyboard, shared/account/window/privacy/speech and migration/history/media work remain. This clears only the cross-task keyboard substep.
+
+[Evidence and scope](mac-transfer-keyboard/README.md). Synthetic native peer; no hosted or genuine shared-account claim, no ordinary gate change. Earlier unlock notes are superseded for this cross-task check.
