@@ -7504,3 +7504,7 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Use an accented retry icon and full 44-point hit rectangle, disabled while syncing. Verify the upper-padding tap and complete queue recovery. Build/sign each owning app and runner.
 - [ ] Mac/iPad, normal auth/bootstrap, other entry/outcome combinations, wider queued histories, context/accessibility, mixed media, whole-project transfer and genuine integration remain. Existing explicit coded pauses and other status copy need broader review. No normal-use enablement.
 - Evidence: [main-screen recovery and retry](audio-sync-attention-recovery/README.md). Curated totals remain 74/35.
+
+## iPad cold selection recovery; Mac runtime pending
+
+The iPad passes 63 local service/native checks and one UI case, covering Later, cold return, actual save failure after closure, fresh consent, lost committed reply and exact cold retry. Mac app/runner build and strict signatures pass, but system authentication stops its new native case before app launch; runtime remains unaccepted. No production app/schema/gate changes. [Scope and evidence](audio-selection-platform-native/README.md).

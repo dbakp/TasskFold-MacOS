@@ -10507,3 +10507,7 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Own unconfirmed task-write classification and retry-specific saved-work copy while explicit service decisions remain unchanged. 211 owning Core tests and current app/runner build/signatures pass.
 - [x] Record iPhone-owned main-screen recovery/manual-retry acceptance: 68 actual local checks with unchanged requests, later work and media intact. The iPhone action has a verified 44-point hit target and accent retry icon.
 - [ ] Mac native presentation/runtime and wider context/accessibility/genuine integration remain separate; no normal-use activation. See [scope](audio-sync-attention-recovery/README.md).
+
+### 3 November: Mac selection-recovery runner
+
+A Mac-specific checkbox/window/cache journey and actual local-provider runner now build and sign. Native runtime is pending: Xcode reports “Authentication cancelled. System authentication is running” before app launch; all owned services/configuration were removed. The existing iPad now accepts the separate cold recovery journey (63 checks), which does not establish Mac acceptance. [Evidence](audio-selection-platform-native/README.md).

@@ -2844,3 +2844,143 @@ extension TaskfoldMacUITests {
         XCTAssertFalse(app.buttons["fileUploadChoose"].exists)
     }
 }
+
+#if os(macOS)
+extension TaskfoldMacUITests {
+
+    @MainActor private func macAudioTaskHome() throws -> URL {
+        try audioGuard()
+        return URL(fileURLWithPath: "/Users/" + NSUserName() + "/Library/Containers/com.dbakp.taskfold.mac.workflowteststeameditbridge/Data")
+    }
+    @MainActor private func macAudioTaskRows(account: String) throws -> Data {
+        XCTAssertNotNil(UUID(uuidString: account))
+        let file = try macAudioTaskHome().appendingPathComponent("Library/Application Support/Taskfold/" + account + ".json")
+        let cache = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+        let tables = try XCTUnwrap(cache["tables"] as? [String: Any])
+        return try JSONSerialization.data(withJSONObject: tables["tasks"] ?? [], options: [.sortedKeys])
+    }
+    @MainActor private func macAudioTaskFiles() throws -> [URL] {
+        let root = try macAudioTaskHome().appendingPathComponent("Library/Application Support/Taskfold/PrivateAudioDrafts")
+        return (FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil)?.allObjects as? [URL] ?? []).filter { $0.pathExtension == "bin" }
+    }
+    @MainActor private func macAudioOpenHost(_ app: XCUIApplication) {
+        let instances = NSRunningApplication.runningApplications(withBundleIdentifier: "com.dbakp.taskfold.mac.workflowteststeameditbridge")
+        XCTAssertEqual(instances.count, 1)
+        guard let url = instances.first?.bundleURL else { XCTFail("Missing isolated host"); return }
+        let opened = expectation(description: "Open isolated recovery host")
+        let configuration = NSWorkspace.OpenConfiguration(); configuration.activates = true; configuration.createsNewApplicationInstance = false
+        NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, error in XCTAssertNil(error); opened.fulfill() }
+        wait(for: [opened], timeout: 10); app.activate()
+
+    }
+    @MainActor func testTeamRecordingNativeSelectionRecovery() throws {
+        try audioGuard()
+        let app = XCUIApplication(); defer { app.terminate() }
+        app.launchArguments = ["--uitesting", "--team-editor-testing", "--team-editor-reset", "--team-audio-controls-testing", "--audio-team-native-service", "--audio-lifecycle-review-testing", "--audio-selection-recovery-testing", "-appearance", "dark", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        let account = "ec240000-0000-4000-8000-000000000001"
+        func cache() throws -> [String: Any] {
+            let file = try macAudioTaskHome().appendingPathComponent("Library/Application Support/Taskfold/" + account + ".json")
+            return try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+        }
+        func queued() throws -> Data { try JSONSerialization.data(withJSONObject: cache()["pending"] ?? [], options: [.sortedKeys]) }
+        func head() throws -> [String: Any] { try XCTUnwrap((cache()["pending"] as? [[String: Any]])?.first) }
+        let state = app.staticTexts["audioTeamNativeLifecycleStatus"]
+        func idle(_ count: Int, removed: Bool? = nil) {
+            var format = "label BEGINSWITH %@", values: [Any] = ["Idle · \(count) queued · "]
+            if let removed { format += removed ? " AND label CONTAINS %@" : " AND NOT label CONTAINS %@"; values.append("Task removed") }
+            XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: format, argumentArray: values), object: state)], timeout: 45), .completed, app.debugDescription)
+        }
+        func reveal(_ element: XCUIElement) { audioReveal(element, app) }
+        func chooseOmission() {
+            let toggle = app.checkBoxes["audioSelectionOmissionConsent"]
+            reveal(toggle); XCTAssertTrue(toggle.isEnabled, app.debugDescription)
+            toggle.click()
+            XCTAssertEqual(toggle.value as? String, "1", app.debugDescription)
+        }
+        func openRecovery() {
+            let button = app.buttons["reviewAudioRestoreRecovery"]
+            audioReveal(button, app); audioPress(button)
+            reveal(app.checkBoxes["audioSelectionOmissionConsent"])
+        }
+        func returnedToHost() {
+            XCTAssertEqual(XCTWaiter.wait(for: [
+                XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false OR hittable == false"), object: app.buttons["cancelAudioSelectionRecovery"]),
+                XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: state)
+            ], timeout: 30), .completed, app.debugDescription)
+        }
+        func fingerprint() throws -> String {
+            let value = try XCTUnwrap(app.staticTexts["audioTeamNativeHistoryFingerprint"].value as? String)
+            XCTAssertEqual(value.count, 64); return value
+        }
+        app.launch(); app.activate(); macAudioOpenHost(app)
+        let ready = app.staticTexts["audioTeamNativeReady"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Ready"), object: ready)], timeout: 100), .completed, app.debugDescription)
+        idle(0, removed: false)
+        let baseline = try macAudioTaskRows(account: account), files = Set(try macAudioTaskFiles().map(\.path))
+        let privateBytes = try Dictionary(uniqueKeysWithValues: macAudioTaskFiles().map { ($0.path, try Data(contentsOf: $0)) })
+        func verifySavedRows(_ members: [[String: Any]]) throws {
+            var expected = try XCTUnwrap(JSONSerialization.jsonObject(with: baseline) as? [[String: Any]])
+            for index in expected.indices {
+                let member = try XCTUnwrap(members.first { ($0["fields"] as? [String: Any])?["id"] as? String == expected[index]["id"] as? String })
+                expected[index]["task_generation"] = (member["fields"] as? [String: Any])?["task_generation"]
+
+            }
+            XCTAssertEqual(try macAudioTaskRows(account: account), try JSONSerialization.data(withJSONObject: expected, options: [.sortedKeys]))
+            XCTAssertEqual(Set(try macAudioTaskFiles().map(\.path)), files, "Selection recovery never creates a private media copy")
+            for (path, bytes) in privateBytes { XCTAssertEqual(try Data(contentsOf: URL(fileURLWithPath: path)), bytes) }
+        }
+        let remove = app.buttons["audioTeamNativeSelectionDeletion"]
+        audioReveal(remove, app); audioPress(remove)
+        let deletionConsent = app.checkBoxes["teamDeletionAudioConsent"]
+        audioReveal(deletionConsent, app)
+        deletionConsent.click()
+        XCTAssertEqual(deletionConsent.value as? String, "1")
+        let confirmDeletion = app.buttons["confirmTeamTaskDeletion"]
+        audioReveal(confirmDeletion, app); XCTAssertTrue(confirmDeletion.isEnabled); audioPress(confirmDeletion)
+        idle(0, removed: true)
+        audioPress(app.buttons["audioTeamNativeUndo"]); idle(1)
+        let originalQueue = try queued(), originalHead = try head(), originalBatch = try XCTUnwrap(originalHead["teamTaskBatch"] as? [String: Any])
+        let originalMembers = try XCTUnwrap(originalBatch["items"] as? [[String: Any]])
+        XCTAssertEqual(originalMembers.count, 3)
+        openRecovery()
+        let toggle = app.checkBoxes["audioSelectionOmissionConsent"], restore = app.buttons["confirmAudioSelectionRestore"]
+        reveal(restore); XCTAssertFalse(restore.isEnabled)
+        chooseOmission(); audioScreenshot(app, "Selection recovery names expired available and empty members")
+        audioPress(app.buttons["cancelAudioSelectionRecovery"])
+        XCTAssertEqual(try queued(), originalQueue)
+        app.terminate(); app.launchArguments.removeAll { $0 == "--team-editor-reset" }; app.launch(); app.activate(); macAudioOpenHost(app); idle(1)
+        XCTAssertEqual(try queued(), originalQueue)
+        let historyBeforeFailure = try fingerprint()
+        let fail = app.buttons["audioSelectionFailNextSave"]
+        audioReveal(fail, app); audioPress(fail)
+        openRecovery(); XCTAssertEqual(toggle.value as? String, "0", "Every reopening requires fresh complete-selection consent")
+        chooseOmission(); reveal(restore); XCTAssertTrue(restore.isEnabled); audioPress(restore)
+        let message = app.staticTexts["audioSelectionRecoveryMessage"]
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == true AND label BEGINSWITH %@", "The recovery could not be saved."), object: message)], timeout: 30), .completed, app.debugDescription)
+        XCTAssertEqual(try queued(), originalQueue, "Failed local save preserves the entire original queue after server closure")
+        XCTAssertEqual(try fingerprint(), historyBeforeFailure, "Failed recovery save preserves every Undo/Redo action and logical history ID")
+        XCTAssertEqual(toggle.value as? String, "0")
+        audioScreenshot(app, "Selection save failure preserves the original recovery")
+        chooseOmission(); reveal(restore); XCTAssertTrue(restore.isEnabled); audioPress(restore)
+        let returned = XCTWaiter.wait(for: [
+            XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false OR hittable == false"), object: app.buttons["cancelAudioSelectionRecovery"]),
+            XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: state)
+        ], timeout: 30)
+        XCTAssertEqual(returned, .completed, app.debugDescription)
+        idle(1)
+        let replacement = try head(), replacementBatch = try XCTUnwrap(replacement["teamTaskBatch"] as? [String: Any]), replacementMembers = try XCTUnwrap(replacementBatch["items"] as? [[String: Any]])
+        XCTAssertNotEqual(replacement["id"] as? String, originalHead["id"] as? String)
+        XCTAssertEqual(replacementBatch["restores"] as? String, originalBatch["restores"] as? String)
+        for member in replacementMembers {
+            let old = try XCTUnwrap(originalMembers.first { $0["recordID"] as? String == member["recordID"] as? String })
+            XCTAssertNotEqual(member["id"] as? String, old["id"] as? String)
+            XCTAssertEqual(try JSONSerialization.data(withJSONObject: member["fields"]!, options: [.sortedKeys]), try JSONSerialization.data(withJSONObject: old["fields"]!, options: [.sortedKeys]))
+        }
+        let savedQueue = try queued(); audioScreenshot(app, "Selection replacement stays saved after lost committed reply")
+        app.terminate(); app.launch(); app.activate(); macAudioOpenHost(app); idle(0, removed: false)
+        XCTAssertNotEqual(savedQueue, try queued()); XCTAssertEqual(try queued(), Data("[]".utf8))
+        try verifySavedRows(replacementMembers)
+        audioScreenshot(app, "Cold selection retry confirms all three saved tasks")
+    }
+}
+#endif

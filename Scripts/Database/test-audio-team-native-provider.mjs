@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { createWriteStream } from "node:fs";
-import { readdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { readdir, readFile, realpath, unlink, writeFile } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { createTaskFileProviderDatabase } from "./task-file-provider-schema.mjs";
 import {
@@ -22,7 +22,7 @@ import { homedir } from "node:os";
 const exec = promisify(execFile);
 const [platform, output] = process.argv.slice(2);
 assert(
-  ["service", "ios", "ipad", "ios-expired", "ios-recorded", "ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued", "ios-selection-attention"].includes(platform) &&
+  ["service", "mac-selection", "ios", "ipad", "ios-expired", "ios-recorded", "ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued", "ios-selection-attention"].includes(platform) &&
     output?.startsWith("/tmp/taskfold-") && output.endsWith(".json"),
 );
 const account = "ec240000-0000-4000-8000-000000000001",
@@ -31,18 +31,19 @@ const account = "ec240000-0000-4000-8000-000000000001",
   project = "ec240000-0000-4000-8000-000000000003",
   team = "ec240000-0000-4000-8000-000000000004",
   generation = "ec240000-0000-4000-8000-000000000071";
+const macNative = platform === "mac-selection";
 const expiredRecovery = platform === "ios-expired";
 const recordedRecovery = platform === "ios-recorded";
 const attentionSelectionRecovery = platform === "ios-selection-attention";
 const queuedSelectionRecovery = ["ios-selection-queued", "ios-selection-attention"].includes(platform);
 const warmSelectionRecovery = platform === "ios-selection-warm", recordedSelectionRecovery = platform === "ios-selection-recorded";
-const selectionRecovery = ["ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued", "ios-selection-attention"].includes(platform), selectionPeer = "ec240000-0000-4000-8000-000000000005", selectionEmpty = "ec240000-0000-4000-8000-000000000006";
+const selectionRecovery = ["mac-selection", "ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued", "ios-selection-attention"].includes(platform), selectionPeer = "ec240000-0000-4000-8000-000000000005", selectionEmpty = "ec240000-0000-4000-8000-000000000006";
 let selectionOriginals, selectionIntents, selectionMedia;
 const device = platform.startsWith("ios")
     ? "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
     : "3ADF3A87-AD51-40F6-8BCB-DAD392EF2378",
-  bundle = "com.dbakp.taskfold.workflowteststeameditbridge",
-  products =
+  bundle = macNative ? "com.dbakp.taskfold.mac.workflowteststeameditbridge" : "com.dbakp.taskfold.workflowteststeameditbridge",
+  products = macNative ? "/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug" :
     "/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator";
 const report = {
   platform,
@@ -65,6 +66,7 @@ const states = async () =>
     (await exec("xcrun", ["simctl", "list", "devices", "--json"])).stdout,
   ).devices;
 async function currentHome() {
+  if (macNative) return homedir() + "/Library/Containers/" + bundle + "/Data";
   const root = homedir() + "/Library/Developer/CoreSimulator/Devices/" +
     device + "/data/Containers/Data/Application";
   const matches = [];
@@ -248,7 +250,7 @@ try {
     });
     check("current author removes", remove.status, 200);
   } else {
-    const host = "/tmp/taskfold-owner-review-ios-host";
+    const host = macNative ? "/tmp/taskfold-owner-review-mac-host" : "/tmp/taskfold-owner-review-ios-host";
     const replacements = {
       "com.dbakp.taskfold.task":
         "com.dbakp.taskfold.workflowteststeameditbridge.task",
@@ -266,7 +268,7 @@ try {
         "Taskfold/AudioCommentCapture.swift",
         "Taskfold/Core/Store.swift",
         "Taskfold/Core/Models.swift",
-        "Taskfold/TaskfoldApp.swift",
+        macNative ? "Taskfold/TaskfoldMacApp.swift" : "Taskfold/TaskfoldApp.swift",
         "Taskfold/Views/BackupTools.swift",
         "Taskfold/Views/SettingsView.swift",
         "Taskfold/Core/TeamProjectAccess.swift",
@@ -274,7 +276,7 @@ try {
         "Taskfold/Core/Backend.swift",
         "Taskfold/Views/TeamTaskDeletionReview.swift",
         "Taskfold/Core/AudioCommentPublishing.swift",
-        "Taskfold/Views/TaskEditor.swift",
+        macNative ? "Taskfold/Views/TaskInspector.swift" : "Taskfold/Views/TaskEditor.swift",
         "Taskfold/Views/AudioCommentConversationView.swift",
         "Taskfold/Views/AudioCommentPublicationView.swift",
         "TaskfoldUITests/AudioCommentUITests.swift",
@@ -313,10 +315,17 @@ try {
         "raw",
         "-o",
         "-",
-        products + "/Taskfold.app/Info.plist",
+        products + (macNative ? "/Taskfold.app/Contents/Info.plist" : "/Taskfold.app/Info.plist"),
       ])).stdout.trim(),
       bundle,
     );
+    let home;
+    if (macNative) {
+      home = await currentHome();
+      assert.equal(await realpath(home), home);
+      await readdir(home + "/Documents");
+      report.existingOwnedMacContainerVerified = true;
+    } else {
     initialState = Object.values(await states()).flat().find((x) =>
       x.udid === device
     )?.state;
@@ -333,7 +342,7 @@ try {
       device,
       products + "/Taskfold.app",
     ], { timeout: 60000 });
-    const home = (await exec("xcrun", [
+    home = (await exec("xcrun", [
       "simctl",
       "get_app_container",
       device,
@@ -341,6 +350,7 @@ try {
       "data",
     ])).stdout.trim();
     assert(home.includes("/" + device + "/data/Containers/Data/Application/"));
+    }
     configPath = home + "/Documents/taskfold-audio-team-native.json";
     configText = JSON.stringify({
       schema: "1",
@@ -354,20 +364,20 @@ try {
       test = attentionSelectionRecovery ? "testTeamRecordingNativeSelectionRecoveryFromSyncAttention" : queuedSelectionRecovery ? "testTeamRecordingNativeSelectionQueuedRecoveryFromSettings" : warmSelectionRecovery ? "testTeamRecordingNativeSelectionWarmHistory" : recordedSelectionRecovery ? "testTeamRecordingNativeSelectionRecordedRecovery" : selectionRecovery ? "testTeamRecordingNativeSelectionRecovery" : expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : recordedRecovery ? "testTeamRecordingNativeRecordedRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
     const command = [
       "-project",
-      "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
+      macNative ? "/tmp/taskfold-owner-review-mac-host/Taskfold.xcodeproj" : "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
       "-scheme",
       "Taskfold",
       "-configuration",
       "Debug",
       "-derivedDataPath",
-      "/tmp/taskfold-prepared-undo-signed-ios-build",
+      macNative ? "/tmp/taskfold-workflow-native-mac-build" : "/tmp/taskfold-prepared-undo-signed-ios-build",
       "-destination",
-      "platform=iOS Simulator,id=" + device,
+      macNative ? "platform=macOS" : "platform=iOS Simulator,id=" + device,
       "-parallel-testing-enabled",
       "NO",
       "-collect-test-diagnostics",
       "never",
-      "-only-testing:TaskfoldUITests/TaskfoldUITests/" + test,
+      "-only-testing:TaskfoldUITests/" + (macNative ? "TaskfoldMacUITests" : "TaskfoldUITests") + "/" + test,
       "-resultBundlePath",
       result,
       "test-without-building",
