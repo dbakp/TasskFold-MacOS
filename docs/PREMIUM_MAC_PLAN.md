@@ -10561,3 +10561,13 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Finish whole-project pending/retained/legacy/mixed media and realm policies, wider native transfer acceptance and integration/accessibility. No Mac/iPad runtime or valid server-expired HMAC claim comes from this phone case; ordinary gates stay off.
 
 [Exact pending-boundary scope and remaining work](pending-approval-boundaries/README.md). The full Px goal remains active.
+
+### 3 November 2026 · Reviewed unfinished sends in project adoption
+
+- [x] Own a separately disabled policy and two explicit recording choices: move published recordings, stop unfinished sends. Bind both counts to signed review and exact saved recovery; pending-only branches are supported.
+- [x] Pass 151 owning local SQL/gateway checks and 83 focused client tests. Forced failure rolls back project/published custody/unfinished state together; a crossing old-author upload resolves its exact closure without task access. Cleanup preserves unrelated sends and original sender history.
+- [ ] Native Mac/iPhone/iPad separate-consent and retry acceptance, retained/legacy/other mixed policies, realm directions and genuine integration remain. No native runtime claim follows from Core tests or compilation; ordinary gates stay off.
+
+[Exact scope and evidence](project-unfinished-recordings/README.md). Whole-project transfers remain To build.
+
+- [x] Both independently owned app/test-runner products build and pass strict signatures for this stop policy. Native consent/retry remains unaccepted.

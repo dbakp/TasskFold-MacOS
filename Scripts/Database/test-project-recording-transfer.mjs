@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import {loadUnfinishedTransfer,checkUnfinishedTransfer} from './project-unfinished-recordings-checks.mjs';
+const unfinished=process.argv.includes('--unfinished');let unfinishedWire;
 import {readFile,writeFile} from 'node:fs/promises';
 import {randomUUID,createHash} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -10,6 +12,11 @@ const candidate=await migrationSQL(candidateName),output=process.argv[2];assert(
 const report={checks:{},candidate:candidateName,candidateSHA256:createHash('sha256').update(candidate).digest('hex'),actualLocalSQL:true,productionGateway:true,genuineAuthOrProvider:false,normalUseEnabled:false,deployed:false};
 const check=(n,a,...expected)=>{const b=expected.length?expected[0]:true;assert.deepEqual(a,b,n);report.checks[n]=true;console.log('passed:',n)};
 const j=x=>lit(JSON.stringify(x))+'::jsonb';let pg,http,oldHTTP,newHTTP,wire;
+const publishAudio=async(client,intent,media)=>{
+ let approval;
+ if(unfinished){const q=await client.call('review',{intent});assert.equal(q.status,200);approval=(await q.json()).approval;}
+ return client.call('publish',{intent,...(approval?{approval}:{}),audio_base64:media.toString('base64')});
+};
 try{
  pg=await createPostgresFixture({advisors:true});await loadAudioProjectCustodyDependencies(pg);await pg.raw(await migrationSQL('20261030102036_child_record_project_adoption_custody.sql'));await pg.raw(await migrationSQL(audioProjectCustodyMigration));await pg.raw(await migrationSQL(inventoryName));
  const users=Object.fromEntries(['owner','old','new'].map(k=>[k,{id:randomUUID(),session:randomUUID()}])),owner=users.owner,team=randomUUID();
@@ -24,14 +31,14 @@ try{
  const prepare=async(b,policy=false)=>{const inspect=await rpc('inspect',b),decisions=inspect.collaborators.filter(x=>x.status==='accepted').map(x=>({project_id:x.project_id,user_id:x.user_id,role:null}));const review=await rpc('review',{...b,inspection_token:inspect.inspection_token,decisions,...(policy?{recording_policy:'published_recordings_v1'}:{})});return {inspect,decisions,review}};
  const command=(b,r)=>({...b,inspection_token:r.inspection_token,decisions:r.decisions.map(({project_id,user_id,role})=>({project_id,user_id,role})),review_token:r.review_token,expires_at:r.expires_at,request_id:randomUUID(),...(r.recording_policy?{recording_policy:r.recording_policy}:{})});
  const pre=await project(),preBody=scope(pre),preReview=await prepare(preBody),preCommand=command(preBody,preReview.review);await rpc('adopt',preCommand);
- report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);
+ report.baselineAdvisors=await pg.advisors();await pg.raw(candidate);if(unfinished){await loadUnfinishedTransfer(pg,report);await pg.raw('update taskfold_private.audio_comment_config set audience_review_enabled=true');}
  check('ordinary recording transfer gate starts disabled',await pg.scalar('select to_jsonb(project_transfer_enabled) from taskfold_private.audio_comment_config'),false);
  check('old receipt survives extended schema',(await rpc('adopt',preCommand)).replayed,true);
  const p=await project(),child=await project(p),body=scope(p),roots=[await task(p),await task(child)];
  for(const id of [p,child])await pg.raw(`begin;${identity()}insert into public.project_collaborators(id,project_id,invited_email,invited_by) values(gen_random_uuid(),${lit(id)},${lit(users.old.id+'@example.invalid')},${lit(owner.id)});update public.project_collaborators set status='accepted' where project_id=${lit(id)};commit;`);
  http=await createAudioHttpFixture(pg,owner.id,owner.session);oldHTTP=await createAudioHttpFixture(pg,users.old.id,users.old.session);newHTTP=await createAudioHttpFixture(pg,users.new.id,users.new.session);oldHTTP.state.objects=http.state.objects;newHTTP.state.objects=http.state.objects;
  const media=await readFile(new URL('../../TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a',import.meta.url)),descriptor={version:1,mime_type:'audio/mp4',byte_count:media.length,duration_ms:1000,sha256:createHash('sha256').update(media).digest('hex')},intents=[],originalReceipts=[];
- for(const root of roots){const intent={version:1,account:owner.id,operation_id:randomUUID(),comment_id:randomUUID(),asset_id:randomUUID(),target:{task_id:root.id,task_generation:root.task_generation,project_id:root.project_id},caption:'Preserve the original published recording',audio:descriptor};const r=await http.call('publish',{intent,audio_base64:media.toString('base64')});check('normal personal publication '+root.id,r.status,200);originalReceipts.push((await r.json()).receipt);intents.push(intent)}
+ for(const root of roots){const intent={version:1,account:owner.id,operation_id:randomUUID(),comment_id:randomUUID(),asset_id:randomUUID(),target:{task_id:root.id,task_generation:root.task_generation,project_id:root.project_id},caption:'Preserve the original published recording',audio:descriptor};const r=await publishAudio(http,intent,media);check('normal personal publication '+root.id,r.status,200);originalReceipts.push((await r.json()).receipt);intents.push(intent)}
  const priorDownload=await oldHTTP.call('download',{comment_id:intents[0].comment_id});
  if(priorDownload.status!==200)report.oldReaderDiagnostic={body:await priorDownload.text(),access:await pg.scalar(`select to_jsonb(public.has_project_access(${lit(users.old.id)},${lit(p)}))`),direct:await pg.value(`public.taskfold_audio_comment_command('read',${lit(users.old.id)},${lit(users.old.session)},${j({comment_id:intents[0].comment_id})})`),objects:[http.state.objects.size,oldHTTP.state.objects.size],collaborators:await pg.scalar(`select jsonb_agg(jsonb_build_object('user',user_id,'status',status,'role',role)) from public.project_collaborators where project_id=${lit(p)}`)};
  check('old audience can read before transfer',priorDownload.status,200);await priorDownload.arrayBuffer();
@@ -70,7 +77,7 @@ try{
  await pg.raw('update taskfold_private.audio_comment_config set project_transfer_enabled=true,team_publication_enabled=true');
  const combinedProject=await project(),combinedTask=await task(combinedProject),combinedBody=scope(combinedProject),route=randomUUID();
  const combinedIntent={version:1,account:owner.id,operation_id:randomUUID(),comment_id:randomUUID(),asset_id:randomUUID(),target:{task_id:combinedTask.id,task_generation:combinedTask.task_generation,project_id:combinedProject},caption:'Combined policy synthetic recording',audio:descriptor};
- const combinedPublication=await http.call('publish',{intent:combinedIntent,audio_base64:media.toString('base64')});check('combined policy source publishes normally',combinedPublication.status,200);await combinedPublication.json();
+ const combinedPublication=await publishAudio(http,combinedIntent,media);check('combined policy source publishes normally',combinedPublication.status,200);await combinedPublication.json();
  await pg.raw(`insert into taskfold_private.email_routes(id,user_id,name,alias_hash,alias_domain,project_id,sender_email,requested_at,state) values(${lit(route)},${lit(owner.id)},'Synthetic combined route',${lit(createHash('sha256').update(route).digest('hex'))},'capture.example.invalid',${lit(combinedProject)},'synthetic@example.invalid',now(),'active')`);
  const combinedInspection=await rpc('inspect',combinedBody),combinedReview=await rpc('review',{...combinedBody,inspection_token:combinedInspection.inspection_token,decisions:[],connection_policy:'pause',recording_policy:'published_recordings_v1'});
  check('combined review binds recording count',combinedReview.recording_count,1);check('combined review binds connection policy',combinedReview.connection_policy,'pause');check('combined review includes email pause',combinedReview.connection_effects.email_routes_paused,1);
@@ -80,9 +87,11 @@ try{
  check('combined failed requests leave route active',await pg.scalar(`select to_jsonb(state) from taskfold_private.email_routes where id=${lit(route)}`),'active');
  const combinedReceipt=await rpc('adopt',combinedCommand);check('combined policies commit together',combinedReceipt.applied);check('combined receipt preserves recording count',combinedReceipt.recording_count,1);check('combined receipt preserves reviewed connection effects',combinedReceipt.connection_effects,combinedReview.connection_effects);check('combined commit pauses route',await pg.scalar(`select to_jsonb(state) from taskfold_private.email_routes where id=${lit(route)}`),'paused');check('combined commit registers recording custody',await pg.scalar(`select count(*)::int from taskfold_private.audio_comment_custody where operation_id=${lit(combinedIntent.operation_id)}`),1);
  check('combined exact command replays',(await rpc('adopt',combinedCommand)),{...combinedReceipt,replayed:true});
+ if(unfinished)unfinishedWire=await checkUnfinishedTransfer({pg,http,oldHTTP,newHTTP,owner,users,team,project,task,scope,rpc,command,identity,media,descriptor,check,expect});
  for(const fn of ['project_recording_transfer_supported(jsonb)','lock_project_adoption_audio(uuid[])','authorize_project_adoption_audio(uuid,uuid[])','finish_project_adoption_audio(uuid,uuid[],integer)'])for(const role of ['anon','authenticated','service_role'])check('private transfer helper stays unavailable '+role+' '+fn,await pg.scalar(`select to_jsonb(has_function_privilege(${lit(role)},${lit('taskfold_private.'+fn)},'execute'))`),false);
  wire={syntheticOnly:true,account:owner.id,origin:'https://synthetic.example',body,inspect:reviewed.inspect,decisions:reviewed.decisions,review:reviewed.review,command:c,receipt,replayed:replay};
  report.advisors=await pg.advisors();const prior=new Set(report.baselineAdvisors.result.map(x=>x.cache_key));check('no new advisor findings',report.advisors.result.filter(x=>!prior.has(x.cache_key)),[]);
 }catch(e){report.error={message:e.message,code:e.code};throw e}finally{report.gatewayErrors=[http,oldHTTP,newHTTP].filter(Boolean).flatMap(x=>x.state.errors);for(const x of [http,oldHTTP,newHTTP])if(x)await x.close();if(pg)report.containerRemoved=await pg.close();report.checkCount=Object.keys(report.checks).length;await writeFile(output,JSON.stringify(report,null,2)+'\n');}
 if(process.argv[3]==='--export-fixture'){assert(wire&&report.containerRemoved);await writeFile(new URL('../../TaskfoldTests/Fixtures/team-project-recording-transfer-v1.json',import.meta.url),JSON.stringify({...wire,containerRemoved:true},null,2)+'\n')}
+if(process.argv.includes('--export-unfinished-fixture')){assert(unfinishedWire&&report.containerRemoved);await writeFile(new URL('../../TaskfoldTests/Fixtures/team-project-unfinished-recordings-v1.json',import.meta.url),JSON.stringify({...unfinishedWire,containerRemoved:true},null,2)+'\n')}
 console.log(JSON.stringify({checks:report.checkCount,containerRemoved:report.containerRemoved}));

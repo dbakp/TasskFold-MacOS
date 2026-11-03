@@ -1,0 +1,29 @@
+{
+  "reviewed": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "3b8eecd135c1834f83e867c01bbbe40b2490a973",
+  "ownSQLChecks": 151,
+  "ownFocusedClientTests": 83,
+  "ownFocusedClientFailures": 0,
+  "coreLogSHA256": "2b343ebe9f07b08eb841d965003a3fea4c8cc0b48a34f097390d773a01d87033",
+  "ownAppRunnerBuildAndStrictSignatures": true,
+  "ownBuildStatus": "passed",
+  "nativeSeparateRecordingConsentAccepted": false,
+  "nativeTransferRetryAccepted": false,
+  "genuineAuthOrProvider": false,
+  "fullSchemaParity": false,
+  "normalUseEnabled": false,
+  "deployed": false,
+  "sourceSHA256": {
+    "Taskfold/Core/TeamProjectAdoption.swift": "ba08d46816caba6e51d97c05332f990c2ec41661e2dad2210f2d014d9f56f8e9",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "937bcb498481f03881bdea85dea699f5cf4e4bd56cdb32b04dbd2f46d2316aeb",
+    "TaskfoldTests/TeamProjectAdoptionTests.swift": "aef0cd30ab7f0c2b070d0eeb17a5376e0c2245e7e52aae77130c6ec1226d2f1b",
+    "TaskfoldTests/Fixtures/team-project-unfinished-recordings-v1.json": "8ca7197de0be033760dc035979442972f09d0be99bda540a57b0e51e4e8e4e88",
+    "Scripts/Database/project-unfinished-recordings-checks.mjs": "c7a8b99082967e0f23eee9e94a7b417695f69a94b2d2c6fe28cc6faf59997890",
+    "Scripts/Database/test-project-recording-transfer.mjs": "6ef756b18fc538ca82e56ae8257eae1fa30cfe0e9951a92bd4f54a6da64f892b",
+    "Scripts/Database/audio-comments-postgres-http-fixture.mjs": "8bc9d070cbde16804c9a447c965a5f66286caf4362cb4743bc537819fd00f93c",
+    "supabase/migrations/20261103050051_reviewed_project_unfinished_recordings.sql": "a7e4640a730f5e8d703abb8f97609c36d22b991b9ea09c281b06509578e85fb3"
+  },
+  "ownBuildPhase": "unfinished-project-transfer",
+  "ownBuildLogSHA256": "e96d72ab92af0ecd35afeb8b0290aaac949fbe7b016d618fe6301f643b664efa"
+}

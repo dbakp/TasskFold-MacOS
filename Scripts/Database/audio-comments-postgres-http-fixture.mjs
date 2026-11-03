@@ -22,6 +22,7 @@ export async function createAudioHttpFixture(pg, actor, session, options = {}) {
     noWrite: false,
     corrupt: false,
     afterGet: null,
+    afterPut: null,
     errors: [],
   };
   const server = createServer(async (req, res) => {
@@ -185,6 +186,7 @@ export async function createAudioHttpFixture(pg, actor, session, options = {}) {
             }::jsonb)`,
           );
         }
+        if (state.afterPut) await state.afterPut();
         if (state.lostAck) {
           req.socket.destroy();
           return;

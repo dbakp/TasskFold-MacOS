@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Whole-project recording custody",
-  "latest": "The iPhone pending-request screen now passes fresh Review/Cancel/Publish, missing approval, expired-local-proof Check and Close/cold recovery with one upload and unchanged private data. Both app builds pass. Whole-project media policies and wider platform/integration acceptance remain; normal use stays disabled.",
+  "latest": "Both apps now support a separately reviewed choice to stop unfinished recording sends while moving published recordings into a team. Each repo passes 151 local SQL/gateway checks and 83 client tests; both app/runner builds and signatures pass. Native consent/retry and retained/legacy/other-realm policies remain open; normal use stays disabled.",
   "next": [
-    "Implement the remaining pending/retained/legacy/mixed recording policies and realm directions for whole-project transfers. Preserve private ownership, exact original requests and explicit audience consent. Then accept native transfer consent/recovery across platforms; do not repeat unchanged iPhone approval checks.",
+    "Accept the new native move-published/stop-unfinished consent and saved-request recovery. Then implement separately reviewed retained/legacy/other mixed-media policies and realm directions; preserve private files, original requests and explicit audience consent.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Both apps implement explicit review and durable approval. The iPhone main Check and pending Review/Cancel, Resume, missing/locally expired Check and Close/cold recovery pass against local SQL/Storage. Whole-project media policies, other platforms and wider integration remain; ordinary use stays disabled.",
+              "detail": "Both apps implement explicit review and durable approval. Published plus unfinished-send project moves now pass local SQL/client checks with atomic rollback, exact retry and cleanup. Native transfer consent/recovery, retained/legacy/other realms and wider integration remain; ordinary use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -707,7 +707,7 @@
                 },
                 {
                   "state": "verify",
-                  "title": "Published project recordings: local consent, custody and receipt verified; private-draft and native checks remain"
+                  "title": "Published and unfinished project sends: local consent, atomic move/stop, cleanup and receipt verified; native acceptance remains"
                 },
                 {
                   "state": "done",
@@ -892,7 +892,9 @@
             "publication-approval-recovery/controller-verification.json",
             "pending-approval-boundaries/README.md",
             "pending-approval-boundaries/verification.json",
-            "pending-approval-boundaries/phone-verification.json"
+            "pending-approval-boundaries/phone-verification.json",
+            "project-unfinished-recordings/README.md",
+            "project-unfinished-recordings/verification.json"
           ],
           "focus": true
         },
@@ -1137,9 +1139,11 @@
     "preserving-json/verification.json": "32245580dd9fdd9cc710c036398ed1c8a26e3ba2e156fb8bf721808db242f3b1",
     "project-recording-inventory/README.md": "2db5f9884b77dd997df2488073487f65c910dff5be00ad0755c915fdb5d470bf",
     "project-recording-inventory/verification.json": "c6f022949539647a7ab01548da32baecad0c44de2277226c4b2826c80805bc57",
-    "project-recording-transfer/README.md": "2c121635dc5eb0072a4eb1b9ce465d8da2e1bee42304986833f2b21024a54223",
+    "project-recording-transfer/README.md": "2065ed8bbefcf178a6d2f694a33b92525d0d5c7daabb8c0da2bb952ca6fd56b6",
     "project-recording-transfer/database-verification.json": "60fc26847b6d973597cc892ff272b98d586d863b802de391bcceb9bd390e2f4e",
     "project-recording-transfer/verification.json": "09f44acd38f16ff605702a4936e08b8239dffd2f126d2318325a44a8c97cd301",
+    "project-unfinished-recordings/README.md": "9dd77ebb6b2ba9dab63cb602f30e4a76fb802cd2560fed3f94eff2be7a50f214",
+    "project-unfinished-recordings/verification.json": "6cd3e38bc265969030e59ba67fc805ae94d294ee51866675374d98bafea75535",
     "publication-approval-recovery/README.md": "773ae234d7e9c6bd404c508c26e65317f2050c6afce8dab53cd598e5929b8564",
     "publication-approval-recovery/controller-verification.json": "8597019e092fae584ecee84b90d33c26898b90388e981bf04f0fd736a30dd027",
     "publication-approval-recovery/phone-verification.json": "264cb0224561845d743b84d7efb2959be16966b7c58205ce60d4e8356ad39d71",

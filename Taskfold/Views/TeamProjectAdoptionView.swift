@@ -42,6 +42,7 @@ struct TeamProjectAdoptionView: View {
     @State private var inspection: TeamProjectAdoptionInspection?
     @State private var pauseConnections = false
     @State private var recordingConsent = false
+    @State private var stopUnfinishedConsent = false
     @State private var choices: [String: TeamProjectAdoptionDecision.Choice] = [:]
     @State private var review: TeamProjectAdoptionReview?
     @State private var stamp: String?
@@ -118,7 +119,7 @@ struct TeamProjectAdoptionView: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(accepted != nil ? "Done" : model?.pending != nil ? "Close" : "Cancel") { dismiss() }.disabled(preparing || model?.busy == true).accessibilityIdentifier("closeProjectTransfer") } }
             .interactiveDismissDisabled(preparing || model?.busy == true)
             .task(id: lifecycle) { await start() }
-            .onChange(of: phase) { _, value in if value != .active { epoch = UUID(); preparing = false; inspection = nil; review = nil; choices = [:]; stamp = nil; recordingConsent = false } else if model?.receipt != nil { Task { await received() } } }
+            .onChange(of: phase) { _, value in if value != .active { epoch = UUID(); preparing = false; inspection = nil; review = nil; choices = [:]; stamp = nil; recordingConsent = false; stopUnfinishedConsent = false } else if model?.receipt != nil { Task { await received() } } }
             .onChange(of: choices) { _, _ in invalidateRecordingReview() }
             .onChange(of: pauseConnections) { _, _ in invalidateRecordingReview() }
             .onDisappear { epoch = UUID(); model?.close() }
@@ -164,7 +165,7 @@ struct TeamProjectAdoptionView: View {
                 if recordings.pending > 0 { LabeledContent("Unfinished recordings", value: String(recordings.pending)) }
                 if recordings.retained > 0 { LabeledContent("Removed recordings awaiting cleanup", value: String(recordings.retained)) }
                 if recordings.unavailable > 0 { LabeledContent("Recordings needing attention", value: String(recordings.unavailable)) }
-                Text(i.recordingTransferSupported ? "Published recordings move with these projects. Their access follows the team settings you review below." : "These recordings need attention or transfer support before the projects can move.")
+                Text(i.supportedRecordingPolicy == .stopUnfinished ? "Published recordings can move with these projects. Review the separate choice to stop unfinished sends before continuing." : (i.recordingTransferSupported ? "Published recordings move with these projects. Their access follows the team settings you review below." : "These recordings need attention or transfer support before the projects can move."))
                     .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("projectTransferRecordingCustody")
             }
@@ -187,12 +188,22 @@ struct TeamProjectAdoptionView: View {
     }
     private func decisions(_ i: TeamProjectAdoptionInspection) -> some View {
         Group {
-            if i.needsRecordingCustody && i.recordingTransferSupported {
+            if i.needsRecordingCustody && i.supportedRecordingPolicy != nil {
                 Section("Recording access") {
                     Text("People with access to the destination projects can listen. Previously downloaded copies cannot be recalled.")
                         .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    Toggle("Move \(i.recordingInventory?.published ?? 0) published \((i.recordingInventory?.published ?? 0) == 1 ? "recording" : "recordings") with these projects", isOn: $recordingConsent)
-                        .disabled(preparing).accessibilityIdentifier("projectTransferRecordingConsent")
+                    if let inventory = i.recordingInventory {
+                        if inventory.published > 0 {
+                            Toggle("Move \(inventory.published) published \(inventory.published == 1 ? "recording" : "recordings") with these projects", isOn: $recordingConsent)
+                                .disabled(preparing).accessibilityIdentifier("projectTransferRecordingConsent")
+                        }
+                        if inventory.pending > 0 {
+                            Toggle("Stop \(inventory.pending) unfinished \(inventory.pending == 1 ? "send" : "sends")", isOn: $stopUnfinishedConsent)
+                                .disabled(preparing).accessibilityIdentifier("projectTransferStopRecordingConsent")
+                            Text("These sends cannot finish in the team. Saved recordings on their authors’ devices stay unchanged.")
+                                .font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                 }
             }
             if i.hasConnections && i.supportsConnectionPause {
@@ -220,7 +231,7 @@ struct TeamProjectAdoptionView: View {
                 Text("Retiring a personal grant does not remove access supplied by team visibility or an administrator role. The next step shows the effective access.").font(.footnote).foregroundStyle(.secondary)
                 Text("All \(i.collaborators.count) personal invitation records will close, including pending invitations. No team membership or invitation is created.").font(.footnote).foregroundStyle(.secondary)
             }
-            Section { Button("Review the transfer") { Task { await prepareReview(i) } }.disabled(preparing || choices.count != i.people.count || (i.hasConnections && i.supportsConnectionPause && !pauseConnections) || (i.needsRecordingCustody && (!i.recordingTransferSupported || !recordingConsent))).accessibilityIdentifier("reviewProjectTransfer"); Button("Back to projects") { resetReview() } }
+            Section { Button("Review the transfer") { Task { await prepareReview(i) } }.disabled(preparing || choices.count != i.people.count || (i.hasConnections && i.supportsConnectionPause && !pauseConnections) || !recordingConsentsMet(i)).accessibilityIdentifier("reviewProjectTransfer"); Button("Back to projects") { resetReview() } }
         }
     }
     @ViewBuilder private func connectionEffectRows(_ effects: TeamProjectConnectionEffects) -> some View {
@@ -258,14 +269,15 @@ struct TeamProjectAdoptionView: View {
             }
             Section {
                 if r.inspection.needsRecordingCustody && r.recordingPolicy == nil { Label("Review recording access before transferring these projects.", systemImage: "waveform").foregroundStyle(.secondary) }
-                if let count = r.recordingCount { LabeledContent("Published recordings moving", value: String(count)).accessibilityIdentifier("projectTransferRecordingSummary") }
+                if let count = r.recordingCount, count > 0 { LabeledContent("Published recordings moving", value: String(count)).accessibilityIdentifier("projectTransferRecordingSummary") }
+                if let count = r.unfinishedRecordingCount { LabeledContent("Unfinished sends stopping", value: String(count)).accessibilityIdentifier("projectTransferStopRecordingSummary") }
                 if r.needsFileCustody { Label("Some files need a custody review before this branch can transfer.", systemImage: "paperclip.badge.ellipsis").foregroundStyle(.secondary) }
                 if r.needsIntegrationPause { Label("Personal email or webhook connections need a pause or destination review first.", systemImage: "link.badge.plus").foregroundStyle(.secondary) }
                 if r.inspection.inflightUpdates > 0 { Text("An outgoing update is still finishing. Wait a minute, then refresh the project review.").foregroundStyle(.secondary) }
                 if !r.canCommit && r.inspection.inflightUpdates == 0 && !r.needsFileCustody && !r.needsIntegrationPause && !r.inspection.needsRecordingCustody { Text("Project transfers have not been enabled for this service yet.").foregroundStyle(.secondary) }
                 Text("These projects will belong to the team. Returning them to personal ownership is a separate transfer; there is no automatic Undo.").font(.callout).fixedSize(horizontal: false, vertical: true)
                 Button("Transfer \(r.inspection.projects.count == 1 ? "project" : "\(r.inspection.projects.count) projects") to team", systemImage: "folder.badge.arrow.forward") { Task { await confirm(r) } }.buttonStyle(.borderedProminent).disabled(preparing || model?.busy == true || !r.canCommit || r.expires <= Date()).accessibilityIdentifier("confirmProjectTransfer")
-                Button("Back to access choices") { review = nil; recordingConsent = false }.disabled(preparing || model?.busy == true)
+                Button("Back to access choices") { review = nil; recordingConsent = false; stopUnfinishedConsent = false }.disabled(preparing || model?.busy == true)
             }
         }
     }
@@ -274,7 +286,8 @@ struct TeamProjectAdoptionView: View {
             Label("The result needs confirmation", systemImage: "tray.and.arrow.up").font(.headline)
             Text("\(c.projects.count) reviewed projects · \(c.scope.visibility == .private ? "Private" : "Team-visible")")
             Text("Retry sends the exact saved request, even if the review expired or team access changed. Task contents are refreshed separately.").font(.callout).foregroundStyle(.secondary)
-            if let count = c.recordingCount { LabeledContent("Reviewed published recordings", value: String(count)) }
+            if let count = c.recordingCount, count > 0 { LabeledContent("Reviewed published recordings", value: String(count)) }
+            if let count = c.unfinishedRecordingCount { LabeledContent("Reviewed unfinished sends to stop", value: String(count)) }
             if let effects = c.connectionEffects {
                 Text("This saved request includes these connection actions. Retry preserves later changes.").font(.footnote).foregroundStyle(.secondary)
                 connectionEffectRows(effects)
@@ -288,13 +301,19 @@ struct TeamProjectAdoptionView: View {
         Section {
             Label("Projects transferred", systemImage: "checkmark.circle.fill").font(.title2.weight(.semibold)).foregroundStyle(.tint).accessibilityIdentifier("projectTransferSuccess").accessibilityFocused($resultFocused).onAppear { resultFocused = true }
             Text("All \(r.command.projects.count) projects have transferred. Saved work and history are preserved.")
-            if let count = r.command.recordingCount { LabeledContent("Recordings transferred", value: String(count)) }
+            if let count = r.command.recordingCount, count > 0 { LabeledContent("Recordings transferred", value: String(count)) }
+            if let count = r.command.unfinishedRecordingCount { LabeledContent("Unfinished sends stopped", value: String(count)) }
             if needsRefresh { Text("The transfer is confirmed. Refresh the workspace to review current access and any preserved drafts.").foregroundStyle(.secondary); if store.accessRecoveryPending { AccessRecoveryBanner() }; Button("Refresh workspace") { Task { preparing = true; needsRefresh = !(await store.refreshAfterProjectTransfer(r)); preparing = false } }.disabled(preparing) }
             else { Text("Your current accessible projects have been refreshed.").foregroundStyle(.secondary) }
         }
     }
-    private func invalidateRecordingReview() { recordingConsent = false; guard inspection != nil, accepted == nil else { return }; epoch = UUID(); preparing = false; review = nil; message = nil }
-    private func resetReview() { epoch = UUID(); inspection = nil; review = nil; stamp = nil; choices = [:]; pauseConnections = false; recordingConsent = false; message = nil }
+    private func recordingConsentsMet(_ inspection: TeamProjectAdoptionInspection) -> Bool {
+        guard inspection.needsRecordingCustody else { return true }
+        guard inspection.supportedRecordingPolicy != nil, let inventory = inspection.recordingInventory else { return false }
+        return (inventory.published == 0 || recordingConsent) && (inventory.pending == 0 || stopUnfinishedConsent)
+    }
+    private func invalidateRecordingReview() { recordingConsent = false; stopUnfinishedConsent = false; guard inspection != nil, accepted == nil else { return }; epoch = UUID(); preparing = false; review = nil; message = nil }
+    private func resetReview() { epoch = UUID(); inspection = nil; review = nil; stamp = nil; choices = [:]; pauseConnections = false; recordingConsent = false; stopUnfinishedConsent = false; message = nil }
     private func start() async {
         model?.close(); resetReview(); selected = []; accepted = nil; preparing = false
         guard store.projectTransferRecoveryAvailable, let origin = try? store.backend.accountRemovalOrigin else { loaded = nil; model = nil; return }
@@ -310,7 +329,7 @@ struct TeamProjectAdoptionView: View {
             let id = UUID(); epoch = id; preparing = true; message = nil; defer { if epoch == id { preparing = false } }
             let i = try await store.backend.inspectProjectAdoption(scope)
             guard current, epoch == id, before == store.projectTransferAuthorStamp(scope, projects: i.projects.map(\.id)) else { throw TeamProjectAdoptionValue.invalid }
-            inspection = i; stamp = before; choices = [:]; pauseConnections = false; recordingConsent = false; review = nil
+            inspection = i; stamp = before; choices = [:]; pauseConnections = false; recordingConsent = false; stopUnfinishedConsent = false; review = nil
         } catch { guard current else { return }; message = "The contents couldn’t be reviewed. Finish any pending sync or task edits, then refresh the team and try again." }
     }
     private func prepareReview(_ i: TeamProjectAdoptionInspection) async {
@@ -318,13 +337,13 @@ struct TeamProjectAdoptionView: View {
         let id = UUID(); epoch = id; preparing = true; message = nil; defer { if epoch == id { preparing = false } }
         do {
             let d = try i.people.map { person -> TeamProjectAdoptionDecision in guard let choice = choices[person.decisionID!], let user = person.user else { throw TeamProjectAdoptionValue.invalid }; return try TeamProjectAdoptionDecision(project: person.project, user: user, choice: choice) }
-            let value = try await store.backend.reviewProjectAdoption(i, decisions: d, connectionPolicy: pauseConnections ? .pause : nil, recordingPolicy: recordingConsent ? .published : nil)
+            let value = try await store.backend.reviewProjectAdoption(i, decisions: d, connectionPolicy: pauseConnections ? .pause : nil, recordingPolicy: i.needsRecordingCustody && recordingConsentsMet(i) ? i.supportedRecordingPolicy : nil)
             guard reviewCurrent, epoch == id else { throw TeamProjectAdoptionValue.invalid }; review = value
         } catch { guard current, epoch == id else { return }; message = "The saved contents or access may have changed. Start a fresh review before transferring." }
     }
     private func confirm(_ r: TeamProjectAdoptionReview) async {
-        guard reviewCurrent, review == r, r.recordingPolicy == nil || recordingConsent, let model else { message = "Finish any edits and refresh this review before transferring."; return }
-        do { let command = try TeamProjectAdoptionCommand(review: r); await model.send(command, canAuthor: { reviewCurrent && review == r && (r.recordingPolicy == nil || recordingConsent) }); await received() }
+        guard reviewCurrent, review == r, r.recordingPolicy == nil || recordingConsentsMet(r.inspection), let model else { message = "Finish any edits and refresh this review before transferring."; return }
+        do { let command = try TeamProjectAdoptionCommand(review: r); await model.send(command, canAuthor: { reviewCurrent && review == r && (r.recordingPolicy == nil || recordingConsentsMet(r.inspection)) }); await received() }
         catch { message = "This review expired or changed. Review the transfer again." }
     }
     private func received() async {

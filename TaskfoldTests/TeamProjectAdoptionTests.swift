@@ -538,3 +538,112 @@ final class TeamProjectAdoptionTests: XCTestCase {
     }
 
 }
+
+extension TeamProjectAdoptionTests {
+    private func unfinishedFixture(only: Bool = false) throws -> ([String: JSON], TeamProjectAdoptionInspection, TeamProjectAdoptionReview, TeamProjectAdoptionCommand) {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "team-project-unfinished-recordings-v1", withExtension: "json", subdirectory: "Fixtures"))
+        let captured = try JSONDecoder().decode([String: JSON].self, from: Data(contentsOf: url))
+        XCTAssertEqual(captured["syntheticOnly"], .bool(true)); XCTAssertEqual(captured["containerRemoved"], .bool(true))
+        var raw = only ? captured["pendingOnly"]!.object : captured
+        raw["account"] = captured["account"]; raw["origin"] = captured["origin"]
+        let b = raw["body"]!.object
+        let scope = try TeamProjectAdoptionScope(account: raw["account"]!.text, origin: raw["origin"]!.text, team: b["team_id"]!.text, roots: b["roots"]!.list.map(\.text), visibility: .team)
+        let inspection = try TeamProjectAdoptionInspection(raw["inspect"]!.object, scope: scope)
+        let decisions = try raw["decisions"]!.list.map { try TeamProjectAdoptionDecision($0.object) }
+        let review = try TeamProjectAdoptionReview(raw["review"]!.object, inspection: inspection, decisions: decisions, recordingPolicy: .stopUnfinished)
+        let command = try TeamProjectAdoptionCommand(review: review, requestID: UUID(uuidString: raw["command"]!.object["request_id"]!.text)!, now: review.expires.addingTimeInterval(-60))
+        return (raw, inspection, review, command)
+    }
+    func testActualSQLMixedRecordingMoveAndStopContract() throws {
+        let (raw, i, review, command) = try unfinishedFixture()
+        XCTAssertFalse(i.recordingTransferSupported); XCTAssertTrue(i.recordingUnfinishedTransferSupported)
+        XCTAssertEqual(i.supportedRecordingPolicy, .stopUnfinished); XCTAssertTrue(review.canCommit)
+        XCTAssertEqual(command.recordingCount, 1); XCTAssertEqual(command.unfinishedRecordingCount, 2)
+        XCTAssertEqual(command.body, raw["command"]!.object)
+        XCTAssertEqual(command.body["recording_count"], .number(1)); XCTAssertEqual(command.body["unfinished_recording_count"], .number(2))
+        XCTAssertFalse(try command.confirmed(raw["receipt"]!.object).replayed)
+        XCTAssertTrue(try command.confirmed(raw["replayed"]!.object).replayed)
+        XCTAssertEqual(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(command)), command)
+    }
+    func testActualSQLPendingOnlyMoveDoesNotInventPublishedRecordings() throws {
+        let (raw, i, review, command) = try unfinishedFixture(only: true)
+        XCTAssertTrue(review.canCommit); XCTAssertFalse(i.recordingTransferSupported)
+        XCTAssertEqual(command.recordingPolicy, .stopUnfinished); XCTAssertEqual(command.recordingCount, 0); XCTAssertEqual(command.unfinishedRecordingCount, 1)
+        XCTAssertEqual(command.body, raw["command"]!.object); XCTAssertFalse(try command.confirmed(raw["receipt"]!.object).replayed)
+    }
+    func testUnfinishedStoppingRequiresItsOwnExplicitPolicy() throws {
+        let (raw, i, review, _) = try unfinishedFixture()
+        XCTAssertThrowsError(try i.reviewBody(review.decisions, recordingPolicy: .published))
+        let none = try i.reviewBody(review.decisions)
+        XCTAssertNil(none["recording_policy"]); XCTAssertNil(none["recording_count"]); XCTAssertNil(none["unfinished_recording_count"])
+        var without = raw["review"]!.object
+        for key in ["recording_policy", "recording_count", "unfinished_recording_count"] { without.removeValue(forKey: key) }
+        let noChoice = try TeamProjectAdoptionReview(without, inspection: i, decisions: review.decisions)
+        XCTAssertFalse(noChoice.canCommit)
+        XCTAssertThrowsError(try TeamProjectAdoptionCommand(review: noChoice, now: review.expires.addingTimeInterval(-60)))
+    }
+    func testUnfinishedStoredCountsCannotBeStrippedOrChangeTheSavedBody() throws {
+        let (_, _, _, command) = try unfinishedFixture()
+        let encoded = try JSONDecoder().decode([String: JSON].self, from: JSONEncoder().encode(command))
+        for value in [JSON.null, .number(-1), .number(0), .number(1), .number(10001), .number(1.5), .bool(true)] {
+            var bad = encoded; bad["unfinishedRecordingCount"] = value
+            XCTAssertThrowsError(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(bad)))
+        }
+        var stripped = encoded; stripped.removeValue(forKey: "unfinishedRecordingCount")
+        XCTAssertThrowsError(try JSONDecoder().decode(TeamProjectAdoptionCommand.self, from: JSONEncoder().encode(stripped)))
+        var body = command.body; body["unfinished_recording_count"] = .number(1)
+        XCTAssertThrowsError(try TeamProjectAdoptionCommand(account: command.account, origin: command.origin, body: body, projects: command.projects, assignmentsCleared: command.assignmentsCleared, invitationsClosed: command.invitationsClosed, recordingCount: 1, unfinishedRecordingCount: 2))
+        body = command.body; body.removeValue(forKey: "recording_count")
+        XCTAssertThrowsError(try TeamProjectAdoptionCommand(account: command.account, origin: command.origin, body: body, projects: command.projects, assignmentsCleared: command.assignmentsCleared, invitationsClosed: command.invitationsClosed, recordingCount: 1, unfinishedRecordingCount: 2))
+    }
+    func testUnfinishedReceiptMustConfirmBothOriginalCountsAndPolicy() throws {
+        let (raw, _, _, command) = try unfinishedFixture()
+        for value in [JSON.null, .number(0), .number(1), .number(10001), .bool(true)] {
+            var changed = raw["receipt"]!.object; changed["unfinished_recording_count"] = value
+            XCTAssertThrowsError(try command.confirmed(changed))
+        }
+        var changed = raw["receipt"]!.object; changed["recording_count"] = .number(0)
+        XCTAssertThrowsError(try command.confirmed(changed))
+        changed = raw["receipt"]!.object; changed["recording_policy"] = .string(TeamProjectRecordingPolicy.published.rawValue)
+        XCTAssertThrowsError(try command.confirmed(changed))
+    }
+    func testUnfinishedCapabilityRejectsUnsupportedInventoryAndProtocol() throws {
+        let (raw, i, _, _) = try unfinishedFixture()
+        for key in ["pending", "retained", "unavailable"] {
+            var response = raw["inspect"]!.object, contents = response["contents"]!.object, inventory = contents["recording_custody"]!.object
+            inventory[key] = .number(key == "pending" ? 0 : 1); contents["recording_custody"] = .object(inventory); response["contents"] = .object(contents)
+            XCTAssertThrowsError(try TeamProjectAdoptionInspection(response, scope: i.scope))
+        }
+        var response = raw["inspect"]!.object, contents = response["contents"]!.object
+        contents["recording_unfinished_transfer"] = .object(["protocol": .number(2), "supported": .bool(true)])
+        response["contents"] = .object(contents); XCTAssertThrowsError(try TeamProjectAdoptionInspection(response, scope: i.scope))
+    }
+    @MainActor func testMixedRecordingConsentSurvivesColdExactRetry() async throws {
+        let (raw, _, review, command) = try unfinishedFixture(), io = AdoptionIO(), vault = TeamProjectAdoptionVault(io: io), peer = AdoptionPeer(raw["receipt"]!.object)
+        peer.lose = true
+        let first = TeamProjectAdoptionModel(account: command.account, origin: command.origin, vault: vault, service: peer, current: { true })
+        await first.send(command, canAuthor: { true }, now: review.expires.addingTimeInterval(-60))
+        XCTAssertEqual(first.pending, command); XCTAssertNil(first.receipt); first.close()
+        XCTAssertFalse(io.encoded.contains("audio_base64")); XCTAssertFalse(io.encoded.contains("Synthetic unfinished original kept privately"))
+        let cold = TeamProjectAdoptionModel(account: command.account, origin: command.origin, vault: vault, service: peer, current: { true })
+        await cold.load(); XCTAssertEqual(cold.pending?.unfinishedRecordingCount, 2)
+        await cold.retry(); XCTAssertNil(cold.pending); XCTAssertEqual(cold.receipt?.command, command)
+        XCTAssertEqual(peer.calls, [command, command])
+    }
+    @MainActor func testBackendCarriesExactPublishedAndUnfinishedChoices() async throws {
+        let (raw, i, review, command) = try unfinishedFixture()
+        let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [AdoptionHTTP.self]
+        let session = try JSONDecoder().decode(Session.self, from: Data("{\"access_token\":\"synthetic-auth\",\"refresh_token\":\"synthetic-refresh\",\"expires_in\":3600,\"user\":{\"id\":\"\(command.account)\"}}".utf8))
+        let backend = Backend(configuration: ["URL": command.origin, "Key": "synthetic-public"], http: URLSession(configuration: config), session: session, persistSession: { _ in })
+        var calls = 0
+        AdoptionHTTP.handler = { request, peer in
+            calls += 1; var data = request.httpBody ?? Data()
+            if let stream = request.httpBodyStream { stream.open(); defer { stream.close() }; var bytes = [UInt8](repeating: 0, count: 4096); while stream.hasBytesAvailable { let count = stream.read(&bytes, maxLength: bytes.count); if count <= 0 { break }; data.append(contentsOf: bytes.prefix(count)) } }
+            let body = try! JSONDecoder().decode([String: JSON].self, from: data)
+            XCTAssertEqual(body["body"], .object(try! i.reviewBody(review.decisions, recordingPolicy: .stopUnfinished)))
+            peer.finish(raw["review"]!.object)
+        }; defer { AdoptionHTTP.handler = nil }
+        let result = try await backend.reviewProjectAdoption(i, decisions: review.decisions, connectionPolicy: nil, recordingPolicy: .stopUnfinished)
+        XCTAssertEqual(result, review); XCTAssertEqual(calls, 1)
+    }
+}

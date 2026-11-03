@@ -44,3 +44,7 @@ Run resource-heavy checks sequentially and reuse existing build products. The da
 ## Audience follow-up
 
 The [publication audience foundation](../audio-publication-audience/README.md) now reproduces the old-private-intent gap and verifies signed audience checks in the local service and typed client transport. Native explicit approval and durable retry are now implemented in both apps, with bounded iPhone Check/Resume acceptance in the [recovery follow-up](../publication-approval-recovery/README.md). The [pending-boundary follow-up](../pending-approval-boundaries/README.md) also accepts bounded iPhone fresh review, missing/local-expiry Check and Close. Wider platforms and the remaining whole-project media policies stay open; the whole-project feature remains disabled.
+
+## Unfinished-send follow-up
+
+The [reviewed stop policy](../project-unfinished-recordings/README.md) now covers published plus unfinished sends, including pending-only branches, a crossing upload that loses access, atomic rollback and later cleanup. Each repo passes 151 local SQL/gateway checks and 83 client cases. Native consent/recovery, retained/legacy/other mixed contexts and realm directions remain open. The earlier pending refusal describes the published-only policy, which remains unchanged.
