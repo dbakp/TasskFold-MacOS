@@ -4,10 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Rich workflow creation",
-  "latest": "Both apps reuse a per-run task timestamp formatter. The rich diagnostic instantiation changed from 1.24 to 0.31 s. The iPhone accepts real template-sheet Create/Undo/cold return for 1,000 tasks and 6,000 nested items; both repos pass 109 tests and builds. Large-template opening/rendering and wider contexts remain.",
+  "focus": "P2 · Responsive template previews",
+  "latest": "Both apps prepare and reuse a cancellable background template preview. The iPhone accepts option editing without repeated validation, dismissal, changed-source hiding, and real large-template Create/Undo/cold return. Both repos pass 113 focused tests and own builds. Full scrolling, broader workflows and wider runtime checks remain.",
   "next": [
-    "Profile large-template opening/preview latency: TemplateRunView still validates definitions during main-actor rendering. Preserve source/workspace/cancellation guards if moving that read off the main actor. Rich local Store and real template-sheet Create/Undo/cold-return now have scoped iPhone acceptance. Continue actual large-list rendering, richer assignments, multiple projects and wider Mac/iPad/accessibility/cloud contexts without repeating unchanged accepted cases.",
+    "Finish the active P0 account-deletion recovery gaps: older attempts, residual-file repair and Mac protected-session/runtime acceptance. Preserve the three paused rollout gates and all other explicit deferrals.",
+    "Continue actual large-list scrolling/rendering, multiple-project/catalog/editor scaling, richer assignments and wider Mac/iPad/accessibility/cloud contexts. Filtered reads, assignment display, rich task construction and per-view background definition loading now have scoped acceptance; do not repeat unchanged accepted cases.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
@@ -448,7 +449,25 @@
             {
               "state": "build",
               "title": "Reduce remaining large-workflow save pauses",
-              "detail": "Filtered/name reads are reused; workflow timestamps now use one formatter per run. The rich diagnostic instantiation is 1.24 → 0.31 s. iPhone Create/Undo/cold return accepts 1,000 tasks/6,000 nested items through the real template sheet. Both own builds/Core pass. Opening/preview, scrolling, wider workflows and platforms remain."
+              "detail": "Scoped gains now cover filtered/display reads, rich task construction, and cancellable background template validation reused while editing options. iPhone native cases accept dismissal/source replacement and real 1,000-root/6,000-child Create/Undo/cold return. Both own builds/Core pass. Full rendering, wider workflows and platforms remain.",
+              "steps": [
+                {
+                  "state": "done",
+                  "title": "Reuse filtered task reads and assignment display names with scoped invalidation proof"
+                },
+                {
+                  "state": "done",
+                  "title": "Construct rich workflows efficiently; verify real Create, Undo and cold saved state"
+                },
+                {
+                  "state": "done",
+                  "title": "Prepare one cancellable background template preview and reuse it while editing options"
+                },
+                {
+                  "state": "verify",
+                  "title": "Finish actual scrolling/rendering, multiple-project scaling and wider platform/account/accessibility acceptance"
+                }
+              ]
             }
           ],
           "sources": [
@@ -468,7 +487,10 @@
             "rich-workflow-creation/verification.json",
             "rich-workflow-creation/iphone-after.json",
             "rich-workflow-creation/before-partial-diagnostic.json",
-            "rich-workflow-creation/before-failed-native.json"
+            "rich-workflow-creation/before-failed-native.json",
+            "workflow-definition-preview/README.md",
+            "workflow-definition-preview/verification.json",
+            "workflow-definition-preview/iphone-after.json"
           ],
           "focus": true
         },
@@ -1237,6 +1259,9 @@
     "team-audio-client/verification.json": "83eb182b51e8023548cd9f2d535caef107e460ccf3bf85456fc409dd375315e9",
     "transfer-redo/README.md": "566c6d5c8827e2da94797158156107ef355553eb6906a3e7a46ddf19bd76b2ac",
     "transfer-redo/verification.json": "9f0d45307cfa830c3af3934e43556f3ee217066994a6d542eca773381d45f6b0",
+    "workflow-definition-preview/README.md": "fb3db35fe0347ea543de3a87e12e4179f6516e4224d860f713c9600b12907063",
+    "workflow-definition-preview/iphone-after.json": "aadaaad40e1d9fead12db11bb6c7616ab9f2634c570a4c302a54478b9d4296d9",
+    "workflow-definition-preview/verification.json": "dea1e754b6163da3f62c7fcebe2cf79029bb5f7d1eff6cb1911a553dc13896cf",
     "workspace-read-reuse/README.md": "f3d85846dba1f28e9f4d155d87b2d8f33f371364c8122015fb20549b4463e409",
     "workspace-read-reuse/iphone-after.json": "196c36c39aad694b2db60f3fabb8998a39e0398ca6c744a1eef47cedad0c05b8",
     "workspace-read-reuse/iphone-before.json": "e072093f1a93298596e0fdda0909f8dcec59bae2b6b06635756de27af4b2d0bd",

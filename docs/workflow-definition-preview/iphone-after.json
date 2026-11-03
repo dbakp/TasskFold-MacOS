@@ -1,0 +1,97 @@
+{
+  "syntheticOnly": true,
+  "nativeActualStoreCreationUndoColdReload": true,
+  "genuineAuthOrProvider": false,
+  "releaseOrHardwarePerformanceClaim": false,
+  "deployed": false,
+  "xcodeExitCode": 0,
+  "summary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 2,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793702934.886,
+    "passedTests": 2,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793702774.135,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 2
+  },
+  "preview": {
+    "reuseCancelSourceReplacementAccepted": true,
+    "observations": {
+      "reuse": {
+        "seconds": 0.315506166,
+        "cancelled": false,
+        "accepted": true,
+        "sourceCurrent": true,
+        "mainActorPulses": 0,
+        "loads": 1
+      },
+      "replace": {
+        "accepted": false,
+        "seconds": 3.305432666,
+        "mainActorPulses": 140,
+        "sourceCurrent": false,
+        "cancelled": true,
+        "loads": 1
+      },
+      "cancel": {
+        "accepted": false,
+        "mainActorPulses": 153,
+        "seconds": 2.348429542,
+        "sourceCurrent": true,
+        "loads": 1,
+        "cancelled": true
+      }
+    }
+  },
+  "actualTemplateSheet": {
+    "actualTemplateSheetAccepted": true,
+    "createdChildren": 6000,
+    "undoAndColdStateAccepted": true,
+    "createdRoots": 1000,
+    "sourcePreserved": true
+  },
+  "sourceSHA256": {
+    "Taskfold/Views/WorkflowViews.swift": "bacc0acc21b3e03e10a1ce78bb6b0e4fde655768e8d42b44a582c60df7965473",
+    "Taskfold/Core/Store.swift": "e79e3730307ab20ebedd11f57a9b07bdb2e2aa5125ad62478a4e6a2bd18b9d84",
+    "Taskfold/TeamTemplateNativeFixture.swift": "c987468246430133b89a405a71d28ddd464885a5994d7b1e3ba995d2bb39440e",
+    "Taskfold/Views/TaskEditor.swift": "15f701dfafd45cc5e15b8565ee0df4aecdae2ca97516b9e06e6012a4f52fb691",
+    "TaskfoldUITests/TeamTaskCreationUITests.swift": "dd8f85ede1acb46c961e32cda91936b4b40b49910f194145c73ab5d813bd6a53",
+    "Taskfold/Core/TaskActivity.swift": "f8603b4e70321a08594d7971816eae228fadfd2c7bc65f60d2c009cab9a50f62",
+    "Taskfold/Core/ProjectWorkflows.swift": "6c6d21537d914113da7aa16ba8e8c51551aa436726b59064b1cccb37f1e94171",
+    "Taskfold/Core/Models.swift": "9c25868dc3f12eedec7de228569d63e8cee29375997586139014519d0b7b20eb"
+  },
+  "codeSHA256": {
+    "Taskfold": "8533f36964d836222acfa14b2dd063863c87dd3d11e73a0f189f8bc9ed8d1e15",
+    "Taskfold.debug.dylib": "c443d7913318b0d1adbbc6b2368447c0a0ebbe6d9d3d997157de64d0a0fb18ad"
+  },
+  "accepted": true,
+  "ownedSimulatorRestored": true
+}

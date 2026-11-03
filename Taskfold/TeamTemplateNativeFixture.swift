@@ -370,8 +370,8 @@ import CryptoKit
 
 @MainActor struct WorkflowUndoNativeFixtureView: View {
     @Environment(Store.self) private var store
-    @State private var presenting = false
     @State private var scaleOriginal: Snapshot?
+    @State private var runSource: Record?
     var body: some View {
         NavigationStack {
             Form {
@@ -416,7 +416,18 @@ import CryptoKit
                     Text(store.workflowPreparedLocalHistoryUsed && store.workflowPreparedNormalizationUsed ? "Prepared history used" : "Ordinary history used").accessibilityIdentifier("preparedHistoryState")
                     Button("Restore local fixture", action: restoreScale).accessibilityIdentifier("restoreLocalWorkflowFixture")
                 }
-                Button("Use native workflow") { presenting = true }.accessibilityIdentifier("openNativeWorkflow")
+                Button("Use native workflow") {
+                    runSource = store.record(WorkflowTemplate.table, id: WorkflowUndoNativePeer.templateID) ?? WorkflowUndoNativePeer.template
+                    if ProcessInfo.processInfo.arguments.contains("--workflow-definition-source-change") {
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(2))
+                            guard WorkflowUndoNativePeer.enabled, var row = store.record(WorkflowTemplate.table, id: WorkflowUndoNativePeer.templateID) else { return }
+                            row["name"] = .string("Updated source")
+                            store.snapshot.tables[WorkflowTemplate.table] = [row]
+                            try? store.persist()
+                        }
+                    }
+                }.accessibilityIdentifier("openNativeWorkflow")
                 Button("Attempt oversized workflow") {
                     var row = Record.task(user: store.userID); row["title"] = .string("Oversized workflow proof")
                     row["description"] = .string(String(repeating: "x", count: WorkflowUndo.maximumBytes))
@@ -439,7 +450,7 @@ import CryptoKit
                     Text("Saved tasks: \(store.tasks.count)").accessibilityIdentifier("nativeWorkflowSavedTaskCount")
                 } else { ForEach(store.tasks) { task in Text(task.title) } }
             }.navigationTitle("Workflow test")
-        }.sheet(isPresented: $presenting) { TemplateRunView(template: WorkflowUndoNativePeer.template) }
+        }.sheet(item: $runSource) { source in TemplateRunView(template: source) }
             .alert("Workflow needs attention", isPresented: Binding(get: { store.error != nil }, set: { if !$0 { store.error = nil } })) {
                 Button("OK") { store.error = nil }
             } message: { Text(store.error ?? "") }

@@ -1031,3 +1031,80 @@ extension ProjectWorkflowsTests {
         XCTAssertEqual(results.count, 12); XCTAssertEqual(count, 36)
     }
 }
+
+extension ProjectWorkflowsTests {
+    func testRichDefinitionValidationDiagnostic() throws {
+        let document = RichDefinitionDiagnosticDocument.make(count: 1000)
+        let start = ContinuousClock.now
+        let first = try WorkflowTemplate(document: document)
+        let middle = ContinuousClock.now
+        let second = try WorkflowTemplate(document: document)
+        let end = ContinuousClock.now
+        XCTAssertEqual(first.document, second.document)
+        XCTAssertEqual(first.tasks.count, 1000)
+        func seconds(_ duration: Duration) -> Double {
+            Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
+        }
+        print("RICH_DEFINITION_VALIDATION \(seconds(start.duration(to: middle))) \(seconds(start.duration(to: end)))")
+    }
+}
+
+private enum RichDefinitionDiagnosticDocument {
+    static func make(count: Int) -> JSON {
+            func children(_ root: Int) -> [JSON] {
+                return (0..<3).map { child in .object([
+                    "id": .string("child-\(root)-\(child)"), "title": .string("Design step \(child + 1)"),
+                    "description": .string("Review the next iteration and keep these instructions."),
+                    "priority": .number(2), "duration_minutes": .number(15), "planned_offset": .number(2), "deadline_offset": .number(4),
+                    "project_id": .string("root"), "section_id": .string("s\(root)"),
+                    "labels": .array([.object(["name": .string("Label \(root)")])]),
+                    "subtasks": .array([.object(["id": .string("leaf-\(root)-\(child)"), "title": .string("Approve the details"),
+                        "description": .string("Keep the nested checklist intact."), "priority": .number(3), "duration_minutes": .number(5),
+                        "project_id": .string("root"), "section_id": .string("s\(root)"), "labels": .array([]), "subtasks": .array([])])])
+                ]) }
+            }
+            return .object(["version": .number(1), "kind": .string("project"),
+                "projects": .array([.object(["id": .string("root"), "name": .string("Scale workflow")])]),
+                "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
+                "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array(children($0))]) })])
+    }
+}
+extension ProjectWorkflowsTests {
+    func testDefinitionPreviewScopeRejectsChangedSourceWorkspaceAndSession() throws {
+        let source = Record(["id": .string("template"), "document": RichDefinitionDiagnosticDocument.make(count: 1)])
+        let workspace = WorkspaceBinding(account: owner, generation: UUID()), session = UUID()
+        let request = WorkflowDefinitionRequest(workspace: workspace, session: session, source: source)
+        XCTAssertTrue(request.matches(workspace: workspace, session: session, source: source))
+        XCTAssertFalse(request.matches(workspace: workspace, session: session, source: nil))
+        var changed = source; changed["name"] = .string("Updated")
+        XCTAssertFalse(request.matches(workspace: workspace, session: session, source: changed))
+        XCTAssertFalse(request.matches(workspace: WorkspaceBinding(account: owner, generation: UUID()), session: session, source: source))
+        XCTAssertFalse(request.matches(workspace: WorkspaceBinding(account: "other", generation: workspace.generation), session: session, source: source))
+        XCTAssertFalse(request.matches(workspace: workspace, session: UUID(), source: source))
+    }
+    func testDefinitionValidationCanCancelInsideNestedTreeAndRetainsRejection() throws {
+        let document = RichDefinitionDiagnosticDocument.make(count: 20)
+        var checks = 0
+        XCTAssertThrowsError(try WorkflowTemplate(document: document, checkCancellation: {
+            checks += 1
+            if checks == 90 { throw CancellationError() }
+        })) { XCTAssertTrue($0 is CancellationError) }
+        XCTAssertEqual(checks, 90)
+        var invalid = document.object
+        invalid["version"] = .number(999)
+        XCTAssertThrowsError(try WorkflowTemplate(document: .object(invalid), checkCancellation: {}))
+        XCTAssertEqual(try WorkflowTemplate(document: document, checkCancellation: {}).document, document)
+    }
+    func testDefinitionPreviewBackgroundLoadAndCancelledRequest() async throws {
+        let source = Record(["id": .string("template"), "document": RichDefinitionDiagnosticDocument.make(count: 20)])
+        let request = WorkflowDefinitionRequest(workspace: WorkspaceBinding(account: owner, generation: UUID()), session: UUID(), source: source)
+        let loaded = try await request.load()
+        XCTAssertEqual(loaded.document, source["document"])
+        let cancelled = Task { () throws -> WorkflowTemplate in
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await request.load()
+        }
+        do { _ = try await cancelled.value; XCTFail("Cancelled previews must not publish a definition") }
+        catch { XCTAssertTrue(error is CancellationError) }
+    }
+}

@@ -14,6 +14,30 @@ struct WorkflowPreparationContext: Sendable {
     }
 }
 
+/// One immutable preview read, scoped to the presentation's workspace and session.
+/// Validation runs off the main actor; cancellation reaches the bounded tree walk.
+struct WorkflowDefinitionRequest: Equatable, Sendable {
+    let workspace: WorkspaceBinding
+    let session: UUID
+    let source: Record
+
+    func matches(workspace: WorkspaceBinding, session: UUID, source: Record?) -> Bool {
+        !self.workspace.account.isEmpty && self.workspace == workspace && self.session == session && self.source == source
+    }
+    func load() async throws -> WorkflowTemplate {
+        try Task.checkCancellation()
+        let document = source["document"]
+        let worker = Task.detached(priority: .userInitiated) {
+            try WorkflowTemplate(document: document, checkCancellation: { try Task.checkCancellation() })
+        }
+        return try await withTaskCancellationHandler(operation: {
+            let result = try await worker.value
+            try Task.checkCancellation()
+            return result
+        }, onCancel: { worker.cancel() })
+    }
+}
+
 /// A workflow file contains a definition, never an account snapshot or live records.
 struct WorkflowTemplateFile: Sendable {
     static let maximumBytes = 2_100_000
@@ -276,6 +300,10 @@ struct WorkflowTemplate: Sendable {
     var tasks: [Record] { document.object["tasks"]?.list.map { Record($0.object) } ?? [] }
     private static let taskFields: Set<String> = ["is_heading","id","title","description","priority","project_id","section_id","duration_minutes","labels","subtasks","is_recurring","recurrence_pattern","due_time","time_zone","planned_offset","deadline_offset","repeat_start_offset","repeat_end_offset"]
     init(document: JSON) throws {
+        try self.init(document: document, checkCancellation: {})
+    }
+    init(document: JSON, checkCancellation: () throws -> Void) throws {
+        try checkCancellation()
         let root = document.object
         let headingFormat = root["version"] == .number(2) && root["capabilities"] == .array([.string("task_headings")])
         guard (root["version"] == .number(1) && root["capabilities"] == nil || headingFormat), Kind(rawValue: root["kind"]?.text ?? "") != nil,
@@ -286,12 +314,14 @@ struct WorkflowTemplate: Sendable {
         self.document = document
         guard projects.count <= 1000, sections.count <= 5000, tasks.count <= 5000,
               (try TaskfoldJSONEncoder().encode(document)).count <= 2_000_000 else { throw AppFailure(message: "This template is too large.") }
+        try checkCancellation()
         func unique(_ rows: [Record]) -> Bool { rows.allSatisfy { !$0.id.isEmpty } && Set(rows.map(\.id)).count == rows.count }
         guard unique(projects), unique(sections), unique(tasks) else { throw AppFailure(message: "The template has missing or duplicate references.") }
         let projectIDs = Set(projects.map(\.id)), sectionRows = Dictionary(sections.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         guard projects.allSatisfy({ Set($0.fields.keys).isSubset(of: ["id","name","description","color","parent_id","order_index"]) && ($0.string("parent_id").isEmpty || projectIDs.contains($0.string("parent_id"))) }),
               sections.allSatisfy({ Set($0.fields.keys).isSubset(of: ["id","name","project_id","order_index"]) && projectIDs.contains($0.string("project_id")) }) else { throw AppFailure(message: "The template contains an unavailable project or section.") }
         for row in projects + sections {
+            try checkCancellation()
             if let value = row.fields["order_index"] {
                 guard case .number(let number) = value, number.rounded() == number, (0...2147483647).contains(number) else { throw AppFailure(message: "A template order is invalid.") }
             }
@@ -307,13 +337,16 @@ struct WorkflowTemplate: Sendable {
             throw AppFailure(message: "The template structure is incomplete.")
         }
         for project in projects {
+            try checkCancellation()
             var cursor = project.id, seen = Set<String>()
             while let row = projects.first(where: { $0.id == cursor }) {
+                try checkCancellation()
                 guard seen.insert(cursor).inserted, seen.count <= ProjectOrganization.maximumDepth else { throw AppFailure(message: "The template project hierarchy is invalid.") }
                 cursor = row.string("parent_id")
             }
         }
         func checkTask(_ task: Record, depth: Int) throws {
+            try checkCancellation()
             if let type = task.fields["is_heading"] {
                 guard headingFormat, case .bool = type else { throw AppFailure(message: "This template task type needs a supported heading format.") }
             }
@@ -661,7 +694,10 @@ enum TemplateEditing {
     }
     static func summary(_ document: JSON) -> String {
         guard let definition=try? WorkflowTemplate(document:document) else { return "Unsupported template definition" }
-        let items=tasks(document), headings=items.filter { TaskKind($0.record) == .heading }.count
+        return summary(definition)
+    }
+    static func summary(_ definition: WorkflowTemplate) -> String {
+        let items=tasks(definition.document), headings=items.filter { TaskKind($0.record) == .heading }.count
         let count=items.count-headings
         func label(_ count:Int,_ noun:String) -> String { "\(count) "+noun+(count==1 ? "" : "s") }
         return label(definition.projects.count,"project")+" · "+label(definition.sections.count,"section")+" · "+(count==1 ? "1 task" : "\(count) tasks and subtasks")+(headings == 0 ? "" : " · "+label(headings,"heading"))

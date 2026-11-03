@@ -1,0 +1,92 @@
+{
+  "reviewed": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "cb8c52f20c34b0ace5821f79a433dea72e0bbe95",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "dd8282a0a8a24cae2b2772f8891d69536ae9549dd8bb4814d59df9eab1b7fed6",
+    "Taskfold/Core/Store.swift": "73cc66a33edf6ed5e482e12b129dde8aaf42ea7ac5b0ffc46a5acdfc071dcf85",
+    "Taskfold/Views/WorkflowViews.swift": "2e0d75ae6f88c286629e90848c4ee095ae357ee503072272783a61a17e4af3ac",
+    "Taskfold/TeamTemplateNativeFixture.swift": "5b46c7de60d1c1496cd28752dc7340e456c56a9b9ec04cb978b5941a8e48019f",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "c71e5d1ba445cc972e416ad8663679436a3c88a641fbfeefed262d81114b283a"
+  },
+  "isolatedHostBinding": {
+    "Taskfold/Core/ProjectWorkflows.swift": {
+      "ownSourceSHA256": "dd8282a0a8a24cae2b2772f8891d69536ae9549dd8bb4814d59df9eab1b7fed6",
+      "isolatedSourceSHA256": "dd8282a0a8a24cae2b2772f8891d69536ae9549dd8bb4814d59df9eab1b7fed6",
+      "matchesAfterNamespaceIsolation": true
+    },
+    "Taskfold/Core/Store.swift": {
+      "ownSourceSHA256": "73cc66a33edf6ed5e482e12b129dde8aaf42ea7ac5b0ffc46a5acdfc071dcf85",
+      "isolatedSourceSHA256": "601742b441254fda75f5cfbaa410ca0efd522b321610e1a2df1a01d622eb000b",
+      "matchesAfterNamespaceIsolation": true
+    },
+    "Taskfold/Views/WorkflowViews.swift": {
+      "ownSourceSHA256": "2e0d75ae6f88c286629e90848c4ee095ae357ee503072272783a61a17e4af3ac",
+      "isolatedSourceSHA256": "2e0d75ae6f88c286629e90848c4ee095ae357ee503072272783a61a17e4af3ac",
+      "matchesAfterNamespaceIsolation": true
+    },
+    "Taskfold/TeamTemplateNativeFixture.swift": {
+      "ownSourceSHA256": "5b46c7de60d1c1496cd28752dc7340e456c56a9b9ec04cb978b5941a8e48019f",
+      "isolatedSourceSHA256": "5b46c7de60d1c1496cd28752dc7340e456c56a9b9ec04cb978b5941a8e48019f",
+      "matchesAfterNamespaceIsolation": true
+    }
+  },
+  "ownCoreTests": 113,
+  "ownCoreFailures": 0,
+  "ownAppRunnerBuildAndStrictSignatures": true,
+  "nativeEvidenceOwner": "TaskFold-iOS",
+  "nativeTests": 2,
+  "nativeFailures": 0,
+  "nativeSkips": 0,
+  "nativeRuntimeWarnings": [],
+  "previewNative": {
+    "reuseCancelSourceReplacementAccepted": true,
+    "observations": {
+      "reuse": {
+        "seconds": 0.315506166,
+        "cancelled": false,
+        "accepted": true,
+        "sourceCurrent": true,
+        "mainActorPulses": 0,
+        "loads": 1
+      },
+      "replace": {
+        "accepted": false,
+        "seconds": 3.305432666,
+        "mainActorPulses": 140,
+        "sourceCurrent": false,
+        "cancelled": true,
+        "loads": 1
+      },
+      "cancel": {
+        "accepted": false,
+        "mainActorPulses": 153,
+        "seconds": 2.348429542,
+        "sourceCurrent": true,
+        "loads": 1,
+        "cancelled": true
+      }
+    }
+  },
+  "actualTemplateCreateUndoColdReturn": {
+    "actualTemplateSheetAccepted": true,
+    "createdChildren": 6000,
+    "undoAndColdStateAccepted": true,
+    "createdRoots": 1000,
+    "sourcePreserved": true
+  },
+  "beforeOneValidationSeconds": 0.118776666,
+  "beforeTwoValidationSeconds": 0.23308675,
+  "baselineScope": "One Debug macOS Core harness diagnostic using own iOS source; 1000 roots/6000 nested items. Two passes model the shared-enabled rendering path; not an actual screen-opening measurement.",
+  "newValidationFasterClaim": false,
+  "mainActorFrameRateClaim": false,
+  "nativeMacOrIPadAccepted": false,
+  "audibleAccessibilityAccepted": false,
+  "genuineCloudOrAccountSwitchAccepted": false,
+  "deployed": false,
+  "rolloutFlagsChanged": false,
+  "secondNativeQualification": "The corrected source reached the real form and reused one load, but an assertion required a heartbeat tick during a normal 0.347s load and observed zero. Real rich creation/Undo/cold return passed in that selection. The heartbeat assertion now applies to deliberately held loading cases; no normal-load responsiveness/FPS claim is made.",
+  "firstNativeQualification": "The initial fixture used a Boolean sheet with fallback source; both native cases refused the wrong captured source before loading. The fixture now presents the selected saved Record with sheet(item:). Only the final passing selection is accepted.",
+  "firstBuildQualification": "iOS v1 failed at private workspaceCacheReadable access in the view; replaced with a read-only Store admission method. No native acceptance claimed from that failed build.",
+  "dashboardValidationSHA256": "d3aa4480cbcdbd916c211a86f047a81f390f1abf023e41888ec254178389ffbe"
+}

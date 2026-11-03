@@ -589,15 +589,44 @@ struct TemplateRunView: View {
     @State private var preparation: Task<Void, Never>?
     @State private var preparationID: UUID?
     @State private var sharedWorkflow: TeamWorkflowRunRequest?
+    @State private var loadedPreview: DefinitionPreview?
+    #if DEBUG
+    @State private var previewLoads = 0
+    private var previewDiagnostics: Bool {
+        ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--workflow-definition-diagnostics")
+    }
+    #endif
+    private struct DefinitionPreview {
+        let request: WorkflowDefinitionRequest
+        let definition: WorkflowTemplate?
+        let changed: Bool
+    }
+    private struct PreviewTask: Equatable {
+        let request: WorkflowDefinitionRequest?
+        let editing: Bool
+    }
+    private var previewRequest: WorkflowDefinitionRequest? {
+        guard let binding, store.workflowPreviewReady(binding),
+              store.record(WorkflowTemplate.table, id: template.id) == template else { return nil }
+        return WorkflowDefinitionRequest(workspace: binding, session: store.backend.reminderSessionIncarnation, source: template)
+    }
     var body: some View {
+        let request = previewRequest
+        let preview = loadedPreview?.request == request ? loadedPreview : nil
+        let definition = preview?.definition
         Group {
-            if editingDefinition {
+            if binding != nil && request == nil {
+                WorkflowShell(title: "Use template") {
+                    ContentUnavailableView("Preview unavailable", systemImage: "arrow.triangle.2.circlepath", description: Text("The workspace or template changed. Reopen templates to continue."))
+                        .accessibilityIdentifier("workflowDefinitionUnavailable")
+                }
+            } else if editingDefinition {
                 TemplateDefinitionEditor(template:template,onCancel:{editingDefinition=false})
             } else {
         WorkflowShell(title: "Use template") {
             Form {
                 Text(template.name).font(.title2.bold())
-                if store.teamWorkflowCreationAvailable, let definition = try? WorkflowTemplate(document: template["document"]) {
+                if store.teamWorkflowCreationAvailable, let definition {
                     Section {
                         Button("Use in shared workspace…", systemImage: "person.3") { sharedWorkflow = .init(source: .personal(template)) }
                             .accessibilityIdentifier("runPrivateTemplateShared")
@@ -609,7 +638,7 @@ struct TemplateRunView: View {
                 }
 
                 Button("Edit template",systemImage:"pencil") { editingDefinition=true }.accessibilityIdentifier("editTemplateDefinition").disabled(pending != nil || preparation != nil)
-                if let definition = try? WorkflowTemplate(document: template["document"]) {
+                if let definition {
                     Section("New workflow") {
                         if definition.kind == .project { TextField("New project name", text: $name).accessibilityIdentifier("templateProjectName") }
                         else {
@@ -620,7 +649,7 @@ struct TemplateRunView: View {
                         Text(dated ? "Dated tasks keep their spacing from the first planned day, or first deadline. Tasks without dates stay unscheduled." : "New tasks start without planned dates or deadlines.").font(.caption).foregroundStyle(.secondary)
                     }.disabled(pending != nil || preparation != nil)
                     Section("Preview") {
-                        if definition.requiresHeadingSupport { TemplateDefinitionPreview(document: definition.document, scope: "run") }
+                        if definition.requiresHeadingSupport { TemplateDefinitionPreview(definition: definition, scope: "run") }
                         else {
                             ForEach(definition.tasks.prefix(25)) { Text($0.title) }
                             if definition.tasks.count > 25 { Text("And \(definition.tasks.count - 25) more tasks").foregroundStyle(.secondary) }
@@ -631,8 +660,17 @@ struct TemplateRunView: View {
                         Button { apply(definition) } label: { Text("Create workflow").frame(maxWidth:.infinity,minHeight:44) }
                             .buttonStyle(.borderedProminent).accessibilityIdentifier("applyWorkflowTemplate").disabled(preparation != nil || (definition.requiresHeadingSupport && !store.taskHeadingsAuthoringEnabled))
                     }
-                } else { ContentUnavailableView("Template needs an update", systemImage: "arrow.down.app", description: Text("Update Taskfold to use this template. Its definition is still saved.")) }
+                } else if preview?.changed == true {
+                    ContentUnavailableView("Template changed", systemImage: "arrow.triangle.2.circlepath", description: Text("Reopen this template to review its latest definition."))
+                } else if preview != nil {
+                    ContentUnavailableView("Template needs an update", systemImage: "arrow.down.app", description: Text("Update Taskfold to use this template. Its definition is still saved."))
+                } else {
+                    ProgressView("Preparing preview…").accessibilityIdentifier("workflowDefinitionLoading")
+                }
                 if let message { Text(message).foregroundStyle(.red) }
+                #if DEBUG
+                if previewDiagnostics { Text("Preview loads: \(previewLoads)").accessibilityIdentifier("workflowDefinitionLoadCount") }
+                #endif
             }.formStyle(.grouped)
                 .safeAreaInset(edge: .bottom) {
                     if preparation != nil {
@@ -647,7 +685,52 @@ struct TemplateRunView: View {
                 }
         }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration); name = template.name; project = "__choose__" } }
             }
+        }.task(id: PreviewTask(request: request, editing: editingDefinition)) {
+            guard !editingDefinition, let request else { return }
+            await loadPreview(request)
         }.onDisappear(perform: cancelPreparation).sheet(item: $sharedWorkflow) { request in WorkflowShell(title: "Use shared workflow") { TeamWorkflowRunView(source: request.source) } }
+    }
+    @MainActor private func loadPreview(_ request: WorkflowDefinitionRequest) async {
+        guard loadedPreview?.request != request else { return }
+        loadedPreview = nil
+        #if DEBUG
+        let started = ContinuousClock.now
+        var pulses = 0
+        let diagnostic = previewDiagnostics
+        if diagnostic { previewLoads += 1 }
+        let heartbeat = diagnostic ? Task { @MainActor in
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .milliseconds(10)) } catch { break }
+                pulses += 1
+            }
+        } : nil
+        defer {
+            heartbeat?.cancel()
+            if diagnostic {
+                let duration = started.duration(to: .now)
+                let seconds = Double(duration.components.seconds) + Double(duration.components.attoseconds) / 1e18
+                let report: [String: JSON] = ["loads": .number(Double(previewLoads)), "seconds": .number(seconds), "mainActorPulses": .number(Double(pulses)), "cancelled": .bool(Task.isCancelled), "accepted": .bool(loadedPreview?.definition != nil), "sourceCurrent": .bool(previewRequest == request)]
+                try? FileManager.default.createDirectory(at: TeamTemplateNativeFixture.root, withIntermediateDirectories: true)
+                try? TaskfoldJSONEncoder().encode(report).write(to: TeamTemplateNativeFixture.root.appendingPathComponent("definition-preview.json"), options: .atomic)
+            }
+        }
+        #endif
+        do {
+            #if DEBUG
+            if ["com.dbakp.taskfold.workflowteststeameditbridge", "com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? ""), ProcessInfo.processInfo.arguments.contains("--workflow-definition-hold") {
+                try await Task.sleep(for: .seconds(10))
+            }
+            #endif
+            let definition = try await request.load()
+            try Task.checkCancellation()
+            guard previewRequest == request else { return }
+            let matches = request.matches(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation, source: store.record(WorkflowTemplate.table, id: template.id))
+            loadedPreview = DefinitionPreview(request: request, definition: matches ? definition : nil, changed: !matches)
+        } catch is CancellationError { }
+        catch {
+            guard !Task.isCancelled, previewRequest == request else { return }
+            loadedPreview = DefinitionPreview(request: request, definition: nil, changed: false)
+        }
     }
     private func validate(_ definition: WorkflowTemplate, target: String) throws {
         guard store.workflowReady(binding), store.record(WorkflowTemplate.table, id: template.id)?["document"] == template["document"] else { throw AppFailure(message: "The workspace or template changed. Reopen it before creating a workflow.") }
@@ -1007,9 +1090,16 @@ private struct TemplatePreviewRow<Value>: Identifiable {
 struct TemplateDefinitionPreview: View {
     let document:JSON
     let scope:String
+    private let validatedDefinition: WorkflowTemplate?
+    init(document: JSON, scope: String) {
+        self.document = document; self.scope = scope; validatedDefinition = nil
+    }
+    init(definition: WorkflowTemplate, scope: String) {
+        document = definition.document; self.scope = scope; validatedDefinition = definition
+    }
     var body:some View {
-        if (try? WorkflowTemplate(document:document)) != nil {
-        Text(TemplateEditing.summary(document)).font(.headline)
+        if let definition = validatedDefinition ?? (try? WorkflowTemplate(document:document)) {
+        Text(TemplateEditing.summary(definition)).font(.headline)
         ForEach(ProjectOrganization.outline(document.object["projects",default:.null].list.map{Record($0.object)}).map { TemplatePreviewRow(id:scope+":project:"+$0.id,value:$0) }) { row in
             let item = row.value
             VStack(alignment:.leading,spacing:4) {

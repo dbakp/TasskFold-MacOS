@@ -10617,3 +10617,12 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Profile large-template definition parsing/opening/preview, then continue wider workflow/rendering/native/accessibility/account/cloud gaps.
 
 [Exact scope, before failure and timing limits](rich-workflow-creation/README.md). The full Px goal remains open.
+
+### 3 November 2026 · Cancellable template previews
+
+- [x] Prepare and reuse a validated workflow definition off main-actor rendering, including heading preview validation/summary reuse. Keep Done available while loading.
+- [x] Bind results to exact source, current account/workspace/session and readable-cache admission; cancel and hide unavailable previews. Preserve production Create/context/write/Undo checks.
+- [x] Pass own 113 Core checks and own app/runner build/signatures. Counterpart iPhone accepts option editing with one load, dismissal, source replacement and real rich Create/Undo/cold return.
+- [ ] Complete Mac/iPad runtime, audible/accessibility/account transitions, actual scrolling/rendering and broader workflow/catalog/editor scaling.
+
+[Evidence and measurement limits](workflow-definition-preview/README.md). No Mac runtime or FPS improvement is claimed.

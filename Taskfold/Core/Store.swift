@@ -4514,6 +4514,11 @@ extension Store {
         guard workspaceCacheReadable, signedIn || localMode, !signingOut, !accountRemovalBlocked else { throw WorkflowTemplateCapture.changed }
         try capture.reviewed(snapshot: presentationSnapshot, workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation, origin: try? backend.accountRemovalOrigin, teamCache: nativeConversationTeamCache)
     }
+    /// Read-only presentation admission; never sets an error while SwiftUI renders.
+    func workflowPreviewReady(_ binding: WorkspaceBinding?) -> Bool {
+        binding?.matches(account: userID, generation: workspaceGeneration) == true && workspaceCacheReadable &&
+        (signedIn || localMode) && !signingOut && !accountRemovalBlocked
+    }
     func workflowReady(_ binding: WorkspaceBinding?) -> Bool {
         guard binding?.matches(account: userID, generation: workspaceGeneration) == true, workspaceCacheReadable, signedIn || localMode else {
             error = "Your workspace changed. Reopen this tool before saving."; return false
