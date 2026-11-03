@@ -27,7 +27,7 @@ The initial lookup is outside the warm batches and still resolves the current me
 
 ## Storage
 
-The Mac storage guard stopped compilation below the 20 GiB floor. Four verified obsolete Taskfold build caches from September/early October were removed, reclaiming about 0.99 GB; current reusable products, Core caches, app and app data were preserved. The guard then allowed the Mac build. See storage-cleanup.json.
+The Mac storage guard stopped compilation below the 20 GiB floor. Four verified obsolete Taskfold build caches from September/early October were removed, reclaiming about 0.99 GB; current reusable products, Core caches, app and app data were preserved. The guard then allowed the Mac build. See storage-cleanup.json. A later check again fell just below the floor; another 136 MB of disposable Core test indexes was removed. Both CLI test scripts now request `--disable-index-store`, confirmed in the installed Swift help. Each repo then passes 91 existing tests with `--skip-build`, proving its compiled products remain reusable after index removal. That check does not benchmark compilation or establish every tool’s index behavior. See index-cleanup.json.
 
 ## Remaining
 

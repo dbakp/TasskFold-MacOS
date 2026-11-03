@@ -10606,3 +10606,5 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Finish richer creation/save and scrolling/rendering, multiple-project scaling, Mac/iPad and wider native/accessibility/account/lifecycle acceptance.
 
 [Exact evidence and limits](assignment-display-reads/README.md). The save-pause checkpoint and full Px objective remain open.
+
+- [x] Remove obsolete build caches (~0.99 GB) and disposable Core indexes (~136 MB) while retaining current products/data. CLI Core tests request no indexing; both owning skip-build checks still pass 91 tests. This is not a fresh compilation/index-regeneration benchmark.

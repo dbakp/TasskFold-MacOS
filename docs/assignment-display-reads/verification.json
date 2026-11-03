@@ -10,7 +10,8 @@
     "Taskfold/Core/Store.swift": "f5947d4db285ea07973d301063da484112fe780738d7718924b3dda7663b600c",
     "Taskfold/Core/TeamWorkspace.swift": "c64f9a279acfea8dd3eb75cbf47ab0fd08298ab95e44d0cf0cc163a77c95396b",
     "Taskfold/TeamTemplateNativeFixture.swift": "63b09cbcc7e5175b8a8f0b55def188a98d8475f8bcc62e14c267f963bf9057a6",
-    "TaskfoldTests/TeamWorkspaceTests.swift": "4544c7b76c071eeebf940bd21715108241a9e59c0f6d3de4750ee2af6bfb1e69"
+    "TaskfoldTests/TeamWorkspaceTests.swift": "4544c7b76c071eeebf940bd21715108241a9e59c0f6d3de4750ee2af6bfb1e69",
+    "Scripts/test_core.sh": "0efc6ba6215c931c2501e510980177ffd6b0d4ee52d15c782e77daa61a851994"
   },
   "ownHostBindings": {
     "Taskfold/Core/Store.swift": {
@@ -67,5 +68,11 @@
   "deployed": false,
   "rolloutFlagsChanged": false,
   "obsoleteBuildCacheBytesReclaimed": 991719424,
-  "currentProductsAndAppDataPreserved": true
+  "currentProductsAndAppDataPreserved": true,
+  "testCLIIndexFlagVerifiedInInstalledHelp": true,
+  "testCLIIndexFlagSkipBuildTests": 91,
+  "testCLIIndexFlagSkipBuildFailures": 0,
+  "indexStoreBytesReclaimed": 135528448,
+  "compiledTestProductsPreserved": true,
+  "indexRegenerationCompilationBenchmarkClaim": false
 }

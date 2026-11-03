@@ -5,7 +5,7 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Large-workflow responsiveness",
-  "latest": "Both apps reuse assignment display names while leaving member choices and permission checks fresh. With 400 collaborators, the iPhone warm-read median fell from 464.0 to 2.1 ms on identical fixture tables; 16 Store checks and the production list pass. Both repos pass 91 workspace tests and app builds. Richer saves and scrolling remain.",
+  "latest": "Both apps reuse assignment display names while leaving member choices and permission checks fresh. With 400 collaborators, the iPhone warm-read median fell from 464.0 to 2.1 ms on identical fixture tables; 16 Store checks and the production list pass. Both repos pass 91 workspace tests and app builds. Richer saves and scrolling remain. Obsolete build/index cleanup restored storage headroom.",
   "next": [
     "Continue richer child/assignment workflow creation and persistence, actual large-list scrolling/rendering, multiple-project/catalog scaling and Mac/iPad/wider contexts. Filtered-row and assignment-display reuse now have scoped actual Store invalidation/Observation proof; do not repeat those unchanged accepted cases or flat-workflow optimizations.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
@@ -462,7 +462,8 @@
             "assignment-display-reads/verification.json",
             "assignment-display-reads/iphone-before.json",
             "assignment-display-reads/iphone-after.json",
-            "assignment-display-reads/storage-cleanup.json"
+            "assignment-display-reads/storage-cleanup.json",
+            "assignment-display-reads/index-cleanup.json"
           ],
           "focus": true
         },
@@ -1028,11 +1029,12 @@
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
-    "assignment-display-reads/README.md": "417ca347f8c1ab2b013c1a78e7bdba9bc5d12b6adc13afb3195a6850e9569494",
+    "assignment-display-reads/README.md": "043a180a9837c065d12089bab5ee2bf0ad3f1da4c0881f0233c92a59cbea0fa9",
+    "assignment-display-reads/index-cleanup.json": "a7d55367765524492c64b4cfd6bee567233ca0ddb10fd705fe914f9d101e12c8",
     "assignment-display-reads/iphone-after.json": "da74e7428ed4b5b5a4689ad94c7d114deefc9224558f309b9a46fd002f607fce",
     "assignment-display-reads/iphone-before.json": "8b27111a69c35d0167b41c44c1dafe6050b7a2b1e40ed50a406e5e47edfcef29",
     "assignment-display-reads/storage-cleanup.json": "8085c4aa97952ecec887970cf9ffbbfee691e476dcd275ac0d60ee6c5e8e01fd",
-    "assignment-display-reads/verification.json": "d430244ec507418afa6a8b98a2076c3d6d5ee9d2f44d851a8eaccd1e0fe49f2e",
+    "assignment-display-reads/verification.json": "103969b892e455d0c00910044f3c04be5e060f7cb72d81f97bd877b32cc72682",
     "assignment-tree-native/README.md": "2ab473887c5954b3665a38cbd4345d20c1780f722dd3d94c5f0bc4fc473bae14",
     "assignment-tree-native/ipad/verification.json": "5289d9ed3cd7b2fdec8993584c0828093eaed6b8fd52d24546f611c5ca0db0d3",
     "assignment-tree-native/mac/verification.json": "269771071decee66357055f652a9ca73ca78c5d2edd8cc66a39ff8efad0ad000",
