@@ -590,24 +590,29 @@ import CryptoKit
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-performance") }
     static var largeCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-catalog") }
     static var projectCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-project-catalog") }
+    static var projectParents: Bool { projectCatalog && ProcessInfo.processInfo.arguments.contains("--workspace-project-parents") }
 }
 @MainActor struct WorkspaceReadNativeFixtureView: View {
     @Environment(Store.self) private var store
     @State private var status = "Preparing"
+    @State private var projectEditor: Record?
     var body: some View {
         NavigationStack {
             Form {
                 Text(status).accessibilityIdentifier("workspaceReadStatus")
                 Button("Measure row reads") {
-                    do { if WorkspaceReadNativeFixture.projectCatalog { try store.measureProjectCatalogFixture() } else { try store.measureWorkspaceReadFixture() }; status = "Reads verified" }
+                    do { if WorkspaceReadNativeFixture.projectParents { try store.measureProjectParentFixture() } else if WorkspaceReadNativeFixture.projectCatalog { try store.measureProjectCatalogFixture() } else { try store.measureWorkspaceReadFixture() }; status = "Reads verified" }
                     catch { status = error.localizedDescription }
                 }.accessibilityIdentifier("measureWorkspaceReads").disabled(status == "Preparing")
+                if WorkspaceReadNativeFixture.projectParents {
+                    Button("Edit project hierarchy") {projectEditor=store.record("projects",id:TeamEditorNativeFixture.projectID)}.accessibilityIdentifier("openProjectParentEditor").disabled(status=="Preparing")
+                }
                 #if os(iOS)
                 NavigationLink("Open production list") { TaskScreen(scope: .project(TeamEditorNativeFixture.projectID)) }
                     .accessibilityIdentifier("openProductionReadList")
                 #endif
             }.navigationTitle("Workspace reads")
-        }.task {
+        }.sheet(item:$projectEditor) {NamedEditor(table:"projects",record:$0)}.task {
             do { try store.prepareWorkspaceReadFixture(); status = "Ready" }
             catch { status = error.localizedDescription }
         }

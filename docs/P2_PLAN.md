@@ -7546,3 +7546,13 @@ Both owning services now bind a bounded recording/provider metadata inventory to
 ## 3 November 2026 — Reuse readable project catalogs
 
 Both owning apps now reuse sorted/outlined project display data in a source/access/workspace/session/server-bound catalog, while live presentation reads and command admission remain current. Iterative traversal preserves legacy graph semantics and handles a 12,000-node historical chain. Each selected Core run has 170 passes, four existing opt-in skips and no failures; both full apps/runners build and sign. The iPhone accepts actual Store rename/reparent/archive/readability refresh plus production TaskScreen scrolling with 4,000 projects and exact task/project/queue preservation. A single Core Debug diagnostic moves 20 equivalent reads from 0.7836 to 0.0192 seconds; native current reads take 0.0237 seconds. These are not FPS or universal latency claims. Broader template/catalog/editor rendering, workloads and Mac/iPad/account/window/accessibility/cloud contexts remain. [Evidence and limits](project-catalog-reads/README.md).
+
+
+### 3 November 2026 · Searchable project parents
+
+- [x] Replace the long native parent menu with searchable names and ancestor paths, selected state and Top level in each independently owned app. Selection edits only a draft; live workspace/session and final Save validation remain in place.
+- [x] Build parent eligibility from one canonical graph; compare choices against the unchanged write validator across malformed legacy/duplicate/cycle/depth cases. Each repo: 178 selected Core passes, four existing opt-in skips.
+- [x] Accept actual iPhone search, draft Cancel, Save, cold return and restoring Top level with 4,000 synthetic projects, preserving all other projects, tasks and queued work.
+- [ ] Finish Mac/iPad native use, wider account/accessibility/cloud contexts and remaining template-library/editor/rendering scaling.
+
+[Evidence and limits](project-parent-choices/README.md). Timings are bounded Debug diagnostics, not frame-rate or whole-app claims.

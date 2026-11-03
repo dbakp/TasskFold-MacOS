@@ -1217,3 +1217,119 @@ private struct TemplateCSVMappingView: View {
         }
     }
 }
+
+/// A parent choice edits only the caller's draft. Final project Save retains its
+/// existing live validation; selection also rechecks the current graph and scope.
+struct ProjectParentPickerField: View {
+    @Environment(Store.self) private var store
+    @Binding var record: Record
+    let choices: [ProjectOrganization.Item]
+    let binding: WorkspaceBinding?
+    @State private var choosing = false
+    @State private var session: UUID?
+    @State private var message: String?
+    private var currentName: String {
+        let id=record.string("parent_id")
+        if id.isEmpty {return "Top level"}
+        guard let row=store.record("projects",id:id) else{return "Unavailable parent"}
+        return row.name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty ? "Untitled project":row.name
+    }
+    var body: some View {
+        VStack(alignment:.leading,spacing:4) {
+            LabeledContent("Parent project") {
+                Button {
+                    guard store.workflowPreviewReady(binding) else {message="Your workspace changed. Reopen this editor to choose a parent.";return}
+                    session=store.backend.reminderSessionIncarnation;message=nil;choosing=true
+                } label: {
+                    HStack(spacing:6) {Text(currentName).lineLimit(2);Image(systemName:"chevron.up.chevron.down").font(.caption2).accessibilityHidden(true)}
+                        #if os(iOS)
+                        .frame(minHeight:44)
+                        #endif
+                }.buttonStyle(.borderless).disabled(record.string("user_id") != store.userID)
+                    .accessibilityLabel("Parent project").accessibilityValue(currentName).accessibilityIdentifier("projectParent")
+            }
+            if let message {Text(message).font(.caption).foregroundStyle(.red)}
+        }
+        .sheet(isPresented:$choosing) {
+            ProjectParentSelectionView(choices:choices,projects:store.allProjects,selected:record.string("parent_id"),currentName:currentName,choose:select)
+                #if os(iOS)
+                .presentationDetents([.large])
+                #endif
+        }
+        .onChange(of:store.workspaceGeneration) {_,_ in choosing=false;message=nil}
+    }
+    private func select(_ id:String)->String? {
+        guard store.workflowPreviewReady(binding),session==store.backend.reminderSessionIncarnation else{return "Your account changed. Close this list and reopen the editor."}
+        if id==record.string("parent_id") {return nil}
+        let projects=store.allProjects
+        if !id.isEmpty && !ProjectOrganization.parentChoices(for:record,account:store.userID,projects:projects).contains(where:{$0.id==id}) {
+            return "That parent is no longer available. Close this list to refresh the choices."
+        }
+        var draft=record;draft["parent_id"] = id.isEmpty ? .null:.string(id)
+        do {try ProjectOrganization.validate(draft,previous:nil,account:store.userID,projects:projects);record=draft;return nil}
+        catch {return error.localizedDescription}
+    }
+}
+
+private struct ProjectParentSelectionView: View {
+    private struct Option:Identifiable {let id:String;let name:String;let path:String;let color:String}
+    @Environment(\.dismiss) private var dismiss
+    @State private var query=""
+    @State private var message:String?
+    private let options:[Option]
+    let selected:String
+    let currentName:String
+    let choose:(String)->String?
+    init(choices:[ProjectOrganization.Item],projects:[Record],selected:String,currentName:String,choose:@escaping(String)->String?) {
+        self.selected=selected;self.currentName=currentName;self.choose=choose
+        let index=Dictionary(projects.map{($0.id,$0)},uniquingKeysWith:{first,_ in first})
+        options=choices.filter{!$0.id.isEmpty}.map {item in
+            var parent=index[item.id]?.string("parent_id") ?? "",path:[String]=[],seen=Set([item.id])
+            while !parent.isEmpty,seen.insert(parent).inserted,path.count<ProjectOrganization.maximumDepth,let row=index[parent] {
+                path.append(row.name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty ? "Untitled project":row.name);parent=row.string("parent_id")
+            }
+            return Option(id:item.id,name:item.project.name.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty ? "Untitled project":item.project.name,path:path.reversed().joined(separator:" › "),color:item.project.string("color"))
+        }
+    }
+    private var matches:[Option] {
+        let text=query.trimmingCharacters(in:.whitespacesAndNewlines)
+        return text.isEmpty ? options:options.filter{$0.name.localizedStandardContains(text) || $0.path.localizedStandardContains(text)}
+    }
+    var body:some View {
+        let matching=matches
+        WorkflowShell(title:"Parent project") {
+            List {
+                Section {
+                    Button {select("")} label: {
+                        HStack {Label("Top level",systemImage:"square.grid.2x2");Spacer();if selected.isEmpty {Image(systemName:"checkmark").foregroundStyle(.tint).accessibilityHidden(true)}}.frame(minHeight:44)
+                    }.buttonStyle(.plain).accessibilityIdentifier("projectParentTopLevel").accessibilityValue(selected.isEmpty ? "Selected":"")
+                    Text("Sharing stays separate for each project.").font(.caption).foregroundStyle(.secondary)
+                }
+                if !selected.isEmpty && !options.contains(where:{$0.id==selected}) {
+                    Section("Current parent") {Text(currentName).foregroundStyle(.secondary)}
+                }
+                Section("Projects") {
+                    ForEach(matching) {item in
+                        Button {select(item.id)} label: {
+                            HStack(spacing:12) {
+                                Image(systemName:"folder").foregroundStyle(Color.project(item.color)).accessibilityHidden(true)
+                                VStack(alignment:.leading,spacing:3) {Text(item.name).foregroundStyle(.primary);Text(item.path.isEmpty ? "Top level":item.path).font(.caption).foregroundStyle(.secondary)}.fixedSize(horizontal:false,vertical:true)
+                                Spacer(minLength:8)
+                                if selected==item.id {Image(systemName:"checkmark").foregroundStyle(.tint).accessibilityHidden(true)}
+                            }.frame(maxWidth:.infinity,minHeight:44,alignment:.leading).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel(item.name).accessibilityValue((selected==item.id ? "Selected, ":"")+(item.path.isEmpty ? "Top level":item.path)).accessibilityIdentifier("projectParentOption-"+item.id)
+                    }
+                    if matching.isEmpty {ContentUnavailableView(query.isEmpty ? "No available parent projects":"No matching projects",systemImage:"folder",description:Text("Only available projects that can contain this hierarchy appear."))}
+                }
+                if let message {Text(message).foregroundStyle(.red).accessibilityIdentifier("projectParentIssue")}
+            }
+            #if os(iOS)
+            .searchable(text:$query,placement:.navigationBarDrawer(displayMode:.always),prompt:"Find a project")
+            .navigationBarTitleDisplayMode(.inline)
+            #else
+            .searchable(text:$query,prompt:"Find a project")
+            #endif
+        }
+    }
+    private func select(_ id:String) {if let issue=choose(id){message=issue}else{dismiss()}}
+}

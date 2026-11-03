@@ -10655,3 +10655,10 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Continue Mac/iPad native, hierarchy/template-editor scaling, wider workload/account/window/accessibility/cloud checks. No native Mac or FPS acceptance is inferred.
 
 [Evidence and limits](project-catalog-reads/README.md).
+
+
+### 3 November 2026 · Searchable project parents
+
+Parent selection now uses a native searchable sheet with ancestor paths, selected state and Top level. It preserves the draft until Save and checks live scope/eligibility before selection. The quadratic eligibility construction is replaced while the final write validator remains unchanged. Mac independently passes 178 selected Core checks (four existing opt-in skips). The iPhone production editor passes search, draft Cancel, Save and cold return with 4,000 projects and preserved saved work; this does not establish native Mac interaction or spoken accessibility acceptance. Wider platform/account/rendering work remains open.
+
+[Evidence and limits](project-parent-choices/README.md).

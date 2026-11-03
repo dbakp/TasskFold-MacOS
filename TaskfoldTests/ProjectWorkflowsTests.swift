@@ -1207,3 +1207,86 @@ extension ProjectWorkflowsTests {
         XCTAssertEqual(catalog.archivedIDs,Set(["duplicate","child"]))
     }
 }
+
+extension ProjectWorkflowsTests {
+    func testProjectParentChoicesDiagnostic() throws {
+        guard let output=ProcessInfo.processInfo.environment["TASKFOLD_PROJECT_PARENT_REPORT"] else{return}
+        let destination=URL(fileURLWithPath:output).resolvingSymlinksInPath()
+        guard destination.deletingLastPathComponent().path==URL(fileURLWithPath:"/tmp").resolvingSymlinksInPath().path,destination.lastPathComponent.hasPrefix("taskfold-"),destination.pathExtension=="json" else{XCTFail("Task-owned temporary output required");return}
+        var rows=(0..<1000).map {i->Record in var row=project("parent-choice-\(i)");row["order_index"] = .number(Double(i));return row}
+        rows[1]["parent_id"] = .string(rows[0].id);rows[2]["parent_id"] = .string(rows[1].id)
+        let start=ProcessInfo.processInfo.systemUptime
+        let choices=ProjectOrganization.parentChoices(for:rows[0],account:owner,projects:rows)
+        let seconds=ProcessInfo.processInfo.systemUptime-start
+        XCTAssertEqual(choices.count,997)
+        let report:[String:Any] = ["projects":1000,"choices":choices.count,"seconds":seconds,"debugDiagnosticOnly":true,"fpsClaim":false]
+        try JSONSerialization.data(withJSONObject:report,options:[.sortedKeys,.prettyPrinted]).write(to:destination,options:.atomic)
+    }
+}
+
+extension ProjectWorkflowsTests {
+    private func originalParentChoices(_ moving:Record,_ rows:[Record])->[ProjectOrganization.Item] {
+        let excluded=ProjectOrganization.descendants(moving.id,in:rows)
+        return ProjectOrganization.outline(rows).filter {item in
+            guard !excluded.contains(item.id),item.project.string("user_id")==owner else{return false}
+            var draft=moving;draft["parent_id"] = .string(item.id)
+            return (try? ProjectOrganization.validate(draft,previous:nil,account:owner,projects:rows)) != nil
+        }
+    }
+    func testParentChoicesMatchWriteValidatorAcrossMixedLegacyGraphs() {
+        for seed in 0..<96 {
+            var rows=(0..<32).map {i->Record in
+                let parent:String
+                if i==0 || (i+seed)%4==0 {parent=""}
+                else if seed%2==0 {parent="parent-\((i*13+seed)%i)"}
+                else {parent="parent-\((i*13+seed)%36)"}
+                var row=project("parent-\(i)",parent:parent,archived:(i+seed)%13==0)
+                row["order_index"] = .number(Double((i*5+seed)%17))
+                if (i+seed)%11==0 {row["user_id"] = .string("other")}
+                row["ancestor_archived"] = .bool(i%3==0);return row
+            }
+            var duplicate=rows[(seed*3)%rows.count];duplicate["parent_id"] = .string(rows[(seed*7)%rows.count].id);duplicate["user_id"] = .string(owner);rows.append(duplicate)
+            if seed%5==0 {rows.append(project(""))}
+            var moving=seed%7==0 ? project("new-root"):rows[seed%32]
+            if seed%17==0 {moving["name"] = .string("  ")}
+            XCTAssertEqual(ProjectOrganization.parentChoices(for:moving,account:owner,projects:rows),originalParentChoices(moving,rows),"Seed \(seed)")
+        }
+    }
+    func testParentChoicesPreserveForeignLeafAndRejectForeignParent() {
+        let root=project("root"),target=project("target")
+        var leaf=project("leaf",parent:"root");leaf["user_id"] = .string("other")
+        XCTAssertEqual(ProjectOrganization.parentChoices(for:root,account:owner,projects:[root,leaf,target]).map(\.id),["target"])
+        XCTAssertTrue(ProjectOrganization.parentChoices(for:root,account:owner,projects:[root,leaf,project("child",parent:"leaf"),target]).isEmpty)
+    }
+    func testParentChoicesKeepTopLevelLegacyEmptyIDAtDepthBoundary() {
+        let rows=(0..<20).map{project("deep-\($0)",parent:$0==0 ? "":"deep-\($0-1)")}+[project("target"),project("")]
+        XCTAssertEqual(ProjectOrganization.parentChoices(for:rows[0],account:owner,projects:rows),originalParentChoices(rows[0],rows))
+        XCTAssertEqual(ProjectOrganization.parentChoices(for:rows[0],account:owner,projects:rows).map(\.id),[""])
+    }
+    func testParentChoicesCanRepairACycleThroughTheMovedRoot() {
+        let root=project("root",parent:"child"),rows=[project("child",parent:"root"),project("target")]
+        XCTAssertEqual(ProjectOrganization.parentChoices(for:root,account:owner,projects:[root]+rows).map(\.id),["target"])
+    }
+    func testParentChoicesUseCanonicalOwnerDespiteDisplayedDuplicate() {
+        let root=project("moving")
+        var canonical=project("target");canonical["user_id"] = .string("other");canonical["order_index"] = .number(99)
+        var displayed=project("target");displayed["order_index"] = .number(0)
+        let rows=[canonical,root,displayed]
+        XCTAssertTrue(ProjectOrganization.parentChoices(for:root,account:owner,projects:rows).isEmpty)
+        XCTAssertEqual(ProjectOrganization.parentChoices(for:root,account:owner,projects:rows),originalParentChoices(root,rows))
+    }
+    func testParentChoicesDoNotChargeIndependentDuplicateAncestryToRoot() {
+        let root=project("moving")
+        let chain=(0..<19).map{project("p\($0)",parent:$0==0 ? "":"p\($0-1)")}
+        let rows=[root,project("detached"),project("duplicate",parent:"detached"),project("duplicate",parent:"moving")]+chain
+        let actual=ProjectOrganization.parentChoices(for:root,account:owner,projects:rows)
+        XCTAssertTrue(actual.contains{$0.id=="p18"});XCTAssertEqual(actual,originalParentChoices(root,rows))
+    }
+    func testParentChoicesIncludeNewRootReplacementAndItsOrphanChildren() {
+        let moving=project("new")
+        let rows=(0..<19).map{project("p\($0)",parent:$0==0 ? "":"p\($0-1)")}+[project("orphan",parent:"new")]
+        let actual=ProjectOrganization.parentChoices(for:moving,account:owner,projects:rows)
+        XCTAssertTrue(actual.contains{$0.id=="p17"});XCTAssertFalse(actual.contains{$0.id=="p18"})
+        XCTAssertEqual(actual,originalParentChoices(moving,rows))
+    }
+}

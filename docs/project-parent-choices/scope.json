@@ -1,0 +1,16 @@
+{
+  "productionUI": "Searchable native parent sheet; draft until project Save",
+  "writeValidatorUnchanged": true,
+  "nativeAcceptancePending": false,
+  "normalUseFeatureGatesChanged": false,
+  "hostedDeployment": false,
+  "releaseOrFPSClaim": false,
+  "openScope": [
+    "Mac native interaction",
+    "iPad interaction",
+    "spoken accessibility",
+    "shared/cloud/account transitions",
+    "remaining template-library and editor scaling"
+  ],
+  "nativeAcceptedScope": "iPhone synthetic local production editor; search, draft Cancel, Save, cold return and restore original parent"
+}

@@ -6669,6 +6669,13 @@ extension Store {
     func prepareProjectCatalogFixture() throws {
         guard WorkspaceReadNativeFixture.projectCatalog else {throw CancellationError()}
         localMode=true;signedIn=false;teamAccessMask=nil;workspaceCacheReadable=true;dailyBackupsEnabled=false
+        if WorkspaceReadNativeFixture.projectParents,ProcessInfo.processInfo.arguments.contains("--workspace-project-parent-reload") {
+            let saved=try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+            guard saved.tables["projects"]?.count==4000,saved.tables["tasks"]?.count==240,
+                  saved.tables["projects"]?.allSatisfy({$0.string("user_id")==userID})==true,
+                  saved.tables["tasks"]?.allSatisfy({$0.string("user_id")==userID && $0.string("project_id")==TeamEditorNativeFixture.projectID})==true else {throw AppFailure(message:"Missing saved parent-choice fixture")}
+            snapshot=saved;publishWidgetSnapshot();return
+        }
         var projects:[Record]=[]
         for index in 0..<1000 {
             let root=index==0 ? TeamEditorNativeFixture.projectID:String(format:"ec260000-0000-4000-8000-%012d",index)
@@ -6713,6 +6720,23 @@ extension Store {
         let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-catalog.json"),options:.atomic)
+    }
+}
+#endif
+
+
+#if DEBUG
+extension Store {
+    func measureProjectParentFixture() throws {
+        guard WorkspaceReadNativeFixture.projectParents,let root=record("projects",id:TeamEditorNativeFixture.projectID) else {throw CancellationError()}
+        let source=snapshot,projects=allProjects,start=ProcessInfo.processInfo.systemUptime
+        let choices=ProjectOrganization.parentChoices(for:root,account:userID,projects:projects)
+        let elapsed=ProcessInfo.processInfo.systemUptime-start
+        guard choices.count==3596,snapshot==source,!choices.contains(where:{$0.id==root.id}) else {throw AppFailure(message:"Parent choices changed their source or eligibility")}
+        let report:[String:JSON] = ["accepted":.bool(true),"projects":.number(4000),"choices":.number(3596),"seconds":.number(elapsed),"snapshotUnchanged":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
+        let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
+        try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-parents.json"),options:.atomic)
     }
 }
 #endif

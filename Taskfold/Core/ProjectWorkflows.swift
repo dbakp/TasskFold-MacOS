@@ -272,11 +272,43 @@ enum ProjectOrganization {
         }
     }
     static func parentChoices(for project: Record, account: String, projects: [Record]) -> [Item] {
+        guard !project.id.isEmpty, !project.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              project.string("user_id") == account else { return [] }
         let excluded = descendants(project.id, in: projects)
+        // Match validate's canonical rows after replacing every old root copy.
+        // Rebuilding this index for each candidate makes large pickers quadratic.
+        let rows = Dictionary(projects.filter { $0.id != project.id }.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        var longestRootPath = 0
+        for start in excluded {
+            var cursor = start, distance = 0, seen = Set<String>()
+            while cursor != project.id, let row = rows[cursor] {
+                guard seen.insert(cursor).inserted else { return [] }
+                let parent = row.string("parent_id")
+                if parent.isEmpty { break }
+                guard parent == project.id || rows[parent]?.string("user_id") == account else { return [] }
+                distance += 1
+                guard distance < maximumDepth else { return [] }
+                cursor = parent
+            }
+            // Duplicate legacy edges can put a raw descendant on an independent
+            // canonical ancestry. Validate it above, without charging its depth
+            // to the moved root unless that ancestry actually reaches the root.
+            if cursor == project.id { longestRootPath = max(longestRootPath, distance) }
+        }
         return outline(projects).filter { item in
             guard !excluded.contains(item.id), item.project.string("user_id") == account else { return false }
-            var draft = project; draft["parent_id"] = .string(item.id)
-            return (try? validate(draft, previous: nil, account: account, projects: projects)) != nil
+            // An empty legacy ID produces a top-level draft, just as in validate.
+            if item.id.isEmpty { return longestRootPath < maximumDepth }
+            var cursor = item.id, depth = 1, seen = Set<String>()
+            while let row = rows[cursor] {
+                guard cursor != project.id, depth + longestRootPath < maximumDepth,
+                      seen.insert(cursor).inserted, row.string("user_id") == account else { return false }
+                let parent = row.string("parent_id")
+                if parent.isEmpty { return true }
+                cursor = parent
+                depth += 1
+            }
+            return false
         }
     }
 }

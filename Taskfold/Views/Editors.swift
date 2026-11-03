@@ -15,6 +15,7 @@ struct NamedEditor: View {
     private var isNew: Bool { store.record(table, id: record.id) == nil }
     private var noun: String { table == "projects" ? "Project" : "Label" }
     var body: some View {
+        let parentChoices = table == "projects" ? ProjectOrganization.parentChoices(for:record,account:store.userID,projects:store.allProjects):[]
         VStack(alignment: .leading, spacing: 16) {
             Text(isNew ? "New \(noun)" : "Edit \(noun)").font(.headline)
             Form {
@@ -31,13 +32,7 @@ struct NamedEditor: View {
                     }
                 }
                 if table == "projects" { TextField("Description", text: Binding(get: { record.string("description") }, set: { record["description"] = .string($0) }), axis: .vertical).lineLimit(2...4)
-                    Picker("Parent project", selection: Binding(get: { record.string("parent_id") }, set: { record["parent_id"] = $0.isEmpty ? .null : .string($0) })) {
-                        Text("Top level").tag("")
-                        if !record.string("parent_id").isEmpty && !ProjectOrganization.parentChoices(for: record, account: store.userID, projects: store.allProjects).contains(where: { $0.id == record.string("parent_id") }) {
-                            Text(store.record("projects", id: record.string("parent_id"))?.name ?? "Unavailable parent").tag(record.string("parent_id"))
-                        }
-                        ForEach(ProjectOrganization.parentChoices(for: record, account: store.userID, projects: store.allProjects)) { item in Text(String(repeating: "  ", count: item.depth) + item.project.name).tag(item.id) }
-                    }.disabled(record.string("user_id") != store.userID).accessibilityIdentifier("projectParent")
+                    ProjectParentPickerField(record:$record,choices:parentChoices,binding:workflowBinding)
                     if !record.string("parent_id").isEmpty { Text("Subprojects share organization, not access. Sharing stays separate for each project.").font(.caption).foregroundStyle(.secondary) }
                     if store.record("projects", id: record.id) != nil && record.string("user_id") == store.userID {
                         Toggle("Archived", isOn: Binding(get: { record["is_archived"].flag }, set: { record["is_archived"] = .bool($0) })).accessibilityIdentifier("projectArchived")
