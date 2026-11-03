@@ -22,7 +22,7 @@ import { homedir } from "node:os";
 const exec = promisify(execFile);
 const [platform, output] = process.argv.slice(2);
 assert(
-  ["service", "ios", "ipad", "ios-expired", "ios-recorded", "ios-selection", "ios-selection-warm", "ios-selection-recorded"].includes(platform) &&
+  ["service", "ios", "ipad", "ios-expired", "ios-recorded", "ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued"].includes(platform) &&
     output?.startsWith("/tmp/taskfold-") && output.endsWith(".json"),
 );
 const account = "ec240000-0000-4000-8000-000000000001",
@@ -33,8 +33,9 @@ const account = "ec240000-0000-4000-8000-000000000001",
   generation = "ec240000-0000-4000-8000-000000000071";
 const expiredRecovery = platform === "ios-expired";
 const recordedRecovery = platform === "ios-recorded";
+const queuedSelectionRecovery = platform === "ios-selection-queued";
 const warmSelectionRecovery = platform === "ios-selection-warm", recordedSelectionRecovery = platform === "ios-selection-recorded";
-const selectionRecovery = ["ios-selection", "ios-selection-warm", "ios-selection-recorded"].includes(platform), selectionPeer = "ec240000-0000-4000-8000-000000000005", selectionEmpty = "ec240000-0000-4000-8000-000000000006";
+const selectionRecovery = ["ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued"].includes(platform), selectionPeer = "ec240000-0000-4000-8000-000000000005", selectionEmpty = "ec240000-0000-4000-8000-000000000006";
 let selectionOriginals, selectionIntents, selectionMedia;
 const device = platform.startsWith("ios")
     ? "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
@@ -91,6 +92,14 @@ async function currentHome() {
 try {
   await exec("python3", ["Scripts/check_test_storage.py", "--path", "/tmp"]);
   ({ pg, storage } = await createTaskFileProviderDatabase());
+  if (queuedSelectionRecovery) {
+    report.planningMigrationSHA256 = {};
+    for (const file of ["20261025044350_team_task_planning_batches.sql", "20261025060437_team_task_assignment_batches.sql", "20261025111218_team_task_label_batches.sql"]) {
+      const sql = await migrationSQL(file); await pg.raw(sql);
+      report.planningMigrationSHA256[file] = createHash("sha256").update(sql).digest("hex");
+    }
+    check("actual public coordinator routes edit to planning", await pg.scalar("select to_jsonb(position('team_task_planning_batch' in pg_get_functiondef('public.taskfold_team_task_batch(text,jsonb)'::regprocedure))>0)"));
+  }
   for (
     const file of [
       ...audioProjectLedgerDependencies,
@@ -160,7 +169,7 @@ try {
       "update taskfold_private.audio_comment_config set restoration_enabled=true",
     );
   }
-  http = await createAudioTeamNativeHttp(pg, storage, users.actor, { expiredRecovery, recordedRecovery, selectionRecovery, warmSelectionRecovery, recordedSelectionRecovery });
+  http = await createAudioTeamNativeHttp(pg, storage, users.actor, { expiredRecovery, recordedRecovery, selectionRecovery, warmSelectionRecovery, recordedSelectionRecovery, queuedSelectionRecovery });
   if (selectionRecovery) {
     selectionMedia=await readFile(new URL("../../TaskfoldTests/Fixtures/audio-comment-synthetic-tone.m4a",import.meta.url));
     selectionIntents=[];
@@ -255,6 +264,10 @@ try {
         "Taskfold/AudioCommentNativeFixture.swift",
         "Taskfold/AudioCommentCapture.swift",
         "Taskfold/Core/Store.swift",
+        "Taskfold/Core/Models.swift",
+        "Taskfold/TaskfoldApp.swift",
+        "Taskfold/Views/BackupTools.swift",
+        "Taskfold/Views/SettingsView.swift",
         "Taskfold/Core/TeamProjectAccess.swift",
         "Taskfold/Core/TeamTaskBatch.swift",
         "Taskfold/Core/Backend.swift",
@@ -337,7 +350,7 @@ try {
     await writeFile(configPath, configText, { mode: 0o600, flag: "wx" });
     const result = output.replace(/\.json$/, ".xcresult"),
       log = output.replace(/\.json$/, ".log"),
-      test = warmSelectionRecovery ? "testTeamRecordingNativeSelectionWarmHistory" : recordedSelectionRecovery ? "testTeamRecordingNativeSelectionRecordedRecovery" : selectionRecovery ? "testTeamRecordingNativeSelectionRecovery" : expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : recordedRecovery ? "testTeamRecordingNativeRecordedRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
+      test = queuedSelectionRecovery ? "testTeamRecordingNativeSelectionQueuedRecoveryFromSettings" : warmSelectionRecovery ? "testTeamRecordingNativeSelectionWarmHistory" : recordedSelectionRecovery ? "testTeamRecordingNativeSelectionRecordedRecovery" : selectionRecovery ? "testTeamRecordingNativeSelectionRecovery" : expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : recordedRecovery ? "testTeamRecordingNativeRecordedRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
     const command = [
       "-project",
       "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",
@@ -412,8 +425,8 @@ try {
       } else {
         check("selection committed reply and retry history match mode", mutations.map((x)=>x.deliveredStatus), warmSelectionRecovery ? [200,200] : [503,200]);
         if (!warmSelectionRecovery) check("selection cold retry preserves complete frozen body", mutations[0].command, mutations[1].command);
-        check("selection first and repeated closure both terminal", closures.map((x)=>x.state),["closed","closed"]);
-        check("local save failure never changes original closure request", closures[0].command,closures[1].command);
+        check("selection closure is terminal for every confirmed attempt", closures.map((x)=>x.state),queuedSelectionRecovery ? ["closed"] : ["closed","closed"]);
+        if (!queuedSelectionRecovery) check("local save failure never changes original closure request", closures[0].command,closures[1].command);
         check("original retained selection is refused before replacement",http.requests.some((x)=>x.action==="selection_restore_refused"&&x.code==="PT409"));
         check("one whole selection closure persists",await pg.scalar("select count(*)::int from taskfold_private.audio_selection_restore_closures"),1);
       }
@@ -444,8 +457,18 @@ try {
         check("selection records reviewed member policy "+member.task_id,member.audio_restoration_ack,expectedPolicy);
       }
       }
+      if (queuedSelectionRecovery) {
+        const singles=http.requests.filter((x)=>x.action==="task_edit"), plans=http.requests.filter((x)=>x.action==="selection_edit");
+        check("queued single edit succeeds once",singles.map((x)=>x.deliveredStatus),[200]);
+        check("queued planning reply is lost and replayed",plans.map((x)=>x.deliveredStatus),[503,200]);
+        check("queued planning retry preserves complete frozen command",plans[0].command,plans[1].command);
+        check("queued planning has one actual group",await pg.scalar("select count(*)::int from taskfold_private.team_task_batches where operation='edit'"),1);
+        const expectedEdits=[{...singles[0].command._body,batch_request_id:null},...plans[0].command._body.items.map((item)=>({...item,batch_request_id:plans[0].command._body.request_id}))].map((item)=>({request_id:item.request_id,actor_id:account,task_id:item.task_id,generation:item.task_generation,batch_request_id:item.batch_request_id,operation:"patch"})).sort((a,b)=>a.request_id.localeCompare(b.request_id));
+        check("queued single and selection keep three exact durable receipts",await pg.scalar("select coalesce(jsonb_agg(jsonb_build_object('request_id',request_id,'actor_id',actor_id,'task_id',task_id,'generation',generation,'batch_request_id',batch_request_id,'operation',operation) order by request_id),'[]'::jsonb) from taskfold_private.team_task_edits where operation='patch'"),expectedEdits);
+      }
       for (const member of finalRestore.items) {
-        const baseline=selectionOriginals.find((x)=>x.id===member.task_id);
+        let baseline=selectionOriginals.find((x)=>x.id===member.task_id);
+        if (queuedSelectionRecovery) baseline={...baseline,...(member.task_id===task?{title:"Keep the newer queued title",description:"Keep the newer queued notes"}:{}),...([task,selectionPeer].includes(member.task_id)?{priority:2}:{})};
         const saved=await pg.scalar(`select to_jsonb(t) from public.tasks t where id=${lit(member.task_id)}`);
         check("selection keeps actual SQL fields "+member.task_id,saved,{...baseline,task_generation:member.task_generation});
         check("selection cold cache equals actual SQL "+member.task_id,cache.tables.tasks.find((x)=>x.id===member.task_id),saved);

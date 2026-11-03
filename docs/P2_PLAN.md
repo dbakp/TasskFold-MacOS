@@ -7488,3 +7488,11 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Keep guarded probes DEBUG-only, add clear acknowledgement-save failure copy, and build/sign app and runner independently in both repos.
 - [ ] Later queued dependencies, normal app entry, Mac/iPad, wider context/accessibility, mixed media, whole-project transfer and genuine integration remain. Normal gates stay Off.
 - Evidence: [native history and confirmation](audio-selection-history-native/README.md). Curated checkpoint/substep totals are unchanged.
+
+### 3 November 2026 · Preserve later selection previews and accept Settings recovery
+
+- [x] Reproduce and fix acknowledgements hiding a newer selection edit or resurrecting a member queued for deletion. Validate the original group, reproject only the affected member, retain generation guards and keep the whole delivery request frozen. 208 owning Core tests pass independently per repo, including four new regressions.
+- [x] Accept the actual iPhone RootView → Settings → Data & Sync recovery presentation in a synthetic signed-in workspace. Later edits, two lost replies and cold retries preserve the exact title/notes/priorities, requests, SQL receipts and available audio bytes. 68 checks pass, with all owned resources removed/restored.
+- [x] Build/sign each owning app and runner. Add only stable Settings identifiers and guarded fixture startup/edit controls; no normal-use gate or production migration changes.
+- [ ] Clarify uncertain-reply retry copy; finish direct sync-attention entry, normal bootstrap, wider queued dependencies, Mac/iPad and accessibility/privacy/genuine integration. Whole-project transfers and mixed media remain.
+- Evidence: [queued Settings recovery](audio-queued-settings-recovery/README.md). Curated bars remain 74; one distinct preview requirement adds a 35th substep.

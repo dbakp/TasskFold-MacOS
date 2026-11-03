@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Recording recovery acceptance",
-  "latest": "Two more iPhone recovery gaps are now accepted: live Redo/delete/Undo after reviewed omission (69 checks), and unchanged confirmation of an already-restored selection (46). Actual failed saves preserve the complete queue and history; final cold rows and available audio bytes match the service. Both apps build/sign. Mac/iPad, normal app entry, later edits and genuine integration remain; ordinary use stays disabled.",
+  "focus": "P2 · Preserve newer queued work",
+  "latest": "Earlier sync responses no longer hide newer selection edits or bring back tasks queued for deletion; 208 Core checks pass in each repo. iPhone recovery through Settings now preserves later title/notes/priorities across two lost replies and cold retries, with 68 actual service/native checks. Both apps build/sign. Uncertain-reply copy, direct sync attention, Mac/iPad, wider histories and genuine integration remain; ordinary use stays disabled.",
   "next": [
-    "Finish later queued dependencies and ordinary Backups/sync-attention presentation, then wider Mac/iPad, account/background/privacy and accessibility acceptance. Whole-project transfers, mixed media and genuine integration remain. iPhone cold retry, live history and recorded selection confirmation now have distinct accepted cases.",
+    "Clarify retry wording for uncertain service replies. Continue direct sync-attention entry, normal sign-in/bootstrap, wider queued completion/move/recipient histories and Mac/iPad/context/accessibility acceptance. The iPhone Settings recovery route now preserves later single and planning edits. Whole-project transfers, mixed media and genuine integration remain.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "iPhone selection recovery now has cold-retry, live Redo/Undo and already-restored confirmation proof. Failed actual saves keep the complete queue/history; task rows and available audio bytes stay exact. Mac/iPad, main entry, later edits, mixed media, whole-project transfers and genuine integration remain. Normal use stays disabled.",
+              "detail": "iPhone Settings recovery keeps newer title/notes and selected priorities through two lost replies and cold retries. Earlier sync responses preserve newer selection changes; both Core implementations pass. Direct sync attention, Mac/iPad, wider histories, mixed media, whole-project transfers and genuine integration remain. Normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -695,7 +695,11 @@
                 },
                 {
                   "state": "verify",
-                  "title": "Selection recovery: iPhone cold retry, live history and recorded confirmation verified"
+                  "title": "Selection recovery: iPhone retries, history, confirmation and Settings verified"
+                },
+                {
+                  "state": "done",
+                  "title": "Newer selection changes stay intact while earlier edits sync"
                 },
                 {
                   "state": "build",
@@ -847,7 +851,9 @@
             "audio-history-rebinding/README.md",
             "audio-history-rebinding/verification.json",
             "audio-selection-history-native/README.md",
-            "audio-selection-history-native/verification.json"
+            "audio-selection-history-native/verification.json",
+            "audio-queued-settings-recovery/README.md",
+            "audio-queued-settings-recovery/verification.json"
           ],
           "focus": true
         },
@@ -957,7 +963,7 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "e615ad8042061dc7d9d51fefb89104967700215713e6819d00bfdc8b8725a689",
+    "P2_PLAN.md": "b873a87e913beaf0cb312967c91d7e084bbe9eed1dcf25ec1351bb2aaa0db04e",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -974,15 +980,17 @@
     "audio-expired-recovery/verification.json": "cc6190b30a6cd17efd61c9b8456b29496930d42b1bd6cbff980b3baf4caaad6e",
     "audio-generation-restore/README.md": "e7da0408570595b31776ecf3e0c6a568769cb62f8b8b3ddb6b0238241fb9f4f2",
     "audio-generation-restore/verification.json": "d4c6066fcf7738ee756878e50c9339a6bdcec89c02c7e38ef0842e1c0e2d5c57",
-    "audio-history-rebinding/README.md": "199762408c6ff65bb1cb7b4748f19882a9daf40b2519805705017336fb567a94",
+    "audio-history-rebinding/README.md": "39f3b82cf34c6f1481a01197460751f521e35725ae767f78ee117170ad376228",
     "audio-history-rebinding/verification.json": "d9521c74fa98278a9a31e4fa301600a1612eaf86dd8162d33f89015bd8bc3cfc",
     "audio-lifecycle-native/README.md": "2b183fd5cb44c5e33930d4d32c399479bb02e42f28c34aa7ae6cd424401c4626",
     "audio-lifecycle-native/verification.json": "0bf743a4d5738e854bace8d282dc06527b3e8acfc5b9b39d9e5b1a2667994f8e",
     "audio-provider-recovery/README.md": "09aa4b4b276abb8729d0fbdea3ad0cde8ce871e1e5c0d5c7ba2b08a7b5ed8e4f",
     "audio-provider-recovery/verification.json": "828589a57e7a3fcd4918e9688d52c8765103f62d84d6429959727929539c6a57",
+    "audio-queued-settings-recovery/README.md": "d482842eab998c5dd45869d454c04f813b4eba3b1a2f5e83e4b592c811d60a6d",
+    "audio-queued-settings-recovery/verification.json": "071095333454a31fd2b099deed70322757644d48498621623722c9d6c5992e39",
     "audio-real-provider-native/README.md": "d8edaeca7ea80e55252f4d7b422b53d26865b6d0e07ab10132535e8884ca0726",
     "audio-real-provider-native/verification.json": "30cb9faeeebd7381b625547e89e790f86790dc755812430a4345d21165087a92",
-    "audio-selection-history-native/README.md": "0f888b3e94b6c1471743878423f6ce0b609e2eec4e40992cb026fbd17d5f7376",
+    "audio-selection-history-native/README.md": "1ddccb10728423ee96a73865155274c4255a1a67535073fad15d88b6bd8fa620",
     "audio-selection-history-native/verification.json": "04f6ba0264051213f3d6e1631c8e8e20c07a9dce51e455297b418ef17e0d2fc4",
     "child-adoption-discovery/verification.json": "0025219a93180f6bdc7918eb372aa3d61a0437b0af48a4b7286e23a62d15e0a7",
     "child-adoption-original-export/verification.json": "d9a5dfce308d7ce39e45f897e3c735bf15a1621eca9cbf18417f13332f6b824b",

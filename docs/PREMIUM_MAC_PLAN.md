@@ -10495,3 +10495,9 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Own the recorded-acknowledgement failure copy and guarded debug support; current app/runner build and pass strict signatures.
 - [x] Record owning iPhone acceptance: 69 live-history checks and 46 recorded-confirmation checks, including actual failed saves and unchanged recovery history. This does not establish Mac runtime.
 - [ ] Accept actual Mac history/selection controls, ordinary app entry and wider accessibility/context/genuine integration. No normal-use activation. See [scope](audio-selection-history-native/README.md).
+
+### 3 November 2026 · Keep later selection work visible
+
+- [x] Own acknowledgement projection for valid queued non-completion selection members. Newer edits/deletion visibility survive, server generations stay guarded and complete requests remain unchanged. 208 owning Core checks and the current app/runner build/signatures pass.
+- [x] Record iPhone-owned Settings presentation and later-queue acceptance: 68 checks against actual local SQL/RLS/Storage, two lost replies and cold retries. Mac presentation/runtime is separate.
+- [ ] Direct Mac entry, wider queued histories, context/accessibility/privacy and genuine integration remain. No normal-use enablement. See [scope](audio-queued-settings-recovery/README.md).

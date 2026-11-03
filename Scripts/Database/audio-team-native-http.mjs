@@ -14,8 +14,8 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
   const workspace = taskFileWorkspaceAdapter(pg, { actor: user }, {
     actor: audio.nativeToken,
   });
-  assert(Object.keys(options).every((key) => ["expiredRecovery", "recordedRecovery", "selectionRecovery", "warmSelectionRecovery", "recordedSelectionRecovery"].includes(key)));
-  const faults = { losePublicationReply: options.selectionRecovery !== true, expireAfterDeletion: (options.expiredRecovery === true || options.selectionRecovery === true) && options.recordedSelectionRecovery !== true, loseOmissionReply: (options.expiredRecovery === true || options.selectionRecovery === true) && options.warmSelectionRecovery !== true, loseRetainedReply: options.recordedRecovery === true || options.recordedSelectionRecovery === true };
+  assert(Object.keys(options).every((key) => ["expiredRecovery", "recordedRecovery", "selectionRecovery", "warmSelectionRecovery", "recordedSelectionRecovery", "queuedSelectionRecovery"].includes(key)));
+  const faults = { losePublicationReply: options.selectionRecovery !== true, expireAfterDeletion: (options.expiredRecovery === true || options.selectionRecovery === true) && options.recordedSelectionRecovery !== true, loseOmissionReply: (options.expiredRecovery === true || options.selectionRecovery === true) && options.warmSelectionRecovery !== true, loseRetainedReply: options.recordedRecovery === true || options.recordedSelectionRecovery === true, losePlanningReply: options.queuedSelectionRecovery === true };
   const requests = [];
   const server = createServer(async (req, res) => {
     try {
@@ -29,10 +29,11 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
           "/rest/v1/rpc/taskfold_audio_restore_recovery",
           "/rest/v1/rpc/taskfold_team_task_batch",
           "/rest/v1/rpc/taskfold_audio_selection_restore_recovery",
+          "/rest/v1/rpc/taskfold_edit_team_task",
         ].includes(url.pathname)
       ) {
         assert.equal(req.method, "POST");
-        const batch = url.pathname.endsWith("_task_batch"), selection = url.pathname.endsWith("_selection_restore_recovery");
+        const batch = url.pathname.endsWith("_task_batch"), selection = url.pathname.endsWith("_selection_restore_recovery"), edit = url.pathname.endsWith("_edit_team_task");
         const chunks = [];
         let size = 0;
         for await (const part of req) {
@@ -45,16 +46,17 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
         const preview = url.pathname.endsWith("_review");
         assert.deepEqual(
           Object.keys(body).sort(),
-          preview ? ["_body"] : batch ? ["_body", "_operation"] : ["_action", "_body"],
+          preview || edit ? ["_body"] : batch ? ["_body", "_operation"] : ["_action", "_body"],
         );
         const recovery = url.pathname.endsWith("_restore_recovery");
-        const action = body[batch ? "_operation" : "_action"], members = batch ? body._body.items : [body._body];
+        const action = edit ? "edit" : body[batch ? "_operation" : "_action"], members = batch ? body._body.items : [body._body];
         const audit = preview ? "lifecycle_review" : selection ? "selection_recovery_" + action : recovery ? "restore_recovery_" + action : (batch ? "selection_" : "task_") + action;
-        if (!preview) assert((recovery ? ["inspect", "close"] : ["delete", "restore"]).includes(action));
+        if (!preview) assert((recovery ? ["inspect", "close"] : batch ? ["delete", "restore", "edit"] : edit ? ["edit"] : ["delete", "restore"]).includes(action));
         const expression = preview
           ? `public.taskfold_team_audio_lifecycle_review(${
             lit(JSON.stringify(body._body))
           }::jsonb)`
+          : edit ? `public.taskfold_edit_team_task(${lit(JSON.stringify(body._body))}::jsonb)`
           : selection ? `public.taskfold_audio_selection_restore_recovery(${lit(action)},${lit(JSON.stringify(body._body))}::jsonb)`
           : batch ? `public.taskfold_team_task_batch(${lit(action)},${lit(JSON.stringify(body._body))}::jsonb)`
           : recovery ? `public.taskfold_audio_restore_recovery(${lit(action)},${lit(JSON.stringify(body._body))}::jsonb)`
@@ -71,7 +73,7 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
         ); } catch (error) {
           const statuses = { PT409: 409, PT412: 412, PT503: 503, "42501": 403, "28000": 401, "22023": 400 };
           assert(Object.hasOwn(statuses, error.code), "Expected SQL refusal code, never invented success");
-          requests.push({ action: audit + "_refused", code: error.code, responseStatus: statuses[error.code], deliveredStatus: statuses[error.code], bodySHA256: createHash("sha256").update(bytes).digest("hex"), requestID: body._body.request_id, ack: body._body.audio_restoration_ack });
+          requests.push({ action: audit + "_refused", command: body, code: error.code, responseStatus: statuses[error.code], deliveredStatus: statuses[error.code], bodySHA256: createHash("sha256").update(bytes).digest("hex"), requestID: body._body.request_id, ack: body._body.audio_restoration_ack });
           res.writeHead(statuses[error.code], { "Content-Type": "application/json", "Cache-Control": "no-store" });
           res.end(JSON.stringify({ code: error.code, message: "Controlled native SQL refusal" })); return;
         }
@@ -85,7 +87,8 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
         }
         const omitted = members.some((x) => x.audio_restoration_ack?.policy === "expired_recordings_omitted_v1");
         const retained = !omitted && members.some((x) => x.audio_restoration_ack?.policy === "published_restore_v1");
-        const lost = !preview && !recovery && action === "restore" && ((omitted && faults.loseOmissionReply) || (retained && faults.loseRetainedReply));
+        const lost = (!preview && !recovery && action === "restore" && ((omitted && faults.loseOmissionReply) || (retained && faults.loseRetainedReply))) || (batch && action === "edit" && faults.losePlanningReply);
+        if (lost && batch && action === "edit") faults.losePlanningReply = false;
         if (lost && omitted) faults.loseOmissionReply = false;
         if (lost && retained) faults.loseRetainedReply = false;
         requests.push({

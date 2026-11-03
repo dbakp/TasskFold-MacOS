@@ -732,3 +732,57 @@ extension TeamTaskBatchTests {
         XCTAssertThrowsError(try TeamAudioRestoreHistoryRebinding(original: original, replacement: unchangedPolicy))
     }
 }
+
+extension TeamTaskBatchTests {
+    private func queuedAfterSingleAcknowledgement(deleting: Bool = false) throws -> (Snapshot, Mutation, Record, Mutation, JSON) {
+        let (selection, _) = try selectionOutcome()
+        let group = selection.original.teamTaskBatch!, originals = group.items.map { Record($0.fields) }
+        var saved = originals[0]; saved["title"] = .string("Newer queued title")
+        var scope = group.items[0].teamTaskScope!; scope.restoreRequest = nil; scope.audioRestoration = nil
+        let single = Mutation(table: "tasks", recordID: saved.id, method: "PATCH", fields: ["title": saved["title"]], baseline: originals[0].fields, teamTaskScope: scope)
+        let priority: JSON = saved["priority"] == .number(1) ? .number(4) : .number(1)
+        let items = group.items.prefix(2).enumerated().map { index, original -> Mutation in
+            var memberScope = original.teamTaskScope!; memberScope.restoreRequest = nil
+            if !deleting { memberScope.audioRestoration = nil }
+            return Mutation(table: "tasks", recordID: original.recordID, method: deleting ? "DELETE" : "PATCH", fields: deleting ? [:] : ["priority": priority], baseline: index == 0 ? saved.fields : original.fields, teamTaskScope: memberScope)
+        }
+        let batch = TeamTaskBatch(account: group.account, origin: group.origin, team: group.team, operation: deleting ? .delete : .edit, restores: nil, items: items)
+        let header = TeamTaskBatch.header(batch)
+        XCTAssertNoThrow(try batch.body(for: header))
+        var rows = originals; rows[0] = saved
+        if deleting { rows.removeFirst(2) } else { rows[0]["priority"] = priority; rows[1]["priority"] = priority }
+        let projects = Set(group.items.map { $0.teamTaskScope!.project }).map { Record(["id": .string($0)]) }
+        return (Snapshot(tables: ["tasks": rows, "projects": projects], pending: [single, header]), single, saved, header, priority)
+    }
+    func testSingleAcknowledgementPreservesLaterSelectionEditPreviewAndFrozenRequest() throws {
+        var (snapshot, single, saved, header, priority) = try queuedAfterSingleAcknowledgement()
+        let peer = snapshot.tables["tasks"]![1], originalQueue = snapshot.pending
+        XCTAssertTrue(snapshot.acknowledge(single, saved: saved))
+        XCTAssertEqual(snapshot.tables["tasks"]!.first { $0.id == saved.id }?["title"], saved["title"])
+        XCTAssertEqual(snapshot.tables["tasks"]!.first { $0.id == saved.id }?["priority"], priority)
+        XCTAssertEqual(snapshot.tables["tasks"]!.first { $0.id == peer.id }, peer)
+        XCTAssertEqual(snapshot.pending, [header]); XCTAssertEqual(originalQueue.last, snapshot.pending.last)
+    }
+    func testSingleAcknowledgementDoesNotResurrectMemberOfLaterQueuedDeletion() throws {
+        var (snapshot, single, saved, header, _) = try queuedAfterSingleAcknowledgement(deleting: true)
+        let visible = snapshot.tables["tasks"]
+        XCTAssertTrue(snapshot.acknowledge(single, saved: saved))
+        XCTAssertEqual(snapshot.tables["tasks"], visible)
+        XCTAssertEqual(snapshot.pending, [header])
+    }
+    func testSelectionAcknowledgementProjectionKeepsNewServerGenerationAndOriginalQueue() throws {
+        var (snapshot, single, saved, header, _) = try queuedAfterSingleAcknowledgement()
+        saved["task_generation"] = .string(UUID().uuidString.lowercased())
+        XCTAssertTrue(snapshot.acknowledge(single, saved: saved))
+        XCTAssertEqual(snapshot.tables["tasks"]!.first { $0.id == saved.id }, saved)
+        XCTAssertEqual(snapshot.pending, [header])
+    }
+    func testMalformedSelectionCannotGainProjectionThroughSingleAcknowledgement() throws {
+        var (snapshot, single, saved, header, _) = try queuedAfterSingleAcknowledgement()
+        var broken = header; broken.teamTaskBatch!.items[1].id = broken.teamTaskBatch!.items[0].id
+        snapshot.pending[1] = broken
+        XCTAssertTrue(snapshot.acknowledge(single, saved: saved))
+        XCTAssertEqual(snapshot.tables["tasks"]!.first { $0.id == saved.id }, saved)
+        XCTAssertEqual(snapshot.pending, [broken])
+    }
+}

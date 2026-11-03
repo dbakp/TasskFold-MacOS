@@ -720,10 +720,23 @@ struct Snapshot: Codable, Equatable, Sendable {
             var confirmed = saved; confirmed["id"] = .string(rows[index].id); rows[index] = confirmed
         } else { rows.append(saved) }
         tables[change.table] = rows
-        for queued in pending where queued.table == change.table && queued.recordID.lowercased() == change.recordID.lowercased() {
-            var queued = queued
-            if let id = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() })?.id { queued.recordID = id }
-            apply(queued)
+        for queued in pending where queued.table == change.table {
+            if let batch = queued.teamTaskBatch {
+                guard !batch.isCompletion, (try? batch.body(for: queued)) != nil else { continue }
+                // Acknowledgement replaces only this member's row. Other members
+                // already have their optimistic values, so replaying the whole
+                // group's admission would incorrectly reject its changed baseline.
+                // Project this member only; the complete frozen RPC stays queued.
+                for member in batch.items where member.recordID.lowercased() == change.recordID.lowercased() {
+                    var member = member
+                    if let id = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() })?.id { member.recordID = id }
+                    apply(member)
+                }
+            } else if queued.recordID.lowercased() == change.recordID.lowercased() {
+                var queued = queued
+                if let id = rows.first(where: { $0.id.lowercased() == change.recordID.lowercased() })?.id { queued.recordID = id }
+                apply(queued)
+            }
         }
         return true
     }

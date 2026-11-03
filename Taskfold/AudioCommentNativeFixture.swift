@@ -639,7 +639,7 @@ struct AudioCommentNativeFixtureView: View {
             guard request.httpMethod == "POST", original.queryItems?.count == 1, let action = original.queryItems?.first, action.name == "action",
                   ["publish", "resolve", "page", "list", "download", "remove"].contains(action.value ?? "") else { throw CancellationError() }
         } else {
-            guard (request.httpMethod == "GET" && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")) || (request.httpMethod == "POST" && ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery"].contains(source.path)) else { throw CancellationError() }
+            guard (request.httpMethod == "GET" && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")) || (request.httpMethod == "POST" && ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_edit_team_task"].contains(source.path)) else { throw CancellationError() }
         }
         parts.path = source.path; parts.percentEncodedQuery = original.percentEncodedQuery
         guard let target = parts.url else { throw CancellationError() }
@@ -728,6 +728,20 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
                             } catch { deletionError = error.localizedDescription }
                         }.disabled(!ready).accessibilityIdentifier("audioTeamNativeSelectionDeletion")
                         Button("Fail next recovery save") { store.fixtureAudioSelectionRecoveryFailNextSave() }.accessibilityIdentifier("audioSelectionFailNextSave")
+                        if ProcessInfo.processInfo.arguments.contains("--audio-queued-recovery-testing") {
+                            Button("Save follow-up edits") {
+                                do {
+                                    guard var root = store.record("tasks", id: TeamEditorNativeFixture.taskID),
+                                          let peer = store.record("tasks", id: "ec240000-0000-4000-8000-000000000005") else { throw TeamTaskEditorDraft.unavailable }
+                                    let draft = try store.captureTeamTaskEditor(root)
+                                    root["title"] = .string("Keep the newer queued title")
+                                    root["description"] = .string("Keep the newer queued notes")
+                                    guard store.saveTeamTaskEditor(root, draft: draft), let current = store.record("tasks", id: root.id) else { throw TeamTaskEditorDraft.unavailable }
+                                    let planning = try store.captureTeamTaskPlanningSelection([current, peer], changes: [current.id: ["priority": .number(2)], peer.id: ["priority": .number(2)]])
+                                    guard store.saveTeamTaskPlanningSelection(planning) else { throw TeamTaskBatch.invalid }
+                                } catch { deletionError = store.error ?? error.localizedDescription }
+                            }.accessibilityIdentifier("audioSelectionQueueFollowups")
+                        }
                     }
                     Button("Review task deletion") {
                         do {
