@@ -343,6 +343,7 @@ final class Store {
             .appendingPathComponent(WorkspaceBackup.stableID("vault", account), isDirectory: true)
         return .init(account: account, origin: origin, directory: directory, encryptionKey: {
             #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
             if ChildFieldNativeIdentity.enabled { return try ChildFieldNativeIdentity.key(account) }
             #endif
             return try BackupVault.deviceKey(account: account)
@@ -358,6 +359,7 @@ final class Store {
         let io=try ChildTaskFieldJournalFileIO(directory:directory,account:account,origin:origin,
             encryptionKey:{
                 #if DEBUG
+            if FullSchemaNativeFixture.enabled {return try FullSchemaNativeFixture.journalKey(account)}
                 if ChildFieldNativeIdentity.enabled {return try ChildFieldNativeIdentity.key(account)}
                 #endif
                 return try BackupVault.deviceKey(account:account)
@@ -6793,8 +6795,63 @@ extension Store {
         let report:[String:JSON]=["accepted":.bool(false),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(FullSchemaNativeFixture.phase),"message":.string(error.localizedDescription),"notice":.string(notice ?? ""),"pending":.number(Double(snapshot.pending.count))]
         try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(FullSchemaNativeFixture.phase+".json"),options:.atomic)
     }
+
+    private func runFullSchemaChildFieldPhase() async throws {
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        guard let child=c.child else {throw AppFailure(message:"Missing isolated child identity")}
+        dailyBackupsEnabled=false
+        if phase=="child-queue" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else {throw AppFailure(message:"Genuine child sign-in failed")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+            let read=try await readChildTaskRecords(c.task)
+            let command=try ChildTaskFieldCommand(read:read,key:child,changes:["description":.string("Child edit saved offline")])
+            let before=try ChildTaskFieldBaseline(read:read,command:command)
+            FullSchemaNativeNetwork.offline=true;online=false
+            let model=try childTaskFieldRecoveryModel();defer{model.close()}
+            guard await model.save(command,before:before) != nil else {throw AppFailure(message:model.message ?? "Child request was not saved offline")}
+        }else {
+            guard backend.session?.user.id==c.account,signedIn,!localMode else {throw AppFailure(message:"Genuine child session was not reopened")}
+            online=false
+        }
+        let journal=try childTaskFieldJournal(account:c.account,origin:backend.accountRemovalOrigin)
+        let original=try await journal.load()
+        guard original.entries.count==1,let first=original.entries.first,first.before != nil else {throw AppFailure(message:"Expected one durable child request with its original baseline")}
+        func fingerprint(_ entry:ChildTaskFieldJournalState.Entry)throws->String {
+            let value=try TaskfoldJSONDecoder().decode(JSON.self,from:TaskfoldJSONEncoder().encode(entry))
+            let stable:[String:JSON] = ["command":value.object["command"] ?? .null,"before":value.object["before"] ?? .null]
+            let object=try JSONSerialization.jsonObject(with:TaskfoldJSONEncoder().encode(stable))
+            return SHA256.hash(data:try JSONSerialization.data(withJSONObject:object,options:[.sortedKeys])).map{String(format:"%02x",$0)}.joined()
+        }
+        if phase != "child-queue" {guard try fingerprint(first)==c.queuedFingerprint else {throw AppFailure(message:"The cold child request or original baseline changed")}}
+        var message="Saved offline"
+        if phase=="child-loss" || phase=="child-replay" {
+            guard first.phase == (phase=="child-loss" ? .queued:.attempted) else {throw AppFailure(message:"Unexpected durable child phase before sending")}
+            if phase=="child-loss" {FullSchemaNativeNetwork.armDrop()}
+            FullSchemaNativeNetwork.offline=false;online=true
+            let model=try childTaskFieldRecoveryModel();defer{model.close()};await model.load()
+            let sent=await model.send(first.command);message=model.message ?? ""
+            if phase=="child-loss" {
+                FullSchemaNativeNetwork.offline=true;online=false
+                guard !sent,FullSchemaNativeNetwork.dropped==1,model.entries.first?.phase == .attempted else {throw AppFailure(message:"Child lost reply did not preserve attempted recovery. "+message)}
+            }else {guard sent,model.entries.first?.phase == .confirmed else {throw AppFailure(message:"Child exact retry was not confirmed. "+message)}}
+        }
+        let disk=try await childTaskFieldJournal(account:c.account,origin:backend.accountRemovalOrigin).load()
+        guard disk.entries.count==1,let saved=disk.entries.first,try fingerprint(saved)==fingerprint(first),snapshot.pending.isEmpty else {throw AppFailure(message:"Durable child request changed or entered the root queue")}
+        if phase=="child-queue" {guard saved.phase == .queued else {throw AppFailure(message:"Offline child request was not queued")}}
+        if phase=="child-replay" || phase=="child-verify" {
+            guard saved.phase == .confirmed,saved.receipt?.raw["replayed"] == .bool(true),
+                  let task=record("tasks",id:c.task),task.title=="Changed remotely while closed",
+                  task["subtasks"].list.contains(where:{$0.object["id"]?.text==child && $0.object["description"]?.text=="Child edit saved offline"}),
+                  task["subtasks"].list.contains(where:{$0.object["id"]?.text==c.sibling && $0.object["title"]?.text=="Remote sibling edit"}) else {throw AppFailure(message:"Confirmed child recovery lost a local or remote edit")}
+        }
+        guard try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))==snapshot else {throw AppFailure(message:"Child recovery Store and disk differ")}
+        let report:[String:JSON] = ["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"account":.string(userID),"task":.string(c.task),"pending":.number(Double(snapshot.pending.count)),"commandFingerprint":.string(try fingerprint(saved)),"journalPhase":.string(saved.phase.rawValue),"journalCommand":.object(saved.command.body),"receipt":saved.receipt.map{.object($0.raw)} ?? .null,"diskMatchesStore":.bool(true),"droppedReplies":.number(Double(FullSchemaNativeNetwork.dropped)),"notice":.string(message)]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
+    }
+
     func runFullSchemaNativePhase() async throws {
         guard FullSchemaNativeFixture.enabled else{throw CancellationError()}
+        if FullSchemaNativeFixture.phase.hasPrefix("child-") {try await runFullSchemaChildFieldPhase();return}
         let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
         dailyBackupsEnabled=false
         if phase=="initial" {

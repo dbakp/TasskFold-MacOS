@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import CryptoKit
 
 /// Exact disposable namespace and explicit flag only. No request leaves this
 /// local URLProtocol peer; it is native client acceptance, not service acceptance.
@@ -665,18 +666,24 @@ enum FullSchemaNativeFixture {
     }
     static var root: URL {URL.applicationSupportDirectory.appendingPathComponent("TaskfoldFullSchemaNative-workflowteststeameditbridge",isDirectory:true)}
     static var phase: String {ProcessInfo.processInfo.arguments.first(where:{$0.hasPrefix("--full-schema-phase=")}).map{String($0.dropFirst("--full-schema-phase=".count))} ?? "invalid"}
-    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?}
+    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?;let child:String?}
     struct SavedSession:Codable {let nonce:UUID;let session:Session}
     static func configuration() throws -> Configuration {
         guard enabled else{throw CancellationError()}
         let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:root.appendingPathComponent("config.json")))
         guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
               let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
-              ["initial","queue","loss","replay","verify"].contains(phase) else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
+              ["initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify"].contains(phase),
+              !phase.hasPrefix("child-") || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
         return c
     }
+    static func journalKey(_ account:String)throws->SymmetricKey {
+        let c=try configuration();guard c.account==account else {throw CancellationError()}
+        // Disposable fixture-only key; protected Keychain acceptance is separate.
+        return SymmetricKey(data:SHA256.hash(data:Data((c.nonce.uuidString+account).utf8)))
+    }
     @MainActor static func backend()->Backend {
-        FullSchemaNativeNetwork.offline = phase != "initial"
+        FullSchemaNativeNetwork.offline = phase != "initial" && phase != "child-queue"
         let c=try? configuration()
         let saved=(try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
         let session=saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil
@@ -698,7 +705,8 @@ enum FullSchemaNativeNetwork {
     static func armDrop(){lock.withLock{drop=true;drops=0}}
     static var dropped:Int {lock.withLock{drops}}
     static func consumeDrop(_ request:URLRequest,_ response:HTTPURLResponse)->Bool {
-        guard request.url?.path=="/rest/v1/rpc/taskfold_patch_task",request.httpMethod=="POST",(200..<300).contains(response.statusCode) else{return false}
+        let expected=FullSchemaNativeFixture.phase.hasPrefix("child-") ? "/rest/v1/rpc/taskfold_edit_child_task":"/rest/v1/rpc/taskfold_patch_task"
+        guard request.url?.path==expected,request.httpMethod=="POST",(200..<300).contains(response.statusCode) else{return false}
         return lock.withLock{guard drop else{return false};drop=false;drops+=1;disconnected=true;return true}
     }
 }

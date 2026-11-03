@@ -9,14 +9,15 @@ import {homedir} from 'node:os';
 import {join,resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFullSchemaRuntime} from './full-schema-runtime.mjs';
-const exec=promisify(execFile),[platform,output]=process.argv.slice(2);
+const exec=promisify(execFile),[platform,output,mode='root']=process.argv.slice(2);
+assert(['root','child'].includes(mode));
 assert(['ios','mac'].includes(platform));assert(/^\/tmp\/taskfold-[^/]+\.json$/.test(output));
 try{await stat(output);throw Error('Preserve previous result')}catch(e){if(e.code!=='ENOENT')throw e}
 const repo=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const device='F2ACCCB5-E5B3-426F-B962-955A113D4EF4';
 const bundle=platform==='ios'?'com.dbakp.taskfold.workflowteststeameditbridge':'com.dbakp.taskfold.mac.workflowteststeameditbridge';
 const product=platform==='ios'?'/tmp/taskfold-prepared-undo-signed-ios-build/Build/Products/Debug-iphonesimulator/Taskfold.app':'/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app';
-const report={platform,actualAppBackendStore:false,genuineLocalAuthREST:false,transportIsTestOnly:true,genuineTLSOrKeychainAcceptance:false,hostedChanges:false,checks:{},phases:{}};
+const report={platform,mode,actualAppBackendStore:false,genuineLocalAuthREST:false,transportIsTestOnly:true,genuineTLSOrKeychainAcceptance:false,hostedChanges:false,checks:{},phases:{}};
 let runtime,initialDevice,root,home,config,pid,cache;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const command=async(...args)=>(await exec(args[0],args.slice(1),{timeout:60000,maxBuffer:1024*1024})).stdout.trim();
@@ -24,7 +25,7 @@ const lit=v=>"'"+String(v).replaceAll("'","''")+"'";
 const check=(name,value)=>{assert.equal(value,true,name);report.checks[name]=true;console.log('passed',name)};
 async function deviceState(){const devices=JSON.parse(await command('xcrun','simctl','list','devices','--json'));return Object.values(devices.devices).flat().find(d=>d.udid===device).state}
 async function stop(){
- if(platform==='ios'){try{await command('xcrun','simctl','terminate',device,bundle)}catch{};return}
+ if(platform==='ios'){try{await command('xcrun','simctl','terminate',device,bundle)}catch{};if(pid){for(let i=0;i<30;i++){try{process.kill(pid,0)}catch(e){if(e.code==='ESRCH'){pid=null;return}throw e}await sleep(100)}throw Error('Owned iPhone app did not quit')}return}
  if(pid){try{const comm=await command('ps','-p',String(pid),'-o','comm=');assert(await realpath(comm)===await realpath(product+'/Contents/MacOS/Taskfold')); process.kill(pid,'SIGTERM');for(let i=0;i<30;i++){try{process.kill(pid,0)}catch{pid=null;return}await sleep(100)}throw Error('Owned Mac app did not quit')}catch(e){if(e.code===1){pid=null;return}throw e}}
 }
 async function launch(phase){
@@ -44,7 +45,7 @@ try{
  await command('codesign','--verify','--deep','--strict',product);
  const host=platform==='ios'?'/tmp/taskfold-owner-review-ios-host':'/tmp/taskfold-owner-review-mac-host';
  const mapping={'com.dbakp.taskfold.task':'com.dbakp.taskfold.workflowteststeameditbridge.task','com.taskfold.ios.session':'com.taskfold.workflowteststeameditbridge.session','com.taskfold.recovery.v1':'com.taskfold.workflowteststeameditbridge.recovery','group.com.dbakp.taskfold':'group.com.dbakp.taskfold.workflowteststeameditbridge'};
- const paths=['Taskfold/Core/Store.swift','Taskfold/Core/Backend.swift','Taskfold/Core/Models.swift','Taskfold/Core/TeamWorkspace.swift','Taskfold/TeamTemplateNativeFixture.swift',platform==='ios'?'Taskfold/Views/TaskEditor.swift':'Taskfold/Views/TaskInspector.swift'];
+ const paths=['Taskfold/Core/Store.swift','Taskfold/Core/Backend.swift','Taskfold/Core/Models.swift','Taskfold/Core/TeamWorkspace.swift','Taskfold/TeamTemplateNativeFixture.swift','Taskfold/Core/ChildTaskFieldCommands.swift','Taskfold/Core/ChildTaskCompletionCommands.swift',platform==='ios'?'Taskfold/Views/TaskEditor.swift':'Taskfold/Views/TaskInspector.swift'];
  const executable=join(product,platform==='ios'?'':'Contents/MacOS','Taskfold.debug.dylib');const compiled=await stat(executable);report.sourceSHA256={};
  for(const path of paths){const source=await readFile(join(repo,path),'utf8');let expected=source;for(const [from,to] of Object.entries(mapping))expected=expected.replaceAll(from,to);assert.equal(await readFile(join(host,path),'utf8'),expected,'Prepared host does not match '+path);assert(compiled.mtimeMs>=(await stat(join(host,path))).mtimeMs,'Build does not include the current prepared source');report.sourceSHA256[path]=createHash('sha256').update(source).digest('hex')}
  report.binarySHA256=createHash('sha256').update(await readFile(executable)).digest('hex');
@@ -66,9 +67,29 @@ try{
  const promotion=await runtime.raw(`update taskfold_private.child_task_record_config set reads_enabled=true,edits_enabled=true;select taskfold_private.adopt_child_task_records(id,task_generation,subtasks) from public.tasks where id=${lit(task)};select taskfold_private.promote_child_task_records(t.id,t.task_generation,t.project_id,p.revision,t.subtasks) from public.tasks t join taskfold_private.child_task_projections p on p.task_id=t.id where t.id=${lit(task)}`);
  check('synthetic root is explicitly record-authoritative',promotion.split('\n').at(-1)==='records');
  root=join(home,'Library/Application Support/TaskfoldFullSchemaNative-workflowteststeameditbridge');await mkdir(root,{recursive:true,mode:0o700});
- for(const file of ['config.json','session.json','initial.json','queue.json','loss.json','replay.json','verify.json'])await rm(join(root,file),{force:true});
- config={version:1,nonce,account,task,sibling,origin:new URL(runtime.urls.rest).origin,key:runtime.anon,email:'native-store-'+nonce+'@example.invalid',password,queuedFingerprint:null};
+ for(const file of ['config.json','session.json','initial.json','queue.json','loss.json','replay.json','verify.json','child-queue.json','child-loss.json','child-replay.json','child-verify.json'])await rm(join(root,file),{force:true});
+ config={version:1,nonce,account,task,sibling,child,origin:new URL(runtime.urls.rest).origin,key:runtime.anon,email:'native-store-'+nonce+'@example.invalid',password,queuedFingerprint:null};
  await writeFile(join(root,'config.json'),JSON.stringify(config),{mode:0o600});cache=join(home,'Library/Application Support/Taskfold',account+'.json');
+ if(mode==='child'){
+  const queued=await phase('child-queue');report.actualAppBackendStore=true;
+  const before=await json(cache);check('child save does not use the root mutation queue',before.pending.length===0&&queued.journalPhase==='queued');
+  config.queuedFingerprint=queued.commandFingerprint;await writeFile(join(root,'config.json'),JSON.stringify(config),{mode:0o600});
+  const beforeRemote=(await api('/tasks?id=eq.'+task+'&select=*')).value[0];check('offline child journal did not touch server',beforeRemote.subtasks[0].description===undefined&&beforeRemote.description===source.description);
+  assert.equal((await api('/tasks?id=eq.'+task,{method:'PATCH',body:{title:'Changed remotely while closed'}})).status,204);
+  const reading=(await api('/rpc/taskfold_read_child_tasks',{method:'POST',body:{_id:task,_generation:source.task_generation}})).value;
+  const target=reading.records.find(x=>x.node_key===sibling);
+  const body={protocol:1,account,request_id:randomUUID(),task_id:task,task_generation:source.task_generation,project_id:project,node_key:target.node_key,incarnation:target.incarnation,revision:target.revision,changes:{title:'Remote sibling edit'}};
+  assert.equal((await api('/rpc/taskfold_edit_child_task',{method:'POST',body:{_body:body}})).status,200);
+  const loss=await phase('child-loss');check('lost child reply preserves original command and baseline',loss.journalPhase==='attempted'&&loss.commandFingerprint===queued.commandFingerprint&&isDeepStrictEqual(loss.journalCommand,queued.journalCommand)&&loss.droppedReplies===1);
+  const committed=(await api('/tasks?id=eq.'+task+'&select=*')).value[0];check('dropped child reply followed a real committed edit',committed.subtasks[0].description==='Child edit saved offline');
+  const replay=await phase('child-replay'),verified=await phase('child-verify');
+  check('child retry confirms the original request as replay',replay.journalPhase==='confirmed'&&replay.receipt.replayed===true&&replay.receipt.request_id===queued.journalCommand.request_id&&isDeepStrictEqual(replay.journalCommand,queued.journalCommand));
+  check('confirmed receipt and baseline survive offline cold reopening',verified.commandFingerprint===queued.commandFingerprint&&isDeepStrictEqual(verified.receipt,replay.receipt)&&verified.journalPhase==='confirmed');
+  const final=await json(cache),saved=final.tables.tasks.find(x=>x.id===task),server=(await api('/tasks?id=eq.'+task+'&select=*')).value[0];
+  check('actual cache preserves child edit and remote sibling and title',saved.title===server.title&&saved.title==='Changed remotely while closed'&&isDeepStrictEqual(saved.subtasks,server.subtasks)&&saved.subtasks[0].description==='Child edit saved offline'&&saved.subtasks[1].title==='Remote sibling edit');
+  check('child journal never rewrites root fields or opaque values',saved.description===source.description&&JSON.stringify(server.subtasks[0].future)===JSON.stringify(children[0].future)&&server.task_generation===source.task_generation&&final.pending.length===0);
+  check('record authority survives native child recovery',await runtime.raw(`select count(*) from taskfold_private.child_task_record_authority where task_id=${lit(task)} and task_generation=${lit(source.task_generation)}::uuid`)==='1');
+ }else{
  await phase('initial');report.actualAppBackendStore=true;const initial=await json(cache);check('real account cache has the genuine task',initial.tables.tasks.some(x=>x.id===task));
  const queued=await phase('queue');const before=await json(cache);check('offline queue is on disk',before.pending.length===1);config.queuedFingerprint=queued.pendingFingerprint;await writeFile(join(root,'config.json'),JSON.stringify(config),{mode:0o600});
  const beforeRemote=(await api('/tasks?id=eq.'+task+'&select=*')).value[0];check('offline save did not touch server',beforeRemote.description===source.description);
@@ -84,6 +105,7 @@ try{
  check('actual cache preserves local and remote edits',saved.description===server.description&&saved.title===server.title&&isDeepStrictEqual(saved.subtasks,server.subtasks));
  check('opaque data and generation preserved',JSON.stringify(server.subtasks[0].future)===JSON.stringify(children[0].future)&&server.task_generation===source.task_generation);
  check('record authority survives actual Store sync',await runtime.raw(`select count(*) from taskfold_private.child_task_record_authority where task_id=${lit(task)} and task_generation=${lit(source.task_generation)}::uuid`)==='1');
+ }
  report.cacheSHA256=createHash('sha256').update(await readFile(cache)).digest('hex');report.checkCount=Object.keys(report.checks).length;report.accepted=true;
 }catch(error){report.error={message:error.message,code:error.code};process.exitCode=1}
 finally{

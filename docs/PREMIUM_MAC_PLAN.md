@@ -10702,3 +10702,14 @@ The native row styling is retained while full definition validation moves onto a
 - [ ] Review supported pg_net installation/placement before rollout. Independent child journals, full migration/media and the other recorded native/hosted gaps remain.
 
 [Evidence and limits](rls-identity-plans/README.md). No hosted deployment or app gate changed; no whole-app speedup claim.
+
+
+### 3 November 2026 · Genuine native child-field journal recovery
+
+- [x] Exercise the actual Store-created child recovery model, encrypted journal and sender against real local Auth/REST and the complete owning schema.
+- [x] Save offline; cold reopen, lose an actual successful reply and retain attempted state; cold retry the original command/baseline and persist its real replay receipt.
+- [x] Cold reopen offline with confirmed history and the actual merged cache; preserve remote root/sibling edits, root description, opaque data, generation and record authority. Each app: 14 checks over four separate processes.
+- [x] Build/sign both current app/runners and close owned apps/services; restore the initial iPhone Simulator state.
+- [ ] Continue same-child conflicts, independent structure journals, full adoption/migration/media and wider account/window/background/access/privacy/accessibility cases. Protected Keychain/TLS and pg_net placement remain separate.
+
+[Accepted flow and exact limits](genuine-child-field-recovery/README.md). Programmatic data-engine proof; no hosted deployment or ordinary gate change.
