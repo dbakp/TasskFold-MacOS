@@ -5,14 +5,14 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Durable offline recovery",
-  "latest": "Both actual apps pass genuine local Backend/Store sign-in, durable offline save, lost successful reply, cold exact retry and final offline reopening. Each has 15 driver checks across five app processes; local/remote/sibling edits, opaque data and explicitly verified record authority survive. Keychain/TLS, independent child journals, wider migration and 15 advisor warnings remain open.",
+  "latest": "Both apps have accepted native offline root-edit recovery. The complete local database now has 14 legacy per-row account checks optimized with unchanged access rules; genuine Auth/REST, catalog and query-plan checks pass independently. Advisor warnings fall from 15 to one (pg_net placement). Independent child journals, wider migration/media and deletion recovery remain open.",
   "next": [
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
     "Continue wider catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
-    "Extend the genuine full-schema native Store proof into durable independent child-field/structure journals, full adoption/legacy migration and shared-account/window/background/access-loss directions. Root-description offline/cold exact retry now passes on iPhone and Mac; do not repeat it unchanged. Protected Keychain/TLS, file/audio handler integration and the 15 full-schema advisor warnings remain.",
+    "Extend the genuine full-schema native Store proof into durable independent child-field/structure journals, full adoption/legacy migration and shared-account/window/background/access-loss directions. Root-description offline/cold exact retry now passes on iPhone and Mac; do not repeat it unchanged. Protected Keychain/TLS, file/audio handler integration and pg_net placement review remains.",
     "Complete remaining Mac format-repair/hierarchy keyboard, inspector and cross-task-move acceptance, plus full largest-text recovery and wider account/window/privacy/speech/large-library checks. Preserve deletion-recovery gaps and all agreed deferrals."
   ],
   "stages": [
@@ -502,6 +502,10 @@
                   "title": "Prepare and reuse library captions off the main thread; verify iPhone scrolling, current-source refresh, unreadable/return and cold reopening"
                 },
                 {
+                  "state": "done",
+                  "title": "Cache account identity once per database statement; preserve all 14 policy rules and verify real Auth/REST isolation and query plans"
+                },
+                {
                   "state": "verify",
                   "title": "Finish actual scrolling/rendering, multiple-project scaling and wider platform/account/accessibility acceptance"
                 }
@@ -543,7 +547,11 @@
             "template-library-summaries/core-checks.json",
             "template-library-summaries/core-diagnostic.json",
             "template-library-summaries/iphone-after.json",
-            "template-library-summaries/build-verification.json"
+            "template-library-summaries/build-verification.json",
+            "rls-identity-plans/README.md",
+            "rls-identity-plans/verification.json",
+            "rls-identity-plans/local-service.json",
+            "rls-identity-plans/attempts.json"
           ],
           "focus": false
         },
@@ -1122,7 +1130,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "d0f809b799871b144e47d0c3d2c8032a7352ac7ad803207fbb1231e38a82bef8",
+    "P2_PLAN.md": "4459c9bf97d68f6643d574aa8c5ce0e311e83ae115276e15e92208d2fba41298",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1321,6 +1329,10 @@
     "rich-workflow-creation/before-partial-diagnostic.json": "7bbce31bdbf4cec67f6f9195cf1e354c115b5108908032bc1483602455373cde",
     "rich-workflow-creation/iphone-after.json": "7fca19efb5d1615f198920ea1d440d924355bc037c08c386a4962b31b7d69b00",
     "rich-workflow-creation/verification.json": "6572c404135133f757f690eb9ab01b7741e5011d5adbd4bdcc785055886d865d",
+    "rls-identity-plans/README.md": "c379f2239caaeb926f4be2168aa070222b4ec320c748b2f87b0443552272da66",
+    "rls-identity-plans/attempts.json": "794804833bfe255b9f716ac4c44ce89317cc3ef432b99e9b62963a958af4480c",
+    "rls-identity-plans/local-service.json": "cfd41cfb89679d51f847a2743271342e5b093857be50d0ff466993fad18a7ba6",
+    "rls-identity-plans/verification.json": "4aff26cc8e0ddf7dacae44c0159ea7435c01eb185f1d4ada569a3a748e55a4e2",
     "saved-copy-comparison/README.md": "2b36724fe5f737d230c7946a0bf8cfd9bfb0b5ebe6a749dd1e0dd2ebc6bef99b",
     "saved-copy-comparison/build-verification.json": "5107e18ee2c06dfa39c2427bbbbe9078419d0d8cf7aea4dbdc88983068642372",
     "saved-copy-comparison/client-verification.json": "d0fa3a559d8d4171d826abe59caa0f60117eb15bc35164f68dbb63bbdc4735c3",

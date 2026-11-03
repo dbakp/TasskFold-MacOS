@@ -1,0 +1,12 @@
+{
+  "accepted": true,
+  "checks": 48,
+  "changedPolicies": 14,
+  "remainingAdvisorWarnings": 1,
+  "migrationsReplayed": 203,
+  "migrationSHA256": "90b90780b656c6dafb94aa0bddca8fce80136173aec5b45b078abb56468af8d4",
+  "hostedChanges": false,
+  "nativeAppSourcesChanged": false,
+  "driverSHA256": "12e4448e2f52f5306d73e1aa923beae7a23b66bd88c704638b1042f145a0032e",
+  "runtimeSHA256": "22dac77c5e106d3ddcb0be7ef5013b9db0846215a60cbed607a9237bf9f954d2"
+}

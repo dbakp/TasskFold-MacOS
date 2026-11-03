@@ -10692,3 +10692,13 @@ The native row styling is retained while full definition validation moves onto a
 - [ ] Finish durable independent child journals, app adoption/legacy/media migration, protected Keychain/TLS and wider native/account/window/background/access/privacy/accessibility contexts. The 15 complete-schema advisor warnings remain open.
 
 [Exact accepted scope and limits](genuine-store-sync/README.md). Test transport routes real replies; session persistence uses a private disposable file. No normal-use gate or hosted deployment changed.
+
+
+### 3 November 2026 · Statement-level account checks
+
+- [x] Optimize 14 existing policy identity checks without changing policy roles, commands, ownership/membership rules or grants.
+- [x] Pass 48 genuine local Auth/REST, full catalog and query-plan checks across all 203 owning migrations. The bounded label plan runs identity InitPlans once per statement.
+- [x] Reduce the official complete-schema advisor from 15 warnings to one; close all 14 legacy auth_rls_initplan findings.
+- [ ] Review supported pg_net installation/placement before rollout. Independent child journals, full migration/media and the other recorded native/hosted gaps remain.
+
+[Evidence and limits](rls-identity-plans/README.md). No hosted deployment or app gate changed; no whole-app speedup claim.

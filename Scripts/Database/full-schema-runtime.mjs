@@ -16,7 +16,7 @@ export const fullSchemaImages={
 };
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const lit=v=>"'"+String(v).replaceAll("'","''")+"'";
-export async function createFullSchemaRuntime({onMigration=()=>{}}={}) {
+export async function createFullSchemaRuntime({onMigration=()=>{},beforeMigration=async()=>{}}={}) {
  await exec('python3',[fileURLToPath(new URL('../check_test_storage.py',import.meta.url)),'--path','/tmp']);
  const owner=randomUUID(),network='taskfold-full-schema-'+owner.slice(0,8),names={},urls={},created=[];
  const password=randomBytes(32).toString('hex'),secret=randomBytes(48).toString('hex');
@@ -74,6 +74,7 @@ export async function createFullSchemaRuntime({onMigration=()=>{}}={}) {
   const migrations=[];
   for(const name of (await readdir(new URL('../../supabase/migrations/',import.meta.url))).filter(x=>/^\d{14}_.+\.sql$/.test(x)).sort()){
    const bytes=await readFile(new URL('../../supabase/migrations/'+name,import.meta.url));
+   await beforeMigration(name,{raw});
    try{await raw(bytes.toString())}catch(e){e.migration=name;throw e}
    migrations.push({file:name,sha256:createHash('sha256').update(bytes).digest('hex')});onMigration(name);
   }
