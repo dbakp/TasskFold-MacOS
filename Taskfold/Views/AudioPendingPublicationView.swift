@@ -1,7 +1,8 @@
 import SwiftUI
 
-private struct PendingAudioReview: Identifiable {
+@MainActor struct AudioPendingPublicationRequest: Identifiable {
     let journal: AudioCommentPublicationJournal
+    let controller: AudioCommentPendingLibrary
     var id: UUID { journal.publication.operation }
 }
 @MainActor struct AudioPendingPublicationSection: View {
@@ -9,16 +10,16 @@ private struct PendingAudioReview: Identifiable {
     @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var phase
     @State private var controller: AudioCommentPendingLibrary?
-    @State private var review: PendingAudioReview?
+    let present: (AudioPendingPublicationRequest) -> Void
     @State private var failure: String?
     @State private var reload = UUID()
-    private var allowed: Bool { phase == .active && store.audioPendingScope().map(library.scope.matches) == true }
+    private var allowed: Bool { phase == .active && library.isCurrent && store.audioPendingScope().map(library.scope.matches) == true }
     var body: some View {
         if store.audioPublishingEnabled, library.scope.origin != nil {
             Section {
                 if let controller, allowed {
                     ForEach(controller.entries, id: \.publication.operation) { journal in
-                        Button { review = .init(journal: journal) } label: {
+                        Button { present(.init(journal: journal, controller: controller)) } label: {
                             VStack(alignment: .leading, spacing: 5) {
                                 Label(journal.publication.caption.isEmpty ? "Recording" : journal.publication.caption, systemImage: journal.closedReceipt != nil ? "checkmark.shield" : (journal.isPending ? "clock.arrow.circlepath" : "checkmark.circle"))
                                     .lineLimit(2).foregroundStyle(.primary)
@@ -36,18 +37,15 @@ private struct PendingAudioReview: Identifiable {
                 Text("Original versions are kept independently of edits or removal of saved drafts. Checking a send never replaces an edited draft.")
             }
             .task(id: String(describing: allowed) + store.backend.reminderSessionIncarnation.uuidString + reload.uuidString) {
-                controller?.close(); controller = nil; review = nil; failure = nil
+                controller?.close(); controller = nil; failure = nil
                 guard allowed else { return }
                 do {
                     let value = try await store.audioPendingLibrary(scope: library.scope, player: DeviceAudioCommentPlaying())
                     guard allowed, !Task.isCancelled else { value.close(); return }; controller = value; await value.refresh()
                 } catch { if allowed, !Task.isCancelled { failure = "Publication copies could not be opened. Existing recordings are kept." } }
             }
-            .sheet(item: $review, onDismiss: { controller?.clearSelection(); Task { await controller?.refresh(); await library.refresh() } }) { request in
-                if let controller { AudioPendingPublicationReview(journal: request.journal, controller: controller, taskTitle: { store.audioLibraryTask($0)?.title }, canResume: { store.audioPublishingScope($0) != nil }, checker: { try store.audioPendingChecker($0, library: controller) }, publisher: { try store.audioPendingPublisher($0, library: controller) }, accessStamp: { store.audioPublishingScope($0)?.audienceStamp }) }
-            }
-            .onChange(of: allowed) { _, value in if !value { review = nil; controller?.setActive(false) } }
-            .onDisappear { controller?.close() }
+            .onChange(of: allowed) { _, value in if !value { controller?.setActive(false) } }
+            .onDisappear { if !library.presentingPublicationReview { controller?.close() } }
         }
     }
 }
@@ -121,11 +119,11 @@ private enum PendingAudioAction {
                                             AudioPublicationAudienceSummary(approval: approval)
                                             if approval.permits(journal.publication, now: context.date) {
                                                 Button("Resume original send…", systemImage: "paperplane") { confirming = .resume }
-                                                    .frame(minHeight: 44).disabled(busy).accessibilityIdentifier("audioPendingResume")
+                                                    .buttonStyle(.borderless).frame(minHeight: 44).disabled(busy).accessibilityIdentifier("audioPendingResume")
                                             } else { Text("The saved review expired. Check the original result before deciding how to continue.").font(.caption).foregroundStyle(.secondary) }
                                         }
                                         Button("Review who can listen", systemImage: "person.2") { run { try await reviewAudience(journal) } }
-                                            .frame(minHeight: 44).disabled(busy).accessibilityIdentifier("audioPendingAudienceReview")
+                                            .buttonStyle(.borderless).frame(minHeight: 44).disabled(busy).accessibilityIdentifier("audioPendingAudienceReview")
                                     }
                                 }
                             } else {Text("The original task is unavailable for publishing. Status checks and your private recording remain available.").font(.caption).foregroundStyle(.secondary)}

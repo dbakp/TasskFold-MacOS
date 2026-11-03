@@ -1,5 +1,7 @@
 # Explicit native audience review and durable publication approval
 
+The later [recovery follow-up](../publication-approval-recovery/README.md) accepts bounded warm retries and the separate iPhone pending-screen Resume. The evidence below records this earlier main-screen checkpoint.
+
 Reviewed 3 November 2026. Both applications now implement the review and saved approval flow. **The bounded iPhone Saved recordings journey is accepted; separate pending-request controls and wider platform/recovery acceptance remain.** Ordinary audio and project-transfer gates stay off. Nothing is deployed.
 
 ## Behavior
@@ -30,12 +32,12 @@ Auth/sign-in, native HTTPS/PostgREST routing and recording drivers are synthetic
 
 The first iOS build exposed a missing Store environment in the parent pending section; it was restored. A source audit then separated private-directory lookup from the new sharing access stamp. The final iOS and Mac builds include both corrections. A temporary test-generator syntax failure did not modify product sources; the native case was added before its accepted build.
 
-Native attempt 1 stopped after a successful private Save: the test waited for an offscreen lazy library button at the largest text size. Its captured hierarchy showed the app correctly back on the main form. The test now reveals controls through actual scrolling. Attempt 2 received a correct private-team review but expected team-visible wording; only that expectation changed. Neither attempt uploaded audio and both cleaned all owned resources. Final attempt 3 passes the complete bounded journey. File-level unknown-rename durability is covered; broader in-process approval-write recovery remains to check.
+Native attempt 1 stopped after a successful private Save: the test waited for an offscreen lazy library button at the largest text size. Its captured hierarchy showed the app correctly back on the main form. The test now reveals controls through actual scrolling. Attempt 2 received a correct private-team review but expected team-visible wording; only that expectation changed. Neither attempt uploaded audio and both cleaned all owned resources. Final attempt 3 passes the complete bounded journey. File-level unknown-rename durability was covered here; the later [recovery follow-up](../publication-approval-recovery/README.md) accepts the bounded in-process cases.
 
 ## Remaining work
 
 - [ ] Accept the separate Original publications review screen, saved Resume, expired/missing approval and exact Close with the current service.
-- [ ] Check in-process approval-write ambiguity, wider competing windows, changed remote access and departure/recovery. Never silently renew approval during retry.
+- [x] Check bounded in-process approval-write ambiguity and repeated competing-proof refusal: see [the recovery follow-up](../publication-approval-recovery/README.md). Actual multiple app windows, changed remote access and wider departure/recovery remain; never silently renew approval during retry.
 - [ ] Accept iPad and Mac native controls, actual VoiceOver speech/keyboard, wider contrast/lifecycle and genuine Auth/full-schema/hosted integration. Do not repeat the unchanged Mac authentication failure.
 - [ ] Finish remaining whole-project transfer media policies and native transfer acceptance. This checkpoint does not complete the whole-project feature or the full Px goal.
 

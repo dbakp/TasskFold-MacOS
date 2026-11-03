@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Whole-project recording custody",
-  "latest": "Both apps now show who can listen and save the exact approval before sharing. The iPhone passes review, Cancel, one upload with a lost reply, and confirmation after relaunch at the largest text size. Separate pending-request, Mac/iPad and wider recovery checks remain; normal use stays disabled.",
+  "latest": "Both apps recover the exact approved send after an ambiguous local save and keep refusing another window’s decision on repeated retry. The iPhone’s separate pending screen now passes cold Resume/Cancel with the same saved approval and one upload. Expiry/Close, Mac/iPad and wider acceptance remain; normal use stays disabled.",
   "next": [
-    "Accept the separate Original publications review, saved Resume, expiry and Close. Check approval-write ambiguity, then Mac/iPad and wider accessibility/recovery. Preserve exact original requests and private copies; do not silently renew audience approval. Whole-project transfers remain open.",
+    "Accept pending-screen fresh audience Review/Cancel/Publish, expired/missing approval, Check and exact Close. Then complete Mac/iPad and wider access/window/accessibility recovery; preserve original requests and private copies. Whole-project media transfers remain open.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Explicit audience review and saved approval are implemented in both apps. The iPhone review/Cancel/publish/cold-confirmation journey is verified with local SQL/Storage. Separate pending-request controls, other platforms and wider recovery remain; normal use stays disabled.",
+              "detail": "Both apps implement explicit audience review and exact saved-approval recovery. iPhone main Review/Cancel/Publish/cold Check and separate pending Resume/Cancel/return pass against local SQL/Storage. Pending fresh review/expiry/Close, other platforms and wider recovery remain; ordinary use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -715,7 +715,7 @@
                 },
                 {
                   "state": "verify",
-                  "title": "Native audience review and saved approval: iPhone main flow verified; pending screen and other platforms remain"
+                  "title": "Native approval recovery: iPhone main Check and pending Resume accepted; expiry/Close and other platforms remain"
                 },
                 {
                   "state": "build",
@@ -885,7 +885,11 @@
             "native-audience-approval/README.md",
             "native-audience-approval/verification.json",
             "native-audience-approval/phone-verification.json",
-            "native-audience-approval/controller-verification.json"
+            "native-audience-approval/controller-verification.json",
+            "publication-approval-recovery/README.md",
+            "publication-approval-recovery/verification.json",
+            "publication-approval-recovery/phone-verification.json",
+            "publication-approval-recovery/controller-verification.json"
           ],
           "focus": true
         },
@@ -1115,7 +1119,7 @@
     "mixed-task-completion/verification.json": "7c77ec64ceae3791b438781c7cf88a8dddd720c7c9b64e9391f324b3de8893fe",
     "move-assignment-intent/README.md": "352376e873556d8515d8cc56bdb364f5329407ee4f48183f43c6b3b15dccdec7",
     "move-assignment-intent/verification.json": "41fdb29b7dd2ccd83fd1f931c4a6356bfd7cf73a9e4f43f494c855f8f861984c",
-    "native-audience-approval/README.md": "eff1a35714d460e5e44651997697cb18a34429085d6ad1f46c99599e30fb40b6",
+    "native-audience-approval/README.md": "70b60ebc268debc5b18ad146ac38625680eeebe4c0bbd22d8f2ab7b2d62c24e5",
     "native-audience-approval/controller-verification.json": "941fe8ca06b88e41e7f8b78633683d2da0ebf82a597c0a23d1c172e461a7f210",
     "native-audience-approval/phone-verification.json": "71292dfcde4e4a2306717549b7b20e4eb047bdb1b443627fc20ae969175181a6",
     "native-audience-approval/verification.json": "37c74717ddb2a5ed0f51803e72b3fc5d0029185dae7c4587bff433ae4b7e857a",
@@ -1130,6 +1134,10 @@
     "project-recording-transfer/README.md": "6dd5f2a95774906b072074041a7ff4da3fd010c9b7fb6f90e6a2cdb241aa7e33",
     "project-recording-transfer/database-verification.json": "60fc26847b6d973597cc892ff272b98d586d863b802de391bcceb9bd390e2f4e",
     "project-recording-transfer/verification.json": "09f44acd38f16ff605702a4936e08b8239dffd2f126d2318325a44a8c97cd301",
+    "publication-approval-recovery/README.md": "89d5478dc0d84590d4bf7bee6b7d6774f99b5b12c12491349d6cd536f0127f0b",
+    "publication-approval-recovery/controller-verification.json": "8597019e092fae584ecee84b90d33c26898b90388e981bf04f0fd736a30dd027",
+    "publication-approval-recovery/phone-verification.json": "264cb0224561845d743b84d7efb2959be16966b7c58205ce60d4e8356ad39d71",
+    "publication-approval-recovery/verification.json": "e27e21692fa6eb1627d0daa6559317abae08ef99aa22c786607575fda58a4f47",
     "removal-coordination/README.md": "15f6a0a9996464c0ba2ba0ad70a8c409adb7aa5e49530913edeb513bd7381991",
     "removal-coordination/verification.json": "23bdbadae3aa8effbe7e92fc91394f1ecd00882a6db1e58cb2f321868b0676a2",
     "reviewed-audio-custody/README.md": "b6dda9d6d208b94ff1d948cfe5876437ca16d53084a380c2303db6a14554e2a6",

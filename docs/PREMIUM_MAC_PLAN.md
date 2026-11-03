@@ -10542,3 +10542,14 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Accept the separate pending-review screen, saved Resume/expiry/Close, in-process approval-write ambiguity, Mac/iPad runtime, audible accessibility and wider integration/recovery. Whole-project transfers and ordinary-use enablement remain unfinished.
 
 [Exact native audience scope and remaining work](native-audience-approval/README.md). All user deferrals remain.
+
+### 3 November 2026 · Approval-write retry recovery
+
+- [x] Recover the exact reviewed approval after an ambiguous local rename acknowledgement; before-rename failure remains retryable. Neither path sends before durable approval or silently obtains another review.
+- [x] Refuse another window's replacement proof across repeated retries, preserving the original expected baseline. Observe the same request's terminal receipt/closure without rewriting or resending.
+- [x] Pass all 78 owning publication tests, including five new recovery cases. The repeated-retry test reproduced a second-attempt replacement before the correction.
+- [ ] Complete separate pending-screen Review/expiry/Close and wider platform/accessibility acceptance. Ordinary gates and whole-project transfer completion remain unchanged.
+
+[Recovery scope and evidence](publication-approval-recovery/README.md). This entry does not claim Mac native runtime acceptance.
+
+- [x] Both current app/runner builds and strict signatures pass. Owning iOS accepts the separate pending-screen cold Resume and Cancel against real local SQL/gateway/Storage with the exact saved approval and one upload. This does not establish Mac runtime or pending expiry/Close acceptance.

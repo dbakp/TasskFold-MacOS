@@ -1,0 +1,12 @@
+{
+  "reason": "Stopped owned xcodebuild after a source audit found return-to-library cleanup needed correction; no acceptance claimed.",
+  "xcodeExitCode": 75,
+  "cleanup": {
+    "configRemoved": true,
+    "httpClosed": true,
+    "storageRemoved": true,
+    "databaseRemoved": true,
+    "ownedSimulatorRestored": true,
+    "cleanupErrors": []
+  }
+}

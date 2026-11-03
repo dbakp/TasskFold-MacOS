@@ -835,3 +835,74 @@ extension AudioCommentPublishingTests {
         XCTAssertNil(try AudioCommentPublicationJournal(encoded: prepared.encoded(), account: account, origin: origin).approval)
     }
 }
+
+private final class ApprovalWriteFault: @unchecked Sendable {
+    private let lock = NSLock()
+    private var point: AudioCommentPublicationDisk.Checkpoint?
+    func arm(_ point: AudioCommentPublicationDisk.Checkpoint) { lock.lock(); self.point = point; lock.unlock() }
+    func check(_ value: AudioCommentPublicationDisk.Checkpoint) throws {
+        lock.lock()
+        let fail = point.map { wanted in
+            switch (wanted, value) { case (.beforeRename, .beforeRename), (.afterRename, .afterRename): return true; default: return false }
+        } ?? false
+        if fail { point = nil }
+        lock.unlock()
+        if fail { throw AudioCommentStorageFailure.unreadable }
+    }
+}
+extension AudioCommentPublishingTests {
+    @MainActor private func approvalWriteRetry(_ point: AudioCommentPublicationDisk.Checkpoint) async throws {
+        let source = try source(), file = try disk(), fault = ApprovalWriteFault(), transport = ReviewedTransport()
+        var failing = file; failing.fault = { try fault.check($0) }
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: failing), transport: transport, incarnation: UUID(), target: source.target, isCurrent: { true })
+        try await flow.reviewAudience(source)
+        let original = try XCTUnwrap(flow.journal), proof = try XCTUnwrap(flow.reviewedApproval)
+        fault.arm(point)
+        do { try await flow.publish(source); XCTFail("Expected local approval write failure") } catch {}
+        XCTAssertTrue(transport.sends.isEmpty); XCTAssertEqual(transport.legacySends, 0)
+        transport.send = { pending, approval in
+            XCTAssertEqual(approval.record, proof.record); XCTAssertTrue(pending.publication.sameIntent(as: original.publication))
+            XCTAssertEqual(try file.journals().first?.approval?.record, proof.record)
+            return try .init(record: self.record(pending.publication), publication: pending.publication)
+        }
+        try await flow.publish(source)
+        XCTAssertEqual(flow.state, .published); XCTAssertEqual(transport.reviews.count, 1); XCTAssertEqual(transport.sends.count, 1)
+        XCTAssertEqual(try file.journals().count, 1); XCTAssertEqual(try file.journals().first?.approval?.record, proof.record)
+    }
+    @MainActor func testInProcessApprovalAfterRenameFailureRetriesSameDecision() async throws { try await approvalWriteRetry(.afterRename) }
+    @MainActor func testInProcessApprovalBeforeRenameFailureRetriesSameDecision() async throws { try await approvalWriteRetry(.beforeRename) }
+    @MainActor func testInProcessApprovalRetryCannotAdoptAnotherWindowsProof() async throws {
+        let source = try source(), file = try disk(), transport = ReviewedTransport()
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: file), transport: transport, incarnation: UUID(), target: source.target, isCurrent: { true })
+        try await flow.reviewAudience(source)
+        let original = try XCTUnwrap(flow.journal), other = try transport.proof(original.publication, token: String(repeating: "e", count: 64))
+        _ = try file.approve(original, approval: other)
+        for _ in 0..<3 {
+            do { try await flow.publish(source); XCTFail("Repeated retry cannot adopt a different decision") } catch {}
+            XCTAssertEqual(flow.journal?.approval?.record, original.approval?.record, "A refusal cannot adopt the other window's baseline")
+        }
+        XCTAssertTrue(transport.sends.isEmpty); XCTAssertEqual(transport.reviews.count, 1); XCTAssertEqual(try file.journals().first?.approval?.record, other.record)
+    }
+    @MainActor private func approvalWriteTerminalRace(closed: Bool) async throws {
+        let source = try source(), file = try disk(), fault = ApprovalWriteFault(), transport = ReviewedTransport()
+        var failing = file; failing.fault = { try fault.check($0) }
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: failing), transport: transport, incarnation: UUID(), target: source.target, isCurrent: { true })
+        try await flow.reviewAudience(source); let proof = try XCTUnwrap(flow.reviewedApproval)
+        fault.arm(.afterRename)
+        do { try await flow.publish(source); XCTFail() } catch {}
+        let approved = try XCTUnwrap(file.journals().first)
+        if closed {
+            let terminal = try AudioCommentPublicationClosed(record: Record(["protocol": .number(1), "intent": .object(approved.publication.record.fields), "state": .string("closed")]), publication: approved.publication)
+            _ = try file.settleClosed(approved, proof: terminal)
+        } else { _ = try file.confirm(approved, receipt: .init(record: record(approved.publication), publication: approved.publication), retainingAudio: true) }
+        let urls = try XCTUnwrap(FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil)?.allObjects as? [URL])
+        let terminalURL = try XCTUnwrap(urls.first { $0.lastPathComponent == approved.publication.operation.uuidString.lowercased() + ".bin" })
+        let terminalBytes = try Data(contentsOf: terminalURL)
+        try await flow.publish(source)
+        XCTAssertEqual(flow.state, closed ? .closed : .published); XCTAssertTrue(transport.sends.isEmpty); XCTAssertEqual(transport.reviews.count, 1)
+        XCTAssertNil(flow.reviewedApproval); XCTAssertEqual(try file.journals().first?.approval?.record, proof.record)
+        XCTAssertEqual(try Data(contentsOf: terminalURL), terminalBytes)
+    }
+    @MainActor func testInProcessApprovalRetryObservesAnotherWindowsReceipt() async throws { try await approvalWriteTerminalRace(closed: false) }
+    @MainActor func testInProcessApprovalRetryObservesAnotherWindowsClosure() async throws { try await approvalWriteTerminalRace(closed: true) }
+}

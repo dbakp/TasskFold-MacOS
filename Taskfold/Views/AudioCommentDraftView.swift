@@ -379,6 +379,8 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
     @Environment(\.scenePhase) private var scenePhase
     @State private var controller: AudioCommentLibraryController?
     @State private var failure: String?
+    @State private var pendingReview: AudioPendingPublicationRequest?
+    @State private var pendingController: AudioCommentPendingLibrary?
     @State private var retry = UUID()
     private var current: Bool { store.audioLibraryScope().map(request.scope.matches) == true }
     var body: some View {
@@ -389,6 +391,9 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
                 } else if let controller {
                     AudioSavedLibraryContent(controller: controller, taskLabel: { target in
                         guard current else { return nil }; return store.audioLibraryTask(target)
+                    }, presentPublication: { value in
+                        controller.presentingPublicationReview = true
+                        pendingController = value.controller; pendingReview = value
                     })
                 } else if let failure {
                     VStack(spacing: 16) { Text(failure).fixedSize(horizontal: false, vertical: true); Button("Try again") { retry = UUID() } }.padding()
@@ -418,6 +423,9 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
         #endif
         .task(id: retry) {
             guard current else { return }
+            if let controller, controller.isCurrent {
+                controller.setActive(scenePhase == .active); await controller.refresh(); return
+            }
             do {
                 let directory = try store.audioLibraryDirectory(for: request.scope)
                 let storage = try await AudioCommentDraftStorage.open(applicationSupport: directory, owner: .init(request.scope.workspace.account))
@@ -428,12 +436,28 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
                 await value.refresh()
             } catch { if current, !Task.isCancelled { failure = "Private recordings could not be opened. Existing files are kept." } }
         }
-        .onChange(of: current) { _, _ in controller?.contextChanged() }
+        .sheet(item: $pendingReview, onDismiss: {
+            let returned = pendingController; pendingController = nil
+            returned?.clearSelection(); controller?.presentingPublicationReview = false
+            if current { Task { await returned?.refresh(); await controller?.refresh() } }
+            else { returned?.close() }
+        }) { value in
+            AudioPendingPublicationReview(journal: value.journal, controller: value.controller,
+                taskTitle: { store.audioLibraryTask($0)?.title }, canResume: { store.audioPublishingScope($0) != nil },
+                checker: { try store.audioPendingChecker($0, library: value.controller) },
+                publisher: { try store.audioPendingPublisher($0, library: value.controller) },
+                accessStamp: { store.audioPublishingScope($0)?.audienceStamp })
+        }
+        .onChange(of: current) { _, value in
+            controller?.contextChanged()
+            if !value { pendingController?.close(); pendingReview = nil }
+        }
         .onChange(of: scenePhase) { _, phase in
             controller?.setActive(phase == .active)
+            if phase != .active { pendingController?.setActive(false); pendingReview = nil }
             if phase == .active, current { Task { await controller?.refresh(preservingExports: true) } }
         }
-        .onDisappear { controller?.close() }
+        .onDisappear { if pendingReview == nil { pendingController?.close(); controller?.close() } }
     }
     private func player() -> any AudioCommentPlaying {
         #if DEBUG
@@ -448,6 +472,7 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
     @State private var exportStatus: String?
     let controller: AudioCommentLibraryController
     let taskLabel: (AudioCommentTarget) -> (title: String, location: AudioCommentSavedLibrary.TaskLocation)?
+    let presentPublication: (AudioPendingPublicationRequest) -> Void
     @AccessibilityFocusState(for: .voiceOver) private var captionFocused: Bool
     var body: some View {
         Form {
@@ -501,7 +526,7 @@ private struct AudioCommentQuitBridge: NSViewRepresentable {
                     }.accessibilityIdentifier("audioLibraryRecoveryNotice")
                 }
             }
-            if controller.selected == nil { AudioPendingPublicationSection(library: controller) }
+            if controller.selected == nil { AudioPendingPublicationSection(library: controller, present: presentPublication) }
             if controller.working { Section { ProgressView("Preparing…").accessibilityIdentifier("audioLibraryProgress") } }
             if let exportStatus { Section { Text(exportStatus).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioLibraryExportStatus") } }
             if let notice = controller.notice { Section { Text(notice).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("audioLibraryNotice") } }

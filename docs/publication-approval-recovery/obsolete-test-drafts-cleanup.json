@@ -1,0 +1,72 @@
+{
+  "isolatedBundle": "com.dbakp.taskfold.workflowteststeameditbridge",
+  "simulator": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+  "account": "ec240000-0000-4000-8000-000000000001",
+  "removedCount": 10,
+  "removedBytes": 601350,
+  "onlyOldSyntheticSharedNativeDrafts": true,
+  "publicationJournalsUntouched": true,
+  "realAppsAndAccountsUntouched": true,
+  "removed": [
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-5d8e6f3c-a3da-414e-a3b1-76a57ddb9168.bin",
+      "sha256": "f58b56e782668392199981df52e36b1635c9861919a861e9f17e97290bc6bf17",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording 2B7F7FC9-E6CB-4BEC-8037-464C1DE715D6"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-effcab81-f8cd-49d4-b944-ee8b77ea5aad.bin",
+      "sha256": "e86a7e61823f50cc84968f8e4ba1affa509fc4174eb1998b1830bfa910263ac9",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording 9F8226CA-8BD5-4D63-B5A1-FFADCC20D9A3"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-98e2ad73-cd50-4f71-8a69-e46cb1925d0d.bin",
+      "sha256": "9f007c2a9573ce156f852b52f9ecba8155406737fa72a61e38f7124161aabc94",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording A8F3A74B-7DBA-4E97-8483-33914E652B26"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-87f94d47-b944-4b23-91b2-ffcb63e03ca2.bin",
+      "sha256": "c2d9c52be0e49ab67d88b980d9f62fe59a0e6262bc86f0dce0497946305f2d50",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording E8EC79E3-2892-4173-960B-40E8D366EB71"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-059ec7e2-d8dc-45d9-a46d-adf56242bd8f.bin",
+      "sha256": "2edda26c2765fb94e9ebbba8aa269223cd59077532c840d6cbdd9e2dbbfa21dc",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording 6CC993F2-E3DB-4205-A1DF-76CD3A7F6E46"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-1f58d8b0-66fe-4d9b-8b86-bd2b2b95287c.bin",
+      "sha256": "8d464e8749df7cd54aaf33f6c1447bd6a9c25eb3cd456271859dea66d859ee39",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording E74FBF96-0D6C-45EB-B8A1-9CFB07DD4DCB"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-bf2e20ac-26d0-4cc4-bfcb-f8c7f3abff4a.bin",
+      "sha256": "25603490aac7af7cfcb13fd983eb6a08c00f4194f0da7dfc6300e0debc70c6db",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording 2A8D792B-0898-4448-ADAC-6AD591C8B92F"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-4ab14c13-8a56-4811-a1fc-c5135b25152b.bin",
+      "sha256": "0fd35865d17b3cd5b43208e86357d6a3e36d19b256a2e6b1d2188f19689419d6",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording C84A325C-E366-4DF6-8F7F-E609FF202FFF"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-1d77e390-bf24-4b45-92a7-894c2bdd798a.bin",
+      "sha256": "f0b2458cd5f1f682b437dbf67125a2b82f27202c36a6a5f8eb650687290b6ab1",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording 3D546DBF-5FF4-4105-A809-A4AA8AC0A5A9"
+    },
+    {
+      "file": "Library/Application Support/Taskfold/PrivateAudioDrafts/app-v1-c45b631fc644c69815acc46bed8baad814c79b1fd10c7df2efc142437f7db72d/origin-v1-a3058588e3ca8f8b845f8d3048541fb50e6eba85adcfea70ac32e64811e4d0ab/AudioCommentsPrivate/f0af3f816635641efe82bc8b9287c7135b2cd17bb3777e71a015495f48ede492/draft-27c97272-f10b-403d-853a-05d1d7cb39d3.bin",
+      "sha256": "341243d7aac63089749e8e4122f3eb82da369203eb8719abfa6a48015366a972",
+      "bytes": 60135,
+      "syntheticCaption": "Shared native recording A17DD9AD-DC8C-47D6-BFA6-31A5F245744A"
+    }
+  ]
+}

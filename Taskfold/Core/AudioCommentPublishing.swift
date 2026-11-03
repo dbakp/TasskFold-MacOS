@@ -435,11 +435,16 @@ extension AudioCommentPublishingTransport {
         }
         let token = attempt; state = .saving
         do {
-            var prepared = try await storage.prepare(source); try check(token); journal = prepared
+            var prepared = try await storage.prepare(source); try check(token)
             if requiresAudienceReview {
-                guard let proof, let expected, prepared.publication.sameIntent(as: expected.publication), prepared.approval?.record == expected.approval?.record else { throw AudioCommentStorageFailure.conflict }
+                guard let proof, let expected, prepared.publication.sameIntent(as: expected.publication) else { throw AudioCommentStorageFailure.conflict }
+                // A lost local write acknowledgement may already have committed
+                // this exact approval. A different window's decision is not it.
+                if prepared.isResolved { journal = prepared; reviewedApproval = nil; try await send(prepared, token: token); return }
+                guard prepared.approval?.record == expected.approval?.record || prepared.approval?.record == proof.record else { throw AudioCommentStorageFailure.conflict }
                 prepared = try await storage.approve(prepared, approval: proof); try check(token); journal = prepared; reviewedApproval = nil
             }
+            journal = prepared
             try await send(prepared, token: token)
         } catch { if token == attempt { state = .unconfirmed }; throw error }
     }

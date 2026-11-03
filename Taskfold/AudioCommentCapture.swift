@@ -858,6 +858,8 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
     private(set) var working = false
     private(set) var playing = false
     var notice: String?
+    // A nested review covers the library without ending its account-bound lifetime.
+    var presentingPublicationReview = false
     @ObservationIgnored var currentScope: () -> AudioCommentLibraryScope? = { nil }
     @ObservationIgnored private let storage: AudioCommentDraftStorage
     @ObservationIgnored private let player: any AudioCommentPlaying
@@ -877,7 +879,7 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
     private func invalidate() { operation = UUID(); working = false; player.stop(); playing = false }
     func stopPlayback() { invalidate() }
     func clearSelection(revokeExports: Bool = true) { invalidate(); if revokeExports { exportGeneration = UUID() }; selected = nil; validated = nil }
-    func close() { clearSelection(); library = nil; notice = nil; closed = true; Self.live.removeValue(forKey: lifecycleID) }
+    func close() { clearSelection(); library = nil; notice = nil; presentingPublicationReview = false; closed = true; Self.live.removeValue(forKey: lifecycleID) }
     func contextChanged() { if !isCurrent { close() } }
     func setActive(_ value: Bool) { active = value; if !value { clearSelection(revokeExports: false) } }
     static func stopForInactivity() { for value in live.values.compactMap(\.value) { value.setActive(false) }; AudioCommentPendingLibrary.stopForInactivity(); AudioCommentConversationController.stopForInactivity() }

@@ -1298,7 +1298,9 @@ extension AudioControllerProof {
         let retained = try cloudVault.pending()
         checks["publicationRefusesUnboundLegacyPendingWork"] = legacyBlocked && retained.count == 1
         gate.setActive(false); checks["publicationImmediatelyLosesInactiveSelectionAuthority"] = !gate.publicationSourceIsCurrent(cloudSource)
+        gate.presentingPublicationReview = true
         gate.close()
+        checks["nestedPublicationPresentationCannotKeepAClosedLibraryCurrent"] = !gate.isCurrent && !gate.presentingPublicationReview
         return checks
     }
 }
