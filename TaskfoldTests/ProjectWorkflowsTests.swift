@@ -1108,3 +1108,102 @@ extension ProjectWorkflowsTests {
         catch { XCTAssertTrue(error is CancellationError) }
     }
 }
+
+extension ProjectWorkflowsTests {
+    @MainActor func testProjectCatalogReadDiagnostic() throws {
+        guard let output=ProcessInfo.processInfo.environment["TASKFOLD_PROJECT_CATALOG_REPORT"] else {return}
+        XCTAssertTrue(output.hasPrefix("/tmp/taskfold-") && output.hasSuffix(".json"))
+        var rows:[Record]=[]
+        for index in 0..<1000 {
+            var root=project("catalog-root-\(index)",archived:index % 10 == 0);root["order_index"] = .number(Double(index*4));rows.append(root)
+            for child in 1...3 {var row=project("catalog-child-\(index)-\(child)",parent:root.id);row["order_index"] = .number(Double(index*4+child));rows.append(row)}
+        }
+        let cache=WorkspaceProjectCatalogReadCache()
+        let context=WorkspaceProjectCatalogReadCache.Context(source:UUID(),access:UUID(),workspace:.init(account:owner,generation:UUID()),session:UUID(),origin:"https://catalog.invalid")
+        let start=ProcessInfo.processInfo.systemUptime
+        var count=0,builds=0
+        for _ in 0..<20 {
+            let catalog=cache.catalog(for:context){builds+=1;return rows}
+            count += catalog.all.count + catalog.active.count + catalog.archived.count + catalog.archivedIDs.count
+        }
+        XCTAssertEqual(builds,1)
+        let seconds=ProcessInfo.processInfo.systemUptime-start
+        XCTAssertEqual(count,168000)
+        let report:[String:Any] = ["projects":rows.count,"passes":20,"observedItems":count,"seconds":seconds,"mode":"cached current Store catalog reads","debugDiagnosticOnly":true,"nativeRenderingClaim":false]
+        try JSONSerialization.data(withJSONObject:report,options:[.sortedKeys,.prettyPrinted]).write(to:URL(fileURLWithPath:output),options:.atomic)
+    }
+}
+
+extension ProjectWorkflowsTests {
+    @MainActor func testProjectCatalogReuseRequiresEverySourceAndAccessBoundary() {
+        let cache=WorkspaceProjectCatalogReadCache()
+        let source=UUID(),access=UUID(),generation=UUID(),session=UUID()
+        func context(_ change:Int = -1)->WorkspaceProjectCatalogReadCache.Context {
+            .init(source:change==0 ? UUID():source,access:change==1 ? UUID():access,
+                  workspace:.init(account:change==2 ? "other":owner,generation:change==3 ? UUID():generation),
+                  session:change==4 ? UUID():session,origin:change==5 ? "https://other.invalid":"https://catalog.invalid")
+        }
+        var builds=0,rows=[project("root"),project("child",parent:"root")]
+        func read(_ scope:WorkspaceProjectCatalogReadCache.Context)->ProjectOrganization.Catalog {
+            cache.catalog(for:scope){builds+=1;return rows}
+        }
+        let original=context()
+        for _ in 0..<50 {XCTAssertEqual(read(original).active.map(\.id),["root","child"])}
+        XCTAssertEqual(builds,1)
+        for change in 0..<6 {XCTAssertEqual(read(context(change)).all.count,2)}
+        XCTAssertEqual(builds,7)
+        rows[0]["name"] = .string("Fresh title")
+        XCTAssertEqual(read(original).active.first?.name,"Fresh title");XCTAssertEqual(builds,8)
+        cache.clear();XCTAssertEqual(read(original).all.first(where:{$0.id=="root"})?.name,"Fresh title");XCTAssertEqual(builds,9)
+        var editable=read(original).all;editable[editable.firstIndex(where:{$0.id=="root"})!]["name"] = .string("Unsaved draft")
+        XCTAssertEqual(read(original).all.first(where:{$0.id=="root"})?.name,"Fresh title")
+    }
+    func testProjectCatalogMatchesLegacyOrderingAndArchiveProjection() {
+        func legacy(_ projects:[Record],archived:Bool)->[ProjectOrganization.Item] {
+            let hidden=ProjectOrganization.archivedIDs(in:projects)
+            let visible=OrganizationOrder.sorted(projects).filter{hidden.contains($0.id)==archived}
+            let ids=Set(visible.map(\.id)),groups=Dictionary(grouping:visible,by:{$0.string("parent_id")})
+            var seen=Set<String>(),result:[ProjectOrganization.Item]=[]
+            func append(_ row:Record,_ depth:Int){guard seen.insert(row.id).inserted else{return};result.append(.init(project:row,depth:depth));for child in groups[row.id] ?? []{append(child,min(ProjectOrganization.maximumDepth,depth+1))}}
+            for row in visible where !ids.contains(row.string("parent_id")){append(row,0)}
+            for row in visible where !seen.contains(row.id){append(row,0)}
+            return result
+        }
+        for seed in 0..<16 {
+            var rows=(0..<96).map {i->Record in
+                var row=project("p\(i)",parent:i%5==0 ? "":"p\((i*17+seed)%110)",archived:(i+seed)%17==0)
+                row["order_index"] = .number(Double((i*7)%13));row["ancestor_archived"] = .bool(i%3==0);return row
+            }
+            var duplicate=rows[seed];duplicate["name"] = .string("Duplicate source");rows.append(duplicate)
+            let catalog=ProjectOrganization.Catalog(rows)
+            XCTAssertEqual(catalog.all,OrganizationOrder.sorted(rows))
+            XCTAssertEqual(catalog.active,legacy(OrganizationOrder.sorted(rows),archived:false).map(\.project))
+            XCTAssertEqual(catalog.archived,legacy(OrganizationOrder.sorted(rows),archived:true))
+            XCTAssertEqual(catalog.archivedIDs,ProjectOrganization.archivedIDs(in:OrganizationOrder.sorted(rows)))
+        }
+    }
+    func testVeryDeepLegacyProjectOutlineDoesNotUseRecursiveStack() {
+        let rows=(0..<12000).map{i->Record in
+            var row=project("deep-\(i)",parent:i==0 ? "":"deep-\(i-1)");row["order_index"] = .number(Double(i));return row
+        }
+        let catalog=ProjectOrganization.Catalog(rows)
+        XCTAssertEqual(catalog.active.count,12000)
+        XCTAssertEqual(catalog.active.first?.id,"deep-0");XCTAssertEqual(catalog.active.last?.id,"deep-11999")
+        let outline=ProjectOrganization.outline(rows)
+        XCTAssertEqual(outline.count,12000);XCTAssertEqual(outline.last?.depth,ProjectOrganization.maximumDepth)
+        XCTAssertTrue(catalog.archived.isEmpty)
+    }
+}
+
+
+extension ProjectWorkflowsTests {
+    func testCatalogPreservesSortedDuplicateArchivePrecedence() {
+        var late=project("duplicate"),early=project("duplicate",archived:true)
+        late["order_index"] = .number(99);early["order_index"] = .number(1)
+        let rows=[late,project("child",parent:"duplicate"),early]
+        let catalog=ProjectOrganization.Catalog(rows),sorted=OrganizationOrder.sorted(rows)
+        XCTAssertEqual(catalog.active,ProjectOrganization.outline(sorted).map(\.project))
+        XCTAssertEqual(catalog.archived,ProjectOrganization.outline(sorted,archived:true))
+        XCTAssertEqual(catalog.archivedIDs,Set(["duplicate","child"]))
+    }
+}

@@ -7541,3 +7541,8 @@ Both owning services now bind a bounded recording/provider metadata inventory to
 - [ ] Accept the separate pending-review screen, saved Resume/expiry/Close, in-process approval-write ambiguity, Mac/iPad runtime, audible accessibility and wider integration/recovery. Whole-project transfers and ordinary-use enablement remain unfinished.
 
 [Exact native audience scope and remaining work](native-audience-approval/README.md). All user deferrals remain.
+
+
+## 3 November 2026 — Reuse readable project catalogs
+
+Both owning apps now reuse sorted/outlined project display data in a source/access/workspace/session/server-bound catalog, while live presentation reads and command admission remain current. Iterative traversal preserves legacy graph semantics and handles a 12,000-node historical chain. Each selected Core run has 170 passes, four existing opt-in skips and no failures; both full apps/runners build and sign. The iPhone accepts actual Store rename/reparent/archive/readability refresh plus production TaskScreen scrolling with 4,000 projects and exact task/project/queue preservation. A single Core Debug diagnostic moves 20 equivalent reads from 0.7836 to 0.0192 seconds; native current reads take 0.0237 seconds. These are not FPS or universal latency claims. Broader template/catalog/editor rendering, workloads and Mac/iPad/account/window/accessibility/cloud contexts remain. [Evidence and limits](project-catalog-reads/README.md).

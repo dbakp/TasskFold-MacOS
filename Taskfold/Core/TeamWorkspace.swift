@@ -535,3 +535,26 @@ extension TeamWorkspaceCache {
         names = [:]
     }
 }
+
+
+/// One readable graph per source/access/workspace/session. Every caller reads
+/// its current presentation before looking up this purely derived display value.
+@MainActor final class WorkspaceProjectCatalogReadCache {
+    struct Context: Equatable {
+        let source: UUID
+        let access: UUID
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let origin: String?
+    }
+    private var context: Context?
+    private var value: ProjectOrganization.Catalog?
+    func catalog(for context: Context, projects: () -> [Record]) -> ProjectOrganization.Catalog {
+        if self.context == context, let value { return value }
+        let next = ProjectOrganization.Catalog(projects())
+        value = next
+        self.context = context
+        return next
+    }
+    func clear() { context = nil; value = nil }
+}

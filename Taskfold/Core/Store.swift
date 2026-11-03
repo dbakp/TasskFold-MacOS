@@ -112,7 +112,7 @@ final class Store {
         didSet {
             snapshotRevision = UUID()
             presentationReadCache.clear()
-            assigneeDisplayCache.clear()
+            assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
             guard !workflowPresentationDeferred else { return }
             refreshSnapshotPresentation(from: oldValue)
         }
@@ -125,7 +125,7 @@ final class Store {
         didSet {
             presentationAccessEpoch = UUID()
             presentationReadCache.clear()
-            assigneeDisplayCache.clear()
+            assigneeDisplayCache.clear(); projectCatalogReadCache.clear()
             if oldValue?.boundary != teamAccessMask?.boundary {workspaceReadRevision = UUID()}
             if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}
             publishWidgetSnapshot(scheduleCapacityRefresh:false)
@@ -142,6 +142,7 @@ final class Store {
     }
     @ObservationIgnored private let presentationReadCache = WorkspacePresentationReadCache()
     @ObservationIgnored private let assigneeDisplayCache = AssigneeDisplayReadCache()
+    @ObservationIgnored private let projectCatalogReadCache = WorkspaceProjectCatalogReadCache()
     @ObservationIgnored private var presentationAccessEpoch = UUID()
     private var presentedTables: [String: [Record]] {
         guard workspaceCacheReadable else { return [:] }
@@ -1143,7 +1144,7 @@ final class Store {
     var workspaceNeedsRepair: Bool { !workspaceCacheDecoded }
     private var workspaceCacheDecoded = true
     private var workspaceCacheReadable = true {
-        didSet {presentationReadCache.clear();assigneeDisplayCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
+        didSet {presentationReadCache.clear();assigneeDisplayCache.clear(); projectCatalogReadCache.clear();if oldValue != workspaceCacheReadable {workspaceReadRevision=UUID()};if taskCache.update(presentedTables["tasks"] ?? []) {taskRevision+=1}}
     }
     #if DEBUG
     var reminderRouteFixtureOutcome = "Waiting"
@@ -1769,7 +1770,7 @@ final class Store {
         if query.filter?.usesAssignmentHistory == true { query.filterAssignments = assignmentCatalog }
         let matches = taskCache.matching(query)
         if case .project = query.scope { return matches }
-        let archived = ProjectOrganization.archivedIDs(in: allProjects)
+        let archived = projectCatalog.archivedIDs
         return matches.filter { !archived.contains($0.string("project_id")) }
     }
     func filterGroups(_ scope: TaskScope, tasks: [Record], includeCompleted: Bool = false) -> [TaskGrouping.Group] {
@@ -1828,8 +1829,17 @@ final class Store {
             return changes.isEmpty || commit(changes)
         } catch { self.error = error.localizedDescription; return false }
     }
-    var allProjects: [Record] { OrganizationOrder.sorted(rows("projects")) }
-    var projects: [Record] { ProjectOrganization.outline(allProjects).map(\.project) }
+    private var projectCatalog: ProjectOrganization.Catalog {
+        // Keep observation and current access filtering on every read, including hits.
+        let projects = presentedTables["projects"] ?? []
+        guard workspaceCacheReadable else { projectCatalogReadCache.clear(); return ProjectOrganization.Catalog([]) }
+        let context = WorkspaceProjectCatalogReadCache.Context(source: snapshotRevision, access: presentationAccessEpoch,
+            workspace: WorkspaceBinding(account: userID, generation: workspaceGeneration), session: backend.reminderSessionIncarnation,
+            origin: try? backend.accountRemovalOrigin)
+        return projectCatalogReadCache.catalog(for: context) { projects }
+    }
+    var allProjects: [Record] { projectCatalog.all }
+    var projects: [Record] { projectCatalog.active }
     var personalConnectionProjects: [Record] {
         let cache = nativeConversationTeamCache, account = userID, origin = try? backend.accountRemovalOrigin
         return projects.filter { PersonalConnectionDestination.resolve(project: $0.id, projects: [$0], cache: cache, account: account, origin: origin).supported }
@@ -1837,16 +1847,16 @@ final class Store {
     func personalConnectionDestination(_ project: String?) -> PersonalConnectionDestination {
         PersonalConnectionDestination.resolve(project: project, projects: allProjects, cache: nativeConversationTeamCache, account: userID, origin: try? backend.accountRemovalOrigin)
     }
-    var archivedProjects: [ProjectOrganization.Item] { ProjectOrganization.outline(allProjects, archived: true) }
+    var archivedProjects: [ProjectOrganization.Item] { projectCatalog.archived }
     var inboxProductiveReading: ProductiveTaskReading {
         _ = taskRevision
         return taskCache.inboxProductiveReading()
     }
     var productiveReading: ProductiveTaskReading {
         _ = taskRevision
-        return taskCache.productiveReading(excluding: ProjectOrganization.archivedIDs(in: allProjects))
+        return taskCache.productiveReading(excluding: projectCatalog.archivedIDs)
     }
-    var activeTasks: [Record] { let archived = ProjectOrganization.archivedIDs(in: allProjects); return tasks.filter { !archived.contains($0.string("project_id")) } }
+    var activeTasks: [Record] { let archived = projectCatalog.archivedIDs; return tasks.filter { !archived.contains($0.string("project_id")) } }
     var workflowTemplates: [Record] { rows(WorkflowTemplate.table).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
     var labels: [Record] { rows("labels").sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
     func quickEntryContext(project: String = "") -> QuickEntryContext {
@@ -6364,6 +6374,7 @@ extension Store {
 extension Store {
     func prepareWorkspaceReadFixture() throws {
         guard WorkspaceReadNativeFixture.enabled else { throw CancellationError() }
+        if WorkspaceReadNativeFixture.projectCatalog { try prepareProjectCatalogFixture(); return }
         dailyBackupsEnabled = false
         var tasks: [Record] = []
         for index in 0..<240 {
@@ -6649,6 +6660,59 @@ extension Store {
         let report:JSON = .object(["accepted":.bool(accepted),"completed":.bool(completed),"checks":.object(checks.mapValues(JSON.bool)),"serverCalls":.number(Double(AccountRemovalProofHTTP.count)),"coldReload":.bool(cold),"currentCacheBytesUnchanged":.bool(currentBytesUnchanged),"otherCacheBytesUnchanged":.bool(otherBytesUnchanged)])
         try TaskfoldJSONEncoder().encode(report).write(to:root.appendingPathComponent(completed ? "recovery-completed.json":"recovery-preserved.json"),options:.atomic)
         guard accepted else {throw AppFailure(message:"Recovery fixture failed: "+checks.filter{!$0.value}.keys.sorted().joined(separator:", "))}
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func prepareProjectCatalogFixture() throws {
+        guard WorkspaceReadNativeFixture.projectCatalog else {throw CancellationError()}
+        localMode=true;signedIn=false;teamAccessMask=nil;workspaceCacheReadable=true;dailyBackupsEnabled=false
+        var projects:[Record]=[]
+        for index in 0..<1000 {
+            let root=index==0 ? TeamEditorNativeFixture.projectID:String(format:"ec260000-0000-4000-8000-%012d",index)
+            projects.append(Record(["id":.string(root),"user_id":.string(userID),"name":.string(String(format:"Catalog project %04d",index)),"order_index":.number(Double(index*4)),"is_archived":.bool(index%10==9)]))
+            for child in 1...3 {
+                projects.append(Record(["id":.string(String(format:"ec260001-0000-4000-8000-%012d",index*3+child)),"user_id":.string(userID),"name":.string("Design phase \(child)"),"parent_id":.string(root),"order_index":.number(Double(index*4+child))]))
+            }
+        }
+        let tasks=(0..<240).map {index->Record in
+            var task=Record.task(user:userID,project:TeamEditorNativeFixture.projectID)
+            task["id"] = .string(String(format:"ec250000-0000-4000-8000-%012d",index+1))
+            task["title"] = .string(String(format:"Workshop task %03d",index+1));return task
+        }
+        snapshot=Snapshot(tables:["projects":projects,"tasks":tasks]);try persist()
+    }
+    func measureProjectCatalogFixture() throws {
+        guard WorkspaceReadNativeFixture.projectCatalog else {throw CancellationError()}
+        let source=snapshot,readable=workspaceCacheReadable
+        defer {snapshot=source;workspaceCacheReadable=readable}
+        guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240 else {throw AppFailure(message:"Incomplete project catalog fixture")}
+        projectCatalogReadCache.clear()
+        let start=ProcessInfo.processInfo.systemUptime
+        var total=0
+        for _ in 0..<20 {total += allProjects.count+projects.count+archivedProjects.count+projectCatalog.archivedIDs.count}
+        let elapsed=ProcessInfo.processInfo.systemUptime-start
+        guard total==168000,snapshot==source else {throw AppFailure(message:"Project reads changed saved work")}
+        let probe=WorkspaceReadObservationProbe()
+        withObservationTracking {_ = projects.first?.name} onChange: {probe.markChanged()}
+        snapshot.tables["projects"]![0]["name"] = .string("Renamed catalog project")
+        guard probe.changed,projects.first?.name=="Renamed catalog project" else {throw AppFailure(message:"Project observation did not refresh")}
+        snapshot.tables["projects"]![1]["parent_id"] = .string(source.tables["projects"]![36].id)
+        guard projects.count==3599,archivedProjects.count==401 else {throw AppFailure(message:"Reparented archive inheritance stayed stale")}
+        snapshot=source
+        snapshot.tables["projects"]![0]["is_archived"] = .bool(true)
+        guard projects.count==3596,archivedProjects.count==404,activeTasks.isEmpty else {throw AppFailure(message:"Archived work stayed visible")}
+        snapshot=source
+        workspaceCacheReadable=false
+        guard allProjects.isEmpty,projects.isEmpty,archivedProjects.isEmpty else {throw AppFailure(message:"Unreadable project catalog exposed cached content")}
+        workspaceCacheReadable=true
+        guard allProjects.count==4000,projects.count==3600,archivedProjects.count==400,activeTasks.count==240,snapshot==source else {throw AppFailure(message:"Project catalog failed to return")}
+        let report:[String:JSON] = ["accepted":.bool(true),"projects":.number(4000),"roots":.number(240),"passes":.number(20),"observedItems":.number(Double(total)),"seconds":.number(elapsed),"snapshotUnchanged":.bool(true),"observationRefresh":.bool(true),"archiveAndReparentRefresh":.bool(true),"unreadableAndReturn":.bool(true),"debugDiagnosticOnly":.bool(true),"fpsClaim":.bool(false)]
+        let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
+        try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-catalog.json"),options:.atomic)
     }
 }
 #endif

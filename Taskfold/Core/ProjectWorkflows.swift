@@ -180,7 +180,7 @@ final class WorkflowTemplateReadOperation: @unchecked Sendable {
 /// available graph; the server projection covers an inaccessible shared ancestor.
 enum ProjectOrganization {
     static let maximumDepth = 20
-    struct Item: Identifiable, Equatable {
+    struct Item: Identifiable, Equatable, Sendable {
         var project: Record
         var depth: Int
         var id: String { project.id }
@@ -214,16 +214,37 @@ enum ProjectOrganization {
         }
         return result
     }
+    /// One immutable projection of the current readable project graph. This is
+    /// display data, never a cached permission or mutation authorization.
+    struct Catalog: Sendable {
+        let all: [Record]
+        let active: [Record]
+        let archived: [Item]
+        let archivedIDs: Set<String>
+        init(_ projects: [Record]) {
+            all = OrganizationOrder.sorted(projects)
+            archivedIDs = ProjectOrganization.archivedIDs(in: all)
+            active = ProjectOrganization.outline(sorted: all, archivedIDs: archivedIDs, showArchived: false).map(\.project)
+            archived = ProjectOrganization.outline(sorted: all, archivedIDs: archivedIDs, showArchived: true)
+        }
+    }
     static func outline(_ projects: [Record], archived showArchived: Bool = false) -> [Item] {
-        let rows = OrganizationOrder.sorted(projects)
-        let archived = archivedIDs(in: projects)
-        let visible = rows.filter { archived.contains($0.id) == showArchived }
+        outline(sorted: OrganizationOrder.sorted(projects), archivedIDs: archivedIDs(in: projects), showArchived: showArchived)
+    }
+    private static func outline(sorted rows: [Record], archivedIDs: Set<String>, showArchived: Bool) -> [Item] {
+        let visible = rows.filter { archivedIDs.contains($0.id) == showArchived }
         let ids = Set(visible.map(\.id)), grouped = Dictionary(grouping: visible, by: { $0.string("parent_id") })
         var result: [Item] = [], seen = Set<String>()
         func append(_ row: Record, depth: Int) {
-            guard seen.insert(row.id).inserted else { return }
-            result.append(Item(project: row, depth: depth))
-            for child in grouped[row.id] ?? [] { append(child, depth: min(maximumDepth, depth + 1)) }
+            var pending: [(Record, Int)] = [(row, depth)]
+            while let (next, level) = pending.popLast() {
+                guard seen.insert(next.id).inserted else { continue }
+                result.append(Item(project: next, depth: level))
+                // Reverse the stack insertion to preserve the existing sibling order.
+                for child in (grouped[next.id] ?? []).reversed() {
+                    pending.append((child, min(maximumDepth, level + 1)))
+                }
+            }
         }
         for row in visible where !ids.contains(row.string("parent_id")) { append(row, depth: 0) }
         // Malformed/legacy cycles never hide records or recurse forever in management.

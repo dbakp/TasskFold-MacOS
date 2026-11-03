@@ -10645,3 +10645,13 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Accept largest-text system-picker/refusal flows, genuine Mac protected-session/runtime and hosted issuer/verifier activation.
 
 [Current recovery scope](account-removal-legacy-recovery/README.md). Native entry and service remain disabled by default.
+
+
+### 3 November 2026 · Project catalog reuse
+
+- [x] Reuse current sorted/outlined/archived project reads with complete source/access/workspace/session/server boundaries; preserve live admission checks and observation.
+- [x] Preserve legacy ordering, duplicates, archive inheritance and cycles; traverse deep historical chains without recursion. Own selected Core has 170 passes, four existing opt-in skips and zero failures; full app/runner build and strict signatures pass.
+- [x] Record counterpart iPhone actual Store invalidation and production scrolling at 4,000 projects with task/project/queue preservation.
+- [ ] Continue Mac/iPad native, hierarchy/template-editor scaling, wider workload/account/window/accessibility/cloud checks. No native Mac or FPS acceptance is inferred.
+
+[Evidence and limits](project-catalog-reads/README.md).

@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P0 · Older account-removal recovery",
-  "latest": "Both repos implement reviewed recovery of older account-removal commands. Each passes 78 selected client, 40 handler/proof and 57 real local database/Storage checks; both apps build/sign. iPhone file review, completion and cold preservation pass. Largest-text picker/refusal acceptance and hosted activation remain open; controls stay disabled.",
+  "focus": "P2 · Large project catalog reads",
+  "latest": "Both apps now reuse current project catalogs and avoid recursive hierarchy rendering. Each has 170 selected Core passes (four existing opt-in skips), plus app/runner builds and signatures. iPhone Store refresh and actual scrolling pass with 4,000 projects and saved work intact. Broader rendering/editor/platform checks remain.",
   "next": [
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
-    "Continue actual large-list scrolling/rendering, multiple-project/catalog/editor scaling, richer assignments and wider Mac/iPad/accessibility/cloud contexts. Filtered reads, assignment display, rich task construction and per-view background definition loading now have scoped acceptance; do not repeat unchanged accepted cases.",
+    "Continue template-library summaries, hierarchy/parent-choice and catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
@@ -147,7 +147,7 @@
             "account-removal-legacy-recovery/verification.json",
             "account-removal-legacy-recovery/iphone-completion.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p0-paused",
@@ -474,8 +474,8 @@
             },
             {
               "state": "build",
-              "title": "Reduce remaining large-workflow save pauses",
-              "detail": "Scoped gains now cover filtered/display reads, rich task construction, and cancellable background template validation reused while editing options. iPhone native cases accept dismissal/source replacement and real 1,000-root/6,000-child Create/Undo/cold return. Both own builds/Core pass. Full rendering, wider workflows and platforms remain.",
+              "title": "Reduce remaining workflow and browsing pauses",
+              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading and now current project-catalog reuse. A 4,000-project iPhone case verifies Store invalidation and production scrolling without changing saved tasks, projects or queued work. Both app builds/Core pass. Template/hierarchy-editor scaling, wider rendering, platforms and account/accessibility/cloud contexts remain.",
               "steps": [
                 {
                   "state": "done",
@@ -488,6 +488,10 @@
                 {
                   "state": "done",
                   "title": "Prepare one cancellable background template preview and reuse it while editing options"
+                },
+                {
+                  "state": "done",
+                  "title": "Reuse current project catalogs; verify archive/reparent/readability refresh and bounded iPhone scrolling"
                 },
                 {
                   "state": "verify",
@@ -516,9 +520,14 @@
             "rich-workflow-creation/before-failed-native.json",
             "workflow-definition-preview/README.md",
             "workflow-definition-preview/verification.json",
-            "workflow-definition-preview/iphone-after.json"
+            "workflow-definition-preview/iphone-after.json",
+            "project-catalog-reads/README.md",
+            "project-catalog-reads/verification.json",
+            "project-catalog-reads/iphone-after.json",
+            "project-catalog-reads/core-after.json",
+            "project-catalog-reads/ios-core-before.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-voice",
@@ -1078,7 +1087,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "36130fcc01f59c9db9729c395aba1860ad28812828c3d75f039eb13aa21b9d57",
+    "P2_PLAN.md": "69d13bf8d08ef8c3ded0b1a5d0ab23bfd4a9490be9b62a07ff57e817c198696a",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1225,6 +1234,11 @@
     "pending-approval-boundaries/verification.json": "12123e97b7fa378c54d0496013693b00909e4573b432d6b606936e63fb40a03a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38",
     "preserving-json/verification.json": "32245580dd9fdd9cc710c036398ed1c8a26e3ba2e156fb8bf721808db242f3b1",
+    "project-catalog-reads/README.md": "8b0de3519976d630db090d183b2088768cdd05cea5f8af5d7fe42c5d7a025241",
+    "project-catalog-reads/core-after.json": "35417d7abe12344a3054be9ba4b1742bb459db569c1d383232c877b0bca9c75d",
+    "project-catalog-reads/ios-core-before.json": "0ac05a8e279c2acb65692e5512dec5ed16c4c14a0f36f8d7e34b55cde210106d",
+    "project-catalog-reads/iphone-after.json": "9b81f07ad657734a205d32962adf598cf22154cbf7f9c93d4f45d0bd11bfd62f",
+    "project-catalog-reads/verification.json": "b256f10bce156d3d482e7f8b96b3900de0a778131630caaaaf53871936ec8cd1",
     "project-private-history/README.md": "bdc37d1ca79281d53a5038b2a5e19d4500b0a35165f9966da7e2ceb45002453b",
     "project-private-history/initial-interaction-verification.json": "97f865f06db59d9261ea4f1ca48c2c26f7c6ffbbf20a06a48326b398e14b0fef",
     "project-private-history/local-service.json": "b4bea464e6d190b51ceb9afba063d92fd9d06e84cfddf93062bf1c47604ce0dc",

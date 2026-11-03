@@ -1,0 +1,32 @@
+{
+  "scope": "Single Debug Core diagnostic; no FPS or release latency claim",
+  "iosOriginalCommit": "b2ab4983267e2c9a70e705b489cd25cb46c317ab",
+  "iosOriginalProjectModelSHA256": "6c6d21537d914113da7aa16ba8e8c51551aa436726b59064b1cccb37f1e94171",
+  "before": {
+    "debugDiagnosticOnly": true,
+    "mode": "uncached current Store catalog reads",
+    "nativeRenderingClaim": false,
+    "observedItems": 168000,
+    "passes": 20,
+    "projects": 4000,
+    "seconds": 0.7835744998883456
+  },
+  "after": {
+    "debugDiagnosticOnly": true,
+    "mode": "cached current Store catalog reads",
+    "nativeRenderingClaim": false,
+    "observedItems": 168000,
+    "passes": 20,
+    "projects": 4000,
+    "seconds": 0.01915366668254137
+  },
+  "sameFixtureAndObservedItems": true,
+  "beforeReadPipeline": [
+    "OrganizationOrder.sorted(rows).count",
+    "ProjectOrganization.outline(OrganizationOrder.sorted(rows)).count",
+    "ProjectOrganization.outline(OrganizationOrder.sorted(rows),archived:true).count",
+    "ProjectOrganization.archivedIDs(in:OrganizationOrder.sorted(rows)).count"
+  ],
+  "ratio": 40.909895367583914,
+  "macBeforeClaim": false
+}

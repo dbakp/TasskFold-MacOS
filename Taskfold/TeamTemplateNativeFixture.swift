@@ -589,6 +589,7 @@ import CryptoKit
 @MainActor enum WorkspaceReadNativeFixture {
     static var enabled: Bool { TeamEditorNativeFixture.enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-performance") }
     static var largeCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-catalog") }
+    static var projectCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-project-catalog") }
 }
 @MainActor struct WorkspaceReadNativeFixtureView: View {
     @Environment(Store.self) private var store
@@ -598,7 +599,7 @@ import CryptoKit
             Form {
                 Text(status).accessibilityIdentifier("workspaceReadStatus")
                 Button("Measure row reads") {
-                    do { try store.measureWorkspaceReadFixture(); status = "Reads verified" }
+                    do { if WorkspaceReadNativeFixture.projectCatalog { try store.measureProjectCatalogFixture() } else { try store.measureWorkspaceReadFixture() }; status = "Reads verified" }
                     catch { status = error.localizedDescription }
                 }.accessibilityIdentifier("measureWorkspaceReads").disabled(status == "Preparing")
                 #if os(iOS)
