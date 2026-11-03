@@ -10662,3 +10662,10 @@ The project-transfer review now has typed recording counts and a specific custod
 Parent selection now uses a native searchable sheet with ancestor paths, selected state and Top level. It preserves the draft until Save and checks live scope/eligibility before selection. The quadratic eligibility construction is replaced while the final write validator remains unchanged. Mac independently passes 178 selected Core checks (four existing opt-in skips). The iPhone production editor passes search, draft Cancel, Save and cold return with 4,000 projects and preserved saved work; this does not establish native Mac interaction or spoken accessibility acceptance. Wider platform/account/rendering work remains open.
 
 [Evidence and limits](project-parent-choices/README.md).
+
+
+### 3 November 2026 · Template-library summary preparation
+
+The native row styling is retained while full definition validation moves onto a serial background actor. A bounded display-only cache reuses unchanged sources within one workspace/session. Changed or cancelled requests cannot publish stale captions. Workspace loss has an explicit unavailable message, and the source picker safely represents unavailable retained choices. Use/Edit/Export keep live validation. Mac independently passes 185 selected Core checks (four existing opt-in skips). iPhone production scrolling, controlled live-source refresh, unreadable/return and cold reopening pass with unrelated saved work intact; this does not establish native Mac interaction or spoken accessibility acceptance.
+
+[Evidence and limits](template-library-summaries/README.md). Wider Px work remains open.

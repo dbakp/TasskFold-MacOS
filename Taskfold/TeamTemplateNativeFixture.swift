@@ -591,11 +591,21 @@ import CryptoKit
     static var largeCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-read-catalog") }
     static var projectCatalog: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-project-catalog") }
     static var projectParents: Bool { projectCatalog && ProcessInfo.processInfo.arguments.contains("--workspace-project-parents") }
+    static var templateLibrary: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--workspace-template-library") }
+    static func libraryID(_ index:Int)->String {String(format:"ec270000-0000-4000-8000-%012d",index)}
+    static func libraryDocument(changed:Bool=false)->JSON {
+        let source=WorkflowRichNativeDocument.make(count:changed ? 1:40)
+        guard changed else{return source}
+        var document=source.object;document["version"] = .number(2);document["capabilities"] = .array([.string("task_headings")])
+        var tasks=document["tasks"]!.list;var first=tasks[0].object;first["is_heading"] = .bool(true);tasks[0] = .object(first);document["tasks"] = .array(tasks)
+        return .object(document)
+    }
 }
 @MainActor struct WorkspaceReadNativeFixtureView: View {
     @Environment(Store.self) private var store
     @State private var status = "Preparing"
     @State private var projectEditor: Record?
+    @State private var libraryPresented=false
     var body: some View {
         NavigationStack {
             Form {
@@ -604,6 +614,9 @@ import CryptoKit
                     do { if WorkspaceReadNativeFixture.projectParents { try store.measureProjectParentFixture() } else if WorkspaceReadNativeFixture.projectCatalog { try store.measureProjectCatalogFixture() } else { try store.measureWorkspaceReadFixture() }; status = "Reads verified" }
                     catch { status = error.localizedDescription }
                 }.accessibilityIdentifier("measureWorkspaceReads").disabled(status == "Preparing")
+                if WorkspaceReadNativeFixture.templateLibrary {
+                    Button("Open template library") {libraryPresented=true}.accessibilityIdentifier("openProductionTemplateLibrary")
+                }
                 if WorkspaceReadNativeFixture.projectParents {
                     Button("Edit project hierarchy") {projectEditor=store.record("projects",id:TeamEditorNativeFixture.projectID)}.accessibilityIdentifier("openProjectParentEditor").disabled(status=="Preparing")
                 }
@@ -612,7 +625,7 @@ import CryptoKit
                     .accessibilityIdentifier("openProductionReadList")
                 #endif
             }.navigationTitle("Workspace reads")
-        }.sheet(item:$projectEditor) {NamedEditor(table:"projects",record:$0)}.task {
+        }.sheet(item:$projectEditor) {NamedEditor(table:"projects",record:$0)}.sheet(isPresented:$libraryPresented) {TemplateLibraryView()}.task {
             do { try store.prepareWorkspaceReadFixture(); status = "Ready" }
             catch { status = error.localizedDescription }
         }

@@ -162,6 +162,7 @@ struct MultiLineCaptureView: View {
 struct TemplateLibraryView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
+    @State private var summaryCache = WorkflowLibrarySummaryCache()
     @State private var sourceKind = "project"
     @State private var source = ""
     @State private var name = ""
@@ -193,10 +194,11 @@ struct TemplateLibraryView: View {
                     Text("Save a workflow once, then start fresh each time. New runs keep structure, notes, labels and relative dates; completion, discussion, files and assignments stay with the originals.").font(.callout).foregroundStyle(.secondary)
                 }
                 Section("Your templates") {
-                    if store.workflowTemplates.isEmpty { Text("No templates yet. Save a project, section or task below.").foregroundStyle(.secondary) }
+                    if binding != nil && !store.workflowPreviewReady(binding) { Text("Templates unavailable. Reopen your workspace to continue.").foregroundStyle(.secondary).accessibilityIdentifier("workflowLibraryUnavailable") }
+                    else if store.workflowTemplates.isEmpty { Text("No templates yet. Save a project, section or task below.").foregroundStyle(.secondary) }
                     ForEach(store.workflowTemplates) { row in
                         Button { selected = row } label: {
-                            HStack { Image(systemName: "square.stack.3d.up"); VStack(alignment: .leading) { Text(row.name).font(.headline); Text(summary(row)).font(.caption).foregroundStyle(.secondary) }; Spacer(); Image(systemName: "chevron.right").foregroundStyle(.secondary) }.contentShape(.rect)
+                            WorkflowLibrarySummaryRow(row:row,binding:binding,cache:summaryCache)
                         }.buttonStyle(.plain).accessibilityIdentifier("workflowTemplate-" + row.id)
                         .contextMenu { Button("Edit template") { editingTemplate = row }; Button("Export template…") { export(row) }; Button("Delete template", role: .destructive) { deleting = row } }
                         .swipeActions(edge:.leading) { Button("Edit") { editingTemplate=row }.tint(.accentColor) }
@@ -211,7 +213,7 @@ struct TemplateLibraryView: View {
                 }
                 Section("Save a workflow") {
                     Picker("Type", selection: $sourceKind) { Text("Project and subprojects").tag("project"); Text("Section").tag("section"); Text("Task").tag("task") }.onChange(of: sourceKind) { _, _ in source = "" }
-                    Picker("Source", selection: $source) {
+                    Picker("Source", selection: Binding(get:{sources.contains(where:{$0.id==source}) ? source:""},set:{source=$0})) {
                         Text("Choose a source").tag("")
                         ForEach(sources) { row in Text(sourceKind == "task" ? row.title : row.name).tag(row.id) }
                     }
@@ -221,6 +223,19 @@ struct TemplateLibraryView: View {
                 }
                 if let message { Text(message).foregroundStyle(.red) }
             }
+            #if DEBUG
+            .toolbar {
+                if WorkspaceReadNativeFixture.templateLibrary {
+                    ToolbarItem {
+                        Menu("Library test") {
+                            Button("Change sample") {do {try store.changeTemplateLibraryReadFixture()} catch {message=error.localizedDescription}}
+                            Button("Hide workspace") {store.templateLibraryReadFixtureVisibility(false)}
+                            Button("Show workspace") {store.templateLibraryReadFixtureVisibility(true)}
+                        }.accessibilityIdentifier("librarySummaryFixture")
+                    }
+                }
+            }
+            #endif
         }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) }; if source.isEmpty { source = sources.first?.id ?? "" } }
         .safeAreaInset(edge: .bottom) {
             if readingFile != nil {
@@ -232,9 +247,10 @@ struct TemplateLibraryView: View {
                 }.padding().background(.regularMaterial)
             }
         }
-        .onDisappear(perform: cancelFileRead)
+        .onDisappear { cancelFileRead(); Task { await summaryCache.clear() } }
         .onChange(of: store.workspaceGeneration) { _, _ in
             cancelFileRead(); importing = false; imported = nil; csvSource = nil; exportRequest = nil
+            Task { await summaryCache.clear() }
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .commaSeparatedText]) { result in
             guard store.workflowReady(binding) else { message = store.error; return }
@@ -285,11 +301,6 @@ struct TemplateLibraryView: View {
             exportRequest = ExportedWorkflowTemplate(file: file, data: try file.encoded())
             message = nil
         } catch { message = error.localizedDescription }
-    }
-    private func summary(_ row: Record) -> String {
-        guard let template = try? WorkflowTemplate(document: row["document"]) else { return "Update Taskfold to use this template" }
-        if template.requiresHeadingSupport { return TemplateEditing.summary(template.document) }
-        return [workflowCount(template.projects.count, "project"), workflowCount(template.sections.count, "section"), workflowCount(template.tasks.count, "task")].joined(separator: " · ")
     }
     private func capture() {
         guard store.workflowReady(binding) else { message = store.error; return }
@@ -1332,4 +1343,36 @@ private struct ProjectParentSelectionView: View {
         }
     }
     private func select(_ id:String) {if let issue=choose(id){message=issue}else{dismiss()}}
+}
+
+/// The name stays available immediately; only a fully validated current-source
+/// summary replaces the loading caption. SwiftUI cancels work as rows leave.
+private struct WorkflowLibrarySummaryRow: View {
+    @Environment(Store.self) private var store
+    let row: Record
+    let binding: WorkspaceBinding?
+    let cache: WorkflowLibrarySummaryCache
+    @State private var prepared: Prepared?
+    private struct Prepared { let request: WorkflowDefinitionRequest; let text: String }
+    private var request: WorkflowDefinitionRequest? {
+        guard let binding, store.workflowPreviewReady(binding), store.record(WorkflowTemplate.table,id:row.id) == row else { return nil }
+        return WorkflowDefinitionRequest(workspace:binding,session:store.backend.reminderSessionIncarnation,source:row)
+    }
+    var body: some View {
+        let current = request
+        let text = current == nil ? "Preview unavailable" : (prepared?.request == current ? prepared?.text : nil) ?? "Preparing template…"
+        HStack {
+            Image(systemName:"square.stack.3d.up")
+            VStack(alignment:.leading) { Text(row.name).font(.headline); Text(text).font(.caption).foregroundStyle(.secondary) }
+            Spacer(); Image(systemName:"chevron.right").foregroundStyle(.secondary)
+        }.contentShape(.rect)
+        .task(id:current) {
+            guard let current else {prepared=nil;return}
+            do {
+                let text = try await cache.summary(for:current)
+                guard !Task.isCancelled,request == current else {return}
+                prepared = Prepared(request:current,text:text)
+            } catch { /* Cancellation must never publish a stale caption. */ }
+        }
+    }
 }

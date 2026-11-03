@@ -1,0 +1,12 @@
+{
+  "afterSeconds" : 0.055226916680112481,
+  "beforeSeconds" : 0.56456687510944903,
+  "debugDiagnosticOnly" : true,
+  "fpsClaim" : false,
+  "passes" : 10,
+  "preparations" : 12,
+  "reads" : 120,
+  "rootsPerTemplate" : 40,
+  "sameSummaries" : true,
+  "templates" : 12
+}

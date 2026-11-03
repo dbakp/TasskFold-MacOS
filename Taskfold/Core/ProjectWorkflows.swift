@@ -1586,3 +1586,44 @@ enum WorkflowUndo {
         return true
     }
 }
+
+/// Display-only, bounded to one library presentation. This actor serializes
+/// validation away from the main actor and never authorizes Use/Edit/Export.
+actor WorkflowLibrarySummaryCache {
+    private struct Context: Equatable { let workspace: WorkspaceBinding; let session: UUID }
+    private struct Entry { let source: Record; let text: String }
+    private let capacity: Int
+    private var context: Context?
+    private var entries: [String: Entry] = [:]
+    private var recent: [String] = []
+    private(set) var preparationCount = 0
+    init(capacity: Int = 24) { self.capacity = max(1, min(capacity, 64)) }
+
+    func summary(for request: WorkflowDefinitionRequest) throws -> String {
+        try Task.checkCancellation()
+        guard !request.workspace.account.isEmpty else { throw CancellationError() }
+        let next = Context(workspace: request.workspace, session: request.session)
+        if context != next { clear(); context = next }
+        let id = request.source.id
+        if let entry = entries[id], entry.source == request.source {
+            touch(id); return entry.text
+        }
+        preparationCount += 1
+        let text = try Self.describe(request.source["document"])
+        try Task.checkCancellation()
+        entries[id] = Entry(source: request.source, text: text); touch(id)
+        while recent.count > capacity { entries.removeValue(forKey: recent.removeFirst()) }
+        return text
+    }
+    func clear() { context = nil; entries = [:]; recent = [] }
+    private func touch(_ id: String) { recent.removeAll { $0 == id }; recent.append(id) }
+    static func describe(_ document: JSON) throws -> String {
+        do {
+            let definition = try WorkflowTemplate(document: document, checkCancellation: { try Task.checkCancellation() })
+            if definition.requiresHeadingSupport { return TemplateEditing.summary(definition) }
+            func label(_ n: Int, _ noun: String) -> String { "\(n) \(noun)" + (n == 1 ? "" : "s") }
+            return [label(definition.projects.count, "project"), label(definition.sections.count, "section"), label(definition.tasks.count, "task")].joined(separator: " · ")
+        } catch is CancellationError { throw CancellationError() }
+        catch { return "Update Taskfold to use this template" }
+    }
+}

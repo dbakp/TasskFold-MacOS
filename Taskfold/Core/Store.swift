@@ -6374,6 +6374,7 @@ extension Store {
 extension Store {
     func prepareWorkspaceReadFixture() throws {
         guard WorkspaceReadNativeFixture.enabled else { throw CancellationError() }
+        if WorkspaceReadNativeFixture.templateLibrary { try prepareTemplateLibraryReadFixture(); return }
         if WorkspaceReadNativeFixture.projectCatalog { try prepareProjectCatalogFixture(); return }
         dailyBackupsEnabled = false
         var tasks: [Record] = []
@@ -6737,6 +6738,33 @@ extension Store {
         let folder=URL.applicationSupportDirectory.appendingPathComponent("WorkspaceReadPerformance",isDirectory:true)
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         try TaskfoldJSONEncoder().encode(report).write(to:folder.appendingPathComponent("project-parents.json"),options:.atomic)
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    func prepareTemplateLibraryReadFixture() throws {
+        guard WorkspaceReadNativeFixture.templateLibrary else{throw CancellationError()}
+        localMode=true;signedIn=false;teamAccessMask=nil;workspaceCacheReadable=true;dailyBackupsEnabled=false
+        if ProcessInfo.processInfo.arguments.contains("--workspace-template-library-reload") {
+            let saved=try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+            guard saved.tables[WorkflowTemplate.table]?.count==17,saved.tables["tasks"]?.count==3,
+                  saved.tables[WorkflowTemplate.table]?.allSatisfy({$0.string("user_id")==userID})==true else{throw AppFailure(message:"Missing saved template-library fixture")}
+            snapshot=saved;return
+        }
+        let project=Record(["id":.string(TeamEditorNativeFixture.projectID),"user_id":.string(userID),"name":.string("Library workshop")])
+        var templates=(0..<16).map {i in Record(["id":.string(WorkspaceReadNativeFixture.libraryID(i)),"user_id":.string(userID),"name":.string(String(format:"Workflow %02d",i)),"document":WorkspaceReadNativeFixture.libraryDocument()])}
+        templates.append(Record(["id":.string(WorkspaceReadNativeFixture.libraryID(16)),"user_id":.string(userID),"name":.string("Workflow 16 — future format"),"document":.object(["version":.number(999)])]))
+        let tasks=(0..<3).map {i->Record in var row=Record.task(user:userID,project:project.id);row["id"] = .string(String(format:"ec270001-0000-4000-8000-%012d",i));row["title"] = .string("Preserve task \(i)");return row}
+        snapshot=Snapshot(tables:["projects":[project],"tasks":tasks,WorkflowTemplate.table:templates]);try persist()
+    }
+    func changeTemplateLibraryReadFixture() throws {
+        guard WorkspaceReadNativeFixture.templateLibrary,let index=snapshot.tables[WorkflowTemplate.table]?.firstIndex(where:{$0.id==WorkspaceReadNativeFixture.libraryID(0)}) else{throw CancellationError()}
+        snapshot.tables[WorkflowTemplate.table]![index]["document"] = WorkspaceReadNativeFixture.libraryDocument(changed:true);try persist()
+    }
+    func templateLibraryReadFixtureVisibility(_ readable:Bool) {
+        guard WorkspaceReadNativeFixture.templateLibrary else{return};workspaceCacheReadable=readable
     }
 }
 #endif

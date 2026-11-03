@@ -1290,3 +1290,78 @@ extension ProjectWorkflowsTests {
         XCTAssertEqual(actual,originalParentChoices(moving,rows))
     }
 }
+
+extension ProjectWorkflowsTests {
+    private func summaryRequest(_ source:Record,workspace:WorkspaceBinding?=nil,session:UUID=UUID())->WorkflowDefinitionRequest {
+        WorkflowDefinitionRequest(workspace:workspace ?? WorkspaceBinding(account:owner,generation:UUID()),session:session,source:source)
+    }
+    private func oldLibrarySummary(_ document:JSON)->String {
+        guard let definition=try? WorkflowTemplate(document:document) else{return "Update Taskfold to use this template"}
+        if definition.requiresHeadingSupport{return TemplateEditing.summary(definition.document)}
+        func label(_ n:Int,_ noun:String)->String{"\(n) \(noun)"+(n==1 ? "":"s")}
+        return [label(definition.projects.count,"project"),label(definition.sections.count,"section"),label(definition.tasks.count,"task")].joined(separator:" · ")
+    }
+    func testLibrarySummaryPreservesRootCountsAndHeadingNestedCounts() throws {
+        let document=RichDefinitionDiagnosticDocument.make(count:3)
+        XCTAssertEqual(try WorkflowLibrarySummaryCache.describe(document),oldLibrarySummary(document))
+        var heading=document.object;heading["version"] = .number(2);heading["capabilities"] = .array([.string("task_headings")])
+        var rows=heading["tasks"]!.list;var first=rows[0].object;first["is_heading"] = .bool(true);rows[0] = .object(first);heading["tasks"] = .array(rows)
+        XCTAssertEqual(try WorkflowLibrarySummaryCache.describe(.object(heading)),oldLibrarySummary(.object(heading)))
+        XCTAssertTrue(try WorkflowLibrarySummaryCache.describe(.object(heading)).contains("1 heading"))
+    }
+    func testLibrarySummaryCachesUnchangedReadsAndReplacesChangedDefinition() async throws {
+        var source=Record(["id":.string("library"),"document":RichDefinitionDiagnosticDocument.make(count:3)])
+        let request=summaryRequest(source),cache=WorkflowLibrarySummaryCache()
+        for _ in 0..<8 {let text=try await cache.summary(for:request);XCTAssertEqual(text,"1 project · 3 sections · 3 tasks")}
+        let count=await cache.preparationCount;XCTAssertEqual(count,1)
+        source["document"] = RichDefinitionDiagnosticDocument.make(count:1)
+        let updated=WorkflowDefinitionRequest(workspace:request.workspace,session:request.session,source:source)
+        let text=try await cache.summary(for:updated);XCTAssertEqual(text,"1 project · 1 section · 1 task")
+        let after=await cache.preparationCount;XCTAssertEqual(after,2)
+    }
+    func testLibrarySummaryDoesNotReuseAcrossWorkspaceAccountSessionOrClear() async throws {
+        let source=Record(["id":.string("library"),"document":RichDefinitionDiagnosticDocument.make(count:1)]),cache=WorkflowLibrarySummaryCache()
+        let original=summaryRequest(source)
+        let requests=[original,WorkflowDefinitionRequest(workspace:WorkspaceBinding(account:"another",generation:original.workspace.generation),session:original.session,source:source),WorkflowDefinitionRequest(workspace:WorkspaceBinding(account:owner,generation:UUID()),session:original.session,source:source),WorkflowDefinitionRequest(workspace:original.workspace,session:UUID(),source:source)]
+        for request in requests {_ = try await cache.summary(for:request)}
+        await cache.clear();_ = try await cache.summary(for:requests.last!)
+        let count=await cache.preparationCount;XCTAssertEqual(count,5)
+    }
+    func testLibrarySummaryBoundedLRURetainsRecentlyReadSource() async throws {
+        let cache=WorkflowLibrarySummaryCache(capacity:2),base=summaryRequest(Record(["id":.string("a"),"document":RichDefinitionDiagnosticDocument.make(count:1)]))
+        func request(_ id:String)->WorkflowDefinitionRequest {var source=base.source;source["id"] = .string(id);return WorkflowDefinitionRequest(workspace:base.workspace,session:base.session,source:source)}
+        for id in ["a","b","a","c","a","b"] {_ = try await cache.summary(for:request(id))}
+        let count=await cache.preparationCount;XCTAssertEqual(count,4)
+    }
+    func testLibrarySummaryUnsupportedSourceCanRecoverWithoutChangingIdentity() async throws {
+        let cache=WorkflowLibrarySummaryCache();var source=Record(["id":.string("same"),"document":.object(["version":.number(999)])]);let request=summaryRequest(source)
+        let invalid=try await cache.summary(for:request);XCTAssertEqual(invalid,"Update Taskfold to use this template")
+        source["document"] = RichDefinitionDiagnosticDocument.make(count:1)
+        let repaired=try await cache.summary(for:WorkflowDefinitionRequest(workspace:request.workspace,session:request.session,source:source));XCTAssertEqual(repaired,"1 project · 1 section · 1 task")
+        let count=await cache.preparationCount;XCTAssertEqual(count,2)
+    }
+    func testCancelledLibrarySummaryCannotPopulateCache() async throws {
+        let cache=WorkflowLibrarySummaryCache(),request=summaryRequest(Record(["id":.string("cancel"),"document":RichDefinitionDiagnosticDocument.make(count:10)]))
+        let job=Task {()throws->String in withUnsafeCurrentTask{$0?.cancel()};return try await cache.summary(for:request)}
+        do {_ = try await job.value;XCTFail("Cancelled row must not prepare a caption")}catch{XCTAssertTrue(error is CancellationError)}
+        let count=await cache.preparationCount;XCTAssertEqual(count,0)
+        _ = try await cache.summary(for:request);let after=await cache.preparationCount;XCTAssertEqual(after,1)
+    }
+    func testTemplateLibrarySummaryReadDiagnostic() async throws {
+        guard let output=ProcessInfo.processInfo.environment["TASKFOLD_LIBRARY_SUMMARY_REPORT"] else{return}
+        let path=URL(fileURLWithPath:output).resolvingSymlinksInPath()
+        guard path.deletingLastPathComponent().path==URL(fileURLWithPath:"/tmp").resolvingSymlinksInPath().path,path.lastPathComponent.hasPrefix("taskfold-"),path.pathExtension=="json" else{throw AppFailure(message:"Task-owned temporary output required")}
+        let workspace=WorkspaceBinding(account:owner,generation:UUID()),session=UUID(),passes=10
+        let rows=(0..<12).map{Record(["id":.string("library-\($0)"),"document":RichDefinitionDiagnosticDocument.make(count:40)])}
+        let start=ProcessInfo.processInfo.systemUptime
+        var expected:[String]=[]
+        for _ in 0..<passes {for row in rows {expected.append(oldLibrarySummary(row["document"]))}}
+        let before=ProcessInfo.processInfo.systemUptime-start,cache=WorkflowLibrarySummaryCache(),next=ProcessInfo.processInfo.systemUptime
+        var actual:[String]=[]
+        for _ in 0..<passes {for row in rows {actual.append(try await cache.summary(for:WorkflowDefinitionRequest(workspace:workspace,session:session,source:row)))}}
+        let after=ProcessInfo.processInfo.systemUptime-next,count=await cache.preparationCount
+        XCTAssertEqual(actual,expected);XCTAssertEqual(count,rows.count)
+        let report:[String:Any]=["templates":rows.count,"rootsPerTemplate":40,"passes":passes,"reads":actual.count,"preparations":count,"beforeSeconds":before,"afterSeconds":after,"sameSummaries":actual==expected,"debugDiagnosticOnly":true,"fpsClaim":false]
+        try JSONSerialization.data(withJSONObject:report,options:[.sortedKeys,.prettyPrinted]).write(to:path,options:.atomic)
+    }
+}

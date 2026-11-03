@@ -7556,3 +7556,13 @@ Both owning apps now reuse sorted/outlined project display data in a source/acce
 - [ ] Finish Mac/iPad native use, wider account/accessibility/cloud contexts and remaining template-library/editor/rendering scaling.
 
 [Evidence and limits](project-parent-choices/README.md). Timings are bounded Debug diagnostics, not frame-rate or whole-app claims.
+
+
+### 3 November 2026 · Template-library summaries
+
+- [x] Prepare validated captions on a serial background actor, with bounded source-aware reuse scoped to one library presentation/workspace/session. Keep live Use/Edit/Export validation independent.
+- [x] Preserve version-1 root-task captions, heading-format nested counts and unsupported-source messages; eliminate the heading path's duplicate validation. Each repo passes 185 selected Core checks (four existing opt-in skips).
+- [x] Accept iPhone production-library scrolling, controlled live source replacement, unreadable/return and cold reopening; preserve unrelated templates, tasks and queued work.
+- [ ] Complete wider Mac/iPad interaction, account/accessibility/cloud contexts and remaining editor/rendering acceptance.
+
+[Evidence and limits](template-library-summaries/README.md). Timings compare bounded Debug summary work, not frame-rate or whole-app responsiveness.
