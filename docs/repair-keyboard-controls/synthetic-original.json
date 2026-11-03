@@ -1,0 +1,27 @@
+{
+  "root": {
+    "id": "ec990000-0000-4000-8000-000000000002",
+    "project_id": null,
+    "subtasks": [
+      {
+        "id": 7,
+        "title": "Plan the workshop",
+        "future": {
+          "keep": true
+        }
+      },
+      "Keep the workshop notes"
+    ],
+    "user_id": "ec990000-0000-4000-8000-000000000001",
+    "task_generation": "ec990000-0000-4000-8000-000000000003",
+    "title": "Native child workspace"
+  },
+  "lost": false,
+  "receipts": {},
+  "writes": 0,
+  "versions": {
+    "review": 1,
+    "concept": 1
+  },
+  "requests": 0
+}

@@ -1,0 +1,185 @@
+{
+  "structureWrites": 4,
+  "root": {
+    "id": "ec990000-0000-4000-8000-000000000002",
+    "user_id": "ec990000-0000-4000-8000-000000000001",
+    "subtasks": [
+      {
+        "completed": false,
+        "id": "concept",
+        "priority": 4,
+        "future": {
+          "keep": true
+        },
+        "description": "Original saved notes",
+        "title": "Prepare the review"
+      },
+      {
+        "completed": false,
+        "future": {
+          "keep": true
+        },
+        "priority": 4,
+        "id": "review",
+        "description": "Original saved notes",
+        "title": "Publish the summary"
+      }
+    ],
+    "task_generation": "ec990000-0000-4000-8000-000000000003",
+    "title": "Native child workspace",
+    "project_id": null
+  },
+  "structureArchives": {},
+  "structureRevision": 5,
+  "lost": false,
+  "versions": {
+    "concept": 1,
+    "review": 1
+  },
+  "writes": 0,
+  "structureRequests": 4,
+  "structureIncarnations": {
+    "review": "ec990000-0000-4000-8000-000000000006",
+    "concept": "ec990000-0000-4000-8000-000000000005"
+  },
+  "receipts": {},
+  "requests": 0,
+  "structureReceipts": {
+    "228dc9ea-6afb-446e-b55f-369a0f2fef98": {
+      "body": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "structure_revision": 2,
+        "undo_of": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "action": "undo",
+        "project_id": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "request_id": "228dc9ea-6afb-446e-b55f-369a0f2fef98",
+        "protocol": 1,
+        "task_id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "receipt": {
+        "undo_of": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "node_key": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "before_revision": 2,
+        "after_revision": 3,
+        "request_id": "228dc9ea-6afb-446e-b55f-369a0f2fef98",
+        "project_id": null,
+        "action": "undo",
+        "incarnation": null,
+        "replayed": false,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "protocol": 1,
+        "task_generation": "ec990000-0000-4000-8000-000000000003"
+      },
+      "inverse": {}
+    },
+    "241aac86-7ef7-472f-9aea-4db268bc0821": {
+      "reversed": true,
+      "body": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "structure_revision": 3,
+        "action": "insert",
+        "index": 0,
+        "parent_key": null,
+        "project_id": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "request_id": "241aac86-7ef7-472f-9aea-4db268bc0821",
+        "protocol": 1,
+        "node": {
+          "id": "1196c648-a05d-4362-a54c-88b01b49bf68",
+          "title": "Hierarchy keyboard proof"
+        },
+        "task_id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "receipt": {
+        "undo_of": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "node_key": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "before_revision": 3,
+        "after_revision": 4,
+        "request_id": "241aac86-7ef7-472f-9aea-4db268bc0821",
+        "project_id": null,
+        "action": "insert",
+        "incarnation": "556e3d00-cc2f-41be-9bc4-84aa7e02ae03",
+        "replayed": false,
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "protocol": 1,
+        "task_id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "inverse": {
+        "digest": "187fd875573d4d0184a40168f3acad936aeea06b7a4c588c035f47659dee3b66",
+        "destination_kind": "array",
+        "destination_parent": null
+      }
+    },
+    "33d14fa0-3d01-4dd4-bcf0-eb3b66856966": {
+      "body": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "structure_revision": 4,
+        "undo_of": "241aac86-7ef7-472f-9aea-4db268bc0821",
+        "action": "undo",
+        "project_id": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "request_id": "33d14fa0-3d01-4dd4-bcf0-eb3b66856966",
+        "protocol": 1,
+        "task_id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "receipt": {
+        "undo_of": "241aac86-7ef7-472f-9aea-4db268bc0821",
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "node_key": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "before_revision": 4,
+        "after_revision": 5,
+        "request_id": "33d14fa0-3d01-4dd4-bcf0-eb3b66856966",
+        "project_id": null,
+        "action": "undo",
+        "incarnation": null,
+        "replayed": false,
+        "protocol": 1,
+        "task_id": "ec990000-0000-4000-8000-000000000002",
+        "task_generation": "ec990000-0000-4000-8000-000000000003"
+      },
+      "inverse": {}
+    },
+    "1196c648-a05d-4362-a54c-88b01b49bf68": {
+      "reversed": true,
+      "body": {
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "structure_revision": 1,
+        "action": "insert",
+        "index": 0,
+        "parent_key": null,
+        "project_id": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "request_id": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "node": {
+          "title": "Hierarchy keyboard proof",
+          "id": "1196c648-a05d-4362-a54c-88b01b49bf68"
+        },
+        "protocol": 1,
+        "task_id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "receipt": {
+        "undo_of": null,
+        "account": "ec990000-0000-4000-8000-000000000001",
+        "node_key": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "before_revision": 1,
+        "after_revision": 2,
+        "request_id": "1196c648-a05d-4362-a54c-88b01b49bf68",
+        "project_id": null,
+        "action": "insert",
+        "incarnation": "26ebc1e2-1a4f-481c-a300-c739458bc9fe",
+        "replayed": false,
+        "task_generation": "ec990000-0000-4000-8000-000000000003",
+        "protocol": 1,
+        "task_id": "ec990000-0000-4000-8000-000000000002"
+      },
+      "inverse": {
+        "digest": "304eb7e58031f59e7e2eaa59aa50fd47ed4a350fd3baeda4ceed468cb4d498d1",
+        "destination_kind": "array",
+        "destination_parent": null
+      }
+    }
+  }
+}

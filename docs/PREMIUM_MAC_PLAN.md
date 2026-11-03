@@ -10768,3 +10768,13 @@ The native row styling is retained while full definition validation moves onto a
 - [ ] Broader Mac format-repair/hierarchy keyboard, shared/account/window/privacy/speech and migration/history/media work remain. This clears only the cross-task keyboard substep.
 
 [Evidence and scope](mac-transfer-keyboard/README.md). Synthetic native peer; no hosted or genuine shared-account claim, no ordinary gate change. Earlier unlock notes are superseded for this cross-task check.
+
+
+### 3 November 2026 · Persistent repair controls and Mac hierarchy handoff
+
+- [x] Keep repair Undo outside the scrolling list with Command-Z; add toolbar Save…/Command-Return and Escape Close. Preserve eligibility, busy/scope checks and explicit save confirmation.
+- [x] Mac v4 direct checks: undo one choice, refuse incomplete Save, retain partial review across Escape/reopen, confirm only on explicit Save, cancel without changing the exact original or publishing a repair.
+- [x] Mac saved insertion and saved Undo hand off to ordinary keyboard Redo/Undo; list/open inspector refresh and cold original/cache preservation pass with four distinct receipts/four writes.
+- [ ] Remaining branch-move/removal keyboard, spoken/shared-account/window/privacy and broader migration/history/media acceptance. The composite Mac checkpoint stays in verification.
+
+[Repair controls](repair-keyboard-controls/README.md) and [hierarchy keyboard evidence](mac-hierarchy-keyboard/README.md). Each app owns the code; Mac evidence is not an additional iOS runtime result. Normal gates and deferrals stay unchanged.

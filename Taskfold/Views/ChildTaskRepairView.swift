@@ -96,7 +96,6 @@ struct ChildTaskRepairView: View {
                                     if changes.count == 1, changes[0].raw["mapping"] != nil {
                                         Button("Edit history choices", systemImage: "pencil") { editMapping() }.disabled(working || currentCopies == nil).accessibilityIdentifier("childMappingEdit")
                                     }
-                                    Button("Undo last choice", systemImage: "arrow.uturn.backward") { Task { await undoChoice() } }.disabled(working).accessibilityIdentifier("childRepairUndoChoice")
                                     Button("Reset review") { discarding = true }.disabled(working)
                                 }
                             }
@@ -159,7 +158,26 @@ struct ChildTaskRepairView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.disabled(working) } }
+            .safeAreaInset(edge: .bottom) {
+                if usable, review != nil, active == nil, !changes.isEmpty {
+                    HStack {
+                        Button("Undo last choice", systemImage: "arrow.uturn.backward") { Task { await undoChoice() } }
+                            .disabled(working).keyboardShortcut("z", modifiers: .command)
+                            .accessibilityIdentifier("childRepairUndoChoice")
+                        Spacer()
+                    }.padding(.horizontal).padding(.vertical, 8).background(.bar)
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.disabled(working).keyboardShortcut(.cancelAction) }
+                if let current, active == nil {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save…") { confirming = true }
+                            .disabled(!current.eligible || !store.childTaskRepairWritesAvailable || working)
+                            .keyboardShortcut(.return, modifiers: .command).accessibilityIdentifier("childRepairSaveShortcut")
+                    }
+                }
+            }
         }
         #if os(macOS)
         .frame(minWidth: 560, idealWidth: 640, minHeight: 560, idealHeight: 720)

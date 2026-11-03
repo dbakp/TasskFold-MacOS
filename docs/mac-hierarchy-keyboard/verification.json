@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-03",
+  "scope": "Actual Mac app with synthetic HTTP hierarchy peer; no genuine shared-account or hosted claim",
+  "steps": [
+    "Saved reviewed insertion separately, explicitly sent",
+    "Saved and sent reviewed Undo",
+    "Command-Shift-Z restored only the authored insertion",
+    "Command-Z removed only the addition",
+    "Main list and already-open inspector updated on both keyboard actions",
+    "Full quit/relaunch without reset retained original two children; actual Store cache exact"
+  ],
+  "writes": 4,
+  "requests": 4,
+  "receipts": 4,
+  "originalSiblingsExact": true,
+  "originalNodeVersionsUnchanged": true,
+  "coldCacheExact": true,
+  "reusedExistingSignedBuild": true,
+  "newSimulators": 0,
+  "sourceSHA256": {
+    "Taskfold/Core/ChildTaskStructureRecovery.swift": "59a0eda5bc334e21529f4bdeecd8993a2cb0236b49850e197fe8fefd8f742ebc",
+    "Taskfold/Core/ChildTaskStructureCommands.swift": "14711c80cdd786377a2619d55eac48b3296a070c4523ba3d609c924bd99c9860",
+    "Taskfold/Core/ChildTaskStructurePresentation.swift": "b63958bcf31d6515cc1cdadff59f8646bd1e0c501671c4db4917df840714096c",
+    "Taskfold/Views/ChildTaskStructureViews.swift": "d4100b051fc0d6d266c06b14e9046c4363404bf28eff1c2f6ccc7fd3f6e640b7",
+    "Taskfold/Core/Store.swift": "887edaec0ed70eb95e6b1f3da4362eb2f0d453e1e9069c5c876a47b963580d4e"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-03",
+  "removed": [
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios/out",
+      "allocatedBytes": 584847360,
+      "kind": "Regenerable compiled unit-test output; no process referenced cache root"
+    },
+    {
+      "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac/out",
+      "allocatedBytes": 535785472,
+      "kind": "Regenerable compiled unit-test output; no process referenced cache root"
+    }
+  ],
+  "beforeFreeBytes": 21638549504,
+  "afterFreeBytes": 22762958848,
+  "preserved": [
+    "Current Mac/iOS app and UI runner products",
+    "Core dependency checkouts and manifests",
+    "All repositories, app data, current Simulator and test evidence"
+  ],
+  "scope": "Taskfold-owned unit-test output only; no Docker or unrelated-project changes"
+}
