@@ -1,0 +1,66 @@
+{
+  "checkedOn": "2026-11-03",
+  "project": "zqxflydiyfjeedqvyova",
+  "deployed": true,
+  "migration": {
+    "version": "20261103201254",
+    "name": "taskfold_daily_scoped_assignment_guard"
+  },
+  "before": {
+    "patch": {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "83d5f48c06902d43648e941acbacf7c3",
+      "owner": "postgres",
+      "definer": false,
+      "settings": [
+        "search_path=\"\""
+      ]
+    },
+    "tables": "953e94605bd8adff940dca59ca5f205a",
+    "policies": "f47d73f4af02a1d7a6f4af0fb2cd75c4",
+    "taskTriggers": "201b08161aa0754a82e7e93dd228df6a",
+    "teamsRpcPresent": false,
+    "scopedEndpointPresent": false,
+    "workspaceBoundaryPresent": false
+  },
+  "after": {
+    "patch": {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "md5": "7ee251352383bd82460a1a231d938f73",
+      "owner": "postgres",
+      "definer": false,
+      "settings": [
+        "search_path=\"\""
+      ]
+    },
+    "tables": "953e94605bd8adff940dca59ca5f205a",
+    "policies": "f47d73f4af02a1d7a6f4af0fb2cd75c4",
+    "taskTriggers": "201b08161aa0754a82e7e93dd228df6a",
+    "teamsRpcPresent": false,
+    "scopedEndpointPresent": true,
+    "workspaceBoundaryPresent": false
+  },
+  "endpoint": {
+    "identity": "taskfold_assign_task_scoped(uuid,jsonb,jsonb)",
+    "security_definer": false,
+    "settings": [
+      "search_path=\"\""
+    ],
+    "owner": "postgres",
+    "body_md5": "dbbedd4d2b27c54dc4c60395db5ae2da",
+    "authenticated_execute": true,
+    "anon_execute": false,
+    "service_execute": false
+  },
+  "verification": {
+    "exactReviewedPatch": true,
+    "originalPatchSecurityUnchanged": true,
+    "tableSecurityAndPoliciesUnchanged": true,
+    "taskTriggersUnchanged": true,
+    "advancedBoundaryAndTeamsStillAbsent": true,
+    "securityAdvisorFindingsUnchanged": true,
+    "userTaskRowsRead": false,
+    "userTaskRowsWritten": false
+  },
+  "limitation": "Local synthetic compatibility plus live catalog/API anonymous admission. Authenticated real-account/native assignment acceptance remains separate; older-client rollout safeguards remain deferred."
+}

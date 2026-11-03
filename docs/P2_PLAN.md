@@ -1,5 +1,12 @@
 # Remaining product backlog
 
+## 3 November 2026 · Scoped assignment service available
+
+The current clients' scoped assignment endpoint is now deployed to the configured TaskFold backend. Each repo independently passes 32 actual PostgreSQL compatibility checks against the catalog-only pre-update task-editor body, including the exact deployment and guarded rollback scripts. The fixture uses synthetic owner RLS rather than claiming production-policy/trigger acceptance. Live postflight confirms exact reviewed definitions, authenticated-only invoker execution, unchanged original patch permissions/owner, unchanged public/private table-security and policy fingerprints, unchanged task triggers, and unchanged security-advisor findings. A real anonymous API request confirms route visibility and permission refusal. No user task rows were read or changed, and advanced boundary/team endpoints remain absent. Signed-in native/real-account assignment acceptance and the broader old-client rollout safeguard remain separate. The newer cloud workflow Undo endpoint is still missing.
+
+The CLI-created history file uses the actual applied remote version, `20261103201254`; it replays the already tested idempotent candidate. The single-use live baseline precondition and definition-guarded rollback are retained as separate reviewed bundles. No whole advanced migration was applied. [Deployment evidence](daily-use-build/scoped-assignment-deployed.json) · [Compatibility proof](daily-use-build/scoped-assignment-compatibility.json) · [Prepared deployment/rollback](daily-use-build/scoped-assignment-deployment-plan.json).
+
+
 ## 3 November 2026 · Preserve multiline capture context
 
 Multiline capture now inherits the originating capture's scheduling, priority, labels, estimates, recurrence/reminder choices and same-project section/assignee. A section picker allows an explicit destination before review; review captions include section, deadline, estimate, assignee and reminder count. Per-line recognition can override inherited values, while project changes clear incompatible section/assignment. The allowlist never copies source identity, completion, description, attachments, comments or child content. Capture from label views now includes that label. Existing account/workspace admission and final destination checks remain in force. Focused test/build results are recorded in `daily-use-build/capture-context.json`; native visual acceptance remains separate.

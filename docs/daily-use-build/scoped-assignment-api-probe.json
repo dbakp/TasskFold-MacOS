@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-03",
+  "requestRole": "anon",
+  "httpStatus": 401,
+  "errorCode": "42501",
+  "message": "permission denied for function taskfold_assign_task_scoped",
+  "userRowsRead": false,
+  "userRowsWritten": false,
+  "limitation": "Confirms live API route visibility and anonymous refusal only; no authenticated assignment or real-account UI acceptance."
+}
