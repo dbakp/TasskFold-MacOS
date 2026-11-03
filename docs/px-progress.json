@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
-  "focus": "P2 · Large-workflow responsiveness",
-  "latest": "Both apps reuse assignment display names while leaving member choices and permission checks fresh. With 400 collaborators, the iPhone warm-read median fell from 464.0 to 2.1 ms on identical fixture tables; 16 Store checks and the production list pass. Both repos pass 91 workspace tests and app builds. Richer saves and scrolling remain. Obsolete build/index cleanup restored storage headroom.",
+  "focus": "P2 · Rich workflow creation",
+  "latest": "Both apps reuse a per-run task timestamp formatter. The rich diagnostic instantiation changed from 1.24 to 0.31 s. The iPhone accepts real template-sheet Create/Undo/cold return for 1,000 tasks and 6,000 nested items; both repos pass 109 tests and builds. Large-template opening/rendering and wider contexts remain.",
   "next": [
-    "Continue richer child/assignment workflow creation and persistence, actual large-list scrolling/rendering, multiple-project/catalog scaling and Mac/iPad/wider contexts. Filtered-row and assignment-display reuse now have scoped actual Store invalidation/Observation proof; do not repeat those unchanged accepted cases or flat-workflow optimizations.",
+    "Profile large-template opening/preview latency: TemplateRunView still validates definitions during main-actor rendering. Preserve source/workspace/cancellation guards if moving that read off the main actor. Rich local Store and real template-sheet Create/Undo/cold-return now have scoped iPhone acceptance. Continue actual large-list rendering, richer assignments, multiple projects and wider Mac/iPad/accessibility/cloud contexts without repeating unchanged accepted cases.",
     "Finish legacy/foreign-custody/other mixed recording histories and realm directions. Published/unfinished/private-removed local service and client policies are verified. Accept integrated native service/Storage and remaining Mac/iPad transfer flows separately; preserve exact original requests and private files without repeating unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
@@ -448,7 +448,7 @@
             {
               "state": "build",
               "title": "Reduce remaining large-workflow save pauses",
-              "detail": "Both apps reuse current filtered rows and assignment display names. With 400 collaborators, iPhone warm reads are 464.0 → 2.1 ms on identical tables, with 16 Store checks and production-list proof; both own builds/Core pass. Richer saves, scrolling/rendering, multiple-project scaling and wider platforms remain."
+              "detail": "Filtered/name reads are reused; workflow timestamps now use one formatter per run. The rich diagnostic instantiation is 1.24 → 0.31 s. iPhone Create/Undo/cold return accepts 1,000 tasks/6,000 nested items through the real template sheet. Both own builds/Core pass. Opening/preview, scrolling, wider workflows and platforms remain."
             }
           ],
           "sources": [
@@ -463,7 +463,12 @@
             "assignment-display-reads/iphone-before.json",
             "assignment-display-reads/iphone-after.json",
             "assignment-display-reads/storage-cleanup.json",
-            "assignment-display-reads/index-cleanup.json"
+            "assignment-display-reads/index-cleanup.json",
+            "rich-workflow-creation/README.md",
+            "rich-workflow-creation/verification.json",
+            "rich-workflow-creation/iphone-after.json",
+            "rich-workflow-creation/before-partial-diagnostic.json",
+            "rich-workflow-creation/before-failed-native.json"
           ],
           "focus": true
         },
@@ -1192,6 +1197,11 @@
     "reviewed-child-adoption-client/verification.json": "5c69918aaf693d69ca9509616024cf4fb9ea79f43c56ada94e9254430e9e8f64",
     "reviewed-child-adoption-native/verification.json": "0b1d67d06dd2b65172d4b8ebb4c3e3677df460d7b1a0f26a9b907a987b7ab5fd",
     "reviewed-child-adoption/verification.json": "488443346a14f4df5aa1cc16cdb53aadbf5f3334d4a1940b99088ad3ccef462c",
+    "rich-workflow-creation/README.md": "103f64cbe3d00dc570f9abaee707ed76f88630e15899983614042bd61a8118f6",
+    "rich-workflow-creation/before-failed-native.json": "db0060240f0596766118ba9b3362ab6014320d94dc25ba2d8db3c9ccdb56f9a4",
+    "rich-workflow-creation/before-partial-diagnostic.json": "7bbce31bdbf4cec67f6f9195cf1e354c115b5108908032bc1483602455373cde",
+    "rich-workflow-creation/iphone-after.json": "7fca19efb5d1615f198920ea1d440d924355bc037c08c386a4962b31b7d69b00",
+    "rich-workflow-creation/verification.json": "6572c404135133f757f690eb9ab01b7741e5011d5adbd4bdcc785055886d865d",
     "saved-copy-comparison/README.md": "2b36724fe5f737d230c7946a0bf8cfd9bfb0b5ebe6a749dd1e0dd2ebc6bef99b",
     "saved-copy-comparison/build-verification.json": "5107e18ee2c06dfa39c2427bbbbe9078419d0d8cf7aea4dbdc88983068642372",
     "saved-copy-comparison/client-verification.json": "d0fa3a559d8d4171d826abe59caa0f60117eb15bc35164f68dbb63bbdc4735c3",

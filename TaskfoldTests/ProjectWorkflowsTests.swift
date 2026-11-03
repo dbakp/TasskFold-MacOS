@@ -983,3 +983,51 @@ extension ProjectWorkflowsTests {
         XCTAssertThrowsError(try TemplateEditing.editingTask(.object(future), item: item, fields: ["is_heading": .bool(true)], headingsEnabled: true))
     }
 }
+
+extension ProjectWorkflowsTests {
+    func testExplicitCreationTimestampRetainsTaskDefaultsAndExistingFactorySignature() throws {
+        let factory: (String, String, Date?) -> Record = Record.task
+        let stamp = "2026-11-03T10:00:00Z"
+        for project in ["", "project" ] {
+            for day in [nil, Date(timeIntervalSince1970: 1793095200)] as [Date?] {
+                let regular = factory(owner, project, day)
+                let batch = Record.task(user: owner, project: project, date: day, createdAt: stamp)
+                let excluded: Set<String> = ["id", "task_generation", "created_at"]
+                XCTAssertEqual(regular.fields.filter { !excluded.contains($0.key) }, batch.fields.filter { !excluded.contains($0.key) })
+                XCTAssertEqual(batch.string("created_at"), stamp)
+                XCTAssertNotNil(UUID(uuidString: batch.id)); XCTAssertNotNil(UUID(uuidString: batch.string("task_generation")))
+                XCTAssertNotEqual(regular.id, batch.id)
+                XCTAssertNotEqual(regular.string("task_generation"), batch.string("task_generation"))
+                XCTAssertNotNil(ISO8601DateFormatter().date(from: regular.string("created_at")))
+            }
+        }
+    }
+    func testConcurrentNestedWorkflowRunsKeepIndependentIdentitiesAndCurrentTimestamps() async throws {
+        let leaf: JSON = .object(["id": .string("leaf"), "title": .string("Approve"), "labels": .array([]), "subtasks": .array([])])
+        let child: JSON = .object(["id": .string("child"), "title": .string("Review"), "labels": .array([]), "subtasks": .array([leaf])])
+        let task: JSON = .object(["id": .string("task"), "title": .string("Design"), "project_id": .string("root"), "labels": .array([]), "subtasks": .array([child])])
+        let template = try WorkflowTemplate(document: .object(["version": .number(1), "kind": .string("project"), "projects": .array([.object(["id": .string("root"), "name": .string("Studio")])]), "sections": .array([]), "tasks": .array([task])]))
+        let account = owner, start = Date().addingTimeInterval(-1)
+        let results = try await withThrowingTaskGroup(of: [Mutation].self) { group in
+            for _ in 0..<12 { group.addTask { try template.instantiate(account: account, name: "Studio") } }
+            var values: [[Mutation]] = []
+            for try await value in group { values.append(value) }
+            return values
+        }
+        let end = Date().addingTimeInterval(1), parser = ISO8601DateFormatter()
+        var identities = Set<String>(), generations = Set<String>(), count = 0
+        for changes in results {
+            var pending = changes.filter { $0.table == "tasks" }.map { Record($0.fields) }
+            while let row = pending.popLast() {
+                XCTAssertTrue(identities.insert(row.id).inserted)
+                XCTAssertTrue(generations.insert(row.string("task_generation")).inserted)
+                XCTAssertNotNil(UUID(uuidString: row.id))
+                let text = row.string("created_at"), time = try XCTUnwrap(parser.date(from: text))
+                XCTAssertNotNil(text.range(of: #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"#, options: .regularExpression))
+                XCTAssertTrue(time >= start && time <= end)
+                pending += row["subtasks"].list.map { Record($0.object) }; count += 1
+            }
+        }
+        XCTAssertEqual(results.count, 12); XCTAssertEqual(count, 36)
+    }
+}

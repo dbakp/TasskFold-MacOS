@@ -434,10 +434,13 @@ struct WorkflowTemplate: Sendable {
             changes.append(Mutation(table: "sections", recordID: id, method: "POST", fields: row.fields))
         }
         let calendar = Calendar(identifier: .gregorian)
+        // This formatter belongs only to this synchronous instantiation. Keep a
+        // separate current-time sample for each task, including nested children.
+        let creationTimestamps = ISO8601DateFormatter()
         func day(_ row: Record, _ field: String) -> String? { guard let start, row.fields[field] != nil, let date = calendar.date(byAdding: .day, value: row[field].integer, to: start) else { return nil }; return Dates.day(date) }
         func task(_ source: Record, path: String) throws -> Record {
             try checkCancellation()
-            var row = Record.task(user: account, project: projectIDs[source.string("project_id")] ?? targetProject)
+            var row = Record.task(user: account, project: projectIDs[source.string("project_id")] ?? targetProject, createdAt: creationTimestamps.string(from: Date()))
             row["id"] = .string(fresh("task", path)); row["task_generation"] = .string(fresh("generation", path))
             for field in ["is_heading","title","description","priority","duration_minutes"] where source.fields[field] != nil { row[field] = source[field] }
             row["section_id"] = sectionIDs[source.string("section_id")].map(JSON.string) ?? .null

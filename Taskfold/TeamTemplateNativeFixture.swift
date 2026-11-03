@@ -291,6 +291,9 @@ import CryptoKit
         var loseUndo = false
     }
     static var template: Record {
+        if ProcessInfo.processInfo.arguments.contains("--workflow-rich-template-ui") {
+            return Record(["id": .string(templateID), "user_id": .string(TeamEditorNativeFixture.account), "name": .string("Rich workflow proof"), "document": WorkflowRichNativeDocument.make(count: 1000)])
+        }
         let document: JSON = .object(["version": .number(2), "capabilities": .array([.string("task_headings")]), "kind": .string("project"),
             "projects": .array([.object(["id": .string("root"), "name": .string("Native workflow proof"), "parent_id": .null]), .object(["id": .string("child"), "name": .string("Delivery"), "parent_id": .string("root")])]),
             "sections": .array([.object(["id": .string("section"), "name": .string("Design"), "project_id": .string("root"), "order_index": .number(0)])]),
@@ -398,6 +401,9 @@ import CryptoKit
                         }
                     }.accessibilityIdentifier("checkBackgroundWidgets")
                     Button("Restore scale fixture", action: restoreScale).disabled(scaleOriginal == nil).accessibilityIdentifier("restoreScaleFixture")
+                    if ProcessInfo.processInfo.arguments.contains("--workflow-rich-children") {
+                        Button("Open saved local workflow") { store.startLocal() }.accessibilityIdentifier("openSavedRichWorkflow")
+                    }
                 }
                 if ProcessInfo.processInfo.arguments.contains("--workflow-local-preparation-testing") {
                     Button("Prepare local workflow") {
@@ -430,7 +436,7 @@ import CryptoKit
                 Text("Queued edits: \(store.snapshot.pending.count)").accessibilityIdentifier("nativeWorkflowPending")
                 ForEach(store.projects) { project in Text(project.name) }
                 if ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") {
-                    Text("Saved tasks: \(store.tasks.count)")
+                    Text("Saved tasks: \(store.tasks.count)").accessibilityIdentifier("nativeWorkflowSavedTaskCount")
                 } else { ForEach(store.tasks) { task in Text(task.title) } }
             }.navigationTitle("Workflow test")
         }.sheet(isPresented: $presenting) { TemplateRunView(template: WorkflowUndoNativePeer.template) }
@@ -452,6 +458,8 @@ import CryptoKit
               let proof = UUID(uuidString: String(proofArgument.dropFirst("--workflow-commit-proof=".count))) else { return }
         do {
             let localHistory = ProcessInfo.processInfo.arguments.contains("--workflow-local-history-scale")
+            let rich = ProcessInfo.processInfo.arguments.contains("--workflow-rich-children")
+            guard !rich || (localHistory && count == 1000) else { return }
             if localHistory {
                 store.startLocal()
                 scaleOriginal = store.snapshot
@@ -473,11 +481,23 @@ import CryptoKit
             }
             let historyBefore = store.snapshot.tables[TaskActivity.table] ?? []
             let nodeHistoryBefore = store.snapshot.tables[TaskNodeActivity.table] ?? []
-            let document: JSON = .object(["version": .number(1), "kind": .string("project"),
+            let document: JSON
+            if rich { document = WorkflowRichNativeDocument.make(count: count) }
+            else {
+                document = .object(["version": .number(1), "kind": .string("project"),
                 "projects": .array([.object(["id": .string("root"), "name": .string("Scale workflow")])]),
                 "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
                 "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array([])]) })])
-            let changes = try WorkflowTemplate(document: document).instantiate(account: store.userID, name: "Scale workflow")
+            }
+            let instantiateClock = ContinuousClock(), instantiateStarted = instantiateClock.now
+            let changes: [Mutation]
+            if rich {
+                let account = store.userID
+                changes = try await Task.detached(priority: .userInitiated) {
+                    try WorkflowTemplate(document: document).instantiate(account: account, name: "Scale workflow", start: Date(timeIntervalSince1970: 1793095200))
+                }.value
+            } else { changes = try WorkflowTemplate(document: document).instantiate(account: store.userID, name: "Scale workflow") }
+            let instantiateElapsed = instantiateStarted.duration(to: instantiateClock.now)
             if !localHistory { scaleOriginal = store.snapshot }
             let clock = ContinuousClock(), started = clock.now
             var prepared: LocalActivityCreation.Preparation?, mainActorPulses = 0
@@ -498,6 +518,8 @@ import CryptoKit
             if localHistory && ProcessInfo.processInfo.arguments.contains("--workflow-local-history-fail-save") { store.failNextWorkflowNativeSave() }
             let saved = store.commit(changes, localHistory: prepared), commitElapsed = commitStarted.duration(to: clock.now), elapsed = started.duration(to: clock.now)
             var data: JSON = .object(["proof": .string(proof.uuidString.lowercased()), "count": .number(Double(count)), "commands": .number(Double(changes.count)), "saved": .bool(saved),
+                "richChildren": .bool(rich), "childCount": .number(rich ? Double(count * 6) : 0),
+                "instantiationSeconds": .number(Double(instantiateElapsed.components.seconds) + Double(instantiateElapsed.components.attoseconds) / 1e18),
                 "seconds": .number(Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18),
                 "synchronousCommitSeconds": .number(Double(commitElapsed.components.seconds) + Double(commitElapsed.components.attoseconds) / 1e18),
                 "historyPreparationSeconds": .number(Double(preparationElapsed.components.seconds) + Double(preparationElapsed.components.attoseconds) / 1e18),
@@ -577,6 +599,29 @@ import CryptoKit
             do { try store.prepareWorkspaceReadFixture(); status = "Ready" }
             catch { status = error.localizedDescription }
         }
+    }
+}
+#endif
+
+#if DEBUG
+private enum WorkflowRichNativeDocument {
+    static func make(count: Int) -> JSON {
+            func children(_ root: Int) -> [JSON] {
+                return (0..<3).map { child in .object([
+                    "id": .string("child-\(root)-\(child)"), "title": .string("Design step \(child + 1)"),
+                    "description": .string("Review the next iteration and keep these instructions."),
+                    "priority": .number(2), "duration_minutes": .number(15), "planned_offset": .number(2), "deadline_offset": .number(4),
+                    "project_id": .string("root"), "section_id": .string("s\(root)"),
+                    "labels": .array([.object(["name": .string("Label \(root)")])]),
+                    "subtasks": .array([.object(["id": .string("leaf-\(root)-\(child)"), "title": .string("Approve the details"),
+                        "description": .string("Keep the nested checklist intact."), "priority": .number(3), "duration_minutes": .number(5),
+                        "project_id": .string("root"), "section_id": .string("s\(root)"), "labels": .array([]), "subtasks": .array([])])])
+                ]) }
+            }
+            return .object(["version": .number(1), "kind": .string("project"),
+                "projects": .array([.object(["id": .string("root"), "name": .string("Scale workflow")])]),
+                "sections": .array((0..<count).map { .object(["id": .string("s\($0)"), "name": .string("Section \($0)"), "project_id": .string("root"), "order_index": .number(Double($0))]) }),
+                "tasks": .array((0..<count).map { .object(["id": .string("t\($0)"), "title": .string("Task \($0)"), "project_id": .string("root"), "section_id": .string("s\($0)"), "labels": .array([.object(["name": .string("Label \($0)")])]), "subtasks": .array(children($0))]) })])
     }
 }
 #endif

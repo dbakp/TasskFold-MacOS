@@ -93,11 +93,16 @@ struct Record: Codable, Identifiable, Equatable, Sendable {
     var deadline: Date? { Dates.parse(string("deadline_date")) }
     var durationMinutes: Int? { (1...10080).contains(self["duration_minutes"].integer) ? self["duration_minutes"].integer : nil }
     static func task(user: String, project: String = "", date: Date? = nil) -> Record {
+        task(user: user, project: project, date: date, createdAt: Dates.timestamp())
+    }
+    /// Internal batch callers may supply the same timestamp format using their
+    /// own formatter. Identity generation and every task default stay here.
+    static func task(user: String, project: String = "", date: Date? = nil, createdAt: String) -> Record {
         Record(["id": .string(UUID().uuidString.lowercased()), "user_id": .string(user),
                 "title": .string(""), "description": .string(""), "completed": .bool(false),
                 "completion_version": .number(0), "task_generation": .string(UUID().uuidString.lowercased()), "priority": .number(4), "project_id": project.isEmpty ? .null : .string(project),
                 "due_date": date.map { .string(Dates.day($0)) } ?? .null,
-                "created_at": .string(Dates.timestamp()), "labels": .array([]),
+                "created_at": .string(createdAt), "labels": .array([]),
                 "subtasks": .array([]), "comments": .array([]), "attachments": .array([]),
                 "reminders": .array([]), "is_recurring": .bool(false)])
     }

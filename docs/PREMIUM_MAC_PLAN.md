@@ -10608,3 +10608,12 @@ The project-transfer review now has typed recording counts and a specific custod
 [Exact evidence and limits](assignment-display-reads/README.md). The save-pause checkpoint and full Px objective remain open.
 
 - [x] Remove obsolete build caches (~0.99 GB) and disposable Core indexes (~136 MB) while retaining current products/data. CLI Core tests request no indexing; both owning skip-build checks still pass 91 tests. This is not a fresh compilation/index-regeneration benchmark.
+
+### 3 November 2026 · Rich workflow timestamps and native save/Undo
+
+- [x] Reuse one formatter per workflow instantiation, sampling current time separately for each root/child. Preserve the three-argument task factory, defaults, IDs and all write/Undo/quota contracts.
+- [x] Pass 109 owning Core tests and own app/runner build/signature checks. Counterpart iPhone accepts the Store diagnostic and real template-sheet Create/Undo/cold return with 1,000 roots and 6,000 nested checklist items, preserving the source and history.
+- [x] Observe instantiation 1.236 → 0.306 s in the qualified single Debug diagnostic. Before cold UI navigation failed; only the final two complete native cases are accepted. This is not Mac/Release/FPS acceptance.
+- [ ] Profile large-template definition parsing/opening/preview, then continue wider workflow/rendering/native/accessibility/account/cloud gaps.
+
+[Exact scope, before failure and timing limits](rich-workflow-creation/README.md). The full Px goal remains open.
