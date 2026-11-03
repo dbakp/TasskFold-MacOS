@@ -1,0 +1,32 @@
+{
+  "reviewed": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "0f830cac9f3aa92b94449b94d2abd1cca269d41f",
+  "ownAppRunnerBuildAndStrictSignatures": true,
+  "ownBuildPhase": "pending-boundaries-mac-v1",
+  "ownBuildDriverSHA256": "088d4d12328cb63e79293e97bcc68eb368f4acc744934416fc1692f7a9f8e619",
+  "phoneEvidenceOwner": "TaskFold-iOS",
+  "phoneChecks": 42,
+  "phoneTests": 1,
+  "phoneSkips": 0,
+  "phoneReportedRuntimeWarnings": [],
+  "phoneReportSHA256": "b628b53944e48363cc26d7984a56036ef4ce30a93f582c366003b4d3547954c8",
+  "nativePendingFreshReviewCancelPublishAccepted": true,
+  "nativeMissingApprovalAndUnconfirmedCheckAccepted": true,
+  "nativeLocallyExpiredHistoricalProofCheckAccepted": true,
+  "nativeCloseCancelAndColdClosedProofAccepted": true,
+  "expiryQualification": "Synthetic local expires_at mutation; no valid server-expired HMAC/elapsed-TTL claim",
+  "actualLocalSQLGatewayAndStorage": true,
+  "genuineAuthOrHardware": false,
+  "macRuntimeAccepted": false,
+  "ipadRuntimeAccepted": false,
+  "audibleVoiceOverAccepted": false,
+  "fullSchemaParity": false,
+  "normalUseEnabled": false,
+  "deployed": false,
+  "allOwnedNativeResourcesRemovedAndSimulatorRestored": true,
+  "unchangedCoreAndGatewaySuitesRerun": false,
+  "ownSourceSHA256": {
+    "Taskfold/AudioCommentNativeFixture.swift": "d3c4baf8c61d1e2a3708bd7b110c385efc1043ceb8c072265e23e4793e67a6fc"
+  }
+}

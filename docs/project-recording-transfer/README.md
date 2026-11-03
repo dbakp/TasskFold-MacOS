@@ -20,7 +20,7 @@ Private helper privileges and baseline advisor keys are checked. The fixture ret
 
 ## Required before ordinary use
 
-- [ ] Bind publication approval to the original audience. Source audit found that an unpublished private intent can lack personal/team audience identity. Current-role checks after a move do not themselves prove fresh consent. Reproduce this boundary, then implement and verify fresh approval before enabling transfers or publishing. No exploit is claimed from this source finding alone.
+- [x] Bind publication approval to its reviewed audience. The [audience foundation](../audio-publication-audience/README.md) reproduced the old-private-intent boundary and verifies current-context checks before upload/finalization. Both apps implement explicit review and durable approval; [native recovery](../publication-approval-recovery/README.md) accepts bounded iPhone main Check and pending Resume. Wider native/realm acceptance remains below, and normal gates remain off.
 - [x] Verify combined connection-pause and recording consent: neither approval can be stripped; connection pause, custody and receipt apply together and replay exactly.
 - [ ] Accept native consent, cancellation, changed review and saved-request recovery on Mac, iPhone and iPad, including accessibility and lifecycle changes.
 - [ ] Accept genuine Auth/provider/full-schema integration and wider account/access races. Add separately reviewed policies for pending/retained/legacy/mixed media and other realm directions.
@@ -43,4 +43,4 @@ Run resource-heavy checks sequentially and reuse existing build products. The da
 
 ## Audience follow-up
 
-The [publication audience foundation](../audio-publication-audience/README.md) now reproduces the old-private-intent gap and verifies signed audience checks in the local service and typed client transport. Native explicit approval and durable retry remain to implement; the whole-project feature is still unfinished and disabled.
+The [publication audience foundation](../audio-publication-audience/README.md) now reproduces the old-private-intent gap and verifies signed audience checks in the local service and typed client transport. Native explicit approval and durable retry are now implemented in both apps, with bounded iPhone Check/Resume acceptance in the [recovery follow-up](../publication-approval-recovery/README.md). The [pending-boundary follow-up](../pending-approval-boundaries/README.md) also accepts bounded iPhone fresh review, missing/local-expiry Check and Close. Wider platforms and the remaining whole-project media policies stay open; the whole-project feature remains disabled.

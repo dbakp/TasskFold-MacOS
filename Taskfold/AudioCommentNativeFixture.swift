@@ -705,6 +705,27 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
     @State private var ready = false
     @State private var deletion: TeamTaskDeletionRequest?
     @State private var deletionError: String?
+    @State private var pendingSeed = ""
+    @State private var seedingPending = false
+    private func seedPending() async {
+        guard !seedingPending, ready, AudioTeamNativeProvider.enabled,
+              let scope = store.audioDraftScope(taskID: TeamEditorNativeFixture.taskID),
+              scope.workspace.account == "ec240000-0000-4000-8000-000000000001",
+              scope.origin == "https://synthetic.example", let libraryScope = store.audioPendingScope() else { return }
+        seedingPending = true; defer { seedingPending = false }
+        do {
+            let bytes = try await Task.detached { try AudioCommentNativeFixture.syntheticData() }.value
+            let clip = try await AudioCommentDecoding.validate(bytes)
+            guard store.audioDraftScope(taskID: TeamEditorNativeFixture.taskID).map(scope.matches) == true else { throw CancellationError() }
+            let root = try store.audioLibraryDirectory(for: libraryScope)
+            let storage = try await AudioCommentDraftStorage.open(applicationSupport: root, owner: .init(scope.workspace.account))
+            guard store.audioPendingScope().map(libraryScope.matches) == true else { throw CancellationError() }
+            let source = try AudioCommentSavedDraft(owner: .init(scope.workspace.account), target: scope.target, caption: "Pending boundary proof " + UUID().uuidString, clip: clip)
+            try await storage.save(source)
+            let journal = try AudioCommentPublicationDisk(root: root, account: UUID(uuidString: scope.workspace.account)!, origin: scope.origin!).prepare(source)
+            pendingSeed = journal.publication.operation.uuidString.lowercased()
+        } catch { pendingSeed = "Seed failed: " + error.localizedDescription }
+    }
     private var historyFingerprint: String {
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         let actions = [store.undoStack.map(\.undo), store.undoStack.map(\.redo), store.redoStack.map(\.undo), store.redoStack.map(\.redo)]
@@ -722,6 +743,10 @@ final class AudioTeamNativeProtocol: URLProtocol, @unchecked Sendable {
                 Button("Record private note") { draft = store.audioDraftRequest(taskID: TeamEditorNativeFixture.taskID) }.disabled(!ready || store.audioDraftScope(taskID: TeamEditorNativeFixture.taskID) == nil).accessibilityIdentifier("audioTeamNativeRecord")
                 Button("Saved recordings") { if let scope = store.audioLibraryScope() { library = .init(scope: scope) } }.disabled(!ready).accessibilityIdentifier("audioTeamNativeLibrary")
                 Button("Audio comments") { conversation = store.audioConversationRequest(taskID: TeamEditorNativeFixture.taskID) }.disabled(!ready).accessibilityIdentifier("audioTeamNativeConversation")
+                if AudioTeamNativeProvider.enabled, ProcessInfo.processInfo.arguments.contains("--audio-pending-boundaries-testing") {
+                    Button("Prepare synthetic original request") { Task { await seedPending() } }.disabled(!ready || seedingPending).accessibilityIdentifier("audioPendingNativeSeed")
+                    Text(pendingSeed).accessibilityIdentifier("audioPendingNativeSeedResult")
+                }
                 if ProcessInfo.processInfo.arguments.contains("--audio-lifecycle-review-testing") {
                     Text(store.record("tasks", id: TeamEditorNativeFixture.taskID)?.string("task_generation") ?? "Task removed").accessibilityIdentifier("audioTeamNativeGeneration")
                     Text("\(store.syncing ? "Syncing" : "Idle") · \(store.snapshot.pending.count) queued · \(store.record("tasks", id: TeamEditorNativeFixture.taskID)?.string("task_generation") ?? "Task removed")").accessibilityIdentifier("audioTeamNativeLifecycleStatus")

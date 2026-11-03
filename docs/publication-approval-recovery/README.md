@@ -1,5 +1,7 @@
 # Publication approval recovery
 
+The later [pending-boundary follow-up](../pending-approval-boundaries/README.md) accepts the separate iPhone fresh review, missing/local-expiry Check and Close controls. This document records the earlier warm-retry/pending-Resume checkpoint.
+
 Reviewed 3 November 2026. This checkpoint fixes local approval-write recovery in both independently owned applications. Ordinary sharing and project-transfer gates remain disabled; whole-project transfers remain unfinished.
 
 ## Accepted client behavior

@@ -10553,3 +10553,11 @@ The project-transfer review now has typed recording counts and a specific custod
 [Recovery scope and evidence](publication-approval-recovery/README.md). This entry does not claim Mac native runtime acceptance.
 
 - [x] Both current app/runner builds and strict signatures pass. Owning iOS accepts the separate pending-screen cold Resume and Cancel against real local SQL/gateway/Storage with the exact saved approval and one upload. This does not establish Mac runtime or pending expiry/Close acceptance.
+
+### 3 November 2026 · Pending approval Check and Close boundaries
+
+- [x] Accept owning iPhone fresh pending Review/Cancel/Publish, no Resume without approval, synthetic local expiry with metadata confirmation, Close cancellation, exact closure and cold closed-state recovery. Pass 42 local SQL/gateway/real Storage checks, one native UI test and one upload; private files/tasks stay unchanged.
+- [x] Build/sign both independently owned app/runner products; add only guarded DEBUG synthetic request preparation and native test audit fields. Correct the old transfer checklist's completed audience-binding entry.
+- [ ] Finish whole-project pending/retained/legacy/mixed media and realm policies, wider native transfer acceptance and integration/accessibility. No Mac/iPad runtime or valid server-expired HMAC claim comes from this phone case; ordinary gates stay off.
+
+[Exact pending-boundary scope and remaining work](pending-approval-boundaries/README.md). The full Px goal remains active.
