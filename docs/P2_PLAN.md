@@ -1,5 +1,9 @@
 # Remaining product backlog
 
+## 3 November 2026 · Find saved templates
+
+Ordinary template libraries now support native name search and a clear no-results state while retaining import, capture, edit and run controls. Search trims surrounding whitespace, uses locale-aware matching and resets on workspace change. This changes presentation only; saved definitions, tasks and service contracts stay intact. Build results are recorded in `daily-use-build/template-search.json`; native visual acceptance remains pending.
+
 ## Delivery order — 3 November 2026
 
 The immediate goal is a useful personal app that can receive incremental development updates. Completion of the entire Px backlog is not the installation gate.

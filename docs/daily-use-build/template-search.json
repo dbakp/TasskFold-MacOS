@@ -1,0 +1,37 @@
+{
+  "scope": "Ordinary template library name search",
+  "build": {
+    "schema": 1,
+    "platform": "mac",
+    "bundle": "com.dbakp.taskfold.mac",
+    "version": "1.2.0",
+    "build": "4",
+    "app": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+    "sourceFingerprint": "e948321e8760a27bc3c783b70a25a722ed47512b4884dbd9d1f6de60af0979f8",
+    "sourceRevision": "616f9f0edb69b68f053607eeb55950846a9c1154",
+    "simulatorOnly": false,
+    "signatureVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": false,
+    "published": false,
+    "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-4-mac-development.zip",
+    "archiveSHA256": "22b4aba0cce36f707374d038ab05169644a4c058451ec17a002789eb79b4801e",
+    "archivePayloadVerified": true,
+    "sourceWasDirty": true,
+    "developmentProfileExpires": "2026-11-10T18:38:42Z",
+    "change": "Template library name search"
+  },
+  "nativeVisualAcceptance": "pending: Mac locked",
+  "backendChanges": false,
+  "taskDataChanges": false
+}

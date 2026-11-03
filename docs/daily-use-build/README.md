@@ -49,3 +49,7 @@ The delivery check originally assumed exactly three versioned targets and reject
 ## Assignment service preflight — 3 November
 
 Read-only inspection confirms exactly one merge anchor in the live guarded task editor, with task-generation protection, invoker security and authenticated-only execution. The scoped endpoint/guard remain absent. See `hosted-assignment-preflight.json`. No real tasks or hosted definitions were changed. This is readiness evidence for a narrow update, not a deployment or acceptance result. Unrelated personal workflows can proceed.
+
+## Template search update — 3 November
+
+The ordinary library now searches template names, shows native no-results feedback and clears its query when the workspace changes. Import/save/edit/run controls and persisted template definitions are retained. Mac 1.2.0 (4) is development signed and separately packaged; the extracted ZIP payload passes signature/extension checks. iOS Simulator compilation passes. Native visual acceptance and actual installation remain pending, with the existing Xcode account/profile blocker for iPhone. See `template-search.json`. The earlier build-3 ZIP remains a separate older candidate; build 4 is the latest Mac download. No backend or real-task changes were made.

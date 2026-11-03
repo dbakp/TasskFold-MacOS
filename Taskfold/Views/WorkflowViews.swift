@@ -163,6 +163,7 @@ struct TemplateLibraryView: View {
     @Environment(Store.self) private var store
     @Environment(Workspace.self) private var workspace
     @State private var summaryCache = WorkflowLibrarySummaryCache()
+    @State private var query = ""
     @State private var sourceKind = "project"
     @State private var source = ""
     @State private var name = ""
@@ -187,6 +188,11 @@ struct TemplateLibraryView: View {
         default: return store.allProjects
         }
     }
+    private var matchingTemplates: [Record] {
+        let search = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let templates = store.workflowTemplates
+        return search.isEmpty ? templates : templates.filter { $0.name.localizedStandardContains(search) }
+    }
     var body: some View {
         WorkflowShell(title: "Templates") {
             List {
@@ -196,7 +202,11 @@ struct TemplateLibraryView: View {
                 Section("Your templates") {
                     if binding != nil && !store.workflowPreviewReady(binding) { Text("Templates unavailable. Reopen your workspace to continue.").foregroundStyle(.secondary).accessibilityIdentifier("workflowLibraryUnavailable") }
                     else if store.workflowTemplates.isEmpty { Text("No templates yet. Save a project, section or task below.").foregroundStyle(.secondary) }
-                    ForEach(store.workflowTemplates) { row in
+                    else if matchingTemplates.isEmpty {
+                        ContentUnavailableView.search(text: query.trimmingCharacters(in: .whitespacesAndNewlines))
+                            .accessibilityIdentifier("workflowTemplateSearchEmpty")
+                    }
+                    ForEach(matchingTemplates) { row in
                         Button { selected = row } label: {
                             WorkflowLibrarySummaryRow(row:row,binding:binding,cache:summaryCache)
                         }.buttonStyle(.plain).accessibilityIdentifier("workflowTemplate-" + row.id)
@@ -223,6 +233,7 @@ struct TemplateLibraryView: View {
                 }
                 if let message { Text(message).foregroundStyle(.red) }
             }
+            .searchable(text: $query, prompt: "Find a template")
             #if DEBUG
             .toolbar {
                 if WorkspaceReadNativeFixture.templateLibrary {
@@ -249,6 +260,7 @@ struct TemplateLibraryView: View {
         }
         .onDisappear { cancelFileRead(); Task { await summaryCache.clear() } }
         .onChange(of: store.workspaceGeneration) { _, _ in
+            query = ""
             cancelFileRead(); importing = false; imported = nil; csvSource = nil; exportRequest = nil
             Task { await summaryCache.clear() }
         }

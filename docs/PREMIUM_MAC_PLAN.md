@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 3 November 2026 · Template library search
+
+The ordinary library now has native name search and no-results feedback; import/save controls remain accessible. Existing row appearance and operations are retained, and workspace changes clear the query. See `daily-use-build/template-search.json` for bounded build evidence. Native visual acceptance remains pending; no real tasks or hosted definitions changed.
+
 ## Delivery order — 3 November 2026
 
 The immediate goal is a useful personal app that can receive incremental development updates. Completion of the entire Px backlog is not the installation gate.
