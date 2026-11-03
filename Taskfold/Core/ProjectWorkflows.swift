@@ -323,7 +323,7 @@ enum MultiLineCapture {
         var warnings: [String]
         var id: Int { number }
     }
-    static func preview(_ text: String, account: String, project: String = "", context: QuickEntryContext = QuickEntryContext(), recognize: Bool = true, now: Date = Date()) throws -> [Line] {
+    static func preview(_ text: String, account: String, project: String = "", context: QuickEntryContext = QuickEntryContext(), recognize: Bool = true, defaults: [String: JSON] = [:], now: Date = Date()) throws -> [Line] {
         guard text.utf8.count <= 100_000 else { throw AppFailure(message: "Paste up to 100 KB of task text at a time.") }
         let lines = text.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: .newlines).enumerated().compactMap { index, raw -> (Int, String)? in
             var title = raw.trimmingCharacters(in: .whitespaces)
@@ -333,7 +333,17 @@ enum MultiLineCapture {
         }
         guard lines.count <= maximumLines else { throw AppFailure(message: "Review up to 200 tasks at a time. Nothing has been added.") }
         return lines.map { number, title in
-            var task = Record.task(user: account, project: project); task["title"] = .string(title)
+            var task = Record.task(user: account, project: project)
+            // Inherit capture choices only. Never reuse identity, completion,
+            // notes, discussion, files or child trees from the source draft.
+            for key in ["due_date", "due_time", "scheduled_at", "time_zone", "deadline_date", "duration_minutes", "priority", "labels", "reminders", "reminder_specs", "is_recurring", "recurrence_pattern", "recurrence_end_date"] {
+                if let value = defaults[key] { task[key] = value }
+            }
+            if defaults["project_id"]?.text == project {
+                task["section_id"] = defaults["section_id"] ?? .null
+                task["assigned_to"] = defaults["assigned_to"] ?? .null
+            }
+            task["title"] = .string(title)
             let parsed = QuickEntry(title, now: now, context: context, task: task)
             return Line(number: number, task: recognize ? parsed.applying(to: task) : task, warnings: recognize ? parsed.warnings : [])
         }

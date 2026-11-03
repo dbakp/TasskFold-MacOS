@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 3 November 2026 · Multiline capture keeps its context
+
+Converting quick capture to multiple tasks now retains the effective project/section and selected planning, priority, labels, reminders and recurrence. Native section selection and fuller review captions expose saved choices; project changes clear incompatible destinations/assignments. Label-view capture supplies its label. Fresh task identity/content boundaries are enforced by an explicit inheritance allowlist. Focused checks and build scope are in `daily-use-build/capture-context.json`; native visual acceptance remains separate.
+
 ## 3 November 2026 · Template library search
 
 The ordinary library now has native name search and no-results feedback; import/save controls remain accessible. Existing row appearance and operations are retained, and workspace changes clear the query. See `daily-use-build/template-search.json` for bounded build evidence. Native visual acceptance remains pending; no real tasks or hosted definitions changed.

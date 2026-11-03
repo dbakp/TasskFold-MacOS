@@ -1,5 +1,9 @@
 # Remaining product backlog
 
+## 3 November 2026 · Preserve multiline capture context
+
+Multiline capture now inherits the originating capture's scheduling, priority, labels, estimates, recurrence/reminder choices and same-project section/assignee. A section picker allows an explicit destination before review; review captions include section, deadline, estimate, assignee and reminder count. Per-line recognition can override inherited values, while project changes clear incompatible section/assignment. The allowlist never copies source identity, completion, description, attachments, comments or child content. Capture from label views now includes that label. Existing account/workspace admission and final destination checks remain in force. Focused test/build results are recorded in `daily-use-build/capture-context.json`; native visual acceptance remains separate.
+
 ## 3 November 2026 · Find saved templates
 
 Ordinary template libraries now support native name search and a clear no-results state while retaining import, capture, edit and run controls. Search trims surrounding whitespace, uses locale-aware matching and resets on workspace change. This changes presentation only; saved definitions, tasks and service contracts stay intact. Build results are recorded in `daily-use-build/template-search.json`; native visual acceptance remains pending.

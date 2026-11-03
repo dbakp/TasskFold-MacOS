@@ -2,6 +2,37 @@ import XCTest
 @testable import TaskfoldCore
 
 final class ProjectWorkflowsTests: XCTestCase {
+
+    func testBulkCaptureInheritsChoicesWithoutCopyingIdentityOrContent() throws {
+        let defaults: [String: JSON] = ["id": .string("old"), "user_id": .string("other"), "task_generation": .string("old-generation"), "project_id": .string("work"), "section_id": .string("next"), "assigned_to": .string(owner), "due_date": .string("2026-11-03"), "priority": .number(2), "labels": .array([.string("client")]), "duration_minutes": .number(25), "completed": .bool(true), "description": .string("Private original"), "subtasks": .array([.string("old child")])]
+        let rows = try MultiLineCapture.preview("First task\nSecond task", account: owner, project: "work", recognize: false, defaults: defaults).map(\.task)
+        XCTAssertEqual(Set(rows.map(\.id)).count, 2)
+        for row in rows {
+            XCTAssertNotEqual(row.id, "old"); XCTAssertEqual(row.string("user_id"), owner)
+            XCTAssertNotEqual(row.string("task_generation"), "old-generation")
+            XCTAssertEqual(row.string("section_id"), "next"); XCTAssertEqual(row.string("assigned_to"), owner)
+            XCTAssertEqual(row.string("due_date"), "2026-11-03"); XCTAssertEqual(row.priority, 2)
+            XCTAssertEqual(row["labels"], .array([.string("client")])); XCTAssertEqual(row["duration_minutes"], .number(25))
+            XCTAssertFalse(row["completed"].flag); XCTAssertTrue(row.string("description").isEmpty)
+            XCTAssertFalse(row["subtasks"].list.contains(.string("old child")))
+        }
+    }
+    func testBulkCapturePerLineChoicesOverrideInheritedPlanning() throws {
+        let rows = try MultiLineCapture.preview("Call tomorrow p1\nWrite draft", account: owner, defaults: ["due_date": .string("2026-11-03"), "priority": .number(3)], now: Dates.parse("2026-11-03")!).map(\.task)
+        XCTAssertEqual(rows[0].string("due_date"), "2026-11-04"); XCTAssertEqual(rows[0].priority, 1)
+        XCTAssertEqual(rows[1].string("due_date"), "2026-11-03"); XCTAssertEqual(rows[1].priority, 3)
+    }
+    func testBulkCaptureChangingProjectNeverCarriesOldSectionOrAssignee() throws {
+        let defaults: [String: JSON] = ["project_id": .string("work"), "section_id": .string("next"), "assigned_to": .string(owner)]
+        let row = try XCTUnwrap(MultiLineCapture.preview("Write draft", account: owner, project: "home", recognize: false, defaults: defaults).first?.task)
+        XCTAssertEqual(row.string("project_id"), "home"); XCTAssertTrue(row.string("section_id").isEmpty); XCTAssertTrue(row.string("assigned_to").isEmpty)
+    }
+    func testBulkCaptureInlineProjectChangeClearsInheritedDestination() throws {
+        let context = QuickEntryContext(projects: [Record(["id": .string("home"), "name": .string("Home")])], currentProject: "work")
+        let row = try XCTUnwrap(MultiLineCapture.preview("Tidy #project:Home", account: owner, project: "work", context: context, defaults: ["project_id": .string("work"), "section_id": .string("next"), "assigned_to": .string(owner)]).first?.task)
+        XCTAssertEqual(row.string("project_id"), "home"); XCTAssertTrue(row.string("section_id").isEmpty); XCTAssertTrue(row.string("assigned_to").isEmpty)
+    }
+
     let owner = "11111111-1111-4111-8111-111111111111"
     func project(_ id: String, parent: String = "", archived: Bool = false) -> Record {
         Record(["id": .string(id), "user_id": .string(owner), "name": .string(id), "parent_id": parent.isEmpty ? .null : .string(parent), "is_archived": .bool(archived)])

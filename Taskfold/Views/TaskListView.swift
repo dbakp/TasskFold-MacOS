@@ -259,7 +259,7 @@ struct TaskListView: View {
         .onChange(of: workspace.search) { _, _ in rowSwipe.cancel() }
         .onChange(of: workspace.selection) { _, _ in rowSwipe.cancel() }
         .onChange(of: workspace.drag.active) { _, _ in rowSwipe.cancel() }
-        .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView(text: workspace.quickAdd, project: projectID, onSaved: { workspace.quickAdd = "" }) }
+        .sheet(isPresented: $multiLinePresented) { MultiLineCaptureView(text: workspace.quickAdd, project: captureDraft.string("project_id"), section: captureDraft.string("section_id"), defaults: captureDraft.fields, onSaved: { workspace.quickAdd = "" }) }
         .sheet(isPresented: $quickAddVisible) {
             TaskCapturePanel(text: $workspace.quickAdd, declined: $declinedGroups, choices: $referenceChoices, destination: captureSection.isEmpty ? title : title + " · " + (store.record("sections", id: captureSection)?.name ?? "Section"), prompt: quickAddPrompt,
                 context: workspace.quickEntryContext(project: captureDraft.string("project_id")), task: captureDraft, submit: submitQuickAdd)
@@ -310,7 +310,13 @@ struct TaskListView: View {
     private func revealQuickAdd() { captureSection = ""; quickAddVisible = true }
 
     private var captureDate: Date? { scope == .today ? Date() : scope == .upcoming ? Calendar.current.date(byAdding: .day, value: 1, to: Date()) : nil }
-    private var captureDraft: Record { workspace.captureTask(project: projectID, date: captureDate, sectionID: captureSection) }
+    private var captureDraft: Record {
+        var task = workspace.captureTask(project: projectID, date: captureDate, sectionID: captureSection)
+        if case .label(let id) = scope, store.record("labels", id: id) != nil {
+            task["labels"] = .array(TaskLabels.normalized(task["labels"].list + [.string(id)], labels: store.labels))
+        }
+        return task
+    }
     private func submitQuickAdd() {
         if workspace.quickAdd.contains(where: { $0.isNewline }) { quickAddVisible = false; multiLinePresented = true; return }
         let date = captureDate

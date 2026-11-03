@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Find and reuse workflows",
-  "latest": "Template library name search now builds in both ordinary apps, with native no-results feedback, import/save controls retained and query reset on workspace changes. Mac 1.2.0 (4) is signed and packaged; actual ZIP payload checks pass. iOS Simulator compilation passes; physical signing and native visual acceptance remain pending. No backend or task-data changes. This is incremental polish of the existing template checkpoint; bars are unchanged.",
+  "focus": "Now · Capture in context",
+  "latest": "Multiline capture now keeps the selected destination/planning settings, offers a section picker and shows fuller review captions. Label-view capture includes its label. Each repo passes six focused checks (four new), with fresh-identity and project-change protection. Mac 1.2.0 (5) is signed/packaged and actual ZIP checks pass; iOS 1.4.0 (20) Simulator build passes. Native visual acceptance and installation/signing remain pending. About 1 GiB of completed test outputs reclaimed; no backend or real-task changes.",
   "next": [
     "FIRST: inspect/install the packaged ordinary Mac build after unlock; finish physical iPhone development signing when the Xcode account is available. The Simulator build is already compiled. Preserve the local safety copy and accept only the affected ordinary startup/use/sync paths.",
     "NEXT DAILY-USE GAP: prepare focused scoped-assignment and cloud workflow Undo service updates from the observed missing live endpoints. Core deployed editing/templates/goals/ordering/Focus remain available. Preserve deferred rollout gates; avoid a wholesale advanced migration to deliver personal workflows.",
@@ -37,7 +37,7 @@
             {
               "state": "done",
               "title": "Quick capture and planning grammar",
-              "detail": "Supported dates, priorities, estimates, repeat/reminder tokens and durable edits."
+              "detail": "Supported dates, priorities, estimates, repeat/reminder tokens and durable edits. Multiline context inheritance/section selection now builds with six focused checks per repo; its new native visual journey remains pending."
             },
             {
               "state": "done",
@@ -1167,7 +1167,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "bd83418d35db0ba537b760044c4517604de3c6fe900f3ffab5f1820421b19c8e",
+    "P2_PLAN.md": "421dba45ad9bc9399228165bb580402f57c8275c5411035977eded7872a8c37b",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1277,7 +1277,7 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
-    "daily-use-build/README.md": "29f507f4d24f3a293ea88d9e89c907875e50b794a23b16359dbf0adc6217a9f9",
+    "daily-use-build/README.md": "9bcaecc07fa18dc93cc83990017072d0ce942121a7c78212c71792262b39264d",
     "daily-use-build/verification.json": "2bf3b81a0e8d48a91fff23cc012eae0979061c6f6e13381639caa8a2cd7fc941",
     "duplicate-history-repair-native/README.md": "c7063d22e97e3fd4c0813cff33f132bbf866c4f1e4b7ec32eb7326359ee61761",
     "duplicate-history-repair-native/verification.json": "95c758f713b374d01ffa31b95744dba3e20ef7231aa71add535b0f543723ee66",

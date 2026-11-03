@@ -71,6 +71,8 @@ struct MultiLineCaptureView: View {
     #endif
     @State var text = ""
     @State var project = ""
+    @State var section = ""
+    var defaults: [String: JSON] = [:]
     var onSaved: () -> Void = {}
     @State private var voiceRequest: VoiceDraftRequest?
     @State private var recognize = true
@@ -97,6 +99,13 @@ struct MultiLineCaptureView: View {
                         Picker("Destination", selection: $project) {
                             Text("Inbox").tag("")
                             ForEach(store.projects) { Text($0.name).tag($0.id) }
+                        }
+                        .onChange(of: project) { _, _ in section = "" }
+                        if !project.isEmpty {
+                            Picker("Section", selection: $section) {
+                                Text("No section").tag("")
+                                ForEach(OrganizationOrder.sorted(store.rows("sections").filter { $0.string("project_id") == project })) { Text($0.name).tag($0.id) }
+                            }.accessibilityIdentifier("multiLineSection")
                         }
                         Toggle("Recognize dates, priorities and labels", isOn: $recognize)
                         Button("Review tasks", action: preview).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty).accessibilityIdentifier("reviewMultiLine")
@@ -133,14 +142,29 @@ struct MultiLineCaptureView: View {
     }
     private func details(_ task: Record) -> String {
         var parts = [store.record("projects", id: task.string("project_id"))?.name ?? "Inbox"]
+        if let section = store.record("sections", id: task.string("section_id")) { parts.append(section.name) }
         if !task.string("due_date").isEmpty { parts.append(task.string("due_date") + (task.string("due_time").isEmpty ? "" : " " + task.string("due_time"))) }
         if task.priority < 4 { parts.append("Priority \(task.priority)") }
+        if !task.string("deadline_date").isEmpty { parts.append("Deadline " + task.string("deadline_date")) }
+        if task["duration_minutes"].integer > 0 { parts.append("\(task["duration_minutes"].integer) min") }
+        if !task.string("assigned_to").isEmpty { parts.append(store.assigneeName(task)) }
+        if task["is_recurring"].flag { parts.append("Repeats") }
+        let reminderCount = ReminderSpec.rows(task).count
+        if reminderCount > 0 { parts.append(workflowCount(reminderCount, "reminder")) }
         parts += task["labels"].list.map { "@" + (store.record("labels", id: $0.text)?.name ?? $0.text) }
         return parts.joined(separator: " · ")
     }
     private func preview() {
         guard store.workflowReady(binding) else { message = store.error; return }
-        do { lines = try MultiLineCapture.preview(text, account: store.userID, project: project, context: store.quickEntryContext(project: project), recognize: recognize); message = lines.isEmpty ? "Add at least one task line." : nil }
+        do {
+            var inherited = defaults
+            if defaults["project_id"]?.text != project { inherited["assigned_to"] = .null }
+            inherited["project_id"] = project.isEmpty ? .null : .string(project)
+            inherited["section_id"] = section.isEmpty ? .null : .string(section)
+            let preview = try MultiLineCapture.preview(text, account: store.userID, project: project, context: store.quickEntryContext(project: project), recognize: recognize, defaults: inherited)
+            guard store.workflowDestinationsAvailable(preview) else { throw AppFailure(message: "A project or section changed. Choose an available destination before reviewing.") }
+            lines = preview; message = lines.isEmpty ? "Add at least one task line." : nil
+        }
         catch { message = error.localizedDescription }
     }
     private func save() {

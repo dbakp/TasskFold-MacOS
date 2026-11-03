@@ -1,0 +1,71 @@
+{
+  "scope": "Preserve multiline quick-capture context",
+  "focusedTests": {
+    "executed": 6,
+    "failures": 0,
+    "names": [
+      "testBulkCaptureChangingProjectNeverCarriesOldSectionOrAssignee",
+      "testBulkCaptureInheritsChoicesWithoutCopyingIdentityOrContent",
+      "testBulkCaptureInlineProjectChangeClearsInheritedDestination",
+      "testBulkCapturePerLineChoicesOverrideInheritedPlanning",
+      "testBulkLiteralModeRetainsSchedulingWordsAndInputLimitFailsBeforeWriting",
+      "testBulkReviewStripsListMarkersButKeepsBlankLinesOutAndParsesDates"
+    ],
+    "logSHA256": "63a618e786256ae818ae087264c4a3e9d55e6fd4501a5480290fa4d4404a2509"
+  },
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "2791fceca95a85771cb66f273f64c55e1e609d0a529dc4f7e025b874b5cf2612",
+    "Taskfold/Views/WorkflowViews.swift": "05bb5210a94eaa81c007d8ba6cab478b3f2b7825299596bb77152d793db91525",
+    "TaskfoldTests/ProjectWorkflowsTests.swift": "90f0197541a5ef2359a2ab831720d2bc2d224bbd9f1922e8da278d8e8644362e"
+  },
+  "nativeVisualAcceptance": "pending; no new native UI journey performed",
+  "backendChanges": false,
+  "realTaskDataChanged": false,
+  "build": {
+    "schema": 1,
+    "platform": "mac",
+    "bundle": "com.dbakp.taskfold.mac",
+    "version": "1.2.0",
+    "build": "5",
+    "app": "/private/tmp/taskfold-workflow-native-mac-build/Build/Products/Debug/Taskfold.app",
+    "sourceFingerprint": "a3d108d6225daa45a14694cc11ee80a7b40d5dcff51370c7a9e7eab8c1900b51",
+    "sourceRevision": "e2a7b4a3239301650c524a8e67e65abf23c1d940",
+    "simulatorOnly": false,
+    "signatureVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": false,
+    "published": false,
+    "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-5-mac-development.zip",
+    "archiveSHA256": "52b3d321e29ecc7cb760f6fdb4ed1ec7034c7cb5b18bc325eede213505eddfd9",
+    "archivePayloadVerified": true,
+    "sourceWasDirty": true,
+    "developmentProfileExpires": "2026-11-10T18:38:42Z",
+    "change": "Multiline capture context and section selection; includes template search"
+  },
+  "cleanup": {
+    "removed": [
+      {
+        "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-mac/out",
+        "bytes": 515163141,
+        "kind": "Completed Taskfold Core test build output"
+      },
+      {
+        "path": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/core-ios/out",
+        "bytes": 563112538,
+        "kind": "Completed Taskfold Core test build output"
+      }
+    ],
+    "retainedLog": "/tmp/taskfold-capture-context-mac-tests.log",
+    "otherProjectsTouched": false
+  }
+}
