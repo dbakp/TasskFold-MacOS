@@ -59,6 +59,8 @@ struct TeamProjectAdoptionDecision: Equatable, Sendable, Identifiable {
         try self.init(project: TeamOrganizationValue.id(raw["project_id"]), user: TeamOrganizationValue.id(raw["user_id"]), choice: choice)
     }
 }
+enum TeamProjectRecordingPolicy: String, Sendable { case published = "published_recordings_v1" }
+
 /// Counts only: publication identities, captions and provider keys stay server-side.
 struct TeamProjectRecordingInventory: Equatable, Sendable {
     let published: Int, pending: Int, retained: Int, unavailable: Int
@@ -87,6 +89,7 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
     let supportsChildHistory: Bool
     let supportsChildRecordCustody: Bool, privateSubtaskUndoCount: Int
     let recordingInventory: TeamProjectRecordingInventory?
+    let recordingTransferSupported: Bool
     var needsRecordingCustody: Bool { (recordingInventory?.count ?? 0) > 0 }
     var hasConnections: Bool { ["email_routes", "webhooks", "queued_webhook_events"].contains { (contents[$0]?.integer ?? 0) > 0 } }
     var inflightUpdates: Int { contents["inflight_webhook_events"]?.integer ?? 0 }
@@ -160,6 +163,12 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
         var eligibility: [String: Bool] = [:]
         for person in collaborators { if let id = person.decisionID { guard eligibility[id] == nil || eligibility[id] == person.eligible else { throw TeamProjectAdoptionValue.invalid }; eligibility[id] = person.eligible } }
         recordingInventory = try contents["recording_custody"].map(TeamProjectRecordingInventory.init)
+        if let capability = contents["recording_transfer"] {
+            guard case .object(let values) = capability, Set(values.keys) == ["protocol", "supported"], values["protocol"] == .number(1),
+                  case .bool(let supported)? = values["supported"], let recordings = recordingInventory else { throw TeamProjectAdoptionValue.invalid }
+            if supported { guard recordings.published > 0, recordings.pending == 0, recordings.retained == 0, recordings.unavailable == 0 else { throw TeamProjectAdoptionValue.invalid } }
+            recordingTransferSupported = supported
+        } else { recordingTransferSupported = false }
         self.contents = contents
     }
     func inheritsArchiveAfter(_ project: Project) -> Bool {
@@ -171,10 +180,11 @@ struct TeamProjectAdoptionInspection: Equatable, Sendable, CustomStringConvertib
         }
         return false
     }
-    func reviewBody(_ decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy? = nil) throws -> [String: JSON] {
+    func reviewBody(_ decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy? = nil, recordingPolicy: TeamProjectRecordingPolicy? = nil) throws -> [String: JSON] {
         guard decisions.count == people.count, Set(decisions.map(\.id)) == Set(people.compactMap(\.decisionID)), decisions.allSatisfy({ d in d.choice == .retire || people.first(where: { $0.decisionID == d.id })?.eligible == true }) else { throw TeamProjectAdoptionValue.invalid }
         var body = scope.body.merging(["inspection_token": .string(token), "decisions": .array(decisions.sorted { $0.id < $1.id }.map(\.body))]) { _, b in b }
         if let connectionPolicy { guard supportsConnectionPause, hasConnections else { throw TeamProjectAdoptionValue.invalid }; body["connection_policy"] = .string(connectionPolicy.rawValue) }
+        if let recordingPolicy { guard recordingTransferSupported, (recordingInventory?.published ?? 0) > 0 else { throw TeamProjectAdoptionValue.invalid }; body["recording_policy"] = .string(recordingPolicy.rawValue) }
         return body
     }
 }
@@ -183,10 +193,12 @@ struct TeamProjectAdoptionReview: Equatable, Sendable, CustomStringConvertible {
     let token: String, expiresText: String, expires: Date, assignmentsCleared: Int, invitationsClosed: Int
     let needsFileCustody: Bool, needsIntegrationPause: Bool
     let connectionPolicy: TeamProjectConnectionPolicy?, connectionEffects: TeamProjectConnectionEffects?
+    let recordingPolicy: TeamProjectRecordingPolicy?
+    var recordingCount: Int? { recordingPolicy == nil ? nil : inspection.recordingInventory?.published }
     var description: String { "Private project transfer review" }
-    var canCommit: Bool { (inspection.commitSupported || (connectionPolicy == .pause && inspection.connectionPauseSupported)) && !needsFileCustody && !needsIntegrationPause && !inspection.needsRecordingCustody && (!inspection.hasConnections || connectionPolicy == .pause) && inspection.inflightUpdates == 0 }
-    init(_ raw: [String: JSON], inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy? = nil) throws {
-        _ = try inspection.reviewBody(decisions, connectionPolicy: connectionPolicy)
+    var canCommit: Bool { (inspection.commitSupported || (connectionPolicy == .pause && inspection.connectionPauseSupported)) && !needsFileCustody && !needsIntegrationPause && (!inspection.needsRecordingCustody || (recordingPolicy == .published && inspection.recordingTransferSupported)) && (!inspection.hasConnections || connectionPolicy == .pause) && inspection.inflightUpdates == 0 }
+    init(_ raw: [String: JSON], inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy? = nil, recordingPolicy: TeamProjectRecordingPolicy? = nil) throws {
+        _ = try inspection.reviewBody(decisions, connectionPolicy: connectionPolicy, recordingPolicy: recordingPolicy)
         guard try TeamProjectAdoptionInspection(raw, scope: inspection.scope) == inspection,
               case .string(let token)? = raw["review_token"], TeamTaskMoveReview.validToken(token), case .string(let expiresText)? = raw["expires_at"],
               case .bool(let files)? = raw["requires_provider_custody"], case .bool(let integrations)? = raw["requires_integration_pause"] else { throw TeamProjectAdoptionValue.invalid }
@@ -214,6 +226,11 @@ struct TeamProjectAdoptionReview: Equatable, Sendable, CustomStringConvertible {
             guard (raw["connection_effects"] ?? .null) == .null else { throw TeamProjectAdoptionValue.invalid }
             connectionEffects = nil
         }
+        guard (raw["recording_policy"] ?? .null) == (recordingPolicy.map { JSON.string($0.rawValue) } ?? .null) else { throw TeamProjectAdoptionValue.invalid }
+        if recordingPolicy != nil {
+            guard try TeamProjectAdoptionValue.count(raw["recording_count"], limit: 10000) == inspection.recordingInventory?.published else { throw TeamProjectAdoptionValue.invalid }
+        } else { guard (raw["recording_count"] ?? .null) == .null else { throw TeamProjectAdoptionValue.invalid } }
+        self.recordingPolicy = recordingPolicy
         needsFileCustody = files; needsIntegrationPause = integrations
     }
 }
@@ -224,17 +241,19 @@ struct TeamProjectAdoptionCommand: ReviewedTeamCommand, CustomStringConvertible,
     let account: String, origin: String, body: [String: JSON], projects: [String], assignmentsCleared: Int, invitationsClosed: Int
     let scope: TeamProjectAdoptionScope
     let connectionEffects: TeamProjectConnectionEffects?
+    let recordingCount: Int?
+    var recordingPolicy: TeamProjectRecordingPolicy? { body["recording_policy"].flatMap { TeamProjectRecordingPolicy(rawValue: $0.text) } }
     var connectionPolicy: TeamProjectConnectionPolicy? { body["connection_policy"].flatMap { TeamProjectConnectionPolicy(rawValue: $0.text) } }
     var id: String { body["request_id"]!.text }
     var description: String { "Private project transfer request" }; var debugDescription: String { description }
     init(review: TeamProjectAdoptionReview, requestID: UUID = UUID(), now: Date = Date()) throws {
         guard review.canCommit, review.expires > now, review.expires <= now.addingTimeInterval(16 * 60) else { throw Self.invalid }
         let i = review.inspection
-        var b = try i.reviewBody(review.decisions, connectionPolicy: review.connectionPolicy); b["review_token"] = .string(review.token); b["expires_at"] = .string(review.expiresText); b["request_id"] = .string(requestID.uuidString.lowercased())
-        try self.init(account: i.scope.account, origin: i.scope.origin, body: b, projects: i.projects.map(\.id).sorted(), assignmentsCleared: review.assignmentsCleared, invitationsClosed: review.invitationsClosed, connectionEffects: review.connectionEffects)
+        var b = try i.reviewBody(review.decisions, connectionPolicy: review.connectionPolicy, recordingPolicy: review.recordingPolicy); b["review_token"] = .string(review.token); b["expires_at"] = .string(review.expiresText); b["request_id"] = .string(requestID.uuidString.lowercased())
+        try self.init(account: i.scope.account, origin: i.scope.origin, body: b, projects: i.projects.map(\.id).sorted(), assignmentsCleared: review.assignmentsCleared, invitationsClosed: review.invitationsClosed, connectionEffects: review.connectionEffects, recordingCount: review.recordingCount)
     }
-    init(account: String, origin: String, body: [String: JSON], projects: [String], assignmentsCleared: Int, invitationsClosed: Int, connectionEffects: TeamProjectConnectionEffects? = nil) throws {
-        guard Set(body.keys) == Set(["team_id", "roots", "visibility", "folder_id", "parent_id", "inspection_token", "decisions", "review_token", "expires_at", "request_id"] + (body["connection_policy"] == nil ? [] : ["connection_policy"])), let v = body["visibility"]?.text, let visibility = TeamProjectVisibility(rawValue: v), try TaskfoldJSONEncoder().encode(body).count <= 262144 else { throw Self.invalid }
+    init(account: String, origin: String, body: [String: JSON], projects: [String], assignmentsCleared: Int, invitationsClosed: Int, connectionEffects: TeamProjectConnectionEffects? = nil, recordingCount: Int? = nil) throws {
+        guard Set(body.keys) == Set(["team_id", "roots", "visibility", "folder_id", "parent_id", "inspection_token", "decisions", "review_token", "expires_at", "request_id"] + (body["connection_policy"] == nil ? [] : ["connection_policy"]) + (body["recording_policy"] == nil ? [] : ["recording_policy"])), let v = body["visibility"]?.text, let visibility = TeamProjectVisibility(rawValue: v), try TaskfoldJSONEncoder().encode(body).count <= 262144 else { throw Self.invalid }
         let roots = try TeamProjectAdoptionValue.ids(body["roots"], limit: 100)
         scope = try TeamProjectAdoptionScope(account: account, origin: origin, team: TeamOrganizationValue.id(body["team_id"]), roots: roots, visibility: visibility, folder: TeamProjectValue.optionalID(body["folder_id"]), parent: TeamProjectValue.optionalID(body["parent_id"]))
         guard try TeamProjectAdoptionValue.ids(.array(projects.map(JSON.string)), limit: 1000) == projects, Set(roots).isSubset(of: Set(projects)), !projects.contains(scope.parent ?? ""), assignmentsCleared >= 0, assignmentsCleared <= 1_000_010_000, (0...1000).contains(invitationsClosed) else { throw Self.invalid }
@@ -247,18 +266,25 @@ struct TeamProjectAdoptionCommand: ReviewedTeamCommand, CustomStringConvertible,
             _ = try TeamProjectConnectionEffects(connectionEffects.body.object)
         } else { guard connectionEffects == nil else { throw Self.invalid } }
         self.connectionEffects = connectionEffects
+        if let policy = body["recording_policy"] {
+            guard policy == .string(TeamProjectRecordingPolicy.published.rawValue), let recordingCount, (1...10000).contains(recordingCount) else { throw Self.invalid }
+        } else { guard recordingCount == nil else { throw Self.invalid } }
+        self.recordingCount = recordingCount
         self.account = account; self.origin = origin; self.body = body; self.projects = projects; self.assignmentsCleared = assignmentsCleared; self.invitationsClosed = invitationsClosed
     }
-    private enum CodingKeys: String, CodingKey { case account, origin, body, projects, assignmentsCleared, invitationsClosed, connectionEffects }
+    private enum CodingKeys: String, CodingKey { case account, origin, body, projects, assignmentsCleared, invitationsClosed, connectionEffects, recordingCount }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), body: c.decode([String: JSON].self, forKey: .body), projects: c.decode([String].self, forKey: .projects), assignmentsCleared: c.decode(Int.self, forKey: .assignmentsCleared), invitationsClosed: c.decode(Int.self, forKey: .invitationsClosed), connectionEffects: c.decodeIfPresent(TeamProjectConnectionEffects.self, forKey: .connectionEffects))
+        try self.init(account: c.decode(String.self, forKey: .account), origin: c.decode(String.self, forKey: .origin), body: c.decode([String: JSON].self, forKey: .body), projects: c.decode([String].self, forKey: .projects), assignmentsCleared: c.decode(Int.self, forKey: .assignmentsCleared), invitationsClosed: c.decode(Int.self, forKey: .invitationsClosed), connectionEffects: c.decodeIfPresent(TeamProjectConnectionEffects.self, forKey: .connectionEffects), recordingCount: c.decodeIfPresent(Int.self, forKey: .recordingCount))
     }
-    func encode(to encoder: Encoder) throws { var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(body, forKey: .body); try c.encode(projects, forKey: .projects); try c.encode(assignmentsCleared, forKey: .assignmentsCleared); try c.encode(invitationsClosed, forKey: .invitationsClosed); try c.encodeIfPresent(connectionEffects, forKey: .connectionEffects) }
+    func encode(to encoder: Encoder) throws { var c = encoder.container(keyedBy: CodingKeys.self); try c.encode(account, forKey: .account); try c.encode(origin, forKey: .origin); try c.encode(body, forKey: .body); try c.encode(projects, forKey: .projects); try c.encode(assignmentsCleared, forKey: .assignmentsCleared); try c.encode(invitationsClosed, forKey: .invitationsClosed); try c.encodeIfPresent(connectionEffects, forKey: .connectionEffects); try c.encodeIfPresent(recordingCount, forKey: .recordingCount) }
     func confirmed(_ raw: [String: JSON]) throws -> TeamProjectAdoptionReceipt {
         guard raw["project_adoption_protocol"] == .number(1), raw["account"] == .string(account), raw["request_id"] == body["request_id"], raw["applied"] == .bool(true), raw["automatic_undo"] == .bool(false), case .bool(let replayed)? = raw["replayed"], scope.body.allSatisfy({ raw[$0.key] == $0.value }), try TeamProjectAdoptionValue.ids(raw["project_ids"], limit: 1000) == projects, try TeamProjectAdoptionValue.count(raw["assignments_cleared"]) == assignmentsCleared, try TeamProjectAdoptionValue.count(raw["invitations_closed"]) == invitationsClosed else { throw Self.invalid }
         guard (raw["connection_policy"] ?? .null) == (body["connection_policy"] ?? .null),
               (raw["connection_effects"] ?? .null) == (connectionEffects?.body ?? .null) else { throw Self.invalid }
+        guard (raw["recording_policy"] ?? .null) == (body["recording_policy"] ?? .null) else { throw Self.invalid }
+        if let recordingCount { guard try TeamProjectAdoptionValue.count(raw["recording_count"], limit: 10000) == recordingCount else { throw Self.invalid } }
+        else { guard (raw["recording_count"] ?? .null) == .null else { throw Self.invalid } }
         return TeamProjectAdoptionReceipt(command: self, replayed: replayed)
     }
 }

@@ -10517,3 +10517,12 @@ The iPad follow-up now accepts recovered real Redo/second Undo (73 checks) and a
 ### 3 November: recording counts in project review
 
 The project-transfer review now has typed recording counts and a specific custody explanation. Its independent SQL inventory/signature/guard checks pass (34), as do the project-transfer Core suites (69) and owning app/test build/signatures. New view rows have no native runtime/speech/largest-text acceptance; the Mac was last confirmed locked. Recording consent and atomic whole-project custody remain to implement. [Evidence](project-recording-inventory/README.md).
+
+### 3 November 2026 · Published-recording project adoption candidate
+
+- [x] Implement explicit signed recording consent, exact saved-command count/replay and atomic published-recording custody for personal branches moving into a team, behind a separate disabled flag.
+- [x] Pass 76 owning local SQL/gateway checks and 75 client tests per repo; app/runner builds and strict signatures pass. Verify rollback, changed inventory, audience revocation during download, original receipts/bytes and replay while paused.
+- [ ] Bind unpublished private publication approval to the original audience and require fresh consent after a move. This is a source-audit requirement, not a reproduced exploit. Keep ordinary use disabled.
+- [ ] Accept native consent/recovery and genuine Auth/provider/full-schema behavior; combined connection-pause/recording signatures are locally verified. Pending/retained/legacy/mixed media and other realm transfers remain.
+
+[Exact accepted scope and remaining work](project-recording-transfer/README.md). Whole-project transfer completion remains To build.

@@ -7516,3 +7516,12 @@ Two further iPad UI cases pass without skips: 73 local service/native checks for
 ## Whole-project recording transfer: signed inventory foundation
 
 Both owning services now bind a bounded recording/provider metadata inventory to the existing signed project inspection and expose counts only. Client validation and native review explanations are built; direct commits remain refused until explicit consent and atomic recording custody are implemented. Each repo passes 34 SQL and 69 project-transfer Core checks; app/runner builds and strict signatures pass. This does not complete or enable recording-bearing project transfers. [Scope and evidence](project-recording-inventory/README.md).
+
+### 3 November 2026 · Published-recording project adoption candidate
+
+- [x] Implement explicit signed recording consent, exact saved-command count/replay and atomic published-recording custody for personal branches moving into a team, behind a separate disabled flag.
+- [x] Pass 76 owning local SQL/gateway checks and 75 client tests per repo; app/runner builds and strict signatures pass. Verify rollback, changed inventory, audience revocation during download, original receipts/bytes and replay while paused.
+- [ ] Bind unpublished private publication approval to the original audience and require fresh consent after a move. This is a source-audit requirement, not a reproduced exploit. Keep ordinary use disabled.
+- [ ] Accept native consent/recovery and genuine Auth/provider/full-schema behavior; combined connection-pause/recording signatures are locally verified. Pending/retained/legacy/mixed media and other realm transfers remain.
+
+[Exact accepted scope and remaining work](project-recording-transfer/README.md). Whole-project transfer completion remains To build.

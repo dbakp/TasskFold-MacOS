@@ -1,0 +1,45 @@
+{
+  "reviewed": "2026-11-03",
+  "repository": "TasskFold-MacOS",
+  "baseCommit": "e8f3f47dd70c3f76ea270147d64674b26cf4eb8b",
+  "ownDatabaseChecks": 76,
+  "ownCoreTests": 75,
+  "newCoreCases": 6,
+  "ownSQLContainerRemoved": true,
+  "ownDatabaseReportSHA256": "60fc26847b6d973597cc892ff272b98d586d863b802de391bcceb9bd390e2f4e",
+  "ownCoreLogSHA256": "e35e075f9c591b85ed6dc383c05cbdc5f9e809339d7dcbbb34695fc81576876b",
+  "ownAppRunnerBuildAndStrictSignatures": true,
+  "ownBuildPhase": "project-recording-transfer-mac-v1",
+  "ownBuildDriverSHA256": "1b4fe7ae471e384fff575aaf286bec4843777a844c2429382045c8b98c54cf48",
+  "ownSignatures": {
+    "Taskfold.app": {
+      "strictSignatureVerified": true
+    },
+    "TaskfoldUITests-Runner.app": {
+      "strictSignatureVerified": true
+    }
+  },
+  "baselineAdvisorEntries": 7,
+  "finalAdvisorEntries": 7,
+  "publishedPersonalToTeamLocalServiceAccepted": true,
+  "explicitClientConsentAndExactRecoveryAccepted": true,
+  "unpublishedDraftAudienceAccepted": false,
+  "combinedConnectionAndRecordingPolicyAccepted": true,
+  "nativeRuntimeAccepted": false,
+  "wholeProjectFeatureComplete": false,
+  "genuineAuthOrProvider": false,
+  "fullSchemaParity": false,
+  "normalUseEnabled": false,
+  "deployed": false,
+  "ownSourceSHA256": {
+    "supabase/migrations/20261103013213_reviewed_project_recording_transfer.sql": "38a48b36e7bda3c456a1bd0919ac2b56fefcbf71b9d730e0ff3c5e910bb18663",
+    "Scripts/Database/test-project-recording-transfer.mjs": "fdf4693c6f3ef61744233682eabec1edd16f9fdf711cffcbb31363a6f5af8f7a",
+    "Taskfold/Core/TeamProjectAdoption.swift": "63b5c74e05bc9aa96f562d5c3731e652907113b5cf1720f042e8d125e02bb057",
+    "Taskfold/Core/Backend.swift": "71f5a893f747de48740358da03a4ef0669673037891f0008d9327a1762cf1c8d",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "77fa24db10f7c770dce5cb8e2ec59b9546b1988dc6080701604a13f800b43a70",
+    "TaskfoldTests/TeamProjectAdoptionTests.swift": "6956cd489dee668dfc723a2a7e92a68f0e2e641e5625f8cbff35a741e65be5ee",
+    "TaskfoldTests/Fixtures/team-project-recording-transfer-v1.json": "de2270291403261d94f2d2b33e02f16a0ea68c6a228e1872b3dc87df03bd1b72"
+  },
+  "curatedCheckpoints": 74,
+  "substeps": 37
+}
