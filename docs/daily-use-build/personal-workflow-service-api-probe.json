@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-03",
+  "requestRole": "anon",
+  "checks": [
+    {
+      "route": "taskfold_workflow_undo_capabilities",
+      "httpStatus": 401,
+      "code": "42501",
+      "anonymousRefused": true
+    },
+    {
+      "route": "taskfold_undo_private_workflow",
+      "httpStatus": 401,
+      "code": "42501",
+      "anonymousRefused": true
+    }
+  ],
+  "userRowsRead": false,
+  "userRowsWritten": false,
+  "limitation": "Live route visibility and anonymous refusal only; authenticated service proof is local synthetic Auth/REST, native acceptance remains separate."
+}

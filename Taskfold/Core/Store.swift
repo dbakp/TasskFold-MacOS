@@ -2599,7 +2599,7 @@ final class Store {
             prepared=try TeamTaskBatch.preparing(changes,snapshot:snapshot)
             for change in prepared {
                 if WorkflowUndo.matches(change) {
-                    guard localMode || (WorkflowUndo.available(boundary: nativeConversationTeamCache?.boundary, account: userID, origin: try? backend.accountRemovalOrigin) && WorkflowUndo.canSend(change, boundary: nativeConversationTeamCache?.boundary)) else { throw AppFailure(message: WorkflowUndo.unavailable) }
+                    guard localMode || (WorkflowUndo.available(boundary: nativeConversationTeamCache?.boundary, account: userID, origin: try? backend.accountRemovalOrigin, service: snapshot.workflowUndoService) && WorkflowUndo.canSend(change, boundary: nativeConversationTeamCache?.boundary, service: snapshot.workflowUndoService, origin: try? backend.accountRemovalOrigin)) else { throw AppFailure(message: WorkflowUndo.unavailable) }
                     try WorkflowUndo.validate(change, snapshot: snapshot, account: userID)
                 }
                 if change.method == "TEAM_COMPLETE" || change.teamCompletion != nil {
@@ -3129,8 +3129,15 @@ final class Store {
             #if DEBUG
             traceTeamAudioNativeSync("Boundary")
             #endif
+            let workflowService: WorkflowUndoService?
+            do { workflowService = try await backend.workflowUndoService(account: account) }
+            catch is AccountSessionAuthorizationRequired { throw AccountSessionAuthorizationRequired() }
+            catch is CancellationError { throw CancellationError() }
+            catch { workflowService = nil } // Optional discovery must not hold unrelated ordinary sync.
+            guard generation == accountGeneration else { return }
+            if snapshot.workflowUndoService != workflowService { snapshot.workflowUndoService = workflowService }
             let boundary:TeamWorkspaceBoundary?
-            let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil || PersonalTaskTypes.requiresService($0) || WorkflowUndo.matches($0)}
+            let allowLegacy=snapshot.teamWorkspace==nil && !snapshot.pending.contains{$0.teamTaskScope != nil || $0.teamCompletion != nil || $0.teamTaskBatch != nil || PersonalTaskTypes.requiresService($0)}
             do {boundary=try await backend.workspaceBoundary(account:account)}
             catch is TeamWorkspaceUnavailable {guard allowLegacy else {throw TeamWorkspaceUnavailable()};boundary=nil}
             guard generation==accountGeneration else {return}
@@ -3160,7 +3167,7 @@ final class Store {
                 }
                 // Compatibility pauses delivery, not access or the optimistic draft.
                 // Continue the read so restored support can resume this exact intention.
-                if !PersonalTaskTypes.canSend(mutation, boundary: boundary) || !WorkflowUndo.canSend(mutation, boundary: boundary) { break }
+                if !PersonalTaskTypes.canSend(mutation, boundary: boundary) || !WorkflowUndo.canSend(mutation, boundary: boundary, service: workflowService, origin: try? backend.accountRemovalOrigin) { break }
                 sending = mutation
                 let saved = try await backend.send(mutation, expectedAccount: account)
                 guard generation == accountGeneration else { return }
@@ -3293,7 +3300,7 @@ final class Store {
         syncSignInWorkspace = nil
         let accessBlocked=snapshot.pending.first.map{snapshot.teamWorkspace?.blocked(snapshot).contains($0.id)==true} ?? false
         let headingBlocked = snapshot.pending.first.map { !PersonalTaskTypes.canSend($0, boundary: snapshot.teamWorkspace?.boundary) } ?? false
-        let workflowUndoBlocked = snapshot.pending.first.map { !WorkflowUndo.canSend($0, boundary: snapshot.teamWorkspace?.boundary) } ?? false
+        let workflowUndoBlocked = snapshot.pending.first.map { !WorkflowUndo.canSend($0, boundary: snapshot.teamWorkspace?.boundary, service: snapshot.workflowUndoService, origin: try? backend.accountRemovalOrigin) } ?? false
         if workflowUndoBlocked { notice = "Your workflow Undo is saved on this device. Its service needs an update before it can sync." }
         if headingBlocked, syncSignInWorkspace == nil { notice = "Your heading changes are saved on this device. This service needs heading support before they can sync." }
         if !accessBlocked && !headingBlocked && !workflowUndoBlocked && !workflowUndoRefused && !hadConflict {notice = widgetActionStatus}

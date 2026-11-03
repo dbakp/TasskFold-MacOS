@@ -35,7 +35,9 @@
     "test:audio-maintenance-scheduler": "node test-audio-maintenance-scheduler.mjs",
     "test:audio-native-publication": "node test-audio-native-publication.mjs",
     "test:account-removal-repair": "node test-account-removal-repair.mjs",
-    "test:scoped-assignment-compatibility": "node test-scoped-assignment-compatibility.mjs"
+    "test:scoped-assignment-compatibility": "node test-scoped-assignment-compatibility.mjs",
+    "test:personal-workflow-service": "node test-personal-workflow-service.mjs",
+    "test:personal-workflow-http": "node test-personal-workflow-service-http.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

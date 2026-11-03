@@ -4,8 +4,8 @@ The immediate delivery is an ordinary personal-workflow app on the existing stor
 
 ## Current candidates — 3 November 2026
 
-- Mac **1.2.0 (5)**: ordinary app identity, Apple Development signed app, widgets and share extension. The actual ZIP payload passes the existing development-artifact verifier. The current profile expires **10 November 2026**. Startup/installation is awaiting the Mac unlock; the installed 1.1.0 app remains intact. A private local app-file safety copy was made before the attempted launch, without exporting Keychain items.
-- iOS **1.4.0 (20)**: ordinary Simulator app builds with widgets and sharing. This unsigned Simulator product cannot be installed on an iPhone. The physical build stops at Xcode account/profile setup. The daily command now applies the configured team to all extensions as well. Physical signing/installation remains unverified.
+- Mac **1.2.0 (6)**: installed at `/Applications/Taskfold.app`, Apple Development signed with widgets/sharing. The actual ZIP payload passes signature/extension checks. Startup and sync of the existing workspace pass; Templates opens, and multiline date/priority/context review then cancellation pass without creating tasks. Previous app and private local files are preserved outside Git. The profile expires **10 November 2026**.
+- iOS **1.4.0 (21)**: ordinary app/widgets/sharing compile for the Simulator. It is not a physical-phone package. The user is configuring Xcode development signing; physical signing and installation remain unverified.
 
 No test launch arguments or candidate feature gates were enabled. The initial build/package work made no hosted changes, new simulators, real-task edits, installation or publication. The later focused assignment service deployment is recorded below. Build receipts bind the app input fingerprint.
 
@@ -15,7 +15,7 @@ No test launch arguments or candidate feature gates were enabled. The initial bu
 | --- | --- | --- |
 | Capture, task edits/completion/deletion, planning and recurring dates | Existing personal path available | Guarded task edit/delete functions present |
 | Archive/subprojects, manual ordering and filters | Existing personal path available | Project archive/parent columns and ordering function present |
-| Templates and multiline capture | Ordinary personal screens available | Template table and guarded edit function present; newer cloud workflow Undo is missing |
+| Templates and multiline capture | Ordinary personal screens available | Template table and guarded edit function present; personal-template cloud Undo is now deployed; native acceptance remains separate; atomic multiline capture Undo remains implementation work |
 | Notes, widgets and Focus | Ordinary personal screens available; packaged extensions verified | Focus session function present |
 | Insights and goals | Ordinary screens available; historical coverage stays explicit | Root activity/epoch and goals function present; new child-activity tables absent |
 | Scoped assignments | Client support exists | Deployed 3 November; exact-definition/permission checks and anonymous refusal pass. Signed-in native acceptance remains separate |
@@ -42,7 +42,7 @@ The Mac ZIP is in this chat's output/daily-use-mac directory, with a byte-bound 
 
 ## Next product work
 
-Finish Mac startup/installation when unlocked and physical iPhone signing when the account is available. The scoped assignment service update is now deployed; next prioritize cloud workflow Undo service availability, followed by real daily-use friction in organization/templates/planning. Keep the full advanced Px backlog; do not restart broad unchanged acceptance matrices as the immediate focus.
+Mac startup/installation is verified. Finish physical iPhone signing when the user confirms setup. Scoped assignment and independent personal-template Undo are deployed; next accept the native template Undo journey, then improve daily organization/templates/planning. Atomic multiline capture Undo remains separate implementation work. Keep the full advanced Px backlog; do not restart broad unchanged acceptance matrices as the immediate focus.
 
 The delivery check originally assumed exactly three versioned targets and rejected the iOS Watch companion. It now requires both configurations for each core bundle identity and consistent versions across optional companions. Each repo passes 12 focused checks, including matching companions, missing required configurations and mismatched companion versions; the ordinary projects and actual built app/widget/share metadata pass. This does not establish distribution or Watch runtime acceptance.
 
@@ -62,6 +62,16 @@ Mac **1.2.0 (5)** and iOS Simulator **1.4.0 (20)** include inherited quick-captu
 
 The current clients' endpoint is live after a focused update. Both owning repositories pass 32 actual PostgreSQL compatibility checks, with the original deployed task-editor body and synthetic task rows. Exact guarded deployment/rollback bundles are tested. Live metadata verifies the reviewed function hashes, authenticated-only invoker execution and unchanged existing patch permissions, table policies and task triggers. The live REST route rejects anonymous calls with permission denied. Current security-advisor findings are unchanged, not universally clear; existing findings/remediation links are retained in `scoped-assignment-advisors-before.json` and `scoped-assignment-advisors-after.json`.
 
-`scoped-assignment-deployed.json` and `scoped-assignment-api-probe.json` record the live scope. No user task records were read or modified. This is not a signed-in real-account/native assignment acceptance or a solution to the separately deferred older-client rollout gate. The newer cloud workflow Undo endpoint remains absent. Mac build 5 and iOS Simulator build 20 already contain the matching client; a client rebuild was unnecessary for this service-only change. Installation/signing blockers remain separate.
+`scoped-assignment-deployed.json` and `scoped-assignment-api-probe.json` record the live scope. No user task records were read or modified. This is not a signed-in real-account/native assignment acceptance or a solution to the separately deferred older-client rollout gate. This assignment-only milestone did not enable workflow Undo; the later independent Undo update below supersedes that availability status. Mac installation now passes; physical iPhone signing remains separate.
 
 Each repo owns the canonical applied-history version `20261103201254_taskfold_daily_scoped_assignment_guard.sql`. It is the idempotent existing candidate, matching its source hash; the actual single-use deployment also included the reviewed live baseline check retained under `Scripts/Database/fixtures`. Do not push the whole unfinished advanced migration chain merely to reproduce this selected update. The guarded rollback refuses definitions changed after this update.
+
+## Personal-template Undo update — 3 November
+
+Personal-template workflow Undo now discovers service support independently of teams. New Mac build 6/iOS Simulator build 21 bind cached support to the account and HTTPS service origin. Missing support holds only the saved Undo rather than blocking unrelated legacy sync. Snapshot corruption in optional capability metadata preserves task/queue data. Requests use bounded, cookie-free transport with redirects refused.
+
+The focused service migration is live as `20261103212921_taskfold_personal_workflow_undo_service`. Both repos own the identical replayable canonical SQL; the single-use live preflight and exact-definition rollback are retained separately. Each repo passes **21 Core checks**, **53 actual PostgreSQL checks** including deployment/rollback/reinstall, and **19 real local Auth/REST checks**. These cover atomic fresh-record removal, later-edit/access-loss refusal, session revocation and retry preservation. Live hashes, grants, unchanged public table ACL/RLS/policies/task triggers and anonymous REST refusal verify; no real task rows were modified by deployment/probes. Existing security WARN findings are unchanged. The new private receipt table has RLS, no client SELECT grants and intentionally no client policies; its advisor INFO is recorded.
+
+This is scoped to fresh insert-only personal template runs. **Native end-to-end template Undo acceptance is pending. Atomic multiline capture Undo is not implemented by this change**: it needs safe handling of existing order deltas and Redo. No team/boundary rollout, ordinary advanced gates or deferred release features were enabled. See `personal-workflow-service-*.json` for exact evidence.
+
+`--products-directory` selects output placement but cannot prevent Xcode from retiring earlier managed products. The helper now refuses a build while an app is running from the same cache. Run daily apps from Applications, preserving build receipts/packages and a private safety copy before replacement. Build 5's removed managed files were restored byte-for-byte from its verified package before the old process was closed; only installed build 6 remains running.

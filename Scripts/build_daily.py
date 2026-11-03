@@ -29,6 +29,7 @@ def fingerprint(project_bytes):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--derived-data", type=Path, default=Path.home() / "Library/Caches/TaskfoldBuild" / ("daily-" + PLATFORM))
+    parser.add_argument("--products-directory", type=Path, help="Choose the products folder while reusing the build cache; stop apps running from that cache first")
     parser.add_argument("--allow-provisioning", action="store_true", help="Let Xcode update development profiles using its configured account")
     parser.add_argument("--team", help="Existing development team for the app and all extensions; defaults to the project's sole configured team")
     parser.add_argument("--build-number", type=int, help="Increment the app/extension build number together for a new daily update")
@@ -39,6 +40,12 @@ def main():
         parser.error("Choose a destination supported by this owning app")
     if args.build_number is not None and args.build_number < 1:
         parser.error("Build number must be a positive integer")
+    # Xcode may retire earlier managed products even when a new products folder
+    # is chosen. Never rebuild a cache whose app executable is still running.
+    cache = str(args.derived_data.resolve()) + "/"
+    running = subprocess.check_output(["ps", "-axo", "comm="], text=True).splitlines()
+    if any(line.strip().startswith(cache) and ".app/" in line for line in running):
+        raise SystemExit("Quit the app running from this build cache first. Installed apps can remain open.")
     probe = args.derived_data
     while not probe.exists():
         probe = probe.parent
@@ -75,6 +82,8 @@ def main():
     # Never leave a previous successful receipt beside a failed new candidate.
     receipt.unlink(missing_ok=True)
     command = ["xcodebuild", "-project", str(daily_project.resolve()), "-scheme", "Taskfold", "-configuration", "Debug", "-destination", destination, "-derivedDataPath", str(args.derived_data.resolve()), "-jobs", "1", "COMPILER_INDEX_STORE_ENABLE=NO", "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2", "build"]
+    if args.products_directory:
+        command.append("CONFIGURATION_BUILD_DIR=" + str(args.products_directory.resolve()))
     if args.allow_provisioning:
         command.append("-allowProvisioningUpdates")
     if team:
@@ -91,6 +100,8 @@ def main():
     if fingerprint(project.read_bytes()) != before:
         raise SystemExit("App inputs changed during the build; no candidate receipt recorded")
     products = args.derived_data / "Build/Products" / ("Debug" if PLATFORM == "mac" else "Debug-iphonesimulator" if args.simulator else "Debug-iphoneos")
+    if args.products_directory:
+        products = args.products_directory.resolve()
     app = products / "Taskfold.app"
     contents = app / "Contents" if PLATFORM == "mac" else app
     info = plistlib.loads((contents / "Info.plist").read_bytes())

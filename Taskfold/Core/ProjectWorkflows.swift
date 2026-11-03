@@ -1364,6 +1364,50 @@ struct FreshWorkflowCreation: Sendable {
     }
 }
 
+/// Cached compatibility metadata, never task authority. Every send refreshes
+/// support and the service independently checks live session/access and rows.
+struct WorkflowUndoService: Equatable, Sendable, Codable {
+    let raw: [String: JSON]
+    let account: String
+    let origin: String
+    var supported: Bool { raw["undo_protocol"] == .number(1) }
+    var bulk: Bool { raw["bulk_protocol"] == .number(1) }
+    init(_ raw: [String: JSON], account: String, origin: String) throws {
+        guard TeamProjectValue.id(account), raw["protocol"] == .number(1), raw["account"] == .string(account),
+              [JSON.number(0), JSON.number(1)].contains(raw["undo_protocol"] ?? .null),
+              [JSON.number(0), JSON.number(1)].contains(raw["bulk_protocol"] ?? .null),
+              raw["undo_protocol"] == .number(1) || raw["bulk_protocol"] == .number(0),
+              let url = URL(string: origin), url.scheme == "https", url.host != nil,
+              url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
+              url.path.isEmpty || url.path == "/", !origin.hasSuffix("/") else { throw TeamProjectValue.invalid }
+        self.raw = raw; self.account = account; self.origin = origin
+    }
+    func belongs(account: String, origin: String) -> Bool { self.account == account && self.origin == origin }
+    private enum CodingKeys: String, CodingKey { case raw, origin }
+    init(from decoder: Decoder) throws {
+        let value = try decoder.container(keyedBy: CodingKeys.self)
+        let raw = try value.decode([String: JSON].self, forKey: .raw)
+        try self.init(raw, account: raw["account"]?.text ?? "", origin: value.decode(String.self, forKey: .origin))
+    }
+    func encode(to encoder: Encoder) throws {
+        var value = encoder.container(keyedBy: CodingKeys.self)
+        try value.encode(raw, forKey: .raw); try value.encode(origin, forKey: .origin)
+    }
+}
+struct WorkflowUndoServiceUnavailable: Error {}
+
+@MainActor extension Backend {
+    func workflowUndoService(account: String) async throws -> WorkflowUndoService? {
+        guard session?.user.id == account else { throw CancellationError() }
+        let origin = try accountRemovalOrigin
+        let data: Data
+        do { data = try await request("/rest/v1/rpc/taskfold_workflow_undo_capabilities", method: "POST", body: [:], expectedAccount: account) }
+        catch is WorkflowUndoServiceUnavailable { return nil }
+        guard data.count <= 16384 else { throw TeamProjectValue.invalid }
+        return try WorkflowUndoService(TaskfoldJSONDecoder().decode([String: JSON].self, from: data), account: account, origin: origin)
+    }
+}
+
 /// One durable, atomic Undo for the fresh personal records of a workflow run.
 /// The server checks the complete set before deleting any of it.
 enum WorkflowUndo {
@@ -1394,15 +1438,21 @@ enum WorkflowUndo {
     }
 
     static let unavailable = "Refresh this workspace after its service is updated to safely undo workflows. Your work is unchanged."
-    static func available(boundary: TeamWorkspaceBoundary?, account: String, origin: String?) -> Bool {
+    static func available(boundary: TeamWorkspaceBoundary?, account: String, origin: String?, service: WorkflowUndoService? = nil) -> Bool {
+        if let service { return origin.map { service.belongs(account: account, origin: $0) && service.supported } ?? false }
         guard let boundary, let origin, boundary.belongs(account: account, origin: origin) else { return false }
         return boundary.raw["personal_workflow_undo_protocol"] == .number(1)
     }
-    static func canSend(_ change: Mutation, boundary: TeamWorkspaceBoundary?) -> Bool {
+    static func canSend(_ change: Mutation, boundary: TeamWorkspaceBoundary?, service: WorkflowUndoService? = nil, origin: String? = nil) -> Bool {
         guard matches(change) else { return true }
+        if let service {
+            guard let account = change.fields["user_id"]?.text, let origin, service.belongs(account: account, origin: origin), service.supported else { return false }
+            return (change.fields["items"]?.list.count ?? 0) <= 12000 || service.bulk
+        }
         guard boundary?.raw["personal_workflow_undo_protocol"] == .number(1) else { return false }
         return (change.fields["items"]?.list.count ?? 0) <= 12000 || boundary?.raw["personal_workflow_undo_bulk_protocol"] == .number(1)
     }
+    static let maximumResponseBytes = 32_000_000
     static let maximumBytes = 16_800_000
     static let tooLarge = "This workflow is too large to create in one step. Your template is kept and no work was created."
     static let message = "This workflow changed after it was created. Undo was cancelled and your current work was kept."

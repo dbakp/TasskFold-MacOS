@@ -1,0 +1,577 @@
+{
+  "lints": [
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "count": 3,
+      "findings": [
+        {
+          "detail": "Table \\`taskfold_private.account_removal_proof_keys\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "account_removal_proof_keys",
+            "type": "table",
+            "schema": "taskfold_private"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Table \\`taskfold_private.account_removal_receipts\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "account_removal_receipts",
+            "type": "table",
+            "schema": "taskfold_private"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Table \\`taskfold_private.private_workflow_undos\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "private_workflow_undos",
+            "type": "table",
+            "schema": "taskfold_private"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        }
+      ]
+    },
+    {
+      "name": "extension_in_public",
+      "title": "Extension in Public",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects extensions installed in the \\`public\\` schema.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+      "count": 1,
+      "findings": [
+        {
+          "detail": "Extension \\`pg_net\\` is installed in the public schema. Move it to another schema.",
+          "metadata": {
+            "name": "pg_net",
+            "type": "extension",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        }
+      ]
+    },
+    {
+      "name": "pg_graphql_anon_table_exposed",
+      "title": "Public Can See Object in GraphQL Schema",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to anyone using your public anon key. Revoke `SELECT` from `anon` for objects that should not be discoverable before sign-in, and check lint 0027 for the matching signed-in-user exposure.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0026_pg_graphql_anon_table_exposed",
+      "count": 6,
+      "findings": [
+        {
+          "detail": "table `public.labels` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if it should not be discoverable without signing in.",
+          "metadata": {
+            "name": "labels",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.profiles` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if it should not be discoverable without signing in.",
+          "metadata": {
+            "name": "profiles",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.project_collaborators` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if it should not be discoverable without signing in.",
+          "metadata": {
+            "name": "project_collaborators",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.projects` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if it should not be discoverable without signing in.",
+          "metadata": {
+            "name": "projects",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.sections` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if it should not be discoverable without signing in.",
+          "metadata": {
+            "name": "sections",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.tasks` is visible in the GraphQL schema because the `anon` role can `SELECT` it. Revoke `SELECT` from `anon` if it should not be discoverable without signing in.",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        }
+      ]
+    },
+    {
+      "name": "pg_graphql_authenticated_table_exposed",
+      "title": "Signed-In Users Can See Object in GraphQL Schema",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects tables, views, materialized views, and foreign tables that are visible in the GraphQL schema to signed-in users. Revoke `SELECT` from `authenticated` for objects that signed-in users should not discover, and check lint 0026 for the matching public exposure.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0027_pg_graphql_authenticated_table_exposed",
+      "count": 20,
+      "findings": [
+        {
+          "detail": "table `public.favorites` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "favorites",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.focus_sessions` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "focus_sessions",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.import_sources` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "import_sources",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.labels` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "labels",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.profiles` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "profiles",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.project_collaborators` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "project_collaborators",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.project_templates` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "project_templates",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.projects` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "projects",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.reminder_preferences` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "reminder_preferences",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.saved_views` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "saved_views",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.sections` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "sections",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.task_activity` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "task_activity",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.task_activity_epoch` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "task_activity_epoch",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.task_assignment_provenance` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "task_assignment_provenance",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.task_comments` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "task_comments",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.task_mentions` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "task_mentions",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.tasks` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "tasks",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.view_orders` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "view_orders",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `public.view_preferences` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "view_preferences",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "table `taskfold_private.organization_order_actions` is visible in the GraphQL schema to signed-in users because the `authenticated` role can `SELECT` it. Revoke `SELECT` from `authenticated` if it should not be discoverable to every account.",
+          "metadata": {
+            "name": "organization_order_actions",
+            "type": "table",
+            "schema": "taskfold_private"
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        }
+      ]
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "title": "Public Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+      "count": 8,
+      "findings": [
+        {
+          "detail": "Function `public.create_project(_name text, _color text)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/create_project`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "create_project",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "_name text, _color text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.get_current_user_email()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_current_user_email`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_current_user_email",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.get_project_collaborators_safe(_project_id uuid)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_project_collaborators_safe`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_project_collaborators_safe",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "_project_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.handle_new_user()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/handle_new_user`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "handle_new_user",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.has_project_access(_user_id uuid, _project_id uuid)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/has_project_access`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "has_project_access",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "_user_id uuid, _project_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.is_project_owner(_user_id uuid, _project_id uuid)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_project_owner`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "is_project_owner",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "_user_id uuid, _project_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.link_pending_invites()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/link_pending_invites`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "link_pending_invites",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.set_project_owner()` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/set_project_owner`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "set_project_owner",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        }
+      ]
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+      "count": 10,
+      "findings": [
+        {
+          "detail": "Function `public.create_project(_name text, _color text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/create_project`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "create_project",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "_name text, _color text",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.get_current_user_email()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_current_user_email`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_current_user_email",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.get_project_collaborators_safe(_project_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_project_collaborators_safe`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_project_collaborators_safe",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "_project_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.get_user_email_by_id(_user_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_user_email_by_id`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_user_email_by_id",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "_user_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.handle_new_user()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/handle_new_user`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "handle_new_user",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.has_project_access(_user_id uuid, _project_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/has_project_access`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "has_project_access",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "_user_id uuid, _project_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.is_project_owner(_user_id uuid, _project_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_project_owner`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "is_project_owner",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "_user_id uuid, _project_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.link_pending_invites()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/link_pending_invites`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "link_pending_invites",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.set_project_owner()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/set_project_owner`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "set_project_owner",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        },
+        {
+          "detail": "Function `public.taskfold_account_allows_storage_write()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/taskfold_account_allows_storage_write`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "taskfold_account_allows_storage_write",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-11-03T21:29:34.859Z"
+        }
+      ]
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "title": "Leaked Password Protection Disabled",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Leaked password protection is currently disabled.",
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+      "count": 1,
+      "findings": [
+        {
+          "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+          "metadata": {
+            "type": "auth",
+            "entity": "Auth"
+          }
+        }
+      ]
+    }
+  ]
+}

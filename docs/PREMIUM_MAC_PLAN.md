@@ -10836,3 +10836,8 @@ No completion-date estimate is asserted by this reordering. The next externally 
 - [ ] Mac startup/installation after unlock; physical iPhone account/signing/installation. Then prioritize the focused cloud service gaps and daily-user friction before more broad advanced acceptance.
 
 [Build receipts, inventory and scope](daily-use-build/README.md). No App Store submission, new Simulator, real-task edits or ordinary candidate-gate activation.
+
+
+### 3 November · Normal build 6 installed
+
+The ordinary Mac app now runs from Applications with signed widgets/sharing, existing-workspace startup/sync, accessible Templates and multiline review/cancel verified. Private safety copies and earlier packages remain outside Git. Cloud personal-template Undo is independently deployed with scoped client/real API/deployment proofs; native Undo acceptance and atomic multiline Undo/order/Redo remain next work. No advanced gates changed. The daily builder refuses to reuse a cache with a running app; output redirection alone does not protect Xcode-managed older products. Keep only the normal installed app open.

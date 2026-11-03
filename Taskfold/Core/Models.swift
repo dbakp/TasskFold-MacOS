@@ -631,6 +631,7 @@ struct Snapshot: Codable, Equatable, Sendable {
     var tables: [String: [Record]] = [:]
     var pending: [Mutation] = []
     var teamWorkspace: TeamWorkspaceCache? = nil
+    var workflowUndoService: WorkflowUndoService? = nil
     var widgetCompletion = WidgetCompletionCache()
     var sharedCaptureReceipts: [String: String]? = nil
     /// Device-private, monotonic wearable mutation proofs; excluded from exports and sync.
@@ -812,12 +813,15 @@ extension Snapshot {
 }
 
 extension Snapshot {
-    private enum CodingKeys: String, CodingKey { case tables, pending, teamWorkspace, widgetCompletion, sharedCaptureReceipts, wearableReceipts, wearableReceiptGeneration, locationRetirements, locationActions, timeSnoozes, locationImports }
+    private enum CodingKeys: String, CodingKey { case tables, pending, teamWorkspace, workflowUndoService, widgetCompletion, sharedCaptureReceipts, wearableReceipts, wearableReceiptGeneration, locationRetirements, locationActions, timeSnoozes, locationImports }
     init(from decoder: Decoder) throws {
         let row = try decoder.container(keyedBy: CodingKeys.self)
         tables = try row.decode([String: [Record]].self, forKey: .tables)
         pending = try row.decode([Mutation].self, forKey: .pending)
         teamWorkspace = try row.decodeIfPresent(TeamWorkspaceCache.self, forKey:.teamWorkspace)
+        // Optional compatibility metadata is not a privacy boundary or authored work.
+        // A fresh service check is still required before forwarding any Undo.
+        workflowUndoService = try? row.decodeIfPresent(WorkflowUndoService.self, forKey: .workflowUndoService)
         widgetCompletion = try row.decodeIfPresent(WidgetCompletionCache.self, forKey: .widgetCompletion) ?? WidgetCompletionCache()
         sharedCaptureReceipts = try row.decodeIfPresent([String: String].self, forKey: .sharedCaptureReceipts)
         wearableReceiptGeneration = try row.decodeIfPresent(UInt64.self, forKey: .wearableReceiptGeneration)

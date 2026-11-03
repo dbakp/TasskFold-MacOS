@@ -7733,3 +7733,15 @@ No completion-date estimate is asserted by this reordering. The next externally 
 - [ ] Mac startup/installation after unlock; physical iPhone account/signing/installation. Then prioritize the focused cloud service gaps and daily-user friction before more broad advanced acceptance.
 
 [Build receipts, inventory and scope](daily-use-build/README.md). No App Store submission, new Simulator, real-task edits or ordinary candidate-gate activation.
+
+
+### 3 November 2026 · Installed daily-use app and independent workflow Undo
+
+- [x] Install signed ordinary Mac 1.2.0 (6), preserve previous app/local files privately, verify startup and sync, open Templates and review/cancel a multiline draft without creating tasks. Leave one normal Taskfold process, no isolated sessions.
+- [x] Build ordinary iOS Simulator 1.4.0 (21). Physical signing is being configured by the user; do not infer completion.
+- [x] Deploy personal-template Undo independently of advanced team/boundary rollout. Per repo: 21 client, 53 PostgreSQL/deployment/rollback and 19 real local Auth/REST checks; live definitions/grants/advisors/API admission verify. Preserve later edits, revoked access and immutable retries. No real task test DML.
+- [ ] Accept the native fresh-template Undo journey in an isolated synthetic workspace; preserve the already-passing service matrices.
+- [ ] Implement atomic multiline capture Undo with existing ordering deltas and Redo preserved; the fresh insert-only template service does not cover this.
+- [ ] Finish physical iPhone development signing/installation after the user confirms setup. Development profile renewal is due 10 November; full distribution verification remains deferred.
+
+This refines existing checkpoints; bars remain unchanged. Continue daily-user organization/templates/planning improvements before broad advanced migration acceptance.
