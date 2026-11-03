@@ -786,3 +786,64 @@ extension TeamTaskBatchTests {
         XCTAssertEqual(snapshot.pending, [broken])
     }
 }
+
+extension TeamTaskBatchTests {
+    @MainActor func testTransientTaskWriteRepliesExplainUncertaintyAndRetryFrozenRequest() async throws {
+        let (selection, _) = try selectionOutcome(), api = try selectionBackend(selection)
+        let original = selection.original, encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let bytes = try encoder.encode(original)
+        var sent: [[String: JSON]] = []
+        defer { BatchHTTP.handler = nil }
+        for status in [408, 429, 500, 502, 503, 504] {
+            BatchHTTP.handler = { request, peer in
+                sent.append(try! TaskfoldJSONDecoder().decode([String: JSON].self, from: request.httpBody!))
+                let response = status == 502 ? "<html>private gateway details</html>" : "{\"error\":\"private provider details\"}"
+                peer.finish(Data(response.utf8), status: status)
+            }
+            do { _ = try await api.send(original); XCTFail("Unconfirmed write must not be acknowledged") }
+            catch {
+                XCTAssertTrue(error is SavedTaskWriteUnconfirmed)
+                XCTAssertEqual(SyncStatus.failureMessage(error), "Sync couldn’t be confirmed. Your changes are saved on this device. Try syncing again.")
+                XCTAssertFalse(error.localizedDescription.contains("private"))
+            }
+        }
+        XCTAssertEqual(sent.count, 6, "No automatic replacement or fallback write")
+        XCTAssertTrue(sent.dropFirst().allSatisfy { $0 == sent[0] })
+        XCTAssertEqual(try encoder.encode(original), bytes)
+        let request = selection.body
+        let items = request["items"]!.list.map { value -> JSON in
+            .object(Dictionary(uniqueKeysWithValues: ["task_id", "project_id", "task_generation", "request_id"].map { ($0,value.object[$0]!) }))
+        }
+        let reply: [String: JSON] = ["protocol":.number(1),"account":.string(original.teamTaskBatch!.account),"team_id":request["team_id"]!,"request_id":request["request_id"]!,"operation":.string("restore"),"restores":request["restores"]!,"items":.array(items),"replayed":.bool(true),"task_type_lifecycle_protocol":.number(1)]
+        BatchHTTP.handler = { request, peer in
+            sent.append(try! TaskfoldJSONDecoder().decode([String: JSON].self, from: request.httpBody!))
+            peer.finish(try! TaskfoldJSONEncoder().encode(reply))
+        }
+        let confirmed = try await api.send(original)
+        XCTAssertNil(confirmed); XCTAssertEqual(sent.count, 7); XCTAssertEqual(sent.first, sent.last)
+    }
+    @MainActor func testExplicitServiceRefusalsKeepTheirMeaningDespiteTransientHTTPStatus() async throws {
+        let (selection, _) = try selectionOutcome(), api = try selectionBackend(selection)
+        defer { BatchHTTP.handler = nil }
+        for (code, status) in [("PT503",503),("PT409",409),("PT412",412),("42501",403),("22023",400),("28000",400)] {
+            BatchHTTP.handler = { _, peer in peer.finish(Data("{\"code\":\"\(code)\",\"message\":\"private refusal detail\"}".utf8), status: status) }
+            do { _ = try await api.send(selection.original); XCTFail("Explicit refusal must not acknowledge") }
+            catch {
+                XCTAssertFalse(error is SavedTaskWriteUnconfirmed)
+                XCTAssertFalse(error.localizedDescription.contains("private"))
+                if code == "28000" { XCTAssertTrue(error is AccountSessionAuthorizationRequired) }
+                if code == "PT412" { XCTAssertTrue(error is TeamAudioRestoreClosed) }
+            }
+        }
+    }
+    @MainActor func testReadFailureAndMalformedSuccessNeverBecomeUnconfirmedTaskWrites() async throws {
+        let (selection, _) = try selectionOutcome(), api = try selectionBackend(selection)
+        defer { BatchHTTP.handler = nil }
+        BatchHTTP.handler = { _, peer in peer.finish(Data("{\"error\":\"temporary\"}".utf8), status: 503) }
+        do { _ = try await api.teamAudioRestoreSelectionRecovery(selection, action: .inspect); XCTFail("Read must fail") }
+        catch { XCTAssertFalse(error is SavedTaskWriteUnconfirmed) }
+        BatchHTTP.handler = { _, peer in peer.finish(Data("{}".utf8)) }
+        do { _ = try await api.send(selection.original); XCTFail("Malformed success must not confirm") }
+        catch { XCTAssertFalse(error is SavedTaskWriteUnconfirmed) }
+    }
+}

@@ -25,3 +25,5 @@ Finish later queued dependencies, ordinary sync-attention/Backups presentation, 
 After retaining the functional v1 report, logs and exported images, its superseded terminal result bundle was removed (2,105,344 allocated bytes). The accepted warm/v2 results and existing build hosts/products/devices are retained.
 
 Follow-up: [later queued work through iPhone Settings recovery](../audio-queued-settings-recovery/README.md) now has scoped native acceptance and fixes single-acknowledgement selection previews. Earlier remaining lists retain their milestone scope; direct sync-attention, normal bootstrap and wider platforms/contexts remain open.
+
+Follow-up: [main-screen recovery and safe retry guidance](../audio-sync-attention-recovery/README.md) now has scoped iPhone acceptance and preserves original requests across manual retries. Earlier remaining lists describe their milestone scope; Mac/iPad, normal bootstrap and wider contexts remain open.

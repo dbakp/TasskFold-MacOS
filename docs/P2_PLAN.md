@@ -7496,3 +7496,11 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Build/sign each owning app and runner. Add only stable Settings identifiers and guarded fixture startup/edit controls; no normal-use gate or production migration changes.
 - [ ] Clarify uncertain-reply retry copy; finish direct sync-attention entry, normal bootstrap, wider queued dependencies, Mac/iPad and accessibility/privacy/genuine integration. Whole-project transfers and mixed media remain.
 - Evidence: [queued Settings recovery](audio-queued-settings-recovery/README.md). Curated bars remain 74; one distinct preview requirement adds a 35th substep.
+
+### 3 November 2026 · Clear uncertain replies and main-screen retry
+
+- [x] Distinguish unstructured transient task-write responses from explicit service decisions; explain saved work and original retry without exposing provider details. Preserve strict success validation, session guards and response limits. 211 focused Core tests pass independently per repo, including three new transport/refusal/read regressions.
+- [x] Accept actual iPhone Today sync-attention recovery and two manual retries, retaining later edits and original requests. 68 SQL/RLS/Storage/native checks pass; final cold rows and available recording bytes remain exact.
+- [x] Use an accented retry icon and full 44-point hit rectangle, disabled while syncing. Verify the upper-padding tap and complete queue recovery. Build/sign each owning app and runner.
+- [ ] Mac/iPad, normal auth/bootstrap, other entry/outcome combinations, wider queued histories, context/accessibility, mixed media, whole-project transfer and genuine integration remain. Existing explicit coded pauses and other status copy need broader review. No normal-use enablement.
+- Evidence: [main-screen recovery and retry](audio-sync-attention-recovery/README.md). Curated totals remain 74/35.

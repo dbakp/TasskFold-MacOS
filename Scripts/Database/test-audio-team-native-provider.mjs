@@ -22,7 +22,7 @@ import { homedir } from "node:os";
 const exec = promisify(execFile);
 const [platform, output] = process.argv.slice(2);
 assert(
-  ["service", "ios", "ipad", "ios-expired", "ios-recorded", "ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued"].includes(platform) &&
+  ["service", "ios", "ipad", "ios-expired", "ios-recorded", "ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued", "ios-selection-attention"].includes(platform) &&
     output?.startsWith("/tmp/taskfold-") && output.endsWith(".json"),
 );
 const account = "ec240000-0000-4000-8000-000000000001",
@@ -33,9 +33,10 @@ const account = "ec240000-0000-4000-8000-000000000001",
   generation = "ec240000-0000-4000-8000-000000000071";
 const expiredRecovery = platform === "ios-expired";
 const recordedRecovery = platform === "ios-recorded";
-const queuedSelectionRecovery = platform === "ios-selection-queued";
+const attentionSelectionRecovery = platform === "ios-selection-attention";
+const queuedSelectionRecovery = ["ios-selection-queued", "ios-selection-attention"].includes(platform);
 const warmSelectionRecovery = platform === "ios-selection-warm", recordedSelectionRecovery = platform === "ios-selection-recorded";
-const selectionRecovery = ["ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued"].includes(platform), selectionPeer = "ec240000-0000-4000-8000-000000000005", selectionEmpty = "ec240000-0000-4000-8000-000000000006";
+const selectionRecovery = ["ios-selection", "ios-selection-warm", "ios-selection-recorded", "ios-selection-queued", "ios-selection-attention"].includes(platform), selectionPeer = "ec240000-0000-4000-8000-000000000005", selectionEmpty = "ec240000-0000-4000-8000-000000000006";
 let selectionOriginals, selectionIntents, selectionMedia;
 const device = platform.startsWith("ios")
     ? "F2ACCCB5-E5B3-426F-B962-955A113D4EF4"
@@ -350,7 +351,7 @@ try {
     await writeFile(configPath, configText, { mode: 0o600, flag: "wx" });
     const result = output.replace(/\.json$/, ".xcresult"),
       log = output.replace(/\.json$/, ".log"),
-      test = queuedSelectionRecovery ? "testTeamRecordingNativeSelectionQueuedRecoveryFromSettings" : warmSelectionRecovery ? "testTeamRecordingNativeSelectionWarmHistory" : recordedSelectionRecovery ? "testTeamRecordingNativeSelectionRecordedRecovery" : selectionRecovery ? "testTeamRecordingNativeSelectionRecovery" : expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : recordedRecovery ? "testTeamRecordingNativeRecordedRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
+      test = attentionSelectionRecovery ? "testTeamRecordingNativeSelectionRecoveryFromSyncAttention" : queuedSelectionRecovery ? "testTeamRecordingNativeSelectionQueuedRecoveryFromSettings" : warmSelectionRecovery ? "testTeamRecordingNativeSelectionWarmHistory" : recordedSelectionRecovery ? "testTeamRecordingNativeSelectionRecordedRecovery" : selectionRecovery ? "testTeamRecordingNativeSelectionRecovery" : expiredRecovery ? "testTeamRecordingNativeExpiredRecovery" : recordedRecovery ? "testTeamRecordingNativeRecordedRecovery" : "testTeamRecordingNativeServiceRecoveryDownloadAndRemoval";
     const command = [
       "-project",
       "/tmp/taskfold-owner-review-ios-host/Taskfold.xcodeproj",

@@ -16,6 +16,12 @@ struct AccountSessionAuthorizationRequired: LocalizedError {
     var errorDescription: String? { "Sign in again to continue." }
 }
 
+/// A transient response without a service decision cannot establish whether a
+/// durable task write applied. Keep the original request for idempotent retry.
+struct SavedTaskWriteUnconfirmed: LocalizedError, Sendable {
+    var errorDescription: String? { "This change couldn’t be confirmed. Try again." }
+}
+
 /// An explicit sign-in can renew only this account, server and session incarnation.
 struct AccountReauthentication: Identifiable, Sendable {
     let id = UUID()
@@ -45,6 +51,9 @@ enum SyncStatus {
         return Presentation(title: "Waiting to sync", symbol: "icloud")
     }
     static func failureMessage(_ error: Error) -> String {
+        if error is SavedTaskWriteUnconfirmed {
+            return "Sync couldn’t be confirmed. Your changes are saved on this device. Try syncing again."
+        }
         if error is AccountSessionAuthorizationRequired {
             return "Sign in again to sync. Your changes are saved on this device."
         }
@@ -382,6 +391,13 @@ final class Backend: NSObject {
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             let error = (try? TaskfoldJSONDecoder().decode(Record.self, from: data)) ?? Record()
             let status = (response as? HTTPURLResponse)?.statusCode
+            let durableTaskWrite = method == "POST" && ["/rest/v1/rpc/taskfold_edit_team_task", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_complete_team_task", "/rest/v1/rpc/taskfold_complete_team_tasks"].contains(path)
+            // Preserve explicit service refusals, session gates and conflicts.
+            // Gateway timeouts/overload can lose a committed reply; never turn
+            // their unstructured response into an instruction to edit the task.
+            if durableTaskWrite, let status, [408, 429].contains(status) || (500...599).contains(status), error.string("code").isEmpty {
+                throw SavedTaskWriteUnconfirmed()
+            }
             if ["/rest/v1/rpc/taskfold_review_team_completion_batch", "/rest/v1/rpc/taskfold_cancel_team_completion_batch"].contains(path) {
                 if status == 401 || error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
                 throw TeamTaskBatch.Review.invalid

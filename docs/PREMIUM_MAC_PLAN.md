@@ -10501,3 +10501,9 @@ The cache audit corrected signed-in shared-file tests that had read an unrelated
 - [x] Own acknowledgement projection for valid queued non-completion selection members. Newer edits/deletion visibility survive, server generations stay guarded and complete requests remain unchanged. 208 owning Core checks and the current app/runner build/signatures pass.
 - [x] Record iPhone-owned Settings presentation and later-queue acceptance: 68 checks against actual local SQL/RLS/Storage, two lost replies and cold retries. Mac presentation/runtime is separate.
 - [ ] Direct Mac entry, wider queued histories, context/accessibility/privacy and genuine integration remain. No normal-use enablement. See [scope](audio-queued-settings-recovery/README.md).
+
+### 3 November 2026 · Explain interrupted task replies safely
+
+- [x] Own unconfirmed task-write classification and retry-specific saved-work copy while explicit service decisions remain unchanged. 211 owning Core tests and current app/runner build/signatures pass.
+- [x] Record iPhone-owned main-screen recovery/manual-retry acceptance: 68 actual local checks with unchanged requests, later work and media intact. The iPhone action has a verified 44-point hit target and accent retry icon.
+- [ ] Mac native presentation/runtime and wider context/accessibility/genuine integration remain separate; no normal-use activation. See [scope](audio-sync-attention-recovery/README.md).
