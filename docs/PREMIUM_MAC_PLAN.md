@@ -10534,3 +10534,11 @@ The project-transfer review now has typed recording counts and a specific custod
 - [ ] Wire the native explicit review and durable approval sidecar/cold retry. Never fetch a new audience approval silently during retry. Finish changed/expired review and old pending Check/Close decisions, then native/accessibility/lifecycle and genuine integration acceptance.
 
 [Exact audience proof and remaining work](audio-publication-audience/README.md). Ordinary audio/project-transfer gates stay disabled; whole-project transfers remain unfinished.
+
+### 3 November 2026 · Native audience review and saved approval
+
+- [x] Add explicit server-audience review and separate Publish confirmation in both apps. Persist exact approval beside the frozen request; keep expired proof readable, refuse silent renewal/replaced proof and preserve metadata Check/Close/private copies. Invalidate local access changes without changing private storage ownership.
+- [x] Pass 73 owning client tests and 288 controller checks per repo; both app/runner builds and signatures pass. The owning iOS phone case passes 36 checks at dark Accessibility XXXL: review/Cancel/review/publish, deliberately lost real reply, cold Check and exact original data/approval with one upload.
+- [ ] Accept the separate pending-review screen, saved Resume/expiry/Close, in-process approval-write ambiguity, Mac/iPad runtime, audible accessibility and wider integration/recovery. Whole-project transfers and ordinary-use enablement remain unfinished.
+
+[Exact native audience scope and remaining work](native-audience-approval/README.md). All user deferrals remain.

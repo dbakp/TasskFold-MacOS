@@ -749,10 +749,12 @@ extension TaskfoldMacUITests {
     }
     @MainActor func testAudioOwnerReviewResumeNeedsSeparateConfirmation() throws {
         let voiceWasOn = try ownerVoiceDisabled(); let app = XCUIApplication(); addTeardownBlock { @MainActor in app.terminate(); self.ownerRestoreVoice(voiceWasOn) }; try ownerReviewOpen(app, extra: "--audio-owner-resumable")
-        let resume = app.buttons["audioPendingResume"]; ownerReveal(resume, app); audioPress(resume); audioPress(app.alerts.buttons["Cancel"])
+        XCTAssertFalse(app.buttons["audioPendingResume"].exists, "An old request without approval cannot silently resume")
+        let review = app.buttons["audioPendingAudienceReview"], publish = app.buttons["audioPendingPublishReviewed"]
+        ownerReveal(review, app); audioPress(review); ownerReveal(publish, app); audioPress(publish); audioPress(app.alerts.buttons["Cancel"])
         ownerSaved(app, "Pending · private audio kept", requests: "Checks: 0 · closures: 0 · uploads: 0")
         audioPress(app.buttons["audioOwnerFixtureOpen"]); XCTAssertTrue(app.buttons["audioPendingPlay"].waitForExistence(timeout: 8))
-        ownerReveal(resume, app); audioPress(resume); audioPress(app.alerts.buttons.matching(identifier: "audioPendingConfirm").firstMatch)
+        ownerReveal(review, app); audioPress(review); ownerReveal(publish, app); audioPress(publish); audioPress(app.alerts.buttons.matching(identifier: "audioPendingConfirm").firstMatch)
         ownerReveal(app.buttons["audioPendingRemove"], app)
         ownerSaved(app, "Published · private audio kept", requests: "Checks: 0 · closures: 0 · uploads: 1")
     }

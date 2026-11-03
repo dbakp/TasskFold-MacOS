@@ -41,3 +41,7 @@ bash Scripts/test_core.sh --jobs 2 --filter AudioCommentPublishingTests
 ```
 
 The local SQL fixture owns its resources and uses no hosted credentials. Its optional --export-fixture refreshes only the owning synthetic audience fixture. Run heavy platform checks sequentially and reuse current products.
+
+## Native follow-up
+
+[Native audience review and saved approval](../native-audience-approval/README.md) now implements the explicit UI and durable proof, with bounded owning iPhone acceptance. The separate pending screen and wider runtime/recovery scope remain open; normal gates stay disabled.

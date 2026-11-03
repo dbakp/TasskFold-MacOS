@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Whole-project recording custody",
-  "latest": "A recording approved before a project joins a team now needs fresh audience approval in the local candidate. Both repos pass the service/client checks and builds. Native review and saved approval retry remain to build; normal use stays disabled.",
+  "latest": "Both apps now show who can listen and save the exact approval before sharing. The iPhone passes review, Cancel, one upload with a lost reply, and confirmation after relaunch at the largest text size. Separate pending-request, Mac/iPad and wider recovery checks remain; normal use stays disabled.",
   "next": [
-    "Wire explicit native recording audience review and persist its exact approval beside the frozen request. Cold retry must never silently approve a changed audience. Accept expiry, changed access and exact Check/Close, then native and genuine integration. Keep whole-project transfer completion open.",
+    "Accept the separate Original publications review, saved Resume, expiry and Close. Check approval-write ambiguity, then Mac/iPad and wider accessibility/recovery. Preserve exact original requests and private copies; do not silently renew audience approval. Whole-project transfers remain open.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Signed publication approval now blocks old personal intents after team adoption in local service/client checks. Native explicit review and durable approval retry remain to build, alongside native transfer acceptance and genuine integration. Normal use remains disabled.",
+              "detail": "Explicit audience review and saved approval are implemented in both apps. The iPhone review/Cancel/publish/cold-confirmation journey is verified with local SQL/Storage. Separate pending-request controls, other platforms and wider recovery remain; normal use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -712,6 +712,10 @@
                 {
                   "state": "done",
                   "title": "Publication approval stays bound to its reviewed audience: local service/client verified"
+                },
+                {
+                  "state": "verify",
+                  "title": "Native audience review and saved approval: iPhone main flow verified; pending screen and other platforms remain"
                 },
                 {
                   "state": "build",
@@ -877,7 +881,11 @@
             "project-recording-transfer/database-verification.json",
             "audio-publication-audience/README.md",
             "audio-publication-audience/verification.json",
-            "audio-publication-audience/database-verification.json"
+            "audio-publication-audience/database-verification.json",
+            "native-audience-approval/README.md",
+            "native-audience-approval/verification.json",
+            "native-audience-approval/phone-verification.json",
+            "native-audience-approval/controller-verification.json"
           ],
           "focus": true
         },
@@ -987,7 +995,7 @@
     "ACCOUNT_REMOVAL.md": "2b38035119a58084f74ff23323e3361aec1e480d6efe7a5212fe92fb12a71364",
     "P0_PROGRESS.md": "b9e12cd09e3cb31f3cf657fb10d4719e45aab2cf674a316520da2932c1d8f167",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "5563b2165e515b5b532abfd56ec747a8a9e359da1e75e788e5eca2a35428c2e6",
+    "P2_PLAN.md": "36130fcc01f59c9db9729c395aba1860ad28812828c3d75f039eb13aa21b9d57",
     "PX_CHECKLIST.md": "4f8c5fbf2c6ac2d4210abc01c0574d2f28e642d0a2076a56f615dfae42366141",
     "activity-groups/README.md": "39121a6a24d00edc73905075b4c04a0300ef4a9119ccda0d2c9b10eba375bedc",
     "activity-groups/verification.json": "2394949c0b4d3d41bbc5f6b944f8fee1eb9795df1ec7aa04aa71bf56198d6375",
@@ -1010,7 +1018,7 @@
     "audio-lifecycle-native/verification.json": "0bf743a4d5738e854bace8d282dc06527b3e8acfc5b9b39d9e5b1a2667994f8e",
     "audio-provider-recovery/README.md": "09aa4b4b276abb8729d0fbdea3ad0cde8ce871e1e5c0d5c7ba2b08a7b5ed8e4f",
     "audio-provider-recovery/verification.json": "828589a57e7a3fcd4918e9688d52c8765103f62d84d6429959727929539c6a57",
-    "audio-publication-audience/README.md": "3229c62714f82fff549c5646f6ac82e095b26d575c660d7a9267bb9a1f0f55f4",
+    "audio-publication-audience/README.md": "8105c88dbe4c6b6b69a8aeca3c13387c75861b8eba01c492dea5a19c7517bf2c",
     "audio-publication-audience/database-verification.json": "ecab9991a3659075bff82aff70db356524580a7546e7cc90cac441a93b494d32",
     "audio-publication-audience/verification.json": "d5e8f2791f775e7f1c0e63e9801dc2b73ab066ebcd549ccb272d3e7a7611605a",
     "audio-queued-settings-recovery/README.md": "6453142bf51a5d190567f9f4f25994a6d8be98371c4323f1ea4b74a5a29213b2",
@@ -1107,6 +1115,10 @@
     "mixed-task-completion/verification.json": "7c77ec64ceae3791b438781c7cf88a8dddd720c7c9b64e9391f324b3de8893fe",
     "move-assignment-intent/README.md": "352376e873556d8515d8cc56bdb364f5329407ee4f48183f43c6b3b15dccdec7",
     "move-assignment-intent/verification.json": "41fdb29b7dd2ccd83fd1f931c4a6356bfd7cf73a9e4f43f494c855f8f861984c",
+    "native-audience-approval/README.md": "eff1a35714d460e5e44651997697cb18a34429085d6ad1f46c99599e30fb40b6",
+    "native-audience-approval/controller-verification.json": "941fe8ca06b88e41e7f8b78633683d2da0ebf82a597c0a23d1c172e461a7f210",
+    "native-audience-approval/phone-verification.json": "71292dfcde4e4a2306717549b7b20e4eb047bdb1b443627fc20ae969175181a6",
+    "native-audience-approval/verification.json": "37c74717ddb2a5ed0f51803e72b3fc5d0029185dae7c4587bff433ae4b7e857a",
     "order-activity/README.md": "140bf1dc708445d5c9713f4f9e7e5897507a7397b17f12966ec0f9fbe1f896a6",
     "order-activity/verification.json": "e6c987f9ca69abbe66fd64effe1b14addbda5a52f7c04085d00654dcac2d291b",
     "p0-requirements-audit.json": "168e938a0c83d5c4009c1b69273edb1aad0e2cd33e5af16a6f24b89e7ded9f9e",

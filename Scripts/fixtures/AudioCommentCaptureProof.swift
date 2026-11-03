@@ -168,6 +168,10 @@ final class AudioProofPrejournalGate: @unchecked Sendable {
         let request = AudioCommentDraftRequest(scope: context.scope, title: "Synthetic audio review")
         let owner = try AudioCommentOwner(workspace.account)
         var checks: [String: Bool] = [:]
+        let personalReview = AudioCommentLiveScope(workspace: workspace, target: target, origin: "https://scope.example.invalid", audienceStamp: "personal")
+        let teamReview = AudioCommentLiveScope(workspace: workspace, target: target, origin: "https://scope.example.invalid", audienceStamp: "team-revision-2")
+        checks["publicationAccessChangeInvalidatesSameTaskScope"] = !personalReview.matches(teamReview) && !teamReview.matches(personalReview)
+        checks["publicationAccessStampMatchesOnlyExactBoundary"] = personalReview.matches(personalReview) && !personalReview.matches(.init(workspace: workspace, target: target, origin: "https://scope.example.invalid"))
         func store(_ suffix: String, fault: (@Sendable (AudioCommentVault.Checkpoint) throws -> Void)? = nil) throws -> AudioCommentDraftStorage {
             let folder = root.appendingPathComponent(suffix, isDirectory: true)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
@@ -1464,6 +1468,9 @@ extension AudioControllerProof {
         checks["pendingListFindsOrphanedOriginalWithoutSavedDraft"] = review.entries.count == 1 && initialDrafts.isEmpty
         await review.select(journal)
         checks["pendingReviewPreservesOriginalCaptionAndBytes"] = review.selected?.publication.caption.utf8.elementsEqual(source.caption.utf8) == true && review.selected?.clip?.data == data
+        let reviewedSource = try await review.prepareAudienceSource(journal)
+        checks["pendingAudienceReviewUsesExactOriginalIdentityAndBytes"] = reviewedSource.id == journal.source && reviewedSource.revision == journal.revision && reviewedSource.target == journal.publication.target && reviewedSource.clip.data == data && reviewedSource.caption.utf8.elementsEqual(source.caption.utf8)
+        checks["pendingAudienceReviewDoesNotCreateDraftOrApproval"] = try draftVault.drafts().isEmpty && publicationDisk.journals().first?.approval == nil
         await review.play(); checks["pendingReviewUsesDecodedOriginalForPlayback"] = player.plays == 1 && review.playing
         review.stopPlayback(); checks["pendingStopRevokesDelayedPlayback"] = !review.playing && player.permits.last?() == false
         try await review.keepPrivateCopy(); try await review.keepPrivateCopy()

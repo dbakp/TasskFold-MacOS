@@ -565,6 +565,16 @@ struct AudioCommentNativeFixtureView: View {
         if closing { return .closed(try .init(record: .init(["protocol": .number(1), "intent": .object(publication.record.fields), "state": .string("closed")]), publication: publication)) }
         return .unconfirmed
     }
+    // Synthetic approval only in the reserved DEBUG owner-review harness.
+    func reviewAudioPublication(_ publication: AudioCommentPublication, origin: String, incarnation: UUID) async throws -> AudioCommentPublicationApproval {
+        guard active, ProcessInfo.processInfo.arguments.contains("--audio-owner-resumable"), origin == scope.origin, incarnation == session else { throw AudioCommentFailure.changed }
+        let formatter = ISO8601DateFormatter(); formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return try .init(record: Record(["protocol": .number(1), "account": .string(publication.account.uuidString.lowercased()), "target": .object(publication.target.record.fields), "audience": .object(["kind": .string("personal"), "team_id": .null, "visibility": .string("personal")]), "expires_at": .string(formatter.string(from: Date().addingTimeInterval(600))), "token": .string(String(repeating: "a", count: 64))]), publication: publication)
+    }
+    func publishAudio(_ upload: AudioCommentPending, approval: AudioCommentPublicationApproval, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
+        guard approval.permits(upload.publication) else { throw AudioCommentFailure.changed }
+        return try await publishAudio(upload, origin: origin, incarnation: incarnation)
+    }
     func publishAudio(_ upload: AudioCommentPending, origin: String, incarnation: UUID) async throws -> AudioCommentPublishedReceipt {
         guard active, ProcessInfo.processInfo.arguments.contains("--audio-owner-resumable"), origin == scope.origin, incarnation == session else { throw AudioCommentFailure.changed }
         uploads += 1; return try receipt(upload.publication)
@@ -637,7 +647,7 @@ struct AudioCommentNativeFixtureView: View {
               let original = URLComponents(url: source, resolvingAgainstBaseURL: false), var parts = URLComponents(url: config.url, resolvingAgainstBaseURL: false) else { throw CancellationError() }
         if source.path == "/functions/v1/audio-comments" {
             guard request.httpMethod == "POST", original.queryItems?.count == 1, let action = original.queryItems?.first, action.name == "action",
-                  ["publish", "resolve", "page", "list", "download", "remove"].contains(action.value ?? "") else { throw CancellationError() }
+                  ["publish", "resolve", "page", "list", "download", "remove", "review"].contains(action.value ?? "") else { throw CancellationError() }
         } else {
             guard (request.httpMethod == "GET" && (source.path.hasPrefix("/rest/v1/") || source.path == "/auth/v1/user")) || (request.httpMethod == "POST" && ["/rest/v1/rpc/taskfold_workspace_boundary", "/rest/v1/rpc/taskfold_team_audio_lifecycle_review", "/rest/v1/rpc/taskfold_team_task_lifecycle", "/rest/v1/rpc/taskfold_audio_restore_recovery", "/rest/v1/rpc/taskfold_team_task_batch", "/rest/v1/rpc/taskfold_audio_selection_restore_recovery", "/rest/v1/rpc/taskfold_edit_team_task"].contains(source.path)) else { throw CancellationError() }
         }

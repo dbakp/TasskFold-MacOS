@@ -8,11 +8,12 @@ struct AudioCommentLiveScope: Sendable {
     let workspace: WorkspaceBinding
     let target: AudioCommentTarget
     let origin: String?
-    init(workspace: WorkspaceBinding, target: AudioCommentTarget, origin: String? = nil) { self.workspace = workspace; self.target = target; self.origin = origin }
+    let audienceStamp: String?
+    init(workspace: WorkspaceBinding, target: AudioCommentTarget, origin: String? = nil, audienceStamp: String? = nil) { self.workspace = workspace; self.target = target; self.origin = origin; self.audienceStamp = audienceStamp }
     func matches(_ other: Self) -> Bool {
         let sameOrigin: Bool
         if let origin, let second = other.origin { sameOrigin = origin.utf8.elementsEqual(second.utf8) } else { sameOrigin = origin == nil && other.origin == nil }
-        return sameOrigin && workspace.generation == other.workspace.generation && !workspace.account.isEmpty && workspace.account.utf8.elementsEqual(other.workspace.account.utf8) && target == other.target
+        return audienceStamp == other.audienceStamp && sameOrigin && workspace.generation == other.workspace.generation && !workspace.account.isEmpty && workspace.account.utf8.elementsEqual(other.workspace.account.utf8) && target == other.target
     }
 }
 /// Account library scope deliberately has no synthetic task identity.
@@ -1039,6 +1040,16 @@ final class AudioCommentRecordingFileRead: @unchecked Sendable {
             try player.play(decoded, isCurrent: { [weak self] in self?.accepts(token) == true }, ended: { [weak self] in guard let self, self.accepts(token) else { return }; self.playing = false })
         } catch { if accepts(token) { stopPlayback(); notice = "This publication changed. Reload before playing it." } }
     }
+    /// Revalidate the exact original bytes for an explicit audience review;
+    /// this does not create or replace a saved draft or publication identity.
+    func prepareAudienceSource(_ expected: AudioCommentPublicationJournal) async throws -> AudioCommentSavedDraft {
+        guard isCurrent, !working, selectedIsCurrent(expected), let decoded = validated else { throw AudioCommentFailure.changed }
+        stopPlayback(); working = true; let token = generation
+        defer { if token == generation { working = false } }
+        let value = try await read(expected)
+        guard accepts(token), let clip = value.clip, clip.data == decoded.data, value.isPending else { throw AudioCommentStorageFailure.conflict }
+        return try .init(owner: .init(scope.workspace.account), target: value.publication.target, caption: value.publication.caption, clip: clip, id: value.source, revision: value.revision)
+    }
     func keepPrivateCopy() async throws {
         guard isCurrent, !working, let expected = selected, let decoded = validated else { throw AudioCommentFailure.changed }
         stopPlayback(); working = true; let token = generation
@@ -1195,13 +1206,22 @@ struct AudioCommentConversationRequest: Identifiable {
         guard audioPublishingEnabled, !localMode, signedIn, !workspaceNeedsRepair,
               let scope = audioDraftScope(taskID: target.task.uuidString.lowercased()), scope.target == target,
               UUID(uuidString: scope.workspace.account) != nil, backend.audioPublicationSessionMatches(scope.workspace.account),
-              scope.origin != nil else { return nil }; return scope
+              scope.origin != nil else { return nil }
+        // A cached access boundary is cheap to compare and invalidates displayed
+        // approval on refresh. The server independently fences remote changes.
+        let project = target.project?.uuidString.lowercased() ?? ""
+        let stamp = (nativeConversationTeamCache?.boundary.raw["token"]?.text ?? "") + "\n" + (nativeConversationTeamCache?.knownTeams[project] ?? "personal")
+        return .init(workspace: scope.workspace, target: scope.target, origin: scope.origin, audienceStamp: stamp)
     }
     func audioPublisher(for scope: AudioCommentLiveScope, source: AudioCommentSavedDraft, library: AudioCommentLibraryController) throws -> AudioCommentPublicationFlow {
         guard let current = audioPublishingScope(scope.target), scope.matches(current), let origin = scope.origin,
               let account = UUID(uuidString: scope.workspace.account), source.target == scope.target,
               library.scope.matches(.init(workspace: scope.workspace, origin: scope.origin)), library.publicationSourceIsCurrent(source) else { throw AudioCommentFailure.changed }
-        let root = try audioDraftDirectory(for: scope, taskID: scope.target.task.uuidString.lowercased())
+        // Sharing approval includes an access stamp; private file ownership does
+        // not. Keep the private namespace stable while the live sharing guard
+        // above and in isCurrent continues to compare the full stamped scope.
+        let privateScope = AudioCommentLiveScope(workspace: scope.workspace, target: scope.target, origin: scope.origin)
+        let root = try audioDraftDirectory(for: privateScope, taskID: scope.target.task.uuidString.lowercased())
         let disk = try AudioCommentPublicationDisk(root: root, account: account, origin: origin), incarnation = backend.reminderSessionIncarnation
         return AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: scope.target, retainAudioOnConfirmation: true, publicationConfirmed: { [weak self] in
             await self?.audioChangeConfirmed(scope: .init(workspace: scope.workspace, origin: scope.origin), incarnation: incarnation)

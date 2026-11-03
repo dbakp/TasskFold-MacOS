@@ -124,7 +124,7 @@ export async function createAudioTeamNativeHttp(pg, storage, user, options = {})
       assert.equal([...url.searchParams].length, 1);
       const action = url.searchParams.get("action");
       assert(
-        ["publish", "resolve", "list", "page", "download", "remove"].includes(
+        ["publish", "resolve", "list", "page", "download", "remove", "review"].includes(
           action,
         ),
       );

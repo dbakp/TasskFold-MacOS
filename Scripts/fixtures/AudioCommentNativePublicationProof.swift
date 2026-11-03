@@ -14,7 +14,7 @@ private final class NativePublicationHTTP: URLProtocol {
     override func stopLoading() { operation?.cancel(); forwarding?.invalidateAndCancel() }
     override func startLoading() {
         guard let requestURL = request.url, let requested = URLComponents(url: requestURL, resolvingAgainstBaseURL: false),
-              requested.scheme == "https", requested.host == "native-publication.example.invalid", requested.path == "/functions/v1/audio-comments", let action = requested.queryItems?.first(where: { $0.name == "action" })?.value, ["publish", "list", "page", "download", "remove", "resolve"].contains(action),
+              requested.scheme == "https", requested.host == "native-publication.example.invalid", requested.path == "/functions/v1/audio-comments", let action = requested.queryItems?.first(where: { $0.name == "action" })?.value, ["publish", "list", "page", "download", "remove", "resolve", "review"].contains(action),
               let components = URLComponents(string: Self.endpoint), components.scheme == "http", components.host == "127.0.0.1", components.port != nil,
               let destination = URL(string: Self.endpoint + "/?action=" + action) else { client?.urlProtocol(self, didFailWithError: URLError(.badURL)); return }
         var body = request.httpBody ?? Data()
@@ -57,7 +57,7 @@ private final class NativePublicationHTTP: URLProtocol {
         let source = try AudioCommentSavedDraft(owner: .init(config.string("account")), target: target, caption: config.string("caption"), clip: clip, id: UUID(uuidString: config.string("source"))!, revision: UUID(uuidString: config.string("revision"))!)
         let disk = try AudioCommentPublicationDisk(root: URL(fileURLWithPath: args[1]), account: UUID(uuidString: config.string("account"))!, origin: backend.baseURL)
         let incarnation = backend.reminderSessionIncarnation
-        let flow = AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: target, retainAudioOnConfirmation: config["retain_audio"] == .bool(true), allowsPublishing:config["status_only"] != .bool(true), isCurrent: { backend.session?.user.id == config.string("account") && backend.reminderSessionIncarnation == incarnation })
+        let flow = AudioCommentPublicationFlow(storage: .init(disk: disk), transport: backend, incarnation: incarnation, target: target, retainAudioOnConfirmation: config["retain_audio"] == .bool(true), allowsPublishing:config["status_only"] != .bool(true), requiresAudienceReview: false, isCurrent: { backend.session?.user.id == config.string("account") && backend.reminderSessionIncarnation == incarnation })
         if config["prepare_only"] == .bool(true) {_ = try disk.prepare(source)}
         else {
             do {

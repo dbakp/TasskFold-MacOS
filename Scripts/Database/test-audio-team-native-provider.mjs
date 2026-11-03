@@ -116,6 +116,10 @@ try {
     await migrationSQL("20261102181442_audio_lifecycle_native_review.sql"),
   );
   await pg.raw(await migrationSQL("20261102194929_recording_restore_recovery_fence.sql"));
+  if (platform !== "service") {
+    await pg.raw(await migrationSQL("20261103021256_reviewed_audio_publication_audience.sql"));
+    await pg.raw("update taskfold_private.audio_comment_config set audience_review_enabled=true");
+  }
   if (selectionRecovery) await pg.raw(await migrationSQL("20261102212850_recording_selection_recovery_fence.sql"));
   await loadTaskFileWorkspaceFixture(pg);
   const users = {
@@ -178,7 +182,7 @@ try {
     selectionIntents=[];
     for (const id of [task,selectionPeer]) {
       const row=selectionOriginals.find((x)=>x.id===id), intent={version:1,account,operation_id:randomUUID(),comment_id:randomUUID(),asset_id:randomUUID(),target:{task_id:id,task_generation:row.task_generation,project_id:project},caption:id===task?"Expires with reviewed Undo":"Keep this recording",audio:{version:1,mime_type:"audio/mp4",byte_count:selectionMedia.length,duration_ms:1000,sha256:createHash("sha256").update(selectionMedia).digest("hex")}};
-      const response=await http.audio.call("publish",{intent,audio_base64:selectionMedia.toString("base64")});assert.equal(response.status,200,await response.text());selectionIntents.push(intent);
+      const review=await http.audio.call("review",{intent});assert.equal(review.status,200);const approval=(await review.json()).approval;const response=await http.audio.call("publish",{intent,approval,audio_base64:selectionMedia.toString("base64")});assert.equal(response.status,200,await response.text());selectionIntents.push(intent);
     }
   }
   if (platform === "service") {
