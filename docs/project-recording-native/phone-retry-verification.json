@@ -1,0 +1,61 @@
+{
+  "case": "retry",
+  "nativeTest": "TeamProjectAdoptionUITests/testRecordingReviewedCountsAndColdExactRetry",
+  "nativeSyntheticPeer": true,
+  "integratedSQLGatewayStorage": false,
+  "genuineAuthOrProvider": false,
+  "normalUseEnabled": false,
+  "deployed": false,
+  "preparedPacketSHA256": "68aec6e9bd4a23f3ececc85d7046d7273cea6640b4e53393468ef940fd98106b",
+  "recordingContractSHA256": "627b6d84b0dfbdc258124d73e8e8e171b005cc97f18bf15eb5742d77bc2ff905",
+  "simulatorContentSize": "accessibility-extra-extra-extra-large",
+  "simulatorIncreaseContrast": "disabled",
+  "xcodeExitCode": 0,
+  "nativeSummary": {
+    "devicesAndConfigurations": [
+      {
+        "device": {
+          "architecture": "arm64",
+          "deviceId": "F2ACCCB5-E5B3-426F-B962-955A113D4EF4",
+          "deviceName": "iPhone 18 Pro",
+          "modelName": "iPhone 18 Pro",
+          "osBuildNumber": "24A434",
+          "osVersion": "27.0",
+          "platform": "iOS Simulator"
+        },
+        "expectedFailures": 0,
+        "failedTests": 0,
+        "passedTests": 1,
+        "skippedTests": 0,
+        "testPlanConfiguration": {
+          "configurationId": "1",
+          "configurationName": "Test Scheme Action"
+        }
+      }
+    ],
+    "environmentDescription": "Taskfold \u00b7 Built with macOS 26.6.2",
+    "expectedFailures": 0,
+    "failedTests": 0,
+    "finishTime": 1793688722.555,
+    "passedTests": 1,
+    "result": "Passed",
+    "runtimeWarnings": [],
+    "skippedTests": 0,
+    "startTime": 1793688370.539,
+    "statistics": [],
+    "testFailures": [],
+    "title": "Test - Taskfold",
+    "topInsights": [],
+    "totalTestCount": 1
+  },
+  "exactOriginalCommandRecovered": true,
+  "recordingCounts": {
+    "published": 1,
+    "unfinished": 2
+  },
+  "nativeReviewedCountsAndReviewBackAccepted": true,
+  "nativeColdExactRetryAccepted": true,
+  "nativeDestinationBoundaryAndEmptyQueueVerified": true,
+  "accepted": true,
+  "ownedSimulatorRestored": true
+}

@@ -5,9 +5,9 @@
   "scope": "Both independently owned Apple apps",
   "headline": "The agreed P1 batch is complete. P2 and account-deletion follow-up remain.",
   "focus": "P2 · Whole-project recording custody",
-  "latest": "Both apps now support a separately reviewed choice to stop unfinished recording sends while moving published recordings into a team. Each repo passes 151 local SQL/gateway checks and 83 client tests; both app/runner builds and signatures pass. Native consent/retry and retained/legacy/other-realm policies remain open; normal use stays disabled.",
+  "latest": "Two iPhone cases accept recording consent/reset/cancel and exact cold retry at largest text with a synthetic peer, including accessible counts and the destination cache. Both independent app/runner builds and signatures pass. Mac/iPad runtime, remaining media/realm policies and genuine integration stay open; ordinary use remains disabled.",
   "next": [
-    "Accept the new native move-published/stop-unfinished consent and saved-request recovery. Then implement separately reviewed retained/legacy/other mixed-media policies and realm directions; preserve private files, original requests and explicit audience consent.",
+    "Implement separately reviewed retained/legacy/other mixed recording policies and realm directions. Current iPhone consent/reset/cancel and exact cold retry are accepted with a synthetic peer; accept Mac/iPad native flows and genuine native service integration separately. Preserve private files and exact original requests; do not repeat unchanged phone cases.",
     "Accept Mac existing-history controls and wider phone/tablet new/retired identities, changed lifecycle, stale/account/access, privacy, keyboard/speech/largest-text/contrast/large-library cases. Verify other Files destinations; only observed local Documents is accepted.",
     "Continue historical child-recipient and recurrence/lifecycle histories, then broader legacy/cache/editor migration. Root project/assignee history and preserved-child read-only previews now have scoped local Mac/iPhone/iPad proof; hosted delivery and wider accessibility/account/window cases remain separate.",
     "Continue genuine sign-in/full-schema and new-account/queued-edit file sync, shared audio publishing/removal and broader legacy/media migration. Current iPad dialog/cache reacceptance remains open after an interrupted Simulator run; avoid broad retries against the unchanged runtime condition. Actual account/window/background and Mac runtime/accessibility checks remain separate.",
@@ -655,7 +655,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Both apps implement explicit review and durable approval. Published plus unfinished-send project moves now pass local SQL/client checks with atomic rollback, exact retry and cleanup. Native transfer consent/recovery, retained/legacy/other realms and wider integration remain; ordinary use stays disabled.",
+              "detail": "Both apps place access choices before explicit recording consents and expose count labels/values. The iPhone accepts consent/reset/cancel and exact cold retry at largest text with a synthetic peer. Local SQL/client contracts are separately verified; Mac/iPad runtime, remaining media/realm policies and genuine integration remain. Ordinary use stays disabled.",
               "steps": [
                 {
                   "state": "done",
@@ -707,7 +707,7 @@
                 },
                 {
                   "state": "verify",
-                  "title": "Published and unfinished project sends: local consent, atomic move/stop, cleanup and receipt verified; native acceptance remains"
+                  "title": "Published/unfinished sends: local service contract plus iPhone native consent/cancel/cold retry verified with synthetic peer; Mac/iPad and wider policies remain"
                 },
                 {
                   "state": "done",
@@ -894,7 +894,12 @@
             "pending-approval-boundaries/verification.json",
             "pending-approval-boundaries/phone-verification.json",
             "project-unfinished-recordings/README.md",
-            "project-unfinished-recordings/verification.json"
+            "project-unfinished-recordings/verification.json",
+            "project-recording-native/README.md",
+            "project-recording-native/verification.json",
+            "project-recording-native/failed-attempts.json",
+            "project-recording-native/phone-retry-verification.json",
+            "project-recording-native/phone-consent-verification.json"
           ],
           "focus": true
         },
@@ -1139,10 +1144,15 @@
     "preserving-json/verification.json": "32245580dd9fdd9cc710c036398ed1c8a26e3ba2e156fb8bf721808db242f3b1",
     "project-recording-inventory/README.md": "2db5f9884b77dd997df2488073487f65c910dff5be00ad0755c915fdb5d470bf",
     "project-recording-inventory/verification.json": "c6f022949539647a7ab01548da32baecad0c44de2277226c4b2826c80805bc57",
+    "project-recording-native/README.md": "57bd64705bd3eb3db90e294615063938f57be0934f230532cfbe6d8213b1f882",
+    "project-recording-native/failed-attempts.json": "75a38ac578738cedec13eb21acecb4e03bd7c6d40bc064af34c2d32481cd0e0f",
+    "project-recording-native/phone-consent-verification.json": "834501140dd0ff5bf49ab96889e97f495f37f2dcbba51ea44a9f735c9cb1267d",
+    "project-recording-native/phone-retry-verification.json": "4d3d12511869187dd55064fcadc52088e9be7f078f7ecd467c9867793c63ec63",
+    "project-recording-native/verification.json": "89ed20e5c781b84e99bd1e392fb23dcea6d37c8804bf1c80542e39faaab1e0d1",
     "project-recording-transfer/README.md": "2065ed8bbefcf178a6d2f694a33b92525d0d5c7daabb8c0da2bb952ca6fd56b6",
     "project-recording-transfer/database-verification.json": "60fc26847b6d973597cc892ff272b98d586d863b802de391bcceb9bd390e2f4e",
     "project-recording-transfer/verification.json": "09f44acd38f16ff605702a4936e08b8239dffd2f126d2318325a44a8c97cd301",
-    "project-unfinished-recordings/README.md": "9dd77ebb6b2ba9dab63cb602f30e4a76fb802cd2560fed3f94eff2be7a50f214",
+    "project-unfinished-recordings/README.md": "1abac9c41c9860021cf24d54c7621aa5e77658c7b16695e4a850fa4f1684beac",
     "project-unfinished-recordings/verification.json": "6cd3e38bc265969030e59ba67fc805ae94d294ee51866675374d98bafea75535",
     "publication-approval-recovery/README.md": "773ae234d7e9c6bd404c508c26e65317f2050c6afce8dab53cd598e5929b8564",
     "publication-approval-recovery/controller-verification.json": "8597019e092fae584ecee84b90d33c26898b90388e981bf04f0fd736a30dd027",

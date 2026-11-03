@@ -132,7 +132,7 @@ struct TeamProjectAdoptionView: View {
         Section {
             VStack(alignment: .leading, spacing: 12) {
                 Image(systemName: "folder.badge.person.crop").font(.largeTitle).foregroundStyle(.tint).accessibilityHidden(true)
-                Text("Make room for shared work").font(.title2.weight(.semibold))
+                Text("Make room for shared work").font(.title2.weight(.semibold)).accessibilityIdentifier("projectTransferHeading")
                 Text("Bring a personal project branch into \(name), with its history and details intact.").foregroundStyle(.secondary)
                 Label("Review first. Transfer together.", systemImage: "checkmark.shield").font(.callout)
             }.padding(.vertical, 12).frame(maxWidth: .infinity, alignment: .leading)
@@ -188,6 +188,31 @@ struct TeamProjectAdoptionView: View {
     }
     private func decisions(_ i: TeamProjectAdoptionInspection) -> some View {
         Group {
+            Section("Personal collaborators") {
+                ForEach(i.people) { person in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(person.email ?? "Collaborator \(person.user?.suffix(8) ?? "")").font(.headline)
+                        Text(i.projects.first(where: { $0.id == person.project })?.name ?? "Selected project").font(.caption).foregroundStyle(.secondary)
+                        Picker("Resulting personal grant", selection: Binding<String>(get: { choices[person.decisionID!]?.rawValue ?? "" }, set: { choices[person.decisionID!] = TeamProjectAdoptionDecision.Choice(rawValue: $0) })) {
+                            Text("Choose access…").tag("")
+                            if person.eligible { Text("Keep as editor").tag("editor"); Text("Keep as viewer").tag("viewer") }
+                            Text("Retire personal access").tag("retire")
+                        }.accessibilityIdentifier("transferAccess-\(person.project)-\(person.user!)")
+                        if !person.eligible { Text("Not currently an eligible member of this team. This transfer will not invite them.").font(.footnote).foregroundStyle(.secondary) }
+                    }.padding(.vertical, 4)
+                }
+                if i.people.isEmpty { Text("No accepted personal collaborators need a decision.").foregroundStyle(.secondary) }
+                Text("Retiring a personal grant does not remove access supplied by team visibility or an administrator role. The next step shows the effective access.").font(.footnote).foregroundStyle(.secondary)
+                Text("All \(i.collaborators.count) personal invitation records will close, including pending invitations. No team membership or invitation is created.").font(.footnote).foregroundStyle(.secondary)
+            }
+            if i.hasConnections && i.supportsConnectionPause {
+                Section("Personal connections") {
+                    Toggle("Pause connections for these projects", isOn: $pauseConnections).disabled(preparing).accessibilityIdentifier("pauseProjectConnections")
+                    Text("Email addresses and verified project webhooks stay paused. Unfinished project webhook setups are cancelled. Queued outgoing updates for this work are discarded.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Global webhooks keep their other personal work. Addresses, secrets and endpoints are not moved into the team. A team connection needs separate authorization.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    if i.inflightUpdates > 0 { Label("An update is still sending. Wait a minute, then choose projects again for a fresh review.", systemImage: "clock").font(.footnote).foregroundStyle(.secondary) }
+                }
+            }
             if i.needsRecordingCustody && i.supportedRecordingPolicy != nil {
                 Section("Recording access") {
                     Text("People with access to the destination projects can listen. Previously downloaded copies cannot be recalled.")
@@ -205,31 +230,6 @@ struct TeamProjectAdoptionView: View {
                         }
                     }
                 }
-            }
-            if i.hasConnections && i.supportsConnectionPause {
-                Section("Personal connections") {
-                    Toggle("Pause connections for these projects", isOn: $pauseConnections).disabled(preparing).accessibilityIdentifier("pauseProjectConnections")
-                    Text("Email addresses and verified project webhooks stay paused. Unfinished project webhook setups are cancelled. Queued outgoing updates for this work are discarded.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    Text("Global webhooks keep their other personal work. Addresses, secrets and endpoints are not moved into the team. A team connection needs separate authorization.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    if i.inflightUpdates > 0 { Label("An update is still sending. Wait a minute, then choose projects again for a fresh review.", systemImage: "clock").font(.footnote).foregroundStyle(.secondary) }
-                }
-            }
-            Section("Personal collaborators") {
-                ForEach(i.people) { person in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(person.email ?? "Collaborator \(person.user?.suffix(8) ?? "")").font(.headline)
-                        Text(i.projects.first(where: { $0.id == person.project })?.name ?? "Selected project").font(.caption).foregroundStyle(.secondary)
-                        Picker("Resulting personal grant", selection: Binding<String>(get: { choices[person.decisionID!]?.rawValue ?? "" }, set: { choices[person.decisionID!] = TeamProjectAdoptionDecision.Choice(rawValue: $0) })) {
-                            Text("Choose access…").tag("")
-                            if person.eligible { Text("Keep as editor").tag("editor"); Text("Keep as viewer").tag("viewer") }
-                            Text("Retire personal access").tag("retire")
-                        }.accessibilityIdentifier("transferAccess-\(person.project)-\(person.user!)")
-                        if !person.eligible { Text("Not currently an eligible member of this team. This transfer will not invite them.").font(.footnote).foregroundStyle(.secondary) }
-                    }.padding(.vertical, 4)
-                }
-                if i.people.isEmpty { Text("No accepted personal collaborators need a decision.").foregroundStyle(.secondary) }
-                Text("Retiring a personal grant does not remove access supplied by team visibility or an administrator role. The next step shows the effective access.").font(.footnote).foregroundStyle(.secondary)
-                Text("All \(i.collaborators.count) personal invitation records will close, including pending invitations. No team membership or invitation is created.").font(.footnote).foregroundStyle(.secondary)
             }
             Section { Button("Review the transfer") { Task { await prepareReview(i) } }.disabled(preparing || choices.count != i.people.count || (i.hasConnections && i.supportsConnectionPause && !pauseConnections) || !recordingConsentsMet(i)).accessibilityIdentifier("reviewProjectTransfer"); Button("Back to projects") { resetReview() } }
         }
@@ -269,8 +269,8 @@ struct TeamProjectAdoptionView: View {
             }
             Section {
                 if r.inspection.needsRecordingCustody && r.recordingPolicy == nil { Label("Review recording access before transferring these projects.", systemImage: "waveform").foregroundStyle(.secondary) }
-                if let count = r.recordingCount, count > 0 { LabeledContent("Published recordings moving", value: String(count)).accessibilityIdentifier("projectTransferRecordingSummary") }
-                if let count = r.unfinishedRecordingCount { LabeledContent("Unfinished sends stopping", value: String(count)).accessibilityIdentifier("projectTransferStopRecordingSummary") }
+                if let count = r.recordingCount, count > 0 { recordingCountRow("Published recordings moving", count: count, id: "projectTransferRecordingSummary") }
+                if let count = r.unfinishedRecordingCount { recordingCountRow("Unfinished sends stopping", count: count, id: "projectTransferStopRecordingSummary") }
                 if r.needsFileCustody { Label("Some files need a custody review before this branch can transfer.", systemImage: "paperclip.badge.ellipsis").foregroundStyle(.secondary) }
                 if r.needsIntegrationPause { Label("Personal email or webhook connections need a pause or destination review first.", systemImage: "link.badge.plus").foregroundStyle(.secondary) }
                 if r.inspection.inflightUpdates > 0 { Text("An outgoing update is still finishing. Wait a minute, then refresh the project review.").foregroundStyle(.secondary) }
@@ -286,8 +286,8 @@ struct TeamProjectAdoptionView: View {
             Label("The result needs confirmation", systemImage: "tray.and.arrow.up").font(.headline)
             Text("\(c.projects.count) reviewed projects · \(c.scope.visibility == .private ? "Private" : "Team-visible")")
             Text("Retry sends the exact saved request, even if the review expired or team access changed. Task contents are refreshed separately.").font(.callout).foregroundStyle(.secondary)
-            if let count = c.recordingCount, count > 0 { LabeledContent("Reviewed published recordings", value: String(count)) }
-            if let count = c.unfinishedRecordingCount { LabeledContent("Reviewed unfinished sends to stop", value: String(count)) }
+            if let count = c.recordingCount, count > 0 { recordingCountRow("Reviewed published recordings", count: count, id: "projectTransferSavedRecordingSummary") }
+            if let count = c.unfinishedRecordingCount { recordingCountRow("Reviewed unfinished sends to stop", count: count, id: "projectTransferSavedStopRecordingSummary") }
             if let effects = c.connectionEffects {
                 Text("This saved request includes these connection actions. Retry preserves later changes.").font(.footnote).foregroundStyle(.secondary)
                 connectionEffectRows(effects)
@@ -301,11 +301,17 @@ struct TeamProjectAdoptionView: View {
         Section {
             Label("Projects transferred", systemImage: "checkmark.circle.fill").font(.title2.weight(.semibold)).foregroundStyle(.tint).accessibilityIdentifier("projectTransferSuccess").accessibilityFocused($resultFocused).onAppear { resultFocused = true }
             Text("All \(r.command.projects.count) projects have transferred. Saved work and history are preserved.")
-            if let count = r.command.recordingCount, count > 0 { LabeledContent("Recordings transferred", value: String(count)) }
-            if let count = r.command.unfinishedRecordingCount { LabeledContent("Unfinished sends stopped", value: String(count)) }
+            if let count = r.command.recordingCount, count > 0 { recordingCountRow("Recordings transferred", count: count, id: "projectTransferResultRecordingSummary") }
+            if let count = r.command.unfinishedRecordingCount { recordingCountRow("Unfinished sends stopped", count: count, id: "projectTransferResultStopRecordingSummary") }
             if needsRefresh { Text("The transfer is confirmed. Refresh the workspace to review current access and any preserved drafts.").foregroundStyle(.secondary); if store.accessRecoveryPending { AccessRecoveryBanner() }; Button("Refresh workspace") { Task { preparing = true; needsRefresh = !(await store.refreshAfterProjectTransfer(r)); preparing = false } }.disabled(preparing) }
             else { Text("Your current accessible projects have been refreshed.").foregroundStyle(.secondary) }
         }
+    }
+    private func recordingCountRow(_ title: String, count: Int, id: String) -> some View {
+        LabeledContent(title, value: String(count))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(title).accessibilityValue(String(count))
+            .accessibilityIdentifier(id)
     }
     private func recordingConsentsMet(_ inspection: TeamProjectAdoptionInspection) -> Bool {
         guard inspection.needsRecordingCustody else { return true }

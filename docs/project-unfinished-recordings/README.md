@@ -37,3 +37,7 @@ bash Scripts/test_core.sh --jobs 2 --filter 'TeamProjectAdoptionTests|TeamProjec
 ```
 
 Add `--export-unfinished-fixture` only when deliberately refreshing this repository's captured contract.
+
+## Native consent follow-up
+
+The [native review checkpoint](../project-recording-native/README.md) now accepts two iPhone cases at largest text with a synthetic peer: separate consent/reset/cancel, reviewed counts, Back and exact cold retry. The destination cache/empty queue are independently checked. Both apps order access before consent and expose count labels/values. Mac/iPad native runtime, genuine integrated service acceptance and the other media/realm policies remain; ordinary gates stay disabled.

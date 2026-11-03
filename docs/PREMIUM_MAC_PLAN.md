@@ -10571,3 +10571,11 @@ The project-transfer review now has typed recording counts and a specific custod
 [Exact scope and evidence](project-unfinished-recordings/README.md). Whole-project transfers remain To build.
 
 - [x] Both independently owned app/test-runner products build and pass strict signatures for this stop policy. Native consent/retry remains unaccepted.
+
+### 3 November 2026 · Recording consent order and accessible counts
+
+- [x] Own access-first ordering, then connection/recording consents near Review. Preserve reset on changed access; expose explicit count labels/values in review, saved retry and the result.
+- [x] Pass owning app/test-runner build and strict signatures. The counterpart iPhone accepts two cases at Accessibility XXXL with a synthetic peer: consent/reset/cancel, reviewed counts, Back/reset, lost-reply cold exact retry, result count2 and independently verified destination cache/empty queue.
+- [ ] Native Mac/iPad, audible VoiceOver/wider display/lifecycle/account cases, pending-only/combined connection flows, retained/legacy/other mixed policies, other realms and genuine native integration remain. Ordinary gates are unchanged and disabled.
+
+[Exact scope, source identities and failed-attempt qualifications](project-recording-native/README.md). Unchanged local service/Core suites were not repeated for this view/harness change; counterpart proof is not Mac runtime acceptance.
