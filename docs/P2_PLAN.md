@@ -7578,3 +7578,14 @@ Both owning apps now reuse sorted/outlined project display data in a source/acce
 - [ ] Resolve/review the complete-schema advisor's 14 legacy RLS performance warnings and nonrelocatable pg_net public placement before rollout.
 
 [Evidence and exact limits](full-schema-sync/README.md). API-request replay is not native Store persistence acceptance. No app gate or hosted service was enabled.
+
+
+### 3 November 2026 · Genuine native Store offline recovery
+
+- [x] Run real Auth sign-in and the actual Store queue/read/merge/persist pipeline in both independently built app processes against the complete owning local schema.
+- [x] Save a root description offline, cold reopen its unchanged request, drop an actual successful server reply, cold retry and confirm before clearing the queue.
+- [x] Preserve remote task-title and separate child-record sibling edits, opaque JSON and task generation; cold reopen the final cache offline. Each app: 13 driver checks across five process launches.
+- [x] Close the owned test apps/services and restore the iPhone Simulator state. Both current Debug app/runners build and pass strict signatures.
+- [ ] Finish durable independent child journals, app adoption/legacy/media migration, protected Keychain/TLS and wider native/account/window/background/access/privacy/accessibility contexts. The 15 complete-schema advisor warnings remain open.
+
+[Exact accepted scope and limits](genuine-store-sync/README.md). Test transport routes real replies; session persistence uses a private disposable file. No normal-use gate or hosted deployment changed.

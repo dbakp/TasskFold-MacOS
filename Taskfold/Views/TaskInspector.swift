@@ -1188,7 +1188,7 @@ struct TeamEditorNativeFixtureView: View {
     @State private var draftsPresented = false
     @State private var storageStatus = ""
     var body: some View {
-        if WorkspaceReadNativeFixture.enabled { WorkspaceReadNativeFixtureView() } else if AudioTeamNativeProvider.enabled { AudioTeamNativeFixtureScreen() } else if TaskFileViewerFixture.enabled { TaskFileViewerFixtureScreen() } else if AudioCommentNativeFixture.taskEditorTesting { AudioTaskEditorFixtureScreen() } else {
+        if FullSchemaNativeFixture.enabled { FullSchemaNativeView() } else if WorkspaceReadNativeFixture.enabled { WorkspaceReadNativeFixtureView() } else if AudioTeamNativeProvider.enabled { AudioTeamNativeFixtureScreen() } else if TaskFileViewerFixture.enabled { TaskFileViewerFixtureScreen() } else if AudioCommentNativeFixture.taskEditorTesting { AudioTaskEditorFixtureScreen() } else {
 
         if ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-testing") {
             NavigationStack {

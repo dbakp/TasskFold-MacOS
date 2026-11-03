@@ -1887,7 +1887,8 @@ final class Store {
         #if DEBUG
         // This local-only fixture must never read another app's stored cloud credentials.
         // Keep authenticated test variants and every normal app launch on the existing path.
-        if TeamEditorNativeFixture.enabled { backend = TeamEditorNativeFixture.backend() }
+        if FullSchemaNativeFixture.enabled { backend = FullSchemaNativeFixture.backend() }
+        else if TeamEditorNativeFixture.enabled { backend = TeamEditorNativeFixture.backend() }
         else if AccountRemovalNativeFixture.enabled { backend = AccountRemovalNativeFixture.backend() }
         else if LocationHandoffNativeFixture.enabled { backend = LocationHandoffNativeFixture.backend() }
         else if let bundle = Bundle.main.bundleIdentifier,
@@ -1915,6 +1916,9 @@ final class Store {
         #if DEBUG
         if TeamEditorNativeFixture.enabled { try? TeamRecoveryStorageNativeFixture.restoreIfRequested() }
         #endif
+        #if DEBUG
+        if FullSchemaNativeFixture.enabled { dailyBackupsEnabled=false;online = !FullSchemaNativeNetwork.offline }
+        #endif
         if signedIn { load() } else { publishWidgetSnapshot() }
         #if DEBUG
         prepareTeamEditorNativeFixture()
@@ -1928,6 +1932,9 @@ final class Store {
         #endif
         monitor.pathUpdateHandler = { [weak self] path in
             Task { @MainActor in
+                #if DEBUG
+                if FullSchemaNativeFixture.enabled,FullSchemaNativeNetwork.offline {self?.online=false;return}
+                #endif
                 self?.online = path.status == .satisfied
                 if path.status == .satisfied { await self?.refreshRemoteReminderRegistration(); await self?.sync() }
             }
@@ -3085,7 +3092,7 @@ final class Store {
         #if DEBUG
         if ChildFieldNativeIdentity.enabled { try? childFieldNativeRefresh(); return }
         if PersonalHeadingNativePeer.enabled, ProcessInfo.processInfo.arguments.contains("--workflow-commit-scale") { return }
-        if (TeamEditorNativeFixture.enabled && !TaskFileNativeProviderFixture.workspaceTesting && !AudioTeamNativeProvider.enabled && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
+        if (TeamEditorNativeFixture.enabled && !FullSchemaNativeFixture.enabled && !TaskFileNativeProviderFixture.workspaceTesting && !AudioTeamNativeProvider.enabled && !PersonalHeadingNativePeer.enabled && !ProcessInfo.processInfo.arguments.contains("--team-batch-recovery-blocked-sync")) || LocationHandoffNativeFixture.enabled { return }
         #endif
         guard workspaceCacheDecoded else {notice="Your saved workspace needs recovery before sync can continue. Its original file is kept.";return}
         consumeWidgetCompletions()
@@ -5257,7 +5264,7 @@ private final class TeamEditorNoNetwork: URLProtocol, @unchecked Sendable {
 }
 extension Store {
     private func prepareTeamEditorNativeFixture() {
-        if ChildFieldNativeIdentity.enabled { return }
+        if FullSchemaNativeFixture.enabled || ChildFieldNativeIdentity.enabled { return }
         guard TeamEditorNativeFixture.enabled else { return }
         if ProjectAdoptionNativeFixture.enabled { prepareProjectAdoptionNativeFixture(); return }
         dailyBackupsEnabled = false
@@ -6765,6 +6772,58 @@ extension Store {
     }
     func templateLibraryReadFixtureVisibility(_ readable:Bool) {
         guard WorkspaceReadNativeFixture.templateLibrary else{return};workspaceCacheReadable=readable
+    }
+}
+#endif
+
+#if DEBUG
+extension Store {
+    private func fullSchemaPendingFingerprint()throws->String {
+        let json=try JSONSerialization.jsonObject(with:TaskfoldJSONEncoder().encode(snapshot.pending))
+        return SHA256.hash(data:try JSONSerialization.data(withJSONObject:json,options:[.sortedKeys])).map{String(format:"%02x",$0)}.joined()
+    }
+    private func fullSchemaSyncSettled() async throws {
+        let deadline=ContinuousClock.now.advanced(by:.seconds(45))
+        while syncing {guard ContinuousClock.now<deadline else{throw AppFailure(message:"Existing Store sync did not settle")};try await Task.sleep(for:.milliseconds(100))}
+        await sync()
+        while syncing {guard ContinuousClock.now<deadline else{throw AppFailure(message:"Store sync did not settle")};try await Task.sleep(for:.milliseconds(100))}
+    }
+    func writeFullSchemaNativeFailure(_ error:Error)throws {
+        let c=try FullSchemaNativeFixture.configuration()
+        let report:[String:JSON]=["accepted":.bool(false),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(FullSchemaNativeFixture.phase),"message":.string(error.localizedDescription),"notice":.string(notice ?? ""),"pending":.number(Double(snapshot.pending.count))]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(FullSchemaNativeFixture.phase+".json"),options:.atomic)
+    }
+    func runFullSchemaNativePhase() async throws {
+        guard FullSchemaNativeFixture.enabled else{throw CancellationError()}
+        let c=try FullSchemaNativeFixture.configuration(),phase=FullSchemaNativeFixture.phase
+        dailyBackupsEnabled=false
+        if phase=="initial" {
+            guard try await backend.signIn(email:c.email,password:c.password,signup:false) else{throw AppFailure(message:"Genuine sign-in did not return a session")}
+            await authenticated();online=true;try await fullSchemaSyncSettled()
+        }else {
+            guard backend.session?.user.id==c.account,signedIn,!localMode else{throw AppFailure(message:"Genuine saved session was not reopened")}
+            online=false
+        }
+        guard userID==c.account,let task=record("tasks",id:c.task) else{throw AppFailure(message:"Store did not read the genuine account task. "+(notice ?? ""))}
+        if phase=="queue" {
+            var edited=task;edited["description"] = .string("Saved offline by the actual Store")
+            guard save("tasks",edited,baseline:task,applyReminderDefaults:false) else{throw AppFailure(message:error ?? "Offline save failed")}
+        }
+        if phase=="loss" || phase=="replay" {
+            guard snapshot.pending.count==1,try fullSchemaPendingFingerprint()==c.queuedFingerprint else{throw AppFailure(message:"The cold queue differs from the original saved request")}
+            if phase=="loss" {FullSchemaNativeNetwork.armDrop()}
+            FullSchemaNativeNetwork.offline=false;online=true;try await fullSchemaSyncSettled()
+            if phase=="loss" {FullSchemaNativeNetwork.offline=true;online=false;guard FullSchemaNativeNetwork.dropped==1,snapshot.pending.count==1,try fullSchemaPendingFingerprint()==c.queuedFingerprint else{throw AppFailure(message:"The lost response did not preserve the exact original queue")}}
+        }
+        let disk=try TaskfoldJSONDecoder().decode(Snapshot.self,from:Data(contentsOf:cacheURL))
+        guard disk==snapshot else{throw AppFailure(message:"Store memory and its actual account cache differ")}
+        if phase=="initial" {guard snapshot.pending.isEmpty,profile.string("user_id")==c.account else{throw AppFailure(message:"Initial Store migration/sync did not finish. "+(notice ?? ""))}}
+        if phase=="queue" {guard snapshot.pending.count==1,record("tasks",id:c.task)?.string("description")=="Saved offline by the actual Store" else{throw AppFailure(message:"Offline edit was not durably queued")}}
+        if phase=="replay" || phase=="verify" {
+            guard snapshot.pending.isEmpty,let saved=record("tasks",id:c.task),saved.title=="Changed remotely while closed",saved.string("description")=="Saved offline by the actual Store",saved["subtasks"].list.contains(where:{$0.object["id"]?.text==c.sibling && $0.object["title"]?.text=="Remote sibling edit"}) else{throw AppFailure(message:"Synced data lost a local or remote edit. "+(notice ?? ""))}
+        }
+        let report:[String:JSON]=["accepted":.bool(true),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(phase),"account":.string(userID),"task":.string(c.task),"pending":.number(Double(snapshot.pending.count)),"pendingFingerprint":.string(try fullSchemaPendingFingerprint()),"diskMatchesStore":.bool(true),"actualStoreSync":.bool(phase=="initial" || phase=="loss" || phase=="replay"),"droppedReplies":.number(Double(FullSchemaNativeNetwork.dropped)),"notice":.string(notice ?? "")]
+        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
     }
 }
 #endif
