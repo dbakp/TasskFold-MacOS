@@ -1,0 +1,30 @@
+{
+  "platform": "ios",
+  "bundle": "com.dbakp.taskfold",
+  "version": "1.4.0",
+  "build": "28",
+  "sourceFingerprint": "092a1879f97251941be61e43baccda35bdbaf0b9979f2a127579abb44c5ff400",
+  "sourceRevision": "e79546de946bab310d80e74f6519f3dcc033fb97",
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": false,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications",
+    "Share-sheet capture: Apple free-account weekly App ID quota"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "archiveSHA256": "6d5baf842bf5c5401aa314e0132b2aa55b5b2174fe2b939df2ee7bb98e2c0093",
+  "archivePayloadVerified": true,
+  "sourceWasDirty": true,
+  "profileExpiresUTC": "2026-11-11T22:18:18Z",
+  "installedBaseline": "1.4.0 (26)",
+  "installationNote": "Prepared only; preserve current phone session and unsaved drafts.",
+  "date": "2026-11-05",
+  "nativeAcceptance": "source-search-native.json and source-search-largest-text.json: exact owning source chooser hashes; isolated synthetic host only"
+}

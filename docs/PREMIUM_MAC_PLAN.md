@@ -10869,3 +10869,6 @@ The installed build-7 process now opens Today and reports Synced after its app-d
 Storage recovery: reclaimed 38.1 GiB of regenerable test-wallpaper/support caches, restoring ~59 GiB free. Both repos now enforce an every-run cleanup procedure and bounded compiler cache; installed Mac build 10 remains usable and real data untouched.
 
 Current daily-use milestone: Mac 1.2.0 (10) remains installed/synced. Phone 1.4.0 (26) is now installed with widgets, its actual startup-stack crash fixed, and the user confirms the visible app stays open. Share is omitted only from this phone development variant due to Apple's weekly App ID quota; release source remains strict. End-of-run storage is ~69.7 GiB free, with seven guarded cleanup checks per repo. Separate source-chooser keyboard/toolbar acceptance remains open.
+
+
+5 November: independently owned iPhone source picker acceptance is now complete for the scoped native refresh/save/fresh-run and largest-text dark cases, both with zero runtime warnings. Done stays available during typing; source identity/readability checks are preserved. Final screenshots reviewed. Mac build 10 remains unchanged and usable. Separate full starter save/run, broader Px and agreed deferrals remain. See P2_PLAN.md and source-search evidence.

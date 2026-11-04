@@ -1,13 +1,13 @@
 {
   "schema": 1,
-  "updated": "2026-11-04",
+  "updated": "2026-11-05",
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Mac and iPhone daily-use apps installed; startup fix confirmed",
-  "latest": "Mac 1.2.0 (10) is installed and synced. iPhone 1.4.0 (26) is installed with widgets; the actual startup-stack crash is fixed and the user confirms it stays open. Old test-app local data was backed up before its approved removal. Share capture is omitted only from this phone development variant because Apple’s weekly App ID quota is exhausted; its release target remains intact. Cache cleanup recovered 38.1 GiB; the final audit has about 69.7 GiB free and both retained compiler caches are bounded. Seven cleanup checks pass per repo. Separate iPhone source search/toolbar and starter journeys remain unaccepted; full Px and agreed deferrals remain.",
+  "focus": "Now · iPhone source search accepted; daily-use apps remain available",
+  "latest": "Mac 1.2.0 (10) and iPhone 1.4.0 (26) remain installed; normal phone startup is human-confirmed. The iPhone source picker now keeps Done available during search. Two focused native cases accept refresh, workspace hiding/return, explicit save/fresh run and largest-text dark selection/cancel, with zero runtime warnings. Final screenshots are reviewed. Starter save/run remains separate; full Px and agreed deferrals remain. Storage cleanup runs after every test session. Signed phone build 28 is packaged and verified, not installed; build 26 remains uninterrupted. Final storage audit: about 70.5 GiB free, selected compiler caches bounded.",
   "next": [
-    "FIRST: continue the bounded iPhone source search/toolbar fix and starter/source save/run acceptance while the user can use both installed apps. Preserve confirmed normal startup and existing Core/Store proof; do not repeat unchanged broad matrices.",
+    "FIRST: make workflow creation and saving easier to reach; accept the separate starter preview/save/run journey. Preserve the accepted source picker, confirmed normal phone startup and existing Core/Store proof; avoid repeating unchanged broad matrices.",
     "NEXT DAILY-USE UPDATE: address the highest-friction organization, nested editing, ordering and filter interactions; deliver another installable update with a focused change list. Keep end-of-run cleanup and stable cache/device reuse.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
@@ -219,7 +219,7 @@
             {
               "state": "done",
               "title": "Rename and edit saved definitions",
-              "detail": "Template/capture Undo services and scoped actual Mac/iPhone Store proofs remain accepted. Four starters plus contextual source search pass thirteen Core checks per app. Mac source save/run and starter preview/cancel are accepted. Normal phone build 26 is installed and its startup fix is human-confirmed; the separate iPhone source search/toolbar and starter save/run journeys remain open."
+              "detail": "Template/capture Undo services and scoped actual Mac/iPhone Store proofs remain accepted. Four starters plus contextual source search pass thirteen Core checks per app. Mac source save/run and starter preview/cancel are accepted. iPhone source search, live refresh, explicit save/fresh run and largest-text dark dismissal/selection now pass native checks with zero runtime warnings; full starter save/run remains open. Phone build 26 stays installed and startup-confirmed."
             },
             {
               "state": "done",
@@ -237,7 +237,12 @@
             "P1_PLAN.md",
             "daily-use-build/workflow-starters-core.json",
             "daily-use-build/workflow-starters-build.json",
-            "daily-use-build/workflow-starters-storage-cleanup.json"
+            "daily-use-build/workflow-starters-storage-cleanup.json",
+            "daily-use-build/source-search-native.json",
+            "daily-use-build/source-search-largest-text.json",
+            "daily-use-build/source-search-bootstrap.json",
+            "daily-use-build/source-search-package.json",
+            "daily-use-build/source-search-storage.json"
           ],
           "focus": false
         },
@@ -1170,7 +1175,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "33ac7fc6e05fd3c8d1e553819689bdf335e240c2f544c768024acf1221b0a756",
+    "P2_PLAN.md": "cbeacc2fed70588ddc4cca7ce3ccc503ce94d28823ded06abb91cc0b0b590ab2",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1281,6 +1286,11 @@
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
     "daily-use-build/README.md": "be645e7f3ed5b592d3b389a570fd39a5e94c0ba61820054059ae0cc13a93f164",
+    "daily-use-build/source-search-bootstrap.json": "7f0c5805a484ccacd788393eaa7c8c8bb5d54bf00bef4f861d9be63aeb2fdd1b",
+    "daily-use-build/source-search-largest-text.json": "b2ab816410c12e31dec0940df2efb6e5fbb94739da0b0fd5fba7e0bdd8ae5679",
+    "daily-use-build/source-search-native.json": "e22bc8ffbf0500392c113c3ff2e1191f33e8b1ec5a0619631348f552f5e8afdb",
+    "daily-use-build/source-search-package.json": "3d2dfa0bfd4f57c00122ff7062fd6290c05de34021ed2d2be0cec893d3cea2dd",
+    "daily-use-build/source-search-storage.json": "9c11e2d6dd8ae01f3ef5d84eae877578b78dba9f288be250e22880dccd08157a",
     "daily-use-build/verification.json": "2bf3b81a0e8d48a91fff23cc012eae0979061c6f6e13381639caa8a2cd7fc941",
     "daily-use-build/workflow-starters-build.json": "21cd3f9b9135cd4cb21081f726aa9dcefb84be33fb19e56abdc3a54c71a51501",
     "daily-use-build/workflow-starters-core.json": "5b298ba4f27272c50a3ba1d3cca195feab55d01e6ae631094258dac5c4149206",

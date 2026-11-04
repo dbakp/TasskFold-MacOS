@@ -1,0 +1,107 @@
+{
+  "date": "2026-11-05",
+  "finalAudit": {
+    "apply": true,
+    "freeBeforeBytes": 75684237312,
+    "actions": [],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 389804032
+      },
+      {
+        "cache": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-ios",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 373444608
+      }
+    ],
+    "freeAfterBytes": 75683823616,
+    "actualFreeChangeBytes": -413696
+  },
+  "obsoleteResultsCleanup": {
+    "date": "2026-11-05",
+    "freeBeforeBytes": 75411415040,
+    "freeAfterBytes": 75671695360,
+    "retired": [
+      {
+        "path": "/tmp/taskfold-source-native-ios-v4-proof.xcresult",
+        "allocatedBytes": 58793984,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-v5-proof.xcresult",
+        "allocatedBytes": 61448192,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-v6-proof.xcresult",
+        "allocatedBytes": 63770624,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-v7-proof.xcresult",
+        "allocatedBytes": 18317312,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-v8-proof.xcresult",
+        "allocatedBytes": 28114944,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-v9-proof.xcresult",
+        "allocatedBytes": 2838528,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-v10-proof.xcresult",
+        "allocatedBytes": 2818048,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-v11-proof.xcresult",
+        "allocatedBytes": 2834432,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-large-v1-proof.xcresult",
+        "allocatedBytes": 1560576,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-native-ios-large-v2-proof.xcresult",
+        "allocatedBytes": 1478656,
+        "preserved": "summary and full tests tree"
+      },
+      {
+        "path": "/tmp/taskfold-source-ios-v7-attachments",
+        "allocatedBytes": 17903616,
+        "preserved": "superseded screenshot exports; final v3 screenshots retained"
+      },
+      {
+        "path": "/tmp/taskfold-source-ios-v10-attachments",
+        "allocatedBytes": 765952,
+        "preserved": "superseded screenshot exports; final v3 screenshots retained"
+      },
+      {
+        "path": "/tmp/taskfold-source-ios-large-v1-attachments",
+        "allocatedBytes": 557056,
+        "preserved": "superseded screenshot exports; final v3 screenshots retained"
+      },
+      {
+        "path": "/tmp/taskfold-source-ios-large-v2-attachments",
+        "allocatedBytes": 483328,
+        "preserved": "superseded screenshot exports; final v3 screenshots retained"
+      }
+    ],
+    "finalNativeResultsRetained": [
+      "v12",
+      "large-v3"
+    ],
+    "realAppDataRemoved": false
+  },
+  "normalMacLeftRunning": true,
+  "installedPhonePreserved": "1.4.0 (26)",
+  "testSimulatorRestored": "Shutdown"
+}
