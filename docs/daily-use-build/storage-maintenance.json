@@ -15,7 +15,7 @@
   ],
   "currentDeviceSupportPreserved": true,
   "simulatorAppDataPreserved": true,
-  "cleanupSafetyTestsPerRepo": 6,
+  "cleanupSafetyTestsPerRepo": 7,
   "policy": {
     "hardPreflightFloorGiB": 20,
     "pruneCompilerScratchBelowFreeGiB": 30,
@@ -24,5 +24,9 @@
     "dailyBuildCleanupAutomatic": true,
     "wallpaperCleanupOnlyExplicitShutdownDevices": true
   },
-  "historicalAttribution": "No baseline inventory exists for the reported 90 GiB state. Device-support caches predate this work; simulator test use accumulated wallpaper snapshots. Measured volume free-space change is authoritative; directory estimates can share APFS blocks."
+  "historicalAttribution": "No baseline inventory exists for the reported 90 GiB state. Device-support caches predate this work; simulator test use accumulated wallpaper snapshots. Measured volume free-space change is authoritative; directory estimates can share APFS blocks.",
+  "endRunFreeBytes": 74841092096,
+  "endRunSelectedCompilerCacheBytes": 756338688,
+  "unrelatedCompilersDoNotPreventOwnedCleanup": true,
+  "systemFreeSpaceCanChangeIndependently": true
 }

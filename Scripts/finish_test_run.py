@@ -17,8 +17,7 @@ def allocated(path):
 
 def finish(simulators=(), build_caches=(), apply=False):
     report = {'apply': apply, 'freeBeforeBytes': shutil.disk_usage('/tmp').free, 'actions': [], 'skipped': []}
-    running = subprocess.check_output(['ps', '-axo', 'comm='], text=True).splitlines()
-    compiling = any(Path(line.strip()).name in ('xcodebuild', 'swift-frontend', 'clang') for line in running)
+    running = subprocess.check_output(['ps', '-axo', 'command='], text=True).splitlines()
     inventory = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '--json'], text=True)) if simulators else {'devices': {}}
     states = {d['udid']: d['state'] for rows in inventory['devices'].values() for d in rows}
     devices = Path.home() / 'Library/Developer/CoreSimulator/Devices'
@@ -30,7 +29,7 @@ def finish(simulators=(), build_caches=(), apply=False):
         marked = (cache / 'DailyProject/Taskfold.xcodeproj').is_dir() or any(cache.glob('taskfold-daily-*.json'))
         if not owned or not marked or original.is_symlink():
             raise ValueError('Not a marked Taskfold build cache: ' + str(cache))
-        caches.append(cache)
+        caches.append((cache, {str(cache), str(original.absolute())}))
     for device in simulators:
         if states.get(device) != 'Shutdown':
             report['skipped'].append({'device': device, 'reason': 'Not a known shutdown Simulator'}); continue
@@ -40,7 +39,11 @@ def finish(simulators=(), build_caches=(), apply=False):
                 raise ValueError('Unexpected wallpaper scratch path')
             report['actions'].append({'path': str(cache), 'kind': 'wallpaperScratch', 'allocatedBytes': allocated(cache)})
             if apply: shutil.rmtree(cache)
-    for cache in caches:
+    for cache, aliases in caches:
+        # Another project's compiler must not suppress cleanup indefinitely.
+        # Our builders always pass absolute cache/input paths to Xcode/Swift.
+        compiling = any(line.strip() and Path(line.strip().split(maxsplit=1)[0]).name in ('xcodebuild', 'swift-frontend', 'swiftc', 'clang')
+                        and any(alias in line for alias in aliases) for line in running)
         if compiling or any(line.strip().startswith(str(cache) + '/') and '.app/' in line for line in running):
             report['skipped'].append({'cache': str(cache), 'reason': 'Compiler or cache app still running'}); continue
         candidates = [cache / name for name in ['Build/Intermediates.noindex', 'ModuleCache.noindex', 'SDKStatCaches.noindex', 'Index.noindex']]

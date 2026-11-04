@@ -22,7 +22,7 @@ class CleanupTests(unittest.TestCase):
         with patch.object(module.subprocess,'check_output',return_value=''):
             module.finish(build_caches=[self.cache],apply=False)
         self.assertTrue(self.scratch.exists())
-        with patch.object(module.subprocess,'check_output',return_value='/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild\n'):
+        with patch.object(module.subprocess,'check_output',return_value='/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -derivedDataPath '+str(self.cache)+'\n'):
             r=module.finish(build_caches=[self.cache],apply=True)
         self.assertTrue(self.scratch.exists());self.assertTrue(r['skipped'])
     def test_healthy_small_cache_is_retained(self):
@@ -33,6 +33,10 @@ class CleanupTests(unittest.TestCase):
         (self.scratch/'object.o').unlink();self.scratch.rmdir();outside=self.home/'outside';outside.mkdir();(outside/'data').write_text('keep');self.scratch.symlink_to(outside,target_is_directory=True)
         with patch.object(module.subprocess,'check_output',return_value=''),self.assertRaises(ValueError):module.finish(build_caches=[self.cache],apply=True)
         self.assertEqual((outside/'data').read_text(),'keep')
+    def test_unrelated_compiler_does_not_prevent_owned_cleanup(self):
+        with patch.object(module.subprocess,'check_output',return_value='/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -derivedDataPath /tmp/UnrelatedProject\n'):
+            r=module.finish(build_caches=[self.cache],apply=True)
+        self.assertFalse(self.scratch.exists());self.assertTrue(self.product.exists());self.assertEqual(len(r['actions']),1)
     def test_reject_unmarked_directory(self):
         p=self.home/'important';p.mkdir();(p/'data').write_text('keep')
         with patch.object(module.subprocess,'check_output',return_value=''),self.assertRaises(ValueError):module.finish(build_caches=[p],apply=True)

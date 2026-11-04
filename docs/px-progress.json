@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · 38 GiB recovered; Mac update installed; iPhone check continuing",
-  "latest": "Recovered 38.1 GiB of regenerable simulator wallpaper and older device-support caches; free storage returned to about 59 GiB. Apps, task data and simulator identities are preserved. Every-run cleanup is required in both repos; daily builds automatically bound completed compiler caches, with six safety checks per repo. Mac build 10 is installed and Synced, with nine isolated source/starter checks accepted. Thirteen focused Core checks pass per app. The corrected single iPhone source test is rebuilding/rerunning now that storage is restored. Full Px gaps and agreed deferrals remain.",
+  "focus": "Now · Mac and iPhone daily-use apps installed; startup fix confirmed",
+  "latest": "Mac 1.2.0 (10) is installed and synced. iPhone 1.4.0 (26) is installed with widgets; the actual startup-stack crash is fixed and the user confirms it stays open. Old test-app local data was backed up before its approved removal. Share capture is omitted only from this phone development variant because Apple’s weekly App ID quota is exhausted; its release target remains intact. Cache cleanup recovered 38.1 GiB; the final audit has about 69.7 GiB free and both retained compiler caches are bounded. Seven cleanup checks pass per repo. Separate iPhone source search/toolbar and starter journeys remain unaccepted; full Px and agreed deferrals remain.",
   "next": [
-    "FIRST: finish the corrected single iPhone source journey and package ordinary Simulator build 25, then run end-of-run cleanup again. Mac build 10 is installed and synced; preserve that acceptance. Physical signing/installation remains unverified; Mac profile renewal is due 10 November.",
-    "NEXT DAILY-USE UPDATE: finish starter save/run native acceptance, then address the highest-friction organization, nested editing, ordering and filter interactions. Preserve passing Core and capture/service checks instead of repeating unchanged matrices.",
-    "Continue wider source/library rendering and lifecycle acceptance separately. Contextual source search is implemented, Core-tested in both apps and natively accepted on Mac; one scoped iPhone rerun remains.",
+    "FIRST: continue the bounded iPhone source search/toolbar fix and starter/source save/run acceptance while the user can use both installed apps. Preserve confirmed normal startup and existing Core/Store proof; do not repeat unchanged broad matrices.",
+    "NEXT DAILY-USE UPDATE: address the highest-friction organization, nested editing, ordering and filter interactions; deliver another installable update with a focused change list. Keep end-of-run cleanup and stable cache/device reuse.",
+    "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
     "Continue wider catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.",
@@ -219,7 +219,7 @@
             {
               "state": "done",
               "title": "Rename and edit saved definitions",
-              "detail": "Template/capture Undo services are live, with scoped actual Mac/iPhone Store capture/run/Undo proof. Four starter workflows have five Core checks per repo; contextual source selection adds eight more. Mac build 10 is installed and synced with isolated source selection/save/run and starter preview/cancel acceptance. iPhone source UI compiles; corrected automation rerun/build 25 and wider starter/physical installation checks remain pending."
+              "detail": "Template/capture Undo services and scoped actual Mac/iPhone Store proofs remain accepted. Four starters plus contextual source search pass thirteen Core checks per app. Mac source save/run and starter preview/cancel are accepted. Normal phone build 26 is installed and its startup fix is human-confirmed; the separate iPhone source search/toolbar and starter save/run journeys remain open."
             },
             {
               "state": "done",
@@ -1170,7 +1170,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "79d5c1510911585740baa02c5a0e54b22244d1d2665f05bc224e354bdf9562ca",
+    "P2_PLAN.md": "33ac7fc6e05fd3c8d1e553819689bdf335e240c2f544c768024acf1221b0a756",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",

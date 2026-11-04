@@ -15,8 +15,14 @@
     "Superseded Mac candidate archives 8 and 9; receipts retained"
   ],
   "installedMacAndRollbackRetained": true,
-  "latestFreeGiB": 59.2,
+  "latestFreeGiB": 69.7,
   "heavyBuildsPausedBelowFloor": false,
   "capacityCleanupActualFreeIncreaseBytes": 40875786240,
-  "capacityCleanupEvidence": "storage-maintenance.json"
+  "capacityCleanupEvidence": "storage-maintenance.json",
+  "endRunAudit": "end-run-storage.json",
+  "supersededIOSPrototypeArchivesRetired": [
+    "23",
+    "24"
+  ],
+  "verifiedCurrentPhoneArchive": "26"
 }

@@ -3,21 +3,25 @@
   "syntheticOnly": true,
   "accepted": false,
   "productionChooserCompiled": true,
-  "buildEvidence": "/tmp/taskfold-source-ui-build-ios-v2.json",
+  "buildEvidence": "/tmp/taskfold-source-ui-build-ios-v4.json",
   "nativeRunExitCode": 65,
-  "nativeRun": "/tmp/taskfold-source-native-ios-v4-proof.json",
-  "failure": "Automation selected Find a template behind the source sheet instead of Find a source or project; keyboard focus was unavailable.",
+  "nativeRun": "/tmp/taskfold-source-native-ios-v6-proof.json",
+  "failure": "The correct source search accepts text and renders No Results, but the Choose a source navigation bar does not return while the test leaves search; assertion failed before cancellation/save/run.",
   "testLocatorCorrected": true,
-  "correctedLocatorRecompiledOrRerun": false,
+  "correctedLocatorRecompiledOrRerun": true,
   "ownedSimulatorRestored": true,
   "nextNormalSimulatorBuild": "25",
   "nextNormalSimulatorBuildProduced": false,
-  "reasonPending": "Storage below the required 20 GiB floor after completed generated caches/products were retired.",
+  "reasonPending": "Source search/toolbar transition still needs scoped acceptance; phone installation and startup crash fix were prioritized as requested.",
   "sourceSHA256": {
     "Taskfold/Core/ProjectWorkflows.swift": "46eb90a97a57a108fadb813b088925003a0a07ef8fb1e61d35a24e120274c0a0",
     "Taskfold/Views/WorkflowViews.swift": "6bcad797b5811bc54037ab72d4013ac499583b7ebff25d02b90405100121c6d0",
-    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "3ff2aad34f59f0e150e60d0853a6c113301af092b60aa4dd07013a197fd34492"
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "ab131cf4e4b9f5244b6636af051124ab5202069a3aff2298e8c636da340bc535"
   },
   "genuineAuthOrProvider": false,
-  "hardwareOrLargeLibraryRenderingAccepted": false
+  "hardwareOrLargeLibraryRenderingAccepted": false,
+  "cleanupApplied": true,
+  "ordinaryPhoneBuildProduced": "26",
+  "ordinaryPhoneStartupAccepted": true,
+  "sourceChooserNativeJourneyAccepted": false
 }
