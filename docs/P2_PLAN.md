@@ -7745,3 +7745,20 @@ No completion-date estimate is asserted by this reordering. The next externally 
 - [ ] Finish physical iPhone development signing/installation after the user confirms setup. Development profile renewal is due 10 November; full distribution verification remains deferred.
 
 This refines existing checkpoints; bars remain unchanged. Continue daily-user organization/templates/planning improvements before broad advanced migration acceptance.
+
+
+### 4 November 2026 · Capture Undo implementation and native check
+
+- [x] Implement a separate capture Undo command/capability/route: delete fresh records and restore existing manual order in one checked transaction. Preserve exact retry receipts, later-edit/reorder refusal and Redo. Keep the ordinary template protocol compatible.
+- [x] Verify 60 synthetic PostgreSQL/deployment/rollback/reinstall checks and 36 genuine local Auth/API checks in each repo; all owned runtimes were removed.
+- [x] Use the actual Mac Store test to expose a false “too large” history failure. Preserve workflow PATCH intent through the ordinary order normalizer; retain inverses during Redo. UTC/time spelling checks keep all SQL microseconds distinct. Current Mac Core checks: 39 pass.
+- [x] Complete actual Mac Store capture → Undo → Redo → Undo and a fresh template run/Undo using genuine local Auth/API. Verify original server work/order, saved cache and three distinct receipts; close the host and remove its runtime. Both clients now pass 39 focused checks.
+- [x] Build iOS Simulator 1.4.0 (22) and accept actual Store capture/Undo/Redo/Undo and fresh template run/Undo. Verify its exact archived binary, original server task/order, saved cache and three receipts; close the app/services and restore the Simulator to Shutdown.
+- [ ] Finish physical iPhone development signing/installation after configuration is confirmed.
+- [x] Deploy the focused capture service as `20261104190311_taskfold_capture_workflow_undo`; verify all five function bodies, 66 live column contracts, grants and unchanged policies/triggers. Anonymous routes refuse access; existing security warnings are unchanged. Package Mac 1.2.0 (7), verify its actual ZIP payload and exact accepted native binary.
+- [x] Install Mac build 7 after closing build 6 without an open draft. Verify signature and preserve fresh private app-file safety copy plus rollback archive. No real task test edits or advanced gate changes occurred.
+- [ ] Verify ordinary build-7 startup/sync after the macOS shared widget/capture app-data prompt is approved. TCC logs confirm that prompt; the main thread waits opening shared capture storage. No Keychain failure is inferred.
+
+The full Px backlog and deferrals remain. Curated bars are unchanged. Readable summaries were retained before pruning completed old test results; the five newest bundles and unreadable bundles were kept.
+
+The accepted Mac and Simulator binaries are preserved in verified archives; duplicate products, completed compiler caches and obsolete experimental packages were retired. Symbols are compressed with verified file hashes. Future daily and Core builds request one compiler job. The Mac reported approximately 15 GiB of swap during this work; that is a system measurement, not attribution to one process. No swap files, Docker volumes, real app data or unrelated project jobs were removed.

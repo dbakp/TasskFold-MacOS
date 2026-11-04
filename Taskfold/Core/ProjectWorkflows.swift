@@ -1372,11 +1372,14 @@ struct WorkflowUndoService: Equatable, Sendable, Codable {
     let origin: String
     var supported: Bool { raw["undo_protocol"] == .number(1) }
     var bulk: Bool { raw["bulk_protocol"] == .number(1) }
+    var capture: Bool { raw["capture_protocol"] == .number(1) }
     init(_ raw: [String: JSON], account: String, origin: String) throws {
         guard TeamProjectValue.id(account), raw["protocol"] == .number(1), raw["account"] == .string(account),
               [JSON.number(0), JSON.number(1)].contains(raw["undo_protocol"] ?? .null),
               [JSON.number(0), JSON.number(1)].contains(raw["bulk_protocol"] ?? .null),
               raw["undo_protocol"] == .number(1) || raw["bulk_protocol"] == .number(0),
+              [JSON.number(0), JSON.number(1)].contains(raw["capture_protocol"] ?? .number(0)),
+              raw["capture_protocol"] != .number(1) || raw["undo_protocol"] == .number(1),
               let url = URL(string: origin), url.scheme == "https", url.host != nil,
               url.user == nil, url.password == nil, url.query == nil, url.fragment == nil,
               url.path.isEmpty || url.path == "/", !origin.hasSuffix("/") else { throw TeamProjectValue.invalid }
@@ -1411,13 +1414,24 @@ struct WorkflowUndoServiceUnavailable: Error {}
 /// One durable, atomic Undo for the fresh personal records of a workflow run.
 /// The server checks the complete set before deleting any of it.
 enum WorkflowUndo {
+    /// Redo commits without adding a new UI history entry, but fresh records
+    /// still require a retained inverse, including capture's existing order edits.
+    static func requiresCreationHistory(_ changes: [Mutation]) -> Bool {
+        guard let run = changes.first?.workflowRun else { return false }
+        var inserts = false
+        for change in changes {
+            guard change.workflowRun == run else { return false }
+            if change.method == "POST" { inserts = true }
+            else if change.table != "view_orders" || change.method != "PATCH" { return false }
+        }
+        return inserts
+    }
     /// Preserve the Store's refusal of a new workflow without retained Undo.
     static func missingCreationHistory(_ changes: [Mutation], snapshot: @autoclosure () -> Snapshot, undo: [Mutation]?) -> Bool {
-        guard let run = changes.first?.workflowRun, undo?.isEmpty != false,
-              changes.allSatisfy({ $0.method == "POST" && $0.workflowRun == run }) else { return false }
+        guard undo?.isEmpty != false, requiresCreationHistory(changes) else { return false }
         let tables = snapshot().tables
         var existing: [String: Set<String>] = [:]
-        for change in changes {
+        for change in changes where change.method == "POST" {
             if existing[change.table] == nil {
                 existing[change.table] = Set((tables[change.table] ?? []).map(\.id))
             }
@@ -1427,6 +1441,7 @@ enum WorkflowUndo {
     }
 
     static let table = "_private_workflow_undo"
+    static let captureTable = "_private_capture_undo"
     /// Only ordinary insert-only personal workflow runs can defer presentation.
     /// Validation and sequential snapshot mutation still happen for every row.
     static func creationRun(_ changes: [Mutation]) -> UUID? {
@@ -1447,18 +1462,20 @@ enum WorkflowUndo {
         guard matches(change) else { return true }
         if let service {
             guard let account = change.fields["user_id"]?.text, let origin, service.belongs(account: account, origin: origin), service.supported else { return false }
+            guard change.table != captureTable || service.capture else { return false }
             return (change.fields["items"]?.list.count ?? 0) <= 12000 || service.bulk
         }
-        guard boundary?.raw["personal_workflow_undo_protocol"] == .number(1) else { return false }
+        guard change.table != captureTable, boundary?.raw["personal_workflow_undo_protocol"] == .number(1) else { return false }
         return (change.fields["items"]?.list.count ?? 0) <= 12000 || boundary?.raw["personal_workflow_undo_bulk_protocol"] == .number(1)
     }
     static let maximumResponseBytes = 32_000_000
     static let maximumBytes = 16_800_000
     static let tooLarge = "This workflow is too large to create in one step. Your template is kept and no work was created."
     static let message = "This workflow changed after it was created. Undo was cancelled and your current work was kept."
-    static func matches(_ change: Mutation) -> Bool { change.table == table || change.method == "WORKFLOW_UNDO" }
+    static func matches(_ change: Mutation) -> Bool { [table, captureTable].contains(change.table) || ["WORKFLOW_UNDO", "CAPTURE_UNDO"].contains(change.method) }
     static func items(_ change: Mutation) -> [Mutation]? {
-        guard change.table == table, change.method == "WORKFLOW_UNDO", let run = change.workflowRun,
+        let capture = change.table == captureTable && change.method == "CAPTURE_UNDO"
+        guard (capture || (change.table == table && change.method == "WORKFLOW_UNDO" && change.fields["order_restores"] == nil)), let run = change.workflowRun,
               change.recordID == run.uuidString.lowercased(), case .array(let rows) = change.fields["items"],
               !rows.isEmpty, let owner = change.fields["user_id"]?.text, !owner.isEmpty else { return nil }
         var seen = Set<String>(), result: [Mutation] = []
@@ -1468,6 +1485,23 @@ enum WorkflowUndo {
                   case .object(let base) = raw["base"], base["id"]?.text == id, base["user_id"]?.text == owner,
                   seen.insert(name + ":" + id).inserted else { return nil }
             result.append(Mutation(table: name, recordID: id, method: "DELETE", fields: [:], baseline: base, workflowRun: run))
+        }
+        if capture {
+            guard case .array(let orders) = change.fields["order_restores"], !orders.isEmpty else { return nil }
+            let tasks = Set(result.filter { $0.table == "tasks" }.map(\.recordID))
+            for value in orders {
+                let raw = value.object, id = raw["id"]?.text ?? ""
+                guard id == "scope:inbox" || id.hasPrefix("group:"),
+                      case .object(let after) = raw["base"], case .object(let before) = raw["restore"],
+                      Set(after.keys) == ["id", "user_id", "ids"], Set(before.keys) == Set(after.keys),
+                      after["id"] == .string(id), before["id"] == .string(id),
+                      after["user_id"] == .string(owner), before["user_id"] == .string(owner),
+                      case .array(let afterIDs) = after["ids"], case .array(let beforeIDs) = before["ids"],
+                      afterIDs.allSatisfy({ if case .string = $0 { return true }; return false }),
+                      beforeIDs == afterIDs.filter({ !tasks.contains($0.text) }), beforeIDs != afterIDs,
+                      seen.insert("view_orders:" + id).inserted else { return nil }
+                result.append(Mutation(table: "view_orders", recordID: id, method: "PATCH", fields: before, baseline: after, workflowRun: run))
+            }
         }
         return result
     }
@@ -1576,19 +1610,66 @@ enum WorkflowUndo {
     static func fitsBody(_ change: Mutation) -> Bool { bodyBytes(change).map { $0 <= maximumBytes } ?? false }
     static func deleting(_ changes: [Mutation], snapshot: Snapshot) -> Mutation? {
         guard let run = changes.first?.workflowRun, !changes.isEmpty,
-              changes.allSatisfy({ $0.workflowRun == run && $0.method == "POST" && $0.insertOnly == true && $0.teamTaskScope == nil && $0.teamTaskBatch == nil && $0.teamCompletion == nil }),
+              changes.allSatisfy({ $0.workflowRun == run && ($0.method == "POST" && $0.insertOnly == true || $0.table == "view_orders" && $0.method == "PATCH") && $0.teamTaskScope == nil && $0.teamTaskBatch == nil && $0.teamCompletion == nil }),
               let owner = changes.first?.fields["user_id"]?.text else { return nil }
-        let existing = snapshot.tables.mapValues { Set($0.map(\.id)) }
-        let created = changes.filter { !(existing[$0.table] ?? []).contains($0.recordID) }
+        let existing = snapshot.tables.mapValues { Dictionary($0.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }) }
+        let created = changes.filter { $0.method == "POST" && existing[$0.table]?[$0.recordID] == nil }
         guard !created.isEmpty else { return nil }
-        let command = Mutation(table: table, recordID: run.uuidString.lowercased(), method: "WORKFLOW_UNDO", fields: [
-            "user_id": .string(owner), "items": .array(created.reversed().map { .object(["table": .string($0.table), "id": .string($0.recordID), "base": .object($0.fields)]) })], workflowRun: run)
+        var orders: [JSON] = []
+        for change in changes where change.method == "PATCH" {
+            guard let before = existing["view_orders"]?[change.recordID], before.string("user_id") == owner else { return nil }
+            let old = Dictionary(uniqueKeysWithValues: ["id", "user_id", "ids"].map { ($0, before[$0]) })
+            orders.append(.object(["id": .string(change.recordID), "base": .object(change.fields), "restore": .object(old)]))
+        }
+        var fields: [String: JSON] = ["user_id": .string(owner), "items": .array(created.reversed().map { .object(["table": .string($0.table), "id": .string($0.recordID), "base": .object($0.fields)]) })]
+        if !orders.isEmpty { fields["order_restores"] = .array(orders) }
+        let command = Mutation(table: orders.isEmpty ? table : captureTable, recordID: run.uuidString.lowercased(), method: orders.isEmpty ? "WORKFLOW_UNDO" : "CAPTURE_UNDO", fields: fields, workflowRun: run)
         return items(command) != nil && fitsBody(command) ? command : nil
     }
     static func restoring(_ change: Mutation) -> [Mutation]? {
         items(change)?.reversed().map { item in
-            Mutation(table: item.table, recordID: item.recordID, method: "POST", fields: item.baseline!, insertOnly: true, workflowRun: item.workflowRun)
+            Mutation(table: item.table, recordID: item.recordID, method: item.method == "PATCH" ? "PATCH" : "POST", fields: item.baseline!, baseline: item.method == "PATCH" ? item.fields : nil, insertOnly: item.method == "PATCH" ? nil : true, workflowRun: item.workflowRun)
         }
+    }
+    /// PostgREST spells UTC as +00:00 and time values with seconds. Compare
+    /// those equivalent spellings exactly, including all six SQL fractional digits.
+    /// Every other value remains an exact comparison; the service rechecks typed rows.
+    private static func sameField(_ key: String, _ lhs: JSON, _ rhs: JSON) -> Bool {
+        if lhs == rhs { return true }
+        guard case .string(let a) = lhs, case .string(let b) = rhs else { return false }
+        func fraction(_ text: String) -> String? {
+            let parts = text.split(separator: ".", omittingEmptySubsequences: false)
+            guard parts.count <= 2 else { return nil }
+            let value = parts.count == 2 ? String(parts[1]) : ""
+            guard value.count <= 6, value.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+            return String(parts[0]) + "." + value + String(repeating: "0", count: 6 - value.count)
+        }
+        func utc(_ text: String) -> String? {
+            let body: String
+            if text.hasSuffix("Z") { body = String(text.dropLast()) }
+            else if text.hasSuffix("+00:00") { body = String(text.dropLast(6)) }
+            else { return nil }
+            let bytes = Array(body.utf8), separators: [Int: UInt8] = [4: 45, 7: 45, 10: 84, 13: 58, 16: 58]
+            guard bytes.count >= 19, bytes.count == 19 || bytes[19] == 46,
+                  (0..<19).allSatisfy({ index in separators[index].map { bytes[index] == $0 } ?? (48...57).contains(bytes[index]) }) else { return nil }
+            return fraction(body)
+        }
+        if ["created_at", "updated_at", "scheduled_at", "completed_at"].contains(key) {
+            guard let value = utc(a) else { return false }; return value == utc(b)
+        }
+        if key == "due_time" {
+            func clock(_ value: String) -> String? {
+                let parts = value.split(separator: ":", omittingEmptySubsequences: false)
+                guard (2...3).contains(parts.count), parts[0].count == 2, parts[1].count == 2,
+                      let hour = Int(parts[0]), let minute = Int(parts[1]), (0...23).contains(hour), (0...59).contains(minute) else { return nil }
+                let seconds = parts.count == 3 ? String(parts[2]) : "00"
+                guard let part = seconds.split(separator: ".").first, let whole = Int(part), (0...59).contains(whole),
+                      let result = fraction(seconds) else { return nil }
+                return String(parts[0]) + ":" + String(parts[1]) + ":" + result
+            }
+            guard let value = clock(a) else { return false }; return value == clock(b)
+        }
+        return false
     }
     static func validate(_ change: Mutation, snapshot: Snapshot, account: String) throws {
         guard let items = items(change), fitsBody(change), change.fields["user_id"]?.text == account else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
@@ -1597,7 +1678,7 @@ enum WorkflowUndo {
         let currentRows = snapshot.tables.mapValues { Dictionary($0.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }) }
         for item in items {
             if let current = currentRows[item.table]?[item.recordID],
-               !item.baseline!.allSatisfy({ current[$0.key] == $0.value }) { throw AppFailure(message: message) }
+               !item.baseline!.allSatisfy({ sameField($0.key, current[$0.key], $0.value) }) { throw AppFailure(message: message) }
         }
         for row in snapshot.tables["projects"] ?? [] where external("projects", row) && (ids["projects"] ?? []).contains(row.string("parent_id")) { throw AppFailure(message: message) }
         for row in snapshot.tables["sections"] ?? [] where external("sections", row) && (ids["projects"] ?? []).contains(row.string("project_id")) { throw AppFailure(message: message) }
@@ -1612,8 +1693,9 @@ enum WorkflowUndo {
         guard let items = items(change) else { return }
         let grouped = Dictionary(grouping: items, by: \.table).mapValues { Dictionary($0.map { ($0.recordID, $0) }, uniquingKeysWith: { first, _ in first }) }
         for (table, changes) in grouped {
+            for item in changes.values where item.method == "PATCH" { snapshot.apply(item) }
             snapshot.tables[table] = (snapshot.tables[table] ?? []).filter { row in
-                guard let item = changes[row.id] else { return true }
+                guard let item = changes[row.id], item.method == "DELETE" else { return true }
                 return !TaskGeneration.permitsLocalAction(item, existing: row) || !TaskKind.permits(item, existing: row)
             }
         }
@@ -1636,7 +1718,12 @@ enum WorkflowUndo {
         guard let reply = reply(saved, change: change) else { return false }
         snapshot.pending.removeAll { $0.id == change.id }
         if !reply.applied {
-            // Refusal returns the server's surviving owned rows, not the stale creation payload.
+            // Reconcile every affected identity, including an order removed on another device.
+            // Missing/inaccessible rows must not leave an optimistic order behind.
+            for (table, items) in Dictionary(grouping: items(change) ?? [], by: \.table) {
+                let ids = Set(items.map(\.recordID))
+                snapshot.tables[table] = (snapshot.tables[table] ?? []).filter { !ids.contains($0.id) }
+            }
             for (table, rows) in Dictionary(grouping: reply.rows, by: \.table) {
                 let ids = Set(rows.map(\.recordID))
                 snapshot.tables[table] = (snapshot.tables[table] ?? []).filter { !ids.contains($0.id) } + rows.map { Record($0.fields) }

@@ -318,7 +318,7 @@ final class Backend: NSObject {
         guard !authenticated || !sessionTransition else { throw CancellationError() }
         let generation = sessionGeneration, owner = expectedAccount ?? session?.user.id
         let workflowUndoDiscovery = path == "/rest/v1/rpc/taskfold_workflow_undo_capabilities"
-        let workflowUndoRequest = workflowUndoDiscovery || path == "/rest/v1/rpc/taskfold_undo_private_workflow"
+        let workflowUndoRequest = workflowUndoDiscovery || ["/rest/v1/rpc/taskfold_undo_private_workflow", "/rest/v1/rpc/taskfold_undo_capture_workflow"].contains(path)
         if authenticated { try await refreshIfNeeded() }
         if authenticated, sessionTransition || generation != sessionGeneration || session?.user.id != owner { throw CancellationError() }
         guard let url = URL(string: baseURL + path), url.scheme == "https" else {
@@ -519,7 +519,7 @@ final class Backend: NSObject {
                 if error.string("code") == "PT404" { throw TeamProjectAccessUnavailable() }
                 throw TeamProjectValue.invalid
             }
-            if path == "/rest/v1/rpc/taskfold_undo_private_workflow", error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
+            if ["/rest/v1/rpc/taskfold_undo_private_workflow", "/rest/v1/rpc/taskfold_undo_capture_workflow"].contains(path), error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
             if path == "/rest/v1/rpc/taskfold_assign_task_scoped" {
                 if error.string("code") == "28000" { throw AccountSessionAuthorizationRequired() }
                 if ["PT503", "PGRST202"].contains(error.string("code")) { throw AppFailure(message: "This server cannot apply the saved assignment yet. Your choice is kept for retry.") }
@@ -1436,7 +1436,8 @@ final class Backend: NSObject {
         }
         if WorkflowUndo.matches(change) {
             guard WorkflowUndo.items(change) != nil, WorkflowUndo.fitsBody(change), change.fields["user_id"]?.text == expectedOwner else { throw AppFailure(message: "Reopen this workflow's current Undo action.") }
-            let data = try await request("/rest/v1/rpc/taskfold_undo_private_workflow", method: "POST", body: [
+            let route = change.table == WorkflowUndo.captureTable ? "taskfold_undo_capture_workflow" : "taskfold_undo_private_workflow"
+            let data = try await request("/rest/v1/rpc/" + route, method: "POST", body: [
                 "_request": .string(change.id.uuidString.lowercased()), "_body": .object(change.fields)], expectedAccount: expectedOwner)
             let saved = try TaskfoldJSONDecoder().decode(Record.self, from: data)
             guard WorkflowUndo.reply(saved, change: change) != nil else { throw AppFailure(message: "The server did not confirm this workflow Undo. It remains saved on this device.") }

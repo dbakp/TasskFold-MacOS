@@ -1676,6 +1676,16 @@ final class TaskCache {
 
 /// Day placement and due-date mutations share the durable, account-owned sync queue.
 enum DayPlacement {
+    /// Stable ordinary order upserts remain compatible with legacy rows. A
+    /// workflow's existing-order edit must retain PATCH for its checked inverse.
+    static func preparing(_ input: Mutation, account: String) -> Mutation {
+        guard input.table == table, input.method != "DELETE" else { return input }
+        var change = input
+        if change.workflowRun == nil { change.method = "POST" }
+        change.fields["id"] = .string(change.recordID)
+        change.fields["user_id"] = .string(account)
+        return change
+    }
     /// Existing project orders may contain only heading roots. Expand those
     /// sparse anchors without overriding any child positions explicitly saved.
     static func arrangedOutline(_ tasks: [Record], ids: [String]) -> [Record] {

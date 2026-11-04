@@ -10,7 +10,7 @@ try{
  const signup=async()=>{const r=await runtime.request('auth','/signup',{method:'POST',body:{email:'workflow-'+randomUUID()+'@example.invalid',password:randomBytes(24).toString('hex')}});assert.equal(r.status,200);assert(r.value.access_token);return {id:r.value.user.id,token:r.value.access_token};};
  const actor=await signup(),other=await signup();
  const rpc=(name,body={},who=actor)=>runtime.request('rest','/rpc/'+name,{method:'POST',body,authorization:who.token});
- const caps=await rpc('taskfold_workflow_undo_capabilities');check('authenticated capability uses actual signed-in identity',caps.value,{protocol:1,account:actor.id,undo_protocol:1,bulk_protocol:1});
+ const caps=await rpc('taskfold_workflow_undo_capabilities');check('authenticated capability uses actual signed-in identity',caps.value,{protocol:1,account:actor.id,undo_protocol:1,bulk_protocol:1,capture_protocol:1});
  check('capability route succeeds',caps.status,200);
  const create=async(table,fields)=>{const r=await runtime.request('rest','/'+table,{method:'POST',body:fields,authorization:actor.token,headers:{Prefer:'return=representation'}});assert.equal(r.status,201,JSON.stringify({table,status:r.status,error:r.value?.code}));return r.value[0];};
  const p=randomUUID(),s=randomUUID(),l=randomUUID(),t=randomUUID(),v='group:'+p+':'+s;

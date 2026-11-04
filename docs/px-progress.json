@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "updated": "2026-11-03",
+  "updated": "2026-11-04",
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Daily-use app installed; workflow updates",
-  "latest": "Mac 1.2.0 (6) is installed in Applications and opens with the existing workspace synced. Templates and a two-line capture review/cancel were checked without creating tasks. iOS Simulator 1.4.0 (21) builds; the user is configuring phone signing. Personal-template cloud Undo is deployed independently of teams: each repo passes 21 client, 53 PostgreSQL/deployment/rollback and 19 real local Auth/REST checks. Live definitions/access and anonymous refusal verify. Native template Undo and atomic multiline capture Undo remain separate. Existing security warnings and all deferrals remain visible.",
+  "focus": "Now · Capture workflows accepted; Mac update installed",
+  "latest": "Capture Undo/Redo and existing-order restoration are implemented, and the focused service is live. Each repo passes 39 client, 60 PostgreSQL/deployment/rollback, 36 real local Auth/API and 6 actual Store checks. Mac and iPhone Simulator both pass capture → Undo → Redo → Undo plus fresh personal-template run/Undo, preserving original work/order, saved cache and three distinct server receipts. Mac build 7 and Simulator build 22 archives match the accepted binaries. All isolated hosts/services are closed; the Simulator returned to Shutdown. Mac build 7 is installed and signature verified. Startup is waiting for the macOS shared widget/capture app-data permission prompt, confirmed by TCC logging and a main-thread open wait; startup/sync are not yet verified. Physical iPhone signing/installation remains unverified. Existing security warnings and agreed deferrals remain.",
   "next": [
-    "FIRST: finish physical iPhone development signing and installation once the user confirms Xcode setup. Mac build 6 is installed, signed and startup/sync verified; only the normal app remains open. Its development profile needs renewal by 10 November.",
-    "NEXT DAILY-USE GAP: accept fresh personal-template cloud Undo through the native app, using an isolated synthetic workspace. Its independent service is live; do not repeat unchanged client/database matrices. Atomic multiline capture Undo must preserve existing ordering and Redo and remains implementation work. Scoped assignment is live; signed-in native assignment acceptance remains separate.",
+    "FIRST: verify installed Mac build 7 startup/sync after its shared app-data prompt is approved. Finish physical iPhone signing/installation once Xcode setup is confirmed. The Mac development profile needs renewal by 10 November.",
+    "NEXT DAILY-USE UPDATE: capture/template Store acceptance is complete on Mac and the reserved iPhone Simulator; do not repeat unchanged checks. Continue organization/templates/planning improvements, preserving all advanced rollout gates.",
     "NEXT FEATURE UPDATE: finish coherent ordinary-user organization and repeatable workflows: archive/subprojects, templates, multiline capture, nested editing, ordering and filters. Fix observed friction and validate changed workflows; preserve completed acceptance instead of rerunning unchanged matrices.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -219,7 +219,7 @@
             {
               "state": "done",
               "title": "Rename and edit saved definitions",
-              "detail": "Independent personal-template cloud Undo is deployed; client and real local Auth/REST checks pass. Native Undo acceptance remains separate. Template search is in the installed Mac build; the library opens normally."
+              "detail": "Template/capture Undo services are live. Actual Mac and iPhone Simulator Stores pass capture/Undo/Redo and fresh template run/Undo. Verified archives match the accepted binaries; physical phone installation remains separate."
             },
             {
               "state": "done",
@@ -1167,7 +1167,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "952547106d70172f502ba94437d2549b2349fddc1772f1fd8d67745777b5110f",
+    "P2_PLAN.md": "98f36cbee09770a0711d1b11171b92f4f3f3535096ccc198897fdc845d1aa9fe",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1277,7 +1277,7 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
-    "daily-use-build/README.md": "12e8f77a70e4d33175ac5cd01c3dc39dfba51d43fc60122ce3ce597a037332b1",
+    "daily-use-build/README.md": "93ccbfde88406cd0433a549b123e2db81764f4229490ffd34a0243f37a33a986",
     "daily-use-build/verification.json": "2bf3b81a0e8d48a91fff23cc012eae0979061c6f6e13381639caa8a2cd7fc941",
     "duplicate-history-repair-native/README.md": "c7063d22e97e3fd4c0813cff33f132bbf866c4f1e4b7ec32eb7326359ee61761",
     "duplicate-history-repair-native/verification.json": "95c758f713b374d01ffa31b95744dba3e20ef7231aa71add535b0f543723ee66",

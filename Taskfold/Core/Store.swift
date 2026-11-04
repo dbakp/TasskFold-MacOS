@@ -2689,10 +2689,7 @@ final class Store {
                     }
                     change = TeamTaskLabelsDraft.normalizing(change, existing: normalizationRecord("tasks", id: change.recordID), catalog: normalizationLabels, cache: normalizationCache)
                 }
-                if change.table == DayPlacement.table, change.method != "DELETE" {
-                    change.method = "POST" // Stable composite upsert also handles pre-sync legacy rows.
-                    change.fields["id"] = .string(change.recordID); change.fields["user_id"] = .string(userID)
-                }
+                change = DayPlacement.preparing(change, account: userID)
                 return change
             }
             } catch { self.error = error.localizedDescription; return false }
@@ -2834,7 +2831,7 @@ final class Store {
         let historyChanges = retainCapturedChanges ? changes : committedChanges.filter { $0.table != FocusSessionChange.table }
         // Retained commands are the unchanged fresh-creation buffer admitted above.
         // Its prepared Undo already proved this shape; ordinary edits still scan.
-        let workflowCreation = retainCapturedChanges || (historyChanges.first?.workflowRun != nil && historyChanges.allSatisfy { $0.method == "POST" && $0.workflowRun == historyChanges.first?.workflowRun })
+        let workflowCreation = retainCapturedChanges || WorkflowUndo.requiresCreationHistory(historyChanges)
         let preparedUndo = admittedHistory?.editHistory(matching: historyChanges, source: historySourceRevision, account: userID)
         let history = (remember || workflowCreation) && !historyChanges.isEmpty ? (preparedUndo ?? EditHistory(changes: historyChanges, snapshot: old)) : nil
         #if DEBUG
@@ -4603,7 +4600,12 @@ extension Store {
             let ids = (existing?["ids"].list ?? []) + groups[key]!.map { .string($0.recordID) }
             changes.append(Mutation(table: "view_orders", recordID: key, method: existing == nil ? "POST" : "PATCH", fields: ["id": .string(key), "user_id": .string(userID), "ids": .array(ids)]))
         }
-        return changes
+        let run = UUID()
+        return changes.map { original in
+            var change = original; change.workflowRun = run
+            if change.method == "POST" { change.insertOnly = true }
+            return change
+        }
     }
 }
 
@@ -7105,7 +7107,51 @@ extension Store {
         try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(phase+".json"),options:.atomic)
     }
 
+    private func runFullSchemaCapturePhase() async throws {
+        let c = try FullSchemaNativeFixture.configuration()
+        guard FullSchemaNativeFixture.enabled, FullSchemaNativeFixture.phase == "capture" else { throw CancellationError() }
+        dailyBackupsEnabled = false
+        guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Capture fixture sign-in failed") }
+        await authenticated(); online = true; try await fullSchemaSyncSettled()
+        guard let original = record("tasks", id: c.task), snapshot.workflowUndoService?.capture == true else { throw AppFailure(message: "Capture fixture is missing its original work or service") }
+        let project = original.string("project_id"), key = project.isEmpty ? "scope:inbox" : "group:" + project + ":none"
+        guard record("view_orders", id: key) == nil else { throw AppFailure(message: "Capture fixture order must be fresh") }
+        let before: [JSON] = [.string(original.id)]
+        guard commit([Mutation(table: "view_orders", recordID: key, method: "POST", fields: ["id": .string(key), "user_id": .string(userID), "ids": .array(before)])]) else { throw AppFailure(message: error ?? "Capture fixture order failed") }
+        try await fullSchemaSyncSettled()
+        let lines = try MultiLineCapture.preview("Prepare the design review\nPublish the workshop notes", account: userID, project: project, recognize: false)
+        let changes = try workflowChanges(lines), ids = lines.map { $0.task.id }
+        guard commit(changes) else { throw AppFailure(message: "Capture creation: " + (error ?? "Failed")) }
+        try await fullSchemaSyncSettled()
+        let after = before + ids.map(JSON.string)
+        guard record("view_orders", id: key)?["ids"] == .array(after), ids.allSatisfy({ record("tasks", id: $0) != nil }) else { throw AppFailure(message: "Capture did not preserve its reviewed order") }
+        guard undo() else { throw AppFailure(message: error ?? "Capture Undo failed") }
+        try await fullSchemaSyncSettled()
+        guard ids.allSatisfy({ record("tasks", id: $0) == nil }), record("view_orders", id: key)?["ids"] == .array(before) else { throw AppFailure(message: "Capture Undo did not restore existing work") }
+        guard redo() else { throw AppFailure(message: "Capture Redo: " + (error ?? "Failed")) }
+        try await fullSchemaSyncSettled()
+        guard ids.allSatisfy({ record("tasks", id: $0) != nil }), record("view_orders", id: key)?["ids"] == .array(after) else { throw AppFailure(message: "Capture Redo did not restore its tasks and order") }
+        guard undo() else { throw AppFailure(message: error ?? "Second capture Undo failed") }
+        try await fullSchemaSyncSettled()
+        let template = try WorkflowTemplate.capture(kind: .project, id: project, snapshot: snapshot)
+        let templateChanges = try template.instantiate(account: userID, name: "Reusable workshop")
+        guard commit(templateChanges) else { throw AppFailure(message: "Template creation: " + (error ?? "Failed")) }
+        try await fullSchemaSyncSettled()
+        guard templateChanges.allSatisfy({ record($0.table, id: $0.recordID) != nil }) else { throw AppFailure(message: "Native template run did not persist") }
+        guard undo() else { throw AppFailure(message: error ?? "Native template Undo failed") }
+        try await fullSchemaSyncSettled()
+        guard templateChanges.allSatisfy({ record($0.table, id: $0.recordID) == nil }) else { throw AppFailure(message: "Native template Undo did not remove its fresh run") }
+        guard ids.allSatisfy({ record("tasks", id: $0) == nil }), record("tasks", id: original.id)?.title == original.title,
+              record("view_orders", id: key)?["ids"] == .array(before), snapshot.pending.isEmpty,
+              try TaskfoldJSONDecoder().decode(Snapshot.self, from: Data(contentsOf: cacheURL)) == snapshot else { throw AppFailure(message: "Capture's saved result differs from its original work") }
+        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string("capture"),
+            "actualStoreSync": .bool(true), "createdTaskIDs": .array(ids.map(JSON.string)), "orderKey": .string(key),
+            "createdAndUndoneTwice": .bool(true), "redoPreserved": .bool(true), "personalTemplateUndo": .bool(true), "existingWorkPreserved": .bool(true), "diskMatchesStore": .bool(true), "pending": .number(0)]
+        try TaskfoldJSONEncoder().encode(report).write(to: FullSchemaNativeFixture.root.appendingPathComponent("capture.json"), options: .atomic)
+    }
+
     func runFullSchemaNativePhase() async throws {
+        if FullSchemaNativeFixture.phase == "capture" { try await runFullSchemaCapturePhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("adoption-") {try await runFullSchemaAdoptionPhase();return}
         if FullSchemaNativeFixture.phase.hasPrefix("field-review-") {try await runFullSchemaFieldReviewPhase();return}
         if FullSchemaNativeFixture.phase.hasPrefix("structure-review-") {try await runFullSchemaStructureReviewPhase();return}

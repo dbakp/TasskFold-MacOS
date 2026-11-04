@@ -37,7 +37,9 @@
     "test:account-removal-repair": "node test-account-removal-repair.mjs",
     "test:scoped-assignment-compatibility": "node test-scoped-assignment-compatibility.mjs",
     "test:personal-workflow-service": "node test-personal-workflow-service.mjs",
-    "test:personal-workflow-http": "node test-personal-workflow-service-http.mjs"
+    "test:personal-workflow-http": "node test-personal-workflow-service-http.mjs",
+    "test:capture-undo": "node test-capture-workflow-undo.mjs",
+    "test:capture-undo-http": "node test-capture-workflow-undo-http.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11"

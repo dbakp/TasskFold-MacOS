@@ -10841,3 +10841,10 @@ No completion-date estimate is asserted by this reordering. The next externally 
 ### 3 November · Normal build 6 installed
 
 The ordinary Mac app now runs from Applications with signed widgets/sharing, existing-workspace startup/sync, accessible Templates and multiline review/cancel verified. Private safety copies and earlier packages remain outside Git. Cloud personal-template Undo is independently deployed with scoped client/real API/deployment proofs; native Undo acceptance and atomic multiline Undo/order/Redo remain next work. No advanced gates changed. The daily builder refuses to reuse a cache with a running app; output redirection alone does not protect Xcode-managed older products. Keep only the normal installed app open.
+
+
+### 4 November · Checked capture Undo and native workflow proof
+
+New capture history keeps existing order edits distinct from new rows, retains its inverse through Redo and compares equivalent UTC/time spellings without losing SQL microseconds. The Mac Store now passes creation/Undo/Redo/Undo and a fresh personal-template run/Undo against genuine local Auth/API, preserving original work/order and the exact saved cache. The isolated host/runtime are closed; no real tasks changed. Signed Mac build 7 is packaged and ZIP/native bytes agree; build 7 is now installed after safely closing build 6 and retaining a fresh private safety copy. Startup/sync await the macOS shared widget/capture app-data prompt; TCC logging confirms it. The focused service is live with verified definitions, current column contracts and unchanged public access/trigger behavior. iOS native acceptance remains separate. Keep the current visual design and all deferred advanced gates.
+
+The corresponding iPhone Simulator Store check also passes, with its original Shutdown state restored. Both accepted binaries are archived and byte-bound to their receipts. Verify installed build 7 startup/sync after app-data approval; physical iPhone signing/install remains unverified. Compiler concurrency is limited for future builds to reduce memory pressure while retaining the normal design.

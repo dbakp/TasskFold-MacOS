@@ -673,7 +673,7 @@ enum FullSchemaNativeFixture {
         let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:root.appendingPathComponent("config.json")))
         guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
               let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
-              ["initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
+              ["capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
               (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-") && !phase.hasPrefix("field-review-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
         return c
     }
@@ -683,7 +683,7 @@ enum FullSchemaNativeFixture {
         return SymmetricKey(data:SHA256.hash(data:Data((c.nonce.uuidString+account).utf8)))
     }
     @MainActor static func backend()->Backend {
-        FullSchemaNativeNetwork.offline = !["initial","child-queue","structure-queue","field-review-queue","structure-review-queue","adoption-queue"].contains(phase)
+        FullSchemaNativeNetwork.offline = !["capture","initial","child-queue","structure-queue","field-review-queue","structure-review-queue","adoption-queue"].contains(phase)
         let c=try? configuration()
         let saved=(try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
         let session=saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil

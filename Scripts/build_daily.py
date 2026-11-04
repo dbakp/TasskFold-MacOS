@@ -81,7 +81,7 @@ def main():
     receipt = args.derived_data / ("taskfold-daily-" + channel + ".json")
     # Never leave a previous successful receipt beside a failed new candidate.
     receipt.unlink(missing_ok=True)
-    command = ["xcodebuild", "-project", str(daily_project.resolve()), "-scheme", "Taskfold", "-configuration", "Debug", "-destination", destination, "-derivedDataPath", str(args.derived_data.resolve()), "-jobs", "1", "COMPILER_INDEX_STORE_ENABLE=NO", "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2", "build"]
+    command = ["xcodebuild", "-project", str(daily_project.resolve()), "-scheme", "Taskfold", "-configuration", "Debug", "-destination", destination, "-derivedDataPath", str(args.derived_data.resolve()), "-jobs", "1", "COMPILER_INDEX_STORE_ENABLE=NO", "OTHER_SWIFT_FLAGS=$(inherited) -driver-batch-count 2 -j 1", "build"]
     if args.products_directory:
         command.append("CONFIGURATION_BUILD_DIR=" + str(args.products_directory.resolve()))
     if args.allow_provisioning:
