@@ -10853,3 +10853,8 @@ The corresponding iPhone Simulator Store check also passes, with its original Sh
 ### 4 November · Starter workflows in the native library
 
 The library now offers four searchable starters with native labels/sections and the existing review/save/run controls. Their notes, estimates and ordered sections are editable through saved copies; no work or scheduling is created by browsing. Successful save clears search to reveal the new template. Five owning Core checks pass and signed build 8 is packaged/ZIP-verified. Actual native preview/save acceptance is unverified: computer use reported a locked Mac before assertions; no crash cause is inferred from the subsequently absent disposable process. Its duplicate products were retired. Installed build 7 and its pending shared-storage approval are untouched. iOS source/Core checks pass; its current app build waits for the storage floor. No premium appearance or advanced rollout gate was replaced.
+
+
+### 4 November · Owning Simulator candidate verified
+
+The independently owned iOS build 23 now compiles and has an exact verified Simulator archive, complementing signed Mac build 8. Starter UI and ordinary installed update acceptance remain open. The current Mac build-7 process still waits on shared widget/capture storage, and current inventory has no connected physical iOS device. Bounded cleanup retained readable outcomes before retiring ten obsolete test-result bundles; app data and unrelated jobs were untouched. This closes the earlier iOS storage/build blocker without enabling advanced features or changing the visual design.

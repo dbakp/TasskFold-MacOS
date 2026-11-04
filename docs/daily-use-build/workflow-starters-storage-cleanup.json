@@ -1,0 +1,122 @@
+{
+  "date": "2026-11-04",
+  "freeBytesBefore": 21015027712,
+  "newestFiveByActualTestFinishKept": true,
+  "unreadableBundlesKept": true,
+  "removed": [
+    {
+      "bundle": "mac-backup-switch-native-v1.xcresult",
+      "reportedDiskUsageBytes": 586592256,
+      "summarySHA256": "b452729ee1d84c80587854dfd8aa8c6afe6f8fb1e122a3baafd0b00fefb09fe4",
+      "testsSHA256": "20519d2560dd115a7d0be0f296fc7136a0549ac0954a068ee6f0ecf778db0a96",
+      "result": "Failed",
+      "totalTests": 1,
+      "passed": 0,
+      "failed": 1,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "mac-local-bulk-deadline-v1.xcresult",
+      "reportedDiskUsageBytes": 557858816,
+      "summarySHA256": "f61688bf35cd374e7308eb2fc8ae3495a1a6e7427a3356270077f401a54f5ba2",
+      "testsSHA256": "f623772725ea44320cc42b069ec8b06128b7a6e385797ff81b28d6614d66aa3a",
+      "result": "Failed",
+      "totalTests": 1,
+      "passed": 0,
+      "failed": 1,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "ios-accessory-gallery-focused-v1.xcresult",
+      "reportedDiskUsageBytes": 206221312,
+      "summarySHA256": "e0ab46e3ec28a63121afef7ad69fc69a9ea043c29e8cabd3d32ab41bd685625a",
+      "testsSHA256": "8bceb0d2dd8f36690b13a796945fec7ba65b3a83d9f3cd6f78111710f19cc426",
+      "result": "Failed",
+      "totalTests": 1,
+      "passed": 0,
+      "failed": 1,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "automation-native-hosted-phone-first.xcresult",
+      "reportedDiskUsageBytes": 105279488,
+      "summarySHA256": "baf185df5f1c00a1000f5f0bce8754a74b2299d4a2b896737ba30e9102252b30",
+      "testsSHA256": "48553f5080033873a08d1aa2ebd4cec8073152b10cbbe2bd35b67b6f64fc7370",
+      "result": "Failed",
+      "totalTests": 2,
+      "passed": 0,
+      "failed": 2,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "automation-native-hosted-ipad-first.xcresult",
+      "reportedDiskUsageBytes": 102498304,
+      "summarySHA256": "4516a727554ee2f9aaff636497bb0ebc76f575b903b88f17108e7977284b7e80",
+      "testsSHA256": "01ec60ae686c7889b6f088267cd87f6a0b73e4f8e2ddcc3c920e014fb7ed7d35",
+      "result": "Failed",
+      "totalTests": 2,
+      "passed": 0,
+      "failed": 2,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "ios-accessory-gallery-focused-v2.xcresult",
+      "reportedDiskUsageBytes": 102121472,
+      "summarySHA256": "bba67bb39e5d025dac36e810f4e24332b0a6040c0aabbda5c86a452020c23158",
+      "testsSHA256": "dd62d6a99f661d5cd0f243fbe88c2ebdbb00814f08363f9f867d6835bb1a9040",
+      "result": "Failed",
+      "totalTests": 1,
+      "passed": 0,
+      "failed": 1,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "automation-native-hosted-ipad-serial.xcresult",
+      "reportedDiskUsageBytes": 98365440,
+      "summarySHA256": "579bdc8f05b7ba7c95f694ce1ea1756728aa16577b605a4b967fcf62134a70a0",
+      "testsSHA256": "6e683aaaf68710ad676c783f572049d47d90fa8f315da497b675b304f9e64146",
+      "result": "Failed",
+      "totalTests": 2,
+      "passed": 0,
+      "failed": 2,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "automation-native-hosted-ipad-forms.xcresult",
+      "reportedDiskUsageBytes": 95383552,
+      "summarySHA256": "d453fdc7043d30ebdaf262fe4e1beecf716a005215e9c008c4b88cd5349155fb",
+      "testsSHA256": "692fbfeeb8a6d28bac73e9e1c4012aa9df0d7ee32c30dac872723caec3647def",
+      "result": "Failed",
+      "totalTests": 2,
+      "passed": 1,
+      "failed": 1,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "automation-native-hosted-phone-recovery.xcresult",
+      "reportedDiskUsageBytes": 90615808,
+      "summarySHA256": "583bef37a8a1f33e1d7fb7f0dfe49145d6e419efa69860f7118dd1705f85ca24",
+      "testsSHA256": "93122b8d8b3c491e6517935cc76401cc11ac704e080259d79fd8e87bd4aeab0a",
+      "result": "Failed",
+      "totalTests": 2,
+      "passed": 0,
+      "failed": 2,
+      "runtimeWarnings": 0
+    },
+    {
+      "bundle": "ios-p2-share-acceptance-v2.xcresult",
+      "reportedDiskUsageBytes": 84840448,
+      "summarySHA256": "a8baa60424fb9c0193d2bd93830b467f498fe129d2b3876dd480adf1d448a6c0",
+      "testsSHA256": "db52d35194192579fa1a30ec347158478f4442efc5422f8cab5c3503e74c4b61",
+      "result": "Failed",
+      "totalTests": 2,
+      "passed": 1,
+      "failed": 1,
+      "runtimeWarnings": 0
+    }
+  ],
+  "freeBytesAfter": 22793465856,
+  "retiredReportedDiskUsageBytes": 2029776896,
+  "protectedBundlesRetained": true,
+  "scope": "Only obsolete Taskfold xcresult directories older than seven days by actual test finish. Full summaries and individual test outcomes retained privately before removal; five newest readable runs and unreadable bundles kept. No app data, devices, Docker volumes or unrelated jobs removed."
+}

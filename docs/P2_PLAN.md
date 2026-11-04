@@ -1,5 +1,11 @@
 # Remaining product backlog
 
+## Current daily-use candidates · 4 November 2026
+
+Signed Mac build 8 and ordinary iOS Simulator build 23 are packaged with the four starter workflows. Each owning repo retains its five passing Core checks; both exact archive payloads verify. The Simulator package is not a phone installation. Starter UI acceptance remains open. Installed Mac build 7 still waits opening shared widget/capture storage in the same process; no Keychain failure or successful startup/sync is inferred. No physical iOS device currently has a connected tunnel, so development signing and actual phone installation remain unverified.
+
+Storage cleanup retained full summaries and individual outcomes before retiring ten obsolete raw test bundles (about 1.9 GiB). Newest five readable runs and unreadable bundles remain. App data, devices, Docker volumes and unrelated jobs were untouched. Reuse the current iOS build cache for the next source-selection usability improvement; keep the verified archives. Full Px and agreed deferrals remain active.
+
 ## 3 November 2026 · Scoped assignment service available
 
 The current clients' scoped assignment endpoint is now deployed to the configured TaskFold backend. Each repo independently passes 32 actual PostgreSQL compatibility checks against the catalog-only pre-update task-editor body, including the exact deployment and guarded rollback scripts. The fixture uses synthetic owner RLS rather than claiming production-policy/trigger acceptance. Live postflight confirms exact reviewed definitions, authenticated-only invoker execution, unchanged original patch permissions/owner, unchanged public/private table-security and policy fingerprints, unchanged task triggers, and unchanged security-advisor findings. A real anonymous API request confirms route visibility and permission refusal. No user task rows were read or changed, and advanced boundary/team endpoints remain absent. Signed-in native/real-account assignment acceptance and the broader old-client rollout safeguard remain separate. The newer cloud workflow Undo endpoint is still missing.
@@ -7770,7 +7776,7 @@ The accepted Mac and Simulator binaries are preserved in verified archives; dupl
 - [x] Search starter names and purposes alongside saved templates. Open the existing full definition preview, then explicitly save an editable private copy. Task creation still requires a separate normal template run; existing workspace checks, fresh identities and Undo remain in force. Clear search only after successful save so the new copy is visible.
 - [x] Own five focused client checks pass per repo: account-free JSON/CSV transfer, fresh identities and section order/notes, absence of imposed scheduling, run Undo/Redo preserving older work and the definition, and search.
 - [x] Mac 1.2.0 (8) builds/signs and its actual archived payload passes app/widget/share verification. Keep installed build 7 intact while its app-data prompt remains pending.
-- [ ] iOS build 23: compilation was not started because the storage preflight is below 20 GiB. The previous build-22 Simulator archive remains intact; the new source has Core proof but no current iOS app-build claim.
+- [x] iOS Simulator 1.4.0 (23) now compiles and its exact ZIP payload/continuity metadata verify. The earlier storage refusal was resolved by retiring obsolete test results after exporting summaries/outcomes. Build 22 remains the earlier native Store baseline; starter UI and physical installation are still unaccepted.
 - [ ] Actual starter preview/cancel/save and subsequent run acceptance. Computer use reported the Mac locked before any assertion; its temporary process was subsequently absent. No runtime success or crash cause is inferred.
 
 The signed Mac package is retained; completed Core/compiler products and duplicate experimental app copies were removed. No real task data, Docker volumes, unrelated jobs or Simulator devices were deleted. This is a template usability refinement: existing curated bars and full Px requirements are unchanged. [Owning evidence](daily-use-build/workflow-starters-core.json).
