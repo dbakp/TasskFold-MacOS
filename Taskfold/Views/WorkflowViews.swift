@@ -217,16 +217,18 @@ struct TemplateLibraryView: View {
         let templates = store.workflowTemplates
         return search.isEmpty ? templates : templates.filter { $0.name.localizedStandardContains(search) }
     }
+    private var matchingStarters: [WorkflowStarter] { WorkflowStarter.matching(query) }
     var body: some View {
         WorkflowShell(title: "Templates") {
             List {
                 Section {
                     Text("Save a workflow once, then start fresh each time. New runs keep structure, notes, labels and relative dates; completion, discussion, files and assignments stay with the originals.").font(.callout).foregroundStyle(.secondary)
                 }
+                if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !matchingTemplates.isEmpty || matchingStarters.isEmpty {
                 Section("Your templates") {
                     if binding != nil && !store.workflowPreviewReady(binding) { Text("Templates unavailable. Reopen your workspace to continue.").foregroundStyle(.secondary).accessibilityIdentifier("workflowLibraryUnavailable") }
-                    else if store.workflowTemplates.isEmpty { Text("No templates yet. Save a project, section or task below.").foregroundStyle(.secondary) }
-                    else if matchingTemplates.isEmpty {
+                    else if store.workflowTemplates.isEmpty && query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { Text("No saved templates yet. Choose a starter below or save your own workflow.").foregroundStyle(.secondary) }
+                    else if matchingTemplates.isEmpty && matchingStarters.isEmpty {
                         ContentUnavailableView.search(text: query.trimmingCharacters(in: .whitespacesAndNewlines))
                             .accessibilityIdentifier("workflowTemplateSearchEmpty")
                     }
@@ -236,6 +238,26 @@ struct TemplateLibraryView: View {
                         }.buttonStyle(.plain).accessibilityIdentifier("workflowTemplate-" + row.id)
                         .contextMenu { Button("Edit template") { editingTemplate = row }; Button("Export template…") { export(row) }; Button("Delete template", role: .destructive) { deleting = row } }
                         .swipeActions(edge:.leading) { Button("Edit") { editingTemplate=row }.tint(.accentColor) }
+                    }
+                }
+                }
+                if !matchingStarters.isEmpty {
+                    Section("Ready-to-use workflows") {
+                        Text("Preview a starter, then save an editable copy. Start a run when you’re ready; dates are yours to choose.").font(.caption).foregroundStyle(.secondary)
+                        ForEach(matchingStarters) { starter in
+                            Button {
+                                guard store.workflowReady(binding) else { message = store.error; return }
+                                do { imported = ImportedWorkflowTemplate(file: try starter.file()); message = nil }
+                                catch { message = error.localizedDescription }
+                            } label: {
+                                Label {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(starter.name).foregroundStyle(.primary)
+                                        Text(starter.summary).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                } icon: { Image(systemName: starter.symbol).foregroundStyle(Color.accentColor) }
+                            }.buttonStyle(.plain).disabled(!store.workflowPreviewReady(binding)).accessibilityIdentifier("workflowStarter-" + starter.id)
+                        }
                     }
                 }
                 Section {
@@ -316,7 +338,7 @@ struct TemplateLibraryView: View {
         }
         .sheet(item: $captured) { value in TemplateCaptureReview(capture: value, initialName: name, completed: { name = ""; source = ""; message = nil }) }
         .sheet(item: $exportRequest) { request in TemplateFileExportReview(request: request, binding: binding) }
-        .sheet(item: $imported) { request in TemplateFileReview(request: request, binding: binding) }
+        .sheet(item: $imported) { request in TemplateFileReview(request: request, binding: binding, onSaved: { query = "" }) }
         .sheet(isPresented: $importingText) { TemplateTextImportView(binding: binding) }
         .sheet(item: $csvSource) { source in TemplateCSVMappingView(source: source, binding: binding) }
         .sheet(item: $selected) { TemplateRunView(template: $0) }
@@ -572,6 +594,7 @@ private struct TemplateFileReview: View {
     let binding: WorkspaceBinding?
     var editText: (() -> Void)? = nil
     var editLabel = "Edit pasted text"
+    var onSaved: () -> Void = {}
     @State private var name = ""
     @State private var message: String?
     var body: some View {
@@ -610,7 +633,7 @@ private struct TemplateFileReview: View {
             #else
             saved = store.save(WorkflowTemplate.table, row)
             #endif
-            if saved { dismiss() } else { message = store.error }
+            if saved { onSaved(); dismiss() } else { message = store.error }
         } catch { message = error.localizedDescription }
     }
 }

@@ -7762,3 +7762,15 @@ This refines existing checkpoints; bars remain unchanged. Continue daily-user or
 The full Px backlog and deferrals remain. Curated bars are unchanged. Readable summaries were retained before pruning completed old test results; the five newest bundles and unreadable bundles were kept.
 
 The accepted Mac and Simulator binaries are preserved in verified archives; duplicate products, completed compiler caches and obsolete experimental packages were retired. Symbols are compressed with verified file hashes. Future daily and Core builds request one compiler job. The Mac reported approximately 15 GiB of swap during this work; that is a system measurement, not attribution to one process. No swap files, Docker volumes, real app data or unrelated project jobs were removed.
+
+
+### 4 November 2026 · Ready-to-use personal workflows
+
+- [x] Add Weekly reset, Project kickoff, Meeting follow-up and Trip preparation in both owning apps. Each includes sections, concrete actions, notes and estimates, with no imposed dates, repeats or reminders.
+- [x] Search starter names and purposes alongside saved templates. Open the existing full definition preview, then explicitly save an editable private copy. Task creation still requires a separate normal template run; existing workspace checks, fresh identities and Undo remain in force. Clear search only after successful save so the new copy is visible.
+- [x] Own five focused client checks pass per repo: account-free JSON/CSV transfer, fresh identities and section order/notes, absence of imposed scheduling, run Undo/Redo preserving older work and the definition, and search.
+- [x] Mac 1.2.0 (8) builds/signs and its actual archived payload passes app/widget/share verification. Keep installed build 7 intact while its app-data prompt remains pending.
+- [ ] iOS build 23: compilation was not started because the storage preflight is below 20 GiB. The previous build-22 Simulator archive remains intact; the new source has Core proof but no current iOS app-build claim.
+- [ ] Actual starter preview/cancel/save and subsequent run acceptance. Computer use reported the Mac locked before any assertion; its temporary process was subsequently absent. No runtime success or crash cause is inferred.
+
+The signed Mac package is retained; completed Core/compiler products and duplicate experimental app copies were removed. No real task data, Docker volumes, unrelated jobs or Simulator devices were deleted. This is a template usability refinement: existing curated bars and full Px requirements are unchanged. [Owning evidence](daily-use-build/workflow-starters-core.json).

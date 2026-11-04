@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "platform": "mac",
+  "bundle": "com.dbakp.taskfold.mac",
+  "version": "1.2.0",
+  "build": "8",
+  "app": "/private/tmp/taskfold-starter-mac-products/Taskfold.app",
+  "sourceFingerprint": "eb22964286522f41b19c7c50b2fee036c057e0906d2a8c6092fd915f84ca4f80",
+  "sourceRevision": "a0766cbff4f6fa360a3e9f8c85e515c927cd0986",
+  "simulatorOnly": false,
+  "signatureVerified": true,
+  "widgetsIncluded": true,
+  "shareIncluded": true,
+  "omittedCapabilities": [
+    "Remote push notifications",
+    "Time Sensitive notifications"
+  ],
+  "featureFlags": {
+    "TaskfoldAudioRestorationEnabled": false,
+    "TaskfoldMixedCompletionEnabled": false,
+    "TaskfoldTeamAudioPublishingEnabled": false
+  },
+  "installed": false,
+  "published": false,
+  "archive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-8-mac-development.zip",
+  "archiveSHA256": "3f2dab0776dcca104bd8733b561fcf319b4971eb0b6091e627becdff585bf0e1",
+  "archivePayloadVerified": true,
+  "sourceWasDirty": true,
+  "change": "Four searchable starter workflows with preview, editable saved copies and explicit fresh runs",
+  "developmentProfileExpires": "2026-11-10T18:38:42Z",
+  "sourceProductRetiredForStorage": true,
+  "nativeUIAccepted": false,
+  "nativeUILimit": "Computer control reported a locked Mac before UI assertions. The temporary process was subsequently absent; no runtime success or crash cause is inferred. Duplicate host/products removed."
+}

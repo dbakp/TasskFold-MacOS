@@ -1774,3 +1774,96 @@ actor WorkflowLibrarySummaryCache {
         catch { return "Update Taskfold to use this template" }
     }
 }
+
+/// Bundled, account-free definitions. Opening one only previews a reusable copy;
+/// the ordinary save and run flows retain workspace checks and fresh identities.
+enum WorkflowStarter: String, CaseIterable, Identifiable, Sendable {
+    case weeklyReset, projectKickoff, meetingFollowUp, tripPreparation
+    var id: String { rawValue }
+    var name: String {
+        switch self {
+        case .weeklyReset: return "Weekly reset"
+        case .projectKickoff: return "Project kickoff"
+        case .meetingFollowUp: return "Meeting follow-up"
+        case .tripPreparation: return "Trip preparation"
+        }
+    }
+    var summary: String {
+        switch self {
+        case .weeklyReset: return "Clear loose ends and choose what matters next."
+        case .projectKickoff: return "Turn an idea into a clear first milestone."
+        case .meetingFollowUp: return "Capture decisions and turn discussion into action."
+        case .tripPreparation: return "Keep bookings, documents and departure details together."
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .weeklyReset: return "arrow.triangle.2.circlepath"
+        case .projectKickoff: return "flag"
+        case .meetingFollowUp: return "bubble.left.and.bubble.right"
+        case .tripPreparation: return "suitcase"
+        }
+    }
+    static func matching(_ query: String) -> [Self] {
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return allCases.filter { query.isEmpty || $0.name.localizedStandardContains(query) || $0.summary.localizedStandardContains(query) }
+    }
+    func file() throws -> WorkflowTemplateFile {
+        typealias Step = (title: String, note: String, minutes: Int)
+        let sections: [(name: String, steps: [Step])]
+        switch self {
+        case .weeklyReset:
+            sections = [
+                ("Clear the decks", [
+                    ("Collect loose tasks", "Check your notes and messages. Capture anything that still needs action.", 10),
+                    ("Review the Inbox", "Give each task a next step, a project or a deliberate decision to let it go.", 10),
+                    ("Close last week", "Review unfinished work. Reschedule consciously and archive finished projects.", 10)]),
+                ("Shape the week", [
+                    ("Review the calendar", "Look for commitments, deadlines and time you need to protect.", 5),
+                    ("Choose three outcomes", "Write down the few results that would make this a good week.", 10),
+                    ("Plan the first next step", "Choose one concrete action for each outcome and give it a realistic place in your day.", 10)])]
+        case .projectKickoff:
+            sections = [
+                ("Define the work", [
+                    ("Write the outcome", "Describe what will be different when this project is finished.", 15),
+                    ("Define done", "List the acceptance criteria and what is outside the scope.", 15),
+                    ("Identify dependencies", "Note the people, decisions and materials needed before work can move forward.", 10)]),
+                ("Make a start", [
+                    ("Choose the first milestone", "Pick a small, useful result that can be reviewed early.", 15),
+                    ("Break down the next actions", "Use specific actions with a clear result. Add owners or dates when ready.", 20),
+                    ("Schedule a review", "Choose when to check progress and decide what comes next.", 5)])]
+        case .meetingFollowUp:
+            sections = [
+                ("Capture", [
+                    ("Summarize the decisions", "Record what was agreed and why. Link the relevant notes in this task.", 10),
+                    ("List the open questions", "Separate unresolved questions from decisions already made.", 5)]),
+                ("Follow through", [
+                    ("Confirm the next actions", "Make each action concrete, then agree an owner and a realistic due date.", 10),
+                    ("Share the follow-up", "Send the decisions, open questions and next actions to the relevant people.", 10),
+                    ("Set a progress check", "Choose when to revisit outstanding actions and dependencies.", 5)])]
+        case .tripPreparation:
+            sections = [
+                ("Before you go", [
+                    ("Confirm the itinerary", "Check dates, bookings, arrival times and cancellation details.", 15),
+                    ("Check travel documents", "Check the requirements for your destination and that your documents are valid.", 15),
+                    ("Plan transport and arrival", "Keep transfer details and arrival instructions somewhere easy to find.", 10)]),
+                ("Ready to leave", [
+                    ("Make a packing checklist", "Include essentials, chargers and anything specific to the trip.", 15),
+                    ("Save useful details offline", "Keep the information you need accessible without a connection.", 10),
+                    ("Check departure essentials", "Review the itinerary, documents, keys and transport before leaving.", 5)])]
+        }
+        let project = "starter-project"
+        var sectionRows: [JSON] = [], taskRows: [JSON] = []
+        for (index, section) in sections.enumerated() {
+            let sectionID = "starter-section-\(index)"
+            sectionRows.append(.object(["id": .string(sectionID), "name": .string(section.name), "project_id": .string(project), "order_index": .number(Double(index))]))
+            for (stepIndex, step) in section.steps.enumerated() {
+                taskRows.append(.object(["id": .string("starter-task-\(index)-\(stepIndex)"), "title": .string(step.title), "description": .string(step.note),
+                    "project_id": .string(project), "section_id": .string(sectionID), "priority": .number(4), "duration_minutes": .number(Double(step.minutes)), "labels": .array([]), "subtasks": .array([])]))
+            }
+        }
+        return try WorkflowTemplateFile(name: name, document: .object(["version": .number(1), "kind": .string("project"),
+            "projects": .array([.object(["id": .string(project), "name": .string(name), "description": .string(summary), "color": .string("#8b5cf6"), "order_index": .number(0)])]),
+            "sections": .array(sectionRows), "tasks": .array(taskRows)]))
+    }
+}
