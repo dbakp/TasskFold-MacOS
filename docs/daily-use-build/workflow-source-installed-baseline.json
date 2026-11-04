@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-04",
+  "installedApp": "/Applications/Taskfold.app",
+  "build": "7",
+  "signatureVerified": true,
+  "archiveSHA256": "1ca4359ab0f7f6abc40a46c642b3b46ad4b23c94d81f53f96809ce9c15ad44b7",
+  "backupFiles": 13,
+  "keychainExported": false,
+  "realTaskTestEdits": false,
+  "startupVerified": true,
+  "syncVerified": true,
+  "permissionWaitResolved": true,
+  "verifiedPID": 75386,
+  "observedSyncStatus": "Synced 22.17",
+  "verificationDate": "2026-11-04"
+}

@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-04",
+  "platform": "mac",
+  "executed": 13,
+  "failures": 0,
+  "newSourceCases": 8,
+  "starterRegressions": 5,
+  "catalogRows": 5000,
+  "initialVisibleRows": 100,
+  "catalogBuildMilliseconds": 40,
+  "combinedSearchChecksMilliseconds": 18,
+  "scope": "Core index, paging, location search, cancellation and live identity recheck; timing is a local Core diagnostic, not an app rendering or hardware performance guarantee.",
+  "nativeUIAccepted": false,
+  "logSHA256": "77bcccd5119c8c495248befff8afb8ec64d600313ff9685523ef78f169cdd62b",
+  "sources": {
+    "Taskfold/Core/ProjectWorkflows.swift": "44bd9ac98042c17e100ecfd4e4f3c074b1f788e4a4b5bf6f90e9e94c074d4104",
+    "TaskfoldTests/WorkflowSourceCatalogTests.swift": "a979a2ff82289ed593df57b094564fe8acd4135e48f2dbde27238b2dc2a64a4a",
+    "TaskfoldTests/WorkflowStarterTests.swift": "5c30c6d3656925b307e72fcb3e1aac22aacb77489ee8064b75bc13c4de0e2d72"
+  }
+}

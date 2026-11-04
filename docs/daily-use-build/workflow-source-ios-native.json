@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-04",
+  "syntheticOnly": true,
+  "accepted": false,
+  "productionChooserCompiled": true,
+  "buildEvidence": "/tmp/taskfold-source-ui-build-ios-v2.json",
+  "nativeRunExitCode": 65,
+  "nativeRun": "/tmp/taskfold-source-native-ios-v4-proof.json",
+  "failure": "Automation selected Find a template behind the source sheet instead of Find a source or project; keyboard focus was unavailable.",
+  "testLocatorCorrected": true,
+  "correctedLocatorRecompiledOrRerun": false,
+  "ownedSimulatorRestored": true,
+  "nextNormalSimulatorBuild": "25",
+  "nextNormalSimulatorBuildProduced": false,
+  "reasonPending": "Storage below the required 20 GiB floor after completed generated caches/products were retired.",
+  "sourceSHA256": {
+    "Taskfold/Core/ProjectWorkflows.swift": "46eb90a97a57a108fadb813b088925003a0a07ef8fb1e61d35a24e120274c0a0",
+    "Taskfold/Views/WorkflowViews.swift": "6bcad797b5811bc54037ab72d4013ac499583b7ebff25d02b90405100121c6d0",
+    "TaskfoldUITests/WorkflowSourceSelectionUITests.swift": "3ff2aad34f59f0e150e60d0853a6c113301af092b60aa4dd07013a197fd34492"
+  },
+  "genuineAuthOrProvider": false,
+  "hardwareOrLargeLibraryRenderingAccepted": false
+}

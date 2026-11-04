@@ -4,12 +4,12 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Starter candidates built on both apps; UI checks next",
-  "latest": "Four searchable starter workflows are implemented in both apps. Each repo retains five passing Core checks. Signed Mac build 8 and iOS Simulator build 23 are packaged; exact archive payloads and continuity metadata verify. Starter preview/cancel/save/run UI acceptance remains open. Installed Mac build 7 still waits at shared widget/capture storage; startup/sync are unverified. No physical iOS device is currently connected; signing and phone installation remain unverified. Ten obsolete test-result bundles (about 1.9 GiB) were retired after retaining full summaries and individual outcomes, keeping the newest five readable runs and unreadable bundles. No real app data, devices, Docker volumes or unrelated jobs were removed. The full Px scope and agreed deferrals remain.",
+  "focus": "Now · 38 GiB recovered; Mac update installed; iPhone check continuing",
+  "latest": "Recovered 38.1 GiB of regenerable simulator wallpaper and older device-support caches; free storage returned to about 59 GiB. Apps, task data and simulator identities are preserved. Every-run cleanup is required in both repos; daily builds automatically bound completed compiler caches, with six safety checks per repo. Mac build 10 is installed and Synced, with nine isolated source/starter checks accepted. Thirteen focused Core checks pass per app. The corrected single iPhone source test is rebuilding/rerunning now that storage is restored. Full Px gaps and agreed deferrals remain.",
   "next": [
-    "FIRST: verify installed Mac build 7 startup/sync after its shared app-data prompt is approved. Finish physical iPhone signing/installation once Xcode setup is confirmed. The Mac development profile needs renewal by 10 November.",
-    "NEXT DAILY-USE UPDATE: accept the starter preview/cancel/save/run in an isolated workspace, then deliver the next installed update. Mac build 8 and Simulator build 23 are packaged; build 7 remains installed. Preserve the passing Core and capture/service checks instead of repeating unchanged matrices.",
-    "NEXT FEATURE UPDATE: improve choosing project/section/task sources for templates with contextual search in large libraries. Keep existing capture/ownership checks and the current visual style; measure changed browsing behavior. Continue remaining organization, nested editing, ordering and filter friction afterward.",
+    "FIRST: finish the corrected single iPhone source journey and package ordinary Simulator build 25, then run end-of-run cleanup again. Mac build 10 is installed and synced; preserve that acceptance. Physical signing/installation remains unverified; Mac profile renewal is due 10 November.",
+    "NEXT DAILY-USE UPDATE: finish starter save/run native acceptance, then address the highest-friction organization, nested editing, ordering and filter interactions. Preserve passing Core and capture/service checks instead of repeating unchanged matrices.",
+    "Continue wider source/library rendering and lifecycle acceptance separately. Contextual source search is implemented, Core-tested in both apps and natively accepted on Mac; one scoped iPhone rerun remains.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
     "Continue wider catalog/editor scaling, actual rendering across other workloads, and wider Mac/iPad/accessibility/account/cloud contexts. Current project-catalog reuse now has scoped iPhone Store/scrolling acceptance; do not repeat unchanged accepted cases.",
@@ -219,7 +219,7 @@
             {
               "state": "done",
               "title": "Rename and edit saved definitions",
-              "detail": "Template/capture Undo services are live. Actual Mac and iPhone Simulator Stores pass capture/Undo/Redo and fresh template run/Undo. Verified archives match the accepted binaries; physical phone installation remains separate. Four built-in starters have five owning Core checks per repo. Signed Mac build 8 and Simulator build 23 are now packaged with exact payload verification. Starter UI/installation remain unaccepted."
+              "detail": "Template/capture Undo services are live, with scoped actual Mac/iPhone Store capture/run/Undo proof. Four starter workflows have five Core checks per repo; contextual source selection adds eight more. Mac build 10 is installed and synced with isolated source selection/save/run and starter preview/cancel acceptance. iPhone source UI compiles; corrected automation rerun/build 25 and wider starter/physical installation checks remain pending."
             },
             {
               "state": "done",
@@ -1170,7 +1170,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "327e41919a0c78b59f5ccbe3d6b81962091dc131d215076fa2725560920a29aa",
+    "P2_PLAN.md": "79d5c1510911585740baa02c5a0e54b22244d1d2665f05bc224e354bdf9562ca",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1282,7 +1282,7 @@
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
     "daily-use-build/README.md": "be645e7f3ed5b592d3b389a570fd39a5e94c0ba61820054059ae0cc13a93f164",
     "daily-use-build/verification.json": "2bf3b81a0e8d48a91fff23cc012eae0979061c6f6e13381639caa8a2cd7fc941",
-    "daily-use-build/workflow-starters-build.json": "3683e289a382e345b5a08a2b91d120841df4fd1da3611b40225589c5efc0d6a1",
+    "daily-use-build/workflow-starters-build.json": "21cd3f9b9135cd4cb21081f726aa9dcefb84be33fb19e56abdc3a54c71a51501",
     "daily-use-build/workflow-starters-core.json": "5b298ba4f27272c50a3ba1d3cca195feab55d01e6ae631094258dac5c4149206",
     "daily-use-build/workflow-starters-storage-cleanup.json": "85ee9ccb52485597c435261a34d83c4d55fdb99b249ac0194c08775c1ed1f63a",
     "duplicate-history-repair-native/README.md": "c7063d22e97e3fd4c0813cff33f132bbf866c4f1e4b7ec32eb7326359ee61761",

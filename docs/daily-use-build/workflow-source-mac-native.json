@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-04",
+  "platform": "mac",
+  "syntheticOnly": true,
+  "build": "10",
+  "protectedKeychainOrRealProviderAccepted": false,
+  "largeLibraryRenderingOrSpeechAccepted": false,
+  "checks": {
+    "fullRowSelectsProject": true,
+    "fullRowSelectsTask": true,
+    "titleAndLocationSearch": true,
+    "liveTaskAndProjectRename": true,
+    "unreadableHidesSourceDataAndQuery": true,
+    "readabilityRestoresCurrentData": true,
+    "definitionSavePreservesPriorRows": true,
+    "freshRunPreservesOriginalTasksAndDefinition": true,
+    "starterPreviewAndCancelPreservesData": true
+  },
+  "taskCountAfterRun": 4,
+  "templateCountAfterSave": 18,
+  "prototypeDefectFixed": "Full row hit area",
+  "launch": {
+    "sourceArchive": "/Users/davidbakposada/Documents/ChatGPT/Taskfold/output/daily-use-mac/Taskfold-1.2.0-10-mac-development.zip",
+    "sourceBinarySHA256": "f79db44d50b36fe1075e83b00e5c1321de151683726b15f0001bd8bc67603e40",
+    "sourceFingerprint": "d9f429f49599427c5f982e046c5998cc99141106d88dbf597b4fac10efb4fc48",
+    "app": "/private/tmp/taskfold-source-native-mac/Taskfold.app",
+    "syntheticOnly": true,
+    "ordinaryAppReplaced": false
+  },
+  "sources": {
+    "Taskfold/Core/ProjectWorkflows.swift": "44bd9ac98042c17e100ecfd4e4f3c074b1f788e4a4b5bf6f90e9e94c074d4104",
+    "Taskfold/Views/WorkflowViews.swift": "dfad8d925cb339b0714676e254ba8516d6e2561da8dabffe636180b3a75e7bda",
+    "Taskfold/Core/Store.swift": "b20d578972bec283480b8336b03f42a5e5d1e9442e78b388b14524a7043695e9"
+  },
+  "starterPreview": {
+    "name": "Weekly reset",
+    "projects": 1,
+    "sections": 2,
+    "tasksAndSubtasks": 6,
+    "cancelledWithoutSaving": true
+  }
+}

@@ -36,12 +36,13 @@
     "sourceProductRetiredForStorage": true,
     "nativeStoreAccepted": true,
     "installedApp": "/Applications/Taskfold.app",
-    "startupVerified": false,
-    "syncVerified": false
+    "startupVerified": true,
+    "syncVerified": true,
+    "permissionWaitResolved": true
   },
   "nativeStoreProof": "capture-workflow-undo-native-mac.json",
   "scope": "Creation/Undo/Redo/Undo of two captured tasks with existing order; fresh personal-template creation/Undo; original work, server receipts and exact saved cache verified.",
-  "ordinaryInstallation": "Mac build 7 is installed and signature verified. Startup is waiting for the macOS shared widget/capture app-data permission prompt, confirmed by TCC logging and a main-thread open wait; startup/sync are not yet verified. Physical iPhone signing/installation remain unverified.",
+  "ordinaryInstallation": "Mac build 7 startup and sync are verified after app-data approval, in the same preserved process. No real-task edits. Physical iPhone signing/installation remain unverified.",
   "realTaskTestEdits": false,
   "advancedGatesChanged": false,
   "compilerPolicy": "Future daily and Core builds request one compiler job; existing accepted binaries predate the scheduling-only helper change."

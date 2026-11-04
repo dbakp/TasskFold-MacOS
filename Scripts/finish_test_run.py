@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""Bound completed Taskfold compiler caches and retired Simulator wallpaper scratch.
+
+Only explicitly named Taskfold caches/devices are eligible. Never erases a device,
+app container, result bundle, app product, source checkout, or device-support cache.
+"""
+import argparse
+import json
+from pathlib import Path
+import shutil
+import subprocess
+
+
+def allocated(path):
+    return sum(p.lstat().st_blocks * 512 for p in path.rglob('*') if p.is_file() and not p.is_symlink()) if path.exists() else 0
+
+
+def finish(simulators=(), build_caches=(), apply=False):
+    report = {'apply': apply, 'freeBeforeBytes': shutil.disk_usage('/tmp').free, 'actions': [], 'skipped': []}
+    running = subprocess.check_output(['ps', '-axo', 'comm='], text=True).splitlines()
+    compiling = any(Path(line.strip()).name in ('xcodebuild', 'swift-frontend', 'clang') for line in running)
+    inventory = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', '--json'], text=True)) if simulators else {'devices': {}}
+    states = {d['udid']: d['state'] for rows in inventory['devices'].values() for d in rows}
+    devices = Path.home() / 'Library/Developer/CoreSimulator/Devices'
+    caches = []
+    for value in build_caches:
+        original = Path(value).expanduser()
+        cache = original.resolve()
+        owned = cache.is_relative_to((Path.home() / 'Library/Caches/TaskfoldBuild').resolve()) or (cache.parent == Path('/private/tmp') and cache.name.startswith('taskfold-'))
+        marked = (cache / 'DailyProject/Taskfold.xcodeproj').is_dir() or any(cache.glob('taskfold-daily-*.json'))
+        if not owned or not marked or original.is_symlink():
+            raise ValueError('Not a marked Taskfold build cache: ' + str(cache))
+        caches.append(cache)
+    for device in simulators:
+        if states.get(device) != 'Shutdown':
+            report['skipped'].append({'device': device, 'reason': 'Not a known shutdown Simulator'}); continue
+        root = devices / device / 'data/Library/Application Support/PRBPosterExtensionDataStore'
+        for cache in root.glob('*/Extensions/*/descriptors/*/versions/*/scratch/SnapshotCache.cachedb'):
+            if cache.is_symlink() or not cache.resolve().is_relative_to(root.resolve()):
+                raise ValueError('Unexpected wallpaper scratch path')
+            report['actions'].append({'path': str(cache), 'kind': 'wallpaperScratch', 'allocatedBytes': allocated(cache)})
+            if apply: shutil.rmtree(cache)
+    for cache in caches:
+        if compiling or any(line.strip().startswith(str(cache) + '/') and '.app/' in line for line in running):
+            report['skipped'].append({'cache': str(cache), 'reason': 'Compiler or cache app still running'}); continue
+        candidates = [cache / name for name in ['Build/Intermediates.noindex', 'ModuleCache.noindex', 'SDKStatCaches.noindex', 'Index.noindex']]
+        total = sum(allocated(p) for p in candidates)
+        # Keep a small reusable cache when space is healthy; never accumulate
+        # repeated derived trees in preference to useful product/evidence bytes.
+        if total <= 768 * 1024**2 and shutil.disk_usage(cache).free >= 30 * 1024**3:
+            report['skipped'].append({'cache': str(cache), 'reason': 'Reusable compiler cache within 768 MiB budget', 'allocatedBytes': total}); continue
+        for path in candidates:
+            if path.exists():
+                if path.is_symlink() or not path.resolve().is_relative_to(cache): raise ValueError('Unexpected compiler cache link')
+                report['actions'].append({'path': str(path), 'kind': 'completedCompilerCache', 'allocatedBytes': allocated(path)})
+                if apply: shutil.rmtree(path)
+    report['freeAfterBytes'] = shutil.disk_usage('/tmp').free
+    report['actualFreeChangeBytes'] = report['freeAfterBytes'] - report['freeBeforeBytes']
+    return report
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--simulator', action='append', default=[], help='Explicit Taskfold test device; only wallpaper scratch while shutdown')
+    parser.add_argument('--build-cache', action='append', default=[], help='Explicit completed marked Taskfold derived-data directory')
+    parser.add_argument('--apply', action='store_true', help='Remove only the enumerated generated caches')
+    parser.add_argument('--report', type=Path, help='Write a concise audit outside app data')
+    args = parser.parse_args()
+    target = args.report.expanduser().resolve() if args.report else None
+    if target and target.exists(): raise SystemExit('Preserve the previous cleanup report; choose a new report path')
+    report = finish(args.simulator, args.build_cache, args.apply)
+    if target:
+        target.write_text(json.dumps(report, indent=2) + '\n')
+    print(json.dumps(report, indent=2))
+
+
+if __name__ == '__main__':
+    main()

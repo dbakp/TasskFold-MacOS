@@ -205,12 +205,10 @@ struct TemplateLibraryView: View {
     @State private var captured: WorkflowTemplateCapture?
     @State private var readingFile: UUID?
     @State private var fileRead: WorkflowTemplateReadOperation?
-    private var sources: [Record] {
-        switch sourceKind {
-        case "section": return OrganizationOrder.sorted(store.rows("sections").filter { row in store.allProjects.contains { $0.id == row.string("project_id") } })
-        case "task": return store.tasks
-        default: return store.allProjects
-        }
+    @State private var sourceRequest: WorkflowSourceRequest?
+    private var selectedSource: Record? {
+        guard !source.isEmpty, store.workflowPreviewReady(binding), let kind = WorkflowTemplate.Kind(rawValue: sourceKind) else { return nil }
+        return WorkflowSourceCatalog.current(source, kind: kind, projects: store.allProjects, sections: store.rows("sections"), tasks: kind == .task ? store.tasks : [])
     }
     private var matchingTemplates: [Record] {
         let search = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -219,6 +217,7 @@ struct TemplateLibraryView: View {
     }
     private var matchingStarters: [WorkflowStarter] { WorkflowStarter.matching(query) }
     var body: some View {
+        let currentSource = selectedSource
         WorkflowShell(title: "Templates") {
             List {
                 Section {
@@ -268,14 +267,14 @@ struct TemplateLibraryView: View {
                     Text("Review a workflow file before saving a private copy. Importing does not create any tasks.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section("Save a workflow") {
-                    Picker("Type", selection: $sourceKind) { Text("Project and subprojects").tag("project"); Text("Section").tag("section"); Text("Task").tag("task") }.onChange(of: sourceKind) { _, _ in source = "" }
-                    Picker("Source", selection: Binding(get:{sources.contains(where:{$0.id==source}) ? source:""},set:{source=$0})) {
-                        Text("Choose a source").tag("")
-                        ForEach(sources) { row in Text(sourceKind == "task" ? row.title : row.name).tag(row.id) }
+                    Picker("Type", selection: $sourceKind) { Text("Project and subprojects").tag("project"); Text("Section").tag("section"); Text("Task").tag("task") }.onChange(of: sourceKind) { _, _ in source = ""; sourceRequest = nil }.accessibilityIdentifier("templateSourceKind")
+                    LabeledContent("Source") {
+                        let title = currentSource.map { sourceKind == "task" ? $0.title : $0.name } ?? "Choose a source"
+                        Button(title, action: openSources).disabled(!store.workflowPreviewReady(binding))
+                            .accessibilityIdentifier("templateSource").accessibilityLabel("Source").accessibilityValue(title)
                     }
-                    .accessibilityIdentifier("templateSource")
                     TextField("Template name", text: $name).accessibilityIdentifier("templateName")
-                    Button("Save template", action: capture).disabled(source.isEmpty || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty).accessibilityIdentifier("saveWorkflowTemplate")
+                    Button("Save template", action: capture).disabled(currentSource == nil || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty).accessibilityIdentifier("saveWorkflowTemplate")
                 }
                 if let message { Text(message).foregroundStyle(.red) }
             }
@@ -293,7 +292,7 @@ struct TemplateLibraryView: View {
                 }
             }
             #endif
-        }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) }; if source.isEmpty { source = sources.first?.id ?? "" } }
+        }.onAppear { if binding == nil { binding = WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration) }; if source.isEmpty && sourceKind == "project" { source = store.allProjects.first?.id ?? "" } }
         .safeAreaInset(edge: .bottom) {
             if readingFile != nil {
                 HStack {
@@ -306,7 +305,7 @@ struct TemplateLibraryView: View {
         }
         .onDisappear { cancelFileRead(); Task { await summaryCache.clear() } }
         .onChange(of: store.workspaceGeneration) { _, _ in
-            query = ""
+            query = ""; source = ""; sourceRequest = nil
             cancelFileRead(); importing = false; imported = nil; csvSource = nil; exportRequest = nil
             Task { await summaryCache.clear() }
         }
@@ -341,11 +340,25 @@ struct TemplateLibraryView: View {
         .sheet(item: $imported) { request in TemplateFileReview(request: request, binding: binding, onSaved: { query = "" }) }
         .sheet(isPresented: $importingText) { TemplateTextImportView(binding: binding) }
         .sheet(item: $csvSource) { source in TemplateCSVMappingView(source: source, binding: binding) }
+        .sheet(item: $sourceRequest) { request in
+            WorkflowSourceSelectionView(request: request, selected: source) { id in
+                guard store.workflowReady(request.workspace), binding == request.workspace,
+                      request.session == store.backend.reminderSessionIncarnation, request.kind.rawValue == sourceKind else { return "Your workspace changed. Reopen templates before choosing a source." }
+                guard WorkflowSourceCatalog.current(id, kind: request.kind, projects: store.allProjects, sections: store.rows("sections"), tasks: request.kind == .task ? store.tasks : []) != nil else {
+                    return "This source is no longer available. Close this list and choose again."
+                }
+                source = id; message = nil; return nil
+            }
+        }
         .sheet(item: $selected) { TemplateRunView(template: $0) }
         .sheet(item: $editingTemplate) { TemplateDefinitionEditor(template: $0) }
         .confirmationDialog("Delete this template?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
             Button("Delete template", role: .destructive) { if store.workflowReady(binding), let row = deleting { workspace.run("Delete Template") { store.remove(WorkflowTemplate.table, row.id) } }; deleting = nil }
         } message: { Text("Tasks and projects created from it stay saved.") }
+    }
+    private func openSources() {
+        guard store.workflowReady(binding), let binding, let kind = WorkflowTemplate.Kind(rawValue: sourceKind) else { message = store.error; return }
+        sourceRequest = WorkflowSourceRequest(kind: kind, workspace: binding, session: store.backend.reminderSessionIncarnation)
     }
     private func cancelFileRead() {
         readingFile = nil
@@ -363,7 +376,7 @@ struct TemplateLibraryView: View {
     private func capture() {
         guard store.workflowReady(binding) else { message = store.error; return }
         do {
-            guard sources.contains(where: { $0.id == source }), let kind = WorkflowTemplate.Kind(rawValue: sourceKind) else { throw AppFailure(message: "Choose an available source.") }
+            guard selectedSource != nil, let kind = WorkflowTemplate.Kind(rawValue: sourceKind) else { throw AppFailure(message: "Choose an available source.") }
             let opening = try store.captureWorkflowTemplate(kind: kind, sourceID: source, binding: binding)
             if opening.shared { captured = opening; return }
             let template = opening.template
@@ -376,6 +389,110 @@ struct TemplateLibraryView: View {
     }
 }
 
+
+private struct WorkflowSourceRequest: Identifiable {
+    let id = UUID()
+    let kind: WorkflowTemplate.Kind
+    let workspace: WorkspaceBinding
+    let session: UUID
+}
+
+private struct WorkflowSourceSelectionView: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: WorkflowSourceRequest
+    let selected: String
+    let choose: (String) -> String?
+    private struct Version: Equatable {
+        let request: UUID
+        let kind: WorkflowTemplate.Kind
+        let projects: [Record]
+        let sections: [Record]
+        let taskRevision: Int
+    }
+    @State private var catalog: WorkflowSourceCatalog?
+    @State private var loadedVersion: Version?
+    @State private var query = ""
+    @State private var limit = WorkflowSourceCatalog.pageSize
+    @State private var message: String?
+    private var readable: Bool { store.workflowPreviewReady(request.workspace) && request.session == store.backend.reminderSessionIncarnation }
+    private var version: Version {
+        Version(request: request.id, kind: request.kind, projects: store.allProjects,
+            sections: request.kind == .project ? [] : store.rows("sections"), taskRevision: request.kind == .task ? store.taskRevision : 0)
+    }
+    var body: some View {
+        let currentVersion = version
+        WorkflowShell(title: "Choose a source") {
+            if !readable {
+                ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Reopen templates in your current workspace."))
+            } else if let catalog, loadedVersion == currentVersion {
+                let page = catalog.page(query: query, limit: limit)
+                List {
+                    if page.total == 0 {
+                        if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            ContentUnavailableView("No sources yet", systemImage: "tray", description: Text("Add a \(request.kind.rawValue), then save it as a reusable workflow."))
+                        } else { ContentUnavailableView.search(text: query.trimmingCharacters(in: .whitespacesAndNewlines)) }
+                    }
+                    ForEach(page.options) { option in
+                        Button {
+                            guard readable else { return }
+                            if let error = choose(option.id) { message = error } else { dismiss() }
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(option.title).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                                    Text(option.location).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer()
+                                if selected == option.id { Image(systemName: "checkmark").foregroundStyle(.tint).accessibilityHidden(true) }
+                            }.frame(minHeight: 44).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityIdentifier("workflowSource-" + option.id)
+                            .accessibilityLabel(option.title).accessibilityValue(option.location + (selected == option.id ? ", Selected" : ""))
+                    }
+                    if page.options.count < page.total {
+                        Section {
+                            Text("Showing \(page.options.count) of \(page.total) sources").font(.caption).foregroundStyle(.secondary)
+                            Button("Show more") { limit += WorkflowSourceCatalog.pageSize }.accessibilityIdentifier("showMoreWorkflowSources")
+                        }
+                    }
+                    if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("workflowSourceError") }
+                }
+                .searchable(text: $query, prompt: "Find a source or project")
+                .onChange(of: query) { _, _ in limit = WorkflowSourceCatalog.pageSize; message = nil }
+            } else if let message, loadedVersion == currentVersion {
+                ContentUnavailableView("Sources unavailable", systemImage: "exclamationmark.triangle", description: Text(message))
+            } else { ProgressView("Loading sources…") }
+        }
+        #if DEBUG
+        .toolbar {
+            if WorkspaceReadNativeFixture.templateLibrary {
+                ToolbarItem {
+                    Menu("Source test") {
+                        Button("Rename sample source") { do { try store.changeWorkflowSourceReadFixture() } catch { message = error.localizedDescription } }
+                        Button("Remove sample source") { do { try store.changeWorkflowSourceReadFixture(removing: true) } catch { message = error.localizedDescription } }
+                        Button("Hide workspace") { store.templateLibraryReadFixtureVisibility(false) }
+                        Button("Show workspace") { store.templateLibraryReadFixtureVisibility(true) }
+                    }.accessibilityIdentifier("workflowSourceFixture")
+                }
+            }
+        }
+        #endif
+        .task(id: currentVersion) {
+            guard readable else { catalog = nil; loadedVersion = nil; return }
+            message = nil
+            do {
+                let catalog = try await WorkflowSourceCatalog.load(kind: request.kind, projects: currentVersion.projects,
+                    sections: currentVersion.sections, tasks: request.kind == .task ? store.tasks : [])
+                guard !Task.isCancelled, readable, version == currentVersion else { return }
+                self.catalog = catalog; loadedVersion = currentVersion
+            } catch {
+                if !Task.isCancelled, readable, version == currentVersion {
+                    catalog = nil; loadedVersion = currentVersion; message = error.localizedDescription
+                }
+            }
+        }
+    }
+}
 
 private struct TemplateCaptureReview: View {
     @Environment(Store.self) private var store

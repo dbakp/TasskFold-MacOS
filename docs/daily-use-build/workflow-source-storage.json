@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-04",
+  "summaryRetainedBundles": 27,
+  "reportedSummaryRetiredBytes": 2919694336,
+  "fullyArchivedBundles": 4,
+  "fullyArchivedOriginalBytes": 702771200,
+  "fullArchiveBytes": 305704564,
+  "allRestoredFileHashesVerified": true,
+  "restoredReaderStatesMatch": true,
+  "scope": "Generated Taskfold results and completed duplicate compiler/products only. Private full archives and outcome summaries retained outside Git; no app data, devices, Docker volumes, swap files or unrelated jobs removed.",
+  "additionalRetired": [
+    "Completed Mac build-10 compiler caches and duplicate products after verified installation/archive",
+    "Closed isolated Mac source host",
+    "Completed iOS native intermediate/module caches",
+    "Superseded Mac candidate archives 8 and 9; receipts retained"
+  ],
+  "installedMacAndRollbackRetained": true,
+  "latestFreeGiB": 59.2,
+  "heavyBuildsPausedBelowFloor": false,
+  "capacityCleanupActualFreeIncreaseBytes": 40875786240,
+  "capacityCleanupEvidence": "storage-maintenance.json"
+}

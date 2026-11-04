@@ -7763,7 +7763,7 @@ This refines existing checkpoints; bars remain unchanged. Continue daily-user or
 - [ ] Finish physical iPhone development signing/installation after configuration is confirmed.
 - [x] Deploy the focused capture service as `20261104190311_taskfold_capture_workflow_undo`; verify all five function bodies, 66 live column contracts, grants and unchanged policies/triggers. Anonymous routes refuse access; existing security warnings are unchanged. Package Mac 1.2.0 (7), verify its actual ZIP payload and exact accepted native binary.
 - [x] Install Mac build 7 after closing build 6 without an open draft. Verify signature and preserve fresh private app-file safety copy plus rollback archive. No real task test edits or advanced gate changes occurred.
-- [ ] Verify ordinary build-7 startup/sync after the macOS shared widget/capture app-data prompt is approved. TCC logs confirm that prompt; the main thread waits opening shared capture storage. No Keychain failure is inferred.
+- [x] Ordinary build-7 startup/sync verified after app-data approval in the preserved process. Subsequently superseded by installed, startup/sync-verified build 10.
 
 The full Px backlog and deferrals remain. Curated bars are unchanged. Readable summaries were retained before pruning completed old test results; the five newest bundles and unreadable bundles were kept.
 
@@ -7780,3 +7780,28 @@ The accepted Mac and Simulator binaries are preserved in verified archives; dupl
 - [ ] Actual starter preview/cancel/save and subsequent run acceptance. Computer use reported the Mac locked before any assertion; its temporary process was subsequently absent. No runtime success or crash cause is inferred.
 
 The signed Mac package is retained; completed Core/compiler products and duplicate experimental app copies were removed. No real task data, Docker volumes, unrelated jobs or Simulator devices were deleted. This is a template usability refinement: existing curated bars and full Px requirements are unchanged. [Owning evidence](daily-use-build/workflow-starters-core.json).
+
+
+### 4 November · Searchable workflow sources
+
+- [x] Replace eager project/section/task menus with an on-demand searchable sheet in each owning app. Background index construction is cancellable. Only 100 matched rows are initially rendered, with explicit Show more; all matches remain reachable.
+- [x] Include project ancestry, section and archived context. Repeated names can be searched by location as well as title. Current visible data, workspace and session are checked before choosing and again before capture.
+- [x] Refresh the presentation when projects, sections or task records change; hide obsolete data while a new index is prepared. Account/readability changes hide the chooser's data and cancel stale construction.
+- [x] Each repo passes 13 focused Core checks: eight source cases plus five starter regressions. The 5,000-source index took 40 ms on Mac and 39 ms in the owning iOS Core run; combined search checks took 18/17 ms. These are local Core diagnostics, not app-rendering or hardware guarantees.
+- [x] Actual Mac prototype observation exposed an interaction defect: title clicks select, but blank space in the source row does not. Add the full-row content shape before accepting the next candidate.
+- [x] Accept the corrected Mac source chooser in an isolated build-10 clone: full-row project/task selection, contextual search, live rename, unreadability/return, explicit definition save and fresh run preserve prior work. Weekly reset preview/cancel also preserves saved work. Install normal Mac build 10 after closing synced build 7 with no draft; verify signature, ordinary startup and Synced status. Private app-file copy plus build-7 rollback retained.
+- [ ] Finish the single isolated iPhone source journey and produce ordinary Simulator build 25. Fixed source UI compiled successfully. The first actual run selected the library search behind the sheet and failed keyboard focus; the test now targets the source search by name, but its rebuild/rerun is pending the 20 GiB floor (19.3 GiB free at review). Simulator initial shutdown state restored. No product failure or runtime pass is inferred from that automation failure.
+- [ ] Wider cloud/provider, speech, largest-library rendering and physical installation remain separately unaccepted.
+
+The normal installed Mac build 7 now opens and reports Synced after app-data approval in its original process. No real-task edits were made. All prior Px gaps and deferrals remain. The source chooser adds no schema or server changes and keeps existing template capture/save/run checks.
+
+Current source-chooser status supersedes earlier candidate notes: **Mac 1.2.0 (10) is installed, opened and Synced**, with widget/share signatures verified. Prototype Mac 8/9 archives are retired after retaining receipts; build 7 remains the rollback. iOS 24 is a superseded prototype, and 25 has **not** been produced. Thirteen focused Core checks pass per owning repo; the corrected Mac native journey is accepted. [Mac native proof](daily-use-build/workflow-source-mac-native.json), [installed update](daily-use-build/workflow-source-mac-installed.json), [iOS pending proof](daily-use-build/workflow-source-ios-native.json).
+
+### 4 November · Storage recovery and recurring cleanup
+
+- [x] Investigate actual usage before further builds: simulator devices ~77 GiB, Xcode device support ~55 GiB, system-wide swap ~15 GiB used. The old device-support files predate this work; no historical 90-GiB baseline exists to attribute the entire change.
+- [x] Clear 227 wallpaper snapshot scratch caches on three shutdown test devices; preserve installed apps/data and simulator identities. Retire three superseded regenerable Apple device-support versions, preserving current hardware support. Measured volume free space increased **38.1 GiB**, from 21.3 to 59.4 GiB. No real app data, devices, Docker data, swap or unrelated jobs removed.
+- [x] Add guarded `Scripts/finish_test_run.py` to each repo. Six meaningful temporary-file checks verify dry-run, active-compiler protection, product/evidence preservation, unknown-path and symlink refusal, healthy small-cache retention, and shutdown-only wallpaper cleanup.
+- [x] Require end-of-every-run cleanup in each owning AGENTS.md. Daily builds invoke bounded compiler cleanup automatically; native source checks clean wallpaper scratch after restoring their device state. Retain current app plus one rollback and concise test evidence.
+
+[Storage measurements and policy](daily-use-build/storage-maintenance.json). Continue the corrected iPhone source journey now that the 20-GiB floor is restored; no prior failed run is relabelled as accepted.

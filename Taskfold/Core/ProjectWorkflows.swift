@@ -353,7 +353,7 @@ enum MultiLineCapture {
 /// Private, versioned, reusable workflow definitions. Source IDs are internal
 /// references only; every use creates new records and task generations.
 struct WorkflowTemplate: Sendable {
-    enum Kind: String { case project, section, task }
+    enum Kind: String, Sendable { case project, section, task }
     static let table = "project_templates"
     let document: JSON
     var requiresHeadingSupport: Bool { document.object["version"] == .number(2) }
@@ -1865,5 +1865,119 @@ enum WorkflowStarter: String, CaseIterable, Identifiable, Sendable {
         return try WorkflowTemplateFile(name: name, document: .object(["version": .number(1), "kind": .string("project"),
             "projects": .array([.object(["id": .string(project), "name": .string(name), "description": .string(summary), "color": .string("#8b5cf6"), "order_index": .number(0)])]),
             "sections": .array(sectionRows), "tasks": .array(taskRows)]))
+    }
+}
+
+/// A presentation-only index of already-readable sources. It is built on demand,
+/// never from the library's body, and is not permission to capture a workflow.
+struct WorkflowSourceCatalog: Sendable {
+    struct Option: Identifiable, Equatable, Sendable {
+        let id: String
+        let title: String
+        let location: String
+    }
+    struct Page: Equatable, Sendable {
+        let options: [Option]
+        let total: Int
+    }
+    let kind: WorkflowTemplate.Kind
+    let options: [Option]
+    static let pageSize = 100
+
+    private static func unique(_ rows: [Record], check: () throws -> Void) throws -> [String: Record] {
+        var index: [String: Record] = [:], duplicates = Set<String>()
+        for row in rows where !row.id.isEmpty {
+            try check()
+            if index.updateValue(row, forKey: row.id) != nil { duplicates.insert(row.id) }
+        }
+        for id in duplicates { index.removeValue(forKey: id) }
+        return index
+    }
+    init(kind: WorkflowTemplate.Kind, projects: [Record], sections: [Record], tasks: [Record], checkCancellation: () throws -> Void = { try Task.checkCancellation() }) throws {
+        self.kind = kind
+        let projects = try Self.unique(projects, check: checkCancellation)
+        let sections = try Self.unique(sections, check: checkCancellation).filter { projects[$0.value.string("project_id")] != nil }
+        let archived = ProjectOrganization.archivedIDs(in: Array(projects.values))
+        var paths: [String: String] = [:]
+        for id in projects.keys {
+            try checkCancellation()
+            var cursor = id, names: [String] = [], seen = Set<String>()
+            while let row = projects[cursor], seen.insert(cursor).inserted, names.count < ProjectOrganization.maximumDepth {
+                try checkCancellation()
+                names.append(row.name.isEmpty ? "Untitled project" : row.name)
+                cursor = row.string("parent_id")
+            }
+            paths[id] = names.reversed().joined(separator: " › ")
+        }
+        func projectPath(_ id: String) -> String {
+            let path = id.isEmpty ? "Inbox" : paths[id] ?? ""
+            return archived.contains(id) ? "Archived · " + path : path
+        }
+        let rows: [String: Record]
+        switch kind {
+        case .project: rows = projects
+        case .section: rows = sections
+        case .task: rows = try Self.unique(tasks, check: checkCancellation).filter { $0.value.string("project_id").isEmpty || projects[$0.value.string("project_id")] != nil }
+        }
+        var options: [Option] = []
+        for row in rows.values {
+            try checkCancellation()
+            let title = kind == .task ? row.title : row.name
+            let location: String
+            switch kind {
+            case .project:
+                let parent = paths[row.string("parent_id")] ?? "Top level"
+                location = archived.contains(row.id) ? "Archived · " + parent : parent
+            case .section: location = projectPath(row.string("project_id"))
+            case .task:
+                var path = projectPath(row.string("project_id"))
+                if let section = sections[row.string("section_id")], section.string("project_id") == row.string("project_id") { path += " › " + section.name }
+                location = path
+            }
+            options.append(Option(id: row.id, title: title.isEmpty ? "Untitled " + kind.rawValue : title, location: location))
+        }
+        self.options = try options.sorted {
+            try checkCancellation()
+            let titleOrder = $0.title.localizedStandardCompare($1.title)
+            if titleOrder != .orderedSame { return titleOrder == .orderedAscending }
+            let locationOrder = $0.location.localizedStandardCompare($1.location)
+            return locationOrder == .orderedSame ? $0.id < $1.id : locationOrder == .orderedAscending
+        }
+        try checkCancellation()
+    }
+    static func load(kind: WorkflowTemplate.Kind, projects: [Record], sections: [Record], tasks: [Record]) async throws -> Self {
+        let worker = Task.detached(priority: .userInitiated) { try Self(kind: kind, projects: projects, sections: sections, tasks: tasks) }
+        return try await withTaskCancellationHandler(operation: {
+            let result = try await worker.value
+            try Task.checkCancellation()
+            return result
+        }, onCancel: { worker.cancel() })
+    }
+    func page(query: String, limit: Int = pageSize) -> Page {
+        let words = Set(query.split(whereSeparator: { $0.isWhitespace }).map { String($0).lowercased() })
+        var total = 0, visible: [Option] = []
+        for option in options where words.allSatisfy({ option.title.localizedStandardContains($0) || option.location.localizedStandardContains($0) }) {
+            total += 1
+            if visible.count < max(0, limit) { visible.append(option) }
+        }
+        return Page(options: visible, total: total)
+    }
+    /// Re-read just the chosen identity. Never admit a deleted, ambiguous or
+    /// inaccessible source using a previously displayed catalog entry.
+    static func current(_ id: String, kind: WorkflowTemplate.Kind, projects: [Record], sections: [Record], tasks: [Record]) -> Record? {
+        guard !id.isEmpty else { return nil }
+        func one(_ id: String, in rows: [Record]) -> Record? {
+            let matches = Array(rows.lazy.filter { $0.id == id }.prefix(2))
+            return matches.count == 1 ? matches[0] : nil
+        }
+        switch kind {
+        case .project: return one(id, in: projects)
+        case .section:
+            guard let row = one(id, in: sections), one(row.string("project_id"), in: projects) != nil else { return nil }
+            return row
+        case .task:
+            guard let row = one(id, in: tasks), row.string("project_id").isEmpty || one(row.string("project_id"), in: projects) != nil else { return nil }
+            return row
+        }
     }
 }

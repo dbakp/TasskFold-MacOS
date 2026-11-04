@@ -121,6 +121,8 @@ def main():
     receipt.write_text(json.dumps(data, indent=2) + "\n")
     print("Daily-use development candidate: " + str(app))
     print("Build receipt: " + str(receipt))
+    # Preserve the verified product and receipt; bound completed compiler scratch.
+    subprocess.run(["python3", "Scripts/finish_test_run.py", "--apply", "--build-cache", str(args.derived_data)], cwd=ROOT, check=True)
 
 
 if __name__ == "__main__":

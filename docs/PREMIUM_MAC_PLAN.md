@@ -10858,3 +10858,12 @@ The library now offers four searchable starters with native labels/sections and 
 ### 4 November · Owning Simulator candidate verified
 
 The independently owned iOS build 23 now compiles and has an exact verified Simulator archive, complementing signed Mac build 8. Starter UI and ordinary installed update acceptance remain open. The current Mac build-7 process still waits on shared widget/capture storage, and current inventory has no connected physical iOS device. Bounded cleanup retained readable outcomes before retiring ten obsolete test-result bundles; app data and unrelated jobs were untouched. This closes the earlier iOS storage/build blocker without enabling advanced features or changing the visual design.
+
+
+### 4 November · Source chooser and installed baseline
+
+The installed build-7 process now opens Today and reports Synced after its app-data approval; user work was untouched. The source chooser uses native rows/search with contextual captions, cancellable background indexing and live-data refresh. Thirteen owning Core checks pass. Actual prototype observation found that only the text activated a row, so the full label now has a rectangular content shape. Corrected native acceptance and the next installed candidate remain open. The independently prepared iOS target compiles only the changed source-chooser case to keep resource use bounded.
+
+4 November source chooser delivery: normal Mac **1.2.0 (10)** installed and Synced 22.54. Nine isolated source/starter checks pass, including full-row selection, current-data refresh, exact preservation on save/run, and Weekly reset preview/cancel. All test sessions closed; normal app remains running. Retain build-7 rollback and private app-file copy. iOS native rerun/build 25 awaits storage floor; no wider speech/provider/large-render acceptance claimed.
+
+Storage recovery: reclaimed 38.1 GiB of regenerable test-wallpaper/support caches, restoring ~59 GiB free. Both repos now enforce an every-run cleanup procedure and bounded compiler cache; installed Mac build 10 remains usable and real data untouched.

@@ -6785,6 +6785,18 @@ extension Store {
         let tasks=(0..<3).map {i->Record in var row=Record.task(user:userID,project:project.id);row["id"] = .string(String(format:"ec270001-0000-4000-8000-%012d",i));row["title"] = .string("Preserve task \(i)");return row}
         snapshot=Snapshot(tables:["projects":[project],"tasks":tasks,WorkflowTemplate.table:templates]);try persist()
     }
+    func changeWorkflowSourceReadFixture(removing: Bool = false) throws {
+        guard WorkspaceReadNativeFixture.templateLibrary, localMode,
+              let project = snapshot.tables["projects"]?.firstIndex(where: { $0.id == TeamEditorNativeFixture.projectID }) else { throw CancellationError() }
+        let task = "ec270001-0000-4000-8000-000000000002"
+        if removing { snapshot.tables["tasks"]?.removeAll { $0.id == task } }
+        else {
+            snapshot.tables["projects"]![project]["name"] = .string("Updated library workshop")
+            guard let index = snapshot.tables["tasks"]?.firstIndex(where: { $0.id == task }) else { throw CancellationError() }
+            snapshot.tables["tasks"]![index]["title"] = .string("Updated source task")
+        }
+        try persist()
+    }
     func changeTemplateLibraryReadFixture() throws {
         guard WorkspaceReadNativeFixture.templateLibrary,let index=snapshot.tables[WorkflowTemplate.table]?.firstIndex(where:{$0.id==WorkspaceReadNativeFixture.libraryID(0)}) else{throw CancellationError()}
         snapshot.tables[WorkflowTemplate.table]![index]["document"] = WorkspaceReadNativeFixture.libraryDocument(changed:true);try persist()

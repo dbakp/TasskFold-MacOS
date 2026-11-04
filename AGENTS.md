@@ -13,3 +13,10 @@
 - Run `python3 Scripts/render_px_progress.py --refresh-sources`, then `python3 Scripts/render_px_progress.py --check`. Commit the snapshot and both generated HTML files with the corresponding work. Each repo owns its own renderer/data; never introduce a sibling-repo build dependency.
 - Bars count curated checkpoints, not effort, time or release readiness. Distinguish verified scope, built-but-unaccepted work, implementation still needed and explicit deferrals. Do not count repeated historical checklist entries or test totals as product completion. Keep known gaps and normal-use feature gates visible.
 - When showing progress in the conversation, refresh the inline fragment using `--preview-output` with the current task's durable visualization path. Updating the artifact is part of ongoing work, not a reason to start duplicate scheduled jobs.
+
+## End every run with storage cleanup
+
+- Before finishing **every run**, check free space and clean completed Taskfold-generated outputs. Record before/after free bytes and what was removed; never leave cleanup as a future promise.
+- Run `python3 Scripts/finish_test_run.py --apply` with each explicitly used `--simulator UUID` and completed marked `--build-cache PATH`. Shut down only devices this run booted, then clear their regenerable wallpaper snapshot scratch. Never erase app/device data or touch other projects’ active devices. The wallpaper cache was measured at 22 GiB across Taskfold test devices on 4 November.
+- Reuse a single derived-data cache per platform and a fixed phone/tablet pool. Keep compiler caches within 768 MiB per selected cache; prune them when free space is below 30 GiB. Keep the 20 GiB hard preflight floor. Serialize heavy builds.
+- Retain the current verified app package and one rollback, concise test outcomes and necessary failure evidence. Retire superseded candidate packages and duplicate products only after verified archive/evidence preservation. Never delete source, real task data, Keychain items, Docker volumes, swap, shared device-support files or unrelated projects as routine end-of-run cleanup. Review shared regenerable caches separately when required.
