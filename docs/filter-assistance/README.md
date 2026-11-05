@@ -18,7 +18,7 @@ Each owning repository passes **123 checks, with 2 explicit skips, out of 125 se
 
 [Current-source signed builds](signed-build.json) pass for both apps, including weak FoundationModels linkage. The two opt-in real-model probes run only on this Mac and report Apple Intelligence disabled, so both skip. **No real model generation or native review flow is accepted.** The Mac was independently observed locked; no UI retry, Simulator boot or test-app launch was attempted. Native Generate/Stop/edit/preview/Cancel/Use/Save/failure/Undo/cold/account/accessibility checks, genuine directory delivery, generated quality/latency and older-system launch remain open. Compilation and Core proof do not establish these outcomes.
 
-The installed Mac14/phone31 and frozen Mac22/phone34 packages remain unchanged and do not contain this feature. Cloud provider/cost/data-handling decisions and broader independently stored child-record acceptance remain open. This milestone does not complete the whole assistance checkpoint or the Px goal.
+Phone34 was subsequently installed from the earlier frozen optimized archive; it excludes this feature. Mac14 remains installed and Mac22 remains prepared. [Phone installation](../daily-use-build/phone-34-installation.json). Cloud provider/cost/data-handling decisions and broader independently stored child-record acceptance remain open. This milestone does not complete the whole assistance checkpoint or the Px goal.
 
 ## API basis
 

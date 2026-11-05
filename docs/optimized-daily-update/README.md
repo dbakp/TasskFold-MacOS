@@ -1,5 +1,7 @@
 # Optimized daily-use update
 
+Phone **1.4.0 (34)** was subsequently installed from this frozen archive on 5 November. Its process runs and all 205 prior task IDs, titles, notes, attachments and children match the fresh private pre-update safety copy. Mac22 remains prepared. Later assistant, note-navigation and Core-performance source changes are excluded. [Phone installation](../daily-use-build/phone-34-installation.json). Physical UI/FPS acceptance remains open.
+
 Reviewed 5 November 2026. The ordinary daily-use builder now defaults to **Release** (Swift `-O`) with its existing development-signing profile. `--configuration Debug` remains available explicitly for diagnostics. The app's normal release project is unchanged. Mac daily builds compile only the current host architecture; the ordinary distribution workflow remains separate.
 
 The preceding daily-use candidates selected Debug/`-Onone`. This adds avoidable execution overhead; switching the daily packages to optimized code is a concrete responsiveness improvement. It does not establish physical frame timing or prove that every navigation/drag pause is eliminated. No hosted state or normal advanced feature gate is changed.
@@ -14,7 +16,7 @@ Mac build **22** includes app, widgets and Share. Phone build **34** retains the
 
 Each owning builder freezes and fingerprints its own app inputs. The package verifier extracts the ZIP, compares every payload file, validates signatures and rechecks continuity/profile metadata. The compiler records bind actual optimized main-app flags, architecture and build-log hash. Current receipts distinguish packaging from installation; a prepared package never implies an app was launched or user data was accepted.
 
-Both continuity suites pass 12 checks; the iOS project-copy suite also passes its two Share-omission guards. The existing source fixtures remain Debug-only and are not enabled by ordinary daily packages. Installation waits for saved drafts and the appropriate connected device.
+Both continuity suites pass 12 checks; the iOS project-copy suite also passes its two Share-omission guards. The existing source fixtures remain Debug-only and are not enabled by ordinary daily packages. Mac installation waits for saved drafts; the phone installation is now recorded separately above.
 
 ## Storage policy
 

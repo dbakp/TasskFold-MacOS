@@ -10971,3 +10971,8 @@ The Mac inspector now offers editable, explicitly applied step suggestions throu
 ### Reviewed filter assistance — 5 November 2026
 
 The Mac filter editor now has an optional on-device helper with editable expression, cancellable background validation, deterministic preview, explicit Use and separate Save. Reference/date bindings are checked again at Save; helper member reads occur only when a person lookup needs them. Shared availability handling preserves the task-step flow. Owning Core checks and current signatures pass; the locked Mac and disabled Apple Intelligence leave native/generation acceptance open. [Detailed scope](filter-assistance/README.md). Normal app/packages remain unchanged.
+
+
+### Phone optimized update installed — 5 November 2026
+
+The phone became reachable and the approved frozen build34 was installed in place. Launch and critical fields for all 205 prior tasks pass; a fresh private backup is retained. This excludes later assistant/note-section/Core-performance source changes. Mac14 remains running; Mac22 awaits its saved-draft window and verified archive extraction. Physical smoothness remains unaccepted. [Phone result](daily-use-build/phone-34-installation.json).

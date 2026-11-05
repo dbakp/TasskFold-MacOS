@@ -5,14 +5,14 @@ The immediate delivery is an ordinary personal-workflow app on the existing stor
 ## Installed daily-use apps — 5 November 2026
 
 - Mac **1.2.0 (14)**: installed at `/Applications/Taskfold.app`; later source builds are separate candidates and do not replace the running app.
-- iPhone **1.4.0 (31)**: installed and launch verified after saved-draft approval. All 205 previous task identities, titles, descriptions, attachments and children were preserved. This update fixes skipped day-review decisions and reduces repeated large-attachment parsing and redundant drop writes. Wider physical rendering/FPS remains unmeasured.
+- iPhone **1.4.0 (34)**: the verified frozen optimized Release update is installed and its app process is running. A fresh private safety copy is retained; all 205 prior task IDs, titles, descriptions, attachments and children match after launch. This includes the earlier day-review/drop fixes and prepared notes/Insights/read work. Later task-step/filter assistants, note-section navigation and subsequent Core optimizations remain source-only. Physical rendering/FPS is unmeasured. [Installation result](phone-34-installation.json).
 - Current and rollback archives are retained privately; later candidates are documented in their individual receipts and remain uninstalled until an appropriate update window.
 
 Ordinary candidates use no test launch arguments and keep the recorded advanced feature gates. Acceptance fixtures run only in the reserved namespace. The initial build/package work made no hosted changes, new simulators, real-task edits, installation or publication. The later focused assignment service deployment is recorded below. Build receipts bind the app input fingerprint.
 
 ## Prepared optimized update — 5 November 2026
 
-**Mac 1.2.0 (22)** and **iPhone 1.4.0 (34)** are built with optimized Swift code, signed and ZIP-payload verified. They combine the latest personal notes, Insights/day-selection and responsiveness work. Mac includes widgets and Share; the phone retains its documented development-only Share omission. They await a saved-draft update window and the phone's reconnection. Normal startup/data preservation and physical frame timing are not accepted merely by packaging. [Current receipts and limits](../optimized-daily-update/README.md).
+**Mac 1.2.0 (22)** and **iPhone 1.4.0 (34)** are built with optimized Swift code, signed and ZIP-payload verified. They combine the latest personal notes, Insights/day-selection and responsiveness work. Mac includes widgets and Share; the phone retains its documented development-only Share omission. Mac22 awaits its saved-draft update window. Phone34 is now installed with launch and critical task-field preservation checks accepted separately. Physical frame timing remains unmeasured. [Current receipts and limits](../optimized-daily-update/README.md).
 
 ## What the ordinary client exposes
 
