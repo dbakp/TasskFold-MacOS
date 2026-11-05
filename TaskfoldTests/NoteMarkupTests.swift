@@ -207,3 +207,62 @@ final class PinnedNoteTextEditTests: XCTestCase {
         }
     }
 }
+
+final class PreparedNoteMarkupTests: XCTestCase {
+    func testPreparedBlocksPreserveExistingFormattingAndLinkPolicy() throws {
+        let source = "# Résumé 🙂\n**Bold** and _italic_\n- [Guide](https://example.com/guide)\n> Quote\n```text\n**literal**\n```"
+        let reading = try NoteMarkup.Prepared(source)
+        XCTAssertEqual(reading.source, source)
+        XCTAssertEqual(reading.document, NoteMarkup.document(source))
+        for block in reading.document.blocks {
+            switch block.kind {
+            case .code, .space, .divider: XCTAssertNil(reading.inlineText[block.id])
+            default: XCTAssertEqual(reading.inlineText[block.id], NoteMarkup.inline(block.text))
+            }
+        }
+        XCTAssertTrue(reading.inlineText.values.contains { $0.runs.contains { $0.link?.host == "example.com" } })
+    }
+    func testOriginalFallbackRemainsCompleteAndDoesNotParseOversizeInlineText() throws {
+        for source in [String(repeating: "**Résumé** ", count: 60_000), Array(repeating: "- item", count: NoteMarkup.maximumBlocks + 1).joined(separator: "\n")] {
+            let reading = try NoteMarkup.Prepared(source)
+            XCTAssertTrue(reading.document.originalOnly)
+            XCTAssertEqual(reading.document.blocks.first?.text, source)
+            XCTAssertTrue(reading.inlineText.isEmpty)
+        }
+    }
+    func testPreparationCannotIntroduceExecutableOrPrivateLinks() throws {
+        for source in ["[Bad](file:///private/data)", "![Image](https://example.com/photo)", "<b>Literal</b>", "[Bad](javascript:alert%281%29)"] {
+            let reading = try NoteMarkup.Prepared(source)
+            XCTAssertEqual(reading.source, source)
+            for value in reading.inlineText.values {
+                XCTAssertTrue(value.runs.allSatisfy { $0.link == nil })
+                XCTAssertEqual(String(value.characters), source)
+            }
+        }
+    }
+    func testCancelledPreparationDoesNotReturnPartialBlocks() {
+        var checks = 0
+        XCTAssertThrowsError(try NoteMarkup.Prepared("# Heading\n- One\n- Two", checkCancellation: {
+            checks += 1
+            if checks == 4 { throw CancellationError() }
+        })) { XCTAssertTrue($0 is CancellationError) }
+        XCTAssertEqual(checks, 4)
+    }
+    func testAsyncPreparationPreservesUnicodeAndRevisedSource() async throws {
+        let original = "## First\nRésumé 👩🏽‍💻"
+        let first = try await NoteMarkup.Prepared.load(original)
+        let second = try await NoteMarkup.Prepared.load("## Revised\nKeep **new words**")
+        XCTAssertEqual(first.source, original)
+        XCTAssertEqual(second.source, "## Revised\nKeep **new words**")
+        XCTAssertNotEqual(first.document, second.document)
+        XCTAssertEqual(String(second.inlineText[1]!.characters), "Keep new words")
+    }
+    func testCancelledAsyncReadCannotPublishAStaleResult() async {
+        let job = Task { () throws -> NoteMarkup.Prepared in
+            return try await NoteMarkup.Prepared.load(String(repeating: "**word** ", count: 50_000))
+        }
+        job.cancel()
+        do { _ = try await job.value; XCTFail("Cancelled read must not be published") }
+        catch { XCTAssertTrue(error is CancellationError) }
+    }
+}

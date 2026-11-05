@@ -169,7 +169,6 @@ private struct PinnedNoteDetail: View {
     let close: () -> Void
     @State private var failure: String?
     @State private var editing: TaskEditorOpening?
-    @State private var originalText = false
     @State private var noteEditing: PinnedNoteTextRequest?
     @State private var failureTitle = "Could not unpin note"
     @State private var printReview: PrintReviewRequest?
@@ -187,11 +186,7 @@ private struct PinnedNoteDetail: View {
                         if task.string("description").isEmpty {
                             Text("Your note has no text yet. Add instructions or an idea with Edit note.").foregroundStyle(.secondary).accessibilityIdentifier("pinnedNoteBlank")
                         } else {
-                            if NoteMarkup.document(task.string("description")).formatted {
-                                Toggle("Show original text", isOn: $originalText).accessibilityIdentifier("noteOriginalText")
-                                if originalText { Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText") }
-                                else { NoteMarkupPreview(text: task.string("description")).accessibilityIdentifier("formattedPinnedNote") }
-                            } else { Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText") }
+                            NoteMarkupPreview(text: task.string("description"), offersOriginalText: true)
                         }
                         Button(action: editText) { Label("Edit note", systemImage: "square.and.pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNoteText")
                         Button {guard binding.matches(account:store.userID,generation:store.workspaceGeneration) else {return};editing=TaskEditorOpening(task:task,admission:store.editorAdmission(task,workspace:binding)) } label: { Label("Edit details", systemImage: "pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNote")

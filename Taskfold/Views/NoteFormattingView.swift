@@ -24,28 +24,58 @@ struct NoteFormatRequest: Identifiable {
 /// this view never fetches metadata, images, HTML or other embedded resources.
 struct NoteMarkupPreview: View {
     let text: String
+    var offersOriginalText = false
+    @State private var prepared: NoteMarkup.Prepared?
+    @State private var originalText = false
     var body: some View {
-        let document = NoteMarkup.document(text)
-        VStack(alignment: .leading, spacing: 12) {
-            if document.originalOnly {
-                Text(text).frame(maxWidth: .infinity, alignment: .leading)
+        Group {
+            if let reading = prepared, reading.source == text {
+                VStack(alignment: .leading, spacing: 12) {
+                    if offersOriginalText, reading.document.formatted {
+                        Toggle("Show original text", isOn: $originalText).accessibilityIdentifier("noteOriginalText")
+                    }
+                    if reading.document.originalOnly || (offersOriginalText && (!reading.document.formatted || originalText)) {
+                        Text(text).frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityIdentifier(offersOriginalText ? "pinnedNoteText" : "notePreviewOriginal")
+                    } else {
+                        blocks(reading).accessibilityIdentifier(offersOriginalText ? "formattedPinnedNote" : "notePreviewBlocks")
+                    }
+                }
             } else {
-            ForEach(document.blocks) { block in
+                ProgressView("Preparing note…").frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("notePreviewLoading")
+            }
+        }
+        .textSelection(.enabled)
+        .environment(\.openURL, OpenURLAction { url in NoteMarkup.safeURL(url.absoluteString) == nil ? .discarded : .systemAction(url) })
+        .task(id: text) {
+            guard prepared?.source != text else { return }
+            prepared = nil; originalText = false
+            do {
+                let reading = try await NoteMarkup.Prepared.load(text)
+                try Task.checkCancellation()
+                prepared = reading
+            } catch is CancellationError { }
+            catch { /* Preparation only throws cancellation; never replace saved text. */ }
+        }
+    }
+    private func blocks(_ reading: NoteMarkup.Prepared) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(reading.document.blocks) { block in
                 Group {
                     switch block.kind {
                     case .paragraph:
-                        Text(NoteMarkup.inline(block.text)).frame(maxWidth: .infinity, alignment: .leading)
+                        Text(reading.inlineText[block.id] ?? AttributedString(block.text)).frame(maxWidth: .infinity, alignment: .leading)
                     case .heading(let level):
-                        Text(NoteMarkup.inline(block.text)).font(level <= 2 ? .title3.weight(.semibold) : .headline)
+                        Text(reading.inlineText[block.id] ?? AttributedString(block.text)).font(level <= 2 ? .title3.weight(.semibold) : .headline)
                             .accessibilityAddTraits(.isHeader).frame(maxWidth: .infinity, alignment: .leading)
                     case .bullet:
-                        list(block, marker: "•")
+                        list(block, marker: "•", text: reading.inlineText[block.id] ?? AttributedString(block.text))
                     case .numbered(let marker):
-                        list(block, marker: marker)
+                        list(block, marker: marker, text: reading.inlineText[block.id] ?? AttributedString(block.text))
                     case .quote:
                         HStack(alignment: .top, spacing: 12) {
                             RoundedRectangle(cornerRadius: 2).fill(.secondary.opacity(0.35)).frame(width: 3)
-                            Text(NoteMarkup.inline(block.text)).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(reading.inlineText[block.id] ?? AttributedString(block.text)).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
                         }.fixedSize(horizontal: false, vertical: true).padding(.leading, CGFloat(block.depth) * 12)
                     case .code(let language):
                         VStack(alignment: .leading, spacing: 6) {
@@ -57,14 +87,12 @@ struct NoteMarkupPreview: View {
                     }
                 }.accessibilityIdentifier("noteBlock-\(block.id)")
             }
-            }
-        }.textSelection(.enabled)
-            .environment(\.openURL, OpenURLAction { url in NoteMarkup.safeURL(url.absoluteString) == nil ? .discarded : .systemAction(url) })
+        }
     }
-    private func list(_ block: NoteMarkup.Block, marker: String) -> some View {
+    private func list(_ block: NoteMarkup.Block, marker: String, text: AttributedString) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(marker).foregroundStyle(.secondary).frame(minWidth: 12, maxWidth: 64, alignment: .trailing).fixedSize(horizontal: false, vertical: true)
-            Text(NoteMarkup.inline(block.text)).frame(maxWidth: .infinity, alignment: .leading)
+            Text(text).frame(maxWidth: .infinity, alignment: .leading)
         }.padding(.leading, CGFloat(block.depth) * 14).accessibilityElement(children: .combine)
     }
 }

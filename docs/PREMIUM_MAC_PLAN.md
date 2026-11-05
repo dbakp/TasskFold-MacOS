@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 5 November 2026 · Background note previews
+
+Pinned-note reading and Write/Preview now prepare block/inline formatting outside the interface thread and retain one source-bound model while mounted. The original-text toggle, complete fallback and link policy remain. Each own Core suite passes 30 focused checks. Two signed iPhone journeys verify refreshed preview content, exact original text, Save/Undo/Redo/cold data and largest-text Preview/Cancel; screenshots were inspected. The current Mac app builds and strictly verifies; native Mac/iPad, physical frame timing and wider account/accessibility remain open. Installed daily apps and prepared packages are unchanged; package the combined personal-workflow update next. [Scope, evidence and cleanup](prepared-note-previews/README.md).
+
 ## 5 November 2026 · Native recording publication recovery
 
 The actual iPhone data engine now passes 17 genuine local-service checks across five cold processes, including native scoped TLS refusal/acceptance, one committed upload with a lost reply, original-operation confirmation/download and offline recovery. Private draft bytes stay exact. The Mac current-source app builds and strictly verifies, but locked private-container access prevented native acceptance; all live owned services were removed, with a few exact synthetic sandbox paths pending access. Protected Keychain, interactive adoption, hosted S3 and broader histories remain open. Normal gates and daily apps are unchanged. [Evidence and limits](genuine-native-audio/README.md).

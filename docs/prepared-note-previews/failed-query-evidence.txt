@@ -1,0 +1,5 @@
+                        SegmentedControl, 0x10fd870c0, {{16.0, 230.3}, {370.0, 31.0}}, identifier: 'noteFormatMode' <AX element pid: 59562, elementOrHash.elementID: 4781976832.325>
+                            StaticText, 0x10fd87700, {{4.0, 281.3}, {211.0, 52.3}}, identifier: 'noteFormatPreview', label: 'Keep the original notes.' <AX element pid: 59562, elementOrHash.elementID: 4800261376.368>
+                            StaticText, 0x10fd87840, {{4.0, 313.7}, {139.0, 56.0}}, identifier: 'noteFormatPreview', label: 'Preparation' <AX element pid: 59562, elementOrHash.elementID: 4800262176.369>
+                            StaticText, 0x10fd87980, {{60.3, 349.7}, {191.3, 52.3}}, identifier: 'noteFormatPreview', label: '•, Bring the sketches' <AX element pid: 59562, elementOrHash.elementID: 4800252416.370>
+                              StaticText, 0x10fd87c00, {{94.0, 365.7}, {141.7, 20.3}}, label: 'Bring the sketches' <AX element pid: 59562, elementOrHash.elementID: 4800251136.373>

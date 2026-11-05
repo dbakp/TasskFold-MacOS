@@ -17,6 +17,39 @@ enum NoteMarkup {
         let formatted: Bool
         let originalOnly: Bool
     }
+    /// One source-bound render model per reader. Inline markdown is prepared
+    /// outside the interface thread and never recomputed by view redraws.
+    struct Prepared: Sendable {
+        let source: String
+        let document: Document
+        let inlineText: [Int: AttributedString]
+        init(_ source: String, checkCancellation: () throws -> Void = {}) throws {
+            try checkCancellation()
+            let document = NoteMarkup.document(source)
+            try checkCancellation()
+            var inlineText: [Int: AttributedString] = [:]
+            if !document.originalOnly {
+                for block in document.blocks {
+                    try checkCancellation()
+                    switch block.kind {
+                    case .code, .divider, .space: break
+                    default: inlineText[block.id] = NoteMarkup.inline(block.text)
+                    }
+                }
+            }
+            self.source = source; self.document = document; self.inlineText = inlineText
+        }
+        static func load(_ source: String) async throws -> Self {
+            let worker = Task.detached(priority: .userInitiated) {
+                try Self(source, checkCancellation: { try Task.checkCancellation() })
+            }
+            return try await withTaskCancellationHandler(operation: {
+                let result = try await worker.value
+                try Task.checkCancellation()
+                return result
+            }, onCancel: { worker.cancel() })
+        }
+    }
     static func safeURL(_ value: String) -> URL? {
         guard value.utf8.count <= 8192, !value.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains),
               let parts = URLComponents(string: value), ["http", "https"].contains(parts.scheme?.lowercased() ?? ""),

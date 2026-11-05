@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Native iPhone recording publication and cold recovery verified",
-  "latest": "The actual iPhone data engine passes 17 genuine local recording publication/recovery checks: wrong-CA refusal, committed lost reply, exact cold confirmation/download and offline journal return with one upload and unchanged private bytes. Mac current source builds/signs; its locked/private-container runtime remains unaccepted. Protected Keychain, interactive adoption, hosted S3 and broader histories remain open; normal gates stay off. Daily apps and prepared Mac21/phone33 packages are unchanged.",
+  "focus": "Now · Background note previews preserve formatting and original text",
+  "latest": "Both apps now prepare note formatting outside the interface thread and reuse source-bound previews while reading. Each repo passes 30 focused Core checks. Two signed iPhone journeys verify revised previews, exact original text, Save/Undo/Redo/cold preservation and largest-text Preview/Cancel; inspected layouts remain readable. Mac current source builds/signs. Physical frame timing and wider Mac/iPad/account cases remain open. Installed Mac14/phone31 and prepared Mac21/phone33 packages stay unchanged.",
   "next": [
-    "NEXT: finish remaining ordinary-use integration for migration and shared files/discussions/recordings, using the new genuine Auth/Storage/TLS fixture. Accept native journals/handlers and remaining mixed/legacy histories/realm directions before enabling the feature. Preserve completed UI/planner/notes/Insights cases; continue concrete everyday UX reports alongside this work.",
+    "NEXT: package a combined personal-workflow update after the prepared notes/Insights/day-selection improvements and new background note previews. Preserve pre-update data and obtain an appropriate restart window. Continue remaining native migration/shared-media integration without repeating unchanged accepted matrices; ordinary advanced gates and agreed rollout deferrals remain.",
     "NEXT DAILY-USE UPDATE: combined Mac21/phone33 contain notes search, prepared Insights and persistent day selection alongside prior fixes. Neither replaces the current sessions automatically. Keep private pre-update backups and cleanup every run.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
@@ -457,7 +457,7 @@
             {
               "state": "verify",
               "title": "Rich-note formatting and heading authoring",
-              "detail": "Focused pinned-note Edit note now uses the existing Write/Preview tools and guarded text-only Save. Six Core intent checks pass per app. Current signed iPhone tests accept Cancel/Save, unchanged pin/completion/children/opaque/unrelated work, external title/priority preservation, actual Store Undo/Redo, cold content, conflicting-note refusal and separate largest-text preview/Cancel. Native Mac/iPad, wider shared/cloud/speech/accessibility and heading contexts remain open; no ordinary rollout gate changes."
+              "detail": "Focused pinned-note Edit note now uses the existing Write/Preview tools and guarded text-only Save. Six Core intent checks pass per app. Current signed iPhone tests accept Cancel/Save, unchanged pin/completion/children/opaque/unrelated work, external title/priority preservation, actual Store Undo/Redo, cold content, conflicting-note refusal and separate largest-text preview/Cancel. Native Mac/iPad, wider shared/cloud/speech/accessibility and heading contexts remain open; no ordinary rollout gate changes. Block/inline note previews now prepare off the interface thread and retain source-bound render models. Both repos pass 30 focused note checks; current iPhone tests accept revised preview content, exact original toggle and largest-text Preview/Cancel, plus unchanged Save/history/cold preservation. Mac builds/signs; wider runtime and heading acceptance remain."
             },
             {
               "state": "done",
@@ -497,7 +497,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Combined Mac21/phone33 packages are prepared only; installed apps remain Mac14/phone31. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open.",
+              "detail": "Read reuse/background preparation now covers filters and assignment captions, rich workflows, template previews/captions, project/parent catalogs, filter/task/note searches and Insights. Exact-byte durable reads avoid repeated attachment parsing; dated-list drops use one commit/Undo. Recorded iPhone journeys accept bounded scrolling, source refresh, draft/save/cold preservation, seven-task review and the new scope/range/persistent-day interactions. Insights has owning Core71 and independent Mac21 build proof. Combined Mac21/phone33 packages are prepared only; installed apps remain Mac14/phone31. Broader editor/rendering/FPS, actual sibling drag, native Mac/iPad/speech, shared/cloud/account/window/access and overnight-clock contexts remain open. Pinned-note readers and editor previews now remove repeated synchronous markup parsing from their view bodies. Current signed iPhone content/toggle/history/cold and largest-text checks pass; Mac source builds/signs. This is not a physical FPS or long-note layout claim.",
               "steps": [
                 {
                   "state": "done",
@@ -588,9 +588,16 @@
             "daily-use-build/direct-note-largest-text.json",
             "daily-use-build/direct-note-mac-build.json",
             "daily-use-build/direct-note-storage.json",
-            "daily-use-build/direct-note-core-checks.json"
+            "daily-use-build/direct-note-core-checks.json",
+            "prepared-note-previews/README.md",
+            "prepared-note-previews/verification.json",
+            "prepared-note-previews/core.json",
+            "prepared-note-previews/iphone.json",
+            "prepared-note-previews/iphone-largest-text.json",
+            "prepared-note-previews/mac-build.json",
+            "prepared-note-previews/storage.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-voice",
@@ -1076,7 +1083,7 @@
             "legacy-adoption-boundaries/verification.json",
             "legacy-adoption-boundaries/local-service.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p2-watch",
@@ -1208,7 +1215,14 @@
     "genuine-native-audio/iphone.json",
     "genuine-native-audio/mac-build.json",
     "genuine-native-audio/mac-blocked-cleanup.json",
-    "genuine-native-audio/storage.json"
+    "genuine-native-audio/storage.json",
+    "prepared-note-previews/README.md",
+    "prepared-note-previews/verification.json",
+    "prepared-note-previews/core.json",
+    "prepared-note-previews/iphone.json",
+    "prepared-note-previews/iphone-largest-text.json",
+    "prepared-note-previews/mac-build.json",
+    "prepared-note-previews/storage.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1324,7 +1338,7 @@
     "cross-root-child-transfers/verification.json": "3ccf568204ab2fb09673947bcce9649bdb979f77706f58ee3a3b4dc77bcc679b",
     "cross-root-transfer-client/verification.json": "aa1c1836b8103adcfbd5c2c3d3aafd98593d47af0caa40e8c2320c53c4699909",
     "cross-root-transfer-layout/verification.json": "ecbb792e03918c5689bd8c90dad0ebe4f367a4a35ebad8a8297aa662ac0dd280",
-    "daily-use-build/README.md": "5b2bd3271dc521a799fce669a2d6dd4fdf79eef13af54b7883559bd511d75e9b",
+    "daily-use-build/README.md": "07cc027d2fbe96e3ea2477927f1ef13818900acd4a368defad5f5e1610f194f8",
     "daily-use-build/context-capture-ios-build.json": "347a2b5b15870bf23539cc7856c7cd9accd12f21d57b9628b35afb61c166c60e",
     "daily-use-build/context-capture-mac-package.json": "01a94b61601f02b1fd223c6307e2fb67af4fe3fbfa907b8ced2f4fd5f108ba0a",
     "daily-use-build/context-capture-native.json": "fddc4e842d98b36a14bff1fef870d8c44f5d1bee74fb13c7984ef119b5cf8506",
@@ -1439,6 +1453,13 @@
     "pending-approval-boundaries/phone-verification.json": "b628b53944e48363cc26d7984a56036ef4ce30a93f582c366003b4d3547954c8",
     "pending-approval-boundaries/verification.json": "12123e97b7fa378c54d0496013693b00909e4573b432d6b606936e63fb40a03a",
     "personal-child-record-moves/verification.json": "576380252e5aec3e56f60ab8956434f0df4f899bd3d721952c1236a9dc3d7d38",
+    "prepared-note-previews/README.md": "5e612e83a2d0ac220cf0373214d9aeb40d00706d1253ee68ca17c65895b791a9",
+    "prepared-note-previews/core.json": "9c6c3ad436c71fc953db9de68a1d1c045e8a509ab409740f7bede5643af84acf",
+    "prepared-note-previews/iphone-largest-text.json": "e648acb188bce201657873bd797a843498dbf5b22fde87a3d44fe98e8f8a0318",
+    "prepared-note-previews/iphone.json": "5b02e4e703afc795af6d70127d2f98676d7a767e116cc67abc21b10592aee89e",
+    "prepared-note-previews/mac-build.json": "4292e2c27329e868b390078a5c17ae65beefe67dad0f47299530066cfccb0957",
+    "prepared-note-previews/storage.json": "510c25058aaed3948e43a052c08934d491ea524614b1a2101c9b969cdfd2714a",
+    "prepared-note-previews/verification.json": "83fb1ff3527f9e727a4252538e89c48d406a45d3aa59aadbc064c7aec0eb343c",
     "preserving-json/verification.json": "32245580dd9fdd9cc710c036398ed1c8a26e3ba2e156fb8bf721808db242f3b1",
     "project-catalog-reads/README.md": "8b0de3519976d630db090d183b2088768cdd05cea5f8af5d7fe42c5d7a025241",
     "project-catalog-reads/core-after.json": "35417d7abe12344a3054be9ba4b1742bb459db569c1d383232c877b0bca9c75d",
