@@ -92,14 +92,24 @@ enum SecureSession {
     }
     static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
         kSecAttrService as String: "com.taskfold.ios.session", kSecAttrAccount as String: "supabase"]
+    private static var activeQuery: [String: Any] {
+        var value = query
+        #if DEBUG && !SWIFT_PACKAGE
+        if FullSchemaNativeFixture.protectedStorageRequested {
+            value[kSecAttrService as String] = FullSchemaNativeFixture.keychainService("session")
+        }
+        #endif
+        return value
+    }
     static func read() -> Session? {
-        var q = query; q[kSecReturnData as String] = true
+        var q = activeQuery; q[kSecReturnData as String] = true
         var result: CFTypeRef?
         guard SecItemCopyMatching(q as CFDictionary, &result) == errSecSuccess,
               let data = result as? Data else { return nil }
         return try? Foundation.JSONDecoder().decode(Session.self, from: data)
     }
     static func save(_ session: Session?) throws {
+        let query = activeQuery
         guard let session else {
             let status = SecItemDelete(query as CFDictionary)
             guard status == errSecSuccess || status == errSecItemNotFound else {

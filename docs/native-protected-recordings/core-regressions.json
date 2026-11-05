@@ -1,0 +1,16 @@
+[
+  {
+    "platform": "ios",
+    "selectedTests": 3,
+    "failures": 0,
+    "logSHA256": "1c186e50b7d1e4392577fbe663c26bc2ea2a0a9dafaca2cb733c3b3511f9aac5",
+    "scope": "Serial background session writes, encrypted backup round trip without plaintext titles, and tampering/wrong-key/foreign-account refusal. Injected keys; native Keychain acceptance is separate."
+  },
+  {
+    "platform": "mac",
+    "selectedTests": 3,
+    "failures": 0,
+    "logSHA256": "29fd9221a58093781cdf81fe3fe132a26a44936b3c20c51b86b3a8926d327b4f",
+    "scope": "Serial background session writes, encrypted backup round trip without plaintext titles, and tampering/wrong-key/foreign-account refusal. Injected keys; native Keychain acceptance is separate."
+  }
+]

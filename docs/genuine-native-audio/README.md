@@ -29,3 +29,7 @@ node Scripts/Database/test-native-audio-publication.mjs ios /tmp/taskfold-native
 ```
 
 Use `mac` only after private test-container access is available. The runner does not prepare or replace normal installed apps. Prepared Mac21/iPhone33 packages remain uninstalled and unchanged; their earlier source evidence is separate from this DEBUG-only native-test binary.
+
+## Protected-session follow-up · 5 November 2026
+
+The newer [native protected recording integration](../native-protected-recordings/README.md) accepts actual scoped Keychain session and encrypted-backup recovery on both apps (iPhone 24/Mac 23). The original session-file result and blocked external-container Mac attempt above remain historical evidence; the new Mac input/stdout bridge avoids that IO path. Physical file-protection, interactive audio, native adoption and broader lifecycle acceptance remain separate, and older pending private files are not claimed removed.

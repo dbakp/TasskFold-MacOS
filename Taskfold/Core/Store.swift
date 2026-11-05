@@ -6860,7 +6860,7 @@ extension Store {
     func writeFullSchemaNativeFailure(_ error:Error)throws {
         let c=try FullSchemaNativeFixture.configuration()
         let report:[String:JSON]=["accepted":.bool(false),"nonce":.string(c.nonce.uuidString.lowercased()),"phase":.string(FullSchemaNativeFixture.phase),"message":.string(error.localizedDescription),"notice":.string(notice ?? ""),"pending":.number(Double(snapshot.pending.count))]
-        try TaskfoldJSONEncoder().encode(report).write(to:FullSchemaNativeFixture.root.appendingPathComponent(FullSchemaNativeFixture.phase+".json"),options:.atomic)
+        try FullSchemaNativeFixture.writeReport(report, phase: FullSchemaNativeFixture.phase)
     }
 
     private func runFullSchemaChildFieldPhase() async throws {
@@ -7204,6 +7204,14 @@ extension Store {
         guard FullSchemaNativeFixture.enabled else { throw CancellationError() }
         let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
         dailyBackupsEnabled = false
+        if phase == "audio-cleanup" {
+            guard FullSchemaNativeFixture.protectedStorageRequested else { throw CancellationError() }
+            let folder = FullSchemaNativeFixture.root.appendingPathComponent("audio-" + c.nonce.uuidString.lowercased(), isDirectory: true)
+            if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
+            if FileManager.default.fileExists(atPath: cacheURL.path), userID == c.account { try FileManager.default.removeItem(at: cacheURL) }
+            try FullSchemaNativeFixture.writeReport(["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase), "syntheticFilesRemoved": .bool(!FileManager.default.fileExists(atPath: folder.path)), "testKeychainRetained": .bool(true)], phase: phase)
+            return
+        }
         if phase == "audio-create" {
             FullSchemaNativeNetwork.offline = false
             guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Genuine audio sign-in failed") }
@@ -7216,7 +7224,7 @@ extension Store {
         let target = try AudioCommentTaskAdmission.target(account: c.account, task: task, projects: projects)
         if phase == "audio-create" {
             guard try vault.drafts().isEmpty else { throw AppFailure(message: "Expected a fresh private recording folder") }
-            let bytes = try Data(contentsOf: FullSchemaNativeFixture.root.appendingPathComponent("audio-media-" + c.nonce.uuidString.lowercased() + ".m4a"))
+            let bytes = try Data(contentsOf: FullSchemaNativeFixture.mediaURL(c.nonce))
             let clip = try await AudioCommentDecoding.validate(bytes)
             try vault.save(AudioCommentSavedDraft(owner: owner, target: target, caption: "Native genuine recording proof", clip: clip))
         }
@@ -7255,14 +7263,46 @@ extension Store {
         func hash(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
         let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
         let journal = flow.journal
-        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase),
+        var report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase),
             "account": .string(userID), "sourceFingerprint": .string(hash(try source.encoded())), "clipSHA256": .string(source.clip.descriptor.sha256),
             "intentFingerprint": .string(try journal.map { hash(try encoder.encode($0.publication.record)) } ?? ""),
             "operation": .string(journal?.publication.operation.uuidString.lowercased() ?? ""), "comment": .string(journal?.publication.comment.uuidString.lowercased() ?? ""),
             "approvalSaved": .bool(journal?.approval != nil), "pending": .bool(journal?.isPending ?? false),
             "receipt": journal?.receipt.map { .object($0.record.fields) } ?? .null, "rejectedUntrustedTLS": .bool(rejectedUntrusted), "downloadedExactBytes": .bool(downloaded),
             "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)), "offline": .bool(FullSchemaNativeNetwork.offline)]
-        try encoder.encode(report).write(to: FullSchemaNativeFixture.root.appendingPathComponent(phase + ".json"), options: .atomic)
+        if FullSchemaNativeFixture.protectedStorageRequested {
+            guard let stored = SecureSession.read(), let current = backend.session, try encoder.encode(stored) == encoder.encode(current), stored.user.id == c.account,
+                  !FileManager.default.fileExists(atPath: FullSchemaNativeFixture.root.appendingPathComponent("session.json").path) else { throw AppFailure(message: "Protected session was not retained exclusively in the scoped Keychain") }
+            let key = try BackupVault.deviceKey(account: c.account)
+            let backups = BackupVault(directory: folder.appendingPathComponent("encrypted-recovery", isDirectory: true), account: c.account, key: { try BackupVault.deviceKey(account: c.account) })
+            let expected = Snapshot(tables: ["tasks": [task]])
+            if phase == "audio-create" { guard try backups.entries().isEmpty else { throw CancellationError() }; _ = try backups.save(expected, kind: "native-protected-proof") }
+            let entries = try backups.entries()
+            guard entries.count == 1, let entry = entries.first, try backups.load(entry).snapshot == expected else { throw AppFailure(message: "Encrypted recovery changed across cold reopening") }
+            let ciphertext = try Data(contentsOf: backups.file(entry))
+            let raw = vault.directory.appendingPathComponent("draft-" + source.id.uuidString.lowercased() + ".bin")
+            let attributes = try FileManager.default.attributesOfItem(atPath: raw.path)
+            guard (attributes[.posixPermissions] as? NSNumber)?.intValue == 0o600 else { throw AppFailure(message: "Private recording permissions changed") }
+            #if os(iOS)
+            let protection = (attributes[.protectionKey] as? FileProtectionType)?.rawValue ?? attributes[.protectionKey] as? String
+            let firstUnlock = protection == FileProtectionType.completeUntilFirstUserAuthentication.rawValue
+            #if targetEnvironment(simulator)
+            // Simulator attributes do not prove hardware protected-data enforcement.
+            report["simulatorFileProtectionAttribute"] = .string(protection ?? "unavailable")
+            report["hardwareFileProtectionAccepted"] = .bool(false)
+            #else
+            guard firstUnlock else { throw AppFailure(message: "Private recording file protection changed") }
+            #endif
+            report["firstUnlockFileProtection"] = .bool(firstUnlock)
+            #endif
+            report["protectedSessionReadback"] = .bool(true)
+            report["encryptedRecoveryReadback"] = .bool(true)
+            report["backupKeyFingerprint"] = .string(key.withUnsafeBytes { hash(Data($0)) })
+            report["backupCiphertextSHA256"] = .string(hash(ciphertext))
+            report["rawDraftSHA256"] = .string(hash(try Data(contentsOf: raw)))
+            report["privateDraftMode"] = .number(384)
+        }
+        try FullSchemaNativeFixture.writeReport(report, phase: phase)
     }
 
     func runFullSchemaNativePhase() async throws {

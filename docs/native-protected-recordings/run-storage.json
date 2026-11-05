@@ -1,0 +1,16 @@
+{
+  "coreCaches": {
+    "ios": {
+      "allocatedBytes": 636321792,
+      "within768MiB": true
+    },
+    "mac": {
+      "allocatedBytes": 586100736,
+      "within768MiB": true
+    }
+  },
+  "freeBytes": 64602787840,
+  "normalMacProcess": "/Applications/Taskfold.app/Contents/MacOS/Taskfold",
+  "normalAppsReplaced": false,
+  "keychainItemsRemoved": false
+}

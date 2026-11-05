@@ -666,16 +666,47 @@ enum FullSchemaNativeFixture {
         ["com.dbakp.taskfold.workflowteststeameditbridge","com.dbakp.taskfold.mac.workflowteststeameditbridge"].contains(Bundle.main.bundleIdentifier ?? "") && ProcessInfo.processInfo.arguments.contains("--team-editor-testing") && ProcessInfo.processInfo.arguments.contains("--full-schema-native-testing")
     }
     static var root: URL {URL.applicationSupportDirectory.appendingPathComponent("TaskfoldFullSchemaNative-workflowteststeameditbridge",isDirectory:true)}
+    static var protectedStorageRequested: Bool { enabled && ProcessInfo.processInfo.arguments.contains("--full-schema-keychain-testing") }
+    static func keychainService(_ kind: String) -> String {
+        // Even unreadable/invalid test configuration must never fall back to a normal item.
+        let nonce = (try? configuration())?.nonce.uuidString.lowercased() ?? "unconfigured"
+        return "com.taskfold.full-schema." + kind + "." + nonce
+    }
+    static var externalConfiguration: URL? {
+        guard enabled, Bundle.main.bundleIdentifier == "com.dbakp.taskfold.mac.workflowteststeameditbridge", protectedStorageRequested,
+              let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--full-schema-config=") }) else { return nil }
+        let url = URL(fileURLWithPath: String(argument.dropFirst("--full-schema-config=".count)))
+        let folder = url.deletingLastPathComponent(), prefix = "taskfold-native-audio-control-"
+        guard url.lastPathComponent == "config.json", folder.deletingLastPathComponent().path == "/private/tmp",
+              folder.lastPathComponent.hasPrefix(prefix), UUID(uuidString: String(folder.lastPathComponent.dropFirst(prefix.count))) != nil else { return nil }
+        return url
+    }
+    static func mediaURL(_ nonce: UUID) -> URL {
+        (externalConfiguration?.deletingLastPathComponent() ?? root).appendingPathComponent("audio-media-" + nonce.uuidString.lowercased() + ".m4a")
+    }
+    static func writeReport(_ report: [String: JSON], phase: String) throws {
+        let bytes = try TaskfoldJSONEncoder().encode(report)
+        if externalConfiguration != nil {
+            try FileHandle.standardOutput.write(contentsOf: Data(("TASKFOLD_NATIVE_REPORT " + bytes.base64EncodedString() + "\n").utf8))
+        } else { try bytes.write(to: root.appendingPathComponent(phase + ".json"), options: .atomic) }
+    }
     static var phase: String {ProcessInfo.processInfo.arguments.first(where:{$0.hasPrefix("--full-schema-phase=")}).map{String($0.dropFirst("--full-schema-phase=".count))} ?? "invalid"}
-    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?;let child:String?;let audioOrigin:String?;let audioCA:String?}
+    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?;let child:String?;let audioOrigin:String?;let audioCA:String?;let protectedStorage:Bool?}
     struct SavedSession:Codable {let nonce:UUID;let session:Session}
     static func configuration() throws -> Configuration {
         guard enabled else{throw CancellationError()}
-        let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:root.appendingPathComponent("config.json")))
+        if ProcessInfo.processInfo.arguments.contains(where: { $0.hasPrefix("--full-schema-config=") }), externalConfiguration == nil { throw CancellationError() }
+        let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:externalConfiguration ?? root.appendingPathComponent("config.json")))
         guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
               let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
-              ["audio-create","audio-deny","audio-loss","audio-check","audio-verify","capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
+              ["audio-cleanup","audio-create","audio-deny","audio-loss","audio-check","audio-verify","capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
               (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-") && !phase.hasPrefix("field-review-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
+        if protectedStorageRequested {
+            guard c.protectedStorage == true, c.email == "native-audio-" + c.nonce.uuidString.lowercased() + "@example.invalid" else { throw AppFailure(message: "Invalid protected test scope") }
+            if let externalConfiguration {
+                guard externalConfiguration.deletingLastPathComponent().lastPathComponent == "taskfold-native-audio-control-" + c.nonce.uuidString.lowercased() else { throw CancellationError() }
+            }
+        }
         if phase.hasPrefix("audio-") {
             guard let origin=c.audioOrigin,let u=URLComponents(string:origin),u.scheme=="https",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.path.isEmpty,u.query==nil,u.fragment==nil,
                   let ca=c.audioCA,ca.utf8.count<32000,Data(base64Encoded:ca) != nil else {throw AppFailure(message:"Invalid isolated audio TLS configuration")}
@@ -684,17 +715,22 @@ enum FullSchemaNativeFixture {
     }
     static func journalKey(_ account:String)throws->SymmetricKey {
         let c=try configuration();guard c.account==account else {throw CancellationError()}
-        // Disposable fixture-only key; protected Keychain acceptance is separate.
+        if protectedStorageRequested { return try BackupVault.deviceKey(account: account) }
+        // Disposable fixture-only key for the older file-session fixture.
         return SymmetricKey(data:SHA256.hash(data:Data((c.nonce.uuidString+account).utf8)))
     }
     @MainActor static func backend()->Backend {
         FullSchemaNativeNetwork.offline = !["capture","initial","child-queue","structure-queue","field-review-queue","structure-review-queue","adoption-queue"].contains(phase)
         let c=try? configuration()
-        let saved=(try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
-        let session=saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil
+        let saved=protectedStorageRequested ? nil : (try? Data(contentsOf:root.appendingPathComponent("session.json"))).flatMap{try? TaskfoldJSONDecoder().decode(SavedSession.self,from:$0)}
+        let session=protectedStorageRequested ? SecureSession.read() : (saved?.nonce==c?.nonce && saved?.session.user.id==c?.account ? saved?.session:nil)
         let http=URLSessionConfiguration.ephemeral;http.protocolClasses=[FullSchemaNativeProtocol.self]
         return Backend(configuration:["URL":"https://taskfold-full-schema.invalid","Key":c?.key ?? "unconfigured"],http:URLSession(configuration:http),session:session,persistSession:{session in
             let c=try configuration(),url=root.appendingPathComponent("session.json")
+            if protectedStorageRequested {
+                guard session == nil || session?.user.id == c.account else { throw CancellationError() }
+                try await SecureSession.saveAsync(session); return
+            }
             if let session {
                 guard session.user.id==c.account else{throw CancellationError()}
                 try TaskfoldJSONEncoder().encode(SavedSession(nonce:c.nonce,session:session)).write(to:url,options:.atomic)

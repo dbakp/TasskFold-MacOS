@@ -549,14 +549,23 @@ struct BackupVault: Sendable {
         Self.lock.lock(); defer { Self.lock.unlock() }
         if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
     }
+    private static func deviceKeyQuery(account: String) -> [String: Any] {
+        var service = "com.taskfold.recovery.v1"
+        #if DEBUG && !SWIFT_PACKAGE
+        if FullSchemaNativeFixture.protectedStorageRequested {
+            service = FullSchemaNativeFixture.keychainService("backup")
+        }
+        #endif
+        return [kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service, kSecAttrAccount as String: account]
+    }
     static func removeDeviceKey(account: String) throws {
-        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "com.taskfold.recovery.v1", kSecAttrAccount as String: account]
+        let query = deviceKeyQuery(account: account)
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else { throw BackupFailure(message: "The account was removed, but its device backup key still needs cleanup. Unlock this device and retry removal.") }
     }
     static func deviceKey(account: String) throws -> SymmetricKey {
-        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.taskfold.recovery.v1", kSecAttrAccount as String: account]
+        let query = deviceKeyQuery(account: account)
         var read = query; read[kSecReturnData as String] = true
         var result: CFTypeRef?
         let status = SecItemCopyMatching(read as CFDictionary, &result)

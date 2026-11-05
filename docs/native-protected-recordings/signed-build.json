@@ -1,0 +1,16 @@
+{
+  "platform": "mac",
+  "buildOnly": true,
+  "sourceSHA256": {
+    "Taskfold/Core/Backend.swift": "e96e94bb2e7eeecb60bb440c9a5ec4fe8db3ee765d7fb6fe583ad04ad7a2eddc",
+    "Taskfold/Core/Backups.swift": "f74554e10a7920d2a847093e10632c5ee51bc01662622de2d371eb9057d54824",
+    "Taskfold/Core/Store.swift": "eca6a4f0d5bb9d115c2b706f3484a4ec5dd204ef7ce09d57fb1b6834c1dcdf3f",
+    "Taskfold/TeamTemplateNativeFixture.swift": "8bacac1de13acf84512205ced304e4f569786a30935e253e12c00a3e38447ba1"
+  },
+  "xcodeExitCode": 0,
+  "ordinaryAppUnchanged": true,
+  "runtimeAccepted": false,
+  "strictSignatureVerified": true,
+  "binarySHA256": "c7dfd5cf6f3fd7f24496eb9d5cffc5220d18fe52f363ccc4cf3fe2ba755be6b3",
+  "sourceUnchanged": true
+}
