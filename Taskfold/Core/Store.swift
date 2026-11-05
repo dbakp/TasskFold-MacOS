@@ -1882,6 +1882,10 @@ final class Store {
         _ = taskRevision
         return taskCache.inboxProductiveReading()
     }
+    var navigationCounts: TaskNavigationCounts {
+        _ = taskRevision
+        return taskCache.navigationCounts(labels: rows("labels"), excluding: projectCatalog.archivedIDs)
+    }
     var productiveReading: ProductiveTaskReading {
         _ = taskRevision
         return taskCache.productiveReading(excluding: projectCatalog.archivedIDs)

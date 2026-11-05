@@ -16,8 +16,9 @@ struct SidebarView: View {
     @State private var projectsExpanded = true
     @State private var labelsExpanded = true
     private var today: String { Dates.day(Date()) }
-    private var open: [Record] { store.productiveReading.work.filter { TaskKind.mayComplete($0) && !$0.completed } }
     var body: some View {
+        let navigationCounts = store.navigationCounts
+        let reading = store.productiveReading
         let projectOrder = ProjectOrderRequest(workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration),
             session: store.backend.reminderSessionIncarnation, projects: store.allProjects)
         @Bindable var workspace = workspace
@@ -40,7 +41,7 @@ struct SidebarView: View {
                 item(.calendar, "Calendar", count: nil)
             }
             Section("Browse") {
-                item(.all, "All Tasks", count: open.count, incomplete: store.productiveReading.incomplete)
+                item(.all, "All Tasks", count: navigationCounts.total, incomplete: reading.incomplete)
                 item(.assigned, "Assigned to Me", count: workspace.assignedTasks.filter { TaskKind.mayComplete($0) && !$0.completed }.count)
                 item(.completed, "Completed", count: nil)
                 Button { openMentions() } label: { HStack { Label("Mentions", systemImage: "at"); Spacer(); if let count = store.mentionUnreadCount, count > 0 { Text("\(count)").foregroundStyle(.secondary) } } }.accessibilityIdentifier("openMentions")
@@ -79,7 +80,7 @@ struct SidebarView: View {
                             HStack {
                                 Text(project.name).lineLimit(1)
                                 Spacer()
-                                count(open.filter { $0.string("project_id") == project.id }.count, incomplete: store.productiveReading.incompleteProjects.contains(project.id.lowercased()))
+                                count(navigationCounts.project(project.id), incomplete: reading.incompleteProjects.contains(project.id.lowercased()))
                             }
                         } icon: { Image(systemName: "folder.fill").foregroundStyle(Color.project(project.string("color"))) }
                     }
@@ -103,7 +104,7 @@ struct SidebarView: View {
             Section(isExpanded: $labelsExpanded) {
                 ForEach(store.labels) { label in
                     Label {
-                        HStack { Text(label.name).lineLimit(1); Spacer(); count(open.filter { $0["labels"].list.contains(.string(label.id)) || $0["labels"].list.contains(.string(label.name)) }.count, incomplete: store.productiveReading.incomplete) }
+                        HStack { Text(label.name).lineLimit(1); Spacer(); count(navigationCounts.label(label.id), incomplete: reading.incomplete) }
                     } icon: { Image(systemName: "tag.fill").foregroundStyle(Color.project(label.string("color"))) }
                     .tag(SidebarItem.label(label.id))
                     .contextMenu { Button("Edit Label…") { labelEditor = label }; Button(store.isFavorite(.label(label.id)) ? "Remove Favorite" : "Add Favorite") { store.toggleFavorite(.label(label.id)) } }

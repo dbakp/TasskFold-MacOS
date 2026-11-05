@@ -10981,3 +10981,8 @@ The phone became reachable and the approved frozen build34 was installed in plac
 ### Filter directory responsiveness — 5 November 2026
 
 Ordinary filter editing now reads member lists only when a person condition needs them. A per-Store coordinator shares in-flight reads, preserves remaining readers on cancellation and rejects late account/session/provider/access results. Both owning Core suites pass 108 selected checks with one model probe skipped; live delivery, native controls and physical smoothness remain separate. Installed Mac14 and phone34 are unchanged by this source follow-up. [Scope and evidence](filter-directory-responsiveness/README.md).
+
+
+### Shared navigation badge counts — 5 November 2026
+
+The sidebar reuses one aggregate for All tasks, projects and labels, replacing repeated workload scans per row. Exact label ID/name union semantics, heading work, archived exclusions and incomplete markers are preserved. Six new checks and the owning heading suite pass (53 Mac checks); the iOS owning suite independently passes 54. Native interaction and physical smoothness remain separate, and normal Mac14/phone34 are unchanged. [Scope and evidence](navigation-counts/README.md).

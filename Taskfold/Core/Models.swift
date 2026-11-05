@@ -1576,6 +1576,17 @@ final class TaskCache {
         let value = ProductiveTaskReading(tasks: tasks.filter { $0.string("project_id").isEmpty })
         inboxProductiveResult = value; return value
     }
+    private var navigationResult: TaskNavigationCounts?
+    private var navigationLabels: [Record] = []
+    private var navigationExcluded = Set<String>()
+    private(set) var navigationComputationCount = 0
+    func navigationCounts(labels: [Record], excluding projects: Set<String> = []) -> TaskNavigationCounts {
+        if let navigationResult, navigationExcluded == projects, AuthoredValueComparison.sameRows(navigationLabels, labels) { return navigationResult }
+        let counts = TaskNavigationCounts(reading: productiveReading(excluding: projects), labels: labels)
+        navigationResult = counts; navigationLabels = labels; navigationExcluded = projects
+        navigationComputationCount += 1
+        return counts
+    }
     private var productiveExcluded = Set<String>()
     func productiveReading(excluding projects: Set<String> = []) -> ProductiveTaskReading {
         if let productiveResult, productiveExcluded == projects { return productiveResult }
@@ -1616,7 +1627,7 @@ final class TaskCache {
     @discardableResult func update(_ rows: [Record]) -> Bool {
         guard !AuthoredValueComparison.sameRows(source, rows) else { return false }
         projectPresentation = nil; projectOutline = nil; labelPositions = nil
-        source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; inboxProductiveResult = nil
+        source = rows; hierarchyKey = nil; hierarchyResult = nil; productiveResult = nil; inboxProductiveResult = nil; navigationResult = nil
         tasks = rows.sorted { $0.priority == $1.priority ? $0.string("created_at") > $1.string("created_at") : $0.priority < $1.priority }
         results.removeAll(keepingCapacity: true)
         return true

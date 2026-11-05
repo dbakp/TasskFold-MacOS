@@ -898,6 +898,35 @@ struct ProductiveTaskReading {
     }
 }
 
+/// Read-only navigation badges, built once per workload/catalog revision.
+/// Label ID and legacy name aliases count a task at most once for each label.
+struct TaskNavigationCounts {
+    let total: Int
+    private let projects: [String: Int]
+    private let labels: [String: Int]
+    func project(_ id: String) -> Int { projects[id, default: 0] }
+    func label(_ id: String) -> Int { labels[id, default: 0] }
+    init(reading: ProductiveTaskReading, labels catalog: [Record]) {
+        var aliases: [String: Set<String>] = [:]
+        for label in catalog {
+            aliases[label.id, default: []].insert(label.id)
+            aliases[label.name, default: []].insert(label.id)
+        }
+        var total = 0, projects: [String: Int] = [:], labels: [String: Int] = [:]
+        for task in reading.work where TaskKind.mayComplete(task) && !task.completed {
+            total += 1
+            projects[task.string("project_id"), default: 0] += 1
+            var matched = Set<String>()
+            for value in task["labels"].list {
+                guard case .string(let token) = value, let targets = aliases[token] else { continue }
+                matched.formUnion(targets)
+            }
+            for id in matched { labels[id, default: 0] += 1 }
+        }
+        self.total = total; self.projects = projects; self.labels = labels
+    }
+}
+
 struct ProjectPulseReading {
     /// Immutable validated history for one project and one read pass. Sharing it
     /// across timeline days does not retain account state or grant edit authority.
