@@ -300,7 +300,9 @@ struct TeamProjectAdoptionView: View {
                 if let count = r.unfinishedRecordingCount, count > 0 { recordingCountRow("Unfinished sends stopping", count: count, id: "projectTransferStopRecordingSummary") }
                 if let count = r.retainedRecordingCount { recordingCountRow("Removed recordings kept private", count: count, id: "projectTransferPrivateHistorySummary") }
                 if let consent = r.fileConsent {
-                    LabeledContent("Private copies shared", value: String(consent.count)).accessibilityIdentifier("projectTransferFileSummary")
+                    LabeledContent("Private copies shared", value: String(consent.count))
+                        .accessibilityElement(children: .ignore).accessibilityLabel("Private copies shared").accessibilityValue(String(consent.count))
+                        .accessibilityIdentifier("projectTransferFileSummary")
                     Text("Original files stay private. People with access to the destination can download the copies; previously downloaded copies cannot be recalled.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 }
                 if r.needsFileCustody { Label("Some files need a custody review before this branch can transfer.", systemImage: "paperclip.badge.ellipsis").foregroundStyle(.secondary) }
@@ -330,6 +332,12 @@ struct TeamProjectAdoptionView: View {
             if let count = c.recordingCount, count > 0 { recordingCountRow("Reviewed published recordings", count: count, id: "projectTransferSavedRecordingSummary") }
             if let count = c.unfinishedRecordingCount, count > 0 { recordingCountRow("Reviewed unfinished sends to stop", count: count, id: "projectTransferSavedStopRecordingSummary") }
             if let count = c.retainedRecordingCount { recordingCountRow("Reviewed removed recordings kept private", count: count, id: "projectTransferSavedPrivateHistorySummary") }
+            if let consent = c.fileConsent {
+                LabeledContent("Reviewed file copies", value: String(consent.count))
+                    .accessibilityElement(children: .ignore).accessibilityLabel("Reviewed file copies").accessibilityValue(String(consent.count))
+                    .accessibilityIdentifier("projectTransferSavedFileSummary")
+                Text("Retry confirms the same reviewed copies. Original files remain private.").font(.footnote).foregroundStyle(.secondary)
+            }
             if let effects = c.connectionEffects {
                 Text("This saved request includes these connection actions. Retry preserves later changes.").font(.footnote).foregroundStyle(.secondary)
                 connectionEffectRows(effects)
@@ -343,7 +351,7 @@ struct TeamProjectAdoptionView: View {
         Section {
             Label("Projects transferred", systemImage: "checkmark.circle.fill").font(.title2.weight(.semibold)).foregroundStyle(.tint).accessibilityIdentifier("projectTransferSuccess").accessibilityFocused($resultFocused).onAppear { resultFocused = true }
             Text("All \(r.command.projects.count) projects have transferred. Saved work and history are preserved.")
-            if let consent = r.command.fileConsent { LabeledContent("File copies transferred", value: String(consent.count)).accessibilityIdentifier("projectTransferResultFiles"); Text("Original files remain in your private storage.").foregroundStyle(.secondary) }
+            if let consent = r.command.fileConsent { LabeledContent("File copies transferred", value: String(consent.count)).accessibilityElement(children: .ignore).accessibilityLabel("File copies transferred").accessibilityValue(String(consent.count)).accessibilityIdentifier("projectTransferResultFiles"); Text("Original files remain in your private storage.").foregroundStyle(.secondary) }
             if let count = r.command.recordingCount, count > 0 { recordingCountRow("Recordings transferred", count: count, id: "projectTransferResultRecordingSummary") }
             if let count = r.command.unfinishedRecordingCount, count > 0 { recordingCountRow("Unfinished sends stopped", count: count, id: "projectTransferResultStopRecordingSummary") }
             if let count = r.command.retainedRecordingCount { recordingCountRow("Removed recordings kept private", count: count, id: "projectTransferResultPrivateHistorySummary") }

@@ -30,7 +30,7 @@ Each handler suite passes **27 tests**, including default-off publication, recov
 
 ## Still required
 
-Observe the actual file-preparation and transfer journey on iPhone/iPad/Mac, including initial response loss, Stop/close latency, cancellation, cold return, disabled/access-changed availability, post-transfer refresh, largest text, keyboard and speech. Verify native secure storage and multiple-window behavior, rate-limit/high-volume behavior, combined file/recording/integration policies, wider lifecycle/history/account removal, legacy/unavailable references and other ownership/realm directions. Hosted and producer-terminal/maintenance acceptance remain separate. The new code is built; the full everyday feature is not yet accepted or enabled.
+Extend the scoped iPhone peer journeys recorded below to Mac/iPad and wider disabled/access-changed availability, largest text, keyboard and speech. Accept provider-integrated native flows separately. Verify native secure storage and multiple-window behavior, rate-limit/high-volume behavior, combined file/recording/integration policies, wider lifecycle/history/account removal, legacy/unavailable references and other ownership/realm directions. Hosted and producer-terminal/maintenance acceptance remain separate. The new code is built; the full everyday feature is not yet accepted or enabled.
 
 On-device-only assistance and deferred further iPhone installation remain the user's current choices. Normal phone34/Mac14 and frozen packages remain unchanged. Only reusable test/compiler outputs are cleaned; no real tasks, Keychain entries, backups, Docker volumes or unrelated devices are deleted.
 
@@ -54,3 +54,19 @@ Stop now immediately releases the preparation controls, preserving the exact sav
 When a fresh project inspection says file transfer is unavailable, the screen hides Continue and sharing consent, explains the pause, and keeps read-only Check and explicit Cancel available. Review and final confirmation use the same inspection-bound consent check. Existing server validation remains authoritative.
 
 See [follow-up verification](controls-verification.json) for the current focused checks and build results. The full native interaction, accessibility and provider acceptance listed above remains pending; no normal gate or installed app changed.
+
+## 6 November — native consent, cancellation and cold recovery
+
+The final review and success file-count rows now expose a single explicit accessibility label/value. The real iPhone accessibility query previously returned an empty value despite a visible count; the corrected rows return the exact count. Saved-transfer recovery also identifies the reviewed copies and explains that Retry confirms those same copies while originals remain private. This verifies the accessibility properties, not a human VoiceOver listening check.
+
+The owning iOS repository now records three accepted native journeys in the existing signed iPhone Simulator host. The tests use the production transfer screens, Backend transport, Keychain-backed command vaults, cache and workspace refresh against a network-blocked synthetic peer:
+
+- Preparation leaves sharing unchecked and Review disabled. Explicit consent permits final review; Back clears consent. An applied confirmation with a deliberately lost reply survives process termination; cold Retry submits the exact original command, produces one transfer, exposes the saved/result counts and refreshes the destination file reference with no queued writes.
+- A lost first preparation reply survives closing/relaunch. Cold checking issues no new preparation or copy. Explicit Cancel leaves all source tables unchanged and no saved recovery after another relaunch.
+- Stop releases Close while a copy response is held. Closing/relaunch preserves the same preparation request. Only explicit Continue prepares the ready result; cancellation then clears recovery without a transfer.
+
+The captured genuine service file contract is adapted onto the existing synthetic native workspace IDs. The peer performs no provider copy, SQL transaction or real account access. The existing 100 genuine local service checks remain separate evidence; these UI runs do not replace them. All three standard-size runs pass with no runtime warnings and restore the Simulator's prior text size and shutdown state. The first oversized-text attempt exposed an offscreen lazy-control assumption in the harness; the tests now scroll to the control and explicitly record/restore text size.
+
+[Current owning build evidence](native-ui-verification.json). The Mac screen/fixture builds and signs successfully; the iPhone UI results are context from its owning repository, not Mac runtime acceptance. The existing Mac host's identity, session namespace and private app-group binding are verified before preparing its synthetic file scenario. No sibling repository is required for the Mac build or fixture.
+
+The complete iPhone consent/review/confirmation-loss/cold-retry journey also passes at the largest accessibility text size, with the final/result counts readable in the scrolling list. The Simulator restores its previous text size and shutdown state. This does not establish human speech, every other largest-text control, Mac/iPad runtime or an integrated provider journey. Repeat fixture preparation preserves the timestamps of unchanged project, Info and resource inputs in both owning hosts; this is verified directly to avoid unnecessary build invalidation.

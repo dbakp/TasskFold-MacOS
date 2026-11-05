@@ -11011,3 +11011,8 @@ The existing project-transfer view now includes private preparation progress, St
 ### 5 November — project-file Stop responsiveness follow-up
 
 Stop/Close now release private preparation controls immediately; a superseded response cannot unlock or overwrite a newer run. The exact saved request remains recoverable. Disabled-service inspection hides Continue/sharing consent and offers Check/Cancel. Focused model races and current build verification are recorded in `native-project-files/controls-verification.json`. Full native journey/accessibility acceptance remains open; normal gates and installed apps are unchanged.
+
+
+### 6 November — accessible project-file review and saved summaries
+
+Final-review/result file counts now expose explicit accessibility label/value pairs. Saved-transfer recovery identifies the reviewed file count and private originals. The owning Mac app and its adapted isolated file fixture build and sign successfully. Three native iPhone peer journeys pass in the owning iOS repository (consent/exact cold transfer retry, lost preparation/cancellation, held-copy Stop/cold Continue); this is not Mac runtime acceptance. See `native-project-files/native-ui-verification.json`. Mac/iPad native journeys and wider speech/context/provider acceptance remain open; no normal gate or installed app changed.

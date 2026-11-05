@@ -1,0 +1,435 @@
+{
+  "date": "2026-11-06",
+  "platform": "mac",
+  "nativeSyntheticPeer": true,
+  "integratedSQLGatewayStorage": false,
+  "sourceSHA256": {
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "be471585024c1d0af216706d723e458d795a3d0adec9551fe3b33cd52933357e",
+    "Taskfold/ProjectAdoptionNativeFixture.swift": "0434f412bf41258dba19e55c4f98a64da1fa98ae11de8e7b8df20e72b400c1d9",
+    "Scripts/prepare_project_adoption_native_test.py": "4d3507693523444c8a2928f128b093f295704bd57f2694d0edfaa841cc32d154"
+  },
+  "nativeCases": [],
+  "nativeCasesPassed": 0,
+  "normalGatesChanged": false,
+  "installedAppsUnchanged": true,
+  "physicalInstallation": "Deferred by user",
+  "providerAndFileBytes": "The existing 100 genuine local service checks are separate evidence; the native peer does not copy real provider bytes.",
+  "remaining": [
+    "Mac and iPad native screen journeys",
+    "Human speech, wider accessibility and native account/window/locked-storage cases",
+    "Hosted and wider lifecycle/provider/volume acceptance"
+  ],
+  "crossPlatformContext": "The owning iOS repository records three accepted native peer journeys, with consent/cold retry also accepted at largest text. This Mac report does not claim those runs as Mac acceptance.",
+  "build": {
+    "platform": "mac",
+    "buildOnly": true,
+    "sourceSHA256": {
+      "Taskfold/ProjectAdoptionNativeFixture.swift": "0434f412bf41258dba19e55c4f98a64da1fa98ae11de8e7b8df20e72b400c1d9",
+      "Taskfold/Core/ProjectFilePreparation.swift": "3444263a3725199c8c971b53d8747c02da4f4d965f42f0a5ad0439c0bc25741b",
+      "Taskfold/Core/TeamProjectAdoption.swift": "1effa533fbced7a347588f4a5c41140b8bb294a318e836fd1884581501986e82",
+      "Taskfold/Views/TeamProjectAdoptionView.swift": "be471585024c1d0af216706d723e458d795a3d0adec9551fe3b33cd52933357e",
+      "Taskfold/Core/TaskActivity.swift": "7216b69136c1dcd4297bc3de54d27cefeea59d86cd197a9909f618b3d6246068",
+      "Taskfold/Views/SidebarView.swift": "ffe405dae88cebf15fb7b742c8e49d22bb835657d5cd1b3c5aecb27dc97921b7",
+      "Taskfold/Core/ProjectMemberReads.swift": "42646cb9c8da6eda2106358a65d083e76e5bd099eb91a9d769a6e8873259fc3e",
+      "Taskfold/Core/OnDeviceAssistance.swift": "16f18401a70b061277717e96440a182d8feca3f3b1bfb2175de5d3447b464f92",
+      "Taskfold/Core/FilterAssistance.swift": "442c0a4888aa6e1ad2af547a05463d2e872958d0f6cc74313ab226c275fdc2b6",
+      "Taskfold/Views/FilterAssistanceView.swift": "5d6df884eb9df945f4c9daa0fc16d3be430496c735608e528da3e3d89616dd57",
+      "Taskfold/Views/SavedViews.swift": "d1d1296fac4330e02309090017e283d1ecbab88db938b4d184a587457627ba39",
+      "Taskfold/Core/Filters.swift": "9b13361359443c94da2eb089aaea52dca8e353a69fff4dadf211fdc6e61f97c7",
+      "Taskfold/Core/TaskBreakdown.swift": "8c408e3faa839ff68890ead42d7e001aea79017bca6bbd758abef770e2a306bc",
+      "Taskfold/Views/TaskBreakdownView.swift": "be4318fa36ce0ca89b0f8defa79276312bdb7ad65cd1a1eed53ffe69002dd3c5",
+      "Taskfold/Views/TaskInspector.swift": "ff273397b40ce40bd5351af89c2e50e798353e3eb5091cc14c5acbc997382bb6",
+      "Taskfold/Core/Planner.swift": "5b72722ff5a9f1ecd303267c70d4aece9a3d56c88705cfa0ee412383c78305fd",
+      "Taskfold/Core/Models.swift": "f93233a2f1a98b8ac5127e08ceea76783ac54aff70d8aa761baac42de2c49837",
+      "Taskfold/Core/NoteMarkup.swift": "8bc28bec74e5e525186e15d639a0147fdf4071aa6737c51c72b940a22cb9e90b",
+      "Taskfold/Views/NoteFormattingView.swift": "53192b45e4d4cb142da4b19475e4b9a1c5c7332b61226a33d2e1b84a8a9bdedd",
+      "Taskfold/Views/PinnedNotesView.swift": "c461c2787b3484fba5d57901ac5c15c415ced3d241290caa462c0bb47f7e71cb",
+      "Taskfold/Core/Backend.swift": "24766210c99e3fb3727d3f6b25bebadbd38f171a5b5e7484e67b971c99e1f456",
+      "Taskfold/Core/Backups.swift": "f74554e10a7920d2a847093e10632c5ee51bc01662622de2d371eb9057d54824",
+      "Taskfold/Core/Store.swift": "c800c40f94c40441fcf10d840d21f83c95ec3e420fbe72d2bdf30aad4b1bff09",
+      "Taskfold/TeamTemplateNativeFixture.swift": "8bacac1de13acf84512205ced304e4f569786a30935e253e12c00a3e38447ba1"
+    },
+    "xcodeExitCode": 0,
+    "ordinaryAppUnchanged": true,
+    "runtimeAccepted": false,
+    "strictSignatureVerified": true,
+    "binarySHA256": "ddc9731a42cfa3c43769daa21922921ae83a3f369d94ad015ed40307be9ae740",
+    "sourceUnchanged": true
+  },
+  "changes": [
+    "Explicit accessibility labels and values for final-review and success file counts",
+    "Saved-transfer recovery identifies reviewed file count and private originals"
+  ],
+  "repeatPreparation": {
+    "inputModificationTimesUnchanged": true,
+    "checkedInputs": [
+      "/tmp/taskfold-owner-review-mac-host/Taskfold.xcodeproj/project.pbxproj",
+      "/tmp/taskfold-owner-review-mac-host/Taskfold/Info.plist",
+      "/tmp/taskfold-owner-review-mac-host/Taskfold/ProjectAdoptionNative.json"
+    ]
+  },
+  "retainedFailureEvidence": [],
+  "endOfRunCleanup": {
+    "apply": true,
+    "freeBeforeBytes": 58671538176,
+    "actions": [
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v5-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-large-v2.xcresult",
+        "allocatedBytes": 7491584
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v1-attachments",
+        "allocatedBytes": 120156160
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v3-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v4.signing-prepare.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-large-v2-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v1.signing-prepare.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-export.log",
+        "allocatedBytes": 8192
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v2.log",
+        "allocatedBytes": 40960
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-large-v1.log",
+        "allocatedBytes": 200704
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v2.xcresult",
+        "allocatedBytes": 35512320
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v3.xcresult",
+        "allocatedBytes": 2965504
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v3.log",
+        "allocatedBytes": 53248
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v2.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v1-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v2.signing.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-export-large.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v5.signing.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v1.log",
+        "allocatedBytes": 135168
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-large-v2.log",
+        "allocatedBytes": 200704
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-large-v2-attachments",
+        "allocatedBytes": 831488
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v2-attachments",
+        "allocatedBytes": 33746944
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v5.signing-prepare.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v4.signing.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v3.signing.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v2-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v1.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v4.log",
+        "allocatedBytes": 40960
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v3.signing-prepare.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-cancel-v1.xcresult",
+        "allocatedBytes": 1470464
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v2.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v6.signing-prepare.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v5.log",
+        "allocatedBytes": 135168
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-cancel-v1-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v1-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-large-v1.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v1.signing.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v6.log",
+        "allocatedBytes": 397312
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v6.signing.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-large-v1.xcresult",
+        "allocatedBytes": 231055360
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v2.log",
+        "allocatedBytes": 40960
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v4-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-export-v3.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-cancel-v1.log",
+        "allocatedBytes": 32768
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-export-v2.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-stop-v1-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v3.log",
+        "allocatedBytes": 45056
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v1.log",
+        "allocatedBytes": 135168
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v3.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-stop-v1.log",
+        "allocatedBytes": 36864
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v1.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v2-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-stop-v1.xcresult",
+        "allocatedBytes": 1523712
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-large-v1-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v2.signing-prepare.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-mac-build-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v3-attachments",
+        "allocatedBytes": 544768
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v4.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-mac-build.log",
+        "allocatedBytes": 331776
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v3-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v5.json",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-build-v6-driver.log",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "summarizedNativeTestOutput",
+        "path": "/tmp/taskfold-files-native-ios-consent-v1.xcresult",
+        "allocatedBytes": 123002880
+      },
+      {
+        "kind": "retiredImplementationHelper",
+        "path": "/tmp/taskfold-add-native-file-peer.py",
+        "allocatedBytes": 8192
+      },
+      {
+        "kind": "retiredImplementationHelper",
+        "path": "/tmp/taskfold-extend-file-preparer.py",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "retiredImplementationHelper",
+        "path": "/tmp/taskfold-file-count-accessibility.py",
+        "allocatedBytes": 4096
+      },
+      {
+        "kind": "retiredImplementationHelper",
+        "path": "/tmp/taskfold-project-files-ui-methods.swift",
+        "allocatedBytes": 8192
+      },
+      {
+        "kind": "retiredImplementationHelper",
+        "path": "/tmp/taskfold-finalize-native-file-evidence.py",
+        "allocatedBytes": 8192
+      }
+    ],
+    "skipped": [
+      {
+        "cache": "/private/tmp/taskfold-prepared-undo-signed-ios-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 672514048,
+        "projectedAllocatedBytes": 672514048
+      },
+      {
+        "cache": "/private/tmp/taskfold-workflow-native-mac-build",
+        "reason": "Reusable compiler cache within 768 MiB budget",
+        "allocatedBytes": 532709376,
+        "projectedAllocatedBytes": 532709376
+      }
+    ],
+    "freeAfterBytes": 59233976320,
+    "actualFreeChangeBytes": 562438144,
+    "sourceChooserTestSelectionRestored": true
+  }
+}
