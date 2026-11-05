@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 5 November 2026 · Genuine mixed recording custody and cleanup
+
+Both complete own schemas pass 58 genuine local Auth/REST/Storage/TLS checks for a parent/child project containing published, uploading and removed recordings. The production handlers preserve original published bytes/receipts, close the crossing upload, enforce exact private fences, roll back all effects on injected failure, confirm paused original requests and purge two retired objects through the real Storage API. No production handler/schema or ordinary flag changes. Native adoption/protected Keychain, legacy/other realms, hosted S3 and wider lifecycle remain open. All local services/private TLS directories are removed; optimized Mac22/iPhone34 packages still match current app inputs and wait for the existing update window. [Evidence and limits](genuine-mixed-recordings/README.md).
+
 ## 5 November 2026 · Optimized daily-use packages
 
 Daily builders now default to Release/Swift `-O`; explicit Debug remains available. The ordinary project is unchanged and Mac daily builds target only this host architecture. Mac22 and iPhone34 are signed, profile-valid and ZIP-payload verified, combining the recent personal notes/Insights/planning improvements. They remain uninstalled pending saved drafts/device connection; optimized native runtime and physical smoothness are not accepted by compilation. The cache helper keeps its 768 MiB cap while pruning cheaper caches before costly objects; nine safety/budget checks pass per repo. About 2.06 GiB of obsolete outputs were retired and 60.34 GiB remains free. [Current evidence](optimized-daily-update/README.md).
