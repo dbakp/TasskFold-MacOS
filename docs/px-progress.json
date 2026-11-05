@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Recording transfer verified with real local Auth, Storage and TLS",
-  "latest": "Published-only recording transfers now pass 49 genuine local Auth/REST/Storage checks per repo through the production handler with validated local TLS. Tests verify original bytes, crossing-access refusal, immutable custody/receipts, exact paused replay, changed-audience approval refusal and revoked real sessions. The existing 72-check iOS workspace regression also passes. Native app/Keychain, hosted S3, mixed/legacy policies and wider realm directions remain open; ordinary gates stay off. Mac21/phone33 packages and installed daily sessions are unchanged.",
+  "focus": "Now · Native iPhone recording publication and cold recovery verified",
+  "latest": "The actual iPhone data engine passes 17 genuine local recording publication/recovery checks: wrong-CA refusal, committed lost reply, exact cold confirmation/download and offline journal return with one upload and unchanged private bytes. Mac current source builds/signs; its locked/private-container runtime remains unaccepted. Protected Keychain, interactive adoption, hosted S3 and broader histories remain open; normal gates stay off. Daily apps and prepared Mac21/phone33 packages are unchanged.",
   "next": [
     "NEXT: finish remaining ordinary-use integration for migration and shared files/discussions/recordings, using the new genuine Auth/Storage/TLS fixture. Accept native journals/handlers and remaining mixed/legacy histories/realm directions before enabling the feature. Preserve completed UI/planner/notes/Insights cases; continue concrete everyday UX reports alongside this work.",
     "NEXT DAILY-USE UPDATE: combined Mac21/phone33 contain notes search, prepared Insights and persistent day selection alongside prior fixes. Neither replaces the current sessions automatically. Keep private pre-update backups and cleanup every run.",
@@ -686,12 +686,12 @@
             {
               "state": "verify",
               "title": "Audio comments: full app and recovery integration",
-              "detail": "Seven phone recording/file flows now use explicit saved-workspace identities. Earlier local iPad recording evidence retains its correct scope; current iPad picker/cache rechecks remain unaccepted after Simulator waits. Shared publishing, Mac runtime and wider recovery/access/storage checks remain; normal entry points stay disabled."
+              "detail": "Actual iPhone Store/AAC/vault/publication-flow/Backend now pass 17 genuine local Auth/REST/Storage checks over scoped audio TLS across five cold processes, preserving exact original bytes and operation through lost replies. Mac builds/signs; locked private-container runtime remains unaccepted. Session-file fixture is not protected Keychain or interactive GUI acceptance. Wider lifecycle/access/storage and iPad checks remain; normal gates stay off."
             },
             {
               "state": "verify",
               "title": "Real cloud-media and provider checks",
-              "detail": "Actual local Storage plus complete owning Auth/REST schema now support the production recording handler over validated loopback TLS. Published personal-branch transfer, exact bytes/receipts, reader-access crossing, audience-bound approval and revoked real sessions pass independently in both repos. This is a local tmpfs file backend. Native app/protected-session integration, hosted S3, mixed/legacy/other realms and broad task/subtask migration remain unaccepted; ordinary gates stay off."
+              "detail": "Actual local Storage plus complete owning Auth/REST schema now support the production recording handler over validated loopback TLS. Published personal-branch transfer, exact bytes/receipts, reader-access crossing, audience-bound approval and revoked real sessions pass independently in both repos. This is a local tmpfs file backend. Native app/protected-session integration, hosted S3, mixed/legacy/other realms and broad task/subtask migration remain unaccepted; ordinary gates stay off. Native iPhone publication/lost-reply recovery now has scoped acceptance; protected Keychain and Mac runtime remain open."
             },
             {
               "state": "build",
@@ -799,7 +799,7 @@
             {
               "state": "build",
               "title": "Shared audio publishing and storage permissions",
-              "detail": "Published, stopped-unfinished and removed-private histories have separate reviewed choices and exact recovery contracts. The published-only personal project branch now passes 49 genuine local Auth/REST/Storage/TLS checks per repo using the production handler, including exact bytes, crossing-access refusal, immutable receipts/provider metadata, paused replay and real session revocation. Existing workspace Auth/REST regression passes. Native app/Keychain, hosted S3, genuine mixed/legacy policies, other realm directions and wider recovery remain. Normal use stays gated.",
+              "detail": "Published, stopped-unfinished and removed-private histories have separate reviewed choices and exact recovery contracts. The published-only personal project branch now passes 49 genuine local Auth/REST/Storage/TLS checks per repo using the production handler, including exact bytes, crossing-access refusal, immutable receipts/provider metadata, paused replay and real session revocation. Existing workspace Auth/REST regression passes. Native app/Keychain, hosted S3, genuine mixed/legacy policies, other realm directions and wider recovery remain. Normal use stays gated. Actual iPhone publication flow now passes 17 native local-service checks across cold launches, including wrong-CA refusal and exact private draft preservation. Mac compiled/signed only; protected sessions, interactive adoption and broader access-loss histories remain.",
               "steps": [
                 {
                   "state": "done",
@@ -1202,7 +1202,13 @@
     "genuine-project-recordings/verification.json",
     "genuine-project-recordings/service.json",
     "genuine-project-recordings/workspace-regression-ios.json",
-    "genuine-project-recordings/storage.json"
+    "genuine-project-recordings/storage.json",
+    "genuine-native-audio/README.md",
+    "genuine-native-audio/verification.json",
+    "genuine-native-audio/iphone.json",
+    "genuine-native-audio/mac-build.json",
+    "genuine-native-audio/mac-blocked-cleanup.json",
+    "genuine-native-audio/storage.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1382,6 +1388,12 @@
     "genuine-native-adoption/README.md": "e3e8f020e74ee1575878c7aef8789edba0c59b133e71c8f74d3e3337f0d55524",
     "genuine-native-adoption/native.json": "0ab58e5cb82b6c7af06ffd166f1996cac7cd8d7ba477d9c8d3d6ee9bc593f95c",
     "genuine-native-adoption/verification.json": "a972343501f104de4790a5081eee5c93af3576f8e4211521ce86f7bf9cb7a345",
+    "genuine-native-audio/README.md": "983f5a9242247990bda4a3389664a6d11b6ee6337e15e28982f1385bcc4b154e",
+    "genuine-native-audio/iphone.json": "295ee69b8fe71332b2a18a9deec11ccb6810a1ba835be03c21267e45f66b97e0",
+    "genuine-native-audio/mac-blocked-cleanup.json": "aaf80553a117bc354e82ecdc728c9877cb1efb6845696af5539e943b525ecd18",
+    "genuine-native-audio/mac-build.json": "c72f9bfeb757eb90c8984a00de06a51d69d2b705953fcabb78eed5ab05ac7166",
+    "genuine-native-audio/storage.json": "94a0fddc1142f93d9be2a19aef5add30a729a1fcf4eb4d6a2df5dcd8379e4dc0",
+    "genuine-native-audio/verification.json": "3a747b4dce04cb40eb9ed0b187f837e092d6613429ab6e738a4f607a5c1c16de",
     "genuine-project-recordings/README.md": "0558dc27a332c35b905c5f0a148b8fd4f022798a988ed3b71c6256dd45ddb819",
     "genuine-project-recordings/service.json": "35158953ce4e7c0f828ce1958c7e2fcacb08d79a65573a068e32d800698a7b7c",
     "genuine-project-recordings/storage.json": "cc118e12cbf188adcef884a4aae6495997ae90ac895356d1098a3b5d98c183e0",

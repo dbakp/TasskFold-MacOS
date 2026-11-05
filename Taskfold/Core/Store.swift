@@ -7200,7 +7200,73 @@ extension Store {
         try TaskfoldJSONEncoder().encode(report).write(to: FullSchemaNativeFixture.root.appendingPathComponent("capture.json"), options: .atomic)
     }
 
+    func runFullSchemaAudioPhase() async throws {
+        guard FullSchemaNativeFixture.enabled else { throw CancellationError() }
+        let c = try FullSchemaNativeFixture.configuration(), phase = FullSchemaNativeFixture.phase
+        dailyBackupsEnabled = false
+        if phase == "audio-create" {
+            FullSchemaNativeNetwork.offline = false
+            guard try await backend.signIn(email: c.email, password: c.password, signup: false) else { throw AppFailure(message: "Genuine audio sign-in failed") }
+            await authenticated(); online = true; try await fullSchemaSyncSettled()
+        } else { guard backend.session?.user.id == c.account, signedIn, !localMode else { throw AppFailure(message: "Audio session was not reopened") } }
+        guard let task = record("tasks", id: c.task) else { throw AppFailure(message: "Genuine task cache is missing") }
+        let folder = FullSchemaNativeFixture.root.appendingPathComponent("audio-" + c.nonce.uuidString.lowercased(), isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        let owner = try AudioCommentOwner(c.account), vault = AudioCommentVault(applicationSupport: folder, owner: owner)
+        let target = try AudioCommentTaskAdmission.target(account: c.account, task: task, projects: projects)
+        if phase == "audio-create" {
+            guard try vault.drafts().isEmpty else { throw AppFailure(message: "Expected a fresh private recording folder") }
+            let bytes = try Data(contentsOf: FullSchemaNativeFixture.root.appendingPathComponent("audio-media-" + c.nonce.uuidString.lowercased() + ".m4a"))
+            let clip = try await AudioCommentDecoding.validate(bytes)
+            try vault.save(AudioCommentSavedDraft(owner: owner, target: target, caption: "Native genuine recording proof", clip: clip))
+        }
+        let drafts = try vault.drafts(); guard drafts.count == 1, let source = drafts.first, source.target == target else { throw AppFailure(message: "Private recording was not preserved") }
+        let disk = try AudioCommentPublicationDisk(root: folder, account: UUID(uuidString: c.account)!, origin: backend.accountRemovalOrigin)
+        let storage = AudioCommentPublicationStorage(disk: disk), session = backend.reminderSessionIncarnation
+        let flow = AudioCommentPublicationFlow(storage: storage, transport: backend, incarnation: session, target: target, isCurrent: { [weak self] in
+            guard let self else { return false }; return self.userID == c.account && self.backend.reminderSessionIncarnation == session && self.signedIn && !self.localMode
+        })
+        try await flow.restore(source)
+        var rejectedUntrusted = false, downloaded = false
+        if phase == "audio-deny" {
+            FullSchemaNativeNetwork.offline = false
+            do { try await flow.reviewAudience(source) } catch { rejectedUntrusted = true }
+            guard rejectedUntrusted, flow.reviewedApproval == nil, flow.journal?.isPending == true else { throw AppFailure(message: "Untrusted audio TLS did not preserve the unsent recording") }
+        } else if phase == "audio-loss" {
+            FullSchemaNativeNetwork.offline = false
+            try await flow.reviewAudience(source)
+            guard flow.reviewedApproval != nil else { throw AppFailure(message: "Genuine audience review is missing") }
+            FullSchemaNativeNetwork.armDrop()
+            do { try await flow.publish(source) } catch { }
+            guard FullSchemaNativeNetwork.dropped == 1, flow.state == .unconfirmed, flow.journal?.isPending == true, flow.journal?.approval != nil else { throw AppFailure(message: "Lost publication reply did not preserve the original approved intent") }
+        } else if phase == "audio-check" {
+            guard let original = flow.journal, original.isPending, original.approval != nil else { throw AppFailure(message: "The original approved recording was not reopened") }
+            FullSchemaNativeNetwork.offline = false
+            try await flow.checkPublication(original)
+            guard flow.state == .published, let receipt = flow.journal?.receipt else { throw AppFailure(message: "Genuine publication was not confirmed") }
+            let comments = try await backend.listAudio(account: UUID(uuidString: c.account)!, target: target, origin: backend.accountRemovalOrigin, incarnation: session)
+            guard comments.count == 1, let comment = comments.first, comment.id == receipt.publication.comment else { throw AppFailure(message: "Published conversation does not match the original recording") }
+            let fetched = try await backend.downloadAudio(comment, origin: backend.accountRemovalOrigin, incarnation: session)
+            guard fetched.data == source.clip.data else { throw AppFailure(message: "Real Storage returned different recording bytes") }; downloaded = true
+        } else if phase == "audio-verify" {
+            guard FullSchemaNativeNetwork.offline, flow.state == .published, flow.journal?.receipt != nil else { throw AppFailure(message: "Confirmed recording did not survive offline cold reopening") }
+        } else { guard phase == "audio-create", flow.state == .ready else { throw AppFailure(message: "Unexpected audio phase") } }
+        guard try vault.drafts() == [source] else { throw AppFailure(message: "Recording source changed during publication/recovery") }
+        func hash(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
+        let encoder = TaskfoldJSONEncoder(); encoder.outputFormatting = [.sortedKeys]
+        let journal = flow.journal
+        let report: [String: JSON] = ["accepted": .bool(true), "nonce": .string(c.nonce.uuidString.lowercased()), "phase": .string(phase),
+            "account": .string(userID), "sourceFingerprint": .string(hash(try source.encoded())), "clipSHA256": .string(source.clip.descriptor.sha256),
+            "intentFingerprint": .string(try journal.map { hash(try encoder.encode($0.publication.record)) } ?? ""),
+            "operation": .string(journal?.publication.operation.uuidString.lowercased() ?? ""), "comment": .string(journal?.publication.comment.uuidString.lowercased() ?? ""),
+            "approvalSaved": .bool(journal?.approval != nil), "pending": .bool(journal?.isPending ?? false),
+            "receipt": journal?.receipt.map { .object($0.record.fields) } ?? .null, "rejectedUntrustedTLS": .bool(rejectedUntrusted), "downloadedExactBytes": .bool(downloaded),
+            "droppedReplies": .number(Double(FullSchemaNativeNetwork.dropped)), "offline": .bool(FullSchemaNativeNetwork.offline)]
+        try encoder.encode(report).write(to: FullSchemaNativeFixture.root.appendingPathComponent(phase + ".json"), options: .atomic)
+    }
+
     func runFullSchemaNativePhase() async throws {
+        if FullSchemaNativeFixture.phase.hasPrefix("audio-") { try await runFullSchemaAudioPhase(); return }
         if FullSchemaNativeFixture.phase == "capture" { try await runFullSchemaCapturePhase(); return }
         if FullSchemaNativeFixture.phase.hasPrefix("adoption-") {try await runFullSchemaAdoptionPhase();return}
         if FullSchemaNativeFixture.phase.hasPrefix("field-review-") {try await runFullSchemaFieldReviewPhase();return}

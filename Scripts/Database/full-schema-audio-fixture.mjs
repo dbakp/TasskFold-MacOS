@@ -55,6 +55,6 @@ export async function createFullSchemaAudioFixture(runtime){
    const bytes=Buffer.from(JSON.stringify(body));const request=https.request({hostname:'127.0.0.1',port,path:'/?action='+action,method:'POST',ca,servername:'localhost',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json','Content-Length':bytes.length}},response=>{const chunks=[];let length=0;response.on('data',x=>{length+=x.length;if(length>16000000)request.destroy(Error('Oversized owned reply'));else chunks.push(x)});response.once('end',()=>resolve(new Response(response.statusCode===204?null:Buffer.concat(chunks),{status:response.statusCode,headers:response.headers})));response.once('error',reject)});
    request.setTimeout(30000,()=>request.destroy(Error('Owned TLS handler request timed out')));request.once('error',reject);request.end(bytes);
   });
-  return {call,state,close,tlsVerified:true,untrustedTLSRejected};
+  return {call,state,close,tlsVerified:true,untrustedTLSRejected,endpoint:'https://127.0.0.1:'+port,certificateAuthority:ca.toString('utf8')};
  }catch(error){await close();throw error}
 }

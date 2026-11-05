@@ -1,0 +1,10 @@
+{
+  "reviewed": "2026-11-05",
+  "buildOnly": true,
+  "buildSucceeded": true,
+  "strictSignatureVerified": true,
+  "runtimeAccepted": false,
+  "reason": "Mac locked and private test-container IO unavailable; no native phase accepted.",
+  "binarySHA256": "99a5a4baac7df65dd8614e4d973715c44040999d255486ed5f7129ede74c6884",
+  "buildLogSHA256": "3225088d419403cae142a4980084e6026817946b9fe788de8613624ea5c8e038"
+}

@@ -46,7 +46,7 @@ def finish(simulators=(), build_caches=(), apply=False):
                         and any(alias in line for alias in aliases) for line in running)
         if compiling or any(line.strip().startswith(str(cache) + '/') and '.app/' in line for line in running):
             report['skipped'].append({'cache': str(cache), 'reason': 'Compiler or cache app still running'}); continue
-        candidates = [cache / name for name in ['Build/Intermediates.noindex', 'ModuleCache.noindex', 'SDKStatCaches.noindex', 'Index.noindex']]
+        candidates = [cache / name for name in ['Build/Intermediates.noindex', 'ModuleCache.noindex', 'SDKStatCaches.noindex', 'Index.noindex', 'CompilationCache.noindex', 'SDKExplicitPrecompiledModules']]
         total = sum(allocated(p) for p in candidates)
         # Keep a small reusable cache when space is healthy; never accumulate
         # repeated derived trees in preference to useful product/evidence bytes.

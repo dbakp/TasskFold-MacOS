@@ -1,6 +1,7 @@
 #if DEBUG
 import Foundation
 import CryptoKit
+import Security
 
 /// Exact disposable namespace and explicit flag only. No request leaves this
 /// local URLProtocol peer; it is native client acceptance, not service acceptance.
@@ -666,15 +667,19 @@ enum FullSchemaNativeFixture {
     }
     static var root: URL {URL.applicationSupportDirectory.appendingPathComponent("TaskfoldFullSchemaNative-workflowteststeameditbridge",isDirectory:true)}
     static var phase: String {ProcessInfo.processInfo.arguments.first(where:{$0.hasPrefix("--full-schema-phase=")}).map{String($0.dropFirst("--full-schema-phase=".count))} ?? "invalid"}
-    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?;let child:String?}
+    struct Configuration: Codable,Sendable {let version:Int;let nonce:UUID;let account:String;let task:String;let sibling:String;let origin:String;let key:String;let email:String;let password:String;let queuedFingerprint:String?;let child:String?;let audioOrigin:String?;let audioCA:String?}
     struct SavedSession:Codable {let nonce:UUID;let session:Session}
     static func configuration() throws -> Configuration {
         guard enabled else{throw CancellationError()}
         let c=try TaskfoldJSONDecoder().decode(Configuration.self,from:Data(contentsOf:root.appendingPathComponent("config.json")))
         guard c.version==1,UUID(uuidString:c.account) != nil,UUID(uuidString:c.task) != nil,UUID(uuidString:c.sibling) != nil,c.email.hasSuffix("@example.invalid"),
               let u=URLComponents(string:c.origin),u.scheme=="http",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.query==nil,u.fragment==nil,u.path.isEmpty,
-              ["capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
+              ["audio-create","audio-deny","audio-loss","audio-check","audio-verify","capture","initial","queue","loss","replay","verify","child-queue","child-loss","child-replay","child-verify","structure-queue","structure-loss","structure-replay","structure-verify","structure-undo","structure-undo-verify","structure-redo","structure-redo-verify","field-review-queue","field-review-refuse","field-review-save","field-review-send","field-review-verify","structure-review-queue","structure-review-refuse","structure-review-save","structure-review-send","structure-review-verify","adoption-queue","adoption-loss","adoption-replay","adoption-verify"].contains(phase),
               (!phase.hasPrefix("child-") && !phase.hasPrefix("structure-") && !phase.hasPrefix("field-review-")) || c.child.flatMap(UUID.init(uuidString:)) != nil else{throw AppFailure(message:"Invalid isolated full-schema configuration")}
+        if phase.hasPrefix("audio-") {
+            guard let origin=c.audioOrigin,let u=URLComponents(string:origin),u.scheme=="https",u.host=="127.0.0.1",let port=u.port,(1...65535).contains(port),u.user==nil,u.password==nil,u.path.isEmpty,u.query==nil,u.fragment==nil,
+                  let ca=c.audioCA,ca.utf8.count<32000,Data(base64Encoded:ca) != nil else {throw AppFailure(message:"Invalid isolated audio TLS configuration")}
+        }
         return c
     }
     static func journalKey(_ account:String)throws->SymmetricKey {
@@ -719,12 +724,25 @@ enum FullSchemaNativeNetwork {
     static func armDrop(){lock.withLock{drop=true;drops=0}}
     static var dropped:Int {lock.withLock{drops}}
     static func consumeDrop(_ request:URLRequest,_ response:HTTPURLResponse)->Bool {
-        let expected=FullSchemaNativeFixture.phase.hasPrefix("adoption-") ? "/rest/v1/rpc/taskfold_adopt_child_records":FullSchemaNativeFixture.phase.hasPrefix("structure-") ? "/rest/v1/rpc/taskfold_edit_child_structure":FullSchemaNativeFixture.phase.hasPrefix("child-") ? "/rest/v1/rpc/taskfold_edit_child_task":"/rest/v1/rpc/taskfold_patch_task"
-        guard request.url?.path==expected,request.httpMethod=="POST",(200..<300).contains(response.statusCode) else{return false}
+        let expected=FullSchemaNativeFixture.phase.hasPrefix("audio-") ? "/functions/v1/audio-comments":FullSchemaNativeFixture.phase.hasPrefix("adoption-") ? "/rest/v1/rpc/taskfold_adopt_child_records":FullSchemaNativeFixture.phase.hasPrefix("structure-") ? "/rest/v1/rpc/taskfold_edit_child_structure":FullSchemaNativeFixture.phase.hasPrefix("child-") ? "/rest/v1/rpc/taskfold_edit_child_task":"/rest/v1/rpc/taskfold_patch_task"
+        guard request.url?.path==expected,(!FullSchemaNativeFixture.phase.hasPrefix("audio-") || URLComponents(url:request.url!,resolvingAgainstBaseURL:false)?.queryItems?.first(where:{$0.name=="action"})?.value=="publish"),request.httpMethod=="POST",(200..<300).contains(response.statusCode) else{return false}
         return lock.withLock{guard drop else{return false};drop=false;drops+=1;disconnected=true;return true}
     }
 }
 private final class FullSchemaNativeNoRedirect:NSObject,URLSessionTaskDelegate,@unchecked Sendable {
+    func urlSession(_ session:URLSession,didReceive challenge:URLAuthenticationChallenge,completionHandler:@escaping(URLSession.AuthChallengeDisposition,URLCredential?)->Void) {
+        guard challenge.protectionSpace.authenticationMethod==NSURLAuthenticationMethodServerTrust else {completionHandler(.performDefaultHandling,nil);return}
+        do {
+            let c=try FullSchemaNativeFixture.configuration()
+            guard let origin=c.audioOrigin,let u=URLComponents(string:origin),u.host==challenge.protectionSpace.host,u.port==challenge.protectionSpace.port,
+                  let encoded=c.audioCA,let data=Data(base64Encoded:encoded),let certificate=SecCertificateCreateWithData(nil,data as CFData),let trust=challenge.protectionSpace.serverTrust,
+                  SecTrustSetPolicies(trust,SecPolicyCreateSSL(true,"127.0.0.1" as CFString))==errSecSuccess,
+                  SecTrustSetAnchorCertificates(trust,[certificate] as CFArray)==errSecSuccess,SecTrustSetAnchorCertificatesOnly(trust,true)==errSecSuccess,
+                  SecTrustEvaluateWithError(trust,nil) else {completionHandler(.cancelAuthenticationChallenge,nil);return}
+            completionHandler(.useCredential,URLCredential(trust:trust))
+        } catch {completionHandler(.cancelAuthenticationChallenge,nil)}
+    }
+
     func urlSession(_ session:URLSession,task:URLSessionTask,willPerformHTTPRedirection response:HTTPURLResponse,newRequest request:URLRequest,completionHandler:@escaping(URLRequest?)->Void){completionHandler(nil)}
 }
 private final class FullSchemaNativeProtocol:URLProtocol,@unchecked Sendable {
@@ -737,7 +755,7 @@ private final class FullSchemaNativeProtocol:URLProtocol,@unchecked Sendable {
         worker=Task {
             do {
                 let c=try FullSchemaNativeFixture.configuration()
-                guard let original=request.url,var target=URLComponents(string:c.origin),let path=URLComponents(url:original,resolvingAgainstBaseURL:false) else{throw URLError(.badURL)}
+                guard let original=request.url,var target=URLComponents(string:original.path=="/functions/v1/audio-comments" ? (c.audioOrigin ?? c.origin):c.origin),let path=URLComponents(url:original,resolvingAgainstBaseURL:false) else{throw URLError(.badURL)}
                 target.percentEncodedPath=path.percentEncodedPath;target.percentEncodedQuery=path.percentEncodedQuery
                 var forwarded=request;forwarded.url=try target.url.unwrapFullSchema();forwarded.setValue(nil,forHTTPHeaderField:"Host")
                 let (data,response)=try await Self.forwarding.data(for:forwarded)

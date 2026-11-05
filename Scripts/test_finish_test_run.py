@@ -18,6 +18,17 @@ class CleanupTests(unittest.TestCase):
         with patch.object(module.subprocess,'check_output',return_value=''):
             r=module.finish(build_caches=[self.cache],apply=True)
         self.assertFalse(self.scratch.exists());self.assertTrue(self.product.exists());self.assertTrue(self.result.exists());self.assertEqual(len(r['actions']),1)
+    def test_sdk_and_compilation_caches_share_the_completed_cache_budget(self):
+        sdk=self.cache/'SDKExplicitPrecompiledModules';sdk.mkdir();(sdk/'module.pcm').write_text('generated')
+        cas=self.cache/'CompilationCache.noindex';cas.mkdir();(cas/'cache.db').write_text('generated')
+        dependency=self.cache/'SourcePackages/checkout/source.swift';dependency.parent.mkdir(parents=True);dependency.write_text('keep dependency')
+        actual=module.allocated
+        def measured(path):return 800*1024**2 if path.resolve()==sdk.resolve() else actual(path)
+        with patch.object(module.subprocess,'check_output',return_value=''),patch.object(module.shutil,'disk_usage',return_value=SimpleNamespace(free=60*1024**3)),patch.object(module,'allocated',side_effect=measured):
+            result=module.finish(build_caches=[self.cache],apply=True)
+        self.assertFalse(sdk.exists());self.assertFalse(cas.exists());self.assertFalse(self.scratch.exists())
+        self.assertTrue(self.product.exists());self.assertTrue(self.result.exists());self.assertEqual(dependency.read_text(),'keep dependency')
+        self.assertEqual(len(result['actions']),3)
     def test_dry_run_and_active_compiler_preserve_files(self):
         with patch.object(module.subprocess,'check_output',return_value=''):
             module.finish(build_caches=[self.cache],apply=False)

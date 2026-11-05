@@ -1,5 +1,9 @@
 # Taskfold macOS polish plan
 
+## 5 November 2026 · Native recording publication recovery
+
+The actual iPhone data engine now passes 17 genuine local-service checks across five cold processes, including native scoped TLS refusal/acceptance, one committed upload with a lost reply, original-operation confirmation/download and offline recovery. Private draft bytes stay exact. The Mac current-source app builds and strictly verifies, but locked private-container access prevented native acceptance; all live owned services were removed, with a few exact synthetic sandbox paths pending access. Protected Keychain, interactive adoption, hosted S3 and broader histories remain open. Normal gates and daily apps are unchanged. [Evidence and limits](genuine-native-audio/README.md).
+
 ## 3 November 2026 · Scoped assignment service available
 
 The current clients' scoped assignment endpoint is now deployed to the configured TaskFold backend. Each repo independently passes 32 actual PostgreSQL compatibility checks against the catalog-only pre-update task-editor body, including the exact deployment and guarded rollback scripts. The fixture uses synthetic owner RLS rather than claiming production-policy/trigger acceptance. Live postflight confirms exact reviewed definitions, authenticated-only invoker execution, unchanged original patch permissions/owner, unchanged public/private table-security and policy fingerprints, unchanged task triggers, and unchanged security-advisor findings. A real anonymous API request confirms route visibility and permission refusal. No user task rows were read or changed, and advanced boundary/team endpoints remain absent. Signed-in native/real-account assignment acceptance and the broader old-client rollout safeguard remain separate. The newer cloud workflow Undo endpoint is still missing.
