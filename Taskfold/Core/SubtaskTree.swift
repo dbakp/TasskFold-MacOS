@@ -1129,3 +1129,104 @@ struct ChildTaskStructureRead: Sendable {
         self.structureRevision = revision
     }
 }
+
+/// View-local row identities follow children through edits/reordering without
+/// inserting IDs into legacy data. This cache grants no write permission.
+@MainActor final class SubtaskInlineDraft {
+    struct Scope: Equatable, Sendable {
+        let root: String
+        let parent: String
+        let selection: JSON
+        let workspace: WorkspaceBinding
+        let session: UUID
+        let generation: JSON
+    }
+    struct Request: Sendable { let token: UUID; let scope: Scope }
+    struct Row: Identifiable, Sendable {
+        let id: UUID
+        let index: Int
+        let value: JSON
+        let request: Request?
+    }
+    private var owner: Scope?
+    private var values: [JSON] = []
+    private var tokens: [UUID] = []
+    private var positions: [UUID: Int] = [:]
+    private var identities: [String: Int] = [:]
+    private func key(_ value: JSON) -> String? {
+        guard case .object(let fields) = value, case .string(let id)? = fields["id"], !id.isEmpty else { return nil }
+        return id
+    }
+    private func counts(_ rows: [JSON]) -> [String: Int] {
+        rows.compactMap(key).reduce(into: [:]) { $0[$1, default: 0] += 1 }
+    }
+    private func reconcile(_ children: JSON, scope: Scope) {
+        if owner != scope { owner = scope; values = []; tokens = []; positions = [:]; identities = [:] }
+        let current = children.list
+        if current != values {
+            let old = values, oldTokens = tokens, oldCounts = counts(values), nextCounts = counts(current)
+            let oldByID = Dictionary(uniqueKeysWithValues: old.enumerated().compactMap { index, value -> (String, Int)? in
+                guard let id = key(value), oldCounts[id] == 1 else { return nil }; return (id, index)
+            })
+            var used = Set<Int>()
+            tokens = current.map { row in
+                let match: Int?
+                if let id = key(row), oldCounts[id] == 1, nextCounts[id] == 1 {
+                    match = oldByID[id].flatMap { used.contains($0) ? nil : $0 }
+                } else { match = old.indices.first { !used.contains($0) && old[$0] == row } }
+                guard let index = match else { return UUID() }
+                used.insert(index); return oldTokens[index]
+            }
+            values = current; identities = nextCounts
+            positions = Dictionary(uniqueKeysWithValues: tokens.enumerated().map { ($0.element, $0.offset) })
+        }
+    }
+    private func editable(_ value: JSON) -> Bool {
+        SubtaskTree.inlineEditable(value) && key(value).map { identities[$0] == 1 } != false
+    }
+    func rows(_ children: JSON, scope: Scope) -> [Row] {
+        reconcile(children, scope: scope)
+        return values.enumerated().map { index, value in
+            return Row(id: tokens[index], index: index, value: value, request: editable(value) ? Request(token: tokens[index], scope: scope) : nil)
+        }
+    }
+    private func position(_ request: Request, children: JSON, scope: Scope) -> Int? {
+        guard request.scope == scope, case .array = children else { return nil }
+        reconcile(children, scope: scope)
+        guard let index = positions[request.token], editable(values[index]) else { return nil }
+        return index
+    }
+    func value(_ request: Request, children: JSON, scope: Scope) -> JSON? {
+        guard let index = position(request, children: children, scope: scope) else { return nil }
+        return values[index]
+    }
+    private func replacing(_ index: Int, with value: JSON) -> JSON {
+        values[index] = value
+        return .array(values)
+    }
+    func title(_ text: String, request: Request, children: JSON, scope: Scope) -> JSON? {
+        guard let index = position(request, children: children, scope: scope) else { return nil }
+        var fields = values[index].object; fields["title"] = .string(text)
+        return replacing(index, with: .object(fields))
+    }
+    func toggle(_ request: Request, children: JSON, scope: Scope) -> JSON? {
+        guard let index = position(request, children: children, scope: scope), TaskKind.mayComplete(SubtaskTree.inlinePresentation(values[index])) else { return nil }
+        var fields = values[index].object; fields["completed"] = .bool(!(fields["completed"]?.flag ?? false))
+        return replacing(index, with: .object(fields))
+    }
+    func remove(_ requests: [Request], children: JSON, scope: Scope) -> JSON? {
+        guard !requests.isEmpty else { return nil }
+        let indices = requests.compactMap { position($0, children: children, scope: scope) }
+        guard indices.count == requests.count, Set(indices).count == indices.count else { return nil }
+        for index in indices.sorted(by: >) { values.remove(at: index); tokens.remove(at: index) }
+        positions = Dictionary(uniqueKeysWithValues: tokens.enumerated().map { ($0.element, $0.offset) }); identities = counts(values)
+        return .array(values)
+    }
+    func details(_ request: Request, original: Record, edited: Record, children: JSON, scope: Scope) throws -> JSON {
+        guard let index = position(request, children: children, scope: scope), key(values[index]) != nil else {
+            throw SubtaskTree.Failure(message: "This subtask changed. Reopen its current details before saving.")
+        }
+        let saved = try SubtaskTree.detailChanges(original: original, edited: edited, current: Record(values[index].object))
+        return replacing(index, with: .object(saved.fields))
+    }
+}

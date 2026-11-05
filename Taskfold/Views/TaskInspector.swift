@@ -92,6 +92,12 @@ struct TaskInspectorForm: View {
     @State private var selectedTeamName: String?
     @State private var selectedTeamID: String?
     @State private var subtaskOrganizing: SubtaskOrganizerRequest?
+    @State private var inlineSubtasks = SubtaskInlineDraft()
+    private var inlineSubtaskScope: SubtaskInlineDraft.Scope {
+        .init(root: Workspace.subtaskPath(taskID)?.first ?? taskID, parent: taskID, selection: sourceContext?.identity ?? .null,
+              workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration),
+              session: store.backend.reminderSessionIncarnation, generation: currentGeneration)
+    }
     @State private var independentHierarchy: ChildTaskStructurePresentationRequest?
     @State private var recoverySession: TaskEditorSession?
     @State private var sourceContext: TaskEditorSourceContext?
@@ -434,7 +440,7 @@ struct TaskInspectorForm: View {
             }
             if workspace.taskDepth(taskID) < SubtaskTree.maximumDepth || !draft["subtasks"].list.isEmpty {
             Section("Subtasks") {
-                let childIndices = SubtaskTree.uniqueChildIndices(draft["subtasks"])
+                let childRows = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope)
                         SubtaskOrganizerButton(children: Binding(get: { draft["subtasks"] }, set: { draft["subtasks"] = $0 }), taskID: taskID, baseDepth: workspace.taskDepth(taskID), projectID: workspace.assignmentProject(draft, contextID: taskID),sourceRecord:draft,sourceRootID:sourceRoot?.id,custodyRoot:sourceRoot,admittedWorkspace:workspaceBinding, teamDraft:teamDraft, present: { subtaskOrganizing = $0 }, presentHierarchy: { independentHierarchy = .init(rootID: $0) }, saveAndOpen: { children, path in
                     let previous = draft
                     draft["subtasks"] = children
@@ -443,14 +449,19 @@ struct TaskInspectorForm: View {
                     workspace.open(childID)
                     return true
                 })
-                ForEach(Array(draft["subtasks"].list.enumerated()), id: \.offset) { index, value in
+                ForEach(childRows) { row in
+                    let index = row.index, value = row.value
                     let preview = SubtaskTree.inlinePresentation(value)
                     let title = preview.title
                     let completed = preview.completed
                     let accessibleTitle = title.isEmpty ? "untitled subtask" : title
                     HStack {
                         if TaskKind.mayComplete(preview) {
-                        Button { var list = draft["subtasks"].list; var item = value.object; item["completed"] = .bool(!(item["completed"]?.flag ?? false)); list[index] = .object(item); draft["subtasks"] = .array(list) } label: {
+                        Button {
+                            guard editorAvailable, let request = row.request,
+                                  let changed = inlineSubtasks.toggle(request, children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
+                            draft["subtasks"] = changed
+                        } label: {
                             Image(systemName: completed ? "checkmark.circle.fill" : "circle").foregroundStyle(completed ? Color.taskfold : .secondary)
                         }.buttonStyle(.borderless)
                             .accessibilityLabel((completed ? "Reopen " : "Complete ") + accessibleTitle)
@@ -460,8 +471,14 @@ struct TaskInspectorForm: View {
                             Image(systemName: TaskKind(preview) == .heading ? "textformat" : "questionmark.square")
                                 .foregroundStyle(.secondary).accessibilityLabel(TaskKind(preview) == .heading ? "Heading, stays open" : "Task type unavailable")
                         }
-                        if SubtaskTree.inlineEditable(value) {
-                        TextField("Subtask", text: Binding(get: { SubtaskTree.inlineTitle(draft["subtasks"].list[index]) }, set: { title in var list = draft["subtasks"].list; var item = list[index].object; item["title"] = .string(title); list[index] = .object(item); draft["subtasks"] = .array(list) }), prompt: Text("Subtask"), axis: .vertical)
+                        if row.request != nil {
+                        TextField("Subtask", text: Binding(get: {
+                            row.request.flatMap { inlineSubtasks.value($0, children: draft["subtasks"], scope: inlineSubtaskScope) }.map(SubtaskTree.inlineTitle) ?? title
+                        }, set: { text in
+                            guard editorAvailable, let request = row.request,
+                                  let changed = inlineSubtasks.title(text, request: request, children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
+                            draft["subtasks"] = changed
+                        }), prompt: Text("Subtask"), axis: .vertical)
                             .labelsHidden().textFieldStyle(.plain)
                         } else {
                             VStack(alignment: .leading, spacing: 3) {
@@ -470,14 +487,19 @@ struct TaskInspectorForm: View {
                             }
                         }
                         Button {
-                            saveNow()
+                            guard editorAvailable, let request = row.request, saveNow(),
+                                  let current = inlineSubtasks.rows(draft["subtasks"], scope: inlineSubtaskScope).first(where: { $0.id == request.token && $0.request != nil }) else { return }
                             workspace.expandedTasks.insert(taskID)
-                            workspace.open(workspace.childID(parent: taskID, value: value, index: index))
+                            workspace.open(workspace.childID(parent: taskID, value: current.value, index: current.index))
                         } label: { Image(systemName: "sidebar.trailing") }
                             .buttonStyle(.borderless).accessibilityLabel("Open details for " + accessibleTitle)
-                            .disabled(isTeamTask || childIndices[Workspace.childKey(value, index: index)] != index)
-                        Button { var list = draft["subtasks"].list; list.remove(at: index); draft["subtasks"] = .array(list) } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
-                    }.disabled(!SubtaskTree.inlineEditable(value))
+                            .disabled(isTeamTask || row.request == nil)
+                        Button {
+                            guard editorAvailable, let request = row.request,
+                                  let changed = inlineSubtasks.remove([request], children: draft["subtasks"], scope: inlineSubtaskScope) else { return }
+                            draft["subtasks"] = changed
+                        } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.tertiary) }.buttonStyle(.borderless).accessibilityLabel("Remove " + accessibleTitle)
+                    }.disabled(row.request == nil)
                 }
                 HStack { TextField("Subtask", text: $subtask, prompt: Text("Add a subtask")).accessibilityIdentifier("addSubtask").labelsHidden().textFieldStyle(.plain).onSubmit(addSubtask); Button("Add", action: addSubtask).controlSize(.small).accessibilityLabel("Add subtask").disabled(!SubtaskTree.hasListContainer(draft["subtasks"]) || subtask.trimmingCharacters(in: .whitespaces).isEmpty || workspace.taskDepth(taskID) >= SubtaskTree.maximumDepth) }
             }

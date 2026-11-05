@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-05",
+  "implemented": "Stable view-local inline subtask identities and guarded callbacks. iPhone direct child details stay in the parent draft; Mac Open Details stops on failed parent save and resolves the current child.",
+  "core": {
+    "ios": {
+      "passed": 12,
+      "failed": 0
+    },
+    "mac": {
+      "passed": 12,
+      "failed": 0
+    }
+  },
+  "nativeIPhone": {
+    "normalJourney": "accepted",
+    "normalEvidence": "inline-subtask-native-ios.json",
+    "largestText": "accepted",
+    "largestTextEvidence": "inline-subtask-largest-text.json",
+    "reportedRuntimeWarnings": 0,
+    "reviewedScreenshots": [
+      "legacy-focus-after-removal.png",
+      "largest-text-details-row.png"
+    ],
+    "visualReview": "Normal legacy insertion remains on the same field after predecessor removal. At AX XXXL dark, the Middle task title wraps and its completion/details controls remain distinct; child Cancel returns to the parent without changing saved tables."
+  },
+  "nativeMac": {
+    "coreTests": "12 passed",
+    "ordinaryMacBuild": "1.2.0 (15), compile/sign/extension checks passed",
+    "buildEvidence": "inline-subtask-mac-build.json",
+    "nativeInteraction": "not claimed",
+    "packagedOrInstalled": false
+  },
+  "existingUpdatePackages": "Mac 14 / iPhone 30 and working Mac 10 / phone 26 rollback archives remain preserved pending saved-draft confirmation. This later source work does not silently replace either reviewed package.",
+  "limits": [
+    "No new persistent legacy IDs or schema are introduced. The view-local cache is not authorization; live editor/source guards remain required.",
+    "The native predecessor-removal driver invokes the same draft engine; actual swipe gestures remain separate.",
+    "The 3,000-row Core diagnostic is not interface performance acceptance.",
+    "Wider Mac/iPad/account/VoiceOver/large-library/independent-child contexts and all prior deferrals remain separate."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/SubtaskTree.swift": "4c17a0b1b4f2ab03bd71415bef5ad160ae1b6e1dd76a8a22af43c97cf1c0fa17",
+    "TaskfoldTests/SubtaskTreeTests.swift": "fb2c8e9c4d80b9ee00cf83d63b3bf1e331a59865405455dbe2c83f3a747e406b",
+    "Taskfold/Views/TaskInspector.swift": "675792a8041eb54fb0a36c01b3a6f147fa2c242a14336e34e0dc47e223750cca"
+  },
+  "testCorrections": [
+    "Prepared-project signing team reads structured owning project metadata.",
+    "The iPhone focus enum now uses the stable UUID row identity.",
+    "UI-test note lookup stays valid after typing; nested Save/Cancel are scoped to the child navigation bar. Earlier selector failures do not represent accepted product behavior."
+  ],
+  "storageEvidence": "inline-subtask-storage.json",
+  "freeGiB": 65.7
+}

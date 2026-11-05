@@ -517,3 +517,110 @@ final class MixedSelectionTests: XCTestCase {
         XCTAssertEqual(root["subtasks"].list[0].object["id"], .string("a"))
     }
 }
+
+@MainActor final class SubtaskInlineDraftTests: XCTestCase {
+    private let binding = WorkspaceBinding(account: "me", generation: UUID())
+    private let session = UUID()
+    private func scope(parent: String = "root", generation: String = "first") -> SubtaskInlineDraft.Scope {
+        .init(root: "root", parent: parent, selection: .array([.string(parent)]), workspace: binding, session: session, generation: .string(generation))
+    }
+    private func node(_ id: String?, _ title: String) -> JSON {
+        var fields: [String: JSON] = ["title": .string(title), "completed": .bool(false), "description": .string("Keep notes"), "opaque": .object(["preserved": .bool(true)]), "subtasks": .array([])]
+        if let id { fields["id"] = .string(id) }; return .object(fields)
+    }
+    func testQueuedEditFollowsIdentityAfterReordering() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node("a", "A"), node("b", "B")])
+        let rows = model.rows(source, scope: owner), a = try XCTUnwrap(rows[0].request)
+        let reordered = JSON.array(source.list.reversed()), current = model.rows(reordered, scope: owner)
+        XCTAssertEqual(current[1].id, rows[0].id)
+        let edited = try XCTUnwrap(model.title("Updated A", request: a, children: reordered, scope: owner))
+        XCTAssertEqual(edited.list[0], source.list[1]); XCTAssertEqual(edited.list[1].object["title"], .string("Updated A"))
+        var expected = source.list[0].object; expected["title"] = .string("Updated A"); XCTAssertEqual(edited.list[1], .object(expected))
+    }
+    func testRepeatedTypingKeepsLegacyIdentityWithoutAddingStoredIDs() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node(nil, "Old")])
+        let first = model.rows(source, scope: owner)[0], request = try XCTUnwrap(first.request)
+        var value = source
+        for text in ["N", "Ne", "New title"] {
+            value = try XCTUnwrap(model.title(text, request: request, children: value, scope: owner))
+            XCTAssertEqual(model.rows(value, scope: owner)[0].id, first.id); XCTAssertNil(value.list[0].object["id"])
+        }
+        var expected = source.list[0].object; expected["title"] = .string("New title"); XCTAssertEqual(value, .array([.object(expected)]))
+    }
+    func testRemovingPredecessorKeepsFocusedRowIdentity() throws {
+        for identified in [true, false] {
+            let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node(identified ? "a" : nil, "A"), node(identified ? "b" : nil, "B")])
+            let rows = model.rows(source, scope: owner)
+            let removed = try XCTUnwrap(model.remove([try XCTUnwrap(rows[0].request)], children: source, scope: owner))
+            XCTAssertEqual(model.rows(removed, scope: owner)[0].id, rows[1].id)
+            let edited = try XCTUnwrap(model.title("Still B", request: try XCTUnwrap(rows[1].request), children: removed, scope: owner))
+            XCTAssertEqual(edited.list[0].object["title"], .string("Still B"))
+        }
+    }
+    func testDeletedThenRestoredChildDoesNotReceiveOldCallbacks() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node("a", "A"), node("b", "B")])
+        let rows = model.rows(source, scope: owner), a = try XCTUnwrap(rows[0].request)
+        let removed = try XCTUnwrap(model.remove([a], children: source, scope: owner))
+        XCTAssertNil(model.title("Wrong", request: a, children: removed, scope: owner))
+        let restored = model.rows(source, scope: owner); XCTAssertNotEqual(restored[0].id, rows[0].id)
+        XCTAssertNil(model.toggle(a, children: source, scope: owner))
+    }
+    func testCompletionReadsCurrentValueAndPreservesFields() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node("a", "A")])
+        let request = try XCTUnwrap(model.rows(source, scope: owner)[0].request)
+        let completed = try XCTUnwrap(model.toggle(request, children: source, scope: owner)); XCTAssertTrue(completed.list[0].object["completed"]!.flag)
+        XCTAssertEqual(model.toggle(request, children: completed, scope: owner), source)
+    }
+    func testHeadingConversionAndDuplicateIDsRejectLateCompletion() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node("a", "A")])
+        let request = try XCTUnwrap(model.rows(source, scope: owner)[0].request)
+        var heading = source.list[0].object; heading["is_heading"] = .bool(true)
+        XCTAssertNil(model.toggle(request, children: .array([.object(heading)]), scope: owner))
+        let duplicate = JSON.array([source.list[0], source.list[0]])
+        XCTAssertTrue(model.rows(duplicate, scope: owner).allSatisfy { $0.request == nil })
+        XCTAssertNil(model.title("Wrong", request: request, children: duplicate, scope: owner))
+    }
+    func testWorkspaceSessionParentAndGenerationBoundaries() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node("a", "A")])
+        let request = try XCTUnwrap(model.rows(source, scope: owner)[0].request)
+        let foreign = SubtaskInlineDraft.Scope(root: owner.root, parent: owner.parent, selection: owner.selection, workspace: .init(account: "other", generation: UUID()), session: owner.session, generation: owner.generation)
+        let reincarnated = SubtaskInlineDraft.Scope(root: owner.root, parent: owner.parent, selection: owner.selection, workspace: owner.workspace, session: UUID(), generation: owner.generation)
+        for changed in [foreign, reincarnated, scope(parent: "other parent"), scope(generation: "restored")] {
+            XCTAssertNil(model.title("Wrong", request: request, children: source, scope: changed))
+        }
+    }
+    func testChangedLegacyRowDoesNotReuseAStaleTextField() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node(nil, "A"), node(nil, "B")])
+        let rows = model.rows(source, scope: owner), changed = JSON.array([node(nil, "Remote"), source.list[1]])
+        XCTAssertNotEqual(model.rows(changed, scope: owner)[0].id, rows[0].id)
+        XCTAssertNil(model.title("Wrong", request: try XCTUnwrap(rows[0].request), children: changed, scope: owner))
+    }
+    func testBatchRemovalIsAllOrNothingAndKeepsOtherTokens() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node("a", "A"), node("b", "B"), node("c", "C")])
+        let rows = model.rows(source, scope: owner), a = try XCTUnwrap(rows[0].request), c = try XCTUnwrap(rows[2].request)
+        XCTAssertNil(model.remove([a, a], children: source, scope: owner))
+        let removed = try XCTUnwrap(model.remove([a, c], children: source, scope: owner)); XCTAssertEqual(removed, .array([source.list[1]])); XCTAssertEqual(model.rows(removed, scope: owner)[0].id, rows[1].id)
+        XCTAssertNil(model.remove([a, try XCTUnwrap(rows[1].request)], children: removed, scope: owner)); XCTAssertEqual(model.rows(removed, scope: owner)[0].value, source.list[1])
+    }
+    func testDetailsMergeOnlyTouchedFieldsIntoCurrentChild() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array([node("a", "A")])
+        let request = try XCTUnwrap(model.rows(source, scope: owner)[0].request), original = Record(source.list[0].object)
+        var current = source.list[0].object; current["title"] = .string("Remote title"); current["new_remote"] = .bool(true)
+        var edited = original; edited["description"] = .string("New notes"); edited["project_id"] = .string("never copied")
+        let result = try model.details(request, original: original, edited: edited, children: .array([.object(current)]), scope: owner)
+        current["description"] = .string("New notes"); XCTAssertEqual(result, .array([.object(current)]))
+        edited["id"] = .string("wrong"); XCTAssertThrowsError(try model.details(request, original: original, edited: edited, children: result, scope: owner))
+    }
+    func testOpaqueContainersAndRowsStayUnchanged() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), opaque = JSON.object(["future": .bool(true)])
+        XCTAssertTrue(model.rows(opaque, scope: owner).isEmpty)
+        let source = JSON.array([.string("Legacy text"), .object(["title": .number(42)]), node("a", "A")]), rows = model.rows(source, scope: owner)
+        XCTAssertNil(rows[0].request); XCTAssertNil(rows[1].request)
+        let request = try XCTUnwrap(rows[2].request); XCTAssertNil(model.toggle(request, children: opaque, scope: owner))
+    }
+    func testLargeIdentifiedReorderKeepsEveryRowToken() throws {
+        let model = SubtaskInlineDraft(), owner = scope(), source = JSON.array((0..<3000).map { node("n\($0)", "Task \($0)") })
+        let before = model.rows(source, scope: owner), after = model.rows(.array(source.list.reversed()), scope: owner)
+        XCTAssertEqual(after.map(\.id), before.map(\.id).reversed()); XCTAssertEqual(Set(after.map(\.id)).count, 3000)
+    }
+}

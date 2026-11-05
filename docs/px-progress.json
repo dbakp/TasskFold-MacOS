@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Searchable filter targets; next nested editing",
-  "latest": "Project, section and label filter targets now have a focused searchable chooser with project paths. Final iPhone search/rename/cancel/save/cold and dark/largest-text cases pass on the same current inputs, with zero reported runtime warnings; actual keyboard/Done and wrapped long paths are reviewed. A real largest-text double-navigation bug is fixed by owning the target sheet outside Form rows. Mac 14 and iPhone 30 are signed and full-payload verified. Installed Mac 10 and phone 26 sessions remain intact pending saved-draft confirmation. Cleanup leaves about 67.3 GiB free. Broader Px and agreed deferrals remain.",
+  "focus": "Now · Direct subtask details and stable inline editing",
+  "latest": "Direct iPhone subtask details now open from each identified row. Child Save stays in the parent draft, parent Cancel discards it, and inline typing remains attached to the same legacy child after predecessor removal. Final ordinary-editor Save/cold and dark/largest-text Cancel journeys pass on the same signed inputs, with zero reported runtime warnings; twelve focused Core checks pass independently in each app. Mac source build 15 compiles/signs with both extensions; native Mac interaction remains separate. Cleanup leaves 65.7 GiB free. The reviewed Mac 14 / iPhone 30 update packages and installed Mac 10 / phone 26 sessions remain preserved pending saved-draft confirmation. No checkpoint totals or rollout gates are changed.",
   "next": [
-    "NEXT IMPLEMENTATION: continue nested task-editing friction, then practical planning and notes. Install cumulative Mac 14 / phone 30 after saved-draft confirmation; both normal apps are currently running. Accept Mac/iPad target interactions and wider label/section, account, speech and large-library contexts separately. Keep scoped evidence and avoid unchanged broad matrices.",
+    "NEXT IMPLEMENTATION: practical planning and notes after this scoped subtask refinement. Install the already reviewed cumulative Mac 14 / phone 30 after saved-draft confirmation; preserve current installed sessions. Accept wider Mac/iPad subtask interactions, account, speech, actual swipe and large-library contexts separately. Avoid unchanged broad matrices.",
     "NEXT DAILY-USE UPDATE: preserve the verified library creation/starter runs, sibling ordering/Undo and filter-target improvements in the cumulative packages. Continue with small user-facing feature updates, bounded caches and end-of-run cleanup.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
@@ -193,7 +193,7 @@
             {
               "state": "done",
               "title": "Edit nested children, notes and planning",
-              "detail": ""
+              "detail": "The original nested editor remains accepted. New one-tap iPhone details, parent-draft Cancel/Save/cold behavior, continued legacy-row typing after predecessor removal and dark/largest-text Cancel now pass. Twelve focused Core checks pass independently per app; the Mac inspector compile is recorded separately from native interaction. Wider cases remain scoped."
             },
             {
               "state": "done",
@@ -208,9 +208,10 @@
           ],
           "sources": [
             "p1-completion-audit.json",
-            "P1_PLAN.md"
+            "P1_PLAN.md",
+            "daily-use-build/inline-subtasks.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p1-templates",
@@ -1184,7 +1185,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "814869f5fc680471a96bfa9204c12701835396f06e5de290c7d598c32293b11a",
+    "P2_PLAN.md": "def407f155a530215874eb0cda6ea51a0804fe69bdad6c66080448cae44e6e2e",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1299,6 +1300,7 @@
     "daily-use-build/context-capture-mac-package.json": "01a94b61601f02b1fd223c6307e2fb67af4fe3fbfa907b8ced2f4fd5f108ba0a",
     "daily-use-build/context-capture-native.json": "fddc4e842d98b36a14bff1fef870d8c44f5d1bee74fb13c7984ef119b5cf8506",
     "daily-use-build/context-capture-storage.json": "a03b78dc6775a36b3e9f0ff8cc88ad49e9db7453298e9fd6b5217fe296322eaf",
+    "daily-use-build/inline-subtasks.json": "e430da2431600ecb1125f8b2c68608611edb2d71c9be2898fcddb6ecf0d29aa4",
     "daily-use-build/library-composer-largest-text.json": "d8a3e945933e76a34b014a51f078a75c5b5e498bf28db2c80f59b3134c77ff89",
     "daily-use-build/library-composer-native.json": "66869643ac1d84418539f6138932c70e0571904c47aa4a4973bf6f59b386df2e",
     "daily-use-build/library-composer-storage.json": "a8f9fb628a11da3b940636e8942d50a85776d2819c02bb534302ed427c0078d8",
