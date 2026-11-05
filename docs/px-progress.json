@@ -4,8 +4,8 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Optimized iPhone34 installed; filter assistance built with native checks open",
-  "latest": "The phone became reachable: frozen optimized iPhone 1.4.0 (34) is now installed in place and its process runs. A fresh private safety copy is retained; all 205 prior task IDs, titles, notes, attachments and children match after launch. This package excludes later assistant, note-section and Core-performance source changes. Both new filter editors are built/signed, with editable expressions, background validation, real match previews and target checks at Use and Save; each owning Core suite passes 123 checks with two real-model skips. Apple Intelligence is off on this Mac and the Mac remains locked. Real generation, native assistant controls/history/cold/accessibility and physical smoothness remain unaccepted; Mac14 stays installed.",
+  "focus": "Use now · iPhone34 installed; filter directory requests reduced",
+  "latest": "Optimized iPhone 1.4.0 (34) is installed in place, launches and preserves all 205 prior task IDs and critical fields. New source work removes eager directory requests from ordinary date, priority and keyword filters; simultaneous member reads now share one operation with account, session, provider and access fences. Each owning repository passes 108 selected Core checks with one real-model skip. Both current app builds and strict signatures pass; live directory behavior and physical smoothness remain unaccepted. These later changes are not in installed phone34 or Mac14.",
   "next": [
     "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Unlock Mac for current normal/largest-text note and assistant flows, then package later source changes. No physical rendering/FPS acceptance is implied.",
     "PRODUCT NEXT: finish note section navigation acceptance, then continue everyday editing/planning/navigation polish in bounded installable updates. Preserve the already accepted protected-session recording milestone and continue remaining native adoption/custody and broader lifecycle work afterward; advanced gates and agreed rollout deferrals remain.",
@@ -472,7 +472,7 @@
             {
               "state": "done",
               "title": "Expanded filters, grouping and gesture foundations",
-              "detail": ""
+              "detail": "Ordinary filter editors now request member lists only for person conditions; concurrent reads share one operation with cancellation and account/session/provider/access fences. Each owning suite passes six focused coordinator/demand tests plus existing filter regression checks. Native interaction, live delivery and physical smoothness remain unaccepted; this follow-up is not in installed phone34 or Mac14."
             },
             {
               "state": "done",
@@ -602,7 +602,10 @@
             "optimized-daily-update/mac-verification.json",
             "optimized-daily-update/iphone-verification.json",
             "optimized-daily-update/storage.json",
-            "planner-lane-layout/README.md"
+            "planner-lane-layout/README.md",
+            "filter-directory-responsiveness/README.md",
+            "filter-directory-responsiveness/core-verification.json",
+            "filter-directory-responsiveness/signed-build.json"
           ],
           "focus": false
         },
@@ -1418,6 +1421,9 @@
     "field-history/README.md": "5b06f10129fc2515d2ff19280fceb406ac4bd50186f334d0501d2c7483547d87",
     "field-history/verification.json": "4b5168fb9ec05cee2e9ddc59127ca320232d9e6d2e4f5463e9939783092ed1e9",
     "filter-assistance/README.md": "dbbd1698942bebadde4da672523697f03bcd2038dceb072e5662c9e6e7ca4945",
+    "filter-directory-responsiveness/README.md": "4af3303cbe1a86ce259d8fc88549e8b09cfa8ba9ca9579ba0252a01c15fe518c",
+    "filter-directory-responsiveness/core-verification.json": "06b5126192cf171a9a0a38ac44eb246017a05e45c692c42039406d802ed0dcbb",
+    "filter-directory-responsiveness/signed-build.json": "202f088e3fba9318a9dfab171f725fc377de889758c4d3356458909bb8fa5dd1",
     "full-schema-sync/README.md": "a6c1b27f9d1d78550bb722849da08533ff0f37281404a45f09e3222c51c61ec9",
     "full-schema-sync/full-schema.json": "cca29b765fa47d52704398755ab2e9511fad6eb203e2e5fcbce5ccfb868a8174",
     "full-schema-sync/historical-provenance.json": "a2e9f7f02800a4233a9bcbf6a78638176e5593a144a4c0d8ed631a20332b5a45",

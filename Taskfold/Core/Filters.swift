@@ -873,6 +873,7 @@ struct FilterParser {
     private var tokens: [String] = []
     private var cursor = 0
     private var quotedTokens = Set<Int>()
+    private(set) var needsPeopleDirectory = false
     let context: FilterContext
     init(_ expression: String, context: FilterContext) throws {
         self.context = context
@@ -967,6 +968,7 @@ struct FilterParser {
             let field = String(String.UnicodeScalarView(scalars[..<colon])).lowercased()
             let value = String(String.UnicodeScalarView(scalars[scalars.index(after: colon)...]))
             if let nameField = FilterNamePattern.expressions.first(where: { $0.value == field })?.key {
+                if nameField == "assignee_name" { needsPeopleDirectory = true }
                 return .predicate(nameField, try FilterNamePattern.canonical(readValue(starting: value)))
             }
             if let creationField = FilterCreationReference.expressions.first(where: { $0.value == field || ($0.key == "created_on" && field == "created on") })?.key {
@@ -1001,10 +1003,15 @@ struct FilterParser {
                 guard (first..<cursor).contains(where: { quotedTokens.contains($0) }) || !target.contains("*") else { throw FilterFailure(message: "Choose one exact project for its subprojects. Quote a project name containing *.") }
                 return .predicate("project_tree", try context.resolve("project", target))
             }
-            if ["assigned-by", "assigned by"].contains(field) { return .predicate("assigned_by", try context.resolve("assigned_by", readValue(starting:value))) }
+            if ["assigned-by", "assigned by"].contains(field) {
+                let target = readValue(starting: value)
+                if !["me", "others", "unknown"].contains(target.lowercased()), target.lowercased() != context.userID.lowercased() { needsPeopleDirectory = true }
+                return .predicate("assigned_by", try context.resolve("assigned_by", target))
+            }
             if ["project", "section", "label", "assignee", "assigned to"].contains(field) {
                 let target = field == "assigned to" ? "assignee" : field
                 let first = cursor - 1, name = readValue(starting: value)
+                if target == "assignee", !["me", "others", "unassigned"].contains(name.lowercased()), name.lowercased() != context.userID.lowercased() { needsPeopleDirectory = true }
                 if target == "assignee", name.contains("*"), !(first..<cursor).contains(where: { quotedTokens.contains($0) }) {
                     return .predicate("assignee_name", try FilterNamePattern.canonical(name))
                 }

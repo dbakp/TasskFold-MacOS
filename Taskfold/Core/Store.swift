@@ -1138,7 +1138,9 @@ final class Store {
 
     #endif
     private let monitor = NWPathMonitor()
+    @ObservationIgnored private let projectMemberReads = ProjectMemberReads()
     private var accountGeneration = UUID() { didSet {
+        projectMemberReads.cancelAll()
         snapshotRevision = UUID()
         widgetPublicationQueue.invalidate()
         syncSignInWorkspace = nil; syncAfterSignInRequested = nil; conversationError = nil; conversationPageTokens.removeAll(); conversationSyncID = nil; conversationSyncGeneration = nil } }
@@ -1991,17 +1993,27 @@ final class Store {
     @discardableResult
     func refreshProjectMembers(_ projectID: String) async throws -> [Record] {
         guard !projectID.isEmpty, !localMode else { return projectMembers(projectID) }
-        guard record("projects",id:projectID) != nil else {throw TeamProjectAccessUnavailable()}
-        let generation = accountGeneration, accessRevision=workspaceReadRevision, account=userID
-        let data = try await backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(projectID)], expectedAccount:account)
-        let people = try TaskfoldJSONDecoder().decode([Record].self, from: data).map { person in
-            var member = person; member["status"] = .string("accepted"); return member
+        guard record("projects", id: projectID) != nil else { throw TeamProjectAccessUnavailable() }
+        let scope = ProjectMemberReads.Scope(account: userID, generation: accountGeneration, access: workspaceReadRevision,
+            session: backend.reminderSessionIncarnation, origin: try backend.accountRemovalOrigin, project: projectID)
+        return try await projectMemberReads.load(scope) { [weak self] in
+            guard let self, self.memberReadCurrent(scope) else { throw CancellationError() }
+            let data = try await self.backend.request("/rest/v1/rpc/taskfold_project_members", method: "POST", body: ["_project_id": .string(projectID)], expectedAccount: scope.account)
+            try Task.checkCancellation()
+            let people = try TaskfoldJSONDecoder().decode([Record].self, from: data).map { person in
+                var member = person; member["status"] = .string("accepted"); return member
+            }
+            guard self.memberReadCurrent(scope) else { throw CancellationError() }
+            self.snapshot.tables["project_members:" + projectID] = people
+            try self.persist()
+            return self.projectMembers(projectID)
         }
-        guard generation == accountGeneration, accessRevision==workspaceReadRevision, record("projects",id:projectID) != nil else { throw CancellationError() }
-        snapshot.tables["project_members:" + projectID] = people
-        try persist()
-        return projectMembers(projectID)
     }
+    private func memberReadCurrent(_ scope: ProjectMemberReads.Scope) -> Bool {
+        scope.account == userID && scope.generation == accountGeneration && scope.access == workspaceReadRevision &&
+        scope.session == backend.reminderSessionIncarnation && scope.origin == (try? backend.accountRemovalOrigin) && record("projects", id: scope.project) != nil
+    }
+
     func load() {
         accessRecoveryPending = UserDefaults.standard.bool(forKey: accessRecoveryNoticeKey)
         workspaceCacheReadable = false;workspaceCacheDecoded=false;workspaceRepairFingerprint=nil

@@ -10976,3 +10976,8 @@ The Mac filter editor now has an optional on-device helper with editable express
 ### Phone optimized update installed — 5 November 2026
 
 The phone became reachable and the approved frozen build34 was installed in place. Launch and critical fields for all 205 prior tasks pass; a fresh private backup is retained. This excludes later assistant/note-section/Core-performance source changes. Mac14 remains running; Mac22 awaits its saved-draft window and verified archive extraction. Physical smoothness remains unaccepted. [Phone result](daily-use-build/phone-34-installation.json).
+
+
+### Filter directory responsiveness — 5 November 2026
+
+Ordinary filter editing now reads member lists only when a person condition needs them. A per-Store coordinator shares in-flight reads, preserves remaining readers on cancellation and rejects late account/session/provider/access results. Both owning Core suites pass 108 selected checks with one model probe skipped; live delivery, native controls and physical smoothness remain separate. Installed Mac14 and phone34 are unchanged by this source follow-up. [Scope and evidence](filter-directory-responsiveness/README.md).

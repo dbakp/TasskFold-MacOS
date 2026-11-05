@@ -71,6 +71,9 @@ struct SavedViewEditor: View {
         var seen = Set<String>()
         return store.projects.flatMap { store.projectMembers($0.id) }.filter { $0.id != store.userID && seen.insert($0.id).inserted }.sorted { $0.string("display_name") < $1.string("display_name") }
     }
+    private var needsMemberDirectory: Bool {
+        ProjectMemberDemand.needsDirectory(expression: advanced ? expression : nil, fields: conditions.map(\.field), context: store.filterContext)
+    }
     private var parsed: Result<FilterRule, Error> {
         Result {
             if let loadFailure { throw FilterFailure(message: loadFailure) }
@@ -196,9 +199,12 @@ struct SavedViewEditor: View {
             .alert("Could not save filter", isPresented: Binding(get: { saveFailure != nil }, set: { if !$0 { saveFailure = nil } })) {
                 Button("OK") { saveFailure = nil }
             } message: { Text(saveFailure ?? "") }
-            .task(id: [advanced || conditions.contains { $0.field == "assignee" || $0.field == "assigned_by" || $0.field == "assignee_name" }, appliedSuggestion == nil]) {
-                guard !store.localMode, appliedSuggestion == nil, advanced || conditions.contains(where: { $0.field == "assignee" || $0.field == "assignee_name" }) else { return }
-                for project in store.projects { _ = try? await store.refreshProjectMembers(project.id) }
+            .task(id: [needsMemberDirectory, appliedSuggestion == nil, assistance == nil]) {
+                guard !store.localMode, needsMemberDirectory, appliedSuggestion == nil, assistance == nil else { return }
+                for project in store.projects {
+                    guard !Task.isCancelled, workspaceCurrent else { return }
+                    _ = try? await store.refreshProjectMembers(project.id)
+                }
             }
             .confirmationDialog("Delete this filter?", isPresented: $deleting, titleVisibility: .visible) { Button("Delete", role: .destructive) { store.remove("saved_views", record.id); dismiss() } } message: { Text("Your tasks stay in place.") }
         }
