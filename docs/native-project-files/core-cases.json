@@ -1,0 +1,464 @@
+{
+  "date": "2026-11-05",
+  "owningSuite": "TaskfoldCoreTests",
+  "passed": 114,
+  "failed": 0,
+  "cases": [
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testAnotherWindowClearingSavedRequestRevokesLocalConsent",
+      "duration": "0.015 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testBackendRefusesWrongAccountBeforeNetwork",
+      "duration": "0.012 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testBackendUsesFixedPrivateGatewayWithExactFrozenBodyAndExplicitConsent",
+      "duration": "0.053 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testEmptyCancellationIsClosedButCannotAuthorizeSharing",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testForeignResponseAndClosedContextCannotProduceConsent",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testGenuineServiceContractProducesExplicitSignedCommandAndExactColdReceipt",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testInventoryPreparationOrUnrequestedReceiptNeverSubstituteForConsent",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testLargeManifestPagesOnlyAtStartAndFinish",
+      "duration": "0.096 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testLostFirstReplyColdLoadIsReadOnlyThenExplicitResumeReusesExactRequest",
+      "duration": "0.010 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testPlanRejectsForeignScopeMissingKeysOverexposureAndFalseCommit",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testRequestColdDecodeRevalidatesBodyAndBoundedCounts",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testSecureWriteFailureMakesNoNetworkCallOrSavedClaim",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testStopKeepsRequestAndIgnoresLateCopyResult",
+      "duration": "0.009 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.ProjectFilePreparationTests testTransferredCopyRetainsExistingUploadReceiptCodec",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testAccountSwitchWhileAwaitingReplyKeepsAttemptedOriginalWithoutLateUIReceipt",
+      "duration": "0.009 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testActualBackendSendsFrozenBytesAndOnlyOperationForRecovery",
+      "duration": "0.044 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testActualNativeProviderReplyConfirmsAColdOriginal",
+      "duration": "0.002 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testActualOwnSQLReceiptRoundTripsAndKeepsOriginalFile",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testActualOwnSQLUnknownSenderStopClosesAndColdRestoresOriginal",
+      "duration": "0.002 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testBackendDownloadVerifiesActualBytesBeforeReturningCopy",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testBackendRejectsWrongSessionBeforeAnyNetworkRequest",
+      "duration": "0.001 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testCASRefusesStaleWindowAndCannotResurrectClearedJournal",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testCiphertextColdReadHasNoPlaintextAndIsBoundToOrigin",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testDescriptorBoundsAndUnsafeFileNamesReject",
+      "duration": "0.009 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testDisabledPublicationStillLoadsAndResolvesSavedOriginal",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testDurableAttemptPrecedesSendAndLostReplyRecoversSameIdentity",
+      "duration": "0.009 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testFailedRefreshKeepsDisplayedOriginalAndBlocksWritesUntilReadSucceeds",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testFileReadsRejectMissingDuplicateAndMovedProjects",
+      "duration": "0.001 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testFileReadsRequireLiveBoundaryNotHistoricalCustodyOrCreator",
+      "duration": "0.000 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testInitialUnreadableRecoveryCannotBeReplacedAndSuccessfulRefreshDoesNotSend",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testLateReplyCannotOverwriteAnotherWindowsConfirmationAndRefreshRecoversIt",
+      "duration": "0.014 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testMalformedReceiptCannotClearOrConfirmAndTerminalCopyClearsOnlyExplicitly",
+      "duration": "0.012 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testMaximumBinaryFileFitsEncryptedRecoveryAndRealHTTPEnvelope",
+      "duration": "0.395 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testMinimalSenderStopRejectsForeignUnknownAndPublishingClaims",
+      "duration": "0.001 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testOnlyAuthenticatedTerminalStatesResolveAndKeepBytes",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testPausedAndArchivedAccessStillPermitsExistingFileReads",
+      "duration": "0.000 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testPublicationRefreshRunsAfterDurableReceiptForEveryAction",
+      "duration": "0.029 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testQueuedAndAttemptedJournalsRoundTripWithoutExposingDescriptions",
+      "duration": "0.001 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testQueuedCancellationDoesNotSendAndStatusDoesNotMarkUnsentAttempted",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testReadTargetCannotFollowReusedIdentityOrEmbeddedTask",
+      "duration": "0.000 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testReceiptRequiresExactOperationAccountTargetAndFileDescriptor",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testRefreshAfterLostNetworkReplyDoesNotPublishOrResolveAutomatically",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testRefreshObservesClearedRecoveryWithoutResurrectingOrSending",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testStaleWindowRequiresExplicitRefreshBeforeActingOnReplacement",
+      "duration": "0.010 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testTamperedBytesOrUnknownJournalFieldsCannotRecover",
+      "duration": "0.001 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testTaskRefreshKeepsRemotePublicationBesideQueuedAttachmentEdits",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testUnconfirmedStoppedOrForeignReplyNeverRefreshesWorkspace",
+      "duration": "0.020 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testUnreservedAttemptCanStopAndReleaseOnlyAfterRealProof",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testViewerCanReadWithoutCreatorOwnershipOrWritePermission",
+      "duration": "0.000 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TaskFileUploadTests testWriteFailureAndAnotherPendingFilePreventNetworkAndReplacement",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testAccountSwitchDuringReplyCannotClearPrivateRecovery",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualChildRecordAdoptionSQLReviewAndReceipt",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualPausedConnectionStillLoadsInExistingSettingsDecoder",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLChildHistoryInspectionReviewAndReceipt",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLCombinedStopAndConnectionPreservesExistingWire",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLInspectionReviewAndReceipt",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLMixedRecordingMoveAndStopContract",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLPausePolicyAndReceiptCounts",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLPendingOnlyMoveDoesNotInventPublishedRecordings",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLPrivateHistoryBindsAllCountsAndConnectionPause",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLRecordingConsentCommandAndReceipt",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLRecordingInventoryKeepsPrivateDetailsOnServer",
+      "duration": "0.002 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testActualSQLRemovedOnlyDoesNotInventMovingOrStoppedRecordings",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testAppliedPauseReplyLossPreservesExactPolicyAcrossRelaunch",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testArchivePreviewSeparatesOwnStateFromDestinationInheritance",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testBackendCarriesExactPublishedAndUnfinishedChoices",
+      "duration": "0.040 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testBackendSendsRecordingConsentOnlyWhenExplicitlyRequested",
+      "duration": "0.051 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testBackendUsesTheActualAdoptionProtocolAndSessionFence",
+      "duration": "0.089 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testChildCustodyNeedsPairedVersionPolicyAndBoundedCount",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testChildHistoryReviewHasAnExplicitBoundedVersion",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testClosingAnInFlightTransferKeepsOriginalRecovery",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testCustodyPolicyCannotChangeBetweenInspectionAndReview",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testDifferentOriginAndAccountNeverShareRecovery",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testEveryAcceptedCollaboratorNeedsAnExplicitDecision",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testForeignReplyAndCleanupFailureKeepTheRequest",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testFreshAuthoringAndExpiredRetryAreDifferent",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testLegacyInspectionDoesNotClaimPrivateSubtaskRetention",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testLostReplyRelaunchRetriesTheExactNonce",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testMalformedRecordingInventoryNeverBecomesTransferConsent",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testMixedRecordingConsentSurvivesColdExactRetry",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testNewAuthoringCannotBypassTheCleanWorkspaceGate",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testNoNetworkWriteBeforeDurablePrivateSave",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testOnlyIdentityAndProofFieldsEnterThePrivateRetry",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testOtherWindowsCannotReplaceThePendingTransfer",
+      "duration": "0.012 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testPausePrivateCommandKeepsOnlyActionAndBoundedCounts",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testPauseReceiptCannotHideActionsOrChangeCounts",
+      "duration": "0.010 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testPauseRequiresExplicitConsentAndMatchingSummary",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testPrivateHistoryAndConnectionConsentSurviveColdExactRetry",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testPrivateHistoryCapabilityRejectsInvalidInventoryAndProtocol",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testPrivateHistoryReceiptMustConfirmExactRetentionChoice",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testPrivateHistorySavedMetadataAndBodyCountsCannotDiverge",
+      "duration": "0.010 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testReceiptRequiresTheWholeReviewedForestAndExactCounts",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testRecordingCapabilityMustMatchAvailableInventory",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testRecordingConsentSurvivesSecureItemColdRetryAfterLostReply",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testRecordingInventoryCannotChangeBetweenInspectionAndReview",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testRecordingInventoryCannotEnableTransferBeforeCustodyCommit",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testRecordingSupportNeverSubstitutesForExplicitConsent",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testRemovalAndLeaseFencesProtectAdoptionRecovery",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testRemovedHistoryRequiresItsOwnExplicitChoice",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testReviewCannotChangeAChoiceOrHideAnInvitation",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testReviewedClearIsLocalAndDoesNotSendOrUndo",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testSavedRecordingConsentAndAcknowledgedCountAreBoundTogether",
+      "duration": "0.008 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testSourceForestCannotBeRetargetedOrFabricated",
+      "duration": "0.005 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testUnfinishedCapabilityRejectsUnsupportedInventoryAndProtocol",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testUnfinishedReceiptMustConfirmBothOriginalCountsAndPolicy",
+      "duration": "0.003 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testUnfinishedStoppingRequiresItsOwnExplicitPolicy",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testUnfinishedStoredCountsCannotBeStrippedOrChangeTheSavedBody",
+      "duration": "0.007 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testUnreadableRecoveryCannotStartAFreshTransfer",
+      "duration": "0.004 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectAdoptionTests testVaultCapacitySupports1000IdentityOnlyDecisions",
+      "duration": "0.078 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectFileInventoryTests testColdRoundTripPreservesExactInventoryAndOlderServerPayloadsStayReadable",
+      "duration": "0.006 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectFileInventoryTests testInspectionCannotClaimUncountedOrAlreadyApprovedFiles",
+      "duration": "0.002 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectFileInventoryTests testMalformedFutureAndContradictoryCountsRefuseWithoutNormalizing",
+      "duration": "0.000 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectFileInventoryTests testRealLocalInspectionDistinguishesReferenceKindsAndKeepsProviderDetailsPrivate",
+      "duration": "0.002 seconds"
+    },
+    {
+      "case": "TaskfoldCoreTests.TeamProjectFileInventoryTests testStoredReferenceInventoryDoesNotAuthorizeTransferOrStripItsFileRequirement",
+      "duration": "0.002 seconds"
+    }
+  ]
+}

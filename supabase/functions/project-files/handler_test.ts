@@ -53,6 +53,7 @@ const plan = () => ({
 const response = (value: unknown, status = 200) =>
   new Response(JSON.stringify(value), { status });
 type Faults = {
+  enabled?: boolean;
   source?: string;
   reserved?: string;
   corrupt?: boolean;
@@ -68,7 +69,7 @@ function fixture(f: Faults = {}) {
   const handler = createProjectFilesHandler({
     url: "https://project-files.example.invalid",
     serviceKey: "private-service-key",
-    enabled: true,
+    enabled: f.enabled ?? true,
     timeoutMilliseconds: 100,
   }, {
     send: async (req) => {
@@ -304,6 +305,56 @@ Deno.test("committed preparation cannot conceal unfinished copies", async () => 
         ...change,
         state: "committed",
         project_transferred: true,
+      }),
+    });
+    assert.equal(
+      (await f.call("check", { plan_id: planID, after: null })).status,
+      503,
+    );
+  }
+});
+
+Deno.test("disabled preparation still permits read-only recovery", async () => {
+  const f = fixture({ enabled: false });
+  const p = plan();
+  const r = await f.call("resolve", {
+    request_id: nonce,
+    scope: p.scope,
+    inspection_token: "a".repeat(64),
+  });
+  assert.equal(r.status, 200);
+  assert.equal(f.calls.some((c) => c.path.startsWith("/storage/")), false);
+});
+Deno.test("cancelled empty identity can be recovered while disabled", async () => {
+  const f = fixture({
+    enabled: false,
+    plan: (p) => ({
+      ...p,
+      state: "cancelled",
+      total: 0,
+      prepared: 0,
+      items: [],
+    }),
+  });
+  const r = await f.call("cancel_request", {
+    request_id: nonce,
+    scope: plan().scope,
+    inspection_token: "a".repeat(64),
+  });
+  assert.equal(r.status, 200);
+  assert.equal(r.value.plan.total, 0);
+  assert.equal(r.value.plan.project_transferred, false);
+});
+Deno.test("empty identity never claims ready or committed", async () => {
+  for (const state of ["ready", "committed"]) {
+    const f = fixture({
+      plan: (p) => ({
+        ...p,
+        state,
+        total: 0,
+        prepared: 0,
+        items: [],
+        project_transferred: state === "committed",
       }),
     });
     assert.equal(

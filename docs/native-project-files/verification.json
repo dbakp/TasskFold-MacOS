@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-05",
+  "platform": "mac",
+  "core": {
+    "passed": 114,
+    "failed": 0,
+    "newFileCases": 14,
+    "adoptionCases": 59,
+    "inventoryCases": 5,
+    "existingTaskFileUploadRegressions": 36
+  },
+  "handler": {
+    "passed": 27,
+    "failed": 0
+  },
+  "genuineLocalServiceChecks": 100,
+  "completeOwningMigrations": 211,
+  "nativeControlsImplemented": true,
+  "nativeRuntimeAccepted": false,
+  "hostedDeployment": false,
+  "normalGatesChanged": false,
+  "installedAppsUnchanged": true,
+  "onDeviceAssistanceOnly": true,
+  "furtherIPhoneInstallation": "Deferred by user",
+  "sources": {
+    "Taskfold/Core/ProjectFilePreparation.swift": "85368eb8def0f128ccc5d489a23019fc442f1831b6e99e0e7dc6dd70938e9635",
+    "Taskfold/Core/TeamProjectAdoption.swift": "1effa533fbced7a347588f4a5c41140b8bb294a318e836fd1884581501986e82",
+    "Taskfold/Core/Backend.swift": "24766210c99e3fb3727d3f6b25bebadbd38f171a5b5e7484e67b971c99e1f456",
+    "Taskfold/Core/Store.swift": "c800c40f94c40441fcf10d840d21f83c95ec3e420fbe72d2bdf30aad4b1bff09",
+    "Taskfold/Views/TeamProjectAdoptionView.swift": "235d9f92a77ca42afb5fdc98154d578a220305353a58cae24d81b528e6827a97",
+    "TaskfoldTests/ProjectFilePreparationTests.swift": "990ad037a0c39dd60713cf3d873701d573cb7d51d20ee686125e4bb41d6f201f",
+    "TaskfoldTests/Fixtures/project-file-preparation-native-v1.json": "a194eaed82b3263630107ccafc5b93afb4cb675e0b3e125d168bc8df44fb8118",
+    "Package.swift": "99cae428efa74f8826818299d236f3095fecfb60abb1f5b0822bc6cd576702f6",
+    "Taskfold.xcodeproj/project.pbxproj": "76e66a7e83c21f0186d52d71e9adcbe5fe63864b620429bbdf99d426f81b5171"
+  },
+  "knownRemaining": [
+    "Native interaction/layout, accessibility and large-text acceptance",
+    "Stop/close latency, cold/session/access/window and secure-storage acceptance",
+    "High-volume/rate-limit, combined-policy and wider lifecycle cases",
+    "Legacy/other realms, hosted providers and producer-terminal maintenance"
+  ],
+  "existingTaskFileUploadRegressions": {
+    "passed": 36,
+    "failed": 0,
+    "includedInCoreTotal": true
+  },
+  "canonicalTransferredFileReceiptAccepted": true
+}

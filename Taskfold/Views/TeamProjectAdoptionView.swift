@@ -20,7 +20,7 @@ struct SavedProjectTransferLink: View {
             visible = false
             guard phase == .active, store.projectTransferRecoveryAvailable, let origin = try? store.backend.accountRemovalOrigin else { return }
             let account = store.userID, captured = lifecycle
-            do { let value = try await store.projectAdoptionVault.pending(account: account, origin: origin); guard captured == lifecycle else { return }; visible = value != nil }
+            do { let value = try await store.projectAdoptionVault.pending(account: account, origin: origin); guard captured == lifecycle else { return }; let preparation = try await store.projectFilePreparationVault.pending(account: account, origin: origin); guard captured == lifecycle else { return }; visible = value != nil || preparation != nil }
             catch { guard captured == lifecycle else { return }; visible = true }
         }
         .sheet(isPresented: $showing, onDismiss: { reload = UUID() }) { TeamProjectAdoptionView() }
@@ -34,6 +34,8 @@ struct TeamProjectAdoptionView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var phase
     @State private var model: TeamProjectAdoptionModel?
+    @State private var files: ProjectFilePreparationModel?
+    @State private var shareFileCopies = false
     @State private var loaded: String?
     @State private var selected: Set<String> = []
     @State private var visibility: TeamProjectVisibility = .private
@@ -73,6 +75,13 @@ struct TeamProjectAdoptionView: View {
                         }
                     }
                     else if let pending = model.pending { recovery(pending, model: model) }
+                    else if files?.recoveryLoaded != true {
+                        Section {
+                            Text("Check this device’s saved file preparation before starting another transfer.").foregroundStyle(.secondary)
+                            Button("Check saved file preparation") { Task { await loadFiles() } }.disabled(files?.busy == true)
+                            if let message = files?.message { Text(message).foregroundStyle(.secondary) }
+                        }
+                    }
                     else if let i = inspection {
                         if reviewCurrent {
                             header(i.teamName)
@@ -86,7 +95,7 @@ struct TeamProjectAdoptionView: View {
                                 Button("Choose projects again") { resetReview() }
                             }
                         }
-                    } else if let team, team.account == store.userID, team.origin == (try? store.backend.accountRemovalOrigin), team.team.role != .guest, !team.team.archived, store.projectTransferAuthoringAvailable {
+                    } else if let saved = files?.request { savedFiles(saved) } else if let team, team.account == store.userID, team.origin == (try? store.backend.accountRemovalOrigin), team.team.role != .guest, !team.team.archived, store.projectTransferAuthoringAvailable {
                         header(team.team.name)
                         sourceChoices
                         Section("Team location") {
@@ -103,6 +112,7 @@ struct TeamProjectAdoptionView: View {
                         Section { ContentUnavailableView("No saved transfer", systemImage: "tray", description: Text("Transfers you need to confirm appear here. Start a new transfer from a team’s project list.")) }
                     }
                     if let message = model.message { Section { Text(message).foregroundStyle(.secondary) } }
+                    if let message = files?.message { Section { Text(message).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("projectFilePreparationMessage") } }
                 } else { Section { ContentUnavailableView("Transfer unavailable", systemImage: "person.crop.circle", description: Text("Return to the original synced account to continue.")) } }
                 if let message, current { Section { Label(message, systemImage: "exclamationmark.circle").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) } }
                 #if DEBUG
@@ -117,13 +127,14 @@ struct TeamProjectAdoptionView: View {
             #else
             .frame(minWidth: 560, idealWidth: 660, minHeight: 540)
             #endif
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(accepted != nil ? "Done" : model?.pending != nil ? "Close" : "Cancel") { dismiss() }.disabled(preparing || model?.busy == true).accessibilityIdentifier("closeProjectTransfer") } }
-            .interactiveDismissDisabled(preparing || model?.busy == true)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(accepted != nil ? "Done" : (model?.pending != nil || files?.request != nil) ? "Close" : "Cancel") { dismiss() }.disabled(preparing || model?.busy == true || files?.busy == true).accessibilityIdentifier("closeProjectTransfer") } }
+            .interactiveDismissDisabled(preparing || model?.busy == true || files?.busy == true)
             .task(id: lifecycle) { await start() }
-            .onChange(of: phase) { _, value in if value != .active { epoch = UUID(); preparing = false; inspection = nil; review = nil; choices = [:]; stamp = nil; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false } else if model?.receipt != nil { Task { await received() } } }
+            .onChange(of: phase) { _, value in if value != .active { files?.close(); shareFileCopies = false; epoch = UUID(); preparing = false; inspection = nil; review = nil; choices = [:]; stamp = nil; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false } else { Task { await loadFiles(); if model?.receipt != nil { await received() } } } }
             .onChange(of: choices) { _, _ in invalidateRecordingReview() }
             .onChange(of: pauseConnections) { _, _ in invalidateRecordingReview() }
-            .onDisappear { epoch = UUID(); model?.close() }
+            .onChange(of: shareFileCopies) { _, _ in review = nil }
+            .onDisappear { epoch = UUID(); model?.close(); files?.close() }
             .confirmationDialog("Clear this saved transfer?", isPresented: Binding(get: { clearing != nil }, set: { if !$0 { clearing = nil } })) {
                 if let c = clearing { Button("Clear saved request", role: .destructive) { Task { await model?.clear(c) } } }
             } message: { Text("Check the latest projects first. This removes the retry from this device; it does not undo a transfer that may already have succeeded.") }
@@ -246,7 +257,8 @@ struct TeamProjectAdoptionView: View {
                     }
                 }
             }
-            Section { Button("Review the transfer") { Task { await prepareReview(i) } }.disabled(preparing || choices.count != i.people.count || (i.hasConnections && i.supportsConnectionPause && !pauseConnections) || !recordingConsentsMet(i)).accessibilityIdentifier("reviewProjectTransfer"); Button("Back to projects") { resetReview() } }
+            fileChoices(i)
+            Section { Button("Review the transfer") { Task { await prepareReview(i) } }.disabled(preparing || choices.count != i.people.count || (i.hasConnections && i.supportsConnectionPause && !pauseConnections) || !recordingConsentsMet(i) || !fileConsentsMet(i) || files?.busy == true).accessibilityIdentifier("reviewProjectTransfer"); Button("Back to projects") { resetReview() } }
         }
     }
     @ViewBuilder private func connectionEffectRows(_ effects: TeamProjectConnectionEffects) -> some View {
@@ -287,6 +299,10 @@ struct TeamProjectAdoptionView: View {
                 if let count = r.recordingCount, count > 0 { recordingCountRow("Published recordings moving", count: count, id: "projectTransferRecordingSummary") }
                 if let count = r.unfinishedRecordingCount, count > 0 { recordingCountRow("Unfinished sends stopping", count: count, id: "projectTransferStopRecordingSummary") }
                 if let count = r.retainedRecordingCount { recordingCountRow("Removed recordings kept private", count: count, id: "projectTransferPrivateHistorySummary") }
+                if let consent = r.fileConsent {
+                    LabeledContent("Private copies shared", value: String(consent.count)).accessibilityIdentifier("projectTransferFileSummary")
+                    Text("Original files stay private. People with access to the destination can download the copies; previously downloaded copies cannot be recalled.").font(.footnote).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
                 if r.needsFileCustody { Label("Some files need a custody review before this branch can transfer.", systemImage: "paperclip.badge.ellipsis").foregroundStyle(.secondary) }
                 if r.needsIntegrationPause { Label("Personal email or webhook connections need a pause or destination review first.", systemImage: "link.badge.plus").foregroundStyle(.secondary) }
                 if r.inspection.inflightUpdates > 0 { Text("An outgoing update is still finishing. Wait a minute, then refresh the project review.").foregroundStyle(.secondary) }
@@ -300,9 +316,9 @@ struct TeamProjectAdoptionView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .accessibilityLabel("Transfer \(r.inspection.projects.count == 1 ? "project" : "\(r.inspection.projects.count) projects") to team")
-                .disabled(preparing || model?.busy == true || !r.canCommit || r.expires <= Date())
+                .disabled(preparing || model?.busy == true || files?.busy == true || !r.canCommit || r.expires <= Date())
                 .accessibilityIdentifier("confirmProjectTransfer")
-                Button("Back to access choices") { review = nil; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false }.disabled(preparing || model?.busy == true)
+                Button("Back to access choices") { review = nil; shareFileCopies = false; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false }.disabled(preparing || model?.busy == true)
             }
         }
     }
@@ -327,6 +343,7 @@ struct TeamProjectAdoptionView: View {
         Section {
             Label("Projects transferred", systemImage: "checkmark.circle.fill").font(.title2.weight(.semibold)).foregroundStyle(.tint).accessibilityIdentifier("projectTransferSuccess").accessibilityFocused($resultFocused).onAppear { resultFocused = true }
             Text("All \(r.command.projects.count) projects have transferred. Saved work and history are preserved.")
+            if let consent = r.command.fileConsent { LabeledContent("File copies transferred", value: String(consent.count)).accessibilityIdentifier("projectTransferResultFiles"); Text("Original files remain in your private storage.").foregroundStyle(.secondary) }
             if let count = r.command.recordingCount, count > 0 { recordingCountRow("Recordings transferred", count: count, id: "projectTransferResultRecordingSummary") }
             if let count = r.command.unfinishedRecordingCount, count > 0 { recordingCountRow("Unfinished sends stopped", count: count, id: "projectTransferResultStopRecordingSummary") }
             if let count = r.command.retainedRecordingCount { recordingCountRow("Removed recordings kept private", count: count, id: "projectTransferResultPrivateHistorySummary") }
@@ -340,19 +357,101 @@ struct TeamProjectAdoptionView: View {
             .accessibilityLabel(title).accessibilityValue(String(count))
             .accessibilityIdentifier(id)
     }
+    @ViewBuilder private func fileChoices(_ inspection: TeamProjectAdoptionInspection) -> some View {
+        if (inspection.fileInventory?.stored ?? 0) > 0 {
+            Section("File access") {
+                Text("Prepare private copies first. They become available to people with access to the destination only after you confirm the transfer. Original files stay private.").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if let files, let request = files.request {
+                    if request.matches(inspection) {
+                        fileProgress(files)
+                        if let consent = files.consent {
+                            Toggle("Share \(consent.count) prepared \(consent.count == 1 ? "file" : "files") with these projects", isOn: $shareFileCopies)
+                                .disabled(preparing || files.busy).accessibilityIdentifier("projectTransferFileConsent")
+                        }
+                    } else {
+                        Text("A different file preparation is saved. Close this review to check or cancel that preparation first.").foregroundStyle(.secondary)
+                    }
+                } else if inspection.filePreparationSupported {
+                    Button("Prepare private file copies", systemImage: "doc.on.doc") {
+                        Task { guard reviewCurrent else { return }; shareFileCopies = false; await files?.prepare(inspection) }
+                    }.disabled(preparing || files?.busy == true).accessibilityIdentifier("prepareProjectFiles")
+                    Text("Up to 5 MB per stored file. Preparing copies does not share them or change the originals.").font(.footnote).foregroundStyle(.secondary)
+                } else {
+                    Text("These stored files need a supported, enabled transfer service. Older or unavailable file references need separate review.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+    @ViewBuilder private func fileProgress(_ files: ProjectFilePreparationModel) -> some View {
+        if let page = files.page {
+            if page.state == .committed {
+                Label("This transfer already completed", systemImage: "checkmark.circle")
+                Text("Check the latest team projects before clearing this device’s preparation record.").font(.footnote).foregroundStyle(.secondary)
+                Button("Clear completed preparation") { Task { await files.clearCommitted(); await store.sync(); resetReview() } }.disabled(files.busy)
+            } else if page.state == .cancelled || page.state == .expired {
+                Text(page.state == .expired ? "This preparation expired. Cancel it and review the current projects again." : "This preparation is cancelled; originals are unchanged.").foregroundStyle(.secondary)
+            } else {
+                ProgressView(value: Double(page.prepared), total: Double(max(1, page.total))) {
+                    Text("\(page.prepared) of \(page.total) files prepared")
+                }.accessibilityIdentifier("projectFilePreparationProgress")
+                ForEach(page.items.prefix(3)) { item in
+                    Label(item.label, systemImage: item.phase == .ready ? "checkmark.circle" : "doc")
+                        .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if page.state == .ready { Label("Private copies are ready for your review", systemImage: "lock.doc").foregroundStyle(.tint) }
+            }
+        } else { if files.busy { ProgressView("Preparing private copies…") }; Text("The saved preparation needs confirmation. Nothing is shared by checking it.").foregroundStyle(.secondary) }
+        if files.busy {
+            Button("Stop preparing", systemImage: "stop.circle") { shareFileCopies = false; files.stop() }.accessibilityIdentifier("stopProjectFiles")
+        } else if files.page?.state != .committed {
+            if files.page?.state != .cancelled && files.page?.state != .expired && files.consent == nil {
+                Button("Continue preparing files") { Task { shareFileCopies = false; await files.resume() } }.accessibilityIdentifier("resumeProjectFiles")
+            }
+            Button("Cancel file preparation", role: .destructive) { Task { shareFileCopies = false; review = nil; await files.cancel() } }.accessibilityIdentifier("cancelProjectFiles")
+        }
+    }
+    private func savedFiles(_ request: ProjectFilePreparationRequest) -> some View {
+        Section("Saved file preparation") {
+            Text("This device kept an interrupted file preparation. Check its original projects before continuing. No file is shared without the final transfer confirmation.").foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            if let files { fileProgress(files) }
+            if files?.page?.state != .committed {
+                Button("Review original projects") { Task { await resumeFileReview(request) } }.disabled(files?.busy == true || preparing).accessibilityIdentifier("reviewSavedProjectFiles")
+            }
+        }
+    }
+    private func fileConsentsMet(_ inspection: TeamProjectAdoptionInspection) -> Bool {
+        guard inspection.filePreparationSupported else { return true }
+        return shareFileCopies && files?.consent != nil && files?.request?.matches(inspection) == true
+    }
+    private func loadFiles() async {
+        guard current, let origin = try? store.backend.accountRemovalOrigin else { return }
+        files?.close()
+        let account = store.userID, workspace = WorkspaceBinding(account: account, generation: store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
+        let value = ProjectFilePreparationModel(account: account, origin: origin, incarnation: session, vault: store.projectFilePreparationVault, service: store.backend, current: { store.projectTransferContext(account: account, origin: origin, workspace: workspace, session: session) })
+        files = value; await value.load()
+    }
+    private func resumeFileReview(_ request: ProjectFilePreparationRequest) async {
+        guard current, !preparing, files?.request == request, let before = store.projectTransferAuthorStamp(request.scope, projects: request.scope.roots) else { message = "Refresh the workspace and finish any open edits before reviewing these projects."; return }
+        let id = UUID(); epoch = id; preparing = true; defer { if epoch == id { preparing = false } }
+        do {
+            let value = try await store.backend.inspectProjectAdoption(request.scope)
+            guard current, epoch == id, request.matches(value), before == store.projectTransferAuthorStamp(request.scope, projects: value.projects.map(\.id)) else { throw ProjectFilePreparationRequest.invalid }
+            inspection = value; stamp = before; choices = [:]; shareFileCopies = false; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false; review = nil
+        } catch { guard current, epoch == id else { return }; message = "The saved source changed or access is unavailable. Your originals are kept; cancel this private preparation before starting a fresh review." }
+    }
     private func recordingConsentsMet(_ inspection: TeamProjectAdoptionInspection) -> Bool {
         guard inspection.needsRecordingCustody else { return true }
         guard inspection.supportedRecordingPolicy != nil, let inventory = inspection.recordingInventory else { return false }
         return (inventory.published == 0 || recordingConsent) && (inventory.pending == 0 || stopUnfinishedConsent) && (inventory.retained == 0 || keepRemovedConsent)
     }
-    private func invalidateRecordingReview() { recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false; guard inspection != nil, accepted == nil else { return }; epoch = UUID(); preparing = false; review = nil; message = nil }
-    private func resetReview() { epoch = UUID(); inspection = nil; review = nil; stamp = nil; choices = [:]; pauseConnections = false; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false; message = nil }
+    private func invalidateRecordingReview() { shareFileCopies = false; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false; guard inspection != nil, accepted == nil else { return }; epoch = UUID(); preparing = false; review = nil; message = nil }
+    private func resetReview() { shareFileCopies = false; epoch = UUID(); inspection = nil; review = nil; stamp = nil; choices = [:]; pauseConnections = false; recordingConsent = false; stopUnfinishedConsent = false; keepRemovedConsent = false; message = nil }
     private func start() async {
-        model?.close(); resetReview(); selected = []; accepted = nil; preparing = false
+        model?.close(); files?.close(); files = nil; resetReview(); selected = []; accepted = nil; preparing = false
         guard store.projectTransferRecoveryAvailable, let origin = try? store.backend.accountRemovalOrigin else { loaded = nil; model = nil; return }
         let captured = lifecycle, account = store.userID, workspace = WorkspaceBinding(account: account, generation: store.workspaceGeneration), session = store.backend.reminderSessionIncarnation
         let value = TeamProjectAdoptionModel(account: account, origin: origin, vault: store.projectAdoptionVault, service: store.backend, current: { store.projectTransferContext(account: account, origin: origin, workspace: workspace, session: session) })
-        model = value; loaded = captured; await value.load()
+        model = value; loaded = captured; await value.load(); guard loaded == captured else { return }; await loadFiles()
     }
     private func inspect() async {
         guard current, !preparing, let team, team.account == store.userID, team.origin == (try? store.backend.accountRemovalOrigin), let origin = try? store.backend.accountRemovalOrigin else { return }
@@ -370,18 +469,18 @@ struct TeamProjectAdoptionView: View {
         let id = UUID(); epoch = id; preparing = true; message = nil; defer { if epoch == id { preparing = false } }
         do {
             let d = try i.people.map { person -> TeamProjectAdoptionDecision in guard let choice = choices[person.decisionID!], let user = person.user else { throw TeamProjectAdoptionValue.invalid }; return try TeamProjectAdoptionDecision(project: person.project, user: user, choice: choice) }
-            let value = try await store.backend.reviewProjectAdoption(i, decisions: d, connectionPolicy: pauseConnections ? .pause : nil, recordingPolicy: i.needsRecordingCustody && recordingConsentsMet(i) ? i.supportedRecordingPolicy : nil)
+            let value = try await store.backend.reviewProjectAdoption(i, decisions: d, connectionPolicy: pauseConnections ? .pause : nil, recordingPolicy: i.needsRecordingCustody && recordingConsentsMet(i) ? i.supportedRecordingPolicy : nil, fileConsent: shareFileCopies && files?.request?.matches(i) == true ? files?.consent : nil)
             guard reviewCurrent, epoch == id else { throw TeamProjectAdoptionValue.invalid }; review = value
         } catch { guard current, epoch == id else { return }; message = "The saved contents or access may have changed. Start a fresh review before transferring." }
     }
     private func confirm(_ r: TeamProjectAdoptionReview) async {
-        guard reviewCurrent, review == r, r.recordingPolicy == nil || recordingConsentsMet(r.inspection), let model else { message = "Finish any edits and refresh this review before transferring."; return }
-        do { let command = try TeamProjectAdoptionCommand(review: r); await model.send(command, canAuthor: { reviewCurrent && review == r && (r.recordingPolicy == nil || recordingConsentsMet(r.inspection)) }); await received() }
+        guard reviewCurrent, review == r, r.fileConsent == nil || (shareFileCopies && r.fileConsent == files?.consent), r.recordingPolicy == nil || recordingConsentsMet(r.inspection), let model else { message = "Finish any edits and refresh this review before transferring."; return }
+        do { let command = try TeamProjectAdoptionCommand(review: r); await model.send(command, canAuthor: { reviewCurrent && review == r && (r.fileConsent == nil || (shareFileCopies && r.fileConsent == files?.consent)) && (r.recordingPolicy == nil || recordingConsentsMet(r.inspection)) }); await received() }
         catch { message = "This review expired or changed. Review the transfer again." }
     }
     private func received() async {
         guard current, let result = model?.receipt else { return }
-        accepted = result; inspection = nil; review = nil; choices = [:]; preparing = true
+        accepted = result; if result.command.fileConsent?.request == files?.request { await files?.clearCommitted() }; inspection = nil; review = nil; choices = [:]; preparing = true
         needsRefresh = !(await store.refreshAfterProjectTransfer(result)); preparing = false
     }
 }

@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Project files · Reviewed transfer verified locally",
-  "latest": "The local service now transfers eligible project files as one explicitly reviewed move: immutable copies go to the team, and originals stay private. Both owning repos pass 81 genuine local service checks and 24 handler tests, including all known attachment locations, independent subtasks, a normal 5 MB inline file, a forced rollback, retired-recipient refusal and exact retry while paused. Native preparation/consent controls and encrypted recovery are next; broader policies, ownership directions and hosted verification remain. No installed app update or normal-use activation occurred. Assistance is on-device only; further iPhone installation is deferred.",
+  "focus": "Project files · App controls and recovery built",
+  "latest": "Both apps now include private-file preparation progress, Stop/Continue, saved-request recovery and explicit sharing consent in project transfer. The exact request is stored securely before networking; checking recovery starts no work, and cancellation closes even an unacknowledged request. Both current app builds/signatures and focused tests pass. Interactive layout, accessibility, native secure storage and wider lifecycle/provider acceptance remain; this is built code, not a completed everyday rollout. Installed apps are unchanged. Assistance remains on-device only; further iPhone installation is deferred.",
   "next": [
     "FIRST: normal iPhone34 is now installed with launch and critical task-field preservation accepted. Mac14 remains installed; Mac22 still awaits its saved-draft update window and must be extracted from its verified archive. Unlock Mac for current normal/largest-text note and assistant flows, then package later source changes. No physical rendering/FPS acceptance is implied. Further iPhone installation is deferred at the user’s request on 5 November; do not treat the earlier disconnected-phone prompt as current installation work.",
-    "PRODUCT NEXT: connect native project-file preparation, consent and encrypted retry recovery to the now-verified local service transaction. Finish note section navigation acceptance and continue everyday editing/planning/navigation polish in bounded installable updates. Preserve accepted protected-session recording work; advanced gates and agreed rollout deferrals remain.",
+    "ACCEPT NEXT: run the actual native project-file preparation/consent/recovery journey, including first-response loss, Stop/close latency, Cancel, cold return, disabled/access-changed states, largest text, keyboard and speech. Then finish note section navigation acceptance and everyday editing/planning/navigation polish in bounded updates. Advanced gates and agreed rollout deferrals remain.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Actual scoped Mac Keychain/recording runtime now passes; deletion/recovery certificates still need their own remaining proof. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -718,7 +718,7 @@
             {
               "state": "build",
               "title": "Move subtask storage and preserve older work",
-              "detail": "Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed or stale requests. Project files now pass inventory, private preparation and an explicitly reviewed local service transaction: task/subtask/comment references, display names, original privacy and a 5 MB inline file survive; failed moves roll back together. Native file controls and encrypted retry recovery, wider legacy/history, combined audio/integration policies, lifecycle and hosted verification remain. Advanced gates remain off.",
+              "detail": "Independent subtask editing, conflict review and cold retry have scoped iPhone/Mac proof. Legacy-tree review preserves supported older work and refuses malformed/stale requests. Project files pass inventory, private preparation and the reviewed atomic local service move. Native progress/consent controls, Keychain-backed saved requests, exact file-policy receipts and interrupted preparation recovery are implemented; both apps build/sign and focused client/service tests pass. Native interaction, accessibility, secure storage, combined policies, wider legacy/history/lifecycle/ownership and hosted acceptance remain. Advanced gates stay off.",
               "steps": [
                 {
                   "state": "done",
@@ -802,7 +802,7 @@
                 },
                 {
                   "state": "build",
-                  "title": "Keep shared files and discussions with the right workspace: reviewed local service transfer passes; native controls/recovery and broader ownership directions remain"
+                  "title": "Keep shared files and discussions with the right workspace: atomic service plus native controls/recovery built; interactive, secure-storage and broader ownership acceptance remain"
                 },
                 {
                   "state": "done",
@@ -1115,7 +1115,14 @@
             "project-file-transfer/verification.json",
             "project-file-transfer/full-schema.json",
             "project-file-transfer/cleanup.json",
-            "project-file-transfer/progress-validation.json"
+            "project-file-transfer/progress-validation.json",
+            "native-project-files/README.md",
+            "native-project-files/verification.json",
+            "native-project-files/full-schema.json",
+            "native-project-files/signed-build.json",
+            "native-project-files/cleanup.json",
+            "native-project-files/progress-validation.json",
+            "native-project-files/core-cases.json"
           ],
           "focus": true
         },
@@ -1283,7 +1290,14 @@
     "project-file-transfer/verification.json",
     "project-file-transfer/full-schema.json",
     "project-file-transfer/cleanup.json",
-    "project-file-transfer/progress-validation.json"
+    "project-file-transfer/progress-validation.json",
+    "native-project-files/README.md",
+    "native-project-files/verification.json",
+    "native-project-files/full-schema.json",
+    "native-project-files/signed-build.json",
+    "native-project-files/cleanup.json",
+    "native-project-files/progress-validation.json",
+    "native-project-files/core-cases.json"
   ],
   "source_hashes": {
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
@@ -1515,6 +1529,13 @@
     "native-audience-approval/controller-verification.json": "941fe8ca06b88e41e7f8b78633683d2da0ebf82a597c0a23d1c172e461a7f210",
     "native-audience-approval/phone-verification.json": "71292dfcde4e4a2306717549b7b20e4eb047bdb1b443627fc20ae969175181a6",
     "native-audience-approval/verification.json": "37c74717ddb2a5ed0f51803e72b3fc5d0029185dae7c4587bff433ae4b7e857a",
+    "native-project-files/README.md": "caed345d0b576e4d55cbc4887bdede30a5de782d5bbbb631aaf500e92698d690",
+    "native-project-files/cleanup.json": "63b43f84bc2bdbf9831c5a615b16d1a7cbf7b1be1c99f36e1afbaa6cc13e8c8f",
+    "native-project-files/core-cases.json": "c879720bcdd4b07ef0fff39feec273b6d2494742295c36de5739f06e69f1dc82",
+    "native-project-files/full-schema.json": "69b1feeb3100d6b7166bfad6b12aaa1a158c9fbef0bfc3e3a0004fe1ec079e10",
+    "native-project-files/progress-validation.json": "be2185da55d806421c603ed2665d443a52b4b128f86e256d4d4295d6deab8911",
+    "native-project-files/signed-build.json": "46c66f40cbd9e97699ea1ec3e23226ec8de85c2e80a357aa170510fe6df90b27",
+    "native-project-files/verification.json": "ff40cfbe7c13264946d5f8ecd76c3397cd52d9a0cb04ada30fff23bebea7df05",
     "native-protected-recordings/verification.json": "7a756520c74249d6b962e40138eb12c82deed2b998ca404aaef14ac4ef31c8c7",
     "navigation-counts/README.md": "7364071d0757b755a1699119d69a331ec9905027be48d1b0281b9aeadb16ddd9",
     "navigation-counts/core-verification.json": "af06a56cfd3fa931c2f88710cb5f7cf5352ec1d5a95a693683921af937c64e7c",
@@ -1548,7 +1569,7 @@
     "project-catalog-reads/ios-core-before.json": "0ac05a8e279c2acb65692e5512dec5ed16c4c14a0f36f8d7e34b55cde210106d",
     "project-catalog-reads/iphone-after.json": "9b81f07ad657734a205d32962adf598cf22154cbf7f9c93d4f45d0bd11bfd62f",
     "project-catalog-reads/verification.json": "b256f10bce156d3d482e7f8b96b3900de0a778131630caaaaf53871936ec8cd1",
-    "project-file-copy/README.md": "2b811fd87fb2ede2f7df0d7ff928495c0a4c490e23616324b9c05719702dd2fd",
+    "project-file-copy/README.md": "d75a204449632e2df9253cdff6fa2f4450a3be4d099beeda8db810e222dfa7b9",
     "project-file-copy/cleanup.json": "82cd61e0b1a11875a4517b4183d7346dd63c4b6db31f04565a5f0441184041d0",
     "project-file-copy/full-schema.json": "89964488571f69a200565e9f1350e45423ddbdb9e6ee77999d3df5beb3940dba",
     "project-file-copy/progress-validation.json": "be2185da55d806421c603ed2665d443a52b4b128f86e256d4d4295d6deab8911",
@@ -1558,7 +1579,7 @@
     "project-file-inventory/database.json": "f2071a68d8c3fe9a521853076ac1ed1de6778d299ee9a949394928d800d90737",
     "project-file-inventory/full-schema.json": "923b6cbc1e40aefeb7be3e12fbce8cb2fe4f71e5f9bb21944f1d9a8b19a254d9",
     "project-file-inventory/signed-build.json": "1af7618da12b9a1fa34aaef433099b101d619d3b0a40f3171ce28ab2634e2563",
-    "project-file-transfer/README.md": "a145606f202ca3f839cbfbfcc8fb81e712d71bb25b726450db0614b6c6c2adb1",
+    "project-file-transfer/README.md": "c405007187358d8b017c919f63020b631169a4c6fe03f3ec0b55d5e4bfb130a7",
     "project-file-transfer/cleanup.json": "4bcd610487259d211e2e25686a7945a1b5bb574e407b079812b483ce39ff8000",
     "project-file-transfer/full-schema.json": "82e60cc79ad90398df79d4c246d5aadc2b08846e2bacfba1ab5c9be6587ea69e",
     "project-file-transfer/progress-validation.json": "be2185da55d806421c603ed2665d443a52b4b128f86e256d4d4295d6deab8911",

@@ -39,3 +39,7 @@ deno run --allow-run --allow-env --allow-read --allow-write --allow-net=127.0.0.
 ```
 
 Each app repository owns its migration, service source, tests and release inputs independently. No sibling checkout or dependency is required.
+
+## Native client follow-up
+
+[Native controls and saved recovery](../native-project-files/README.md) are now implemented and compile/sign in both apps. The local service extends into read-only request resolution and closed cancellation identities, and client contracts/model/transport tests pass. Interactive/accessibility/secure-storage and broader lifecycle/provider acceptance remain; normal gates stay Off. Earlier evidence above retains its original milestone scope.

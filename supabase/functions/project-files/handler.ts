@@ -130,10 +130,16 @@ export function createProjectFilesHandler(
     try {
       const action = new URL(request.url).searchParams.get("action");
       if (request.method !== "POST") throw new Failure(405, "method");
-      if (!action || !["prepare", "check", "cancel", "copy"].includes(action)) {
+      if (
+        !action ||
+        !["prepare", "resolve", "cancel_request", "check", "cancel", "copy"]
+          .includes(action)
+      ) {
         throw new Failure(400, "invalid");
       }
-      if (!config.enabled) throw new Failure(503, "disabled");
+      if (!config.enabled && ["prepare", "copy"].includes(action)) {
+        throw new Failure(503, "disabled");
+      }
       const origin = new URL(config.url);
       if (
         origin.username || origin.password || origin.search || origin.hash ||
@@ -206,7 +212,7 @@ export function createProjectFilesHandler(
         throw new Failure(401, "unauthorized");
       }
       const body = await parsed(request);
-      if (action === "prepare") {
+      if (["prepare", "resolve", "cancel_request"].includes(action)) {
         exact(body, ["request_id", "scope", "inspection_token"]);
         if (
           !id(body.request_id) || typeof body.inspection_token !== "string" ||
@@ -285,18 +291,21 @@ export function createProjectFilesHandler(
           !["preparing", "ready", "cancelled", "expired", "committed"].includes(
             String(p.state),
           ) ||
-          !Number.isInteger(p.total) || Number(p.total) < 1 ||
+          !Number.isInteger(p.total) || Number(p.total) < 0 ||
+          (Number(p.total) === 0 && p.state !== "cancelled") ||
           Number(p.total) > 10000 ||
           !Number.isInteger(p.prepared) || Number(p.prepared) < 0 ||
           Number(p.prepared) > Number(p.total) ||
           (["ready", "committed"].includes(String(p.state)) &&
             p.prepared !== p.total) ||
           !Array.isArray(p.items) || p.items.length > 100 ||
+          p.items.length > Number(p.total) ||
           (p.next !== null && !id(p.next)) ||
           typeof p.expires_at !== "string" || p.expires_at.length > 40 ||
           !Number.isFinite(Date.parse(p.expires_at)) ||
           (body.plan_id !== undefined && p.plan_id !== body.plan_id) ||
-          (action === "prepare" && p.request_id !== body.request_id)
+          (["prepare", "resolve", "cancel_request"].includes(action) &&
+            p.request_id !== body.request_id)
         ) throw new Failure(503, "retry");
         const scope = row(p.scope);
         exact(scope, [
@@ -333,7 +342,12 @@ export function createProjectFilesHandler(
         return p;
       };
       if (action !== "copy") {
-        return json({ plan: plan(await rpc(action, body)) });
+        const result = await rpc(action, body);
+        if (action === "resolve" && result.status === "absent") {
+          exact(result, ["status"]);
+          return json({ absent: true });
+        }
+        return json({ plan: plan(result) });
       }
       const source = await rpc("source", body);
       if (source.status === "plan") return json({ plan: plan(source) });

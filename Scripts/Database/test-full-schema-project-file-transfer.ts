@@ -11,10 +11,10 @@ const report={checks:{},genuineLocalAuth:true,genuineLocalPostgREST:true,genuine
 const check=(name,value,expected=true)=>{assert.deepEqual(value,expected,name);report.checks[name]=true;console.log('passed',name)};
 const ok=(name,r,status=200)=>{if(r.status!==status)report.lastFailure={name,status:r.status,value:r.value};check(name,r.status,status);return r.value};
 const lit=x=>"'"+String(x).replaceAll("'","''")+"'";
-const sourcePaths=['supabase/functions/project-files/handler.ts','supabase/functions/task-files/handler.ts','Scripts/Database/test-full-schema-project-file-transfer.ts','supabase/migrations/20261105210740_reviewed_project_file_transfer.sql'];
+const sourcePaths=['supabase/functions/project-files/handler.ts','supabase/functions/task-files/handler.ts','Scripts/Database/test-full-schema-project-file-transfer.ts','supabase/migrations/20261105210740_reviewed_project_file_transfer.sql','supabase/migrations/20261105214041_native_project_file_preparation_recovery.sql','supabase/migrations/20261105221349_canonical_project_file_copy_receipts.sql'];
 const hash=async p=>createHash('sha256').update(await readFile(new URL('../../'+p,import.meta.url))).digest('hex');
 report.sourceSHA256=Object.fromEntries(await Promise.all(sourcePaths.map(async p=>[p,await hash(p)])));
-let runtime;
+let runtime,contract;
 try {
  runtime=await createFullSchemaRuntime({onMigration:name=>console.log('replayed',name)});report.migrations=runtime.migrations;report.images=runtime.images;report.baselineAdvisors=await runtime.advisors();
  const users={};for(const name of ['owner','retired','member','outside']){const email='transfer-'+name+'@example.invalid';const v=ok('signup '+name,await runtime.request('auth','/signup',{method:'POST',body:{email,password:'Disposable-'+randomUUID()+'!'}}));users[name]={id:v.user.id,token:v.access_token,email,session:JSON.parse(Buffer.from(v.access_token.split('.')[1],'base64url')).session_id};}
@@ -40,18 +40,34 @@ try {
  const scope={team_id:team,roots:[project.id],visibility:'team',folder_id:null,parent_id:null};
  const inspection=ok('inspect original file project',await rpc('inspect',scope));check('stored references are deduplicated per task',inspection.contents.file_custody,{protocol:1,stored:1,legacy:0,unavailable:0});
  const decisions=inspection.collaborators.filter(x=>x.status==='accepted').map(x=>({project_id:x.project_id,user_id:x.user_id,role:null}));check('one personal audience retirement is explicit',decisions.length,1);
- const origin=new URL(runtime.urls.storage).origin;let uploads=0,revokeAfterRead=false;
- const copies=createProjectFilesHandler({url:origin,serviceKey:runtime.service,enabled:true},{send:async r=>{if(r.method==='POST'&&new URL(r.url).pathname.startsWith('/storage/v1/object/'))uploads++;return fetch(r)}});
+ const origin=new URL(runtime.urls.storage).origin;let uploads=0,revokeAfterRead=false,losePrepare=false;
+ const copies=createProjectFilesHandler({url:origin,serviceKey:runtime.service,enabled:true},{send:async r=>{const path=new URL(r.url).pathname;if(r.method==='POST'&&path.startsWith('/storage/v1/object/'))uploads++;if(path==='/rest/v1/rpc/taskfold_project_file_preparation'&&losePrepare){const b=await r.clone().json();const reply=await fetch(r);if(b._action==='prepare'&&reply.ok){losePrepare=false;await reply.arrayBuffer();throw Error('Synthetic lost preparation acknowledgement')}return reply}return fetch(r)}});
  let gatewayReads=0;
  const files=createTaskFilesHandler({url:'https://taskfold-file-transfer-fixture.invalid',serviceKey:runtime.service,enabled:true},{send:async r=>{const url=new URL(r.url);assert.equal(url.origin,'https://taskfold-file-transfer-fixture.invalid');const response=await fetch(new Request(origin+url.pathname+url.search,{method:r.method,headers:r.headers,body:r.body,signal:r.signal,redirect:'error'}));if(new URL(r.url).pathname.startsWith('/storage/v1/object/')){gatewayReads++;if(revokeAfterRead){revokeAfterRead=false;await runtime.raw(`delete from taskfold_private.team_members where team_id=${lit(team)} and user_id=${lit(users.member.id)}`)}}return response}});
  const call=async(handler,action,body,user=owner)=>{const r=await handler(new Request('http://127.0.0.1/?action='+action,{method:'POST',headers:{Authorization:'Bearer '+user.token,'Content-Type':'application/json'},body:JSON.stringify(body)}));const b=Buffer.from(await r.arrayBuffer());let v;try{v=JSON.parse(b)}catch{v=null}return{status:r.status,value:v,bytes:b}};
  await runtime.raw('update taskfold_private.project_file_preparation_config set enabled=true;update taskfold_private.task_file_upload_config set enabled=true;');
- const prep=ok('prepare captured project files',await call(copies,'prepare',{request_id:randomUUID(),scope,inspection_token:inspection.inspection_token})).plan;
+ const unseen={request_id:randomUUID(),scope,inspection_token:inspection.inspection_token};
+ check('resolve does not start absent preparation',ok('resolve absent request',await call(copies,'resolve',unseen)),{absent:true});
+ const cancelledEmpty=ok('cancel unacknowledged request',await call(copies,'cancel_request',unseen)).plan;
+ check('cancel before create leaves a closed identity',[cancelledEmpty.state,cancelledEmpty.total,cancelledEmpty.prepared],['cancelled',0,0]);
+ check('late prepare cannot reopen cancellation',ok('late prepare after cancellation',await call(copies,'prepare',unseen)).plan,cancelledEmpty);
+ check('changed cancellation body conflicts',(await call(copies,'cancel_request',{...unseen,scope:{...scope,visibility:'private'}})).status,409);
+ check('outside request lookup is opaque',ok('outside resolve',await call(copies,'resolve',unseen,users.outside)),{absent:true});
+ const preparationRequest={request_id:randomUUID(),scope,inspection_token:inspection.inspection_token};
+ losePrepare=true;check('lost first preparation acknowledgement is retryable',(await call(copies,'prepare',preparationRequest)).status,503);
+ const prep=ok('resolve saved request after lost acknowledgement',await call(copies,'resolve',preparationRequest)).plan;
+ check('resolving never starts file uploads',uploads,0);
+ check('exact prepare retry reuses existing plan',ok('retry captured project preparation',await call(copies,'prepare',preparationRequest)).plan,prep);
+
  const policy={protocol:1,plan_id:prep.plan_id,action:'share_copies_keep_originals'},body={...scope,inspection_token:inspection.inspection_token,decisions,file_policy:policy};
  check('transfer gate remains off by default',(await rpc('review',body)).status,503);
  await runtime.raw('update taskfold_private.project_file_preparation_config set transfer_enabled=true;');
  check('unprepared copies cannot be approved',(await rpc('review',body)).status,409);
  const ready=ok('copy actual source bytes',await call(copies,'copy',{plan_id:prep.plan_id,operation_id:prep.items[0].operation_id})).plan;check('ready is still private',ready.project_transferred,false);
+ await runtime.raw('update taskfold_private.team_project_config set native_project_adoption_enabled=false;');
+ check('file policy does not bypass paused adoption',(await rpc('review',body)).status,503);
+ await runtime.raw('update taskfold_private.team_project_config set native_project_adoption_enabled=true;');
+ const nativeInspection=ok('fresh native file capability',await rpc('inspect',scope));check('native file preparation is explicitly enabled',nativeInspection.file_preparation,{protocol:1,enabled:true});
  const review=ok('explicit private-copy consent review',await rpc('review',body));check('review can now authorize file custody',review.requires_provider_custody,false);check('reviewed source originals stay private',review.file_transfer.originals_kept_private,true);check('review binds count and exact bytes',[review.file_transfer.count,review.file_transfer.byte_count],[1,bytes.length]);check('review returns a bounded file proof',/^[a-f0-9]{64}$/.test(review.file_transfer.inventory_token));
  check('policy refuses other action',(await rpc('review',{...body,file_policy:{...policy,action:'move_originals'}})).status,400);
  check('policy refuses another destination scope',(await rpc('review',{...body,visibility:'private'})).status,409);
@@ -72,7 +88,12 @@ try {
  check('late failure keeps preparation ready',ok('check after rollback',await call(copies,'check',{plan_id:prep.plan_id,after:null})).plan.state,'ready');
  await runtime.raw('drop trigger zzz_fixture_file_transfer_abort on taskfold_private.team_content_projects;drop function taskfold_private.fixture_file_transfer_abort();');
  const receipt=ok('atomic reviewed file and project move',await rpc('adopt',command));check('receipt reports exact immutable-copy policy',receipt.file_transfer,{protocol:1,plan_id:prep.plan_id,action:'share_copies_keep_originals',count:1,byte_count:bytes.length,originals_kept_private:true});
+ contract={account:owner.id,origin:'https://file-native.example.invalid',scope,expectedCount:1,inspection:nativeInspection,request:preparationRequest,prepared:prep,ready,review,command,receipt,cancelledEmpty,cancelledRequest:unseen};
  check('project entered reviewed team',await runtime.raw(`select team_id::text from taskfold_private.team_content_projects where project_id=${lit(project.id)}`),team);
+ const publishedLedger=JSON.parse(await ledger());check('transferred copy receipt retains immutable intent name',publishedLedger.attachment.name,publishedLedger.intent.name);
+ const resolvedUpload=ok('normal file receipt resolves transferred copy',await call(files,'resolve',{operation_id:prep.items[0].operation_id})).receipt;
+ check('resolved file receipt uses canonical attachment',resolvedUpload.attachment,publishedLedger.attachment);
+ contract.taskFileResolveReceipt=resolvedUpload;contract.taskFileResolveIntent=publishedLedger.intent;contract.syntheticSourceBase64=bytes.toString('base64');
  const after=ok('team reader sees moved task',await request('/tasks?id=eq.'+task.id,undefined,'GET',users.member))[0];
  check('task and generation identities retained',[after.id,after.task_generation,after.project_id],[task.id,task.task_generation,project.id]);check('task and discussion text retained',[after.title,after.comments[0].id,after.comments[0].text,after.subtasks[0].id,after.subtasks[0].title],[task.title,commentID,'Keep the original discussion',childID,'Read the instructions']);
  const refs=[after.attachments[0],after.comments[0].attachment,after.subtasks[0].attachments[0],after.subtasks[0].comments[0].attachment];
@@ -106,5 +127,5 @@ try {
  check('no pending file-admission authority remains',await runtime.raw('select count(*) from taskfold_private.task_file_admission_scope'),'0');
  check('scheduler stays disabled',await runtime.raw('show cron.launch_active_jobs'),'off');check('no outbound jobs queued',await runtime.raw('select count(*) from net.http_request_queue'),'0');report.advisors=await runtime.advisors();const oldKeys=new Set(report.baselineAdvisors.result.map(x=>x.cache_key));check('no new advisor findings',report.advisors.result.filter(x=>!oldKeys.has(x.cache_key)),[]);
  for(const p of sourcePaths)assert.equal(await hash(p),report.sourceSHA256[p],p+' changed during verification');report.currentSourceUnchanged=true;report.accepted=true;
-}catch(error){report.error={message:error.message,code:error.code,migration:error.migration};throw error}finally{if(runtime)report.runtimeRemoved=await runtime.close();report.checkCount=Object.keys(report.checks).length;await writeFile(output,JSON.stringify(report,null,2)+'\n')}
+}catch(error){report.error={message:error.message,code:error.code,migration:error.migration};throw error}finally{if(runtime)report.runtimeRemoved=await runtime.close();report.checkCount=Object.keys(report.checks).length;await writeFile(output,JSON.stringify(report,null,2)+'\n');if(Deno.args.includes('--export-native-fixture')&&report.accepted&&report.runtimeRemoved){await writeFile(new URL('../../TaskfoldTests/Fixtures/project-file-preparation-native-v1.json',import.meta.url),JSON.stringify({syntheticOnly:true,containerRemoved:true,...contract},null,2)+'\n')}}
 console.log(JSON.stringify({accepted:report.accepted,checks:report.checkCount,runtimeRemoved:report.runtimeRemoved}));

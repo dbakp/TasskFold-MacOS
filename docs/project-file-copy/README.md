@@ -39,3 +39,7 @@ The service entry point retains platform JWT verification and requires both its 
 ## Reviewed transfer service follow-up
 
 [The next local service milestone](../project-file-transfer/README.md) now verifies explicit private-copy consent, atomic project/file custody, exact receipt replay and original privacy, including independent child records and a normal 5 MiB inline file. Native file controls and encrypted pending recovery, combined policies, wider lifecycle/ownership and hosted acceptance remain open. The earlier evidence above retains its original inventory/preparation scope.
+
+## Native client follow-up
+
+[Native controls and saved recovery](../native-project-files/README.md) are now implemented and compile/sign in both apps. The local service extends into read-only request resolution and closed cancellation identities, and client contracts/model/transport tests pass. Interactive/accessibility/secure-storage and broader lifecycle/provider acceptance remain; normal gates stay Off. Earlier evidence above retains its original milestone scope.

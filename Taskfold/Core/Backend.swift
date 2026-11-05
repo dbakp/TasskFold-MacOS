@@ -1071,9 +1071,9 @@ final class Backend: NSObject {
     func reviewProjectAdoption(_ inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision]) async throws -> TeamProjectAdoptionReview {
         try await reviewProjectAdoption(inspection, decisions: decisions, connectionPolicy: nil)
     }
-    func reviewProjectAdoption(_ inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy?, recordingPolicy: TeamProjectRecordingPolicy? = nil) async throws -> TeamProjectAdoptionReview {
-        let body = try inspection.reviewBody(decisions, connectionPolicy: connectionPolicy, recordingPolicy: recordingPolicy)
-        return try TeamProjectAdoptionReview(await projectAdoptionReply("review", body: body, account: inspection.scope.account, origin: inspection.scope.origin), inspection: inspection, decisions: decisions, connectionPolicy: connectionPolicy, recordingPolicy: recordingPolicy)
+    func reviewProjectAdoption(_ inspection: TeamProjectAdoptionInspection, decisions: [TeamProjectAdoptionDecision], connectionPolicy: TeamProjectConnectionPolicy?, recordingPolicy: TeamProjectRecordingPolicy? = nil, fileConsent: ProjectFileConsent? = nil) async throws -> TeamProjectAdoptionReview {
+        let body = try inspection.reviewBody(decisions, connectionPolicy: connectionPolicy, recordingPolicy: recordingPolicy, fileConsent: fileConsent)
+        return try TeamProjectAdoptionReview(await projectAdoptionReply("review", body: body, account: inspection.scope.account, origin: inspection.scope.origin), inspection: inspection, decisions: decisions, connectionPolicy: connectionPolicy, recordingPolicy: recordingPolicy, fileConsent: fileConsent)
     }
     func adoptProjects(_ command: TeamProjectAdoptionCommand) async throws -> TeamProjectAdoptionReceipt {
         try command.confirmed(await projectAdoptionReply("adopt", body: command.body, account: command.account, origin: command.origin))
@@ -1867,9 +1867,10 @@ extension Backend: TaskFileUploadTransport {
         let result = try await fileRequest(body, action: action, account: journal.account, origin: journal.origin, incarnation: incarnation, maximum: 64000)
         return result
     }
-    private func fileRequest(_ body: Data, action: String, account: String, origin: String, incarnation: UUID, maximum: Int) async throws -> Data {
+    private func fileRequest(_ body: Data, action: String, account: String, origin: String, incarnation: UUID, maximum: Int, endpoint: String = "task-files") async throws -> Data {
+        guard ["task-files", "project-files"].contains(endpoint) else { throw ProjectFilePreparationRequest.invalid }
         try checkAudioPublicationOwner(account, origin: origin, incarnation: incarnation)
-        guard let session, let url = URL(string: origin + "/functions/v1/task-files?action=" + action) else { throw TaskFileUploadJournal.invalid }
+        guard let session, let url = URL(string: origin + "/functions/v1/" + endpoint + "?action=" + action) else { throw TaskFileUploadJournal.invalid }
         var request = URLRequest(url: url); request.httpMethod = "POST"; request.httpBody = body; request.timeoutInterval = 30
         request.cachePolicy = .reloadIgnoringLocalCacheData; request.httpShouldHandleCookies = false
         request.setValue(config["Key"], forHTTPHeaderField: "apikey"); request.setValue("Bearer " + session.access_token, forHTTPHeaderField: "Authorization")
@@ -1897,5 +1898,24 @@ extension Backend: TaskFileUploadTransport {
         let bytes = try await fileRequest(body, action: "download", account: account, origin: origin, incarnation: incarnation, maximum: TaskFileUploadJournal.maximumBytes)
         guard bytes.count == Int(size), TaskFileUploadJournal.digest(bytes) == attachment.string("sha256") else { throw TaskFileUploadJournal.invalid }
         return bytes
+    }
+}
+
+
+extension Backend: ProjectFilePreparationService {
+    func projectFilePreparation(_ request: ProjectFilePreparationRequest, action: ProjectFilePreparationAction, incarnation: UUID) async throws -> ProjectFilePreparationPage? {
+        try checkAudioPublicationOwner(request.account, origin: request.origin, incarnation: incarnation)
+        try await refreshIfNeeded(); try checkAudioPublicationOwner(request.account, origin: request.origin, incarnation: incarnation)
+        let body = try TaskfoldJSONEncoder().encode(action.body(request))
+        guard body.count <= 20_000 else { throw ProjectFilePreparationRequest.invalid }
+        let data = try await fileRequest(body, action: action.name, account: request.account, origin: request.origin, incarnation: incarnation, maximum: 262144, endpoint: "project-files")
+        let raw = try TaskfoldJSONDecoder().decode([String: JSON].self, from: data)
+        if action == .resolve && raw == ["absent": .bool(true)] { return nil }
+        guard Set(raw.keys) == ["plan"], case .object(let fields)? = raw["plan"] else { throw ProjectFilePreparationRequest.invalid }
+        switch action {
+        case .check(let plan, let after): return try ProjectFilePreparationPage(fields, request: request, plan: plan, after: after)
+        case .copy(let plan, _): return try ProjectFilePreparationPage(fields, request: request, plan: plan)
+        default: return try ProjectFilePreparationPage(fields, request: request)
+        }
     }
 }
