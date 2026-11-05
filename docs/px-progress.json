@@ -4,11 +4,11 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Predictable project organization and easier reusable workflows",
-  "latest": "Phone 26 startup is confirmed by the user. Project arrows now move among visible siblings and keep descendant branches attached. The fix also corrects ORDER Undo admission: ten focused Core checks pass in each repo, and the real iPhone menu/Store Undo journey preserves every saved table with zero runtime warnings. Mac 13 builds/signs and its full archive verifies; installed Mac 10 and phone 26 stay unchanged. Native Mac/drag acceptance and broader Px remain. Cleanup leaves about 66.7 GiB free.",
+  "focus": "Now · Searchable filter targets; next nested editing",
+  "latest": "Project, section and label filter targets now have a focused searchable chooser with project paths. Final iPhone search/rename/cancel/save/cold and dark/largest-text cases pass on the same current inputs, with zero reported runtime warnings; actual keyboard/Done and wrapped long paths are reviewed. A real largest-text double-navigation bug is fixed by owning the target sheet outside Form rows. Mac 14 and iPhone 30 are signed and full-payload verified. Installed Mac 10 and phone 26 sessions remain intact pending saved-draft confirmation. Cleanup leaves about 67.3 GiB free. Broader Px and agreed deferrals remain.",
   "next": [
-    "NEXT IMPLEMENTATION: continue nested-editing and filter friction. Accept Mac task/project menus, library creation/starter run and sibling-order interactions when available; accept actual drag gestures separately. Keep prepared Mac 13 and phone 29 for non-disruptive updates, noting phone 29 predates the newest ordering source. Preserve scoped evidence and avoid unchanged broad matrices.",
-    "NEXT DAILY-USE UPDATE: address the highest-friction organization, nested editing, ordering and filter interactions; deliver another installable update with a focused change list. Keep end-of-run cleanup and stable cache/device reuse.",
+    "NEXT IMPLEMENTATION: continue nested task-editing friction, then practical planning and notes. Install cumulative Mac 14 / phone 30 after saved-draft confirmation; both normal apps are currently running. Accept Mac/iPad target interactions and wider label/section, account, speech and large-library contexts separately. Keep scoped evidence and avoid unchanged broad matrices.",
+    "NEXT DAILY-USE UPDATE: preserve the verified library creation/starter runs, sibling ordering/Undo and filter-target improvements in the cumulative packages. Continue with small user-facing feature updates, bounded caches and end-of-run cleanup.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
     "Finish native acceptance and hosted verification of reviewed residual-file repair and absence-only recovery certificates. Mac protected-session/runtime depends on deferred signing. Preserve paused rollout gates and all other deferrals; never infer erasure from a missing receipt.",
@@ -496,7 +496,7 @@
             {
               "state": "build",
               "title": "Reduce remaining workflow and browsing pauses",
-              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data. Visible sibling arrows and branch-aware drag planning now have owning Core proof; actual iPhone menu and Store Undo restore exact saved tables. Native drag gestures and Mac interaction remain separate.",
+              "detail": "Scoped gains cover filtered/display reads, rich construction, background definition loading, project catalogs, searchable parents and background cached library captions. iPhone production cases verify scrolling, current-source refresh, draft/save/cold behavior and saved-work preservation. Wider editor/rendering, platform, account/accessibility/cloud contexts remain. Field conflict review now waits for an ongoing sync before comparing current task data. Visible sibling arrows and branch-aware drag planning now have owning Core proof; actual iPhone menu and Store Undo restore exact saved tables. Native drag gestures and Mac interaction remain separate. Searchable filter targets now use cancellable background catalogs and bounded pages. Final iPhone project-target Save/Cancel/cold and dark/largest-text keyboard/Done cases pass; Mac/iPad and wider label/section/access/speech/rendering remain separate.",
               "steps": [
                 {
                   "state": "done",
@@ -1184,7 +1184,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "5525c9e52533854a825de69b457bee6ef2436787d1670982ff023469931a5b21",
+    "P2_PLAN.md": "814869f5fc680471a96bfa9204c12701835396f06e5de290c7d598c32293b11a",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",

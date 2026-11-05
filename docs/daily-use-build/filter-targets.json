@@ -1,0 +1,88 @@
+{
+  "date": "2026-11-05",
+  "implemented": "Searchable native project/project-tree/section/label filter targets with parent paths, bounded pages, live refresh and explicit draft selection. No query syntax/schema/authorization change.",
+  "core": {
+    "ios": {
+      "passed": 8,
+      "failed": 0,
+      "finalLog": "/tmp/taskfold-filter-target-core-ios-final.log"
+    },
+    "mac": {
+      "passed": 8,
+      "failed": 0,
+      "finalLog": "/tmp/taskfold-filter-target-core-mac-final.log"
+    }
+  },
+  "nativeIPhone": {
+    "normal": {
+      "accepted": true,
+      "passed": 1,
+      "failed": 0,
+      "runtimeWarnings": 0,
+      "report": "filter-target-native-ios.json"
+    },
+    "largestText": {
+      "accepted": true,
+      "passed": 1,
+      "failed": 0,
+      "runtimeWarnings": 0,
+      "softwareKeyboardObserved": true,
+      "report": "filter-target-largest-text.json"
+    },
+    "sameProductionAndTestInputs": true,
+    "sameAppProductHashes": true,
+    "reviewedScreenshots": [
+      "normal-search.png",
+      "largest-dark-keyboard.png",
+      "largest-dark-scrolled-path.png"
+    ]
+  },
+  "nativeMac": "pending",
+  "limits": [
+    "Core label/section catalogs are verified; actual native project-target journeys are recorded separately.",
+    "This is no full filter-suite, hardware, speech or broad account/lifecycle/performance claim.",
+    "All existing provider, rollout and release deferrals remain."
+  ],
+  "sourceSHA256": {
+    "Taskfold/Core/Filters.swift": "a49fbf26b5796315cddcc844624da01c36a13c667c1cbed5300a420f7ea3b026",
+    "Taskfold/Views/SavedViews.swift": "9a1c4296727617e2d705d7acb18bed92a8001e14b4e16fd76b4bce3e609d27b6",
+    "TaskfoldTests/FilterTests.swift": "756579bcddf4fbb63b2b5aad73db1a4e8eb108cc16a9bd8ff4791ffe57b4735c"
+  },
+  "resolvedAttempts": [
+    {
+      "attempt": "normal v1",
+      "accepted": false,
+      "cause": "Isolated cold fixture switched to local storage without loading that file. Explicit production load() after the synthetic switch fixes the fixture."
+    },
+    {
+      "attempt": "largest v2/v3",
+      "accepted": false,
+      "cause": "Largest-text condition and target NavigationLinks shared a Form row and both could activate. A moved return assertion exposed the actual Choose condition hierarchy. Own the target sheet outside reused rows and use borderless row actions."
+    }
+  ],
+  "macBuild": {
+    "version": "1.2.0 (14)",
+    "signed": true,
+    "fullArchivePayloadVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "installed": false,
+    "nativeInteractionAccepted": false
+  },
+  "iPhoneBuild": {
+    "version": "1.4.0 (30)",
+    "signed": true,
+    "fullArchivePayloadVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": false,
+    "developmentOnlyVariant": true,
+    "shareOmission": "Existing Apple free-account weekly App ID limit; normal release project retains Share and its strict validator",
+    "installed": false
+  },
+  "installedSessions": {
+    "mac": "1.2.0 (10)",
+    "iPhone": "1.4.0 (26)",
+    "preserved": true,
+    "installation": "Both normal apps are running; awaiting saved-draft confirmation for replacement."
+  }
+}

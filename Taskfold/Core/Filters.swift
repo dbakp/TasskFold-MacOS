@@ -1064,3 +1064,81 @@ struct TaskGrouping {
         }
     }
 }
+
+/// Readable filter targets for search and display; never a mutation permission.
+struct FilterTargetCatalog: Sendable {
+    static let pageSize = 60
+    struct Option: Identifiable, Equatable, Sendable {
+        let id: String
+        let title: String
+        let location: String
+    }
+    struct Page: Sendable { let options: [Option]; let total: Int }
+    let options: [Option]
+    private static func unique(_ rows: [Record]) -> [String: Record] {
+        Dictionary(grouping: rows.filter { !$0.id.isEmpty }, by: \.id).compactMapValues { $0.count == 1 ? $0[0] : nil }
+    }
+    private static func availableProjects(_ rows: [Record]) -> [String: Record] {
+        let unique = unique(rows), hidden = ProjectOrganization.archivedIDs(in: rows)
+        return unique.filter { !hidden.contains($0.key) }
+    }
+    init(field: String, projects: [Record], sections: [Record], labels: [Record], checkCancellation: () throws -> Void = {}) throws {
+        guard ["project", "project_tree", "section", "label"].contains(field) else { throw FilterFailure(message: "Choose a project, section or label condition.") }
+        try checkCancellation()
+        let available = Self.availableProjects(projects)
+        var paths: [String: String] = [:]
+        func path(_ id: String) throws -> String {
+            if let value = paths[id] { return value }
+            var names: [String] = [], cursor = id, visited = Set<String>()
+            while let row = available[cursor], visited.insert(cursor).inserted, names.count < ProjectOrganization.maximumDepth {
+                try checkCancellation()
+                names.append(row.name.isEmpty ? "Untitled project" : row.name)
+                cursor = row.string("parent_id")
+            }
+            let value = names.reversed().joined(separator: " › "); paths[id] = value
+            return value
+        }
+        let rows = field == "label" ? Self.unique(labels) : field == "section" ? Self.unique(sections).filter { available[$0.value.string("project_id")] != nil } : available
+        var result: [Option] = []; result.reserveCapacity(rows.count)
+        for row in rows.values {
+            try checkCancellation()
+            let location: String
+            if field == "label" { location = "Label" }
+            else if field == "section" { location = try path(row.string("project_id")) }
+            else { location = available[row.string("parent_id")] == nil ? "Top level" : try path(row.string("parent_id")) }
+            result.append(Option(id: row.id, title: row.name.isEmpty ? "Untitled " + (field == "section" ? "section" : field == "label" ? "label" : "project") : row.name, location: location))
+        }
+        options = try result.sorted {
+            try checkCancellation()
+            let title = $0.title.localizedStandardCompare($1.title)
+            if title != .orderedSame { return title == .orderedAscending }
+            let location = $0.location.localizedStandardCompare($1.location)
+            return location == .orderedSame ? $0.id < $1.id : location == .orderedAscending
+        }
+        try checkCancellation()
+    }
+    static func load(field: String, projects: [Record], sections: [Record], labels: [Record]) async throws -> Self {
+        let worker = Task.detached(priority: .userInitiated) { try Self(field: field, projects: projects, sections: sections, labels: labels, checkCancellation: { try Task.checkCancellation() }) }
+        return try await withTaskCancellationHandler(operation: {
+            let result = try await worker.value; try Task.checkCancellation(); return result
+        }, onCancel: { worker.cancel() })
+    }
+    func page(query: String, limit: Int = pageSize) -> Page {
+        let words = query.split(whereSeparator: \.isWhitespace).map(String.init)
+        var count = 0, page: [Option] = []
+        for option in options where words.allSatisfy({ option.title.localizedStandardContains($0) || option.location.localizedStandardContains($0) }) {
+            count += 1
+            if page.count < max(0, limit) { page.append(option) }
+        }
+        return Page(options: page, total: count)
+    }
+    /// Re-read a selected identity against today's accessible rows, after search.
+    static func current(_ id: String, field: String, projects: [Record], sections: [Record], labels: [Record]) -> Record? {
+        guard !id.isEmpty else { return nil }
+        if field == "label" { return unique(labels)[id] }
+        let available = availableProjects(projects)
+        if field == "project" || field == "project_tree" { return available[id] }
+        guard field == "section", let row = unique(sections)[id], available[row.string("project_id")] != nil else { return nil }
+        return row
+    }
+}

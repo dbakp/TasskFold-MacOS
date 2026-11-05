@@ -1325,3 +1325,70 @@ final class SharingFilterTests: XCTestCase {
         XCTAssertEqual(bindings.count, 2); XCTAssertEqual(bindings[0].ids.count, 2500); XCTAssertEqual(bindings[1].ids.count, 2500)
     }
 }
+
+final class FilterTargetCatalogTests: XCTestCase {
+    private func row(_ id: String, _ name: String, parent: String = "", archived: Bool = false) -> Record {
+        Record(["id": .string(id), "name": .string(name), "parent_id": .string(parent), "is_archived": .bool(archived)])
+    }
+    private var projects: [Record] {
+        [row("design", "Design"), row("personal", "Personal"), row("a", "Research", parent: "design"), row("b", "Research", parent: "personal")]
+    }
+    func testDuplicateNamesHaveSearchableParentLocations() throws {
+        let catalog = try FilterTargetCatalog(field: "project_tree", projects: projects, sections: [], labels: [])
+        let all = catalog.page(query: "research")
+        XCTAssertEqual(all.total, 2); XCTAssertEqual(all.options.map(\.location), ["Design", "Personal"])
+        XCTAssertEqual(catalog.page(query: "personal research").options.map(\.id), ["b"])
+        XCTAssertEqual(catalog.page(query: "research design").options.map(\.id), ["a"])
+    }
+    func testSectionUsesFullProjectPathAndExcludesUnavailableOwners() throws {
+        let sections = [Record(["id": .string("s"), "name": .string("Review"), "project_id": .string("a")]), Record(["id": .string("other"), "name": .string("Review"), "project_id": .string("missing")])]
+        let catalog = try FilterTargetCatalog(field: "section", projects: projects, sections: sections, labels: [])
+        XCTAssertEqual(catalog.page(query: "Design Research Review").options, [.init(id: "s", title: "Review", location: "Design › Research")])
+    }
+    func testArchivesAndCyclesDoNotBecomeSelectable() throws {
+        let rows = projects + [row("closed", "Closed", archived: true), row("nested", "Hidden", parent: "closed"), row("cycle1", "Loop", parent: "cycle2"), row("cycle2", "Loop", parent: "cycle1")]
+        let catalog = try FilterTargetCatalog(field: "project", projects: rows, sections: [], labels: [])
+        XCTAssertEqual(Set(catalog.options.map(\.id)), Set(projects.map(\.id)))
+        XCTAssertNil(FilterTargetCatalog.current("nested", field: "project", projects: rows, sections: [], labels: []))
+    }
+    func testRevalidationKeepsRenamedIdentityAndRejectsMissingOrAmbiguousRows() throws {
+        var renamed = projects; renamed[2]["name"] = .string("New research")
+        XCTAssertEqual(FilterTargetCatalog.current("a", field: "project_tree", projects: renamed, sections: [], labels: [])?.name, "New research")
+        XCTAssertNil(FilterTargetCatalog.current("a", field: "project", projects: projects + [projects[2]], sections: [], labels: []))
+        XCTAssertNil(FilterTargetCatalog.current("a", field: "project", projects: Array(projects.prefix(2)), sections: [], labels: []))
+        XCTAssertNil(FilterTargetCatalog.current("", field: "project", projects: projects, sections: [], labels: []))
+        XCTAssertNil(FilterTargetCatalog.current("a", field: "unsupported", projects: projects, sections: [], labels: []))
+    }
+    func testLabelsKeepLiteralNamesAndSupportAccentInsensitiveSearch() throws {
+        let labels = [row("l", "Café & Home*"), row("duplicate", "One"), row("duplicate", "Two"), row("", "Empty identity")]
+        let catalog = try FilterTargetCatalog(field: "label", projects: [], sections: [], labels: labels)
+        XCTAssertEqual(catalog.page(query: "cafe home*").options, [.init(id: "l", title: "Café & Home*", location: "Label")])
+        XCTAssertNil(FilterTargetCatalog.current("duplicate", field: "label", projects: [], sections: [], labels: labels))
+    }
+    func testPaginationIsStableAndSearchStartsAcrossWholeCatalog() throws {
+        let labels = (0..<137).map { row(String(format: "l%03d", $0), String(format: "Label %03d", $0)) }
+        let catalog = try FilterTargetCatalog(field: "label", projects: [], sections: [], labels: labels.reversed())
+        XCTAssertEqual(catalog.page(query: "").options.count, 60); XCTAssertEqual(catalog.page(query: "").total, 137)
+        XCTAssertEqual(catalog.page(query: "", limit: 120).options.map(\.id), Array(labels.prefix(120)).map(\.id))
+        XCTAssertEqual(catalog.page(query: "136").options.map(\.id), ["l136"])
+        XCTAssertEqual(catalog.page(query: "", limit: 0).options.count, 0)
+    }
+    func testCancellationAndUnsupportedFieldsDoNotYieldPartialResults() throws {
+        XCTAssertThrowsError(try FilterTargetCatalog(field: "project", projects: projects, sections: [], labels: [], checkCancellation: { throw CancellationError() })) { XCTAssertTrue($0 is CancellationError) }
+        XCTAssertThrowsError(try FilterTargetCatalog(field: "assignee", projects: projects, sections: [], labels: []))
+    }
+    func testBackgroundCatalogAndCancellation() async throws {
+        let value = try await FilterTargetCatalog.load(field: "project", projects: projects, sections: [], labels: [])
+        XCTAssertEqual(value.page(query: "Research").total, 2)
+        let rows = projects
+        let (stream, continuation) = AsyncStream<Void>.makeStream()
+        defer { continuation.finish() }
+        let worker = Task {
+            var gate = stream.makeAsyncIterator()
+            _ = await gate.next() // Cancellation releases the gate before load starts.
+            return try await FilterTargetCatalog.load(field: "project", projects: rows, sections: [], labels: [])
+        }
+        worker.cancel()
+        do { _ = try await worker.value; XCTFail("Cancelled chooser work must not publish") } catch { XCTAssertTrue(error is CancellationError) }
+    }
+}

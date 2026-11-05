@@ -19,6 +19,7 @@ struct SavedViewEditor: View {
     @State private var baseline: Record?
     @State private var loadFailure: String?
     @State private var saveFailure: String?
+    @State private var targetRequest: SavedFilterTargetRequest?
     @FocusState private var focusedField: String?
     private static let choices: [(String, String)] = [
         ("all","All tasks"),("root","Main tasks"),("subtask","Subtasks"),("parent","Tasks with subtasks"),("search","Keywords"),("created_on","Created on"),("created_before","Created before"),("created_after","Created after"),("recurring","Repeating tasks"),("no_time","No planned time"),("no_labels","No labels"),("planned_time_on","Time at"),("planned_time_before","Time before"),("planned_time_after","Time after"),("planned_next_days","Planned in next days"),("planned_past_days","Planned in past days"),("planned_on","Planned on"),("planned_before","Planned before"),("planned_after","Planned after"),("effective_due_next_days","Due in next days"),("effective_due_past_days","Due in past days"),("effective_due_on","Due on"),("effective_due_before","Due before"),("effective_due_after","Due after"),("deadline_next_days","Deadline within days"),("deadline_past_days","Deadline in past days"),("deadline_on","Deadline on"),("deadline_before_day","Deadline before"),("deadline_after","Deadline after"),("today","Planned today"),("overdue","Overdue plan"),("next","Next days"),("no_date","No planned date"),("inbox","Inbox"),
@@ -179,6 +180,18 @@ struct SavedViewEditor: View {
             .confirmationDialog("Delete this filter?", isPresented: $deleting, titleVisibility: .visible) { Button("Delete", role: .destructive) { store.remove("saved_views", record.id); dismiss() } } message: { Text("Your tasks stay in place.") }
         }
         .tint(Color.taskfold)
+        // The editor owns this sheet outside reusable Form rows. In accessibility
+        // layouts the condition row also has a link; target taps must not push both.
+        .sheet(item: $targetRequest) { request in
+            NavigationStack {
+                SavedFilterTargetChooser(request: request, selected: conditions.first { $0.id == request.condition }?.value ?? "") { id in
+                    guard store.workflowPreviewReady(request.workspace), request.session == store.backend.reminderSessionIncarnation,
+                          let index = conditions.firstIndex(where: { $0.id == request.condition && $0.field == request.field }) else { return "This filter changed. Reopen its target chooser." }
+                    conditions[index].value = id; return nil
+                }
+            }.tint(Color.taskfold)
+                .frame(minWidth: 450, idealWidth: 500, minHeight: 500, idealHeight: 650)
+        }
     }
     private func validationFeedback(_ message: String) -> some View {
         Label(message, systemImage: "exclamationmark.triangle")
@@ -203,6 +216,7 @@ struct SavedViewEditor: View {
                 .accessibilityLabel("Condition")
                 .accessibilityValue(Self.choices.first { $0.0 == condition.wrappedValue.field }?.1 ?? "Condition")
                 .accessibilityIdentifier("filterCondition-" + condition.wrappedValue.id.uuidString)
+                .buttonStyle(.borderless)
             }
         } else {
             Menu { conditionOptions(condition) } label: {
@@ -224,12 +238,21 @@ struct SavedViewEditor: View {
         } else if ["shared", "personal"].contains(field) {
             Text(field == "shared" ? "Projects with another accepted member. Pending invitations and parent-project sharing do not count." : "Your Inbox and projects you own with no accepted collaborators. Pending invitations do not count.").font(.caption).foregroundStyle(.secondary)
         } else if ["project", "project_tree", "section", "label"].contains(field) {
-            let rows = ["project", "project_tree"].contains(field) ? store.projects : field == "section" ? store.rows("sections") : store.labels
-            Picker("Target", selection: condition.value) {
-                Text("Choose…").tag("")
-                if !condition.wrappedValue.value.isEmpty && !rows.contains(where: { $0.id == condition.wrappedValue.value }) { Text("Unavailable target").tag(condition.wrappedValue.value) }
-                ForEach(rows) { row in Text(row.name + (field == "section" ? " · " + (store.record("projects", id: row.string("project_id"))?.name ?? "") : "")).tag(row.id) }
-            }
+            let selected = FilterTargetCatalog.current(condition.wrappedValue.value, field: field, projects: store.allProjects, sections: store.rows("sections"), labels: store.labels)
+            let conditionID = condition.wrappedValue.id
+            Button {
+                focusedField = nil
+                targetRequest = SavedFilterTargetRequest(field: field, condition: conditionID,
+                    workspace: WorkspaceBinding(account: store.userID, generation: store.workspaceGeneration), session: store.backend.reminderSessionIncarnation)
+            } label: {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Target").foregroundStyle(.primary); Spacer()
+                    Text(selected?.name ?? (condition.wrappedValue.value.isEmpty ? "Choose…" : "Unavailable target"))
+                        .foregroundStyle(.secondary).multilineTextAlignment(.trailing).fixedSize(horizontal: false, vertical: true)
+                    Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+                }.frame(minHeight: 44).contentShape(Rectangle())
+            }.buttonStyle(.borderless).accessibilityLabel("Target").accessibilityValue(selected?.name ?? (condition.wrappedValue.value.isEmpty ? "Choose a target" : "Unavailable target"))
+                .accessibilityIdentifier("filterTargetPicker-" + conditionID.uuidString)
             if field == "project_tree" { Text("Includes this project and its accessible subprojects. Results follow project moves; sharing is never inherited. New tasks still need a destination.").font(.caption).foregroundStyle(.secondary) }
         } else if field == "priority" { Picker("Priority", selection: condition.value) { ForEach(1...4, id: \.self) { Text("Priority \($0)").tag(String($0)) } } }
         else if field == "completed" { Picker("State", selection: condition.value) { Text("Open").tag("false"); Text("Completed").tag("true") } }
@@ -434,5 +457,111 @@ private struct SavedFilterConditionChooser: View {
             .navigationBarBackButtonHidden()
             #endif
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+    }
+}
+
+private struct SavedFilterTargetRequest: Identifiable {
+    let id = UUID()
+    let field: String
+    let condition: UUID
+    let workspace: WorkspaceBinding
+    let session: UUID
+}
+
+private struct SavedFilterTargetChooser: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let request: SavedFilterTargetRequest
+    let selected: String
+    let choose: (String) -> String?
+    private struct Version: Equatable {
+        let readable: Bool
+        let projects: [Record]
+        let sections: [Record]
+        let labels: [Record]
+    }
+    @FocusState private var searchFocused: Bool
+    @State private var query = ""
+    @State private var limit = FilterTargetCatalog.pageSize
+    @State private var catalog: FilterTargetCatalog?
+    @State private var loaded: Version?
+    @State private var message: String?
+    private var readable: Bool { store.workflowPreviewReady(request.workspace) && request.session == store.backend.reminderSessionIncarnation }
+    private var version: Version {
+        Version(readable: readable, projects: request.field == "label" ? [] : store.allProjects,
+            sections: request.field == "section" ? store.rows("sections") : [], labels: request.field == "label" ? store.labels : [])
+    }
+    private var kind: String { request.field == "label" ? "label" : request.field == "section" ? "section" : "project" }
+    var body: some View {
+        let current = version
+        VStack(spacing: 0) {
+            if readable {
+                HStack {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary).accessibilityHidden(true)
+                    TextField("Find a name or project", text: $query)
+                        .focused($searchFocused).onSubmit { searchFocused = false }
+                        .textFieldStyle(.plain).accessibilityLabel("Search targets").accessibilityIdentifier("filterTargetSearch")
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.search)
+                        #endif
+                    if !query.isEmpty {
+                        Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
+                            .buttonStyle(.borderless).accessibilityLabel("Clear search").accessibilityIdentifier("clearFilterTargetSearch")
+                    }
+                }.padding().background(.bar)
+            }
+            if !readable {
+                ContentUnavailableView("Workspace changed", systemImage: "person.crop.circle", description: Text("Reopen this filter in your current workspace."))
+            } else if let catalog, loaded == current {
+                let page = catalog.page(query: query, limit: limit)
+                List {
+                    if page.total == 0 {
+                        ContentUnavailableView(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "No targets yet" : "No targets found", systemImage: "magnifyingglass", description: Text("Try another name or project."))
+                            .accessibilityIdentifier("filterTargetNoResults")
+                    }
+                    ForEach(page.options) { option in
+                        Button {
+                            guard readable, FilterTargetCatalog.current(option.id, field: request.field, projects: store.allProjects, sections: store.rows("sections"), labels: store.labels) != nil else { message = "This target changed. Choose an available target."; return }
+                            if let failure = choose(option.id) { message = failure } else { dismiss() }
+                        } label: {
+                            HStack(alignment: .firstTextBaseline) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(option.title).foregroundStyle(.primary).fixedSize(horizontal: false, vertical: true)
+                                    Text(option.location).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer()
+                                if option.id == selected { Image(systemName: "checkmark").foregroundStyle(.tint).accessibilityHidden(true) }
+                            }.frame(minHeight: 44).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel(option.title).accessibilityValue(option.location + (option.id == selected ? ", Selected" : ""))
+                            .accessibilityIdentifier("filterTarget-" + option.id)
+                    }
+                    if page.options.count < page.total {
+                        Text("Showing \(page.options.count) of \(page.total) targets").font(.caption).foregroundStyle(.secondary)
+                        Button("Show more") { limit += FilterTargetCatalog.pageSize }.accessibilityIdentifier("showMoreFilterTargets")
+                    }
+                    if let message { Text(message).foregroundStyle(.red).accessibilityIdentifier("filterTargetError") }
+                }
+            } else if let message, loaded == current {
+                ContentUnavailableView("Targets unavailable", systemImage: "exclamationmark.triangle", description: Text(message))
+            } else { ProgressView("Loading targets…") }
+        }
+        .navigationTitle("Choose a " + kind)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden()
+        #endif
+        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.accessibilityIdentifier("closeFilterTargets") } }
+        .onChange(of: query) { _, _ in limit = FilterTargetCatalog.pageSize; message = nil }
+        .task(id: current) {
+            catalog = nil; loaded = nil; message = nil
+            guard readable else { return }
+            do {
+                let value = try await FilterTargetCatalog.load(field: request.field, projects: current.projects, sections: current.sections, labels: current.labels)
+                try Task.checkCancellation()
+                guard readable, version == current else { return }
+                catalog = value; loaded = current
+            } catch is CancellationError { }
+            catch { guard readable, version == current else { return }; message = error.localizedDescription; loaded = current }
+        }
     }
 }
