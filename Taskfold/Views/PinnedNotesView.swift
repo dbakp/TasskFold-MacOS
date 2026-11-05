@@ -35,7 +35,7 @@ struct PinnedNotesView: View {
                                     NavigationLink { PinnedNoteDetail(taskID: task.id, binding: request.workspace, close: { dismiss() }) } label: {
                                         VStack(alignment: .leading, spacing: 6) {
                                             Text(task.title).font(.headline).lineLimit(2)
-                                            Text(task.string("description").isEmpty ? "Add note text in task details" : NoteMarkup.summary(task.string("description"))).font(.callout).foregroundStyle(.secondary).lineLimit(2)
+                                            Text(task.string("description").isEmpty ? "Add instructions or an idea" : NoteMarkup.summary(task.string("description"))).font(.callout).foregroundStyle(.secondary).lineLimit(2)
                                             if task.completed { Label("Task completed", systemImage: "checkmark.circle").font(.caption).foregroundStyle(.secondary) }
                                         }.padding(.vertical, 6)
                                     }.accessibilityIdentifier("pinnedNote-" + task.id)
@@ -58,6 +58,12 @@ struct PinnedNotesView: View {
     }
 }
 
+private struct PinnedNoteTextRequest: Identifiable {
+    let format: NoteFormatRequest
+    let session: UUID
+    var id: UUID { format.id }
+}
+
 private struct PinnedNoteDetail: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -70,6 +76,7 @@ private struct PinnedNoteDetail: View {
     @State private var failure: String?
     @State private var editing: TaskEditorOpening?
     @State private var originalText = false
+    @State private var noteEditing: PinnedNoteTextRequest?
     @State private var failureTitle = "Could not unpin note"
     @State private var printReview: PrintReviewRequest?
     private var live: Record? {
@@ -84,7 +91,7 @@ private struct PinnedNoteDetail: View {
                         Text(task.title).font(.title2.weight(.semibold)).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("pinnedNoteTitle")
                         if task.completed { Label("Task completed · note still pinned", systemImage: "checkmark.circle").font(.callout).foregroundStyle(.secondary) }
                         if task.string("description").isEmpty {
-                            Text("Your note has no text yet. Add instructions or an idea in task details.").foregroundStyle(.secondary).accessibilityIdentifier("pinnedNoteBlank")
+                            Text("Your note has no text yet. Add instructions or an idea with Edit note.").foregroundStyle(.secondary).accessibilityIdentifier("pinnedNoteBlank")
                         } else {
                             if NoteMarkup.document(task.string("description")).formatted {
                                 Toggle("Show original text", isOn: $originalText).accessibilityIdentifier("noteOriginalText")
@@ -92,6 +99,7 @@ private struct PinnedNoteDetail: View {
                                 else { NoteMarkupPreview(text: task.string("description")).accessibilityIdentifier("formattedPinnedNote") }
                             } else { Text(task.string("description")).font(.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).accessibilityIdentifier("pinnedNoteText") }
                         }
+                        Button(action: editText) { Label("Edit note", systemImage: "square.and.pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNoteText")
                         Button {guard binding.matches(account:store.userID,generation:store.workspaceGeneration) else {return};editing=TaskEditorOpening(task:task,admission:store.editorAdmission(task,workspace:binding)) } label: { Label("Edit details", systemImage: "pencil").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("editPinnedNote")
                         Button("Print or export", systemImage: "printer") { preparePrint() }.accessibilityIdentifier("printPinnedNote")
                         Button(action: unpin) { Label("Unpin note", systemImage: "pin.slash").frame(maxWidth: .infinity, minHeight: 44, alignment: .leading) }.accessibilityIdentifier("unpinNote")
@@ -104,6 +112,21 @@ private struct PinnedNoteDetail: View {
         }.navigationTitle("Pinned note")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", action: close).accessibilityIdentifier("closePinnedNotes") } }
             .sheet(item: $printReview) { PrintReviewView(request: $0) }
+            .sheet(item: $noteEditing) { request in
+                NoteFormattingView(request: request.format) { text in
+                    guard let admission = request.format.admission else { return "Reopen the current note before saving. Your text is still here." }
+                    var saved = false
+                    #if os(macOS)
+                    workspace.run("Edit Note") { saved = store.savePinnedNoteText(text, admission: admission, session: request.session) }
+                    #else
+                    saved = store.savePinnedNoteText(text, admission: admission, session: request.session)
+                    #endif
+                    if saved { return nil }
+                    let message = store.error ?? "The note could not be saved. Your text is still here; try again."
+                    store.error = nil
+                    return message
+                }
+            }
             .sheet(item: $editing) { opening in
                 #if os(iOS)
                 TaskEditor(task:opening.task,admission:opening.admission)
@@ -116,6 +139,18 @@ private struct PinnedNoteDetail: View {
             }
             .alert(failureTitle, isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) { Button("OK") { failure = nil } } message: { Text(failure ?? "") }
             .onChange(of: store.workspaceGeneration) { _, _ in editing = nil }
+    }
+    private func editText() {
+        guard let task = live else { return }
+        let admission = store.editorAdmission(task, workspace: binding)
+        guard admission.matches(account: store.userID, generation: store.workspaceGeneration, currentRoot: task),
+              store.editorMayWrite(source: task, proposed: task, teamDraft: admission.teamDraft) else {
+            failureTitle = "Could not edit note"; failure = "Reopen the current note with editing access."; return
+        }
+        let format = NoteFormatRequest(taskID: task.id, original: task.string("description"), workspace: binding,
+            generation: task["task_generation"], storedText: task.string("description"), source: task, sourceRootID: task.id,
+            admission: admission, title: "Edit note", confirmation: "Save", focusOnOpen: true)
+        noteEditing = PinnedNoteTextRequest(format: format, session: store.backend.reminderSessionIncarnation)
     }
     private func preparePrint() {
         guard let task = live else { return }

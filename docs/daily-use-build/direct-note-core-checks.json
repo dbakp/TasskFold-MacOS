@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-05",
+  "owningIndependentSuites": {
+    "ios": {
+      "passed": 6,
+      "failed": 0,
+      "testNames": [
+        "testAlreadySavedTextIsIdempotentAndCanBeRetried",
+        "testConflictingNoteTextIsNeverReplaced",
+        "testDeletedUnpinnedMovedAndRestoredNotesRefuse",
+        "testNoEditPreservesMissingOrNullNoteRepresentation",
+        "testOpaqueSavedNoteCannotBeOverwrittenAsEmptyText",
+        "testTextIntentUsesOnlyDescriptionAndKeepsUnrelatedConcurrentWork"
+      ],
+      "cacheAllocatedBytes": 578990080,
+      "within768MiB": true
+    },
+    "mac": {
+      "passed": 6,
+      "failed": 0,
+      "testNames": [
+        "testAlreadySavedTextIsIdempotentAndCanBeRetried",
+        "testConflictingNoteTextIsNeverReplaced",
+        "testDeletedUnpinnedMovedAndRestoredNotesRefuse",
+        "testNoEditPreservesMissingOrNullNoteRepresentation",
+        "testOpaqueSavedNoteCannotBeOverwrittenAsEmptyText",
+        "testTextIntentUsesOnlyDescriptionAndKeepsUnrelatedConcurrentWork"
+      ],
+      "cacheAllocatedBytes": 531009536,
+      "within768MiB": true
+    }
+  },
+  "scope": "Text intent only, not permission/native/cloud acceptance"
+}

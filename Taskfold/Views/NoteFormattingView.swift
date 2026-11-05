@@ -15,6 +15,9 @@ struct NoteFormatRequest: Identifiable {
     var source: Record? = nil
     var sourceRootID: String? = nil
     var admission: TaskEditorAdmission? = nil
+    var title = "Format notes"
+    var confirmation = "Apply"
+    var focusOnOpen = false
 }
 
 /// Native, selectable note blocks. Every link has already passed the web-only policy;
@@ -169,11 +172,11 @@ struct NoteFormattingView: View {
                         }
                     }.frame(maxWidth:.infinity,alignment:.leading).padding(24)}
                 }
-            }.navigationTitle("Format notes")
+            }.navigationTitle(request.title)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: cancel) }
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Apply") { guard available else { return }; if let error = apply(text) { focused = false; message = error } else { editorFinished=true;_=recoverySession?.finish();dismiss() } }
+                        Button(request.confirmation) { guard available else { return }; if let error = apply(text) { focused = false; message = error } else { editorFinished=true;_=recoverySession?.finish();dismiss() } }
                             .disabled(!available || link).accessibilityIdentifier("applyNoteFormatting")
                     }
                 }
@@ -209,6 +212,7 @@ struct NoteFormattingView: View {
             original["description"] = .string(request.original)
             sourceRecord=original;sourceContext=request.admission?.source ?? TaskEditorSourceContext(record:original,root:store.record("tasks",id:request.sourceRootID ?? SubtaskTree.referencePath(request.taskID)?.first ?? request.taskID))
             do {recoverySession=try store.beginEditorSession(original)} catch {message="Your note could not be protected. Keep this editor open and retry."}
+            if request.focusOnOpen, recoverySession != nil { focused = true }
         }
         .onChange(of:text) {_,_ in checkpoint()}
         .onChange(of:available) {_,value in if !value {checkpoint();accessStopped=true;link=false;focused=false}}

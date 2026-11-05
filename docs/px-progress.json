@@ -4,10 +4,10 @@
   "title": "Taskfold · progress",
   "scope": "Both independently owned Apple apps",
   "headline": "Daily-use build first. Remaining Px follow in small feature updates.",
-  "focus": "Now · Direct subtask details and stable inline editing",
-  "latest": "Direct iPhone subtask details now open from each identified row. Child Save stays in the parent draft, parent Cancel discards it, and inline typing remains attached to the same legacy child after predecessor removal. Final ordinary-editor Save/cold and dark/largest-text Cancel journeys pass on the same signed inputs, with zero reported runtime warnings; twelve focused Core checks pass independently in each app. Mac source build 15 compiles/signs with both extensions; native Mac interaction remains separate. Cleanup leaves 65.7 GiB free. The reviewed Mac 14 / iPhone 30 update packages and installed Mac 10 / phone 26 sessions remain preserved pending saved-draft confirmation. No checkpoint totals or rollout gates are changed.",
+  "focus": "Now · Focused pinned-note editing; next planner task selection",
+  "latest": "Pinned notes now offer Edit note directly, reusing the existing native formatting tools, Write/Preview and explicit Save. Six text-intent Core checks pass independently per app. Three final signed iPhone cases pass on the same source/app inputs: Cancel/Save, description-only intent with unrelated current fields preserved, actual Store Undo/Redo and cold content, conflict refusal with retained unsent text, and separate dark/largest-text preview/Cancel. Screenshots reviewed, with zero reported runtime warnings. Mac source build 16 compiles/signs with both extensions; native Mac interaction remains separate. Cleanup leaves 65.5 GiB free. Installed sessions and the reviewed Mac14/phone30 packages remain untouched pending saved-draft confirmation. Wider Px and agreed deferrals remain.",
   "next": [
-    "NEXT IMPLEMENTATION: practical planning and notes after this scoped subtask refinement. Install the already reviewed cumulative Mac 14 / phone 30 after saved-draft confirmation; preserve current installed sessions. Accept wider Mac/iPad subtask interactions, account, speech, actual swipe and large-library contexts separately. Avoid unchanged broad matrices.",
+    "NEXT IMPLEMENTATION: make planner task selection practical for larger workspaces, with focused search and useful context; then improve scheduling responsiveness and continue notes/headings, widget and insight polish. Install the already reviewed Mac14/phone30 after saved-draft confirmation. Current source refinements are not substituted into those archives. Keep native Mac/iPad, shared/account/speech and wider workload checks scoped; avoid unchanged broad matrices.",
     "NEXT DAILY-USE UPDATE: preserve the verified library creation/starter runs, sibling ordering/Undo and filter-target improvements in the cumulative packages. Continue with small user-facing feature updates, bounded caches and end-of-run cleanup.",
     "Restore phone Share-sheet capture after Apple’s weekly App ID quota permits registration. The current development profile expires 11 November (Mac: 10 November); preserve local data across updates. All three distribution/remote-reminder/older-client rollout deferrals remain.",
     "THEN: notes/headings, planning responsiveness and widget/insight polish. Deliver bounded installable updates with change lists; continue integrations and advanced teams/storage/media afterward under their recorded prerequisites and deferrals.",
@@ -211,7 +211,7 @@
             "P1_PLAN.md",
             "daily-use-build/inline-subtasks.json"
           ],
-          "focus": true
+          "focus": false
         },
         {
           "id": "p1-templates",
@@ -457,7 +457,7 @@
             {
               "state": "verify",
               "title": "Rich-note formatting and heading authoring",
-              "detail": "Implementation and guarded candidates exist; broader native/shared/cloud/exposure checks remain."
+              "detail": "Focused pinned-note Edit note now uses the existing Write/Preview tools and guarded text-only Save. Six Core intent checks pass per app. Current signed iPhone tests accept Cancel/Save, unchanged pin/completion/children/opaque/unrelated work, external title/priority preservation, actual Store Undo/Redo, cold content, conflicting-note refusal and separate largest-text preview/Cancel. Native Mac/iPad, wider shared/cloud/speech/accessibility and heading contexts remain open; no ordinary rollout gate changes."
             },
             {
               "state": "done",
@@ -581,9 +581,16 @@
             "genuine-conflict-review/README.md",
             "genuine-conflict-review/verification.json",
             "genuine-conflict-review/field.json",
-            "genuine-conflict-review/attempts.json"
+            "genuine-conflict-review/attempts.json",
+            "daily-use-build/direct-note-editing.json",
+            "daily-use-build/direct-note-native-ios.json",
+            "daily-use-build/direct-note-conflict-ios.json",
+            "daily-use-build/direct-note-largest-text.json",
+            "daily-use-build/direct-note-mac-build.json",
+            "daily-use-build/direct-note-storage.json",
+            "daily-use-build/direct-note-core-checks.json"
           ],
-          "focus": false
+          "focus": true
         },
         {
           "id": "p2-voice",
@@ -1185,7 +1192,7 @@
     "ACCOUNT_REMOVAL.md": "7918fdb0bf28326a7e166ea9aac664ec83b69c02ee786e1a0702a04c7b9ca24d",
     "P0_PROGRESS.md": "44c2a67084e8da1783da78d19190a80beb0869d73237f37c5123fe3cc182c776",
     "P1_PLAN.md": "d91f44b1163d03bc6c30f2caf3c11306fb1c59e5c06abf9da22b496ebc63959c",
-    "P2_PLAN.md": "def407f155a530215874eb0cda6ea51a0804fe69bdad6c66080448cae44e6e2e",
+    "P2_PLAN.md": "cc6d33d1fd7f930a56d6bb25ee79ba40707ef4c53a378bb02ad789b572441c2e",
     "PX_CHECKLIST.md": "b8c8fd7e10c039a1f92bcfc66b4151e6126c2e1d76a0fa8f3f2456c9fd4e1b0e",
     "account-removal-legacy-recovery/README.md": "d764c3b7d96110581c3b976b397c19cbb52a7bfc216f49947b6fa2bd346ee8fc",
     "account-removal-legacy-recovery/checks.json": "ebd1606ca382d5cc14381d1df7ff65176351de980bcf69482ac6bfd2d6bff8c1",
@@ -1300,6 +1307,13 @@
     "daily-use-build/context-capture-mac-package.json": "01a94b61601f02b1fd223c6307e2fb67af4fe3fbfa907b8ced2f4fd5f108ba0a",
     "daily-use-build/context-capture-native.json": "fddc4e842d98b36a14bff1fef870d8c44f5d1bee74fb13c7984ef119b5cf8506",
     "daily-use-build/context-capture-storage.json": "a03b78dc6775a36b3e9f0ff8cc88ad49e9db7453298e9fd6b5217fe296322eaf",
+    "daily-use-build/direct-note-conflict-ios.json": "d7967330fec1caf97e1f5625e524ac652a158fc674d7663f76ab9ff88478931f",
+    "daily-use-build/direct-note-core-checks.json": "ba44e37ade0c695930e80f17968771cba35e9731143ab5eb1896260cf875de68",
+    "daily-use-build/direct-note-editing.json": "46ba689b40a484a57cf20c3c988c92ef53c5d286db6f274a905e8496d5fe4506",
+    "daily-use-build/direct-note-largest-text.json": "0fdabb06f15932d18f932e949dbc03542fb732d36af4131f9e7e0439835c8d4e",
+    "daily-use-build/direct-note-mac-build.json": "fa1cf9c35ba7e390df01bf612fc35ce65b6229c9a0c4e47ba6edcb8312d3651a",
+    "daily-use-build/direct-note-native-ios.json": "6cde5dc4551bc851d14dfc1ee468d132aee35ac18265f56c9334677bd7aff91f",
+    "daily-use-build/direct-note-storage.json": "fc6d53f1cbec5294ba88a75fbd9c3814ef92c84168569adc508de4a8da9d34b9",
     "daily-use-build/inline-subtasks.json": "e430da2431600ecb1125f8b2c68608611edb2d71c9be2898fcddb6ecf0d29aa4",
     "daily-use-build/library-composer-largest-text.json": "d8a3e945933e76a34b014a51f078a75c5b5e498bf28db2c80f59b3134c77ff89",
     "daily-use-build/library-composer-native.json": "66869643ac1d84418539f6138932c70e0571904c47aa4a4973bf6f59b386df2e",

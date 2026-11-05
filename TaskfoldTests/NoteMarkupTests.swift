@@ -150,3 +150,60 @@ final class CompactNotePreviewTests: XCTestCase {
         XCTAssertEqual(NoteMarkup.preview(raw, characters: 0, bytes: 6000).0, "")
     }
 }
+
+final class PinnedNoteTextEditTests: XCTestCase {
+    private var source: Record {
+        Record(["id": .string("note-task"), "user_id": .string("owner"), "project_id": .string("project"),
+                "task_generation": .string("generation"), "title": .string("Workshop guide"),
+                "description": .string("Original notes"), "completed": .bool(true),
+                "deadline_date": .string("2026-11-30"), "opaque": .object(["kept": .bool(true)])])
+    }
+    func testTextIntentUsesOnlyDescriptionAndKeepsUnrelatedConcurrentWork() throws {
+        let original = source; var current = original
+        current["title"] = .string("Renamed elsewhere"); current["deadline_date"] = .string("2026-12-01")
+        current["opaque"] = .object(["new": .string("current")])
+        let desired = try PinnedNoteTextEdit(source: original).applying("## New notes\nRésumé 🙂", current: current, pinned: true)
+        let change = try XCTUnwrap(PinnedNotes.edit(desired, existing: current, baseline: original))
+        XCTAssertEqual(change.method, "PATCH"); XCTAssertEqual(change.fields, ["description": .string("## New notes\nRésumé 🙂")])
+        var saved = current; for (key, value) in change.fields { saved[key] = value }
+        XCTAssertEqual(saved["title"], current["title"]); XCTAssertEqual(saved["deadline_date"], current["deadline_date"])
+        XCTAssertEqual(saved["opaque"], current["opaque"]); XCTAssertEqual(saved["completed"], .bool(true))
+    }
+    func testConflictingNoteTextIsNeverReplaced() {
+        var current = source; current["description"] = .string("A different note edit")
+        XCTAssertThrowsError(try PinnedNoteTextEdit(source: source).applying("My unsent edit", current: current, pinned: true))
+        XCTAssertEqual(current.string("description"), "A different note edit")
+    }
+    func testDeletedUnpinnedMovedAndRestoredNotesRefuse() {
+        XCTAssertThrowsError(try PinnedNoteTextEdit(source: source).applying("Edit", current: nil, pinned: true))
+        XCTAssertThrowsError(try PinnedNoteTextEdit(source: source).applying("Edit", current: source, pinned: false))
+        for key in ["id", "user_id", "project_id", "task_generation"] {
+            var current = source; current[key] = .string("changed")
+            XCTAssertThrowsError(try PinnedNoteTextEdit(source: source).applying("Edit", current: current, pinned: true), key)
+        }
+    }
+    func testAlreadySavedTextIsIdempotentAndCanBeRetried() throws {
+        var current = source; current["description"] = .string("My edit")
+        let desired = try PinnedNoteTextEdit(source: source).applying("My edit", current: current, pinned: true)
+        XCTAssertEqual(desired["description"], current["description"])
+        XCTAssertNil(PinnedNotes.edit(current, existing: current, baseline: current))
+    }
+    func testNoEditPreservesMissingOrNullNoteRepresentation() throws {
+        for value in [JSON.null, .string("")] {
+            var original = source; original["description"] = value
+            let desired = try PinnedNoteTextEdit(source: original).applying("", current: original, pinned: true)
+            XCTAssertEqual(desired, original); XCTAssertNil(PinnedNotes.edit(desired, existing: original, baseline: original))
+        }
+        var original = source; original.fields.removeValue(forKey: "description")
+        let desired = try PinnedNoteTextEdit(source: original).applying("", current: original, pinned: true)
+        XCTAssertEqual(desired.fields, original.fields)
+    }
+    func testOpaqueSavedNoteCannotBeOverwrittenAsEmptyText() {
+        for value in [JSON.number(42), .object(["text": .string("preserve")]), .array([.string("preserve")])] {
+            var original = source; original["description"] = value
+            XCTAssertThrowsError(try PinnedNoteTextEdit(source: original).applying("Edit", current: original, pinned: true))
+            var current = source; current["description"] = value
+            XCTAssertThrowsError(try PinnedNoteTextEdit(source: source).applying("Edit", current: current, pinned: true))
+        }
+    }
+}

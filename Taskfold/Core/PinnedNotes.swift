@@ -220,3 +220,27 @@ struct TaskOrderRecovery: Codable, Equatable, Sendable {
         }
     }
 }
+
+/// A text-only intent. Live Store admission still owns all write permissions.
+/// Return the captured record so the established field-diff writer changes only
+/// description; unrelated current fields never become part of this edit.
+struct PinnedNoteTextEdit {
+    let source: Record
+    func applying(_ text: String, current: Record?, pinned: Bool) throws -> Record {
+        guard pinned, let current,
+              ["id", "user_id", "project_id", "task_generation"].allSatisfy({ current[$0] == source[$0] }),
+              PinnedNotes.validID(source.id) else {
+            throw AppFailure(message: "This note was removed, unpinned or moved. Your text is still here; copy it before reopening the current note.")
+        }
+        func readable(_ value: JSON) -> Bool { if value == .null { return true }; if case .string = value { return true }; return false }
+        guard readable(source["description"]), readable(current["description"]) else {
+            throw AppFailure(message: "The saved note needs review. Your text is still here; copy it before reopening the current note.")
+        }
+        guard current["description"] == source["description"] || current["description"] == .string(text) else {
+            throw AppFailure(message: "The note changed elsewhere. Your text is still here; copy it before reopening the current note.")
+        }
+        if text == source.string("description") { return source }
+        var desired = source; desired["description"] = .string(text)
+        return desired
+    }
+}

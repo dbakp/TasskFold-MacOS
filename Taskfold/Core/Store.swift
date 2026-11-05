@@ -2913,6 +2913,26 @@ final class Store {
         return commit(changes)
     }
     func isPinnedNote(_ taskID: String) -> Bool { PinnedNotes.contains(taskID, pins: rows("view_orders"), account: userID) }
+    /// Pinned-note text uses the same task admission, conflict, queue and Undo
+    /// writers as task details. It never changes the pin or reminder defaults.
+    @discardableResult func savePinnedNoteText(_ text: String, admission: TaskEditorAdmission, session: UUID) -> Bool {
+        do {
+            let source = admission.source.record, current = record("tasks", id: admission.rootID)
+            guard session == backend.reminderSessionIncarnation, admission.kind == .existing,
+                  admission.rootID == source.id,
+                  admission.matches(account: userID, generation: workspaceGeneration, currentRoot: current) else {
+                throw AppFailure(message: "This task or workspace changed. Your note text is still here.")
+            }
+            let desired = try PinnedNoteTextEdit(source: source).applying(text, current: current, pinned: isPinnedNote(source.id))
+            guard editorMayWrite(source: source, proposed: desired, teamDraft: admission.teamDraft) else {
+                throw AppFailure(message: "This note’s editing access changed. Your text is still here.")
+            }
+            if current?["description"] == desired["description"] { return true }
+            if let team = admission.teamDraft { return saveTeamTaskEditor(desired, draft: team) }
+            return save("tasks", desired, baseline: source, applyReminderDefaults: false)
+        } catch { self.error = error.localizedDescription; return false }
+    }
+
     /// Task edits and selection reach disk together before any sync begins.
     /// Capture optional recovery evidence without changing the user's row write.
     /// Older/unsupported choices keep their original queue and remain protected.

@@ -1,0 +1,29 @@
+{
+  "build": {
+    "schema": 1,
+    "platform": "mac",
+    "bundle": "com.dbakp.taskfold.mac",
+    "version": "1.2.0",
+    "build": "16",
+    "app": "/Users/davidbakposada/Library/Caches/TaskfoldBuild/daily-mac/Build/Products/Debug/Taskfold.app",
+    "sourceFingerprint": "b52d07e2df91b7636f912187505f0a4cd527f9fe751596f7d8a358df76adbb8d",
+    "sourceRevision": "8d6fbc9c6fb604dfea4654de3791ba96fbcfccec",
+    "simulatorOnly": false,
+    "signatureVerified": true,
+    "widgetsIncluded": true,
+    "shareIncluded": true,
+    "omittedCapabilities": [
+      "Remote push notifications",
+      "Time Sensitive notifications"
+    ],
+    "featureFlags": {
+      "TaskfoldAudioRestorationEnabled": false,
+      "TaskfoldMixedCompletionEnabled": false,
+      "TaskfoldTeamAudioPublishingEnabled": false
+    },
+    "installed": false,
+    "published": false
+  },
+  "sourceWasDirtyAtBuild": true,
+  "scope": "Ordinary Mac compile, extension and strict signature verification only; not packaged, installed or native interaction acceptance."
+}
